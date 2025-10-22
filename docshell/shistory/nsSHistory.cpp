@@ -1880,9 +1880,6 @@ void nsSHistory::GloballyEvictDocumentViewers() {
       nsCOMPtr<nsISHEntry> entry = shist->mEntries[i];
       nsCOMPtr<nsIDocumentViewer> viewer = entry->GetDocumentViewer();
 
-      MOZ_ASSERT(mozilla::IsValidAbsArgument(i - shist->mIndex));
-      const int32_t idiff = std::abs(i - shist->mIndex);
-
       bool found = false;
       bool hasDocumentViewerOrFrameLoader = false;
       if (viewer) {
@@ -1894,7 +1891,8 @@ void nsSHistory::GloballyEvictDocumentViewers() {
         for (uint32_t j = 0; j < shEntries.Length(); j++) {
           EntryAndDistance& container = shEntries[j];
           if (container.mViewer == viewer) {
-            container.mDistance = std::min(container.mDistance, idiff);
+            container.mDistance =
+                std::min(container.mDistance, DeprecatedAbs(i - shist->mIndex));
             found = true;
             break;
           }
@@ -1906,8 +1904,8 @@ void nsSHistory::GloballyEvictDocumentViewers() {
           for (uint32_t j = 0; j < shEntries.Length(); j++) {
             EntryAndDistance& container = shEntries[j];
             if (container.mFrameLoader == frameLoader) {
-              container.mDistance = std::min(container.mDistance, idiff);
-              ;
+              container.mDistance = std::min(container.mDistance,
+                                             DeprecatedAbs(i - shist->mIndex));
               found = true;
               break;
             }
@@ -1918,8 +1916,8 @@ void nsSHistory::GloballyEvictDocumentViewers() {
       // If we didn't find a EntryAndDistance for this content viewer /
       // frameloader, make a new one.
       if (hasDocumentViewerOrFrameLoader && !found) {
-        MOZ_ASSERT(mozilla::IsValidAbsArgument(i - shist->mIndex));
-        EntryAndDistance container(shist, entry, std::abs(i - shist->mIndex));
+        EntryAndDistance container(shist, entry,
+                                   DeprecatedAbs(i - shist->mIndex));
         shEntries.AppendElement(container);
       }
     }

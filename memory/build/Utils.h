@@ -161,7 +161,7 @@ class FastDivisor {
     unsigned m_ = ((1U << p) + div - 1 - (((1U << p) - 1) % div)) / div;
 
     // Make sure that max * m does not overflow.
-    MOZ_DIAGNOSTIC_ASSERT(max < std::numeric_limits<unsigned int>::max() / m_);
+    MOZ_DIAGNOSTIC_ASSERT(max < UINT_MAX / m_);
 
     MOZ_ASSERT(m_ <= std::numeric_limits<T>::max());
     m = static_cast<T>(m_);

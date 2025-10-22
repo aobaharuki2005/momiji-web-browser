@@ -6,8 +6,6 @@
 
 #include "mozilla/MathAlgorithms.h"
 
-#include <limits>
-
 using mozilla::CeilingLog2;
 using mozilla::FloorLog2;
 using mozilla::RoundUpPow2;
@@ -68,10 +66,7 @@ static void TestRoundUpPow2() {
   MOZ_RELEASE_ASSERT(RoundUpPow2(32) == 32);
   MOZ_RELEASE_ASSERT(RoundUpPow2(33) == 64);
 
-  size_t MaxPow2 = size_t(1)
-                   << (sizeof(size_t) *
-                           std::numeric_limits<unsigned char>::digits -
-                       1);
+  size_t MaxPow2 = size_t(1) << (sizeof(size_t) * CHAR_BIT - 1);
   MOZ_RELEASE_ASSERT(RoundUpPow2(MaxPow2 - 1) == MaxPow2);
   MOZ_RELEASE_ASSERT(RoundUpPow2(MaxPow2) == MaxPow2);
   // not valid to round up when past the max power of two

@@ -4281,15 +4281,11 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
   static LONG sLastClickCount = 0L;
   static BYTE sLastMouseButton = 0;
 
-  // By definition, those should be non-negative.
-  MOZ_ASSERT(::GetSystemMetrics(SM_CXDOUBLECLK) >= 0);
-  MOZ_ASSERT(::GetSystemMetrics(SM_CYDOUBLECLK) >= 0);
-
   bool insideMovementThreshold =
-      (Abs(sLastMousePoint.x - eventPoint.x.value) <
-       (unsigned)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
-      (Abs(sLastMousePoint.y - eventPoint.y.value) <
-       (unsigned)::GetSystemMetrics(SM_CYDOUBLECLK));
+      (DeprecatedAbs(sLastMousePoint.x - eventPoint.x.value) <
+       (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
+      (DeprecatedAbs(sLastMousePoint.y - eventPoint.y.value) <
+       (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
   BYTE eventButton;
   switch (aButton) {
@@ -6834,14 +6830,12 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam) {
     }
 
     if (mDisplayPanFeedback) {
-      const auto RoundedDeltaX = RoundDown(wheelEvent.mOverflowDeltaX);
-      MOZ_ASSERT(mozilla::IsValidAbsArgument(RoundedDeltaX));
-      mGesture.UpdatePanFeedbackX(mWnd, std::abs(RoundedDeltaX), endFeedback);
-
-      const auto RoundedDeltaY = RoundDown(wheelEvent.mOverflowDeltaY);
-      MOZ_ASSERT(mozilla::IsValidAbsArgument(RoundedDeltaY));
-      mGesture.UpdatePanFeedbackY(mWnd, std::abs(RoundedDeltaY), endFeedback);
-
+      mGesture.UpdatePanFeedbackX(
+          mWnd, DeprecatedAbs(RoundDown(wheelEvent.mOverflowDeltaX)),
+          endFeedback);
+      mGesture.UpdatePanFeedbackY(
+          mWnd, DeprecatedAbs(RoundDown(wheelEvent.mOverflowDeltaY)),
+          endFeedback);
       mGesture.PanFeedbackFinalize(mWnd, endFeedback);
     }
 
