@@ -563,9 +563,12 @@ bool WorkerScriptLoader::CreateScriptRequests(
     return false;
   }
   for (const nsString& scriptURL : aScriptURLs) {
-    RefPtr<ScriptLoadRequest> request =
-        CreateScriptLoadRequest(scriptURL, aDocumentEncoding, aIsMainScript);
+    nsresult rv = NS_OK;
+    RefPtr<ScriptLoadRequest> request = CreateScriptLoadRequest(
+        scriptURL, aDocumentEncoding, aIsMainScript, &rv);
     if (!request) {
+      mLoadingRequests.CancelRequestsAndClear();
+      workerinternals::ReportLoadError(mRv, rv, scriptURL);
       return false;
     }
     mLoadingRequests.AppendElement(request);
@@ -621,7 +624,7 @@ nsContentPolicyType WorkerScriptLoader::GetContentPolicyType(
 
 already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
-    bool aIsMainScript) {
+    bool aIsMainScript, nsresult* aRv) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
   WorkerLoadContext::Kind kind =
       WorkerLoadContext::GetKind(aIsMainScript, IsDebuggerScript());
@@ -654,14 +657,29 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
                 aIsMainScript && !mWorkerRef->Private()->GetParent());
   nsCOMPtr<nsIURI> baseURI = aIsMainScript ? GetInitialBaseURI() : GetBaseURI();
   nsCOMPtr<nsIURI> uri;
-  bool setErrorResult = false;
   nsresult rv =
       ConstructURI(aScriptURL, baseURI, aDocumentEncoding, getter_AddRefs(uri));
   // If we failed to construct the URI, handle it in the LoadContext so it is
   // thrown in the right order.
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    setErrorResult = true;
-    loadContext->mLoadResult = rv;
+    // This function is used by the following:
+    //   * Worker constructor
+    //   * WorkerGlobalScope.importScripts
+    //   * WorkerDebuggerGlobalScope.loadSubScript
+    //
+    // Worker constructor validates the URL in WorkerPrivate::Constructor,
+    // and this branch shouldn't taken.
+    //
+    // importScripts is available only to classic scripts.
+    //
+    // loadSubScript is available only to privileged scripts, and we don't
+    // care any invalid URLs.
+    //
+    // Module imports should use WorkerModuleLoader instead.
+    MOZ_ASSERT(mWorkerRef->Private()->WorkerType() == WorkerType::Classic);
+
+    *aRv = rv;
+    return nullptr;
   }
 
   // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-classic-worker-script
@@ -719,11 +737,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   // Set the mURL, it will be used for error handling and debugging.
   request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
 
-  if (setErrorResult) {
-    request->SetPendingFetchingError();
-  } else {
-    request->NoCacheEntryFound();
-  }
+  request->NoCacheEntryFound();
 
   return request.forget();
 }

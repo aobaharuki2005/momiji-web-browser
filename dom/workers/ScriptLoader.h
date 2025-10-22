@@ -202,7 +202,7 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
 
   already_AddRefed<ScriptLoadRequest> CreateScriptLoadRequest(
       const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
-      bool aIsMainScript);
+      bool aIsMainScript, nsresult* aRv);
 
   bool DispatchLoadScript(ScriptLoadRequest* aRequest);
 
