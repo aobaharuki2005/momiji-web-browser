@@ -369,7 +369,7 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Enable opt-in dialog to display for weather widget in GDPR regions.",
-      value: false,
+      value: true,
     },
   ],
   [
@@ -385,7 +385,7 @@ export const PREFS_CONFIG = new Map([
     {
       title:
         "Static weather data shown when user has not set/enabled location from opt-in.",
-      value: false,
+      value: true,
     },
   ],
   [

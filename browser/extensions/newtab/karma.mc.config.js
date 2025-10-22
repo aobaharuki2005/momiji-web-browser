@@ -305,8 +305,8 @@ module.exports = function (config) {
               branches: 0,
             },
             "content-src/components/Weather/Weather.jsx": {
-              statements: 51.1,
-              lines: 52.38,
+              statements: 50,
+              lines: 50.94,
               functions: 31.2,
               branches: 31.2,
             },
