@@ -135,7 +135,6 @@ def run(
     push_to_vcs=False,
     show_chunk_numbers=False,
     new_test_config=False,
-    **kwargs,
 ):
     fzf = fzf_bootstrap(update)
 
@@ -236,10 +235,7 @@ def run(
         return queries
 
     # build commit message
-    if "preset_id" in kwargs:
-        msg = "Fuzzy (preset: {})".format(kwargs.get("preset_id"))
-    else:
-        msg = "Fuzzy"
+    msg = "Fuzzy"
     args = [f"query={q}" for q in queries]
     if test_paths:
         args.append("paths={}".format(":".join(test_paths)))

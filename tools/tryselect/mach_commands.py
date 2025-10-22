@@ -114,7 +114,6 @@ def handle_presets(
         name = preset
         preset = presets(command_context)[name]
         selector = preset.pop("selector")
-        kwargs["preset_id"] = name
         preset.pop("description", None)  # description isn't used by any selectors
 
         if not subcommand:
