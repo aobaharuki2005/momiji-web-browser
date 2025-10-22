@@ -167,7 +167,7 @@ var sdputils = {
   // for some SDP parsing issues.
   removeCodec(sdp, codec) {
     var updated_sdp = sdp.replace(
-      new RegExp("a=rtpmap:" + codec + ".*\\/90000\\r\\n", ""),
+      new RegExp("a=rtpmap:" + codec + ".*\\/[0-9/]+\\r\\n", ""),
       ""
     );
     updated_sdp = updated_sdp.replace(
