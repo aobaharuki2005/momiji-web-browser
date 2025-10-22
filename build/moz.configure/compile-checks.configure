@@ -92,7 +92,13 @@ def try_link(
 #   conditional on the value of that function.
 @template
 def check_header(
-    header, language="C++", flags=None, includes=None, when=None, onerror=lambda: None
+    header,
+    language="C++",
+    body="",
+    flags=None,
+    includes=None,
+    when=None,
+    onerror=lambda: None,
 ):
     if when is None:
         when = always
@@ -105,6 +111,7 @@ def check_header(
 
     have_header = try_compile(
         includes=includes,
+        body=body,
         language=language,
         flags=flags,
         check_msg="for %s" % header,
