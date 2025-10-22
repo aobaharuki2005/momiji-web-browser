@@ -92,7 +92,6 @@ class ScriptLoadRequest : public nsISupports,
  public:
   using SRIMetadata = mozilla::dom::SRIMetadata;
   ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
-                    ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
                     LoadContextBase* aContext);
 
@@ -152,17 +151,17 @@ class ScriptLoadRequest : public nsISupports,
   }
 
   mozilla::dom::RequestPriority FetchPriority() const {
-    return mFetchOptions->mFetchPriority;
+    return FetchOptions()->mFetchPriority;
   }
 
   enum ParserMetadata ParserMetadata() const {
-    return mFetchOptions->mParserMetadata;
+    return FetchOptions()->mParserMetadata;
   }
 
-  const nsString& Nonce() const { return mFetchOptions->mNonce; }
+  const nsString& Nonce() const { return FetchOptions()->mNonce; }
 
   nsIPrincipal* TriggeringPrincipal() const {
-    return mFetchOptions->mTriggeringPrincipal;
+    return FetchOptions()->mTriggeringPrincipal;
   }
 
   // Convert a CheckingCache ScriptLoadRequest into a Ready one, by populating
@@ -215,7 +214,7 @@ class ScriptLoadRequest : public nsISupports,
   }
 
  public:
-  mozilla::CORSMode CORSMode() const { return mFetchOptions->mCORSMode; }
+  mozilla::CORSMode CORSMode() const { return FetchOptions()->mCORSMode; }
 
   bool HasLoadContext() const { return mLoadContext; }
   bool HasScriptLoadContext() const;
@@ -267,7 +266,6 @@ class ScriptLoadRequest : public nsISupports,
 
   CacheExpirationTime mExpirationTime = CacheExpirationTime::Never();
 
-  RefPtr<ScriptFetchOptions> mFetchOptions;
   RefPtr<mozilla::SubResourceNetworkMetadataHolder> mNetworkMetadata;
   const SRIMetadata mIntegrity;
   const nsCOMPtr<nsIURI> mReferrer;

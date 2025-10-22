@@ -1141,8 +1141,8 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
 
   MOZ_ASSERT(aKind == ScriptKind::eClassic || aKind == ScriptKind::eImportMap);
 
-  RefPtr<ScriptLoadRequest> request = new ScriptLoadRequest(
-      aKind, aURI, fetchOptions, aIntegrity, referrer, context);
+  RefPtr<ScriptLoadRequest> request =
+      new ScriptLoadRequest(aKind, aURI, aIntegrity, referrer, context);
 
   TryUseCache(aReferrerPolicy, fetchOptions, request, aElement, aNonce,
               aRequestType);
@@ -1176,7 +1176,12 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
     return;
   }
 
-  ScriptHashKey key(this, aRequest, aRequest->mFetchOptions, aRequest->mURI);
+  // NOTE: Some ScriptLoadRequest fields aren't yet accessible until
+  //       either NoCacheEntryFound or CacheEntryFound is called,
+  //       which constructs LoadedScript.
+  //       aRequest->FetchOptions() is backed by LoadedScript, and we cannot
+  //       use it here.
+  ScriptHashKey key(this, aRequest, aFetchOptions, aRequest->mURI);
   auto cacheResult = mCache->Lookup(*this, key, /* aSyncLoad = */ true);
   if (cacheResult.mState != CachedSubResourceState::Complete) {
     aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions);
@@ -1191,8 +1196,7 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
   if (aRequestType == ScriptLoadRequestType::External) {
     // NOTE: The preload case checks the same after the
     //       LookupPreloadRequest call.
-    if (NS_FAILED(CheckContentPolicy(aElement, aNonce, aRequest,
-                                     aRequest->mFetchOptions,
+    if (NS_FAILED(CheckContentPolicy(aElement, aNonce, aRequest, aFetchOptions,
                                      aRequest->mURI))) {
       aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions);
       LOG(
@@ -1237,8 +1241,8 @@ void ScriptLoader::EmulateNetworkEvents(ScriptLoadRequest* aRequest) {
   }
 
   NotifyObserversForCachedScript(
-      aRequest->mURI, context, aRequest->mFetchOptions->mTriggeringPrincipal,
-      CORSModeToSecurityFlags(aRequest->mFetchOptions->mCORSMode),
+      aRequest->mURI, context, aRequest->FetchOptions()->mTriggeringPrincipal,
+      CORSModeToSecurityFlags(aRequest->FetchOptions()->mCORSMode),
       nsIContentPolicy::TYPE_INTERNAL_SCRIPT, aRequest->mNetworkMetadata);
 
   {
@@ -1358,7 +1362,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
       LookupPreloadRequest(aElement, aScriptKind, sriMetadata);
   if (request) {
     if (NS_FAILED(CheckContentPolicy(aElement, nonce, request,
-                                     request->mFetchOptions, request->mURI))) {
+                                     request->FetchOptions(), request->mURI))) {
       LOG(("ScriptLoader (%p): content policy check failed for preload", this));
 
       // Probably plans have changed; even though the preload was allowed seems
@@ -3386,8 +3390,6 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
 
   // Create a ClassicScript object and associate it with the JSScript.
   MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
-  MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions()->IsCompatible(
-      aRequest->mFetchOptions));
 
 #ifdef DEBUG
   {

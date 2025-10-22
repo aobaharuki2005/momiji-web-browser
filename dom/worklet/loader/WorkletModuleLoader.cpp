@@ -79,7 +79,7 @@ already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateRequest(
       context->GetHandlerRef();
   RefPtr<WorkletLoadContext> loadContext = new WorkletLoadContext(handlerRef);
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      aURI, moduleType, aOptions, SRIMetadata(), aBaseURL, loadContext,
+      aURI, moduleType, SRIMetadata(), aBaseURL, loadContext,
       ModuleLoadRequest::Kind::StaticImport, this, root);
 
   request->mURL = request->mURI->GetSpecOrDefault();

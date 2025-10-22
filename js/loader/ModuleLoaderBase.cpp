@@ -1002,8 +1002,6 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
     }
 
     MOZ_ASSERT(aRequest->mLoadedScript->IsModuleScript());
-    MOZ_ASSERT(aRequest->mFetchOptions->IsCompatible(
-        aRequest->mLoadedScript->GetFetchOptions()));
 #ifdef DEBUG
     {
       bool equals = false;

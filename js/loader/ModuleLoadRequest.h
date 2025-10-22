@@ -51,7 +51,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   };
 
   ModuleLoadRequest(nsIURI* aURI, ModuleType aModuleType,
-                    ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
                     LoadContextBase* aContext, Kind aKind,
                     ModuleLoaderBase* aLoader, ModuleLoadRequest* aRootModule);
