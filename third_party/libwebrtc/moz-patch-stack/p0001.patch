@@ -1,0 +1,44 @@
+From: Philipp Hancke <phancke@meta.com>
+Date: Sat, 16 Aug 2025 12:15:50 -0700
+Subject: (cherry-pick-branch-heads/7339) [M140] sdp munging: do not misdetect
+ rtp attributes on datachannel
+
+rtcp-mux and rtcp-rsize are unconditionally set for datachannel
+but since they are not serialized in the SDP they are not parsed.
+This leads the munging detector to misclassify this.
+
+a unit test is added as a separate CL for easier backmerging.
+
+(cherry picked from commit 602b06b1125ea4d107fbfbda7d314b4157c4c74b)
+
+Bug: webrtc:414284082,chromium:40567530
+Fixed: chromium:439807581
+Change-Id: I4ebb2ad5062ea42fc47a314ed929de42f91bbea7
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/404740
+Commit-Queue: Philipp Hancke <phancke@meta.com>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#45357}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/405281
+Cr-Commit-Position: refs/branch-heads/7339@{#1}
+Cr-Branched-From: 9bd64751d9b3b35a820cb72c9029993e218146a1-refs/heads/main@{#45270}
+---
+ pc/sdp_munging_detector.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/pc/sdp_munging_detector.cc b/pc/sdp_munging_detector.cc
+index addfa25c02..f54aeaa86a 100644
+--- a/pc/sdp_munging_detector.cc
++++ b/pc/sdp_munging_detector.cc
+@@ -424,6 +424,12 @@ SdpMungingType DetermineSdpMungingType(
+     }
+     // Validate video and audio contents.
+     MediaType media_type = last_created_media_description->type();
++    bool is_rtp =
++        media_type == MediaType::AUDIO || media_type == MediaType::VIDEO;
++    if (!is_rtp) {
++      // The checks that follow only apply for RTP-based contents.
++      continue;
++    }
+     if (media_type == MediaType::VIDEO) {
+       type = DetermineVideoSdpMungingType(last_created_media_description,
+                                           media_description_to_set);
