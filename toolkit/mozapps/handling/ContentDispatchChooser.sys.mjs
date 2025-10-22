@@ -45,14 +45,10 @@ export class nsContentDispatchChooser {
     aBrowsingContext,
     aTriggeredExternally = false
   ) {
-    const isStandardProtocol = E10SUtils.STANDARD_SAFE_PROTOCOLS.includes(
-      aURI.scheme
-    );
     let callerHasPermission = this._hasProtocolHandlerPermission(
-      aHandler,
+      aHandler.type,
       aPrincipal,
-      aTriggeredExternally,
-      isStandardProtocol
+      aTriggeredExternally
     );
 
     // Force showing the dialog for links passed from outside the application.
@@ -280,18 +276,11 @@ export class nsContentDispatchChooser {
    * @param {nsIPrincipal} aPrincipal - Principal to test for permission.
    * @returns {boolean} - true if permission is set, false otherwise.
    */
-  _hasProtocolHandlerPermission(
-    aHandler,
-    aPrincipal,
-    aTriggeredExternally,
-    isStandardProtocol
-  ) {
+  _hasProtocolHandlerPermission(scheme, aPrincipal, aTriggeredExternally) {
     // If a handler is set to open externally by default we skip the dialog.
-    const { type, hasDefaultHandler, preferredApplicationHandler } = aHandler;
-
     if (
       Services.prefs.getBoolPref(
-        "network.protocol-handler.external." + type,
+        "network.protocol-handler.external." + scheme,
         false
       )
     ) {
@@ -300,16 +289,12 @@ export class nsContentDispatchChooser {
 
     if (
       !aPrincipal ||
-      (aPrincipal.isSystemPrincipal && !aTriggeredExternally) ||
-      (!isStandardProtocol &&
-        hasDefaultHandler &&
-        !preferredApplicationHandler &&
-        aTriggeredExternally)
+      (aPrincipal.isSystemPrincipal && !aTriggeredExternally)
     ) {
       return false;
     }
 
-    let key = this._getSkipProtoDialogPermissionKey(type);
+    let key = this._getSkipProtoDialogPermissionKey(scheme);
     return (
       Services.perms.testPermissionFromPrincipal(aPrincipal, key) ===
       Services.perms.ALLOW_ACTION

@@ -570,16 +570,3 @@ function runExtProtocolSandboxTest(options) {
     }
   );
 }
-
-function getSystemProtocol() {
-  if (AppConstants.platform == "macosx") {
-    return "itunes";
-  } else if (AppConstants.platform == "win") {
-    return "mms";
-  }
-
-  info(
-    "Skipping this test since there isn't a suitable default protocol on this platform"
-  );
-  return null;
-}
