@@ -23,9 +23,14 @@ class SettingsSearchMiddleware(
         next: (SettingsSearchAction) -> Unit,
         action: SettingsSearchAction,
     ) {
+        val store = context.store as SettingsSearchStore
         when (action) {
             is SettingsSearchAction.SearchQueryUpdated -> {
                 next(action)
+
+                if (action.query.isNotBlank()) {
+                    store.dispatch(SettingsSearchAction.NoResultsFound(action.query))
+                }
             }
             else -> {
                 next(action)

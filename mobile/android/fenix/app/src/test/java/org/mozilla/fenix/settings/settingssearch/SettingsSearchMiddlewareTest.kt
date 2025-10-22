@@ -48,7 +48,7 @@ class SettingsSearchMiddlewareTest {
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
         store.waitUntilIdle()
 
-        assert(store.state is SettingsSearchState.SearchInProgress)
+        assert(store.state is SettingsSearchState.NoSearchResults)
         assert(store.state.searchQuery == query)
     }
 }
