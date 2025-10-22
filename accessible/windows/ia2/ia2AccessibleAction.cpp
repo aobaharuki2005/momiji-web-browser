@@ -62,19 +62,7 @@ ia2AccessibleAction::doAction(long aActionIndex) {
 
 STDMETHODIMP
 ia2AccessibleAction::get_description(long aActionIndex, BSTR* aDescription) {
-  if (!aDescription) return E_INVALIDARG;
-  *aDescription = nullptr;
-
-  Accessible* acc = Acc();
-  if (!acc) return CO_E_OBJNOTCONNECTED;
-
-  nsAutoString description;
-  uint8_t index = static_cast<uint8_t>(aActionIndex);
-  acc->ActionDescriptionAt(index, description);
-  if (description.IsEmpty()) return S_FALSE;
-
-  *aDescription = ::SysAllocStringLen(description.get(), description.Length());
-  return *aDescription ? S_OK : E_OUTOFMEMORY;
+  return get_localizedName(aActionIndex, aDescription);
 }
 
 STDMETHODIMP
@@ -147,7 +135,17 @@ STDMETHODIMP
 ia2AccessibleAction::get_localizedName(long aActionIndex,
                                        BSTR* aLocalizedName) {
   if (!aLocalizedName) return E_INVALIDARG;
-
   *aLocalizedName = nullptr;
-  return E_NOTIMPL;
+
+  Accessible* acc = Acc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
+
+  nsAutoString description;
+  uint8_t index = static_cast<uint8_t>(aActionIndex);
+  acc->ActionDescriptionAt(index, description);
+  if (description.IsEmpty()) return S_FALSE;
+
+  *aLocalizedName =
+      ::SysAllocStringLen(description.get(), description.Length());
+  return *aLocalizedName ? S_OK : E_OUTOFMEMORY;
 }
