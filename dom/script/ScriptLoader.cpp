@@ -1171,7 +1171,7 @@ void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
     return;
   }
 
-  ScriptHashKey key(this, aRequest);
+  ScriptHashKey key(this, aRequest, aRequest->mFetchOptions, aRequest->mURI);
   auto cacheResult = mCache->Lookup(*this, key, /* aSyncLoad = */ true);
   if (cacheResult.mState != CachedSubResourceState::Complete) {
     aRequest->NoCacheEntryFound();
@@ -3233,7 +3233,7 @@ ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
     return CacheBehavior::Insert;
   }
 
-  ScriptHashKey key(this, aRequest);
+  ScriptHashKey key(this, aRequest, aRequest->getLoadedScript());
   auto cacheResult = mCache->Lookup(*this, key,
                                     /* aSyncLoad = */ true);
   if (cacheResult.mState == CachedSubResourceState::Complete) {
@@ -3265,13 +3265,14 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
   aRequest->ConvertToCachedStencil();
 
   if (cacheBehavior == CacheBehavior::Insert) {
-    auto loadData = MakeRefPtr<ScriptLoadData>(this, aRequest);
+    auto loadData =
+        MakeRefPtr<ScriptLoadData>(this, aRequest, aRequest->getLoadedScript());
     mCache->Insert(*loadData);
     LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
          aRequest->mURI->GetSpecOrDefault().get()));
   } else {
     MOZ_ASSERT(cacheBehavior == CacheBehavior::Evict);
-    ScriptHashKey key(this, aRequest);
+    ScriptHashKey key(this, aRequest, aRequest->getLoadedScript());
     mCache->Evict(key);
     LOG(("ScriptLoader (%p): Evicting in-memory cache for %s.", this,
          aRequest->mURI->GetSpecOrDefault().get()));
