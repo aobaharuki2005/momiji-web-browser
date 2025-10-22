@@ -34,4 +34,11 @@ sealed interface SettingsSearchAction : Action {
         val query: String,
         val results: List<SettingsSearchItem>,
     ) : SettingsSearchAction
+
+    /**
+     * User has clicked on a search result item.
+     *
+     * @property item [SettingsSearchItem] that was clicked.
+     */
+    data class ResultItemClicked(val item: SettingsSearchItem) : SettingsSearchAction
 }

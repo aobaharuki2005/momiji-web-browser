@@ -53,6 +53,7 @@ private fun reduce(state: SettingsSearchState, action: SettingsSearchAction): Se
                 searchResults = action.results,
             )
         }
+        is SettingsSearchAction.ResultItemClicked -> state
     }
 }
 
