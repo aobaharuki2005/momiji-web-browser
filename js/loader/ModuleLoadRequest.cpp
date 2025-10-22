@@ -51,6 +51,7 @@ ModuleLoadRequest::ModuleLoadRequest(
     : ScriptLoadRequest(ScriptKind::eModule, aIntegrity, aReferrer, aContext),
       mKind(aKind),
       mModuleType(aModuleType),
+      mIsDynamicImport(aKind == Kind::DynamicImport),
       mErroredLoadingImports(false),
       mLoader(aLoader),
       mRootModule(aRootModule) {

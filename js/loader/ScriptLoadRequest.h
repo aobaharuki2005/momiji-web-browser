@@ -212,7 +212,6 @@ class ScriptLoadRequest : public nsISupports,
     mMemoryCachingPlan = CachingPlan::PassedCondition;
   }
 
- public:
   mozilla::CORSMode CORSMode() const { return FetchOptions()->mCORSMode; }
 
   bool HasLoadContext() const { return mLoadContext; }
@@ -231,11 +230,28 @@ class ScriptLoadRequest : public nsISupports,
   const LoadedScript* getLoadedScript() const { return mLoadedScript.get(); }
   LoadedScript* getLoadedScript() { return mLoadedScript.get(); }
 
-  const ScriptKind mKind;  // Whether this is a classic script or a module
-                           // script.
+  bool HasSourceMapURL() const { return mHasSourceMapURL_; }
+  const nsString& GetSourceMapURL() const {
+    MOZ_ASSERT(mHasSourceMapURL_);
+    return mMaybeSourceMapURL_;
+  }
+  void SetSourceMapURL(const nsString& aSourceMapURL) {
+    MOZ_ASSERT(!mHasSourceMapURL_);
+    mMaybeSourceMapURL_ = aSourceMapURL;
+    mHasSourceMapURL_ = true;
+  }
 
-  State mState;           // Are we still waiting for a load to complete?
-  bool mFetchSourceOnly;  // Request source, not cached bytecode.
+ public:
+  // Fields.
+
+  // Whether this is a classic script, a module script, or an import map.
+  const ScriptKind mKind;
+
+  // Are we still waiting for a load to complete?
+  State mState;
+
+  // Request source, not cached bytecode.
+  bool mFetchSourceOnly;
 
   // Becomes true if this has source map url.
   //
@@ -267,17 +283,6 @@ class ScriptLoadRequest : public nsISupports,
   // Do not access directly.
   // Use HasSourceMapURL(), SetSourceMapURL(), and GetSourceMapURL().
   nsString mMaybeSourceMapURL_;
-
-  bool HasSourceMapURL() const { return mHasSourceMapURL_; }
-  const nsString& GetSourceMapURL() const {
-    MOZ_ASSERT(mHasSourceMapURL_);
-    return mMaybeSourceMapURL_;
-  }
-  void SetSourceMapURL(const nsString& aSourceMapURL) {
-    MOZ_ASSERT(!mHasSourceMapURL_);
-    mMaybeSourceMapURL_ = aSourceMapURL;
-    mHasSourceMapURL_ = true;
-  }
 
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
