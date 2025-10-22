@@ -275,7 +275,7 @@ Result<LinkStyle::Update, nsresult> LinkStyle::DoUpdateStyleSheet(
   Maybe<SheetInfo> info = GetStyleSheetInfo();
   if (aForceUpdate == ForceUpdate::No && mStyleSheet && info &&
       !info->mIsInline && info->mURI) {
-    if (nsIURI* oldURI = mStyleSheet->GetSheetURI()) {
+    if (nsIURI* oldURI = mStyleSheet->GetOriginalURI()) {
       bool equal;
       nsresult rv = oldURI->Equals(info->mURI, &equal);
       if (NS_SUCCEEDED(rv) && equal) {

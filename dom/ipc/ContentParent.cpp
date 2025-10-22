@@ -2779,7 +2779,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   // send the file URL instead.
   auto* sheetCache = GlobalStyleSheetCache::Singleton();
   if (StyleSheet* ucs = sheetCache->GetUserContentSheet()) {
-    xpcomInit.userContentSheetURL() = ucs->GetSheetURI();
+    xpcomInit.userContentSheetURL() = ucs->GetOriginalURI();
   } else {
     xpcomInit.userContentSheetURL() = nullptr;
   }
@@ -2942,17 +2942,17 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     // shouldn't matter which we look at.
 
     for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
-      (void)SendLoadAndRegisterSheet(sheet->GetSheetURI(),
+      (void)SendLoadAndRegisterSheet(sheet->GetOriginalURI(),
                                      nsIStyleSheetService::AGENT_SHEET);
     }
 
     for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
-      (void)SendLoadAndRegisterSheet(sheet->GetSheetURI(),
+      (void)SendLoadAndRegisterSheet(sheet->GetOriginalURI(),
                                      nsIStyleSheetService::USER_SHEET);
     }
 
     for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
-      (void)SendLoadAndRegisterSheet(sheet->GetSheetURI(),
+      (void)SendLoadAndRegisterSheet(sheet->GetOriginalURI(),
                                      nsIStyleSheetService::AUTHOR_SHEET);
     }
   }

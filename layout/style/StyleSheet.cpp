@@ -54,7 +54,6 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentSheetToUse,
       mTitle(aCopy.mTitle),
       mDocumentOrShadowRoot(aDocOrShadowRootToUse),
       mURLData(aCopy.mURLData),
-      mSheetURI(aCopy.mSheetURI),
       mOriginalSheetURI(aCopy.mOriginalSheetURI),
       mParsingMode(aCopy.mParsingMode),
       mState(aCopy.mState),
@@ -991,7 +990,9 @@ void StyleSheet::List(FILE* aOut, int32_t aIndent) {
   line.AppendLiteral("/* ");
 
   nsCString url;
-  GetSheetURI()->GetSpec(url);
+  if (auto* uri = GetOriginalURI()) {
+    uri->GetSpec(url);
+  }
   if (url.IsEmpty()) {
     line.AppendLiteral("(no URL)");
   } else {
@@ -1158,9 +1159,7 @@ already_AddRefed<StyleSheet> StyleSheet::CreateConstructedSheet(
   }
 
   auto referrerInfo = MakeRefPtr<ReferrerInfo>(aConstructorDocument);
-  nsIURI* sheetURI = aConstructorDocument.GetDocumentURI();
-  nsIURI* originalURI = nullptr;
-  sheet->SetURIs(sheetURI, originalURI, baseURI, referrerInfo,
+  sheet->SetURIs(nullptr, baseURI, referrerInfo,
                  aConstructorDocument.NodePrincipal());
   sheet->mConstructorDocument = &aConstructorDocument;
 
@@ -1259,15 +1258,13 @@ const StyleUseCounters* StyleSheet::UseCounters() const {
   return Servo_StyleSheet_UseCounters(RawContents());
 }
 
-void StyleSheet::SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
-                         nsIURI* aBaseURI, nsIReferrerInfo* aReferrerInfo,
+void StyleSheet::SetURIs(nsIURI* aOriginalSheetURI, nsIURI* aBaseURI,
+                         nsIReferrerInfo* aReferrerInfo,
                          nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aSheetURI);
   MOZ_ASSERT(aBaseURI);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aReferrerInfo);
   mURLData = MakeAndAddRef<URLExtraData>(aBaseURI, aReferrerInfo, aPrincipal);
-  mSheetURI = aSheetURI;
   mOriginalSheetURI = aOriginalSheetURI;
 }
 
@@ -1534,3 +1531,4 @@ bool StyleSheet::IsReadOnly() const {
 }
 
 }  // namespace mozilla
+//

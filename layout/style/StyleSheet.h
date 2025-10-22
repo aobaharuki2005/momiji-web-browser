@@ -196,15 +196,13 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   // Whether the sheet is for an inline <style> element.
   bool IsInline() const { return !GetOriginalURI(); }
-
-  nsIURI* GetSheetURI() const { return mSheetURI; }
   /**
    * Get the URI this sheet was originally loaded from, if any. Can return null.
    */
   nsIURI* GetOriginalURI() const { return mOriginalSheetURI; }
   nsIURI* GetBaseURI() const;
 
-  void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI,
+  void SetURIs(nsIURI* aOriginalSheetURI, nsIURI* aBaseURI,
                nsIReferrerInfo* aReferrerInfo, nsIPrincipal* aPrincipal);
 
   void SetOriginClean(bool aValue) { Inner().mOriginClean = aValue; }
@@ -597,7 +595,6 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   RefPtr<dom::MediaList> mMedia;
 
   RefPtr<URLExtraData> mURLData;
-  RefPtr<nsIURI> mSheetURI;
   RefPtr<nsIURI> mOriginalSheetURI;
 
   // mParsingMode controls access to nonstandard style constructs that

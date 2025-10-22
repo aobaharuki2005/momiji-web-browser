@@ -313,8 +313,7 @@ void GlobalStyleSheetCache::LoadSheetFromSharedMemory(
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       dom::ReferrerInfo::CreateForExternalCSSResources(sheet, uri);
-  sheet->SetURIs(uri, uri, uri, referrerInfo,
-                 nsContentUtils::GetSystemPrincipal());
+  sheet->SetURIs(uri, uri, referrerInfo, nsContentUtils::GetSystemPrincipal());
   sheet->SetSharedContents(aHeader->mSheets[i]);
   sheet->SetComplete();
   URLExtraData::sShared[i] = sheet->URLData();

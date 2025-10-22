@@ -667,7 +667,7 @@ void SheetLoadData::OnStartRequest(nsIRequest* aRequest) {
       ReferrerInfo::CreateForExternalCSSResources(
           mSheet, finalURI,
           nsContentUtils::GetReferrerPolicyFromChannel(channel));
-  mSheet->SetURIs(finalURI, originalURI, finalURI, referrerInfo, principal);
+  mSheet->SetURIs(originalURI, finalURI, referrerInfo, principal);
   mSheet->SetOriginClean([&] {
     if (mParentData && !mParentData->mSheet->IsOriginClean()) {
       return false;
@@ -755,7 +755,7 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     const auto errorMessage = flag == nsIScriptError::errorFlag
                                   ? "MimeNotCss"_ns
                                   : "MimeNotCssWarn"_ns;
-    NS_ConvertUTF8toUTF16 sheetUri(mSheet->GetSheetURI()->GetSpecOrDefault());
+    NS_ConvertUTF8toUTF16 sheetUri(mURI->GetSpecOrDefault());
     NS_ConvertUTF8toUTF16 contentType16(contentType);
 
     nsAutoCString referrerSpec;
@@ -962,7 +962,7 @@ Loader::CreateSheet(nsIURI* aURI, nsIContent* aLinkingContent,
       ReferrerInfo::CreateForExternalCSSResources(sheet, aURI);
   // NOTE: If the sheet is loaded, then SetURIs gets called again with the right
   // principal / final uri / etc.
-  sheet->SetURIs(aURI, aURI, aURI, referrerInfo, LoaderPrincipal());
+  sheet->SetURIs(aURI, aURI, referrerInfo, LoaderPrincipal());
   // Load errors should be origin-dirty, even if same-origin.
   sheet->SetOriginClean(false);
   LOG(("  Needs parser"));
@@ -1798,9 +1798,6 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   // Use the document's base URL so that @import in the inline sheet picks up
   // the right base.
   nsIURI* baseURI = aInfo.mContent->GetBaseURI();
-  nsIURI* sheetURI = aInfo.mContent->OwnerDoc()->GetDocumentURI();
-  nsIURI* originalURI = nullptr;
-
   MOZ_ASSERT(aInfo.mIntegrity.IsEmpty());
   nsIPrincipal* loadingPrincipal = LoaderPrincipal();
   nsIPrincipal* principal = aInfo.mTriggeringPrincipal
@@ -1828,8 +1825,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
                                    SRIMetadata{});
     nsIReferrerInfo* referrerInfo =
         aInfo.mContent->OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
-    sheet->SetURIs(sheetURI, originalURI, baseURI, referrerInfo,
-                   sheetPrincipal);
+    sheet->SetURIs(nullptr, baseURI, referrerInfo, sheetPrincipal);
     // If an extension creates an inline stylesheet, we don't want to consider
     // it same-origin with the page.
     // FIXME(emilio): That's rather odd.
