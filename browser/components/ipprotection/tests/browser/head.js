@@ -265,6 +265,7 @@ add_setup(async function setupVPN() {
     setupSandbox.restore();
     cleanupExperiment();
     CustomizableUI.reset();
+    Services.prefs.clearUserPref(IPProtectionWidget.ADDED_PREF);
   });
 });
 

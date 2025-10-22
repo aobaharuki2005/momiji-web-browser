@@ -259,3 +259,52 @@ add_task(async function toolbar_placement_customized() {
     start.position
   );
 });
+
+/**
+ * Tests that toolbar widget can be removed and will not be re-added.
+ */
+add_task(async function toolbar_removed() {
+  setupService({
+    isSignedIn: true,
+    isEnrolled: true,
+  });
+
+  let start = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
+  Assert.equal(
+    start.area,
+    CustomizableUI.AREA_NAVBAR,
+    "IP Protection widget is initially added to the nav bar"
+  );
+
+  // Remove from the toolbar
+  CustomizableUI.removeWidgetFromArea(IPProtectionWidget.WIDGET_ID);
+
+  let end = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);
+  Assert.equal(end, null, "IP Protection widget is removed");
+
+  // Disable the feature
+  await cleanupExperiment();
+
+  const waitForStateChange = BrowserTestUtils.waitForEvent(
+    lazy.IPProtectionService,
+    "IPProtectionService:StateChanged",
+    false,
+    () => lazy.IPProtectionService.state === lazy.IPProtectionStates.READY
+  );
+
+  // Reenable the feature
+  await setupExperiment();
+
+  await waitForStateChange;
+
+  let restored = CustomizableUI.getPlacementOfWidget(
+    IPProtectionWidget.WIDGET_ID
+  );
+  Assert.equal(restored, null, "IP Protection widget is still removed");
+
+  CustomizableUI.addWidgetToArea(
+    IPProtectionWidget.WIDGET_ID,
+    start.area,
+    start.position
+  );
+});
