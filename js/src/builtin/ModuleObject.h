@@ -426,8 +426,6 @@ class ModuleObject : public NativeObject {
   ModuleEnvironmentObject* environment() const;
   ModuleNamespaceObject* namespace_();
   ModuleStatus status() const;
-  mozilla::Maybe<uint32_t> maybeDfsIndex() const;
-  uint32_t dfsIndex() const;
   mozilla::Maybe<uint32_t> maybeDfsAncestorIndex() const;
   uint32_t dfsAncestorIndex() const;
   bool hadEvaluationError() const;
@@ -445,9 +443,8 @@ class ModuleObject : public NativeObject {
   IndirectBindingMap& importBindings();
 
   void setStatus(ModuleStatus newStatus);
-  void setDfsIndex(uint32_t index);
   void setDfsAncestorIndex(uint32_t index);
-  void clearDfsIndexes();
+  void clearDfsAncestorIndex();
 
   static PromiseObject* createTopLevelCapability(JSContext* cx,
                                                  Handle<ModuleObject*> module);

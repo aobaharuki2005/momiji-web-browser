@@ -1734,7 +1734,7 @@ static bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
       MOZ_ASSERT(m->status() == ModuleStatus::Linking);
       // Step 4.a.ii. Set m.[[Status]] to unlinked.
       m->setStatus(ModuleStatus::Unlinked);
-      m->clearDfsIndexes();
+      m->clearDfsAncestorIndex();
     }
 
     // Step 4.b. Assert: module.[[Status]] is unlinked.
@@ -1797,8 +1797,8 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
   // Step 4. Set module.[[Status]] to linking.
   module->setStatus(ModuleStatus::Linking);
 
-  // Step 5. Set module.[[DFSIndex]] to index.
-  module->setDfsIndex(index);
+  // Step 5. Let moduleIndex be index.
+  size_t moduleIndex = index;
 
   // Step 6. Set module.[[DFSAncestorIndex]] to index.
   module->setDfsAncestorIndex(index);
@@ -1865,11 +1865,11 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
   // Step 11. Assert: module occurs exactly once in stack.
   MOZ_ASSERT(CountElements(stack, module) == 1);
 
-  // Step 12. Assert: module.[[DFSAncestorIndex]] <= module.[[DFSIndex]].
-  MOZ_ASSERT(module->dfsAncestorIndex() <= module->dfsIndex());
+  // Step 12. Assert: module.[[DFSAncestorIndex]] <= moduleIndex.
+  MOZ_ASSERT(module->dfsAncestorIndex() <= moduleIndex);
 
-  // Step 13. If module.[[DFSAncestorIndex]] = module.[[DFSIndex]], then
-  if (module->dfsAncestorIndex() == module->dfsIndex()) {
+  // Step 13. If module.[[DFSAncestorIndex]] = moduleIndex, then
+  if (module->dfsAncestorIndex() == moduleIndex) {
     // Step 13.a.
     bool done = false;
 
@@ -2100,8 +2100,8 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
   // Step 5. Set module.[[Status]] to evaluating.
   module->setStatus(ModuleStatus::Evaluating);
 
-  // Step 6. Set module.[[DFSIndex]] to index.
-  module->setDfsIndex(index);
+  // Step 6. Let moduleIndex be index.
+  size_t moduleIndex = index;
 
   // Step 7. Set module.[[DFSAncestorIndex]] to index.
   module->setDfsAncestorIndex(index);
@@ -2215,11 +2215,11 @@ static bool InnerModuleEvaluation(JSContext* cx, Handle<ModuleObject*> module,
   // Step 14. Assert: module occurs exactly once in stack.
   MOZ_ASSERT(CountElements(stack, module) == 1);
 
-  // Step 15. Assert: module.[[DFSAncestorIndex]] <= module.[[DFSIndex]].
-  MOZ_ASSERT(module->dfsAncestorIndex() <= module->dfsIndex());
+  // Step 15. Assert: module.[[DFSAncestorIndex]] <= moduleIndex.
+  MOZ_ASSERT(module->dfsAncestorIndex() <= moduleIndex);
 
-  // Step 16. If module.[[DFSAncestorIndex]] = module.[[DFSIndex]], then:
-  if (module->dfsAncestorIndex() == module->dfsIndex()) {
+  // Step 16. If module.[[DFSAncestorIndex]] = momoduleIndex, then:
+  if (module->dfsAncestorIndex() == moduleIndex) {
     // Step 16.a. Let done be false.
     bool done = false;
 

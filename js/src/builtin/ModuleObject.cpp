@@ -770,12 +770,10 @@ class js::CyclicModuleFields {
 
  private:
   // Flag bits that determine whether other fields are present.
-  bool hasDfsIndex : 1;
   bool hasDfsAncestorIndex : 1;
   bool hasPendingAsyncDependencies : 1;
 
   // Fields whose presence is conditional on the flag bits above.
-  uint32_t dfsIndex = 0;
   uint32_t dfsAncestorIndex = 0;
   uint32_t pendingAsyncDependencies = 0;
 
@@ -811,11 +809,9 @@ class js::CyclicModuleFields {
   Span<const ExportEntry> indirectExportEntries() const;
   Span<const ExportEntry> starExportEntries() const;
 
-  void setDfsIndex(uint32_t index);
-  Maybe<uint32_t> maybeDfsIndex() const;
   void setDfsAncestorIndex(uint32_t index);
   Maybe<uint32_t> maybeDfsAncestorIndex() const;
-  void clearDfsIndexes();
+  void clearDfsAncestorIndex();
 
   void setPendingAsyncDependencies(uint32_t newValue);
   Maybe<uint32_t> maybePendingAsyncDependencies() const;
@@ -823,7 +819,6 @@ class js::CyclicModuleFields {
 
 CyclicModuleFields::CyclicModuleFields()
     : hasTopLevelAwait(false),
-      hasDfsIndex(false),
       hasDfsAncestorIndex(false),
       hasPendingAsyncDependencies(false) {}
 
@@ -874,15 +869,6 @@ Span<const ExportEntry> CyclicModuleFields::starExportEntries() const {
               exportEntries.end());
 }
 
-void CyclicModuleFields::setDfsIndex(uint32_t index) {
-  dfsIndex = index;
-  hasDfsIndex = true;
-}
-
-Maybe<uint32_t> CyclicModuleFields::maybeDfsIndex() const {
-  return hasDfsIndex ? Some(dfsIndex) : Nothing();
-}
-
 void CyclicModuleFields::setDfsAncestorIndex(uint32_t index) {
   dfsAncestorIndex = index;
   hasDfsAncestorIndex = true;
@@ -892,9 +878,7 @@ Maybe<uint32_t> CyclicModuleFields::maybeDfsAncestorIndex() const {
   return hasDfsAncestorIndex ? Some(dfsAncestorIndex) : Nothing();
 }
 
-void CyclicModuleFields::clearDfsIndexes() {
-  dfsIndex = 0;
-  hasDfsIndex = false;
+void CyclicModuleFields::clearDfsAncestorIndex() {
   dfsAncestorIndex = 0;
   hasDfsAncestorIndex = false;
 }
@@ -1193,16 +1177,6 @@ AsyncEvaluationOrder const& ModuleObject::asyncEvaluationOrder() const {
   return cyclicModuleFields()->asyncEvaluationOrder;
 }
 
-Maybe<uint32_t> ModuleObject::maybeDfsIndex() const {
-  return cyclicModuleFields()->maybeDfsIndex();
-}
-
-uint32_t ModuleObject::dfsIndex() const { return maybeDfsIndex().value(); }
-
-void ModuleObject::setDfsIndex(uint32_t index) {
-  cyclicModuleFields()->setDfsIndex(index);
-}
-
 Maybe<uint32_t> ModuleObject::maybeDfsAncestorIndex() const {
   return cyclicModuleFields()->maybeDfsAncestorIndex();
 }
@@ -1215,8 +1189,8 @@ void ModuleObject::setDfsAncestorIndex(uint32_t index) {
   cyclicModuleFields()->setDfsAncestorIndex(index);
 }
 
-void ModuleObject::clearDfsIndexes() {
-  cyclicModuleFields()->clearDfsIndexes();
+void ModuleObject::clearDfsAncestorIndex() {
+  cyclicModuleFields()->clearDfsAncestorIndex();
 }
 
 PromiseObject* ModuleObject::maybeTopLevelCapability() const {

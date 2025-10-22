@@ -481,8 +481,6 @@ DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, indirectExportEntries,
                                SpanToArrayFilter<ShellExportEntryWrapper>)
 DEFINE_NATIVE_GETTER_FUNCTIONS(ModuleObject, starExportEntries,
                                SpanToArrayFilter<ShellExportEntryWrapper>)
-DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsIndex, Uint32OrUndefinedValue,
-                        IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, maybeDfsAncestorIndex,
                         Uint32OrUndefinedValue, IdentFilter)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, hasTopLevelAwait, BooleanValue,
@@ -510,7 +508,6 @@ static const JSPropertySpec ShellModuleObjectWrapper_accessors[] = {
            ShellModuleObjectWrapper_indirectExportEntriesGetter, 0),
     JS_PSG("starExportEntries",
            ShellModuleObjectWrapper_starExportEntriesGetter, 0),
-    JS_PSG("dfsIndex", ShellModuleObjectWrapper_maybeDfsIndexGetter, 0),
     JS_PSG("dfsAncestorIndex",
            ShellModuleObjectWrapper_maybeDfsAncestorIndexGetter, 0),
     JS_PSG("hasTopLevelAwait", ShellModuleObjectWrapper_hasTopLevelAwaitGetter,
