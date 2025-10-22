@@ -864,13 +864,18 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     if (error instanceof StartException) {
       final StartException startError = (StartException) error;
-      if (startError.errorCode == IChildProcess.STARTED_BUSY) {
+      if (isContent(info.type) && startError.errorCode == IChildProcess.STARTED_BUSY) {
         // This process is owned by a different runtime, so we can't use
-        // it. We will keep retrying indefinitely until we find a non-busy process.
+        // it. For content processes we will keep retrying indefinitely until
+        // we find a non-busy process.
         // Note: this strategy is pretty bad, we go through each process in
         // sequence until one works, the multiple runtime case is test-only
         // for now, so that's ok. We can improve on this if we eventually
         // end up needing something fancier.
+        // For non-content processes there is only a single service defined for
+        // each process type, meaning this will never succeed while an instance
+        // of that process is alive. We therefore do *not* want to retry
+        // indefinitely. See bug 1844829.
         return start(info, retryLog);
       }
     }

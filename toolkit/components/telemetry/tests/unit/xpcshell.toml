@@ -21,10 +21,10 @@ skip-if = ["os == 'android'"] # Disabled due to crashes (see bug 1331366)
 tags = "addons"
 
 ["test_CoveragePing.js"]
-requesttimeoutfactor = 5  # Slow on Android
+skip-if = ["os == 'android'"] # Legacy telemetry is always disabled on Android
 
 ["test_EventPing.js"]
-requesttimeoutfactor = 5  # Slow on Android
+skip-if = ["os == 'android'"] # Legacy telemetry is always disabled on Android
 tags = "coverage"
 
 ["test_HealthPing.js"]
@@ -35,10 +35,10 @@ skip-if = [
 tags = "addons"
 
 ["test_MigratePendingPings.js"]
-requesttimeoutfactor = 3  # Slow on Android
+skip-if = ["os == 'android'"] # Legacy telemetry is always disabled on Android
 
 ["test_PingAPI.js"]
-requesttimeoutfactor = 3  # Slow on Android
+skip-if = ["os == 'android'"] # Legacy telemetry is always disabled on Android
 
 ["test_PingSender.js"]
 skip-if = ["os == 'android'"]
@@ -76,7 +76,7 @@ skip-if = ["os == 'android' && processor == 'x86_64'"]  # Disabled as Android/Ge
 tags = "addons"
 
 ["test_TelemetryController_idle.js"]
-requesttimeoutfactor = 3  # Slow on Android
+skip-if = ["os == 'android'"] # Legacy telemetry is always disabled on Android
 
 ["test_TelemetryEnvironment.js"]
 requesttimeoutfactor = 2  # Slow on Windows
@@ -122,7 +122,7 @@ skip-if = ["os == 'linux' && verify && debug"]
 skip-if = ["os == 'android'"]
 
 ["test_TelemetrySession_activeTicks.js"]
-requesttimeoutfactor = 3  # Slow on Android
+skip-if = ["os == 'android'"] # Legacy telemetry is always disabled on Android
 
 ["test_TelemetryTimestamps.js"]
 
