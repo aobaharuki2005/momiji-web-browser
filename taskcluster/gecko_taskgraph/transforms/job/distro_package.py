@@ -178,7 +178,7 @@ def common_package(config, job, taskdesc, distro, version):
         # Make the artifacts directory usable as an APT repository.
         "apt-ftparchive sources apt | gzip -c9 > apt/Sources.gz && "
         "apt-ftparchive packages apt | gzip -c9 > apt/Packages.gz".format(
-            root_url=get_root_url(False),
+            root_url=get_root_url(),
             package=package,
             src_url=src_url,
             src_file=src_file,
