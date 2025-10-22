@@ -1446,6 +1446,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void DidSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>, bool aOldValue);
 
+  void DidSet(FieldIndex<IDX_ForceOffline>, bool aOldValue);
+
   // Allow if the process attemping to set field is the same as the owning
   // process. Deprecated. New code that might use this should generally be moved
   // to WindowContext or be settable only by the parent process.

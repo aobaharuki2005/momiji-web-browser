@@ -4939,8 +4939,12 @@ already_AddRefed<CacheStorage> nsGlobalWindowInner::GetCaches(
 void nsGlobalWindowInner::FireOfflineStatusEventIfChanged() {
   if (!IsCurrentInnerWindow()) return;
 
+  bool isOffline =
+      NS_IsOffline() ||
+      (GetBrowsingContext() && GetBrowsingContext()->Top()->GetForceOffline());
+
   // Don't fire an event if the status hasn't changed
-  if (mWasOffline == NS_IsOffline()) {
+  if (mWasOffline == isOffline) {
     return;
   }
 

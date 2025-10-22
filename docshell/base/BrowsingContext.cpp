@@ -4208,6 +4208,22 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
   }
 }
 
+void BrowsingContext::DidSet(FieldIndex<IDX_ForceOffline>, bool aOldValue) {
+  const bool newValue = ForceOffline();
+  if (newValue == aOldValue) {
+    return;
+  }
+  PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
+    if (RefPtr<WindowContext> windowContext =
+            aBrowsingContext->GetCurrentWindowContext()) {
+      if (nsCOMPtr<nsPIDOMWindowInner> window =
+              windowContext->GetInnerWindow()) {
+        nsGlobalWindowInner::Cast(window)->FireOfflineStatusEventIfChanged();
+      }
+    }
+  });
+}
+
 bool BrowsingContext::IsPopupAllowed() {
   for (auto* context = GetCurrentWindowContext(); context;
        context = context->GetParentWindowContext()) {
