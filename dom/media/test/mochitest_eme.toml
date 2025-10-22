@@ -724,6 +724,10 @@ scheme = "https"
 skip-if = ["os == 'android'"] # bug 1149374
 scheme = "https"
 
+["test_eme_output_config_check.html"]
+skip-if = ["os == 'android'"] # bug 1900626 : no clearkey on Android
+scheme = "https"
+
 ["test_eme_playback.html"]
 skip-if = [
   "os == 'android'", # bug 1149374
