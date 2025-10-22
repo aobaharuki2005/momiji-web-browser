@@ -19,16 +19,18 @@
 
 namespace mozilla::dom {
 
-ScriptHashKey::ScriptHashKey(ScriptLoader* aLoader,
-                             const JS::loader::ScriptLoadRequest* aRequest)
+ScriptHashKey::ScriptHashKey(
+    ScriptLoader* aLoader, const JS::loader::ScriptLoadRequest* aRequest,
+    const JS::loader::ScriptFetchOptions* aFetchOptions,
+    const nsCOMPtr<nsIURI> aURI)
     : PLDHashEntryHdr(),
-      mURI(aRequest->mURI),
+      mURI(aURI),
       mLoaderPrincipal(aLoader->LoaderPrincipal()),
       mPartitionPrincipal(aLoader->PartitionedPrincipal()),
-      mCORSMode(aRequest->CORSMode()),
+      mCORSMode(aFetchOptions->mCORSMode),
       mSRIMetadata(aRequest->mIntegrity),
       mKind(aRequest->mKind),
-      mNonce(aRequest->Nonce()),
+      mNonce(aFetchOptions->mNonce),
       mIsLinkRelPreload(aRequest->GetScriptLoadContext()->IsPreload()) {
   if (mKind == JS::loader::ScriptKind::eClassic) {
     if (aRequest->GetScriptLoadContext()->HasScriptElement()) {
@@ -38,6 +40,12 @@ ScriptHashKey::ScriptHashKey(ScriptLoader* aLoader,
 
   MOZ_COUNT_CTOR(ScriptHashKey);
 }
+
+ScriptHashKey::ScriptHashKey(ScriptLoader* aLoader,
+                             const JS::loader::ScriptLoadRequest* aRequest,
+                             const JS::loader::LoadedScript* aLoadedScript)
+    : ScriptHashKey(aLoader, aRequest, aRequest->mFetchOptions,
+                    aRequest->mURI) {}
 
 ScriptHashKey::ScriptHashKey(const ScriptLoadData& aLoadData)
     : ScriptHashKey(aLoadData.CacheKey()) {}
@@ -84,11 +92,12 @@ bool ScriptHashKey::KeyEquals(const ScriptHashKey& aKey) const {
 NS_IMPL_ISUPPORTS(ScriptLoadData, nsISupports)
 
 ScriptLoadData::ScriptLoadData(ScriptLoader* aLoader,
-                               JS::loader::ScriptLoadRequest* aRequest)
+                               JS::loader::ScriptLoadRequest* aRequest,
+                               JS::loader::LoadedScript* aLoadedScript)
     : mExpirationTime(aRequest->ExpirationTime()),
       mLoader(aLoader),
-      mKey(aLoader, aRequest),
-      mLoadedScript(aRequest->getLoadedScript()),
+      mKey(aLoader, aRequest, aLoadedScript),
+      mLoadedScript(aLoadedScript),
       mNetworkMetadata(aRequest->mNetworkMetadata) {}
 
 NS_IMPL_ISUPPORTS(SharedScriptCache, nsIMemoryReporter)

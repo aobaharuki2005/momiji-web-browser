@@ -9,6 +9,7 @@
 
 #include "PLDHashTable.h"                    // PLDHashEntryHdr
 #include "js/loader/LoadedScript.h"          // JS::loader::LoadedScript
+#include "js/loader/ScriptFetchOptions.h"    // JS::loader::ScriptFetchOptions
 #include "js/loader/ScriptKind.h"            // JS::loader::ScriptKind
 #include "js/loader/ScriptLoadRequest.h"     // JS::loader::ScriptLoadRequest
 #include "mozilla/CORSMode.h"                // mozilla::CORSMode
@@ -65,7 +66,12 @@ class ScriptHashKey : public PLDHashEntryHdr {
   }
 
   ScriptHashKey(ScriptLoader* aLoader,
-                const JS::loader::ScriptLoadRequest* aRequest);
+                const JS::loader::ScriptLoadRequest* aRequest,
+                const JS::loader::LoadedScript* aLoadedScript);
+  ScriptHashKey(ScriptLoader* aLoader,
+                const JS::loader::ScriptLoadRequest* aRequest,
+                const JS::loader::ScriptFetchOptions* aFetchOptions,
+                const nsCOMPtr<nsIURI> aURI);
   explicit ScriptHashKey(const ScriptLoadData& aLoadData);
 
   MOZ_COUNTED_DTOR(ScriptHashKey)
@@ -122,8 +128,8 @@ class ScriptLoadData final
   ~ScriptLoadData() {}
 
  public:
-  ScriptLoadData(ScriptLoader* aLoader,
-                 JS::loader::ScriptLoadRequest* aRequest);
+  ScriptLoadData(ScriptLoader* aLoader, JS::loader::ScriptLoadRequest* aRequest,
+                 JS::loader::LoadedScript* aLoadedScript);
 
   NS_DECL_ISUPPORTS
 
