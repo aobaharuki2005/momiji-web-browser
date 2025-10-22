@@ -620,6 +620,23 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest) {
       conv->MaybeRetarget(this);
     }
   }
+
+#if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
+  if (nsCOMPtr<nsIThreadRetargetableRequest> req =
+          do_QueryInterface(aRequest)) {
+    nsCOMPtr<nsISerialEventTarget> target;
+    rv = req->GetDeliveryTarget(getter_AddRefs(target));
+    if (NS_SUCCEEDED(rv) && target && !target->IsOnCurrentThread()) {
+      if (nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+              do_QueryInterface(mListener)) {
+        MOZ_DIAGNOSTIC_ASSERT(
+            NS_SUCCEEDED(retargetableListener->CheckListenerChain()));
+      } else {
+        MOZ_DIAGNOSTIC_ASSERT(false, "Unexpected listener is not retargetable");
+      }
+    }
+  }
+#endif
 }
 
 void HttpChannelChild::ProcessOnTransportAndData(
