@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.filters.SdkSuppress
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -143,7 +144,6 @@ class TextSelectionTest : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326834
-    @SdkSuppress(maxSdkVersion = 30)
     @Test
     fun verifySelectAllPDFTextOptionTest() {
         val genericURL =
@@ -152,6 +152,8 @@ class TextSelectionTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(itemWithText("PDF form file"))
+            clickPageObject(itemWithResIdAndText("android:id/button2", "Cancel"))
+            waitForPageToLoad()
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Select all")
             clickContextMenuItem("Copy")
