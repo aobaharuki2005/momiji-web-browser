@@ -618,7 +618,12 @@ public class ContentBlocking {
         return false;
       }
 
-      return provider.getEnabled();
+      final Boolean enabled = provider.getEnabled();
+      if (enabled == null) {
+        return false;
+      }
+
+      return enabled;
     }
 
     /**
@@ -1519,11 +1524,7 @@ public class ContentBlocking {
       mAdvisoryName = new Pref<>(ROOT + mName + ".advisoryName", null);
       mDataSharingUrl = new Pref<>(ROOT + mName + ".dataSharingURL", null);
       mDataSharingEnabled = new Pref<>(ROOT + mName + ".dataSharing.enabled", false);
-      if (mName.equals("google5")) {
-        mEnabled = new Pref<>(ROOT + mName + ".enabled", BuildConfig.NIGHTLY_BUILD);
-      } else {
-        mEnabled = new Pref<>(ROOT + mName + ".enabled", false);
-      }
+      mEnabled = new Pref<>(ROOT + mName + ".enabled", null);
 
       if (source != null) {
         updatePrefs(source);
