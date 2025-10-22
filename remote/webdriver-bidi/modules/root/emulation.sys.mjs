@@ -454,31 +454,39 @@ class EmulationModule extends RootBiDiModule {
     }
 
     const sessionDataItems = [];
+    // In case of resetting the override, remove existing session data items
+    // for the required context descriptors.
+    const onlyRemoveSessionDataItem = locale === "";
+
     if (userContextIds !== null) {
       for (const userContext of userContexts) {
-        sessionDataItems.push({
-          category: "locale-override",
-          moduleName: "_configuration",
-          values: [locale],
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.UserContext,
-            id: userContext,
-          },
-          method: lazy.SessionDataMethod.Add,
-        });
+        sessionDataItems.push(
+          ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
+            "_configuration",
+            "locale-override",
+            {
+              type: lazy.ContextDescriptorType.UserContext,
+              id: userContext,
+            },
+            onlyRemoveSessionDataItem,
+            locale
+          )
+        );
       }
     } else {
       for (const navigable of navigables) {
-        sessionDataItems.push({
-          category: "locale-override",
-          moduleName: "_configuration",
-          values: [locale],
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.TopBrowsingContext,
-            id: navigable.browserId,
-          },
-          method: lazy.SessionDataMethod.Add,
-        });
+        sessionDataItems.push(
+          ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
+            "_configuration",
+            "locale-override",
+            {
+              type: lazy.ContextDescriptorType.TopBrowsingContext,
+              id: navigable.browserId,
+            },
+            onlyRemoveSessionDataItem,
+            locale
+          )
+        );
       }
     }
 
@@ -492,8 +500,23 @@ class EmulationModule extends RootBiDiModule {
     const commands = [];
 
     for (const navigable of navigables) {
+      const overrideValue = this.#getOverrideValue({
+        category: "locale-override",
+        context: navigable,
+        contextIds,
+        userContextIds,
+        value: locale,
+      });
+
+      if (overrideValue === null) {
+        continue;
+      }
+
       commands.push(
-        this._setLocaleForBrowsingContext({ locale, context: navigable })
+        this._setLocaleForBrowsingContext({
+          locale: overrideValue,
+          context: navigable,
+        })
       );
     }
 
@@ -807,31 +830,39 @@ class EmulationModule extends RootBiDiModule {
     }
 
     const sessionDataItems = [];
+    // In case of resetting the override, remove existing session data items
+    // for the required context descriptors.
+    const onlyRemoveSessionDataItem = timezone === "";
+
     if (userContextIds !== null) {
       for (const userContext of userContexts) {
-        sessionDataItems.push({
-          category: "timezone-override",
-          moduleName: "_configuration",
-          values: [timezone],
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.UserContext,
-            id: userContext,
-          },
-          method: lazy.SessionDataMethod.Add,
-        });
+        sessionDataItems.push(
+          ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
+            "_configuration",
+            "timezone-override",
+            {
+              type: lazy.ContextDescriptorType.UserContext,
+              id: userContext,
+            },
+            onlyRemoveSessionDataItem,
+            timezone
+          )
+        );
       }
     } else {
       for (const navigable of navigables) {
-        sessionDataItems.push({
-          category: "timezone-override",
-          moduleName: "_configuration",
-          values: [timezone],
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.TopBrowsingContext,
-            id: navigable.browserId,
-          },
-          method: lazy.SessionDataMethod.Add,
-        });
+        sessionDataItems.push(
+          ...this.messageHandler.sessionData.generateSessionDataItemUpdate(
+            "_configuration",
+            "timezone-override",
+            {
+              type: lazy.ContextDescriptorType.TopBrowsingContext,
+              id: navigable.browserId,
+            },
+            onlyRemoveSessionDataItem,
+            timezone
+          )
+        );
       }
     }
 
@@ -845,8 +876,23 @@ class EmulationModule extends RootBiDiModule {
     const commands = [];
 
     for (const navigable of navigables) {
+      const overrideValue = this.#getOverrideValue({
+        category: "timezone-override",
+        context: navigable,
+        contextIds,
+        userContextIds,
+        value: timezone,
+      });
+
+      if (overrideValue === null) {
+        continue;
+      }
+
       commands.push(
-        this._setTimezoneOverride({ context: navigable, timezone })
+        this._setTimezoneOverride({
+          context: navigable,
+          timezone: overrideValue,
+        })
       );
     }
 
@@ -1017,35 +1063,22 @@ class EmulationModule extends RootBiDiModule {
     }
 
     for (const navigable of navigables) {
-      const [overridePerContext, overridePerUserContext, overrideGlobal] =
-        this.#findExistingOverrideForContext("user-agent-override", navigable);
+      const overrideValue = this.#getOverrideValue({
+        category: "user-agent-override",
+        context: navigable,
+        contextIds,
+        userContextIds,
+        value: userAgent,
+      });
 
-      if (contextIds) {
-        if (userAgent === "") {
-          // In case of resetting an override for navigable,
-          // if there is an existing override for user context or global,
-          // we should apply it to browsing context.
-          userAgent = overridePerUserContext || overrideGlobal || "";
-        }
-      } else if (userContextIds) {
-        // No need to do anything if there is an override
-        // for the browsing context.
-        if (overridePerContext) {
-          continue;
-        }
-
-        // In case of resetting an override for user context,
-        // apply a global override if it exists
-        if (userAgent === "" && overrideGlobal) {
-          userAgent = overrideGlobal;
-        }
-      } else if (overridePerContext || overridePerUserContext) {
-        // No need to do anything if there is an override
-        // for the browsing or user context.
+      if (overrideValue === null) {
         continue;
       }
 
-      this._setUserAgentOverride({ context: navigable, userAgent });
+      this._setUserAgentOverride({
+        context: navigable,
+        userAgent: overrideValue,
+      });
     }
   }
 
@@ -1160,6 +1193,39 @@ class EmulationModule extends RootBiDiModule {
         `Failed to override user agent for context with id: ${contextId} (${e.message})`
       );
     }
+  }
+
+  #getOverrideValue(params) {
+    const { category, context, contextIds, userContextIds, value } = params;
+    const [overridePerContext, overridePerUserContext, overrideGlobal] =
+      this.#findExistingOverrideForContext(category, context);
+
+    if (contextIds) {
+      if (value === "") {
+        // In case of resetting an override for navigable,
+        // if there is an existing override for user context or global,
+        // we should apply it to browsing context.
+        return overridePerUserContext || overrideGlobal || "";
+      }
+    } else if (userContextIds) {
+      // No need to do anything if there is an override
+      // for the browsing context.
+      if (overridePerContext) {
+        return null;
+      }
+
+      // In case of resetting an override for user context,
+      // apply a global override if it exists
+      if (value === "" && overrideGlobal) {
+        return overrideGlobal;
+      }
+    } else if (overridePerContext || overridePerUserContext) {
+      // No need to do anything if there is an override
+      // for the browsing or user context.
+      return null;
+    }
+
+    return value;
   }
 
   /**

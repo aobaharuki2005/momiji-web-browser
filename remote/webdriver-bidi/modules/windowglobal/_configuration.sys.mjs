@@ -214,6 +214,12 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       }
     }
 
+    let localeOverridePerContext = null;
+    let localeOverridePerUserContext = null;
+
+    let timezoneOverridePerContext = null;
+    let timezoneOverridePerUserContext = null;
+
     let userAgentOverrideGlobal = null;
     let userAgentOverridePerUserContext = null;
     let userAgentOverridePerContext = null;
@@ -252,7 +258,16 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
             break;
           }
           case "locale-override": {
-            this.#localeOverride = value;
+            switch (contextDescriptor.type) {
+              case lazy.ContextDescriptorType.TopBrowsingContext: {
+                localeOverridePerContext = value;
+                break;
+              }
+              case lazy.ContextDescriptorType.UserContext: {
+                localeOverridePerUserContext = value;
+                break;
+              }
+            }
             break;
           }
           case "screen-orientation-override": {
@@ -260,7 +275,16 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
             break;
           }
           case "timezone-override": {
-            this.#timezoneOverride = value;
+            switch (contextDescriptor.type) {
+              case lazy.ContextDescriptorType.TopBrowsingContext: {
+                timezoneOverridePerContext = value;
+                break;
+              }
+              case lazy.ContextDescriptorType.UserContext: {
+                timezoneOverridePerUserContext = value;
+                break;
+              }
+            }
             break;
           }
           case "user-agent-override": {
@@ -282,6 +306,16 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
         }
       }
     }
+
+    this.#localeOverride = this.#findCorrectOverrideValue(
+      localeOverridePerContext,
+      localeOverridePerUserContext
+    );
+
+    this.#timezoneOverride = this.#findCorrectOverrideValue(
+      timezoneOverridePerContext,
+      timezoneOverridePerUserContext
+    );
 
     this.#userAgentOverride = this.#findCorrectOverrideValue(
       userAgentOverridePerContext,
