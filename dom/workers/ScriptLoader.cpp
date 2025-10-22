@@ -699,7 +699,8 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   // Bug 1817259 - For now the debugger scripts are always loaded a Classic.
   if (mWorkerRef->Private()->WorkerType() == WorkerType::Classic ||
       IsDebuggerScript()) {
-    request = new ScriptLoadRequest(ScriptKind::eClassic, SRIMetadata(),
+    request = new ScriptLoadRequest(ScriptKind::eClassic, uri, referrerPolicy,
+                                    fetchOptions, SRIMetadata(),
                                     nullptr,  // mReferrer
                                     loadContext);
   } else {
@@ -728,14 +729,15 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
     // Part of Step 2. This sets the Top-level flag to true
     request = new ModuleLoadRequest(
-        JS::ModuleType::JavaScript, SRIMetadata(), referrer, loadContext,
-        ModuleLoadRequest::Kind::TopLevel, moduleLoader, nullptr);
+        uri, JS::ModuleType::JavaScript, referrerPolicy, fetchOptions,
+        SRIMetadata(), referrer, loadContext, ModuleLoadRequest::Kind::TopLevel,
+        moduleLoader, nullptr);
   }
 
   // Set the mURL, it will be used for error handling and debugging.
   request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
 
-  request->NoCacheEntryFound(referrerPolicy, fetchOptions, uri);
+  request->NoCacheEntryFound();
 
   return request.forget();
 }
@@ -989,7 +991,7 @@ nsresult WorkerScriptLoader::LoadScript(
               : mWorkerRef->Private()->WorkerCredentials();
 
       rv = GetModuleSecFlags(loadContext->IsTopLevel(), principal,
-                             mWorkerScriptType, request->URI(), credentials,
+                             mWorkerScriptType, request->mURI, credentials,
                              secFlags);
     } else {
       referrerInfo = ReferrerInfo::CreateForFetch(principal, nullptr);
@@ -998,7 +1000,7 @@ nsresult WorkerScriptLoader::LoadScript(
             static_cast<ReferrerInfo*>(referrerInfo.get())
                 ->CloneWithNewPolicy(parentWorker->GetReferrerPolicy());
       }
-      rv = GetClassicSecFlags(loadContext->IsTopLevel(), request->URI(),
+      rv = GetClassicSecFlags(loadContext->IsTopLevel(), request->mURI,
                               principal, mWorkerScriptType, secFlags);
     }
 
@@ -1010,7 +1012,7 @@ nsresult WorkerScriptLoader::LoadScript(
 
     rv = ChannelFromScriptURL(
         principal, parentDoc, mWorkerRef->Private(), loadGroup, ios, secMan,
-        request->URI(), loadContext->mClientInfo, mController,
+        request->mURI, loadContext->mClientInfo, mController,
         loadContext->IsTopLevel(), mWorkerScriptType, contentPolicyType,
         loadFlags, secFlags, mWorkerRef->Private()->CookieJarSettings(),
         referrerInfo, getter_AddRefs(channel));
@@ -1257,9 +1259,11 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     if (loadContext->mMutedErrorFlag.valueOr(false)) {
       NS_NewURI(getter_AddRefs(requestBaseURI), "about:blank"_ns);
     } else {
-      requestBaseURI = aRequest->BaseURL();
+      requestBaseURI = aRequest->mBaseURL;
     }
     MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
+    MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions() ==
+               aRequest->mFetchOptions);
     aRequest->mLoadedScript->SetBaseURL(requestBaseURI);
     classicScript = aRequest->mLoadedScript->AsClassicScript();
   }

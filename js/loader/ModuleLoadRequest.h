@@ -50,8 +50,11 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     DynamicImport,
   };
 
-  ModuleLoadRequest(ModuleType aModuleType, const SRIMetadata& aIntegrity,
-                    nsIURI* aReferrer, LoadContextBase* aContext, Kind aKind,
+  ModuleLoadRequest(nsIURI* aURI, ModuleType aModuleType,
+                    mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                    ScriptFetchOptions* aFetchOptions,
+                    const SRIMetadata& aIntegrity, nsIURI* aReferrer,
+                    LoadContextBase* aContext, Kind aKind,
                     ModuleLoaderBase* aLoader, ModuleLoadRequest* aRootModule);
 
   bool IsTopLevel() const override { return mKind == Kind::TopLevel; }
@@ -104,21 +107,20 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   void LoadFinished();
 
+  void UpdateReferrerPolicy(mozilla::dom::ReferrerPolicy aReferrerPolicy) {
+    mReferrerPolicy = aReferrerPolicy;
+  }
+
+  const Kind mKind;
+
   void SetErroredLoadingImports() {
     MOZ_ASSERT(IsDynamicImport());
     MOZ_ASSERT(IsFetching() || IsCompiling());
     mErroredLoadingImports = true;
   }
 
- public:
-  // Fields.
-  const Kind mKind;
-
   // Type of module (JavaScript, JSON)
   const ModuleType mModuleType;
-
-  // Is this the top level request for a dynamic module import?
-  const bool mIsDynamicImport;
 
   // A flag (for dynamic import) that indicates the module script is
   // successfully fetched and compiled, but its dependencies are failed to load.

@@ -97,10 +97,11 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateRequest(
 
   JS::ModuleType moduleType = JS::GetModuleRequestType(aCx, aModuleRequest);
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      moduleType, SRIMetadata(), aBaseURL, loadContext, kind, this, root);
+      aURI, moduleType, aReferrerPolicy, aOptions, SRIMetadata(), aBaseURL,
+      loadContext, kind, this, root);
 
-  request->mURL = aURI->GetSpecOrDefault();
-  request->NoCacheEntryFound(aReferrerPolicy, aOptions, aURI);
+  request->mURL = request->mURI->GetSpecOrDefault();
+  request->NoCacheEntryFound();
   return request.forget();
 }
 

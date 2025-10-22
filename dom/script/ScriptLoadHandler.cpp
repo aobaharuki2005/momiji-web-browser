@@ -135,7 +135,7 @@ NS_IMETHODIMP
 ScriptLoadHandler::OnStartRequest(nsIRequest* aRequest) {
   mRequest->SetMinimumExpirationTime(
       nsContentUtils::GetSubresourceCacheExpirationTime(aRequest,
-                                                        mRequest->URI()));
+                                                        mRequest->mURI));
 
   return NS_OK;
 }
@@ -368,7 +368,7 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   nsresult rv = NS_OK;
   if (LOG_ENABLED()) {
     nsAutoCString url;
-    mRequest->URI()->GetAsciiSpec(url);
+    mRequest->mURI->GetAsciiSpec(url);
     LOG(("ScriptLoadRequest (%p): Stream complete (url = %s)", mRequest.get(),
          url.get()));
   }
@@ -499,7 +499,7 @@ nsresult ScriptLoadHandler::AsyncOnChannelRedirect(
     nsIChannel* aOld, nsIChannel* aNew, uint32_t aFlags,
     nsIAsyncVerifyRedirectCallback* aCallback) {
   mRequest->SetMinimumExpirationTime(
-      nsContentUtils::GetSubresourceCacheExpirationTime(aOld, mRequest->URI()));
+      nsContentUtils::GetSubresourceCacheExpirationTime(aOld, mRequest->mURI));
 
   aCallback->OnRedirectVerifyCallback(NS_OK);
 

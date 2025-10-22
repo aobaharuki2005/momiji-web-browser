@@ -553,7 +553,7 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
 
   if (LOG_ENABLED()) {
     nsAutoCString url;
-    aRequest->URI()->GetAsciiSpec(url);
+    aRequest->mURI->GetAsciiSpec(url);
     LOG(("ScriptLoadRequest (%p): Start module load %s", aRequest, url.get()));
   }
 
@@ -561,7 +561,7 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
   // "fetching" map.
   MOZ_ASSERT_IF(
       aRestart == RestartRequest::Yes,
-      IsModuleFetching(ModuleMapKey(aRequest->URI(), aRequest->mModuleType)));
+      IsModuleFetching(ModuleMapKey(aRequest->mURI, aRequest->mModuleType)));
 
   // Check with the derived class whether we should load this module.
   nsresult rv = NS_OK;
@@ -573,7 +573,7 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
   // and if so wait for it rather than starting a new fetch.
   if (aRestart == RestartRequest::No &&
       ModuleMapContainsURL(
-          ModuleMapKey(aRequest->URI(), aRequest->mModuleType))) {
+          ModuleMapKey(aRequest->mURI, aRequest->mModuleType))) {
     LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
     WaitForModuleFetch(aRequest);
     return NS_OK;
@@ -584,7 +584,7 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
 
   if (isCachedStencil) {
     MOZ_ASSERT(
-        IsModuleFetched(ModuleMapKey(aRequest->URI(), aRequest->mModuleType)));
+        IsModuleFetched(ModuleMapKey(aRequest->mURI, aRequest->mModuleType)));
     return NS_OK;
   }
 
@@ -626,7 +626,7 @@ nsresult ModuleLoaderBase::GetFetchedModuleURLs(nsTArray<nsCString>& aURLs) {
 void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   // Update the module map to indicate that a module is currently being fetched.
 
-  ModuleMapKey moduleMapKey(aRequest->URI(), aRequest->mModuleType);
+  ModuleMapKey moduleMapKey(aRequest->mURI, aRequest->mModuleType);
 
   MOZ_ASSERT(aRequest->IsFetching());
   MOZ_ASSERT(!ModuleMapContainsURL(moduleMapKey));
@@ -651,7 +651,7 @@ ModuleLoaderBase::SetModuleFetchFinishedAndGetWaitingRequests(
        "%u)",
        aRequest, aRequest->mModuleScript.get(), unsigned(aResult)));
 
-  ModuleMapKey moduleMapKey(aRequest->URI(), aRequest->mModuleType);
+  ModuleMapKey moduleMapKey(aRequest->mURI, aRequest->mModuleType);
 
   auto entry = mFetchingModules.Lookup(moduleMapKey);
   if (!entry) {
@@ -707,7 +707,7 @@ void ModuleLoaderBase::ResumeWaitingRequest(ModuleLoadRequest* aRequest,
 }
 
 void ModuleLoaderBase::WaitForModuleFetch(ModuleLoadRequest* aRequest) {
-  ModuleMapKey moduleMapKey(aRequest->URI(), aRequest->mModuleType);
+  ModuleMapKey moduleMapKey(aRequest->mURI, aRequest->mModuleType);
   MOZ_ASSERT(ModuleMapContainsURL(moduleMapKey));
 
   if (auto entry = mFetchingModules.Lookup(moduleMapKey)) {
@@ -866,7 +866,7 @@ void ModuleLoaderBase::OnFetchFailed(ModuleLoadRequest* aRequest) {
     // cases.
     if (aRequest->GetRootModule()->IsDynamicImport()) {
       nsAutoCString url;
-      aRequest->URI()->GetSpec(url);
+      aRequest->mURI->GetSpec(url);
       JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
                                 JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
       FinishLoadingImportedModuleFailedWithPendingException(cx, payload);
@@ -962,7 +962,7 @@ void ModuleLoaderBase::DispatchModuleErrored(ModuleLoadRequest* aRequest) {
 
 nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(!aRequest->mModuleScript);
-  MOZ_ASSERT(aRequest->BaseURL());
+  MOZ_ASSERT(aRequest->mBaseURL);
 
   LOG(("ScriptLoadRequest (%p): Create module script", aRequest));
 
@@ -1002,6 +1002,29 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
     }
 
     MOZ_ASSERT(aRequest->mLoadedScript->IsModuleScript());
+    MOZ_ASSERT(aRequest->mFetchOptions->IsCompatible(
+        aRequest->mLoadedScript->GetFetchOptions()));
+#ifdef DEBUG
+    {
+      bool equals = false;
+      aRequest->mURI->Equals(aRequest->mLoadedScript->GetURI(), &equals);
+      MOZ_ASSERT(equals);
+    }
+#endif
+
+    if (!aRequest->mLoadedScript->BaseURL()) {
+      // If this script is not cached, the BaseURL should be copied from
+      // request to script for later use.
+      aRequest->mLoadedScript->SetBaseURL(aRequest->mBaseURL);
+    } else {
+      // If this script is cached, the BaseURL should match, which is
+      // checked when looking for the cache.
+#ifdef DEBUG
+      bool equals = false;
+      aRequest->mBaseURL->Equals(aRequest->mLoadedScript->BaseURL(), &equals);
+      MOZ_ASSERT(equals);
+#endif
+    }
     RefPtr<ModuleScript> moduleScript =
         aRequest->mLoadedScript->AsModuleScript();
 
@@ -1219,8 +1242,8 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
   // destroyed. As a result, the promise returned by LoadRequestedModules may
   // neither resolve nor reject. To ensure module loading completes reliably in
   // chrome pages, we use the synchronous variant of LoadRequestedModules.
-  bool isSync = aRequest->URI()->SchemeIs("chrome") ||
-                aRequest->URI()->SchemeIs("resource");
+  bool isSync = aRequest->mURI->SchemeIs("chrome") ||
+                aRequest->mURI->SchemeIs("resource");
 
   // TODO: Bug1973660: Use Promise version of LoadRequestedModules on Workers.
   if (aRequest->HasScriptLoadContext() && !isSync) {
@@ -1342,7 +1365,7 @@ bool ModuleLoaderBase::OnLoadRequestedModulesRejected(
       FinishLoadingImportedModuleFailed(aCx, payload, error);
     } else {
       nsAutoCString url;
-      aRequest->URI()->GetSpec(url);
+      aRequest->mURI->GetSpec(url);
       JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
                                 JSMSG_DYNAMIC_IMPORT_FAILED, url.get());
       FinishLoadingImportedModuleFailedWithPendingException(aCx, payload);
@@ -1685,7 +1708,7 @@ UniquePtr<ImportMap> ModuleLoaderBase::ParseImportMap(
   // supported, therefore parsing and registering import-maps will be executed
   // consecutively. To simplify the implementation, we didn't create the 'error
   // to rethow' item and report the exception immediately(done in ~AutoJSAPI).
-  return ImportMap::ParseString(jsapi.cx(), text, aRequest->BaseURL(), warning);
+  return ImportMap::ParseString(jsapi.cx(), text, aRequest->mBaseURL, warning);
 }
 
 void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {

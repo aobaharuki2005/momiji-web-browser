@@ -487,9 +487,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * request if any.
    */
   void TryUseCache(
-      ReferrerPolicy aReferrerPolicy, ScriptFetchOptions* aFetchOptions,
-      nsIURI* aURI, ScriptLoadRequest* aRequest,
-      nsIScriptElement* aElement = nullptr, const nsAString& aNonce = u""_ns,
+      ScriptLoadRequest* aRequest, nsIScriptElement* aElement = nullptr,
+      const nsAString& aNonce = u""_ns,
       ScriptLoadRequestType aRequestType = ScriptLoadRequestType::External);
 
   /**
@@ -548,8 +547,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   nsresult CheckContentPolicy(nsIScriptElement* aElement,
                               const nsAString& aNonce,
-                              ScriptLoadRequest* aRequest,
-                              ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
+                              ScriptLoadRequest* aRequest);
 
   /**
    * Helper function to determine whether an about: page loads a chrome: URI.

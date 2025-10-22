@@ -81,8 +81,9 @@ already_AddRefed<ModuleLoadRequest> SyncModuleLoader::CreateRequest(
   }
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      moduleType, dom::SRIMetadata(), aBaseURL, context, kind, this, root);
-  request->NoCacheEntryFound(aReferrerPolicy, aOptions, aURI);
+      aURI, moduleType, aReferrerPolicy, aOptions, dom::SRIMetadata(), aBaseURL,
+      context, kind, this, root);
+  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -125,13 +126,13 @@ void SyncModuleLoader::OnDynamicImportStarted(ModuleLoadRequest* aRequest) {
 
 bool SyncModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
                                     nsresult* aRvOut) {
-  return nsContentSecurityUtils::IsTrustedScheme(aRequest->URI());
+  return nsContentSecurityUtils::IsTrustedScheme(aRequest->mURI);
 }
 
 nsresult SyncModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->HasLoadContext());
 
-  aRequest->SetBaseURL(aRequest->URI());
+  aRequest->mBaseURL = aRequest->mURI;
 
   // Loading script source and compilation are intertwined in
   // mozJSModuleLoader. Perform both operations here but only report load
@@ -153,7 +154,7 @@ nsresult SyncModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   bool threwException = jsapi.HasException();
   if (NS_FAILED(rv) && !threwException) {
     nsAutoCString uri;
-    nsresult rv2 = aRequest->URI()->GetSpec(uri);
+    nsresult rv2 = aRequest->mURI->GetSpec(uri);
     NS_ENSURE_SUCCESS(rv2, rv2);
 
     JS_ReportErrorUTF8(cx, "Failed to load %s", PromiseFlatCString(uri).get());

@@ -463,25 +463,21 @@ nsContentPolicyType ScriptLoadRequestToContentPolicyType(
 }
 
 RequestMode ComputeRequestModeForContentPolicy(
-    const ScriptLoadRequest* aRequest, ScriptFetchOptions* aFetchOptions) {
+    const ScriptLoadRequest* aRequest) {
   auto corsMapping =
       aRequest->IsModuleRequest()
           ? nsContentSecurityManager::REQUIRE_CORS_CHECKS
           : nsContentSecurityManager::CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS;
   return nsContentSecurityManager::SecurityModeToRequestMode(
       nsContentSecurityManager::ComputeSecurityMode(
-          nsContentSecurityManager::ComputeSecurityFlags(
-              aFetchOptions->mCORSMode, corsMapping)));
+          nsContentSecurityManager::ComputeSecurityFlags(aRequest->CORSMode(),
+                                                         corsMapping)));
 }
 
 nsresult ScriptLoader::CheckContentPolicy(nsIScriptElement* aElement,
                                           const nsAString& aNonce,
-                                          ScriptLoadRequest* aRequest,
-                                          ScriptFetchOptions* aFetchOptions,
-                                          nsIURI* aURI) {
+                                          ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest);
-  MOZ_ASSERT(aFetchOptions);
-  MOZ_ASSERT(aURI);
 
   nsContentPolicyType contentPolicyType =
       ScriptLoadRequestToContentPolicyType(aRequest);
@@ -499,7 +495,7 @@ nsresult ScriptLoader::CheckContentPolicy(nsIScriptElement* aElement,
                                            aElement->GetParserCreated() !=
                                                mozilla::dom::NOT_FROM_PARSER);
   Maybe<RequestMode> requestMode =
-      Some(ComputeRequestModeForContentPolicy(aRequest, aFetchOptions));
+      Some(ComputeRequestModeForContentPolicy(aRequest));
   secCheckLoadInfo->SetRequestMode(requestMode);
   // Use nonce of the current element, instead of the preload, because those
   // are allowed to differ.
@@ -508,8 +504,9 @@ nsresult ScriptLoader::CheckContentPolicy(nsIScriptElement* aElement,
       aRequest->mIntegrity.GetIntegrityString());
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(aURI, secCheckLoadInfo, &shouldLoad,
-                                          nsContentUtils::GetContentPolicy());
+  nsresult rv =
+      NS_CheckContentLoadPolicy(aRequest->mURI, secCheckLoadInfo, &shouldLoad,
+                                nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
     if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
       return NS_ERROR_CONTENT_BLOCKED;
@@ -524,7 +521,7 @@ nsresult ScriptLoader::CheckContentPolicy(nsIScriptElement* aElement,
 bool ScriptLoader::IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest,
                                                Document* aDocument) {
   // if the uri to be loaded is not of scheme chrome:, there is nothing to do.
-  if (!aRequest->URI()->SchemeIs("chrome")) {
+  if (!aRequest->mURI->SchemeIs("chrome")) {
     return false;
   }
 
@@ -655,7 +652,7 @@ nsresult ScriptLoader::StartClassicLoad(
 
   if (LOG_ENABLED()) {
     nsAutoCString url;
-    aRequest->URI()->GetAsciiSpec(url);
+    aRequest->mURI->GetAsciiSpec(url);
     LOG(("ScriptLoadRequest (%p): Start Classic Load (url = %s)", aRequest,
          url.get()));
   }
@@ -709,7 +706,7 @@ static nsresult CreateChannelForScriptLoading(nsIChannel** aOutChannel,
     context = aDocument;
   }
 
-  return CreateChannelForScriptLoading(aOutChannel, aDocument, aRequest->URI(),
+  return CreateChannelForScriptLoading(aOutChannel, aDocument, aRequest->mURI,
                                        context, aRequest->TriggeringPrincipal(),
                                        aSecurityFlags, contentPolicyType);
 }
@@ -1003,7 +1000,7 @@ nsresult ScriptLoader::StartLoadInternal(
   NS_ENSURE_SUCCESS(rv, rv);
 
   mozilla::net::PredictorLearn(
-      aRequest->URI(), mDocument->GetDocumentURI(),
+      aRequest->mURI, mDocument->GetDocumentURI(),
       nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE,
       mDocument->NodePrincipal()->OriginAttributesRef());
 
@@ -1013,7 +1010,7 @@ nsresult ScriptLoader::StartLoadInternal(
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto key = PreloadHashKey::CreateAsScript(
-      aRequest->URI(), aRequest->CORSMode(), aRequest->mKind);
+      aRequest->mURI, aRequest->CORSMode(), aRequest->mKind);
   aRequest->GetScriptLoadContext()->NotifyOpen(
       key, channel, mDocument,
       aRequest->GetScriptLoadContext()->IsLinkPreloadScript(),
@@ -1036,7 +1033,7 @@ nsresult ScriptLoader::StartLoadInternal(
 bool ScriptLoader::PreloadURIComparator::Equals(const PreloadInfo& aPi,
                                                 nsIURI* const& aURI) const {
   bool same;
-  return NS_SUCCEEDED(aPi.mRequest->URI()->Equals(aURI, &same)) && same;
+  return NS_SUCCEEDED(aPi.mRequest->mURI->Equals(aURI, &same)) && same;
 }
 
 static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
@@ -1142,84 +1139,72 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
   MOZ_ASSERT(aKind == ScriptKind::eClassic || aKind == ScriptKind::eImportMap);
 
   RefPtr<ScriptLoadRequest> request =
-      new ScriptLoadRequest(aKind, aIntegrity, referrer, context);
+      new ScriptLoadRequest(aKind, aURI, aReferrerPolicy, fetchOptions,
+                            aIntegrity, referrer, context);
 
-  TryUseCache(aReferrerPolicy, fetchOptions, aURI, request, aElement, aNonce,
-              aRequestType);
+  TryUseCache(request, aElement, aNonce, aRequestType);
 
   return request.forget();
 }
 
-void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
-                               ScriptFetchOptions* aFetchOptions, nsIURI* aURI,
-                               ScriptLoadRequest* aRequest,
+void ScriptLoader::TryUseCache(ScriptLoadRequest* aRequest,
                                nsIScriptElement* aElement,
                                const nsAString& aNonce,
                                ScriptLoadRequestType aRequestType) {
   if (aRequestType == ScriptLoadRequestType::Inline) {
-    aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions, aURI);
+    aRequest->NoCacheEntryFound();
     LOG(
         ("ScriptLoader (%p): Created LoadedScript (%p) for "
          "ScriptLoadRequest(%p) %s.",
          this, aRequest->getLoadedScript(), aRequest,
-         aRequest->URI()->GetSpecOrDefault().get()));
+         aRequest->mURI->GetSpecOrDefault().get()));
     return;
   }
 
   if (!mCache) {
-    aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions, aURI);
+    aRequest->NoCacheEntryFound();
     LOG(
         ("ScriptLoader (%p): Created LoadedScript (%p) for "
          "ScriptLoadRequest(%p) %s.",
          this, aRequest->getLoadedScript(), aRequest,
-         aRequest->URI()->GetSpecOrDefault().get()));
+         aRequest->mURI->GetSpecOrDefault().get()));
     return;
   }
 
-  // NOTE: Some ScriptLoadRequest fields aren't yet accessible until
-  //       either NoCacheEntryFound or CacheEntryFound is called,
-  //       which constructs LoadedScript.
-  //       aRequest->FetchOptions() and aRequest->URI() are backed by
-  //       LoadedScript, and we cannot use them here.
-  ScriptHashKey key(this, aRequest, aFetchOptions, aURI);
+  ScriptHashKey key(this, aRequest);
   auto cacheResult = mCache->Lookup(*this, key, /* aSyncLoad = */ true);
   if (cacheResult.mState != CachedSubResourceState::Complete) {
-    aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions, aURI);
+    aRequest->NoCacheEntryFound();
     LOG(
         ("ScriptLoader (%p): Created LoadedScript (%p) for "
          "ScriptLoadRequest(%p) %s.",
          this, aRequest->getLoadedScript(), aRequest,
-         aRequest->URI()->GetSpecOrDefault().get()));
+         aRequest->mURI->GetSpecOrDefault().get()));
     return;
   }
 
   if (aRequestType == ScriptLoadRequestType::External) {
     // NOTE: The preload case checks the same after the
     //       LookupPreloadRequest call.
-    if (NS_FAILED(CheckContentPolicy(aElement, aNonce, aRequest, aFetchOptions,
-                                     aURI))) {
-      aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions, aURI);
+    if (NS_FAILED(CheckContentPolicy(aElement, aNonce, aRequest))) {
+      aRequest->NoCacheEntryFound();
       LOG(
           ("ScriptLoader (%p): Created LoadedScript (%p) for "
            "ScriptLoadRequest(%p) %s.",
            this, aRequest->getLoadedScript(), aRequest,
-           aRequest->URI()->GetSpecOrDefault().get()));
+           aRequest->mURI->GetSpecOrDefault().get()));
       return;
     }
   }
 
   aRequest->mNetworkMetadata = cacheResult.mNetworkMetadata;
 
-  MOZ_ASSERT(cacheResult.mCompleteValue->ReferrerPolicy() == aReferrerPolicy);
-  MOZ_ASSERT(aFetchOptions->IsCompatible(
-      cacheResult.mCompleteValue->GetFetchOptions()));
-
   aRequest->CacheEntryFound(cacheResult.mCompleteValue);
   LOG(
       ("ScriptLoader (%p): Found in-memory cache LoadedScript (%p) for "
        "ScriptLoadRequest(%p) %s.",
        this, aRequest->getLoadedScript(), aRequest,
-       aRequest->URI()->GetSpecOrDefault().get()));
+       aRequest->mURI->GetSpecOrDefault().get()));
 
   if (cacheResult.mCompleteValue->mFetchCount < UINT8_MAX) {
     cacheResult.mCompleteValue->mFetchCount++;
@@ -1241,14 +1226,14 @@ void ScriptLoader::EmulateNetworkEvents(ScriptLoadRequest* aRequest) {
   }
 
   NotifyObserversForCachedScript(
-      aRequest->URI(), context, aRequest->FetchOptions()->mTriggeringPrincipal,
-      CORSModeToSecurityFlags(aRequest->FetchOptions()->mCORSMode),
+      aRequest->mURI, context, aRequest->mFetchOptions->mTriggeringPrincipal,
+      CORSModeToSecurityFlags(aRequest->mFetchOptions->mCORSMode),
       nsIContentPolicy::TYPE_INTERNAL_SCRIPT, aRequest->mNetworkMetadata);
 
   {
     nsAutoCString name;
     nsString entryName;
-    aRequest->URI()->GetSpec(name);
+    aRequest->mURI->GetSpec(name);
     CopyUTF8toUTF16(name, entryName);
 
     auto now = TimeStamp::Now();
@@ -1361,9 +1346,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   RefPtr<ScriptLoadRequest> request =
       LookupPreloadRequest(aElement, aScriptKind, sriMetadata);
   if (request) {
-    if (NS_FAILED(CheckContentPolicy(aElement, nonce, request,
-                                     request->FetchOptions(),
-                                     request->URI()))) {
+    if (NS_FAILED(CheckContentPolicy(aElement, nonce, request))) {
       LOG(("ScriptLoader (%p): content policy check failed for preload", this));
 
       // Probably plans have changed; even though the preload was allowed seems
@@ -1669,7 +1652,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   LOG(("ScriptLoadRequest (%p): Created request for inline script",
        request.get()));
 
-  request->SetBaseURL(mDocument->GetDocBaseURI());
+  request->mBaseURL = mDocument->GetDocBaseURI();
 
   if (request->IsModuleRequest()) {
     // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-inline-module-script-graph
@@ -2341,7 +2324,7 @@ nsresult ScriptLoader::CreateOffThreadTask(
     LOG(
         ("ScriptLoadRequest (%p): non-on-demand-only (omt) Parsing Enabled "
          "for url=%s mTotalFullParseSize=%u",
-         aRequest, aRequest->URI()->GetSpecOrDefault().get(),
+         aRequest, aRequest->mURI->GetSpecOrDefault().get(),
          mTotalFullParseSize));
   }
 
@@ -2531,7 +2514,7 @@ void ScriptLoader::FireScriptAvailable(nsresult aResult,
     obs->ScriptAvailable(
         aResult,
         aRequest->GetScriptLoadContext()->GetScriptElementForObserver(),
-        aRequest->GetScriptLoadContext()->mIsInline, aRequest->URI(),
+        aRequest->GetScriptLoadContext()->mIsInline, aRequest->mURI,
         aRequest->GetScriptLoadContext()->mLineNo);
   }
 
@@ -2540,7 +2523,7 @@ void ScriptLoader::FireScriptAvailable(nsresult aResult,
   RefPtr<nsIScriptElement> scriptElement =
       aRequest->GetScriptLoadContext()->GetScriptElementForObserver();
   scriptElement->ScriptAvailable(aResult, scriptElement, isInlineClassicScript,
-                                 aRequest->URI(),
+                                 aRequest->mURI,
                                  aRequest->GetScriptLoadContext()->mLineNo);
 }
 
@@ -2624,9 +2607,9 @@ static void ApplyEagerBaselineStrategy(JS::CompileOptions* aOptions) {
 nsresult ScriptLoader::FillCompileOptionsForRequest(
     JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions* aOptions,
     JS::MutableHandle<JSScript*> aIntroductionScript) {
-  // It's very important to use aRequest->URI(), not the final URI of the
-  // channel aRequest ended up getting script data from, as the script filename.
-  nsresult rv = aRequest->URI()->GetSpec(aRequest->mURL);
+  // It's very important to use aRequest->mURI, not the final URI of the channel
+  // aRequest ended up getting script data from, as the script filename.
+  nsresult rv = aRequest->mURI->GetSpec(aRequest->mURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3227,8 +3210,7 @@ ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
     return CacheBehavior::DoNothing;
   }
 
-  if (!aRequest->URI()->SchemeIs("http") &&
-      !aRequest->URI()->SchemeIs("https")) {
+  if (!aRequest->mURI->SchemeIs("http") && !aRequest->mURI->SchemeIs("https")) {
     // Internal resources can be exposed to the web content, but they don't
     // have to be cached.
     return CacheBehavior::DoNothing;
@@ -3251,7 +3233,7 @@ ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
     return CacheBehavior::Insert;
   }
 
-  ScriptHashKey key(this, aRequest, aRequest->getLoadedScript());
+  ScriptHashKey key(this, aRequest);
   auto cacheResult = mCache->Lookup(*this, key,
                                     /* aSyncLoad = */ true);
   if (cacheResult.mState == CachedSubResourceState::Complete) {
@@ -3283,17 +3265,16 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
   aRequest->ConvertToCachedStencil();
 
   if (cacheBehavior == CacheBehavior::Insert) {
-    auto loadData =
-        MakeRefPtr<ScriptLoadData>(this, aRequest, aRequest->getLoadedScript());
+    auto loadData = MakeRefPtr<ScriptLoadData>(this, aRequest);
     mCache->Insert(*loadData);
     LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
-         aRequest->URI()->GetSpecOrDefault().get()));
+         aRequest->mURI->GetSpecOrDefault().get()));
   } else {
     MOZ_ASSERT(cacheBehavior == CacheBehavior::Evict);
-    ScriptHashKey key(this, aRequest, aRequest->getLoadedScript());
+    ScriptHashKey key(this, aRequest);
     mCache->Evict(key);
     LOG(("ScriptLoader (%p): Evicting in-memory cache for %s.", this,
-         aRequest->URI()->GetSpecOrDefault().get()));
+         aRequest->mURI->GetSpecOrDefault().get()));
 
     if (!aRequest->PassedConditionForEitherCache()) {
       aRequest->ClearStencil();
@@ -3392,6 +3373,30 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
 
   // Create a ClassicScript object and associate it with the JSScript.
   MOZ_ASSERT(aRequest->mLoadedScript->IsClassicScript());
+  MOZ_ASSERT(aRequest->mLoadedScript->GetFetchOptions()->IsCompatible(
+      aRequest->mFetchOptions));
+
+#ifdef DEBUG
+  {
+    bool equals;
+    (void)aRequest->mLoadedScript->GetURI()->Equals(aRequest->mURI, &equals);
+    MOZ_ASSERT(equals);
+  }
+#endif
+
+  if (aRequest->IsCachedStencil()) {
+#ifdef DEBUG
+    // A request with cache might not have mBaseURL.
+    if (aRequest->mBaseURL) {
+      bool equals;
+      (void)aRequest->mLoadedScript->BaseURL()->Equals(aRequest->mBaseURL,
+                                                       &equals);
+      MOZ_ASSERT(equals);
+    }
+#endif
+  } else {
+    aRequest->mLoadedScript->SetBaseURL(aRequest->mBaseURL);
+  }
 
   RefPtr<ClassicScript> classicScript =
       aRequest->mLoadedScript->AsClassicScript();
@@ -3419,7 +3424,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
     LOG(
         ("ScriptLoadRequest (%p): non-on-demand-only (non-omt) Parsing Enabled "
          "for url=%s mTotalFullParseSize=%u",
-         aRequest, aRequest->URI()->GetSpecOrDefault().get(),
+         aRequest, aRequest->mURI->GetSpecOrDefault().get(),
          mTotalFullParseSize));
   }
 
@@ -4126,7 +4131,7 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
   }
 
   AutoTArray<nsString, 1> params;
-  CopyUTF8toUTF16(aRequest->URI()->GetSpecOrDefault(), *params.AppendElement());
+  CopyUTF8toUTF16(aRequest->mURI->GetSpecOrDefault(), *params.AppendElement());
 
   Maybe<SourceLocation> loc;
   if (!isScript && !aRequest->IsTopLevel()) {
@@ -4324,7 +4329,7 @@ bool ScriptLoader::ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest) {
   }
 
   if (LOG_ENABLED()) {
-    nsCString url = aRequest->URI()->GetSpecOrDefault();
+    nsCString url = aRequest->mURI->GetSpecOrDefault();
     LOG(
         ("ScriptLoadRequest (%p): non-on-demand-only Parsing Disabled for (%s) "
          "with size=%u because mTotalFullParseSize=%u would exceed max_size=%u",

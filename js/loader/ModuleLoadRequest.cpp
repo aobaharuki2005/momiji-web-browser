@@ -45,13 +45,16 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ModuleLoadRequest,
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 ModuleLoadRequest::ModuleLoadRequest(
-    ModuleType aModuleType, const mozilla::dom::SRIMetadata& aIntegrity,
-    nsIURI* aReferrer, LoadContextBase* aContext, Kind aKind,
-    ModuleLoaderBase* aLoader, ModuleLoadRequest* aRootModule)
-    : ScriptLoadRequest(ScriptKind::eModule, aIntegrity, aReferrer, aContext),
+    nsIURI* aURI, ModuleType aModuleType,
+    mozilla::dom::ReferrerPolicy aReferrerPolicy,
+    ScriptFetchOptions* aFetchOptions,
+    const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
+    LoadContextBase* aContext, Kind aKind, ModuleLoaderBase* aLoader,
+    ModuleLoadRequest* aRootModule)
+    : ScriptLoadRequest(ScriptKind::eModule, aURI, aReferrerPolicy,
+                        aFetchOptions, aIntegrity, aReferrer, aContext),
       mKind(aKind),
       mModuleType(aModuleType),
-      mIsDynamicImport(aKind == Kind::DynamicImport),
       mErroredLoadingImports(false),
       mLoader(aLoader),
       mRootModule(aRootModule) {
@@ -96,7 +99,7 @@ void ModuleLoadRequest::ModuleLoaded() {
 
   MOZ_ASSERT(IsFetching());
 
-  mModuleScript = mLoader->GetFetchedModule(ModuleMapKey(URI(), mModuleType));
+  mModuleScript = mLoader->GetFetchedModule(ModuleMapKey(mURI, mModuleType));
 }
 
 void ModuleLoadRequest::LoadFailed() {

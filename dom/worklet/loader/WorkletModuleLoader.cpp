@@ -78,12 +78,12 @@ already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateRequest(
   const nsMainThreadPtrHandle<WorkletFetchHandler>& handlerRef =
       context->GetHandlerRef();
   RefPtr<WorkletLoadContext> loadContext = new WorkletLoadContext(handlerRef);
-  RefPtr<ModuleLoadRequest> request =
-      new ModuleLoadRequest(moduleType, SRIMetadata(), aBaseURL, loadContext,
-                            ModuleLoadRequest::Kind::StaticImport, this, root);
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, moduleType, aReferrerPolicy, aOptions, SRIMetadata(), aBaseURL,
+      loadContext, ModuleLoadRequest::Kind::StaticImport, this, root);
 
-  request->mURL = aURI->GetSpecOrDefault();
-  request->NoCacheEntryFound(aReferrerPolicy, aOptions, aURI);
+  request->mURL = request->mURI->GetSpecOrDefault();
+  request->NoCacheEntryFound();
   return request.forget();
 }
 
@@ -93,11 +93,11 @@ bool WorkletModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
 }
 
 nsresult WorkletModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
-  InsertRequest(aRequest->URI(), aRequest);
+  InsertRequest(aRequest->mURI, aRequest);
 
   RefPtr<StartFetchRunnable> runnable =
       new StartFetchRunnable(aRequest->GetWorkletLoadContext()->GetHandlerRef(),
-                             aRequest->URI(), aRequest->mReferrer);
+                             aRequest->mURI, aRequest->mReferrer);
   NS_DispatchToMainThread(runnable.forget());
   return NS_OK;
 }
