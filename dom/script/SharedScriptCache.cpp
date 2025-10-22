@@ -45,7 +45,7 @@ ScriptHashKey::ScriptHashKey(ScriptLoader* aLoader,
                              const JS::loader::ScriptLoadRequest* aRequest,
                              const JS::loader::LoadedScript* aLoadedScript)
     : ScriptHashKey(aLoader, aRequest, aLoadedScript->GetFetchOptions(),
-                    aRequest->mURI) {}
+                    aLoadedScript->GetURI()) {}
 
 ScriptHashKey::ScriptHashKey(const ScriptLoadData& aLoadData)
     : ScriptHashKey(aLoadData.CacheKey()) {}

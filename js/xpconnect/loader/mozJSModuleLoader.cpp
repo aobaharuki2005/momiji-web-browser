@@ -169,7 +169,7 @@ class MOZ_STACK_CLASS ModuleLoaderInfo {
   explicit ModuleLoaderInfo(const nsACString& aLocation)
       : mLocation(&aLocation) {}
   explicit ModuleLoaderInfo(JS::loader::ModuleLoadRequest* aRequest)
-      : mLocation(nullptr), mURI(aRequest->mURI) {}
+      : mLocation(nullptr), mURI(aRequest->URI()) {}
 
   nsIIOService* IOService() {
     MOZ_ASSERT(mIOService);
@@ -603,7 +603,7 @@ nsresult mozJSModuleLoader::LoadSingleModuleScriptOnWorker(
     SyncModuleLoader* aModuleLoader, JSContext* aCx,
     JS::loader::ModuleLoadRequest* aRequest, MutableHandleScript aScriptOut) {
   nsAutoCString location;
-  nsresult rv = aRequest->mURI->GetSpec(location);
+  nsresult rv = aRequest->URI()->GetSpec(location);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString data;
@@ -650,7 +650,7 @@ nsresult mozJSModuleLoader::LoadSingleModuleScript(
       "ChromeUtils.importESModule static import", JS,
       MarkerOptions(MarkerStack::Capture(),
                     MarkerInnerWindowIdFromJSContext(aCx)),
-      nsContentUtils::TruncatedURLForDisplay(aRequest->mURI));
+      nsContentUtils::TruncatedURLForDisplay(aRequest->URI()));
 
   if (!NS_IsMainThread()) {
     return LoadSingleModuleScriptOnWorker(aModuleLoader, aCx, aRequest,
@@ -665,7 +665,7 @@ nsresult mozJSModuleLoader::LoadSingleModuleScript(
   rv = GetSourceFile(info.ResolvedURI(), getter_AddRefs(sourceFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool realFile = LocationIsRealFile(aRequest->mURI);
+  bool realFile = LocationIsRealFile(aRequest->URI());
 
   RootedScript script(aCx);
   rv = GetScriptForLocation(aCx, info, sourceFile, realFile, aScriptOut);
@@ -971,7 +971,7 @@ void mozJSModuleLoader::RecordImportStack(
   }
 
   nsAutoCString location;
-  nsresult rv = aRequest->mURI->GetSpec(location);
+  nsresult rv = aRequest->URI()->GetSpec(location);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1085,7 +1085,7 @@ nsresult mozJSModuleLoader::ImportESModule(
   RefPtr<SyncLoadContext> context = new SyncLoadContext();
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
-      uri, JS::ModuleType::JavaScript, dom::SRIMetadata(),
+      JS::ModuleType::JavaScript, dom::SRIMetadata(),
       /* aReferrer = */ nullptr, context, ModuleLoadRequest::Kind::TopLevel,
       mModuleLoader, nullptr);
 

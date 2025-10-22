@@ -28,8 +28,19 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LoadedScript)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(LoadedScript, mFetchOptions, mURI, mBaseURL,
-                         mCacheInfo)
+// LoadedScript can be accessed from multiple threads.
+//
+// For instance, worker script loader passes the ScriptLoadRequest and
+// the associated LoadedScript to the main thread to perform the actual load.
+// Even while it's handled by the main thread, the LoadedScript is
+// the target of the worker thread's cycle collector.
+//
+// Fields that can be modified by other threads shouldn't be touched by
+// the cycle collection.
+//
+// NOTE: nsIURI doesn't have to be touched here because it cannot be a part
+//       of cycle.
+NS_IMPL_CYCLE_COLLECTION(LoadedScript, mFetchOptions, mCacheInfo)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadedScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)

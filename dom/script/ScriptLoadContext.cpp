@@ -225,8 +225,8 @@ void ScriptLoadContext::GetProfilerLabel(nsACString& aOutString) {
   }
 
   nsAutoCString url;
-  if (mRequest->mURI) {
-    mRequest->mURI->GetAsciiSpec(url);
+  if (mRequest->URI()) {
+    mRequest->URI()->GetAsciiSpec(url);
   } else {
     url = "<unknown>";
   }

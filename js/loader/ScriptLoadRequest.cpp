@@ -85,7 +85,7 @@ NS_IMPL_CYCLE_COLLECTION(ScriptLoadRequest, mLoadedScript, mLoadContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
+ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
                                      const SRIMetadata& aIntegrity,
                                      nsIURI* aReferrer,
                                      LoadContextBase* aContext)
@@ -95,7 +95,6 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
       mHasSourceMapURL_(false),
       mIntegrity(aIntegrity),
       mReferrer(aReferrer),
-      mURI(aURI),
       mLoadContext(aContext),
       mEarlyHintPreloaderId(0) {
   if (mLoadContext) {
@@ -171,7 +170,6 @@ bool ScriptLoadRequest::IsCacheable() const {
 
 void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript) {
   MOZ_ASSERT(IsCheckingCache());
-  MOZ_ASSERT(mURI);
 
   switch (mKind) {
     case ScriptKind::eClassic:
@@ -195,15 +193,6 @@ void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript) {
       MOZ_ASSERT(aLoadedScript->IsModuleScript());
 
       mLoadedScript = ModuleScript::FromCache(*aLoadedScript);
-
-#ifdef DEBUG
-      {
-        bool equals = false;
-        mURI->Equals(mLoadedScript->GetURI(), &equals);
-        MOZ_ASSERT(equals);
-      }
-#endif
-
       mBaseURL = mLoadedScript->BaseURL();
 
       // Modules need to wait for fetching dependencies before setting to
@@ -220,19 +209,19 @@ void ScriptLoadRequest::NoCacheEntryFound(
     mozilla::dom::ReferrerPolicy aReferrerPolicy,
     ScriptFetchOptions* aFetchOptions, nsIURI* aURI) {
   MOZ_ASSERT(IsCheckingCache());
-  MOZ_ASSERT(mURI);
   // At the time where we check in the cache, the mBaseURL is not set, as this
-  // is resolved by the network. Thus we use the mURI, for checking the cache
+  // is resolved by the network. Thus we use the aURI passed by the consumer,
+  // which is the original URI used for the request, for checking the cache
   // and later replace the mBaseURL using what the Channel->GetURI will provide.
   switch (mKind) {
     case ScriptKind::eClassic:
-      mLoadedScript = new ClassicScript(aReferrerPolicy, aFetchOptions, mURI);
+      mLoadedScript = new ClassicScript(aReferrerPolicy, aFetchOptions, aURI);
       break;
     case ScriptKind::eImportMap:
-      mLoadedScript = new ImportMapScript(aReferrerPolicy, aFetchOptions, mURI);
+      mLoadedScript = new ImportMapScript(aReferrerPolicy, aFetchOptions, aURI);
       break;
     case ScriptKind::eModule:
-      mLoadedScript = new ModuleScript(aReferrerPolicy, aFetchOptions, mURI);
+      mLoadedScript = new ModuleScript(aReferrerPolicy, aFetchOptions, aURI);
       break;
     case ScriptKind::eEvent:
       MOZ_ASSERT_UNREACHABLE("EventScripts are not using ScriptLoadRequest");
