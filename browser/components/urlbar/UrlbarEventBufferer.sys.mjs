@@ -165,10 +165,13 @@ export class UrlbarEventBufferer {
       throw new Error(`Event ${event.type}:${event.keyCode} already deferred!`);
     }
     lazy.logger.debug(`Deferring ${event.type}:${event.keyCode} event`);
-    // Also store the current search string, as an added safety check. If the
-    // string will differ later, the event is stale and should be dropped.
-    event.searchString = this.#lastQuery.context.searchString;
-    this.#eventsQueue.push({ event, callback });
+    this.#eventsQueue.push({
+      event,
+      callback,
+      // Also store the current search string, as an added safety check. If the
+      // string will differ later, the event is stale and should be dropped.
+      searchString: this.#lastQuery.context.searchString,
+    });
 
     if (!this.#deferringTimeout) {
       let elapsed = ChromeUtils.now() - this.#lastQuery.startDate;
@@ -199,7 +202,7 @@ export class UrlbarEventBufferer {
       return;
     }
 
-    let { event, callback } = this.#eventsQueue[0];
+    let { event, callback, searchString } = this.#eventsQueue[0];
     if (onlyIfSafe && !this.isSafeToPlayDeferredEvent(event)) {
       return;
     }
@@ -207,7 +210,7 @@ export class UrlbarEventBufferer {
     // Remove the event from the queue and play it.
     this.#eventsQueue.shift();
     // Safety check: handle only if the search string didn't change meanwhile.
-    if (event.searchString == this.#lastQuery.context.searchString) {
+    if (searchString == this.#lastQuery.context.searchString) {
       callback();
     }
     Services.tm.dispatchToMainThread(() => {
@@ -367,7 +370,7 @@ export class UrlbarEventBufferer {
    * but it may also never be invoked, if the context changed and the event
    * became obsolete.
    *
-   * @type {{event: KeyboardEvent, callback: () => void}[]}
+   * @type {{event: KeyboardEvent, callback: () => void, searchString: string}[]}
    */
   #eventsQueue = [];
 
