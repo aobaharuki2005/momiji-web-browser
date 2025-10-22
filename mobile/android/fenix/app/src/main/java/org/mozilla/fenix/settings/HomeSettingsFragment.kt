@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -25,6 +26,8 @@ import org.mozilla.fenix.utils.view.addToRadioGroup
  */
 class HomeSettingsFragment : PreferenceFragmentCompat() {
 
+    private val args by navArgs<HomeSettingsFragmentArgs>()
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.home_preferences, rootKey)
         setupPreferences()
@@ -33,6 +36,9 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_home_2))
+        args.preferenceToScrollTo?.let {
+            scrollToPreference(it)
+        }
     }
 
     private fun setupPreferences() {

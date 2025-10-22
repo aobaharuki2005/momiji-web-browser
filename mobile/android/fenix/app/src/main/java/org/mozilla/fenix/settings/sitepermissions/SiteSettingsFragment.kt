@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings.sitepermissions
 import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
@@ -30,6 +31,8 @@ import org.mozilla.fenix.settings.requirePreference
 @SuppressWarnings("TooManyFunctions")
 class SiteSettingsFragment : PreferenceFragmentCompat() {
 
+    val args by navArgs<SiteSettingsFragmentArgs>()
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.site_permissions_preferences, rootKey)
 
@@ -41,6 +44,9 @@ class SiteSettingsFragment : PreferenceFragmentCompat() {
         super.onResume()
         showToolbar(getString(R.string.preferences_site_settings))
         setupPreferences()
+        args.preferenceToScrollTo?.let {
+            scrollToPreference(it)
+        }
     }
 
     private fun setupPreferences() {
