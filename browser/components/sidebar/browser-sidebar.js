@@ -446,7 +446,6 @@ var SidebarController = {
           { global: "current" }
         );
       }
-      this.revampComponentsLoaded = true;
       this._state.initializeState(this._showLauncherAfterInit);
       // clear the flag after we've used it
       delete this._showLauncherAfterInit;
@@ -565,7 +564,7 @@ var SidebarController = {
       this._mainResizeObserver = null;
     }
 
-    if (this.revampComponentsLoaded) {
+    if (this.sidebarRevampEnabled) {
       // Explicitly disconnect the `sidebar-main` element so that listeners
       // setup by reactive controllers will also be removed.
       this.sidebarMain.remove();
@@ -665,7 +664,7 @@ var SidebarController = {
           this.showInitially(this.lastOpenedId);
           break;
         }
-        if (this.revampComponentsLoaded) {
+        if (this.sidebarRevampEnabled) {
           this.sidebarMain.requestUpdate();
         }
         break;
