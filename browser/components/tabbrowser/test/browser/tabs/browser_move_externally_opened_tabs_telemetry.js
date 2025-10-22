@@ -6,16 +6,6 @@
 let resetTelemetry = async () => {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
-  // `browser.ui.interaction.tab_movement` is disabled by default and enabled
-  // by server knobs, so this test needs to enable it manually in order
-  // to test it.
-  Services.fog.applyServerKnobsConfig(
-    JSON.stringify({
-      metrics_enabled: {
-        "browser.ui.interaction.tab_movement": true,
-      },
-    })
-  );
 };
 
 /**

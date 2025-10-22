@@ -11,8 +11,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 let lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
+  URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -265,16 +266,18 @@ export class BrowserDOMWindow {
       return null;
     }
 
+    if (isExternal) {
+      lazy.NimbusFeatures.externalLinkHandling.recordExposureEvent({
+        once: true,
+      });
+    }
+
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
-      if (
-        isExternal &&
-        Services.prefs.prefHasUserValue(
-          "browser.link.open_newwindow.override.external"
-        )
-      ) {
-        aWhere = Services.prefs.getIntPref(
-          "browser.link.open_newwindow.override.external"
-        );
+      /** @type {number} proxy for `browser.link.open_newwindow.override.external` */
+      const externalLinkOpeningBehavior =
+        lazy.NimbusFeatures.externalLinkHandling.getVariable("openBehavior");
+      if (isExternal && externalLinkOpeningBehavior != -1) {
+        aWhere = externalLinkOpeningBehavior;
       } else {
         aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
       }
