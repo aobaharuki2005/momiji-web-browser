@@ -1677,6 +1677,16 @@ AttachDecision GetPropIRGenerator::tryAttachScriptedProxy(
     }
   }
 
+  // Private fields of proxies are stored on the expando, and don't fire traps.
+  // Note that we don't need to guard against this in CacheIR, because there's
+  // no way to generate bytecode that will *sometimes* load a private field;
+  // either it's accessing a private field, or it isn't. We assert in the
+  // CacheIR implementation of callScriptedProxy(GetResult|GetByValueResult)
+  // that we don't see any private field symbols.
+  if (idVal_.isSymbol() && idVal_.toSymbol()->isPrivateName()) {
+    return AttachDecision::NoAction;
+  }
+
   JSObject* handlerObj = ScriptedProxyHandler::handlerObject(obj);
   if (!handlerObj) {
     return AttachDecision::NoAction;
