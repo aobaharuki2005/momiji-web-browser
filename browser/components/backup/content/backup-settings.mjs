@@ -475,8 +475,10 @@ export default class BackupSettings extends MozLitElement {
   }
 
   render() {
-    let scheduledBackupsEnabledL10nID = this.backupServiceState
-      .scheduledBackupsEnabled
+    let scheduledBackupsEnabledState =
+      this.backupServiceState.scheduledBackupsEnabled;
+
+    let scheduledBackupsEnabledL10nID = scheduledBackupsEnabledState
       ? "settings-data-backup-scheduled-backups-on"
       : "settings-data-backup-scheduled-backups-off";
 
@@ -506,13 +508,17 @@ export default class BackupSettings extends MozLitElement {
                 class="heading-medium"
               ></span>
 
-              <moz-button
-                id="backup-trigger-button"
-                @click=${this.handleBackupTrigger}
-                data-l10n-id=${backupTriggerL10nID}
-                ?disabled=${this.backupServiceState.backupInProgress ||
-                !this.backupServiceState.scheduledBackupsEnabled}
-              ></moz-button>
+              ${scheduledBackupsEnabledState
+                ? html`
+                    <moz-button
+                      id="backup-trigger-button"
+                      @click=${this.handleBackupTrigger}
+                      data-l10n-id=${backupTriggerL10nID}
+                      ?disabled=${this.backupServiceState.backupInProgress ||
+                      !this.backupServiceState.scheduledBackupsEnabled}
+                    ></moz-button>
+                  `
+                : null}
 
               <moz-button
                 id="backup-toggle-scheduled-button"
