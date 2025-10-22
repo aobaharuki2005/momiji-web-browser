@@ -40,13 +40,32 @@ inline NSString* ToNSString(id aValue) {
   return nil;
 }
 
-@interface mozTextAccessible ()
-- (long)textLength;
-- (BOOL)isReadOnly;
-- (NSString*)text;
-- (GeckoTextMarkerRange)selection;
-- (GeckoTextMarkerRange)textMarkerRangeFromRange:(NSValue*)range;
-@end
+static GeckoTextMarkerRange GetSelectionInObject(mozAccessible* aObj) {
+  id<MOXTextMarkerSupport> delegate = [aObj moxTextMarkerDelegate];
+  GeckoTextMarkerRange selection =
+      [static_cast<MOXTextMarkerDelegate*>(delegate) selection];
+
+  if (!selection.IsValid() || !selection.Crop([aObj geckoAccessible])) {
+    // The selection is not in this accessible. Return invalid range.
+    return GeckoTextMarkerRange();
+  }
+
+  return selection;
+}
+
+static GeckoTextMarkerRange GetTextMarkerRangeFromRange(mozAccessible* aObj,
+                                                        NSValue* aRange) {
+  NSRange r = [aRange rangeValue];
+  Accessible* acc = [aObj geckoAccessible];
+
+  GeckoTextMarker startMarker =
+      GeckoTextMarker::MarkerFromIndex(acc, r.location);
+
+  GeckoTextMarker endMarker =
+      GeckoTextMarker::MarkerFromIndex(acc, r.location + r.length);
+
+  return GeckoTextMarkerRange(startMarker, endMarker);
+}
 
 @implementation mozTextAccessible
 
@@ -62,11 +81,11 @@ inline NSString* ToNSString(id aValue) {
 }
 
 - (NSNumber*)moxNumberOfCharacters {
-  return @([self textLength]);
+  return @([[self moxValue] length]);
 }
 
 - (NSString*)moxSelectedText {
-  GeckoTextMarkerRange selection = [self selection];
+  GeckoTextMarkerRange selection = GetSelectionInObject(self);
   if (!selection.IsValid()) {
     return nil;
   }
@@ -75,7 +94,7 @@ inline NSString* ToNSString(id aValue) {
 }
 
 - (NSValue*)moxSelectedTextRange {
-  GeckoTextMarkerRange selection = [self selection];
+  GeckoTextMarkerRange selection = GetSelectionInObject(self);
   if (!selection.IsValid()) {
     return nil;
   }
@@ -90,11 +109,12 @@ inline NSString* ToNSString(id aValue) {
 - (NSValue*)moxVisibleCharacterRange {
   // XXX this won't work with Textarea and such as we actually don't give
   // the visible character range.
-  return [NSValue valueWithRange:NSMakeRange(0, [self textLength])];
+  return [NSValue valueWithRange:NSMakeRange(0, [[self moxValue] length])];
 }
 
 - (BOOL)moxBlockSelector:(SEL)selector {
-  if (selector == @selector(moxSetValue:) && [self isReadOnly]) {
+  if (selector == @selector(moxSetValue:) &&
+      [self stateWithMask:states::EDITABLE] == 0) {
     return YES;
   }
 
@@ -134,7 +154,7 @@ inline NSString* ToNSString(id aValue) {
 
 - (void)moxSetSelectedTextRange:(NSValue*)selectedTextRange {
   GeckoTextMarkerRange markerRange =
-      [self textMarkerRangeFromRange:selectedTextRange];
+      GetTextMarkerRangeFromRange(self, selectedTextRange);
 
   if (markerRange.IsValid()) {
     markerRange.Select();
@@ -156,7 +176,7 @@ inline NSString* ToNSString(id aValue) {
 }
 
 - (NSString*)moxStringForRange:(NSValue*)range {
-  GeckoTextMarkerRange markerRange = [self textMarkerRangeFromRange:range];
+  GeckoTextMarkerRange markerRange = GetTextMarkerRangeFromRange(self, range);
 
   if (!markerRange.IsValid()) {
     return nil;
@@ -166,7 +186,7 @@ inline NSString* ToNSString(id aValue) {
 }
 
 - (NSAttributedString*)moxAttributedStringForRange:(NSValue*)range {
-  GeckoTextMarkerRange markerRange = [self textMarkerRangeFromRange:range];
+  GeckoTextMarkerRange markerRange = GetTextMarkerRangeFromRange(self, range);
 
   if (!markerRange.IsValid()) {
     return nil;
@@ -177,7 +197,7 @@ inline NSString* ToNSString(id aValue) {
 
 - (NSValue*)moxRangeForLine:(NSNumber*)line {
   // XXX: actually get the integer value for the line #
-  return [NSValue valueWithRange:NSMakeRange(0, [self textLength])];
+  return [NSValue valueWithRange:NSMakeRange(0, [[self moxValue] length])];
 }
 
 - (NSNumber*)moxLineForIndex:(NSNumber*)index {
@@ -186,7 +206,7 @@ inline NSString* ToNSString(id aValue) {
 }
 
 - (NSValue*)moxBoundsForRange:(NSValue*)range {
-  GeckoTextMarkerRange markerRange = [self textMarkerRangeFromRange:range];
+  GeckoTextMarkerRange markerRange = GetTextMarkerRangeFromRange(self, range);
 
   if (!markerRange.IsValid()) {
     return nil;
@@ -229,55 +249,6 @@ inline NSString* ToNSString(id aValue) {
       [super handleAccessibleEvent:eventType];
       break;
   }
-}
-
-#pragma mark -
-
-- (long)textLength {
-  return [[self text] length];
-}
-
-- (BOOL)isReadOnly {
-  return [self stateWithMask:states::EDITABLE] == 0;
-}
-
-- (NSString*)text {
-  // A password text field returns an empty value
-  if (mRole == roles::PASSWORD_TEXT) {
-    return @"";
-  }
-
-  id<MOXTextMarkerSupport> delegate = [self moxTextMarkerDelegate];
-  return [delegate
-      moxStringForTextMarkerRange:[delegate
-                                      moxTextMarkerRangeForUIElement:self]];
-}
-
-- (GeckoTextMarkerRange)selection {
-  MOZ_ASSERT(mGeckoAccessible);
-
-  id<MOXTextMarkerSupport> delegate = [self moxTextMarkerDelegate];
-  GeckoTextMarkerRange selection =
-      [static_cast<MOXTextMarkerDelegate*>(delegate) selection];
-
-  if (!selection.IsValid() || !selection.Crop(mGeckoAccessible)) {
-    // The selection is not in this accessible. Return invalid range.
-    return GeckoTextMarkerRange();
-  }
-
-  return selection;
-}
-
-- (GeckoTextMarkerRange)textMarkerRangeFromRange:(NSValue*)range {
-  NSRange r = [range rangeValue];
-
-  GeckoTextMarker startMarker =
-      GeckoTextMarker::MarkerFromIndex(mGeckoAccessible, r.location);
-
-  GeckoTextMarker endMarker =
-      GeckoTextMarker::MarkerFromIndex(mGeckoAccessible, r.location + r.length);
-
-  return GeckoTextMarkerRange(startMarker, endMarker);
 }
 
 @end
