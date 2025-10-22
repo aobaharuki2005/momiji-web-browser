@@ -52,7 +52,6 @@ export const ALLOW_LIST = [
  * @param {string[]} additionalAllows to be appended to our list
  * @returns {string[]}
  */
-
 export const createAllowList = (additionalAllows = []) => {
   return [...ALLOW_LIST, ...additionalAllows];
 };
@@ -67,7 +66,7 @@ export const createTokenNamesArray = tokenCategoriesArray =>
   tokenCategoriesArray
     .flatMap(category => tokensTable[category])
     .reduce((acc, token) => {
-      if (token.name) {
+      if (token?.name) {
         return [...acc, `var(${token.name})`];
       }
       return acc;
@@ -356,7 +355,6 @@ export const isValidLocalProperty = (value, cssCustomProperties, tokenCSS) => {
  * @param {string} value some CSS declaration to match
  * @returns {string}
  */
-
 export const trimValue = value => String(value).trim();
 
 /**

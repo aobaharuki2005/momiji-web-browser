@@ -14,6 +14,7 @@ import useSpaceTokens from "./use-space-tokens.mjs";
 import useBackgroundColorTokens from "./use-background-color-tokens.mjs";
 import useTextColorTokens from "./use-text-color-tokens.mjs";
 import useBoxShadowTokens from "./use-box-shadow-tokens.mjs";
+import noNonSemanticTokenUsage from "./no-non-semantic-token-usage.mjs";
 
 export default {
   "no-base-design-tokens": noBaseDesignTokens,
@@ -26,4 +27,5 @@ export default {
   "use-background-color-tokens": useBackgroundColorTokens,
   "use-text-color-tokens": useTextColorTokens,
   "use-box-shadow-tokens": useBoxShadowTokens,
+  "no-non-semantic-token-usage": noNonSemanticTokenUsage,
 };

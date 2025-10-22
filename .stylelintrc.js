@@ -278,6 +278,7 @@ module.exports = {
     "stylelint-plugin-mozilla/use-space-tokens": true,
     "stylelint-plugin-mozilla/use-text-color-tokens": true,
     "stylelint-plugin-mozilla/use-box-shadow-tokens": true,
+    "stylelint-plugin-mozilla/no-non-semantic-token-usage": true,
   },
 
   overrides: [
@@ -426,6 +427,7 @@ module.exports = {
         "stylelint-plugin-mozilla/use-space-tokens": false,
         "stylelint-plugin-mozilla/use-text-color-tokens": false,
         "stylelint-plugin-mozilla/use-box-shadow-tokens": false,
+        "stylelint-plugin-mozilla/no-non-semantic-token-usage": false,
       },
     },
     {
@@ -440,6 +442,7 @@ module.exports = {
         "stylelint-plugin-mozilla/use-border-radius-tokens": true,
         "stylelint-plugin-mozilla/use-space-tokens": false,
         "stylelint-plugin-mozilla/use-text-color-tokens": false,
+        "stylelint-plugin-mozilla/no-non-semantic-token-usage": false,
       },
     },
     {
