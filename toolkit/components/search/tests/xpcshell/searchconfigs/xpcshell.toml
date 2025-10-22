@@ -25,7 +25,7 @@ skip-if = [
 ["test_distributions.js"]
 
 ["test_searchconfig.js"]
-requesttimeoutfactor = 3  # Slow on Linux and Windows
+requesttimeoutfactor = 5  # Slow and high CPU use on Linux and Windows
 
 ["test_searchconfig_google_additional.js"]
 

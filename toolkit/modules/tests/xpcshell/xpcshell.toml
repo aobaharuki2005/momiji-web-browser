@@ -99,7 +99,7 @@ skip-if = ["os == 'android'"]
 ["test_Region.js"]
 
 ["test_Region_geocoding.js"]
-requesttimeoutfactor = 2  # Slow on debug builds
+requesttimeoutfactor = 4  # Slow and high CPU use on debug builds
 
 ["test_RustSharedRemoteSettingsService.js"]
 skip-if = ["os == 'android'"]

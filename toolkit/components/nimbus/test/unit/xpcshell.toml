@@ -33,7 +33,7 @@ prefs = [
 ["test_ExperimentManager_lifecycle.js"]
 
 ["test_ExperimentManager_prefs.js"]
-requesttimeoutfactor = 3  # Slow on Linux and Windows
+requesttimeoutfactor = 6  # Slow and high CPU use on Linux and Windows
 skip-if = ["os == 'win' && msix"] # Bug 1991153
 
 ["test_ExperimentManager_unenroll.js"]
