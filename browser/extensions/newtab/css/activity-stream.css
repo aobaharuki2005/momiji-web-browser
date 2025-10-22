@@ -5352,10 +5352,10 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-1-small.refined-cards .card-stp-thumbs-buttons-wrapper .card-stp-thumbs-buttons {
     gap: var(--space-small);
   }
-  .ds-section-grid.ds-card-grid .col-1-small.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:focus-visible .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-small.refined-cards.active .card-stp-thumbs-buttons-wrapper {
+  .ds-section-grid.ds-card-grid .col-1-small.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:focus-within .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-small.refined-cards.active .card-stp-thumbs-buttons-wrapper {
     visibility: visible;
   }
-  .ds-section-grid.ds-card-grid .col-1-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:focus-visible .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards.active .meta .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-1-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards.active .meta .source-wrapper .source {
     display: none;
   }
   .ds-section-grid.ds-card-grid .col-1-small.ds-card.sections-card-ui {
@@ -5456,7 +5456,10 @@ dialog::after {
     min-height: 28px;
   }
   .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .meta .sections-card-footer .source-wrapper {
-    max-width: 175px;
+    max-width: 245px;
+  }
+  .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .meta .sections-card-footer .source-wrapper .source {
+    width: 217px;
   }
   .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .meta:has(.story-footer .story-sponsored-label) .sections-card-footer {
     display: none;
@@ -5475,8 +5478,18 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .card-stp-button-hover-background {
     background: transparent;
   }
-  .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:focus-visible .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards.active .meta .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .card-stp-thumbs-buttons-wrapper {
+    visibility: hidden;
+  }
+  .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:focus-within .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards.active .card-stp-thumbs-buttons-wrapper {
+    visibility: visible;
+  }
+  .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:hover .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:active .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:focus-within .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards.active .meta .source-wrapper {
+    max-width: 175px;
+  }
+  .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-medium.refined-cards.active .meta .source-wrapper .source {
     display: block;
+    width: unset;
   }
   .ds-section-grid.ds-card-grid .col-1-medium .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
@@ -5720,10 +5733,10 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-2-small.refined-cards .card-stp-thumbs-buttons-wrapper .card-stp-thumbs-buttons {
     gap: var(--space-small);
   }
-  .ds-section-grid.ds-card-grid .col-2-small.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:focus-visible .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-small.refined-cards.active .card-stp-thumbs-buttons-wrapper {
+  .ds-section-grid.ds-card-grid .col-2-small.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:focus-within .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-small.refined-cards.active .card-stp-thumbs-buttons-wrapper {
     visibility: visible;
   }
-  .ds-section-grid.ds-card-grid .col-2-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:focus-visible .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards.active .meta .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-2-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards.active .meta .source-wrapper .source {
     display: none;
   }
   .ds-section-grid.ds-card-grid .col-2-small.ds-card.sections-card-ui {
@@ -5824,7 +5837,10 @@ dialog::after {
     min-height: 28px;
   }
   .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .meta .sections-card-footer .source-wrapper {
-    max-width: 175px;
+    max-width: 245px;
+  }
+  .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .meta .sections-card-footer .source-wrapper .source {
+    width: 217px;
   }
   .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .meta:has(.story-footer .story-sponsored-label) .sections-card-footer {
     display: none;
@@ -5843,8 +5859,18 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .card-stp-button-hover-background {
     background: transparent;
   }
-  .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:focus-visible .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards.active .meta .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .card-stp-thumbs-buttons-wrapper {
+    visibility: hidden;
+  }
+  .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:focus-within .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards.active .card-stp-thumbs-buttons-wrapper {
+    visibility: visible;
+  }
+  .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:hover .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:active .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:focus-within .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards.active .meta .source-wrapper {
+    max-width: 175px;
+  }
+  .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-medium.refined-cards.active .meta .source-wrapper .source {
     display: block;
+    width: unset;
   }
   .ds-section-grid.ds-card-grid .col-2-medium .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
@@ -6097,10 +6123,10 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-3-small.refined-cards .card-stp-thumbs-buttons-wrapper .card-stp-thumbs-buttons {
     gap: var(--space-small);
   }
-  .ds-section-grid.ds-card-grid .col-3-small.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:focus-visible .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-small.refined-cards.active .card-stp-thumbs-buttons-wrapper {
+  .ds-section-grid.ds-card-grid .col-3-small.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:focus-within .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-small.refined-cards.active .card-stp-thumbs-buttons-wrapper {
     visibility: visible;
   }
-  .ds-section-grid.ds-card-grid .col-3-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:focus-visible .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards.active .meta .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-3-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards.active .meta .source-wrapper .source {
     display: none;
   }
   .ds-section-grid.ds-card-grid .col-3-small.ds-card.sections-card-ui {
@@ -6201,7 +6227,10 @@ dialog::after {
     min-height: 28px;
   }
   .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .meta .sections-card-footer .source-wrapper {
-    max-width: 175px;
+    max-width: 245px;
+  }
+  .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .meta .sections-card-footer .source-wrapper .source {
+    width: 217px;
   }
   .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .meta:has(.story-footer .story-sponsored-label) .sections-card-footer {
     display: none;
@@ -6220,8 +6249,18 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .card-stp-button-hover-background {
     background: transparent;
   }
-  .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:focus-visible .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards.active .meta .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .card-stp-thumbs-buttons-wrapper {
+    visibility: hidden;
+  }
+  .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:focus-within .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards.active .card-stp-thumbs-buttons-wrapper {
+    visibility: visible;
+  }
+  .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:hover .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:active .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:focus-within .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards.active .meta .source-wrapper {
+    max-width: 175px;
+  }
+  .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-medium.refined-cards.active .meta .source-wrapper .source {
     display: block;
+    width: unset;
   }
   .ds-section-grid.ds-card-grid .col-3-medium .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
@@ -6473,10 +6512,10 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-4-small.refined-cards .card-stp-thumbs-buttons-wrapper .card-stp-thumbs-buttons {
     gap: var(--space-small);
   }
-  .ds-section-grid.ds-card-grid .col-4-small.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:focus-visible .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-small.refined-cards.active .card-stp-thumbs-buttons-wrapper {
+  .ds-section-grid.ds-card-grid .col-4-small.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:focus-within .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-small.refined-cards.active .card-stp-thumbs-buttons-wrapper {
     visibility: visible;
   }
-  .ds-section-grid.ds-card-grid .col-4-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:focus-visible .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards.active .meta .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-4-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards.active .meta .source-wrapper .source {
     display: none;
   }
   .ds-section-grid.ds-card-grid .col-4-small.ds-card.sections-card-ui {
@@ -6577,7 +6616,10 @@ dialog::after {
     min-height: 28px;
   }
   .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .meta .sections-card-footer .source-wrapper {
-    max-width: 175px;
+    max-width: 245px;
+  }
+  .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .meta .sections-card-footer .source-wrapper .source {
+    width: 217px;
   }
   .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .meta:has(.story-footer .story-sponsored-label) .sections-card-footer {
     display: none;
@@ -6596,8 +6638,18 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .card-stp-button-hover-background {
     background: transparent;
   }
-  .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:focus-visible .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards.active .meta .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .card-stp-thumbs-buttons-wrapper {
+    visibility: hidden;
+  }
+  .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:hover .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:active .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:focus-within .card-stp-thumbs-buttons-wrapper, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards.active .card-stp-thumbs-buttons-wrapper {
+    visibility: visible;
+  }
+  .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:hover .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:active .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:focus-within .meta .source-wrapper, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards.active .meta .source-wrapper {
+    max-width: 175px;
+  }
+  .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-medium.refined-cards.active .meta .source-wrapper .source {
     display: block;
+    width: unset;
   }
   .ds-section-grid.ds-card-grid .col-4-medium .card-stp-button-position-wrapper {
     inset-inline-end: var(--space-small);
