@@ -35,6 +35,8 @@ add_setup(async () => {
 add_task(async function test_create_new_backup_trigger() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let settings = browser.contentDocument.querySelector("backup-settings");
+    // disable the buffer for the test
+    settings.MESSAGE_BAR_BUFFER = 0;
 
     let bs = getAndMaybeInitBackupService();
 
@@ -54,6 +56,12 @@ add_task(async function test_create_new_backup_trigger() {
       }
     );
 
+    // ensure that the in progress message bar is not visible
+    Assert.ok(
+      !settings.backupInProgressMessageBarEl,
+      "A backup is not in progress, the message bar should not be visible"
+    );
+
     // click on button
     settings.triggerBackupButtonEl.click();
 
@@ -64,7 +72,13 @@ add_task(async function test_create_new_backup_trigger() {
 
     Assert.ok(
       settings.triggerBackupButtonEl.disabled,
-      "A backup is in progress"
+      "A backup is in progress, the trigger button should be disabled"
+    );
+
+    // ensure that the in progress message bar is visible
+    Assert.ok(
+      settings.backupInProgressMessageBarEl,
+      "A backup is in progress, the message bar should be visible"
     );
 
     await BrowserTestUtils.waitForEvent(
@@ -77,8 +91,12 @@ add_task(async function test_create_new_backup_trigger() {
     );
 
     await settings.updateComplete;
+
     // make sure that the backup created is a valid backup
-    Assert.ok(!settings.triggerBackupButtonEl.disabled, "A backup is complete");
+    Assert.ok(
+      !settings.backupServiceState.backupInProgress,
+      "A backup is complete"
+    );
 
     let fileName = JSON.parse(
       settings.lastBackupFileNameEl.getAttribute("data-l10n-args")
@@ -86,6 +104,11 @@ add_task(async function test_create_new_backup_trigger() {
 
     // the file should show once it's created
     Assert.ok(fileName, "the archive was created");
+
+    await BrowserTestUtils.waitForCondition(
+      () => !settings.backupInProgressMessageBarEl,
+      "A backup is no longer in progress, the message bar should disappear"
+    );
   });
 });
 
@@ -138,8 +161,9 @@ add_task(async function test_create_backup_trigger_disabled() {
     ok(result, `Backup completed and returned result ${result.archivePath}`);
     await stateUpdated;
     await settings.updateComplete;
+
     Assert.ok(
-      !settings.triggerBackupButtonEl.disabled,
+      !settings.backupServiceState.backupInProgress,
       "No backup in progress, we can trigger a new one"
     );
   });

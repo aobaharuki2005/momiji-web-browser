@@ -33,6 +33,11 @@ const BACKUP_ERROR_CODE_PREF_NAME = "browser.backup.errorCode";
 export default class BackupSettings extends MozLitElement {
   #placeholderIconURL = "chrome://global/skin/icons/page-portrait.svg";
   #backupService = lazy.BackupService.init();
+  inProgressTimeout = null;
+  showInProgress = false;
+
+  // Decides how long the progress message bar persists for
+  MESSAGE_BAR_BUFFER = 3000;
 
   static properties = {
     backupServiceState: { type: Object },
@@ -68,6 +73,7 @@ export default class BackupSettings extends MozLitElement {
       backupLocationEditButtonEl: "#backup-location-edit",
       scheduledBackupsDescriptionEl: "#scheduled-backups-description",
       backupErrorBarEl: "#create-backup-error",
+      backupInProgressMessageBarEl: "#backup-in-progress-message",
     };
   }
 
@@ -445,6 +451,16 @@ export default class BackupSettings extends MozLitElement {
     </section>`;
   }
 
+  inProgressMessageBarTemplate() {
+    return html`
+      <moz-message-bar
+        type="info"
+        id="backup-in-progress-message"
+        data-l10n-id="settings-data-backup-in-progress-message"
+      ></moz-message-bar>
+    `;
+  }
+
   errorBarTemplate() {
     const l10nId = getErrorL10nId(this.backupErrorCode);
     return html`
@@ -482,9 +498,21 @@ export default class BackupSettings extends MozLitElement {
       ? "settings-data-backup-scheduled-backups-on"
       : "settings-data-backup-scheduled-backups-off";
 
-    let backupTriggerL10nID = this.backupServiceState.backupInProgress
-      ? "settings-data-backup-in-progress-button"
-      : "settings-data-backup-trigger-button";
+    let backupToggleL10nID = scheduledBackupsEnabledState
+      ? "settings-data-backup-toggle-off"
+      : "settings-data-backup-toggle-on";
+
+    if (this.backupServiceState.backupInProgress) {
+      if (!this.showInProgress) {
+        this.showInProgress = true;
+        // Keep the in progress message bar visible for at least 3 seconds
+        clearTimeout(this.inProgressTimeout);
+        this.inProgressTimeout = setTimeout(() => {
+          this.showInProgress = false;
+          this.requestUpdate();
+        }, this.MESSAGE_BAR_BUFFER);
+      }
+    }
 
     return html`<link
         rel="stylesheet"
@@ -495,6 +523,7 @@ export default class BackupSettings extends MozLitElement {
         href="chrome://browser/content/backup/backup-settings.css"
       />
       ${this.backupErrorCode ? this.errorBarTemplate() : null}
+      ${this.showInProgress ? this.inProgressMessageBarTemplate() : null}
       ${this.turnOnScheduledBackupsDialogTemplate()}
       ${this.turnOffScheduledBackupsDialogTemplate()}
       ${this.enableBackupEncryptionDialogTemplate()}
@@ -513,9 +542,8 @@ export default class BackupSettings extends MozLitElement {
                     <moz-button
                       id="backup-trigger-button"
                       @click=${this.handleBackupTrigger}
-                      data-l10n-id=${backupTriggerL10nID}
-                      ?disabled=${this.backupServiceState.backupInProgress ||
-                      !this.backupServiceState.scheduledBackupsEnabled}
+                      data-l10n-id="settings-data-backup-trigger-button"
+                      ?disabled=${this.showInProgress}
                     ></moz-button>
                   `
                 : null}
@@ -523,7 +551,7 @@ export default class BackupSettings extends MozLitElement {
               <moz-button
                 id="backup-toggle-scheduled-button"
                 @click=${this.handleShowScheduledBackups}
-                data-l10n-id="settings-data-backup-toggle"
+                data-l10n-id=${backupToggleL10nID}
               ></moz-button>
 
               ${this.backupServiceState.scheduledBackupsEnabled
