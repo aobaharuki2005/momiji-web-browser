@@ -1539,6 +1539,42 @@
     border-color: color-mix(in srgb, currentColor 10%, transparent);
     background-color: var(--urlbar-box-focus-bgcolor);
 
+    &[backgroundImageId] {
+      background-position: center;
+      -moz-context-properties: fill, stroke;
+      fill: var(--airline-color, currentColor);
+      stroke: var(--airline-color, currentColor);
+    }
+
+    &[backgroundImageId="0"] {
+      background-image: url(chrome://browser/skin/urlbar/flight-inflight-progress-0.svg);
+    }
+
+    &[backgroundImageId="1"] {
+      background-image: url(chrome://browser/skin/urlbar/flight-inflight-progress-1.svg);
+    }
+
+    &[backgroundImageId="2"] {
+      background-image: url(chrome://browser/skin/urlbar/flight-inflight-progress-2.svg);
+    }
+
+    &[backgroundImageId="3"] {
+      background-image: url(chrome://browser/skin/urlbar/flight-inflight-progress-3.svg);
+    }
+
+    &[backgroundImageId="4"] {
+      background-image: url(chrome://browser/skin/urlbar/flight-inflight-progress-4.svg);
+    }
+
+    &[hasForegroundImage] {
+      /* Move up the progress image if exists */
+      background-position-y: bottom 12px;
+      /* Move the foreground image to the end corner */
+      display: flex;
+      justify-content: end;
+      align-items: end;
+    }
+
     > .urlbarView-realtime-image[fallback] {
       width: 26px;
       height: 26px;
