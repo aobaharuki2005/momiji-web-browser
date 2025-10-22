@@ -19,7 +19,6 @@
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkPoint.h"
-#include "include/core/SkRSXform.h" // IWYU pragma: keep    (for unspanned apis)
 #include "include/core/SkRasterHandleAllocator.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
@@ -69,7 +68,6 @@ class SkPicture;
 class SkPixmap;
 class SkRRect;
 class SkRegion;
-class SkRecorder;
 class SkShader;
 class SkSpecialImage;
 class SkSurface;
@@ -77,6 +75,7 @@ class SkSurface_Base;
 class SkTextBlob;
 class SkVertices;
 struct SkDrawShadowRec;
+struct SkRSXform;
 
 template<typename E>
 class SkEnumBitMask;
@@ -328,17 +327,12 @@ public:
      */
     virtual GrRecordingContext* recordingContext() const;
 
+
     /** Returns Recorder for the GPU surface associated with SkCanvas.
 
         @return  Recorder, if available; nullptr otherwise
      */
     virtual skgpu::graphite::Recorder* recorder() const;
-
-    /** Returns Recorder for the surface associated with SkCanvas.
-
-        @return  Recorder, should be non-null
-     */
-    virtual SkRecorder* baseRecorder() const;
 
     /** Sometimes a canvas is owned by a surface. If it is, getSurface() will return a bare
      *  pointer to that surface, else this will return nullptr.
@@ -1327,12 +1321,7 @@ public:
 
         example: https://fiddle.skia.org/c/@Canvas_drawPoints
     */
-    void drawPoints(PointMode mode, SkSpan<const SkPoint>, const SkPaint& paint);
-#ifdef SK_SUPPORT_UNSPANNED_APIS
-    void drawPoints(PointMode mode, size_t count, const SkPoint pts[], const SkPaint& paint) {
-        this->drawPoints(mode, {pts, count}, paint);
-    }
-#endif
+    void drawPoints(PointMode mode, size_t count, const SkPoint pts[], const SkPaint& paint);
 
     /** Draws point at (x, y) using clip, SkMatrix and SkPaint paint.
 
@@ -1904,28 +1893,19 @@ public:
        SkColorFilter, and SkImageFilter; apply to text. By
        default, draws filled black glyphs.
 
-       @param glyphs          the span of glyphIDs to draw
+       @param count           number of glyphs to draw
+       @param glyphs          the array of glyphIDs to draw
        @param positions       where to draw each glyph relative to origin
-       @param clusters        cluster information
+       @param clusters        array of size count of cluster information
+       @param textByteCount   size of the utf8text
        @param utf8text        utf8text supporting information for the glyphs
        @param origin          the origin of all the positions
        @param font            typeface, text size and so, used to describe the text
        @param paint           blend, color, and so on, used to draw
     */
-    void drawGlyphs(SkSpan<const SkGlyphID> glyphs, SkSpan<const SkPoint> positions,
-                    SkSpan<const uint32_t> clusters, SkSpan<const char> utf8text,
-                    SkPoint origin, const SkFont& font, const SkPaint& paint);
-#ifdef SK_SUPPORT_UNSPANNED_APIS
     void drawGlyphs(int count, const SkGlyphID glyphs[], const SkPoint positions[],
                     const uint32_t clusters[], int textByteCount, const char utf8text[],
-                    SkPoint origin, const SkFont& font, const SkPaint& paint) {
-        this->drawGlyphs({glyphs,    count},
-                         {positions, count},
-                         {clusters,  count},
-                         {utf8text,  textByteCount},
-                         origin, font, paint);
-    }
-#endif
+                    SkPoint origin, const SkFont& font, const SkPaint& paint);
 
     /** Draws count glyphs, at positions relative to origin styled with font and paint.
 
@@ -1945,14 +1925,8 @@ public:
         @param font        typeface, text size and so, used to describe the text
         @param paint       blend, color, and so on, used to draw
     */
-    void drawGlyphs(SkSpan<const SkGlyphID> glyphs, SkSpan<const SkPoint> positions,
-                    SkPoint origin, const SkFont& font, const SkPaint& paint);
-#ifdef SK_SUPPORT_UNSPANNED_APIS
     void drawGlyphs(int count, const SkGlyphID glyphs[], const SkPoint positions[],
-                    SkPoint origin, const SkFont& font, const SkPaint& paint) {
-        this->drawGlyphs({glyphs, count}, {positions, count}, origin, font, paint);
-    }
-#endif
+                    SkPoint origin, const SkFont& font, const SkPaint& paint);
 
     /** Draws count glyphs, at positions relative to origin styled with font and paint.
 
@@ -1973,14 +1947,8 @@ public:
         @param font     typeface, text size and so, used to describe the text
         @param paint    blend, color, and so on, used to draw
     */
-    void drawGlyphsRSXform(SkSpan<const SkGlyphID> glyphs, SkSpan<const SkRSXform> xforms,
-                           SkPoint origin, const SkFont& font, const SkPaint& paint);
-#ifdef SK_SUPPORT_UNSPANNED_APIS
     void drawGlyphs(int count, const SkGlyphID glyphs[], const SkRSXform xforms[],
-                    SkPoint origin, const SkFont& font, const SkPaint& paint) {
-        this->drawGlyphsRSXform({glyphs, count}, {xforms, count}, origin, font, paint);
-    }
-#endif
+                    SkPoint origin, const SkFont& font, const SkPaint& paint);
 
     /** Draws SkTextBlob blob at (x, y), using clip, SkMatrix, and SkPaint paint.
 
@@ -2187,9 +2155,7 @@ public:
 
         SkMaskFilter and SkPathEffect on paint are ignored.
 
-        For non-empty spans, the number of draws will be the min of
-        xform.size(), tex.size(), and (if not empty) colors.size().
-
+        xform, tex, and colors if present, must contain count entries.
         Optional colors are applied for each sprite using SkBlendMode mode, treating
         sprite as source and colors as destination.
         Optional cullRect is a conservative bounds of all transformed sprites.
@@ -2201,25 +2167,15 @@ public:
         @param xform     SkRSXform mappings for sprites in atlas
         @param tex       SkRect locations of sprites in atlas
         @param colors    one per sprite, blended with sprite using SkBlendMode; may be nullptr
+        @param count     number of sprites to draw
         @param mode      SkBlendMode combining colors and sprites
         @param sampling  SkSamplingOptions used when sampling from the atlas image
         @param cullRect  bounds of transformed sprites for efficient clipping; may be nullptr
         @param paint     SkColorFilter, SkImageFilter, SkBlendMode, and so on; may be nullptr
     */
-    void drawAtlas(const SkImage* atlas, SkSpan<const SkRSXform> xform,
-                   SkSpan<const SkRect> tex, SkSpan<const SkColor> colors, SkBlendMode mode,
-                   const SkSamplingOptions& sampling, const SkRect* cullRect, const SkPaint* paint);
-#ifdef SK_SUPPORT_UNSPANNED_APIS
     void drawAtlas(const SkImage* atlas, const SkRSXform xform[], const SkRect tex[],
                    const SkColor colors[], int count, SkBlendMode mode,
-                   const SkSamplingOptions& samp, const SkRect* cullRect, const SkPaint* paint) {
-        this->drawAtlas(atlas,
-                        {xform, count},
-                        {tex, tex ? count : 0},
-                        {colors, colors ? count : 0},
-                        mode, samp, cullRect, paint);
-    }
-#endif
+                   const SkSamplingOptions& sampling, const SkRect* cullRect, const SkPaint* paint);
 
     /** Draws SkDrawable drawable using clip and SkMatrix, concatenated with
         optional matrix.
@@ -2583,8 +2539,6 @@ private:
     void doSave();
     void checkForDeferredSave();
     void internalSetMatrix(const SkM44&);
-
-    virtual void onSurfaceDelete() {}
 
     friend class SkAndroidFrameworkUtils;
     friend class SkCanvasPriv;      // needs to expose android functions for testing outside android

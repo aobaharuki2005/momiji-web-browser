@@ -44,11 +44,11 @@ bool SkConicalGradient::FocalData::set(SkScalar r0, SkScalar r1, SkMatrix* matri
     // Map {focal point, (1, 0)} to {(0, 0), (1, 0)}
     const SkPoint from[2]   = { {fFocalX, 0}, {1, 0} };
     const SkPoint to[2]     = { {0, 0}, {1, 0} };
-    const auto focalMatrix = SkMatrix::PolyToPoly(from, to);
-    if (!focalMatrix) {
+    SkMatrix focalMatrix;
+    if (!focalMatrix.setPolyToPoly(from, to, 2)) {
         return false;
     }
-    matrix->postConcat(*focalMatrix);
+    matrix->postConcat(focalMatrix);
     fR1 = r1 / SkScalarAbs(1 - fFocalX);  // focalMatrix has a scale of 1/(1-f)
 
     // The following transformations are just to accelerate the shader computation by saving
@@ -62,11 +62,13 @@ bool SkConicalGradient::FocalData::set(SkScalar r0, SkScalar r1, SkMatrix* matri
     return true;
 }
 
-std::optional<SkMatrix> SkConicalGradient::MapToUnitX(const SkPoint &startCenter,
-                                                      const SkPoint &endCenter) {
+bool SkConicalGradient::MapToUnitX(const SkPoint &startCenter,
+                                   const SkPoint &endCenter,
+                                   SkMatrix* dstMatrix) {
     const SkPoint centers[2] = { startCenter, endCenter };
     const SkPoint unitvec[2] = { {0, 0}, {1, 0} };
-    return SkMatrix::PolyToPoly(centers, unitvec);
+
+    return dstMatrix->setPolyToPoly(centers, unitvec, 2);
 }
 
 sk_sp<SkShader> SkConicalGradient::Create(const SkPoint& c0,
@@ -91,12 +93,10 @@ sk_sp<SkShader> SkConicalGradient::Create(const SkPoint& c0,
 
         gradientType = Type::kRadial;
     } else {
-        auto mx = MapToUnitX(c0, c1);
-        if (!mx) {
+        if (!MapToUnitX(c0, c1, &gradientMatrix)) {
             // Degenerate case.
             return nullptr;
         }
-        gradientMatrix = *mx;
 
         gradientType = SkScalarNearlyZero(r1 - r0) ? Type::kStrip : Type::kFocal;
     }

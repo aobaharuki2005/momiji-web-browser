@@ -28,12 +28,6 @@
 #include <string_view>
 #include <tuple>
 
-// IWYU wants this, but it's C++20 and beyond. We can remove
-// this guard once C++ core is allowed to use C++20
-#if __cplusplus >= 202002L
-#include <compare>
-#endif
-
 namespace SkSL {
 
 class Context;

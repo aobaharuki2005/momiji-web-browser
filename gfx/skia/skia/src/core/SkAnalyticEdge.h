@@ -12,6 +12,7 @@
 #include "include/private/base/SkDebug.h"
 #include "include/private/base/SkFixed.h"
 #include "include/private/base/SkSafe32.h"
+#include "src/core/SkEdge.h"
 
 #include <cstdint>
 
@@ -19,15 +20,8 @@ struct SkPoint;
 
 struct SkAnalyticEdge {
     // Similar to SkEdge, the conic edges will be converted to quadratic edges
-    enum class Type : int8_t {
-        kLine,
-        kQuad,
-        kCubic,
-    };
-    enum class Winding : int8_t {
-        kCW = 1,    // clockwise
-        kCCW = -1,  // counter clockwise
-    };
+    using Type = SkEdge::Type;
+    using Winding = SkEdge::Winding;
 
     SkAnalyticEdge* fNext;
     SkAnalyticEdge* fPrev;
@@ -45,6 +39,7 @@ struct SkAnalyticEdge {
 
     int8_t  fCurveCount;    // only used by kQuad(+) and kCubic(-)
     uint8_t fCurveShift;    // appled to all Dx/DDx/DDDx except for fCubicDShift exception
+    uint8_t fCubicDShift;   // applied to fCDx and fCDy only in cubic
     Winding fWinding;
 
     static constexpr int kDefaultAccuracy = 2;  // default accuracy for snapping
@@ -79,7 +74,7 @@ struct SkAnalyticEdge {
     bool updateLine(SkFixed ax, SkFixed ay, SkFixed bx, SkFixed by, SkFixed slope);
 
     // return true if we're NOT done with this edge
-    bool update(SkFixed last_y);
+    bool update(SkFixed last_y, bool sortY = true);
 
 #ifdef SK_DEBUG
     void dump() const {
@@ -104,15 +99,11 @@ struct SkAnalyticEdge {
 };
 
 struct SkAnalyticQuadraticEdge : public SkAnalyticEdge {
-    SkFixed fQx, fQy;
-    SkFixed fQDx, fQDy;
-    SkFixed fQDDx, fQDDy;
-    SkFixed fQLastX, fQLastY;
+    SkQuadraticEdge fQEdge;
 
     // snap y to integer points in the middle of the curve to accelerate AAA path filling
     SkFixed fSnappedX, fSnappedY;
 
-    bool setQuadraticWithoutUpdate(const SkPoint pts[3], int shiftUp);
     bool setQuadratic(const SkPoint pts[3]);
     bool updateQuadratic();
     inline void keepContinuous() {
@@ -126,22 +117,15 @@ struct SkAnalyticQuadraticEdge : public SkAnalyticEdge {
 };
 
 struct SkAnalyticCubicEdge : public SkAnalyticEdge {
-    SkFixed fCx, fCy;
-    SkFixed fCDx, fCDy;
-    SkFixed fCDDx, fCDDy;
-    SkFixed fCDDDx, fCDDDy;
-    SkFixed fCLastX, fCLastY;
+    SkCubicEdge fCEdge;
 
     SkFixed fSnappedY; // to make sure that y is increasing with smooth jump and snapping
 
-    uint8_t fCubicDShift;   // applied to fCDx and fCDy
-
-    bool setCubicWithoutUpdate(const SkPoint pts[4], int shiftUp);
-    bool setCubic(const SkPoint pts[4]);
-    bool updateCubic();
+    bool setCubic(const SkPoint pts[4], bool sortY = true);
+    bool updateCubic(bool sortY = true);
     inline void keepContinuous() {
-        SkASSERT(SkAbs32(fX - SkFixedMul(fDX, fY - SnapY(fCy)) - fCx) < SK_Fixed1);
-        fCx = fX;
+        SkASSERT(SkAbs32(fX - SkFixedMul(fDX, fY - SnapY(fCEdge.fCy)) - fCEdge.fCx) < SK_Fixed1);
+        fCEdge.fCx = fX;
         fSnappedY = fY;
     }
 };

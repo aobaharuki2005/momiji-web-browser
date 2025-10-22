@@ -12,7 +12,6 @@
 #include "include/core/SkFontMetrics.h"
 #include "include/core/SkFontTypes.h"
 #include "include/core/SkPath.h"
-#include "include/core/SkPathBuilder.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/ports/SkTypeface_win.h"
@@ -287,10 +286,10 @@ protected:
     std::unique_ptr<SkScalerContext> onCreateScalerContext(const SkScalerContextEffects&,
                                                            const SkDescriptor*) const override;
     void onFilterRec(SkScalerContextRec*) const override;
-    void getGlyphToUnicodeMap(SkSpan<SkUnichar>) const override;
+    void getGlyphToUnicodeMap(SkUnichar*) const override;
     std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override;
     void onGetFontDescriptor(SkFontDescriptor*, bool*) const override;
-    void onCharsToGlyphs(SkSpan<const SkUnichar>, SkSpan<SkGlyphID>) const override;
+    void onCharsToGlyphs(const SkUnichar* chars, int count, SkGlyphID glyphs[]) const override;
     int onCountGlyphs() const override;
     void getPostScriptGlyphNames(SkString*) const override;
     int onGetUPEM() const override;
@@ -298,16 +297,17 @@ protected:
     bool onGetPostScriptName(SkString*) const override { return false; }
     SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
     bool onGlyphMaskNeedsCurrentColor() const override { return false; }
-    int onGetVariationDesignPosition(
-                             SkSpan<SkFontArguments::VariationPosition::Coordinate>) const override
+    int onGetVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
+                                     int coordinateCount) const override
     {
         return -1;
     }
-    int onGetVariationDesignParameters(SkSpan<SkFontParameters::Variation::Axis>) const override
+    int onGetVariationDesignParameters(SkFontParameters::Variation::Axis parameters[],
+                                       int parameterCount) const override
     {
         return -1;
     }
-    int onGetTableTags(SkSpan<SkFontTableTag>) const override;
+    int onGetTableTags(SkFontTableTag tags[]) const override;
     size_t onGetTableData(SkFontTableTag, size_t offset, size_t length, void* data) const override;
     sk_sp<SkData> onCopyTableData(SkFontTableTag) const override;
 };
@@ -412,8 +412,8 @@ void SkLOGFONTFromTypeface(const SkTypeface* face, LOGFONT* lf) {
 // require parsing the TTF cmap table (platform 4, encoding 12) directly instead
 // of calling GetFontUnicodeRange().
 static void populate_glyph_to_unicode(HDC fontHdc, const unsigned glyphCount,
-                                      SkSpan<SkUnichar> glyphToUnicode) {
-    sk_bzero(glyphToUnicode.data(), glyphToUnicode.size_bytes());
+                                      SkUnichar* glyphToUnicode) {
+    sk_bzero(glyphToUnicode, sizeof(SkUnichar) * glyphCount);
     DWORD glyphSetBufferSize = GetFontUnicodeRanges(fontHdc, nullptr);
     if (!glyphSetBufferSize) {
         return;
@@ -591,7 +591,7 @@ public:
 protected:
     GlyphMetrics generateMetrics(const SkGlyph&, SkArenaAlloc*) override;
     void generateImage(const SkGlyph&, void* imageBuffer) override;
-    std::optional<GeneratedPath> generatePath(const SkGlyph&) override;
+    bool generatePath(const SkGlyph& glyph, SkPath* path, bool* modified) override;
     void generateFontMetrics(SkFontMetrics*) override;
 
 private:
@@ -629,7 +629,6 @@ private:
     enum Type {
         kTrueType_Type, kBitmap_Type, kLine_Type
     } fType;
-    bool fGenerateFromPath;
     TEXTMETRIC fTM;
 };
 
@@ -664,7 +663,6 @@ SkScalerContext_GDI::SkScalerContext_GDI(LogFontTypeface& rawTypeface,
         , fSavefont(nullptr)
         , fFont(nullptr)
         , fSC(nullptr)
-        , fGenerateFromPath(false)
 {
     LogFontTypeface* typeface = static_cast<LogFontTypeface*>(this->getTypeface());
 
@@ -760,7 +758,7 @@ SkScalerContext_GDI::SkScalerContext_GDI(LogFontTypeface& rawTypeface,
         fMat22.eM22 = SkFloatToFIXED(xform.eM22);
 
         if (needToRenderWithSkia(fRec)) {
-            fGenerateFromPath = true;
+            this->forceGenerateImageFromPath();
         }
 
         // Create a hires matrix if we need linear metrics.
@@ -913,17 +911,15 @@ SkScalerContext::GlyphMetrics SkScalerContext_GDI::generateMetrics(const SkGlyph
         sk_bzero(&gm, sizeof(gm));
         status = GetGlyphOutlineW(fDDC, glyphId, GGO_METRICS | GGO_GLYPH_INDEX, &gm, 0, nullptr, &fHighResMat22);
         if (GDI_ERROR != status) {
-            mx.advance = fHiResMatrix.mapPoint({SkIntToScalar(gm.gmCellIncX),
-                                                SkIntToScalar(gm.gmCellIncY)});
+            mx.advance = fHiResMatrix.mapXY(SkIntToScalar(gm.gmCellIncX),
+                                            SkIntToScalar(gm.gmCellIncY));
         }
     } else if (!isAxisAligned(this->fRec)) {
         status = GetGlyphOutlineW(fDDC, glyphId, GGO_METRICS | GGO_GLYPH_INDEX, &gm, 0, nullptr, &fGsA);
         if (GDI_ERROR != status) {
-            mx.advance = fG_inv.mapPoint({SkIntToScalar(gm.gmCellIncX), SkIntToScalar(gm.gmCellIncY)});
+            mx.advance = fG_inv.mapXY(SkIntToScalar(gm.gmCellIncX), SkIntToScalar(gm.gmCellIncY));
         }
     }
-
-    mx.computeFromPath = fGenerateFromPath;
     return mx;
 }
 
@@ -1107,11 +1103,6 @@ void SkScalerContext_GDI::RGBToLcd16(
 
 void SkScalerContext_GDI::generateImage(const SkGlyph& glyph, void* imageBuffer) {
     SkASSERT(fDDC);
-
-    if (fGenerateFromPath && glyph.path()) {
-        this->generateImageFromPath(glyph, imageBuffer);
-        return;
-    }
 
     const bool isBW = SkMask::kBW_Format == fRec.fMaskFormat;
     const bool isAA = !isLCD(fRec);
@@ -1338,15 +1329,15 @@ private:
 };
 
 class SkGDIGeometrySink {
-    SkPathBuilder* fBuilder;
+    SkPath* fPath;
     bool fStarted = false;
     POINTFX fCurrent;
 
     void goingTo(const POINTFX pt) {
         if (!fStarted) {
             fStarted = true;
-            fBuilder->moveTo( SkFIXEDToScalar(fCurrent.x),
-                             -SkFIXEDToScalar(fCurrent.y));
+            fPath->moveTo( SkFIXEDToScalar(fCurrent.x),
+                          -SkFIXEDToScalar(fCurrent.y));
         }
         fCurrent = pt;
     }
@@ -1357,7 +1348,7 @@ class SkGDIGeometrySink {
     }
 
 public:
-    SkGDIGeometrySink(SkPathBuilder* builder) : fBuilder(builder) {}
+    SkGDIGeometrySink(SkPath* path) : fPath(path) {}
     void process(const uint8_t* glyphbuf, DWORD total_size);
 
     /** It is possible for the hinted and unhinted versions of the same path to have
@@ -1390,7 +1381,7 @@ void SkGDIGeometrySink::process(const uint8_t* glyphbuf, DWORD total_size) {
                     POINTFX pnt_b = apfx[i];
                     if (this->currentIsNot(pnt_b)) {
                         this->goingTo(pnt_b);
-                        fBuilder->lineTo( SkFIXEDToScalar(pnt_b.x),
+                        fPath->lineTo( SkFIXEDToScalar(pnt_b.x),
                                       -SkFIXEDToScalar(pnt_b.y));
                     }
                 }
@@ -1411,10 +1402,10 @@ void SkGDIGeometrySink::process(const uint8_t* glyphbuf, DWORD total_size) {
 
                     if (this->currentIsNot(pnt_b) || this->currentIsNot(pnt_c)) {
                         this->goingTo(pnt_c);
-                        fBuilder->quadTo( SkFIXEDToScalar(pnt_b.x),
-                                         -SkFIXEDToScalar(pnt_b.y),
-                                          SkFIXEDToScalar(pnt_c.x),
-                                         -SkFIXEDToScalar(pnt_c.y));
+                        fPath->quadTo( SkFIXEDToScalar(pnt_b.x),
+                                      -SkFIXEDToScalar(pnt_b.y),
+                                       SkFIXEDToScalar(pnt_c.x),
+                                      -SkFIXEDToScalar(pnt_c.y));
                     }
                 }
             }
@@ -1424,7 +1415,7 @@ void SkGDIGeometrySink::process(const uint8_t* glyphbuf, DWORD total_size) {
         }
         cur_glyph += th->cb;
         if (this->fStarted) {
-            fBuilder->close();
+            fPath->close();
         }
     }
 }
@@ -1462,8 +1453,8 @@ bool SkGDIGeometrySink::process(const uint8_t* glyphbuf, DWORD total_size,
                     POINTFX pnt_b = {apfx[i].x, hintedPoint->y};
                     if (this->currentIsNot(pnt_b)) {
                         this->goingTo(pnt_b);
-                        fBuilder->lineTo( SkFIXEDToScalar(pnt_b.x),
-                                         -SkFIXEDToScalar(pnt_b.y));
+                        fPath->lineTo( SkFIXEDToScalar(pnt_b.x),
+                                      -SkFIXEDToScalar(pnt_b.y));
                     }
                 }
             }
@@ -1495,10 +1486,10 @@ bool SkGDIGeometrySink::process(const uint8_t* glyphbuf, DWORD total_size,
 
                     if (this->currentIsNot(pnt_b) || this->currentIsNot(pnt_c)) {
                         this->goingTo(pnt_c);
-                        fBuilder->quadTo( SkFIXEDToScalar(pnt_b.x),
-                                         -SkFIXEDToScalar(pnt_b.y),
-                                          SkFIXEDToScalar(pnt_c.x),
-                                         -SkFIXEDToScalar(pnt_c.y));
+                        fPath->quadTo( SkFIXEDToScalar(pnt_b.x),
+                                      -SkFIXEDToScalar(pnt_b.y),
+                                       SkFIXEDToScalar(pnt_c.x),
+                                      -SkFIXEDToScalar(pnt_c.y));
                     }
                 }
             }
@@ -1508,7 +1499,7 @@ bool SkGDIGeometrySink::process(const uint8_t* glyphbuf, DWORD total_size,
         }
         cur_glyph += th->cb;
         if (this->fStarted) {
-            fBuilder->close();
+            fPath->close();
         }
     }
     return true;
@@ -1553,9 +1544,11 @@ DWORD SkScalerContext_GDI::getGDIGlyphPath(SkGlyphID glyph, UINT flags,
     return total_size;
 }
 
-std::optional<SkScalerContext::GeneratedPath>
-SkScalerContext_GDI::generatePath(const SkGlyph& glyph) {
+bool SkScalerContext_GDI::generatePath(const SkGlyph& glyph, SkPath* path, bool* modified) {
+    SkASSERT(path);
     SkASSERT(fDDC);
+
+    path->reset();
 
     SkGlyphID glyphID = glyph.getGlyphID();
 
@@ -1575,12 +1568,11 @@ SkScalerContext_GDI::generatePath(const SkGlyph& glyph) {
     AutoSTMalloc<BUFFERSIZE, uint8_t> glyphbuf(BUFFERSIZE);
     DWORD total_size = getGDIGlyphPath(glyphID, format, &glyphbuf);
     if (0 == total_size) {
-        return {};
+        return false;
     }
 
-    SkPathBuilder builder;
     if (fRec.getHinting() != SkFontHinting::kSlight) {
-        SkGDIGeometrySink sink(&builder);
+        SkGDIGeometrySink sink(path);
         sink.process(glyphbuf, total_size);
     } else {
         AutoSTMalloc<BUFFERSIZE, uint8_t> hintedGlyphbuf(BUFFERSIZE);
@@ -1588,20 +1580,20 @@ SkScalerContext_GDI::generatePath(const SkGlyph& glyph) {
         DWORD hinted_total_size = getGDIGlyphPath(glyphID, GGO_NATIVE | GGO_GLYPH_INDEX,
                                                   &hintedGlyphbuf);
         if (0 == hinted_total_size) {
-            return {};
+            return false;
         }
 
-        SkGDIGeometrySink sinkXBufYIter(&builder);
+        SkGDIGeometrySink sinkXBufYIter(path);
         if (!sinkXBufYIter.process(glyphbuf, total_size,
                                    GDIGlyphbufferPointIter(hintedGlyphbuf, hinted_total_size)))
         {
             // Both path and sinkXBufYIter are in the state they were in at the time of failure.
-            builder.reset();
-            SkGDIGeometrySink sink(&builder);
+            path->reset();
+            SkGDIGeometrySink sink(path);
             sink.process(glyphbuf, total_size);
         }
     }
-    return {{builder.detach(), false}};
+    return true;
 }
 
 static void logfont_for_name(const char* familyName, LOGFONT* lf) {
@@ -1640,10 +1632,10 @@ void LogFontTypeface::onGetFontDescriptor(SkFontDescriptor* desc,
     *isLocalStream = this->fSerializeAsStream;
 }
 
-void LogFontTypeface::getGlyphToUnicodeMap(SkSpan<SkUnichar> dstArray) const {
+void LogFontTypeface::getGlyphToUnicodeMap(SkUnichar* dstArray) const {
     SkAutoHDC hdc(fLogFont);
     unsigned int glyphCount = calculateGlyphCount(hdc, fLogFont);
-    populate_glyph_to_unicode(hdc, std::min<unsigned>(glyphCount, dstArray.size()), dstArray);
+    populate_glyph_to_unicode(hdc, glyphCount, dstArray);
 }
 
 std::unique_ptr<SkAdvancedTypefaceMetrics> LogFontTypeface::onGetAdvancedMetrics() const {
@@ -1796,7 +1788,7 @@ static HRESULT create_unique_font_name(char* buffer, size_t bufferSize) {
    Introduces a font to GDI. On failure will return nullptr. The returned handle
    should eventually be passed to RemoveFontMemResourceEx.
 */
-static HANDLE activate_font(const SkData* fontData) {
+static HANDLE activate_font(SkData* fontData) {
     DWORD numFonts = 0;
     //AddFontMemResourceEx just copies the data, but does not specify const.
     HANDLE fontHandle = AddFontMemResourceEx(const_cast<void*>(fontData->data()),
@@ -1965,9 +1957,9 @@ static uint16_t nonBmpCharToGlyph(HDC hdc, SCRIPT_CACHE* scriptCache, const WCHA
     return index;
 }
 
-void LogFontTypeface::onCharsToGlyphs(SkSpan<const SkUnichar> uni, SkSpan<SkGlyphID> glyphs) const {
-    SkASSERT(uni.size() == glyphs.size());
-
+void LogFontTypeface::onCharsToGlyphs(const SkUnichar* uni, int glyphCount,
+                                      SkGlyphID glyphs[]) const
+{
     SkAutoHDC hdc(fLogFont);
 
     TEXTMETRIC tm;
@@ -1983,8 +1975,7 @@ void LogFontTypeface::onCharsToGlyphs(SkSpan<const SkUnichar> uni, SkSpan<SkGlyp
     static const int scratchCount = 256;
     WCHAR scratch[scratchCount];
     int glyphIndex = 0;
-    const int glyphCount = SkToInt(glyphs.size());
-    const uint32_t* utf32 = reinterpret_cast<const uint32_t*>(uni.data());
+    const uint32_t* utf32 = reinterpret_cast<const uint32_t*>(uni);
     while (glyphIndex < glyphCount) {
         // Try a run of bmp.
         int glyphsLeft = std::min(glyphCount - glyphIndex, scratchCount);
@@ -2035,23 +2026,22 @@ SkTypeface::LocalizedStrings* LogFontTypeface::onCreateFamilyNameIterator() cons
     return nameIter.release();
 }
 
-int LogFontTypeface::onGetTableTags(SkSpan<SkFontTableTag> tags) const {
+int LogFontTypeface::onGetTableTags(SkFontTableTag tags[]) const {
     SkSFNTHeader header;
     if (sizeof(header) != this->onGetTableData(0, 0, sizeof(header), &header)) {
         return 0;
     }
 
-    size_t numTables = SkEndian_SwapBE16(header.numTables);
+    int numTables = SkEndian_SwapBE16(header.numTables);
 
-    if (!tags.empty()) {
+    if (tags) {
         size_t size = numTables * sizeof(SkSFNTHeader::TableDirectoryEntry);
         AutoSTMalloc<0x20, SkSFNTHeader::TableDirectoryEntry> dir(numTables);
         if (size != this->onGetTableData(0, sizeof(header), size, dir.get())) {
             return 0;
         }
 
-        const size_t n = std::min(numTables, tags.size());
-        for (size_t i = 0; i < n; ++i) {
+        for (int i = 0; i < numTables; ++i) {
             tags[i] = SkEndian_SwapBE32(dir[i].tag);
         }
     }

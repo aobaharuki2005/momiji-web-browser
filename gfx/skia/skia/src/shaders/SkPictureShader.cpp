@@ -38,7 +38,7 @@ class SkDiscardableMemory;
 
 sk_sp<SkShader> SkPicture::makeShader(SkTileMode tmx, SkTileMode tmy, SkFilterMode filter,
                                       const SkMatrix* localMatrix, const SkRect* tile) const {
-    if (localMatrix && !localMatrix->invert()) {
+    if (localMatrix && !localMatrix->invert(nullptr)) {
         return nullptr;
     }
     return SkPictureShader::Make(sk_ref_sp(this), tmx, tmy, filter, localMatrix, tile);
@@ -235,8 +235,7 @@ SkPictureShader::CachedImageInfo SkPictureShader::CachedImageInfo::Make(
 
     return {true,
             tileScale,
-            SkMatrix::RectToRectOrIdentity(bounds,
-                                           SkRect::MakeIWH(tileSize.width(), tileSize.height())),
+            SkMatrix::RectToRect(bounds, SkRect::MakeIWH(tileSize.width(), tileSize.height())),
             SkImageInfo::Make(tileSize, imgCT, kPremul_SkAlphaType, imgCS),
             props};
 }

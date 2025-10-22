@@ -29,12 +29,7 @@ public:
     explicit SkColorShader(const SkColor4f& c) : fColor(c) {}
 
     bool isOpaque() const override { return fColor.isOpaque(); }
-    bool isConstant(SkColor4f* color = nullptr) const override {
-        if (color) {
-            *color = fColor;
-        }
-        return true;
-    }
+    bool isConstant() const override { return true; }
 
     ShaderType type() const override { return ShaderType::kColor; }
 

@@ -15,13 +15,11 @@
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkHdrMetadata.h"
 #include "include/private/base/SkTo.h"
 #include "modules/skcms/skcms.h"
 
 #include <cstdint>
 #include <memory>
-#include <tuple>
 #include <utility>
 
 struct SkEncodedInfo {
@@ -120,27 +118,61 @@ public:
     static SkEncodedInfo Make(int width, int height, Color color,
             Alpha alpha, int bitsPerComponent, std::unique_ptr<ICCProfile> profile,
             int colorDepth) {
-        return Make(width, height, color, alpha, bitsPerComponent, colorDepth, std::move(profile),
-                    skhdr::Metadata::MakeEmpty());
-    }
-
-    static SkEncodedInfo Make(int width, int height, Color color,
-            Alpha alpha, int bitsPerComponent, int colorDepth, std::unique_ptr<ICCProfile> profile,
-            const skhdr::Metadata& hdrMetadata) {
         SkASSERT(1 == bitsPerComponent ||
                  2 == bitsPerComponent ||
                  4 == bitsPerComponent ||
                  8 == bitsPerComponent ||
                  16 == bitsPerComponent);
-        VerifyColor(color, alpha, bitsPerComponent);
+
+        switch (color) {
+            case kGray_Color:
+                SkASSERT(kOpaque_Alpha == alpha);
+                break;
+            case kGrayAlpha_Color:
+                SkASSERT(kOpaque_Alpha != alpha);
+                break;
+            case kPalette_Color:
+                SkASSERT(16 != bitsPerComponent);
+                break;
+            case kRGB_Color:
+            case kBGR_Color:
+            case kBGRX_Color:
+                SkASSERT(kOpaque_Alpha == alpha);
+                SkASSERT(bitsPerComponent >= 8);
+                break;
+            case kYUV_Color:
+            case kInvertedCMYK_Color:
+            case kYCCK_Color:
+                SkASSERT(kOpaque_Alpha == alpha);
+                SkASSERT(8 == bitsPerComponent);
+                break;
+            case kRGBA_Color:
+                SkASSERT(bitsPerComponent >= 8);
+                break;
+            case kBGRA_Color:
+            case kYUVA_Color:
+                SkASSERT(8 == bitsPerComponent);
+                break;
+            case kXAlpha_Color:
+                SkASSERT(kUnpremul_Alpha == alpha);
+                SkASSERT(8 == bitsPerComponent);
+                break;
+            case k565_Color:
+                SkASSERT(kOpaque_Alpha == alpha);
+                SkASSERT(8 == bitsPerComponent);
+                break;
+            default:
+                SkASSERT(false);
+                break;
+        }
+
         return SkEncodedInfo(width,
                              height,
                              color,
                              alpha,
                              SkToU8(bitsPerComponent),
                              SkToU8(colorDepth),
-                             std::move(profile),
-                             hdrMetadata);
+                             std::move(profile));
     }
 
     /*
@@ -200,9 +232,10 @@ public:
             case kInvertedCMYK_Color:
             case kYCCK_Color:
                 return 4 * fBitsPerComponent;
+            default:
+                SkASSERT(false);
+                return 0;
         }
-        SkASSERT(false);
-        return 0;
     }
 
     SkEncodedInfo(const SkEncodedInfo& orig) = delete;
@@ -213,9 +246,12 @@ public:
 
     // Explicit copy method, to avoid accidental copying.
     SkEncodedInfo copy() const {
-        return SkEncodedInfo(
-                fWidth, fHeight, fColor, fAlpha, fBitsPerComponent, fColorDepth,
-                fProfile ? std::make_unique<ICCProfile>(*fProfile) : nullptr, fHdrMetadata);
+        auto copy = SkEncodedInfo::Make(
+                fWidth, fHeight, fColor, fAlpha, fBitsPerComponent, nullptr, fColorDepth);
+        if (fProfile) {
+            copy.fProfile = std::make_unique<ICCProfile>(*fProfile);
+        }
+        return copy;
     }
 
     // Return number of bits of R/G/B channel
@@ -223,16 +259,9 @@ public:
         return fColorDepth;
     }
 
-    // Return the HDR metadata associated with this image. Note that even SDR images can include
-    // HDR metadata (e.g, indicating how to inverse tone map when displayed on an HDR display).
-    const skhdr::Metadata& getHdrMetadata() const {
-        return fHdrMetadata;
-    }
-
 private:
     SkEncodedInfo(int width, int height, Color color, Alpha alpha,
-            uint8_t bitsPerComponent, uint8_t colorDepth, std::unique_ptr<ICCProfile> profile,
-            const skhdr::Metadata& hdrMetadata)
+            uint8_t bitsPerComponent, uint8_t colorDepth, std::unique_ptr<ICCProfile> profile)
         : fWidth(width)
         , fHeight(height)
         , fColor(color)
@@ -240,54 +269,7 @@ private:
         , fBitsPerComponent(bitsPerComponent)
         , fColorDepth(colorDepth)
         , fProfile(std::move(profile))
-        , fHdrMetadata(hdrMetadata)
     {}
-
-    static void VerifyColor(Color color, Alpha alpha, int bitsPerComponent) {
-        // Avoid `-Wunused-parameter` warnings on non-debug builds.
-        std::ignore = alpha;
-        std::ignore = bitsPerComponent;
-
-        switch (color) {
-            case kGray_Color:
-                SkASSERT(kOpaque_Alpha == alpha);
-                return;
-            case kGrayAlpha_Color:
-                SkASSERT(kOpaque_Alpha != alpha);
-                return;
-            case kPalette_Color:
-                SkASSERT(16 != bitsPerComponent);
-                return;
-            case kRGB_Color:
-            case kBGR_Color:
-            case kBGRX_Color:
-                SkASSERT(kOpaque_Alpha == alpha);
-                SkASSERT(bitsPerComponent >= 8);
-                return;
-            case kYUV_Color:
-            case kInvertedCMYK_Color:
-            case kYCCK_Color:
-                SkASSERT(kOpaque_Alpha == alpha);
-                SkASSERT(8 == bitsPerComponent);
-                return;
-            case kRGBA_Color:
-                SkASSERT(bitsPerComponent >= 8);
-                return;
-            case kBGRA_Color:
-            case kYUVA_Color:
-                SkASSERT(8 == bitsPerComponent);
-                return;
-            case kXAlpha_Color:
-                SkASSERT(kUnpremul_Alpha == alpha);
-                SkASSERT(8 == bitsPerComponent);
-                return;
-            case k565_Color:
-                SkASSERT(kOpaque_Alpha == alpha);
-                SkASSERT(8 == bitsPerComponent);
-                return;
-        }
-        SkASSERT(false);  // Unrecognized `color` enum value.
-    }
 
     int                         fWidth;
     int                         fHeight;
@@ -296,7 +278,6 @@ private:
     uint8_t                     fBitsPerComponent;
     uint8_t                     fColorDepth;
     std::unique_ptr<ICCProfile> fProfile;
-    skhdr::Metadata             fHdrMetadata;
 };
 
 #endif

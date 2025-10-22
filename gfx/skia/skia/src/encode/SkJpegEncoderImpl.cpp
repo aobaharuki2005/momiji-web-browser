@@ -414,11 +414,6 @@ bool Encode(SkWStream* dst,
     return encoder.get() && encoder->encodeRows(src.yuvaInfo().height());
 }
 
-sk_sp<SkData> Encode(const SkPixmap& src, const Options& options) {
-    SkDynamicMemoryWStream stream;
-    return Encode(&stream, src, options) ? stream.detachAsData() : nullptr;
-}
-
 sk_sp<SkData> Encode(GrDirectContext* ctx, const SkImage* img, const Options& options) {
     if (!img) {
         return nullptr;
@@ -427,7 +422,11 @@ sk_sp<SkData> Encode(GrDirectContext* ctx, const SkImage* img, const Options& op
     if (!as_IB(img)->getROPixels(ctx, &bm)) {
         return nullptr;
     }
-    return Encode(bm.pixmap(), options);
+    SkDynamicMemoryWStream stream;
+    if (Encode(&stream, bm.pixmap(), options)) {
+        return stream.detachAsData();
+    }
+    return nullptr;
 }
 
 std::unique_ptr<SkEncoder> Make(SkWStream* dst, const SkPixmap& src, const Options& options) {
@@ -460,7 +459,8 @@ namespace SkJpegMetadataEncoder {
 void AppendICC(SegmentList& segmentList,
                const SkJpegEncoder::Options& options,
                const SkColorSpace* colorSpace) {
-    sk_sp<SkData> icc = icc_from_color_space(colorSpace);
+    sk_sp<SkData> icc =
+            icc_from_color_space(colorSpace, options.fICCProfile, options.fICCProfileDescription);
     if (!icc) {
         return;
     }

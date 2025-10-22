@@ -9,10 +9,11 @@
 
 #include "include/core/SkBlendMode.h"
 #include "include/core/SkPath.h"
-#include "include/core/SkPathBuilder.h"
+#include "include/core/SkPathTypes.h"
 #include "include/core/SkScalar.h"
 #include "include/private/base/SkDebug.h"
 #include "src/core/SkRectPriv.h"
+#include "src/shaders/SkShaderBase.h"
 
 #include <array>
 #include <atomic>
@@ -33,7 +34,7 @@ SkClipStack::Element::Element(const Element& that) {
             break;
         case DeviceSpaceType::kPath:
             fShader.reset();
-            fDeviceSpacePath = that.getDeviceSpacePath();
+            fDeviceSpacePath.set(that.getDeviceSpacePath());
             break;
         case DeviceSpaceType::kShader:
             fDeviceSpacePath.reset();
@@ -137,6 +138,32 @@ bool SkClipStack::Element::contains(const SkRRect& rrect) const {
     }
 }
 
+void SkClipStack::Element::invertShapeFillType() {
+    switch (fDeviceSpaceType) {
+        case DeviceSpaceType::kRect:
+            fDeviceSpacePath.init();
+            fDeviceSpacePath->addRect(this->getDeviceSpaceRect());
+            fDeviceSpacePath->setFillType(SkPathFillType::kInverseEvenOdd);
+            fDeviceSpaceType = DeviceSpaceType::kPath;
+            break;
+        case DeviceSpaceType::kRRect:
+            fDeviceSpacePath.init();
+            fDeviceSpacePath->addRRect(fDeviceSpaceRRect);
+            fDeviceSpacePath->setFillType(SkPathFillType::kInverseEvenOdd);
+            fDeviceSpaceType = DeviceSpaceType::kPath;
+            break;
+        case DeviceSpaceType::kPath:
+            fDeviceSpacePath->toggleInverseFillType();
+            break;
+        case DeviceSpaceType::kShader:
+            fShader = as_SB(fShader)->makeInvertAlpha();
+            break;
+        case DeviceSpaceType::kEmpty:
+            // Should this set to an empty, inverse filled path?
+            break;
+    }
+}
+
 void SkClipStack::Element::initCommon(int saveCount, SkClipOp op, bool doAA) {
     fSaveCount = saveCount;
     fOp = op;
@@ -160,13 +187,15 @@ void SkClipStack::Element::initRect(int saveCount, const SkRect& rect, const SkM
         this->initCommon(saveCount, op, doAA);
         return;
     }
-    this->initAsPath(saveCount, SkPath::Rect(rect), m, op, doAA);
+    SkPath path;
+    path.addRect(rect);
+    path.setIsVolatile(true);
+    this->initAsPath(saveCount, path, m, op, doAA);
 }
 
 void SkClipStack::Element::initRRect(int saveCount, const SkRRect& rrect, const SkMatrix& m,
                                      SkClipOp op, bool doAA) {
-    if (auto rr = rrect.transform(m)) {
-        fDeviceSpaceRRect = *rr;
+    if (rrect.transform(m, &fDeviceSpaceRRect)) {
         SkRRect::Type type = fDeviceSpaceRRect.getType();
         if (SkRRect::kRect_Type == type || SkRRect::kEmpty_Type == type) {
             fDeviceSpaceType = DeviceSpaceType::kRect;
@@ -176,7 +205,10 @@ void SkClipStack::Element::initRRect(int saveCount, const SkRRect& rrect, const 
         this->initCommon(saveCount, op, doAA);
         return;
     }
-    this->initAsPath(saveCount, SkPath::RRect(rrect), m, op, doAA);
+    SkPath path;
+    path.addRRect(rrect);
+    path.setIsVolatile(true);
+    this->initAsPath(saveCount, path, m, op, doAA);
 }
 
 void SkClipStack::Element::initPath(int saveCount, const SkPath& path, const SkMatrix& m,
@@ -200,11 +232,8 @@ void SkClipStack::Element::initPath(int saveCount, const SkPath& path, const SkM
 
 void SkClipStack::Element::initAsPath(int saveCount, const SkPath& path, const SkMatrix& m,
                                       SkClipOp op, bool doAA) {
-    SkPathBuilder builder(path);
-    builder.transform(m);
-    builder.setIsVolatile(true);
-    fDeviceSpacePath = builder.detach();
-
+    path.transform(m, fDeviceSpacePath.init());
+    fDeviceSpacePath->setIsVolatile(true);
     fDeviceSpaceType = DeviceSpaceType::kPath;
     this->initCommon(saveCount, op, doAA);
 }
@@ -223,24 +252,28 @@ void SkClipStack::Element::initReplaceRect(int saveCount, const SkRect& rect, bo
     fIsReplace = true;
 }
 
-SkPath SkClipStack::Element::asDeviceSpacePath() const {
-    SkPathBuilder builder;
+void SkClipStack::Element::asDeviceSpacePath(SkPath* path) const {
     switch (fDeviceSpaceType) {
         case DeviceSpaceType::kEmpty:
+            path->reset();
             break;
         case DeviceSpaceType::kRect:
-            builder.addRect(this->getDeviceSpaceRect());
+            path->reset();
+            path->addRect(this->getDeviceSpaceRect());
             break;
         case DeviceSpaceType::kRRect:
-            builder.addRRect(fDeviceSpaceRRect);
+            path->reset();
+            path->addRRect(fDeviceSpaceRRect);
             break;
         case DeviceSpaceType::kPath:
-            return *fDeviceSpacePath;
+            *path = *fDeviceSpacePath;
+            break;
         case DeviceSpaceType::kShader:
-            builder.addRect(SkRectPriv::MakeLargeS32());
+            path->reset();
+            path->addRect(SkRectPriv::MakeLargeS32());
             break;
     }
-    return builder.detach();
+    path->setIsVolatile(true);
 }
 
 void SkClipStack::Element::setEmpty() {
@@ -261,7 +294,7 @@ void SkClipStack::Element::checkEmpty() const {
     SkASSERT(!fIsIntersectionOfRects);
     SkASSERT(kEmptyGenID == fGenID);
     SkASSERT(fDeviceSpaceRRect.isEmpty());
-    SkASSERT(!fDeviceSpacePath.has_value());
+    SkASSERT(!fDeviceSpacePath.isValid());
     SkASSERT(!fShader);
 }
 

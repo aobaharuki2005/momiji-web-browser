@@ -14,9 +14,9 @@
 
 enum class SkClipOp;
 
-SkPath SkClipStack_AsPath(const SkClipStack& cs) {
-    SkPath path;
-    path.setFillType(SkPathFillType::kInverseEvenOdd);
+void SkClipStack_AsPath(const SkClipStack& cs, SkPath* path) {
+    path->reset();
+    path->setFillType(SkPathFillType::kInverseEvenOdd);
 
     SkClipStack::Iter iter(cs, SkClipStack::Iter::kBottom_IterStart);
     while (const SkClipStack::Element* element = iter.next()) {
@@ -27,19 +27,16 @@ SkPath SkClipStack_AsPath(const SkClipStack& cs) {
         }
         SkPath operand;
         if (element->getDeviceSpaceType() != SkClipStack::Element::DeviceSpaceType::kEmpty) {
-            operand = element->asDeviceSpacePath();
+            element->asDeviceSpacePath(&operand);
         }
 
         SkClipOp elementOp = element->getOp();
         if (element->isReplaceOp()) {
-            path = operand;
+            *path = operand;
             // TODO: Once expanding clip ops are removed, we can switch the iterator to be top
             // to bottom, which allows us to break here on encountering a replace op.
         } else {
-            if (auto result = Op(path, operand, (SkPathOp)elementOp)) {
-                path = *result;
-            }
+            Op(*path, operand, (SkPathOp)elementOp, path);
         }
     }
-    return path;
 }

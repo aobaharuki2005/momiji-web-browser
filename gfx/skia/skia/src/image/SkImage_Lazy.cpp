@@ -8,14 +8,12 @@
 #include "src/image/SkImage_Lazy.h"
 
 #include "include/core/SkBitmap.h"
-#include "include/core/SkCPURecorder.h"
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkData.h"
 #include "include/core/SkImageGenerator.h"
 #include "include/core/SkPixmap.h"
-#include "include/core/SkRecorder.h"
 #include "include/core/SkSize.h"
-#include "include/core/SkSurface.h"  // IWYU pragma: keep
+#include "include/core/SkSurface.h"
 #include "include/core/SkYUVAInfo.h"
 #include "src/core/SkBitmapCache.h"
 #include "src/core/SkCachedData.h"
@@ -187,12 +185,20 @@ sk_sp<SkData> SkImage_Lazy::onRefEncoded() const {
     return nullptr;
 }
 
-bool SkImage_Lazy::isValid(SkRecorder* recorder) const {
+bool SkImage_Lazy::isValid(GrRecordingContext* context) const {
     ScopedGenerator generator(fSharedGenerator);
-    return generator->isValid(recorder);
+    return generator->isValid(context);
 }
 
-sk_sp<SkImage> SkImage_Lazy::onMakeSubset(SkRecorder*,
+
+sk_sp<SkImage> SkImage_Lazy::onMakeSubset(GrDirectContext*, const SkIRect& subset) const {
+    // neither picture-backed nor codec-backed lazy images need the context to do readbacks.
+    // The subclass for cross-context images *does* use the direct context.
+    auto pixels = this->makeRasterImage(nullptr);
+    return pixels ? pixels->makeSubset(nullptr, subset) : nullptr;
+}
+
+sk_sp<SkImage> SkImage_Lazy::onMakeSubset(skgpu::graphite::Recorder*,
                                           const SkIRect& subset,
                                           RequiredProperties props) const {
     // TODO: can we do this more efficiently, by telling the generator we want to
@@ -204,28 +210,23 @@ sk_sp<SkImage> SkImage_Lazy::onMakeSubset(SkRecorder*,
     return nonLazyImg->makeSubset(nullptr, subset, props);
 }
 
-sk_sp<SkSurface> SkImage_Lazy::onMakeSurface(SkRecorder* recorder, const SkImageInfo& info) const {
-    if (!recorder) {
-        // TODO(kjlubick) remove this after old SkImage::makeScaled(image info, sampling) API gone
-        recorder = skcpu::Recorder::TODO();
-    }
+sk_sp<SkSurface> SkImage_Lazy::onMakeSurface(skgpu::graphite::Recorder*,
+                                             const SkImageInfo& info) const {
     const SkSurfaceProps* props = nullptr;
-    constexpr size_t rowBytes = 0;
-    return recorder->cpuRecorder()->makeBitmapSurface(info, rowBytes, props);
+    const size_t rowBytes = 0;
+    return SkSurfaces::Raster(info, rowBytes, props);
 }
 
-sk_sp<SkImage> SkImage_Lazy::makeColorTypeAndColorSpace(SkRecorder*,
-                                                        SkColorType targetColorType,
-                                                        sk_sp<SkColorSpace> targetColorSpace,
-                                                        RequiredProperties) const {
+sk_sp<SkImage> SkImage_Lazy::onMakeColorTypeAndColorSpace(SkColorType targetCT,
+                                                          sk_sp<SkColorSpace> targetCS,
+                                                          GrDirectContext*) const {
     SkAutoMutexExclusive autoAquire(fOnMakeColorTypeAndSpaceMutex);
     if (fOnMakeColorTypeAndSpaceResult &&
-        targetColorType == fOnMakeColorTypeAndSpaceResult->colorType() &&
-        SkColorSpace::Equals(targetColorSpace.get(),
-                             fOnMakeColorTypeAndSpaceResult->colorSpace())) {
+        targetCT == fOnMakeColorTypeAndSpaceResult->colorType() &&
+        SkColorSpace::Equals(targetCS.get(), fOnMakeColorTypeAndSpaceResult->colorSpace())) {
         return fOnMakeColorTypeAndSpaceResult;
     }
-    Validator validator(fSharedGenerator, &targetColorType, targetColorSpace);
+    Validator validator(fSharedGenerator, &targetCT, targetCS);
     sk_sp<SkImage> result = validator ? sk_sp<SkImage>(new SkImage_Lazy(&validator)) : nullptr;
     if (result) {
         fOnMakeColorTypeAndSpaceResult = result;
@@ -245,7 +246,7 @@ sk_sp<SkImage> SkImage_Lazy::onReinterpretColorSpace(sk_sp<SkColorSpace> newCS) 
         pixmap.setColorSpace(this->refColorSpace());
         if (ScopedGenerator(fSharedGenerator)->getPixels(pixmap)) {
             bitmap.setImmutable();
-            return SkImages::RasterFromBitmap(bitmap);
+            return bitmap.asImage();
         }
     }
     return nullptr;

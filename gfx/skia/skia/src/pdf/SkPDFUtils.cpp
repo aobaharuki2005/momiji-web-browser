@@ -108,9 +108,9 @@ static void append_cubic(SkScalar ctl1X, SkScalar ctl1Y,
     content->writeText(cmd.c_str());
 }
 
-static void append_quad(SkSpan<const SkPoint> quad, SkWStream* content) {
+static void append_quad(const SkPoint quad[], SkWStream* content) {
     SkPoint cubic[4];
-    SkConvertQuadToCubic(quad.data(), cubic);
+    SkConvertQuadToCubic(quad, cubic);
     append_cubic(cubic[1].fX, cubic[1].fY, cubic[2].fX, cubic[2].fY,
                  cubic[3].fX, cubic[3].fY, content);
 }
@@ -164,19 +164,20 @@ void SkPDFUtils::EmitPath(const SkPath& path, SkPaint::Style paintStyle,
     //}
     SkPoint lastMovePt = SkPoint::Make(0,0);
     SkDynamicMemoryWStream currentSegment;
-
+    SkPoint args[4];
     SkPath::Iter iter(path, false);
-    while (auto rec = iter.next()) {
+    for (SkPath::Verb verb = iter.next(args);
+         verb != SkPath::kDone_Verb;
+         verb = iter.next(args)) {
         // args gets all the points, even the implicit first point.
-        SkSpan<const SkPoint> args = rec->fPoints;
-        switch (rec->fVerb) {
-            case SkPathVerb::kMove:
+        switch (verb) {
+            case SkPath::kMove_Verb:
                 MoveTo(args[0].fX, args[0].fY, &currentSegment);
                 lastMovePt = args[0];
                 fillState = kEmpty_SkipFillState;
                 break;
-            case SkPathVerb::kLine:
-                if (!doConsumeDegerates || !SkPathPriv::AllPointsEq(args)) {
+            case SkPath::kLine_Verb:
+                if (!doConsumeDegerates || !SkPathPriv::AllPointsEq(args, 2)) {
                     AppendLine(args[1].fX, args[1].fY, &currentSegment);
                     if ((fillState == kEmpty_SkipFillState) && (args[0] != lastMovePt)) {
                         fillState = kSingleLine_SkipFillState;
@@ -185,33 +186,36 @@ void SkPDFUtils::EmitPath(const SkPath& path, SkPaint::Style paintStyle,
                     fillState = kNonSingleLine_SkipFillState;
                 }
                 break;
-            case SkPathVerb::kQuad:
-                if (!doConsumeDegerates || !SkPathPriv::AllPointsEq(args)) {
+            case SkPath::kQuad_Verb:
+                if (!doConsumeDegerates || !SkPathPriv::AllPointsEq(args, 3)) {
                     append_quad(args, &currentSegment);
                     fillState = kNonSingleLine_SkipFillState;
                 }
                 break;
-            case SkPathVerb::kConic:
-                if (!doConsumeDegerates || !SkPathPriv::AllPointsEq(args)) {
+            case SkPath::kConic_Verb:
+                if (!doConsumeDegerates || !SkPathPriv::AllPointsEq(args, 3)) {
                     SkAutoConicToQuads converter;
-                    const SkPoint* quads = converter.computeQuads(args, rec->conicWeight(), tolerance);
+                    const SkPoint* quads = converter.computeQuads(args, iter.conicWeight(), tolerance);
                     for (int i = 0; i < converter.countQuads(); ++i) {
-                        append_quad({&quads[i * 2], 3}, &currentSegment);
+                        append_quad(&quads[i * 2], &currentSegment);
                     }
                     fillState = kNonSingleLine_SkipFillState;
                 }
                 break;
-            case SkPathVerb::kCubic:
-                if (!doConsumeDegerates || !SkPathPriv::AllPointsEq(args)) {
+            case SkPath::kCubic_Verb:
+                if (!doConsumeDegerates || !SkPathPriv::AllPointsEq(args, 4)) {
                     append_cubic(args[1].fX, args[1].fY, args[2].fX, args[2].fY,
                                  args[3].fX, args[3].fY, &currentSegment);
                     fillState = kNonSingleLine_SkipFillState;
                 }
                 break;
-            case SkPathVerb::kClose:
+            case SkPath::kClose_Verb:
                 ClosePath(&currentSegment);
                 currentSegment.writeToStream(content);
                 currentSegment.reset();
+                break;
+            default:
+                SkASSERT(false);
                 break;
         }
     }
@@ -289,7 +293,7 @@ static constexpr int int_pow(int base, unsigned exp, int acc = 1) {
 }
 
 
-size_t SkPDFUtils::ColorToDecimalF(float value, char (&result)[kFloatColorDecimalCount + 2]) {
+size_t SkPDFUtils::ColorToDecimalF(float value, char result[kFloatColorDecimalCount + 2]) {
     static constexpr int kFactor = int_pow(10, kFloatColorDecimalCount);
     int x = sk_float_round2int(value * kFactor);
     if (x >= kFactor || x <= 0) {  // clamp to 0-1
@@ -312,11 +316,12 @@ size_t SkPDFUtils::ColorToDecimal(uint8_t value, char result[5]) {
 }
 
 bool SkPDFUtils::InverseTransformBBox(const SkMatrix& matrix, SkRect* bbox) {
-    if (auto inverse = matrix.invert()) {
-        inverse->mapRect(bbox);
-        return true;
+    SkMatrix inverse;
+    if (!matrix.invert(&inverse)) {
+        return false;
     }
-    return false;
+    inverse.mapRect(bbox);
+    return true;
 }
 
 void SkPDFUtils::PopulateTilingPatternDict(SkPDFDict* pattern,

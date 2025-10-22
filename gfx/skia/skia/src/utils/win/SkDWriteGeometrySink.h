@@ -8,8 +8,10 @@
 #ifndef SkDWriteToPath_DEFINED
 #define SkDWriteToPath_DEFINED
 
-#include "include/core/SkPathBuilder.h"
+#include "include/core/SkTypes.h"
 #include "src/utils/win/SkObjBase.h"
+
+class SkPath;
 
 #include <dwrite.h>
 #include <d2d1.h>
@@ -17,14 +19,14 @@
 class SkDWriteGeometrySink : public IDWriteGeometrySink {
 private:
     LONG fRefCount;
-    SkPathBuilder* fBuilder;
+    SkPath* fPath;
     bool fStarted;
     D2D1_POINT_2F fCurrent;
 
     void goingTo(const D2D1_POINT_2F pt) {
         if (!fStarted) {
             fStarted = true;
-            fBuilder->moveTo(fCurrent.x, fCurrent.y);
+            fPath->moveTo(fCurrent.x, fCurrent.y);
         }
         fCurrent = pt;
     }
@@ -34,7 +36,7 @@ private:
     }
 
 protected:
-    explicit SkDWriteGeometrySink(SkPathBuilder*);
+    explicit SkDWriteGeometrySink(SkPath* path);
     virtual ~SkDWriteGeometrySink();
 
 public:
@@ -50,7 +52,7 @@ public:
     SK_STDMETHODIMP_(void) EndFigure(D2D1_FIGURE_END figureEnd) override;
     SK_STDMETHODIMP Close() override;
 
-    static HRESULT Create(SkPathBuilder*, IDWriteGeometrySink** geometryToPath);
+    static HRESULT Create(SkPath* path, IDWriteGeometrySink** geometryToPath);
 };
 
 #endif

@@ -35,11 +35,16 @@ public:
         return matrix->readFromMemory(buffer, length);
     }
 
+    typedef SkMatrix::MapXYProc MapXYProc;
     typedef SkMatrix::MapPtsProc MapPtsProc;
 
 
     static MapPtsProc GetMapPtsProc(const SkMatrix& matrix) {
         return SkMatrix::GetMapPtsProc(matrix.getType());
+    }
+
+    static MapXYProc GetMapXYProc(const SkMatrix& matrix) {
+        return SkMatrix::GetMapXYProc(matrix.getType());
     }
 
     /**
@@ -78,8 +83,9 @@ public:
         }
 
         // general case
-        if (auto inverse = mx.invert()) {
-            inverse->mapRect(dst, src);
+        SkMatrix inverse;
+        if (mx.invert(&inverse)) {
+            inverse.mapRect(dst, src);
             return true;
         }
         return false;
@@ -125,16 +131,10 @@ public:
         // Insert other special-cases here (e.g. scale+translate)
 
         // general case
-        if (mx.hasPerspective()) {
-            for (int i = 0; i < count; ++i) {
-                *pts = mx.mapPointPerspective(*pts);
-                pts = (SkPoint*)((intptr_t)pts + stride);
-            }
-        } else {
-            for (int i = 0; i < count; ++i) {
-                *pts = mx.mapPointAffine(*pts);
-                pts = (SkPoint*)((intptr_t)pts + stride);
-            }
+        SkMatrix::MapXYProc proc = mx.getMapXYProc();
+        for (int i = 0; i < count; ++i) {
+            proc(mx, pts->fX, pts->fY, pts);
+            pts = (SkPoint*)((intptr_t)pts + stride);
         }
     }
 
@@ -165,7 +165,7 @@ public:
         SkASSERT(0 == srcStride % sizeof(SkScalar));
         SkASSERT(0 == dstStride % sizeof(SkScalar));
         for (int i = 0; i < count; ++i) {
-            *dst = mx.mapPoint(*src);
+            mx.mapPoints(dst, src, 1);
             src = (SkPoint*)((intptr_t)src + srcStride);
             dst = (SkPoint*)((intptr_t)dst + dstStride);
         }

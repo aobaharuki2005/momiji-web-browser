@@ -16,25 +16,7 @@
 #include "src/core/SkRasterPipelineOpList.h"
 #include "src/shaders/SkLocalMatrixShader.h"
 
-#include <atomic>
-
 class SkWriteBuffer;
-
-namespace {
-
-// The 32-bit shader ID counter is not expected to wrap. In the unlikely event that it does, we
-// assume that the associated shaders will be sufficiently temporally separated such that shaders
-// with the same recycled IDs are no longer in use.
-uint32_t next_unique_id() {
-    static std::atomic<uint32_t> gNextUniqueID{SK_InvalidUniqueID + 1};
-    uint32_t id = SK_InvalidUniqueID;
-    do {
-        id = gNextUniqueID.fetch_add(1, std::memory_order_relaxed);
-    } while (id == SK_InvalidUniqueID);
-    return id;
-}
-
-} // anonymous namespace
 
 namespace SkShaders {
 MatrixRec::MatrixRec(const SkMatrix& ctm) : fCTM(ctm) {}
@@ -44,11 +26,10 @@ std::optional<MatrixRec> MatrixRec::apply(const SkStageRec& rec, const SkMatrix&
     if (!fCTMApplied) {
         total = SkMatrix::Concat(fCTM, total);
     }
-    if (auto inv = total.invert()) {
-        total = SkMatrix::Concat(postInv, *inv);
-    } else {
+    if (!total.invert(&total)) {
         return {};
     }
+    total = SkMatrix::Concat(postInv, total);
     if (!fCTMApplied) {
         rec.fPipeline->append(SkRasterPipelineOp::seed_shader);
     }
@@ -63,11 +44,11 @@ std::optional<MatrixRec> MatrixRec::apply(const SkStageRec& rec, const SkMatrix&
 
 std::tuple<SkMatrix, bool> MatrixRec::applyForFragmentProcessor(const SkMatrix& postInv) const {
     SkASSERT(!fCTMApplied);
-    if (auto total = fPendingLocalMatrix.invert()) {
-        return {SkMatrix::Concat(postInv, *total), true};
-    } else {
+    SkMatrix total;
+    if (!fPendingLocalMatrix.invert(&total)) {
         return {SkMatrix::I(), false};
     }
+    return {SkMatrix::Concat(postInv, total), true};
 }
 
 MatrixRec MatrixRec::applied() const {
@@ -92,7 +73,7 @@ MatrixRec MatrixRec::concat(const SkMatrix& m) const {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-SkShaderBase::SkShaderBase() : fUniqueID(next_unique_id()) {}
+SkShaderBase::SkShaderBase() = default;
 
 SkShaderBase::~SkShaderBase() = default;
 
@@ -114,7 +95,7 @@ SkShaderBase::Context* SkShaderBase::makeContext(const ContextRec& rec, SkArenaA
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
     // We always fall back to raster pipeline when perspective is present.
     auto totalMatrix = rec.fMatrixRec.totalMatrix();
-    if (totalMatrix.hasPerspective() || !totalMatrix.invert()) {
+    if (totalMatrix.hasPerspective() || !totalMatrix.invert(nullptr)) {
         return nullptr;
     }
 
@@ -128,6 +109,10 @@ SkShaderBase::Context::Context(const SkShaderBase& shader, const ContextRec& rec
         : fShader(shader) {
     // We should never use a context with perspective.
     SkASSERT(!rec.fMatrixRec.totalMatrix().hasPerspective());
+
+    // Because the context parameters must be valid at this point, we know that the matrix is
+    // invertible.
+    SkAssertResult(rec.fMatrixRec.totalInverse(&fTotalInverse));
 
     fPaintAlpha = rec.fPaintAlpha;
 }

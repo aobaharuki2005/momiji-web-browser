@@ -20,9 +20,9 @@
 #include "src/core/SkAlphaRuns.h"
 #include "src/core/SkAnalyticEdge.h"
 #include "src/core/SkBlitter.h"
+#include "src/core/SkEdge.h"
 #include "src/core/SkEdgeBuilder.h"
 #include "src/core/SkMask.h"
-#include "src/core/SkPathRaw.h"
 #include "src/core/SkScan.h"
 #include "src/core/SkScanPriv.h"
 
@@ -542,7 +542,7 @@ static SkAlpha trapezoid_to_alpha(SkFixed l1, SkFixed l2) {
 static SkAlpha partial_triangle_to_alpha(SkFixed a, SkFixed b) {
     SkASSERT(a <= SK_Fixed1);
 #if 0
-    // TODO(mtklein): skbug.com/40040159
+    // TODO(mtklein): skia:8877
     SkASSERT(b <= SK_Fixed1);
 #endif
 
@@ -551,7 +551,7 @@ static SkAlpha partial_triangle_to_alpha(SkFixed a, SkFixed b) {
     SkFixed area = (a >> 11) * (a >> 11) * (b >> 11);
 
 #if 0
-    // TODO(mtklein): skbug.com/40040159
+    // TODO(mtklein): skia:8877
     return SkTo<SkAlpha>(area >> 8);
 #else
     return SkTo<SkAlpha>((area >> 8) & 0xFF);
@@ -990,18 +990,18 @@ static void validate_sort(const SkAnalyticEdge* edge) {
 // relatively large compared to fQDDx/QCDDx and fQDDy/fCDDy
 static bool is_smooth_enough(SkAnalyticEdge* thisEdge, SkAnalyticEdge* nextEdge, int stop_y) {
     if (thisEdge->fCurveCount < 0) {
-        const auto cEdge = static_cast<SkAnalyticCubicEdge*>(thisEdge);
-        int      ddshift = cEdge->fCurveShift;
-        return SkAbs32(cEdge->fCDx) >> 1 >= SkAbs32(cEdge->fCDDx) >> ddshift &&
-               SkAbs32(cEdge->fCDy) >> 1 >= SkAbs32(cEdge->fCDDy) >> ddshift &&
+        const SkCubicEdge& cEdge   = static_cast<SkAnalyticCubicEdge*>(thisEdge)->fCEdge;
+        int                ddshift = cEdge.fCurveShift;
+        return SkAbs32(cEdge.fCDx) >> 1 >= SkAbs32(cEdge.fCDDx) >> ddshift &&
+               SkAbs32(cEdge.fCDy) >> 1 >= SkAbs32(cEdge.fCDDy) >> ddshift &&
                // current Dy is (fCDy - (fCDDy >> ddshift)) >> dshift
-               (cEdge->fCDy - (cEdge->fCDDy >> ddshift)) >> cEdge->fCubicDShift >= SK_Fixed1;
+               (cEdge.fCDy - (cEdge.fCDDy >> ddshift)) >> cEdge.fCubicDShift >= SK_Fixed1;
     } else if (thisEdge->fCurveCount > 0) {
-        const auto qEdge = static_cast<SkAnalyticQuadraticEdge*>(thisEdge);
-        return SkAbs32(qEdge->fQDx) >> 1 >= SkAbs32(qEdge->fQDDx) &&
-               SkAbs32(qEdge->fQDy) >> 1 >= SkAbs32(qEdge->fQDDy) &&
+        const SkQuadraticEdge& qEdge = static_cast<SkAnalyticQuadraticEdge*>(thisEdge)->fQEdge;
+        return SkAbs32(qEdge.fQDx) >> 1 >= SkAbs32(qEdge.fQDDx) &&
+               SkAbs32(qEdge.fQDy) >> 1 >= SkAbs32(qEdge.fQDDy) &&
                // current Dy is (fQDy - fQDDy) >> shift
-               (qEdge->fQDy - qEdge->fQDDy) >> qEdge->fCurveShift >= SK_Fixed1;
+               (qEdge.fQDy - qEdge.fQDDy) >> qEdge.fCurveShift >= SK_Fixed1;
     }
     // DDx should be small and Dy should be large
     return SkAbs32(Sk32_sat_sub(nextEdge->fDX, thisEdge->fDX)) <= SK_Fixed1 &&
@@ -1601,7 +1601,7 @@ static void aaa_walk_edges(SkAnalyticEdge*  prevHead,
     }
 }
 
-static void aaa_fill_path(const SkPathRaw& path,
+static void aaa_fill_path(const SkPath& path,
                           const SkIRect& clipRect,
                           AdditiveBlitter* blitter,
                           int start_y,
@@ -1675,7 +1675,7 @@ static void aaa_fill_path(const SkPathRaw& path,
         // If we're using mask, then we have to limit the bound within the path bounds.
         // Otherwise, the edge drift may access an invalid address inside the mask.
         SkIRect ir;
-        path.bounds().roundOut(&ir);
+        path.getBounds().roundOut(&ir);
         leftBound  = std::max(leftBound, SkIntToFixed(ir.fLeft));
         rightBound = std::min(rightBound, SkIntToFixed(ir.fRight));
     }
@@ -1686,11 +1686,11 @@ static void aaa_fill_path(const SkPathRaw& path,
     } else {
         // We skip intersection computation if there are many points which probably already
         // give us enough fractional scan lines.
-        bool skipIntersect = path.points().size() > SkToSizeT((stop_y - start_y) * 2);
+        bool skipIntersect = path.countPoints() > (stop_y - start_y) * 2;
 
         aaa_walk_edges(&headEdge,
                        &tailEdge,
-                       path.fillType(),
+                       path.getFillType(),
                        blitter,
                        start_y,
                        stop_y,
@@ -1704,24 +1704,24 @@ static void aaa_fill_path(const SkPathRaw& path,
 
 // Check if the path is a rect and fat enough after clipping; if so, blit it.
 static inline bool try_blit_fat_anti_rect(SkBlitter* blitter,
-                                          const SkPathRaw& raw,
+                                          const SkPath& path,
                                           const SkIRect& clip) {
-    std::optional<SkRect> rect = raw.isRect();
-    if (!rect) {
-        return false;
+    SkRect rect;
+    if (!path.isRect(&rect)) {
+        return false; // not rect
     }
-    if (!rect->intersect(SkRect::Make(clip))) {
+    if (!rect.intersect(SkRect::Make(clip))) {
         return true; // The intersection is empty. Hence consider it done.
     }
-    SkIRect bounds = rect->roundOut();
+    SkIRect bounds = rect.roundOut();
     if (bounds.width() < 3) {
         return false; // not fat
     }
-    blitter->blitFatAntiRect(*rect);
+    blitter->blitFatAntiRect(rect);
     return true;
 }
 
-void SkScan::AAAFillPath(const SkPathRaw&  path,
+void SkScan::AAAFillPath(const SkPath&  path,
                          SkBlitter*     blitter,
                          const SkIRect& ir,
                          const SkIRect& clipBounds,

@@ -9,7 +9,6 @@
 
 #include "include/core/SkFlattenable.h"
 #include "include/core/SkPath.h"
-#include "include/core/SkPathBuilder.h"
 #include "include/core/SkPathEffect.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkRefCnt.h"
@@ -44,14 +43,15 @@ public:
         SkASSERT(radius > 0);
     }
 
-    bool onFilterPath(SkPathBuilder* dst, const SkPath& src, SkStrokeRec*, const SkRect*,
+    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*,
                       const SkMatrix&) const override {
         if (fRadius <= 0) {
             return false;
         }
 
-        // just need a value that won't match when we compare it initially
-        SkPathVerb   prevVerb = static_cast<SkPathVerb>(0xFF);
+        SkPath::Iter    iter(src, false);
+        SkPath::Verb    verb, prevVerb = SkPath::kDone_Verb;
+        SkPoint         pts[4];
 
         bool        closed;
         SkPoint     moveTo, lastCorner;
@@ -64,13 +64,11 @@ public:
         firstStep.set(0, 0);
         lastCorner.set(0, 0);
 
-        SkPath::Iter iter(src, false);
-        while (auto rec = iter.next()) {
-            SkSpan<const SkPoint> pts = rec->fPoints;
-            switch (rec->fVerb) {
-                case SkPathVerb::kMove:
+        for (;;) {
+            switch (verb = iter.next(pts)) {
+                case SkPath::kMove_Verb:
                     // close out the previous (open) contour
-                    if (SkPathVerb::kLine == prevVerb) {
+                    if (SkPath::kLine_Verb == prevVerb) {
                         dst->lineTo(lastCorner);
                     }
                     closed = iter.isClosedContour();
@@ -82,7 +80,7 @@ public:
                         prevIsValid = true;
                     }
                     break;
-                case SkPathVerb::kLine: {
+                case SkPath::kLine_Verb: {
                     bool drawSegment = ComputeStep(pts[0], pts[1], fRadius, &step);
                     // prev corner
                     if (!prevIsValid) {
@@ -99,7 +97,7 @@ public:
                     prevIsValid = true;
                     break;
                 }
-                case SkPathVerb::kQuad:
+                case SkPath::kQuad_Verb:
                     // TBD - just replicate the curve for now
                     if (!prevIsValid) {
                         dst->moveTo(pts[0]);
@@ -109,17 +107,17 @@ public:
                     lastCorner = pts[2];
                     firstStep.set(0, 0);
                     break;
-                case SkPathVerb::kConic:
+                case SkPath::kConic_Verb:
                     // TBD - just replicate the curve for now
                     if (!prevIsValid) {
                         dst->moveTo(pts[0]);
                         prevIsValid = true;
                     }
-                    dst->conicTo(pts[1], pts[2], rec->conicWeight());
+                    dst->conicTo(pts[1], pts[2], iter.conicWeight());
                     lastCorner = pts[2];
                     firstStep.set(0, 0);
                     break;
-                case SkPathVerb::kCubic:
+                case SkPath::kCubic_Verb:
                     if (!prevIsValid) {
                         dst->moveTo(pts[0]);
                         prevIsValid = true;
@@ -129,7 +127,7 @@ public:
                     lastCorner = pts[3];
                     firstStep.set(0, 0);
                     break;
-                case SkPathVerb::kClose:
+                case SkPath::kClose_Verb:
                     if (firstStep.fX || firstStep.fY) {
                         dst->quadTo(lastCorner.fX, lastCorner.fY,
                                     lastCorner.fX + firstStep.fX,
@@ -138,16 +136,21 @@ public:
                     dst->close();
                     prevIsValid = false;
                     break;
+                case SkPath::kDone_Verb:
+                    if (prevIsValid) {
+                        dst->lineTo(lastCorner);
+                    }
+                    return true;
+                default:
+                    SkDEBUGFAIL("default should not be reached");
+                    return false;
             }
-            if (SkPathVerb::kMove == prevVerb) {
+
+            if (SkPath::kMove_Verb == prevVerb) {
                 firstStep = step;
             }
-            prevVerb = rec->fVerb;
+            prevVerb = verb;
         }
-        if (prevIsValid) {
-            dst->lineTo(lastCorner);
-        }
-        return true;
     }
 
     bool computeFastBounds(SkRect*) const override {

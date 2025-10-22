@@ -289,11 +289,7 @@ void SkPicturePlayback::handleOp(SkReadBuffer* reader,
                 sampling = reader->readSampling();
                 BREAK_ON_READ_ERROR(reader);
             }
-            canvas->drawAtlas(atlas,
-                              {xform, count},
-                              {tex, count},
-                              {colors, colors ? count : 0},
-                              mode, sampling, cull, paint);
+            canvas->drawAtlas(atlas, xform, tex, colors, count, mode, sampling, cull, paint);
         } break;
         case DRAW_CLEAR: {
             auto c = reader->readInt();
@@ -589,7 +585,7 @@ void SkPicturePlayback::handleOp(SkReadBuffer* reader,
             const SkPoint* pts = (const SkPoint*)reader->skip(count, sizeof(SkPoint));
             BREAK_ON_READ_ERROR(reader);
 
-            canvas->drawPoints(mode, {pts, count}, paint);
+            canvas->drawPoints(mode, count, pts, paint);
         } break;
         case DRAW_RECT: {
             const SkPaint& paint = fPictureData->requiredPaint(reader);

@@ -11,7 +11,6 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPoint.h"
-#include "include/core/SkRSXform.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
@@ -227,7 +226,7 @@ void SkNWayCanvas::onDrawPoints(PointMode mode, size_t count, const SkPoint pts[
                                 const SkPaint& paint) {
     Iter iter(fList);
     while (iter.next()) {
-        iter->drawPoints(mode, {pts, count}, paint);
+        iter->drawPoints(mode, count, pts, paint);
     }
 }
 
@@ -313,11 +312,7 @@ void SkNWayCanvas::onDrawAtlas2(const SkImage* image, const SkRSXform xform[], c
                                 const SkPaint* paint) {
     Iter iter(fList);
     while (iter.next()) {
-        iter->drawAtlas(image,
-                        {xform, count},
-                        {tex, count},
-                        {colors, colors ? count : 0},
-                        bmode, sampling, cull, paint);
+        iter->drawAtlas(image, xform, tex, colors, count, bmode, sampling, cull, paint);
     }
 }
 

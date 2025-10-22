@@ -61,7 +61,7 @@ public:
                 return !fLoopIndices || !fLoopIndices->contains(v);
             }
 
-            // ... not a sequence expression (skbug.com/40044392)...
+            // ... not a sequence expression (skia:13311)...
             case Expression::Kind::kBinary:
                 if (e.as<BinaryExpression>().getOperator().kind() == Operator::Kind::COMMA) {
                     return true;

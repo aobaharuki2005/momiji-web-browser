@@ -183,19 +183,19 @@ SkISize SkPatchUtils::GetLevelOfDetail(const SkPoint cubics[12], const SkMatrix*
     // Approximate length of each cubic.
     SkPoint pts[kNumPtsCubic];
     SkPatchUtils::GetTopCubic(cubics, pts);
-    matrix->mapPoints(pts);
+    matrix->mapPoints(pts, kNumPtsCubic);
     SkScalar topLength = approx_arc_length(pts, kNumPtsCubic);
 
     SkPatchUtils::GetBottomCubic(cubics, pts);
-    matrix->mapPoints(pts);
+    matrix->mapPoints(pts, kNumPtsCubic);
     SkScalar bottomLength = approx_arc_length(pts, kNumPtsCubic);
 
     SkPatchUtils::GetLeftCubic(cubics, pts);
-    matrix->mapPoints(pts);
+    matrix->mapPoints(pts, kNumPtsCubic);
     SkScalar leftLength = approx_arc_length(pts, kNumPtsCubic);
 
     SkPatchUtils::GetRightCubic(cubics, pts);
-    matrix->mapPoints(pts);
+    matrix->mapPoints(pts, kNumPtsCubic);
     SkScalar rightLength = approx_arc_length(pts, kNumPtsCubic);
 
     if (topLength < 0 || bottomLength < 0 || leftLength < 0 || rightLength < 0) {

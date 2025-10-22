@@ -51,7 +51,7 @@ namespace SkImages {
 
 sk_sp<SkImage> DeferredFromEncodedData(sk_sp<SkData> encoded,
                                        std::optional<SkAlphaType> alphaType) {
-    if (nullptr == encoded || encoded->empty()) {
+    if (nullptr == encoded || encoded->isEmpty()) {
         return nullptr;
     }
     return DeferredFromGenerator(SkImageGenerators::MakeFromEncoded(std::move(encoded), alphaType));

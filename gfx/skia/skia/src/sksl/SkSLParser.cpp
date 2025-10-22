@@ -1356,6 +1356,9 @@ bool Parser::interfaceBlock(const Modifiers& modifiers) {
                 }
                 this->expect(Token::Kind::TK_RBRACKET, "']'");
             }
+            if (!this->expect(Token::Kind::TK_SEMICOLON, "';'")) {
+                return false;
+            }
 
             fields.push_back(SkSL::Field(this->rangeFrom(fieldPos),
                                          fieldModifiers.fLayout,
@@ -1363,10 +1366,6 @@ bool Parser::interfaceBlock(const Modifiers& modifiers) {
                                          this->text(fieldName),
                                          actualType));
         } while (this->checkNext(Token::Kind::TK_COMMA));
-
-        if (!this->expect(Token::Kind::TK_SEMICOLON, "';'")) {
-            return false;
-        }
     }
     std::string_view instanceName;
     Token instanceNameToken;
@@ -1701,7 +1700,7 @@ std::unique_ptr<Statement> Parser::continueStatement() {
 /* DISCARD SEMICOLON */
 std::unique_ptr<Statement> Parser::discardStatement() {
     Token start;
-    if (!this->expect(Token::Kind::TK_DISCARD, "'discard'", &start)) {
+    if (!this->expect(Token::Kind::TK_DISCARD, "'continue'", &start)) {
         return nullptr;
     }
     if (!this->expect(Token::Kind::TK_SEMICOLON, "';'")) {

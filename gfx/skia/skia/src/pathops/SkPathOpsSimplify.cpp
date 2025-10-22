@@ -150,6 +150,9 @@ static bool bridgeXor(SkOpContourHead* contourList, SkPathWriter* writer) {
 static bool path_is_trivial(const SkPath& path) {
     SkPath::Iter iter(path, true);
 
+    SkPath::Verb verb;
+    SkPoint points[4];
+
     class Trivializer {
         SkPoint prevPt{0,0};
         SkVector prevVec{0,0};
@@ -174,43 +177,46 @@ static bool path_is_trivial(const SkPath& path) {
         }
     } triv;
 
-    while (auto rec = iter.next()) {
-        SkSpan<const SkPoint> points = rec->fPoints;
-        switch (rec->fVerb) {
-            case SkPathVerb::kMove:
+    while ((verb = iter.next(points)) != SkPath::kDone_Verb) {
+        switch (verb) {
+            case SkPath::kMove_Verb:
                 triv.moveTo(points[0]);
                 break;
-            case SkPathVerb::kCubic:
+            case SkPath::kCubic_Verb:
                 if (!triv.addTrivialContourPoint(points[3])) { return false; }
                 [[fallthrough]];
-            case SkPathVerb::kConic:
-            case SkPathVerb::kQuad:
+            case SkPath::kConic_Verb:
+            case SkPath::kQuad_Verb:
                 if (!triv.addTrivialContourPoint(points[2])) { return false; }
                 [[fallthrough]];
-            case SkPathVerb::kLine:
+            case SkPath::kLine_Verb:
                 if (!triv.addTrivialContourPoint(points[1])) { return false; }
                 if (!triv.addTrivialContourPoint(points[0])) { return false; }
                 break;
-            case SkPathVerb::kClose:
+            case SkPath::kClose_Verb:
+            case SkPath::kDone_Verb:
                 break;
         }
     }
     return true;
 }
 
-std::optional<SkPath> SimplifyDebug(const SkPath& path SkDEBUGPARAMS(bool skipAssert)
-                                                       SkDEBUGPARAMS(const char* testName)) {
+// FIXME : add this as a member of SkPath
+bool SimplifyDebug(const SkPath& path, SkPath* result
+        SkDEBUGPARAMS(bool skipAssert) SkDEBUGPARAMS(const char* testName)) {
     // returns 1 for evenodd, -1 for winding, regardless of inverse-ness
     SkPathFillType fillType = path.isInverseFillType() ? SkPathFillType::kInverseEvenOdd
             : SkPathFillType::kEvenOdd;
 
     if (path.isConvex()) {
-        SkPath result;
-        // If the path is trivially convex, simplify to empty, else copy
-        if (!path_is_trivial(path)) {
-            result = path;
+        // If the path is trivially convex, simplify to empty.
+        if (path_is_trivial(path)) {
+            result->reset();
+        } else if (result != &path) {
+            *result = path;
         }
-        return result.makeFillType(fillType);
+        result->setFillType(fillType);
+        return true;
     }
     // turn path into list of segments
     SkSTArenaAlloc<4096> allocator;  // FIXME: constant-ize, tune
@@ -232,13 +238,15 @@ std::optional<SkPath> SimplifyDebug(const SkPath& path SkDEBUGPARAMS(bool skipAs
 #endif
     SkOpEdgeBuilder builder(path, contourList, &globalState);
     if (!builder.finish()) {
-        return {};
+        return false;
     }
 #if DEBUG_DUMP_SEGMENTS
     contour.dumpSegments();
 #endif
     if (!SortContourList(&contourList, false, false)) {
-        return SkPath().makeFillType(fillType);
+        result->reset();
+        result->setFillType(fillType);
+        return true;
     }
     // find all intersections between segments
     SkOpContour* current = contourList;
@@ -255,31 +263,33 @@ std::optional<SkPath> SimplifyDebug(const SkPath& path SkDEBUGPARAMS(bool skipAs
     globalState.debugAddToGlobalCoinDicts();
 #endif
     if (!success) {
-        return {};
+        return false;
     }
 #if DEBUG_DUMP_ALIGNMENT
     contour.dumpSegments("aligned");
 #endif
     // construct closed contours
-    SkPathWriter wrapper(fillType);
+    result->reset();
+    result->setFillType(fillType);
+    SkPathWriter wrapper(*result);
     if (builder.xorMask() == kWinding_PathOpsMask ? !bridgeWinding(contourList, &wrapper)
             : !bridgeXor(contourList, &wrapper)) {
-        return {};
+        return false;
     }
     wrapper.assemble();  // if some edges could not be resolved, assemble remaining
-    return wrapper.nativePath();
+    return true;
 }
 
-std::optional<SkPath> Simplify(const SkPath& path) {
-    auto result = SimplifyDebug(path  SkDEBUGPARAMS(true) SkDEBUGPARAMS(nullptr));
+bool Simplify(const SkPath& path, SkPath* result) {
 #if DEBUG_DUMP_VERIFY
     if (SkPathOpsDebug::gVerifyOp) {
-        if (result.has_value()) {
-            VerifySimplify(path, *result);
-        } else {
+        if (!SimplifyDebug(path, result  SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr))) {
             ReportSimplifyFail(path);
+            return false;
         }
+        VerifySimplify(path, *result);
+        return true;
     }
 #endif
-    return result;
+    return SimplifyDebug(path, result  SkDEBUGPARAMS(true) SkDEBUGPARAMS(nullptr));
 }

@@ -12,9 +12,8 @@
 #include "include/private/base/SkTArray.h"
 #include "include/private/base/SkTDArray.h"
 
-#include <optional>
-
 struct SkRect;
+
 
 // FIXME: move everything below into the SkPath class
 /**
@@ -44,35 +43,21 @@ enum SkPathOp {
                   inputs.
     @return True if the operation succeeded.
   */
-std::optional<SkPath> SK_API Op(const SkPath& one, const SkPath& two, SkPathOp op);
+bool SK_API Op(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result);
 
-// DEPRECATED
-static inline bool Op(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result) {
-    if (auto res = Op(one, two, op)) {
-        *result = *res;
-        return true;
-    }
-    return false;
-}
-
-/** Return a path with a set of non-overlapping contours that describe the
+/** Set this path to a set of non-overlapping contours that describe the
     same area as the original path.
     The curve order is reduced where possible so that cubics may
     be turned into quadratics, and quadratics maybe turned into lines.
 
-    @param path The path to simplify.
-    @return The simplified path, or {} on failure.
-  */
-std::optional<SkPath> SK_API Simplify(const SkPath& path);
+    Returns true if operation was able to produce a result;
+    otherwise, result is unmodified.
 
-// DEPRECATED
-static inline bool Simplify(const SkPath& path, SkPath* result) {
-    if (auto res = Simplify(path)) {
-        *result = *res;
-        return true;
-    }
-    return false;
-}
+    @param path The path to simplify.
+    @param result The simplified path. The result may be the input.
+    @return True if simplification succeeded.
+  */
+bool SK_API Simplify(const SkPath& path, SkPath* result);
 
 /** Set the resulting rectangle to the tight bounds of the path.
 
@@ -90,25 +75,19 @@ static inline bool TightBounds(const SkPath& path, SkRect* result) {
     return false;
 }
 
-/** Returns a path with fill type winding to area equivalent to the input.
-    Does not detect if path contains contours which
+/** Set the result with fill type winding to area equivalent to path.
+    Returns true if successful. Does not detect if path contains contours which
     contain self-crossings or cross other contours; in these cases, may return
-    a result even though it does not fill same area as the input.
+    true even though result does not fill same area as path.
 
-    If it fails to compute a result, returns {}.
+    Returns true if operation was able to produce a result;
+    otherwise, result is unmodified. The result may be the input.
 
     @param path The path typically with fill type set to even odd.
+    @param result The equivalent path with fill type set to winding.
+    @return True if winding path was set.
   */
-std::optional<SkPath> SK_API AsWinding(const SkPath& path);
-
-// DEPRECATED
-static inline bool AsWinding(const SkPath& path, SkPath* result) {
-    if (auto res = AsWinding(path)) {
-        *result = *res;
-        return true;
-    }
-    return false;
-}
+bool SK_API AsWinding(const SkPath& path, SkPath* result);
 
 /** Perform a series of path operations, optimized for unioning many paths together.
   */
@@ -125,18 +104,10 @@ public:
     /** Computes the sum of all paths and operands, and resets the builder to its
         initial state.
 
-        @return result The product of the operands, {} on failure.
+        @param result The product of the operands.
+        @return True if the operation succeeded.
       */
-    std::optional<SkPath> resolve();
-
-    // DEPRECATED
-    bool resolve(SkPath* result) {
-        if (auto res = this->resolve()) {
-            *result = *res;
-            return true;
-        }
-        return false;
-    }
+    bool resolve(SkPath* result);
 
 private:
     skia_private::TArray<SkPath> fPathRefs;

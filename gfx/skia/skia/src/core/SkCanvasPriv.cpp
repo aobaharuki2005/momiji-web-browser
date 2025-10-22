@@ -247,8 +247,8 @@ void AutoLayerForImageFilter::addMaskFilterLayer(const SkRect* drawBounds) {
     SkASSERT(!fPaint.getImageFilter());
 
     // TODO: Eventually all SkMaskFilters will implement this method so this can switch to an assert
-    auto [maskFilterAsImageFilter, appliesShading] = as_MFB(
-        fPaint.getMaskFilter())->asImageFilter(fCanvas->getTotalMatrix(), fPaint);
+    sk_sp<SkImageFilter> maskFilterAsImageFilter =
+            as_MFB(fPaint.getMaskFilter())->asImageFilter(fCanvas->getTotalMatrix());
     if (!maskFilterAsImageFilter) {
         // This is a legacy mask filter that can be handled by raster and Ganesh directly, but will
         // be ignored by Graphite. Return now, leaving the paint with the mask filter so that the
@@ -259,16 +259,12 @@ void AutoLayerForImageFilter::addMaskFilterLayer(const SkRect* drawBounds) {
     // The restore paint for the coverage layer takes over all shading effects that had been on the
     // original paint, which will be applied to the alpha-only output image from the mask filter
     // converted to an image filter.
-    // If we know our mask filter will affect shading, we don't want to add the original shading
-    // into the restore paint.
     SkPaint restorePaint;
-    if (!appliesShading) {
-        restorePaint.setColor4f(fPaint.getColor4f());
-        restorePaint.setShader(fPaint.refShader());
-        restorePaint.setColorFilter(fPaint.refColorFilter());
-        restorePaint.setDither(fPaint.isDither());
-    }
+    restorePaint.setColor4f(fPaint.getColor4f());
+    restorePaint.setShader(fPaint.refShader());
+    restorePaint.setColorFilter(fPaint.refColorFilter());
     restorePaint.setBlender(fPaint.refBlender());
+    restorePaint.setDither(fPaint.isDither());
     restorePaint.setImageFilter(maskFilterAsImageFilter);
 
     // Remove all shading effects from the "working" paint so that the layer's alpha channel
@@ -281,7 +277,7 @@ void AutoLayerForImageFilter::addMaskFilterLayer(const SkRect* drawBounds) {
     fPaint.setDither(false);
     fPaint.setBlendMode(SkBlendMode::kSrcOver);
 
-    this->addLayer(restorePaint, drawBounds, /*coverageOnly=*/!appliesShading);
+    this->addLayer(restorePaint, drawBounds, /*coverageOnly=*/true);
 }
 
 void AutoLayerForImageFilter::addLayer(const SkPaint& restorePaint,

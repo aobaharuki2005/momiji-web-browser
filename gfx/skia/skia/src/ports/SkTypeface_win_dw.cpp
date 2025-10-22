@@ -326,10 +326,9 @@ void DWriteFontTypeface::onGetFontDescriptor(SkFontDescriptor* desc,
     *serialize = SkToBool(fLoaders);
 }
 
-void DWriteFontTypeface::onCharsToGlyphs(SkSpan<const SkUnichar> uni,
-                                         SkSpan<SkGlyphID> glyphs) const {
-    SkASSERT(uni.size() == glyphs.size());
-    fDWriteFontFace->GetGlyphIndices((const UINT32*)uni.data(), uni.size(), glyphs.data());
+void DWriteFontTypeface::onCharsToGlyphs(const SkUnichar* uni, int count,
+                                         SkGlyphID glyphs[]) const {
+    fDWriteFontFace->GetGlyphIndices((const UINT32*)uni, count, glyphs);
 }
 
 int DWriteFontTypeface::onCountGlyphs() const {
@@ -399,7 +398,7 @@ bool DWriteFontTypeface::onGlyphMaskNeedsCurrentColor() const {
 }
 
 int DWriteFontTypeface::onGetVariationDesignPosition(
-    SkSpan<SkFontArguments::VariationPosition::Coordinate> coordinates) const
+    SkFontArguments::VariationPosition::Coordinate coordinates[], int coordinateCount) const
 {
 
 #if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
@@ -424,7 +423,7 @@ int DWriteFontTypeface::onGetVariationDesignPosition(
         }
     }
 
-    if (coordinates.size() < variableAxisCount) {
+    if (!coordinates || coordinateCount < 0 || (unsigned)coordinateCount < variableAxisCount) {
         return SkTo<int>(variableAxisCount);
     }
 
@@ -448,7 +447,7 @@ int DWriteFontTypeface::onGetVariationDesignPosition(
 }
 
 int DWriteFontTypeface::onGetVariationDesignParameters(
-    SkSpan<SkFontParameters::Variation::Axis> parameters) const
+    SkFontParameters::Variation::Axis parameters[], int parameterCount) const
 {
 
 #if defined(NTDDI_WIN10_RS3) && NTDDI_VERSION >= NTDDI_WIN10_RS3
@@ -473,7 +472,7 @@ int DWriteFontTypeface::onGetVariationDesignParameters(
         }
     }
 
-    if (parameters.size() < (unsigned)variableAxisCount) {
+    if (!parameters || parameterCount < variableAxisCount) {
         return variableAxisCount;
     }
 
@@ -503,7 +502,7 @@ int DWriteFontTypeface::onGetVariationDesignParameters(
 #endif
 }
 
-int DWriteFontTypeface::onGetTableTags(SkSpan<SkFontTableTag> tags) const {
+int DWriteFontTypeface::onGetTableTags(SkFontTableTag tags[]) const {
     DWRITE_FONT_FACE_TYPE type = fDWriteFontFace->GetType();
     if (type != DWRITE_FONT_FACE_TYPE_CFF &&
         type != DWRITE_FONT_FACE_TYPE_TRUETYPE &&
@@ -723,10 +722,10 @@ static void glyph_to_unicode_map(IDWriteFontFace* fontFace, DWRITE_UNICODE_RANGE
     }
 }
 
-void DWriteFontTypeface::getGlyphToUnicodeMap(SkSpan<SkUnichar> glyphToUnicode) const {
+void DWriteFontTypeface::getGlyphToUnicodeMap(SkUnichar* glyphToUnicode) const {
     IDWriteFontFace* face = fDWriteFontFace.get();
-    UINT32 numGlyphs = std::min<UINT32>(face->GetGlyphCount(), glyphToUnicode.size());
-    sk_bzero(glyphToUnicode.data(), glyphToUnicode.size_bytes());
+    UINT32 numGlyphs = face->GetGlyphCount();
+    sk_bzero(glyphToUnicode, sizeof(SkUnichar) * numGlyphs);
     UINT32 remainingGlyphCount = numGlyphs;
 
     if (fDWriteFontFace1) {
@@ -739,12 +738,10 @@ void DWriteFontTypeface::getGlyphToUnicodeMap(SkSpan<SkUnichar> glyphToUnicode) 
         std::unique_ptr<DWRITE_UNICODE_RANGE[]> ranges(new DWRITE_UNICODE_RANGE[numRanges]);
         HRVM(face1->GetUnicodeRanges(numRanges, ranges.get(), &numRanges), "Failed to get ranges.");
         for (UINT32 i = 0; i < numRanges; ++i) {
-            glyph_to_unicode_map(face1, ranges[i], &remainingGlyphCount, numGlyphs,
-                                 glyphToUnicode.data());
+            glyph_to_unicode_map(face1, ranges[i], &remainingGlyphCount, numGlyphs, glyphToUnicode);
         }
     } else {
-        glyph_to_unicode_map(face, {0, 0x10FFFF}, &remainingGlyphCount, numGlyphs,
-                             glyphToUnicode.data());
+        glyph_to_unicode_map(face, {0, 0x10FFFF}, &remainingGlyphCount, numGlyphs, glyphToUnicode);
     }
 }
 

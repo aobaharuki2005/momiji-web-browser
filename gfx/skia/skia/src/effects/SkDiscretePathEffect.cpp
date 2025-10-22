@@ -6,7 +6,7 @@
  */
 
 #include "include/core/SkFlattenable.h"
-#include "include/core/SkPathBuilder.h"
+#include "include/core/SkPath.h"
 #include "include/core/SkPathEffect.h"
 #include "include/core/SkPathMeasure.h"
 #include "include/core/SkPoint.h"
@@ -27,7 +27,6 @@
 #include <cstdint>
 
 class SkMatrix;
-class SkPath;
 
 /** \class LCGRandom
 
@@ -87,7 +86,7 @@ public:
         SkASSERT(segLength > SK_ScalarNearlyZero);
     }
 
-    bool onFilterPath(SkPathBuilder* dst, const SkPath& src, SkStrokeRec* rec,
+    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                       const SkRect*, const SkMatrix&) const override {
         bool doFill = rec->isFillStyle();
 

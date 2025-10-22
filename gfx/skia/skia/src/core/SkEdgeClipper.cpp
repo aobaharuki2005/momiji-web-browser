@@ -61,10 +61,10 @@ bool SkEdgeClipper::clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) {
         this->appendLine(lines[i], lines[i + 1]);
     }
 
-    fCurrVerbStop = fCurrVerb;
+    *fCurrVerb = SkPath::kDone_Verb;
     fCurrPoint = fPoints;
     fCurrVerb = fVerbs;
-    return fCurrVerbStop != fCurrVerb;
+    return SkPath::kDone_Verb != fVerbs[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -227,7 +227,8 @@ bool SkEdgeClipper::clipQuad(const SkPoint srcPts[3], const SkRect& clip) {
     fCurrPoint = fPoints;
     fCurrVerb = fVerbs;
 
-    const SkRect bounds = SkRect::BoundsOrEmpty({srcPts, 3});
+    SkRect  bounds;
+    bounds.setBounds(srcPts, 3);
 
     if (!quick_reject(bounds, clip)) {
         SkPoint monoY[5];
@@ -243,10 +244,10 @@ bool SkEdgeClipper::clipQuad(const SkPoint srcPts[3], const SkRect& clip) {
         }
     }
 
-    fCurrVerbStop = fCurrVerb;
+    *fCurrVerb = SkPath::kDone_Verb;
     fCurrPoint = fPoints;
     fCurrVerb = fVerbs;
-    return fCurrVerbStop != fCurrVerb;
+    return SkPath::kDone_Verb != fVerbs[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -402,7 +403,9 @@ void SkEdgeClipper::clipMonoCubic(const SkPoint src[4], const SkRect& clip) {
 }
 
 static SkRect compute_cubic_bounds(const SkPoint pts[4]) {
-    return SkRect::BoundsOrEmpty({pts, 4});
+    SkRect r;
+    r.setBounds(pts, 4);
+    return r;
 }
 
 static bool too_big_for_reliable_float_math(const SkRect& r) {
@@ -446,23 +449,23 @@ bool SkEdgeClipper::clipCubic(const SkPoint srcPts[4], const SkRect& clip) {
         }
     }
 
-    fCurrVerbStop = fCurrVerb;
+    *fCurrVerb = SkPath::kDone_Verb;
     fCurrPoint = fPoints;
     fCurrVerb = fVerbs;
-    return fCurrVerbStop != fCurrVerb;
+    return SkPath::kDone_Verb != fVerbs[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkEdgeClipper::appendLine(SkPoint p0, SkPoint p1) {
-    *fCurrVerb++ = SkPathVerb::kLine;
+    *fCurrVerb++ = SkPath::kLine_Verb;
     fCurrPoint[0] = p0;
     fCurrPoint[1] = p1;
     fCurrPoint += 2;
 }
 
 void SkEdgeClipper::appendVLine(SkScalar x, SkScalar y0, SkScalar y1, bool reverse) {
-    *fCurrVerb++ = SkPathVerb::kLine;
+    *fCurrVerb++ = SkPath::kLine_Verb;
 
     if (reverse) {
         using std::swap;
@@ -474,7 +477,7 @@ void SkEdgeClipper::appendVLine(SkScalar x, SkScalar y0, SkScalar y1, bool rever
 }
 
 void SkEdgeClipper::appendQuad(const SkPoint pts[3], bool reverse) {
-    *fCurrVerb++ = SkPathVerb::kQuad;
+    *fCurrVerb++ = SkPath::kQuad_Verb;
 
     if (reverse) {
         fCurrPoint[0] = pts[2];
@@ -488,7 +491,7 @@ void SkEdgeClipper::appendQuad(const SkPoint pts[3], bool reverse) {
 }
 
 void SkEdgeClipper::appendCubic(const SkPoint pts[4], bool reverse) {
-    *fCurrVerb++ = SkPathVerb::kCubic;
+    *fCurrVerb++ = SkPath::kCubic_Verb;
 
     if (reverse) {
         for (int i = 0; i < 4; i++) {
@@ -500,25 +503,26 @@ void SkEdgeClipper::appendCubic(const SkPoint pts[4], bool reverse) {
     fCurrPoint += 4;
 }
 
-std::optional<SkPathVerb> SkEdgeClipper::next(SkPoint pts[]) {
-    SkASSERT(fCurrVerb <= fCurrVerbStop);
-    if (fCurrVerb >= fCurrVerbStop) {
-        return {};
-    }
+SkPath::Verb SkEdgeClipper::next(SkPoint pts[]) {
+    SkPath::Verb verb = *fCurrVerb;
 
-    auto verb = *fCurrVerb++;
     switch (verb) {
-        case SkPathVerb::kLine:
+        case SkPath::kLine_Verb:
             memcpy(pts, fCurrPoint, 2 * sizeof(SkPoint));
             fCurrPoint += 2;
+            fCurrVerb += 1;
             break;
-        case SkPathVerb::kQuad:
+        case SkPath::kQuad_Verb:
             memcpy(pts, fCurrPoint, 3 * sizeof(SkPoint));
             fCurrPoint += 3;
+            fCurrVerb += 1;
             break;
-        case SkPathVerb::kCubic:
+        case SkPath::kCubic_Verb:
             memcpy(pts, fCurrPoint, 4 * sizeof(SkPoint));
             fCurrPoint += 4;
+            fCurrVerb += 1;
+            break;
+        case SkPath::kDone_Verb:
             break;
         default:
             SkDEBUGFAIL("unexpected verb in quadclippper2 iter");
@@ -559,12 +563,14 @@ void sk_assert_monotonic_x(const SkPoint pts[], int count) {
 }
 #endif
 
-void SkEdgeClipper::ClipPath(const SkPathRaw& raw, const SkRect& clip, bool canCullToTheRight,
+void SkEdgeClipper::ClipPath(const SkPath& path, const SkRect& clip, bool canCullToTheRight,
                              void (*consume)(SkEdgeClipper*, bool newCtr, void* ctx), void* ctx) {
-    SkAutoConicToQuads quadder;
-    constexpr float kConicTol = 0.25f;
+    SkASSERT(path.isFinite());
 
-    SkPathEdgeIter iter(raw);
+    SkAutoConicToQuads quadder;
+    const SkScalar conicTol = SK_Scalar1 / 4;
+
+    SkPathEdgeIter iter(path);
     SkEdgeClipper clipper(canCullToTheRight);
 
     while (auto e = iter.next()) {
@@ -580,8 +586,7 @@ void SkEdgeClipper::ClipPath(const SkPathRaw& raw, const SkRect& clip, bool canC
                 }
                 break;
             case SkPathEdgeIter::Edge::kConic: {
-                const SkPoint* quadPts =
-                        quadder.computeQuads(e.fPts, iter.conicWeight(), kConicTol);
+                const SkPoint* quadPts = quadder.computeQuads(e.fPts, iter.conicWeight(), conicTol);
                 for (int i = 0; i < quadder.countQuads(); ++i) {
                     if (clipper.clipQuad(quadPts, clip)) {
                         consume(&clipper, e.fIsNewContour, ctx);
@@ -593,9 +598,6 @@ void SkEdgeClipper::ClipPath(const SkPathRaw& raw, const SkRect& clip, bool canC
                 if (clipper.clipCubic(e.fPts, clip)) {
                     consume(&clipper, e.fIsNewContour, ctx);
                 }
-                break;
-            default:
-                SkDEBUGFAIL("Unknown edge type");
                 break;
         }
     }

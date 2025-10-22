@@ -13,7 +13,6 @@
 #include "src/base/SkAutoMalloc.h"
 #include "src/base/SkEndian.h"
 
-#include <algorithm>
 #include <cstdint>
 
 struct SkSFNTHeader {
@@ -159,15 +158,17 @@ int SkFontStream::CountTTCEntries(SkStream* stream) {
     }
 }
 
-int SkFontStream::GetTableTags(SkStream* stream, int ttcIndex, SkSpan<SkFontTableTag> tags) {
+int SkFontStream::GetTableTags(SkStream* stream, int ttcIndex,
+                               SkFontTableTag tags[]) {
     SfntHeader  header;
     if (!header.init(stream, ttcIndex)) {
         return 0;
     }
 
-    const size_t n = std::min((size_t)header.fCount, tags.size());
-    for (size_t i = 0; i < n; i++) {
-        tags[i] = SkEndian_SwapBE32(header.fDir[i].fTag);
+    if (tags) {
+        for (int i = 0; i < header.fCount; i++) {
+            tags[i] = SkEndian_SwapBE32(header.fDir[i].fTag);
+        }
     }
     return header.fCount;
 }

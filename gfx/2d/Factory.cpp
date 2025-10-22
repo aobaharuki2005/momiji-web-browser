@@ -240,7 +240,7 @@ StaticMutex Factory::mDeviceLock;
 StaticMutex Factory::mDTDependencyLock;
 #endif
 
-SubpixelOrder Factory::mSubpixelOrder = SubpixelOrder::UNKNOWN;
+bool Factory::mBGRSubpixelOrder = false;
 
 mozilla::gfx::Config* Factory::sConfig = nullptr;
 
@@ -627,11 +627,9 @@ already_AddRefed<ScaledFont> Factory::CreateScaledFontForFreeTypeFont(
 }
 #endif
 
-void Factory::SetSubpixelOrder(SubpixelOrder aOrder) {
-  mSubpixelOrder = aOrder;
-}
+void Factory::SetBGRSubpixelOrder(bool aBGR) { mBGRSubpixelOrder = aBGR; }
 
-SubpixelOrder Factory::GetSubpixelOrder() { return mSubpixelOrder; }
+bool Factory::GetBGRSubpixelOrder() { return mBGRSubpixelOrder; }
 
 #ifdef MOZ_ENABLE_FREETYPE
 SharedFTFace::SharedFTFace(FT_Face aFace, SharedFTFaceData* aData)

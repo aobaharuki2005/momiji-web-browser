@@ -27,10 +27,12 @@ sk_sp<SkImageFilter> SkLocalMatrixImageFilter::Make(const SkMatrix& localMatrix,
         return nullptr;
     }
 
-    if (auto invLocal = localMatrix.invert()) {
-        return sk_sp<SkImageFilter>(new SkLocalMatrixImageFilter(localMatrix, *invLocal, &input));
+    SkMatrix invLocal;
+    if (!localMatrix.invert(&invLocal)) {
+        return nullptr;
     }
-    return nullptr;
+
+    return sk_sp<SkImageFilter>(new SkLocalMatrixImageFilter(localMatrix, invLocal, &input));
 }
 
 sk_sp<SkFlattenable> SkLocalMatrixImageFilter::CreateProc(SkReadBuffer& buffer) {

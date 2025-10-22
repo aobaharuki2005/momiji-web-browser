@@ -12,6 +12,7 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkPathEffect.h"
 #include "include/core/SkSurfaceProps.h"
+#include "src/base/SkTLazy.h"
 #include "src/core/SkFontPriv.h"
 #include "src/core/SkGlyph.h"
 #include "src/core/SkStrike.h"
@@ -74,11 +75,10 @@ std::tuple<SkStrikeSpec, SkScalar> SkStrikeSpec::MakeCanonicalized(
     }
 
     const SkFont* canonicalizedFont = &font;
-    std::optional<SkFont> pathFont;
+    SkTLazy<SkFont> pathFont;
     SkScalar strikeToSourceScale = 1;
     if (ShouldDrawAsPath(canonicalizedPaint, font, SkMatrix::I())) {
-        pathFont = font;
-        canonicalizedFont = &pathFont.value();
+        canonicalizedFont = pathFont.set(font);
         strikeToSourceScale = pathFont->setupForAsPaths(nullptr);
         canonicalizedPaint.reset();
     }

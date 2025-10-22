@@ -24,7 +24,6 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkSerialProcs.h"
-#include "include/core/SkSpan.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
@@ -40,11 +39,9 @@
 #include "src/core/SkScalerContext.h"
 #include "src/core/SkStreamPriv.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <optional>
 #include <utility>
 #include <vector>
 
@@ -102,12 +99,12 @@ private:
     std::unique_ptr<SkScalerContext> onCreateScalerContext(const SkScalerContextEffects&,
                                                            const SkDescriptor* desc) const override;
     void onFilterRec(SkScalerContextRec* rec) const override;
-    void getGlyphToUnicodeMap(SkSpan<SkUnichar>) const override;
+    void getGlyphToUnicodeMap(SkUnichar* glyphToUnicode) const override;
     std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override;
 
     void onGetFontDescriptor(SkFontDescriptor* desc, bool* isLocal) const override;
 
-    void onCharsToGlyphs(SkSpan<const SkUnichar>, SkSpan<SkGlyphID>) const override;
+    void onCharsToGlyphs(const SkUnichar* chars, int count, SkGlyphID glyphs[]) const override;
 
     void onGetFamilyName(SkString* familyName) const override;
     bool onGetPostScriptName(SkString*) const override;
@@ -133,12 +130,11 @@ private:
 
     void getPostScriptGlyphNames(SkString*) const override {}
     bool onGlyphMaskNeedsCurrentColor() const override { return false; }
-    int onGetVariationDesignPosition(
-             SkSpan<SkFontArguments::VariationPosition::Coordinate>) const override { return 0; }
-    int onGetVariationDesignParameters(SkSpan<SkFontParameters::Variation::Axis>) const override {
-        return 0;
-    }
-    int onGetTableTags(SkSpan<SkFontTableTag>) const override { return 0; }
+    int onGetVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate[],
+                                     int) const override { return 0; }
+    int onGetVariationDesignParameters(SkFontParameters::Variation::Axis[],
+                                       int) const override { return 0; }
+    int onGetTableTags(SkFontTableTag tags[]) const override { return 0; }
     size_t onGetTableData(SkFontTableTag, size_t, size_t, void*) const override { return 0; }
 
     int glyphCount() const {
@@ -179,7 +175,7 @@ void SkCustomTypefaceBuilder::setGlyph(SkGlyphID index, float advance,
     rec.fAdvance  = advance;
     rec.fDrawable = std::move(drawable);
     rec.fBounds   = bounds;
-    rec.fPath     = SkPath();
+    rec.fPath.reset();
 }
 
 sk_sp<SkTypeface> SkCustomTypefaceBuilder::detach() {
@@ -209,9 +205,8 @@ void SkUserTypeface::onFilterRec(SkScalerContextRec* rec) const {
     rec->setHinting(SkFontHinting::kNone);
 }
 
-void SkUserTypeface::getGlyphToUnicodeMap(SkSpan<SkUnichar> glyphToUnicode) const {
-    const int n = std::min(this->glyphCount(), (int)glyphToUnicode.size());
-    for (int gid = 0; gid < n; ++gid) {
+void SkUserTypeface::getGlyphToUnicodeMap(SkUnichar* glyphToUnicode) const {
+    for (int gid = 0; gid < this->glyphCount(); ++gid) {
         glyphToUnicode[gid] = SkTo<SkUnichar>(gid);
     }
 }
@@ -225,12 +220,9 @@ void SkUserTypeface::onGetFontDescriptor(SkFontDescriptor* desc, bool* isLocal) 
     *isLocal = true;
 }
 
-void SkUserTypeface::onCharsToGlyphs(SkSpan<const SkUnichar> chars,
-                                     SkSpan<SkGlyphID> glyphs) const {
-    SkASSERT(chars.size() == glyphs.size());
-    const int glyphCount = this->glyphCount();
-    for (size_t i = 0; i < chars.size(); ++i) {
-        glyphs[i] = chars[i] < glyphCount ? SkTo<SkGlyphID>(chars[i]) : 0;
+void SkUserTypeface::onCharsToGlyphs(const SkUnichar* chars, int count, SkGlyphID glyphs[]) const {
+    for (int i = 0; i < count; ++i) {
+        glyphs[i] = chars[i] < this->glyphCount() ? SkTo<SkGlyphID>(chars[i]) : 0;
     }
 }
 
@@ -253,9 +245,10 @@ public:
     SkUserScalerContext(SkUserTypeface& face,
                         const SkScalerContextEffects& effects,
                         const SkDescriptor* desc)
-        : SkScalerContext(face, effects, desc)
-        , fMatrix(fRec.getSingleMatrix())
-    {}
+            : SkScalerContext(face, effects, desc) {
+        fRec.getSingleMatrix(&fMatrix);
+        this->forceGenerateImageFromPath();
+    }
 
     const SkUserTypeface* userTF() const {
         return static_cast<SkUserTypeface*>(this->getTypeface());
@@ -273,7 +266,7 @@ protected:
         }
 
         const auto& rec = tf->fGlyphRecs[gid];
-        mx.advance = fMatrix.mapPoint({rec.fAdvance, 0});
+        mx.advance = fMatrix.mapXY(rec.fAdvance, 0);
 
         if (rec.isDrawable()) {
             mx.maskFormat = SkMask::kARGB32_Format;
@@ -285,18 +278,13 @@ protected:
 
             // These do not have an outline path.
             mx.neverRequestPath = true;
-        } else {
-            mx.computeFromPath = true;
         }
         return mx;
     }
 
     void generateImage(const SkGlyph& glyph, void* imageBuffer) override {
         const auto& rec = this->userTF()->fGlyphRecs[glyph.getGlyphID()];
-        if (!rec.isDrawable()) {
-            this->generateImageFromPath(glyph, imageBuffer);
-            return;
-        }
+        SkASSERTF(rec.isDrawable(), "Only drawable-backed glyphs should reach generateImage.");
 
         auto canvas = SkCanvas::MakeRasterDirectN32(glyph.width(), glyph.height(),
                                                     static_cast<SkPMColor*>(imageBuffer),
@@ -313,12 +301,14 @@ protected:
         canvas->drawDrawable(rec.fDrawable.get(), &fMatrix);
     }
 
-    std::optional<SkScalerContext::GeneratedPath> generatePath(const SkGlyph& glyph) override {
+    bool generatePath(const SkGlyph& glyph, SkPath* path, bool* modified) override {
         const auto& rec = this->userTF()->fGlyphRecs[glyph.getGlyphID()];
 
         SkASSERT(!rec.isDrawable());
 
-        return {{rec.fPath.makeTransform(fMatrix), false}};
+        rec.fPath.transform(fMatrix, path);
+
+        return true;
     }
 
     sk_sp<SkDrawable> generateDrawable(const SkGlyph& glyph) override {
@@ -359,12 +349,12 @@ protected:
     }
 
     void generateFontMetrics(SkFontMetrics* metrics) override {
-        auto [sx, sy] = fMatrix.mapPoint({1, 1});
+        auto [sx, sy] = fMatrix.mapXY(1, 1);
         *metrics = scale_fontmetrics(this->userTF()->fMetrics, sx, sy);
     }
 
 private:
-    const SkMatrix fMatrix;
+    SkMatrix fMatrix;
 };
 
 std::unique_ptr<SkScalerContext> SkUserTypeface::onCreateScalerContext(
@@ -498,26 +488,25 @@ sk_sp<SkTypeface> SkCustomTypefaceBuilder::Deserialize(SkStream* stream) {
         }
 
         switch (gtype) {
-            case GlyphType::kDrawable: {
-                SkDeserialProcs procs;
-                procs.fAllowSkSL = false;
-                auto drawable = SkDrawable::Deserialize(data->data(), data->size(), &procs);
-                if (!drawable) {
-                    return nullptr;
-                }
-                builder.setGlyph(i, advance, std::move(drawable), bounds);
-            } break;
-            case GlyphType::kPath: {
-                size_t bytesRead = 0;
-                auto path = SkPath::ReadFromMemory(data->data(), data->size(), &bytesRead);
-                if (path.has_value() && (bytesRead == data->size())) {
-                    builder.setGlyph(i, advance, *path);
-                } else {
-                    return nullptr;
-                }
-            } break;
-            default:
+        case GlyphType::kDrawable: {
+            SkDeserialProcs procs;
+            procs.fAllowSkSL = false;
+            auto drawable = SkDrawable::Deserialize(data->data(), data->size(), &procs);
+            if (!drawable) {
                 return nullptr;
+            }
+            builder.setGlyph(i, advance, std::move(drawable), bounds);
+        } break;
+        case GlyphType::kPath: {
+            SkPath path;
+            if (path.readFromMemory(data->data(), data->size()) != data->size()) {
+                return nullptr;
+            }
+
+            builder.setGlyph(i, advance, path);
+        } break;
+        default:
+            return nullptr;
         }
     }
 

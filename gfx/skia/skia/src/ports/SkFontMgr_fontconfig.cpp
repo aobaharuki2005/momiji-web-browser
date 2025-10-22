@@ -4,12 +4,10 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "include/ports/SkFontMgr_fontconfig.h"
 
 #include "include/core/SkDataTable.h"
 #include "include/core/SkFontArguments.h"
 #include "include/core/SkFontMgr.h"
-#include "include/core/SkFontScanner.h"
 #include "include/core/SkFontStyle.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRefCnt.h"
@@ -18,6 +16,8 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
+#include "include/ports/SkFontMgr_fontconfig.h"
+#include "include/ports/SkFontScanner_FreeType.h"
 #include "include/private/base/SkDebug.h"
 #include "include/private/base/SkMutex.h"
 #include "include/private/base/SkTArray.h"
@@ -74,7 +74,7 @@ namespace {
 
 // FontConfig was thread antagonistic until 2.10.91 with known thread safety issues until 2.13.93.
 // Before that, lock with a global mutex.
-// See skbug.com/40032593 and cl/339089311 for background.
+// See https://bug.skia.org/1497 and cl/339089311 for background.
 static SkMutex& f_c_mutex() {
     static SkMutex& mutex = *(new SkMutex);
     return mutex;
@@ -480,7 +480,9 @@ protected:
                      -fcMatrix->yx, fcMatrix->yy, 0,
                       0           , 0           , 1);
 
-            SkMatrix sm = rec->getMatrixFrom2x2();
+            SkMatrix sm;
+            rec->getMatrixFrom2x2(&sm);
+
             sm.preConcat(fm);
             rec->fPost2x2[0][0] = sm.getScaleX();
             rec->fPost2x2[0][1] = sm.getSkewX();
@@ -991,4 +993,8 @@ protected:
 
 sk_sp<SkFontMgr> SkFontMgr_New_FontConfig(FcConfig* fc, std::unique_ptr<SkFontScanner> scanner) {
     return sk_make_sp<SkFontMgr_fontconfig>(fc, std::move(scanner));
+}
+
+sk_sp<SkFontMgr> SkFontMgr_New_FontConfig(FcConfig* fc) {
+    return sk_make_sp<SkFontMgr_fontconfig>(fc, SkFontScanner_Make_FreeType());
 }

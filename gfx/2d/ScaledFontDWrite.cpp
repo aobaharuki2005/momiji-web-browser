@@ -496,7 +496,7 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
     default:
       break;
   }
-  if (Factory::GetSubpixelOrder() == SubpixelOrder::BGR) {
+  if (Factory::GetBGRSubpixelOrder()) {
     options.flags |= wr::FontInstanceFlags::SUBPIXEL_BGR;
   }
   options.synthetic_italics =

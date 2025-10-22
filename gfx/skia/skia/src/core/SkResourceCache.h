@@ -208,7 +208,7 @@ public:
      *  changed at runtime with setTotalByteLimit.
      */
     explicit SkResourceCache(size_t byteLimit);
-    virtual ~SkResourceCache();
+    ~SkResourceCache();
 
     /**
      *  Returns true if the visitor was called on a matching Key, and the visitor returned true.
@@ -219,45 +219,45 @@ public:
      *      true  : Rec is valid
      *      false : Rec is "stale" -- the cache will purge it.
      */
-    virtual bool find(const Key&, FindVisitor, void* context) ;
-    virtual void add(Rec*, void* payload = nullptr);
-    virtual void visitAll(Visitor, void* context);
+    bool find(const Key&, FindVisitor, void* context);
+    void add(Rec*, void* payload = nullptr);
+    void visitAll(Visitor, void* context);
 
-    virtual size_t getTotalBytesUsed() const { return fTotalBytesUsed; }
-    virtual size_t getTotalByteLimit() const { return fTotalByteLimit; }
+    size_t getTotalBytesUsed() const { return fTotalBytesUsed; }
+    size_t getTotalByteLimit() const { return fTotalByteLimit; }
 
     /**
      *  This is respected by SkBitmapProcState::possiblyScaleImage.
      *  0 is no maximum at all; this is the default.
      *  setSingleAllocationByteLimit() returns the previous value.
      */
-    virtual size_t setSingleAllocationByteLimit(size_t maximumAllocationSize);
-    virtual size_t getSingleAllocationByteLimit() const;
+    size_t setSingleAllocationByteLimit(size_t maximumAllocationSize);
+    size_t getSingleAllocationByteLimit() const;
     // returns the logical single allocation size (pinning against the budget when the cache
     // is not backed by discardable memory.
-    virtual size_t getEffectiveSingleAllocationByteLimit() const;
+    size_t getEffectiveSingleAllocationByteLimit() const;
 
     /**
      *  Set the maximum number of bytes available to this cache. If the current
      *  cache exceeds this new value, it will be purged to try to fit within
      *  this new limit.
      */
-    virtual size_t setTotalByteLimit(size_t newLimit);
+    size_t setTotalByteLimit(size_t newLimit);
 
-    virtual void purgeSharedID(uint64_t sharedID);
+    void purgeSharedID(uint64_t sharedID);
 
-    virtual void purgeAll() {
+    void purgeAll() {
         this->purgeAsNeeded(true);
     }
 
-    virtual DiscardableFactory discardableFactory() const { return fDiscardableFactory; }
+    DiscardableFactory discardableFactory() const { return fDiscardableFactory; }
 
-    virtual SkCachedData* newCachedData(size_t bytes);
+    SkCachedData* newCachedData(size_t bytes);
 
     /**
      *  Call SkDebugf() with diagnostic information about the state of the cache
      */
-    virtual void dump() const;
+    void dump() const;
 
 private:
     Rec*    fHead;

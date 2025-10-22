@@ -48,7 +48,14 @@ bool ScaledFontFontconfig::UseSubpixelPosition() const {
 }
 
 SkTypeface* ScaledFontFontconfig::CreateSkTypeface() {
-  return SkCreateTypefaceFromCairoFTFont(mFace->GetFace(), mFace.get(),
+  SkPixelGeometry geo = mInstanceData.mFlags & InstanceData::SUBPIXEL_BGR
+                            ? (mInstanceData.mFlags & InstanceData::LCD_VERTICAL
+                                   ? kBGR_V_SkPixelGeometry
+                                   : kBGR_H_SkPixelGeometry)
+                            : (mInstanceData.mFlags & InstanceData::LCD_VERTICAL
+                                   ? kRGB_V_SkPixelGeometry
+                                   : kRGB_H_SkPixelGeometry);
+  return SkCreateTypefaceFromCairoFTFont(mFace->GetFace(), mFace.get(), geo,
                                          mInstanceData.mLcdFilter);
 }
 

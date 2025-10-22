@@ -6,8 +6,6 @@
  */
 
 #include "include/core/SkPath.h"
-#include "include/core/SkPathBuilder.h"
-#include "include/core/SkPathTypes.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkStream.h"
@@ -18,6 +16,8 @@
 #include "src/core/SkGeometry.h"
 
 #include <cstdio>
+
+enum class SkPathDirection;
 
 static inline bool is_between(int c, int min, int max) {
     return (unsigned)(c - min) <= (unsigned)(max - min);
@@ -104,10 +104,10 @@ static const char* find_flag(const char str[], bool* value) {
     return str;
 }
 
-std::optional<SkPath> SkParsePath::FromSVGString(const char data[]) {
+bool SkParsePath::FromSVGString(const char data[], SkPath* result) {
     // We will write all data to this local path and only write it
     // to result if the whole parsing succeeds.
-    SkPathBuilder builder;
+    SkPath path;
     SkPoint first = {0, 0};
     SkPoint c = {0, 0};
     SkPoint lastc = {0, 0};
@@ -123,7 +123,7 @@ std::optional<SkPath> SkParsePath::FromSVGString(const char data[]) {
     for (;;) {
         if (!data) {
             // Truncated data
-            return {};
+            return false;
         }
         data = skip_ws(data);
         if (data[0] == '\0') {
@@ -132,7 +132,7 @@ std::optional<SkPath> SkParsePath::FromSVGString(const char data[]) {
         char ch = data[0];
         if (is_digit(ch) || ch == '-' || ch == '+' || ch == '.') {
             if (op == '\0' || op == 'Z') {
-                return {};
+                return false;
             }
         } else if (is_sep(ch)) {
             data = skip_sep(data);
@@ -152,14 +152,14 @@ std::optional<SkPath> SkParsePath::FromSVGString(const char data[]) {
                 // find_points might have failed, so this might be the
                 // previous point. However, data will be set to nullptr
                 // if it failed, so we will check this at the top of the loop.
-                builder.moveTo(points[0]);
+                path.moveTo(points[0]);
                 previousOp = '\0';
                 op = 'L';
                 c = points[0];
                 break;
             case 'L':  // Line
                 data = find_points(data, points, 1, relative, &c);
-                builder.lineTo(points[0]);
+                path.lineTo(points[0]);
                 c = points[0];
                 break;
             case 'H':  // Horizontal Line
@@ -168,12 +168,12 @@ std::optional<SkPath> SkParsePath::FromSVGString(const char data[]) {
                 // be set to nullptr and this lineTo is bogus but will
                 // be ultimately ignored when the next time through the loop
                 // detects that and bails out.
-                builder.lineTo(scratch, c.fY);
+                path.lineTo(scratch, c.fY);
                 c.fX = scratch;
                 break;
             case 'V':  // Vertical Line
                 data = find_scalar(data, &scratch, relative, c.fY);
-                builder.lineTo(c.fX, scratch);
+                path.lineTo(c.fX, scratch);
                 c.fY = scratch;
                 break;
             case 'C':  // Cubic Bezier Curve
@@ -187,7 +187,7 @@ std::optional<SkPath> SkParsePath::FromSVGString(const char data[]) {
                     points[0].fY -= lastc.fY - c.fY;
                 }
             cubicCommon:
-                builder.cubicTo(points[0], points[1], points[2]);
+                path.cubicTo(points[0], points[1], points[2]);
                 lastc = points[1];
                 c = points[2];
                 break;
@@ -202,7 +202,7 @@ std::optional<SkPath> SkParsePath::FromSVGString(const char data[]) {
                     points[0].fY -= lastc.fY - c.fY;
                 }
             quadraticCommon:
-                builder.quadTo(points[0], points[1]);
+                path.quadTo(points[0], points[1]);
                 lastc = points[0];
                 c = points[1];
                 break;
@@ -219,25 +219,26 @@ std::optional<SkPath> SkParsePath::FromSVGString(const char data[]) {
                         && (data = find_flag(data, &sweep))
                         && (data = skip_sep(data))
                         && (data = find_points(data, &points[0], 1, relative, &c))) {
-                    builder.arcTo(radii, angle, (SkPathBuilder::ArcSize) largeArc,
+                    path.arcTo(radii, angle, (SkPath::ArcSize) largeArc,
                             (SkPathDirection) !sweep, points[0]);
-                    c = builder.points().back();
+                    path.getLastPt(&c);
                 }
                 } break;
             case 'Z':  // Close Path
-                builder.close();
+                path.close();
                 c = first;
                 break;
             default:
-                return {};
+                return false;
         }
         if (previousOp == 0) {
             first = c;
         }
         previousOp = op;
     }
-
-    return builder.detach();
+    // we're good, go ahead and swap in the result
+    result->swap(path);
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -268,39 +269,40 @@ SkString SkParsePath::ToSVGString(const SkPath& path, PathEncoding encoding) {
         current_point = pts[count - 1] * rel_selector;
     };
 
-    SkPath::Iter iter(path, false);
+    SkPath::Iter    iter(path, false);
+    SkPoint         pts[4];
 
-    while (auto rec = iter.next()) {
-        SkSpan<const SkPoint> pts = rec->fPoints;
-        switch (rec->fVerb) {
-            case SkPathVerb::kConic: {
+    for (;;) {
+        switch (iter.next(pts)) {
+            case SkPath::kConic_Verb: {
                 const SkScalar tol = SK_Scalar1 / 1024; // how close to a quad
                 SkAutoConicToQuads quadder;
-                const SkPoint* quadPts = quadder.computeQuads(pts.data(), rec->conicWeight(), tol);
+                const SkPoint* quadPts = quadder.computeQuads(pts, iter.conicWeight(), tol);
                 for (int i = 0; i < quadder.countQuads(); ++i) {
                     append_command('Q', &quadPts[i*2 + 1], 2);
                 }
             } break;
-            case SkPathVerb::kMove:
+           case SkPath::kMove_Verb:
                 append_command('M', &pts[0], 1);
                 break;
-            case SkPathVerb::kLine:
+            case SkPath::kLine_Verb:
                 append_command('L', &pts[1], 1);
                 break;
-            case SkPathVerb::kQuad:
+            case SkPath::kQuad_Verb:
                 append_command('Q', &pts[1], 2);
                 break;
-            case SkPathVerb::kCubic:
+            case SkPath::kCubic_Verb:
                 append_command('C', &pts[1], 3);
                 break;
-            case SkPathVerb::kClose:
+            case SkPath::kClose_Verb:
                 stream.write("Z", 1);
                 break;
+            case SkPath::kDone_Verb: {
+                SkString str;
+                str.resize(stream.bytesWritten());
+                stream.copyTo(str.data());
+                return str;
+            }
         }
     }
-
-    SkString str;
-    str.resize(stream.bytesWritten());
-    stream.copyTo(str.data());
-    return str;
 }

@@ -74,7 +74,7 @@ SkPictureImageGenerator::SkPictureImageGenerator(const SkImageInfo& info, sk_sp<
     }
 
     if (paint) {
-        fPaint = *paint;
+        fPaint.set(*paint);
     }
 }
 
@@ -85,6 +85,6 @@ bool SkPictureImageGenerator::onGetPixels(const SkImageInfo& info, void* pixels,
         return false;
     }
     canvas->clear(0);
-    canvas->drawPicture(fPicture, &fMatrix, SkOptAddressOrNull(fPaint));
+    canvas->drawPicture(fPicture, &fMatrix, fPaint.getMaybeNull());
     return true;
 }

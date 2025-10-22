@@ -12,11 +12,8 @@
 #include "include/core/SkPathEffect.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
-#include "include/core/SkSpan.h"
 
-#include <optional>
-
-class SkPathBuilder;
+class SkPath;
 class SkStrokeRec;
 
 class SkPathEffectBase : public SkPathEffect {
@@ -62,8 +59,6 @@ public:
 
         SkPath             fFirst;      // If not empty, contains geometry for first point
         SkPath             fLast;       // If not empty, contains geometry for last point
-
-        SkSpan<SkPoint> points() { return {fPoints, fNumPoints}; }
     };
 
     /**
@@ -102,7 +97,7 @@ public:
      * The output of path effects must always be in the original (input) coordinate system,
      * regardless of whether the path effect uses the CTM or not.
      */
-    virtual bool onFilterPath(SkPathBuilder*, const SkPath&, SkStrokeRec*, const SkRect*,
+    virtual bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*,
                               const SkMatrix& /* ctm */) const = 0;
 
     /** Path effects *requiring* a valid CTM should override to return true. */
@@ -113,13 +108,25 @@ public:
         return false;
     }
 
-    struct DashInfo {
-        SkSpan<const SkScalar> fIntervals;
-        SkScalar               fPhase;
+    enum class DashType {
+        kNone, //!< ignores the info parameter
+        kDash, //!< fills in all of the info parameter
     };
 
-    virtual std::optional<DashInfo> asADash() const {
-        return {};
+    struct DashInfo {
+        DashInfo() : fIntervals(nullptr), fCount(0), fPhase(0) {}
+        DashInfo(SkScalar* intervals, int32_t count, SkScalar phase)
+            : fIntervals(intervals), fCount(count), fPhase(phase) {}
+
+        SkScalar*   fIntervals;         //!< Length of on/off intervals for dashed lines
+                                        //   Even values represent ons, and odds offs
+        int32_t     fCount;             //!< Number of intervals in the dash. Should be even number
+        SkScalar    fPhase;             //!< Offset into the dashed interval pattern
+                                        //   mod the sum of all intervals
+    };
+
+    virtual DashType asADash(DashInfo*) const {
+        return DashType::kNone;
     }
 
 

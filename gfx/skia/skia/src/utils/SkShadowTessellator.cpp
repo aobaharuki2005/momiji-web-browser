@@ -270,6 +270,8 @@ bool SkBaseShadowTessellator::computeConvexShadow(SkScalar inset, SkScalar outse
     SkScalar minDistSq = SkPointPriv::DistanceToLineSegmentBetweenSqd(fCentroid,
                                                                       fPathPolygon[0],
                                                                       fPathPolygon[1]);
+    SkRect bounds;
+    bounds.setBounds(&fPathPolygon[0], fPathPolygon.size());
     for (int i = 1; i < fPathPolygon.size(); ++i) {
         int j = i + 1;
         if (i == fPathPolygon.size() - 1) {
@@ -781,7 +783,7 @@ void SkBaseShadowTessellator::handleLine(const SkPoint& p) {
 }
 
 void SkBaseShadowTessellator::handleLine(const SkMatrix& m, SkPoint* p) {
-    *p = m.mapPoint(*p);
+    m.mapPoints(p, 1);
 
     this->handleLine(*p);
 }
@@ -812,12 +814,12 @@ void SkBaseShadowTessellator::handleQuad(const SkPoint pts[3]) {
 }
 
 void SkBaseShadowTessellator::handleQuad(const SkMatrix& m, SkPoint pts[3]) {
-    m.mapPoints({pts, 3});
+    m.mapPoints(pts, 3);
     this->handleQuad(pts);
 }
 
 void SkBaseShadowTessellator::handleCubic(const SkMatrix& m, SkPoint pts[4]) {
-    m.mapPoints({pts, 4});
+    m.mapPoints(pts, 4);
 #if defined(SK_GANESH)
     // TODO: Pull PathUtils out of Ganesh?
     int maxCount = GrPathUtils::cubicPointCount(pts, kCubicTolerance);
@@ -841,7 +843,7 @@ void SkBaseShadowTessellator::handleConic(const SkMatrix& m, SkPoint pts[3], SkS
     if (m.hasPerspective()) {
         w = SkConic::TransformW(pts, w, m);
     }
-    m.mapPoints({pts, 3});
+    m.mapPoints(pts, 3);
     SkAutoConicToQuads quadder;
     const SkPoint* quads = quadder.computeQuads(pts, w, kConicTolerance);
     SkPoint lastPoint = *(quads++);
@@ -955,46 +957,40 @@ SkAmbientShadowTessellator::SkAmbientShadowTessellator(const SkPath& path,
     }
 }
 
-static inline void spancpy(SkSpan<SkPoint> dst, SkSpan<const SkPoint> src) {
-    SkASSERT(dst.size() >= src.size());
-    for (size_t i = 0; i < src.size(); ++i) {
-        dst[i] = src[i];
-    }
-}
-
 bool SkAmbientShadowTessellator::computePathPolygon(const SkPath& path, const SkMatrix& ctm) {
     fPathPolygon.reserve(path.countPoints());
 
     // walk around the path, tessellate and generate outer ring
     // if original path is transparent, will accumulate sum of points for centroid
     SkPath::Iter iter(path, true);
+    SkPoint pts[4];
+    SkPath::Verb verb;
     bool verbSeen = false;
     bool closeSeen = false;
-    while (auto rec = iter.next()) {
+    while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
         if (closeSeen) {
             return false;
         }
-        SkPoint pts[4];             // max needed
-        spancpy(pts, rec->fPoints); // need a writable copy
-        switch (rec->fVerb) {
-            case SkPathVerb::kLine:
+        switch (verb) {
+            case SkPath::kLine_Verb:
                 this->handleLine(ctm, &pts[1]);
                 break;
-            case SkPathVerb::kQuad:
+            case SkPath::kQuad_Verb:
                 this->handleQuad(ctm, pts);
                 break;
-            case SkPathVerb::kCubic:
+            case SkPath::kCubic_Verb:
                 this->handleCubic(ctm, pts);
                 break;
-            case SkPathVerb::kConic:
-                this->handleConic(ctm, pts, rec->conicWeight());
+            case SkPath::kConic_Verb:
+                this->handleConic(ctm, pts, iter.conicWeight());
                 break;
-            case SkPathVerb::kMove:
+            case SkPath::kMove_Verb:
                 if (verbSeen) {
                     return false;
                 }
                 break;
-            case SkPathVerb::kClose:
+            case SkPath::kClose_Verb:
+            case SkPath::kDone_Verb:
                 closeSeen = true;
                 break;
         }
@@ -1080,7 +1076,9 @@ bool SkSpotShadowTessellator::computeClipAndPathPolygons(const SkPath& path, con
     // Will also accumulate sum of areas for centroid.
     // For Bezier curves, we compute additional interior points on curve.
     SkPath::Iter iter(path, true);
+    SkPoint pts[4];
     SkPoint clipPts[4];
+    SkPath::Verb verb;
 
     // coefficients to compute cubic Bezier at t = 5/16
     static constexpr SkScalar kA = 0.32495117187f;
@@ -1089,22 +1087,21 @@ bool SkSpotShadowTessellator::computeClipAndPathPolygons(const SkPath& path, con
     static constexpr SkScalar kD = 0.03051757812f;
 
     SkPoint curvePoint;
+    SkScalar w;
     bool closeSeen = false;
     bool verbSeen = false;
-    while (auto rec = iter.next()) {
+    while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
         if (closeSeen) {
             return false;
         }
-        SkPoint pts[4];             // max needed
-        spancpy(pts, rec->fPoints); // need a writable copy
-        switch (rec->fVerb) {
-            case SkPathVerb::kLine:
-                clipPts[0] = ctm.mapPoint(pts[1]);
+        switch (verb) {
+            case SkPath::kLine_Verb:
+                ctm.mapPoints(clipPts, &pts[1], 1);
                 this->addToClip(clipPts[0]);
                 this->handleLine(shadowTransform, &pts[1]);
                 break;
-            case SkPathVerb::kQuad:
-                ctm.mapPoints({clipPts, 3}, {pts, 3});
+            case SkPath::kQuad_Verb:
+                ctm.mapPoints(clipPts, pts, 3);
                 // point at t = 1/2
                 curvePoint.fX = 0.25f*clipPts[0].fX + 0.5f*clipPts[1].fX + 0.25f*clipPts[2].fX;
                 curvePoint.fY = 0.25f*clipPts[0].fY + 0.5f*clipPts[1].fY + 0.25f*clipPts[2].fY;
@@ -1112,9 +1109,9 @@ bool SkSpotShadowTessellator::computeClipAndPathPolygons(const SkPath& path, con
                 this->addToClip(clipPts[2]);
                 this->handleQuad(shadowTransform, pts);
                 break;
-            case SkPathVerb::kConic: {
-                ctm.mapPoints({clipPts, 3}, {pts, 3});
-                const float w = rec->conicWeight();
+            case SkPath::kConic_Verb:
+                ctm.mapPoints(clipPts, pts, 3);
+                w = iter.conicWeight();
                 // point at t = 1/2
                 curvePoint.fX = 0.25f*clipPts[0].fX + w*0.5f*clipPts[1].fX + 0.25f*clipPts[2].fX;
                 curvePoint.fY = 0.25f*clipPts[0].fY + w*0.5f*clipPts[1].fY + 0.25f*clipPts[2].fY;
@@ -1122,9 +1119,9 @@ bool SkSpotShadowTessellator::computeClipAndPathPolygons(const SkPath& path, con
                 this->addToClip(curvePoint);
                 this->addToClip(clipPts[2]);
                 this->handleConic(shadowTransform, pts, w);
-            } break;
-            case SkPathVerb::kCubic:
-                ctm.mapPoints({clipPts, 4}, {pts, 4});
+                break;
+            case SkPath::kCubic_Verb:
+                ctm.mapPoints(clipPts, pts, 4);
                 // point at t = 5/16
                 curvePoint.fX = kA*clipPts[0].fX + kB*clipPts[1].fX
                               + kC*clipPts[2].fX + kD*clipPts[3].fX;
@@ -1140,14 +1137,17 @@ bool SkSpotShadowTessellator::computeClipAndPathPolygons(const SkPath& path, con
                 this->addToClip(clipPts[3]);
                 this->handleCubic(shadowTransform, pts);
                 break;
-            case SkPathVerb::kMove:
+            case SkPath::kMove_Verb:
                 if (verbSeen) {
                     return false;
                 }
                 break;
-            case SkPathVerb::kClose:
+            case SkPath::kClose_Verb:
+            case SkPath::kDone_Verb:
                 closeSeen = true;
                 break;
+            default:
+                SkDEBUGFAIL("unknown verb");
         }
         verbSeen = true;
     }

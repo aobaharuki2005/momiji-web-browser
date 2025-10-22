@@ -13,7 +13,6 @@
 namespace SkSL {
 
 class ErrorReporter;
-struct NativeShader;
 class OutputStream;
 enum class PrettyPrint : bool;
 struct Program;
@@ -36,7 +35,7 @@ bool ToWGSL(Program& program,
             IncludeSyntheticCode,
             ValidateWGSLProc);
 bool ToWGSL(Program& program, const ShaderCaps* caps, OutputStream& out);
-bool ToWGSL(Program& program, const ShaderCaps* caps, NativeShader* out);
+bool ToWGSL(Program& program, const ShaderCaps* caps, std::string* out);
 
 }  // namespace SkSL
 

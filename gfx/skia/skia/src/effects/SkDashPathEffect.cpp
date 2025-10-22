@@ -17,7 +17,9 @@
 #include "include/core/SkStrokeRec.h"
 #include "include/private/base/SkAlign.h"
 #include "include/private/base/SkFloatingPoint.h"
+#include "include/private/base/SkMalloc.h"
 #include "include/private/base/SkTemplates.h"
+#include "include/private/base/SkTo.h"
 #include "src/core/SkPathEffectBase.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
@@ -27,31 +29,35 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <optional>
-
-class SkPathBuilder;
 
 using namespace skia_private;
 
-SkDashImpl::SkDashImpl(SkSpan<const SkScalar> intervals, SkScalar phase)
-        : fIntervals(intervals.size())
-        , fPhase(0)
+SkDashImpl::SkDashImpl(const SkScalar intervals[], int count, SkScalar phase)
+        : fPhase(0)
         , fInitialDashLength(-1)
-        , fIntervalLength(0)
         , fInitialDashIndex(0)
-{
-    SkASSERT(intervals.size() > 1 && SkIsAlign2(intervals.size()));
+        , fIntervalLength(0) {
+    SkASSERT(intervals);
+    SkASSERT(count > 1 && SkIsAlign2(count));
 
-    memcpy(fIntervals.data(), intervals.data(), intervals.size_bytes());
+    fIntervals = (SkScalar*)sk_malloc_throw(sizeof(SkScalar) * count);
+    fCount = count;
+    for (int i = 0; i < count; i++) {
+        fIntervals[i] = intervals[i];
+    }
 
     // set the internal data members
-    SkDashPath::CalcDashParameters(phase, fIntervals,
+    SkDashPath::CalcDashParameters(phase, fIntervals, fCount,
             &fInitialDashLength, &fInitialDashIndex, &fIntervalLength, &fPhase);
 }
 
-bool SkDashImpl::onFilterPath(SkPathBuilder* builder, const SkPath& src, SkStrokeRec* rec,
+SkDashImpl::~SkDashImpl() {
+    sk_free(fIntervals);
+}
+
+bool SkDashImpl::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                               const SkRect* cullRect, const SkMatrix&) const {
-    return SkDashPath::InternalFilter(builder, src, rec, cullRect, fIntervals,
+    return SkDashPath::InternalFilter(dst, src, rec, cullRect, fIntervals, fCount,
                                       fInitialDashLength, fInitialDashIndex, fIntervalLength,
                                       fPhase);
 }
@@ -186,7 +192,7 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
     // Additionally, they do not necessarily need to be integers.
     // We cannot allow arbitrary intervals since we want the returned points
     // to be uniformly sized.
-    if (fIntervals.size() != 2 ||
+    if (fCount != 2 ||
         !SkScalarNearlyEqual(fIntervals[0], fIntervals[1]) ||
         !SkScalarIsInt(fIntervals[0]) ||
         !SkScalarIsInt(fIntervals[1])) {
@@ -308,8 +314,8 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
                     }
                     if (clampedInitialDashLength < fIntervals[0]) {
                         // This one will not be like the others
-                        results->fFirst = SkPath::Rect({x - halfWidth, y - halfHeight,
-                                                        x + halfWidth, y + halfHeight});
+                        results->fFirst.addRect(x - halfWidth, y - halfHeight,
+                                                x + halfWidth, y + halfHeight);
                     } else {
                         SkASSERT(curPt < results->fNumPoints);
                         results->fPoints[curPt].set(x, y);
@@ -357,8 +363,8 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
                 halfWidth = SkScalarHalf(rec.getWidth());
                 halfHeight = SkScalarHalf(temp);
             }
-            results->fLast = SkPath::Rect({x - halfWidth, y - halfHeight,
-                                           x + halfWidth, y + halfHeight});
+            results->fLast.addRect(x - halfWidth, y - halfHeight,
+                                   x + halfWidth, y + halfHeight);
         }
 
         SkASSERT(curPt == results->fNumPoints);
@@ -367,13 +373,20 @@ bool SkDashImpl::onAsPoints(PointData* results, const SkPath& src, const SkStrok
     return true;
 }
 
-std::optional<SkPathEffectBase::DashInfo> SkDashImpl::asADash() const {
-    return {{fIntervals, fPhase}};
+SkPathEffectBase::DashType SkDashImpl::asADash(DashInfo* info) const {
+    if (info) {
+        if (info->fCount >= fCount && info->fIntervals) {
+            memcpy(info->fIntervals, fIntervals, fCount * sizeof(SkScalar));
+        }
+        info->fCount = fCount;
+        info->fPhase = fPhase;
+    }
+    return DashType::kDash;
 }
 
 void SkDashImpl::flatten(SkWriteBuffer& buffer) const {
     buffer.writeScalar(fPhase);
-    buffer.writeScalarArray(fIntervals);
+    buffer.writeScalarArray(fIntervals, fCount);
 }
 
 sk_sp<SkFlattenable> SkDashImpl::CreateProc(SkReadBuffer& buffer) {
@@ -386,17 +399,17 @@ sk_sp<SkFlattenable> SkDashImpl::CreateProc(SkReadBuffer& buffer) {
     }
 
     AutoSTArray<32, SkScalar> intervals(count);
-    if (buffer.readScalarArray(intervals)) {
-        return SkDashPathEffect::Make(intervals, phase);
+    if (buffer.readScalarArray(intervals.get(), count)) {
+        return SkDashPathEffect::Make(intervals.get(), SkToInt(count), phase);
     }
     return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-sk_sp<SkPathEffect> SkDashPathEffect::Make(SkSpan<const SkScalar> intervals, SkScalar phase) {
-    if (!SkDashPath::ValidDashPath(phase, intervals)) {
+sk_sp<SkPathEffect> SkDashPathEffect::Make(const SkScalar intervals[], int count, SkScalar phase) {
+    if (!SkDashPath::ValidDashPath(phase, intervals, count)) {
         return nullptr;
     }
-    return sk_sp<SkPathEffect>(new SkDashImpl(intervals, phase));
+    return sk_sp<SkPathEffect>(new SkDashImpl(intervals, count, phase));
 }

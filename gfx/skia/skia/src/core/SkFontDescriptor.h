@@ -142,7 +142,6 @@ public:
                          this->getPaletteEntryOverrideCount()});
     }
     static SkFontStyle::Width SkFontStyleWidthForWidthAxisValue(SkScalar width);
-    static SkScalar SkFontWidthAxisValueForStyleWidth(int width);
 
 private:
     SkString fFamilyName;

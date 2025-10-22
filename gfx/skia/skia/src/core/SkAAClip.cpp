@@ -21,7 +21,6 @@
 #include "src/core/SkBlitter.h"
 #include "src/core/SkColorData.h"
 #include "src/core/SkMask.h"
-#include "src/core/SkPathPriv.h"
 #include "src/core/SkScan.h"
 
 #include <algorithm>
@@ -837,11 +836,10 @@ bool SkAAClip::Builder::blitPath(SkAAClip* target, const SkPath& path, bool doAA
     Blitter blitter(this);
     SkRegion clip(fBounds);
 
-    const auto raw = SkPathPriv::Raw(path);
     if (doAA) {
-        SkScan::AntiFillPath(raw, clip, &blitter, true);
+        SkScan::AntiFillPath(path, clip, &blitter, true);
     } else {
-        SkScan::FillPath(raw, clip, &blitter);
+        SkScan::FillPath(path, clip, &blitter);
     }
 
     blitter.finish();

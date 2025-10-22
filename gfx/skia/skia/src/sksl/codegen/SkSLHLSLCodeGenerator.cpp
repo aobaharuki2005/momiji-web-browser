@@ -41,7 +41,7 @@ bool ToHLSL(Program& program,
             const ShaderCaps* caps,
             std::string* out,
             ValidateSPIRVProc validateSPIRV) {
-    std::vector<uint32_t> spirv;
+    std::string spirv;
     if (!ToSPIRV(program, caps, &spirv, validateSPIRV)) {
         return false;
     }

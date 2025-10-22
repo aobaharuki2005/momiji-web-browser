@@ -19,7 +19,6 @@
 #include <cstdint>
 
 class SkPath;
-class SkPathBuilder;
 struct SkRect;
 
 #ifdef SK_DEBUG
@@ -69,9 +68,9 @@ public:
     /**
      *  Stroke the specified rect, winding it in the specified direction..
      */
-    void    strokeRect(const SkRect& rect, SkPathBuilder* result,
+    void    strokeRect(const SkRect& rect, SkPath* result,
                        SkPathDirection = SkPathDirection::kCW) const;
-    void    strokePath(const SkPath& path, SkPathBuilder*) const;
+    void    strokePath(const SkPath& path, SkPath*) const;
 
     ////////////////////////////////////////////////////////////////
 

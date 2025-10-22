@@ -5,30 +5,44 @@
  * found in the LICENSE file.
  */
 
-#ifndef skcpu_GlyphRunPainter_DEFINED
-#define skcpu_GlyphRunPainter_DEFINED
+#ifndef SkGlyphRunPainter_DEFINED
+#define SkGlyphRunPainter_DEFINED
 
+#include "include/core/SkSamplingOptions.h"
 #include "include/core/SkSurfaceProps.h"
+#include "src/base/SkZip.h"
 
 #include <cstdint>
 
+class SkBitmap;
 class SkCanvas;
 class SkColorSpace;
+class SkGlyph;
 class SkMatrix;
 class SkPaint;
 enum SkColorType : int;
 enum class SkScalerContextFlags : uint32_t;
-namespace sktext {
-class GlyphRunList;
-}
+namespace sktext { class GlyphRunList; }
+struct SkPoint;
+struct SkRect;
 
-namespace skcpu {
-
-class BitmapDevicePainter;
-
-class GlyphRunListPainter {
+class SkGlyphRunListPainterCPU {
 public:
-    GlyphRunListPainter(const SkSurfaceProps& props, SkColorType colorType, SkColorSpace* cs);
+    class BitmapDevicePainter {
+    public:
+        BitmapDevicePainter() = default;
+        BitmapDevicePainter(const BitmapDevicePainter&) = default;
+        virtual ~BitmapDevicePainter() = default;
+
+        virtual void paintMasks(SkZip<const SkGlyph*, SkPoint> accepted,
+                                const SkPaint& paint) const = 0;
+        virtual void drawBitmap(const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull,
+                                const SkSamplingOptions&, const SkPaint&) const = 0;
+    };
+
+    SkGlyphRunListPainterCPU(const SkSurfaceProps& props,
+                             SkColorType colorType,
+                             SkColorSpace* cs);
 
     void drawForBitmapDevice(
             SkCanvas* canvas, const BitmapDevicePainter* bitmapDevice,
@@ -43,7 +57,4 @@ private:
     const SkColorType fColorType;
     const SkScalerContextFlags fScalerContextFlags;
 };
-
-}  // namespace skcpu
-
-#endif  // skcpu_GlyphRunPainter_DEFINED
+#endif  // SkGlyphRunPainter_DEFINED

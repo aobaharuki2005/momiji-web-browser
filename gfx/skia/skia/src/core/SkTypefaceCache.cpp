@@ -10,7 +10,6 @@
 #include "include/core/SkFontStyle.h"
 #include "include/core/SkGraphics.h"
 #include "include/core/SkString.h"
-#include "include/private/base/SkAssert.h"
 #include "include/private/base/SkDebug.h"
 #include "include/private/base/SkMutex.h"
 
@@ -22,7 +21,6 @@ SkTypefaceCache::SkTypefaceCache() {}
 
 void SkTypefaceCache::add(sk_sp<SkTypeface> face) {
 #ifndef SK_DISABLE_TYPEFACE_CACHE
-    SkASSERT_RELEASE(face);
     const auto limit = SkGraphics::GetTypefaceCacheCountLimit();
 
     if (fTypefaces.size() >= limit) {

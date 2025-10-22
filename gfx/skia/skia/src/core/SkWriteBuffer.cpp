@@ -64,18 +64,18 @@ void SkBinaryWriteBuffer::writeScalar(SkScalar value) {
     fWriter.writeScalar(value);
 }
 
-void SkBinaryWriteBuffer::writeScalarArray(SkSpan<const SkScalar> values) {
-    fWriter.write32(SkToInt(values.size()));
-    fWriter.write(values.data(), values.size_bytes());
+void SkBinaryWriteBuffer::writeScalarArray(const SkScalar* value, uint32_t count) {
+    fWriter.write32(count);
+    fWriter.write(value, count * sizeof(SkScalar));
 }
 
 void SkBinaryWriteBuffer::writeInt(int32_t value) {
     fWriter.write32(value);
 }
 
-void SkBinaryWriteBuffer::writeIntArray(SkSpan<const int32_t> values) {
-    fWriter.write32(SkToInt(values.size()));
-    fWriter.write(values.data(), values.size_bytes());
+void SkBinaryWriteBuffer::writeIntArray(const int32_t* value, uint32_t count) {
+    fWriter.write32(count);
+    fWriter.write(value, count * sizeof(int32_t));
 }
 
 void SkBinaryWriteBuffer::writeUInt(uint32_t value) {
@@ -90,18 +90,18 @@ void SkBinaryWriteBuffer::writeColor(SkColor color) {
     fWriter.write32(color);
 }
 
-void SkBinaryWriteBuffer::writeColorArray(SkSpan<const SkColor> values) {
-    fWriter.write32(SkToInt(values.size()));
-    fWriter.write(values.data(), values.size_bytes());
+void SkBinaryWriteBuffer::writeColorArray(const SkColor* color, uint32_t count) {
+    fWriter.write32(count);
+    fWriter.write(color, count * sizeof(SkColor));
 }
 
 void SkBinaryWriteBuffer::writeColor4f(const SkColor4f& color) {
     fWriter.write(&color, sizeof(SkColor4f));
 }
 
-void SkBinaryWriteBuffer::writeColor4fArray(SkSpan<const SkColor4f> values) {
-    fWriter.write32(SkToInt(values.size()));
-    fWriter.write(values.data(), values.size_bytes());
+void SkBinaryWriteBuffer::writeColor4fArray(const SkColor4f* color, uint32_t count) {
+    fWriter.write32(count);
+    fWriter.write(color, count * sizeof(SkColor4f));
 }
 
 void SkBinaryWriteBuffer::writePoint(const SkPoint& point) {
@@ -113,9 +113,9 @@ void SkBinaryWriteBuffer::writePoint3(const SkPoint3& point) {
     this->writePad32(&point, sizeof(SkPoint3));
 }
 
-void SkBinaryWriteBuffer::writePointArray(SkSpan<const SkPoint> values) {
-    fWriter.write32(SkToInt(values.size()));
-    fWriter.write(values.data(), values.size_bytes());
+void SkBinaryWriteBuffer::writePointArray(const SkPoint* point, uint32_t count) {
+    fWriter.write32(count);
+    fWriter.write(point, count * sizeof(SkPoint));
 }
 
 void SkBinaryWriteBuffer::write(const SkM44& matrix) {
@@ -179,8 +179,9 @@ static sk_sp<SkData> serialize_image(const SkImage* image, SkSerialProcs procs) 
     if (!ib->getROPixels(ib->directContext(), &bm)) {
         return nullptr;
     }
-    if (auto result = SkPngEncoder::Encode(bm.pixmap(), SkPngEncoder::Options())) {
-        return result;
+    SkDynamicMemoryWStream stream;
+    if (SkPngEncoder::Encode(&stream, bm.pixmap(), SkPngEncoder::Options())) {
+        return stream.detachAsData();
     }
 #endif
     return nullptr;

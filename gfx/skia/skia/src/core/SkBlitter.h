@@ -9,7 +9,6 @@
 #define SkBlitter_DEFINED
 
 #include "include/core/SkColor.h"
-#include "include/core/SkPixmap.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkRegion.h"
@@ -21,11 +20,11 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <optional>
 
 class SkArenaAlloc;
 class SkMatrix;
 class SkPaint;
+class SkPixmap;
 class SkShader;
 class SkSurfaceProps;
 struct SkMask;
@@ -121,13 +120,6 @@ public:
      */
     virtual int requestRowsPreserved() const { return 1; }
 
-
-    struct DirectBlit {
-        SkPixmap pm;
-        uint64_t value; // low bits match pixmap's bitdepth
-    };
-    virtual std::optional<DirectBlit> canDirectBlit() { return {}; }
-
     /**
      * This function allocates memory for the blitter that the blitter then owns.
      * The memory can be used by the calling function at will, but it will be
@@ -139,7 +131,9 @@ public:
     }
 
     ///@name non-virtual helpers
+#if defined(SK_SUPPORT_LEGACY_ALPHA_BITMAP_AS_COVERAGE)
     void blitMaskRegion(const SkMask& mask, const SkRegion& clip);
+#endif
     void blitRectRegion(const SkIRect& rect, const SkRegion& clip);
     void blitRegion(const SkRegion& clip);
     ///@}
@@ -153,8 +147,7 @@ public:
                              SkArenaAlloc*,
                              SkDrawCoverage,
                              sk_sp<SkShader> clipShader,
-                             const SkSurfaceProps& props,
-                             const SkRect& devBounds);
+                             const SkSurfaceProps& props);
 
     static SkBlitter* ChooseSprite(const SkPixmap& dst,
                                    const SkPaint&,

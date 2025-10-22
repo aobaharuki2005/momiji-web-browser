@@ -13,7 +13,6 @@
 #include "include/private/base/SkMath.h"
 #include "src/core/SkAAClip.h"
 #include "src/core/SkBlitter.h"
-#include "src/core/SkPathRaw.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkScan.h"
 #include "src/core/SkScanPriv.h"
@@ -56,14 +55,14 @@ static int rect_overflows_short_shift(SkIRect rect, int shift) {
            overflows_short_shift(rect.fBottom, shift);
 }
 
-void SkScan::AntiFillPath(const SkPathRaw& path, const SkRegion& origClip,
+void SkScan::AntiFillPath(const SkPath& path, const SkRegion& origClip,
                           SkBlitter* blitter, bool forceRLE) {
     if (origClip.isEmpty()) {
         return;
     }
 
     const bool isInverse = path.isInverseFillType();
-    SkIRect ir = safeRoundOut(path.bounds());
+    SkIRect ir = safeRoundOut(path.getBounds());
     if (ir.isEmpty()) {
         if (isInverse) {
             blitter->blitRegion(origClip);
@@ -136,20 +135,36 @@ void SkScan::AntiFillPath(const SkPathRaw& path, const SkRegion& origClip,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkScan::AntiFillPath(const SkPathRaw& raw, const SkRasterClip& clip, SkBlitter* blitter) {
-    SkASSERT(raw.bounds().isFinite());
-    if (clip.isEmpty()) {
+void SkScan::FillPath(const SkPath& path, const SkRasterClip& clip, SkBlitter* blitter) {
+    if (clip.isEmpty() || !path.isFinite()) {
         return;
     }
 
     if (clip.isBW()) {
-        AntiFillPath(raw, clip.bwRgn(), blitter, false);
+        FillPath(path, clip.bwRgn(), blitter);
     } else {
         SkRegion        tmp;
         SkAAClipBlitter aaBlitter;
 
         tmp.setRect(clip.getBounds());
         aaBlitter.init(blitter, &clip.aaRgn());
-        AntiFillPath(raw, tmp, &aaBlitter, true); // SkAAClipBlitter can blitMask, why forceRLE?
+        SkScan::FillPath(path, tmp, &aaBlitter);
+    }
+}
+
+void SkScan::AntiFillPath(const SkPath& path, const SkRasterClip& clip, SkBlitter* blitter) {
+    if (clip.isEmpty() || !path.isFinite()) {
+        return;
+    }
+
+    if (clip.isBW()) {
+        AntiFillPath(path, clip.bwRgn(), blitter, false);
+    } else {
+        SkRegion        tmp;
+        SkAAClipBlitter aaBlitter;
+
+        tmp.setRect(clip.getBounds());
+        aaBlitter.init(blitter, &clip.aaRgn());
+        AntiFillPath(path, tmp, &aaBlitter, true); // SkAAClipBlitter can blitMask, why forceRLE?
     }
 }

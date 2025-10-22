@@ -24,9 +24,13 @@ protected:
     PrecompileMaskFilter() : PrecompileBase(Type::kMaskFilter) {}
     ~PrecompileMaskFilter() override;
 
-    void addToKey(const KeyContext&, int desiredCombination) const final;
+    void addToKey(const KeyContext&,
+                  PaintParamsKeyBuilder*,
+                  PipelineDataGatherer*,
+                  int desiredCombination) const final;
 
     virtual void createPipelines(const KeyContext&,
+                                 PipelineDataGatherer*,
                                  const PaintOptions&,
                                  const RenderPassDesc&,
                                  const PaintOptions::ProcessCombination&) const = 0;

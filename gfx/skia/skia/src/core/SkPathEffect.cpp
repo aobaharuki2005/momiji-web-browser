@@ -9,8 +9,8 @@
 #include "include/core/SkFlattenable.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPath.h"
-#include "include/core/SkPathBuilder.h"
 #include "include/core/SkRefCnt.h"
+#include "include/private/base/SkAssert.h"
 #include "src/core/SkPathEffectBase.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
@@ -24,30 +24,24 @@ struct SkRect;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef SK_SUPPORT_MUTABLE_PATHEFFECT
 bool SkPathEffect::filterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                               const SkRect* bounds) const {
     return this->filterPath(dst, src, rec, bounds, SkMatrix::I());
 }
 
-bool SkPathEffect::filterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec, const SkRect* cullR,
-                              const SkMatrix& ctm) const {
-    SkPathBuilder builder;
-    if (this->filterPath(&builder, src, rec, cullR, ctm)) {
-        *dst = builder.detach();
+bool SkPathEffect::filterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
+                              const SkRect* bounds, const SkMatrix& ctm) const {
+    SkPath tmp, *tmpDst = dst;
+    if (dst == &src) {
+        tmpDst = &tmp;
+    }
+    if (as_PEB(this)->onFilterPath(tmpDst, src, rec, bounds, ctm)) {
+        if (dst == &src) {
+            *dst = tmp;
+        }
         return true;
     }
     return false;
-}
-#endif
-
-bool SkPathEffect::filterPath(SkPathBuilder* dst, const SkPath& src, SkStrokeRec* rec) const {
-    return this->filterPath(dst, src, rec, nullptr, SkMatrix::I());
-}
-
-bool SkPathEffect::filterPath(SkPathBuilder* dst, const SkPath& src, SkStrokeRec* rec,
-                              const SkRect* bounds, const SkMatrix& ctm) const {
-    return as_PEB(this)->onFilterPath(dst, src, rec, bounds, ctm);
 }
 
 bool SkPathEffectBase::asPoints(PointData* results, const SkPath& src,
@@ -111,16 +105,15 @@ public:
     SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner)
             : INHERITED(std::move(outer), std::move(inner)) {}
 
-    bool onFilterPath(SkPathBuilder* builder, const SkPath& src, SkStrokeRec* rec,
+    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                        const SkRect* cullRect, const SkMatrix& ctm) const override {
         SkPath          tmp;
         const SkPath*   ptr = &src;
 
-        if (fPE1->filterPath(builder, src, rec, cullRect, ctm)) {
-            tmp = builder->detach();
+        if (fPE1->filterPath(&tmp, src, rec, cullRect, ctm)) {
             ptr = &tmp;
         }
-        return fPE0->filterPath(builder, *ptr, rec, cullRect, ctm);
+        return fPE0->filterPath(dst, *ptr, rec, cullRect, ctm);
     }
 
     SK_FLATTENABLE_HOOKS(SkComposePathEffect)
@@ -173,11 +166,11 @@ public:
     SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second)
             : INHERITED(std::move(first), std::move(second)) {}
 
-    bool onFilterPath(SkPathBuilder* builder, const SkPath& src, SkStrokeRec* rec,
+    bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
                       const SkRect* cullRect, const SkMatrix& ctm) const override {
         // always call both, even if the first one succeeds
-        bool filteredFirst = fPE0->filterPath(builder, src, rec, cullRect, ctm);
-        bool filteredSecond = fPE1->filterPath(builder, src, rec, cullRect, ctm);
+        bool filteredFirst = fPE0->filterPath(dst, src, rec, cullRect, ctm);
+        bool filteredSecond = fPE1->filterPath(dst, src, rec, cullRect, ctm);
         return filteredFirst || filteredSecond;
     }
 

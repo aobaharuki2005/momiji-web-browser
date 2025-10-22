@@ -68,9 +68,7 @@ static void GDIGammaVarUpdated() {
 static void UpdatePixelGeometry() {
   sPixelGeometry =
       static_cast<DWRITE_PIXEL_GEOMETRY>(gfxVars::SystemTextPixelGeometry());
-  Factory::SetSubpixelOrder(sPixelGeometry == DWRITE_PIXEL_GEOMETRY_BGR
-                                ? SubpixelOrder::BGR
-                                : SubpixelOrder::RGB);
+  Factory::SetBGRSubpixelOrder(sPixelGeometry == DWRITE_PIXEL_GEOMETRY_BGR);
 }
 static void PixelGeometryVarUpdated() {
   UpdatePixelGeometry();

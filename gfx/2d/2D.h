@@ -2317,11 +2317,11 @@ class GFX2D_API Factory {
 
   static bool DoesBackendSupportDataDrawtarget(BackendType aType);
 
-  static void SetSubpixelOrder(SubpixelOrder aOrder);
-  static SubpixelOrder GetSubpixelOrder();
+  static void SetBGRSubpixelOrder(bool aBGR);
+  static bool GetBGRSubpixelOrder();
 
  private:
-  static SubpixelOrder mSubpixelOrder;
+  static bool mBGRSubpixelOrder;
 
  public:
   static already_AddRefed<DrawTarget> CreateDrawTargetWithSkCanvas(
