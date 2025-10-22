@@ -147,29 +147,35 @@ class nsTStringRepr {
   typedef nsTStringLengthStorage<T> LengthStorage;
 
   // Reading iterators.
-  constexpr const_char_iterator BeginReading() const { return mData; }
-  constexpr const_char_iterator EndReading() const { return mData + mLength; }
+  constexpr const_char_iterator BeginReading() const MOZ_LIFETIME_BOUND {
+    return mData;
+  }
+  constexpr const_char_iterator EndReading() const MOZ_LIFETIME_BOUND {
+    return mData + mLength;
+  }
 
   // Deprecated reading iterators.
-  const_iterator& BeginReading(const_iterator& aIter) const {
+  const_iterator& BeginReading(const_iterator& aIter) const MOZ_LIFETIME_BOUND {
     aIter.mStart = mData;
     aIter.mEnd = mData + mLength;
     aIter.mPosition = aIter.mStart;
     return aIter;
   }
 
-  const_iterator& EndReading(const_iterator& aIter) const {
+  const_iterator& EndReading(const_iterator& aIter) const MOZ_LIFETIME_BOUND {
     aIter.mStart = mData;
     aIter.mEnd = mData + mLength;
     aIter.mPosition = aIter.mEnd;
     return aIter;
   }
 
-  const_char_iterator& BeginReading(const_char_iterator& aIter) const {
+  const_char_iterator& BeginReading(const_char_iterator& aIter) const
+      MOZ_LIFETIME_BOUND {
     return aIter = mData;
   }
 
-  const_char_iterator& EndReading(const_char_iterator& aIter) const {
+  const_char_iterator& EndReading(const_char_iterator& aIter) const
+      MOZ_LIFETIME_BOUND {
     return aIter = mData + mLength;
   }
 
@@ -186,13 +192,17 @@ class nsTStringRepr {
 #endif
 
   // Returns pointer to string data (not necessarily null-terminated)
-  constexpr typename raw_type<T, int>::type Data() const { return mData; }
+  constexpr typename raw_type<T, int>::type Data() const MOZ_LIFETIME_BOUND {
+    return mData;
+  }
 
   constexpr size_type Length() const { return static_cast<size_type>(mLength); }
 
-  constexpr string_view View() const { return string_view(Data(), Length()); }
+  constexpr string_view View() const MOZ_LIFETIME_BOUND {
+    return string_view(Data(), Length());
+  }
 
-  constexpr operator string_view() const { return View(); }
+  constexpr operator string_view() const MOZ_LIFETIME_BOUND { return View(); }
 
   constexpr DataFlags GetDataFlags() const { return mDataFlags; }
 
