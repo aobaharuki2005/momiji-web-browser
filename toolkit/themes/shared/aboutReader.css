@@ -980,7 +980,11 @@ div[name="customtheme"] {
 }
 
 pre {
-  font-family: inherit;
+  font-family: monospace;
+
+  .plain-text-doc & {
+    font-family: inherit;
+  }
 }
 
 .moz-reader-content {
