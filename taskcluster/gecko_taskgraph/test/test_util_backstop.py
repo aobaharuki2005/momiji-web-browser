@@ -148,10 +148,16 @@ def params():
     ),
 )
 def test_is_backstop(
-    responses, params, response_args, extra_params, expected, session_mocker
+    monkeypatch,
+    responses,
+    params,
+    response_args,
+    extra_params,
+    expected,
 ):
-    root_url = "https://firefox-ci-tc.services.mozilla.com"
-    session_mocker.patch.dict("os.environ", {"TASKCLUSTER_ROOT_URL": root_url})
+    root_url = "https://taskcluster.example.com"
+    monkeypatch.delenv("TASKCLUSTER_PROXY_URL", raising=False)
+    monkeypatch.setenv("TASKCLUSTER_ROOT_URL", root_url)
 
     urls = {
         "index": get_index_url(

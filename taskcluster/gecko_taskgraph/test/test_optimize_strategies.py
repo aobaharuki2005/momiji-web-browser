@@ -587,14 +587,15 @@ def test_mozlint_should_remove_task2(
     assert result == expected
 
 
-def test_skip_unless_missing(responses, params, session_mocker):
+def test_skip_unless_missing(monkeypatch, responses, params):
     opt = SkipUnlessMissing()
     task = deepcopy(default_tasks[0])
     task.task["deadline"] = "2024-01-02T00:00:00.000Z"
     index = "foo.bar.baz"
     task_id = "abc"
-    root_url = "https://firefox-ci-tc.services.mozilla.com"
-    session_mocker.patch.dict("os.environ", {"TASKCLUSTER_ROOT_URL": root_url})
+    root_url = "https://taskcluster.example.com"
+    monkeypatch.delenv("TASKCLUSTER_PROXY_URL", raising=False)
+    monkeypatch.setenv("TASKCLUSTER_ROOT_URL", root_url)
 
     # Task is missing, don't optimize
     responses.add(
