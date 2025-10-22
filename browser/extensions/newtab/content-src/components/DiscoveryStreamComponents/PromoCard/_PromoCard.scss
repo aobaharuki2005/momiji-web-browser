@@ -1,6 +1,7 @@
 .promo-card-wrapper {
+  @include newtab-card-style;
+
   display: none; // hidden by default
-  background: var(--newtab-background-card);
   box-shadow: var(--box-shadow-card);
   border-radius: var(--border-radius-large);
   height: 298px;

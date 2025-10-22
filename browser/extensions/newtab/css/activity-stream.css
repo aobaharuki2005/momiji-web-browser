@@ -38,7 +38,7 @@ input {
   --newtab-background-color: #F9F9FB;
   --newtab-background-color-secondary: var(--color-white);
   --newtab-text-primary-color: var(--text-color);
-  --newtab-background-card: color-mix(in srgb, var(--color-white) 80%, transparent);
+  --newtab-background-card: color-mix(in srgb, var(--color-white) 85%, transparent);
   --newtab-text-topic-label-color: var(--color-violet-70);
   --newtab-text-secondary-text: var(--text-color-deemphasized);
   --newtab-contextual-text-primary-color: light-dark(var(--newtab-text-primary-color), var(--text-color));
@@ -46,7 +46,7 @@ input {
   --newtab-primary-action-background-pocket: #008078;
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
   --newtab-contextual-text-secondary-color: color-mix(in srgb, var(--newtab-contextual-text-primary-color) 70%, transparent);
-  --newtab-weather-background-color: light-dark(rgba(255, 255, 255, 70%), rgba(35, 34, 43, 70%));
+  --newtab-weather-background-color: light-dark(rgba(255, 255, 255, 85%), rgba(66, 65, 77, 85%));
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #000);
   --newtab-button-background: var(--button-background-color);
@@ -86,7 +86,7 @@ input {
   --newtab-background-color: #2B2A33;
   --newtab-background-color-secondary: #42414d;
   --newtab-text-primary-color: var(--text-color);
-  --newtab-background-card: rgba(66, 65, 77, 0.8);
+  --newtab-background-card: rgba(66, 65, 77, 0.85);
   --newtab-text-topic-label-color: var(--color-violet-30);
   --newtab-text-secondary-text: #FBFBFEB0;
   --newtab-contextual-text-primary-color: light-dark(var(--text-color), var(--newtab-text-primary-color));
@@ -4443,9 +4443,10 @@ dialog::after {
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 .lists {
+  background: var(--newtab-background-card);
+  transition: opacity 0.2s ease;
   grid-column: span 1;
   width: var(--newtab-card-width-medium);
-  background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
   padding-block-start: var(--space-medium);
   height: var(--newtab-card-height);
@@ -4453,6 +4454,11 @@ dialog::after {
   position: relative;
   display: flex;
   flex-direction: column;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lists:hover {
+    background: var(--newtab-background-color-secondary);
+  }
 }
 .lists .confetti-canvas {
   position: absolute;
@@ -4659,9 +4665,10 @@ dialog::after {
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 .focus-timer {
+  background: var(--newtab-background-card);
+  transition: opacity 0.2s ease;
   grid-column: span 1;
   width: var(--newtab-card-width-medium);
-  background: var(--newtab-background-card);
   border-radius: var(--border-radius-large);
   padding-block: var(--space-medium);
   height: var(--newtab-card-height);
@@ -4669,6 +4676,11 @@ dialog::after {
   flex-direction: column;
   align-items: center;
   box-shadow: var(--box-shadow-card);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .focus-timer:hover {
+    background: var(--newtab-background-color-secondary);
+  }
 }
 
 .focus-timer-tabs {
@@ -7491,6 +7503,12 @@ dialog::after {
 }
 .ds-card-grid .sections-card-ui {
   background: var(--newtab-background-card);
+  transition: opacity 0.2s ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ds-card-grid .sections-card-ui:hover {
+    background: var(--newtab-background-color-secondary);
+  }
 }
 .ds-card-grid .sections-card-ui:not(.placeholder) {
   box-shadow: 0 1px 2px 0 rgba(58, 57, 68, 0.2);
@@ -7498,6 +7516,10 @@ dialog::after {
 }
 .ds-card-grid .sections-card-ui:not(.placeholder).active, .ds-card-grid .sections-card-ui:not(.placeholder):focus-within, .ds-card-grid .sections-card-ui:not(.placeholder):hover {
   box-shadow: 0 2px 14px 0 var(--newtab-section-card-box-shadow-color);
+  z-index: 1;
+}
+.ds-card-grid .sections-card-ui:not(.placeholder).active {
+  z-index: 2;
 }
 .ds-card-grid .sections-card-ui:not(.placeholder) .img-wrapper > .ds-image.img > img {
   border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
@@ -7605,6 +7627,13 @@ dialog::after {
 .ds-card-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards,
 .ds-section-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards {
   background: var(--newtab-background-card);
+  transition: opacity 0.2s ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ds-card-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards:hover,
+.ds-section-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards:hover {
+    background: var(--newtab-background-color-secondary);
+  }
 }
 .ds-card-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards .img-wrapper .ds-image img,
 .ds-section-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards .img-wrapper .ds-image img {
@@ -8870,10 +8899,16 @@ dialog::after {
   }
 }
 .ad-banner-wrapper .ad-banner-inner {
-  position: relative;
   background: var(--newtab-background-card);
+  transition: opacity 0.2s ease;
+  position: relative;
   box-shadow: var(--box-shadow-card);
   border-radius: var(--border-radius-large);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ad-banner-wrapper .ad-banner-inner:hover {
+    background: var(--newtab-background-color-secondary);
+  }
 }
 .ad-banner-wrapper .ad-banner-inner:hover {
   box-shadow: var(--box-shadow-card-hover);
@@ -8988,14 +9023,20 @@ dialog::after {
 }
 
 .promo-card-wrapper {
-  display: none;
   background: var(--newtab-background-card);
+  transition: opacity 0.2s ease;
+  display: none;
   box-shadow: var(--box-shadow-card);
   border-radius: var(--border-radius-large);
   height: 298px;
   width: 228px;
   position: relative;
   padding: var(--space-large);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .promo-card-wrapper:hover {
+    background: var(--newtab-background-color-secondary);
+  }
 }
 .promo-card-wrapper .promo-card-title {
   display: block;

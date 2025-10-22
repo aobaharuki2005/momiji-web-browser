@@ -409,7 +409,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
   }
 
   .ds-card-grid & {
-    background: var(--newtab-background-card);
+    @include newtab-card-style;
 
     &:not(.placeholder) {
       box-shadow: 0 1px 2px 0 rgba(58, 57, 68, 20%);
@@ -419,6 +419,12 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       &:focus-within,
       &:hover {
         box-shadow: 0 2px 14px 0 var(--newtab-section-card-box-shadow-color);
+        z-index: 1;
+      }
+
+      // This is higher to keep the context menu (when open) above any other cards
+      &.active {
+        z-index: 2;
       }
 
       .img-wrapper > .ds-image.img > img {
@@ -546,7 +552,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     }
 
     &.refined-cards {
-      background: var(--newtab-background-card);
+      @include newtab-card-style;
 
       .img-wrapper .ds-image img {
         border-bottom-left-radius: 0;
