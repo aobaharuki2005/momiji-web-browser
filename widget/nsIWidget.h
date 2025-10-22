@@ -446,8 +446,6 @@ class nsIWidget : public nsSupportsWeakReference {
   typedef mozilla::DesktopIntRect DesktopIntRect;
   typedef mozilla::DesktopPoint DesktopPoint;
   typedef mozilla::DesktopIntPoint DesktopIntPoint;
-  typedef mozilla::DesktopIntSize DesktopIntSize;
-  typedef mozilla::DesktopIntMargin DesktopIntMargin;
   typedef mozilla::DesktopRect DesktopRect;
   typedef mozilla::DesktopSize DesktopSize;
   typedef mozilla::CSSPoint CSSPoint;
@@ -1923,7 +1921,7 @@ class nsIWidget : public nsSupportsWeakReference {
   /**
    * Wayland specific routines.
    */
-  virtual LayoutDeviceIntSize GetMoveToRectPopupSize() {
+  virtual LayoutDeviceIntSize GetMoveToRectPopupSize() const {
     NS_WARNING("GetLayoutPopupRect implemented only for wayland");
     return LayoutDeviceIntSize();
   }
