@@ -15,13 +15,13 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9c487a574d218cc1c
  1 file changed, 12 insertions(+)
 
 diff --git a/audio/audio_receive_stream.h b/audio/audio_receive_stream.h
-index 0d78482e0e..d7ebd8c9d1 100644
+index 4b6c57b871..3f054776d2 100644
 --- a/audio/audio_receive_stream.h
 +++ b/audio/audio_receive_stream.h
-@@ -32,7 +32,11 @@
- #include "api/scoped_refptr.h"
- #include "api/sequence_checker.h"
+@@ -34,7 +34,11 @@
  #include "api/transport/rtp/rtp_source.h"
+ #include "api/units/time_delta.h"
+ #include "api/units/timestamp.h"
 +// This can be removed after Bug 1768116 enables
 +// c++20 builds across the entire Mozilla tree.
 +#if !defined(WEBRTC_MOZILLA_BUILD)
@@ -30,7 +30,7 @@ index 0d78482e0e..d7ebd8c9d1 100644
  #include "call/audio_receive_stream.h"
  #include "call/audio_state.h"
  #include "call/syncable.h"
-@@ -44,6 +48,14 @@ class PacketRouter;
+@@ -47,6 +51,14 @@ class PacketRouter;
  class RtpStreamReceiverControllerInterface;
  class RtpStreamReceiverInterface;
  
