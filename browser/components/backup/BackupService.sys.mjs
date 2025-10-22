@@ -22,6 +22,8 @@ import { BackupError } from "resource:///modules/backup/BackupError.mjs";
 const BACKUP_DIR_PREF_NAME = "browser.backup.location";
 const BACKUP_ERROR_CODE_PREF_NAME = "browser.backup.errorCode";
 const SCHEDULED_BACKUPS_ENABLED_PREF_NAME = "browser.backup.scheduled.enabled";
+const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
+const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
 const IDLE_THRESHOLD_SECONDS_PREF_NAME =
   "browser.backup.scheduled.idle-threshold-seconds";
 const MINIMUM_TIME_BETWEEN_BACKUPS_SECONDS_PREF_NAME =
@@ -618,6 +620,13 @@ export class BackupService extends EventTarget {
       };
     }
 
+    if (!Services.prefs.getBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME)) {
+      return {
+        enabled: false,
+        reason: "Archiving a profile disabled by user pref.",
+      };
+    }
+
     return { enabled: true };
   }
 
@@ -634,6 +643,13 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Restore from backup disabled remotely.",
+      };
+    }
+
+    if (!Services.prefs.getBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME)) {
+      return {
+        enabled: false,
+        reason: "Restoring a profile disabled by user pref.",
       };
     }
 
@@ -1051,6 +1067,7 @@ export class BackupService extends EventTarget {
   constructor(backupResources = DefaultBackupResources) {
     super();
     lazy.logConsole.debug("Instantiated");
+    this.#registerStatusObservers();
 
     for (const resourceName in backupResources) {
       let resource = backupResources[resourceName];
@@ -3589,6 +3606,7 @@ export class BackupService extends EventTarget {
       }
       case "quit-application-granted": {
         this.uninitBackupScheduler();
+        this.#unregisterStatusObservers();
         break;
       }
       case "passwordmgr-storage-changed": {
@@ -3638,6 +3656,38 @@ export class BackupService extends EventTarget {
       }
     }
   }
+
+  #registerStatusObservers() {
+    // We don't use this.#observer since any changes to the prefs or nimbus should
+    // immediately reflect across any observers, instead of waiting on idle
+    Services.prefs.addObserver(
+      BACKUP_ARCHIVE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+    Services.prefs.addObserver(
+      BACKUP_RESTORE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+    lazy.NimbusFeatures.backupService.onUpdate(this.#notifyStatusObservers);
+  }
+
+  #unregisterStatusObservers() {
+    Services.prefs.removeObserver(
+      BACKUP_ARCHIVE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+    Services.prefs.removeObserver(
+      BACKUP_RESTORE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+  }
+
+  /**
+   * Notify any listeners about the availability of the backup service.
+   */
+  #notifyStatusObservers = () => {
+    Services.obs.notifyObservers(null, "backup-service-status-updated");
+  };
 
   /**
    * Called when the last known backup should be deleted and a new one

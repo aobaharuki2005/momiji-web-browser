@@ -23,7 +23,7 @@ add_setup(async () => {
   // It's possible for other tests to change the internal state of the BackupService
   // which can lead to complications with the auto detection behaviour. Let's just reset
   // these states before testing
-  let bs = BackupService.get();
+  let bs = getAndMaybeInitBackupService();
   bs.resetLastBackupInternalState();
 
   registerCleanupFunction(async () => {
@@ -175,7 +175,7 @@ add_task(async function test_restore_from_backup() {
 add_task(async function test_restore_in_progress() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
-    let bs = BackupService.get();
+    let bs = getAndMaybeInitBackupService();
 
     let { promise: recoverPromise, resolve: recoverResolve } =
       Promise.withResolvers();

@@ -3438,8 +3438,10 @@ pref("browser.mailto.dualPrompt.dismissXClickMinutes", 1440); // one day
 pref("browser.backup.enabled", true);
 // Pref to control whether scheduled backups run or not.
 pref("browser.backup.scheduled.enabled", false);
-// Pref to control the visibility of the backup section in about:preferences
-pref("browser.backup.preferences.ui.enabled", false);
+// Pref to control visibility and usability of the create backup feature.
+pref("browser.backup.archive.enabled", false);
+// Pref to control visibility and usability of the restore from backup feature.
+pref("browser.backup.restore.enabled", false);
 // The number of SQLite database pages to backup per step.
 pref("browser.backup.sqlite.pages_per_step", 50);
 // The delay between SQLite database backup steps in milliseconds.
