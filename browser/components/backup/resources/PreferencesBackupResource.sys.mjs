@@ -36,11 +36,14 @@ export class PreferencesBackupResource extends BackupResource {
    */
   static addPrefsToIgnoreInBackup(prefsOverrideMap) {
     // List of prefs we never backup.
-    const kIgnoredPrefs = [
+    let kIgnoredPrefs = [
       "app.normandy.user_id",
       "toolkit.telemetry.cachedProfileGroupID",
       PROFILE_RESTORATION_DATE_PREF,
     ];
+
+    const backupPrefs = Services.prefs.getChildList("browser.backup.");
+    kIgnoredPrefs = kIgnoredPrefs.concat(backupPrefs);
 
     // Prefs with this prefix are always overriden.
     const kNimbusMetadataPrefPrefix = "nimbus.";
