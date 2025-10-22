@@ -94,12 +94,7 @@ BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
   }
 
   double scale = WinUtils::LogToPhysFactor(aMon);
-  DesktopToLayoutDeviceScale contentsScaleFactor;
-  if (WinUtils::IsPerMonitorDPIAware()) {
-    contentsScaleFactor.scale = 1.0;
-  } else {
-    contentsScaleFactor.scale = scale;
-  }
+  DesktopToLayoutDeviceScale contentsScaleFactor(1.0);
   CSSToLayoutDeviceScale defaultCssScaleFactor(scale);
   LayoutDeviceIntRect rect(info.rcMonitor.left, info.rcMonitor.top,
                            info.rcMonitor.right - info.rcMonitor.left,
