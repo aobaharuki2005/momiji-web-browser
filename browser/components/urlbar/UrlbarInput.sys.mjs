@@ -4126,9 +4126,10 @@ export class UrlbarInput {
 
     let cachedUriDidChange =
       state.persist?.originalURI &&
-      !state.persist.originalURI.equals(
-        this.window.gBrowser.selectedBrowser.originalURI
-      );
+      (!this.window.gBrowser.selectedBrowser.originalURI ||
+        !state.persist.originalURI.equals(
+          this.window.gBrowser.selectedBrowser.originalURI
+        ));
 
     // Capture the shouldPersist property if it exists before
     // setPersistenceState potentially modifies it.
