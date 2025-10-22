@@ -569,6 +569,8 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
                       wr::DebugFlags::MISSING_SNAPSHOT_PINK)
   GFX_WEBRENDER_DEBUG(".highlight-backdrop-filters",
                       wr::DebugFlags::HIGHLIGHT_BACKDROP_FILTERS)
+  GFX_WEBRENDER_DEBUG(".external-composite-borders",
+                      wr::DebugFlags::EXTERNAL_COMPOSITE_BORDERS)
 #undef GFX_WEBRENDER_DEBUG
   gfx::gfxVars::SetWebRenderDebugFlags(flags._0);
 

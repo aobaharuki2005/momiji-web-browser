@@ -957,6 +957,9 @@ pub struct Renderer {
 
     /// Hold previous frame compositing state with layer compositor.
     layer_compositor_frame_state_in_prev_frame: Option<LayerCompositorFrameState>,
+
+    /// Hold DebugItems of DebugFlags::EXTERNAL_COMPOSITE_BORDERS for debug overlay
+    external_composite_debug_items: Vec<DebugItem>,
 }
 
 #[derive(Debug)]
@@ -1443,6 +1446,8 @@ impl Renderer {
         // event. Otherwise they would just pile up in this vector forever.
         self.notifications.clear();
 
+        self.external_composite_debug_items = Vec::new();
+
         tracy_frame_marker!();
 
         result
@@ -1465,7 +1470,8 @@ impl Renderer {
             DebugFlags::PICTURE_CACHING_DBG |
             DebugFlags::PICTURE_BORDERS |
             DebugFlags::ZOOM_DBG |
-            DebugFlags::WINDOW_VISIBILITY_DBG
+            DebugFlags::WINDOW_VISIBILITY_DBG |
+            DebugFlags::EXTERNAL_COMPOSITE_BORDERS
         );
 
         // Update the debug overlay surface, if we are running in native compositor mode.
@@ -1758,6 +1764,7 @@ impl Renderer {
                 self.draw_zoom_debug(device_size);
                 self.draw_epoch_debug();
                 self.draw_window_visibility_debug();
+                self.draw_external_composite_borders_debug();
                 draw_target
             })
         });
@@ -3848,6 +3855,15 @@ impl Renderer {
 
                         let clip_rect = tile.device_clip_rect.to_i32();
                         let is_opaque = tile.kind != TileKind::Alpha;
+
+                        if self.debug_flags.contains(DebugFlags::EXTERNAL_COMPOSITE_BORDERS) {
+                            self.external_composite_debug_items.push(DebugItem::Rect {
+                                outer_color: debug_colors::ORANGERED,
+                                inner_color: ColorF { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+                                rect: tile.device_clip_rect,
+                                thickness: 10,
+                            });
+                        }
 
                         (rect.min.to_i32(), clip_rect, is_opaque)
                     }
@@ -5947,6 +5963,32 @@ impl Renderer {
         }
 
 
+    }
+
+    fn draw_external_composite_borders_debug(&mut self) {
+        if !self.debug_flags.contains(DebugFlags::EXTERNAL_COMPOSITE_BORDERS) {
+            return;
+        }
+
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => return,
+        };
+
+        for item in &self.external_composite_debug_items {
+            match item {
+                DebugItem::Rect { rect, outer_color, inner_color: _, thickness } => {
+                    if outer_color.a > 0.001 {
+                        debug_renderer.add_rect(
+                            &rect.to_i32(),
+                            *thickness,
+                            (*outer_color).into(),
+                        );
+                    }
+                }
+                DebugItem::Text { .. } => {}
+            }
+        }
     }
 
     fn draw_gpu_cache_debug(&mut self, device_size: DeviceIntSize) {

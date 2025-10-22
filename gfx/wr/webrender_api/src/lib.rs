@@ -759,6 +759,9 @@ bitflags! {
         const MISSING_SNAPSHOT_PINK     = (1 as u64) << 32;
         /// Highlight backdrop filters
         const HIGHLIGHT_BACKDROP_FILTERS = (1 as u64) << 33;
+        /// Show external composite border rects in debug overlay.
+        /// TODO: Add native compositor support
+        const EXTERNAL_COMPOSITE_BORDERS = (1 as u64) << 34;
     }
 }
 
