@@ -494,6 +494,8 @@
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">برای کمک به بهبود مرورگر، Firefox داده‌های تشخیصی و تعاملات را به Mozilla ارسال می‌کند. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">مدیریت</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
+  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">شرایط استفاده از Firefox</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_three. -->
   <string name="onboarding_redesign_tou_body_three_link_text">مدیریت تنظیمات</string>
   <!-- Terms of use (ToU) onboarding page continue button label. -->
@@ -906,6 +908,8 @@
   <string name="alternative_app_icon_option_gradient_midnight">نیمه شب</string>
   <!-- Title for the "Northern Lights" gradient alternative app icon variant in the icon picker screen. The app icon has a dynamic green, blue, and purple gradient background, resembling the aurora borealis. -->
   <string name="alternative_app_icon_option_gradient_northern_lights">شفق قطبی</string>
+  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_other">‏‏سایر</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1020,6 +1024,8 @@
   <string name="preferences_daily_usage_ping_title">پینگ استفاده روزانه</string>
   <string name="preferences_daily_usage_ping_description">این به Mozilla کمک می‌کند تا کاربران فعال را تخمین بزند.</string>
   <string name="preferences_daily_usage_ping_learn_more">بیشتر درباره پینگ استفاده روزانه بدانید</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">گزارش ارسال شد</string>
   <!-- Preference switch for campaign measurement data (marketing data) collection -->
   <string name="preferences_marketing_data_2">داده‌های اندازه‌گیری کمپین</string>
   <!--
@@ -1448,6 +1454,8 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">گزارش خرابی وبگاه</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">بیشتر بدانید</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">نشانی اینترنتی</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
@@ -1466,6 +1474,8 @@
   <string name="webcompat_reporter_send">ارسال</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">گزارش شما ارسال شد</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">گزارش ارسال شد</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">بستن</string>
   <!--
@@ -2476,6 +2486,12 @@
   <string name="addresses_phone">تلفن</string>
   <!-- The header for the email of an address -->
   <string name="addresses_email">رایانامه</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used for addresses in Iran, Mexico. -->
+  <string name="addresses_neighborhood" tools:ignore="UnusedResources">محله</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
+  <string name="addresses_island" tools:ignore="UnusedResources">جزیره</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in cases we want to only display the word "Country" over "Country or Region". -->
+  <string name="addresses_country_only" tools:ignore="UnusedResources">کشور</string>
   <!-- The text for the "Save" button for saving an address -->
   <string name="addresses_save_button">ذخیره‌</string>
   <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->

@@ -2362,7 +2362,7 @@
   -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Opravdu chcete vypnout opravy?</string>
   <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
-  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Toto nastavení pomáhá řešit nejčastější problémy s webem. Pokud jej vypnete, některé weby nemusí fungovat a %1$s nebude moci pomoci s řešením těchto problémů.</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Toto nastavení pomáhá řešit nejčastější problémy se stránkami. Pokud ho vypnete, některé stránky nemusí fungovat a %1$s nebude moci s odstraněním těchto problémů pomoci.</string>
   <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Vypnout opravy</string>
   <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
