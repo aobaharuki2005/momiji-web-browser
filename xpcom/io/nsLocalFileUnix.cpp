@@ -324,7 +324,11 @@ nsLocalFile::Clone(nsIFile** aFile) {
 
 NS_IMETHODIMP
 nsLocalFile::InitWithNativePath(const nsACString& aFilePath) {
-  if (!aFilePath.IsEmpty() && aFilePath.First() == '~') {
+  if (aFilePath.IsEmpty()) {
+    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+  }
+
+  if (aFilePath.First() == '~') {
     if (aFilePath.Length() == 1 || aFilePath.CharAt(1) == '/') {
       // Home dir for the current user
 
@@ -355,7 +359,7 @@ nsLocalFile::InitWithNativePath(const nsACString& aFilePath) {
           + Substring(aFilePath, 1);
     }
   } else {
-    if (aFilePath.IsEmpty() || aFilePath.First() != '/') {
+    if (aFilePath.First() != '/') {
       return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
     mPath = aFilePath;
