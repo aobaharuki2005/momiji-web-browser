@@ -402,7 +402,7 @@ nsresult ModuleLoader::CompileCssModule(
     // https://github.com/whatwg/html/issues/11629).
     dom::CSSStyleSheetInit options;
     RefPtr<StyleSheet> sheet = StyleSheet::CreateConstructedSheet(
-        *constructorDocument, aRequest->mBaseURL, options, error);
+        *constructorDocument, aRequest->BaseURL(), options, error);
     if (error.Failed()) {
       return;
     }

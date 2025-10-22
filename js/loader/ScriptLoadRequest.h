@@ -231,13 +231,6 @@ class ScriptLoadRequest : public nsISupports,
   const LoadedScript* getLoadedScript() const { return mLoadedScript.get(); }
   LoadedScript* getLoadedScript() { return mLoadedScript.get(); }
 
-  /*
-   * Set the request's mBaseURL, based on aChannel.
-   * aOriginalURI is the result of aChannel->GetOriginalURI.
-   */
-  void SetBaseURLFromChannelAndOriginalURI(nsIChannel* aChannel,
-                                           nsIURI* aOriginalURI);
-
   const ScriptKind mKind;  // Whether this is a classic script or a module
                            // script.
 
@@ -292,9 +285,6 @@ class ScriptLoadRequest : public nsISupports,
   // Also used by workers to report on errors while loading, and used by
   // worklets as the file name in compile options.
   nsAutoCString mURL;
-
-  // The base URL used for resolving relative module imports.
-  nsCOMPtr<nsIURI> mBaseURL;
 
   // The loaded script holds the source / bytecode which is loaded.
   //

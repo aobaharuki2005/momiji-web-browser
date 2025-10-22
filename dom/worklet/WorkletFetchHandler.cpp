@@ -217,7 +217,7 @@ NS_IMETHODIMP FetchCompleteRunnable::RunOnWorkletThread() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  request->mBaseURL = mURI;
+  request->SetBaseURL(mURI);
   request->OnFetchComplete(mResult);
   moduleLoader->RemoveRequest(mURI);
   return NS_OK;

@@ -193,7 +193,6 @@ void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript) {
       MOZ_ASSERT(aLoadedScript->IsModuleScript());
 
       mLoadedScript = ModuleScript::FromCache(*aLoadedScript);
-      mBaseURL = mLoadedScript->BaseURL();
 
       // Modules need to wait for fetching dependencies before setting to
       // Ready.
@@ -209,10 +208,11 @@ void ScriptLoadRequest::NoCacheEntryFound(
     mozilla::dom::ReferrerPolicy aReferrerPolicy,
     ScriptFetchOptions* aFetchOptions, nsIURI* aURI) {
   MOZ_ASSERT(IsCheckingCache());
-  // At the time where we check in the cache, the mBaseURL is not set, as this
+  // At the time where we check in the cache, the BaseURL() is not set, as this
   // is resolved by the network. Thus we use the aURI passed by the consumer,
   // which is the original URI used for the request, for checking the cache
-  // and later replace the mBaseURL using what the Channel->GetURI will provide.
+  // and later replace the BaseURL() using what the Channel->GetURI will
+  // provide.
   switch (mKind) {
     case ScriptKind::eClassic:
       mLoadedScript = new ClassicScript(aReferrerPolicy, aFetchOptions, aURI);
@@ -228,22 +228,6 @@ void ScriptLoadRequest::NoCacheEntryFound(
       break;
   }
   mState = State::Fetching;
-}
-
-static bool IsInternalURIScheme(nsIURI* uri) {
-  return uri->SchemeIs("moz-extension") || uri->SchemeIs("resource") ||
-         uri->SchemeIs("moz-src") || uri->SchemeIs("chrome");
-}
-
-void ScriptLoadRequest::SetBaseURLFromChannelAndOriginalURI(
-    nsIChannel* aChannel, nsIURI* aOriginalURI) {
-  // Fixup moz-extension: and resource: URIs, because the channel URI will
-  // point to file:, which won't be allowed to load.
-  if (aOriginalURI && IsInternalURIScheme(aOriginalURI)) {
-    mBaseURL = aOriginalURI;
-  } else {
-    aChannel->GetURI(getter_AddRefs(mBaseURL));
-  }
 }
 
 }  // namespace JS::loader
