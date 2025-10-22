@@ -15,8 +15,8 @@
 #import "MOXSearchInfo.h"
 #import "MOXTextMarkerDelegate.h"
 #import "MOXWebAreaAccessible.h"
-#import "mozTextAccessible.h"
 #import "mozRootAccessible.h"
+#import "mozTextAccessible.h"
 
 #include "LocalAccessible-inl.h"
 #include "nsAccUtils.h"
@@ -161,6 +161,10 @@ using namespace mozilla::a11y;
 
   if (selector == @selector(moxExpanded)) {
     return [self stateWithMask:states::EXPANDABLE] == 0;
+  }
+
+  if ([self blockTextFieldMethod:selector]) {
+    return YES;
   }
 
   return [super moxBlockSelector:selector];
@@ -853,8 +857,8 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
 }
 
 - (id)moxEditableAncestor {
-  return [self moxFindAncestor:^BOOL(id moxAcc, BOOL* stop) {
-    return [moxAcc isKindOfClass:[mozTextAccessible class]];
+  return [self moxFindAncestor:^BOOL(id<MOXAccessible> moxAcc, BOOL* stop) {
+    return [moxAcc moxIsTextField];
   }];
 }
 
@@ -1073,13 +1077,6 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
   }
 
   return relations;
-}
-
-- (void)handleAccessibleTextChangeEvent:(NSString*)change
-                               inserted:(BOOL)isInserted
-                            inContainer:(Accessible*)container
-                                     at:(int32_t)start {
-  [self maybePostValidationErrorChanged];
 }
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
