@@ -17,7 +17,6 @@ common cases.
 import aiohttp
 import contextlib
 import datetime
-from datetime import timezone
 import hashlib
 
 from dateutil.parser import parse as dateparse
@@ -102,7 +101,8 @@ async def _getUrlDownload(name, downloadResp, objectService, writerFactory, sess
             writer = HashingWriter(await writerFactory())
 
             # if the downloadResp has been used at least once and has now expired,
-            if downloadRespUsed and dateparse(downloadResp["expires"]) < datetime.datetime.now(timezone.utc):
+            # get a new one before proceeding
+            if downloadRespUsed and dateparse(downloadResp["expires"]) < datetime.datetime.utcnow():
                 downloadResp = await ensureCoro(objectService.startDownload)(name, {
                     "acceptDownloadMethods": {
                         "getUrl": True,

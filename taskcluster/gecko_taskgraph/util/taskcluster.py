@@ -4,26 +4,32 @@
 
 
 import logging
+import os
 
+import taskcluster_urls as liburls
 from taskcluster import Hooks
 from taskgraph.util import taskcluster as tc_util
 from taskgraph.util.taskcluster import (
+    _do_request,
+    get_index_url,
     get_root_url,
     get_task_definition,
-    get_taskcluster_client,
+    get_task_url,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def insert_index(index_path, task_id, data=None, use_proxy=False):
-    # Find task expiry.
-    expires = get_task_definition(task_id)["expires"]
+    index_url = get_index_url(index_path, use_proxy=use_proxy)
 
-    index = get_taskcluster_client("index")
-    response = index.insertTask(
-        index_path,
-        {
+    # Find task expiry.
+    expires = get_task_definition(task_id, use_proxy)["expires"]
+
+    response = _do_request(
+        index_url,
+        method="put",
+        json={
             "taskId": task_id,
             "rank": 0,
             "data": data or {},
@@ -49,10 +55,9 @@ def status_task(task_id, use_proxy=False):
     if tc_util.testing:
         logger.info(f"Would have gotten status for {task_id}.")
     else:
-        queue = get_taskcluster_client("queue")
-        response = queue.status(task_id)
-        if response:
-            return response.get("status", {})
+        resp = _do_request(get_task_url(task_id, use_proxy) + "/status")
+        status = resp.json().get("status", {})
+        return status
 
 
 def state_task(task_id, use_proxy=False):
@@ -77,12 +82,12 @@ def state_task(task_id, use_proxy=False):
 
 
 def trigger_hook(hook_group_id, hook_id, hook_payload):
-    hooks = Hooks({"rootUrl": get_root_url()})
+    hooks = Hooks({"rootUrl": get_root_url(True)})
     response = hooks.triggerHook(hook_group_id, hook_id, hook_payload)
 
     logger.info(
         "Task seen here: {}/tasks/{}".format(
-            get_root_url(),
+            get_root_url(os.environ.get("TASKCLUSTER_PROXY_URL")),
             response["status"]["taskId"],
         )
     )
@@ -91,9 +96,14 @@ def trigger_hook(hook_group_id, hook_id, hook_payload):
 def list_task_group_tasks(task_group_id):
     """Generate the tasks in a task group"""
     params = {}
-    queue = get_taskcluster_client("queue")
     while True:
-        resp = queue.listTaskGroup(task_group_id, params)
+        url = liburls.api(
+            get_root_url(False),
+            "queue",
+            "v1",
+            f"task-group/{task_group_id}/list",
+        )
+        resp = _do_request(url, method="get", params=params).json()
         yield from resp["tasks"]
         if resp.get("continuationToken"):
             params = {"continuationToken": resp.get("continuationToken")}
@@ -119,5 +129,5 @@ def list_task_group_complete_tasks(task_group_id):
 
 
 def find_task(index_path, use_proxy=False):
-    index = get_taskcluster_client("index")
-    return index.findTask(index_path)
+    response = _do_request(get_index_url(index_path, use_proxy))
+    return response.json()

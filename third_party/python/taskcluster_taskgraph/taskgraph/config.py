@@ -8,6 +8,7 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Dict
 
 from voluptuous import ALLOW_EXTRA, All, Any, Extra, Length, Optional, Required
 
@@ -112,7 +113,7 @@ graph_config_schema = Schema(
 
 @dataclass(frozen=True, eq=False)
 class GraphConfig:
-    _config: dict
+    _config: Dict
     root_dir: str
 
     _PATH_MODIFIED = False

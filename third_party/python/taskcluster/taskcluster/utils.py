@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, print_function
 import re
 import json
 import datetime
-from datetime import timezone
 import base64
 import logging
 import os
@@ -110,7 +109,7 @@ def fromNow(offset, dateObj=None):
     )
 
     if not dateObj:
-        dateObj = datetime.datetime.now(timezone.utc)
+        dateObj = datetime.datetime.utcnow()
 
     return dateObj + delta if future else dateObj - delta
 
@@ -123,7 +122,7 @@ def fromNowJSON(offset):
 
 
 def dumpJson(obj, **kwargs):
-    """ Match JS's JSON.stringify.  When using the default separators,
+    """ Match JS's JSON.stringify.  When using the default seperators,
     base64 encoding JSON results in \n sequences in the output.  Hawk
     barfs in your face if you have that in the text"""
     def handleDateAndBinaryForJs(x):
@@ -217,10 +216,10 @@ def scopeMatch(assumedScopes, requiredScopeSets):
         for requiredScope in scopeSet:
             for scope in assumedScopes:
                 if scope == requiredScope:
-                    # requiredScope satisfied, no need to check more scopes
+                    # requiredScope satisifed, no need to check more scopes
                     break
                 if scope.endswith("*") and requiredScope.startswith(scope[:-1]):
-                    # requiredScope satisfied, no need to check more scopes
+                    # requiredScope satisifed, no need to check more scopes
                     break
             else:
                 # requiredScope not satisfied, stop checking scopeSet
@@ -274,7 +273,7 @@ def makeHttpRequest(method, url, payload, headers, retries=MAX_RETRIES, session=
         status = response.status_code
         if 500 <= status and status < 600 and retry < retries:
             if retry < retries:
-                log.warning('Retrying because of: %d status' % status)
+                log.warn('Retrying because of: %d status' % status)
                 continue
             else:
                 raise exceptions.TaskclusterRestFailure("Unknown Server Error", superExc=None)
@@ -290,7 +289,7 @@ def makeSingleHttpRequest(method, url, payload, headers, session=None):
     log.debug('HTTP Headers: %s' % str(headers))
     log.debug('HTTP Payload: %s (limit 100 char)' % str(payload)[:100])
     obj = session if session else requests
-    response = obj.request(method.upper(), url, data=payload, headers=headers, allow_redirects=True)
+    response = obj.request(method.upper(), url, data=payload, headers=headers, allow_redirects=False)
     log.debug('Received HTTP Status:    %s' % response.status_code)
     log.debug('Received HTTP Headers: %s' % str(response.headers))
 

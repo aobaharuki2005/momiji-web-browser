@@ -4,19 +4,12 @@
 
 
 import collections
-import functools
 from dataclasses import dataclass
-
-from .util.readonlydict import ReadOnlyDict
+from typing import FrozenSet
 
 
 @dataclass(frozen=True)
-class _Graph:
-    nodes: frozenset
-    edges: frozenset
-
-
-class Graph(_Graph):
+class Graph:
     """Generic representation of a directed acyclic graph with labeled edges
     connecting the nodes. Graph operations are implemented in a functional
     manner, so the data structure is immutable.
@@ -31,8 +24,8 @@ class Graph(_Graph):
     node `left` to node `right`..
     """
 
-    def __init__(self, nodes, edges):
-        super().__init__(frozenset(nodes), frozenset(edges))
+    nodes: FrozenSet
+    edges: FrozenSet
 
     def transitive_closure(self, nodes, reverse=False):
         """Return the transitive closure of <nodes>: the graph containing all
@@ -75,28 +68,23 @@ class Graph(_Graph):
             add_nodes = {(left if reverse else right) for (left, right, _) in add_edges}
             new_nodes = nodes | add_nodes
             new_edges = edges | add_edges
-        return Graph(new_nodes, new_edges)
+        return Graph(new_nodes, new_edges)  # type: ignore
 
     def _visit(self, reverse):
-        forward_links, reverse_links = self.links_and_reverse_links_dict()
-
-        dependencies = reverse_links if reverse else forward_links
-        dependents = forward_links if reverse else reverse_links
-
-        indegree = {node: len(dependencies[node]) for node in self.nodes}
-
-        queue = collections.deque(
-            node for node, degree in indegree.items() if degree == 0
-        )
-
+        queue = collections.deque(sorted(self.nodes))
+        links_by_node = self.reverse_links_dict() if reverse else self.links_dict()
+        seen = set()
         while queue:
             node = queue.popleft()
-            yield node
-
-            for dependent in dependents[node]:
-                indegree[dependent] -= 1
-                if indegree[dependent] == 0:
-                    queue.append(dependent)
+            if node in seen:
+                continue
+            links = links_by_node[node]
+            if all((n in seen) for n in links):
+                seen.add(node)
+                yield node
+            else:
+                queue.extend(n for n in links if n not in seen)
+                queue.append(node)
 
     def visit_postorder(self):
         """
@@ -114,30 +102,6 @@ class Graph(_Graph):
         any nodes it links to.
         """
         return self._visit(True)
-
-    @functools.cache
-    def links_and_reverse_links_dict(self):
-        """
-        Return both links and reverse_links dictionaries.
-        Returns a (forward_links, reverse_links) tuple where forward_links maps
-        each node to the set of nodes it links to, and reverse_links maps each
-        node to the set of nodes linking to it.
-
-        Because the return value is cached, this function returns a pair of
-        `ReadOnlyDict` instead of defaultdicts like its `links_dict` and
-        `reverse_links_dict` counterparts to avoid consumers modifying the
-        cached value by mistake.
-        """
-        forward = {node: set() for node in self.nodes}
-        reverse = {node: set() for node in self.nodes}
-        for left, right, _ in self.edges:
-            forward[left].add(right)
-            reverse[right].add(left)
-
-        return (
-            ReadOnlyDict({key: frozenset(value) for key, value in forward.items()}),
-            ReadOnlyDict({key: frozenset(value) for key, value in reverse.items()}),
-        )
 
     def links_dict(self):
         """

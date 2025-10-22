@@ -2,15 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from collections.abc import Generator
-from typing import Any
+from typing import Any, Dict, Generator, Tuple
 
 from taskgraph.util.attributes import keymatch
 
 
 def iter_dot_path(
-    container: dict[str, Any], subfield: str
-) -> Generator[tuple[dict[str, Any], str], None, None]:
+    container: Dict[str, Any], subfield: str
+) -> Generator[Tuple[Dict[str, Any], str], None, None]:
     """Given a container and a subfield in dot path notation, yield the parent
     container of the dotpath's leaf node, along with the leaf node name that it
     contains.

@@ -14,7 +14,6 @@ from taskgraph.generator import TaskGraphGenerator
 from taskgraph.parameters import parameters_loader
 
 here = os.path.abspath(os.path.dirname(__file__))
-ROOT_URL = "https://firefox-ci-tc.services.mozilla.com"
 
 
 @pytest.fixture(scope="session")
@@ -69,9 +68,7 @@ def create_tgg(responses, datadir):
 
         # Still allow other real requests.
         responses.add_passthru("https://hg.mozilla.org")
-        responses.add_passthru(ROOT_URL)
-        if proxy_url := os.environ.get("TASKCLUSTER_PROXY_URL"):
-            responses.add_passthru(proxy_url)
+        responses.add_passthru("https://firefox-ci-tc.services.mozilla.com")
         return tgg
 
     return inner

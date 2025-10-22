@@ -30,13 +30,13 @@ def is_json(data):
     return True
 
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def read_taskcluster_yml(filename):
     """Load and parse .taskcluster.yml, cached to save some time"""
     return yaml.load_yaml(filename)
 
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def hash_taskcluster_yml(filename):
     """
     Generate a hash of the given .taskcluster.yml.  This is the first 10 digits

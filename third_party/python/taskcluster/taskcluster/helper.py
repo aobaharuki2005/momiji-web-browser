@@ -6,7 +6,6 @@
 import os
 
 import datetime
-from datetime import timezone
 import logging
 import requests
 from taskcluster.generated import _client_importer
@@ -166,7 +165,7 @@ def upload_artifact(queue_service, artifact_path, content, content_type, ttl):
         artifact_path,
         {
             "storageType": "s3",
-            "expires": stringDate(datetime.datetime.now(timezone.utc) + ttl),
+            "expires": stringDate(datetime.datetime.utcnow() + ttl),
             "contentType": content_type,
         },
     )

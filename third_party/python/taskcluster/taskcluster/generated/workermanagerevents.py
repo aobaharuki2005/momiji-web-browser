@@ -44,8 +44,6 @@ class WorkerManagerEvents(BaseClient):
 
          * workerId: Worker ID
 
-         * launchConfigId: ID of the launch configuration
-
          * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
         """
 
@@ -79,10 +77,6 @@ class WorkerManagerEvents(BaseClient):
                     'name': 'workerId',
                 },
                 {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
                     'multipleWords': True,
                     'name': 'reserved',
                 },
@@ -112,8 +106,6 @@ class WorkerManagerEvents(BaseClient):
          * workerGroup: Worker group of the worker (region or location)
 
          * workerId: Worker ID
-
-         * launchConfigId: ID of the launch configuration
 
          * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
         """
@@ -148,10 +140,6 @@ class WorkerManagerEvents(BaseClient):
                     'name': 'workerId',
                 },
                 {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
                     'multipleWords': True,
                     'name': 'reserved',
                 },
@@ -182,8 +170,6 @@ class WorkerManagerEvents(BaseClient):
          * workerGroup: Worker group of the worker (region or location)
 
          * workerId: Worker ID
-
-         * launchConfigId: ID of the launch configuration
 
          * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
         """
@@ -218,10 +204,6 @@ class WorkerManagerEvents(BaseClient):
                     'name': 'workerId',
                 },
                 {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
                     'multipleWords': True,
                     'name': 'reserved',
                 },
@@ -250,8 +232,6 @@ class WorkerManagerEvents(BaseClient):
          * workerGroup: Worker group of the worker (region or location) (required)
 
          * workerId: Worker ID (required)
-
-         * launchConfigId: ID of the launch configuration
 
          * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
         """
@@ -286,10 +266,6 @@ class WorkerManagerEvents(BaseClient):
                     'name': 'workerId',
                 },
                 {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
                     'multipleWords': True,
                     'name': 'reserved',
                 },
@@ -319,8 +295,6 @@ class WorkerManagerEvents(BaseClient):
          * workerGroup: Worker group of the worker (region or location) (required)
 
          * workerId: Worker ID (required)
-
-         * launchConfigId: ID of the launch configuration
 
          * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
         """
@@ -355,10 +329,6 @@ class WorkerManagerEvents(BaseClient):
                     'name': 'workerId',
                 },
                 {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
                     'multipleWords': True,
                     'name': 'reserved',
                 },
@@ -388,8 +358,6 @@ class WorkerManagerEvents(BaseClient):
          * workerGroup: Worker group of the worker (region or location) (required)
 
          * workerId: Worker ID (required)
-
-         * launchConfigId: ID of the launch configuration
 
          * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
         """
@@ -424,10 +392,6 @@ class WorkerManagerEvents(BaseClient):
                     'name': 'workerId',
                 },
                 {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
                     'multipleWords': True,
                     'name': 'reserved',
                 },
@@ -458,8 +422,6 @@ class WorkerManagerEvents(BaseClient):
          * workerGroup: Worker group of the worker (region or location) (required)
 
          * workerId: Worker ID (required)
-
-         * launchConfigId: ID of the launch configuration
 
          * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
         """
@@ -494,219 +456,11 @@ class WorkerManagerEvents(BaseClient):
                     'name': 'workerId',
                 },
                 {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
                     'multipleWords': True,
                     'name': 'reserved',
                 },
             ],
             'schema': 'v1/pulse-worker-removed-message.json#',
-        }
-        return self._makeTopicExchange(ref, *args, **kwargs)
-
-    def launchConfigCreated(self, *args, **kwargs):
-        """
-        Launch Config Created Messages
-
-        Whenever a new launch configuration is created for a worker pool,
-        a message is posted to this exchange.
-
-        This exchange takes the following keys:
-
-         * routingKeyKind: Identifier for the routing-key kind. This is always `'primary'` for the formalized routing key. (required)
-
-         * providerId: Provider.
-
-         * provisionerId: First part of the workerPoolId.
-
-         * workerType: Second part of the workerPoolId.
-
-         * workerGroup: Worker group of the worker (region or location)
-
-         * workerId: Worker ID
-
-         * launchConfigId: ID of the launch configuration
-
-         * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
-        """
-
-        ref = {
-            'exchange': 'launch-config-created',
-            'name': 'launchConfigCreated',
-            'routingKey': [
-                {
-                    'constant': 'primary',
-                    'multipleWords': False,
-                    'name': 'routingKeyKind',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'providerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'provisionerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerType',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerGroup',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
-                    'multipleWords': True,
-                    'name': 'reserved',
-                },
-            ],
-            'schema': 'v1/pulse-launch-config-message.json#',
-        }
-        return self._makeTopicExchange(ref, *args, **kwargs)
-
-    def launchConfigUpdated(self, *args, **kwargs):
-        """
-        Launch Config Updated Messages
-
-        Whenever a launch configuration is updated for a worker pool,
-        a message is posted to this exchange.
-
-        This exchange takes the following keys:
-
-         * routingKeyKind: Identifier for the routing-key kind. This is always `'primary'` for the formalized routing key. (required)
-
-         * providerId: Provider.
-
-         * provisionerId: First part of the workerPoolId.
-
-         * workerType: Second part of the workerPoolId.
-
-         * workerGroup: Worker group of the worker (region or location)
-
-         * workerId: Worker ID
-
-         * launchConfigId: ID of the launch configuration
-
-         * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
-        """
-
-        ref = {
-            'exchange': 'launch-config-updated',
-            'name': 'launchConfigUpdated',
-            'routingKey': [
-                {
-                    'constant': 'primary',
-                    'multipleWords': False,
-                    'name': 'routingKeyKind',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'providerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'provisionerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerType',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerGroup',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
-                    'multipleWords': True,
-                    'name': 'reserved',
-                },
-            ],
-            'schema': 'v1/pulse-launch-config-message.json#',
-        }
-        return self._makeTopicExchange(ref, *args, **kwargs)
-
-    def launchConfigArchived(self, *args, **kwargs):
-        """
-        Launch Config Archived Messages
-
-        Whenever a launch configuration is archived for a worker pool,
-        a message is posted to this exchange.
-
-        This exchange takes the following keys:
-
-         * routingKeyKind: Identifier for the routing-key kind. This is always `'primary'` for the formalized routing key. (required)
-
-         * providerId: Provider.
-
-         * provisionerId: First part of the workerPoolId.
-
-         * workerType: Second part of the workerPoolId.
-
-         * workerGroup: Worker group of the worker (region or location)
-
-         * workerId: Worker ID
-
-         * launchConfigId: ID of the launch configuration
-
-         * reserved: Space reserved for future routing-key entries, you should always match this entry with `#`. As automatically done by our tooling, if not specified.
-        """
-
-        ref = {
-            'exchange': 'launch-config-archived',
-            'name': 'launchConfigArchived',
-            'routingKey': [
-                {
-                    'constant': 'primary',
-                    'multipleWords': False,
-                    'name': 'routingKeyKind',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'providerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'provisionerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerType',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerGroup',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'workerId',
-                },
-                {
-                    'multipleWords': False,
-                    'name': 'launchConfigId',
-                },
-                {
-                    'multipleWords': True,
-                    'name': 'reserved',
-                },
-            ],
-            'schema': 'v1/pulse-launch-config-message.json#',
         }
         return self._makeTopicExchange(ref, *args, **kwargs)
 

@@ -1,8 +1,6 @@
 import logging
 from datetime import datetime
 
-from taskcluster.exceptions import TaskclusterRestFailure
-
 from taskgraph.optimize.base import OptimizationStrategy, register_strategy
 from taskgraph.util.path import match as match_path
 from taskgraph.util.taskcluster import find_task_id, status_task
@@ -50,15 +48,14 @@ class IndexSearch(OptimizationStrategy):
                     status = status_task(task_id)
                 # status can be `None` if we're in `testing` mode
                 # (e.g. test-action-callback)
-                if not status or status.get("state") in ("exception", "failed"):  # type: ignore
+                if not status or status.get("state") in ("exception", "failed"):
                     logger.debug(
                         f"not replacing {task.label} with {task_id} because it is in failed or exception state"
                     )
                     continue
 
                 if deadline and datetime.strptime(
-                    status["expires"],  # type: ignore
-                    self.fmt,
+                    status["expires"], self.fmt
                 ) < datetime.strptime(deadline, self.fmt):
                     logger.debug(
                         f"not replacing {task.label} with {task_id} because it expires before {deadline}"
@@ -66,7 +63,7 @@ class IndexSearch(OptimizationStrategy):
                     continue
 
                 return task_id
-            except (KeyError, TaskclusterRestFailure):
+            except KeyError:
                 # go on to the next index path
                 pass
 

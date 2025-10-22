@@ -16,7 +16,7 @@ from collections import namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from textwrap import dedent
-from typing import Any
+from typing import Any, List
 from urllib.parse import urlparse
 
 import appdirs
@@ -412,7 +412,7 @@ def show_taskgraph(options):
     overrides = {
         "target-kinds": options.get("target_kinds"),
     }
-    parameters: list[Any[str, Parameters]] = options.pop("parameters")
+    parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
         parameters = [
             parameters_loader(None, strict=False, overrides=overrides)
@@ -572,6 +572,9 @@ def show_taskgraph(options):
     help="Relative path to the root of the Taskgraph definition.",
 )
 @argument(
+    "-t", "--tag", help="tag that the image should be built as.", metavar="name:tag"
+)
+@argument(
     "--context-only",
     help="File name the context tarball should be written to."
     "with this option it will only build the context.tar.",
@@ -579,16 +582,19 @@ def show_taskgraph(options):
 )
 def build_image(args):
     from taskgraph.config import load_graph_config  # noqa: PLC0415
-    from taskgraph.docker import build_image  # noqa: PLC0415
+    from taskgraph.docker import build_context, build_image  # noqa: PLC0415
 
     validate_docker()
-    graph_config = load_graph_config(args["root"])
 
-    return build_image(
-        graph_config,
-        args["image_name"],
-        args["context_only"],
-    )
+    root = args["root"]
+    graph_config = load_graph_config(root)
+
+    if args["context_only"] is None:
+        build_image(args["image_name"], args["tag"], graph_config, os.environ)
+    else:
+        build_context(
+            args["image_name"], args["context_only"], graph_config, os.environ
+        )
 
 
 @command(
@@ -668,21 +674,7 @@ def image_digest(args):
     "The task's payload.command will be replaced with 'bash'. You need to have "
     "docker installed and running for this to work.",
 )
-@argument(
-    "task",
-    help="The task id or definition to load into a docker container. Can use "
-    "'-' to read from stdin.",
-)
-@argument(
-    "-i",
-    "--interactive",
-    action="store_true",
-    default=False,
-    help="Setup the task but pause execution before executing its command. "
-    "Repositories will be cloned, environment variables will be set and an"
-    "executable script named `exec-task` will be provided to resume task "
-    "execution. Only supported for `run-task` based tasks.",
-)
+@argument("task_id", help="The task id to load into a docker container.")
 @argument(
     "--keep",
     dest="remove",
@@ -707,23 +699,14 @@ def image_digest(args):
 def load_task(args):
     from taskgraph.config import load_graph_config  # noqa: PLC0415
     from taskgraph.docker import load_task  # noqa: PLC0415
-    from taskgraph.util import json  # noqa: PLC0415
 
     validate_docker()
-
-    if args["task"] == "-":
-        data = sys.stdin.read()
-        try:
-            args["task"] = json.loads(data)
-        except ValueError:
-            args["task"] = data  # assume it is a taskId
 
     root = args["root"]
     graph_config = load_graph_config(root)
     return load_task(
         graph_config,
-        args["task"],
-        interactive=args["interactive"],
+        args["task_id"],
         remove=args["remove"],
         user=args["user"],
         custom_image=args["image"],
