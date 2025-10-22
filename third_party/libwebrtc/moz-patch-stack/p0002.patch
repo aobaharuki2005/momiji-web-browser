@@ -52,7 +52,7 @@ index 2d539e2e22..1e42998d4f 100644
      networkBehavior.loss_percent = 50;
  
 diff --git a/rtc_base/openssl_stream_adapter.cc b/rtc_base/openssl_stream_adapter.cc
-index 604a9465c7..0bf0d8ea62 100644
+index 50be6b5c26..8c952cd3a2 100644
 --- a/rtc_base/openssl_stream_adapter.cc
 +++ b/rtc_base/openssl_stream_adapter.cc
 @@ -852,10 +852,15 @@ void OpenSSLStreamAdapter::SetTimeout(int delay_ms) {

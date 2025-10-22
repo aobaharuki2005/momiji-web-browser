@@ -521,7 +521,7 @@ index 531130a876..fcaaee9eb7 100644
      x_display_->AddEventHandler(xfixes_event_base_ + XFixesCursorNotify, this);
  
 diff --git a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-index ce7312424b..d1898a2ea7 100644
+index 27b334f4f7..68ae5fea33 100644
 --- a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
 +++ b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
 @@ -307,7 +307,7 @@ bool ScreenCapturerX11::GetSourceList(SourceList* sources) {
