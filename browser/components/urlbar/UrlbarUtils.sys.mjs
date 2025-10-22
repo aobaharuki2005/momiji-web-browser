@@ -2937,7 +2937,6 @@ export class UrlbarProvider {
    *       },
    *       style: {
    *         someStyleProperty: someValue,
-   *         "another-style-property": someValue,
    *       },
    *       l10n: {
    *         id: someL10nId,

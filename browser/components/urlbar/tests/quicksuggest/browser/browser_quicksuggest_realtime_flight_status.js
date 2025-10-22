@@ -95,7 +95,7 @@ const TEST_MERINO_MULTI = [
               scheduled_time: "2025-09-02T18:32:00-02:00",
             },
             status: "En Route",
-            progress_percent: 0,
+            progress_percent: 72,
             time_left_minutes: 1,
             url: "https://example.com/A2",
           },
@@ -148,6 +148,90 @@ const TEST_MERINO_MULTI = [
             status: "Cancelled",
             url: "https://example.com/A4",
           },
+          // Delayed flight cases
+          {
+            flight_number: "D1",
+            airline: {
+              name: "Delay Air",
+              code: "D",
+              icon: "chrome://browser/skin/urlbar/market-down.svg",
+            },
+            origin: {
+              city: "Origin D1",
+              code: "OD1",
+            },
+            destination: {
+              city: "Destination D1",
+              code: "DD1",
+            },
+            departure: {
+              scheduled_time: "2025-09-05T14:05:00+1130",
+              estimated_time: "2025-09-05T15:05:00-1130",
+            },
+            arrival: {
+              scheduled_time: "2025-09-05T18:35:00Z",
+              estimated_time: "2025-09-05T19:35:00Z",
+            },
+            status: "Delayed",
+            delayed: true,
+            url: "https://example.com/D1",
+          },
+          {
+            flight_number: "D2",
+            airline: {
+              name: null,
+              code: null,
+              icon: null,
+            },
+            origin: {
+              city: "Origin D2",
+              code: "OD2",
+            },
+            destination: {
+              city: "Destination D2",
+              code: "DD2",
+            },
+            departure: {
+              scheduled_time: "2025-09-06T14:06:00Z",
+              estimated_time: "2025-09-06T15:06:00Z",
+            },
+            arrival: {
+              scheduled_time: "2025-09-06T18:36:00Z",
+              estimated_time: "2025-09-06T19:36:00Z",
+            },
+            status: "En Route",
+            time_left_minutes: 10,
+            delayed: true,
+            url: "https://example.com/D2",
+          },
+          {
+            flight_number: "D3",
+            airline: {
+              name: null,
+              code: null,
+              icon: null,
+            },
+            origin: {
+              city: "Origin D3",
+              code: "OD3",
+            },
+            destination: {
+              city: "Destination D3",
+              code: "DD3",
+            },
+            departure: {
+              scheduled_time: "2025-09-07T14:07:00Z",
+              estimated_time: "2025-09-07T15:07:00Z",
+            },
+            arrival: {
+              scheduled_time: "2025-09-07T18:37:00Z",
+              estimated_time: "2025-09-07T19:37:00Z",
+            },
+            status: "Arrived",
+            delayed: true,
+            time_left_minutes: 0,
+            url: "https://example.com/D3",
+          },
         ],
       },
     },
@@ -170,8 +254,14 @@ add_setup(async function () {
   });
 });
 
-add_task(async function ui_basic() {
+add_task(async function ui() {
   MerinoTestUtils.server.response.body.suggestions = TEST_MERINO_MULTI;
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "only match the Merino suggestion",
+  });
+  let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
 
   const expectedList = [
     {
@@ -186,7 +276,7 @@ add_task(async function ui_basic() {
     },
     {
       flight_number: "A2",
-      image: "",
+      image: "chrome://browser/skin/urlbar/flight-airline.svg",
       departure_time: "2:02 PM",
       departure_date: "Tue, September 2",
       arrival_time: "6:32 PM",
@@ -216,124 +306,9 @@ add_task(async function ui_basic() {
       destination_airport: "Destination 4 (D4)",
       status: "Cancelled",
     },
-  ];
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "only match the Merino suggestion",
-  });
-  let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-
-  await assertUI({ row: element.row, expectedList });
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  gURLBar.handleRevert();
-});
-
-add_task(async function ui_delayed() {
-  MerinoTestUtils.server.response.body.suggestions = [
-    {
-      provider: "flightaware",
-      is_sponsored: false,
-      score: 0,
-      title: "Flight Suggestion",
-      custom_details: {
-        flightaware: {
-          values: [
-            {
-              flight_number: "D1",
-              airline: {
-                name: "Delay Air",
-                code: "D",
-                icon: "chrome://browser/skin/urlbar/market-unchanged.svg",
-              },
-              origin: {
-                city: "Origin D1",
-                code: "OD1",
-              },
-              destination: {
-                city: "Destination D1",
-                code: "DD1",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:05:00+1130",
-                estimated_time: "2025-09-05T15:05:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:35:00Z",
-                estimated_time: "2025-09-05T19:35:00Z",
-              },
-              status: "Delayed",
-              delayed: true,
-              url: "https://example.com/D1",
-            },
-            {
-              flight_number: "D2",
-              airline: {
-                name: null,
-                code: null,
-                icon: null,
-              },
-              origin: {
-                city: "Origin D2",
-                code: "OD2",
-              },
-              destination: {
-                city: "Destination D2",
-                code: "DD2",
-              },
-              departure: {
-                scheduled_time: "2025-09-06T14:06:00Z",
-                estimated_time: "2025-09-06T15:06:00Z",
-              },
-              arrival: {
-                scheduled_time: "2025-09-06T18:36:00Z",
-                estimated_time: "2025-09-06T19:36:00Z",
-              },
-              status: "En Route",
-              progress_percent: 18,
-              time_left_minutes: 10,
-              delayed: true,
-              url: "https://example.com/D2",
-            },
-            {
-              flight_number: "D3",
-              airline: {
-                name: null,
-                code: null,
-                icon: null,
-              },
-              origin: {
-                city: "Origin D3",
-                code: "OD3",
-              },
-              destination: {
-                city: "Destination D3",
-                code: "DD3",
-              },
-              departure: {
-                scheduled_time: "2025-09-07T14:07:00Z",
-                estimated_time: "2025-09-07T15:07:00Z",
-              },
-              arrival: {
-                scheduled_time: "2025-09-07T18:37:00Z",
-                estimated_time: "2025-09-07T19:37:00Z",
-              },
-              status: "Arrived",
-              delayed: true,
-              time_left_minutes: 0,
-              url: "https://example.com/D3",
-            },
-          ],
-        },
-      },
-    },
-  ];
-
-  const expectedList = [
     {
       flight_number: "D1, Delay Air",
-      image: "chrome://browser/skin/urlbar/market-unchanged.svg",
+      image: "chrome://browser/skin/urlbar/market-down.svg",
       departure_time: "2:05 PM",
       departure_date: "Fri, September 5",
       arrival_time: "6:35 PM",
@@ -343,7 +318,7 @@ add_task(async function ui_delayed() {
     },
     {
       flight_number: "D2",
-      image: "",
+      image: "chrome://browser/skin/urlbar/flight-airline.svg",
       departure_time: "3:06 PM",
       departure_date: "Sat, September 6",
       arrival_time: "7:36 PM",
@@ -365,413 +340,6 @@ add_task(async function ui_delayed() {
     },
   ];
 
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "only match the Merino suggestion",
-  });
-  let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-
-  await assertUI({ row: element.row, expectedList });
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  gURLBar.handleRevert();
-});
-
-add_task(async function ui_inflight() {
-  MerinoTestUtils.server.response.body.suggestions = [
-    {
-      provider: "flightaware",
-      is_sponsored: false,
-      score: 0,
-      title: "Flight Suggestion",
-      custom_details: {
-        flightaware: {
-          values: [
-            {
-              flight_number: "I1",
-              airline: {
-                name: "In flight Air",
-                code: "I",
-                icon: "chrome://browser/skin/urlbar/flight-airline.svg",
-                color: "#f00",
-              },
-              origin: {
-                city: "Origin I1",
-                code: "OI1",
-              },
-              destination: {
-                city: "Destination I1",
-                code: "DI1",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:06:00+1130",
-                estimated_time: "2025-09-05T15:06:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:36:00Z",
-                estimated_time: "2025-09-05T19:36:00Z",
-              },
-              status: "En Route",
-              progress_percent: 0,
-              url: "https://example.com/I1",
-            },
-            {
-              flight_number: "I2",
-              airline: {
-                name: "In flight Up Air",
-                code: "IUP",
-                icon: "chrome://browser/skin/urlbar/market-up.svg",
-                color: null,
-              },
-              origin: {
-                city: "Origin I2",
-                code: "OI2",
-              },
-              destination: {
-                city: "Destination I2",
-                code: "DI2",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:07:00+1130",
-                estimated_time: "2025-09-05T15:07:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:37:00Z",
-                estimated_time: "2025-09-05T19:37:00Z",
-              },
-              status: "En Route",
-              progress_percent: 19,
-              url: "https://example.com/I2",
-            },
-            {
-              flight_number: "I3",
-              airline: {
-                name: "In flight Unchanged Air",
-                code: "IUN",
-                icon: "chrome://browser/skin/urlbar/market-unchanged.svg",
-                color: "#0f0",
-              },
-              origin: {
-                city: "Origin I3",
-                code: "OI3",
-              },
-              destination: {
-                city: "Destination I3",
-                code: "DI3",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:08:00+1130",
-                estimated_time: "2025-09-05T15:08:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:38:00Z",
-                estimated_time: "2025-09-05T19:38:00Z",
-              },
-              status: "En Route",
-              progress_percent: 20,
-              url: "https://example.com/I3",
-            },
-            {
-              flight_number: "I4",
-              airline: {
-                name: "In flight No Color Air",
-                code: "INC",
-                icon: "chrome://browser/skin/urlbar/flight-airline.svg",
-                color: null,
-              },
-              origin: {
-                city: "Origin I4",
-                code: "OI4",
-              },
-              destination: {
-                city: "Destination I4",
-                code: "DI4",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:09:00+1130",
-                estimated_time: "2025-09-05T15:09:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:39:00Z",
-                estimated_time: "2025-09-05T19:39:00Z",
-              },
-              status: "En Route",
-              progress_percent: 39,
-              url: "https://example.com/I4",
-            },
-            {
-              flight_number: "I5",
-              airline: {
-                name: null,
-                code: null,
-                icon: null,
-                color: "#00f",
-              },
-              origin: {
-                city: "Origin I5",
-                code: "OI5",
-              },
-              destination: {
-                city: "Destination I5",
-                code: "DI5",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:10:00+1130",
-                estimated_time: "2025-09-05T15:10:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:40:00Z",
-                estimated_time: "2025-09-05T19:40:00Z",
-              },
-              status: "En Route",
-              progress_percent: 40,
-              url: "https://example.com/I5",
-            },
-            {
-              flight_number: "I6",
-              airline: {
-                name: null,
-                code: null,
-                icon: null,
-                color: null,
-              },
-              origin: {
-                city: "Origin I6",
-                code: "OI6",
-              },
-              destination: {
-                city: "Destination I6",
-                code: "DI6",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:11:00+1130",
-                estimated_time: "2025-09-05T15:11:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:41:00Z",
-                estimated_time: "2025-09-05T19:41:00Z",
-              },
-              status: "En Route",
-              progress_percent: 59,
-              url: "https://example.com/I6",
-            },
-            {
-              flight_number: "I7",
-              airline: {
-                name: null,
-                code: null,
-                icon: null,
-                color: "#ff0",
-              },
-              origin: {
-                city: "Origin I7",
-                code: "OI7",
-              },
-              destination: {
-                city: "Destination I7",
-                code: "DI7",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:12:00+1130",
-                estimated_time: "2025-09-05T15:12:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:42:00Z",
-                estimated_time: "2025-09-05T19:42:00Z",
-              },
-              status: "En Route",
-              progress_percent: 60,
-              url: "https://example.com/I7",
-            },
-            {
-              flight_number: "I8",
-              airline: {
-                name: null,
-                code: null,
-                icon: null,
-                color: null,
-              },
-              origin: {
-                city: "Origin I8",
-                code: "OI8",
-              },
-              destination: {
-                city: "Destination I8",
-                code: "DI8",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:13:00+1130",
-                estimated_time: "2025-09-05T15:13:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:43:00Z",
-                estimated_time: "2025-09-05T19:43:00Z",
-              },
-              status: "En Route",
-              progress_percent: 79,
-              url: "https://example.com/I8",
-            },
-            {
-              flight_number: "I9",
-              airline: {
-                name: null,
-                code: null,
-                icon: null,
-                color: "#0ff",
-              },
-              origin: {
-                city: "Origin I9",
-                code: "OI9",
-              },
-              destination: {
-                city: "Destination I9",
-                code: "DI9",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:14:00+1130",
-                estimated_time: "2025-09-05T15:14:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:44:00Z",
-                estimated_time: "2025-09-05T19:44:00Z",
-              },
-              status: "En Route",
-              progress_percent: 80,
-              url: "https://example.com/I9",
-            },
-            {
-              flight_number: "I10",
-              airline: {
-                name: null,
-                code: null,
-                icon: null,
-                color: null,
-              },
-              origin: {
-                city: "Origin I10",
-                code: "OI10",
-              },
-              destination: {
-                city: "Destination I10",
-                code: "DI10",
-              },
-              departure: {
-                scheduled_time: "2025-09-05T14:15:00+1130",
-                estimated_time: "2025-09-05T15:15:00-1130",
-              },
-              arrival: {
-                scheduled_time: "2025-09-05T18:45:00Z",
-                estimated_time: "2025-09-05T19:45:00Z",
-              },
-              status: "En Route",
-              progress_percent: 100,
-              url: "https://example.com/I10",
-            },
-          ],
-        },
-      },
-    },
-  ];
-
-  const expectedList = [
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-0.svg",
-        fill: "rgb(255, 0, 0)",
-        stroke: "rgb(255, 0, 0)",
-      },
-      foreground: {
-        image: "chrome://browser/skin/urlbar/flight-airline.svg",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-0.svg",
-      },
-      foreground: {
-        image: "chrome://browser/skin/urlbar/market-up.svg",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-1.svg",
-        fill: "rgb(0, 255, 0)",
-        stroke: "rgb(0, 255, 0)",
-      },
-      foreground: {
-        image: "chrome://browser/skin/urlbar/market-unchanged.svg",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-1.svg",
-      },
-      foreground: {
-        image: "chrome://browser/skin/urlbar/flight-airline.svg",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-2.svg",
-        fill: "rgb(0, 0, 255)",
-        stroke: "rgb(0, 0, 255)",
-      },
-      foreground: {
-        image: "",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-2.svg",
-      },
-      foreground: {
-        image: "",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-3.svg",
-        fill: "rgb(255, 255, 0)",
-        stroke: "rgb(255, 255, 0)",
-      },
-      foreground: {
-        image: "",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-3.svg",
-      },
-      foreground: {
-        image: "",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-4.svg",
-        fill: "rgb(0, 255, 255)",
-        stroke: "rgb(0, 255, 255)",
-      },
-      foreground: {
-        image: "",
-      },
-    },
-    {
-      background: {
-        image: "chrome://browser/skin/urlbar/flight-inflight-progress-4.svg",
-      },
-      foreground: {
-        image: "",
-      },
-    },
-  ];
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "only match the Merino suggestion",
-  });
-  let { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-
   let items = element.row.querySelectorAll(".urlbarView-realtime-item");
   Assert.equal(items.length, expectedList.length);
 
@@ -781,25 +349,47 @@ add_task(async function ui_inflight() {
     let expected = expectedList[i];
 
     await TestUtils.waitForCondition(
-      () => item.querySelector(`[name=status_${i}]`).textContent == "In flight"
+      () =>
+        item.querySelector(`[name=status_${i}]`).textContent == expected.status,
+      "Wait until the status text will be applied by Fluent"
     );
-    let backgroundStyle = window.getComputedStyle(
-      item.querySelector(".urlbarView-realtime-image-container")
-    );
-    Assert.equal(
-      backgroundStyle.backgroundImage,
-      `url("${expected.background.image}")`
-    );
-
-    let expectedFillColor = expected.background.fill ?? "rgb(251, 251, 254)";
-    let expectedStrokeColor =
-      expected.background.stroke ?? "rgb(251, 251, 254)";
-    Assert.equal(backgroundStyle.fill, expectedFillColor);
-    Assert.equal(backgroundStyle.stroke, expectedStrokeColor);
     Assert.equal(
       item.querySelector(".urlbarView-realtime-image").src,
-      expected.foreground.image
+      expected.image
     );
+    Assert.equal(
+      item.querySelector(`[name=departure_time_${i}]`).textContent,
+      expected.departure_time
+    );
+    Assert.equal(
+      item.querySelector(`[name=departure_date_${i}]`).textContent,
+      expected.departure_date
+    );
+    Assert.equal(
+      item.querySelector(`[name=arrival_time_${i}]`).textContent,
+      expected.arrival_time
+    );
+    Assert.equal(
+      item.querySelector(`[name=origin_airport_${i}]`).textContent,
+      expected.origin_airport
+    );
+    Assert.equal(
+      item.querySelector(`[name=destination_airport_${i}]`).textContent,
+      expected.destination_airport
+    );
+    Assert.equal(
+      item.querySelector(`[name=flight_number_${i}]`).textContent,
+      expected.flight_number
+    );
+
+    let timeLeftMinutes = item.querySelector(`[name=time_left_minutes_${i}]`);
+    if (typeof expected.time_left_minutes != "undefined") {
+      Assert.equal(timeLeftMinutes.textContent, expected.time_left_minutes);
+    } else {
+      Assert.equal(timeLeftMinutes.textContent, "");
+      let previousSeparator = timeLeftMinutes.previousElementSibling;
+      Assert.ok(BrowserTestUtils.isHidden(previousSeparator));
+    }
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
@@ -901,56 +491,8 @@ add_task(async function activate_multi() {
   gURLBar.handleRevert();
 });
 
-async function assertUI({ row, expectedList }) {
-  let items = row.querySelectorAll(".urlbarView-realtime-item");
-  Assert.equal(items.length, expectedList.length);
-
-  for (let i = 0; i < items.length; i++) {
-    info(`Check the item[${i}]`);
-    let item = items[i];
-    let expected = expectedList[i];
-
-    await TestUtils.waitForCondition(
-      () =>
-        item.querySelector(`[name=status_${i}]`).textContent == expected.status,
-      "Wait until the status text will be applied by Fluent"
-    );
-    Assert.equal(
-      item.querySelector(".urlbarView-realtime-image").src,
-      expected.image
-    );
-    Assert.equal(
-      item.querySelector(`[name=departure_time_${i}]`).textContent,
-      expected.departure_time
-    );
-    Assert.equal(
-      item.querySelector(`[name=departure_date_${i}]`).textContent,
-      expected.departure_date
-    );
-    Assert.equal(
-      item.querySelector(`[name=arrival_time_${i}]`).textContent,
-      expected.arrival_time
-    );
-    Assert.equal(
-      item.querySelector(`[name=origin_airport_${i}]`).textContent,
-      expected.origin_airport
-    );
-    Assert.equal(
-      item.querySelector(`[name=destination_airport_${i}]`).textContent,
-      expected.destination_airport
-    );
-    Assert.equal(
-      item.querySelector(`[name=flight_number_${i}]`).textContent,
-      expected.flight_number
-    );
-
-    let timeLeftMinutes = item.querySelector(`[name=time_left_minutes_${i}]`);
-    if (typeof expected.time_left_minutes != "undefined") {
-      Assert.equal(timeLeftMinutes.textContent, expected.time_left_minutes);
-    } else {
-      Assert.equal(timeLeftMinutes.textContent, "");
-      let previousSeparator = timeLeftMinutes.previousElementSibling;
-      Assert.ok(BrowserTestUtils.isHidden(previousSeparator));
-    }
-  }
+function toDate(timeString) {
+  let time = new Date(timeString);
+  time.setMinutes(time.getMinutes() + time.getTimezoneOffset());
+  return time;
 }

@@ -2328,14 +2328,7 @@ export class UrlbarView {
       this.#updateElementForDynamicType(node, update, item, result);
       if (update.style) {
         for (let [styleName, value] of Object.entries(update.style)) {
-          if (styleName.includes("-")) {
-            // Expect hyphen-case. e.g. "background-image", "--a-variable".
-            node.style.setProperty(styleName, value);
-          } else {
-            // Expect camel-case. e.g. "backgroundImage"
-            // NOTE: If want to define the variable, please use hyphen-case.
-            node.style[styleName] = value;
-          }
+          node.style[styleName] = value;
         }
       }
       if (update.l10n) {

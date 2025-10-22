@@ -142,44 +142,20 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
           };
         }
 
-        let foregroundImage;
-        let backgroundImage;
-        if (status == "inflight") {
-          let backgroundImageId =
-            v.progress_percent == 100 ? 4 : Math.floor(v.progress_percent / 20);
-          backgroundImage = {
-            style: {
-              "--airline-color": v.airline.color,
-            },
-            attributes: {
-              backgroundImageId,
-              hasForegroundImage: !!v.airline.icon,
-            },
-          };
-          foregroundImage = {
-            attributes: {
-              src: v.airline.icon,
-            },
-          };
-        } else {
-          foregroundImage = {
-            attributes: {
-              src:
-                v.airline.icon ??
-                "chrome://browser/skin/urlbar/flight-airline.svg",
-              fallback: !v.airline.icon,
-            },
-          };
-        }
-
         return {
           [`item_${i}`]: {
             attributes: {
               status,
             },
           },
-          [`image_container_${i}`]: backgroundImage,
-          [`image_${i}`]: foregroundImage,
+          [`image_${i}`]: {
+            attributes: {
+              src:
+                v.airline.icon ??
+                "chrome://browser/skin/urlbar/flight-airline.svg",
+              fallback: !v.airline.icon,
+            },
+          },
           [`departure_time_${i}`]: {
             textContent: new Intl.DateTimeFormat(undefined, {
               hour: "numeric",
