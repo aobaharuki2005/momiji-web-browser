@@ -754,3 +754,84 @@ add_task(async function flexible_space_context_menu_customize_mode() {
   ok(!lastSpring.parentNode, "Spring should have been removed successfully.");
   await endCustomizing();
 });
+
+// Menu Bar spacer context menu
+add_task(async function menubar_spacer_context_menu() {
+  if (isOSX) {
+    info("Skipping test that requires menu bar.");
+    return;
+  }
+
+  let menubar = document.getElementById("toolbar-menubar");
+  menubar.removeAttribute("autohide");
+  ok(!menubar.hasAttribute("autohide"), "Menu bar is visible");
+  let spacer = menubar.querySelector("spacer");
+  ok(spacer, "Found menubar spacer");
+  await waitForElementShown(spacer);
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = popupShown(contextMenu);
+  EventUtils.synthesizeMouseAtCenter(spacer, {
+    type: "contextmenu",
+    button: 2,
+  });
+  await shownPromise;
+
+  let expectedEntries = [
+    ["#toolbar-context-toggle-vertical-tabs", true],
+    ["---"],
+    ["#toggle_toolbar-menubar", true],
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", true],
+  ];
+
+  checkContextMenu(contextMenu, expectedEntries);
+  let hiddenPromise = popupHidden(contextMenu);
+  contextMenu.hidePopup();
+  await hiddenPromise;
+  menubar.setAttribute("autohide", "true");
+  ok(menubar.hasAttribute("autohide"), "Menu bar is hidden");
+});
+
+//  Menu Bar spacer context menu in customization mode
+add_task(async function menu_bar_spacer_context_menu_customize_mode() {
+  if (isOSX) {
+    info("Skipping test that requires menu bar.");
+    return;
+  }
+
+  await startCustomizing();
+  let menubar = document.getElementById("toolbar-menubar");
+  menubar.removeAttribute("autohide");
+  ok(!menubar.hasAttribute("autohide"), "Menu bar is visible");
+  let spacer = menubar.querySelector("spacer");
+  ok(spacer, "Found menubar spacer");
+  await waitForElementShown(spacer);
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = popupShown(contextMenu);
+  EventUtils.synthesizeMouseAtCenter(spacer, {
+    type: "contextmenu",
+    button: 2,
+  });
+  await shownPromise;
+
+  let expectedEntries = [
+    ["#toolbar-context-toggle-vertical-tabs", true],
+    ["---"],
+    [".customize-context-moveToPanel", false],
+    [".customize-context-removeFromToolbar", false],
+    ["---"],
+    ["#toggle_toolbar-menubar", true],
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", false],
+  ];
+
+  checkContextMenu(contextMenu, expectedEntries);
+  let hiddenPromise = popupHidden(contextMenu);
+  contextMenu.hidePopup();
+  await hiddenPromise;
+  menubar.setAttribute("autohide", "true");
+  ok(menubar.hasAttribute("autohide"), "Menu bar is hidden");
+  await endCustomizing();
+});

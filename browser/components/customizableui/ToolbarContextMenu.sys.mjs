@@ -235,6 +235,10 @@ export var ToolbarContextMenu = {
 
     let isTitlebarSpacer = toolbarItem?.classList.contains("titlebar-spacer");
 
+    let isMenuBarSpacer =
+      toolbarItem?.localName == "spacer" &&
+      toolbarItem?.parentElement?.id == "toolbar-menubar";
+
     // Show/hide fullscreen context menu items and set the
     // autohide item's checked state to mirror the autohide pref.
     showFullScreenViewContextMenuItems(popup);
@@ -244,7 +248,8 @@ export var ToolbarContextMenu = {
     let showSidebarActions =
       ["tabbrowser-tabs", "sidebar-button"].includes(toolbarItem?.id) ||
       toolbarItem?.localName == "toolbarspring" ||
-      isTitlebarSpacer;
+      isTitlebarSpacer ||
+      isMenuBarSpacer;
 
     let toggleVerticalTabsItem = document.getElementById(
       "toolbar-context-toggle-vertical-tabs"
@@ -266,7 +271,7 @@ export var ToolbarContextMenu = {
       !showSidebarActions || isVerticalTabStripMenu;
     document.getElementById("customizationMenuSeparator").hidden =
       toolbarItem?.id == "tabbrowser-tabs" ||
-      (toolbarItem?.localName == "toolbarspring" &&
+      ((toolbarItem?.localName == "toolbarspring" || isMenuBarSpacer) &&
         !CustomizationHandler.isCustomizing());
 
     // View -> Toolbars menu doesn't have the moveToPanel or removeFromToolbar items.
