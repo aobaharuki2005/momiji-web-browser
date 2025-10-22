@@ -326,6 +326,15 @@ function isNodeHidden(node) {
     return true;
   }
 
+  // The element may still have a zero-sized bounding client rectangle.
+  const boundingClientRect = element.getBoundingClientRect();
+  if (
+    boundingClientRect &&
+    (boundingClientRect.width === 0 || boundingClientRect.height === 0)
+  ) {
+    return true;
+  }
+
   const { ownerGlobal } = element;
   if (!ownerGlobal) {
     // We cannot compute the style without ownerGlobal, so we will assume it is not visible.

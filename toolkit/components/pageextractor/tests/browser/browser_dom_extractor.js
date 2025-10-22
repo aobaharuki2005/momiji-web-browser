@@ -106,6 +106,21 @@ add_task(
         <!-- Hidden via opacity:0 -->
         <p style="opacity:0">Hidden via opacity:0</p>
 
+        <!-- Hidden via zero-sized block container -->
+        <div style="width:0; height:0; overflow:hidden">
+          <span>Inline text within zero-sized block container</span>
+        </div>
+
+        <!-- Hidden via zero-width block container (non-zero height only) -->
+        <div style="width:0; height:16px; overflow:hidden">
+          <span>Inline text within zero-width (height>0) block container</span>
+        </div>
+
+        <!-- Hidden via zero-height block container (non-zero width only) -->
+        <div style="width:16px; height:0; overflow:hidden">
+          <span>Inline text within zero-height (width>0) block container</span>
+        </div>
+
         <!-- Visible block within hidden inline container -->
         <span style="width:0; height:0; overflow:hidden">
           <div>Block text within zero-sized inline container</div>
