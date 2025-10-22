@@ -2088,6 +2088,21 @@
       }
     ]
   },
+  "1898936": {
+    "label": "app.stormx.io",
+    "bugs": {
+      "1898936": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://app.stormx.io/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1898915": {
     "label": "africanews.com",
     "bugs": {
