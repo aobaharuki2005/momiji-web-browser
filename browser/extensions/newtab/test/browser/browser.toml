@@ -22,6 +22,7 @@ prefs = [
 tags = "newtab"
 
 ["browser_SmartShortcuts.js"]
+skip-if = ["os == 'win' && os_version == '11.26100' && verify-standalone"]
 
 ["browser_TrendingSearch.js"]
 

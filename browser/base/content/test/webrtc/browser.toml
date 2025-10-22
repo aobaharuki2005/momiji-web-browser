@@ -54,6 +54,7 @@ skip-if = [
 
 ["browser_devices_get_user_media_default_permissions.js"]
 https_first_disabled = true
+skip-if = ["verify-standalone"]
 
 ["browser_devices_get_user_media_in_frame.js"]
 https_first_disabled = true
@@ -103,6 +104,7 @@ skip-if = [
   "os == 'mac' && os_version == '10.15' && processor == 'x86_64'", # Bug 1974591
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1974591
   "os == 'win' && !debug", # Bug 1775945
+  "verify-standalone",
 ]
 
 ["browser_devices_get_user_media_screen.js"]

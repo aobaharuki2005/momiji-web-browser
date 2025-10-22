@@ -250,6 +250,7 @@ support-files = [
   "green.png",
   "slow.sjs",
 ]
+skip-if = ["os == 'linux' && os_version == '24.04' && arch == 'x86_64' && debug && verify-standalone"]
 
 ["test_EventSource_redirects.html"]
 skip-if = [
@@ -676,6 +677,7 @@ support-files = ["file_bug503473-frame.sjs"]
 ["test_bug503481b.html"]
 
 ["test_bug513194.html"]
+skip-if = ["verify-standalone"]
 
 ["test_bug514487.html"]
 
@@ -1738,8 +1740,9 @@ support-files = ["file_viewport_metrics_on_landscape_content.html"]
 
 ["test_warning_for_blocked_cross_site_request.html"]
 skip-if = [
-  "http3",
   "http2",
+  "http3",
+  "debug && verify-standalone",
 ]
 
 ["test_window_close.html"]

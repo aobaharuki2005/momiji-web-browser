@@ -84,6 +84,7 @@ https_first_disabled = true
 ["browser_html_discover_view.js"]
 https_first_disabled = true
 support-files = ["head_disco.js"]
+skip-if = ["os == 'linux' && os_version == '24.04' && arch == 'x86_64' && opt && a11y_checks && swgl && verify-standalone"]
 
 ["browser_html_discover_view_clientid.js"]
 
@@ -123,6 +124,7 @@ https_first_disabled = true
 ["browser_html_warning_messages.js"]
 
 ["browser_installssl.js"]
+skip-if = ["verify-standalone"]
 
 ["browser_local_install.js"]
 

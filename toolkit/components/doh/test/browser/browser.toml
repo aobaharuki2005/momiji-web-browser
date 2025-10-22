@@ -25,6 +25,7 @@ skip-if = ["os == 'android'"] # browser-chrome tests don't work on android
 ["browser_throttle_heuristics.js"]
 
 ["browser_trrSelect.js"]
+skip-if = ["socketprocess_networking && verify-standalone"]
 
 ["browser_trrSelection_disable.js"]
 
