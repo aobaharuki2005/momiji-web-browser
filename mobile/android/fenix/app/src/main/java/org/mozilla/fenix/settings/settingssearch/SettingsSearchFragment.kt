@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import androidx.navigation.fragment.findNavController
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -53,9 +54,7 @@ class SettingsSearchFragment : Fragment() {
                 initialState = SettingsSearchState.Default,
                 middleware = listOf(
                     SettingsSearchMiddleware(
-                        SettingsSearchMiddleware.Companion.Dependencies(
-                            context = requireContext(),
-                         ),
+                        fenixSettingsIndexer = requireContext().components.settingsIndexer,
                     ),
                 ),
             )

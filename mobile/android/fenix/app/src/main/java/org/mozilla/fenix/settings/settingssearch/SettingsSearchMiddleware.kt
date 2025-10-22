@@ -4,21 +4,20 @@
 
 package org.mozilla.fenix.settings.settingssearch
 
-import android.content.Context
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 
 /**
  * [Middleware] for the settings search screen.
  *
- * @param initialDependencies [Dependencies] for the middleware.
  * @property fenixSettingsIndexer [SettingsIndexer] to use for indexing and querying settings.
  */
 class SettingsSearchMiddleware(
-    initialDependencies: Dependencies,
-    val fenixSettingsIndexer: SettingsIndexer = DefaultFenixSettingsIndexer(),
+    val fenixSettingsIndexer: SettingsIndexer,
 ) : Middleware<SettingsSearchState, SettingsSearchAction> {
-    var dependencies = initialDependencies
 
     init {
         fenixSettingsIndexer.indexAllSettings()
@@ -33,17 +32,18 @@ class SettingsSearchMiddleware(
         when (action) {
             is SettingsSearchAction.SearchQueryUpdated -> {
                 next(action)
-                val store = context.store as SettingsSearchStore
-                val results = fenixSettingsIndexer.getSettingsWithQuery(action.query)
-                if (results.isEmpty()) {
-                    store.dispatch(SettingsSearchAction.NoResultsFound(action.query))
-                } else {
-                    store.dispatch(
-                        SettingsSearchAction.SearchResultsLoaded(
-                            query = action.query,
-                            results = results,
-                        ),
-                    )
+                CoroutineScope(Dispatchers.Main).launch {
+                    val results = fenixSettingsIndexer.getSettingsWithQuery(action.query)
+                    if (results.isEmpty()) {
+                        store.dispatch(SettingsSearchAction.NoResultsFound(action.query))
+                    } else {
+                        store.dispatch(
+                            SettingsSearchAction.SearchResultsLoaded(
+                                query = action.query,
+                                results = results,
+                            ),
+                        )
+                    }
                 }
             }
             else -> {
@@ -51,9 +51,5 @@ class SettingsSearchMiddleware(
                 // no op in middleware layer
             }
         }
-    }
-
-    companion object {
-        data class Dependencies(val context: Context)
     }
 }
