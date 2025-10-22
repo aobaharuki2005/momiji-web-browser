@@ -7,6 +7,7 @@
 #ifndef DOM_COMPRESSION_BASEALGORITHMS_H_
 #define DOM_COMPRESSION_BASEALGORITHMS_H_
 
+#include "js/TypeDecls.h"
 #include "mozilla/dom/TransformerCallbackHelpers.h"
 
 namespace mozilla::dom::compression {
@@ -43,10 +44,19 @@ class DecompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
 
   ~DecompressionStreamAlgorithms() = default;
 
-  MOZ_CAN_RUN_SCRIPT
-  virtual void DecompressAndEnqueue(
+  /**
+   * @return true if the input is fully consumed, else false
+   */
+  virtual bool Decompress(JSContext* aCx, Span<const uint8_t> aInput,
+                          JS::MutableHandleVector<JSObject*> aOutput,
+                          Flush aFlush, ErrorResult& aRv) = 0;
+
+  bool mObservedStreamEnd = false;
+
+ private:
+  MOZ_CAN_RUN_SCRIPT void DecompressAndEnqueue(
       JSContext* aCx, Span<const uint8_t> aInput, Flush aFlush,
-      TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
+      TransformStreamDefaultController& aController, ErrorResult& aRv);
 };
 
 }  // namespace mozilla::dom::compression

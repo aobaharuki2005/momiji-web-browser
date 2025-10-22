@@ -13,6 +13,15 @@
 
 namespace mozilla::dom::compression {
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DecompressionStreamAlgorithms,
+                                   TransformerAlgorithmsBase)
+NS_IMPL_ADDREF_INHERITED(DecompressionStreamAlgorithms,
+                         TransformerAlgorithmsBase)
+NS_IMPL_RELEASE_INHERITED(DecompressionStreamAlgorithms,
+                          TransformerAlgorithmsBase)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DecompressionStreamAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(TransformerAlgorithmsBase)
+
 // Step 3 of
 // https://wicg.github.io/compression/#dom-decompressionstream-decompressionstream
 // Let transformAlgorithm be an algorithm which takes a chunk argument and
@@ -65,17 +74,55 @@ MOZ_CAN_RUN_SCRIPT void DecompressionStreamAlgorithms::FlushCallbackImpl(
 
   // Step 1: Let buffer be the result of decompressing an empty input with
   // ds's format and context, with the finish flag.
-  // Step 2 - 4: (Done in DecompressAndEnqueue)
+  // Step 2 - 6: (Done in DecompressAndEnqueue)
   DecompressAndEnqueue(cx, Span<const uint8_t>(), Flush::Yes, aController, aRv);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DecompressionStreamAlgorithms,
-                                   TransformerAlgorithmsBase)
-NS_IMPL_ADDREF_INHERITED(DecompressionStreamAlgorithms,
-                         TransformerAlgorithmsBase)
-NS_IMPL_RELEASE_INHERITED(DecompressionStreamAlgorithms,
-                          TransformerAlgorithmsBase)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DecompressionStreamAlgorithms)
-NS_INTERFACE_MAP_END_INHERITING(TransformerAlgorithmsBase)
+// Shared by:
+// https://wicg.github.io/compression/#decompress-and-enqueue-a-chunk
+// https://wicg.github.io/compression/#decompress-flush-and-enqueue
+MOZ_CAN_RUN_SCRIPT void DecompressionStreamAlgorithms::DecompressAndEnqueue(
+    JSContext* aCx, Span<const uint8_t> aInput, Flush aFlush,
+    TransformStreamDefaultController& aController, ErrorResult& aRv) {
+  MOZ_ASSERT_IF(aFlush == Flush::Yes, !aInput.Length());
+
+  JS::RootedVector<JSObject*> array(aCx);
+
+  // Step 2: Let buffer be the result of decompressing chunk with ds’s format
+  // and context. If this results in an error, then throw a TypeError.
+  // Step 3: If buffer is empty, return.
+  // (Skipping, see https://github.com/whatwg/compression/issues/78)
+  // Step 4: Let arrays be the result of splitting buffer into one or more
+  // non-empty pieces and converting them into Uint8Arrays.
+  bool fullyConsumed = Decompress(aCx, aInput, &array, aFlush, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Step 5: For each Uint8Array array, enqueue array in ds's transform.
+  for (const auto& view : array) {
+    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*view));
+    aController.Enqueue(aCx, value, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+
+  // Step 6: If the end of the compressed input has been reached, and ds's
+  // context has not fully consumed chunk, then throw a TypeError.
+  if (mObservedStreamEnd && !fullyConsumed) {
+    aRv.ThrowTypeError("Unexpected input after the end of stream");
+    return;
+  }
+
+  // Step 3 of
+  // https://wicg.github.io/compression/#decompress-flush-and-enqueue
+  // If the end of the compressed input has not been reached, then throw a
+  // TypeError.
+  if (aFlush == Flush::Yes && !mObservedStreamEnd) {
+    aRv.ThrowTypeError("The input is ended without reaching the stream end");
+    return;
+  }
+}
 
 }  // namespace mozilla::dom::compression
