@@ -1772,7 +1772,7 @@ main section {
 }
 
 @media (height > 700px) {
-  .fixed-search .search-wrapper {
+  .activity-stream .fixed-search .search-wrapper {
     border-bottom: solid 1px var(--newtab-border-color);
     padding: var(--space-xlarge) 0;
     background-color: var(--newtab-overlay-color);
@@ -1782,31 +1782,33 @@ main section {
     inset-block-start: 0;
     width: 100%;
     z-index: 3;
+    display: flex;
+    align-items: center;
   }
-  .fixed-search .search-wrapper .search-inner-wrapper {
+  .activity-stream .fixed-search .search-wrapper .search-inner-wrapper {
     min-height: 52px;
   }
-  .fixed-search .search-wrapper input {
+  .activity-stream .fixed-search .search-wrapper input {
     background-position-x: 16px;
     background-size: 24px;
   }
-  .fixed-search .search-wrapper input:dir(rtl) {
+  .activity-stream .fixed-search .search-wrapper input:dir(rtl) {
     background-position-x: right 16px;
   }
-  .fixed-search .search-wrapper .search-handoff-button .fake-caret {
+  .activity-stream .fixed-search .search-wrapper .search-handoff-button .fake-caret {
     inset-block-start: var(--space-large);
   }
-  .fixed-search .search-wrapper .logo-and-wordmark {
+  .activity-stream .fixed-search .search-wrapper .logo-and-wordmark {
     display: none;
   }
-  .fixed-search .search-handoff-button {
+  .activity-stream .fixed-search .search-handoff-button {
     background-position-x: var(--space-large);
     background-size: 24px;
   }
-  .fixed-search .search-handoff-button:dir(rtl) {
+  .activity-stream .fixed-search .search-handoff-button:dir(rtl) {
     background-position-x: right var(--space-large);
   }
-  .fixed-search .search-handoff-button .fake-caret {
+  .activity-stream .fixed-search .search-handoff-button .fake-caret {
     inset-block-start: var(--space-small);
   }
 }
