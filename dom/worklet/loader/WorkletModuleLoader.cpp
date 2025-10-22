@@ -83,7 +83,7 @@ already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateRequest(
       ModuleLoadRequest::Kind::StaticImport, this, root);
 
   request->mURL = request->mURI->GetSpecOrDefault();
-  request->NoCacheEntryFound(aReferrerPolicy, aOptions);
+  request->NoCacheEntryFound(aReferrerPolicy, aOptions, aURI);
   return request.forget();
 }
 

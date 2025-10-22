@@ -488,8 +488,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   void TryUseCache(
       ReferrerPolicy aReferrerPolicy, ScriptFetchOptions* aFetchOptions,
-      ScriptLoadRequest* aRequest, nsIScriptElement* aElement = nullptr,
-      const nsAString& aNonce = u""_ns,
+      nsIURI* aURI, ScriptLoadRequest* aRequest,
+      nsIScriptElement* aElement = nullptr, const nsAString& aNonce = u""_ns,
       ScriptLoadRequestType aRequestType = ScriptLoadRequestType::External);
 
   /**

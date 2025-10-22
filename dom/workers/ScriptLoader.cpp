@@ -735,7 +735,7 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   // Set the mURL, it will be used for error handling and debugging.
   request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
 
-  request->NoCacheEntryFound(referrerPolicy, fetchOptions);
+  request->NoCacheEntryFound(referrerPolicy, fetchOptions, uri);
 
   return request.forget();
 }

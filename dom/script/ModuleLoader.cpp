@@ -454,7 +454,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
       aURI, JS::ModuleType::JavaScript, aIntegrity, aReferrer, aContext,
       ModuleLoadRequest::Kind::TopLevel, this, nullptr);
 
-  GetScriptLoader()->TryUseCache(aReferrerPolicy, aFetchOptions, request,
+  GetScriptLoader()->TryUseCache(aReferrerPolicy, aFetchOptions, aURI, request,
                                  aElement, aFetchOptions->mNonce, aRequestType);
 
   return request.forget();
@@ -486,7 +486,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateRequest(
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, moduleType, aSriMetadata, aBaseURL, context, kind, this, root);
 
-  GetScriptLoader()->TryUseCache(aReferrerPolicy, aOptions, request);
+  GetScriptLoader()->TryUseCache(aReferrerPolicy, aOptions, aURI, request);
 
   return request.forget();
 }

@@ -100,7 +100,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateRequest(
       aURI, moduleType, SRIMetadata(), aBaseURL, loadContext, kind, this, root);
 
   request->mURL = request->mURI->GetSpecOrDefault();
-  request->NoCacheEntryFound(aReferrerPolicy, aOptions);
+  request->NoCacheEntryFound(aReferrerPolicy, aOptions, aURI);
   return request.forget();
 }
 
