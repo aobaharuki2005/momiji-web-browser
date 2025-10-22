@@ -1144,18 +1144,20 @@ already_AddRefed<ScriptLoadRequest> ScriptLoader::CreateLoadRequest(
   RefPtr<ScriptLoadRequest> request = new ScriptLoadRequest(
       aKind, aURI, fetchOptions, aIntegrity, referrer, context);
 
-  TryUseCache(aReferrerPolicy, request, aElement, aNonce, aRequestType);
+  TryUseCache(aReferrerPolicy, fetchOptions, request, aElement, aNonce,
+              aRequestType);
 
   return request.forget();
 }
 
 void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
+                               ScriptFetchOptions* aFetchOptions,
                                ScriptLoadRequest* aRequest,
                                nsIScriptElement* aElement,
                                const nsAString& aNonce,
                                ScriptLoadRequestType aRequestType) {
   if (aRequestType == ScriptLoadRequestType::Inline) {
-    aRequest->NoCacheEntryFound(aReferrerPolicy);
+    aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions);
     LOG(
         ("ScriptLoader (%p): Created LoadedScript (%p) for "
          "ScriptLoadRequest(%p) %s.",
@@ -1165,7 +1167,7 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
   }
 
   if (!mCache) {
-    aRequest->NoCacheEntryFound(aReferrerPolicy);
+    aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions);
     LOG(
         ("ScriptLoader (%p): Created LoadedScript (%p) for "
          "ScriptLoadRequest(%p) %s.",
@@ -1177,7 +1179,7 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
   ScriptHashKey key(this, aRequest, aRequest->mFetchOptions, aRequest->mURI);
   auto cacheResult = mCache->Lookup(*this, key, /* aSyncLoad = */ true);
   if (cacheResult.mState != CachedSubResourceState::Complete) {
-    aRequest->NoCacheEntryFound(aReferrerPolicy);
+    aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions);
     LOG(
         ("ScriptLoader (%p): Created LoadedScript (%p) for "
          "ScriptLoadRequest(%p) %s.",
@@ -1192,7 +1194,7 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
     if (NS_FAILED(CheckContentPolicy(aElement, aNonce, aRequest,
                                      aRequest->mFetchOptions,
                                      aRequest->mURI))) {
-      aRequest->NoCacheEntryFound(aReferrerPolicy);
+      aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions);
       LOG(
           ("ScriptLoader (%p): Created LoadedScript (%p) for "
            "ScriptLoadRequest(%p) %s.",
@@ -1205,6 +1207,8 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
   aRequest->mNetworkMetadata = cacheResult.mNetworkMetadata;
 
   MOZ_ASSERT(cacheResult.mCompleteValue->ReferrerPolicy() == aReferrerPolicy);
+  MOZ_ASSERT(aFetchOptions->IsCompatible(
+      cacheResult.mCompleteValue->GetFetchOptions()));
 
   aRequest->CacheEntryFound(cacheResult.mCompleteValue);
   LOG(

@@ -172,7 +172,8 @@ class ScriptLoadRequest : public nsISupports,
   // Convert a CheckingCache ScriptLoadRequest into a Fetching one, by creating
   // a new LoadedScript which is matching the ScriptKind provided when
   // constructing this ScriptLoadRequest.
-  void NoCacheEntryFound(mozilla::dom::ReferrerPolicy aReferrerPolicy);
+  void NoCacheEntryFound(mozilla::dom::ReferrerPolicy aReferrerPolicy,
+                         ScriptFetchOptions* aFetchOptions);
 
   bool PassedConditionForDiskCache() const {
     return mDiskCachingPlan == CachingPlan::PassedCondition;

@@ -177,8 +177,6 @@ void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript) {
   MOZ_ASSERT(IsCheckingCache());
   MOZ_ASSERT(mURI);
 
-  MOZ_ASSERT(mFetchOptions->IsCompatible(aLoadedScript->GetFetchOptions()));
-
   switch (mKind) {
     case ScriptKind::eClassic:
       MOZ_ASSERT(aLoadedScript->IsClassicScript());
@@ -223,12 +221,14 @@ void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript) {
 }
 
 void ScriptLoadRequest::NoCacheEntryFound(
-    mozilla::dom::ReferrerPolicy aReferrerPolicy) {
+    mozilla::dom::ReferrerPolicy aReferrerPolicy,
+    ScriptFetchOptions* aFetchOptions) {
   MOZ_ASSERT(IsCheckingCache());
   MOZ_ASSERT(mURI);
   // At the time where we check in the cache, the mBaseURL is not set, as this
   // is resolved by the network. Thus we use the mURI, for checking the cache
   // and later replace the mBaseURL using what the Channel->GetURI will provide.
+  MOZ_ASSERT(mFetchOptions == aFetchOptions);
   switch (mKind) {
     case ScriptKind::eClassic:
       mLoadedScript = new ClassicScript(aReferrerPolicy, mFetchOptions, mURI);
