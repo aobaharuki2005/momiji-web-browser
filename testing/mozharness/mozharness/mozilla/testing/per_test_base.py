@@ -188,7 +188,7 @@ class SingleTestMixin:
                 )
                 continue
 
-            if mozinfo["fission"] and (
+            if mozinfo.info["fission"] and (
                 (entry[0] == "mochitest-a11y") or (entry[0] == "mochitest-chrome")
             ):
                 self.info(
