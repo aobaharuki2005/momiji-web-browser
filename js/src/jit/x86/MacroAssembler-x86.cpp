@@ -959,15 +959,15 @@ void MacroAssembler::moveValue(const Value& src, const ValueOperand& dest) {
 // Arithmetic functions
 
 void MacroAssembler::flexibleQuotientPtr(
-    Register rhs, Register srcDest, bool isUnsigned,
+    Register lhs, Register rhs, Register dest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  flexibleQuotient32(rhs, srcDest, isUnsigned, volatileLiveRegs);
+  flexibleQuotient32(lhs, rhs, dest, isUnsigned, volatileLiveRegs);
 }
 
 void MacroAssembler::flexibleRemainderPtr(
-    Register rhs, Register srcDest, bool isUnsigned,
+    Register lhs, Register rhs, Register dest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  flexibleRemainder32(rhs, srcDest, isUnsigned, volatileLiveRegs);
+  flexibleRemainder32(lhs, rhs, dest, isUnsigned, volatileLiveRegs);
 }
 
 // ===============================================================

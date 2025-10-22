@@ -3274,48 +3274,47 @@ void MacroAssembler::atomicEffectOpJS(Scalar::Type arrayType,
 
 void MacroAssembler::atomicPause() { Isb(); }
 
-void MacroAssembler::flexibleQuotient32(Register rhs, Register srcDest,
-                                        bool isUnsigned,
+void MacroAssembler::flexibleQuotient32(Register lhs, Register rhs,
+                                        Register dest, bool isUnsigned,
                                         const LiveRegisterSet&) {
-  quotient32(rhs, srcDest, isUnsigned);
+  quotient32(lhs, rhs, dest, isUnsigned);
 }
 
 void MacroAssembler::flexibleQuotientPtr(
-    Register rhs, Register srcDest, bool isUnsigned,
+    Register lhs, Register rhs, Register dest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  quotient64(rhs, srcDest, isUnsigned);
+  quotient64(lhs, rhs, dest, isUnsigned);
 }
 
-void MacroAssembler::flexibleRemainder32(Register rhs, Register srcDest,
-                                         bool isUnsigned,
+void MacroAssembler::flexibleRemainder32(Register lhs, Register rhs,
+                                         Register dest, bool isUnsigned,
                                          const LiveRegisterSet&) {
-  remainder32(rhs, srcDest, isUnsigned);
+  remainder32(lhs, rhs, dest, isUnsigned);
 }
 
 void MacroAssembler::flexibleRemainderPtr(
-    Register rhs, Register srcDest, bool isUnsigned,
+    Register lhs, Register rhs, Register dest, bool isUnsigned,
     const LiveRegisterSet& volatileLiveRegs) {
-  remainder64(rhs, srcDest, isUnsigned);
+  remainder64(lhs, rhs, dest, isUnsigned);
 }
 
-void MacroAssembler::flexibleDivMod32(Register rhs, Register srcDest,
-                                      Register remOutput, bool isUnsigned,
-                                      const LiveRegisterSet&) {
-  vixl::UseScratchRegisterScope temps(this);
-  ARMRegister src = temps.AcquireW();
-
-  // Preserve src for remainder computation
-  Mov(src, ARMRegister(srcDest, 32));
+void MacroAssembler::flexibleDivMod32(Register lhs, Register rhs,
+                                      Register divOutput, Register remOutput,
+                                      bool isUnsigned, const LiveRegisterSet&) {
+  MOZ_ASSERT(lhs != divOutput && lhs != remOutput, "lhs is preserved");
+  MOZ_ASSERT(rhs != divOutput && rhs != remOutput, "rhs is preserved");
 
   if (isUnsigned) {
-    Udiv(ARMRegister(srcDest, 32), src, ARMRegister(rhs, 32));
+    Udiv(ARMRegister(divOutput, 32), ARMRegister(lhs, 32),
+         ARMRegister(rhs, 32));
   } else {
-    Sdiv(ARMRegister(srcDest, 32), src, ARMRegister(rhs, 32));
+    Sdiv(ARMRegister(divOutput, 32), ARMRegister(lhs, 32),
+         ARMRegister(rhs, 32));
   }
 
-  // Compute the remainder: remOutput = src - (srcDest * rhs).
-  Msub(/* result= */ ARMRegister(remOutput, 32), ARMRegister(srcDest, 32),
-       ARMRegister(rhs, 32), src);
+  // Compute the remainder: remOutput = lhs - (divOutput * rhs).
+  Msub(/* result= */ ARMRegister(remOutput, 32), ARMRegister(divOutput, 32),
+       ARMRegister(rhs, 32), ARMRegister(lhs, 32));
 }
 
 CodeOffset MacroAssembler::moveNearAddressWithPatch(Register dest) {

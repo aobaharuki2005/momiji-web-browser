@@ -76,8 +76,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
                            X86Encoding::XMMRegisterID destId));
 
  protected:
-  void flexibleDivMod64(Register rhs, Register lhsOutput, bool isUnsigned,
-                        bool isDiv);
+  void flexibleDivMod64(Register lhs, Register rhs, Register output,
+                        bool isUnsigned, bool isDiv);
 
  public:
   using MacroAssemblerX86Shared::load32;
