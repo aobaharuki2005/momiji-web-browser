@@ -2015,6 +2015,21 @@ bool WinUtils::MicaPopupsEnabled() {
   return !lf->NeedsMicaWorkaround();
 }
 
+static BOOL CALLBACK InvalidateWindowPreviewsProc(HWND aHwnd, LPARAM aLParam) {
+  if (RefPtr<nsWindow> window = WinUtils::GetNSWindowPtr(aHwnd)) {
+    RefPtr<nsITaskbarWindowPreview> taskbarPreview =
+        window->GetTaskbarPreview();
+    if (taskbarPreview) {
+      taskbarPreview->Invalidate();
+    }
+  }
+  return TRUE;
+}
+
+void WinUtils::InvalidateWindowPreviews() {
+  ::EnumWindows(InvalidateWindowPreviewsProc, 0);
+}
+
 // There are undocumented APIs to query/change the system DPI settings found by
 // https://github.com/lihas/ . We use those APIs only for testing purpose, i.e.
 // in mochitests or some such. To avoid exposing them in our official release

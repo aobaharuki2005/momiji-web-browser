@@ -569,6 +569,8 @@ class WinUtils {
 
   static nsresult GetProcessImageName(DWORD aProcessId, nsAString& aName);
 
+  static void InvalidateWindowPreviews();
+
  private:
   static WhitelistVec BuildWhitelist();
 
