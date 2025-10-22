@@ -4962,16 +4962,64 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
 
   const bool isSecondaryButton =
       aMouseEvent->mButton == MouseButton::eSecondary;
-  if (isSecondaryButton &&
-      !MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
-          *frameselection, *aMouseEvent, *offsets.content,
-          // When we collapse selection in nsFrameSelection::TakeFocus,
-          // we always collapse selection to the start offset.  Therefore,
-          // we can ignore the end offset here.  E.g., when an <img> is clicked,
-          // set the primary offset to after it, but the the secondary offset
-          // may be before it, see OffsetsForSingleFrame for the detail.
-          offsets.StartOffset())) {
-    return NS_OK;
+  if (isSecondaryButton) {
+    const bool rightClickSelectIsEnabled =
+        StaticPrefs::ui_mouse_right_click_select_under_cursor();
+    const bool allowEditable =
+        StaticPrefs::ui_mouse_right_click_select_in_editable();
+    const bool isEditableHere =
+        offsets.content && offsets.content->IsEditable();
+    const bool selectClickedWord =
+        rightClickSelectIsEnabled && (!isEditableHere || allowEditable);
+    // On right-click, collapse the selection to the click point if enabled
+    // in prefs, and either the target isn't editable or editable fields are
+    // allowed.
+
+    // sel is grabbed by hideSelectionChanges, so, it's safe to access this even
+    // after running script.
+    const OwningNonNull<Selection> sel = frameselection->NormalSelection();
+    const SelectionBatcher hideSelectionChanges(
+        *sel, __FUNCTION__, nsISelectionListener::MOUSEDOWN_REASON);
+    const bool clickedOnCaret =
+        sel->IsCollapsed() && sel->GetAnchorNode() == offsets.content &&
+        sel->AnchorOffset() == static_cast<uint32_t>(offsets.StartOffset());
+    if (offsets.content && offsets.offset >= 0 && selectClickedWord &&
+        !nsContentUtils::IsPointInSelection(
+            *sel, *offsets.content, static_cast<uint32_t>(offsets.offset),
+            true)) {
+      // Collapse selection to the clicked point.
+      nsCOMPtr<nsIContent> content = offsets.content;
+      fc->HandleClick(content, offsets.StartOffset(), offsets.EndOffset(),
+                      nsFrameSelection::FocusMode::kCollapseToNewPoint,
+                      offsets.associate);
+    }
+
+    if (!MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
+            *frameselection, *aMouseEvent, *offsets.content,
+            // When we collapse selection in nsFrameSelection::TakeFocus,
+            // we always collapse selection to the start offset.  Therefore,
+            // we can ignore the end offset here.  E.g., when an <img> is
+            // clicked, set the primary offset to after it, but the the
+            // secondary offset may be before it, see OffsetsForSingleFrame for
+            // the detail.
+            offsets.StartOffset())) {
+      return NS_OK;
+    }
+
+    if (selectClickedWord) {
+      // Skip word selection when right-clicking directly on the caret in an
+      // editable field. Users typically right-click here to open the context
+      // menu, not to select text.
+      if (isEditableHere && clickedOnCaret) {
+        return NS_OK;
+      }
+      nsIFrame* frameUnderPoint =
+          nsLayoutUtils::GetFrameForPoint(RelativeTo{this}, pt);
+      if (!frameUnderPoint->IsTextFrame()) {
+        return NS_OK;
+      }
+      return SelectByTypeAtPoint(pt, eSelectWord, eSelectWord, 0);
+    }
   }
 
   if (aMouseEvent->mMessage == eMouseDown &&

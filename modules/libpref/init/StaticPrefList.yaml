@@ -18305,6 +18305,22 @@
   value: false
   mirror: always
 
+# When true, right-clicking selects the word/link under the cursor.
+- name: ui.mouse.right_click.select_under_cursor
+  type: bool
+#ifdef XP_MACOSX
+  value: @EARLY_BETA_OR_EARLIER@
+#else
+  value: false
+#endif
+  mirror: always
+
+# When true, right-clicking selects the word under the cursor in editable
+- name: ui.mouse.right_click.select_in_editable
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "urlclassifier."
 #---------------------------------------------------------------------------

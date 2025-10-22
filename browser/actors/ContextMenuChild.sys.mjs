@@ -662,13 +662,44 @@ export class ContextMenuChild extends JSWindowActorChild {
       } catch (e) {}
     }
 
-    let selectionInfo = lazy.SelectionUtils.getSelectionDetails(
-      this.contentWindow
-    );
-
     this._setContext(aEvent);
     let context = this.context;
     this.target = context.target;
+
+    // If right-click select is enabled, we're on a link, and the link
+    // text is not selected, select the link text.
+    if (
+      context.onLink &&
+      Services.prefs.getBoolPref(
+        "ui.mouse.right_click.select_under_cursor",
+        false
+      )
+    ) {
+      // Check if user-select: none is set on the link or its ancestors
+      let shouldSelect = true;
+      let elem = context.link;
+      while (elem && shouldSelect) {
+        if (this.contentWindow.getComputedStyle(elem).userSelect === "none") {
+          shouldSelect = false;
+        }
+        elem = elem.parentElement;
+      }
+
+      if (shouldSelect) {
+        const range = this.document.createRange();
+        range.selectNodeContents(context.link);
+        if (range.toString().trim().length) {
+          const sel = this.contentWindow.getSelection();
+          if (sel.isCollapsed || !sel.containsNode(context.link, true)) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
+      }
+    }
+    let selectionInfo = lazy.SelectionUtils.getSelectionDetails(
+      this.contentWindow
+    );
 
     let spellInfo = null;
     let editFlags = null;
@@ -1218,7 +1249,6 @@ export class ContextMenuChild extends JSWindowActorChild {
           context.onTelLink = context.linkProtocol == "tel";
           context.onMozExtLink = context.linkProtocol == "moz-extension";
           context.onSaveableLink = this._isLinkSaveable(context.link);
-
           context.isSponsoredLink =
             (elem.ownerDocument.URL === "about:newtab" ||
               elem.ownerDocument.URL === "about:home") &&
