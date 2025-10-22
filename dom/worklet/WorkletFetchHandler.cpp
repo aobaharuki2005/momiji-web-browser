@@ -119,7 +119,7 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
       moduleLoader, nullptr);
 
   request->mURL = request->mURI->GetSpecOrDefault();
-  request->NoCacheEntryFound();
+  request->NoCacheEntryFound(ReferrerPolicy::_empty);
 
   return request->StartModuleLoad();
 }
