@@ -12,11 +12,17 @@ import mozilla.components.lib.state.MiddlewareContext
  * [Middleware] for the settings search screen.
  *
  * @param initialDependencies [Dependencies] for the middleware.
+ * @property fenixSettingsIndexer [SettingsIndexer] to use for indexing and querying settings.
  */
 class SettingsSearchMiddleware(
     initialDependencies: Dependencies,
+    val fenixSettingsIndexer: SettingsIndexer = DefaultFenixSettingsIndexer(),
 ) : Middleware<SettingsSearchState, SettingsSearchAction> {
     var dependencies = initialDependencies
+
+    init {
+        fenixSettingsIndexer.indexAllSettings()
+    }
 
     override fun invoke(
         context: MiddlewareContext<SettingsSearchState, SettingsSearchAction>,
@@ -27,14 +33,22 @@ class SettingsSearchMiddleware(
         when (action) {
             is SettingsSearchAction.SearchQueryUpdated -> {
                 next(action)
-
-                if (action.query.isNotBlank()) {
+                val store = context.store as SettingsSearchStore
+                val results = fenixSettingsIndexer.getSettingsWithQuery(action.query)
+                if (results.isEmpty()) {
                     store.dispatch(SettingsSearchAction.NoResultsFound(action.query))
+                } else {
+                    store.dispatch(
+                        SettingsSearchAction.SearchResultsLoaded(
+                            query = action.query,
+                            results = results,
+                        ),
+                    )
                 }
             }
             else -> {
                 next(action)
-                // no op
+                // no op in middleware layer
             }
         }
     }

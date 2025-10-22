@@ -25,16 +25,12 @@ class SettingsSearchFragment : Fragment() {
 
     lateinit var settingsSearchStore: SettingsSearchStore
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        settingsSearchStore = buildSettingsSearchStore()
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View = content {
+        settingsSearchStore = buildSettingsSearchStore()
         (activity as? AppCompatActivity)?.supportActionBar?.hide()
         FirefoxTheme {
             SettingsSearchScreen(
