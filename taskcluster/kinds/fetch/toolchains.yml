@@ -240,19 +240,19 @@ wine:
         strip-components: 1
         add-prefix: wine-source/
 
-cbindgen-0.27.0:
-    description: cbindgen 0.27 source code
+cbindgen-0.29.1:
+    description: cbindgen 0.29.1 source code
     fetch:
         type: git
         repo: https://github.com/mozilla/cbindgen
-        revision: 58c6156b0d91e82abb03c26187b8d18fa4345ce0
+        revision: eef17769e2739ebb425fee0bbd88e6a52ac2a4e1
 
 cbindgen:
-    description: cbindgen 0.28 source code
+    description: cbindgen 0.29.1 source code
     fetch:
         type: git
         repo: https://github.com/mozilla/cbindgen
-        revision: bd78bbe59b10eda6ef1255e4acda95c56c6d0279
+        revision: eef17769e2739ebb425fee0bbd88e6a52ac2a4e1
 
 cctools-port:
     description: cctools-port source code
