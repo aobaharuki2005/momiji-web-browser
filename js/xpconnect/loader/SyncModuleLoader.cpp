@@ -83,7 +83,7 @@ already_AddRefed<ModuleLoadRequest> SyncModuleLoader::CreateRequest(
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, moduleType, aReferrerPolicy, aOptions, dom::SRIMetadata(), aBaseURL,
       context, kind, this, root);
-  request->NoCacheEntryFound();
+  request->NoCacheEntryFound(aReferrerPolicy);
   return request.forget();
 }
 
