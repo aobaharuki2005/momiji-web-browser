@@ -3221,6 +3221,21 @@
       }
     ]
   },
+  "1902463": {
+    "label": "stage.metareal.com",
+    "bugs": {
+      "1902463": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://stage.metareal.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1902450": {
     "label": "hilokal.com",
     "bugs": {
