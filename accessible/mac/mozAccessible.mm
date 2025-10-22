@@ -292,6 +292,17 @@ using namespace mozilla::a11y;
 }
 
 - (NSString*)moxRole {
+  if (mRole == roles::ENTRY ||
+      (mGeckoAccessible->IsGeneric() && mGeckoAccessible->IsEditableRoot())) {
+    if ([self stateWithMask:states::MULTI_LINE]) {
+      // This is a special case where we have a separate role when an entry is a
+      // multiline text area.
+      return NSAccessibilityTextAreaRole;
+    }
+
+    return NSAccessibilityTextFieldRole;
+  }
+
 #define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
              msaaRole, ia2Role, androidClass, iosIsElement, uiaControlType, \
              nameRule)                                                      \

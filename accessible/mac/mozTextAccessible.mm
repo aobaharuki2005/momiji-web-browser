@@ -61,14 +61,6 @@ inline NSString* ToNSString(id aValue) {
   return (lineNumber >= 0) ? [NSNumber numberWithInt:lineNumber] : nil;
 }
 
-- (NSString*)moxRole {
-  if (mRole == roles::ENTRY && [self stateWithMask:states::MULTI_LINE]) {
-    return NSAccessibilityTextAreaRole;
-  }
-
-  return [super moxRole];
-}
-
 - (NSNumber*)moxNumberOfCharacters {
   return @([self textLength]);
 }
