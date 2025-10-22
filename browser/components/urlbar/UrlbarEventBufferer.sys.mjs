@@ -160,18 +160,11 @@ export class UrlbarEventBufferer {
    *        the event.
    */
   deferEvent(event, callback) {
-    // TODO Bug 1536822: once one-off buttons are implemented, figure out if the
-    // following is true for the quantum bar as well: somehow event.defaultPrevented
-    // ends up true for deferred events.  Autocomplete ignores defaultPrevented
-    // events, which means it would ignore replayed deferred events if we didn't
-    // tell it to bypass defaultPrevented through urlbarDeferred.
     // Check we don't try to defer events more than once.
-    if (event.urlbarDeferred) {
+    if (this.#eventsQueue.find(item => item.event == event)) {
       throw new Error(`Event ${event.type}:${event.keyCode} already deferred!`);
     }
     lazy.logger.debug(`Deferring ${event.type}:${event.keyCode} event`);
-    // Mark the event as deferred.
-    event.urlbarDeferred = true;
     // Also store the current search string, as an added safety check. If the
     // string will differ later, the event is stale and should be dropped.
     event.searchString = this.#lastQuery.context.searchString;
