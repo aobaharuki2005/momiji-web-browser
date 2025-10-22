@@ -36,7 +36,6 @@
 #  define FREEDESKTOP_PORTAL_DESKTOP_TARGET "org.freedesktop.portal.Desktop"
 #  define FREEDESKTOP_PORTAL_DESKTOP_OBJECT "/org/freedesktop/portal/desktop"
 #  define FREEDESKTOP_PORTAL_DESKTOP_INTERFACE "org.freedesktop.portal.Inhibit"
-#  define FREEDESKTOP_PORTAL_DESKTOP_INHIBIT_SUSPEND_FLAG 4
 #  define FREEDESKTOP_PORTAL_DESKTOP_INHIBIT_IDLE_FLAG 8
 
 #  define FREEDESKTOP_SCREENSAVER_TARGET "org.freedesktop.ScreenSaver"
@@ -50,8 +49,6 @@
 #  define SESSION_MANAGER_TARGET "org.gnome.SessionManager"
 #  define SESSION_MANAGER_OBJECT "/org/gnome/SessionManager"
 #  define SESSION_MANAGER_INTERFACE "org.gnome.SessionManager"
-#  define SESSION_MANAGER_INHIBIT_SUSPEND_FLAG 4
-#  define SESSION_MANAGER_INHIBIT_IDLE_FLAG 8
 
 #  define DBUS_TIMEOUT (-1)
 #endif
@@ -159,11 +156,9 @@ class WakeLockTopic {
  public:
   NS_INLINE_DECL_REFCOUNTING(WakeLockTopic)
 
-  WakeLockTopic(const nsAString& aTopic, bool aLockOnBackground)
-      : mLockOnBackground(aLockOnBackground) {
+  explicit WakeLockTopic(const nsAString& aTopic) {
     CopyUTF16toUTF8(aTopic, mTopic);
-    WAKE_LOCK_LOG("WakeLockTopic::WakeLockTopic() created %s on background %d",
-                  mTopic.get(), mLockOnBackground);
+    WAKE_LOCK_LOG("WakeLockTopic::WakeLockTopic() created %s", mTopic.get());
     if (mTopic.Equals("video-playing")) {
       nsCString videoPlayingString = []() -> nsCString {
         auto string = GetLocalizedWakeLockString("WakeLockVideoPlaying");
@@ -283,7 +278,6 @@ class WakeLockTopic {
   int mUninhibitAttempts = 5;
 #endif
 
-  const bool mLockOnBackground = false;
   std::queue<WakeLockState> mStateQueue;
   static int sWakeLockType;
 };
@@ -478,8 +472,7 @@ void WakeLockTopic::DBusUninhibitScreensaver(const char* aName,
 }
 
 void WakeLockTopic::InhibitFreeDesktopPortal() {
-  WAKE_LOCK_LOG("WakeLockTopic::InhibitFreeDesktopPortal() background %d",
-                mLockOnBackground);
+  WAKE_LOCK_LOG("WakeLockTopic::InhibitFreeDesktopPortal()");
 
   MOZ_DIAGNOSTIC_ASSERT(!mCancellable);
   MOZ_DIAGNOSTIC_ASSERT(mState == WaitingToInhibit);
@@ -500,16 +493,13 @@ void WakeLockTopic::InhibitFreeDesktopPortal() {
             g_variant_builder_init(&b, G_VARIANT_TYPE_VARDICT);
             g_variant_builder_add(&b, "{sv}", "reason",
                                   g_variant_new_string(self->mNiceTopic.get()));
+
             // From
             // https://flatpak.github.io/xdg-desktop-portal/docs/#gdbus-org.freedesktop.portal.Inhibit
             DBusProxyCall(
                 aProxy.get(), "Inhibit",
-                g_variant_new(
-                    "(sua{sv})", g_get_prgname(),
-                    mLockOnBackground
-                        ? FREEDESKTOP_PORTAL_DESKTOP_INHIBIT_SUSPEND_FLAG
-                        : FREEDESKTOP_PORTAL_DESKTOP_INHIBIT_IDLE_FLAG,
-                    &b),
+                g_variant_new("(sua{sv})", g_get_prgname(),
+                              FREEDESKTOP_PORTAL_DESKTOP_INHIBIT_IDLE_FLAG, &b),
                 G_DBUS_CALL_FLAGS_NONE, DBUS_TIMEOUT, mCancellable)
                 ->Then(
                     GetCurrentSerialEventTarget(), __func__,
@@ -550,8 +540,6 @@ void WakeLockTopic::InhibitFreeDesktopPortal() {
 
 void WakeLockTopic::InhibitFreeDesktopScreensaver() {
   WAKE_LOCK_LOG("InhibitFreeDesktopScreensaver()");
-  MOZ_DIAGNOSTIC_ASSERT(!mLockOnBackground,
-                        "Background lock is not supported.");
   DBusInhibitScreensaver(FREEDESKTOP_SCREENSAVER_TARGET,
                          FREEDESKTOP_SCREENSAVER_OBJECT,
                          FREEDESKTOP_SCREENSAVER_INTERFACE, "Inhibit",
@@ -561,8 +549,6 @@ void WakeLockTopic::InhibitFreeDesktopScreensaver() {
 
 void WakeLockTopic::InhibitFreeDesktopPower() {
   WAKE_LOCK_LOG("InhibitFreeDesktopPower()");
-  MOZ_DIAGNOSTIC_ASSERT(!mLockOnBackground,
-                        "Background lock is not supported.");
   DBusInhibitScreensaver(FREEDESKTOP_POWER_TARGET, FREEDESKTOP_POWER_OBJECT,
                          FREEDESKTOP_POWER_INTERFACE, "Inhibit",
                          dont_AddRef(g_variant_ref_sink(g_variant_new(
@@ -570,11 +556,9 @@ void WakeLockTopic::InhibitFreeDesktopPower() {
 }
 
 void WakeLockTopic::InhibitGNOME() {
-  WAKE_LOCK_LOG("InhibitGNOME() background %d", mLockOnBackground);
+  WAKE_LOCK_LOG("InhibitGNOME()");
   static const uint32_t xid = 0;
-  static const uint32_t flags = mLockOnBackground
-                                    ? SESSION_MANAGER_INHIBIT_SUSPEND_FLAG
-                                    : SESSION_MANAGER_INHIBIT_IDLE_FLAG;
+  static const uint32_t flags = (1 << 3);  // Inhibit idle
   DBusInhibitScreensaver(
       SESSION_MANAGER_TARGET, SESSION_MANAGER_OBJECT, SESSION_MANAGER_INTERFACE,
       "Inhibit",
@@ -928,19 +912,14 @@ void WakeLockTopic::Shutdown() {
 bool WakeLockTopic::IsWakeLockTypeAvailable(int aWakeLockType) {
   switch (aWakeLockType) {
 #if defined(MOZ_ENABLE_DBUS)
+    case FreeDesktopPortal:
     case FreeDesktopScreensaver:
     case FreeDesktopPower:
-      // Doesn't support background inihibit
-      return !mLockOnBackground;
-    case FreeDesktopPortal:
     case GNOME:
       return true;
 #endif
 #if defined(MOZ_X11)
     case XScreenSaver:
-      if (mLockOnBackground) {
-        return false;
-      }
       if (!GdkIsX11Display()) {
         return false;
       }
@@ -952,9 +931,6 @@ bool WakeLockTopic::IsWakeLockTypeAvailable(int aWakeLockType) {
 #endif
 #if defined(MOZ_WAYLAND)
     case WaylandIdleInhibit:
-      if (mLockOnBackground) {
-        return false;
-      }
       if (!GdkIsWaylandDisplay()) {
         return false;
       }
@@ -985,19 +961,17 @@ bool WakeLockTopic::IsNativeWakeLock(int aWakeLockType) {
 }
 
 void WakeLockTopic::InitializeWakeLockType() {
-  if (!mLockOnBackground) {
-    int lock = GetWakeLockTypeFromEnv();
-    if (lock != Initial) {
-      WAKE_LOCK_LOG("MOZ_WAKE_LOCK_TYPE set: %s", WakeLockTypeNames[lock]);
-      if (IsWakeLockTypeAvailable(lock)) {
-        sWakeLockType = lock;
-        return;
-      }
-      WAKE_LOCK_LOG(
-          "Requested WakeLockType %s not available, falling back to "
-          "auto-detection",
-          WakeLockTypeNames[lock]);
+  int lock = GetWakeLockTypeFromEnv();
+  if (lock != Initial) {
+    WAKE_LOCK_LOG("MOZ_WAKE_LOCK_TYPE set: %s", WakeLockTypeNames[lock]);
+    if (IsWakeLockTypeAvailable(lock)) {
+      sWakeLockType = lock;
+      return;
     }
+    WAKE_LOCK_LOG(
+        "Requested WakeLockType %s not available, falling back to "
+        "auto-detection",
+        WakeLockTypeNames[lock]);
   }
   // Fall back to automatic detection
   SwitchToNextWakeLockType();
@@ -1031,8 +1005,6 @@ bool WakeLockTopic::SwitchToNextWakeLockType() {
     if (IsWakeLockTypeAvailable(sWakeLockType)) {
       return true;
     }
-    WAKE_LOCK_LOG("  WakeLockType %s is not available",
-                  WakeLockTypeNames[sWakeLockType]);
   }
   return false;
 }
@@ -1040,35 +1012,26 @@ bool WakeLockTopic::SwitchToNextWakeLockType() {
 WakeLockListener::WakeLockListener() = default;
 
 WakeLockListener::~WakeLockListener() {
-  for (const auto& topic : mForegroundTopics.Values()) {
-    topic->Shutdown();
-  }
-  for (const auto& topic : mBackgroundTopics.Values()) {
+  for (const auto& topic : mTopics.Values()) {
     topic->Shutdown();
   }
 }
 
 nsresult WakeLockListener::Callback(const nsAString& topic,
                                     const nsAString& state) {
-  WAKE_LOCK_LOG("WakeLockListener::Callback() topic %s state %s",
-                NS_ConvertUTF16toUTF8(topic).get(),
-                NS_ConvertUTF16toUTF8(state).get());
   if (!topic.Equals(u"screen"_ns) && !topic.Equals(u"video-playing"_ns) &&
-      !topic.Equals(u"autoscroll"_ns) && !topic.Equals(u"audio-playing"_ns)) {
+      !topic.Equals(u"autoscroll"_ns)) {
     return NS_OK;
   }
 
-  bool backgroundLock = !(topic.Equals(u"video-playing"_ns) &&
-                          state.EqualsLiteral("locked-foreground"));
-  bool shouldLock = state.EqualsLiteral("locked-background") ||
-                    state.EqualsLiteral("locked-foreground");
+  RefPtr<WakeLockTopic> topicLock = mTopics.LookupOrInsertWith(
+      topic, [&] { return MakeRefPtr<WakeLockTopic>(topic); });
 
-  nsRefPtrHashtable<nsStringHashKey, WakeLockTopic>* topicTable =
-      backgroundLock ? &mBackgroundTopics : &mForegroundTopics;
-  RefPtr<WakeLockTopic> topicLock = topicTable->LookupOrInsertWith(
-      topic, [&] { return MakeRefPtr<WakeLockTopic>(topic, backgroundLock); });
-  WAKE_LOCK_LOG("Adding WakeLockListener lock %d background %d", shouldLock,
-                backgroundLock);
+  // Treat "locked-background" the same as "unlocked" on desktop linux.
+  bool shouldLock = state.EqualsLiteral("locked-foreground");
+  WAKE_LOCK_LOG("WakeLockListener topic %s state %s request lock %d",
+                NS_ConvertUTF16toUTF8(topic).get(),
+                NS_ConvertUTF16toUTF8(state).get(), shouldLock);
 
   return shouldLock ? topicLock->InhibitScreensaver()
                     : topicLock->UninhibitScreensaver();
