@@ -16,20 +16,26 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.UrlbarUtils.getLogger({ prefix: "EventBufferer" })
 );
 
-// Array of keyCodes to defer.
+/**
+ * Array of keyCodes to defer.
+ *
+ * @type {Set<number>}
+ */
 const DEFERRED_KEY_CODES = new Set([
   KeyboardEvent.DOM_VK_RETURN,
   KeyboardEvent.DOM_VK_DOWN,
   KeyboardEvent.DOM_VK_TAB,
 ]);
 
-// Status of the current or last query.
-const QUERY_STATUS = {
+/**
+ * Status of the current or last query.
+ */
+const QUERY_STATUS = Object.freeze({
   UKNOWN: 0,
   RUNNING: 1,
   RUNNING_GOT_ALL_HEURISTIC_RESULTS: 2,
   COMPLETE: 3,
-};
+});
 
 /**
  * The UrlbarEventBufferer can queue up events and replay them later, to make
@@ -61,20 +67,7 @@ export class UrlbarEventBufferer {
     this.input = input;
     this.input.inputField.addEventListener("blur", this);
 
-    // A queue of {event, callback} objects representing deferred events.
-    // The callback is invoked when it's the right time to handle the event,
-    // but it may also never be invoked, if the context changed and the event
-    // became obsolete.
-    this._eventsQueue = [];
-    // If this timer fires, we will unconditionally replay all the deferred
-    // events so that, after a certain point, we don't keep blocking the user's
-    // actions, when nothing else has caused the events to be replayed.
-    // At that point we won't check whether it's safe to replay the events,
-    // because otherwise it may look like we ignored the user's actions.
-    this._deferringTimeout = null;
-
-    // Tracks the current or last query status.
-    this._lastQuery = {
+    this.#lastQuery = {
       // The time at which the current or last search was started. This is used
       // to check how much time passed while deferring the user's actions. Must
       // be set using the monotonic ChromeUtils.now() helper.
@@ -91,30 +84,30 @@ export class UrlbarEventBufferer {
 
   // UrlbarController listener methods.
   onQueryStarted(queryContext) {
-    this._lastQuery = {
+    this.#lastQuery = {
       startDate: ChromeUtils.now(),
       status: QUERY_STATUS.RUNNING,
       context: queryContext,
     };
-    if (this._deferringTimeout) {
-      lazy.clearTimeout(this._deferringTimeout);
-      this._deferringTimeout = null;
+    if (this.#deferringTimeout) {
+      lazy.clearTimeout(this.#deferringTimeout);
+      this.#deferringTimeout = null;
     }
   }
 
   onQueryCancelled() {
-    this._lastQuery.status = QUERY_STATUS.COMPLETE;
+    this.#lastQuery.status = QUERY_STATUS.COMPLETE;
   }
 
   onQueryFinished() {
-    this._lastQuery.status = QUERY_STATUS.COMPLETE;
+    this.#lastQuery.status = QUERY_STATUS.COMPLETE;
   }
 
   onQueryResults(queryContext) {
     if (queryContext.pendingHeuristicProviders.size) {
       return;
     }
-    this._lastQuery.status = QUERY_STATUS.RUNNING_GOT_ALL_HEURISTIC_RESULTS;
+    this.#lastQuery.status = QUERY_STATUS.RUNNING_GOT_ALL_HEURISTIC_RESULTS;
     // Ensure this runs after other results handling code.
     Services.tm.dispatchToMainThread(() => {
       this.replayDeferredEvents(true);
@@ -131,10 +124,10 @@ export class UrlbarEventBufferer {
       lazy.logger.debug("Clearing queue on blur");
       // The input field was blurred, pending events don't matter anymore.
       // Clear the timeout and the queue.
-      this._eventsQueue.length = 0;
-      if (this._deferringTimeout) {
-        lazy.clearTimeout(this._deferringTimeout);
-        this._deferringTimeout = null;
+      this.#eventsQueue.length = 0;
+      if (this.#deferringTimeout) {
+        lazy.clearTimeout(this.#deferringTimeout);
+        this.#deferringTimeout = null;
       }
     }
   }
@@ -181,16 +174,16 @@ export class UrlbarEventBufferer {
     event.urlbarDeferred = true;
     // Also store the current search string, as an added safety check. If the
     // string will differ later, the event is stale and should be dropped.
-    event.searchString = this._lastQuery.context.searchString;
-    this._eventsQueue.push({ event, callback });
+    event.searchString = this.#lastQuery.context.searchString;
+    this.#eventsQueue.push({ event, callback });
 
-    if (!this._deferringTimeout) {
-      let elapsed = ChromeUtils.now() - this._lastQuery.startDate;
+    if (!this.#deferringTimeout) {
+      let elapsed = ChromeUtils.now() - this.#lastQuery.startDate;
       let remaining = UrlbarEventBufferer.DEFERRING_TIMEOUT_MS - elapsed;
-      this._deferringTimeout = lazy.setTimeout(
+      this.#deferringTimeout = lazy.setTimeout(
         () => {
           this.replayDeferredEvents(false);
-          this._deferringTimeout = null;
+          this.#deferringTimeout = null;
         },
         Math.max(0, remaining)
       );
@@ -209,19 +202,19 @@ export class UrlbarEventBufferer {
     if (typeof onlyIfSafe != "boolean") {
       throw new Error("Must provide a boolean argument");
     }
-    if (!this._eventsQueue.length) {
+    if (!this.#eventsQueue.length) {
       return;
     }
 
-    let { event, callback } = this._eventsQueue[0];
+    let { event, callback } = this.#eventsQueue[0];
     if (onlyIfSafe && !this.isSafeToPlayDeferredEvent(event)) {
       return;
     }
 
     // Remove the event from the queue and play it.
-    this._eventsQueue.shift();
+    this.#eventsQueue.shift();
     // Safety check: handle only if the search string didn't change meanwhile.
-    if (event.searchString == this._lastQuery.context.searchString) {
+    if (event.searchString == this.#lastQuery.context.searchString) {
       callback();
     }
     Services.tm.dispatchToMainThread(() => {
@@ -238,8 +231,8 @@ export class UrlbarEventBufferer {
   shouldDeferEvent(event) {
     // If any event has been deferred for this search, then defer all subsequent
     // events so that the user does not experience them out of order.
-    // All events will be replayed when _deferringTimeout fires.
-    if (this._eventsQueue.length) {
+    // All events will be replayed when #deferringTimeout fires.
+    if (this.#eventsQueue.length) {
       return true;
     }
 
@@ -267,7 +260,7 @@ export class UrlbarEventBufferer {
     // This is an event that we'd defer, but if enough time has passed since the
     // start of the search, we don't want to block the user's workflow anymore.
     if (
-      this._lastQuery.startDate + UrlbarEventBufferer.DEFERRING_TIMEOUT_MS <=
+      this.#lastQuery.startDate + UrlbarEventBufferer.DEFERRING_TIMEOUT_MS <=
       ChromeUtils.now()
     ) {
       return false;
@@ -292,7 +285,7 @@ export class UrlbarEventBufferer {
    * @returns {boolean} Whether the bufferer is deferring events.
    */
   get isDeferringEvents() {
-    return !!this._eventsQueue.length;
+    return !!this.#eventsQueue.length;
   }
 
   /**
@@ -302,7 +295,7 @@ export class UrlbarEventBufferer {
    * @returns {boolean} Whether a provider asked to defer events.
    */
   get waitingDeferUserSelectionProviders() {
-    return !!this._lastQuery.context?.deferUserSelectionProviders.size;
+    return !!this.#lastQuery.context?.deferUserSelectionProviders.size;
   }
 
   /**
@@ -317,15 +310,15 @@ export class UrlbarEventBufferer {
    */
   isSafeToPlayDeferredEvent(event) {
     if (
-      this._lastQuery.status == QUERY_STATUS.COMPLETE ||
-      this._lastQuery.status == QUERY_STATUS.UKNOWN
+      this.#lastQuery.status == QUERY_STATUS.COMPLETE ||
+      this.#lastQuery.status == QUERY_STATUS.UKNOWN
     ) {
       // The view can't get any more results, so there's no need to further
       // defer events.
       return true;
     }
     let waitingHeuristicResults =
-      this._lastQuery.status == QUERY_STATUS.RUNNING;
+      this.#lastQuery.status == QUERY_STATUS.RUNNING;
     if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
       // Check if we're waiting for providers that requested deferring.
       if (this.waitingDeferUserSelectionProviders) {
@@ -368,10 +361,38 @@ export class UrlbarEventBufferer {
   get lastResultIsSelected() {
     // TODO Bug 1536818: Once one-off buttons are fully implemented, it would be
     // nice to have a better way to check if the next down will focus one-off buttons.
-    let results = this._lastQuery.context.results;
+    let results = this.#lastQuery.context.results;
     return (
       results.length &&
       results[results.length - 1] == this.input.view.selectedResult
     );
   }
+
+  /**
+   * A queue of deferred events.
+   * The callback is invoked when it's the right time to handle the event,
+   * but it may also never be invoked, if the context changed and the event
+   * became obsolete.
+   *
+   * @type {{event: KeyboardEvent, callback: () => void}[]}
+   */
+  #eventsQueue = [];
+
+  /**
+   * If this timer fires, we will unconditionally replay all the deferred
+   * events so that, after a certain point, we don't keep blocking the user's
+   * actions, when nothing else has caused the events to be replayed.
+   * At that point we won't check whether it's safe to replay the events,
+   * because otherwise it may look like we ignored the user's actions.
+   *
+   * @type {?number}
+   */
+  #deferringTimeout = null;
+
+  /**
+   * Tracks the current or last query status.
+   *
+   * @type {{ startDate: number, status: Values<typeof QUERY_STATUS>, context: UrlbarQueryContext}}
+   */
+  #lastQuery;
 }
