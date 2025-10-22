@@ -3193,8 +3193,9 @@ class nsLayoutUtils {
 
   static bool IsAPZTestLoggingEnabled();
 
-  static void ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize);
-  static void ConstrainToCoordValues(float& aStart, float& aSize);
+  // doubles only because nscoord_max and nscoord_min cannot be represented
+  // exactly by floats.
+  static void ConstrainToCoordValues(double& aStart, double& aSize);
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsLayoutUtils::PaintFrameFlags)
@@ -3247,21 +3248,31 @@ nsRect nsLayoutUtils::RoundGfxRectToAppRect(const T& aRect,
   T scaledRect = aRect;
   scaledRect.ScaleRoundOut(aFactor);
 
+  nsRect retval;
+
+  double start = double(scaledRect.x);
+  double size = double(scaledRect.width);
   // We now need to constrain our results to the max and min values for coords.
-  ConstrainToCoordValues(scaledRect.x, scaledRect.width);
-  ConstrainToCoordValues(scaledRect.y, scaledRect.height);
+  ConstrainToCoordValues(start, size);
+  // ConstrainToCoordValues ensures casting to nscoord is safe.
+  retval.x = nscoord(start);
+  retval.width = nscoord(size);
+
+  start = double(scaledRect.y);
+  size = double(scaledRect.height);
+  ConstrainToCoordValues(start, size);
+  retval.y = nscoord(start);
+  retval.height = nscoord(size);
 
   if (!aRect.Width()) {
-    scaledRect.SetWidth(0);
+    retval.SetWidth(0);
   }
 
   if (!aRect.Height()) {
-    scaledRect.SetHeight(0);
+    retval.SetHeight(0);
   }
 
-  // Now typecast everything back.  This is guaranteed to be safe.
-  return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
-                nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
+  return retval;
 }
 
 namespace mozilla {
