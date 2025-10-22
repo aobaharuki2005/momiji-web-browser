@@ -101,7 +101,7 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateRequest(
                             loadContext, kind, this, root);
 
   request->mURL = request->mURI->GetSpecOrDefault();
-  request->NoCacheEntryFound(aReferrerPolicy);
+  request->NoCacheEntryFound(aReferrerPolicy, aOptions);
   return request.forget();
 }
 

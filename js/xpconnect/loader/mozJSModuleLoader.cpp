@@ -1089,7 +1089,7 @@ nsresult mozJSModuleLoader::ImportESModule(
       /* aReferrer = */ nullptr, context, ModuleLoadRequest::Kind::TopLevel,
       mModuleLoader, nullptr);
 
-  request->NoCacheEntryFound(dom::ReferrerPolicy::No_referrer);
+  request->NoCacheEntryFound(dom::ReferrerPolicy::No_referrer, options);
 
   rv = request->StartModuleLoad();
   if (NS_FAILED(rv)) {
