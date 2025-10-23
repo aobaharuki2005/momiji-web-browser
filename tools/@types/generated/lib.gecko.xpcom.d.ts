@@ -389,6 +389,8 @@ interface nsIAccessibleRelation extends nsISupports {
   readonly RELATION_ERRORMSG?: 23;
   readonly RELATION_ERRORMSG_FOR?: 24;
   readonly RELATION_LINKS_TO?: 25;
+  readonly RELATION_ACTION?: 32;
+  readonly RELATION_ACTION_FOR?: 33;
 
   readonly relationType: u32;
   readonly targetsCount: u32;
@@ -2667,6 +2669,7 @@ interface nsIDOMWindowUtils extends nsISupports, Enums<typeof nsIDOMWindowUtils_
   setAsyncZoom(aRootElement: Element, aValue: float): void;
   flushApzRepaints(aElement?: Element): boolean;
   disableApzForElement(aElement: Element): void;
+  isApzDisabledForElement(aElement: Element): boolean;
   zoomToFocusedInput(): void;
   computeAnimationDistance(element: Element, property: string, value1: string, value2: string): double;
   getUnanimatedComputedStyle(aElement: Element, aPseudoElement: string, aProperty: string, aFlushType: i32): string;
@@ -4937,7 +4940,7 @@ interface imgIEncoder extends nsIAsyncInputStream {
   readonly INPUT_FORMAT_RGBA?: 1;
   readonly INPUT_FORMAT_HOSTARGB?: 2;
 
-  initFromData(data: u8[], length: u32, width: u32, height: u32, stride: u32, inputFormat: u32, outputOptions: string): void;
+  initFromData(data: u8[], length: u32, width: u32, height: u32, stride: u32, inputFormat: u32, outputOptions: string, randomizationKey: string): void;
   startImageEncode(width: u32, height: u32, inputFormat: u32, outputOptions: string): void;
   addImageFrame(data: u8[], length: u32, width: u32, height: u32, stride: u32, frameFormat: u32, frameOptions: string): void;
   endImageEncode(): void;
@@ -6949,7 +6952,7 @@ interface nsIProtocolProxyService extends nsISupports {
   asyncResolve(aChannelOrURI: nsISupports, aFlags: u32, aCallback: nsIProtocolProxyCallback, aMainThreadTarget?: nsISerialEventTarget): nsICancelable;
   newProxyInfo(aType: string, aHost: string, aPort: i32, aProxyAuthorizationHeader: string, aConnectionIsolationKey: string, aFlags: u32, aFailoverTimeout: u32, aFailoverProxy: nsIProxyInfo): nsIProxyInfo;
   newProxyInfoWithAuth(aType: string, aHost: string, aPort: i32, aUsername: string, aPassword: string, aProxyAuthorizationHeader: string, aConnectionIsolationKey: string, aFlags: u32, aFailoverTimeout: u32, aFailoverProxy: nsIProxyInfo): nsIProxyInfo;
-  newMASQUEProxyInfo(aHost: string, aPort: i32, aPathTemplate: string, aAlpn: string, aProxyAuthorizationHeader: string, aConnectionIsolationKey: string, aFlags: u32, aFailoverTimeout: u32, aFailoverProxy: nsIProxyInfo): nsIProxyInfo;
+  newMASQUEProxyInfo(aHost: string, aPort: i32, aPathTemplate: string, aProxyAuthorizationHeader: string, aConnectionIsolationKey: string, aFlags: u32, aFailoverTimeout: u32, aFailoverProxy: nsIProxyInfo): nsIProxyInfo;
   getFailoverForProxy(aProxyInfo: nsIProxyInfo, aURI: nsIURI, aReason: nsresult): nsIProxyInfo;
   registerFilter(aFilter: nsIProtocolProxyFilter, aPosition: u32): void;
   registerChannelFilter(aFilter: nsIProtocolProxyChannelFilter, aPosition: u32): void;
@@ -7002,7 +7005,6 @@ interface nsIProxyInfo extends nsISupports {
   readonly proxyAuthorizationHeader: string;
   readonly connectionIsolationKey: string;
   pathTemplate: string;
-  alpn: string;
 }
 
 // https://searchfox.org/mozilla-central/source/netwerk/base/nsIRandomGenerator.idl
@@ -7643,6 +7645,7 @@ interface nsICacheEntry extends nsISupports {
   readonly key: string;
   readonly cacheEntryId: u64;
   readonly persistent: boolean;
+  readonly readyOrRevalidating: boolean;
   readonly fetchCount: u32;
   readonly lastFetched: u32;
   readonly lastModified: u32;
@@ -7674,6 +7677,7 @@ interface nsICacheEntry extends nsISupports {
   openAlternativeOutputStream(type: string, predictedSize: i64): nsIAsyncOutputStream;
   openAlternativeInputStream(type: string): nsIInputStream;
   readonly loadContextInfo: nsILoadContextInfo;
+  setBypassWriterLock(aBypass: boolean): void;
 }
 
 interface nsICacheEntryMetaDataVisitor extends nsISupports {
@@ -7718,8 +7722,10 @@ interface nsICacheStorage extends nsISupports {
   readonly CHECK_MULTITHREADED?: 16;
   readonly OPEN_SECRETLY?: 32;
   readonly OPEN_INTERCEPTED?: 64;
+  readonly OPEN_COMPLETE_ONLY?: 128;
 
   asyncOpenURI(aURI: nsIURI, aIdExtension: string, aFlags: u32, aCallback: nsICacheEntryOpenCallback): void;
+  asyncOpenURIString(aURI: string, aIdExtension: string, aFlags: u32, aCallback: nsICacheEntryOpenCallback): void;
   openTruncate(aURI: nsIURI, aIdExtension: string): nsICacheEntry;
   exists(aURI: nsIURI, aIdExtension: string): boolean;
   getCacheIndexEntryAttrs(aURI: nsIURI, aIdExtension: string, aHasAltData: OutParam<boolean>, aSizeInKB: OutParam<u32>): void;
@@ -7742,6 +7748,8 @@ interface nsICacheStorageService extends nsISupports {
   clearBaseDomain(aBaseDomain: string): void;
   clearOriginsByOriginAttributes(aOriginAttributes: string): void;
   clear(): void;
+  clearOriginDictionary(aURI: nsIURI): void;
+  clearAllOriginDictionaries(): void;
   purgeFromMemory(aWhat: u32): void;
   readonly ioTarget: nsIEventTarget;
   asyncGetDiskConsumption(aObserver: nsICacheStorageConsumptionObserver): void;
@@ -7804,6 +7812,7 @@ interface nsICookie extends nsISupports, Enums<typeof nsICookie_schemeType> {
   readonly isSession: boolean;
   readonly isHttpOnly: boolean;
   readonly creationTime: i64;
+  readonly updateTime: i64;
   readonly lastAccessed: i64;
   readonly sameSite: i32;
   readonly schemeMap: nsICookie.schemeType;
@@ -9500,7 +9509,7 @@ interface nsITransportSecurityInfo extends nsISupports, Enums<typeof nsITranspor
   readonly securityState: u32;
   readonly errorCode: i32;
   readonly errorCodeString: string;
-  readonly failedCertChain: nsIX509Cert[];
+  readonly handshakeCertificates: nsIX509Cert[];
   readonly serverCert: nsIX509Cert;
   readonly succeededCertChain: nsIX509Cert[];
   readonly cipherName: string;
@@ -9644,6 +9653,7 @@ interface nsIX509CertDB extends nsISupports, Enums<typeof nsIX509CertDB_VerifyUs
   getCerts(): nsIX509Cert[];
   asPKCS7Blob(certList: nsIX509Cert[]): string;
   getAndroidCertificateFromAlias(alias: string): nsIX509Cert;
+  asyncVerify1QWAC(cert: nsIX509Cert, collectedCerts: nsIX509Cert[]): Promise<any>;
 }
 
 // https://searchfox.org/mozilla-central/source/security/manager/ssl/nsIX509CertValidity.idl
@@ -11921,6 +11931,7 @@ interface nsIApplicationUpdateService extends nsISupports {
   readonly DOWNLOAD_SUCCESS?: 1;
   readonly DOWNLOAD_FAILURE_CANNOT_RESUME_IN_BACKGROUND?: 2;
   readonly DOWNLOAD_FAILURE_GENERIC?: 3;
+  readonly DOWNLOAD_FAILURE_CANNOT_WRITE_STATE?: 4;
   readonly STATE_IDLE?: 1;
   readonly STATE_DOWNLOADING?: 2;
   readonly STATE_STAGING?: 4;

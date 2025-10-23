@@ -300,7 +300,6 @@ export class SearchModeSwitcher {
     let element = /** @type {HTMLImageElement} */ (
       this.#input.querySelector(".searchmode-switcher-icon")
     );
-    // @ts-expect-error Bug 1982726 - CSS2Properties aren't available as TypeScript types
     element.style.listStyleImage = iconUrl;
 
     if (label) {

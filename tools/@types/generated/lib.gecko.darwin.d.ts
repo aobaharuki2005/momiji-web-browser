@@ -17,6 +17,7 @@ interface nsIAccessibleMacInterface extends nsISupports {
   readonly actionNames: string[];
   getAttributeValue(attributeName: string): any;
   getParameterizedAttributeValue(attributeName: string, parameter: any): any;
+  getActionDescription(actionName: string): string;
   performAction(actionName: string): void;
   isAttributeSettable(attributeName: string): boolean;
   setAttributeValue(attributeName: string, attributeValue: any): void;
