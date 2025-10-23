@@ -42,6 +42,7 @@ export const logNameTable = {
   "HJ9oLOn68EVpUPgbloqH3dsyENhM5siy44JSSsTPWZ8=": "Sectigo 'Tiger2027h1'",
   "JS+Uwisp6W6fQRpyBytpXFtS/5epDSVAu/zcUexN7gs=": "Sectigo 'Mammoth2026h1'",
   "Jbfv3qETAZPtkweXcKoyKiZiDeNayKp8dRl94LGp4GU=": "TrustAsia 'log2026b'",
+  "JuNkblhpISO8ND9HJDWbN5LNJFqI2BXTkzP9mRirRyM=": "IPng Networks 'Halloumi2026h2a'",
   "KCyL3YEP+QkSCs4W1uDsIBvqgqOkrxnZ7/tZ6D/cQmg=": "TrustAsia Log2025b",
   "KOKBOP2DIUXpqdaqdTdtg3eohRKzwH9yQUgh3L3pjGY=": "TrustAsia Log2025a",
   "KrgwRDO5FN7S8x5CB/JRwXo3oJJoUtkIAgb4Xlc5Fio=": "Mozilla Test EC Log",
