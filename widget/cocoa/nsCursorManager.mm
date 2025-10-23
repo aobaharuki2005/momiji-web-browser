@@ -89,22 +89,13 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
       return [NSCursor cursorWithImageNamed:@"help"
                                     hotSpot:NSMakePoint(12, 12)];
     case eCursor_copy: {
-      SEL cursorSelector = @selector(dragCopyCursor);
-      return [NSCursor respondsToSelector:cursorSelector]
-                 ? [NSCursor performSelector:cursorSelector]
-                 : [NSCursor arrowCursor];
+      return [NSCursor dragCopyCursor];
     }
     case eCursor_alias: {
-      SEL cursorSelector = @selector(dragLinkCursor);
-      return [NSCursor respondsToSelector:cursorSelector]
-                 ? [NSCursor performSelector:cursorSelector]
-                 : [NSCursor arrowCursor];
+      return [NSCursor dragLinkCursor];
     }
     case eCursor_context_menu: {
-      SEL cursorSelector = @selector(contextualMenuCursor);
-      return [NSCursor respondsToSelector:cursorSelector]
-                 ? [NSCursor performSelector:cursorSelector]
-                 : [NSCursor arrowCursor];
+      return [NSCursor contextualMenuCursor];
     }
     case eCursor_cell:
       return [NSCursor cursorWithImageNamed:@"cell"
@@ -126,10 +117,7 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
       return [NSCursor openHandCursor];
     case eCursor_not_allowed:
     case eCursor_no_drop: {
-      SEL cursorSelector = @selector(operationNotAllowedCursor);
-      return [NSCursor respondsToSelector:cursorSelector]
-                 ? [NSCursor performSelector:cursorSelector]
-                 : [NSCursor arrowCursor];
+      return [NSCursor operationNotAllowedCursor];
     }
     // Resize Cursors:
     // North
