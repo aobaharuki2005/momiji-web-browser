@@ -298,6 +298,14 @@ class BinaryReadableStream {
        *   The number of bytes available in the stream
        */
       onDataAvailable(request, stream, offset, count) {
+        if (this._done) {
+          // No need to load anything else - abort reading in more
+          // attachments.
+          throw Components.Exception(
+            "Got binary block - cancelling loading the multipart stream.",
+            Cr.NS_BINDING_ABORTED
+          );
+        }
         if (!this._enabled) {
           // We don't care about this data, just move on.
           return;
@@ -319,13 +327,6 @@ class BinaryReadableStream {
           this._done = true;
 
           controller.close();
-
-          // No need to load anything else - abort reading in more
-          // attachments.
-          throw Components.Exception(
-            "Got binary block - cancelling loading the multipart stream.",
-            Cr.NS_BINDING_ABORTED
-          );
         }
       },
 
@@ -2287,6 +2288,14 @@ export class BackupService extends EventTarget {
          *   The number of bytes available in the stream
          */
         onDataAvailable(request, stream, offset, count) {
+          if (this._done) {
+            // No need to load anything else - abort reading in more
+            // attachments.
+            throw Components.Exception(
+              "Got JSON block. Aborting further reads.",
+              Cr.NS_BINDING_ABORTED
+            );
+          }
           if (!this._enabled) {
             // We don't care about this data, just move on.
             return;
@@ -2318,12 +2327,6 @@ export class BackupService extends EventTarget {
                 )
               );
             }
-            // No need to load anything else - abort reading in more
-            // attachments.
-            throw Components.Exception(
-              "Got JSON block. Aborting further reads.",
-              Cr.NS_BINDING_ABORTED
-            );
           }
         },
 
@@ -3684,10 +3687,8 @@ export class BackupService extends EventTarget {
    *
    * The scheduler will automatically uninitialize itself on the
    * quit-application-granted observer notification.
-   *
-   * @returns {Promise<undefined>}
    */
-  async initBackupScheduler() {
+  initBackupScheduler() {
     if (this.#backupSchedulerInitted) {
       lazy.logConsole.warn(
         "BackupService scheduler already initting or initted."
@@ -3759,10 +3760,8 @@ export class BackupService extends EventTarget {
 
   /**
    * Uninitializes the backup scheduling system.
-   *
-   * @returns {Promise<undefined>}
    */
-  async uninitBackupScheduler() {
+  uninitBackupScheduler() {
     if (!this.#backupSchedulerInitted) {
       lazy.logConsole.warn(
         "Tried to uninitBackupScheduler when it wasn't yet enabled."
@@ -4379,7 +4378,10 @@ export class BackupService extends EventTarget {
               "Attempting to delete last backup file at ",
               backupFilePath
             );
-            await IOUtils.remove(backupFilePath, { ignoreAbsent: true });
+            await IOUtils.remove(backupFilePath, {
+              ignoreAbsent: true,
+              retryReadonly: true,
+            });
           }
 
           this.#_state.lastBackupDate = null;
