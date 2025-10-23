@@ -1031,19 +1031,6 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
     }
 
     moduleScript->SetModuleRecord(module);
-
-    // TODO: Bug 1968885: Remove ModuleLoaderBase::ResolveRequestedModules
-    //
-    // Validate requested modules and treat failure to resolve module specifiers
-    // the same as a parse error.
-    rv = ResolveRequestedModules(aRequest, nullptr);
-    if (NS_FAILED(rv)) {
-      if (!aRequest->IsErrored()) {
-        aRequest->mModuleScript = nullptr;
-        return rv;
-      }
-      return NS_OK;
-    }
   }
 
   LOG(("ScriptLoadRequest (%p):   module script == %p", aRequest,
@@ -1110,76 +1097,6 @@ ResolveResult ModuleLoaderBase::ResolveModuleSpecifier(
   // the Import Maps spec.
   return ImportMap::ResolveModuleSpecifier(mImportMap.get(), mLoader, aScript,
                                            aSpecifier);
-}
-
-nsresult ModuleLoaderBase::ResolveRequestedModules(
-    ModuleLoadRequest* aRequest, nsTArray<ModuleMapKey>* aRequestedModulesOut) {
-  MOZ_ASSERT_IF(aRequestedModulesOut, aRequestedModulesOut->IsEmpty());
-
-  ModuleScript* ms = aRequest->mModuleScript;
-
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(mGlobalObject)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JSContext* cx = jsapi.cx();
-  Rooted<JSObject*> moduleRecord(cx, ms->ModuleRecord());
-
-  if (!IsCyclicModule(moduleRecord)) {
-    return NS_OK;
-  }
-
-  uint32_t length = GetRequestedModulesCount(cx, moduleRecord);
-
-  for (uint32_t i = 0; i < length; i++) {
-    Rooted<JSString*> str(cx, GetRequestedModuleSpecifier(cx, moduleRecord, i));
-    if (!str) {
-      Rooted<Value> pendingException(cx);
-      if (!JS_GetPendingException(cx, &pendingException)) {
-        return NS_ERROR_FAILURE;
-      }
-      ms->SetParseError(pendingException);
-      JS_ClearPendingException(cx);
-      return NS_ERROR_FAILURE;
-    }
-
-    nsAutoJSString specifier;
-    if (!specifier.init(cx, str)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Let url be the result of resolving a module specifier given module script
-    // and requested.
-    ModuleLoaderBase* loader = aRequest->mLoader;
-    auto result = loader->ResolveModuleSpecifier(ms, specifier);
-    if (result.isErr()) {
-      uint32_t lineNumber = 0;
-      ColumnNumberOneOrigin columnNumber;
-      GetRequestedModuleSourcePos(cx, moduleRecord, i, &lineNumber,
-                                  &columnNumber);
-
-      Rooted<Value> error(cx);
-      nsresult rv =
-          loader->HandleResolveFailure(cx, ms, specifier, result.unwrapErr(),
-                                       lineNumber, columnNumber, &error);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      ms->SetParseError(error);
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIURI> uri = result.unwrap();
-    if (aRequestedModulesOut) {
-      // Let moduleType be the result of running the module type from module
-      // request steps given moduleRequest.
-      ModuleType moduleType = GetRequestedModuleType(cx, moduleRecord, i);
-
-      aRequestedModulesOut->AppendElement(ModuleMapKey(uri, moduleType));
-    }
-  }
-
-  return NS_OK;
 }
 
 void ModuleLoaderBase::StartFetchingModuleDependencies(

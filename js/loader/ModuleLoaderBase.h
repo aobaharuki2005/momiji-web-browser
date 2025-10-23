@@ -525,10 +525,6 @@ class ModuleLoaderBase : public nsISupports {
  private:
   ModuleScript* GetFetchedModule(const ModuleMapKey& moduleMapKey) const;
 
-  nsresult ResolveRequestedModules(
-      ModuleLoadRequest* aRequest,
-      nsTArray<ModuleMapKey>* aRequestedModulesOut);
-
   already_AddRefed<LoadingRequest> SetModuleFetchFinishedAndGetWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
   void ResumeWaitingRequests(LoadingRequest* aLoadingRequest, bool aSuccess);
