@@ -1583,28 +1583,8 @@ void gfxWindowsPlatform::InitializeD3D11() {
 void gfxWindowsPlatform::InitializeD2DConfig() {
   FeatureState& d2d1 = gfxConfig::GetFeature(Feature::DIRECT2D);
 
-  if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    d2d1.DisableByDefault(FeatureStatus::Unavailable,
-                          "Direct2D requires Direct3D 11 compositing",
-                          "FEATURE_FAILURE_D2D_D3D11_COMP"_ns);
-    return;
-  }
-
-  d2d1.SetDefaultFromPref(StaticPrefs::GetPrefName_gfx_direct2d_disabled(),
-                          false,
-                          StaticPrefs::GetPrefDefault_gfx_direct2d_disabled());
-
-  nsCString message;
-  nsCString failureId;
-  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D, &message,
-                                        failureId)) {
-    d2d1.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
-  }
-
-  if (!d2d1.IsEnabled() &&
-      StaticPrefs::gfx_direct2d_force_enabled_AtStartup()) {
-    d2d1.UserForceEnable("Force-enabled via user-preference");
-  }
+  d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D is not supported",
+                        "FEATURE_FAILURE_DIRECT2D_NOT_SUPPORTED"_ns);
 }
 
 void gfxWindowsPlatform::InitializeD2D() {

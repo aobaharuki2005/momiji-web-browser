@@ -111,11 +111,6 @@ def setup_talos(config, tasks):
         )
         extra_options.append("--use-talos-json")
 
-        # win7 needs to test skip
-        if task["build-platform"].startswith("win32"):
-            extra_options.append("--add-option")
-            extra_options.append("--setpref,gfx.direct2d.disabled=true")
-
         if config.params.get("project", None):
             extra_options.append("--project=%s" % config.params["project"])
 

@@ -7022,24 +7022,6 @@
   mirror: once
 
 
-# Whether to disable the automatic detection and use of direct2d.
-- name: gfx.direct2d.disabled
-  type: bool
-  value: true
-  mirror: once
-
-# Whether to attempt to enable Direct2D regardless of automatic detection or
-# blacklisting.
-- name: gfx.direct2d.force-enabled
-  type: bool
-  value: false
-  mirror: once
-
-- name: gfx.direct2d.target-independent-rasterization.disabled
-  type: bool
-  value: false
-  mirror: once
-
 - name: gfx.direct3d11.reuse-decoder-device
   type: bool
   value: true

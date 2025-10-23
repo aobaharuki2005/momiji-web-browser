@@ -397,15 +397,9 @@ pref("gfx.downloadable_fonts.fallback_delay_short", 100);
   pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
 #endif
 
-#if defined(XP_WIN)
-  // comma separated list of backends to use in order of preference
-  // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia");
-  pref("gfx.canvas.azure.backends", "direct2d1.1,skia");
-#elif defined(XP_MACOSX)
-  pref("gfx.canvas.azure.backends", "skia");
-#else
-  pref("gfx.canvas.azure.backends", "skia");
-#endif
+// comma separated list of backends to use in order of preference
+// e.g., pref("gfx.canvas.azure.backends", "direct2d,skia");
+pref("gfx.canvas.azure.backends", "skia");
 pref("gfx.content.azure.backends", "skia");
 
 #ifdef XP_WIN
@@ -2236,7 +2230,7 @@ pref("font.size.monospace.x-math", 13);
   pref("font.name-list.monospace.x-math", "Consolas");
   pref("font.name-list.cursive.x-math", "Comic Sans MS");
 
-  // ClearType tuning parameters for directwrite/d2d.
+  // ClearType tuning parameters for directwrite.
   //
   // Allows overriding of underlying registry values in:
   //   HKCU/Software/Microsoft/Avalon.Graphics/<display> (contrast and level)
