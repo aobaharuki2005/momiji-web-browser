@@ -99,6 +99,7 @@ private val networking_threads = arrayOf(
 
 private val debug_features = arrayOf(
     "cpu",
+    "java",
     "ipcmessages",
     "js",
     "markersallthreads",
@@ -122,6 +123,13 @@ enum class ProfilerSettings(val threads: Array<String>, val features: Array<Stri
     Media(media_threads, media_features),
     Networking(networking_threads, networking_features),
     Debug(debug_threads, debug_features),
+    ;
+
+    init {
+        require(features.contains("java")) {
+            "ProfilerSettings.$name must include the 'java' feature."
+        }
+    }
 }
 
 /**
