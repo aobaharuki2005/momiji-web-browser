@@ -70,7 +70,7 @@ index c9254c25f0..1b88cb7f42 100644
  
  TEST(TimestampTest, GetBackSameValues) {
 diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
-index adecc36079..3e119fc562 100644
+index 90d3c70aa0..eda5824569 100644
 --- a/audio/channel_receive.cc
 +++ b/audio/channel_receive.cc
 @@ -78,6 +78,7 @@
