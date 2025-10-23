@@ -58,7 +58,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a342f5eca8622c8b9
  42 files changed, 105 insertions(+), 105 deletions(-)
 
 diff --git a/.gn b/.gn
-index cdbd705ec2..4ee826ec58 100644
+index 4df8681a9b..269ca2f5a7 100644
 --- a/.gn
 +++ b/.gn
 @@ -6,10 +6,10 @@
@@ -326,7 +326,7 @@ index 589142b014..2ee80ded55 100644
      }
    }
 diff --git a/examples/BUILD.gn b/examples/BUILD.gn
-index 6ec5e65609..73ef4bf072 100644
+index c8000c3c12..7a77610e07 100644
 --- a/examples/BUILD.gn
 +++ b/examples/BUILD.gn
 @@ -9,15 +9,15 @@
@@ -350,7 +350,7 @@ index 6ec5e65609..73ef4bf072 100644
  }
  
  group("examples") {
-@@ -632,7 +632,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
+@@ -630,7 +630,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
            "../sdk:mediaconstraints_objc",
            "../sdk:peerconnectionfactory_base_objc",
            "../sdk:videocapture_objc",
@@ -359,7 +359,7 @@ index 6ec5e65609..73ef4bf072 100644
            "//third_party/ocmock",
          ]
        }
-@@ -737,7 +737,7 @@ if (is_linux || is_chromeos || is_win) {
+@@ -735,7 +735,7 @@ if (is_linux || is_chromeos || is_win) {
          "peerconnection/client/main_wnd.cc",
          "peerconnection/client/main_wnd.h",
        ]
@@ -382,7 +382,7 @@ index b671239bae..e545b2cde3 100644
    android_java_prebuilt("autobanh_java") {
      jar_path = "lib/autobanh.jar"
 diff --git a/examples/androidnativeapi/BUILD.gn b/examples/androidnativeapi/BUILD.gn
-index 64cd43e923..6d36129869 100644
+index 26d136a1d8..1b3d2f3884 100644
 --- a/examples/androidnativeapi/BUILD.gn
 +++ b/examples/androidnativeapi/BUILD.gn
 @@ -41,8 +41,8 @@ if (is_android) {
@@ -397,7 +397,7 @@ index 64cd43e923..6d36129869 100644
      deps = [
        ":generated_jni",
 diff --git a/examples/androidvoip/BUILD.gn b/examples/androidvoip/BUILD.gn
-index 657e7a71f9..881dd69b03 100644
+index af82ba39db..2306fe1886 100644
 --- a/examples/androidvoip/BUILD.gn
 +++ b/examples/androidvoip/BUILD.gn
 @@ -50,8 +50,8 @@ if (is_android) {
@@ -687,7 +687,7 @@ index 4a772795ed..de27f01bb0 100644
  
  rtc_source_set("arch") {
 diff --git a/rtc_tools/network_tester/BUILD.gn b/rtc_tools/network_tester/BUILD.gn
-index 4fa98d73a2..72c01d50ab 100644
+index 082a11f47c..2e8f069f24 100644
 --- a/rtc_tools/network_tester/BUILD.gn
 +++ b/rtc_tools/network_tester/BUILD.gn
 @@ -180,8 +180,8 @@ if (is_android) {
@@ -804,7 +804,7 @@ index ae891d22bd..4f2e3cc266 100644
    }
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index bf4535e14c..b9c2178996 100644
+index 8882cb497e..3aef398fa3 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -5,12 +5,12 @@

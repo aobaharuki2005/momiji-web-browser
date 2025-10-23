@@ -13,7 +13,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7017edc7cfc880bb1
  4 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/.gn b/.gn
-index 851c745732..cdbd705ec2 100644
+index 26080d9abc..4df8681a9b 100644
 --- a/.gn
 +++ b/.gn
 @@ -18,7 +18,7 @@ script_executable = "python3"
@@ -52,7 +52,7 @@ index ef3d60ee34..0d68cb4b29 100644
  
  rtc_library("encoded_frame") {
 diff --git a/webrtc.gni b/webrtc.gni
-index 10cc7468f6..afacae1027 100644
+index ea13d49957..f76b023285 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -487,8 +487,8 @@ all_poison_types = [
