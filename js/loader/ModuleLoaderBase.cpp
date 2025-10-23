@@ -1636,9 +1636,9 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   }
 
   // TODO: Bug 1973321: Prepare Bytecode encoding for dynamic import
-  rv = mLoader->MaybePrepareModuleForCacheAfterExecute(aRequest, NS_OK);
+  rv = mLoader->MaybePrepareModuleForDiskCacheAfterExecute(aRequest, NS_OK);
 
-  mLoader->MaybeUpdateCache();
+  mLoader->MaybeUpdateDiskCache();
 
   return rv;
 }

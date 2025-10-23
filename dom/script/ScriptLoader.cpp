@@ -205,7 +205,7 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mDeferCheckpointReached(false),
       mBlockingDOMContentLoaded(false),
       mLoadEventFired(false),
-      mGiveUpCaching(false),
+      mGiveUpDiskCaching(false),
       mContinueParsingDocumentAfterCurrentScript(false),
       mReporter(new ConsoleReportCollector()) {
   LOG(("ScriptLoader::ScriptLoader %p", this));
@@ -3333,7 +3333,7 @@ nsCString& ScriptLoader::BytecodeMimeTypeFor(
   return nsContentUtils::JSScriptBytecodeMimeType();
 }
 
-nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
+nsresult ScriptLoader::MaybePrepareForDiskCacheAfterExecute(
     ScriptLoadRequest* aRequest, nsresult aRv) {
   if (!aRequest->PassedConditionForDiskCache() || !aRequest->HasStencil()) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X)", aRequest,
@@ -3366,7 +3366,7 @@ nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
   return aRv;
 }
 
-nsresult ScriptLoader::MaybePrepareModuleForCacheAfterExecute(
+nsresult ScriptLoader::MaybePrepareModuleForDiskCacheAfterExecute(
     ModuleLoadRequest* aRequest, nsresult aRv) {
   MOZ_ASSERT(aRequest->IsTopLevel());
 
@@ -3380,7 +3380,7 @@ nsresult ScriptLoader::MaybePrepareModuleForCacheAfterExecute(
     return aRv;
   }
 
-  aRv = MaybePrepareForCacheAfterExecute(aRequest, aRv);
+  aRv = MaybePrepareForDiskCacheAfterExecute(aRequest, aRv);
 
   for (auto* r = mDiskCacheableDependencyModules.getFirst(); r;) {
     auto* dep = r->AsModuleRequest();
@@ -3394,7 +3394,7 @@ nsresult ScriptLoader::MaybePrepareModuleForCacheAfterExecute(
 
     mDiskCacheableDependencyModules.Remove(dep);
 
-    aRv = MaybePrepareForCacheAfterExecute(dep, aRv);
+    aRv = MaybePrepareForDiskCacheAfterExecute(dep, aRv);
   }
 
   return aRv;
@@ -3473,13 +3473,13 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
 
   // This must be called also for compilation failure case, in order to
   // dispatch test-only event.
-  rv = MaybePrepareForCacheAfterExecute(aRequest, rv);
+  rv = MaybePrepareForDiskCacheAfterExecute(aRequest, rv);
 
   // Even if we are not saving the bytecode of the current script, we have
   // to trigger the encoding of the bytecode, as the current script can
   // call functions of a script for which we are recording the bytecode.
   LOG(("ScriptLoadRequest (%p): ScriptLoader = %p", aRequest, this));
-  MaybeUpdateCache();
+  MaybeUpdateDiskCache();
 
   return rv;
 }
@@ -3504,7 +3504,7 @@ void ScriptLoader::RegisterForDiskCache(ScriptLoadRequest* aRequest) {
 
 void ScriptLoader::LoadEventFired() {
   mLoadEventFired = true;
-  MaybeUpdateCache();
+  MaybeUpdateDiskCache();
 }
 
 void ScriptLoader::Destroy() {
@@ -3514,15 +3514,15 @@ void ScriptLoader::Destroy() {
   }
 
   CancelAndClearScriptLoadRequests();
-  GiveUpCaching();
+  GiveUpDiskCaching();
 }
 
-void ScriptLoader::MaybeUpdateCache() {
+void ScriptLoader::MaybeUpdateDiskCache() {
   // If we already gave up, ensure that we are not going to enqueue any script,
   // and that we finalize them properly.
-  if (mGiveUpCaching) {
+  if (mGiveUpDiskCaching) {
     LOG(("ScriptLoader (%p): Keep giving-up bytecode encoding.", this));
-    GiveUpCaching();
+    GiveUpDiskCaching();
     return;
   }
 
@@ -3553,17 +3553,17 @@ void ScriptLoader::MaybeUpdateCache() {
   // all enqueued scripts when the document is idle. In case of failure, we
   // give-up on encoding the bytecode.
   nsCOMPtr<nsIRunnable> encoder = NewRunnableMethod(
-      "ScriptLoader::UpdateCache", this, &ScriptLoader::UpdateCache);
+      "ScriptLoader::UpdateCache", this, &ScriptLoader::UpdateDiskCache);
   if (NS_FAILED(NS_DispatchToCurrentThreadQueue(encoder.forget(),
                                                 EventQueuePriority::Idle))) {
-    GiveUpCaching();
+    GiveUpDiskCaching();
     return;
   }
 
   LOG(("ScriptLoader (%p): Schedule bytecode encoding.", this));
 }
 
-void ScriptLoader::UpdateCache() {
+void ScriptLoader::UpdateDiskCache() {
   LOG(("ScriptLoader (%p): Start bytecode encoding.", this));
 
   // If any script got added in the previous loop cycle, wait until all
@@ -3685,10 +3685,10 @@ void ScriptLoader::EncodeBytecodeAndSave(
   MOZ_RELEASE_ASSERT(compressedBytecode.length() == n);
 }
 
-void ScriptLoader::GiveUpCaching() {
+void ScriptLoader::GiveUpDiskCaching() {
   // If the document went away prematurely, we still want to set this, in order
   // to avoid queuing more scripts.
-  mGiveUpCaching = true;
+  mGiveUpDiskCaching = true;
 
   while (!mDiskCacheQueue.isEmpty()) {
     RefPtr<ScriptLoadRequest> request = mDiskCacheQueue.StealFirst();

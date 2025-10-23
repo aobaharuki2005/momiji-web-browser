@@ -110,15 +110,12 @@ class ScriptLoaderInterface : public nsISupports {
       JSContext* cx, ScriptLoadRequest* aRequest, CompileOptions* aOptions,
       MutableHandle<JSScript*> aIntroductionScript) = 0;
 
-  virtual void MaybePrepareModuleForCacheBeforeExecute(
-      JSContext* aCx, ModuleLoadRequest* aRequest) {}
-
-  virtual nsresult MaybePrepareModuleForCacheAfterExecute(
+  virtual nsresult MaybePrepareModuleForDiskCacheAfterExecute(
       ModuleLoadRequest* aRequest, nsresult aRv) {
     return NS_OK;
   }
 
-  virtual void MaybeUpdateCache() {}
+  virtual void MaybeUpdateDiskCache() {}
 };
 
 class ModuleMapKey : public PLDHashEntryHdr {
