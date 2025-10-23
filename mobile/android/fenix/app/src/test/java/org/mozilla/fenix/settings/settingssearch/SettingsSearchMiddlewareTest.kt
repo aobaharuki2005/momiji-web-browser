@@ -27,14 +27,39 @@ class SettingsSearchMiddlewareTest {
 
     private fun buildMiddleware(): SettingsSearchMiddleware {
         return SettingsSearchMiddleware(
-            SettingsSearchMiddleware.Companion.Dependencies(
+            initialDependencies = SettingsSearchMiddleware.Companion.Dependencies(
                 context,
             ),
+            fenixSettingsIndexer = TestSettingsIndexer(),
         )
     }
 
     @Test
     fun `WHEN the settings search query is updated and results are not found THEN the state is updated`() {
+        val middleware = SettingsSearchMiddleware(
+            SettingsSearchMiddleware.Companion.Dependencies(
+                context,
+            ),
+            fenixSettingsIndexer = EmptyTestSettingsIndexer(),
+        )
+        val capture = CaptureActionsMiddleware<SettingsSearchState, SettingsSearchAction>()
+        val query = "test"
+        val store = SettingsSearchStore(
+            middleware = listOf(
+                middleware,
+                capture,
+            ),
+        )
+
+        store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
+        store.waitUntilIdle()
+        capture.assertLastAction(SettingsSearchAction.NoResultsFound::class)
+        assert(store.state is SettingsSearchState.NoSearchResults)
+        assert(store.state.searchQuery == query)
+    }
+
+    @Test
+    fun `WHEN the settings search query is updated and results are found THEN the state is updated`() {
         val middleware = buildMiddleware()
         val capture = CaptureActionsMiddleware<SettingsSearchState, SettingsSearchAction>()
         val query = "test"
@@ -47,8 +72,51 @@ class SettingsSearchMiddlewareTest {
 
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
         store.waitUntilIdle()
-
-        assert(store.state is SettingsSearchState.NoSearchResults)
+        capture.assertLastAction(SettingsSearchAction.SearchResultsLoaded::class)
+        assert(store.state is SettingsSearchState.SearchInProgress)
         assert(store.state.searchQuery == query)
+        assert(store.state.searchResults == testList)
+    }
+}
+
+val testList = listOf(
+    SettingsSearchItem(
+        title = "Search Engine",
+        summary = "Set your preferred search engine for browsing.",
+        preferenceKey = "search_engine_main",
+        breadcrumbs = listOf("Search", "Default Search Engine"),
+    ),
+    SettingsSearchItem(
+        title = "Advanced Settings",
+        summary = "", // Empty or blank summary
+        preferenceKey = "advanced_stuff",
+        breadcrumbs = listOf("Developer", "Experiments"),
+    ),
+    SettingsSearchItem(
+        title = "Do not collect usage data",
+        summary = "", // Empty or blank summary
+        preferenceKey = "do_not_collect_data",
+        breadcrumbs = listOf("Privacy", "Usage Data"),
+    ),
+)
+
+class TestSettingsIndexer : SettingsIndexer {
+
+    override fun indexAllSettings() {
+        // no op
+    }
+
+    override fun getSettingsWithQuery(query: String): List<SettingsSearchItem> {
+        return testList
+    }
+}
+
+class EmptyTestSettingsIndexer : SettingsIndexer {
+    override fun indexAllSettings() {
+        // no op
+    }
+
+    override fun getSettingsWithQuery(query: String): List<SettingsSearchItem> {
+        return emptyList()
     }
 }
