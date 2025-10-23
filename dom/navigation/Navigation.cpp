@@ -37,6 +37,7 @@
 #include "nsGlobalWindowInner.h"
 #include "nsIPrincipal.h"
 #include "nsISHistory.h"
+#include "nsIScriptChannel.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
@@ -289,7 +290,11 @@ bool Navigation::HasEntriesAndEventsDisabled() const {
          doc->GetInitialStatus() == Document::InitialStatus::IsInitial ||
          doc->GetInitialStatus() ==
              Document::InitialStatus::IsInitialButExplicitlyOpened ||
-         doc->GetPrincipal()->GetIsNullPrincipal();
+         doc->GetPrincipal()->GetIsNullPrincipal() || [&doc]() {
+           nsCOMPtr<nsIScriptChannel> channel =
+               do_QueryInterface(doc->GetChannel());
+           return channel;
+         }();
 }
 
 // https://html.spec.whatwg.org/#initialize-the-navigation-api-entries-for-a-new-document
