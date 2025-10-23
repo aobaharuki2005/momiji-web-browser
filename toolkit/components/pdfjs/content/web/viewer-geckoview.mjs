@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.329
- * pdfjsBuild = 3eca60735
+ * pdfjsVersion = 5.4.370
+ * pdfjsBuild = f6317ddbb
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -3454,10 +3454,17 @@ class CommentPopup {
     if (!correctPosition) {
       this.#editor.commentPopupPosition = [x, y];
     } else {
-      const widthRatio = this._popupWidth / this.#editor.parentBoundingClientRect.width;
+      const parentRect = this.#editor.parentBoundingClientRect;
+      const widthRatio = this._popupWidth / parentRect.width;
       if (this.#isLTR && x + widthRatio > 1 || !this.#isLTR && x - widthRatio >= 0) {
         const buttonWidth = this.#editor.commentButtonWidth;
         x -= widthRatio - buttonWidth;
+      }
+      const margin = 0.01;
+      if (this.#isLTR) {
+        x = Math.max(x, -parentRect.x / parentRect.width + margin);
+      } else {
+        x = Math.min(x, (window.innerWidth - parentRect.x) / parentRect.width - widthRatio - margin);
       }
     }
     this.#posX = x;
@@ -8213,7 +8220,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.329";
+    const viewerVersion = "5.4.370";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
