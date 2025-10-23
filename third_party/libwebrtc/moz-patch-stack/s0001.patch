@@ -1277,7 +1277,7 @@ index 8c0f592e94..502a152902 100644
  
    int64_t _lastProcessFrameTimeNanos RTC_GUARDED_BY(capture_checker_);
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index b07e5235cc..f0f2e3b853 100644
+index cecb34a303..9b6336a327 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 @@ -284,6 +284,7 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const Environment& env,
@@ -1501,7 +1501,7 @@ index b7933130bd..428fc9615d 100644
    vcm_ = nullptr;
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index 57aa114622..488eb3bb68 100644
+index 3cf3cc5c06..1ba954a5fb 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -114,7 +114,7 @@ declare_args() {

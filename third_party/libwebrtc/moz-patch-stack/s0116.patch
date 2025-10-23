@@ -18,7 +18,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c8cf67108972d5cae
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/webrtc.gni b/webrtc.gni
-index bbf1ce11ca..acd687567a 100644
+index fddcdabae7..09e3f58634 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -136,7 +136,7 @@ declare_args() {
