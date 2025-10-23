@@ -70,7 +70,6 @@ class IPPAutoStart {
       case lazy.IPProtectionStates.UNINITIALIZED:
       case lazy.IPProtectionStates.UNAVAILABLE:
       case lazy.IPProtectionStates.UNAUTHENTICATED:
-      case lazy.IPProtectionStates.ENROLLING:
       case lazy.IPProtectionStates.ERROR:
         this.#shouldStartWhenReady = true;
         break;
