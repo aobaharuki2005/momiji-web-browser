@@ -637,6 +637,8 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
     MOZ_CRASH("Not supported for this target");
   }
 
+  void truncateFloat32ModUint32(FloatRegister src, Register dest);
+
   void movq(Register rj, Register rd);
 
   void computeEffectiveAddress(const Address& address, Register dest) {

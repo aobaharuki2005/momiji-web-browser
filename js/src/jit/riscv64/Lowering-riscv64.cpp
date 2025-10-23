@@ -424,8 +424,7 @@ void LIRGeneratorRiscv64::lowerWasmBuiltinTruncateToInt32(
   }
 
   define(new (alloc()) LWasmBuiltinTruncateFToInt32(
-             useRegister(opd), useFixed(ins->instance(), InstanceReg),
-             LDefinition::BogusTemp()),
+             useRegister(opd), LAllocation(), LDefinition::BogusTemp()),
          ins);
 }
 

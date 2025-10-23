@@ -1614,8 +1614,8 @@ void CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32* ins) {
 }
 
 void CodeGenerator::visitTruncateFToInt32(LTruncateFToInt32* ins) {
-  emitTruncateFloat32(ToFloatRegister(ins->input()), ToRegister(ins->output()),
-                      ins->mir());
+  masm.truncateFloat32ModUint32(ToFloatRegister(ins->input()),
+                                ToRegister(ins->output()));
 }
 
 void CodeGenerator::visitWasmBuiltinTruncateDToInt32(
@@ -1626,8 +1626,9 @@ void CodeGenerator::visitWasmBuiltinTruncateDToInt32(
 
 void CodeGenerator::visitWasmBuiltinTruncateFToInt32(
     LWasmBuiltinTruncateFToInt32* lir) {
-  emitTruncateFloat32(ToFloatRegister(lir->input()), ToRegister(lir->output()),
-                      lir->mir());
+  MOZ_ASSERT(lir->instance()->isBogus(), "instance not used for riscv64");
+  masm.truncateFloat32ModUint32(ToFloatRegister(lir->input()),
+                                ToRegister(lir->output()));
 }
 
 void CodeGenerator::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir) {

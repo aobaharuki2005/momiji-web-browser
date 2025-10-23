@@ -1083,6 +1083,31 @@ void MacroAssemblerRiscv64Compat::convertInt32ToFloat32(const Address& src,
   fcvt_s_w(dest, scratch);
 }
 
+void MacroAssemblerRiscv64Compat::truncateFloat32ModUint32(FloatRegister src,
+                                                           Register dest) {
+  UseScratchRegisterScope temps(this);
+  Register scratch = temps.Acquire();
+
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
+  // In the case of overflow or NaN, the output is saturated.
+  // In the case of -0, the output is zero.
+  Trunc_l_s(dest, src);
+
+  // Unsigned subtraction of INT64_MAX returns 1 resp. 0 for INT64_{MIN,MAX}.
+  ma_li(scratch, Imm64(0x7fff'ffff'ffff'ffff));
+  ma_sub64(scratch, dest, scratch);
+
+  // If scratch u< 2, then scratch = 0; else scratch = -1.
+  ma_sltu(scratch, scratch, Imm32(2));
+  ma_add32(scratch, scratch, Imm32(-1));
+
+  // Clear |dest| if the truncation result was saturated.
+  ma_and(dest, dest, scratch);
+
+  // Clear upper 32 bits.
+  SignExtendWord(dest, dest);
+}
+
 void MacroAssemblerRiscv64Compat::movq(Register rj, Register rd) { mv(rd, rj); }
 
 // Memory.

@@ -1242,33 +1242,71 @@ void MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src,
                                                         Register dest,
                                                         Label* fail) {
   UseScratchRegisterScope temps(this);
+
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
+  // In the case of overflow or NaN, the output is saturated.
+  // In the case of -0, the output is zero.
+  Trunc_l_d(dest, src);
+
+  // Zero if NaN, so we don't take the failure path below.
+  Clear_if_nan_d(dest, src);
+
+  // Unsigned subtraction of INT64_MAX returns 1 resp. 0 for INT64_{MIN,MAX}.
   Register scratch = temps.Acquire();
-  Trunc_w_d(dest, src, scratch);
-  ma_b(scratch, Imm32(0), fail, Assembler::Equal);
+  ma_li(scratch, Imm64(0x7fff'ffff'ffff'ffff));
+  ma_sub64(scratch, dest, scratch);
+
+  // Fail if the result is saturated.
+  branchPtr(Assembler::BelowOrEqual, scratch, ImmWord(1), fail);
+
+  // Clear upper 32 bits.
+  move32SignExtendToPtr(dest, dest);
 }
 
 void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
                                                  Register dest, Label* fail) {
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  Trunc_w_d(dest, src, scratch);
-  ma_b(scratch, Imm32(0), fail, Assembler::Equal);
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
+  // In the case of overflow or NaN, the output is saturated.
+  // In the case of -0, the output is zero.
+  Trunc_l_d(dest, src);
+
+  // Zero if NaN, so we don't take the failure path below.
+  Clear_if_nan_d(dest, src);
+
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
+  {
+    UseScratchRegisterScope temps(this);
+    Register scratch = temps.Acquire();
+
+    move32SignExtendToPtr(dest, scratch);
+    branchPtr(Assembler::NotEqual, dest, scratch, fail);
+  }
 }
 void MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src,
                                                          Register dest,
                                                          Label* fail) {
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  Trunc_w_s(dest, src, scratch);
-  ma_b(scratch, Imm32(0), fail, Assembler::Equal);
+  // Infallible operation on riscv64.
+  truncateFloat32ModUint32(src, dest);
 }
 
 void MacroAssembler::branchTruncateFloat32ToInt32(FloatRegister src,
                                                   Register dest, Label* fail) {
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  Trunc_w_s(dest, src, scratch);
-  ma_b(scratch, Imm32(0), fail, Assembler::Equal);
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
+  // In the case of overflow or NaN, the output is saturated.
+  // In the case of -0, the output is zero.
+  Trunc_l_s(dest, src);
+
+  // Zero if NaN, so we don't take the failure path below.
+  Clear_if_nan_s(dest, src);
+
+  // Sign extend lower 32 bits to test if the result isn't an Int32.
+  {
+    UseScratchRegisterScope temps(this);
+    Register scratch = temps.Acquire();
+
+    move32SignExtendToPtr(dest, scratch);
+    branchPtr(Assembler::NotEqual, dest, scratch, fail);
+  }
 }
 
 void MacroAssembler::branchInt64NotInPtrRange(Register64 src, Label* label) {
