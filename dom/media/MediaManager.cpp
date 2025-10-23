@@ -412,6 +412,13 @@ class DeviceListener : public SupportsWeakPtr {
 
  public:
   /**
+   * Synchronously clones this device listener, setting up the device to match
+   * our current device state asynchronously. Settings, constraints and other
+   * main thread state starts applying immediately.
+   */
+  already_AddRefed<DeviceListener> Clone() const;
+
+  /**
    * Posts a task to stop the device associated with this DeviceListener and
    * notifies the associated window listener that a track was stopped.
    *
@@ -479,6 +486,10 @@ class DeviceListener : public SupportsWeakPtr {
 
   LocalMediaDevice* GetDevice() const {
     return mDeviceState ? mDeviceState->mDevice.get() : nullptr;
+  }
+
+  LocalTrackSource* GetTrackSource() const {
+    return mDeviceState ? mDeviceState->mTrackSource.get() : nullptr;
   }
 
   bool Activated() const { return static_cast<bool>(mDeviceState); }
@@ -824,7 +835,7 @@ class LocalTrackSource : public MediaStreamTrackSource {
   LocalTrackSource(nsIPrincipal* aPrincipal, const nsString& aLabel,
                    const RefPtr<DeviceListener>& aListener,
                    MediaSourceEnum aSource, MediaTrack* aTrack,
-                   RefPtr<PeerIdentity> aPeerIdentity,
+                   RefPtr<const PeerIdentity> aPeerIdentity,
                    TrackingId aTrackingId = TrackingId())
       : MediaStreamTrackSource(aPrincipal, aLabel, std::move(aTrackingId)),
         mSource(aSource),
@@ -876,6 +887,20 @@ class LocalTrackSource : public MediaStreamTrackSource {
     if (!mTrack->IsDestroyed()) {
       mTrack->Destroy();
     }
+  }
+
+  CloneResult Clone() override {
+    if (!mListener) {
+      return {};
+    }
+    RefPtr listener = mListener->Clone();
+    MOZ_ASSERT(listener);
+    if (!listener) {
+      return {};
+    }
+
+    return {.mSource = listener->GetTrackSource(),
+            .mInputTrack = listener->GetTrackSource()->mTrack};
   }
 
   void Disable() override {
@@ -1167,6 +1192,11 @@ const TrackingId& LocalMediaDevice::GetTrackingId() const {
   return mSource->GetTrackingId();
 }
 
+const dom::MediaTrackConstraints& LocalMediaDevice::Constraints() const {
+  MOZ_ASSERT(MediaManager::IsInMediaThread());
+  return mConstraints;
+}
+
 // Threadsafe since mKind and mSource are const.
 NS_IMETHODIMP
 LocalMediaDevice::GetMediaSource(nsAString& aMediaSource) {
@@ -1191,7 +1221,12 @@ nsresult LocalMediaDevice::Allocate(const MediaTrackConstraints& aConstraints,
     return NS_ERROR_FAILURE;
   }
 
-  return Source()->Allocate(aConstraints, aPrefs, aWindowID, aOutBadConstraint);
+  nsresult rv =
+      Source()->Allocate(aConstraints, aPrefs, aWindowID, aOutBadConstraint);
+  if (NS_SUCCEEDED(rv)) {
+    mConstraints = aConstraints;
+  }
+  return rv;
 }
 
 void LocalMediaDevice::SetTrack(const RefPtr<MediaTrack>& aTrack,
@@ -1235,7 +1270,11 @@ nsresult LocalMediaDevice::Reconfigure(
       }
     }
   }
-  return Source()->Reconfigure(aConstraints, aPrefs, aOutBadConstraint);
+  nsresult rv = Source()->Reconfigure(aConstraints, aPrefs, aOutBadConstraint);
+  if (NS_SUCCEEDED(rv)) {
+    mConstraints = aConstraints;
+  }
+  return rv;
 }
 
 nsresult LocalMediaDevice::FocusOnSelectedSource() {
@@ -1253,6 +1292,19 @@ nsresult LocalMediaDevice::Deallocate() {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
   return mSource->Deallocate();
+}
+
+already_AddRefed<LocalMediaDevice> LocalMediaDevice::Clone() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  auto device = MakeRefPtr<LocalMediaDevice>(mRawDevice, mID, mGroupID, mName);
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+  // The source is normally created on the MediaManager thread. But for cloning,
+  // it ends up being created on main thread. Make sure its owning event target
+  // is set properly.
+  auto* src = device->Source();
+  src->_mOwningThread = mSource->_mOwningThread;
+#endif
+  return device.forget();
 }
 
 MediaSourceEnum MediaDevice::GetMediaSource() const { return mMediaSource; }
@@ -4391,6 +4443,125 @@ nsresult DeviceListener::Initialize(PrincipalHandle aPrincipal,
   }
   LOG("started %s device %p", dom::GetEnumString(kind).get(), aDevice);
   return rv;
+}
+
+already_AddRefed<DeviceListener> DeviceListener::Clone() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaManager* mgr = MediaManager::GetIfExists();
+  if (!mgr) {
+    return nullptr;
+  }
+  if (!mWindowListener) {
+    return nullptr;
+  }
+  auto* thisDevice = GetDevice();
+  if (!thisDevice) {
+    return nullptr;
+  }
+
+  auto* thisTrackSource = GetTrackSource();
+  if (!thisTrackSource) {
+    return nullptr;
+  }
+
+  // See PrepareDOMStream for how a gUM/gDM track is created.
+  RefPtr<MediaTrack> track;
+  MediaTrackGraph* mtg = thisTrackSource->mTrack->Graph();
+  if (const auto source = thisDevice->GetMediaSource();
+      source == dom::MediaSourceEnum::Microphone) {
+#ifdef MOZ_WEBRTC
+    if (thisDevice->IsFake()) {
+      track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
+    } else {
+      track = AudioProcessingTrack::Create(mtg);
+      track->Suspend();  // Microphone source resumes in SetTrack
+    }
+#else
+    track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
+#endif
+  } else if (source == dom::MediaSourceEnum::Camera ||
+             source == dom::MediaSourceEnum::Screen ||
+             source == dom::MediaSourceEnum::Window ||
+             source == dom::MediaSourceEnum::Browser) {
+    track = mtg->CreateSourceTrack(MediaSegment::VIDEO);
+  }
+
+  if (!track) {
+    return nullptr;
+  }
+
+  RefPtr device = thisDevice->Clone();
+  auto listener = MakeRefPtr<DeviceListener>();
+  auto trackSource = MakeRefPtr<LocalTrackSource>(
+      thisTrackSource->GetPrincipal(), thisTrackSource->mLabel, listener,
+      thisTrackSource->mSource, track, thisTrackSource->mPeerIdentity,
+      thisTrackSource->mTrackingId);
+
+  LOG("DeviceListener %p registering clone", this);
+  mWindowListener->Register(listener);
+  LOG("DeviceListener %p activating clone", this);
+  mWindowListener->Activate(listener, device, trackSource,
+                            /*aIsAllocated=*/false);
+
+  listener->mDeviceState->mDeviceEnabled = mDeviceState->mDeviceEnabled;
+  listener->mDeviceState->mDeviceMuted = mDeviceState->mDeviceMuted;
+  listener->mDeviceState->mTrackEnabled = mDeviceState->mTrackEnabled;
+  listener->mDeviceState->mTrackEnabledTime = TimeStamp::Now();
+
+  // We have to do an async operation here, even though Clone() is sync.
+  // This is fine because JS will not be able to trigger any operation to run
+  // async on the media thread.
+  LOG("DeviceListener %p allocating clone device %p async", this, device.get());
+  InvokeAsync(
+      mgr->mMediaThread, __func__,
+      [thisDevice = RefPtr(thisDevice), device, prefs = mgr->mPrefs,
+       windowId = mWindowListener->WindowID(), listener,
+       principal = GetPrincipalHandle(), track,
+       startDevice = !listener->mDeviceState->mDeviceMuted &&
+                     listener->mDeviceState->mDeviceEnabled] {
+        const char* outBadConstraint{};
+        nsresult rv = device->Source()->Allocate(
+            thisDevice->Constraints(), prefs, windowId, &outBadConstraint);
+        LOG("Allocated clone device %p. rv=%s", device.get(),
+            GetStaticErrorName(rv));
+        if (NS_FAILED(rv)) {
+          return GenericPromise::CreateAndReject(
+              rv, "DeviceListener::Clone failure #1");
+        }
+        rv = listener->Initialize(principal, device, track, startDevice);
+        if (NS_SUCCEEDED(rv)) {
+          return GenericPromise::CreateAndResolve(
+              true, "DeviceListener::Clone success");
+        }
+        return GenericPromise::CreateAndReject(
+            rv, "DeviceListener::Clone failure #2");
+      })
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [listener, device,
+              trackSource](GenericPromise::ResolveOrRejectValue&& aValue) {
+               if (aValue.IsReject()) {
+                 // Allocating/initializing failed. Stopping the device listener
+                 // will destroy the MediaStreamTrackSource's MediaTrack, which
+                 // will make the MediaStreamTrack's mTrack MediaTrack auto-end
+                 // due to lack of inputs. This makes the MediaStreamTrack's
+                 // readyState transition to "ended" as expected.
+                 LOG("Allocating clone device %p failed. Stopping.",
+                     device.get());
+                 listener->Stop();
+                 return;
+               }
+               listener->mDeviceState->mAllocated = true;
+               if (listener->mDeviceState->mStopped) {
+                 MediaManager::Dispatch(NS_NewRunnableFunction(
+                     "DeviceListener::Clone::Stop",
+                     [device = listener->mDeviceState->mDevice]() {
+                       device->Stop();
+                       device->Deallocate();
+                     }));
+               }
+             });
+
+  return listener.forget();
 }
 
 void DeviceListener::Stop() {
