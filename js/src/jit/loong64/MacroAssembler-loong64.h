@@ -476,8 +476,6 @@ class MacroAssemblerLOONG64Compat : public MacroAssemblerLOONG64 {
     MOZ_CRASH("Not supported for this target");
   }
 
-  void movq(Register rj, Register rd);
-
   void computeScaledAddress(const BaseIndex& address, Register dest);
   void computeScaledAddress32(const BaseIndex& address, Register dest);
 

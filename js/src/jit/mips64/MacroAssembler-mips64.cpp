@@ -198,10 +198,6 @@ void MacroAssembler::convertIntPtrToDouble(Register src, FloatRegister dest) {
   convertInt64ToDouble(Register64(src), dest);
 }
 
-void MacroAssemblerMIPS64Compat::movq(Register rs, Register rd) {
-  ma_move(rd, rs);
-}
-
 void MacroAssemblerMIPS64::ma_li(Register dest, CodeLabel* label) {
   BufferOffset bo = m_buffer.nextOffset();
   ma_liPatchable(dest, ImmWord(/* placeholder */ 0));

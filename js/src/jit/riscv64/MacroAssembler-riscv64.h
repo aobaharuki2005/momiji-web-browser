@@ -639,8 +639,6 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
 
   void truncateFloat32ModUint32(FloatRegister src, Register dest);
 
-  void movq(Register rj, Register rd);
-
   void computeEffectiveAddress(const Address& address, Register dest) {
     ma_add64(dest, address.base, Imm32(address.offset));
   }

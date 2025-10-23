@@ -1108,8 +1108,6 @@ void MacroAssemblerRiscv64Compat::truncateFloat32ModUint32(FloatRegister src,
   SignExtendWord(dest, dest);
 }
 
-void MacroAssemblerRiscv64Compat::movq(Register rj, Register rd) { mv(rd, rj); }
-
 // Memory.
 FaultingCodeOffset MacroAssemblerRiscv64::ma_loadDouble(FloatRegister dest,
                                                         Address address) {

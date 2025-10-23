@@ -290,8 +290,6 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     MOZ_CRASH("Not supported for this target");
   }
 
-  void movq(Register rs, Register rd);
-
   void computeScaledAddress(const BaseIndex& address, Register dest);
   void computeScaledAddress32(const BaseIndex& address, Register dest);
 
