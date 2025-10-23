@@ -651,6 +651,12 @@ static void ApplyFallbackTactic(
     case StylePositionTryFallbacksTryTacticKeyword::FlipStart:
       FlipStartsAndEnds(aPhysicalArea, aWM);
       return;
+    case StylePositionTryFallbacksTryTacticKeyword::FlipX:
+      FlipInAxis(aPhysicalArea, PhysicalAxis::Horizontal);
+      return;
+    case StylePositionTryFallbacksTryTacticKeyword::FlipY:
+      FlipInAxis(aPhysicalArea, PhysicalAxis::Vertical);
+      return;
   }
 }
 
