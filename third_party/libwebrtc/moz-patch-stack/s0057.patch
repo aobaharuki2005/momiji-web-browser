@@ -30,10 +30,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ee566d1bfb654d36e
  12 files changed, 70 insertions(+), 8 deletions(-)
 
 diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
-index 17a030b2c4..251b464f37 100644
+index 78426db4f6..467ceaa42d 100644
 --- a/api/video/frame_buffer.cc
 +++ b/api/video/frame_buffer.cc
-@@ -149,14 +149,29 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
+@@ -150,14 +150,29 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
    }
  
    auto end_it = std::next(next_decodable_temporal_unit_->last_frame);
@@ -66,7 +66,7 @@ index 17a030b2c4..251b464f37 100644
  std::optional<int64_t> FrameBuffer::LastContinuousFrameId() const {
    return last_continuous_frame_id_;
  }
-@@ -176,6 +191,9 @@ int FrameBuffer::GetTotalNumberOfContinuousTemporalUnits() const {
+@@ -177,6 +192,9 @@ int FrameBuffer::GetTotalNumberOfContinuousTemporalUnits() const {
  int FrameBuffer::GetTotalNumberOfDroppedFrames() const {
    return num_dropped_frames_;
  }
@@ -76,7 +76,7 @@ index 17a030b2c4..251b464f37 100644
  
  size_t FrameBuffer::CurrentSize() const {
    return frames_.size();
-@@ -278,6 +296,7 @@ void FrameBuffer::FindNextAndLastDecodableTemporalUnit() {
+@@ -280,6 +298,7 @@ void FrameBuffer::FindNextAndLastDecodableTemporalUnit() {
  }
  
  void FrameBuffer::Clear() {

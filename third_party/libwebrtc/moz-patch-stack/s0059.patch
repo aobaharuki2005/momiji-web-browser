@@ -23,7 +23,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8e9a326a99cd5eaa6
  4 files changed, 55 insertions(+)
 
 diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
-index 251b464f37..90fbb7780f 100644
+index 467ceaa42d..b6e67a4309 100644
 --- a/api/video/frame_buffer.cc
 +++ b/api/video/frame_buffer.cc
 @@ -25,6 +25,7 @@
@@ -83,7 +83,7 @@ index 251b464f37..90fbb7780f 100644
        return false;
      }
    }
-@@ -158,16 +176,31 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
+@@ -159,16 +177,31 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
  
  void FrameBuffer::UpdateDroppedFramesAndDiscardedPackets(FrameIterator begin_it,
                                                           FrameIterator end_it) {
