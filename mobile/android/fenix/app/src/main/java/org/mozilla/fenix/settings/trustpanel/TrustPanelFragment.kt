@@ -259,11 +259,11 @@ class TrustPanelFragment : BottomSheetDialogFragment() {
                     when (route) {
                         Route.ProtectionPanel -> {
                             ProtectionPanel(
+                                websiteInfoState = store.state.websiteInfoState,
                                 icon = sessionState?.content?.icon,
                                 isTrackingProtectionEnabled = isTrackingProtectionEnabled,
                                 isLocalPdf = args.isLocalPdf,
                                 numberOfTrackersBlocked = numberOfTrackersBlocked,
-                                websiteInfoState = store.state.websiteInfoState,
                                 websitePermissions = websitePermissions.filter { it.isVisible },
                                 onTrackerBlockedMenuClick = {
                                     contentState = Route.TrackersPanel
