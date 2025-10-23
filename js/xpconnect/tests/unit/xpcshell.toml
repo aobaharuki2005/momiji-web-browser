@@ -261,9 +261,6 @@ skip-if = ["!nightly_build"]
 ["test_js_weak_references.js"]
 
 ["test_json_parse_with_source.js"]
-prefs = [
-  "javascript.options.experimental.json_parse_with_source=true",
-]
 
 ["test_loadedESModules.js"]
 

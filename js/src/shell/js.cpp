@@ -12829,8 +12829,6 @@ bool InitOptionParser(OptionParser& op) {
                         "Enable iterator helpers") ||
       !op.addBoolOption('\0', "enable-async-iterator-helpers",
                         "Enable async iterator helpers") ||
-      !op.addBoolOption('\0', "enable-json-parse-with-source",
-                        "Enable JSON.parse with source") ||
       !op.addBoolOption('\0', "enable-shadow-realms", "Enable ShadowRealms") ||
       !op.addBoolOption('\0', "disable-array-grouping",
                         "Disable Object.groupBy and Map.groupBy") ||
@@ -13285,10 +13283,6 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
     JS::Prefs::setAtStartup_experimental_temporal(true);
   }
 #endif
-  if (op.getBoolOption("enable-json-parse-with-source")) {
-    JS::Prefs::set_experimental_json_parse_with_source(true);
-  }
-
   JS::Prefs::setAtStartup_experimental_weakrefs_expose_cleanupSome(true);
 
   if (op.getBoolOption("disable-property-error-message-fix")) {
