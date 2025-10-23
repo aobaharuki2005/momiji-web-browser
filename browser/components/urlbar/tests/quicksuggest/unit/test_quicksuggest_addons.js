@@ -428,7 +428,7 @@ add_task(async function remoteSettings() {
   ];
 
   // Disable Merino so we trigger only remote settings suggestions.
-  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
+  UrlbarPrefs.set("quicksuggest.online.enabled", false);
 
   for (let { input, expected } of testCases) {
     await check_results({
@@ -440,7 +440,7 @@ add_task(async function remoteSettings() {
     });
   }
 
-  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+  UrlbarPrefs.clear("quicksuggest.online.enabled");
 });
 
 add_task(async function merinoIsTopPick() {
@@ -484,7 +484,7 @@ add_task(async function merinoIsTopPick() {
 // Tests the "Not relevant" command: a dismissed suggestion shouldn't be added.
 add_task(async function notRelevant() {
   // Disable Merino suggestions to make this task simpler.
-  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
+  UrlbarPrefs.set("quicksuggest.online.enabled", false);
 
   await doDismissOneTest({
     result: makeExpectedResult({
@@ -509,7 +509,7 @@ add_task(async function notRelevant() {
     ],
   });
 
-  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+  UrlbarPrefs.clear("quicksuggest.online.enabled");
 });
 
 // Tests the "Not interested" command: all addon suggestions should be disabled

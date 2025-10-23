@@ -1331,7 +1331,11 @@ Changelog
   Firefox 94.0.2
     Introduced. [Bug 1735976_]
 
+  Firefox 146.0
+    Removed. [Bug 1995362_]
+
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
+.. _1995362: https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
 
 browser.urlbar.suggest.quicksuggest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

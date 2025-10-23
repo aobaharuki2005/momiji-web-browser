@@ -16,12 +16,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 
 /**
- * The Suggest Merino backend. This backend is enabled when the user opts in to
- * Merino, also called "online" Suggest.
+ * The Suggest Merino backend. This backend is enabled when online Suggest is
+ * available to the user and enabled.
  */
 export class SuggestBackendMerino extends SuggestBackend {
   get enablingPreferences() {
-    return ["quicksuggest.dataCollection.enabled"];
+    return ["quickSuggestOnlineAvailable", "quicksuggest.online.enabled"];
   }
 
   /**

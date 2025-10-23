@@ -171,8 +171,17 @@ browser.urlbar.quicksuggest.enabled (boolean, default: false)
   the individual prefs ``browser.urlbar.suggest.quicksuggest.nonsponsored`` and
   ``browser.urlbar.suggest.quicksuggest.sponsored``.
 
-browser.urlbar.quicksuggest.dataCollection.enabled (boolean, default: false)
-  Whether data collection is enabled for quick suggest results.
+browser.urlbar.quicksuggest.online.available (boolean, default: false)
+  Whether online Firefox Suggest is available to the user. This is only
+  relevant when Suggest overall is enabled. When true, a checkbox will be
+  shown in the settings UI allowing to the user to toggle online Suggest.
+
+browser.urlbar.quicksuggest.online.enabled (boolean, default: true)
+  Whether Firefox Suggest retrieves online suggestions from Merino. This pref
+  is only relevant when Suggest overall is enabled and online Suggest is
+  available to the user; otherwise online suggestions are disabled. In
+  addition, when the relevant Oblivious HTTP (OHTTP) Merino prefs are set,
+  online suggestions will be fetched over OHTTP.
 
 browser.urlbar.richSuggestions.tail (boolean, default: true)
   If true, we show tail search suggestions when available.

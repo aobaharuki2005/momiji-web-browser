@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Tests that Suggest is enabled by default for appropriate locales and disabled
-// by default everywhere else. (When Suggest is enabled by default, "offline"
-// suggestions are enabled but Merino is not, hence "offline" default.)
+// Tests that Suggest is enabled by default for appropriate region-locales and
+// disabled by default everywhere else.
 
 "use strict";
 
@@ -17,7 +16,8 @@ const EN_LOCALES = ["en-CA", "en-GB", "en-US", "en-ZA"];
 // Expected prefs when Suggest is disabled.
 const EXPECTED_PREFS_SUGGEST_DISABLED = {
   "quicksuggest.enabled": false,
-  "quicksuggest.dataCollection.enabled": false,
+  "quicksuggest.online.available": false,
+  "quicksuggest.online.enabled": true,
   "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.NONE,
   "suggest.quicksuggest.nonsponsored": false,
   "suggest.quicksuggest.sponsored": false,
@@ -30,20 +30,16 @@ const EXPECTED_PREFS_SUGGEST_DISABLED = {
   "yelp.featureGate": false,
 };
 
-// Expected prefs for native locales in EU countries (e.g., `de` locale in Germany).
+// Expected prefs for native locales in EU countries (e.g., `de` locale in
+// Germany).
 const EXPECTED_PREFS_EU_NATIVE = {
+  ...EXPECTED_PREFS_SUGGEST_DISABLED,
   "quicksuggest.enabled": true,
-  "quicksuggest.dataCollection.enabled": false,
   "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
   "suggest.quicksuggest.nonsponsored": true,
   "suggest.quicksuggest.sponsored": true,
-  "addons.featureGate": false,
-  "amp.featureGate": false,
   "importantDates.featureGate": true,
-  "mdn.featureGate": false,
   "weather.featureGate": true,
-  "wikipedia.featureGate": false,
-  "yelp.featureGate": false,
 };
 
 // Expected prefs for `en` locales in EU countries (e.g., `en-US` locale in
@@ -52,6 +48,21 @@ const EXPECTED_PREFS_EU_EN = {
   ...EXPECTED_PREFS_SUGGEST_DISABLED,
   "quicksuggest.enabled": true,
   "importantDates.featureGate": true,
+};
+
+// Base set of expected prefs for countries where an `en` locale is native
+// (e.g., US, UK). These countries will have slightly different actual expected
+// prefs, which is why this is a base set.
+const EXPECTED_PREFS_BASE_EN_NATIVE = {
+  ...EXPECTED_PREFS_SUGGEST_DISABLED,
+  "quicksuggest.enabled": true,
+  "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
+  "suggest.quicksuggest.nonsponsored": true,
+  "suggest.quicksuggest.sponsored": true,
+  "amp.featureGate": true,
+  "importantDates.featureGate": true,
+  "weather.featureGate": true,
+  "wikipedia.featureGate": true,
 };
 
 // Region -> locale -> expected prefs when Suggest is enabled
@@ -69,23 +80,7 @@ const EXPECTED_PREFS_BY_LOCALE_BY_REGION = {
     ),
   },
   GB: Object.fromEntries(
-    EN_LOCALES.map(locale => [
-      locale,
-      {
-        "quicksuggest.enabled": true,
-        "quicksuggest.dataCollection.enabled": false,
-        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
-        "suggest.quicksuggest.nonsponsored": true,
-        "suggest.quicksuggest.sponsored": true,
-        "addons.featureGate": false,
-        "amp.featureGate": true,
-        "importantDates.featureGate": true,
-        "mdn.featureGate": false,
-        "weather.featureGate": true,
-        "wikipedia.featureGate": true,
-        "yelp.featureGate": false,
-      },
-    ])
+    EN_LOCALES.map(locale => [locale, EXPECTED_PREFS_BASE_EN_NATIVE])
   ),
   IT: {
     it: EXPECTED_PREFS_EU_NATIVE,
@@ -97,17 +92,9 @@ const EXPECTED_PREFS_BY_LOCALE_BY_REGION = {
     EN_LOCALES.map(locale => [
       locale,
       {
-        "quicksuggest.enabled": true,
-        "quicksuggest.dataCollection.enabled": false,
-        "quicksuggest.settingsUi": QuickSuggest.SETTINGS_UI.OFFLINE_ONLY,
-        "suggest.quicksuggest.nonsponsored": true,
-        "suggest.quicksuggest.sponsored": true,
+        ...EXPECTED_PREFS_BASE_EN_NATIVE,
         "addons.featureGate": true,
-        "amp.featureGate": true,
-        "importantDates.featureGate": true,
         "mdn.featureGate": true,
-        "weather.featureGate": true,
-        "wikipedia.featureGate": true,
         "yelp.featureGate": true,
       },
     ])

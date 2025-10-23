@@ -139,7 +139,8 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       "quicksuggest.realtimeOptIn.dismissTypes",
       "quicksuggest.realtimeOptIn.notNowTimeSeconds",
       "quicksuggest.realtimeOptIn.notNowReshowAfterPeriodDays",
-      "quicksuggest.dataCollection.enabled",
+      "quickSuggestOnlineAvailable",
+      "quicksuggest.online.enabled",
       this.featureGatePref,
       this.suggestPref,
 
@@ -164,15 +165,18 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   }
 
   get shouldEnable() {
-    if (!lazy.UrlbarPrefs.get(this.featureGatePref)) {
-      // The feature gate is disabled. Don't show opt-in or online suggestions
-      // for this realtime type.
+    if (
+      !lazy.UrlbarPrefs.get(this.featureGatePref) ||
+      !lazy.UrlbarPrefs.get("quickSuggestOnlineAvailable")
+    ) {
+      // The feature gate is disabled or online suggestions aren't available.
+      // Don't show opt-in or online suggestions for this realtime type.
       return false;
     }
 
-    if (lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")) {
-      // The user opted in to online suggestions. Show this realtime type if
-      // they didn't disable it.
+    if (lazy.UrlbarPrefs.get("quicksuggest.online.enabled")) {
+      // Online suggestions are enabled. Show this realtime type if the user
+      // didn't disable it.
       return lazy.UrlbarPrefs.get(this.suggestPref);
     }
 
@@ -256,9 +260,9 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   }
 
   filterSuggestions(suggestions) {
-    // The Rust opt-in suggestion can continue to be matched after the user opts
-    // in, so always return only Merino suggestions after opt in.
-    if (lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")) {
+    // The Rust opt-in suggestion can always be matched regardless of whether
+    // online is enabled, so return only Merino suggestions when it is enabled.
+    if (lazy.UrlbarPrefs.get("quicksuggest.online.enabled")) {
       return suggestions.filter(s => s.source == "merino");
     }
     return suggestions;
@@ -560,7 +564,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   onOptInEngagement(queryContext, controller, details, _searchString) {
     switch (details.selType) {
       case "opt_in":
-        lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+        lazy.UrlbarPrefs.set("quicksuggest.online.enabled", true);
         controller.input.startQuery({ allowAutofill: false });
         break;
       case "not_now": {

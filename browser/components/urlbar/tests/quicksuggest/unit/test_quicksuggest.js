@@ -2113,7 +2113,8 @@ add_task(async function online_wikipedia_disabled() {
 });
 
 async function doMerinoTest(callback) {
-  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+  UrlbarPrefs.set("quicksuggest.online.available", true);
+  UrlbarPrefs.set("quicksuggest.online.enabled", true);
   await MerinoTestUtils.server.start();
 
   MerinoTestUtils.server.response.body.suggestions = MERINO_SUGGESTIONS;
@@ -2121,7 +2122,8 @@ async function doMerinoTest(callback) {
   await callback();
 
   await MerinoTestUtils.server.stop();
-  UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
+  UrlbarPrefs.clear("quicksuggest.online.available");
+  UrlbarPrefs.clear("quicksuggest.online.enabled");
 }
 
 add_task(async function mergeRustProviderConstraints() {

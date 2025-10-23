@@ -23,11 +23,6 @@ add_task(async function sponsoredToggled() {
   doToggleTest("suggest.quicksuggest.sponsored");
 });
 
-// Toggles the `quicksuggest.dataCollection.enabled` pref.
-add_task(async function dataCollectionToggled() {
-  doToggleTest("quicksuggest.dataCollection.enabled");
-});
-
 function doToggleTest(pref) {
   let enabled = UrlbarPrefs.get(pref);
   Assert.equal(
@@ -82,11 +77,7 @@ add_task(async function telemetryEnvironmentOnStartup() {
   // array here.
   Assert.deepEqual(
     prefs.sort(),
-    [
-      "quicksuggest.dataCollection.enabled",
-      "suggest.quicksuggest.nonsponsored",
-      "suggest.quicksuggest.sponsored",
-    ],
+    ["suggest.quicksuggest.nonsponsored", "suggest.quicksuggest.sponsored"],
     "Expected startup prefs"
   );
 

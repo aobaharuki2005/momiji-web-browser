@@ -479,20 +479,36 @@ pref("browser.urlbar.suggest.quicksuggest.nonsponsored", false, sticky);
 // default-branch values, the user is enrolled in over time.
 pref("browser.urlbar.suggest.quicksuggest.sponsored", false, sticky);
 
+// TODO: Remove this pref, which is the old opt-in pref for online Firefox
+// Suggest. We need to keep it for now because some live Nimbus experiments use
+// a targeting filter that depends on it. Original comment below.
+//
 // Whether data collection is enabled for quick suggest results in the urlbar.
 // This pref is exposed to the user in the UI, and it's sticky so that its
 // user-branch value persists regardless of whatever Firefox Suggest scenarios,
 // with their various default-branch values, the user is enrolled in over time.
 pref("browser.urlbar.quicksuggest.dataCollection.enabled", false, sticky);
 
-// Whether quick suggest retrives online suggestions from Merino via Oblivious
-// HTTP (OHTTP). This functionality is being enabled in a future release. Note,
-// that even if this is preference enabled, the feature may not be available
-// - there are other prefs that control if the feature is available or not.
-// When the feature is enabled, the pref will also be exposed to the user in the
-// UI and it's sticky so that its user-branch value persists regardless of
-// whatever Firefox Suggest scenarios, with their various default-brnch values,
-// the user is enrolled in over time.
+// Whether online Firefox Suggest is available to the user. This is only
+// relevant when Suggest overall is enabled [1]. When true, a checkbox will be
+// shown in the settings UI allowing to the user to toggle online Suggest.
+//
+// [1] browser.urlbar.quicksuggest.enabled
+pref("browser.urlbar.quicksuggest.online.available", false);
+
+// Whether Firefox Suggest retrieves online suggestions from Merino. This pref
+// is only relevant when Suggest overall is enabled [1] and online Suggest is
+// available to the user [2]; otherwise online suggestions are disabled. In
+// addition, when the relevant Oblivious HTTP (OHTTP) prefs [3, 4] are set,
+// online suggestions will be fetched over OHTTP.
+//
+// This pref corresponds to the online Suggest checkbox in the settings UI. It's
+// sticky so that user choice is preserved regardless of its default value.
+//
+// [1] browser.urlbar.quicksuggest.enabled
+// [2] browser.urlbar.quicksuggest.online.available
+// [3] browser.urlbar.merino.ohttpConfigURL
+// [4] browser.urlbar.merino.ohttpRelayURL
 pref("browser.urlbar.quicksuggest.online.enabled", true, sticky);
 
 // Whether the Firefox Suggest contextual opt-in result is enabled.

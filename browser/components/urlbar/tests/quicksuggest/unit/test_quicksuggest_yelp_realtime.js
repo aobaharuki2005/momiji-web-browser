@@ -194,7 +194,7 @@ add_task(async function opt_in_on_opt_in_prompt() {
   });
 
   info("Check the prefs after triggering");
-  Assert.ok(UrlbarPrefs.get("quicksuggest.dataCollection.enabled"));
+  Assert.ok(UrlbarPrefs.get("quicksuggest.online.enabled"));
 
   info("Check the result after triggering");
   await check_results({
@@ -358,7 +358,8 @@ add_task(async function not_interested_on_opt_in_prompt() {
 
 function setupOptInPromptTest() {
   UrlbarPrefs.set("suggest.realtimeOptIn", true);
-  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
+  UrlbarPrefs.set("quicksuggest.online.available", true);
+  UrlbarPrefs.set("quicksuggest.online.enabled", false);
   UrlbarPrefs.set("quicksuggest.realtimeOptIn.dismissTypes", "");
   UrlbarPrefs.set("quicksuggest.realtimeOptIn.notNowTimeSeconds", 0);
   UrlbarPrefs.set("quicksuggest.realtimeOptIn.notNowTypes", "");

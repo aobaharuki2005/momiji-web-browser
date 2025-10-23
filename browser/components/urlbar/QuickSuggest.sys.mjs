@@ -62,10 +62,7 @@ const EN_LOCALES = ["en-CA", "en-GB", "en-US", "en-ZA"];
 const SUGGEST_PREFS = Object.freeze({
   // Prefs related to Suggest overall
   //
-  // Please update `test_quicksuggest_offlineDefault.js` when you change these.
-  "quicksuggest.dataCollection.enabled": {
-    nimbusVariableIfExposedInUi: "quickSuggestDataCollectionEnabled",
-  },
+  // Please update `test_quicksuggest_defaultPrefs.js` when you change these.
   "quicksuggest.enabled": {
     defaultValues: {
       DE: [["de", ...EN_LOCALES], true],
@@ -107,7 +104,7 @@ const SUGGEST_PREFS = Object.freeze({
 
   // Prefs related to individual features
   //
-  // Please update `test_quicksuggest_offlineDefault.js` when you change these.
+  // Please update `test_quicksuggest_defaultPrefs.js` when you change these.
   "addons.featureGate": {
     defaultValues: {
       US: [EN_LOCALES, true],

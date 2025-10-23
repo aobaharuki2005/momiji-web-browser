@@ -189,10 +189,10 @@ class _QuickSuggestTestUtils {
    *       the record should be added to. Defaults to "quicksuggest-other".
    * @param {Array} [options.merinoSuggestions]
    *   Array of Merino suggestion objects. If given, this function will start
-   *   the mock Merino server and set `quicksuggest.dataCollection.enabled` to
-   *   true so that `UrlbarProviderQuickSuggest` will fetch suggestions from it.
-   *   Otherwise Merino will not serve suggestions, but you can still set up
-   *   Merino without using this function by using `MerinoTestUtils` directly.
+   *   the mock Merino server and set appropriate online prefs so that Suggest
+   *   will fetch suggestions from it. Otherwise Merino will not serve
+   *   suggestions, but you can still set up Merino without using this function
+   *   by using `MerinoTestUtils` directly.
    * @param {object} [options.config]
    *   The Suggest configuration object. This should not be the full remote
    *   settings record; only pass the object that should be set to the nested
@@ -280,7 +280,8 @@ class _QuickSuggestTestUtils {
       this.#log("ensureQuickSuggestInit", "Setting up Merino server");
       await lazy.MerinoTestUtils.server.start();
       lazy.MerinoTestUtils.server.response.body.suggestions = merinoSuggestions;
-      lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+      lazy.UrlbarPrefs.set("quicksuggest.online.available", true);
+      lazy.UrlbarPrefs.set("quicksuggest.online.enabled", true);
       this.#log("ensureQuickSuggestInit", "Done setting up Merino server");
     }
 
@@ -303,7 +304,7 @@ class _QuickSuggestTestUtils {
     return cleanup;
   }
 
-  async #uninitQuickSuggest(prefs, clearDataCollectionEnabled) {
+  async #uninitQuickSuggest(prefs, clearOnlinePrefs) {
     this.#log("#uninitQuickSuggest", "Started");
 
     // Reset prefs, which can cause the Rust backend to start syncing. Wait for
@@ -316,8 +317,9 @@ class _QuickSuggestTestUtils {
     this.#log("#uninitQuickSuggest", "Stopping remote settings server");
     await this.#remoteSettingsServer.stop();
 
-    if (clearDataCollectionEnabled) {
-      lazy.UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
+    if (clearOnlinePrefs) {
+      lazy.UrlbarPrefs.clear("quicksuggest.online.available");
+      lazy.UrlbarPrefs.clear("quicksuggest.online.enabled");
     }
 
     await lazy.QuickSuggest.rustBackend._test_setRemoteSettingsService(null);

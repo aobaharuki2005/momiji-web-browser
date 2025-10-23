@@ -113,6 +113,7 @@ async function doMigrateTest({
   let initialDefaultBranch = {
     "suggest.quicksuggest.nonsponsored": false,
     "suggest.quicksuggest.sponsored": false,
+    // This pref is obsolete but it's used by old migrations that we still test.
     "quicksuggest.dataCollection.enabled": false,
   };
   for (let name of Object.keys(initialDefaultBranch)) {
@@ -626,7 +627,7 @@ async function doOneShowLessFrequentlyTest({
   // mock Merino server will always return whatever suggestion it's told to
   // return regardless of the search string. That means Merino will return a
   // suggestion for a keyword that's smaller than the first full word.
-  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
+  UrlbarPrefs.set("quicksuggest.online.enabled", false);
 
   // Set Nimbus variables and RS config.
   let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature(nimbus);
@@ -701,7 +702,7 @@ async function doOneShowLessFrequentlyTest({
 
   await cleanUpNimbus();
   UrlbarPrefs.clear(showLessFrequentlyCountPref);
-  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+  UrlbarPrefs.clear("quicksuggest.online.enabled");
 }
 
 /**

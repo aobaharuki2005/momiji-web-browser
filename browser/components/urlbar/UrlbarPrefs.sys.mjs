@@ -292,7 +292,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // impression.
   ["quicksuggest.contextualOptIn.impressionDaysLimit", 5],
 
-  // Whether the user has opted in to data collection for quick suggest.
+  // TODO: Remove this pref, which is the old opt-in pref for online Firefox
+  // Suggest. We need to keep it for now because some live Nimbus experiments
+  // use a targeting filter that depends on it.
   ["quicksuggest.dataCollection.enabled", false],
 
   // Comma-separated list of Suggest dynamic suggestion types to enable.
@@ -337,6 +339,18 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
 
   // Whether Suggest will use the ML backend in addition to Rust.
   ["quicksuggest.mlEnabled", false],
+
+  // NOTE: You should most likely access this pref via its Nimbus variable
+  // instead: `UrlbarPrefs.get("quickSuggestOnlineAvailable"). It's listed here
+  // mainly so tests can access it easily via `UrlbarPrefs`.
+  //
+  // Whether online Suggest is available to the user. This is only relevant when
+  // Suggest overall is enabled.
+  ["quicksuggest.online.available", false],
+
+  // Whether online Suggest is enabled for the user. This is only relevant when
+  // Suggest overall is enabled and online Suggest is available to the user.
+  ["quicksuggest.online.enabled", true],
 
   // The last time (as seconds) the user selected 'Not Now' on Realtime
   // suggestion opt-in result.
