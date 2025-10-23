@@ -238,8 +238,9 @@ export class GuardianClient {
     url.pathname = "/oauth/success";
     return url;
   }
-  /** This is the URL that the user will be redirected to after a rejected/failed enrollment.
-   *  The url will contain an error query parameter with the error message.
+  /**
+   * This is the URL that the user will be redirected to after a rejected/failed enrollment.
+   * The url will contain an error query parameter with the error message.
    */
   get #enrollmentError() {
     const url = new URL(this.guardianEndpoint);

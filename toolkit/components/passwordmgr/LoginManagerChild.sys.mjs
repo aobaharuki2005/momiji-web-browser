@@ -738,7 +738,8 @@ export class LoginFormState {
     lazy.gFormFillService.showPopup();
   }
 
-  /** Remove login field highlight when its value is cleared or overwritten.
+  /**
+   * Remove login field highlight when its value is cleared or overwritten.
    */
   static #removeFillFieldHighlight(event) {
     event.target.autofillState = "";

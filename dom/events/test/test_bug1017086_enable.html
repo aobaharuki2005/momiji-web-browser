@@ -21,9 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1017086
       }
       function part_of_checks(pointer_events, check, window, document, testelem) {
         for(item in pointer_events) { check(true,  pointer_events[item], window, "window"); }
-        /** TODO
-        for(item in pointer_events) { check(false, pointer_events[item], document, "document"); }
-        **/
+        // TODO
+        // for(item in pointer_events) { check(false, pointer_events[item], document, "document"); }
         for(item in pointer_events) { check(true,  pointer_events[item], testelem, "element"); }
         SimpleTest.finish();
       }

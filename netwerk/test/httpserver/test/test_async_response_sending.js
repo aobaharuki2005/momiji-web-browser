@@ -45,7 +45,7 @@ function runNextTest() {
   }
 }
 
-/** ***********
+/*************
  * TEST DATA *
  *************/
 
@@ -72,9 +72,11 @@ const LATTER_HALF_THIRD_SEGMENT = [11, 12];
 
 const TWO_HALF_SEGMENTS = [1, 2, 1, 2];
 
-/** *******
+/**
+ * *******
  * TESTS *
- *********/
+ ********
+ */
 
 var tests = [
   sourceClosedWithoutWrite,
@@ -318,7 +320,7 @@ function sinkAndSourceClosedWithPendingData(next) {
   t.expect(Cr.NS_ERROR_UNEXPECTED, []);
 }
 
-/** ***********
+/*************
  * UTILITIES *
  *************/
 
@@ -375,7 +377,7 @@ function note(m) {
   dumpn(asterisks + "\n* " + m + " *\n" + asterisks);
 }
 
-/** *********
+/***********
  * MOCKERY *
  ***********/
 

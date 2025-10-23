@@ -809,7 +809,7 @@ add_task(async function test_link_preview_error_rendered() {
 
 /**
  * Test that settings icon is correctly rendered in the link preview card.
-//  */
+ */
 add_task(async function test_link_preview_settings_icon_rendered() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.ml.linkPreview.enabled", true]],

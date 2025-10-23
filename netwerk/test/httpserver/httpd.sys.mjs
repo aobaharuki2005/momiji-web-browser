@@ -1199,8 +1199,9 @@ function Connection(
    */
   this.request = null;
 
-  /** This allows a connection to disambiguate between a peer initiating a
-   *  close and the socket being forced closed on shutdown.
+  /**
+   * This allows a connection to disambiguate between a peer initiating a
+   * close and the socket being forced closed on shutdown.
    */
   this._closed = false;
 

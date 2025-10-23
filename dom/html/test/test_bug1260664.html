@@ -30,10 +30,12 @@ function runTests() {
       attribute: { content: "referrerpolicy", idl: "referrerPolicy" },
       validValues: [ "no-referrer",
                      "origin",
-                     /** These 2 below values are still invalid, please see
-                       Bug 1178337 - Valid referrer attribute values **/
-                     /** "no-referrer-when-downgrade",
-                     "origin-when-cross-origin", **/
+                     /**
+                      * These 2 below values are still invalid, please see
+                      * Bug 1178337 - Valid referrer attribute values
+                      */
+                     //  "no-referrer-when-downgrade",
+                     //  "origin-when-cross-origin",
                      "unsafe-url" ],
       invalidValues: [
         "", "  orIgin   ", "  unsafe-uRl  ", "  No-RefeRRer  ", " fOoBaR  "

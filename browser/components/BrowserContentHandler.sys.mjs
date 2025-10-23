@@ -826,7 +826,8 @@ nsBrowserContentHandler.prototype = {
               overridePage = null;
             }
 
-            /** If the override URL is provided by an experiment, is a valid
+            /**
+             * If the override URL is provided by an experiment, is a valid
              * Firefox What's New Page URL, and the update version is less than
              * or equal to the maxVersion set by the experiment, we'll try to use
              * the experiment override URL instead of the default or the

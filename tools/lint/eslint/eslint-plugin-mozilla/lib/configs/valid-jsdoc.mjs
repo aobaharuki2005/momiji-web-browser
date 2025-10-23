@@ -15,6 +15,7 @@ export default {
     "jsdoc/check-tag-names": "error",
     "jsdoc/check-types": "error",
     "jsdoc/empty-tags": "error",
+    "jsdoc/multiline-blocks": "error",
     "jsdoc/no-bad-blocks": "error",
     "jsdoc/no-multi-asterisks": "error",
     "jsdoc/require-param-type": "error",

@@ -1620,8 +1620,10 @@ class HiddenExtensionPage {
   }
 }
 
-/** @typedef {import("resource://devtools/server/actors/descriptors/webextension.js")
-              .WebExtensionDescriptorActor} WebExtensionDescriptorActor */
+/**
+ * @typedef {import("resource://devtools/server/actors/descriptors/webextension.js")
+ *         .WebExtensionDescriptorActor} WebExtensionDescriptorActor
+ */
 
 /**
  * This object provides utility functions needed by the devtools actors to

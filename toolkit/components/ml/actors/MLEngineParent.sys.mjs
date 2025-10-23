@@ -494,7 +494,8 @@ export class MLEngineParent extends JSProcessActorParent {
     });
   }
 
-  /** Gets the wasm file from remote settings.
+  /**
+   * Gets the wasm file from remote settings.
    *
    * @param {RemoteSettingsClient} client
    * @param {string} backend - The ML engine for which the WASM buffer is requested.
