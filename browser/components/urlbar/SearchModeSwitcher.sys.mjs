@@ -242,6 +242,30 @@ export class SearchModeSwitcher {
     }
   }
 
+  /**
+   * If the user presses Option+Up or Option+Down while navigating the urlbar results
+   * we open the engine list.
+   *
+   * @param {KeyboardEvent} event
+   *   The key down event.
+   */
+  handleKeyDown(event) {
+    if (
+      (event.keyCode == KeyEvent.DOM_VK_UP ||
+        event.keyCode == KeyEvent.DOM_VK_DOWN) &&
+      event.altKey
+    ) {
+      this.#input.controller.focusOnUnifiedSearchButton();
+      this.#popup.openPopup(null, {
+        triggerEvent: event,
+      });
+      event.stopPropagation();
+      event.preventDefault();
+      return true;
+    }
+    return false;
+  }
+
   async updateSearchIcon() {
     let searchMode = this.#input.searchMode;
 

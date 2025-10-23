@@ -321,12 +321,17 @@ export class UrlbarController {
       }
 
       let { queryContext } = this._lastQueryContextWrapper;
-      let handled = this.view.oneOffSearchButtons?.handleKeyDown(
-        event,
-        this.view.visibleRowCount,
-        this.view.allowEmptySelection,
-        queryContext.searchString
-      );
+      let handled = false;
+      if (lazy.UrlbarPrefs.get("scotchBonnet.enableOverride")) {
+        handled = this.input.searchModeSwitcher.handleKeyDown(event);
+      } else {
+        handled = this.view.oneOffSearchButtons?.handleKeyDown(
+          event,
+          this.view.visibleRowCount,
+          this.view.allowEmptySelection,
+          queryContext.searchString
+        );
+      }
       if (handled) {
         return;
       }
@@ -390,14 +395,14 @@ export class UrlbarController {
             // Button. Then make urlbar results selectable by tab + shift.
             event.preventDefault();
             this.view.selectedRowIndex = -1;
-            this.#focusOnUnifiedSearchButton();
+            this.focusOnUnifiedSearchButton();
             break;
           } else if (
             !this.view.selectedElement &&
             this.input.focusedViaMousedown
           ) {
             if (event.shiftKey) {
-              this.#focusOnUnifiedSearchButton();
+              this.focusOnUnifiedSearchButton();
             } else {
               this.view.selectBy(1, {
                 userPressedTab: true,
@@ -718,7 +723,7 @@ export class UrlbarController {
     }
   }
 
-  #focusOnUnifiedSearchButton() {
+  focusOnUnifiedSearchButton() {
     this.input.setUnifiedSearchButtonAvailability(true);
 
     /** @type {HTMLElement} */
