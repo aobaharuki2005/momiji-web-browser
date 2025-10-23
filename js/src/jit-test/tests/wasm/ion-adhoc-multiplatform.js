@@ -334,7 +334,7 @@ codegenTestMultiplatform_adhoc(
     {x64:   `mov %edi, %ecx
              mov %ecx, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax`,
-     arm64: `lsr w0, w0, #0`, // lsl and lsr are both aliases for ubfm. When shift=0, the preferred disassembly of ubfm is lsr.
+     arm64: `mov w0, w0`,
      arm:   `` // no-op 
     },
     {x86: {no_prefix:true}}
@@ -387,7 +387,7 @@ codegenTestMultiplatform_adhoc(
     {x64:   `mov %edi, %ecx
              mov %ecx, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax`,
-     arm64: `sbfx w0, w0, #0, #32`,
+     arm64: `mov w0, w0`,
      arm:   ``
     },
     {x86: {no_prefix:true}}
