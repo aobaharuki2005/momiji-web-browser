@@ -222,14 +222,14 @@ fun MainMenu(
                 )
 
                 if (scrollState.canScrollBackward) {
-                    HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
+                    HorizontalDivider()
                 }
             }
         },
         footer = {
             if (accessPoint != MenuAccessPoint.Home && (isBottomToolbar || isExpandedToolbarEnabled)) {
                 if (scrollState.canScrollBackward) {
-                    HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
+                    HorizontalDivider()
                 }
 
                 MenuNavigation(
