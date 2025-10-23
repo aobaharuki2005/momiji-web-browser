@@ -1926,9 +1926,6 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
 
   // We first check if we met a call_rt_redirected.
   if (instr->instructionBits() == kCallRedirInstr) {
-#if !defined(USES_N64_ABI)
-    MOZ_CRASH("Only N64 ABI supported.");
-#else
     Redirection* redirection = Redirection::FromSwiInstruction(instr);
     uintptr_t nativeFn =
         reinterpret_cast<uintptr_t>(redirection->nativeFunction());
@@ -1984,7 +1981,6 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
 
     setRegister(ra, saved_ra);
     set_pc(getRegister(ra));
-#endif
   } else if (func == ff_break && code <= kMaxStopCode) {
     if (isWatchpoint(code)) {
       printWatchpoint(code);
