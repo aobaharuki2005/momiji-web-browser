@@ -142,11 +142,11 @@ static bool CreateBadModuleTypeError(JSContext* aCx, LoadedScript* aScript,
 
 // https://html.spec.whatwg.org/#hostloadimportedmodule
 // static
-bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
-                                              Handle<JSScript*> aReferrer,
-                                              Handle<JSObject*> aModuleRequest,
-                                              Handle<Value> aHostDefined,
-                                              Handle<Value> aPayload) {
+bool ModuleLoaderBase::HostLoadImportedModule(
+    JSContext* aCx, Handle<JSScript*> aReferrer,
+    Handle<JSObject*> aModuleRequest, Handle<Value> aHostDefined,
+    Handle<Value> aPayload, uint32_t aLineNumber,
+    JS::ColumnNumberOneOrigin aColumnNumber) {
   Rooted<JSObject*> object(aCx);
   if (aPayload.isObject()) {
     object = &aPayload.toObject();
@@ -195,7 +195,7 @@ bool ModuleLoaderBase::HostLoadImportedModule(JSContext* aCx,
       Rooted<Value> error(aCx);
       nsresult rv =
           loader->HandleResolveFailure(aCx, script, string, result.unwrapErr(),
-                                       0, ColumnNumberOneOrigin(), &error);
+                                       aLineNumber, aColumnNumber, &error);
       if (NS_FAILED(rv)) {
         JS_ReportOutOfMemory(aCx);
         return false;

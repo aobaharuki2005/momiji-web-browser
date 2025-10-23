@@ -79,7 +79,8 @@ enum class ModuleType : uint32_t {
 using ModuleLoadHook = bool (*)(JSContext* cx, Handle<JSScript*> referrer,
                                 Handle<JSObject*> moduleRequest,
                                 Handle<Value> hostDefined,
-                                Handle<Value> payload);
+                                Handle<Value> payload, uint32_t lineNumber,
+                                JS::ColumnNumberOneOrigin columnNumber);
 
 /**
  * Get the HostLoadImportedModule hook for the runtime.

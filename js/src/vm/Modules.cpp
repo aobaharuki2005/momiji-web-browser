@@ -813,7 +813,8 @@ static void ThrowUnexpectedModuleStatus(JSContext* cx, ModuleStatus status) {
 bool js::HostLoadImportedModule(JSContext* cx, Handle<JSScript*> referrer,
                                 Handle<JSObject*> moduleRequest,
                                 Handle<Value> hostDefined,
-                                Handle<Value> payload) {
+                                Handle<Value> payload, uint32_t lineNumber,
+                                JS::ColumnNumberOneOrigin columnNumber) {
   MOZ_ASSERT(moduleRequest);
   MOZ_ASSERT(!payload.isUndefined());
 
@@ -823,7 +824,8 @@ bool js::HostLoadImportedModule(JSContext* cx, Handle<JSScript*> referrer,
     return false;
   }
 
-  bool ok = moduleLoadHook(cx, referrer, moduleRequest, hostDefined, payload);
+  bool ok = moduleLoadHook(cx, referrer, moduleRequest, hostDefined, payload,
+                           lineNumber, columnNumber);
 
   if (!ok) {
     MOZ_ASSERT(JS_IsExceptionPending(cx));
@@ -1561,7 +1563,8 @@ static bool InnerModuleLoading(JSContext* cx,
         Rooted<Value> hostDefined(cx, state->hostDefined());
         Rooted<Value> payload(cx, ObjectValue(*state));
         if (!HostLoadImportedModule(cx, referrer, moduleRequest, hostDefined,
-                                    payload)) {
+                                    payload, request.lineNumber(),
+                                    request.columnNumber())) {
           return false;
         }
       }
