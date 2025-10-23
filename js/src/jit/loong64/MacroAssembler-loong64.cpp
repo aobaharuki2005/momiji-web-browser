@@ -5611,18 +5611,9 @@ void MacroAssemblerLOONG64Compat::loadInt32OrDouble(const BaseIndex& addr,
                                                     FloatRegister dest) {
   UseScratchRegisterScope temps(asMasm());
   Register scratch = temps.Acquire();
-  Label end;
 
-  // If it's an int, convert it to double.
   computeScaledAddress(addr, scratch);
-  // Since we only have one scratch, we need to stomp over it with the tag.
-  loadPtr(Address(scratch, 0), scratch);
-  as_movgr2fr_d(dest, scratch);
-  as_srli_d(scratch, scratch, JSVAL_TAG_SHIFT);
-  asMasm().branchTestInt32(Assembler::NotEqual, scratch, &end);
-  as_ffint_d_w(dest, dest);
-
-  bind(&end);
+  loadInt32OrDouble(Address(scratch, addr.offset), dest);
 }
 
 void MacroAssemblerLOONG64Compat::loadConstantDouble(double dp,

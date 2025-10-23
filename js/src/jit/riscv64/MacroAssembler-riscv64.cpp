@@ -2047,29 +2047,11 @@ void MacroAssemblerRiscv64Compat::loadInt32OrDouble(const Address& src,
 
 void MacroAssemblerRiscv64Compat::loadInt32OrDouble(const BaseIndex& addr,
                                                     FloatRegister dest) {
-  Label notInt32, end;
-
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
-  // If it's an int, convert it to double.
-  computeScaledAddress(addr, scratch);
-  // Since we only have one scratch, we need to stomp over it with the tag.
-  loadPtr(Address(scratch, 0), scratch);
-  srli(scratch, scratch, JSVAL_TAG_SHIFT);
-  asMasm().branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
 
   computeScaledAddress(addr, scratch);
-  loadPtr(Address(scratch, 0), scratch);
-  convertInt32ToDouble(scratch, dest);
-  ma_branch(&end);
-
-  // Not an int, just load as double.
-  bind(&notInt32);
-  // First, recompute the offset that had been stored in the scratch register
-  // since the scratch register was overwritten loading in the type.
-  computeScaledAddress(addr, scratch);
-  unboxDouble(Address(scratch, 0), dest);
-  bind(&end);
+  loadInt32OrDouble(Address(scratch, addr.offset), dest);
 }
 
 void MacroAssemblerRiscv64Compat::loadConstantDouble(double dp,

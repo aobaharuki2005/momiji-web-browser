@@ -2033,30 +2033,11 @@ void MacroAssemblerMIPS64Compat::loadInt32OrDouble(const Address& src,
 
 void MacroAssemblerMIPS64Compat::loadInt32OrDouble(const BaseIndex& addr,
                                                    FloatRegister dest) {
-  Label notInt32, end;
-
   UseScratchRegisterScope temps(*this);
   Register scratch = temps.Acquire();
-  Register scratch2 = temps.Acquire();
-  // If it's an int, convert it to double.
-  computeScaledAddress(addr, scratch2);
-  // Since we only have one scratch, we need to stomp over it with the tag.
-  loadPtr(Address(scratch2, 0), scratch);
-  ma_dsrl(scratch2, scratch, Imm32(JSVAL_TAG_SHIFT));
-  asMasm().branchTestInt32(Assembler::NotEqual, scratch2, &notInt32);
 
-  computeScaledAddress(addr, scratch2);
-  loadPtr(Address(scratch2, 0), scratch2);
-  convertInt32ToDouble(scratch2, dest);
-  ma_b(&end, ShortJump);
-
-  // Not an int, just load as double.
-  bind(&notInt32);
-  // First, recompute the offset that had been stored in the scratch register
-  // since the scratch register was overwritten loading in the type.
-  computeScaledAddress(addr, scratch2);
-  unboxDouble(Address(scratch2, 0), dest);
-  bind(&end);
+  computeScaledAddress(addr, scratch);
+  loadInt32OrDouble(Address(scratch, addr.offset), dest);
 }
 
 void MacroAssemblerMIPS64Compat::loadConstantDouble(double dp,
