@@ -1965,41 +1965,29 @@ void MacroAssembler::remainder64(Register lhs, Register rhs, Register dest,
 
 void MacroAssembler::rotateLeft64(Imm32 count, Register64 src, Register64 dest,
                                   Register temp) {
-  Dror(dest.reg, src.reg, Operand(64 - (count.value % 64)));
+  Drol(dest.reg, src.reg, Operand(count.value));
 }
 void MacroAssembler::rotateLeft64(Register count, Register64 src,
                                   Register64 dest, Register temp) {
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  ma_mod32(scratch, count, Operand(64));
-  negw(scratch, scratch);
-  addi(scratch, scratch, 64);
-  Dror(dest.reg, src.reg, Operand(scratch));
+  Drol(dest.reg, src.reg, Operand(count));
 }
 
 void MacroAssembler::rotateLeft(Imm32 count, Register input, Register dest) {
-  JitSpew(JitSpew_Codegen, "[ rotateLeft\n");
-  Ror(dest, input, Operand(32 - (count.value % 32)));
-  JitSpew(JitSpew_Codegen, "]\n");
+  Rol(dest, input, Operand(count.value));
 }
 void MacroAssembler::rotateLeft(Register count, Register input, Register dest) {
-  JitSpew(JitSpew_Codegen, "[ rotateLeft\n");
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  ma_mod32(scratch, count, Operand(32));
-  negw(scratch, scratch);
-  addi(scratch, scratch, 32);
-  Ror(dest, input, Operand(scratch));
-  JitSpew(JitSpew_Codegen, "]\n");
+  Rol(dest, input, Operand(count));
+}
+
+void MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest,
+                                   Register temp) {
+  Dror(dest.reg, src.reg, Operand(count.value));
 }
 void MacroAssembler::rotateRight64(Register count, Register64 src,
                                    Register64 dest, Register temp) {
   Dror(dest.reg, src.reg, Operand(count));
 }
-void MacroAssembler::rotateRight64(Imm32 count, Register64 src, Register64 dest,
-                                   Register temp) {
-  Dror(dest.reg, src.reg, Operand(count.value));
-}
+
 void MacroAssembler::rotateRight(Imm32 count, Register input, Register dest) {
   Ror(dest, input, Operand(count.value));
 }
@@ -2007,6 +1995,7 @@ void MacroAssembler::rotateRight(Register count, Register input,
                                  Register dest) {
   Ror(dest, input, Operand(count));
 }
+
 void MacroAssembler::rshift32Arithmetic(Register src, Register dest) {
   sraw(dest, dest, src);
 }

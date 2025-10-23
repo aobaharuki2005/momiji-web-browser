@@ -555,6 +555,9 @@ class MacroAssemblerRiscv64 : public Assembler {
   void ByteSwap(Register dest, Register src, int operand_size,
                 Register scratch);
 
+  void Rol(Register rd, Register rs, const Operand& rt);
+  void Drol(Register rd, Register rs, const Operand& rt);
+
   void Ror(Register rd, Register rs, const Operand& rt);
   void Dror(Register rd, Register rs, const Operand& rt);
 

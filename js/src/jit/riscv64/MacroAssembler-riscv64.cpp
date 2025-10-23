@@ -6731,10 +6731,24 @@ void MacroAssemblerRiscv64::Float64Min(FPURegister dst, FPURegister src1,
   FloatMinMaxHelper<double>(dst, src1, src2, MaxMinKind::kMin);
 }
 
+void MacroAssemblerRiscv64::Rol(Register rd, Register rs, const Operand& rt) {
+  if (rt.is_reg()) {
+    UseScratchRegisterScope temps(this);
+    Register scratch = temps.Acquire();
+
+    negw(scratch, rt.rm());
+    srlw(scratch, rs, scratch);
+    sllw(rd, rs, rt.rm());
+    or_(rd, scratch, rd);
+    sext_w(rd, rd);
+  } else {
+    Ror(rd, rs, Operand(32 - (rt.immediate() % 32)));
+  }
+}
+
 void MacroAssemblerRiscv64::Ror(Register rd, Register rs, const Operand& rt) {
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
-  BlockTrampolinePoolScope block_trampoline_pool(this, 8);
   if (rt.is_reg()) {
     negw(scratch, rt.rm());
     sllw(scratch, rs, scratch);
@@ -6756,10 +6770,23 @@ void MacroAssemblerRiscv64::Ror(Register rd, Register rs, const Operand& rt) {
   }
 }
 
+void MacroAssemblerRiscv64::Drol(Register rd, Register rs, const Operand& rt) {
+  if (rt.is_reg()) {
+    UseScratchRegisterScope temps(this);
+    Register scratch = temps.Acquire();
+
+    negw(scratch, rt.rm());
+    srl(scratch, rs, scratch);
+    sll(rd, rs, rt.rm());
+    or_(rd, scratch, rd);
+  } else {
+    Dror(rd, rs, Operand(64 - (rt.immediate() % 64)));
+  }
+}
+
 void MacroAssemblerRiscv64::Dror(Register rd, Register rs, const Operand& rt) {
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
-  BlockTrampolinePoolScope block_trampoline_pool(this, 8);
   if (rt.is_reg()) {
     negw(scratch, rt.rm());
     sll(scratch, rs, scratch);
