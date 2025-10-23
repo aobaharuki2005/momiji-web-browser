@@ -4,6 +4,7 @@
 
 "use strict";
 
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   gDevTools,
 } = require("resource://devtools/client/framework/devtools.js");
@@ -19,8 +20,6 @@ loader.lazyRequireGetter(
   "resource://devtools/client/shared/link.js",
   true
 );
-
-exports.OptionsPanel = OptionsPanel;
 
 function GetPref(name) {
   const type = Services.prefs.getPrefType(name);
@@ -61,34 +60,33 @@ function InfallibleGetBoolPref(key) {
 /**
  * Represents the Options Panel in the Toolbox.
  */
-function OptionsPanel(iframeWindow, toolbox, commands) {
-  this.panelDoc = iframeWindow.document;
-  this.panelWin = iframeWindow;
+class OptionsPanel extends EventEmitter {
+  constructor(iframeWindow, toolbox, commands) {
+    super();
 
-  this.toolbox = toolbox;
-  this.commands = commands;
-  this.telemetry = toolbox.telemetry;
+    this.panelDoc = iframeWindow.document;
+    this.panelWin = iframeWindow;
 
-  this.setupToolsList = this.setupToolsList.bind(this);
-  this._prefChanged = this._prefChanged.bind(this);
-  this._themeRegistered = this._themeRegistered.bind(this);
-  this._themeUnregistered = this._themeUnregistered.bind(this);
-  this._disableJSClicked = this._disableJSClicked.bind(this);
+    this.toolbox = toolbox;
+    this.commands = commands;
+    this.telemetry = toolbox.telemetry;
 
-  this.disableJSNode = this.panelDoc.getElementById(
-    "devtools-disable-javascript"
-  );
+    this.setupToolsList = this.setupToolsList.bind(this);
+    this._prefChanged = this._prefChanged.bind(this);
+    this._themeRegistered = this._themeRegistered.bind(this);
+    this._themeUnregistered = this._themeUnregistered.bind(this);
+    this._disableJSClicked = this._disableJSClicked.bind(this);
 
-  this._addListeners();
+    this.disableJSNode = this.panelDoc.getElementById(
+      "devtools-disable-javascript"
+    );
 
-  const EventEmitter = require("resource://devtools/shared/event-emitter.js");
-  EventEmitter.decorate(this);
-}
+    this._addListeners();
+  }
 
-OptionsPanel.prototype = {
   get target() {
     return this.toolbox.target;
-  },
+  }
 
   async open() {
     this.setupToolsList();
@@ -97,7 +95,7 @@ OptionsPanel.prototype = {
     this.setupAdditionalOptions();
     await this.populatePreferences();
     return this;
-  },
+  }
 
   _addListeners() {
     Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged);
@@ -121,7 +119,7 @@ OptionsPanel.prototype = {
     // unregistered from the toolbox.
     this.toolbox.on("tool-unregistered", this.setupToolsList);
     this.toolbox.on("webextension-unregistered", this.setupToolsList);
-  },
+  }
 
   _removeListeners() {
     Services.prefs.removeObserver("devtools.cache.disabled", this._prefChanged);
@@ -142,7 +140,7 @@ OptionsPanel.prototype = {
 
     gDevTools.off("theme-registered", this._themeRegistered);
     gDevTools.off("theme-unregistered", this._themeUnregistered);
-  },
+  }
 
   _prefChanged(subject, topic, prefName) {
     if (prefName === "devtools.cache.disabled") {
@@ -156,11 +154,11 @@ OptionsPanel.prototype = {
     } else if (prefName === "devtools.toolbox.splitconsole.enabled") {
       this.toolbox.updateIsSplitConsoleEnabled();
     }
-  },
+  }
 
   _themeRegistered() {
     this.setupThemeList();
-  },
+  }
 
   _themeUnregistered(theme) {
     const themeBox = this.panelDoc.getElementById("devtools-theme-box");
@@ -169,7 +167,7 @@ OptionsPanel.prototype = {
     if (themeInput) {
       themeInput.parentNode.remove();
     }
-  },
+  }
 
   async setupToolbarButtonsList() {
     // Ensure the toolbox is open, and the buttons are all set up.
@@ -227,7 +225,7 @@ OptionsPanel.prototype = {
 
       enabledToolbarButtonsBox.appendChild(createCommandCheckbox(button));
     }
-  },
+  }
 
   setupToolsList() {
     const defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
@@ -383,7 +381,7 @@ OptionsPanel.prototype = {
     }
 
     this.panelWin.focus();
-  },
+  }
 
   setupThemeList() {
     const themeBox = this.panelDoc.getElementById("devtools-theme-box");
@@ -424,7 +422,7 @@ OptionsPanel.prototype = {
     }
 
     this.updateCurrentTheme();
-  },
+  }
 
   /**
    * Add extra checkbox options bound to a boolean preference.
@@ -492,7 +490,7 @@ OptionsPanel.prototype = {
         referenceElement
       );
     }
-  },
+  }
 
   async populatePreferences() {
     const prefCheckboxes = this.panelDoc.querySelectorAll(
@@ -563,7 +561,7 @@ OptionsPanel.prototype = {
       );
       triggersPageRefreshLabel.style.display = "none";
     }
-  },
+  }
 
   updateCurrentTheme() {
     const currentTheme = GetPref("devtools.theme");
@@ -577,14 +575,14 @@ OptionsPanel.prototype = {
       const autoThemeInputRadio = themeBox.querySelector("[value=auto]");
       autoThemeInputRadio.checked = true;
     }
-  },
+  }
 
   updateSourceMapPref() {
     const prefName = "devtools.source-map.client-service.enabled";
     const enabled = GetPref(prefName);
     const box = this.panelDoc.querySelector(`[data-pref="${prefName}"]`);
     box.checked = enabled;
-  },
+  }
 
   /**
    * Disables JavaScript for the currently loaded tab. We force a page refresh
@@ -602,7 +600,7 @@ OptionsPanel.prototype = {
     this.commands.targetConfigurationCommand.updateConfiguration({
       javascriptEnabled: !checked,
     });
-  },
+  }
 
   destroy() {
     if (this.destroyed) {
@@ -615,5 +613,7 @@ OptionsPanel.prototype = {
     this.disableJSNode.removeEventListener("click", this._disableJSClicked);
 
     this.panelWin = this.panelDoc = this.disableJSNode = this.toolbox = null;
-  },
-};
+  }
+}
+
+exports.OptionsPanel = OptionsPanel;
