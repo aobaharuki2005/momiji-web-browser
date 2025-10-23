@@ -555,6 +555,9 @@ tags = "vertical-tabs"
 
 ["browser_tab_manager_groups.js"]
 tags = "vertical-tabs"
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1994900
+]
 
 ["browser_tab_manager_keyboard_access.js"]
 tags = "vertical-tabs"
