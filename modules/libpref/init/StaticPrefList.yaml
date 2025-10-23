@@ -9627,7 +9627,7 @@
 
 - name: layers.gpu-process.startup_timeout_ms
   type: int32_t
-  value: 5000
+  value: 10000
   mirror: once
 
 - name: layers.gpu-process.crash-also-crashes-browser
