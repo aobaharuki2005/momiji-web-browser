@@ -507,6 +507,9 @@ nsresult SVGAnimatedLength::SetBaseValueString(const nsAString& aValueAsString,
   if (!GetValueFromString(aValueAsString, value, &unitType)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
+  if (aSVGElement->LengthAttrIsNonNegative(mAttrEnum) && value < 0.0f) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
 
   if (mIsBaseSet && mBaseVal == float(value) &&
       mBaseUnitType == uint8_t(unitType)) {
