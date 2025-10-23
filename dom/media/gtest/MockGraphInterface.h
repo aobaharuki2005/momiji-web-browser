@@ -27,8 +27,10 @@ class MockGraphInterface : public GraphInterface {
 #endif
   /* OneIteration cannot be mocked because IterationResult is non-memmovable and
    * cannot be passed as a parameter, which GMock does internally. */
+  MOCK_METHOD(void, MockIteration, (GraphTime aStateComputedTime), ());
   IterationResult OneIteration(GraphTime aStateComputedTime,
                                MixerCallbackReceiver* aMixerReceiver) {
+    MockIteration(aStateComputedTime);
     GraphDriver* driver = mCurrentDriver;
     if (aMixerReceiver) {
       mMixer.StartMixing();

@@ -1160,5 +1160,6 @@ TEST_F(MediaDataEncoderTest, VP9EncodeWithScalabilityModeL1T3) {
 #  endif
 #endif
 
+#undef BLOCK_SIZE
 #undef GET_OR_RETURN_ON_ERROR
 #undef RUN_IF_SUPPORTED

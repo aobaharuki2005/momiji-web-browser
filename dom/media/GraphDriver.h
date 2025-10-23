@@ -520,9 +520,19 @@ class OfflineClockDriver final : public ThreadedDriver {
 
   void RunThread() override;
 
+  void SetTickCountToRender(uint32_t aTicksToProcess) {
+    MOZ_ASSERT(InIteration());
+    MOZ_ASSERT(mEndTime == 0);
+    mEndTime = aTicksToProcess;
+  }
+
  protected:
   TimeDuration NextIterationWaitDuration() override { return TimeDuration(); }
   MediaTime GetIntervalForIteration() override;
+
+ private:
+  // The graph will advance up to this time.  Graph thread.
+  GraphTime mEndTime = 0;
 };
 
 enum class AudioInputType { Unknown, Voice };
