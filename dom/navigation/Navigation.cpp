@@ -44,6 +44,9 @@
 
 mozilla::LazyLogModule gNavigationAPILog("NavigationAPI");
 
+#define LOG_FMTE(format, ...) \
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Error, format, ##__VA_ARGS__);
+
 #define LOG_FMTW(format, ...) \
   MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Warning, format, ##__VA_ARGS__);
 
@@ -356,6 +359,7 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
     case NavigationType::Replace:
       MOZ_LOG(gNavigationAPILog, LogLevel::Debug, ("Replace navigation"));
       if (!oldCurrentEntry) {
+        LOG_FMTE("No current entry.");
         MOZ_ASSERT(false, "FIXME");
         return;
       }
@@ -1941,3 +1945,5 @@ void Navigation::CreateNavigationActivationFrom(
 #undef LOG_FMTV
 #undef LOG_FMTD
 #undef LOG_FMTI
+#undef LOG_FMTW
+#undef LOG_FMTE
