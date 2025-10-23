@@ -2021,20 +2021,27 @@ void MacroAssemblerRiscv64Compat::loadConstantFloat32(float f,
 
 void MacroAssemblerRiscv64Compat::loadInt32OrDouble(const Address& src,
                                                     FloatRegister dest) {
-  Label notInt32, end;
-  // If it's an int, convert it to double.
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
-  loadPtr(Address(src.base, src.offset), scratch);
-  srli(scratch, scratch, JSVAL_TAG_SHIFT);
-  asMasm().branchTestInt32(Assembler::NotEqual, scratch, &notInt32);
-  loadPtr(Address(src.base, src.offset), scratch);
-  convertInt32ToDouble(scratch, dest);
-  ma_branch(&end);
 
-  // Not an int, just load as double.
+  Label notInt32, end;
+  {
+    // Inlined |branchTestInt32| to use a short-jump.
+    Register tag = extractTag(src, scratch);
+    ma_b(tag, ImmTag(JSVAL_TAG_INT32), &notInt32, Assembler::NotEqual,
+         ShortJump);
+  }
+  {
+    // If it's an int, convert it to double.
+    unboxInt32(src, scratch);
+    convertInt32ToDouble(scratch, dest);
+    ma_branch(&end);
+  }
   bind(&notInt32);
-  unboxDouble(src, dest);
+  {
+    // Not an int, just load as double.
+    unboxDouble(src, dest);
+  }
   bind(&end);
 }
 

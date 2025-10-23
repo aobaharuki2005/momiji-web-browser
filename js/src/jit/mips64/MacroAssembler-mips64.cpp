@@ -2008,23 +2008,26 @@ void MacroAssemblerMIPS64Compat::loadConstantFloat32(float f,
 void MacroAssemblerMIPS64Compat::loadInt32OrDouble(const Address& src,
                                                    FloatRegister dest) {
   UseScratchRegisterScope temps(*this);
-  Register scratch2 = temps.Acquire();
-  Label notInt32, end;
-  // If it's an int, convert it to double.
-  {
-    UseScratchRegisterScope temps(*this);
-    Register scratch = temps.Acquire();
-    loadPtr(Address(src.base, src.offset), scratch);
-    ma_dsrl(scratch2, scratch, Imm32(JSVAL_TAG_SHIFT));
-  }
-  asMasm().branchTestInt32(Assembler::NotEqual, scratch2, &notInt32);
-  loadPtr(Address(src.base, src.offset), scratch2);
-  convertInt32ToDouble(scratch2, dest);
-  ma_b(&end, ShortJump);
+  Register scratch = temps.Acquire();
 
-  // Not an int, just load as double.
+  Label notInt32, end;
+  {
+    // Inlined |branchTestInt32| to use a short-jump.
+    Register tag = extractTag(src, scratch);
+    ma_b(tag, ImmTag(JSVAL_TAG_INT32), &notInt32, Assembler::NotEqual,
+         ShortJump);
+  }
+  {
+    // If it's an int, convert it to double.
+    unboxInt32(src, scratch);
+    convertInt32ToDouble(scratch, dest);
+    ma_b(&end, ShortJump);
+  }
   bind(&notInt32);
-  unboxDouble(src, dest);
+  {
+    // Not an int, just load as double.
+    unboxDouble(src, dest);
+  }
   bind(&end);
 }
 
