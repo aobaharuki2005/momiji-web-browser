@@ -964,25 +964,22 @@ void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
 }
 
 void CodeGenerator::visitUrshD(LUrshD* ins) {
-  const ARMRegister lhs = toWRegister(ins->lhs());
+  ARMRegister lhs = toWRegister(ins->lhs());
   const LAllocation* rhs = ins->rhs();
-  const FloatRegister out = ToFloatRegister(ins->output());
-
-  const Register temp = ToRegister(ins->temp0());
-  const ARMRegister temp32 = toWRegister(ins->temp0());
+  FloatRegister out = ToFloatRegister(ins->output());
+  ARMRegister temp = toWRegister(ins->temp0());
 
   if (rhs->isConstant()) {
     int32_t shift = ToInt32(rhs) & 0x1F;
     if (shift) {
-      masm.Lsr(temp32, lhs, shift);
-      masm.convertUInt32ToDouble(temp, out);
+      masm.Lsr(temp, lhs, shift);
+      masm.convertUInt32ToDouble(temp.asUnsized(), out);
     } else {
-      masm.convertUInt32ToDouble(ToRegister(ins->lhs()), out);
+      masm.convertUInt32ToDouble(lhs.asUnsized(), out);
     }
   } else {
-    masm.And(temp32, toWRegister(rhs), Operand(0x1F));
-    masm.Lsr(temp32, lhs, temp32);
-    masm.convertUInt32ToDouble(temp, out);
+    masm.Lsr(temp, lhs, toWRegister(rhs));
+    masm.convertUInt32ToDouble(temp.asUnsized(), out);
   }
 }
 
