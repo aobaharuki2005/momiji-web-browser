@@ -1092,7 +1092,7 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
                     print("Skipping index tasks")
                     return []
         if not create.testing:
-            insert_index(index_path, os.environ["TASK_ID"], use_proxy=True)
+            insert_index(index_path, os.environ["TASK_ID"])
 
     return [
         "searchfox-linux64-searchfox/opt",

@@ -490,7 +490,7 @@ def set_decision_indexes(decision_task_id, params, graph_config):
     subs["trust-domain"] = graph_config["trust-domain"]
 
     for index_path in index_paths:
-        insert_index(index_path.format(**subs), decision_task_id, use_proxy=True)
+        insert_index(index_path.format(**subs), decision_task_id)
 
 
 def write_artifact(filename, data):

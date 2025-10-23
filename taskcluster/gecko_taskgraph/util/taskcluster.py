@@ -16,7 +16,7 @@ from taskgraph.util.taskcluster import (
 logger = logging.getLogger(__name__)
 
 
-def insert_index(index_path, task_id, data=None, use_proxy=False):
+def insert_index(index_path, task_id, data=None):
     # Find task expiry.
     expires = get_task_definition(task_id)["expires"]
 
@@ -33,14 +33,13 @@ def insert_index(index_path, task_id, data=None, use_proxy=False):
     return response
 
 
-def status_task(task_id, use_proxy=False):
+def status_task(task_id):
     """Gets the status of a task given a task_id.
 
     In testing mode, just logs that it would have retrieved status.
 
     Args:
         task_id (str): A task id.
-        use_proxy (bool): Whether to use taskcluster-proxy (default: False)
 
     Returns:
         dict: A dictionary object as defined here:
@@ -55,7 +54,7 @@ def status_task(task_id, use_proxy=False):
             return response.get("status", {})
 
 
-def state_task(task_id, use_proxy=False):
+def state_task(task_id):
     """Gets the state of a task given a task_id.
 
     In testing mode, just logs that it would have retrieved state. This is a subset of the
@@ -63,7 +62,6 @@ def state_task(task_id, use_proxy=False):
 
     Args:
         task_id (str): A task id.
-        use_proxy (bool): Whether to use taskcluster-proxy (default: False)
 
     Returns:
         str: The state of the task, one of
@@ -72,7 +70,7 @@ def state_task(task_id, use_proxy=False):
     if tc_util.testing:
         logger.info(f"Would have gotten state for {task_id}.")
     else:
-        status = status_task(task_id, use_proxy=use_proxy).get("state") or "unknown"
+        status = status_task(task_id).get("state") or "unknown"
         return status
 
 
@@ -118,6 +116,6 @@ def list_task_group_complete_tasks(task_group_id):
     return tasks
 
 
-def find_task(index_path, use_proxy=False):
+def find_task(index_path):
     index = get_taskcluster_client("index")
     return index.findTask(index_path)
