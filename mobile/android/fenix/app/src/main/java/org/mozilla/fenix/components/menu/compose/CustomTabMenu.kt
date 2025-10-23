@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -145,11 +146,11 @@ internal fun CustomTabMenu(
 
             if (isDesktopMode) {
                 badgeText = stringResource(id = R.string.browser_feature_desktop_site_on)
-                badgeBackgroundColor = FirefoxTheme.colors.badgeActive
+                badgeBackgroundColor = MaterialTheme.colorScheme.primaryContainer
                 menuItemState = if (isPdf) MenuItemState.DISABLED else MenuItemState.ACTIVE
             } else {
                 badgeText = stringResource(id = R.string.browser_feature_desktop_site_off)
-                badgeBackgroundColor = FirefoxTheme.colors.layer2
+                badgeBackgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest
                 menuItemState = if (isPdf) MenuItemState.DISABLED else MenuItemState.ENABLED
             }
 
@@ -243,7 +244,7 @@ private fun PoweredByFirefoxItem(modifier: Modifier = Modifier) {
                 id = R.string.browser_menu_powered_by2,
                 stringResource(id = R.string.app_name),
             ),
-            color = FirefoxTheme.colors.textSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = FirefoxTheme.typography.caption,
         )
     }
@@ -255,7 +256,8 @@ private fun CustomTabMenuPreview() {
     FirefoxTheme {
         Column(
             modifier = Modifier
-                .background(color = FirefoxTheme.colors.layer3),
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(all = FirefoxTheme.layout.space.static200),
         ) {
             CustomTabMenu(
                 canGoBack = true,
@@ -287,7 +289,8 @@ private fun CustomTabMenuPrivatePreview() {
     FirefoxTheme(theme = Theme.Private) {
         Column(
             modifier = Modifier
-                .background(color = FirefoxTheme.colors.layer3),
+                .background(color = MaterialTheme.colorScheme.surface)
+                .padding(all = FirefoxTheme.layout.space.static200),
         ) {
             CustomTabMenu(
                 canGoBack = false,
