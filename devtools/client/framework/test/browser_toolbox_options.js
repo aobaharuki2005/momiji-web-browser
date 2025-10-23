@@ -141,6 +141,10 @@ async function testOptions() {
   const prefNodes = tool.panelDoc.querySelectorAll(
     "input[type=checkbox][data-pref]"
   );
+  ok(
+    [...prefNodes].some(prefNode => prefNode.hasAttribute("data-force-reload")),
+    "There's at least one checkbox with the data-force-reload attribute"
+  );
 
   // Store modified pref names so that they can be cleared on error.
   for (const node of tool.panelDoc.querySelectorAll("[data-pref]")) {
@@ -219,6 +223,11 @@ async function testMouseClick(node, prefValue) {
     });
   });
 
+  // if changing the setting reloads the page, waits for the toolbox to be reloaded
+  const waitForDevToolsReload = node.hasAttribute("data-force-reload")
+    ? await watchForDevToolsReload(gBrowser.selectedBrowser)
+    : null;
+
   const onNewConfigurationApplied = Object.keys(
     BOOLEAN_CONFIGURATION_PREFS
   ).includes(pref)
@@ -242,6 +251,12 @@ async function testMouseClick(node, prefValue) {
     await onNewConfigurationApplied;
     ok(true, `Configuration was changed when updating pref "${pref}"`);
   }
+
+  if (waitForDevToolsReload) {
+    await waitForDevToolsReload();
+    ok(true, `The page was reloaded when toggling ${node.outerHTML}`);
+  }
+
   observer.destroy();
 }
 

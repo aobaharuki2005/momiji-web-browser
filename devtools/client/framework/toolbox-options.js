@@ -496,9 +496,12 @@ class OptionsPanel extends EventEmitter {
       if (GetPref(prefCheckbox.getAttribute("data-pref"))) {
         prefCheckbox.setAttribute("checked", true);
       }
-      prefCheckbox.addEventListener("change", function (e) {
+      prefCheckbox.addEventListener("change", e => {
         const checkbox = e.target;
         SetPref(checkbox.getAttribute("data-pref"), checkbox.checked);
+        if (checkbox.hasAttribute("data-force-reload")) {
+          this.commands.targetCommand.reloadTopLevelTarget();
+        }
       });
     }
     // Themes radio inputs are handled in setupThemeList

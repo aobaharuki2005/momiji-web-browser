@@ -34,6 +34,11 @@ options-show-user-agent-styles-label = Show Browser Styles
 options-show-user-agent-styles-tooltip =
     .title = Turning this on will show default styles that are loaded by the browser.
 
+# The label for the checkbox option to show all anonymous content
+options-show-user-agent-shadow-dom-label = Show Browser Shadow DOM
+options-show-user-agent-shadow-dom-tooltip =
+    .title = Turning this on will show Shadow DOM elements handled by the browser.
+
 # The label for the checkbox option to enable collapse attributes
 options-collapse-attrs-label = Truncate DOM attributes
 options-collapse-attrs-tooltip =
@@ -164,5 +169,8 @@ options-source-maps-label = Enable Source Maps
 options-source-maps-tooltip =
     .title = If you enable this option sources will be mapped in the tools.
 
-# The message shown for settings that trigger page reload
+# The message shown for settings that trigger page reload and will only apply to the current session
 options-context-triggers-page-refresh = * Current session only, reloads the page
+
+# The message shown for settings that trigger page reload
+options-context-triggers-page-refresh-persists = (reloads the page)
