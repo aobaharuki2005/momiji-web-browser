@@ -1319,8 +1319,8 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     }
 
     // ReplacedBy will swap the entry back.
-    aBrowsingContext->SetActiveSessionHistoryEntry(aEntry);
-    loadingBC->SetActiveSessionHistoryEntry(nullptr);
+    aBrowsingContext->SetActiveSessionHistoryEntryFromBFCache(aEntry);
+    loadingBC->SetActiveSessionHistoryEntryFromBFCache(nullptr);
     NavigationIsolationOptions options;
     aBrowsingContext->ReplacedBy(loadingBC, options);
 

@@ -359,7 +359,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   mActiveEntry.swap(aNewContext->mActiveEntry);
   if (Navigation::IsAPIEnabled()) {
     MOZ_ASSERT(aNewContext->mActiveEntryList.isEmpty());
-    aNewContext->mActiveEntryList.extendBack(std::move(mActiveEntryList));
+    aNewContext->mActiveEntryList = std::move(mActiveEntryList);
   }
 
   aNewContext->mPermanentKey = mPermanentKey;
@@ -482,14 +482,12 @@ SessionHistoryEntry* CanonicalBrowsingContext::GetActiveSessionHistoryEntry() {
   return mActiveEntry;
 }
 
-void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
+void CanonicalBrowsingContext::SetActiveSessionHistoryEntryFromBFCache(
     SessionHistoryEntry* aEntry) {
   mActiveEntry = aEntry;
   if (Navigation::IsAPIEnabled()) {
-    mActiveEntryList.clear();
-    if (mActiveEntry) {
-      mActiveEntryList.insertBack(mActiveEntry);
-    }
+    MOZ_DIAGNOSTIC_ASSERT(!aEntry || mActiveEntryList.contains(aEntry));
+    MOZ_DIAGNOSTIC_ASSERT(aEntry || mActiveEntryList.isEmpty());
   }
 }
 
