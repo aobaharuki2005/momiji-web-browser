@@ -162,6 +162,9 @@ class CamerasParent final : public PCamerasParent {
       int aEngine);
   VideoEngine* EnsureInitialized(int aEngine);
 
+  bool IsWindowCapturing(VideoEngine* aEngine, uint64_t aWindowID,
+                         const nsACString& aUniqueIdUTF8);
+
   // Stops any ongoing capturing and releases resources. Called on
   // mVideoCaptureThread. Idempotent.
   void CloseEngines();
