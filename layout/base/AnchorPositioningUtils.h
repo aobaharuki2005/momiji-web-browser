@@ -78,7 +78,6 @@ class AnchorPosReferenceData {
 };
 
 struct StylePositionArea;
-struct StylePositionTryFallbacksTryTactic;
 class WritingMode;
 
 /**
