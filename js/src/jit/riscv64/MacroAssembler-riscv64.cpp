@@ -6508,9 +6508,21 @@ void MacroAssemblerRiscv64::ma_div_branch_overflow(Register rd, Register rj,
                                                    Label* overflow) {
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
+
+  Register dest = rd;
+  if (rd == rj || rd == rk) {
+    dest = temps.Acquire();
+  }
+
+  // The recommended code sequence to obtain both the quotient and remainder
+  // is div[u] followed by mod[u].
+  ma_div32(dest, rj, rk);
   ma_mod32(scratch, rj, rk);
   ma_b(scratch, scratch, overflow, Assembler::NonZero);
-  divw(rd, rj, rk);
+
+  if (dest != rd) {
+    mv(rd, dest);
+  }
 }
 
 void MacroAssemblerRiscv64::ma_div_branch_overflow(Register rd, Register rj,
@@ -6518,7 +6530,21 @@ void MacroAssemblerRiscv64::ma_div_branch_overflow(Register rd, Register rj,
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
   ma_li(scratch, imm);
-  ma_div_branch_overflow(rd, rj, scratch, overflow);
+
+  Register dest = rd;
+  if (rd == rj) {
+    dest = temps.Acquire();
+  }
+
+  // The recommended code sequence to obtain both the quotient and remainder
+  // is div[u] followed by mod[u].
+  ma_div32(dest, rj, scratch);
+  ma_mod32(scratch, rj, scratch);
+  ma_b(scratch, scratch, overflow, Assembler::NonZero);
+
+  if (dest != rd) {
+    mv(rd, dest);
+  }
 }
 
 void MacroAssemblerRiscv64::ma_mod_mask(Register src, Register dest,
