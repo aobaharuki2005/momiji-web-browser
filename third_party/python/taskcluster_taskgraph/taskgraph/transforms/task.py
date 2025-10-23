@@ -43,7 +43,7 @@ RUN_TASK = os.path.join(
 )
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _run_task_suffix():
     """String to append to cache names under control of run-task."""
     return hash_path(RUN_TASK)[0:20]
@@ -412,14 +412,14 @@ def get_branch_rev(config):
     return config.params["head_rev"]
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_default_priority(graph_config, project):
     return evaluate_keyed_by(
         graph_config["task-priority"], "Graph Config", {"project": project}
     )
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def get_default_deadline(graph_config, project):
     return evaluate_keyed_by(
         graph_config["task-deadline-after"], "Graph Config", {"project": project}
