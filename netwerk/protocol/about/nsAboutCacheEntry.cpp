@@ -9,6 +9,7 @@
 
 #include "CacheFileUtils.h"
 #include "CacheObserver.h"
+#include "Dictionary.h"
 #include "mozilla/Sprintf.h"
 #include "nsAboutCache.h"
 #include "nsAboutProtocolUtils.h"
@@ -489,6 +490,17 @@ nsAboutCacheEntry::Channel::OnMetaDataElement(char const* key,
   mBuffer->AppendLiteral(
       ":</th>\n"
       "    <td>");
+  if (mEnhanceId.EqualsLiteral("dict:")) {
+    RefPtr<DictionaryCacheEntry> dict = new DictionaryCacheEntry("temp");
+    dict->ParseMetadata(value);
+    nsAppendEscapedHTML(
+        nsPrintfCString(
+            "Hash: %s\nPattern: %s\nId: %s\nMatch-Id: ", dict->GetHash().get(),
+            dict->GetPattern().get(), dict->GetId().get()),
+        *mBuffer);
+    dict->AppendMatchDest(*mBuffer);
+    mBuffer->AppendLiteral("\n");
+  }
   nsAppendEscapedHTML(nsDependentCString(value), *mBuffer);
   mBuffer->AppendLiteral(
       "</td>\n"

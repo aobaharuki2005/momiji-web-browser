@@ -487,6 +487,13 @@ bool DictionaryCacheEntry::ParseMetadata(const char* aSrc) {
   return true;
 }
 
+void DictionaryCacheEntry::AppendMatchDest(nsACString& aDest) const {
+  for (auto& dest : mMatchDest) {
+    aDest.Append(dom::GetEnumString(dest));
+    aDest.Append(" ");
+  }
+}
+
 //-----------------------------------------------------------------------------
 // nsIStreamListener implementation
 //-----------------------------------------------------------------------------

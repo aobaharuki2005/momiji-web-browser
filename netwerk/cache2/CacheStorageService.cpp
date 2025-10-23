@@ -1509,8 +1509,11 @@ Result<size_t, nsresult> CacheStorageService::MemoryPool::PurgeByFrecency(
         mayPurgeSorted.AppendElement(std::move(copy));
       } else {
         if (entry->GetEnhanceID().EqualsLiteral("dict:")) {
-          LOG(("*** Entry is a dictionary origin, metadata size %d",
-               entry->GetMetadataMemoryConsumption()));
+          LOG(
+              ("*** Entry is a dictionary origin, metadata size %d, referenced "
+               "%d, Frecency %f",
+               entry->GetMetadataMemoryConsumption(), entry->IsReferenced(),
+               entry->GetFrecency()));
         }
       }
     }

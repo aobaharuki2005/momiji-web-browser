@@ -80,7 +80,7 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
   nsresult Prefetch(nsILoadContextInfo* aLoadContextInfo, bool& aShouldSuspend,
                     const std::function<void()>& aFunc);
 
-  const nsACString& GetHash() const { return mHash; }
+  const nsCString& GetHash() const { return mHash; }
 
   bool HasHash() {
     // Hard to statically check since we're called from lambdas in
@@ -160,11 +160,14 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
     mURI = aOther->mURI;
     mPattern = aOther->mPattern;
     mId = aOther->mId;
-    // XXX match-dest
-    // XXX type
+    mMatchDest = aOther->mMatchDest;
+    // XXX mType = aOther->mType;
   }
 
   void UnblockAddEntry(DictionaryOrigin* aOrigin);
+
+  const nsCString& GetPattern() const { return mPattern; }
+  void AppendMatchDest(nsACString& aDest) const;
 
  private:
   // URI (without ref) for the dictionary
@@ -174,7 +177,7 @@ class DictionaryCacheEntry final : public nsICacheEntryOpenCallback,
 
   nsCString mPattern;
   nsCString mId;  // max length 1024
-  nsTArray<dom::RequestDestination> mMatchDest;
+  CopyableTArray<dom::RequestDestination> mMatchDest;
   // dcb and dcz use type 'raw'.  We're allowed to ignore types we don't
   // understand, so we can fail to record a dictionary with type != 'raw'
   //  nsCString mType;
