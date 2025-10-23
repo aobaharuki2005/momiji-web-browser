@@ -104,7 +104,7 @@ export class UrlbarProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     if (
       !lazy.UrlbarPrefs.get("quickSuggestEnabled") ||
       !lazy.UrlbarPrefs.get("quicksuggest.contextualOptIn") ||
-      lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled")
+      lazy.UrlbarPrefs.get("quicksuggest.online.enabled")
     ) {
       return false;
     }
@@ -273,7 +273,7 @@ export class UrlbarProviderQuickSuggestContextualOptIn extends UrlbarProvider {
         controller.browserWindow.openHelpLink("firefox-suggest");
         break;
       case "allow":
-        lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+        lazy.UrlbarPrefs.set("quicksuggest.online.enabled", true);
         break;
       case "dismiss":
         this.#dismiss();
