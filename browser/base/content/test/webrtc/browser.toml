@@ -141,6 +141,9 @@ https_first_disabled = true
 
 ["browser_devices_get_user_media_unprompted_access_in_frame.js"]
 https_first_disabled = true
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1994652
+]
 
 ["browser_devices_get_user_media_unprompted_access_queue_request.js"]
 https_first_disabled = true
