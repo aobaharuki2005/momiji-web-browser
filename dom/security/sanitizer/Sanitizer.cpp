@@ -1429,11 +1429,11 @@ bool Sanitizer::SetDataAttributes(bool aAllow) {
 // https://wicg.github.io/sanitizer-api/#built-in-safe-baseline-configuration
 // The built-in safe baseline configuration
 #define FOR_EACH_BASELINE_REMOVE_ELEMENT(ELEMENT) \
-  ELEMENT(XHTML, xhtml, script)                   \
+  ELEMENT(XHTML, xhtml, embed)                    \
   ELEMENT(XHTML, xhtml, frame)                    \
   ELEMENT(XHTML, xhtml, iframe)                   \
   ELEMENT(XHTML, xhtml, object)                   \
-  ELEMENT(XHTML, xhtml, embed)                    \
+  ELEMENT(XHTML, xhtml, script)                   \
   ELEMENT(SVG, svg, script)                       \
   ELEMENT(SVG, svg, use)
 
