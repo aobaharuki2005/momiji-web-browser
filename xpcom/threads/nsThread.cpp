@@ -85,6 +85,8 @@ using GetCurrentThreadStackLimitsFn = void(WINAPI*)(PULONG_PTR LowLimit,
 #  include <mach/mach.h>
 #  include <mach/thread_policy.h>
 #  include <sys/qos.h>
+
+#  include "nsCocoaFeatures.h"
 #endif
 
 #ifdef MOZ_CANARY
@@ -338,8 +340,11 @@ void nsThread::ThreadFunc(void* aArg) {
   self->InitCommon();
 
 #ifdef XP_MACOSX
-  // Use "User Initiated" as the default quality of service.
-  pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
+  if (nsCocoaFeatures::OnTahoeOrLater()) {
+    // On macOS 26+, use "User Initiated" as the default quality of service.
+    // It may make sense to do this on all versions of macOS.
+    pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);
+  }
 #endif
 
   // Inform the ThreadManager
