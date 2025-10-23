@@ -284,9 +284,9 @@ export class AmpSuggestions extends SuggestProvider {
       // Always use lowercase to make the reporting consistent.
       advertiser: result.payload.sponsoredAdvertiser.toLocaleLowerCase(),
       blockId: result.payload.sponsoredBlockId,
-      improveSuggestExperience: lazy.UrlbarPrefs.get(
-        "quicksuggest.dataCollection.enabled"
-      ),
+      improveSuggestExperience:
+        lazy.UrlbarPrefs.get("quickSuggestOnlineAvailable") &&
+        lazy.UrlbarPrefs.get("quicksuggest.online.enabled"),
       // `position` is 1-based, unlike `rowIndex`, which is zero-based.
       position: result.rowIndex + 1,
       suggestedIndex: result.suggestedIndex.toString(),

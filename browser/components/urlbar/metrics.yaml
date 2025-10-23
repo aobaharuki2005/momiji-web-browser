@@ -1132,11 +1132,13 @@ quick_suggest:
   improve_suggest_experience:
     type: boolean
     description: >
-      Whether the "Improve Suggest Experience" checkbox is checked.
+      Whether online Suggest is available to the user and enabled.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
     data_sensitivity:
       - interaction
     notification_emails:
