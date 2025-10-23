@@ -53,6 +53,7 @@ const PREFS_FOR_DISPLAY = [
   "browser.startup.homepage",
   "browser.startup.page",
   "browser.tabs.",
+  "browser.theme.",
   "browser.toolbars.",
   "browser.urlbar.",
   "browser.zoom.",
