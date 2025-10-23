@@ -65,7 +65,7 @@ export class SessionStoreBackupResource extends BackupResource {
     if (sessionStoreState.savedGroups) {
       sessionStoreState.savedGroups.forEach(group => {
         if (group.tabs) {
-          group.tabs.forEach(tab => delete tab.storage);
+          group.tabs.forEach(tab => delete tab.state.storage);
         }
       });
     }
