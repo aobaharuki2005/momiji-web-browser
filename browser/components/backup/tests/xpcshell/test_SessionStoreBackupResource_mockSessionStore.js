@@ -87,15 +87,19 @@ const mockSessionStore = {
         {
           tabs: [
             {
-              savedGroupData: -3.7,
-              storage: {
-                message: "I don't get serialized!",
+              state: {
+                savedGroupData: -3.7,
+                storage: {
+                  message: "I don't get serialized!",
+                },
               },
             },
             {
-              someData: "hi I am window #2's data",
-              moreData: -3.71,
-              // tab has no storage
+              state: {
+                someData: "hi I am window #2's data",
+                moreData: -3.71,
+                // tab has no storage
+              },
             },
           ],
           notTabData: "notTabData",
@@ -112,7 +116,7 @@ filteredMockSessionData.windows.forEach(win => {
   win._closedTabs.forEach(closedTab => delete closedTab.state.storage);
 });
 filteredMockSessionData.savedGroups.forEach(group => {
-  group.tabs.forEach(tab => delete tab.storage);
+  group.tabs.forEach(tab => delete tab.state.storage);
 });
 
 /**
