@@ -132,13 +132,6 @@ firefox-suggest-yelp-service-title = Top results for { $service }
 # Yelp.
 firefox-suggest-yelp-bottom-text = { -yelp-brand-name } · Sponsored
 
-# These strings are used for a toggle switch in the settings UI that opts the
-# user into "online" Firefox Suggest, allowing them to receive suggestions from
-# Mozilla's Merino server.
-addressbar-firefox-suggest-data-collection =
-  .label = Improve the { -firefox-suggest-brand-name } experience
-  .description = Share search query data with { -vendor-short-name } to create a richer search experience.
-
 ## Used as title on the introduction pane. The text can be formatted to span
 ## multiple lines as needed (line breaks are significant).
 

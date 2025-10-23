@@ -74,7 +74,7 @@
       <description flex="1">
         <html:span id="locationBarSuggestionLabel"
                    class="description-deemphasized"
-                   data-l10n-id="addressbar-suggest"
+                   data-l10n-id="addressbar-suggest-1"
         />
         <html:a hidden="true"
                 is="moz-support-link"
@@ -95,7 +95,7 @@
       <checkbox id="topSitesSuggestion"
                 data-l10n-id="addressbar-locbar-shortcuts-option"
                 preference="browser.urlbar.suggest.topsites"/>
-      <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option"
+      <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option-1"
                 preference="browser.urlbar.suggest.engines"/>
       <hbox id="quickActionsBox" align="center" hidden="true">
         <checkbox id="enableQuickActions"
@@ -123,12 +123,16 @@
         <description class="indent tip-caption"
                       data-l10n-id="addressbar-locbar-suggest-sponsored-desc"
         />
-        <html:moz-toggle id="firefoxSuggestDataCollectionSearchToggle"
-                         preference="browser.urlbar.quicksuggest.dataCollection.enabled"
-                         data-l10n-id="addressbar-firefox-suggest-data-collection"
-                         data-l10n-attrs="label, description"
-                         support-page="firefox-suggest#w_what-setting-is-opt-in"
-        />
+        <hbox id="firefoxSuggestOnlineBox" align="center">
+          <checkbox id="firefoxSuggestOnlineEnabledToggle"
+                    class="tail-with-learn-more"
+                    data-l10n-id="addressbar-firefox-suggest-online"
+                    preference="browser.urlbar.quicksuggest.online.enabled" />
+          <html:a is="moz-support-link"
+                  data-l10n-id="addressbar-quickactions-learn-more"
+                  support-page="firefox-suggest#w_what-setting-is-opt-in"
+          />
+        </hbox>
         <hbox id="dismissedSuggestions" align="center">
           <vbox flex="1">
             <label data-l10n-id="addressbar-dismissed-suggestions-label"/>

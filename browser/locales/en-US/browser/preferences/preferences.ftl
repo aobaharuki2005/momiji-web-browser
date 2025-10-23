@@ -1297,13 +1297,13 @@ cookie-banner-blocker-checkbox-label =
 
 addressbar-header = Address Bar
 
-addressbar-suggest = When using the address bar, suggest
+addressbar-suggest-1 = Choose which suggestions display in your address bar
 
 # When Firefox Suggest is enabled, this replaces `addressbar-header`.
-addressbar-header-firefox-suggest = Address Bar — { -firefox-suggest-brand-name }
+addressbar-header-firefox-suggest-1 = { -firefox-suggest-brand-name }
 
 # When Firefox Suggest is enabled, this replaces `addressbar-suggest`.
-addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear in the address bar.
+addressbar-suggest-firefox-suggest-1 = Suggestions from { -brand-short-name } and our partners in your address bar.
 
 # When Firefox Suggest is enabled, a "Learn more" link appears at the end of
 # `addressbar-suggest-firefox-suggest`.
@@ -1328,8 +1328,8 @@ addressbar-locbar-shortcuts-option =
 addressbar-locbar-topsites-option =
     .label = Top sites
     .accesskey = T
-addressbar-locbar-engines-option =
-    .label = Search engines
+addressbar-locbar-engines-option-1 =
+    .label = Suggest search engines to use
     .accesskey = a
 addressbar-locbar-quickactions-option =
     .label = Quick actions
@@ -1349,6 +1349,15 @@ addressbar-locbar-suggest-nonsponsored-desc = Get suggestions from the web relat
 addressbar-locbar-suggest-sponsored-option =
   .label = Suggestions from sponsors
 addressbar-locbar-suggest-sponsored-desc = Support { -brand-short-name } with occasional sponsored suggestions.
+
+# This string is used for a checkbox in the settings UI that opts the
+# user into "online" Firefox Suggest, allowing them to receive suggestions from
+# Mozilla's Merino server.
+# "Mozilla" is intentionally hardcoded to prevent forks from replacing it
+# with their own vendor name, since the online suggest is created and maintained
+# by Mozilla.
+addressbar-firefox-suggest-online =
+  .label = Retrieve suggestions from Mozilla as you type
 
 addressbar-quickactions-learn-more = Learn more
 

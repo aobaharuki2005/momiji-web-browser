@@ -30,13 +30,16 @@ add_task(async function test_firefox_suggest_with_policy() {
         true,
         "Sponsored suggestions is enabled"
       );
-      is(
-        browser.contentDocument.getElementById(
-          "firefoxSuggestDataCollectionSearchToggle"
-        ).pressed,
-        true,
-        "Improve suggest is enabled"
-      );
+      // TODO: The preference is enabled by default, so the new enterprise policy
+      // being added in bug 1995362 should be set to false, and this check changed
+      // to confirm the option is not checked.
+      // is(
+      //   browser.contentDocument.getElementById(
+      //     "firefoxSuggestOnlineEnabledToggle"
+      //   ).checked,
+      //   true,
+      //   "Suggest online is enabled"
+      // );
       is(
         browser.contentDocument.getElementById("firefoxSuggestNonsponsored")
           .disabled,
@@ -47,15 +50,17 @@ add_task(async function test_firefox_suggest_with_policy() {
         browser.contentDocument.getElementById("firefoxSuggestSponsored")
           .disabled,
         true,
-        "Sponsored suggestions is enabled"
+        "Sponsored suggestions is disabled"
       );
-      is(
-        browser.contentDocument.getElementById(
-          "firefoxSuggestDataCollectionSearchToggle"
-        ).disabled,
-        true,
-        "Improve suggest is enabled"
-      );
+      // TODO: Bug 1995362 - This needs the new enterprise policy to be hooked
+      // up.
+      // is(
+      //   browser.contentDocument.getElementById(
+      //     "firefoxSuggestOnlineEnabledToggle"
+      //   ).disabled,
+      //   true,
+      //   "Suggest online is disabled"
+      // );
     }
   );
 });

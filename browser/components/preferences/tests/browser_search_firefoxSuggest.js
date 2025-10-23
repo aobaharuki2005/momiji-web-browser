@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 const CONTAINER_ID = "firefoxSuggestContainer";
-const DATA_COLLECTION_TOGGLE_ID = "firefoxSuggestDataCollectionSearchToggle";
+const ONLINE_ENABLED_TOGGLE_ID = "firefoxSuggestOnlineEnabledToggle";
 const LEARN_MORE_ID = "firefoxSuggestLearnMore";
 const BUTTON_RESTORE_DISMISSED_ID = "restoreDismissedSuggestions";
 
@@ -20,14 +20,14 @@ const EXPECTED = {
   [QuickSuggest.SETTINGS_UI.FULL]: {
     [LEARN_MORE_ID]: { isVisible: true },
     [CONTAINER_ID]: { isVisible: true },
-    [DATA_COLLECTION_TOGGLE_ID]: { isVisible: true },
+    [ONLINE_ENABLED_TOGGLE_ID]: { isVisible: true },
     locationBarGroupHeader: {
       isVisible: true,
-      l10nId: "addressbar-header-firefox-suggest",
+      l10nId: "addressbar-header-firefox-suggest-1",
     },
     locationBarSuggestionLabel: {
       isVisible: true,
-      l10nId: "addressbar-suggest-firefox-suggest",
+      l10nId: "addressbar-suggest-firefox-suggest-1",
     },
   },
   [QuickSuggest.SETTINGS_UI.NONE]: {
@@ -36,20 +36,20 @@ const EXPECTED = {
     locationBarGroupHeader: { isVisible: true, l10nId: "addressbar-header" },
     locationBarSuggestionLabel: {
       isVisible: true,
-      l10nId: "addressbar-suggest",
+      l10nId: "addressbar-suggest-1",
     },
   },
   [QuickSuggest.SETTINGS_UI.OFFLINE_ONLY]: {
     [LEARN_MORE_ID]: { isVisible: true },
     [CONTAINER_ID]: { isVisible: true },
-    [DATA_COLLECTION_TOGGLE_ID]: { isVisible: false },
+    [ONLINE_ENABLED_TOGGLE_ID]: { isVisible: false },
     locationBarGroupHeader: {
       isVisible: true,
-      l10nId: "addressbar-header-firefox-suggest",
+      l10nId: "addressbar-header-firefox-suggest-1",
     },
     locationBarSuggestionLabel: {
       isVisible: true,
-      l10nId: "addressbar-suggest-firefox-suggest",
+      l10nId: "addressbar-suggest-firefox-suggest-1",
     },
   },
 };

@@ -161,17 +161,6 @@ Preferences.addAll([
     type: "bool",
   },
 
-  // Location Bar
-  { id: "browser.urlbar.suggest.bookmark", type: "bool" },
-  { id: "browser.urlbar.suggest.clipboard", type: "bool" },
-  { id: "browser.urlbar.suggest.history", type: "bool" },
-  { id: "browser.urlbar.suggest.openpage", type: "bool" },
-  { id: "browser.urlbar.suggest.topsites", type: "bool" },
-  { id: "browser.urlbar.suggest.engines", type: "bool" },
-  { id: "browser.urlbar.suggest.quicksuggest.nonsponsored", type: "bool" },
-  { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
-  { id: "browser.urlbar.quicksuggest.dataCollection.enabled", type: "bool" },
-
   // History
   { id: "places.history.enabled", type: "bool" },
   { id: "browser.formfill.enable", type: "bool" },
@@ -2629,13 +2618,6 @@ var gPrivacyPane = {
       }
     }
 
-    let onNimbus = () => this._updateFirefoxSuggestToggle();
-    NimbusFeatures.urlbar.onUpdate(onNimbus);
-    this._updateFirefoxSuggestToggle();
-    window.addEventListener("unload", () => {
-      NimbusFeatures.urlbar.offUpdate(onNimbus);
-    });
-
     this.initSiteDataControls();
 
     this.initCookieBannerHandling();
@@ -3921,19 +3903,6 @@ var gPrivacyPane = {
     } else {
       groupbox.setAttribute("style", "display: none !important");
     }
-  },
-
-  /**
-   * Updates the visibility of the Firefox Suggest Privacy Container
-   * based on the user's Quick Suggest settings.
-   */
-  _updateFirefoxSuggestToggle() {
-    document.getElementById(
-      "firefoxSuggestDataCollectionPrivacyToggle"
-    ).hidden =
-      !UrlbarPrefs.get("quickSuggestEnabled") ||
-      UrlbarPrefs.get("quickSuggestSettingsUi") !=
-        QuickSuggest.SETTINGS_UI.FULL;
   },
 
   // GEOLOCATION

@@ -195,8 +195,6 @@ skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && t
 
 ["browser_privacy_dnsoverhttps.js"]
 
-["browser_privacy_firefoxSuggest.js"]
-
 ["browser_privacy_gpc.js"]
 
 ["browser_privacy_ipprotection.js"]

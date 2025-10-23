@@ -32,6 +32,17 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.recentsearches", type: "bool" },
   { id: "browser.urlbar.scotchBonnet.enableOverride", type: "bool" },
   { id: "browser.urlbar.update2.engineAliasRefresh", type: "bool" },
+
+  // Suggest Section.
+  { id: "browser.urlbar.suggest.bookmark", type: "bool" },
+  { id: "browser.urlbar.suggest.clipboard", type: "bool" },
+  { id: "browser.urlbar.suggest.history", type: "bool" },
+  { id: "browser.urlbar.suggest.openpage", type: "bool" },
+  { id: "browser.urlbar.suggest.topsites", type: "bool" },
+  { id: "browser.urlbar.suggest.engines", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest.nonsponsored", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
+  { id: "browser.urlbar.quicksuggest.online.enabled", type: "bool" },
 ]);
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
@@ -345,8 +356,8 @@ var gSearchPane = {
     ) {
       // Update the l10n IDs of text elements.
       let l10nIdByElementId = {
-        locationBarGroupHeader: "addressbar-header-firefox-suggest",
-        locationBarSuggestionLabel: "addressbar-suggest-firefox-suggest",
+        locationBarGroupHeader: "addressbar-header-firefox-suggest-1",
+        locationBarSuggestionLabel: "addressbar-suggest-firefox-suggest-1",
       };
       for (let [elementId, l10nId] of Object.entries(l10nIdByElementId)) {
         let element = document.getElementById(elementId);
@@ -360,9 +371,7 @@ var gSearchPane = {
         .classList.add("tail-with-learn-more");
       document.getElementById("firefoxSuggestLearnMore").hidden = false;
 
-      document.getElementById(
-        "firefoxSuggestDataCollectionSearchToggle"
-      ).hidden =
+      document.getElementById("firefoxSuggestOnlineEnabledToggle").hidden =
         UrlbarPrefs.get("quickSuggestSettingsUi") !=
         QuickSuggest.SETTINGS_UI.FULL;
 
