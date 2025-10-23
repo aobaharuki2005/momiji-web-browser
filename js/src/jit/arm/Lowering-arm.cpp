@@ -195,7 +195,7 @@ void LIRGeneratorARM::lowerForALUInt64(
     LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
     MDefinition* mir, MDefinition* lhs, MDefinition* rhs) {
   ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-  ins->setInt64Operand(INT64_PIECES, useInt64OrConstant(rhs));
+  ins->setInt64Operand(INT64_PIECES, useInt64RegisterOrConstant(rhs));
   defineInt64ReuseInput(ins, mir, 0);
 }
 
@@ -216,7 +216,7 @@ void LIRGeneratorARM::lowerForMulInt64(LMulI64* ins, MMul* mir,
   }
 
   ins->setLhs(useInt64RegisterAtStart(lhs));
-  ins->setRhs(useInt64OrConstant(rhs));
+  ins->setRhs(useInt64RegisterOrConstant(rhs));
   if (needsTemp) {
     ins->setTemp0(temp());
   }
@@ -506,7 +506,7 @@ void LIRGeneratorARM::lowerWasmSelectI(MWasmSelect* select) {
 void LIRGeneratorARM::lowerWasmSelectI64(MWasmSelect* select) {
   auto* lir = new (alloc()) LWasmSelectI64(
       useInt64RegisterAtStart(select->trueExpr()),
-      useInt64(select->falseExpr()), useRegister(select->condExpr()));
+      useInt64Register(select->falseExpr()), useRegister(select->condExpr()));
   defineInt64ReuseInput(lir, select, LWasmSelectI64::TrueExprIndex);
 }
 
