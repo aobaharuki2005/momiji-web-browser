@@ -5,7 +5,9 @@
 package org.mozilla.fenix.settings.settingssearch
 
 import android.content.Context
+import androidx.navigation.NavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
@@ -23,10 +25,13 @@ class SettingsSearchMiddlewareTest {
     @get:Rule
     val coroutineRule = MainCoroutineRule()
 
-    private var context: Context = mock()
+    private val navController: NavController = mockk(relaxed = true)
 
     private fun buildMiddleware(): SettingsSearchMiddleware {
         return SettingsSearchMiddleware(
+            initialDependencies = SettingsSearchMiddleware.Companion.Dependencies(
+                navController = navController,
+            ),
             fenixSettingsIndexer = TestSettingsIndexer(),
         )
     }
@@ -34,6 +39,9 @@ class SettingsSearchMiddlewareTest {
     @Test
     fun `WHEN the settings search query is updated and results are not found THEN the state is updated`() {
         val middleware = SettingsSearchMiddleware(
+            initialDependencies = SettingsSearchMiddleware.Companion.Dependencies(
+                navController = navController,
+            ),
             fenixSettingsIndexer = EmptyTestSettingsIndexer(),
         )
         val capture = CaptureActionsMiddleware<SettingsSearchState, SettingsSearchAction>()
@@ -79,18 +87,21 @@ val testList = listOf(
         summary = "Set your preferred search engine for browsing.",
         preferenceKey = "search_engine_main",
         breadcrumbs = listOf("Search", "Default Search Engine"),
+        preferenceFileInformation = PreferenceFileInformation.SearchSettingsPreferences,
     ),
     SettingsSearchItem(
         title = "Advanced Settings",
         summary = "", // Empty or blank summary
         preferenceKey = "advanced_stuff",
         breadcrumbs = listOf("Developer", "Experiments"),
+        preferenceFileInformation = PreferenceFileInformation.GeneralPreferences,
     ),
     SettingsSearchItem(
         title = "Do not collect usage data",
         summary = "", // Empty or blank summary
         preferenceKey = "do_not_collect_data",
         breadcrumbs = listOf("Privacy", "Usage Data"),
+        preferenceFileInformation = PreferenceFileInformation.GeneralPreferences,
     ),
 )
 

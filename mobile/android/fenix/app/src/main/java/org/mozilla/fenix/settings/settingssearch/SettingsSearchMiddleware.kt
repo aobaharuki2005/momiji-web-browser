@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.settings.settingssearch
 
+import androidx.core.os.bundleOf
+import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,11 +15,14 @@ import mozilla.components.lib.state.MiddlewareContext
 /**
  * [Middleware] for the settings search screen.
  *
+ * @param initialDependencies [Dependencies] to use for navigation.
  * @property fenixSettingsIndexer [SettingsIndexer] to use for indexing and querying settings.
  */
 class SettingsSearchMiddleware(
+    initialDependencies: Dependencies,
     val fenixSettingsIndexer: SettingsIndexer,
 ) : Middleware<SettingsSearchState, SettingsSearchAction> {
+    var dependencies = initialDependencies
 
     init {
         fenixSettingsIndexer.indexAllSettings()
@@ -46,10 +51,23 @@ class SettingsSearchMiddleware(
                     }
                 }
             }
+            is SettingsSearchAction.ResultItemClicked -> {
+                val bundle = bundleOf("preference_to_scroll_to" to action.item.preferenceKey)
+                val fragmentId = action.item.preferenceFileInformation.fragmentId
+                CoroutineScope(Dispatchers.Main).launch {
+                    dependencies.navController.navigate(fragmentId, bundle)
+                }
+            }
             else -> {
                 next(action)
                 // no op in middleware layer
             }
         }
+    }
+
+    companion object {
+        data class Dependencies(
+            val navController: NavController,
+        )
     }
 }

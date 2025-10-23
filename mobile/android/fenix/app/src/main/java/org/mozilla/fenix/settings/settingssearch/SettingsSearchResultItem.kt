@@ -71,12 +71,14 @@ private class SettingsSearchResultItemParameterProvider : PreviewParameterProvid
                 summary = "Set your preferred search engine for browsing.",
                 preferenceKey = "search_engine_main",
                 breadcrumbs = listOf("Search", "Default Search Engine"),
+                preferenceFileInformation = PreferenceFileInformation.SearchSettingsPreferences,
             ),
             SettingsSearchItem(
                 title = "Advanced Settings",
                 summary = "", // Empty or blank summary
                 preferenceKey = "advanced_stuff",
                 breadcrumbs = listOf("Developer", "Experiments"),
+                preferenceFileInformation = PreferenceFileInformation.GeneralPreferences,
             ),
         )
 }

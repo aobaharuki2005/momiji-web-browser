@@ -9,7 +9,6 @@ import android.content.res.Resources
 import android.content.res.XmlResourceParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.mozilla.fenix.R
 import java.io.IOException
 
 /**
@@ -32,7 +31,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             val settingFileParser = getXmlParserForFile(preferenceFileInformation.xmlResourceId)
             breadcrumbs.add(context.getString(preferenceFileInformation.topBreadcrumbResourceId))
             if (settingFileParser != null) {
-                parseXmlFile(settingFileParser)
+                parseXmlFile(settingFileParser, preferenceFileInformation)
             }
         }
     }
@@ -71,6 +70,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
     @Suppress("NestedBlockDepth")
     private fun parseXmlFile(
         parser: XmlResourceParser,
+        preferenceFileInformation: PreferenceFileInformation,
     ) {
         try {
             var eventType = parser.next()
@@ -83,7 +83,10 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
                         when (parser.name) {
                             PREFERENCE_CATEGORY_TAG -> {
                                 addCategoryToBreadcrumbs(parser)
-                                categoryItem = createCategoryItem(parser)
+                                categoryItem = createCategoryItem(
+                                    parser,
+                                    preferenceFileInformation,
+                                )
                             }
                             CHECKBOX_PREFERENCE_TAG,
                             CUSTOM_CBH_SWITCH_PREFERENCE_TAG,
@@ -93,7 +96,10 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
                             TEXT_PERCENTAGE_SEEK_BAR_PREFERENCE_TAG,
                             TOGGLE_RADIO_BUTTON_PREFERENCE_TAG,
                                 -> {
-                                    val item = createSettingsSearchItemFromAttributes(parser)
+                                val item = createSettingsSearchItemFromAttributes(
+                                    parser = parser,
+                                    preferenceFileInformation = preferenceFileInformation,
+                                )
                                     if (item != null) {
                                         settings.add(item)
                                     }
@@ -107,7 +113,10 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
                                     settings.add(categoryItem.copy(preferenceKey = preferenceKey ?: ""))
                                     categoryItem = null
                                 } else {
-                                    val item = createSettingsSearchItemFromAttributes(parser)
+                                    val item = createSettingsSearchItemFromAttributes(
+                                        parser,
+                                        preferenceFileInformation,
+                                    )
                                     if (item != null) {
                                         settings.add(item)
                                     }
@@ -156,6 +165,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
 
     private fun createSettingsSearchItemFromAttributes(
         parser: XmlResourceParser,
+        preferenceFileInformation: PreferenceFileInformation,
     ): SettingsSearchItem? {
         var key: String? = null
         var title: String? = null
@@ -197,6 +207,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             title = title,
             summary = summary,
             breadcrumbs = breadcrumbs.toList(),
+            preferenceFileInformation = preferenceFileInformation,
         )
     }
 
@@ -207,9 +218,11 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
      * in the category will be used for navigation.
      *
      * @param parser [XmlResourceParser] for the category.
+     * @param preferenceFileInformation [PreferenceFileInformation] for the category.
      */
     private fun createCategoryItem(
         parser: XmlResourceParser,
+        preferenceFileInformation: PreferenceFileInformation,
     ): SettingsSearchItem? {
         var key: String? = null
         var title: String? = null
@@ -236,6 +249,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             title = title ?: "",
             summary = summary,
             breadcrumbs = breadcrumbs.toList(),
+            preferenceFileInformation = preferenceFileInformation,
         )
     }
 
@@ -303,69 +317,19 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
          * In a [List] of [PreferenceFileInformation]s.
          */
         val preferenceFileInformationList = listOf(
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.preferences,
-                topBreadcrumbResourceId = R.string.settings_title,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.accessibility_preferences,
-                topBreadcrumbResourceId = R.string.preferences_accessibility,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.autofill_preferences,
-                topBreadcrumbResourceId = R.string.preferences_autofill,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.customization_preferences,
-                topBreadcrumbResourceId = R.string.preferences_customize,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.default_search_engine_preferences,
-                topBreadcrumbResourceId = R.string.preferences_default_search_engine,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.downloads_settings_preferences,
-                topBreadcrumbResourceId = R.string.preferences_downloads,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.home_preferences,
-                topBreadcrumbResourceId = R.string.preferences_home_2,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.open_links_in_apps_preferences,
-                topBreadcrumbResourceId = R.string.preferences_open_links_in_apps,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.private_browsing_preferences,
-                topBreadcrumbResourceId = R.string.preferences_private_browsing_options,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.search_settings_preferences,
-                topBreadcrumbResourceId = R.string.preferences_search,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.tabs_preferences,
-                topBreadcrumbResourceId = R.string.preferences_tabs,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.tracking_protection_preferences,
-                topBreadcrumbResourceId = R.string.preference_enhanced_tracking_protection,
-            ),
-            PreferenceFileInformation(
-                xmlResourceId = R.xml.save_logins_preferences,
-                topBreadcrumbResourceId = R.string.preferences_passwords_save_logins_2,
-            ),
+            PreferenceFileInformation.GeneralPreferences,
+            PreferenceFileInformation.AccessibilityPreferences,
+            PreferenceFileInformation.AutofillPreferences,
+            PreferenceFileInformation.CustomizationPreferences,
+            PreferenceFileInformation.DefaultSearchEnginePreferences,
+            PreferenceFileInformation.DownloadsSettingsPreferences,
+            PreferenceFileInformation.HomePreferences,
+            PreferenceFileInformation.OpenLinksInAppsPreferences,
+            PreferenceFileInformation.PrivateBrowsingPreferences,
+            PreferenceFileInformation.SearchSettingsPreferences,
+            PreferenceFileInformation.TabsPreferences,
+            PreferenceFileInformation.TrackingProtectionPreferences,
+            PreferenceFileInformation.SaveLoginsPreferences,
         )
     }
 }
-
-/**
- * Data class for a settings search item navigation information based on the xml file it comes from.
- *
- * @property xmlResourceId The resource ID of the xml file that the item comes from.
- * @property topBreadcrumbResourceId The top breadcrumb of the item as a string resource.
- */
-data class PreferenceFileInformation(
-    val xmlResourceId: Int,
-    val topBreadcrumbResourceId: Int,
-)

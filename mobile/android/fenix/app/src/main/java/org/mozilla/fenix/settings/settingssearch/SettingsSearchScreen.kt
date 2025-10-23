@@ -65,13 +65,18 @@ fun SettingsSearchScreen(
                         .fillMaxSize(),
                 ) {
                     items(state.searchResults.size) { index ->
+                        val settingsSearchItem = state.searchResults[index]
                         if (index != 0) {
                             HorizontalDivider()
                         }
                         SettingsSearchResultItem(
-                            item = state.searchResults[index],
+                            item = settingsSearchItem,
                             onClick = {
-                                // dispatch navigation click event
+                                store.dispatch(
+                                    SettingsSearchAction.ResultItemClicked(
+                                        settingsSearchItem,
+                                    ),
+                                )
                             },
                         )
                     }

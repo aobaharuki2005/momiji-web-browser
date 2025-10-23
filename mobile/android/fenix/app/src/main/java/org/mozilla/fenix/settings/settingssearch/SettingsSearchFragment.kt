@@ -54,6 +54,9 @@ class SettingsSearchFragment : Fragment() {
                 initialState = SettingsSearchState.Default,
                 middleware = listOf(
                     SettingsSearchMiddleware(
+                        SettingsSearchMiddleware.Companion.Dependencies(
+                            navController = findNavController(),
+                         ),
                         fenixSettingsIndexer = requireContext().components.settingsIndexer,
                     ),
                 ),
