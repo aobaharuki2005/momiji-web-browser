@@ -72,16 +72,12 @@ class OptionsPanel extends EventEmitter {
     this.telemetry = toolbox.telemetry;
 
     this.setupToolsList = this.setupToolsList.bind(this);
-    this._prefChanged = this._prefChanged.bind(this);
-    this._themeRegistered = this._themeRegistered.bind(this);
-    this._themeUnregistered = this._themeUnregistered.bind(this);
-    this._disableJSClicked = this._disableJSClicked.bind(this);
 
     this.disableJSNode = this.panelDoc.getElementById(
       "devtools-disable-javascript"
     );
 
-    this._addListeners();
+    this.#addListeners();
   }
 
   get target() {
@@ -97,19 +93,19 @@ class OptionsPanel extends EventEmitter {
     return this;
   }
 
-  _addListeners() {
-    Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged);
-    Services.prefs.addObserver("devtools.theme", this._prefChanged);
+  #addListeners() {
+    Services.prefs.addObserver("devtools.cache.disabled", this.#prefChanged);
+    Services.prefs.addObserver("devtools.theme", this.#prefChanged);
     Services.prefs.addObserver(
       "devtools.source-map.client-service.enabled",
-      this._prefChanged
+      this.#prefChanged
     );
     Services.prefs.addObserver(
       "devtools.toolbox.splitconsole.enabled",
-      this._prefChanged
+      this.#prefChanged
     );
-    gDevTools.on("theme-registered", this._themeRegistered);
-    gDevTools.on("theme-unregistered", this._themeUnregistered);
+    gDevTools.on("theme-registered", this.#themeRegistered);
+    gDevTools.on("theme-unregistered", this.#themeUnregistered);
 
     // Refresh the tools list when a new tool or webextension has been
     // registered to the toolbox.
@@ -121,16 +117,16 @@ class OptionsPanel extends EventEmitter {
     this.toolbox.on("webextension-unregistered", this.setupToolsList);
   }
 
-  _removeListeners() {
-    Services.prefs.removeObserver("devtools.cache.disabled", this._prefChanged);
-    Services.prefs.removeObserver("devtools.theme", this._prefChanged);
+  #removeListeners() {
+    Services.prefs.removeObserver("devtools.cache.disabled", this.#prefChanged);
+    Services.prefs.removeObserver("devtools.theme", this.#prefChanged);
     Services.prefs.removeObserver(
       "devtools.source-map.client-service.enabled",
-      this._prefChanged
+      this.#prefChanged
     );
     Services.prefs.removeObserver(
       "devtools.toolbox.splitconsole.enabled",
-      this._prefChanged
+      this.#prefChanged
     );
 
     this.toolbox.off("tool-registered", this.setupToolsList);
@@ -138,11 +134,11 @@ class OptionsPanel extends EventEmitter {
     this.toolbox.off("webextension-registered", this.setupToolsList);
     this.toolbox.off("webextension-unregistered", this.setupToolsList);
 
-    gDevTools.off("theme-registered", this._themeRegistered);
-    gDevTools.off("theme-unregistered", this._themeUnregistered);
+    gDevTools.off("theme-registered", this.#themeRegistered);
+    gDevTools.off("theme-unregistered", this.#themeUnregistered);
   }
 
-  _prefChanged(subject, topic, prefName) {
+  #prefChanged = (subject, topic, prefName) => {
     if (prefName === "devtools.cache.disabled") {
       const cacheDisabled = GetPref(prefName);
       const cbx = this.panelDoc.getElementById("devtools-disable-cache");
@@ -154,20 +150,20 @@ class OptionsPanel extends EventEmitter {
     } else if (prefName === "devtools.toolbox.splitconsole.enabled") {
       this.toolbox.updateIsSplitConsoleEnabled();
     }
-  }
+  };
 
-  _themeRegistered() {
+  #themeRegistered = () => {
     this.setupThemeList();
-  }
+  };
 
-  _themeUnregistered(theme) {
+  #themeUnregistered = theme => {
     const themeBox = this.panelDoc.getElementById("devtools-theme-box");
     const themeInput = themeBox.querySelector(`[value=${theme.id}]`);
 
     if (themeInput) {
       themeInput.parentNode.remove();
     }
-  }
+  };
 
   async setupToolbarButtonsList() {
     // Ensure the toolbox is open, and the buttons are all set up.
@@ -551,7 +547,7 @@ class OptionsPanel extends EventEmitter {
       const isJavascriptEnabled =
         await this.commands.targetConfigurationCommand.isJavascriptEnabled();
       this.disableJSNode.checked = !isJavascriptEnabled;
-      this.disableJSNode.addEventListener("click", this._disableJSClicked);
+      this.disableJSNode.addEventListener("click", this.#disableJSClicked);
     } else {
       // Hide the checkbox and label
       this.disableJSNode.parentNode.style.display = "none";
@@ -594,13 +590,13 @@ class OptionsPanel extends EventEmitter {
    * @param {Event} event
    *        The event sent by checking / unchecking the disable JS checkbox.
    */
-  _disableJSClicked(event) {
+  #disableJSClicked = event => {
     const checked = event.target.checked;
 
     this.commands.targetConfigurationCommand.updateConfiguration({
       javascriptEnabled: !checked,
     });
-  }
+  };
 
   destroy() {
     if (this.destroyed) {
@@ -608,9 +604,9 @@ class OptionsPanel extends EventEmitter {
     }
     this.destroyed = true;
 
-    this._removeListeners();
+    this.#removeListeners();
 
-    this.disableJSNode.removeEventListener("click", this._disableJSClicked);
+    this.disableJSNode.removeEventListener("click", this.#disableJSClicked);
 
     this.panelWin = this.panelDoc = this.disableJSNode = this.toolbox = null;
   }
