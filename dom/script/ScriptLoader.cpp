@@ -3975,6 +3975,9 @@ nsresult ScriptLoader::OnStreamComplete(
   nsresult rv = VerifySRI(aRequest, aLoader, aSRIStatus, aSRIDataVerifier);
 
   if (NS_SUCCEEDED(rv)) {
+    // If we are loading from source, store the cache info channel and
+    // save the computed SRI hash or a dummy SRI hash in case we are going to
+    // save the bytecode of this script in the cache.
     if (aRequest->IsSource() &&
         StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
       nsCOMPtr<nsIRequest> channelRequest;
@@ -3984,13 +3987,11 @@ nsresult ScriptLoader::OnStreamComplete(
           do_QueryInterface(channelRequest);
       LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", aRequest,
            aRequest->getLoadedScript()->mCacheInfo.get()));
-    }
 
-    // If we are loading from source, save the computed SRI hash or a dummy SRI
-    // hash in case we are going to save the bytecode of this script in the
-    // cache.
-    if (aRequest->IsSource()) {
-      rv = SaveSRIHash(aRequest, aSRIDataVerifier);
+      // We need the SRI hash only when the channel has cache info.
+      if (aRequest->getLoadedScript()->mCacheInfo) {
+        rv = SaveSRIHash(aRequest, aSRIDataVerifier);
+      }
     }
 
     if (NS_SUCCEEDED(rv)) {
