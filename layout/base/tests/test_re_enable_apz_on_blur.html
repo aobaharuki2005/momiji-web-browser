@@ -7,15 +7,10 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <style>
-  html {
-    user-select: none;
-  }
-  textarea {
-    width: 100%;
-    height: 20px;
-    position: fixed;
-    bottom: 20px;
-    user-select: text;
+  iframe {
+    width: 100vw;
+    height: 100vh;
+    border: none;
   }
   </style>
 </head>
@@ -23,50 +18,72 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
-<textarea name="name" rows="1" cols="20" inputmode="none">text</textarea>
+<iframe></iframe>
 </body>
 <script>
-SimpleTest.waitForExplicitFinish();
-
-SpecialPowers.pushPrefEnv({
-  set: [
-    ["layout.accessiblecaret.enabled", true],
-    ["layout.accessiblecaret.enabled_on_touch", true],
-  ],
-}, async () => {
-  await SpecialPowers.spawnChrome([], () => {
+// Open a new document in an iframe with enabling accessible-carets.
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["layout.accessiblecaret.enabled", true],
+      ["layout.accessiblecaret.enabled_on_touch", true],
+    ],
+  });
+  await SpecialPowers.spawnChrome([], async () => {
     browsingContext.touchEventsOverride = "enabled";
   });
 
-  const utils = SpecialPowers.DOMWindowUtils;
-  const target = document.querySelector("textarea");
-
-  const selectionchangePromise = new Promise(resolve => {
-    target.addEventListener("selectionchange", () => resolve());
+  const iframe = document.querySelector("iframe");
+  const loadPromise = new Promise(resolve => {
+    iframe.addEventListener("load", () => resolve());
   });
-  ok(!utils.isApzDisabledForElement(target),
-     "APZ is not disabled on the textarea");
+  iframe.src = "helper_re_enable_apz_on_blur.html";
+  await loadPromise;
+});
 
-  // Tap on the text area.
-  synthesizeTouch(target, 10, 10, { type: "touchstart" });
-  synthesizeTouch(target, 10, 10, { type: "touchend" });
+add_task(async () => {
+  const iframe = document.querySelector("iframe");
+
+  // Setup a selectionchange event listner in the iframe.
+  const selectionchangePromise = SpecialPowers.spawn(iframe, [], () => {
+    return new Promise(resolve => {
+      content.document.querySelector("textarea").
+        addEventListener("selectionchange", () => resolve());
+    });
+  });
+  // To make sure the listener has been setup in the iframe context.
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await new Promise(resolve => resolve());
+  });
+
+  async function isApzDisabled() {
+    return SpecialPowers.spawn(iframe, [], () => {
+      return SpecialPowers.DOMWindowUtils.isApzDisabledForElement(
+        content.document.querySelector("textarea"));
+    });
+  }
+
+  ok(!await isApzDisabled(), "APZ is not disabled on the textarea");
+
+  // Tap on the text area in the iframe.
+  synthesizeTouch(iframe, 10, 10, { type: "touchstart" });
+  synthesizeTouch(iframe, 10, 10, { type: "touchend" });
 
   await selectionchangePromise;
 
-  ok(utils.isApzDisabledForElement(target),
-     "Now APZ is disabled on the textarea");
+  ok(await isApzDisabled(), "Now APZ is disabled on the textarea");
 
-  const blurPromise = new Promise(resolve => {
-    target.addEventListener("blur", () => resolve());
+  // Now blur the focus from the textarea.
+  await SpecialPowers.spawn(iframe, [], async () => {
+    const target = content.document.querySelector("textarea");
+    const blurPromise = new Promise(resolve => {
+      target.addEventListener("blur", () => resolve());
+    });
+    target.blur();
+    await blurPromise;
   });
-  target.blur();
 
-  await blurPromise;
-
-  ok(!utils.isApzDisabledForElement(target),
-     "Now APZ is re-enabled on the textarea");
-
-  SimpleTest.finish();
+  ok(!await isApzDisabled(), "Now APZ is re-enabled on the textarea");
 });
 </script>
 </html>
