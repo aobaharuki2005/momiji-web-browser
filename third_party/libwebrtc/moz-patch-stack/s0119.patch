@@ -65,10 +65,10 @@ index 87e1884583..420a754edd 100644
    static std::unique_ptr<Call> Create(CallConfig config);
  
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 75196a1bc6..bcc2c87ce8 100644
+index 85aecb7b1e..8447de5d9f 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
-@@ -390,6 +390,11 @@ rtc_library("desktop_capture") {
+@@ -391,6 +391,11 @@ rtc_library("desktop_capture") {
      ]
      if (build_with_mozilla) {
        libs -= [ "Xtst" ]
