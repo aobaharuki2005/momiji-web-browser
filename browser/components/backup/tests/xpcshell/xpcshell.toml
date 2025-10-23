@@ -48,6 +48,8 @@ run-sequentially = ["true"] # Mock Windows registry interferes with normal opera
 
 ["test_BackupService_recoverFromSnapshotFolder.js"]
 
+["test_BackupService_recoverFromSnapshotFolderIntoSelectableProfile.js"]
+
 ["test_BackupService_regeneration.js"]
 
 ["test_BackupService_renderTemplate.js"]

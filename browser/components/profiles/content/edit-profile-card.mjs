@@ -77,6 +77,7 @@ export class EditProfileCard extends MozLitElement {
     profile: { type: Object },
     profiles: { type: Array },
     themes: { type: Array },
+    isCopy: { type: Boolean, reflect: true },
   };
 
   static queries = {
@@ -131,6 +132,12 @@ export class EditProfileCard extends MozLitElement {
       return;
     }
 
+    this.isCopy = document.location.hash.includes("#copiedProfileName");
+    let fakeParams = new URLSearchParams(
+      document.location.hash.replace("#", "")
+    );
+    this.copiedProfileName = fakeParams.get("copiedProfileName");
+
     let {
       currentProfile,
       hasDesktopShortcut,
@@ -149,6 +156,18 @@ export class EditProfileCard extends MozLitElement {
     this.profiles = profiles;
     this.setProfile(currentProfile);
     this.themes = themes;
+
+    await this.setInitialInput();
+  }
+
+  async setInitialInput() {
+    if (!this.isCopy) {
+      return;
+    }
+
+    await this.getUpdateComplete();
+
+    this.nameInput.value = "";
   }
 
   createAvatarURL() {
@@ -330,6 +349,18 @@ export class EditProfileCard extends MozLitElement {
   }
 
   headerTemplate() {
+    if (this.isCopy) {
+      return html`<div>
+        <h1
+          data-l10n-id="copied-profile-page-header"
+          data-l10n-args=${JSON.stringify({
+            profilename: this.copiedProfileName,
+          })}
+        ></h1>
+        <p data-l10n-id="copied-profile-page-header-description"></p>
+      </div>`;
+    }
+
     return html`<h1
       id="profile-header"
       data-l10n-id="edit-profile-page-header"

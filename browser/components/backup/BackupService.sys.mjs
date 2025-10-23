@@ -75,6 +75,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  SelectableProfileService:
+    "resource:///modules/profiles/SelectableProfileService.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
@@ -1271,6 +1273,172 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * Creates a backup for a given profile into a staging foler.
+   *
+   * @param {string} profilePath The path to the profile to backup.
+   * @returns {Promsie<object>} An object containing the results of this function.
+   * @property {STEPS} currentStep The current step of the backup process.
+   * @property {string} backupDirPath The path to the folder containing backups.
+   *   Only included if this function completed successfully.
+   * @property {string} stagingPath The path to the staging folder.
+   *   Only included if this function completed successfully.
+   * @property {object} manifest An object containing meta data for the backup.
+   *   See the BackupManifest schema for the specific shape of the returned
+   *   manifest object.
+   * @property {Error} error An error. Only included if an error was thrown.
+   */
+  async createAndPopulateStagingFolder(profilePath) {
+    let currentStep, backupDirPath, renamedStagingPath, manifest;
+    try {
+      currentStep = STEPS.CREATE_BACKUP_CREATE_MANIFEST;
+      manifest = await this.#createBackupManifest();
+
+      currentStep = STEPS.CREATE_BACKUP_CREATE_BACKUPS_FOLDER;
+      // First, check to see if a `backups` directory already exists in the
+      // profile.
+      backupDirPath = PathUtils.join(
+        profilePath,
+        BackupService.PROFILE_FOLDER_NAME,
+        BackupService.SNAPSHOTS_FOLDER_NAME
+      );
+      lazy.logConsole.debug("Creating backups folder");
+
+      // ignoreExisting: true is the default, but we're being explicit that it's
+      // okay if this folder already exists.
+      await IOUtils.makeDirectory(backupDirPath, {
+        ignoreExisting: true,
+        createAncestors: true,
+      });
+
+      currentStep = STEPS.CREATE_BACKUP_CREATE_STAGING_FOLDER;
+      let stagingPath = await this.#prepareStagingFolder(backupDirPath);
+
+      // Sort resources be priority.
+      let sortedResources = Array.from(this.#resources.values()).sort(
+        (a, b) => {
+          return b.priority - a.priority;
+        }
+      );
+
+      currentStep = STEPS.CREATE_BACKUP_LOAD_ENCSTATE;
+      let encState = await this.loadEncryptionState(profilePath);
+      let encryptionEnabled = !!encState;
+      lazy.logConsole.debug("Encryption enabled: ", encryptionEnabled);
+
+      currentStep = STEPS.CREATE_BACKUP_RUN_BACKUP;
+      // Perform the backup for each resource.
+      for (let resourceClass of sortedResources) {
+        try {
+          lazy.logConsole.debug(
+            `Backing up resource with key ${resourceClass.key}. ` +
+              `Requires encryption: ${resourceClass.requiresEncryption}`
+          );
+
+          if (resourceClass.requiresEncryption && !encryptionEnabled) {
+            lazy.logConsole.debug(
+              "Encryption is not currently enabled. Skipping."
+            );
+            continue;
+          }
+
+          let resourcePath = PathUtils.join(stagingPath, resourceClass.key);
+          await IOUtils.makeDirectory(resourcePath);
+
+          // `backup` on each BackupResource should return us a ManifestEntry
+          // that we eventually write to a JSON manifest file, but for now,
+          // we're just going to log it.
+          let manifestEntry = await new resourceClass().backup(
+            resourcePath,
+            profilePath,
+            encryptionEnabled
+          );
+
+          if (manifestEntry === undefined) {
+            lazy.logConsole.error(
+              `Backup of resource with key ${resourceClass.key} returned undefined
+                as its ManifestEntry instead of null or an object`
+            );
+          } else {
+            lazy.logConsole.debug(
+              `Backup of resource with key ${resourceClass.key} completed`,
+              manifestEntry
+            );
+            manifest.resources[resourceClass.key] = manifestEntry;
+          }
+        } catch (e) {
+          lazy.logConsole.error(
+            `Failed to backup resource: ${resourceClass.key}`,
+            e
+          );
+        }
+      }
+
+      currentStep = STEPS.CREATE_BACKUP_VERIFY_MANIFEST;
+      // Ensure that the manifest abides by the current schema, and log
+      // an error if somehow it doesn't. We'll want to collect telemetry for
+      // this case to make sure it's not happening in the wild. We debated
+      // throwing an exception here too, but that's not meaningfully better
+      // than creating a backup that's not schema-compliant. At least in this
+      // case, a user so-inclined could theoretically repair the manifest
+      // to make it valid.
+      let manifestSchema = await BackupService.MANIFEST_SCHEMA;
+      let schemaValidationResult = lazy.JsonSchema.validate(
+        manifest,
+        manifestSchema
+      );
+      if (!schemaValidationResult.valid) {
+        lazy.logConsole.error(
+          "Backup manifest does not conform to schema:",
+          manifest,
+          manifestSchema,
+          schemaValidationResult
+        );
+        // TODO: Collect telemetry for this case. (bug 1891817)
+      }
+
+      currentStep = STEPS.CREATE_BACKUP_WRITE_MANIFEST;
+      // Write the manifest to the staging folder.
+      let manifestPath = PathUtils.join(
+        stagingPath,
+        BackupService.MANIFEST_FILE_NAME
+      );
+      await IOUtils.writeJSON(manifestPath, manifest);
+
+      currentStep = STEPS.CREATE_BACKUP_FINALIZE_STAGING;
+      renamedStagingPath = await this.#finalizeStagingFolder(stagingPath);
+      lazy.logConsole.log(
+        "Wrote backup to staging directory at ",
+        renamedStagingPath
+      );
+
+      // Record the total size of the backup staging directory
+      let totalSizeKilobytes =
+        await BackupResource.getDirectorySize(renamedStagingPath);
+      let totalSizeBytesNearestMebibyte = MeasurementUtils.fuzzByteSize(
+        totalSizeKilobytes * BYTES_IN_KILOBYTE,
+        1 * BYTES_IN_MEBIBYTE
+      );
+      lazy.logConsole.debug(
+        "total staging directory size in bytes: " +
+          totalSizeBytesNearestMebibyte
+      );
+
+      Glean.browserBackup.totalBackupSize.accumulate(
+        totalSizeBytesNearestMebibyte / BYTES_IN_MEBIBYTE
+      );
+    } catch (e) {
+      return { currentStep, error: e };
+    }
+
+    return {
+      currentStep,
+      backupDirPath,
+      stagingPath: renamedStagingPath,
+      manifest,
+    };
+  }
+
+  /**
    * @typedef {object} CreateBackupResult
    * @property {object} manifest
    *   The backup manifest data of the created backup. See BackupManifest
@@ -1329,152 +1497,24 @@ export class BackupService extends EventTarget {
             `Destination for archive: ${archiveDestFolderPath}`
           );
 
-          currentStep = STEPS.CREATE_BACKUP_CREATE_MANIFEST;
-          let manifest = await this.#createBackupManifest();
-
-          currentStep = STEPS.CREATE_BACKUP_CREATE_BACKUPS_FOLDER;
-          // First, check to see if a `backups` directory already exists in the
-          // profile.
-          let backupDirPath = PathUtils.join(
-            profilePath,
-            BackupService.PROFILE_FOLDER_NAME,
-            BackupService.SNAPSHOTS_FOLDER_NAME
-          );
-          lazy.logConsole.debug("Creating backups folder");
-
-          // ignoreExisting: true is the default, but we're being explicit that it's
-          // okay if this folder already exists.
-          await IOUtils.makeDirectory(backupDirPath, {
-            ignoreExisting: true,
-            createAncestors: true,
-          });
-
-          currentStep = STEPS.CREATE_BACKUP_CREATE_STAGING_FOLDER;
-          let stagingPath = await this.#prepareStagingFolder(backupDirPath);
-
-          // Sort resources be priority.
-          let sortedResources = Array.from(this.#resources.values()).sort(
-            (a, b) => {
-              return b.priority - a.priority;
-            }
-          );
-
-          currentStep = STEPS.CREATE_BACKUP_LOAD_ENCSTATE;
-          let encState = await this.loadEncryptionState(profilePath);
-          let encryptionEnabled = !!encState;
-          lazy.logConsole.debug("Encryption enabled: ", encryptionEnabled);
-
-          currentStep = STEPS.CREATE_BACKUP_RUN_BACKUP;
-          // Perform the backup for each resource.
-          for (let resourceClass of sortedResources) {
-            try {
-              lazy.logConsole.debug(
-                `Backing up resource with key ${resourceClass.key}. ` +
-                  `Requires encryption: ${resourceClass.requiresEncryption}`
-              );
-
-              if (resourceClass.requiresEncryption && !encryptionEnabled) {
-                lazy.logConsole.debug(
-                  "Encryption is not currently enabled. Skipping."
-                );
-                continue;
-              }
-
-              let resourcePath = PathUtils.join(stagingPath, resourceClass.key);
-              await IOUtils.makeDirectory(resourcePath);
-
-              // `backup` on each BackupResource should return us a ManifestEntry
-              // that we eventually write to a JSON manifest file, but for now,
-              // we're just going to log it.
-              let manifestEntry = await new resourceClass().backup(
-                resourcePath,
-                profilePath,
-                encryptionEnabled
-              );
-
-              if (manifestEntry === undefined) {
-                lazy.logConsole.error(
-                  `Backup of resource with key ${resourceClass.key} returned undefined
-                as its ManifestEntry instead of null or an object`
-                );
-              } else {
-                lazy.logConsole.debug(
-                  `Backup of resource with key ${resourceClass.key} completed`,
-                  manifestEntry
-                );
-                manifest.resources[resourceClass.key] = manifestEntry;
-              }
-            } catch (e) {
-              lazy.logConsole.error(
-                `Failed to backup resource: ${resourceClass.key}`,
-                e
-              );
-            }
+          let result = await this.createAndPopulateStagingFolder(profilePath);
+          this.#backupInProgress = true;
+          currentStep = result.currentStep;
+          if (result.error) {
+            // Re-throw the error so we can catch it below for telemetry
+            throw result.error;
           }
 
-          currentStep = STEPS.CREATE_BACKUP_VERIFY_MANIFEST;
-          // Ensure that the manifest abides by the current schema, and log
-          // an error if somehow it doesn't. We'll want to collect telemetry for
-          // this case to make sure it's not happening in the wild. We debated
-          // throwing an exception here too, but that's not meaningfully better
-          // than creating a backup that's not schema-compliant. At least in this
-          // case, a user so-inclined could theoretically repair the manifest
-          // to make it valid.
-          let manifestSchema = await BackupService.MANIFEST_SCHEMA;
-          let schemaValidationResult = lazy.JsonSchema.validate(
-            manifest,
-            manifestSchema
-          );
-          if (!schemaValidationResult.valid) {
-            lazy.logConsole.error(
-              "Backup manifest does not conform to schema:",
-              manifest,
-              manifestSchema,
-              schemaValidationResult
-            );
-            // TODO: Collect telemetry for this case. (bug 1891817)
-          }
-
-          currentStep = STEPS.CREATE_BACKUP_WRITE_MANIFEST;
-          // Write the manifest to the staging folder.
-          let manifestPath = PathUtils.join(
-            stagingPath,
-            BackupService.MANIFEST_FILE_NAME
-          );
-          await IOUtils.writeJSON(manifestPath, manifest);
-
-          currentStep = STEPS.CREATE_BACKUP_FINALIZE_STAGING;
-          let renamedStagingPath =
-            await this.#finalizeStagingFolder(stagingPath);
-          lazy.logConsole.log(
-            "Wrote backup to staging directory at ",
-            renamedStagingPath
-          );
-
-          // Record the total size of the backup staging directory
-          let totalSizeKilobytes =
-            await BackupResource.getDirectorySize(renamedStagingPath);
-          let totalSizeBytesNearestMebibyte = MeasurementUtils.fuzzByteSize(
-            totalSizeKilobytes * BYTES_IN_KILOBYTE,
-            1 * BYTES_IN_MEBIBYTE
-          );
-          lazy.logConsole.debug(
-            "total staging directory size in bytes: " +
-              totalSizeBytesNearestMebibyte
-          );
-
-          Glean.browserBackup.totalBackupSize.accumulate(
-            totalSizeBytesNearestMebibyte / BYTES_IN_MEBIBYTE
-          );
+          let { backupDirPath, stagingPath, manifest } = result;
 
           currentStep = STEPS.CREATE_BACKUP_COMPRESS_STAGING;
           let compressedStagingPath = await this.#compressStagingFolder(
-            renamedStagingPath,
+            stagingPath,
             backupDirPath
           ).finally(async () => {
             // retryReadonly is needed in case there were read only files in
             // the profile.
-            await IOUtils.remove(renamedStagingPath, {
+            await IOUtils.remove(stagingPath, {
               recursive: true,
               retryReadonly: true,
             });
@@ -2807,6 +2847,213 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * Given a recovery path, read in the backup manifest from the archive and
+   * ensures that it is valid. Will throw an error for an invalid manifest.
+   *
+   * @param {string} recoveryPath The path to the decompressed backup archive
+   *   on the file system.
+   * @returns {object} See the BackupManifest schema for the specific shape of the
+   * returned manifest object.
+   */
+  async #readAndValidateManifest(recoveryPath) {
+    // Read in the backup manifest.
+    let manifestPath = PathUtils.join(
+      recoveryPath,
+      BackupService.MANIFEST_FILE_NAME
+    );
+
+    let manifest = await IOUtils.readJSON(manifestPath);
+    if (!manifest.version) {
+      throw new BackupError(
+        "Backup manifest version not found",
+        ERRORS.CORRUPTED_ARCHIVE
+      );
+    }
+
+    if (manifest.version > lazy.ArchiveUtils.SCHEMA_VERSION) {
+      throw new BackupError(
+        "Cannot recover from a manifest newer than the current schema version",
+        ERRORS.UNSUPPORTED_BACKUP_VERSION
+      );
+    }
+
+    // Make sure that it conforms to the schema.
+    let manifestSchema = await BackupService.getSchemaForVersion(
+      SCHEMAS.BACKUP_MANIFEST,
+      manifest.version
+    );
+    let schemaValidationResult = lazy.JsonSchema.validate(
+      manifest,
+      manifestSchema
+    );
+    if (!schemaValidationResult.valid) {
+      lazy.logConsole.error(
+        "Backup manifest does not conform to schema:",
+        manifest,
+        manifestSchema,
+        schemaValidationResult
+      );
+      // TODO: Collect telemetry for this case. (bug 1891817)
+      throw new BackupError(
+        "Cannot recover from an invalid backup manifest",
+        ERRORS.CORRUPTED_ARCHIVE
+      );
+    }
+
+    // In the future, if we ever bump the ArchiveUtils.SCHEMA_VERSION and need
+    // to do any special behaviours to interpret older schemas, this is where
+    // we can do that, and we can remove this comment.
+
+    let meta = manifest.meta;
+
+    if (meta.appName != AppConstants.MOZ_APP_NAME) {
+      throw new BackupError(
+        `Cannot recover a backup from ${meta.appName} in ${AppConstants.MOZ_APP_NAME}`,
+        ERRORS.UNSUPPORTED_APPLICATION
+      );
+    }
+
+    if (
+      Services.vc.compare(AppConstants.MOZ_APP_VERSION, meta.appVersion) < 0
+    ) {
+      throw new BackupError(
+        `Cannot recover a backup created on version ${meta.appVersion} in ${AppConstants.MOZ_APP_VERSION}`,
+        ERRORS.UNSUPPORTED_BACKUP_VERSION
+      );
+    }
+
+    return manifest;
+  }
+
+  /**
+   * Iterates over each resource in the manifest and calls the recover() method
+   * on each found BackupResource, passing in the associated ManifestEntry from
+   * the backup manifest, and collects any post-recovery data from those
+   * resources.
+   *
+   * @param {object} manifest See the BackupManifest schema for the specific
+   *   shape of the returned manifest object.
+   * @param {string} recoveryPath The path to the decompressed backup archive
+   *   on the file system.
+   * @param {string} profilePath The path of the newly recovered profile
+   * @returns {object}
+   *   An object containing post recovery data for each resource.
+   */
+  async #recoverResources(manifest, recoveryPath, profilePath) {
+    let postRecovery = {};
+
+    // Iterate over each resource in the manifest and call recover() on each
+    // associated BackupResource.
+    for (let resourceKey in manifest.resources) {
+      let manifestEntry = manifest.resources[resourceKey];
+      let resourceClass = this.#resources.get(resourceKey);
+      if (!resourceClass) {
+        lazy.logConsole.error(`No BackupResource found for key ${resourceKey}`);
+        continue;
+      }
+
+      try {
+        lazy.logConsole.debug(
+          `Restoring resource with key ${resourceKey}. ` +
+            `Requires encryption: ${resourceClass.requiresEncryption}`
+        );
+        let resourcePath = PathUtils.join(recoveryPath, resourceKey);
+        let postRecoveryEntry = await new resourceClass().recover(
+          manifestEntry,
+          resourcePath,
+          profilePath
+        );
+        postRecovery[resourceKey] = postRecoveryEntry;
+      } catch (e) {
+        lazy.logConsole.error(`Failed to recover resource: ${resourceKey}`, e);
+        throw e;
+      }
+    }
+
+    return postRecovery;
+  }
+
+  /**
+   * Make sure the legacy telemetry client ID exists and write telemetry files
+   * to the profile we are recovering into.
+   *
+   * @param {string} profilePath The path of the newly recovered profile
+   */
+  async #writeTelemetryFiles(profilePath) {
+    // Make sure that a legacy telemetry client ID exists and is written to
+    // disk.
+    let clientID = await lazy.ClientID.getClientID();
+    lazy.logConsole.debug("Current client ID: ", clientID);
+    // Next, copy over the legacy telemetry client ID state from the currently
+    // running profile. The newly created profile that we're recovering into
+    // should inherit this client ID.
+    const TELEMETRY_STATE_FILENAME = "state.json";
+    const TELEMETRY_STATE_FOLDER = "datareporting";
+    await IOUtils.makeDirectory(
+      PathUtils.join(profilePath, TELEMETRY_STATE_FOLDER)
+    );
+    await IOUtils.copy(
+      /* source */
+      PathUtils.join(
+        PathUtils.profileDir,
+        TELEMETRY_STATE_FOLDER,
+        TELEMETRY_STATE_FILENAME
+      ),
+      /* destination */
+      PathUtils.join(
+        profilePath,
+        TELEMETRY_STATE_FOLDER,
+        TELEMETRY_STATE_FILENAME
+      )
+    );
+  }
+
+  /**
+   * If the encState exists, write the encrypted state object to the
+   * ARCHIVE_ENCRYPTION_STATE_FILE.
+   *
+   * @param {ArchiveEncryptionState|null} encState Set if the backup being
+   *   recovered was encrypted. This implies that the profile being recovered
+   *   was configured to create encrypted backups. This ArchiveEncryptionState
+   *   is therefore needed to generate the ARCHIVE_ENCRYPTION_STATE_FILE for
+   *   the recovered profile (since the original ARCHIVE_ENCRYPTION_STATE_FILE
+   *   was intentionally not backed up, as the recovery device might have a
+   *   different OSKeyStore secret).
+   * @param {string} profilePath The path of the newly recovered profile
+   */
+  async #maybeWriteEncryptedStateObject(encState, profilePath) {
+    if (encState) {
+      // The backup we're recovering was originally encrypted, meaning that
+      // the recovered profile is configured to create encrypted backups. Our
+      // caller passed us a _new_ ArchiveEncryptionState generated for this
+      // device with the backup's recovery code so that we can serialize the
+      // ArchiveEncryptionState for the recovered profile.
+      let encStatePath = PathUtils.join(
+        profilePath,
+        BackupService.PROFILE_FOLDER_NAME,
+        BackupService.ARCHIVE_ENCRYPTION_STATE_FILE
+      );
+      let encStateObject = await encState.serialize();
+      await IOUtils.writeJSON(encStatePath, encStateObject);
+    }
+  }
+
+  /**
+   * Write the post recovery data to the newly recovered profile.
+   *
+   * @param {object} postRecoveryData An object containing post recovery data
+   *   from each resource recovered.
+   * @param {string} profilePath The path of the newly recovered profile
+   */
+  async #writePostRecoveryData(postRecoveryData, profilePath) {
+    let postRecoveryPath = PathUtils.join(
+      profilePath,
+      BackupService.POST_RECOVERY_FILE_NAME
+    );
+    await IOUtils.writeJSON(postRecoveryPath, postRecoveryData);
+  }
+
+  /**
    * Given a decompressed backup archive at recoveryPath, this method does the
    * following:
    *
@@ -2857,70 +3104,7 @@ export class BackupService extends EventTarget {
     lazy.logConsole.debug("Recovering from backup at ", recoveryPath);
 
     try {
-      // Read in the backup manifest.
-      let manifestPath = PathUtils.join(
-        recoveryPath,
-        BackupService.MANIFEST_FILE_NAME
-      );
-      let manifest = await IOUtils.readJSON(manifestPath);
-      if (!manifest.version) {
-        throw new BackupError(
-          "Backup manifest version not found",
-          ERRORS.CORRUPTED_ARCHIVE
-        );
-      }
-
-      if (manifest.version > lazy.ArchiveUtils.SCHEMA_VERSION) {
-        throw new BackupError(
-          "Cannot recover from a manifest newer than the current schema version",
-          ERRORS.UNSUPPORTED_BACKUP_VERSION
-        );
-      }
-
-      // Make sure that it conforms to the schema.
-      let manifestSchema = await BackupService.getSchemaForVersion(
-        SCHEMAS.BACKUP_MANIFEST,
-        manifest.version
-      );
-      let schemaValidationResult = lazy.JsonSchema.validate(
-        manifest,
-        manifestSchema
-      );
-      if (!schemaValidationResult.valid) {
-        lazy.logConsole.error(
-          "Backup manifest does not conform to schema:",
-          manifest,
-          manifestSchema,
-          schemaValidationResult
-        );
-        // TODO: Collect telemetry for this case. (bug 1891817)
-        throw new BackupError(
-          "Cannot recover from an invalid backup manifest",
-          ERRORS.CORRUPTED_ARCHIVE
-        );
-      }
-
-      // In the future, if we ever bump the ArchiveUtils.SCHEMA_VERSION and need
-      // to do any special behaviours to interpret older schemas, this is where
-      // we can do that, and we can remove this comment.
-
-      let meta = manifest.meta;
-
-      if (meta.appName != AppConstants.MOZ_APP_NAME) {
-        throw new BackupError(
-          `Cannot recover a backup from ${meta.appName} in ${AppConstants.MOZ_APP_NAME}`,
-          ERRORS.UNSUPPORTED_APPLICATION
-        );
-      }
-
-      if (
-        Services.vc.compare(AppConstants.MOZ_APP_VERSION, meta.appVersion) < 0
-      ) {
-        throw new BackupError(
-          `Cannot recover a backup created on version ${meta.appVersion} in ${AppConstants.MOZ_APP_VERSION}`,
-          ERRORS.UNSUPPORTED_BACKUP_VERSION
-        );
-      }
+      let manifest = await this.#readAndValidateManifest(recoveryPath);
 
       // Okay, we have a valid backup-manifest.json. Let's create a new profile
       // and start invoking the recover() method on each BackupResource.
@@ -2929,91 +3113,23 @@ export class BackupService extends EventTarget {
       );
       let profile = profileSvc.createUniqueProfile(
         profileRootPath ? await IOUtils.getDirectory(profileRootPath) : null,
-        meta.profileName
+        manifest.meta.profileName
       );
 
-      let postRecovery = {};
-
-      // Iterate over each resource in the manifest and call recover() on each
-      // associated BackupResource.
-      for (let resourceKey in manifest.resources) {
-        let manifestEntry = manifest.resources[resourceKey];
-        let resourceClass = this.#resources.get(resourceKey);
-        if (!resourceClass) {
-          lazy.logConsole.error(
-            `No BackupResource found for key ${resourceKey}`
-          );
-          continue;
-        }
-
-        try {
-          lazy.logConsole.debug(
-            `Restoring resource with key ${resourceKey}. ` +
-              `Requires encryption: ${resourceClass.requiresEncryption}`
-          );
-          let resourcePath = PathUtils.join(recoveryPath, resourceKey);
-          let postRecoveryEntry = await new resourceClass().recover(
-            manifestEntry,
-            resourcePath,
-            profile.rootDir.path
-          );
-          postRecovery[resourceKey] = postRecoveryEntry;
-        } catch (e) {
-          lazy.logConsole.error(
-            `Failed to recover resource: ${resourceKey}`,
-            e
-          );
-          throw e;
-        }
-      }
-
-      // Make sure that a legacy telemetry client ID exists and is written to
-      // disk.
-      let clientID = await lazy.ClientID.getClientID();
-      lazy.logConsole.debug("Current client ID: ", clientID);
-      // Next, copy over the legacy telemetry client ID state from the currently
-      // running profile. The newly created profile that we're recovering into
-      // should inherit this client ID.
-      const TELEMETRY_STATE_FILENAME = "state.json";
-      const TELEMETRY_STATE_FOLDER = "datareporting";
-      await IOUtils.makeDirectory(
-        PathUtils.join(profile.rootDir.path, TELEMETRY_STATE_FOLDER)
-      );
-      await IOUtils.copy(
-        /* source */
-        PathUtils.join(
-          PathUtils.profileDir,
-          TELEMETRY_STATE_FOLDER,
-          TELEMETRY_STATE_FILENAME
-        ),
-        /* destination */
-        PathUtils.join(
-          profile.rootDir.path,
-          TELEMETRY_STATE_FOLDER,
-          TELEMETRY_STATE_FILENAME
-        )
+      let postRecovery = await this.#recoverResources(
+        manifest,
+        recoveryPath,
+        profile.rootDir.path
       );
 
-      if (encState) {
-        // The backup we're recovering was originally encrypted, meaning that
-        // the recovered profile is configured to create encrypted backups. Our
-        // caller passed us a _new_ ArchiveEncryptionState generated for this
-        // device with the backup's recovery code so that we can serialize the
-        // ArchiveEncryptionState for the recovered profile.
-        let encStatePath = PathUtils.join(
-          profile.rootDir.path,
-          BackupService.PROFILE_FOLDER_NAME,
-          BackupService.ARCHIVE_ENCRYPTION_STATE_FILE
-        );
-        let encStateObject = await encState.serialize();
-        await IOUtils.writeJSON(encStatePath, encStateObject);
-      }
+      await this.#writeTelemetryFiles(profile.rootDir.path);
 
-      let postRecoveryPath = PathUtils.join(
-        profile.rootDir.path,
-        BackupService.POST_RECOVERY_FILE_NAME
+      await this.#maybeWriteEncryptedStateObject(
+        encState,
+        profile.rootDir.path
       );
-      await IOUtils.writeJSON(postRecoveryPath, postRecovery);
+
+      await this.#writePostRecoveryData(postRecovery, profile.rootDir.path);
 
       // In a release scenario, this should always be true
       // this makes it easier to get around setting up profiles for testing other functionality
@@ -3038,6 +3154,104 @@ export class BackupService extends EventTarget {
     } catch (e) {
       lazy.logConsole.error(
         "Failed to recover from backup at ",
+        recoveryPath,
+        e
+      );
+      throw e;
+    }
+  }
+
+  /**
+   * Given a decompressed backup archive at recoveryPath, this method does the
+   * following:
+   *
+   * 1. Reads in the backup manifest from the archive and ensures that it is
+   *    valid.
+   * 2. Creates a new SelectableProfile profile directory using the same name
+   *    as the one found in the backup manifest, but with a different prefix.
+   * 3. Iterates over each resource in the manifest and calls the recover()
+   *    method on each found BackupResource, passing in the associated
+   *    ManifestEntry from the backup manifest, and collects any post-recovery
+   *    data from those resources.
+   * 4. Writes a `post-recovery.json` file into the newly created profile
+   *    directory.
+   * 5. Returns the name of the newly created profile directory.
+   * 6. Regardless of whether or not recovery succeeded, clears the native
+   *    OSKeyStore of any secret labeled with
+   *    BackupService.RECOVERY_OSKEYSTORE_LABEL.
+   *
+   * @param {string} recoveryPath
+   *   The path to the decompressed backup archive on the file system.
+   * @param {boolean} [shouldLaunch=false]
+   *   An optional argument that specifies whether an instance of the app
+   *   should be launched with the newly recovered profile after recovery is
+   *   complete.
+   * @param {ArchiveEncryptionState} [encState=null]
+   *   Set if the backup being recovered was encrypted. This implies that the
+   *   profile being recovered was configured to create encrypted backups. This
+   *   ArchiveEncryptionState is therefore needed to generate the
+   *   ARCHIVE_ENCRYPTION_STATE_FILE for the recovered profile (since the
+   *   original ARCHIVE_ENCRYPTION_STATE_FILE was intentionally not backed up,
+   *   as the recovery device might have a different OSKeyStore secret).
+   * @param {SelectableProfile} [copiedProfile=null]
+   *   If the profile we are recovering is a "copied" profile, we don't want to
+   *   inherit the client ID as this profile will be a new profile in the
+   *   profile group. If we are copying a profile, we will use
+   *   copiedProfile.name to show that the new profile is a copy of
+   *   copiedProfile on about:editprofile.
+   * @returns {Promise<SelectableProfile>}
+   *   The SelectableProfile that was created for the recovered profile.
+   * @throws {Exception}
+   *   In the event that recovery somehow failed.
+   */
+  async recoverFromSnapshotFolderIntoSelectableProfile(
+    recoveryPath,
+    shouldLaunch = false,
+    encState = null,
+    copiedProfile = null
+  ) {
+    lazy.logConsole.debug(
+      "Recovering SelectableProfile from backup at ",
+      recoveryPath
+    );
+
+    try {
+      let manifest = await this.#readAndValidateManifest(recoveryPath);
+
+      // Okay, we have a valid backup-manifest.json. Let's create a new profile
+      // and start invoking the recover() method on each BackupResource.
+      let profile = await lazy.SelectableProfileService.createNewProfile(false);
+
+      let postRecovery = await this.#recoverResources(
+        manifest,
+        recoveryPath,
+        profile.path
+      );
+
+      // We don't want to copy the client ID if this is a copied profile
+      // because this profile will be a new profile in the profile group.
+      if (!copiedProfile) {
+        await this.#writeTelemetryFiles(profile.path);
+      }
+
+      await this.#maybeWriteEncryptedStateObject(encState, profile.path);
+
+      await this.#writePostRecoveryData(postRecovery, profile.path);
+
+      if (shouldLaunch) {
+        lazy.SelectableProfileService.launchInstance(
+          profile,
+          // Using URL Search Params on this about: page didn't work because
+          // the RPM communication so we use the hash and parse that instead.
+          "about:editprofile" +
+            (copiedProfile ? `#copiedProfileName=${copiedProfile.name}` : "")
+        );
+      }
+
+      return profile;
+    } catch (e) {
+      lazy.logConsole.error(
+        "Failed to recover SelectableProfile from backup at ",
         recoveryPath,
         e
       );

@@ -7,6 +7,7 @@ import { DownloadPaths } from "resource://gre/modules/DownloadPaths.sys.mjs";
 import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 import { ProfilesDatastoreService } from "moz-src:///toolkit/profile/ProfilesDatastoreService.sys.mjs";
 import { SelectableProfileService } from "resource:///modules/profiles/SelectableProfileService.sys.mjs";
+import { BackupService } from "resource:///modules/backup/BackupService.sys.mjs";
 
 const lazy = {};
 
@@ -470,6 +471,30 @@ export class SelectableProfile {
     }
 
     return profileObj;
+  }
+
+  async copyProfile() {
+    const backupServiceInstance = BackupService.init();
+    let result = await backupServiceInstance.createAndPopulateStagingFolder(
+      this.path
+    );
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    let copiedProfile =
+      await backupServiceInstance.recoverFromSnapshotFolderIntoSelectableProfile(
+        result.stagingPath,
+        true, // shouldLaunch
+        null, // encState
+        this // copiedProfile
+      );
+
+    copiedProfile.theme = this.theme;
+    await copiedProfile.setAvatar(this.avatar);
+
+    return copiedProfile;
   }
 
   // Desktop shortcut-related methods, currently Windows-only.

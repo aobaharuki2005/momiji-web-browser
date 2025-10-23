@@ -74,6 +74,11 @@ new-profile-page-input-placeholder =
 new-profile-page-done-button =
     .label = Done editing
 
+# Variables
+#   $profilename (String) - The name of the copied profile.
+copied-profile-page-header = Your copy of { $profilename } is ready to customize
+copied-profile-page-header-description = We copied your data and settings into a new profile. Now give it a name, pick a look, and make it your own.
+
 ## Delete profile dialogue that allows users to review what they will lose if they choose to delete their profile. Each item (open windows, etc.) is displayed in a table, followed by a column with the number of items.
 
 # Variables
