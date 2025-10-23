@@ -88,15 +88,16 @@ def trigger_hook(hook_group_id, hook_id, hook_payload):
 
 def list_task_group_tasks(task_group_id):
     """Generate the tasks in a task group"""
-    params = {}
     queue = get_taskcluster_client("queue")
-    while True:
-        resp = queue.listTaskGroup(task_group_id, params)
-        yield from resp["tasks"]
-        if resp.get("continuationToken"):
-            params = {"continuationToken": resp.get("continuationToken")}
-        else:
-            break
+
+    tasks = []
+
+    def pagination_handler(response):
+        tasks.extend(response["tasks"])
+
+    queue.listTaskGroup(task_group_id, paginationHandler=pagination_handler)
+
+    return tasks
 
 
 def list_task_group_incomplete_task_ids(task_group_id):
