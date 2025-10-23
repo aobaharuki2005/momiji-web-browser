@@ -1123,7 +1123,7 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
   FaultingCodeOffset loadDouble(const BaseIndex& src, FloatRegister dest) {
     UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
-    computeScaledAddress(src, scratch);
+    computeEffectiveAddress(src, scratch);
     FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
     fld(dest, scratch, 0);
     return fco;
@@ -1136,7 +1136,7 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
   FaultingCodeOffset loadFloat32(const BaseIndex& src, FloatRegister dest) {
     UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
-    computeScaledAddress(src, scratch);
+    computeEffectiveAddress(src, scratch);
     FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
     flw(dest, scratch, 0);
     return fco;

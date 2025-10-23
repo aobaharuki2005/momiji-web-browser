@@ -1190,16 +1190,14 @@ FaultingCodeOffset MacroAssemblerRiscv64::ma_store(
     Imm32 imm, const BaseIndex& dest, LoadStoreSize size,
     LoadStoreExtension extension) {
   UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
+
   Register address = temps.Acquire();
-  // Make sure that scratch contains absolute address so that
-  // offset is 0.
   computeScaledAddress(dest, address);
 
-  // Scrach register is free now, use it for loading imm value
+  Register scratch = temps.Acquire();
   ma_li(scratch, imm);
 
-  return ma_store(scratch, Address(address, 0), size, extension);
+  return ma_store(scratch, Address(address, dest.offset), size, extension);
 }
 
 FaultingCodeOffset MacroAssemblerRiscv64::ma_store(
@@ -2156,11 +2154,11 @@ void MacroAssemblerRiscv64Compat::storeValue(const Value& val, Address dest) {
 void MacroAssemblerRiscv64Compat::storeValue(const Value& val, BaseIndex dest) {
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
-  Register scratch2 = temps.Acquire();
   computeScaledAddress(dest, scratch);
 
   int32_t offset = dest.offset;
   if (!is_int12(offset)) {
+    Register scratch2 = temps.Acquire();
     ma_li(scratch2, Imm32(offset));
     add(scratch, scratch, scratch2);
     offset = 0;
