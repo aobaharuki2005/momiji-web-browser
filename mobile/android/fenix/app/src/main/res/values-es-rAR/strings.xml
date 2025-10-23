@@ -2822,7 +2822,7 @@
   <!-- The header for the email of an address -->
   <string name="addresses_email">Correo electrónico</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used for addresses in Iran, Mexico. -->
-  <string name="addresses_neighborhood" tools:ignore="UnusedResources">Vecindad</string>
+  <string name="addresses_neighborhood" tools:ignore="UnusedResources">Barrio</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Village or Township field, specific to Malaysia is crucial for addresses in rural areas. -->
   <string name="addresses_village_township" tools:ignore="UnusedResources">Pueblo o municipio</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
