@@ -465,8 +465,6 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   Register rhs = ToRegister(lir->rhs());
   Register output = ToRegister(lir->output());
 
-  Label done;
-
   // Prevent divide by zero.
   if (lir->canBeDivideByZero()) {
     Label nonZero;
@@ -480,8 +478,6 @@ void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
   } else {
     masm.ma_divu64(output, lhs, rhs);
   }
-
-  masm.bind(&done);
 }
 
 void CodeGenerator::visitWasmLoadI64(LWasmLoadI64* lir) {
@@ -1055,7 +1051,6 @@ void CodeGenerator::visitMulI64(LMulI64* lir) {
 }
 
 void CodeGenerator::visitDivI(LDivI* ins) {
-  // Extract the registers from this instruction
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register dest = ToRegister(ins->output());
@@ -1117,18 +1112,21 @@ void CodeGenerator::visitDivI(LDivI* ins) {
     bailoutCmp32(Assembler::LessThan, rhs, Imm32(0), ins->snapshot());
     masm.bind(&nonzero);
   }
-  // Note: above safety checks could not be verified as Ion seems to be
-  // smarter and requires double arithmetic in such cases.
 
   // All regular. Lets call div.
   if (mir->canTruncateRemainder()) {
     masm.ma_div32(dest, lhs, rhs);
   } else {
     MOZ_ASSERT(mir->fallible());
+    MOZ_ASSERT(lhs != dest && rhs != dest);
 
-    Label remainderNonZero;
-    masm.ma_div_branch_overflow(dest, lhs, rhs, &remainderNonZero);
-    bailoutFrom(&remainderNonZero, ins->snapshot());
+    // The recommended code sequence to obtain both the quotient and remainder
+    // is div[u] followed by mod[u].
+    masm.ma_div32(dest, lhs, rhs);
+    masm.ma_mod32(temp, lhs, rhs);
+
+    // If the remainder is != 0, bailout since this must be a double.
+    bailoutCmp32(Assembler::NonZero, temp, temp, ins->snapshot());
   }
 
   masm.bind(&done);

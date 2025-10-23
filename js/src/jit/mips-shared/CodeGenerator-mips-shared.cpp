@@ -484,7 +484,6 @@ void CodeGenerator::visitMulI64(LMulI64* lir) {
 }
 
 void CodeGenerator::visitDivI(LDivI* ins) {
-  // Extract the registers from this instruction
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register dest = ToRegister(ins->output());
@@ -546,8 +545,6 @@ void CodeGenerator::visitDivI(LDivI* ins) {
     bailoutCmp32(Assembler::LessThan, rhs, Imm32(0), ins->snapshot());
     masm.bind(&nonzero);
   }
-  // Note: above safety checks could not be verified as Ion seems to be
-  // smarter and requires double arithmetic in such cases.
 
   // All regular. Lets call div.
   if (mir->canTruncateRemainder()) {
@@ -560,9 +557,20 @@ void CodeGenerator::visitDivI(LDivI* ins) {
   } else {
     MOZ_ASSERT(mir->fallible());
 
-    Label remainderNonZero;
-    masm.ma_div_branch_overflow(dest, lhs, rhs, &remainderNonZero);
-    bailoutFrom(&remainderNonZero, ins->snapshot());
+#ifdef MIPSR6
+    masm.as_mod(temp, lhs, rhs);
+#else
+    masm.as_div(lhs, rhs);
+    masm.as_mfhi(temp);
+#endif
+
+    bailoutCmp32(Assembler::NonZero, temp, temp, ins->snapshot());
+
+#ifdef MIPSR6
+    masm.as_div(dest, lhs, rhs);
+#else
+    masm.as_mflo(dest);
+#endif
   }
 
   masm.bind(&done);
@@ -609,7 +617,6 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
 }
 
 void CodeGenerator::visitModI(LModI* ins) {
-  // Extract the registers from this instruction
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register dest = ToRegister(ins->output());

@@ -1632,24 +1632,6 @@ void MacroAssemblerLOONG64::ma_mul32TestOverflow(Register rd, Register rj,
   ma_b(rd, scratch, overflow, Assembler::NotEqual);
 }
 
-void MacroAssemblerLOONG64::ma_div_branch_overflow(Register rd, Register rj,
-                                                   Register rk,
-                                                   Label* overflow) {
-  UseScratchRegisterScope temps(asMasm());
-  Register scratch = temps.Acquire();
-  as_mod_w(scratch, rj, rk);
-  ma_b(scratch, scratch, overflow, Assembler::NonZero);
-  as_div_w(rd, rj, rk);
-}
-
-void MacroAssemblerLOONG64::ma_div_branch_overflow(Register rd, Register rj,
-                                                   Imm32 imm, Label* overflow) {
-  UseScratchRegisterScope temps(asMasm());
-  Register scratch = temps.Acquire();
-  ma_li(scratch, imm);
-  ma_div_branch_overflow(rd, rj, scratch, overflow);
-}
-
 void MacroAssemblerLOONG64::ma_mod_mask(Register src, Register dest,
                                         Register hold, Register remain,
                                         int32_t shift, Label* negZero) {

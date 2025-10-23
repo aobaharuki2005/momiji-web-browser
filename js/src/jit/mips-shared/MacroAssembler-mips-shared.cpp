@@ -386,39 +386,6 @@ void MacroAssemblerMIPSShared::ma_mul32TestOverflow(Register rd, Register rs,
   ma_b(rd, scratch, overflow, Assembler::NotEqual);
 }
 
-void MacroAssemblerMIPSShared::ma_div_branch_overflow(Register rd, Register rs,
-                                                      Register rt,
-                                                      Label* overflow) {
-  UseScratchRegisterScope temps(*this);
-  Register scratch = temps.Acquire();
-#ifdef MIPSR6
-  if (rd == rs) {
-    Register scratch2 = temps.Acquire();
-    ma_move(scratch2, rs);
-    rs = scratch2;
-  }
-  as_mod(scratch, rs, rt);
-#else
-  as_div(rs, rt);
-  as_mfhi(scratch);
-#endif
-  ma_b(scratch, scratch, overflow, Assembler::NonZero);
-#ifdef MIPSR6
-  as_div(rd, rs, rt);
-#else
-  as_mflo(rd);
-#endif
-}
-
-void MacroAssemblerMIPSShared::ma_div_branch_overflow(Register rd, Register rs,
-                                                      Imm32 imm,
-                                                      Label* overflow) {
-  UseScratchRegisterScope temps(*this);
-  Register scratch = temps.Acquire();
-  ma_li(scratch, imm);
-  ma_div_branch_overflow(rd, rs, scratch, overflow);
-}
-
 void MacroAssemblerMIPSShared::ma_mod_mask(Register src, Register dest,
                                            Register hold, Register remain,
                                            int32_t shift, Label* negZero) {
