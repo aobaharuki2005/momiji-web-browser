@@ -511,8 +511,7 @@ class SystemClockDriver final : public ThreadedDriver {
  */
 class OfflineClockDriver final : public ThreadedDriver {
  public:
-  OfflineClockDriver(GraphInterface* aGraphInterface, uint32_t aSampleRate,
-                     GraphTime aSlice);
+  OfflineClockDriver(GraphInterface* aGraphInterface, uint32_t aSampleRate);
   virtual ~OfflineClockDriver();
   OfflineClockDriver* AsOfflineClockDriver() override { return this; }
   const OfflineClockDriver* AsOfflineClockDriver() const override {
@@ -524,10 +523,6 @@ class OfflineClockDriver final : public ThreadedDriver {
  protected:
   TimeDuration NextIterationWaitDuration() override { return TimeDuration(); }
   MediaTime GetIntervalForIteration() override;
-
- private:
-  // Time, in GraphTime, for each iteration
-  GraphTime mSlice;
 };
 
 enum class AudioInputType { Unknown, Voice };

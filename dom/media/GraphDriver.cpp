@@ -261,8 +261,8 @@ TimeDuration SystemClockDriver::NextIterationWaitDuration() {
 }
 
 OfflineClockDriver::OfflineClockDriver(GraphInterface* aGraphInterface,
-                                       uint32_t aSampleRate, GraphTime aSlice)
-    : ThreadedDriver(aGraphInterface, nullptr, aSampleRate), mSlice(aSlice) {}
+                                       uint32_t aSampleRate)
+    : ThreadedDriver(aGraphInterface, nullptr, aSampleRate) {}
 
 OfflineClockDriver::~OfflineClockDriver() = default;
 
@@ -276,7 +276,7 @@ void OfflineClockDriver::RunThread() {
 
 MediaTime OfflineClockDriver::GetIntervalForIteration() {
   return MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(
-      MillisecondsToMediaTime(mSlice));
+      MillisecondsToMediaTime(MEDIA_GRAPH_TARGET_PERIOD_MS));
 }
 
 /* Helper to proxy the GraphInterface methods used by a running

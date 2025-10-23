@@ -3508,8 +3508,7 @@ void MediaTrackGraphImpl::Init(GraphDriverType aDriverRequested,
     LOG(LogLevel::Debug, ("%p: document title: %s", this, streamName.get()));
     mDriver->SetStreamName(streamName);
   } else {
-    mDriver =
-        new OfflineClockDriver(this, mSampleRate, MEDIA_GRAPH_TARGET_PERIOD_MS);
+    mDriver = new OfflineClockDriver(this, mSampleRate);
   }
 
   mLastMainThreadUpdate = TimeStamp::Now();
