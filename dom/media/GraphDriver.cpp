@@ -275,9 +275,8 @@ void OfflineClockDriver::RunThread() {
 }
 
 MediaTime OfflineClockDriver::GetIntervalForIteration() {
-  return MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(std::clamp<MediaTime>(
-      mEndTime - mStateComputedTime, 0,
-      MillisecondsToMediaTime(MEDIA_GRAPH_TARGET_PERIOD_MS)));
+  return MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(
+      MillisecondsToMediaTime(MEDIA_GRAPH_TARGET_PERIOD_MS));
 }
 
 /* Helper to proxy the GraphInterface methods used by a running

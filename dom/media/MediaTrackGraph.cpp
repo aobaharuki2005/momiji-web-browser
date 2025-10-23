@@ -1678,13 +1678,14 @@ auto MediaTrackGraphImpl::OneIterationImpl(
     NS_ProcessPendingEvents(nullptr);
   }
 
-  UpdateGraph(aStateTime);
+  GraphTime stateTime = std::min(aStateTime, GraphTime(mEndTime));
+  UpdateGraph(stateTime);
 
-  mStateComputedTime = aStateTime;
+  mStateComputedTime = stateTime;
 
   GraphTime oldProcessedTime = mProcessedTime;
   Process(aMixerReceiver);
-  MOZ_ASSERT(mProcessedTime == aStateTime);
+  MOZ_ASSERT(mProcessedTime == stateTime);
 
   UpdateCurrentTimeForTracks(oldProcessedTime);
 
@@ -4123,17 +4124,25 @@ void MediaTrackGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess) {
   MediaTrackGraphImpl* graph = static_cast<MediaTrackGraphImpl*>(this);
   NS_ASSERTION(!graph->mRealtime, "non-realtime only");
 
-  graph->QueueControlMessageWithNoShutdown([graph = RefPtr{graph},
-                                            aTicksToProcess]() {
-    TRACE("MTG::StartNonRealtimeProcessing ControlMessage");
-    MOZ_ASSERT(graph->mStateComputedTime == 0);
-    MOZ_ASSERT(graph->mEndTime == 0,
-               "StartNonRealtimeProcessing should be called only once");
-    graph->mEndTime = aTicksToProcess;
-    OfflineClockDriver* driver = graph->CurrentDriver()->AsOfflineClockDriver();
-    MOZ_ASSERT(driver);
-    driver->SetTickCountToRender(aTicksToProcess);
-  });
+  class Message : public ControlMessage {
+   public:
+    explicit Message(MediaTrackGraphImpl* aGraph, uint32_t aTicksToProcess)
+        : ControlMessage(nullptr),
+          mGraph(aGraph),
+          mTicksToProcess(aTicksToProcess) {}
+    void Run() override {
+      TRACE("MTG::StartNonRealtimeProcessing ControlMessage");
+      MOZ_ASSERT(mGraph->mEndTime == 0,
+                 "StartNonRealtimeProcessing should be called only once");
+      mGraph->mEndTime = mGraph->RoundUpToEndOfAudioBlock(
+          mGraph->mStateComputedTime + mTicksToProcess);
+    }
+    // The graph owns this message.
+    MediaTrackGraphImpl* MOZ_NON_OWNING_REF mGraph;
+    uint32_t mTicksToProcess;
+  };
+
+  graph->AppendMessage(MakeUnique<Message>(graph, aTicksToProcess));
 }
 
 void MediaTrackGraphImpl::InterruptJS() {

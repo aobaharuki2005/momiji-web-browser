@@ -58,7 +58,6 @@ UNIFIED_SOURCES += [
     "TestMP3Demuxer.cpp",
     "TestMP4Demuxer.cpp",
     "TestMuxer.cpp",
-    "TestOfflineClockDriver.cpp",
     "TestOggWriter.cpp",
     "TestOpusParser.cpp",
     "TestRust.cpp",
