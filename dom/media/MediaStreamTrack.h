@@ -128,18 +128,6 @@ class MediaStreamTrackSource : public nsISupports {
    */
   virtual void Destroy() {}
 
-  struct CloneResult {
-    RefPtr<MediaStreamTrackSource> mSource;
-    RefPtr<mozilla::MediaTrack> mInputTrack;
-  };
-
-  /**
-   * Clone this MediaStreamTrackSource. Cloned sources allow independent track
-   * settings. Not supported by all source types. A source not supporting
-   * cloning returns nullptr.
-   */
-  virtual CloneResult Clone();
-
   /**
    * Gets the source's MediaSourceEnum for usage by PeerConnections.
    */
@@ -481,7 +469,7 @@ class MediaStreamTrack : public DOMEventTargetHelper, public SupportsWeakPtr {
   already_AddRefed<Promise> ApplyConstraints(
       const dom::MediaTrackConstraints& aConstraints, CallerType aCallerType,
       ErrorResult& aRv);
-  virtual already_AddRefed<MediaStreamTrack> Clone() = 0;
+  already_AddRefed<MediaStreamTrack> Clone();
   MediaStreamTrackState ReadyState() { return mReadyState; }
 
   IMPL_EVENT_HANDLER(mute)
@@ -654,22 +642,7 @@ class MediaStreamTrack : public DOMEventTargetHelper, public SupportsWeakPtr {
    * Creates a new MediaStreamTrack with the same kind, input track, input
    * track ID and source as this MediaStreamTrack.
    */
-
-  template <typename TrackType>
-  already_AddRefed<MediaStreamTrack> CloneInternal() {
-    auto cloneRes = mSource->Clone();
-    MOZ_ASSERT(!!cloneRes.mSource == !!cloneRes.mInputTrack);
-    if (!cloneRes.mSource || !cloneRes.mInputTrack) {
-      cloneRes.mSource = mSource;
-      cloneRes.mInputTrack = mInputTrack;
-    }
-    auto newTrack =
-        MakeRefPtr<TrackType>(mWindow, cloneRes.mInputTrack, cloneRes.mSource,
-                              ReadyState(), Muted(), mConstraints);
-    newTrack->SetEnabled(Enabled());
-    newTrack->SetMuted(Muted());
-    return newTrack.forget();
-  }
+  virtual already_AddRefed<MediaStreamTrack> CloneInternal() = 0;
 
   nsTArray<PrincipalChangeObserver<MediaStreamTrack>*>
       mPrincipalChangeObservers;

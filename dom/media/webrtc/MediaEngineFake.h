@@ -22,8 +22,6 @@ class MediaEngineFake : public MediaEngine {
                         nsTArray<RefPtr<MediaDevice>>*) override;
   void Shutdown() override {}
   RefPtr<MediaEngineSource> CreateSource(const MediaDevice* aDevice) override;
-  RefPtr<MediaEngineSource> CreateSourceFrom(
-      const MediaEngineSource* aSource, const MediaDevice* aDevice) override;
 
   MediaEventSource<void>& DeviceListChangeEvent() override {
     return mDeviceListChangeEvent;

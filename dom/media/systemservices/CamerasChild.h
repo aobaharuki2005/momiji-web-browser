@@ -45,10 +45,6 @@ class CamerasChild;
 template <class T>
 class LockAndDispatch;
 
-static constexpr int kSuccess = 0;
-static constexpr int kError = -1;
-static constexpr int kIpcError = -2;
-
 // We emulate the sync webrtc.org API with the help of singleton
 // CamerasSingleton, which manages a pointer to an IPC object, a thread
 // where IPC operations should run on, and a mutex.
@@ -150,12 +146,10 @@ class CamerasChild final : public PCamerasChild {
 
   // IPC messages recevied, received on the PBackground thread
   // these are the actual callbacks with data
-  mozilla::ipc::IPCResult RecvCaptureEnded(
-      nsTArray<int>&& aCaptureIds) override;
+  mozilla::ipc::IPCResult RecvCaptureEnded(const int&) override;
   mozilla::ipc::IPCResult RecvDeliverFrame(
-      const int& aCaptureId, nsTArray<int>&& aStreamIds,
-      mozilla::ipc::Shmem&& aShmem,
-      const VideoFrameProperties& aProps) override;
+      const int&, mozilla::ipc::Shmem&&,
+      const VideoFrameProperties& prop) override;
 
   mozilla::ipc::IPCResult RecvDeviceChange() override;
 
@@ -227,13 +221,7 @@ class CamerasChild final : public PCamerasChild {
   ~CamerasChild();
   // Dispatch a Runnable to the PCamerasParent, by executing it on the
   // decidecated Cameras IPC/PBackground thread.
-  enum class DispatchToParentResult : int8_t {
-    SUCCESS = 0,
-    FAILURE = -1,
-    DISCONNECTED = -2,
-  };
-  DispatchToParentResult DispatchToParent(nsIRunnable* aRunnable,
-                                          MonitorAutoLock& aMonitor);
+  bool DispatchToParent(nsIRunnable* aRunnable, MonitorAutoLock& aMonitor);
   void AddCallback(int capture_id, FrameRelay* render);
   void RemoveCallback(int capture_id);
 
@@ -260,6 +248,7 @@ class CamerasChild final : public PCamerasChild {
   bool mReceivedReply;
   // Async responses data contents;
   bool mReplySuccess;
+  const int mZero;
   int mReplyInteger;
   webrtc::VideoCaptureCapability* mReplyCapability = nullptr;
   nsCString mReplyDeviceName;
