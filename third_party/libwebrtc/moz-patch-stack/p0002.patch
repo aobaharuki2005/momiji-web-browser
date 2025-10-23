@@ -26,7 +26,7 @@ Cr-Branched-From: 9bd64751d9b3b35a820cb72c9029993e218146a1-refs/heads/main@{#452
  1 file changed, 6 insertions(+)
 
 diff --git a/pc/sdp_munging_detector.cc b/pc/sdp_munging_detector.cc
-index 58e580baa3..7b126d9b26 100644
+index 04f0d53fd0..88f38da30d 100644
 --- a/pc/sdp_munging_detector.cc
 +++ b/pc/sdp_munging_detector.cc
 @@ -427,6 +427,12 @@ SdpMungingType DetermineSdpMungingType(
