@@ -3364,7 +3364,7 @@ nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
   LOG(("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X)", aRequest,
        unsigned(aRv)));
   TRACE_FOR_TEST_NONE(aRequest, "scriptloader_no_encode");
-  aRequest->getLoadedScript()->DropDiskCacheReference();
+  MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
 
   return aRv;
 }
@@ -3695,6 +3695,7 @@ void ScriptLoader::GiveUpCaching() {
     TRACE_FOR_TEST_NONE(request, "scriptloader_bytecode_failed");
     MOZ_ASSERT(!IsWebExtensionRequest(request));
 
+    request->getLoadedScript()->DropBytecode();
     request->getLoadedScript()->DropDiskCacheReference();
   }
 
