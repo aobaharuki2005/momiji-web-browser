@@ -1773,9 +1773,7 @@ def set_defaults(config, tasks):
                     "Windows and Linux, not on {}".format(worker["os"])
                 )
             worker.setdefault("chain-of-trust", False)
-        elif worker["implementation"] in (
-            "iscript",
-        ):
+        elif worker["implementation"] in ("iscript",):
             worker.setdefault("max-run-time", 600)
         elif worker["implementation"] == "push-apk":
             worker.setdefault("commit", False)
