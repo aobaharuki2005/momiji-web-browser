@@ -186,10 +186,10 @@ index ce0954a7b3..be90539f93 100644
        cache_now_us - cache_timestamp_us_ <= cache_lifetime_us_) {
      // We have a fresh cached report to deliver. Deliver asynchronously, since
 diff --git a/video/adaptation/overuse_frame_detector.cc b/video/adaptation/overuse_frame_detector.cc
-index 704c94c85f..5aed5ed3c0 100644
+index 827b0a5dd9..959dbb0418 100644
 --- a/video/adaptation/overuse_frame_detector.cc
 +++ b/video/adaptation/overuse_frame_detector.cc
-@@ -597,7 +597,7 @@ void OveruseFrameDetector::CheckForOveruse(
+@@ -600,7 +600,7 @@ void OveruseFrameDetector::CheckForOveruse(
        !encode_usage_percent_)
      return;
  
@@ -220,7 +220,7 @@ index 1d17e10b87..d9d64e4f0c 100644
    if (media_rate_trackers_[stream_index]) {
      media_rate_trackers_[stream_index]->OnDataProduced(size,
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 170600c2b4..5df80d049a 100644
+index eccec79bb3..4dff35605c 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
 @@ -81,6 +81,7 @@
