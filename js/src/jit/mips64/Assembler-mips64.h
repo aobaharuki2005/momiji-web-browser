@@ -84,7 +84,7 @@ static constexpr Register WasmTailCallFPScratchReg = ABINonArgReg3;
 // It must be a volatile register.
 static constexpr Register WasmJitEntryReturnScratch = t1;
 
-static constexpr Register InterpreterPCReg = t5;
+static constexpr Register InterpreterPCReg = a5;
 
 static constexpr Register JSReturnReg = v1;
 static constexpr Register JSReturnReg_Type = JSReturnReg;
