@@ -61,7 +61,7 @@ class LIRGeneratorARM : public LIRGeneratorShared {
                           MDefinition* rhs);
 
   void lowerForFPU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
-                   MDefinition* src);
+                   MDefinition* input);
   template <size_t Temps>
   void lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir,
                    MDefinition* lhs, MDefinition* rhs);

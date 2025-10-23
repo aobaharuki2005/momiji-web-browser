@@ -119,7 +119,7 @@ template void LIRGeneratorMIPSShared::lowerForShiftInt64(LRotateI64* ins,
 
 void LIRGeneratorMIPSShared::lowerForFPU(LInstructionHelper<1, 1, 0>* ins,
                                          MDefinition* mir, MDefinition* input) {
-  ins->setOperand(0, useRegister(input));
+  ins->setOperand(0, useRegisterAtStart(input));
   define(
       ins, mir,
       LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
@@ -129,8 +129,8 @@ template <size_t Temps>
 void LIRGeneratorMIPSShared::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins,
                                          MDefinition* mir, MDefinition* lhs,
                                          MDefinition* rhs) {
-  ins->setOperand(0, useRegister(lhs));
-  ins->setOperand(1, useRegister(rhs));
+  ins->setOperand(0, useRegisterAtStart(lhs));
+  ins->setOperand(1, useRegisterAtStart(rhs));
   define(
       ins, mir,
       LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
