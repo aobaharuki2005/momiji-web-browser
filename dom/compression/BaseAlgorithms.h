@@ -17,12 +17,41 @@ namespace mozilla::dom::compression {
 // with a function defined below.
 enum class Flush : bool { No, Yes };
 
+class CompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
+ public:
+  // Step 3 of
+  // https://wicg.github.io/compression/#dom-decompressionstream-decompressionstream
+  // Let transformAlgorithm be an algorithm which takes a chunk argument and
+  // runs the compress and enqueue a chunk algorithm with this and chunk.
+  MOZ_CAN_RUN_SCRIPT
+  void TransformCallbackImpl(JS::Handle<JS::Value> aChunk,
+                             TransformStreamDefaultController& aController,
+                             ErrorResult& aRv) override;
+
+  // Step 4 of
+  // https://compression.spec.whatwg.org/#dom-decompressionstream-decompressionstream
+  // Let flushAlgorithm be an algorithm which takes no argument and runs the
+  // compress flush and enqueue algorithm with this.
+  MOZ_CAN_RUN_SCRIPT void FlushCallbackImpl(
+      TransformStreamDefaultController& aController, ErrorResult& aRv) override;
+
+ protected:
+  static const uint16_t kBufferSize = 16384;
+
+  ~CompressionStreamAlgorithms() = default;
+
+  virtual void Compress(JSContext* aCx, Span<const uint8_t> aInput,
+                        JS::MutableHandleVector<JSObject*> aOutput,
+                        Flush aFlush, ErrorResult& aRv) = 0;
+
+ private:
+  MOZ_CAN_RUN_SCRIPT void CompressAndEnqueue(
+      JSContext* aCx, Span<const uint8_t> aInput, Flush aFlush,
+      TransformStreamDefaultController& aController, ErrorResult& aRv);
+};
+
 class DecompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DecompressionStreamAlgorithms,
-                                           TransformerAlgorithmsBase)
-
   // Step 3 of
   // https://wicg.github.io/compression/#dom-decompressionstream-decompressionstream
   // Let transformAlgorithm be an algorithm which takes a chunk argument and

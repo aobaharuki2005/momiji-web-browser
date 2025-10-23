@@ -13,13 +13,13 @@
 namespace mozilla::dom::compression {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ZstdDecompressionStreamAlgorithms,
-                                   DecompressionStreamAlgorithms)
+                                   TransformerAlgorithmsBase)
 NS_IMPL_ADDREF_INHERITED(ZstdDecompressionStreamAlgorithms,
-                         DecompressionStreamAlgorithms)
+                         TransformerAlgorithmsBase)
 NS_IMPL_RELEASE_INHERITED(ZstdDecompressionStreamAlgorithms,
-                          DecompressionStreamAlgorithms)
+                          TransformerAlgorithmsBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ZstdDecompressionStreamAlgorithms)
-NS_INTERFACE_MAP_END_INHERITING(DecompressionStreamAlgorithms)
+NS_INTERFACE_MAP_END_INHERITING(TransformerAlgorithmsBase)
 
 Result<already_AddRefed<ZstdDecompressionStreamAlgorithms>, nsresult>
 ZstdDecompressionStreamAlgorithms::Create() {

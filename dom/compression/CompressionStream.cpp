@@ -60,7 +60,7 @@ already_AddRefed<CompressionStream> CompressionStream::Constructor(
   // Step 6: Set up this's transform with transformAlgorithm set to
   // transformAlgorithm and flushAlgorithm set to flushAlgorithm.
   Result<already_AddRefed<CompressionStreamAlgorithms>, nsresult> algorithms =
-      CompressionStreamAlgorithms::Create(aFormat);
+      ZLibCompressionStreamAlgorithms::Create(aFormat);
   if (algorithms.isErr()) {
     aRv.ThrowUnknownError("Not enough memory");
     return nullptr;

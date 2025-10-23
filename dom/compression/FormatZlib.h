@@ -20,44 +20,28 @@ enum class CompressionFormat : uint8_t;
 
 namespace mozilla::dom::compression {
 
-class CompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
+class ZLibCompressionStreamAlgorithms : public CompressionStreamAlgorithms {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CompressionStreamAlgorithms,
-                                           TransformerAlgorithmsBase)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ZLibCompressionStreamAlgorithms,
+                                           CompressionStreamAlgorithms)
 
-  static Result<already_AddRefed<CompressionStreamAlgorithms>, nsresult> Create(
-      CompressionFormat format);
+  static Result<already_AddRefed<ZLibCompressionStreamAlgorithms>, nsresult>
+  Create(CompressionFormat format);
 
  private:
-  CompressionStreamAlgorithms() = default;
+  ZLibCompressionStreamAlgorithms() = default;
 
   [[nodiscard]] nsresult Init(CompressionFormat format);
-
-  // Step 3 of
-  // https://wicg.github.io/compression/#dom-compressionstream-compressionstream
-  // Let transformAlgorithm be an algorithm which takes a chunk argument and
-  // runs the compress and enqueue a chunk algorithm with this and chunk.
-  MOZ_CAN_RUN_SCRIPT
-  void TransformCallbackImpl(JS::Handle<JS::Value> aChunk,
-                             TransformStreamDefaultController& aController,
-                             ErrorResult& aRv) override;
-
-  // Step 4 of
-  // https://wicg.github.io/compression/#dom-compressionstream-compressionstream
-  // Let flushAlgorithm be an algorithm which takes no argument and runs the
-  // compress flush and enqueue algorithm with this.
-  MOZ_CAN_RUN_SCRIPT void FlushCallbackImpl(
-      TransformStreamDefaultController& aController, ErrorResult& aRv) override;
 
   // Shared by:
   // https://wicg.github.io/compression/#compress-and-enqueue-a-chunk
   // https://wicg.github.io/compression/#compress-flush-and-enqueue
-  MOZ_CAN_RUN_SCRIPT void CompressAndEnqueue(
-      JSContext* aCx, Span<const uint8_t> aInput, Flush aFlush,
-      TransformStreamDefaultController& aController, ErrorResult& aRv);
+  void Compress(JSContext* aCx, Span<const uint8_t> aInput,
+                JS::MutableHandleVector<JSObject*> aOutput, Flush aFlush,
+                ErrorResult& aRv) override;
 
-  ~CompressionStreamAlgorithms() override;
+  ~ZLibCompressionStreamAlgorithms() override;
 
   z_stream mZStream = {};
 };
