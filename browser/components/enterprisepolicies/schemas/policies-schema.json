@@ -862,6 +862,9 @@
         "ImproveSuggest": {
           "type": "boolean"
         },
+        "OnlineEnabled": {
+          "type": "boolean"
+        },
         "Locked": {
           "type": "boolean"
         }

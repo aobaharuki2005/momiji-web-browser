@@ -1641,10 +1641,11 @@ export var Policies = {
             param.Locked
           );
         }
-        if ("ImproveSuggest" in param) {
+        // `ImproveSuggest` is deprecated and replaced with `OnlineEnabled`.
+        if ("OnlineEnabled" in param || "ImproveSuggest" in param) {
           PoliciesUtils.setDefaultPref(
-            "browser.urlbar.quicksuggest.dataCollection.enabled",
-            param.ImproveSuggest,
+            "browser.urlbar.quicksuggest.online.enabled",
+            param.OnlineEnabled ?? param.ImproveSuggest,
             param.Locked
           );
         }
