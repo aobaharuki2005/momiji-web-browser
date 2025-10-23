@@ -5112,27 +5112,30 @@ void MacroAssemblerRiscv64::ma_b(Register lhs, Register rhs, Label* label,
 void MacroAssemblerRiscv64::ExtractBits(Register rt, Register rs, uint16_t pos,
                                         uint16_t size, bool sign_extend) {
 #if JS_CODEGEN_RISCV64
-  MOZ_ASSERT(pos < 64 && 0 < size && size <= 64 && 0 < pos + size &&
-             pos + size <= 64);
-  slli(rt, rs, 64 - (pos + size));
-  if (sign_extend) {
-    srai(rt, rt, 64 - size);
-  } else {
-    srli(rt, rt, 64 - size);
-  }
+  constexpr uint16_t MaxBits = 64;
 #elif JS_CODEGEN_RISCV32
-  MOZ_ASSERT(pos < 32);
-  MOZ_ASSERT(size > 0);
-  MOZ_ASSERT(size <= 32);
-  MOZ_ASSERT((pos + size) > 0);
-  MOZ_ASSERT((pos + size) <= 32);
-  slli(rt, rs, 32 - (pos + size));
-  if (sign_extend) {
-    srai(rt, rt, 32 - size);
-  } else {
-    srli(rt, rt, 32 - size);
-  }
+  constexpr uint16_t MaxBits = 32;
 #endif
+
+  MOZ_ASSERT(pos < MaxBits);
+  MOZ_ASSERT(size > 0);
+  MOZ_ASSERT(size <= MaxBits);
+  MOZ_ASSERT((pos + size) > 0);
+  MOZ_ASSERT((pos + size) <= MaxBits);
+
+  Register src;
+  if (uint16_t shift = MaxBits - (pos + size)) {
+    slli(rt, rs, shift);
+    src = rt;
+  } else {
+    src = rs;
+  }
+
+  if (sign_extend) {
+    srai(rt, src, MaxBits - size);
+  } else {
+    srli(rt, src, MaxBits - size);
+  }
 }
 
 void MacroAssemblerRiscv64::InsertBits(Register dest, Register source, int pos,
