@@ -123,21 +123,13 @@ void LIRGeneratorARM64::lowerForFPU(LInstructionHelper<1, 1, 0>* ins,
   define(ins, mir);
 }
 
-template <size_t Temps>
-void LIRGeneratorARM64::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins,
+void LIRGeneratorARM64::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
                                     MDefinition* mir, MDefinition* lhs,
                                     MDefinition* rhs) {
   ins->setOperand(0, useRegisterAtStart(lhs));
   ins->setOperand(1, useRegisterAtStart(rhs));
   define(ins, mir);
 }
-
-template void LIRGeneratorARM64::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
-                                             MDefinition* mir, MDefinition* lhs,
-                                             MDefinition* rhs);
-template void LIRGeneratorARM64::lowerForFPU(LInstructionHelper<1, 2, 1>* ins,
-                                             MDefinition* mir, MDefinition* lhs,
-                                             MDefinition* rhs);
 
 void LIRGeneratorARM64::lowerForALUInt64(
     LInstructionHelper<INT64_PIECES, INT64_PIECES, 0>* ins, MDefinition* mir,

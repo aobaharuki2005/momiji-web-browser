@@ -41,8 +41,7 @@ class LIRGeneratorLOONG64 : public LIRGeneratorShared {
 
   void lowerForFPU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
                    MDefinition* input);
-  template <size_t Temps>
-  void lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir,
+  void lowerForFPU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
                    MDefinition* lhs, MDefinition* rhs);
 
   // Returns a box allocation. reg2 is ignored on 64-bit platforms.

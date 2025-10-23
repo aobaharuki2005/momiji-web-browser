@@ -120,23 +120,13 @@ void LIRGeneratorLOONG64::lowerForFPU(LInstructionHelper<1, 1, 0>* ins,
   define(ins, mir);
 }
 
-template <size_t Temps>
-void LIRGeneratorLOONG64::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins,
+void LIRGeneratorLOONG64::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
                                       MDefinition* mir, MDefinition* lhs,
                                       MDefinition* rhs) {
   ins->setOperand(0, useRegisterAtStart(lhs));
   ins->setOperand(1, useRegisterAtStart(rhs));
   define(ins, mir);
 }
-
-template void LIRGeneratorLOONG64::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
-                                               MDefinition* mir,
-                                               MDefinition* lhs,
-                                               MDefinition* rhs);
-template void LIRGeneratorLOONG64::lowerForFPU(LInstructionHelper<1, 2, 1>* ins,
-                                               MDefinition* mir,
-                                               MDefinition* lhs,
-                                               MDefinition* rhs);
 
 LBoxAllocation LIRGeneratorLOONG64::useBoxFixed(MDefinition* mir, Register reg1,
                                                 Register reg2,
