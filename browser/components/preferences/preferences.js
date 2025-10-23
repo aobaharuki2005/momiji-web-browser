@@ -380,6 +380,10 @@ async function gotoPref(
     // Overwrite the hash, unless there is no hash and we're switching to the
     // default category, e.g. by using the 'back' button after navigating to
     // a different category.
+
+    // Note: Bug 1983388 - If there is an element in the DOM that has the same
+    // ID as the `friendlyName`, then focus will be lost when navigating the
+    // category navigation via keyboard when that `friendlyName` category is selected.
     if (
       !(!document.location.hash && category == kDefaultCategoryInternalName)
     ) {

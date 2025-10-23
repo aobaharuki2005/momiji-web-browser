@@ -13,7 +13,7 @@ export const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 // SectionsManager to construct the preferences view.
 const PREFS_FOR_SETTINGS = () => [
   {
-    id: "search",
+    id: "web-search",
     pref: {
       feed: "showSearch",
       titleString: "home-prefs-search-header",
@@ -224,9 +224,25 @@ export class AboutPreferences {
    * @param document
    * @param Preferences
    */
+
+  /**
+   * @backward-compat { version 146 }
+   *
+   * The `web-search` DOM node will not exist until Fx146+ so we have
+   * to fall back to the `search` DOM node. Adding this shim causes
+   * renderPreferenceSection to have too many statements. We can remove
+   * this eslint exception once we are in Fx146+.
+   */
+  // eslint-disable-next-line max-statements
   renderPreferenceSection(sectionData, document, Preferences) {
+    /**
+     * @backward-compat { version 146 }
+     *
+     * We have to potentially re-assign the `id` if it is `web-search`.
+     * We should restore `id` back to a const after Fx146+.
+     */
+    let { id } = sectionData;
     const {
-      id,
       pref: prefData,
       maxRows,
       rowsPref,
@@ -253,6 +269,19 @@ export class AboutPreferences {
     // Don't show any sections that we don't want to expose in preferences UI
     if (shouldHidePref) {
       return;
+    }
+
+    /**
+     * @backward-compat { version 146 }
+     *
+     * The `web-search` DOM node will not exist until Fx146+ so fall
+     * back to the `search` DOM node until then.
+     */
+    if (id === "web-search") {
+      let webSearchBox = document.getElementById(id);
+      if (!webSearchBox) {
+        id = "search";
+      }
     }
 
     // Add the main preference for turning on/off a section
