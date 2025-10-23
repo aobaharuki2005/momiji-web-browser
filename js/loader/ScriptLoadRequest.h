@@ -251,13 +251,13 @@ class ScriptLoadRequest : public nsISupports,
   State mState;
 
   // Request source, not cached bytecode.
-  bool mFetchSourceOnly;
+  bool mFetchSourceOnly : 1;
 
   // Becomes true if this has source map url.
   //
   // Do not access directly.
   // Use HasSourceMapURL(), SetSourceMapURL(), and GetSourceMapURL().
-  bool mHasSourceMapURL_;
+  bool mHasSourceMapURL_ : 1;
 
   enum class CachingPlan : uint8_t {
     // This is not yet considered for caching.
@@ -269,8 +269,8 @@ class ScriptLoadRequest : public nsISupports,
     // This fits the condition for the caching (e.g. file size, fetch count).
     PassedCondition,
   };
-  CachingPlan mDiskCachingPlan = CachingPlan::Uninitialized;
-  CachingPlan mMemoryCachingPlan = CachingPlan::Uninitialized;
+  CachingPlan mDiskCachingPlan : 2;
+  CachingPlan mMemoryCachingPlan : 2;
 
   CacheExpirationTime mExpirationTime = CacheExpirationTime::Never();
 
