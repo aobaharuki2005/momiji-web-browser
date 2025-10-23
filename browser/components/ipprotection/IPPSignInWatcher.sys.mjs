@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * This class monitors the Sign-In state and triggers the update of the service
  * if needed.
  */
-class IPPSignInWatcherSingleton extends EventTarget {
+class IPPSignInWatcherSingleton {
   #signedIn = false;
 
   get isSignedIn() {
@@ -45,13 +45,6 @@ class IPPSignInWatcherSingleton extends EventTarget {
         if (signedIn !== IPPSignInWatcher.isSignedIn) {
           IPPSignInWatcher.isSignedIn = signedIn;
           lazy.IPProtectionService.updateState();
-
-          IPPSignInWatcher.dispatchEvent(
-            new CustomEvent("IPPSignInWatcher:StateChanged", {
-              bubbles: true,
-              composed: true,
-            })
-          );
         }
       },
     };

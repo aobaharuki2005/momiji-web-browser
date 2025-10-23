@@ -15,9 +15,6 @@ const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
 const { IPPSignInWatcher } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );
-const { IPPEnrollHelper } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPEnrollHelper.sys.mjs"
-);
 
 do_get_profile();
 
@@ -69,6 +66,7 @@ add_setup(async function () {
 
   registerCleanupFunction(async () => {
     await IPProtectionService.init();
+    await IPProtectionService.init();
   });
 });
 
@@ -79,13 +77,7 @@ add_task(async function test_IPProtectionService_start() {
   let sandbox = sinon.createSandbox();
   setupStubs(sandbox);
 
-  IPProtectionService.init();
-
-  await waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state === IPProtectionStates.READY
-  );
+  await IPProtectionService.init();
 
   Assert.ok(
     !IPProtectionService.activatedAt,
@@ -95,6 +87,7 @@ add_task(async function test_IPProtectionService_start() {
   let startedEventPromise = waitForEvent(
     IPProtectionService,
     "IPProtectionService:StateChanged",
+    false,
     () => IPProtectionService.state === IPProtectionStates.ACTIVE
   );
 
@@ -127,19 +120,14 @@ add_task(async function test_IPProtectionService_stop() {
   let sandbox = sinon.createSandbox();
   setupStubs(sandbox);
 
-  IPProtectionService.init();
-
-  await waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state === IPProtectionStates.READY
-  );
+  await IPProtectionService.init();
 
   await IPProtectionService.start();
 
   let stoppedEventPromise = waitForEvent(
     IPProtectionService,
     "IPProtectionService:StateChanged",
+    false,
     () => IPProtectionService.state !== IPProtectionStates.ACTIVE
   );
   IPProtectionService.stop();
@@ -168,7 +156,6 @@ add_task(async function test_IPProtectionService_stop() {
  */
 add_task(async function test_IPProtectionService_updateState_signedIn() {
   let sandbox = sinon.createSandbox();
-  sandbox.stub(IPPEnrollHelper, "isEnrolled").get(() => true);
 
   await IPProtectionService.init();
 
@@ -177,6 +164,7 @@ add_task(async function test_IPProtectionService_updateState_signedIn() {
   let signedInEventPromise = waitForEvent(
     IPProtectionService,
     "IPProtectionService:StateChanged",
+    false,
     () => IPProtectionService.state === IPProtectionStates.READY
   );
 
@@ -204,6 +192,7 @@ add_task(async function test_IPProtectionService_updateState_signedOut() {
   let signedOutEventPromise = waitForEvent(
     IPProtectionService,
     "IPProtectionService:StateChanged",
+    false,
     () => IPProtectionService.state === IPProtectionStates.UNAVAILABLE
   );
 
@@ -229,13 +218,7 @@ add_task(
     const sandbox = sinon.createSandbox();
     setupStubs(sandbox);
 
-    IPProtectionService.init();
-
-    await waitForEvent(
-      IPProtectionService,
-      "IPProtectionService:StateChanged",
-      () => IPProtectionService.state === IPProtectionStates.READY
-    );
+    await IPProtectionService.init();
 
     IPProtectionService.guardian.fetchUserInfo.resolves({
       status: 200,
@@ -250,6 +233,7 @@ add_task(
     let hasUpgradedEventPromise = waitForEvent(
       IPProtectionService,
       "IPProtectionService:StateChanged",
+      false,
       () => IPProtectionService.hasUpgraded
     );
 
