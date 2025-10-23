@@ -3799,7 +3799,10 @@ void MacroAssembler::shiftIndex32AndAdd(Register indexTemp32, int shift,
       Operand(ARMRegister(indexTemp32, 64), vixl::LSL, shift));
 }
 
-void MacroAssembler::wasmMarkCallAsSlow() { Mov(x28, x28); }
+void MacroAssembler::wasmMarkCallAsSlow() {
+  // Use mov() instead of Mov() to ensure this no-op move isn't elided.
+  vixl::MacroAssembler::mov(x28, x28);
+}
 
 const int32_t SlowCallMarker = 0xaa1c03fc;
 
