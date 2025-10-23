@@ -267,9 +267,7 @@ void LIRGeneratorARM::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition,
 void LIRGeneratorARM::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
                                     MDefinition* mir, MDefinition* lhs,
                                     MDefinition* rhs) {
-  ins->setOperand(0, useRegister(lhs));
-  ins->setOperand(1, useRegisterOrConstant(rhs));
-  define(ins, mir);
+  lowerForALU(ins, mir, lhs, rhs);
 }
 
 template <class LInstr>

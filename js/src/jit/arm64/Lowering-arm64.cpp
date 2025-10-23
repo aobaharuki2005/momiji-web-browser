@@ -209,9 +209,7 @@ void LIRGeneratorARM64::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition,
 void LIRGeneratorARM64::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
                                       MDefinition* mir, MDefinition* lhs,
                                       MDefinition* rhs) {
-  ins->setOperand(0, useRegister(lhs));
-  ins->setOperand(1, useRegisterOrConstant(rhs));
-  define(ins, mir);
+  lowerForALU(ins, mir, lhs, rhs);
 }
 
 void LIRGeneratorARM64::lowerDivI(MDiv* div) {

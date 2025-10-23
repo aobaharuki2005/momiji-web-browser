@@ -335,13 +335,8 @@ codegenTestMultiplatform_adhoc(
     {x64:   `mov %edi, %ecx
              mov %ecx, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax`,
-     arm64: // Regalloc badness, plus not folded out at the MIR level
-            `mov w2, w0
-             mov w1, w2
-             lsr w0, w1, #0`, // Uhh.  lsr ?!
-     arm:   `mov r2, r0
-             mov r1, r2
-             mov r0, r1`
+     arm64: `lsr w0, w0, #0`, // lsl and lsr are both aliases for ubfm. When shift=0, the preferred disassembly of ubfm is lsr.
+     arm:   `` // no-op 
     },
     {x86: {no_prefix:true}}
 );
@@ -367,12 +362,8 @@ codegenTestMultiplatform_adhoc(
     {x64:   `mov %edi, %ecx
              mov %ecx, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax`,
-     arm64: `mov w2, w0
-             mov w1, w2
-             mov w0, w1`,
-     arm:   `mov r2, r0
-             mov r1, r2
-             mov r0, r1`
+     arm64: `mov w0, w0`,
+     arm:   ``
     },
     {x86: {no_prefix:true}}
 );
@@ -397,12 +388,8 @@ codegenTestMultiplatform_adhoc(
     {x64:   `mov %edi, %ecx
              mov %ecx, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax`,
-     arm64: `mov w2, w0
-             mov w1, w2
-             sbfx w0, w1, #0, #32`,
-     arm:   `mov r2, r0
-             mov r1, r2
-             mov r0, r1`
+     arm64: `sbfx w0, w0, #0, #32`,
+     arm:   ``
     },
     {x86: {no_prefix:true}}
 );
