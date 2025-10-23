@@ -440,7 +440,7 @@ index 51d055bcf0..e50b924806 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index a90fac2f4c..ae05c9d228 100644
+index 29b1b11fae..62dd9f56d1 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -702,7 +702,7 @@ index 082a11f47c..2e8f069f24 100644
      output_extension = "so"
    }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index c78cdec7cc..cc5d90b42f 100644
+index 90389a59fc..b430795605 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
 @@ -9,12 +9,12 @@
@@ -731,7 +731,7 @@ index c78cdec7cc..cc5d90b42f 100644
      }
    }
  
-@@ -1280,7 +1280,7 @@ if (is_ios || is_mac) {
+@@ -1281,7 +1281,7 @@ if (is_ios || is_mac) {
            }
  
            public_deps = [

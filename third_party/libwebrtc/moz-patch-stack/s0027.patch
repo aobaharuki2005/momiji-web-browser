@@ -736,7 +736,7 @@ index 9649f0c940..51570e8c95 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index a26de6be15..a90fac2f4c 100644
+index 82e64086d1..29b1b11fae 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -763,7 +763,7 @@ index a26de6be15..a90fac2f4c 100644
    sources = [
      "audio_device_buffer.cc",
      "audio_device_buffer.h",
-@@ -77,6 +80,7 @@ rtc_library("audio_device_buffer") {
+@@ -78,6 +81,7 @@ rtc_library("audio_device_buffer") {
      "../../system_wrappers:metrics",
    ]
  }
@@ -771,7 +771,7 @@ index a26de6be15..a90fac2f4c 100644
  
  rtc_library("audio_device_generic") {
    sources = [
-@@ -250,6 +254,7 @@ if (!build_with_chromium) {
+@@ -252,6 +256,7 @@ if (!build_with_chromium) {
  # Contains default implementations of webrtc::AudioDeviceModule for Windows,
  # Linux, Mac, iOS and Android.
  rtc_library("audio_device_impl") {
@@ -779,7 +779,7 @@ index a26de6be15..a90fac2f4c 100644
    visibility = [ "*" ]
    deps = [
      ":audio_device_buffer",
-@@ -296,9 +301,9 @@ rtc_library("audio_device_impl") {
+@@ -298,9 +303,9 @@ rtc_library("audio_device_impl") {
    sources = [ "include/fake_audio_device.h" ]
  
    if (build_with_mozilla) {
@@ -792,7 +792,7 @@ index a26de6be15..a90fac2f4c 100644
      ]
    }
  
-@@ -401,6 +406,7 @@ rtc_library("audio_device_impl") {
+@@ -403,6 +408,7 @@ rtc_library("audio_device_impl") {
      sources += [ "dummy/file_audio_device_factory.h" ]
    }
  }
@@ -800,7 +800,7 @@ index a26de6be15..a90fac2f4c 100644
  
  if (is_mac) {
    rtc_source_set("audio_device_impl_frameworks") {
-@@ -418,6 +424,7 @@ if (is_mac) {
+@@ -420,6 +426,7 @@ if (is_mac) {
    }
  }
  
@@ -808,7 +808,7 @@ index a26de6be15..a90fac2f4c 100644
  rtc_source_set("mock_audio_device") {
    visibility = [ "*" ]
    testonly = true
-@@ -436,8 +443,10 @@ rtc_source_set("mock_audio_device") {
+@@ -438,8 +445,10 @@ rtc_source_set("mock_audio_device") {
      "../../test:test_support",
    ]
  }
