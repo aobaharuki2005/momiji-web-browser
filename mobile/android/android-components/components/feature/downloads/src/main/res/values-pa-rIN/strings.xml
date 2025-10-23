@@ -28,7 +28,7 @@
   <!-- This string is used as the title for the download confirmation dialog when the size of the file is not known. -->
   <string name="mozac_feature_downloads_dialog_title_with_unknown_size">ਫ਼ਾਇਲ ਨੂੰ ਡਾਊਨਲੋਡ ਕਰਨਾ ਹੈ?</string>
   <!-- Alert dialog confirmation before downloading a previously downloaded file, this is the title when the size of the file is not known. -->
-  <string name="mozac_feature_downloads_again_dialog_title_with_unknown_size">ਫ਼ਾਇਲ ਨੂੰ ਡਾਊਨਲੋਡ ਕਰਨਾ ਹੈ?</string>
+  <string name="mozac_feature_downloads_again_dialog_title_with_unknown_size">ਫ਼ਾਇਲ ਨੂੰ ਫੇਰ ਡਾਊਨਲੋਡ ਕਰਨਾ ਹੈ?</string>
   <!-- Alert dialog confirmation before download a file, this is the positive action. -->
   <string name="mozac_feature_downloads_dialog_download">ਡਾਊਨਲੋਡ ਕਰੋ</string>
   <!-- Alert dialog confirmation before downloading a file again, this is the positive action. -->
