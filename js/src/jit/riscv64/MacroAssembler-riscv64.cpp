@@ -1088,11 +1088,11 @@ void MacroAssemblerRiscv64Compat::movq(Register rj, Register rd) { mv(rd, rj); }
 // Memory.
 FaultingCodeOffset MacroAssemblerRiscv64::ma_loadDouble(FloatRegister dest,
                                                         Address address) {
+  UseScratchRegisterScope temps(this);
   int16_t encodedOffset;
   Register base;
 
   if (!is_int12(address.offset)) {
-    UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
     ma_li(scratch, Imm32(address.offset));
     add(scratch, address.base, scratch);
@@ -1109,11 +1109,11 @@ FaultingCodeOffset MacroAssemblerRiscv64::ma_loadDouble(FloatRegister dest,
 
 FaultingCodeOffset MacroAssemblerRiscv64::ma_loadFloat(FloatRegister dest,
                                                        Address address) {
+  UseScratchRegisterScope temps(this);
   int16_t encodedOffset;
   Register base;
 
   if (!is_int12(address.offset)) {
-    UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
     ma_li(scratch, Imm32(address.offset));
     add(scratch, address.base, scratch);
@@ -1131,11 +1131,11 @@ FaultingCodeOffset MacroAssemblerRiscv64::ma_loadFloat(FloatRegister dest,
 FaultingCodeOffset MacroAssemblerRiscv64::ma_load(
     Register dest, Address address, LoadStoreSize size,
     LoadStoreExtension extension) {
+  UseScratchRegisterScope temps(this);
   int16_t encodedOffset;
   Register base;
 
   if (!is_int12(address.offset)) {
-    UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
     ma_li(scratch, Imm32(address.offset));
     add(scratch, address.base, scratch);
@@ -1212,11 +1212,12 @@ FaultingCodeOffset MacroAssemblerRiscv64::ma_store(
 FaultingCodeOffset MacroAssemblerRiscv64::ma_store(
     Register data, Address address, LoadStoreSize size,
     LoadStoreExtension extension) {
+  UseScratchRegisterScope temps(this);
+
   int16_t encodedOffset;
   Register base;
 
   if (!is_int12(address.offset)) {
-    UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
     ma_li(scratch, Imm32(address.offset));
     add(scratch, address.base, scratch);
@@ -1249,11 +1250,11 @@ FaultingCodeOffset MacroAssemblerRiscv64::ma_store(
 // Memory.
 void MacroAssemblerRiscv64::ma_storeDouble(FloatRegister dest,
                                            Address address) {
+  UseScratchRegisterScope temps(this);
   int16_t encodedOffset;
   Register base;
 
   if (!is_int12(address.offset)) {
-    UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
     ma_li(scratch, Imm32(address.offset));
     add(scratch, address.base, scratch);
@@ -1267,11 +1268,11 @@ void MacroAssemblerRiscv64::ma_storeDouble(FloatRegister dest,
 }
 
 void MacroAssemblerRiscv64::ma_storeFloat(FloatRegister dest, Address address) {
+  UseScratchRegisterScope temps(this);
   int16_t encodedOffset;
   Register base;
 
   if (!is_int12(address.offset)) {
-    UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
     ma_li(scratch, Imm32(address.offset));
     add(scratch, address.base, scratch);
@@ -4723,8 +4724,8 @@ void MacroAssemblerRiscv64::ma_pop(Register r) {
 }
 
 void MacroAssemblerRiscv64::ma_push(Register r) {
+  UseScratchRegisterScope temps(this);
   if (r == sp) {
-    UseScratchRegisterScope temps(this);
     Register scratch = temps.Acquire();
     // Pushing sp requires one more instruction.
     mv(scratch, sp);
