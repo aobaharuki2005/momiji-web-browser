@@ -8,15 +8,6 @@
 #import <Cocoa/Cocoa.h>
 #include "nsIWidget.h"
 
-/*! @class      nsCursorManager
-    @abstract   Singleton service provides access to all cursors available in
-   the application.
-    @discussion Use <code>nsCusorManager</code> to set the current cursor using
-                an XP <code>nsCusor</code> enum value.
-                <code>nsCursorManager</code> encapsulates the details of
-                setting different types of cursors, animating cursors and
-                cleaning up cursors when they are no longer in use.
- */
 @interface nsCursorManager : NSObject {
  @private
   NSMutableDictionary* mCursors;
@@ -24,14 +15,9 @@
   nsCursor mCurrentCursorType;
 }
 
-/*! @method     setCursor:
-    @abstract   Sets the current cursor.
-    @discussion Sets the current cursor to the cursor indicated by the XP
-                cursor given in the argument. Resources associated with the
-                previous cursor are cleaned up.
-    @param aCursor the cursor to use
-*/
-- (nsresult)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor;
+// Sets non-custom cursors and can be used as a fallback if setting
+// a custom cursor did not succeed.
+- (void)setNonCustomCursor:(const nsIWidget::Cursor&)aCursor;
 
 // As above, but returns an error if the cursor isn't custom or we couldn't set
 // it for some reason.
@@ -39,18 +25,7 @@
           widgetScaleFactor:(CGFloat)aWidgetScaleFactor
                 forceUpdate:(bool)aForceUpdate;
 
-/*! @method     sharedInstance
-    @abstract   Get the Singleton instance of the cursor manager.
-    @discussion Use this method to obtain a reference to the cursor manager.
-    @result a reference to the cursor manager
-*/
 + (nsCursorManager*)sharedInstance;
-
-/*! @method     dispose
-    @abstract   Releases the shared instance of the cursor manager.
-    @discussion Use dispose to clean up the cursor manager and associated
-   cursors.
-*/
 + (void)dispose;
 @end
 
