@@ -1102,6 +1102,19 @@ class nsLayoutUtils {
   static nsRect RoundGfxRectToAppRect(const T& aRect, const float aFactor);
 
   /**
+   * Like the above but slightly different scale and round behaviour. First
+   * scales, then constrains to nscoord, then rounds each component (x, y,
+   * width, height) individually.
+   *
+   * @param aRect The graphics rect to round outward.
+   * @param aFactor The number of app units per graphics unit.
+   * @return The rounaded rectangle in app space.
+   */
+  template <typename T>
+  static nsRect ScaleThenRoundGfxRectToAppRect(const T& aRect,
+                                               const float aFactor);
+
+  /**
    * Returns a subrectangle of aContainedRect that is entirely inside the
    * rounded rect. Complex cases are handled conservatively by returning a
    * smaller rect than necessary.
@@ -3262,6 +3275,41 @@ nsRect nsLayoutUtils::RoundGfxRectToAppRect(const T& aRect,
   ConstrainToCoordValues(start, size);
   retval.y = nscoord(start);
   retval.height = nscoord(size);
+
+  if (!aRect.Width()) {
+    retval.SetWidth(0);
+  }
+
+  if (!aRect.Height()) {
+    retval.SetHeight(0);
+  }
+
+  return retval;
+}
+
+template <typename T>
+nsRect nsLayoutUtils::ScaleThenRoundGfxRectToAppRect(const T& aRect,
+                                                     const float aFactor) {
+  // Get a new Rect whose units are app units by scaling by the specified
+  // factor.
+  T scaledRect = aRect;
+  scaledRect.Scale(aFactor);
+
+  nsRect retval;
+
+  double start = double(scaledRect.x);
+  double size = double(scaledRect.width);
+  // We now need to constrain our results to the max and min values for coords.
+  ConstrainToCoordValues(start, size);
+  // ConstrainToCoordValues ensures converting to nscoord is safe.
+  retval.x = NSToCoordRoundWithClamp(start);
+  retval.width = NSToCoordRoundWithClamp(size);
+
+  start = double(scaledRect.y);
+  size = double(scaledRect.height);
+  ConstrainToCoordValues(start, size);
+  retval.y = NSToCoordRoundWithClamp(start);
+  retval.height = NSToCoordRoundWithClamp(size);
 
   if (!aRect.Width()) {
     retval.SetWidth(0);
