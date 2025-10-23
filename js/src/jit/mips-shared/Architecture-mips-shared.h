@@ -17,19 +17,12 @@
 
 #include "js/Utility.h"
 
-// gcc appears to use _mips_hard_float to denote
-// that the target is a hard-float target.
-#ifdef _mips_hard_float
-#  define JS_CODEGEN_MIPS_HARDFP
-#endif
-
-#if (defined(_MIPS_SIM) && (_MIPS_SIM == _ABIO32))
-#  define USES_O32_ABI
-#elif (defined(_MIPS_SIM) && (_MIPS_SIM == _ABI64)) || \
-    defined(JS_SIMULATOR_MIPS64)
-#  define USES_N64_ABI
-#else
-#  error "Unsupported ABI"
+#if defined(_MIPS_SIM)
+#  if (_MIPS_SIM != _ABI64)
+#    error "Unsupported ABI"
+#  endif
+#elif !defined(JS_SIMULATOR_MIPS64)
+#  error "Unknown ABI"
 #endif
 
 #if (defined(__mips_isa_rev) && (__mips_isa_rev >= 6))
@@ -85,20 +78,6 @@ class Registers {
     a1 = r5,
     a2 = r6,
     a3 = r7,
-#if defined(USES_O32_ABI)
-    t0 = r8,
-    t1 = r9,
-    t2 = r10,
-    t3 = r11,
-    t4 = r12,
-    t5 = r13,
-    t6 = r14,
-    t7 = r15,
-    ta0 = t4,
-    ta1 = t5,
-    ta2 = t6,
-    ta3 = t7,
-#elif defined(USES_N64_ABI)
     a4 = r8,
     a5 = r9,
     a6 = r10,
@@ -111,7 +90,6 @@ class Registers {
     ta1 = a5,
     ta2 = a6,
     ta3 = a7,
-#endif
     s0 = r16,
     s1 = r17,
     s2 = r18,
