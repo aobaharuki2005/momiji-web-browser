@@ -1592,7 +1592,7 @@ void MacroAssembler::lshift32(Imm32 imm, Register dest) {
 }
 
 void MacroAssembler::lshift32(Imm32 imm, Register src, Register dest) {
-  slliw(dest, src, imm.value % 32);
+  slliw(dest, src, imm.value & 0x1f);
 }
 
 void MacroAssembler::lshift64(Register shift, Register64 dest) {
@@ -2006,7 +2006,7 @@ void MacroAssembler::rshift32Arithmetic(Imm32 imm, Register dest) {
 
 void MacroAssembler::rshift32Arithmetic(Imm32 imm, Register src,
                                         Register dest) {
-  sraiw(dest, src, imm.value % 32);
+  sraiw(dest, src, imm.value & 0x1f);
 }
 
 void MacroAssembler::rshift32(Register src, Register dest) {
@@ -2018,7 +2018,7 @@ void MacroAssembler::rshift32(Imm32 imm, Register dest) {
 }
 
 void MacroAssembler::rshift32(Imm32 imm, Register src, Register dest) {
-  srliw(dest, src, imm.value % 32);
+  srliw(dest, src, imm.value & 0x1f);
 }
 
 void MacroAssembler::rshift64Arithmetic(Imm32 imm, Register64 dest) {

@@ -48,36 +48,36 @@ void MacroAssemblerMIPSShared::ma_liPatchable(Register dest, Imm32 imm) {
 
 // Shifts
 void MacroAssemblerMIPSShared::ma_sll(Register rd, Register rt, Imm32 shift) {
-  as_sll(rd, rt, shift.value % 32);
+  as_sll(rd, rt, shift.value & 0x1f);
 }
 void MacroAssemblerMIPSShared::ma_srl(Register rd, Register rt, Imm32 shift) {
-  as_srl(rd, rt, shift.value % 32);
+  as_srl(rd, rt, shift.value & 0x1f);
 }
 
 void MacroAssemblerMIPSShared::ma_sra(Register rd, Register rt, Imm32 shift) {
-  as_sra(rd, rt, shift.value % 32);
+  as_sra(rd, rt, shift.value & 0x1f);
 }
 
 void MacroAssemblerMIPSShared::ma_ror(Register rd, Register rt, Imm32 shift) {
   if (hasR2()) {
-    as_rotr(rd, rt, shift.value % 32);
+    as_rotr(rd, rt, shift.value & 0x1f);
   } else {
     UseScratchRegisterScope temps(*this);
     Register scratch = temps.Acquire();
-    as_srl(scratch, rt, shift.value % 32);
-    as_sll(rd, rt, (32 - (shift.value % 32)) % 32);
+    as_srl(scratch, rt, shift.value & 0x1f);
+    as_sll(rd, rt, 32 - (shift.value & 0x1f));
     as_or(rd, rd, scratch);
   }
 }
 
 void MacroAssemblerMIPSShared::ma_rol(Register rd, Register rt, Imm32 shift) {
   if (hasR2()) {
-    as_rotr(rd, rt, (32 - (shift.value % 32)) % 32);
+    as_rotr(rd, rt, 32 - (shift.value & 0x1f));
   } else {
     UseScratchRegisterScope temps(*this);
     Register scratch = temps.Acquire();
-    as_srl(scratch, rt, (32 - (shift.value % 32)) % 32);
-    as_sll(rd, rt, shift.value % 32);
+    as_srl(scratch, rt, 32 - (shift.value & 0x1f));
+    as_sll(rd, rt, shift.value & 0x1f);
     as_or(rd, rd, scratch);
   }
 }

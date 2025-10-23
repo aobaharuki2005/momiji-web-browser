@@ -6742,7 +6742,7 @@ void MacroAssemblerRiscv64::Rol(Register rd, Register rs, const Operand& rt) {
     or_(rd, scratch, rd);
     sext_w(rd, rd);
   } else {
-    Ror(rd, rs, Operand(32 - (rt.immediate() % 32)));
+    Ror(rd, rs, Operand(32 - (rt.immediate() & 0x1f)));
   }
 }
 
@@ -6756,12 +6756,10 @@ void MacroAssemblerRiscv64::Ror(Register rd, Register rs, const Operand& rt) {
     or_(rd, scratch, rd);
     sext_w(rd, rd);
   } else {
-    int64_t ror_value = rt.immediate() % 32;
+    int64_t ror_value = rt.immediate() & 0x1f;
     if (ror_value == 0) {
       mv(rd, rs);
       return;
-    } else if (ror_value < 0) {
-      ror_value += 32;
     }
     srliw(scratch, rs, ror_value);
     slliw(rd, rs, 32 - ror_value);
@@ -6780,7 +6778,7 @@ void MacroAssemblerRiscv64::Drol(Register rd, Register rs, const Operand& rt) {
     sll(rd, rs, rt.rm());
     or_(rd, scratch, rd);
   } else {
-    Dror(rd, rs, Operand(64 - (rt.immediate() % 64)));
+    Dror(rd, rs, Operand(64 - (rt.immediate() & 0x3f)));
   }
 }
 
@@ -6793,12 +6791,10 @@ void MacroAssemblerRiscv64::Dror(Register rd, Register rs, const Operand& rt) {
     srl(rd, rs, rt.rm());
     or_(rd, scratch, rd);
   } else {
-    int64_t dror_value = rt.immediate() % 64;
+    int64_t dror_value = rt.immediate() & 0x3f;
     if (dror_value == 0) {
       mv(rd, rs);
       return;
-    } else if (dror_value < 0) {
-      dror_value += 64;
     }
     srli(scratch, rs, dror_value);
     slli(rd, rs, 64 - dror_value);

@@ -1079,19 +1079,20 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
   Register dest = ToRegister(ins->output());
   Register tmp = ToRegister(ins->temp0());
   int32_t shift = ins->shift();
+  MOZ_ASSERT(0 <= shift && shift <= 31);
 
   if (shift != 0) {
     MDiv* mir = ins->mir();
     if (!mir->isTruncated()) {
       // If the remainder is going to be != 0, bailout since this must
       // be a double.
-      masm.as_slli_w(tmp, lhs, (32 - shift) % 32);
+      masm.as_slli_w(tmp, lhs, (32 - shift));
       bailoutCmp32(Assembler::NonZero, tmp, tmp, ins->snapshot());
     }
 
     if (!mir->canBeNegativeDividend()) {
       // Numerator is unsigned, so needs no adjusting. Do the shift.
-      masm.as_srai_w(dest, lhs, shift % 32);
+      masm.as_srai_w(dest, lhs, shift);
       return;
     }
 
@@ -1100,15 +1101,15 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
     // Power of 2" in Henry S. Warren, Jr.'s Hacker's Delight.
     if (shift > 1) {
       masm.as_srai_w(tmp, lhs, 31);
-      masm.as_srli_w(tmp, tmp, (32 - shift) % 32);
+      masm.as_srli_w(tmp, tmp, (32 - shift));
       masm.add32(lhs, tmp);
     } else {
-      masm.as_srli_w(tmp, lhs, (32 - shift) % 32);
+      masm.as_srli_w(tmp, lhs, (32 - shift));
       masm.add32(lhs, tmp);
     }
 
     // Do the shift.
-    masm.as_srai_w(dest, tmp, shift % 32);
+    masm.as_srai_w(dest, tmp, shift);
   } else {
     masm.move32(lhs, dest);
   }
@@ -1302,21 +1303,21 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
     switch (ins->bitop()) {
       case JSOp::Lsh:
         if (shift) {
-          masm.as_slli_w(dest, lhs, shift % 32);
+          masm.as_slli_w(dest, lhs, shift);
         } else {
           masm.move32(lhs, dest);
         }
         break;
       case JSOp::Rsh:
         if (shift) {
-          masm.as_srai_w(dest, lhs, shift % 32);
+          masm.as_srai_w(dest, lhs, shift);
         } else {
           masm.move32(lhs, dest);
         }
         break;
       case JSOp::Ursh:
         if (shift) {
-          masm.as_srli_w(dest, lhs, shift % 32);
+          masm.as_srli_w(dest, lhs, shift);
         } else {
           // x >>> 0 can overflow.
           if (ins->mir()->toUrsh()->fallible()) {
@@ -1441,7 +1442,7 @@ void CodeGenerator::visitUrshD(LUrshD* ins) {
   FloatRegister out = ToFloatRegister(ins->output());
 
   if (rhs->isConstant()) {
-    masm.as_srli_w(temp, lhs, ToInt32(rhs) % 32);
+    masm.as_srli_w(temp, lhs, ToInt32(rhs) & 0x1f);
   } else {
     masm.as_srl_w(temp, lhs, ToRegister(rhs));
   }

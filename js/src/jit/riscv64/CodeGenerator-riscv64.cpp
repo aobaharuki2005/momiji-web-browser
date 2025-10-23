@@ -1139,19 +1139,20 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
   Register dest = ToRegister(ins->output());
   Register tmp = ToRegister(ins->temp0());
   int32_t shift = ins->shift();
+  MOZ_ASSERT(0 <= shift && shift <= 31);
 
   if (shift != 0) {
     MDiv* mir = ins->mir();
     if (!mir->isTruncated()) {
       // If the remainder is going to be != 0, bailout since this must
       // be a double.
-      masm.slliw(tmp, lhs, (32 - shift) % 32);
+      masm.slliw(tmp, lhs, (32 - shift));
       bailoutCmp32(Assembler::NonZero, tmp, tmp, ins->snapshot());
     }
 
     if (!mir->canBeNegativeDividend()) {
       // Numerator is unsigned, so needs no adjusting. Do the shift.
-      masm.sraiw(dest, lhs, shift % 32);
+      masm.sraiw(dest, lhs, shift);
       return;
     }
 
@@ -1160,15 +1161,15 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
     // Power of 2" in Henry S. Warren, Jr.'s Hacker's Delight.
     if (shift > 1) {
       masm.sraiw(tmp, lhs, 31);
-      masm.srliw(tmp, tmp, (32 - shift) % 32);
+      masm.srliw(tmp, tmp, (32 - shift));
       masm.add32(lhs, tmp);
     } else {
-      masm.srliw(tmp, lhs, (32 - shift) % 32);
+      masm.srliw(tmp, lhs, (32 - shift));
       masm.add32(lhs, tmp);
     }
 
     // Do the shift.
-    masm.sraiw(dest, tmp, shift % 32);
+    masm.sraiw(dest, tmp, shift);
   } else {
     masm.move32(lhs, dest);
   }
@@ -1527,7 +1528,7 @@ void CodeGenerator::visitUrshD(LUrshD* ins) {
   FloatRegister out = ToFloatRegister(ins->output());
 
   if (rhs->isConstant()) {
-    masm.srliw(temp, lhs, ToInt32(rhs) % 32);
+    masm.srliw(temp, lhs, ToInt32(rhs) & 0x1f);
   } else {
     masm.srlw(temp, lhs, ToRegister(rhs));
   }
