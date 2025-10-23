@@ -87,13 +87,13 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
 
   void MaybeMaterializeDefaultConfig();
 
-  bool RemoveElementCanonical(sanitizer::CanonicalName&& aElement);
-  bool RemoveAttributeCanonical(sanitizer::CanonicalName&& aAttribute);
+  bool RemoveElementCanonical(sanitizer::CanonicalElement&& aElement);
+  bool RemoveAttributeCanonical(sanitizer::CanonicalAttribute&& aAttribute);
 
   template <bool IsDefaultConfig>
   void SanitizeChildren(nsINode* aNode, bool aSafe);
   void SanitizeAttributes(Element* aChild,
-                          const sanitizer::CanonicalName& aElementName,
+                          const sanitizer::CanonicalElement& aElementName,
                           bool aSafe);
   void SanitizeDefaultConfigAttributes(Element* aChild,
                                        StaticAtomSet* aElementAttributes,
@@ -131,11 +131,11 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
   RefPtr<nsIGlobalObject> mGlobal;
 
   Maybe<sanitizer::CanonicalElementMap> mElements;
-  Maybe<sanitizer::CanonicalNameSet> mRemoveElements;
-  Maybe<sanitizer::CanonicalNameSet> mReplaceWithChildrenElements;
+  Maybe<sanitizer::CanonicalElementSet> mRemoveElements;
+  Maybe<sanitizer::CanonicalElementSet> mReplaceWithChildrenElements;
 
-  Maybe<sanitizer::CanonicalNameSet> mAttributes;
-  Maybe<sanitizer::CanonicalNameSet> mRemoveAttributes;
+  Maybe<sanitizer::CanonicalAttributeSet> mAttributes;
+  Maybe<sanitizer::CanonicalAttributeSet> mRemoveAttributes;
 
   bool mComments = false;
   // mDataAttributes always exists when mAttributes exists after
