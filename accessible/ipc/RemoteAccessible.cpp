@@ -776,7 +776,8 @@ bool RemoteAccessible::ApplyTransform(nsRect& aCumulativeBounds) const {
   return true;
 }
 
-bool RemoteAccessible::ApplyScrollOffset(nsRect& aBounds) const {
+bool RemoteAccessible::ApplyScrollOffset(nsRect& aBounds,
+                                         float aResolution) const {
   ASSERT_DOMAINS_ACTIVE(CacheDomain::ScrollPosition);
   Maybe<const nsTArray<int32_t>&> maybeScrollPosition =
       mCachedFields->GetAttribute<nsTArray<int32_t>>(CacheKey::ScrollPosition);
@@ -793,7 +794,8 @@ bool RemoteAccessible::ApplyScrollOffset(nsRect& aBounds) const {
   // moves up/closer to the origin).
   nsPoint scrollOffset(-scrollPosition[0], -scrollPosition[1]);
 
-  aBounds.MoveBy(scrollOffset.x, scrollOffset.y);
+  aBounds.MoveBy(scrollOffset.x * aResolution * aResolution,
+                 scrollOffset.y * aResolution * aResolution);
 
   // Return true here even if the scroll offset was 0,0 because the RV is used
   // as a scroll container indicator. Non-scroll containers won't have cached
@@ -899,6 +901,11 @@ LayoutDeviceIntRect RemoteAccessible::BoundsWithOffset(
 
     ApplyCrossDocOffset(bounds);
 
+    Maybe<float> res =
+        mDoc->mCachedFields->GetAttribute<float>(CacheKey::Resolution);
+    MOZ_ASSERT(res, "No cached document resolution found.");
+    const float resolution = res.valueOr(1.0f);
+
     LayoutDeviceIntRect devPxBounds;
     const Accessible* acc = Parent();
     bool encounteredFixedContainer = IsFixedPos();
@@ -948,7 +955,8 @@ LayoutDeviceIntRect RemoteAccessible::BoundsWithOffset(
           // happens in this loop instead of both inside and outside of
           // the loop (like ApplyTransform).
           // Never apply scroll offsets past a fixed container.
-          const bool hasScrollArea = remoteAcc->ApplyScrollOffset(bounds);
+          const bool hasScrollArea =
+              remoteAcc->ApplyScrollOffset(bounds, resolution);
 
           // If we are hit testing and the Accessible has a scroll area, ensure
           // that the bounds we've calculated so far are constrained to the

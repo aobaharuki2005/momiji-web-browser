@@ -3831,7 +3831,17 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   if (aCacheDomain & CacheDomain::ScrollPosition && frame) {
-    const auto [scrollPosition, scrollRange] = mDoc->ComputeScrollData(this);
+    // We request these values unscaled when caching because the scaled values
+    // have resolution multiplied in. We can encounter a race condition when
+    // using APZ where the resolution is not propogated back to content in time
+    // for it to be multipled into the scroll position calculation. Even if we
+    // end up with the correct resolution cached in parent, our final bounds
+    // will be incorrect. Instead of scaling here, we scale in parent with our
+    // cached resolution so any incorrectness will be consistent and dependent
+    // on a single cache update (Resolution) instead of two (Resolution and
+    // ScrollPosition).
+    const auto [scrollPosition, scrollRange] =
+        mDoc->ComputeScrollData(this, /* aShouldScaleByResolution */ false);
     if (scrollRange.width || scrollRange.height) {
       // If the scroll range is 0 by 0, this acc is not scrollable. We
       // can't simply check scrollPosition != 0, since it's valid for scrollable
