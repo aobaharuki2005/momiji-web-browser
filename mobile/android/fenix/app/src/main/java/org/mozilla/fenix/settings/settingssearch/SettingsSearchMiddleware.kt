@@ -52,8 +52,12 @@ class SettingsSearchMiddleware(
                 }
             }
             is SettingsSearchAction.ResultItemClicked -> {
-                val bundle = bundleOf("preference_to_scroll_to" to action.item.preferenceKey)
-                val fragmentId = action.item.preferenceFileInformation.fragmentId
+                val searchItem = action.item
+                val bundle = bundleOf(
+                    "preference_to_scroll_to" to searchItem.preferenceKey,
+                    "search_in_progress" to true,
+                )
+                val fragmentId = searchItem.preferenceFileInformation.fragmentId
                 CoroutineScope(Dispatchers.Main).launch {
                     dependencies.navController.navigate(fragmentId, bundle)
                 }

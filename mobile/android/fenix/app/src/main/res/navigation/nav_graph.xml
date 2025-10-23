@@ -571,6 +571,10 @@
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="search_in_progress"
+            android:defaultValue="false"
+            app:argType="boolean" />
         <action
             android:id="@+id/action_settingsFragment_to_settingsSearchFragment"
             app:destination="@id/settingsSearchFragment"
