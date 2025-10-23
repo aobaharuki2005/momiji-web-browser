@@ -6,6 +6,7 @@
 
 import {
   gIsCertError,
+  isCaptive,
   getCSSClass,
   getHostName,
   getSubjectAltNames,
@@ -87,6 +88,17 @@ export class NetErrorCard extends MozLitElement {
     document.dispatchEvent(
       new CustomEvent("AboutNetErrorLoad", { bubbles: true })
     );
+
+    // Record telemetry when the error page loads
+    if (gIsCertError && !isCaptive()) {
+      if (this.failedCertInfo) {
+        recordSecurityUITelemetry(
+          "securityUiCerterror",
+          "loadAboutcerterror",
+          this.failedCertInfo
+        );
+      }
+    }
   }
 
   init() {

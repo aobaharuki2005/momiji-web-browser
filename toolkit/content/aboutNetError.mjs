@@ -7,6 +7,7 @@
 import { NetErrorCard } from "chrome://global/content/net-error-card.mjs";
 import {
   gIsCertError,
+  isCaptive,
   gErrorCode,
   gHasSts,
   searchParams,
@@ -90,10 +91,6 @@ document.getElementById("favicon").href =
 
 function getDescription() {
   return searchParams.get("d");
-}
-
-function isCaptive() {
-  return searchParams.get("captive") == "true";
 }
 
 /**
