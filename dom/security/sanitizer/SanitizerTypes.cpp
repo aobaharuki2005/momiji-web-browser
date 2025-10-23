@@ -6,6 +6,11 @@
 
 namespace mozilla::dom::sanitizer {
 
+bool CanonicalName::IsDataAttribute() const {
+  return StringBeginsWith(nsDependentAtomString(mLocalName), u"data-"_ns) &&
+         !mNamespace;
+}
+
 template <typename SanitizerName>
 void CanonicalName::SetSanitizerName(SanitizerName& aSanitizerName) const {
   mLocalName->ToString(aSanitizerName.mName);
@@ -16,27 +21,21 @@ void CanonicalName::SetSanitizerName(SanitizerName& aSanitizerName) const {
   }
 }
 
-bool CanonicalAttribute::IsDataAttribute() const {
-  return StringBeginsWith(nsDependentAtomString(mLocalName), u"data-"_ns) &&
-         !mNamespace;
-}
-
-SanitizerAttributeNamespace CanonicalAttribute::ToSanitizerAttributeNamespace()
+SanitizerAttributeNamespace CanonicalName::ToSanitizerAttributeNamespace()
     const {
   SanitizerAttributeNamespace result;
   SetSanitizerName(result);
   return result;
 }
 
-SanitizerElementNamespace CanonicalElement::ToSanitizerElementNamespace()
-    const {
+SanitizerElementNamespace CanonicalName::ToSanitizerElementNamespace() const {
   SanitizerElementNamespace result;
   SetSanitizerName(result);
   return result;
 }
 
 SanitizerElementNamespaceWithAttributes
-CanonicalElement::ToSanitizerElementNamespaceWithAttributes(
+CanonicalName::ToSanitizerElementNamespaceWithAttributes(
     const CanonicalElementAttributes& aElementAttributes) const {
   SanitizerElementNamespaceWithAttributes result;
   SetSanitizerName(result);
@@ -75,7 +74,7 @@ bool CanonicalElementAttributes::Equals(
       return false;
     }
 
-    for (const CanonicalAttribute& attr : *mAttributes) {
+    for (const CanonicalName& attr : *mAttributes) {
       if (!aOther.mAttributes->Contains(attr)) {
         return false;
       }
@@ -87,7 +86,7 @@ bool CanonicalElementAttributes::Equals(
       return false;
     }
 
-    for (const CanonicalAttribute& attr : *mRemoveAttributes) {
+    for (const CanonicalName& attr : *mRemoveAttributes) {
       if (!aOther.mRemoveAttributes->Contains(attr)) {
         return false;
       }
@@ -98,9 +97,9 @@ bool CanonicalElementAttributes::Equals(
 }
 
 nsTArray<OwningStringOrSanitizerAttributeNamespace> ToSanitizerAttributes(
-    const CanonicalAttributeSet& aSet) {
+    const CanonicalNameSet& aSet) {
   nsTArray<OwningStringOrSanitizerAttributeNamespace> attributes;
-  for (const CanonicalAttribute& canonical : aSet) {
+  for (const CanonicalName& canonical : aSet) {
     OwningStringOrSanitizerAttributeNamespace owning;
     owning.SetAsSanitizerAttributeNamespace() =
         canonical.ToSanitizerAttributeNamespace();

@@ -15,19 +15,46 @@ namespace mozilla::dom::sanitizer {
 
 struct CanonicalElementAttributes;
 
-class CanonicalName {
- protected:
-  explicit CanonicalName(const CanonicalName* aKey)
+// The name of an element/attribute combined with its namespace.
+class CanonicalName : public PLDHashEntryHdr {
+ public:
+  using KeyType = const CanonicalName&;
+  using KeyTypePointer = const CanonicalName*;
+
+  explicit CanonicalName(KeyTypePointer aKey)
       : mLocalName(aKey->mLocalName), mNamespace(aKey->mNamespace) {}
+  CanonicalName(CanonicalName&&) = default;
   CanonicalName(RefPtr<nsAtom> aLocalName, RefPtr<nsAtom> aNamespace)
       : mLocalName(std::move(aLocalName)), mNamespace(std::move(aNamespace)) {}
   CanonicalName(nsStaticAtom* aLocalName, nsStaticAtom* aNamespace)
       : mLocalName(aLocalName), mNamespace(aNamespace) {}
+  ~CanonicalName() = default;
 
-  bool KeyEquals(const CanonicalName* aKey) const {
+  KeyType GetKey() const { return *this; }
+  bool KeyEquals(KeyTypePointer aKey) const {
     return mLocalName == aKey->mLocalName && mNamespace == aKey->mNamespace;
   }
 
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    return mozilla::HashGeneric(aKey->mLocalName.get(), aKey->mNamespace.get());
+  }
+
+  enum { ALLOW_MEMMOVE = true };
+
+  // Caution: Only use this for attribute names, not elements!
+  // Returns true for names that start with data-* and have a null namespace.
+  bool IsDataAttribute() const;
+
+  SanitizerAttributeNamespace ToSanitizerAttributeNamespace() const;
+  SanitizerElementNamespace ToSanitizerElementNamespace() const;
+  SanitizerElementNamespaceWithAttributes
+  ToSanitizerElementNamespaceWithAttributes(
+      const CanonicalElementAttributes& aElementAttributes) const;
+
+  CanonicalName Clone() const { return CanonicalName(mLocalName, mNamespace); }
+
+ protected:
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const CanonicalName& aName);
 
@@ -39,87 +66,22 @@ class CanonicalName {
   RefPtr<nsAtom> mNamespace;
 };
 
-template <typename Derived>
 std::ostream& operator<<(std::ostream& aStream, const CanonicalName& aName);
 
-class CanonicalAttribute : public CanonicalName, public PLDHashEntryHdr {
- public:
-  using KeyType = const CanonicalAttribute&;
-  using KeyTypePointer = const CanonicalAttribute*;
-
-  explicit CanonicalAttribute(KeyTypePointer aAttribute)
-      : CanonicalName(aAttribute) {}
-  CanonicalAttribute(CanonicalAttribute&&) = default;
-  CanonicalAttribute(RefPtr<nsAtom> aLocalName, RefPtr<nsAtom> aNamespace)
-      : CanonicalName(aLocalName, aNamespace) {}
-  CanonicalAttribute(nsStaticAtom* aLocalName, nsStaticAtom* aNamespace)
-      : CanonicalName(aLocalName, aNamespace) {}
-  ~CanonicalAttribute() = default;
-
-  KeyType GetKey() const { return *this; }
-  using CanonicalName::KeyEquals;
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return mozilla::HashGeneric(aKey->mLocalName.get(), aKey->mNamespace.get());
-  }
-
-  enum { ALLOW_MEMMOVE = true };
-
-  // Returns true for names that start with data-* and have a null namespace.
-  bool IsDataAttribute() const;
-  SanitizerAttributeNamespace ToSanitizerAttributeNamespace() const;
-
-  CanonicalAttribute Clone() const {
-    return CanonicalAttribute(mLocalName, mNamespace);
-  }
-};
-
-class CanonicalElement : public CanonicalName, public PLDHashEntryHdr {
- public:
-  using KeyType = const CanonicalElement&;
-  using KeyTypePointer = const CanonicalElement*;
-
-  explicit CanonicalElement(KeyTypePointer aElement)
-      : CanonicalName(aElement) {}
-  CanonicalElement(CanonicalElement&&) = default;
-  CanonicalElement(RefPtr<nsAtom> aLocalName, RefPtr<nsAtom> aNamespace)
-      : CanonicalName(aLocalName, aNamespace) {}
-  CanonicalElement(nsStaticAtom* aLocalName, nsStaticAtom* aNamespace)
-      : CanonicalName(aLocalName, aNamespace) {}
-  ~CanonicalElement() = default;
-
-  KeyType GetKey() const { return *this; }
-  using CanonicalName::KeyEquals;
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return mozilla::HashGeneric(aKey->mLocalName.get(), aKey->mNamespace.get());
-  }
-
-  enum { ALLOW_MEMMOVE = true };
-
-  SanitizerElementNamespace ToSanitizerElementNamespace() const;
-  SanitizerElementNamespaceWithAttributes
-  ToSanitizerElementNamespaceWithAttributes(
-      const CanonicalElementAttributes& aElementAttributes) const;
-};
-
-using CanonicalAttributeSet = nsTHashSet<CanonicalAttribute>;
-using CanonicalElementSet = nsTHashSet<CanonicalElement>;
+using CanonicalNameSet = nsTHashSet<CanonicalName>;
 
 struct CanonicalElementAttributes {
-  Maybe<CanonicalAttributeSet> mAttributes;
-  Maybe<CanonicalAttributeSet> mRemoveAttributes;
+  Maybe<CanonicalNameSet> mAttributes;
+  Maybe<CanonicalNameSet> mRemoveAttributes;
 
   bool Equals(const CanonicalElementAttributes& aOther) const;
 };
 
 using CanonicalElementMap =
-    nsTHashMap<CanonicalElement, CanonicalElementAttributes>;
+    nsTHashMap<CanonicalName, CanonicalElementAttributes>;
 
 nsTArray<OwningStringOrSanitizerAttributeNamespace> ToSanitizerAttributes(
-    const CanonicalAttributeSet& aSet);
+    const CanonicalNameSet& aSet);
 
 inline const auto& GetAsDictionary(
     const OwningStringOrSanitizerAttributeNamespace& aOwning) {
@@ -199,11 +161,7 @@ class MOZ_STACK_CLASS SanitizerComparator final {
 }  // namespace mozilla::dom::sanitizer
 
 template <>
-struct fmt::formatter<mozilla::dom::sanitizer::CanonicalAttribute>
-    : ostream_formatter {};
-
-template <>
-struct fmt::formatter<mozilla::dom::sanitizer::CanonicalElement>
+struct fmt::formatter<mozilla::dom::sanitizer::CanonicalName>
     : ostream_formatter {};
 
 #endif
