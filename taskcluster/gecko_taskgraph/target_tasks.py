@@ -9,8 +9,8 @@ import os
 import re
 from datetime import datetime, timedelta
 
-import requests
 from redo import retry
+from taskcluster.exceptions import TaskclusterRestFailure
 from taskgraph import create
 from taskgraph.target_tasks import filter_for_git_branch, register_target_task
 from taskgraph.util.attributes import attrmatch
@@ -77,7 +77,9 @@ def index_exists(index_path, reason=""):
         task_id = find_task_id(index_path)
         print(f"Index {index_path} exists: taskId {task_id}")
         return True
-    except KeyError:
+    except (KeyError, TaskclusterRestFailure) as e:
+        if isinstance(e, TaskclusterRestFailure) and e.status_code != 404:
+            raise
         print(f"Index {index_path} doesn't exist.")
         return False
 
@@ -1068,8 +1070,8 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
         try:
             task = find_task(index_path)
             print(f"Index {index_path} exists: taskId {task['taskId']}")
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code != 404:
+        except TaskclusterRestFailure as e:
+            if e.status_code != 404:
                 raise
             print(f"Index {index_path} doesn't exist.")
         else:
@@ -1077,8 +1079,8 @@ def target_tasks_searchfox(full_task_graph, parameters, graph_config):
             taskdef = get_task_definition(task["taskId"])
             try:
                 task_graph = get_artifact(task["taskId"], "public/task-graph.json")
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code != 404:
+            except TaskclusterRestFailure as e:
+                if e.status_code != 404:
                     raise
                 task_graph = None
             if task_graph:
