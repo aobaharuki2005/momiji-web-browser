@@ -4762,12 +4762,11 @@ void MacroAssemblerRiscv64::ma_mul32TestOverflow(Register rd, Register rj,
                                                  Imm32 imm, Label* overflow) {
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
-  Register scratch2 = temps.Acquire();
-  MOZ_ASSERT(rd != scratch && rj != scratch2);
+  MOZ_ASSERT(rd != scratch && rj != scratch);
 
-  ma_li(scratch2, imm);
+  ma_li(scratch, imm);
 
-  mul(rd, rj, scratch2);
+  mul(rd, rj, scratch);
   sext_w(scratch, rd);
   ma_b(scratch, rd, overflow, Assembler::NotEqual);
 }
