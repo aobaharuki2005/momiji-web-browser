@@ -147,10 +147,10 @@ index 9653fd651f..82b050a559 100644
  rtc_library("ssl") {
  if (!build_with_mozilla) {
 diff --git a/webrtc.gni b/webrtc.gni
-index bbb68a82d1..fddcdabae7 100644
+index b199596ed1..d36ef790d3 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -116,7 +116,7 @@ declare_args() {
+@@ -112,7 +112,7 @@ declare_args() {
  
    # Used to specify an external OpenSSL include path when not compiling the
    # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
@@ -159,7 +159,7 @@ index bbb68a82d1..fddcdabae7 100644
  
    # Enable when an external authentication mechanism is used for performing
    # packet authentication for RTP packets instead of libsrtp.
-@@ -344,7 +344,7 @@ declare_args() {
+@@ -340,7 +340,7 @@ declare_args() {
  }
  
  # Enable liboam only on non-mozilla builds.
