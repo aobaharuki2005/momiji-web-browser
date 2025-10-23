@@ -7,7 +7,7 @@
 #include "nsCocoaWindow.h"
 
 #include "nsArrayUtils.h"
-#include "nsCursorManager.h"
+#include "MOZDynamicCursor.h"
 #include "nsIAppStartup.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsILocalFileMac.h"
@@ -315,14 +315,14 @@ void nsCocoaWindow::SetCursor(const Cursor& aCursor) {
 
   bool forceUpdate = mUpdateCursor;
   mUpdateCursor = false;
-  if (mCustomCursorAllowed && NS_SUCCEEDED([[nsCursorManager sharedInstance]
+  if (mCustomCursorAllowed && NS_SUCCEEDED([MOZDynamicCursor.sharedInstance
                                     setCustomCursor:aCursor
                                   widgetScaleFactor:BackingScaleFactor()
                                         forceUpdate:forceUpdate])) {
     return;
   }
 
-  [[nsCursorManager sharedInstance] setNonCustomCursor:aCursor];
+  [MOZDynamicCursor.sharedInstance setNonCustomCursor:aCursor];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -3710,6 +3710,10 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   NS_OBJC_END_TRY_BLOCK_RETURN(NSDragOperationNone);
 }
 
+- (void)resetCursorRects {
+  [self addCursorRect:self.bounds cursor:MOZDynamicCursor.sharedInstance];
+}
+
 // NSDraggingDestination
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
@@ -4535,7 +4539,7 @@ void ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent,
     // After the cursor exits the window set it to a visible regular arrow
     // cursor.
     if (exitFrom == WidgetMouseEvent::ePlatformTopLevel) {
-      [[nsCursorManager sharedInstance]
+      [MOZDynamicCursor.sharedInstance
           setNonCustomCursor:nsIWidget::Cursor{eCursor_standard}];
     }
     [sLastMouseEventView sendMouseEnterOrExitEvent:aEvent
@@ -4997,7 +5001,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect,
         mWindow.collectionBehavior | NSWindowCollectionBehaviorCanJoinAllSpaces;
   }
   mWindow.contentMinSize = NSMakeSize(60, 60);
-  [mWindow disableCursorRects];
 
   // Make the window use CoreAnimation from the start, so that we don't
   // switch from a non-CA window to a CA-window in the middle.
