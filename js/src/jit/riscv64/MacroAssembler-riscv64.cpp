@@ -2456,21 +2456,9 @@ void MacroAssembler::subFromStackPtr(Imm32 imm32) {
 }
 
 void MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output) {
-  JitSpew(JitSpew_Codegen, "[ clampDoubleToUint8");
-  Label nan, done;
-  UseScratchRegisterScope temps(this);
-  Register scratch = temps.Acquire();
-  feq_d(scratch, input, input);
-  beqz(scratch, &nan);
-  addi(zero, scratch, 0x11);
   Round_w_d(output, input);
+  Clear_if_nan_d(output, input);
   clampIntToUint8(output);
-  ma_branch(&done);
-  // Input is nan
-  bind(&nan);
-  mv(output, zero_reg);
-  bind(&done);
-  JitSpew(JitSpew_Codegen, "]");
 }
 
 //{{{ check_macroassembler_style
