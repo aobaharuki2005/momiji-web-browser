@@ -26,8 +26,6 @@ add_task(async function test_preferences_visibility() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let backupSection =
       browser.contentDocument.querySelector("#dataBackupGroup");
-
-    let settings = browser.contentDocument.querySelector("backup-settings");
     Assert.ok(backupSection, "Found backup preferences section");
 
     // Our mochitest-browser tests are configured to have the section visible
@@ -36,34 +34,23 @@ add_task(async function test_preferences_visibility() {
       BrowserTestUtils.isVisible(backupSection),
       "Backup section is visible"
     );
+  });
 
-    await SpecialPowers.pushPrefEnv({
-      set: [["privacy.sanitize.sanitizeOnShutdown", true]],
-    });
+  await SpecialPowers.pushPrefEnv({
+    set: [[BACKUP_ARCHIVE_ENABLED_PREF, false]],
+  });
 
-    Assert.ok(
-      !settings.restoreFromBackupEl,
-      "Backup Restore section is not available"
-    );
-
-    Assert.ok(
-      BrowserTestUtils.isHidden(backupSection),
-      "Backup section is now hidden"
-    );
-
-    await SpecialPowers.popPrefEnv();
-
-    await SpecialPowers.pushPrefEnv({
-      set: [[BACKUP_ARCHIVE_ENABLED_PREF, false]],
-    });
-
-    await settings.updateComplete;
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let backupSection =
+      browser.contentDocument.querySelector("#dataBackupGroup");
+    Assert.ok(backupSection, "Found backup preferences section");
 
     Assert.ok(
       BrowserTestUtils.isVisible(backupSection),
-      "Backup section is now visible"
+      "Backup section is still visible"
     );
 
+    let settings = browser.contentDocument.querySelector("backup-settings");
     let backupArchiveSection = settings.querySelector("#scheduled-backups");
 
     Assert.ok(!backupArchiveSection, "Backup archive section is not available");
@@ -72,24 +59,27 @@ add_task(async function test_preferences_visibility() {
       settings.restoreFromBackupEl,
       "Backup restore section is available"
     );
-
-    await SpecialPowers.pushPrefEnv({
-      set: [[BACKUP_RESTORE_ENABLED_PREF, false]],
-    });
-
+  });
+  await SpecialPowers.pushPrefEnv({
+    set: [[BACKUP_RESTORE_ENABLED_PREF, false]],
+  });
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let settings = browser.contentDocument.querySelector("backup-settings");
     Assert.ok(
       !settings.restoreFromBackupEl,
       "Backup Restore section is not available"
     );
 
+    let backupSection =
+      browser.contentDocument.querySelector("#dataBackupGroup");
     Assert.ok(
       BrowserTestUtils.isHidden(backupSection),
       "Backup section is now hidden"
     );
-
-    await SpecialPowers.popPrefEnv();
-    await SpecialPowers.popPrefEnv();
   });
+
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
