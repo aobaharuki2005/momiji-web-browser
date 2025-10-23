@@ -816,14 +816,13 @@ urlbar:
     send_in_pings:
       - events
 
-  pref_suggest_data_collection:
+  pref_suggest_nonsponsored:
     lifetime: application
     type: boolean
     description: >
-      Whether the user has opted in to data collection for Firefox Suggest,
-      i.e., online suggestions served from Merino.
+      Whether non-sponsored quick suggest results are shown in the urlbar.
       Corresponds to the value of the
-      `browser.urlbar.quicksuggest.dataCollection.enabled` pref.
+      `browser.urlbar.suggest.quicksuggest.nonsponsored` pref.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1849726
@@ -837,18 +836,41 @@ urlbar:
     send_in_pings:
       - events
 
-  pref_suggest_nonsponsored:
+  pref_suggest_online_available:
     lifetime: application
     type: boolean
     description: >
-      Whether non-sponsored quick suggest results are shown in the urlbar.
-      Corresponds to the value of the
-      `browser.urlbar.suggest.quicksuggest.nonsponsored` pref.
+      Whether online Suggest is available to the user.
+      Corresponds to the Nimbus variable `quickSuggestOnlineAvailable` and its
+      fallback pref `browser.urlbar.quicksuggest.online.available`.
+      NOTE: "Online Suggest" in this context means the new version of online
+      Suggest introduced in 146 with Terms of Use and OHTTP.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849726
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    send_in_pings:
+      - events
+
+  pref_suggest_online_enabled:
+    lifetime: application
+    type: boolean
+    description: >
+      This pref is true for all users by default! You probably want to use this
+      in conjunction with pref_suggest_online_available and/or restrict your
+      analysis to user populations where you know online Suggest is available.
+      Corresponds to `browser.urlbar.quicksuggest.online.enabled`.
+      NOTE: "Online Suggest" in this context means the new version of online
+      Suggest introduced in 146 with Terms of Use and OHTTP.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1995362
     data_sensitivity:
       - interaction
     notification_emails:

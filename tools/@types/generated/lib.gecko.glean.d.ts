@@ -1292,8 +1292,9 @@ interface GleanImpl {
     heuristicResultMissing: GleanRate;
     keywordExposure: GleanEventWithExtras<{ keyword?: string, result?: string, terminal?: string }>;
     prefMaxResults: GleanQuantity;
-    prefSuggestDataCollection: GleanBoolean;
     prefSuggestNonsponsored: GleanBoolean;
+    prefSuggestOnlineAvailable: GleanBoolean;
+    prefSuggestOnlineEnabled: GleanBoolean;
     prefSuggestSponsored: GleanBoolean;
     prefSuggestTopsites: GleanBoolean;
     prefSwitchTabsSearchAllContainers: GleanBoolean;

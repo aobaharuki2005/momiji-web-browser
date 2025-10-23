@@ -1025,7 +1025,7 @@ class Preferences {
    *           `browser.urlbar.` branch, the name will be relative to the branch.
    *           For other prefs, the name will be the full name.
    *         - `onNimbusChanged` invoked when a Nimbus value changes. It will be
-   *           passed the name of the changed Nimbus variable.
+   *           passed the name of the changed Nimbus variable and the new value.
    */
   addObserver(observer) {
     this._observerWeakRefs.push(Cu.getWeakReference(observer));
@@ -1111,7 +1111,7 @@ class Preferences {
         oldNimbus.hasOwnProperty(name) != newNimbus.hasOwnProperty(name) ||
         oldNimbus[name] !== newNimbus[name]
       ) {
-        this.#notifyObservers("onNimbusChanged", name);
+        this.#notifyObservers("onNimbusChanged", name, newNimbus[name]);
       }
     }
   }
@@ -1340,7 +1340,7 @@ class Preferences {
     );
   }
 
-  #notifyObservers(method, changed) {
+  #notifyObservers(method, changed, ...rest) {
     for (let i = 0; i < this._observerWeakRefs.length; ) {
       let observer = this._observerWeakRefs[i].get();
       if (!observer) {
@@ -1350,7 +1350,7 @@ class Preferences {
       }
       if (method in observer) {
         try {
-          observer[method](changed);
+          observer[method](changed, ...rest);
         } catch (ex) {
           console.error(ex);
         }

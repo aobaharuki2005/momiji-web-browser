@@ -1623,22 +1623,30 @@ class TelemetryEvent {
 
   #PING_PREFS = {
     maxRichResults: Glean.urlbar.prefMaxResults,
-    "quicksuggest.dataCollection.enabled":
-      Glean.urlbar.prefSuggestDataCollection,
+    "quicksuggest.online.available": Glean.urlbar.prefSuggestOnlineAvailable,
+    "quicksuggest.online.enabled": Glean.urlbar.prefSuggestOnlineEnabled,
     "suggest.quicksuggest.nonsponsored": Glean.urlbar.prefSuggestNonsponsored,
     "suggest.quicksuggest.sponsored": Glean.urlbar.prefSuggestSponsored,
     "suggest.topsites": Glean.urlbar.prefSuggestTopsites,
   };
 
+  // Used to record telemetry for prefs that are fallbacks for Nimbus variables.
+  // `onNimbusChanged` is called for these variables rather than `onPrefChanged`
+  // but we want to record telemetry as if the prefs themselves changed. This
+  // object maps Nimbus variable names to their fallback prefs.
+  #PING_NIMBUS_VARIABLES = {
+    quickSuggestOnlineAvailable: "quicksuggest.online.available",
+  };
+
   #readPingPrefs() {
     for (const p of Object.keys(this.#PING_PREFS)) {
-      this.onPrefChanged(p);
+      this.#recordPref(p);
     }
   }
 
-  onPrefChanged(pref) {
+  #recordPref(pref, newValue = undefined) {
     const metric = this.#PING_PREFS[pref];
-    const prefValue = lazy.UrlbarPrefs.get(pref);
+    const prefValue = newValue ?? lazy.UrlbarPrefs.get(pref);
     if (metric) {
       metric.set(prefValue);
     }
@@ -1649,6 +1657,16 @@ class TelemetryEvent {
         if (!prefValue) {
           this.handleDisableSuggest();
         }
+    }
+  }
+
+  onPrefChanged(pref) {
+    this.#recordPref(pref);
+  }
+
+  onNimbusChanged(name, newValue) {
+    if (this.#PING_NIMBUS_VARIABLES.hasOwnProperty(name)) {
+      this.#recordPref(this.#PING_NIMBUS_VARIABLES[name], newValue);
     }
   }
 
