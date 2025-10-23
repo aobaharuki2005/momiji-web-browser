@@ -149,9 +149,6 @@ add_task(async function titlebar_spacer_context() {
   let expectedEntries = [
     ["#toolbar-context-toggle-vertical-tabs", true],
     ["---"],
-    [".customize-context-moveToPanel", false],
-    [".customize-context-removeFromToolbar", false],
-    ["---"],
   ];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
@@ -183,11 +180,7 @@ add_task(async function empty_toolbar_context() {
   });
   await shownPromise;
 
-  let expectedEntries = [
-    [".customize-context-moveToPanel", false],
-    [".customize-context-removeFromToolbar", false],
-    ["---"],
-  ];
+  let expectedEntries = [];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
   }
@@ -218,11 +211,7 @@ add_task(async function urlbar_context() {
   });
   await shownPromise;
 
-  let expectedEntries = [
-    [".customize-context-moveToPanel", false],
-    [".customize-context-removeFromToolbar", false],
-    ["---"],
-  ];
+  let expectedEntries = [];
   if (!isOSX) {
     expectedEntries.push(["#toggle_toolbar-menubar", true]);
   }
@@ -817,9 +806,6 @@ add_task(async function menu_bar_spacer_context_menu_customize_mode() {
 
   let expectedEntries = [
     ["#toolbar-context-toggle-vertical-tabs", true],
-    ["---"],
-    [".customize-context-moveToPanel", false],
-    [".customize-context-removeFromToolbar", false],
     ["---"],
     ["#toggle_toolbar-menubar", true],
     ["#toggle_PersonalToolbar", true],
