@@ -12,7 +12,6 @@
 #include <utility>
 
 #include "SameBinary.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/NativeNt.h"

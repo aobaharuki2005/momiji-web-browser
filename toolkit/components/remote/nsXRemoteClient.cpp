@@ -7,7 +7,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDebug.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "nsXRemoteClient.h"

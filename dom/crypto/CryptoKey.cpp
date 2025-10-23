@@ -17,7 +17,6 @@
 #include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
 #include "keyhi.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/KeyAlgorithmBinding.h"
 #include "mozilla/dom/RootedDictionary.h"

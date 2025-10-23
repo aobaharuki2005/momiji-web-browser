@@ -8,7 +8,6 @@
 #include "HashStore.h"
 #include "nsIFileStreams.h"
 #include "nsISeekableStream.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/glean/UrlClassifierMetrics.h"
 #include "mozilla/Logging.h"
 #include "nsNetUtil.h"

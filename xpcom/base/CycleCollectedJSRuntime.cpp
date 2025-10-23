@@ -69,7 +69,6 @@
 #include "js/ShadowRealmCallbacks.h"
 #include "js/SliceBudget.h"
 #include "jsfriendapi.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebuggerOnGCRunnable.h"

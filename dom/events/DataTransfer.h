@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_DataTransfer_h
 #define mozilla_dom_DataTransfer_h
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/BindingDeclarations.h"

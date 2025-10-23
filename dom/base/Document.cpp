@@ -45,7 +45,6 @@
 #include "mozIThirdPartyUtil.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ArrayIterator.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AttributeStyles.h"
 #include "mozilla/Base64.h"

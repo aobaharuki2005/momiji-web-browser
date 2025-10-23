@@ -25,7 +25,6 @@
 #include "plbase64.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/AppShutdown.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"

@@ -14,7 +14,6 @@
 #include "js/Wrapper.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"

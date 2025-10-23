@@ -25,7 +25,6 @@
 #include "base/eintr_wrapper.h"
 #include "base/strings/safe_sprintf.h"
 #include "mozilla/Array.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"

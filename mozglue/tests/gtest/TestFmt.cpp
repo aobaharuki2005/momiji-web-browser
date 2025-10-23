@@ -7,7 +7,6 @@
 #include "gtest/gtest.h"
 #include "fmt/format.h"
 #include "fmt/xchar.h"
-#include "mozilla/ArrayUtils.h"
 #include "nsTArray.h"
 #include "nsFmtString.h"
 #include "nsString.h"

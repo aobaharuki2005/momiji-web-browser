@@ -7,7 +7,6 @@
 
 #include <utility>
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsGkAtoms.h"

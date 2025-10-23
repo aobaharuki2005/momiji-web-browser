@@ -59,7 +59,6 @@
 #include "mozIDOMWindow.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ArrayIterator.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AtomArray.h"
 #include "mozilla/Atomics.h"

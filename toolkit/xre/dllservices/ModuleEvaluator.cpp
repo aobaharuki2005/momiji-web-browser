@@ -12,7 +12,6 @@
 #include <windows.h>
 #include <shlobj.h>
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleVersionInfo.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinDllServices.h"

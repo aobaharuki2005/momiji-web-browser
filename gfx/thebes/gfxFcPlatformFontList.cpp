@@ -11,7 +11,6 @@
 #include "gfxFT2Utils.h"
 #include "gfxPlatform.h"
 #include "nsPresContext.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Preferences.h"

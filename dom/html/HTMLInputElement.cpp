@@ -10,7 +10,6 @@
 
 #include "HTMLDataListElement.h"
 #include "HTMLFormSubmissionConstants.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"

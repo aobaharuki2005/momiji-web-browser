@@ -17,7 +17,6 @@
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/ArenaAllocator.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/PContent.h"

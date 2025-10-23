@@ -10,7 +10,6 @@
 #include "Units.h"
 #include "gfxTextRun.h"
 #include "inLayoutUtils.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"

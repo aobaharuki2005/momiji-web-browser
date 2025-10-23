@@ -16,7 +16,6 @@
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/Services.h"

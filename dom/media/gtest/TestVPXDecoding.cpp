@@ -6,7 +6,6 @@
 
 #include "VPXDecoder.h"
 #include "gtest/gtest.h"
-#include "mozilla/ArrayUtils.h"
 #include "nsTArray.h"
 
 using namespace mozilla;

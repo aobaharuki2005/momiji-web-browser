@@ -11,7 +11,6 @@
 #include "mozilla/dom/FragmentOrElement.h"
 
 #include "DOMIntersectionObserver.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/EffectSet.h"

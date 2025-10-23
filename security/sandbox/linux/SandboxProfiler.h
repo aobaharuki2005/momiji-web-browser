@@ -19,8 +19,6 @@
 #include "mozilla/ProfileChunkedBuffer.h"
 #include "mozilla/ProfilerState.h"
 
-#include "mozilla/ArrayUtils.h"
-
 #include "mozilla/BoundedMPSCQueue.h"
 
 #if defined(HAVE_REPORT_UPROFILER_PARENT) && \

@@ -6,7 +6,6 @@
 
 #include "nsScriptSecurityManager.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/SourceLocation.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_security.h"

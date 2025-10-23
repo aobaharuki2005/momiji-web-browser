@@ -10,7 +10,6 @@
 #include "PSMRunnable.h"
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"

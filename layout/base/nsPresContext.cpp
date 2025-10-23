@@ -8,7 +8,6 @@
 
 #include "nsPresContext.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "nsPresContextInlines.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/AsyncEventDispatcher.h"

@@ -16,7 +16,6 @@
 #include "TouchEvents.h"
 #include "X11UndefineNone.h"
 #include "base/thread.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/IMEStateManager.h"

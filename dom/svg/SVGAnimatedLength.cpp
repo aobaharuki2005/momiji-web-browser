@@ -13,7 +13,6 @@
 #include "SVGGeometryProperty.h"
 #include "SVGLengthSMILType.h"
 #include "mozAutoDocUpdate.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/GeckoBindings.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"

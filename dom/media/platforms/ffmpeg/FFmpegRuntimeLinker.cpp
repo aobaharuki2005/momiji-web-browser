@@ -8,7 +8,6 @@
 
 #include "FFmpegLibWrapper.h"
 #include "FFmpegLog.h"
-#include "mozilla/ArrayUtils.h"
 #include "prlink.h"
 
 namespace mozilla {

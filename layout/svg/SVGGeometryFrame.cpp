@@ -14,7 +14,6 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContentUtils.h"

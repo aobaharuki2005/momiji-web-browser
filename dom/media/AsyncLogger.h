@@ -12,7 +12,6 @@
 #include <thread>
 
 #include "GeckoProfiler.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BaseProfilerMarkerTypes.h"
 #include "mozilla/MathAlgorithms.h"

@@ -10,7 +10,6 @@
 
 #include "mozilla/Logging.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MacStringHelpers.h"
 #include "mozilla/MiscEvents.h"

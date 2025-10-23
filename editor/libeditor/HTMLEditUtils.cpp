@@ -15,7 +15,6 @@
 #include "HTMLEditHelpers.h"       // for EditorInlineStyle
 #include "WSRunScanner.h"          // for WSRunScanner
 
-#include "mozilla/ArrayUtils.h"  // for ArrayLength
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPrefs_editor.h"       // for StaticPrefs::editor_

@@ -28,7 +28,6 @@
 #include "GtkCompositorWidget.h"
 #include "imgIContainer.h"
 #include "InputData.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Components.h"
 #include "mozilla/GRefPtr.h"

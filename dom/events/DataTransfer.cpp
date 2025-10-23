@@ -6,7 +6,6 @@
 
 #include "DataTransfer.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CheckedInt.h"

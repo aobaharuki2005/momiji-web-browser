@@ -7,7 +7,6 @@
 #include "EnterpriseRoots.h"
 
 #include "PKCS11ModuleDB.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"

@@ -9,7 +9,6 @@
 
 #include "MP3Demuxer.h"
 #include "MockMediaResource.h"
-#include "mozilla/ArrayUtils.h"
 
 class MockMP3MediaResource;
 class MockMP3StreamMediaResource;

@@ -23,7 +23,6 @@
 #include "gfxGradientCache.h"
 #include "gfxUtils.h"
 #include "imgIContainer.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"

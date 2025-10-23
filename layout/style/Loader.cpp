@@ -10,7 +10,6 @@
 
 #include "MainThreadUtils.h"
 #include "ReferrerInfo.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ConsoleReportCollector.h"

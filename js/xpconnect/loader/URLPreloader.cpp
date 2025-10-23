@@ -8,7 +8,6 @@
 #include "mozilla/URLPreloader.h"
 #include "mozilla/loader/AutoMemMap.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/IOBuffers.h"

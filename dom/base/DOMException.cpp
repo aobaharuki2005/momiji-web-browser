@@ -8,7 +8,6 @@
 
 #include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/DOMExceptionBinding.h"

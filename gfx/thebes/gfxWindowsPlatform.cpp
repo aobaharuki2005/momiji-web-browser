@@ -9,7 +9,6 @@
 #include "gfxWindowsPlatform.h"
 
 #include "cairo.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 
 #include "gfxBlur.h"

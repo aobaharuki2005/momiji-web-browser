@@ -38,7 +38,6 @@
 #endif
 
 #include "mozilla/AppShutdown.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntentionalCrash.h"

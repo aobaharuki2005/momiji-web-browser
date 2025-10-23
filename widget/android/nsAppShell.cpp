@@ -25,7 +25,6 @@
 #include "nsCategoryManagerUtils.h"
 #include "mozilla/dom/GeolocationPosition.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"

@@ -8,7 +8,6 @@
 
 #include "SVGArcConverter.h"
 #include "gfx2DGlue.h"
-#include "mozilla/ArrayUtils.h"        // std::size
 #include "mozilla/ServoStyleConsts.h"  // StylePathCommand
 #include "nsMathUtils.h"
 #include "nsTextFormatter.h"

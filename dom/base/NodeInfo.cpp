@@ -12,7 +12,6 @@
 
 #include "mozilla/dom/NodeInfo.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/Document.h"

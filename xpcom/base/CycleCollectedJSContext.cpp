@@ -15,7 +15,6 @@
 #include "js/GCAPI.h"
 #include "js/Utility.h"
 #include "jsapi.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSRuntime.h"

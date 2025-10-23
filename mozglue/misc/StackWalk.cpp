@@ -7,7 +7,6 @@
 /* API for getting a stack trace of the C/C++ stack on the current thread */
 
 #include "mozilla/Array.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StackWalk.h"
@@ -108,7 +107,6 @@ class FrameSkipper {
 #  include <process.h>
 #  include <stdio.h>
 #  include <malloc.h>
-#  include "mozilla/ArrayUtils.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/StackWalk_windows.h"
 #  include "mozilla/WindowsVersion.h"

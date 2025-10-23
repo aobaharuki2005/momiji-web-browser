@@ -9,7 +9,6 @@
 #include "H264.h"
 #include "H265.h"
 #include "MediaData.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"

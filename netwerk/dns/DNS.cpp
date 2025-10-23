@@ -6,7 +6,6 @@
 
 #include "mozilla/net/DNS.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/StaticPrefs_network.h"

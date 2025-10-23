@@ -15,7 +15,6 @@
 
 #include <vector>
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Tainting.h"
 #include "mozilla/dom/GamepadHandle.h"

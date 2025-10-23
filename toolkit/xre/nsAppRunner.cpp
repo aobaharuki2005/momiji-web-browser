@@ -8,7 +8,6 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "mozilla/AppShutdown.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Components.h"

@@ -60,7 +60,6 @@
 #include "nsTreeBodyFrame.h"
 #include "nsTreeUtils.h"
 #include "mozilla/a11y/AccTypes.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/EventTarget.h"

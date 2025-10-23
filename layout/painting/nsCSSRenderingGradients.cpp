@@ -15,7 +15,6 @@
 #include "gfxContext.h"
 #include "gfxGradientCache.h"
 #include "gfxUtils.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"

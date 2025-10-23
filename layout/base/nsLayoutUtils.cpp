@@ -33,7 +33,6 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/AccessibleCaretEventHub.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Baseline.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ClearOnShutdown.h"

@@ -12,7 +12,6 @@
 #include "GeckoProfiler.h"
 #include "HangDetails.h"
 #include "ThreadStackHelper.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/CPUUsageWatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"

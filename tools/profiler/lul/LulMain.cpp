@@ -19,7 +19,6 @@
 #include "LulCommonExt.h"
 #include "LulElfExt.h"
 #include "LulMainInt.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"

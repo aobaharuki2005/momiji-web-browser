@@ -27,7 +27,6 @@
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"

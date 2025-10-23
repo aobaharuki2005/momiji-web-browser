@@ -37,7 +37,6 @@
 #include <string_view>
 
 // #include "memory_hooks.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoProfilerLabel.h"
 #include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/BaseProfilerDetail.h"

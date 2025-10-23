@@ -56,7 +56,6 @@
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "jsapi.h"
 #include "mozilla/AppShutdown.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/EventDispatcher.h"

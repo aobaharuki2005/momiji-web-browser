@@ -8,7 +8,6 @@
 #include "nsNetUtil.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsBaseChannel.h"
-#include "mozilla/ArrayUtils.h"
 #include "nsIProtocolHandler.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"

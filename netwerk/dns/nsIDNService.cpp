@@ -15,7 +15,6 @@
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 #include "harfbuzz/hb.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TextUtils.h"

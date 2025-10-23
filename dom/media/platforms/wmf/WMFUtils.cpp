@@ -18,7 +18,6 @@
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"

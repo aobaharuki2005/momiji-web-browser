@@ -28,7 +28,6 @@
 #include "States.h"
 #include "nsISimpleEnumerator.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Sprintf.h"
 #include "nsAccessibilityService.h"
 #include "nsComponentManagerUtils.h"

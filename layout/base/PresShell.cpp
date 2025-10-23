@@ -30,7 +30,6 @@
 #include "js/GCAPI.h"
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AnimationEventDispatcher.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CaretAssociationHint.h"

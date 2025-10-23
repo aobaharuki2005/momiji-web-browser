@@ -8,7 +8,6 @@
 
 #include "mozilla/Utf8.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/IntegerRange.h"

@@ -48,7 +48,6 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ArrayIterator.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BaseProfilerMarkersPrerequisites.h"
 #include "mozilla/BasicEvents.h"

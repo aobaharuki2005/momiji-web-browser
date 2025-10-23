@@ -11,7 +11,6 @@
 
 #include "nsString.h"
 #include "nsCOMArray.h"
-#include "mozilla/ArrayUtils.h"  // ArrayLength
 #include "mozilla/Attributes.h"
 #include "mozilla/Sprintf.h"
 

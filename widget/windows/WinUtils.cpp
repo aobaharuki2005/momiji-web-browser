@@ -16,7 +16,6 @@
 #include "nsWindowDefs.h"
 #include "InputDeviceUtils.h"
 #include "KeyboardLayout.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_widget.h"

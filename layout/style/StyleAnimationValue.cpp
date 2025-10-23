@@ -11,7 +11,6 @@
 #include "gfx2DGlue.h"
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/Likely.h"

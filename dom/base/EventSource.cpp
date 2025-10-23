@@ -7,7 +7,6 @@
 #include "mozilla/dom/EventSource.h"
 
 #include "ReferrerInfo.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Components.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/DataMutex.h"

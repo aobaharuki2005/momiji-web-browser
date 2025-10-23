@@ -8,7 +8,6 @@
 #include "MockMediaResource.h"
 #include "VideoUtils.h"
 #include "gtest/gtest.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/TaskQueue.h"

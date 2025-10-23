@@ -5,7 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "nsWindowsDllInterceptor.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ImportDir.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/PolicyChecks.h"

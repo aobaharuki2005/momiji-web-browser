@@ -151,7 +151,6 @@
 
 #include "base/process_util.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"

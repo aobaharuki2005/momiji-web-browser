@@ -37,7 +37,6 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
 #include "mozilla/dom/WorkerRef.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"

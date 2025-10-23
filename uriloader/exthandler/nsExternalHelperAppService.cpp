@@ -7,7 +7,6 @@
 #include "base/basictypes.h"
 
 /* This must occur *after* base/basictypes.h to avoid typedefs conflicts. */
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/ResultExtensions.h"
 

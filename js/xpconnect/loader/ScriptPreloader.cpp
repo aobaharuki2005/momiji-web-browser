@@ -13,7 +13,6 @@
 
 #include "mozilla/URLPreloader.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Components.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FileUtils.h"

@@ -7,7 +7,6 @@
 #ifndef DOM_SMIL_SMILKEYSPLINE_H_
 #define DOM_SMIL_SMILKEYSPLINE_H_
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 
 namespace mozilla {

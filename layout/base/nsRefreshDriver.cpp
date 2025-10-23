@@ -38,7 +38,6 @@
 #include "imgRequest.h"
 #include "jsapi.h"
 #include "mozilla/AnimationEventDispatcher.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"

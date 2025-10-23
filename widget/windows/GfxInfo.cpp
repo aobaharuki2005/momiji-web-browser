@@ -22,7 +22,6 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/SSE.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/widget/WinRegistry.h"
 #include "mozilla/WindowsProcessMitigations.h"
 

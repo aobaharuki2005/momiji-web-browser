@@ -13,7 +13,6 @@
 #include "DOMSVGLength.h"
 #include "DOMSVGPoint.h"
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Likely.h"

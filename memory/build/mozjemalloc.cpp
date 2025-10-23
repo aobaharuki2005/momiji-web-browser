@@ -138,7 +138,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Alignment.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"

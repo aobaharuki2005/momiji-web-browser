@@ -17,7 +17,6 @@
 #include "ByteWriter.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"

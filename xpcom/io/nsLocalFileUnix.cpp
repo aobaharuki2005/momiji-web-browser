@@ -10,7 +10,6 @@
 
 #include "nsLocalFile.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"

@@ -19,7 +19,6 @@
 #include "certdb.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"

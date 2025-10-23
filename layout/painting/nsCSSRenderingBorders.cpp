@@ -15,7 +15,6 @@
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
 #include "gfxUtils.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Range.h"
 #include "mozilla/gfx/2D.h"

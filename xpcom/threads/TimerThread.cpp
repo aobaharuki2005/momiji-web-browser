@@ -15,7 +15,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/ArenaAllocator.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/StaticPrefs_timer.h"
 

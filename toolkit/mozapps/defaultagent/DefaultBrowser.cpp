@@ -13,7 +13,6 @@
 #include "EventLog.h"
 #include "Registry.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Try.h"
 #include "mozilla/WinHeaderOnlyUtils.h"

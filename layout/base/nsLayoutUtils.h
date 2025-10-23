@@ -13,7 +13,6 @@
 #include "LayoutConstants.h"
 #include "Units.h"
 #include "gfxPoint.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/LayoutStructs.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Maybe.h"

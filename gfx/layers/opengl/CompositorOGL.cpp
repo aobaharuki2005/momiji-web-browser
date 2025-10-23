@@ -16,7 +16,6 @@
 #include "gfxPlatform.h"            // for gfxPlatform
 #include "gfxRect.h"                // for gfxRect
 #include "gfxUtils.h"               // for gfxUtils, etc
-#include "mozilla/ArrayUtils.h"     // for ArrayLength
 #include "mozilla/Preferences.h"    // for Preferences
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_gfx.h"

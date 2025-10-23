@@ -9,7 +9,6 @@
 
 #include "ReferrerInfo.h"
 #include "WebBrowserPersistLocalDocument.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Printf.h"
 #include "mozilla/TextUtils.h"
