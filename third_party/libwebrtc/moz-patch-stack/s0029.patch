@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc
  4 files changed, 36 insertions(+)
 
 diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
-index 024d6171cc..8100775eb7 100644
+index fc923a8733..11b6ac6e08 100644
 --- a/audio/audio_send_stream.cc
 +++ b/audio/audio_send_stream.cc
 @@ -436,6 +436,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
