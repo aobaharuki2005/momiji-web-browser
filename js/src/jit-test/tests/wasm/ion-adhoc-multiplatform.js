@@ -59,9 +59,8 @@ codegenTestMultiplatform_adhoc(
      x86:   `xor %eax, %eax
              xor %edx, %edx`,
      arm64: `mov x0, xzr`,
-     arm:   // bizarrely inconsistent with the 32-bit case
-            `eor r0, r0, r0
-             eor r1, r1, r1` },
+     arm:   `mov r0, #0
+             mov r1, #0` },
     {x86: {no_prefix:true}}
 );
 
@@ -206,8 +205,8 @@ codegenTestMultiplatform_adhoc(
      x86:   `xor %eax, %eax
              xor %edx, %edx`,
      arm64: `mov x0, xzr`,
-     arm:   `eor r0, r0, r0
-             eor r1, r1, r1` },
+     arm:   `mov r0, #0
+             mov r1, #0` },
     {x86: {no_prefix:true}}
 );
 

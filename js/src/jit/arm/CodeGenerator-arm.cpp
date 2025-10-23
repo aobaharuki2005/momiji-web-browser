@@ -433,7 +433,7 @@ void CodeGenerator::visitMulI64(LMulI64* lir) {
         masm.neg64(ToRegister64(lhs));
         return;
       case 0:
-        masm.xor64(ToRegister64(lhs), ToRegister64(lhs));
+        masm.move64(Imm64(0), ToRegister64(lhs));
         return;
       case 1:
         // nop
