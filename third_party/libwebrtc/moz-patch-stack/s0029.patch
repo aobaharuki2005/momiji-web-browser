@@ -27,7 +27,7 @@ index fc923a8733..11b6ac6e08 100644
    stats.header_and_padding_bytes_sent =
        channel_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 791c597d19..1105ab5ca4 100644
+index fbda6e852e..7536645e4e 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -81,6 +81,32 @@ constexpr TimeDelta kMinRetransmissionWindow = TimeDelta::Millis(30);
@@ -89,7 +89,7 @@ index 791c597d19..1105ab5ca4 100644
    if (env_.field_trials().IsDisabled("WebRTC-DisableRtxRateLimiter")) {
      configuration.retransmission_rate_limiter =
          retransmission_rate_limiter_.get();
-@@ -795,6 +826,7 @@ ChannelSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -804,6 +835,7 @@ ChannelSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    ChannelSendStatistics stats = {
        .round_trip_time = rtp_rtcp_->LastRtt().value_or(TimeDelta::Zero())};
