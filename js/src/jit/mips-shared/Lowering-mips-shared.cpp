@@ -38,9 +38,7 @@ LDefinition LIRGeneratorMIPSShared::tempByteOpRegister() { return temp(); }
 void LIRGeneratorMIPSShared::lowerForALU(LInstructionHelper<1, 1, 0>* ins,
                                          MDefinition* mir, MDefinition* input) {
   ins->setOperand(0, useRegister(input));
-  define(
-      ins, mir,
-      LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
+  define(ins, mir);
 }
 
 // z = x+y
@@ -49,9 +47,7 @@ void LIRGeneratorMIPSShared::lowerForALU(LInstructionHelper<1, 2, 0>* ins,
                                          MDefinition* rhs) {
   ins->setOperand(0, useRegister(lhs));
   ins->setOperand(1, useRegisterOrConstant(rhs));
-  define(
-      ins, mir,
-      LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
+  define(ins, mir);
 }
 
 void LIRGeneratorMIPSShared::lowerForALUInt64(
@@ -120,9 +116,7 @@ template void LIRGeneratorMIPSShared::lowerForShiftInt64(LRotateI64* ins,
 void LIRGeneratorMIPSShared::lowerForFPU(LInstructionHelper<1, 1, 0>* ins,
                                          MDefinition* mir, MDefinition* input) {
   ins->setOperand(0, useRegisterAtStart(input));
-  define(
-      ins, mir,
-      LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
+  define(ins, mir);
 }
 
 template <size_t Temps>
@@ -131,9 +125,7 @@ void LIRGeneratorMIPSShared::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins,
                                          MDefinition* rhs) {
   ins->setOperand(0, useRegisterAtStart(lhs));
   ins->setOperand(1, useRegisterAtStart(rhs));
-  define(
-      ins, mir,
-      LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
+  define(ins, mir);
 }
 
 template void LIRGeneratorMIPSShared::lowerForFPU(

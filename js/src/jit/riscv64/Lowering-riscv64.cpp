@@ -65,9 +65,7 @@ template void LIRGeneratorRiscv64::lowerForShiftInt64(LRotateI64* ins,
 void LIRGeneratorRiscv64::lowerForALU(LInstructionHelper<1, 1, 0>* ins,
                                       MDefinition* mir, MDefinition* input) {
   ins->setOperand(0, useRegister(input));
-  define(
-      ins, mir,
-      LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
+  define(ins, mir);
 }
 
 // z = x + y
@@ -76,9 +74,7 @@ void LIRGeneratorRiscv64::lowerForALU(LInstructionHelper<1, 2, 0>* ins,
                                       MDefinition* rhs) {
   ins->setOperand(0, useRegister(lhs));
   ins->setOperand(1, useRegisterOrConstant(rhs));
-  define(
-      ins, mir,
-      LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
+  define(ins, mir);
 }
 
 void LIRGeneratorRiscv64::lowerForALUInt64(
@@ -122,9 +118,7 @@ void LIRGeneratorRiscv64::lowerForMulInt64(LMulI64* ins, MMul* mir,
 void LIRGeneratorRiscv64::lowerForFPU(LInstructionHelper<1, 1, 0>* ins,
                                       MDefinition* mir, MDefinition* input) {
   ins->setOperand(0, useRegisterAtStart(input));
-  define(
-      ins, mir,
-      LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
+  define(ins, mir);
 }
 
 template <size_t Temps>
@@ -133,9 +127,7 @@ void LIRGeneratorRiscv64::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins,
                                       MDefinition* rhs) {
   ins->setOperand(0, useRegisterAtStart(lhs));
   ins->setOperand(1, useRegisterAtStart(rhs));
-  define(
-      ins, mir,
-      LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
+  define(ins, mir);
 }
 
 template void LIRGeneratorRiscv64::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
