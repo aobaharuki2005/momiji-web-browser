@@ -98,16 +98,17 @@ internal fun CustomTabMenu(
             if (!isBottomToolbar) {
                 MenuNavigation(
                     isSiteLoading = isSiteLoading,
-                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
-                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    isExtensionsExpanded = false,
+                    isMoreMenuExpanded = false,
                     onBackButtonClick = onBackButtonClick,
                     onForwardButtonClick = onForwardButtonClick,
                     onRefreshButtonClick = onRefreshButtonClick,
                     onStopButtonClick = onStopButtonClick,
                     onShareButtonClick = onShareButtonClick,
-                    isExtensionsExpanded = false,
-                    isMoreMenuExpanded = false,
+                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
                 )
+
                 if (scrollState.canScrollBackward) {
                     HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
@@ -118,17 +119,18 @@ internal fun CustomTabMenu(
                 if (scrollState.canScrollBackward) {
                     HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
+
                 MenuNavigation(
                     isSiteLoading = isSiteLoading,
-                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
-                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    isExtensionsExpanded = false,
+                    isMoreMenuExpanded = false,
                     onBackButtonClick = onBackButtonClick,
                     onForwardButtonClick = onForwardButtonClick,
                     onRefreshButtonClick = onRefreshButtonClick,
                     onStopButtonClick = onStopButtonClick,
                     onShareButtonClick = onShareButtonClick,
-                    isExtensionsExpanded = false,
-                    isMoreMenuExpanded = false,
+                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
                 )
             }
         },

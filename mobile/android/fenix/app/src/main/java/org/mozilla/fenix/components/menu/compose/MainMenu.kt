@@ -209,18 +209,18 @@ fun MainMenu(
         header = {
             if (accessPoint != MenuAccessPoint.Home && !isBottomToolbar && !isExpandedToolbarEnabled) {
                 MenuNavigation(
-                    state = MenuItemState.ENABLED,
-                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
-                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
                     isSiteLoading = isSiteLoading,
+                    isExtensionsExpanded = isExtensionsExpanded,
+                    isMoreMenuExpanded = isMoreMenuExpanded,
                     onBackButtonClick = onBackButtonClick,
                     onForwardButtonClick = onForwardButtonClick,
                     onRefreshButtonClick = onRefreshButtonClick,
                     onStopButtonClick = onStopButtonClick,
                     onShareButtonClick = onShareButtonClick,
-                    isExtensionsExpanded = isExtensionsExpanded,
-                    isMoreMenuExpanded = isMoreMenuExpanded,
+                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
                 )
+
                 if (scrollState.canScrollBackward) {
                     HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
@@ -231,18 +231,18 @@ fun MainMenu(
                 if (scrollState.canScrollBackward) {
                     HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
                 }
+
                 MenuNavigation(
-                    state = MenuItemState.ENABLED,
-                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
-                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
                     isSiteLoading = isSiteLoading,
+                    isExtensionsExpanded = isExtensionsExpanded,
+                    isMoreMenuExpanded = isMoreMenuExpanded,
                     onBackButtonClick = onBackButtonClick,
                     onForwardButtonClick = onForwardButtonClick,
                     onRefreshButtonClick = onRefreshButtonClick,
                     onStopButtonClick = onStopButtonClick,
                     onShareButtonClick = onShareButtonClick,
-                    isExtensionsExpanded = isExtensionsExpanded,
-                    isMoreMenuExpanded = isMoreMenuExpanded,
+                    goBackState = if (canGoBack) MenuItemState.ENABLED else MenuItemState.DISABLED,
+                    goForwardState = if (canGoForward) MenuItemState.ENABLED else MenuItemState.DISABLED,
                 )
             }
         },
