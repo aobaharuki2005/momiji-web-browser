@@ -1986,7 +1986,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.topicLabels.locale-topi
 // List of locales that get section layout by default
 pref("browser.newtabpage.activity-stream.discoverystream.sections.locale-content-config", "en-US,en-CA");
 // List of regions that get section layout by default
-pref("browser.newtabpage.activity-stream.discoverystream.sections.region-content-config", "");
+pref("browser.newtabpage.activity-stream.discoverystream.sections.region-content-config", "US");
 
 pref("browser.newtabpage.activity-stream.discoverystream.sections.cards.enabled", true);
 
