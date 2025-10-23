@@ -96,26 +96,38 @@ const LOCALE_SECTIONS_CONFIG =
 const BROWSER_URLBAR_PLACEHOLDERNAME = "browser.urlbar.placeholderName";
 
 export const WEATHER_OPTIN_REGIONS = [
-  "DE",
-  "GB",
-  "FR",
-  "ES",
-  "IT",
-  "CH",
-  "AT",
-  "BE",
-  "IE",
-  "NL",
-  "PL",
-  "CZ",
-  "SE",
-  "SG",
-  "HU",
-  "SK",
-  "FI",
-  "DK",
-  "NO",
-  "PT",
+  "AT", // Austria
+  "BE", // Belgium
+  "BG", // Bulgaria
+  "HR", // Croatia
+  "CY", // Cyprus
+  "CZ", // Czechia
+  "DK", // Denmark
+  "EE", // Estonia
+  "FI", // Finland
+  "FR", // France
+  "DE", // Germany
+  "GB", // United Kingdom
+  "GR", // Greece
+  "HU", // Hungary
+  "IS", // Iceland
+  "IE", // Ireland
+  "IT", // Italy
+  "LV", // Latvia
+  "LI", // Liechtenstein
+  "LT", // Lithuania
+  "MT", // Malta
+  "NL", // Netherlands
+  "NO", // Norway
+  "PL", // Poland
+  "PT", // Portugal
+  "RO", // Romania
+  "SG", // Singapore
+  "SK", // Slovakia
+  "SI", // Slovenia
+  "ES", // Spain
+  "SE", // Sweden
+  "CH", // Switzerland
 ];
 
 export function csvPrefHasValue(stringPrefName, value) {
