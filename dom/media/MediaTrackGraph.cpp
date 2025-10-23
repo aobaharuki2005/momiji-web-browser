@@ -1306,8 +1306,8 @@ void MediaTrackGraphImpl::ProduceDataForTracksBlockByBlock(
     }
     mProcessedTime = next;
   }
-  NS_ASSERTION(mProcessedTime == mStateComputedTime,
-               "Something went wrong with rounding to block boundaries");
+  MOZ_ASSERT(mProcessedTime == mStateComputedTime,
+             "Something went wrong with rounding to block boundaries");
 }
 
 void MediaTrackGraphImpl::RunMessageAfterProcessing(
