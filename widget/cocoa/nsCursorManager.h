@@ -26,7 +26,6 @@
                 forceUpdate:(bool)aForceUpdate;
 
 + (nsCursorManager*)sharedInstance;
-+ (void)dispose;
 @end
 
 @interface NSCursor (Undocumented)
