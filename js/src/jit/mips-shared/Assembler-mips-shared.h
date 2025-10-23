@@ -34,10 +34,10 @@ static constexpr Register a4{Registers::a4};
 static constexpr Register a5{Registers::a5};
 static constexpr Register a6{Registers::a6};
 static constexpr Register a7{Registers::a7};
-static constexpr Register t0{Registers::t0};
-static constexpr Register t1{Registers::t1};
-static constexpr Register t2{Registers::t2};
-static constexpr Register t3{Registers::t3};
+static constexpr Register t4{Registers::t4};
+static constexpr Register t5{Registers::t5};
+static constexpr Register t6{Registers::t6};
+static constexpr Register t7{Registers::t7};
 static constexpr Register s0{Registers::s0};
 static constexpr Register s1{Registers::s1};
 static constexpr Register s2{Registers::s2};
@@ -84,10 +84,10 @@ class UseScratchRegisterScope {
 
 // Use arg reg from EnterJIT function as OsrFrameReg.
 static constexpr Register OsrFrameReg = a3;
-static constexpr Register CallTempReg0 = t0;
-static constexpr Register CallTempReg1 = t1;
-static constexpr Register CallTempReg2 = t2;
-static constexpr Register CallTempReg3 = t3;
+static constexpr Register CallTempReg0 = t4;
+static constexpr Register CallTempReg1 = t5;
+static constexpr Register CallTempReg2 = t6;
+static constexpr Register CallTempReg3 = t7;
 
 static constexpr Register IntArgReg0 = a0;
 static constexpr Register IntArgReg1 = a1;

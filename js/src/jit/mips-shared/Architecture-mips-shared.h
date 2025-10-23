@@ -82,10 +82,10 @@ class Registers {
     a5 = r9,
     a6 = r10,
     a7 = r11,
-    t0 = r12,
-    t1 = r13,
-    t2 = r14,
-    t3 = r15,
+    t4 = r12,
+    t5 = r13,
+    t6 = r14,
+    t7 = r15,
     ta0 = a4,
     ta1 = a5,
     ta2 = a6,
@@ -141,8 +141,8 @@ class Registers {
       (1 << Registers::v0) | (1 << Registers::v1) | (1 << Registers::a0) |
       (1 << Registers::a1) | (1 << Registers::a2) | (1 << Registers::a3) |
       (1 << Registers::a4) | (1 << Registers::a5) | (1 << Registers::a6) |
-      (1 << Registers::a7) | (1 << Registers::t0) | (1 << Registers::t1) |
-      (1 << Registers::t2) | (1 << Registers::t3) | (1 << Registers::t8) |
+      (1 << Registers::a7) | (1 << Registers::t4) | (1 << Registers::t5) |
+      (1 << Registers::t6) | (1 << Registers::t7) | (1 << Registers::t8) |
       (1 << Registers::t9);
 
   // We use this constant to save registers when entering functions. This
@@ -154,8 +154,8 @@ class Registers {
       (1 << Registers::ra);
 
   static const SetType WrapperMask = VolatileMask |          // = arguments
-                                     (1 << Registers::t0) |  // = outReg
-                                     (1 << Registers::t1);   // = argBase
+                                     (1 << Registers::t4) |  // = outReg
+                                     (1 << Registers::t5);   // = argBase
 
   static const SetType NonAllocatableMask =
       (1 << Registers::zero) | (1 << Registers::at) |  // at = scratch

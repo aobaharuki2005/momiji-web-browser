@@ -19,7 +19,7 @@ namespace jit {
 static constexpr Register CallTempReg4 = a4;
 static constexpr Register CallTempReg5 = a5;
 
-static constexpr Register CallTempNonArgRegs[] = {t0, t1, t2, t3};
+static constexpr Register CallTempNonArgRegs[] = {t4, t5, t6, t7};
 static const uint32_t NumCallTempNonArgRegs = std::size(CallTempNonArgRegs);
 
 class ABIArgGenerator : public ABIArgGeneratorShared {
@@ -35,10 +35,10 @@ class ABIArgGenerator : public ABIArgGeneratorShared {
 };
 
 // These registers may be volatile or nonvolatile.
-static constexpr Register ABINonArgReg0 = t0;
-static constexpr Register ABINonArgReg1 = t1;
-static constexpr Register ABINonArgReg2 = t2;
-static constexpr Register ABINonArgReg3 = t3;
+static constexpr Register ABINonArgReg0 = t4;
+static constexpr Register ABINonArgReg1 = t5;
+static constexpr Register ABINonArgReg2 = t6;
+static constexpr Register ABINonArgReg3 = t7;
 
 // This register may be volatile or nonvolatile. Avoid f23 which is the
 // ScratchDoubleReg.
@@ -47,14 +47,14 @@ static constexpr FloatRegister ABINonArgDoubleReg{FloatRegisters::f21,
 
 // These registers may be volatile or nonvolatile.
 // Note: these three registers are all guaranteed to be different
-static constexpr Register ABINonArgReturnReg0 = t0;
-static constexpr Register ABINonArgReturnReg1 = t1;
+static constexpr Register ABINonArgReturnReg0 = t4;
+static constexpr Register ABINonArgReturnReg1 = t5;
 static constexpr Register ABINonVolatileReg = s0;
 
 // This register is guaranteed to be clobberable during the prologue and
 // epilogue of an ABI call which must preserve both ABI argument, return
 // and non-volatile registers.
-static constexpr Register ABINonArgReturnVolatileReg = t0;
+static constexpr Register ABINonArgReturnVolatileReg = t4;
 
 // TLS pointer argument register for WebAssembly functions. This must not alias
 // any other register used for passing function arguments or return values.
@@ -82,7 +82,7 @@ static constexpr Register WasmTailCallFPScratchReg = ABINonArgReg3;
 // Register used as a scratch along the return path in the fast js -> wasm stub
 // code. This must not overlap ReturnReg, JSReturnOperand, or InstanceReg.
 // It must be a volatile register.
-static constexpr Register WasmJitEntryReturnScratch = t1;
+static constexpr Register WasmJitEntryReturnScratch = t5;
 
 static constexpr Register InterpreterPCReg = a5;
 
