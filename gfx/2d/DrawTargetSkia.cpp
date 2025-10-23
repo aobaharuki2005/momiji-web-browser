@@ -420,7 +420,7 @@ static sk_sp<SkImage> ExtractSubset(sk_sp<SkImage> aImage,
     return SkImages::RasterFromPixmap(subsetPixmap, ReleaseImage,
                                       aImage.release());
   }
-  return aImage->makeSubset(nullptr, subsetRect);
+  return aImage->makeSubset(nullptr, subsetRect, SkImage::RequiredProperties());
 }
 
 static void FreeAlphaPixels(void* aBuf, void*) { sk_free(aBuf); }
@@ -1329,7 +1329,10 @@ class GlyphMaskShader : public SkEmptyShader {
   }
 
   bool isOpaque() const override { return true; }
-  bool isConstant() const override { return true; }
+  bool isConstant(SkColor4f* color) const override {
+    if (color) *color = SkColor4f{1, 1, 1, 1};
+    return true;
+  }
 
   void flatten(SkWriteBuffer& buffer) const override {
     buffer.writeColor4f(mColor);
@@ -1412,7 +1415,8 @@ Maybe<Rect> DrawTargetSkia::GetGlyphLocalBounds(
       for (uint32_t i = 0; i < batchSize; i++) {
         glyphs[i] = aBuffer.mGlyphs[offset + i].mIndex;
       }
-      font.getBounds(glyphs.begin(), batchSize, rects.begin(), nullptr);
+      font.getBounds({glyphs.begin(), batchSize}, {rects.begin(), batchSize},
+                     nullptr);
       for (uint32_t i = 0; i < batchSize; i++) {
         bounds = bounds.Union(SkRectToRect(rects[i]) +
                               aBuffer.mGlyphs[offset + i].mPosition);
@@ -1778,8 +1782,17 @@ void DrawTargetSkia::CopySurface(SourceSurface* aSurface,
 }
 
 static inline SkPixelGeometry GetSkPixelGeometry() {
-  return Factory::GetBGRSubpixelOrder() ? kBGR_H_SkPixelGeometry
-                                        : kRGB_H_SkPixelGeometry;
+  switch (Factory::GetSubpixelOrder()) {
+    case SubpixelOrder::BGR:
+      return kBGR_H_SkPixelGeometry;
+    case SubpixelOrder::VBGR:
+      return kBGR_V_SkPixelGeometry;
+    case SubpixelOrder::VRGB:
+      return kRGB_V_SkPixelGeometry;
+    case SubpixelOrder::RGB:
+    default:
+      return kRGB_H_SkPixelGeometry;
+  }
 }
 
 template <typename T>

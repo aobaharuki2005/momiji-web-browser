@@ -122,6 +122,14 @@ enum class SurfaceFormat : int8_t {
   OS_RGBX = X8R8G8B8_UINT32
 };
 
+enum class SubpixelOrder : uint8_t {
+  UNKNOWN,
+  RGB,
+  BGR,
+  VRGB,
+  VBGR,
+};
+
 struct SurfaceFormatInfo {
   bool hasColor;
   bool hasAlpha;

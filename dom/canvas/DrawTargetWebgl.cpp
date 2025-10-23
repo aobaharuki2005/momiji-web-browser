@@ -5498,7 +5498,7 @@ void DrawTargetWebgl::Stroke(const Path* aPath, const Pattern& aPattern,
   bool allowStrokeAlpha = false;
   if (numVerbs >= 2 && numVerbs <= 3) {
     uint8_t verbs[3];
-    skiaPath.getVerbs(verbs, numVerbs);
+    skiaPath.getVerbs({verbs, numVerbs});
     if (verbs[0] == SkPath::kMove_Verb && verbs[1] == SkPath::kLine_Verb &&
         (numVerbs < 3 || verbs[2] == SkPath::kClose_Verb)) {
       bool closed = numVerbs >= 3;
