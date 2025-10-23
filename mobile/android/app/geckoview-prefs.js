@@ -269,8 +269,6 @@ pref("image.cache.size", 1048576); // bytes
 // Inherit locale from the OS, used for multi-locale builds
 pref("intl.locale.requested", "");
 
-pref("keyword.enabled", true);
-
 // Always tilt the caret to match the text selection guideline (bug 1097398)
 pref("layout.accessiblecaret.always_tilt", true);
 
