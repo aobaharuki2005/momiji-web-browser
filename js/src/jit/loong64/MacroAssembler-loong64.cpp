@@ -5623,14 +5623,14 @@ void MacroAssemblerLOONG64Compat::loadConstantDouble(double dp,
 
 Register MacroAssemblerLOONG64Compat::extractObject(const Address& address,
                                                     Register scratch) {
-  loadPtr(Address(address.base, address.offset), scratch);
+  loadPtr(address, scratch);
   as_bstrpick_d(scratch, scratch, JSVAL_TAG_SHIFT - 1, 0);
   return scratch;
 }
 
 Register MacroAssemblerLOONG64Compat::extractTag(const Address& address,
                                                  Register scratch) {
-  loadPtr(Address(address.base, address.offset), scratch);
+  loadPtr(address, scratch);
   as_bstrpick_d(scratch, scratch, 63, JSVAL_TAG_SHIFT);
   return scratch;
 }

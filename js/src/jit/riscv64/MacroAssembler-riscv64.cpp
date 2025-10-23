@@ -2061,14 +2061,14 @@ void MacroAssemblerRiscv64Compat::loadConstantDouble(double dp,
 
 Register MacroAssemblerRiscv64Compat::extractObject(const Address& address,
                                                     Register scratch) {
-  loadPtr(Address(address.base, address.offset), scratch);
+  loadPtr(address, scratch);
   ExtractBits(scratch, scratch, 0, JSVAL_TAG_SHIFT);
   return scratch;
 }
 
 Register MacroAssemblerRiscv64Compat::extractTag(const Address& address,
                                                  Register scratch) {
-  loadPtr(Address(address.base, address.offset), scratch);
+  loadPtr(address, scratch);
   ExtractBits(scratch, scratch, JSVAL_TAG_SHIFT, 64 - JSVAL_TAG_SHIFT);
   return scratch;
 }

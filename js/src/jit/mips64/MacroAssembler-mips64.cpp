@@ -2047,14 +2047,14 @@ void MacroAssemblerMIPS64Compat::loadConstantDouble(double dp,
 
 Register MacroAssemblerMIPS64Compat::extractObject(const Address& address,
                                                    Register scratch) {
-  loadPtr(Address(address.base, address.offset), scratch);
+  loadPtr(address, scratch);
   ma_dext(scratch, scratch, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
   return scratch;
 }
 
 Register MacroAssemblerMIPS64Compat::extractTag(const Address& address,
                                                 Register scratch) {
-  loadPtr(Address(address.base, address.offset), scratch);
+  loadPtr(address, scratch);
   ma_dext(scratch, scratch, Imm32(JSVAL_TAG_SHIFT),
           Imm32(64 - JSVAL_TAG_SHIFT));
   return scratch;
