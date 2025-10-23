@@ -1869,11 +1869,11 @@ void MacroAssembler::negateDouble(FloatRegister reg) { fneg_d(reg, reg); }
 
 void MacroAssembler::negateFloat(FloatRegister reg) { fneg_s(reg, reg); }
 
-void MacroAssembler::neg64(Register64 reg) { sub(reg.reg, zero, reg.reg); }
+void MacroAssembler::neg64(Register64 reg) { neg(reg.reg, reg.reg); }
 
-void MacroAssembler::negPtr(Register reg) { sub(reg, zero, reg); }
+void MacroAssembler::negPtr(Register reg) { neg(reg, reg); }
 
-void MacroAssembler::neg32(Register reg) { subw(reg, zero, reg); }
+void MacroAssembler::neg32(Register reg) { negw(reg, reg); }
 void MacroAssembler::not32(Register reg) { not_(reg, reg); }
 
 void MacroAssembler::notPtr(Register reg) { not_(reg, reg); }

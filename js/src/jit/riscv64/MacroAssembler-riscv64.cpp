@@ -6560,7 +6560,7 @@ void MacroAssemblerRiscv64::ma_mod_mask(Register src, Register dest,
 
   bind(&negative);
   ma_li(hold, Imm32(-1));
-  subw(remain, zero, remain);
+  negw(remain, remain);
 
   // Begin the main loop.
   bind(&head);
@@ -6590,9 +6590,9 @@ void MacroAssemblerRiscv64::ma_mod_mask(Register src, Register dest,
   if (negZero != nullptr) {
     // Jump out in case of negative zero.
     ma_b(hold, hold, negZero, Zero);
-    subw(dest, zero, dest);
+    negw(dest, dest);
   } else {
-    subw(dest, zero, dest);
+    negw(dest, dest);
   }
 
   bind(&done);
