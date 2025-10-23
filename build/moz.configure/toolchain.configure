@@ -3016,8 +3016,8 @@ def stl_hardening_flags(
             return ["-D_LIBCPP_ENABLE_ASSERTIONS=1"]
 
     # Debug builds don't ship to users, so it is fine if STL hardening is
-    # silently skipped.
-    if debug:
+    # silently skipped, unless it has been explicitly enabled.
+    if debug and enabled.origin == "default":
         return
 
     die("C++ STL does not support hardening")
