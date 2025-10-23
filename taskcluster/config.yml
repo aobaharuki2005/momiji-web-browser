@@ -304,6 +304,7 @@ treeherder:
         'service-digitalassetlinks': 'service-digitalassetlinks'
         'service-experiments': 'service-experiments'
         'service-firefox-accounts': 'service-firefox-accounts'
+        'service-firefox-relay': 'service-firefox-relay'
         'service-fretboard': 'service-fretboard'
         'service-glean': 'service-glean'
         'service-location': 'service-location'
