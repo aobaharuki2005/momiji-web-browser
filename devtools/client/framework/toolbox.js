@@ -248,6 +248,7 @@ const BOOLEAN_CONFIGURATION_PREFS = {
     name: "isTracerFeatureEnabled",
   },
 };
+exports.BOOLEAN_CONFIGURATION_PREFS = BOOLEAN_CONFIGURATION_PREFS;
 
 /**
  * A "Toolbox" is the component that holds all the tools for one specific

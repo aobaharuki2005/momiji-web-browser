@@ -14,6 +14,9 @@ const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
 const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
+const {
+  BOOLEAN_CONFIGURATION_PREFS,
+} = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function () {
   const URL =
@@ -216,6 +219,12 @@ async function testMouseClick(node, prefValue) {
     });
   });
 
+  const onNewConfigurationApplied = Object.keys(
+    BOOLEAN_CONFIGURATION_PREFS
+  ).includes(pref)
+    ? toolbox.once("new-configuration-applied")
+    : null;
+
   node.scrollIntoView();
 
   // We use executeSoon here to ensure that the element is in view and
@@ -228,6 +237,11 @@ async function testMouseClick(node, prefValue) {
   await changeSeenPromise;
 
   ok(changeSeen, "Correct pref was changed");
+
+  if (onNewConfigurationApplied) {
+    await onNewConfigurationApplied;
+    ok(true, `Configuration was changed when updating pref "${pref}"`);
+  }
   observer.destroy();
 }
 
