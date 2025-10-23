@@ -19,5 +19,5 @@ interface SettingsIndexer {
      * @param query The query to search for.
      * @return A list of [SettingsSearchItem]s that match the query.
      */
-    fun getSettingsWithQuery(query: String): List<SettingsSearchItem>
+    suspend fun getSettingsWithQuery(query: String): List<SettingsSearchItem>
 }

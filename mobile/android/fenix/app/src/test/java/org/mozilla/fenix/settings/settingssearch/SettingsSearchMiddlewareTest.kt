@@ -27,9 +27,6 @@ class SettingsSearchMiddlewareTest {
 
     private fun buildMiddleware(): SettingsSearchMiddleware {
         return SettingsSearchMiddleware(
-            initialDependencies = SettingsSearchMiddleware.Companion.Dependencies(
-                context,
-            ),
             fenixSettingsIndexer = TestSettingsIndexer(),
         )
     }
@@ -37,9 +34,6 @@ class SettingsSearchMiddlewareTest {
     @Test
     fun `WHEN the settings search query is updated and results are not found THEN the state is updated`() {
         val middleware = SettingsSearchMiddleware(
-            SettingsSearchMiddleware.Companion.Dependencies(
-                context,
-            ),
             fenixSettingsIndexer = EmptyTestSettingsIndexer(),
         )
         val capture = CaptureActionsMiddleware<SettingsSearchState, SettingsSearchAction>()
@@ -106,7 +100,7 @@ class TestSettingsIndexer : SettingsIndexer {
         // no op
     }
 
-    override fun getSettingsWithQuery(query: String): List<SettingsSearchItem> {
+    override suspend fun getSettingsWithQuery(query: String): List<SettingsSearchItem> {
         return testList
     }
 }
@@ -116,7 +110,7 @@ class EmptyTestSettingsIndexer : SettingsIndexer {
         // no op
     }
 
-    override fun getSettingsWithQuery(query: String): List<SettingsSearchItem> {
+    override suspend fun getSettingsWithQuery(query: String): List<SettingsSearchItem> {
         return emptyList()
     }
 }
