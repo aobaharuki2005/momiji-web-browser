@@ -1,44 +1,242 @@
-From: Philipp Hancke <phancke@meta.com>
-Date: Sat, 16 Aug 2025 12:15:50 -0700
-Subject: (cherry-pick-branch-heads/7339) [M140] sdp munging: do not misdetect
- rtp attributes on datachannel
+From: Daniel Baker <dbaker@mozilla.com>
+Date: Thu, 23 Oct 2025 15:03:13 -0600
+Subject: (tmp-cherry-pick) Revert "Use field clock instead of global clock
+ where available" (ac2597e9ce)
 
-rtcp-mux and rtcp-rsize are unconditionally set for datachannel
-but since they are not serialized in the SDP they are not parsed.
-This leads the munging detector to misclassify this.
+This reverts commit f4453c3711eff9e8851364687cc55a31de5c059f.
 
-a unit test is added as a separate CL for easier backmerging.
+Reason for revert: Broken downstream
 
-(cherry picked from commit 602b06b1125ea4d107fbfbda7d314b4157c4c74b)
+Bug: webrtc:42223992
+Original change's description:
+> Use field clock instead of global clock where available
+>
+> Bug: webrtc:42223992
+> Change-Id: Ia0eb6a5f9ebfe4031fc72026f31767b2ce7dcc2d
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/404280
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+> Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
+> Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#45333}
 
-Bug: webrtc:414284082,chromium:40567530
-Fixed: chromium:439807581
-Change-Id: I4ebb2ad5062ea42fc47a314ed929de42f91bbea7
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/404740
-Commit-Queue: Philipp Hancke <phancke@meta.com>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#45357}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/405281
-Cr-Commit-Position: refs/branch-heads/7339@{#1}
-Cr-Branched-From: 9bd64751d9b3b35a820cb72c9029993e218146a1-refs/heads/main@{#45270}
+Bug: webrtc:42223992
+Change-Id: I5c496d744b977edcda80a1877f9bae1f5864af2a
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/404581
+Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
+Owners-Override: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Cr-Commit-Position: refs/heads/main@{#45352}
 ---
- pc/sdp_munging_detector.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ api/units/timestamp.h                          | 4 ----
+ api/units/timestamp_unittest.cc                | 1 -
+ audio/channel_receive.cc                       | 5 +++--
+ audio/voip/voip_core.cc                        | 3 ++-
+ modules/audio_device/test_audio_device_impl.cc | 3 ++-
+ p2p/base/port.cc                               | 6 +++---
+ pc/rtc_stats_collector.cc                      | 2 +-
+ video/adaptation/overuse_frame_detector.cc     | 2 +-
+ video/encoder_bitrate_adjuster.cc              | 3 ++-
+ video/video_receive_stream2.cc                 | 3 ++-
+ 10 files changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/pc/sdp_munging_detector.cc b/pc/sdp_munging_detector.cc
-index 58e580baa3..7b126d9b26 100644
---- a/pc/sdp_munging_detector.cc
-+++ b/pc/sdp_munging_detector.cc
-@@ -427,6 +427,12 @@ SdpMungingType DetermineSdpMungingType(
+diff --git a/api/units/timestamp.h b/api/units/timestamp.h
+index 0317e9faef..7831bba2d0 100644
+--- a/api/units/timestamp.h
++++ b/api/units/timestamp.h
+@@ -60,10 +60,6 @@ class Timestamp final : public rtc_units_impl::UnitBase<Timestamp> {
+   constexpr T us() const {
+     return ToValue<T>();
+   }
+-  template <typename T = int64_t>
+-  constexpr T ns() const {
+-    return ToMultiple<1000, T>();
+-  }
+ 
+   constexpr int64_t seconds_or(int64_t fallback_value) const {
+     return ToFractionOr<1000000>(fallback_value);
+diff --git a/api/units/timestamp_unittest.cc b/api/units/timestamp_unittest.cc
+index c9254c25f0..1b88cb7f42 100644
+--- a/api/units/timestamp_unittest.cc
++++ b/api/units/timestamp_unittest.cc
+@@ -37,7 +37,6 @@ TEST(TimestampTest, ConstExpr) {
+   EXPECT_EQ(kTimestampSeconds.seconds(), kValue);
+   EXPECT_EQ(kTimestampMs.ms(), kValue);
+   EXPECT_EQ(kTimestampUs.us(), kValue);
+-  EXPECT_EQ(kTimestampUs.ns(), kValue * 1000);
+ }
+ 
+ TEST(TimestampTest, GetBackSameValues) {
+diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
+index adecc36079..3e119fc562 100644
+--- a/audio/channel_receive.cc
++++ b/audio/channel_receive.cc
+@@ -78,6 +78,7 @@
+ #include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/system/no_unique_address.h"
+ #include "rtc_base/thread_annotations.h"
++#include "rtc_base/time_utils.h"
+ #include "rtc_base/trace_event.h"
+ #include "system_wrappers/include/metrics.h"
+ #include "system_wrappers/include/ntp_time.h"
+@@ -657,7 +658,7 @@ void ChannelReceive::SetReceiveCodecs(
+ 
+ void ChannelReceive::OnRtpPacket(const RtpPacketReceived& packet) {
+   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+-  Timestamp now = env_.clock().CurrentTime();
++  Timestamp now = Timestamp::Millis(TimeMillis());
+ 
+   last_received_rtp_timestamp_ = packet.Timestamp();
+   last_received_rtp_system_time_ = now;
+@@ -754,7 +755,7 @@ void ChannelReceive::ReceivedRTCPPacket(const uint8_t* data, size_t length) {
+   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+ 
+   // Store playout timestamp for the received RTCP packet
+-  UpdatePlayoutTimestamp(true, env_.clock().CurrentTime());
++  UpdatePlayoutTimestamp(true, Timestamp::Millis(TimeMillis()));
+ 
+   // Deliver RTCP packet to RTP/RTCP module for parsing
+   rtp_rtcp_->IncomingRtcpPacket(MakeArrayView(data, length));
+diff --git a/audio/voip/voip_core.cc b/audio/voip/voip_core.cc
+index d3ce340ac9..7676811698 100644
+--- a/audio/voip/voip_core.cc
++++ b/audio/voip/voip_core.cc
+@@ -40,6 +40,7 @@
+ #include "rtc_base/logging.h"
+ #include "rtc_base/random.h"
+ #include "rtc_base/synchronization/mutex.h"
++#include "rtc_base/time_utils.h"
+ 
+ namespace webrtc {
+ 
+@@ -151,7 +152,7 @@ ChannelId VoipCore::CreateChannel(Transport* transport,
+ 
+   // Set local ssrc to random if not set by caller.
+   if (!local_ssrc) {
+-    Random random(env_.clock().TimeInMicroseconds());
++    Random random(TimeMicros());
+     local_ssrc = random.Rand<uint32_t>();
+   }
+ 
+diff --git a/modules/audio_device/test_audio_device_impl.cc b/modules/audio_device/test_audio_device_impl.cc
+index 80402d3ea3..fe3d10dcf3 100644
+--- a/modules/audio_device/test_audio_device_impl.cc
++++ b/modules/audio_device/test_audio_device_impl.cc
+@@ -25,6 +25,7 @@
+ #include "rtc_base/checks.h"
+ #include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/task_utils/repeating_task.h"
++#include "rtc_base/time_utils.h"
+ 
+ namespace webrtc {
+ namespace {
+@@ -174,7 +175,7 @@ void TestAudioDevice::ProcessAudio() {
+       audio_buffer_->SetRecordedBuffer(
+           recording_buffer_.data(),
+           recording_buffer_.size() / capturer_->NumChannels(),
+-          std::make_optional(env_.clock().CurrentTime().ns()));
++          std::make_optional(TimeNanos()));
+       audio_buffer_->DeliverRecordedData();
      }
-     // Validate video and audio contents.
-     MediaType media_type = last_created_media_description->type();
-+    bool is_rtp =
-+        media_type == MediaType::AUDIO || media_type == MediaType::VIDEO;
-+    if (!is_rtp) {
-+      // The checks that follow only apply for RTP-based contents.
-+      continue;
-+    }
-     if (media_type == MediaType::VIDEO) {
-       type = DetermineVideoSdpMungingType(last_created_media_description,
-                                           media_description_to_set);
+     if (!keep_capturing) {
+diff --git a/p2p/base/port.cc b/p2p/base/port.cc
+index cce75157e2..d91143db2f 100644
+--- a/p2p/base/port.cc
++++ b/p2p/base/port.cc
+@@ -53,6 +53,7 @@
+ #include "rtc_base/string_encode.h"
+ #include "rtc_base/string_utils.h"
+ #include "rtc_base/strings/string_builder.h"
++#include "rtc_base/time_utils.h"
+ #include "rtc_base/trace_event.h"
+ #include "rtc_base/weak_ptr.h"
+ 
+@@ -829,8 +830,7 @@ void Port::DestroyIfDead() {
+   bool dead =
+       (state_ == State::INIT || state_ == State::PRUNED) &&
+       connections_.empty() &&
+-      env_.clock().TimeInMilliseconds() - last_time_all_connections_removed_ >=
+-          timeout_delay_;
++      TimeMillis() - last_time_all_connections_removed_ >= timeout_delay_;
+   if (dead) {
+     Destroy();
+   }
+@@ -899,7 +899,7 @@ bool Port::OnConnectionDestroyed(Connection* conn) {
+   // fails and is removed before kPortTimeoutDelay, then this message will
+   // not cause the Port to be destroyed.
+   if (connections_.empty()) {
+-    last_time_all_connections_removed_ = env_.clock().TimeInMilliseconds();
++    last_time_all_connections_removed_ = TimeMillis();
+     PostDestroyIfDead(/*delayed=*/true);
+   }
+ 
+diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
+index ce0954a7b3..be90539f93 100644
+--- a/pc/rtc_stats_collector.cc
++++ b/pc/rtc_stats_collector.cc
+@@ -1207,7 +1207,7 @@ void RTCStatsCollector::GetStatsReportInternal(
+   requests_.push_back(std::move(request));
+ 
+   // "Now" using a monotonically increasing timer.
+-  int64_t cache_now_us = env_.clock().TimeInMicroseconds();
++  int64_t cache_now_us = TimeMicros();
+   if (cached_report_ &&
+       cache_now_us - cache_timestamp_us_ <= cache_lifetime_us_) {
+     // We have a fresh cached report to deliver. Deliver asynchronously, since
+diff --git a/video/adaptation/overuse_frame_detector.cc b/video/adaptation/overuse_frame_detector.cc
+index 704c94c85f..5aed5ed3c0 100644
+--- a/video/adaptation/overuse_frame_detector.cc
++++ b/video/adaptation/overuse_frame_detector.cc
+@@ -597,7 +597,7 @@ void OveruseFrameDetector::CheckForOveruse(
+       !encode_usage_percent_)
+     return;
+ 
+-  int64_t now_ms = env_.clock().TimeInMilliseconds();
++  int64_t now_ms = TimeMillis();
+   const char* action = "NoAction";
+ 
+   if (IsOverusing(*encode_usage_percent_)) {
+diff --git a/video/encoder_bitrate_adjuster.cc b/video/encoder_bitrate_adjuster.cc
+index 1d17e10b87..d9d64e4f0c 100644
+--- a/video/encoder_bitrate_adjuster.cc
++++ b/video/encoder_bitrate_adjuster.cc
+@@ -31,6 +31,7 @@
+ #include "rtc_base/checks.h"
+ #include "rtc_base/experiments/rate_control_settings.h"
+ #include "rtc_base/logging.h"
++#include "rtc_base/time_utils.h"
+ #include "system_wrappers/include/clock.h"
+ #include "video/encoder_overshoot_detector.h"
+ #include "video/rate_utilization_tracker.h"
+@@ -385,7 +386,7 @@ void EncoderBitrateAdjuster::OnEncodedFrame(DataSize size,
+   // Detectors may not exist, for instance if ScreenshareLayers is used.
+   auto& detector = overshoot_detectors_[stream_index][temporal_index];
+   if (detector) {
+-    detector->OnEncodedFrame(size.bytes(), clock_.TimeInMilliseconds());
++    detector->OnEncodedFrame(size.bytes(), TimeMillis());
+   }
+   if (media_rate_trackers_[stream_index]) {
+     media_rate_trackers_[stream_index]->OnDataProduced(size,
+diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
+index 170600c2b4..5df80d049a 100644
+--- a/video/video_receive_stream2.cc
++++ b/video/video_receive_stream2.cc
+@@ -81,6 +81,7 @@
+ #include "rtc_base/strings/string_builder.h"
+ #include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/system/file_wrapper.h"
++#include "rtc_base/time_utils.h"
+ #include "rtc_base/trace_event.h"
+ #include "system_wrappers/include/clock.h"
+ #include "system_wrappers/include/ntp_time.h"
+@@ -586,7 +587,7 @@ void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
+     char filename_buffer[256];
+     SimpleStringBuilder ssb(filename_buffer);
+     ssb << decoded_output_file << "/webrtc_receive_stream_" << remote_ssrc()
+-        << "-" << env_.clock().TimeInMicroseconds() << ".ivf";
++        << "-" << TimeMicros() << ".ivf";
+     video_decoder = CreateFrameDumpingDecoderWrapper(
+         std::move(video_decoder), FileWrapper::OpenWriteOnly(ssb.str()));
+   }
