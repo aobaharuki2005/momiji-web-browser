@@ -27,6 +27,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
+  "cfrFeatures",
+  "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
   "collapsed",
   "browser.ml.linkPreview.collapsed",
   null,
@@ -74,6 +80,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
+  "onboardingCooldownPeriodMs",
+  "browser.ml.linkPreview.onboardingCooldownPeriodMs",
+  7 * 24 * 60 * 60 * 1000 // Constant for onboarding reactivation cooldown period (7 days in milliseconds)
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
   "onboardingHoverLinkMs",
   "browser.ml.linkPreview.onboardingHoverLinkMs",
   1000
@@ -82,7 +94,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "onboardingMaxShowFreq",
   "browser.ml.linkPreview.onboardingMaxShowFreq",
-  0
+  2
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -129,11 +141,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   (_pref, _old, val) => LinkPreview.onShiftAltPrefChange(val)
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "supportedLocales",
-  "browser.ml.linkPreview.supportedLocales"
-);
 
 export const LinkPreview = {
   // Shared downloading state to use across multiple previews
@@ -165,11 +172,7 @@ export const LinkPreview = {
   },
 
   get canShowKeyPoints() {
-    return (
-      this._isRegionSupported() &&
-      this._isLocaleSupported() &&
-      !this._isDisabledByPolicy()
-    );
+    return this._isRegionSupported() && !this._isDisabledByPolicy();
   },
 
   get canShowLegacy() {
@@ -177,12 +180,29 @@ export const LinkPreview = {
   },
 
   get canShowPreferences() {
-    // The setting is always shown.
-    return true;
+    // Show preferences if the user has ever enabled link previews.
+    // This is true if the feature is currently enabled, or if the onboarding UI
+    // was shown previously (which populates `onboardingTimes`).
+    // Note: showing onboarding requires link previews to be enabled at the time.
+    // This ensures users who later disable the feature can still access the settings.
+    return lazy.enabled || !!lazy.onboardingTimes.length;
   },
 
   get showOnboarding() {
-    return false;
+    // Don't show onboarding if CFR features are disabled. This is true for
+    // automated tests.
+    if (!lazy.cfrFeatures) {
+      return false;
+    }
+
+    const timesArray = lazy.onboardingTimes;
+    const lastValidTime = timesArray.at(-1) || 0;
+    const timeSinceLastOnboarding = Date.now() - lastValidTime;
+
+    return (
+      timesArray.length < lazy.onboardingMaxShowFreq &&
+      timeSinceLastOnboarding >= lazy.onboardingCooldownPeriodMs
+    );
   },
 
   shouldShowContextMenu(nsContextMenu) {
@@ -747,20 +767,6 @@ export const LinkPreview = {
   },
 
   /**
-   * Checks if the user's locale is supported for key points generation.
-   *
-   * @returns {boolean} True if the locale is supported, false otherwise.
-   */
-  _isLocaleSupported() {
-    const supportedLocales = lazy.supportedLocales
-      .split(",")
-      .map(locale => locale.trim().toLowerCase());
-
-    const userLocale = Services.locale.appLocaleAsBCP47.toLowerCase();
-    return supportedLocales.some(locale => userLocale.startsWith(locale));
-  },
-
-  /**
    * Checks if key points generation is disabled by policy.
    *
    * @returns {boolean} True if disabled by policy, false otherwise.
@@ -789,7 +795,7 @@ export const LinkPreview = {
 
     ogCard.optin = lazy.optin;
     ogCard.collapsed = lazy.collapsed;
-    ogCard.canShowKeyPoints = this.canShowKeyPoints;
+    ogCard.regionSupported = this._isRegionSupported();
 
     // Reflect the shared download progress to this preview.
     const updateProgress = () => {
@@ -803,10 +809,15 @@ export const LinkPreview = {
       }
     };
     updateProgress();
+
+    if (!this._isRegionSupported()) {
+      // Region not supported, just don't show key points section
+      return ogCard;
+    }
+
     // Generate key points if we have content, language and configured for any
-    // language or restricted, and if key points can be shown.
+    // language or restricted.
     if (
-      this.canShowKeyPoints &&
       pageData.article.textContent &&
       pageData.article.detectedLanguage &&
       (!lazy.allowedLanguages ||
