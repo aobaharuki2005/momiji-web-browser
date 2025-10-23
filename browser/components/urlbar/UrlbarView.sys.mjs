@@ -1744,6 +1744,7 @@ export class UrlbarView {
           id: result.showFeedbackMenu
             ? "urlbar-result-menu-button-feedback"
             : "urlbar-result-menu-button",
+          cacheable: true,
         },
         attributes: lazy.UrlbarPrefs.get("resultMenu.keyboardAccessible")
           ? null
