@@ -587,18 +587,19 @@ def test_mozlint_should_remove_task2(
     assert result == expected
 
 
-def test_skip_unless_missing(responses, params):
+def test_skip_unless_missing(responses, params, session_mocker):
     opt = SkipUnlessMissing()
     task = deepcopy(default_tasks[0])
     task.task["deadline"] = "2024-01-02T00:00:00.000Z"
     index = "foo.bar.baz"
     task_id = "abc"
-    root_url = "https://firefox-ci-tc.services.mozilla.com/api"
+    root_url = "https://firefox-ci-tc.services.mozilla.com"
+    session_mocker.patch.dict("os.environ", {"TASKCLUSTER_ROOT_URL": root_url})
 
     # Task is missing, don't optimize
     responses.add(
         responses.GET,
-        f"{root_url}/index/v1/task/{index}",
+        f"{root_url}/api/index/v1/task/{index}",
         status=404,
     )
     result = opt.should_remove_task(task, params, index)
@@ -607,13 +608,13 @@ def test_skip_unless_missing(responses, params):
     # Task is found but failed, don't optimize
     responses.replace(
         responses.GET,
-        f"{root_url}/index/v1/task/{index}",
+        f"{root_url}/api/index/v1/task/{index}",
         json={"taskId": task_id},
         status=200,
     )
     responses.add(
         responses.GET,
-        f"{root_url}/queue/v1/task/{task_id}/status",
+        f"{root_url}/api/queue/v1/task/{task_id}/status",
         json={"status": {"state": "failed"}},
         status=200,
     )
@@ -623,13 +624,13 @@ def test_skip_unless_missing(responses, params):
     # Task is found and passed but expires before deadline, don't optimize
     responses.replace(
         responses.GET,
-        f"{root_url}/index/v1/task/{index}",
+        f"{root_url}/api/index/v1/task/{index}",
         json={"taskId": task_id},
         status=200,
     )
     responses.replace(
         responses.GET,
-        f"{root_url}/queue/v1/task/{task_id}/status",
+        f"{root_url}/api/queue/v1/task/{task_id}/status",
         json={"status": {"state": "completed", "expires": "2024-01-01T00:00:00.000Z"}},
         status=200,
     )
@@ -639,13 +640,13 @@ def test_skip_unless_missing(responses, params):
     # Task is found and passed and expires after deadline, optimize
     responses.replace(
         responses.GET,
-        f"{root_url}/index/v1/task/{index}",
+        f"{root_url}/api/index/v1/task/{index}",
         json={"taskId": task_id},
         status=200,
     )
     responses.replace(
         responses.GET,
-        f"{root_url}/queue/v1/task/{task_id}/status",
+        f"{root_url}/api/queue/v1/task/{task_id}/status",
         json={"status": {"state": "completed", "expires": "2024-01-03T00:00:00.000Z"}},
         status=200,
     )
@@ -656,13 +657,13 @@ def test_skip_unless_missing(responses, params):
     task.task["deadline"] = {"relative-datestamp": "1 day"}
     responses.replace(
         responses.GET,
-        f"{root_url}/index/v1/task/{index}",
+        f"{root_url}/api/index/v1/task/{index}",
         json={"taskId": task_id},
         status=200,
     )
     responses.replace(
         responses.GET,
-        f"{root_url}/queue/v1/task/{task_id}/status",
+        f"{root_url}/api/queue/v1/task/{task_id}/status",
         json={"status": {"state": "completed", "expires": "2024-01-03T00:00:00.000Z"}},
         status=200,
     )
