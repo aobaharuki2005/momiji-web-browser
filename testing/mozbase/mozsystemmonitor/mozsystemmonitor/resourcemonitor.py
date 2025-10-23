@@ -801,6 +801,11 @@ class SystemResourceMonitor:
             "name": test_name.split("/")[-1],
         }
 
+        # Include timeout factor if present in extra data
+        extra = data.get("extra", {})
+        if extra and "timeoutfactor" in extra:
+            marker_data["timeoutfactor"] = extra["timeoutfactor"]
+
         status = data.get("status", "")
         if status:
             marker_data["status"] = status
@@ -1363,6 +1368,11 @@ class SystemResourceMonitor:
                                 "key": "message",
                                 "label": "Message",
                                 "format": "string",
+                            },
+                            {
+                                "key": "timeoutfactor",
+                                "label": "Timeout Factor",
+                                "format": "integer",
                             },
                             {
                                 "key": "color",

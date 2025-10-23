@@ -440,12 +440,17 @@ class XPCShellTestThread(Thread):
         else:
             expected = "FAIL"
 
+        extra = None
+        if self.timeout_factor > 1:
+            extra = {"timeoutfactor": self.timeout_factor}
+
         if self.retry:
             self.log.test_end(
                 self.test_object["id"],
                 "TIMEOUT",
                 expected="TIMEOUT",
                 message="Test timed out",
+                extra=extra,
             )
             self.log_full_output(mark_failures_as_expected=True)
         else:
@@ -459,6 +464,7 @@ class XPCShellTestThread(Thread):
                 result,
                 expected=expected,
                 message="Test timed out",
+                extra=extra,
             )
             self.log_full_output()
 
@@ -950,10 +956,12 @@ class XPCShellTestThread(Thread):
             self.env["MOZ_HEADLESS"] = "1"
             self.env["DISPLAY"] = "77"  # Set a fake display.
 
-        testTimeoutInterval = self.harness_timeout
         # Allow a test to request a multiple of the timeout if it is expected to take long
+        self.timeout_factor = 1
         if "requesttimeoutfactor" in self.test_object:
-            testTimeoutInterval *= int(self.test_object["requesttimeoutfactor"])
+            self.timeout_factor = int(self.test_object["requesttimeoutfactor"])
+
+        testTimeoutInterval = self.harness_timeout * self.timeout_factor
 
         testTimer = None
         if not self.interactive and not self.debuggerInfo and not self.jsDebuggerInfo:
@@ -1065,6 +1073,11 @@ class XPCShellTestThread(Thread):
                 status = "CRASH"
                 message = "Test crashed"
 
+            # Include timeout factor in extra data if not default
+            extra = None
+            if self.timeout_factor > 1:
+                extra = {"timeoutfactor": self.timeout_factor}
+
             if status != expected or ended_before_crash_reporter_init:
                 if ended_before_crash_reporter_init:
                     self.log.test_end(
@@ -1073,6 +1086,7 @@ class XPCShellTestThread(Thread):
                         expected=expected,
                         message="Test ended before setting up the crash reporter",
                         group=group,
+                        extra=extra,
                     )
                 elif self.retry:
                     retry_message = (
@@ -1086,6 +1100,7 @@ class XPCShellTestThread(Thread):
                         expected=status,
                         message=retry_message,
                         group=group,
+                        extra=extra,
                     )
                     self.clean_temp_dirs(path)
                     if self.verboseIfFails and not self.verbose:
@@ -1093,7 +1108,12 @@ class XPCShellTestThread(Thread):
                     return
                 else:
                     self.log.test_end(
-                        name, status, expected=expected, message=message, group=group
+                        name,
+                        status,
+                        expected=expected,
+                        message=message,
+                        group=group,
+                        extra=extra,
                     )
                 self.log_full_output()
 
@@ -1113,7 +1133,12 @@ class XPCShellTestThread(Thread):
                     self.log_full_output()
 
                 self.log.test_end(
-                    name, status, expected=expected, message=message, group=group
+                    name,
+                    status,
+                    expected=expected,
+                    message=message,
+                    group=group,
+                    extra=extra,
                 )
                 if self.verbose:
                     self.log_full_output()
