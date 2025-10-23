@@ -20,7 +20,6 @@ import mozilla.components.feature.awesomebar.provider.SearchEngineSuggestionProv
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchTermSuggestionsProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
-import mozilla.components.feature.awesomebar.provider.TopSitesSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.TrendingSearchProvider
 import mozilla.components.feature.fxsuggest.FxSuggestSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
@@ -62,7 +61,6 @@ class SearchSuggestionsProvidersBuilder(
     val defaultCombinedHistoryProvider: CombinedHistorySuggestionProvider
     val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     val defaultSearchSuggestionProvider: SearchSuggestionProvider
-    val defaultTopSitesSuggestionProvider: TopSitesSuggestionProvider
     val defaultTrendingSearchProvider: TrendingSearchProvider
     val defaultSearchActionProvider: SearchActionProvider
     var searchEngineSuggestionProvider: SearchEngineSuggestionProvider?
@@ -112,15 +110,6 @@ class SearchSuggestionsProvidersBuilder(
                 filterExactMatch = true,
                 private = browsingModeManager.mode.isPrivate,
                 suggestionsHeader = suggestionsStringsProvider.forSearchEngineSuggestion(),
-            )
-
-        defaultTopSitesSuggestionProvider =
-            TopSitesSuggestionProvider(
-                topSitesStorage = components.core.topSitesStorage,
-                loadUrlUseCase = loadUrlUseCase,
-                icons = components.core.icons,
-                engine = engineForSpeculativeConnects,
-                maxNumberOfSuggestions = FxNimbus.features.topSitesSuggestions.value().maxSuggestions,
             )
 
         defaultTrendingSearchProvider =
@@ -277,10 +266,6 @@ class SearchSuggestionsProvidersBuilder(
         }
 
         providersToAdd.add(requireNotNull(searchEngineSuggestionProvider))
-
-        if (state.showShortcutsSuggestions) {
-            providersToAdd.add(defaultTopSitesSuggestionProvider)
-        }
 
         if (state.showTrendingSearches) {
             val suggestionHeader = state.searchEngineSource.searchEngine?.let { searchEngine ->
@@ -537,7 +522,6 @@ class SearchSuggestionsProvidersBuilder(
      * @property showNonSponsoredSuggestions Whether to show non-sponsored suggestions.
      * @property showTrendingSearches Whether to show trending searches.
      * @property showRecentSearches Whether to show recent searches.
-     * @property showShortcutsSuggestions Whether to show shortcuts suggestions.
      * @property searchEngineSource Hoe the current search engine was selected.
      */
     data class SearchProviderState(
@@ -556,7 +540,6 @@ class SearchSuggestionsProvidersBuilder(
         val showNonSponsoredSuggestions: Boolean,
         val showTrendingSearches: Boolean,
         val showRecentSearches: Boolean,
-        val showShortcutsSuggestions: Boolean,
         val searchEngineSource: SearchEngineSource,
     )
 

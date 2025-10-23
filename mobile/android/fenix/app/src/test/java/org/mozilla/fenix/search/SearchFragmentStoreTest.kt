@@ -768,7 +768,6 @@ class SearchFragmentStoreTest {
         every { settings.trendingSearchSuggestionsEnabled } returns true
         every { settings.isTrendingSearchesVisible } returns true
         every { settings.shouldShowRecentSearchSuggestions } returns true
-        every { settings.shouldShowShortcutSuggestions } returns true
 
         store.dispatch(
             SearchFragmentAction.SearchShortcutEngineSelected(
@@ -796,7 +795,6 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.showNonSponsoredSuggestions)
         assertFalse(store.state.showTrendingSearches)
         assertTrue(store.state.showRecentSearches)
-        assertTrue(store.state.showShortcutsSuggestions)
     }
 
     @Test

@@ -756,21 +756,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false,
     )
 
-    /**
-     * Returns true if shortcut suggestions feature should be shown to the user.
-     */
-    var isShortcutSuggestionsVisible by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_shortcuts_suggestions),
-        default = { FxNimbus.features.topSitesSuggestions.value().enabled },
-        featureFlag = true,
-    )
-
-    /**
-     * Returns true if shortcut suggestions should be shown to the user.
-     */
-    val shouldShowShortcutSuggestions: Boolean
-        get() = shortcutSuggestionsEnabled && isShortcutSuggestionsVisible
-
     val shouldShowSyncedTabsSuggestions by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_synced_tabs),
         default = true,

@@ -226,31 +226,6 @@ class FenixSearchMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN should show shortcut suggestions and a query is set WHEN search is started THEN show search suggestions`() {
-        val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine!!
-        val wasEngineSelectedByUser = false
-        val isSearchInPrivateMode = true
-        every { settings.shouldShowShortcutSuggestions } returns true
-        every { settings.shouldShowSearchSuggestions } returns true
-        val (middleware, store) = buildMiddlewareAndAddToSearchStore()
-        val expectedSuggestionProviders = setOf(mockk<SuggestionProvider>(), mockk<SuggestionProvider>())
-        val expectedSearchSuggestionsProvider: SearchSuggestionsProvidersBuilder = mockk {
-            every { getProvidersToAdd(any()) } returns expectedSuggestionProviders
-        }
-        every { middleware.buildSearchSuggestionsProvider(any()) } returns expectedSearchSuggestionsProvider
-
-        store.dispatch(SearchFragmentAction.UpdateQuery("test"))
-        store.dispatch(SearchStarted(null, wasEngineSelectedByUser, isSearchInPrivateMode, false))
-        store.waitUntilIdle()
-
-        verify { engine.speculativeCreateSession(isSearchInPrivateMode) }
-        assertEquals(expectedSearchSuggestionsProvider, middleware.suggestionsProvidersBuilder)
-        assertEquals(expectedSuggestionProviders.toList(), store.state.searchSuggestionsProviders.toList())
-        assertEquals(defaultSearchEngine.id, store.state.searchEngineSource.searchEngine?.id)
-        assertTrue(store.state.shouldShowSearchSuggestions)
-    }
-
-    @Test
     fun `GIVEN the search query is updated WHEN it is different than the current URL and not empty THEN show search suggestions`() {
         val (_, store) = buildMiddlewareAndAddToSearchStore()
         every { settings.shouldShowSearchSuggestions } returns true
@@ -297,20 +272,6 @@ class FenixSearchMiddlewareTest {
     fun `GIVEN recent search suggestions are enabled WHEN search starts starts for the current webpage THEN show new search suggestions`() {
         val (_, store) = buildMiddlewareAndAddToSearchStore()
         every { settings.shouldShowRecentSearchSuggestions } returns true
-        every { settings.shouldShowSearchSuggestions } returns true
-        val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
-
-        store.dispatch(SearchStarted(defaultSearchEngine, false, false, true)).joinBlocking()
-
-        searchActionsCaptor.assertLastAction(SearchSuggestionsVisibilityUpdated::class) {
-            assertTrue(it.visible)
-        }
-    }
-
-    @Test
-    fun `GIVEN shortcuts suggestions are enabled WHEN search starts starts for the current webpage THEN show new search suggestions`() {
-        val (_, store) = buildMiddlewareAndAddToSearchStore()
-        every { settings.shouldShowShortcutSuggestions } returns true
         every { settings.shouldShowSearchSuggestions } returns true
         val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
 

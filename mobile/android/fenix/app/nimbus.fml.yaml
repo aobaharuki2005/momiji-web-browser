@@ -719,19 +719,6 @@ features:
         type: Int
         default: 5
 
-  top-sites-suggestions:
-    description: Enables top sites suggestions.
-    variables:
-      enabled:
-        description: >
-          Whether or not to enable top sites suggestions.
-        type: Boolean
-        default: true
-      max-suggestions:
-        description: The number of maximum suggestions.
-        type: Int
-        default: 2
-
   search-suggestions-on-homepage:
     description: Enables search suggestions on homepage.
     variables:

@@ -262,7 +262,7 @@ class FenixSearchMiddleware(
         query: String,
     ) {
         val shouldShowTrendingSearches = context.state.run {
-            (showTrendingSearches || showRecentSearches || showShortcutsSuggestions) &&
+            (showTrendingSearches || showRecentSearches) &&
                 (searchStartedForCurrentUrl || FxNimbus.features.searchSuggestionsOnHomepage.value().enabled)
         }
         val shouldShowSearchSuggestions = with(context.state) {

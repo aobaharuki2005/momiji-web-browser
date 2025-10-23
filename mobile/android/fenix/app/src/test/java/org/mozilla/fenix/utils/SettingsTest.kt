@@ -1132,22 +1132,6 @@ class SettingsTest {
     }
 
     @Test
-    fun `GIVEN shortcut suggestions is enable THEN should show shortcut suggestions only if shortcut suggestions is visible`() {
-        val settings = spyk(settings)
-        every { settings.shortcutSuggestionsEnabled } returns true
-        every { settings.isShortcutSuggestionsVisible } returns true
-        assertTrue(settings.shouldShowShortcutSuggestions)
-
-        every { settings.shortcutSuggestionsEnabled } returns true
-        every { settings.isShortcutSuggestionsVisible } returns false
-        assertFalse(settings.shouldShowShortcutSuggestions)
-
-        every { settings.shortcutSuggestionsEnabled } returns false
-        every { settings.isShortcutSuggestionsVisible } returns true
-        assertFalse(settings.shouldShowShortcutSuggestions)
-    }
-
-    @Test
     fun `GIVEN the conditions to show a prompt are not met WHEN checking prompt eligibility THEN shouldShowSetAsDefaultPrompt is false`() {
         settings.numberOfSetAsDefaultPromptShownTimes = 0
         settings.lastSetAsDefaultPromptShownTimeInMillis = System.currentTimeMillis()
