@@ -5,11 +5,12 @@
 mod debug_flags;
 mod profiler;
 mod shell;
+mod textures;
 mod composite_view;
 
 use eframe::egui;
 use webrender_api::DebugFlags;
-use webrender_api::debugger::{DebuggerMessage, ProfileCounterId, CompositorDebugInfo};
+use webrender_api::debugger::{DebuggerMessage, DebuggerTextureContent, ProfileCounterId, CompositorDebugInfo};
 use crate::{command, net};
 use std::collections::{HashMap, BTreeMap};
 use std::fs;
@@ -30,7 +31,7 @@ struct DataModel {
     cmd: String,
     log: Vec<String>,
     documents: Vec<Document>,
-    preview_doc_index: usize,
+    preview_doc_index: Option<usize>,
     profile_graphs: HashMap<ProfileCounterId, Graph>,
 }
 
@@ -42,7 +43,7 @@ impl DataModel {
             cmd: String::new(),
             log: Vec::new(),
             documents: Vec::new(),
-            preview_doc_index: 0,
+            preview_doc_index: None,
             profile_graphs: HashMap::new(),
         }
     }
@@ -154,11 +155,15 @@ impl Gui {
                 let tabs = vec![
                     tiles.insert_pane(Tool::Profiler),
                     tiles.insert_pane(Tool::Preview),
+                ];
+                let side = vec![
+                    tiles.insert_pane(Tool::DebugFlags),
                     tiles.insert_pane(Tool::Documents),
                 ];
+                let side = tiles.insert_vertical_tile(side);
                 let main_tile = tiles.insert_tab_tile(tabs);
                 let main_and_side = vec![
-                    tiles.insert_pane(Tool::DebugFlags),
+                    side,
                     main_tile,
                 ];
                 let main_and_side = tiles.insert_horizontal_tile(main_and_side);
@@ -243,6 +248,8 @@ impl eframe::App for Gui {
             }
         }
 
+        textures::prepare(self, ctx);
+
         // Main menu bar
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
@@ -307,7 +314,7 @@ impl Gui {
                     command::CommandOutput::TextDocument { title, content } => {
                         let title = format!("{} [id {}]", title, self.doc_id);
                         self.doc_id += 1;
-                        self.data_model.preview_doc_index = self.data_model.documents.len();
+                        self.data_model.preview_doc_index = Some(self.data_model.documents.len());
                         self.data_model.documents.push(
                             Document {
                                 title,
@@ -320,7 +327,7 @@ impl Gui {
                     command::CommandOutput::SerdeDocument { kind, ref content } => {
                         let title = format!("Compositor [id {}]", self.doc_id);
                         self.doc_id += 1;
-                        self.data_model.preview_doc_index = self.data_model.documents.len();
+                        self.data_model.preview_doc_index = Some(self.data_model.documents.len());
 
                         let kind = match kind.as_str() {
                             "composite-view" => {
@@ -340,6 +347,9 @@ impl Gui {
                                 kind,
                             }
                         );
+                    }
+                    command::CommandOutput::Textures(textures) => {
+                        textures::add_textures(self, textures);
                     }
                 }
             }
@@ -433,6 +443,10 @@ pub enum DocumentKind {
     Compositor {
         info: CompositorDebugInfo,
     },
+    Texture {
+        content: DebuggerTextureContent,
+        handle: Option<egui::TextureHandle>,
+    }
 }
 
 pub struct Document {
@@ -443,20 +457,32 @@ pub struct Document {
 fn do_documents_ui(app: &mut Gui, ui: &mut egui::Ui) {
     let width = ui.available_width();
     for (i, doc) in app.data_model.documents.iter().enumerate() {
+        if let DocumentKind::Texture { .. } = doc.kind {
+            // Handle textures separately below.
+            continue;
+        }
+
         let item = egui::Button::selectable(
-            app.data_model.preview_doc_index == i,
+            app.data_model.preview_doc_index == Some(i),
             &doc.title,
         ).min_size(egui::vec2(width, 20.0));
 
         if ui.add(item).clicked() {
-            app.data_model.preview_doc_index = i;
+            app.data_model.preview_doc_index = Some(i);
         }
     }
+
+    textures::texture_list_ui(app, ui);
 }
 
 fn do_preview_ui(app: &mut Gui, ui: &mut egui::Ui) {
-    if app.data_model.preview_doc_index < app.data_model.documents.len() {
-        let doc = &app.data_model.documents[app.data_model.preview_doc_index];
+    if let Some(idx) = app.data_model.preview_doc_index {
+        if idx >= app.data_model.documents.len() {
+            app.data_model.preview_doc_index = None;
+            return;
+        }
+
+        let doc = &app.data_model.documents[idx];
 
         match &doc.kind {
             DocumentKind::Text { content } => {
@@ -466,10 +492,14 @@ fn do_preview_ui(app: &mut Gui, ui: &mut egui::Ui) {
             }
             DocumentKind::Compositor { .. } => {
                 // We need to handle compositor separately due to borrow checker
-                let preview_doc_index = app.data_model.preview_doc_index;
                 if let Some(Document { kind: DocumentKind::Compositor { info }, .. }) =
-                    app.data_model.documents.get_mut(preview_doc_index) {
+                    app.data_model.documents.get_mut(idx) {
                     composite_view::ui(ui, info);
+                }
+            }
+            DocumentKind::Texture { content, handle } => {
+                if let Some(handle) = handle {
+                    textures::texture_viewer_ui(ui, &content, &handle);
                 }
             }
         }

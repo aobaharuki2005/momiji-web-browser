@@ -5,6 +5,7 @@
 use crate::command::{Command, CommandList, CommandDescriptor};
 use crate::command::{CommandContext, CommandOutput};
 use webrender_api::DebugFlags;
+use webrender_api::debugger::DebuggerTextureContent;
 
 // Implementation of a basic set of debug commands to demonstrate functionality
 
@@ -16,6 +17,11 @@ pub fn register(cmd_list: &mut CommandList) {
     cmd_list.register_command(Box::new(GetSpatialTreeCommand));
     cmd_list.register_command(Box::new(GetCompositeConfigCommand));
     cmd_list.register_command(Box::new(GetCompositeViewCommand));
+    cmd_list.register_command(Box::new(GetTexturesCommand { kind: None }));
+    cmd_list.register_command(Box::new(GetTexturesCommand { kind: Some("atlas") }));
+    cmd_list.register_command(Box::new(GetTexturesCommand { kind: Some("standalone") }));
+    cmd_list.register_command(Box::new(GetTexturesCommand { kind: Some("render-target") }));
+    cmd_list.register_command(Box::new(GetTexturesCommand { kind: Some("tile") }));
 }
 
 struct PingCommand;
@@ -24,6 +30,7 @@ struct ToggleProfilerCommand;
 struct GetSpatialTreeCommand;
 struct GetCompositeConfigCommand;
 struct GetCompositeViewCommand;
+struct GetTexturesCommand { kind: Option<&'static str> }
 
 impl Command for PingCommand {
     fn descriptor(&self) -> CommandDescriptor {
@@ -191,6 +198,50 @@ impl Command for GetCompositeViewCommand {
                     kind: "composite-view".into(),
                     content: output.expect("empty response"),
                 }
+            }
+            Err(err) => {
+                CommandOutput::Err(err)
+            }
+        }
+    }
+}
+
+impl Command for GetTexturesCommand {
+    fn descriptor(&self) -> CommandDescriptor {
+        CommandDescriptor {
+            name: match self.kind {
+                Some("atlas") => "get-atlas-textures",
+                Some("standalone") => "get-standalone-textures",
+                Some("render-target") => "get-target-textures",
+                Some("tile") => "get-tile-textures",
+                _ => "get-textures",
+            },
+            help: "Fetch all gpu textures",
+            ..Default::default()
+        }
+    }
+
+    fn run(
+        &mut self,
+        ctx: &mut CommandContext,
+    ) -> CommandOutput {
+        let kind = match self.kind {
+            Some("atlas") => "atlas-textures",
+            Some("standalone") => "standalone-textures",
+            Some("render-target") => "target-textures",
+            Some("tile") => "tile-textures",
+            _ => "textures",
+        };
+        match ctx.net.get_with_query(
+            "query",
+            &[("type", kind)],
+        ) {
+            Ok(output) => {
+                let mut textures: Vec<DebuggerTextureContent> = serde_json::from_str(
+                    output.unwrap().as_str()
+                ).unwrap();
+                textures.sort_by(|a, b| a.name.cmp(&b.name));
+                CommandOutput::Textures(textures)
             }
             Err(err) => {
                 CommandOutput::Err(err)

@@ -1237,7 +1237,8 @@ impl RenderBackend {
                                 return RenderBackendStatus::Continue;
                             }
                             DebugQueryKind::CompositorView { .. } |
-                            DebugQueryKind::CompositorConfig { .. } => {
+                            DebugQueryKind::CompositorConfig { .. } |
+                            DebugQueryKind::Textures { .. } => {
                                 ResultMsg::DebugCommand(option)
                             }
                         }

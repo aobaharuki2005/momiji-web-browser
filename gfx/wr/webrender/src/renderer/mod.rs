@@ -34,7 +34,7 @@
 //! up the scissor, are accepting already transformed coordinates, which we can get by
 //! calling `DrawTarget::to_framebuffer_rect`
 
-use api::{ClipMode, ColorF, ColorU, MixBlendMode};
+use api::{ClipMode, ColorF, ColorU, MixBlendMode, TextureCacheCategory};
 use api::{DocumentId, Epoch, ExternalImageHandler, RenderReasons};
 #[cfg(feature = "replay")]
 use api::ExternalImageId;
@@ -59,7 +59,7 @@ use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeFeatur
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation, ClipRadius};
 use crate::composite::TileKind;
 #[cfg(feature = "debugger")]
-use api::debugger::CompositorDebugInfo;
+use api::debugger::{CompositorDebugInfo, DebuggerTextureContent};
 use crate::segment::SegmentBuilder;
 use crate::{debug_colors, CompositorInputConfig, CompositorSurfaceUsage};
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId, UploadPBOPool};
@@ -74,7 +74,7 @@ use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{ScalingInstance, SvgFilterInstance, SVGFEFilterInstance, CopyInstance, PrimitiveInstanceData};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
-use crate::internal_types::{TextureSource, TextureSourceExternal, TextureCacheCategory, FrameId, FrameVec};
+use crate::internal_types::{TextureSource, TextureSourceExternal, FrameId, FrameVec};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
 use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
@@ -1315,6 +1315,47 @@ impl Renderer {
                             }
                         };
                         query.result.send(result).ok();
+                    }
+                    DebugQueryKind::Textures { category } => {
+                        let mut texture_list = Vec::new();
+
+                        self.device.begin_frame();
+                        self.device.bind_read_target_impl(self.read_fbo, DeviceIntPoint::zero());
+
+                        for (id, item) in &self.texture_resolver.texture_cache_map {
+                            if category.is_some() && category != Some(item.category) {
+                                continue;
+                            }
+
+                            let size = item.texture.get_dimensions();
+                            let format = item.texture.get_format();
+                            let buffer_size = (size.area() * format.bytes_per_pixel()) as usize;
+                            let mut data = vec![0u8; buffer_size];
+                            let rect = size.cast_unit().into();
+                            self.device.attach_read_texture(&item.texture);
+                            self.device.read_pixels_into(rect, format, &mut data);
+
+                            let category_str = match item.category {
+                                TextureCacheCategory::Atlas => "atlas",
+                                TextureCacheCategory::Standalone => "standalone",
+                                TextureCacheCategory::PictureTile => "tile",
+                                TextureCacheCategory::RenderTarget => "target",
+                            };
+
+                            let texture_msg = DebuggerTextureContent {
+                                name: format!("{category_str}-{:02}", id.0),
+                                category: item.category,
+                                width: size.width as u32,
+                                height: size.height as u32,
+                                format,
+                                data,
+                            };
+                            texture_list.push(texture_msg);
+                        }
+                        self.device.reset_read_target();
+                        self.device.end_frame();
+
+                        query.result.send(serde_json::to_string(&texture_list).unwrap()).ok();
                     }
                 }
             }

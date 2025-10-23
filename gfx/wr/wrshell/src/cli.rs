@@ -4,6 +4,9 @@
 
 use repl_ng::Parameter;
 
+use std::fs::File;
+use std::io::BufWriter;
+
 use crate::net;
 use crate::command;
 
@@ -59,6 +62,23 @@ impl Cli {
                         }
                         command::CommandOutput::SerdeDocument { content, .. } => {
                             Ok(Some(content))
+                        }
+                        command::CommandOutput::Textures(textures) => {
+                            for texture in textures {
+                                let name = format!("{}.png", texture.name);
+                                println!("saving {name:?}");
+
+                                let file = File::create(name).unwrap();
+                                let ref mut w = BufWriter::new(file);
+
+                                let mut encoder = png::Encoder::new(w, texture.width, texture.height);
+                                encoder.set_color(png::ColorType::RGBA);
+                                encoder.set_depth(png::BitDepth::Eight);
+                                let mut writer = encoder.write_header().unwrap();
+
+                                writer.write_image_data(&texture.data).unwrap(); // Save
+                            }
+                            Ok(None)
                         }
                     }
                 },

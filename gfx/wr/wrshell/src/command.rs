@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::collections::BTreeMap;
+use webrender_api::debugger::DebuggerTextureContent;
 use crate::net;
 
 // Types for defining debug commands (and queries) that can be run in CLI or GUI mode
@@ -44,6 +45,7 @@ pub enum CommandOutput {
         kind: String,
         content: String,
     },
+    Textures(Vec<DebuggerTextureContent>),
 }
 
 pub struct ParamDescriptor {

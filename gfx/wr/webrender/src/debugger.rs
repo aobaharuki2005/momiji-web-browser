@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::convert::Infallible;
 use api::crossbeam_channel;
 use api::channel::{Sender, unbounded_channel};
-use api::DebugFlags;
+use api::{DebugFlags, TextureCacheCategory};
 use api::debugger::{DebuggerMessage, SetDebugFlagsMessage, ProfileCounterDescriptor};
 use api::debugger::{UpdateProfileCountersMessage, InitProfileCountersMessage, ProfileCounterId};
 use api::debugger::{CompositorDebugInfo, CompositorDebugTile};
@@ -62,6 +62,8 @@ pub enum DebugQueryKind {
     CompositorConfig {},
     /// Query the compositing view
     CompositorView {},
+    /// Query the content of GPU textures
+    Textures { category: Option<TextureCacheCategory> },
 }
 
 /// Details about the debug query being requested
@@ -268,11 +270,15 @@ async fn handle_request(
         "/query" => {
             // Query internal state about WR.
             let (tx, rx) = crossbeam_channel::unbounded();
-
             let kind = match args.get("type").map(|s| s.as_str()) {
                 Some("spatial-tree") => DebugQueryKind::SpatialTree {},
                 Some("composite-view") => DebugQueryKind::CompositorView {},
                 Some("composite-config") => DebugQueryKind::CompositorConfig {},
+                Some("textures") => DebugQueryKind::Textures { category: None },
+                Some("atlas-textures") => DebugQueryKind::Textures { category: Some(TextureCacheCategory::Atlas) },
+                Some("target-textures") => DebugQueryKind::Textures { category: Some(TextureCacheCategory::RenderTarget) },
+                Some("tile-textures") => DebugQueryKind::Textures { category: Some(TextureCacheCategory::PictureTile) },
+                Some("standalone-textures") => DebugQueryKind::Textures { category: Some(TextureCacheCategory::Standalone) },
                 _ => {
                     return Ok(string_response("Unknown query"));
                 }

@@ -12,7 +12,7 @@ nightly = ["euclid/unstable", "serde/unstable"]
 serialize = []
 deserialize = []
 display_list_stats = []
-debugger = []
+debugger = ["serialize", "deserialize"]
 
 [dependencies]
 app_units = "0.7.3"
