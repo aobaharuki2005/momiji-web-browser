@@ -5,8 +5,7 @@ android-lint = "31.13.0"
 
 # Kotlin
 coroutines = "1.10.2"
-kotlin = "2.2.20" # remember to change ksp-plugin
-ksp-plugin = "2.2.20-2.0.4"
+kotlin = "2.2.21"
 serialization = "1.9.0"
 
 # AndroidX
@@ -52,6 +51,7 @@ work = "2.11.0"
 accompanist = "0.37.3"
 firebase-messaging = "25.0.1"
 installreferrer = "2.2"
+ksp = "2.3.0"
 material = "1.13.0"
 osslicenses-plugin = "0.10.7"
 play-review = "2.0.2"
@@ -115,10 +115,6 @@ kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutin
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
-ksp-symbol-processing-aa = { group = "com.google.devtools.ksp", name = "symbol-processing-aa", version.ref = "ksp-plugin" }
-ksp-symbol-processing-aa-embeddable = { group = "com.google.devtools.ksp", name = "symbol-processing-aa-embeddable", version.ref = "ksp-plugin" }
-ksp-symbol-processing-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp-plugin" }
-ksp-symbol-processing-common-deps = { group = "com.google.devtools.ksp", name = "symbol-processing-common-deps", version.ref = "ksp-plugin" }
 
 # AndroidX
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
@@ -204,6 +200,10 @@ accompanist-drawablepainter = { group = "com.google.accompanist", name = "accomp
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebase-messaging" }
 installreferrer = { group = "com.android.installreferrer", name = "installreferrer", version.ref = "installreferrer" }
 google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+ksp-symbol-processing-aa = { group = "com.google.devtools.ksp", name = "symbol-processing-aa", version.ref = "ksp" }
+ksp-symbol-processing-aa-embeddable = { group = "com.google.devtools.ksp", name = "symbol-processing-aa-embeddable", version.ref = "ksp" }
+ksp-symbol-processing-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
+ksp-symbol-processing-common-deps = { group = "com.google.devtools.ksp", name = "symbol-processing-common-deps", version.ref = "ksp" }
 osslicenses-plugin = { group = "com.google.android.gms", name = "oss-licenses-plugin", version.ref = "osslicenses-plugin" }
 play-review = { group = "com.google.android.play", name = "review", version.ref = "play-review" }
 play-review-ktx = { group = "com.google.android.play", name = "review-ktx", version.ref = "play-review" }
@@ -276,7 +276,7 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-dsl = { id = "org.gradle.kotlin.kotlin-dsl", version.ref = "kotlin-dsl" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp-plugin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 python-envs-plugin = {id = "com.jetbrains.python.envs", version.ref = "python-envs-plugin"}
 protobuf-plugin = {id = "com.google.protobuf", version.ref = "protobuf-plugin"}
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
