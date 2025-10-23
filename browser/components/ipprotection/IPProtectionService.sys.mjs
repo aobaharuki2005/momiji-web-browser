@@ -8,7 +8,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
-  IPPEnrollHelper: "resource:///modules/ipprotection/IPPEnrollHelper.sys.mjs",
   IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
   IPPNimbusHelper: "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
@@ -43,6 +42,9 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
  *  The user is not eligible (via nimbus) or still not signed in. No UI is available.
  * @property {string} UNAUTHENTICATED
  *  The user is signed out but eligible (via nimbus). The panel should show the login view.
+ * @property {string} ENROLLING
+ *  The user is signed in and eligible (via nimbus). The UI should show the main view,
+ *  but not allow activation until enrollment has finished.
  * @property {string} READY
  *  Ready to be activated.
  * @property {string} ACTIVE
@@ -57,6 +59,7 @@ export const IPProtectionStates = Object.freeze({
   UNINITIALIZED: "uninitialized",
   UNAVAILABLE: "unavailable",
   UNAUTHENTICATED: "unauthenticated",
+  ENROLLING: "enrolling",
   READY: "ready",
   ACTIVE: "active",
   ERROR: "error",
@@ -76,6 +79,7 @@ class IPProtectionServiceSingleton extends EventTarget {
   #updating = false;
 
   errors = [];
+  enrolling = null;
 
   guardian = null;
   proxyManager = null;
@@ -181,6 +185,7 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.#entitlement = null;
     this.errors = [];
+    this.enrolling = null;
 
     this.#helpers.forEach(helper => helper.uninit());
 
@@ -201,11 +206,7 @@ class IPProtectionServiceSingleton extends EventTarget {
    */
   async start(userAction = true) {
     // Wait for enrollment to finish.
-    const enrollData = await lazy.IPPEnrollHelper.maybeEnroll();
-    if (!enrollData || !enrollData.isEnrolled) {
-      this.setErrorState(enrollData.error || ERRORS.GENERIC);
-      return;
-    }
+    await this.enrolling;
 
     // Retry getting state if the previous attempt failed.
     if (this.#state === IPProtectionStates.ERROR) {
@@ -279,6 +280,18 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
+   * Enroll the current account if it meets all the criteria.
+   *
+   * @returns {Promise<void>}
+   */
+  async maybeEnroll() {
+    if (this.#state !== IPProtectionStates.ENROLLING) {
+      return null;
+    }
+    return this.#enroll();
+  }
+
+  /**
    * Reset the statuses that are set based on a FxA account.
    */
   resetAccount() {
@@ -289,6 +302,23 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.stop(false);
     }
     this.proxyManager.reset();
+  }
+
+  /**
+   * Checks if the user has enrolled with FxA to use the proxy.
+   *
+   * @param { boolean } onlyCached - if true only the cached clients will be checked.
+   * @returns {Promise<boolean>}
+   */
+  async #isEnrolled(onlyCached) {
+    let isEnrolled;
+    try {
+      isEnrolled = await this.guardian.isLinkedToGuardian(onlyCached);
+    } catch (error) {
+      this.#setErrorState(error?.message);
+    }
+
+    return isEnrolled;
   }
 
   /**
@@ -307,6 +337,47 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (prevState === this.#state) {
       this.#stateChanged(this.#state, prevState);
     }
+  }
+
+  /**
+   * Enrolls a users FxA account to use the proxy and updates the state.
+   *
+   * @returns {Promise<void>}
+   */
+  async #enroll() {
+    if (this.#state !== IPProtectionStates.ENROLLING) {
+      return null;
+    }
+
+    if (this.enrolling) {
+      return this.enrolling;
+    }
+
+    this.enrolling = this.guardian
+      .enroll()
+      .then(enrollment => {
+        let ok = enrollment?.ok;
+
+        lazy.logConsole.debug(
+          "Guardian:",
+          ok ? "Enrolled" : "Enrollment Failed"
+        );
+
+        if (!ok) {
+          this.#setErrorState(enrollment?.error || ERRORS.GENERIC);
+          return null;
+        }
+
+        return this.#updateState();
+      })
+      .catch(error => {
+        this.#setErrorState(error?.message);
+      })
+      .finally(() => {
+        this.enrolling = null;
+      });
+
+    return this.enrolling;
   }
 
   /**
@@ -389,14 +460,18 @@ class IPProtectionServiceSingleton extends EventTarget {
       return IPProtectionStates.READY;
     }
 
-    if (!lazy.IPPEnrollHelper.isEnrolled) {
-      return !eligible
-        ? IPProtectionStates.UNAVAILABLE
-        : IPProtectionStates.READY;
-    }
-
     // The following are remote authentication checks and should be avoided
     // whenever possible.
+
+    // Check if the current account is enrolled with Guardian.
+    let enrolled = await this.#isEnrolled(
+      this.#state !== IPProtectionStates.ENROLLING /*onlyCached*/
+    );
+    if (!enrolled) {
+      return !eligible
+        ? IPProtectionStates.UNAVAILABLE
+        : IPProtectionStates.ENROLLING;
+    }
 
     // Check if the current account can get an entitlement.
     let entitled = await this.#getEntitlement();

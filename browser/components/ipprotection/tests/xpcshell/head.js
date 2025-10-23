@@ -15,13 +15,11 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
-function waitForEvent(target, eventName, callback = () => true) {
+function waitForEvent(target, eventName) {
   return new Promise(resolve => {
     let listener = event => {
-      if (callback()) {
-        target.removeEventListener(eventName, listener);
-        resolve(event);
-      }
+      target.removeEventListener(eventName, listener);
+      resolve(event);
     };
     target.addEventListener(eventName, listener);
   });

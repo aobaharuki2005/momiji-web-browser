@@ -12,9 +12,6 @@ const { IPPNimbusHelper } = ChromeUtils.importESModule(
 const { IPPSignInWatcher } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );
-const { IPPEnrollHelper } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPEnrollHelper.sys.mjs"
-);
 
 do_get_profile();
 
@@ -95,7 +92,6 @@ add_task(async function test_IPProtectionStates_unauthenticated() {
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(false);
-  sandbox.stub(IPProtectionService.guardian, "enroll").resolves({ ok: true });
 
   await IPProtectionService.init();
 
@@ -111,7 +107,7 @@ add_task(async function test_IPProtectionStates_unauthenticated() {
 
   Assert.equal(
     IPProtectionService.state,
-    IPProtectionStates.READY,
+    IPProtectionStates.ENROLLING,
     "IP Protection service should no longer be unauthenticated"
   );
 
@@ -150,14 +146,13 @@ add_task(async function test_IPProtectionStates_enrolling() {
 
   Assert.equal(
     IPProtectionService.state,
-    IPProtectionStates.READY,
-    "IP Protection service should be ready"
+    IPProtectionStates.ENROLLING,
+    "IP Protection service should be enrolling"
   );
 
   IPProtectionService.guardian.isLinkedToGuardian.resolves(true);
 
-  const enrollData = await IPPEnrollHelper.maybeEnroll();
-  Assert.ok(enrollData.isEnrolled, "Fully enrolled");
+  await IPProtectionService.maybeEnroll();
 
   Assert.equal(
     IPProtectionService.state,
@@ -229,13 +224,7 @@ add_task(async function test_IPProtectionStates_active() {
     },
   });
 
-  IPProtectionService.init();
-
-  await waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state === IPProtectionStates.READY
-  );
+  await IPProtectionService.init();
 
   Assert.equal(
     IPProtectionService.state,

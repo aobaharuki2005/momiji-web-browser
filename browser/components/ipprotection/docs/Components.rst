@@ -32,10 +32,9 @@ A diagram of all the main components is the following:
        UIHelper["UI Helper"]
        AccountResetHelper["Account Reset Helper"]
        VPNAddonHelper["VPN Add-on Helper"]
-       IPPNimbusHelper["Nimbus Eligibility Helper"]
+      IPPNimbusHelper["Nimbus Eligibility Helper"]
        IPPAutoStart["Auto-Start Helper"]
        IPPEarlyStartupFilter["Early Startup Filter Helper"]
-       IPPEnrollHelper["Enrollment Helper"]
      end
 
      %% Proxy stack
@@ -136,10 +135,6 @@ VPNAddonHelper
 IPPNimbusHelper
   Monitors the Nimbus feature (``NimbusFeatures.ipProtection``) and triggers a
   state recomputation on updates.
-
-IPPEnrollHelper
-  Orchestrates the user enrollment flow with Guardian and updates the service
-  when enrollment status changes.
 
 How to implement new components
 -------------------------------
