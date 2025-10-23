@@ -51,9 +51,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.style.Hyphens
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -960,16 +958,7 @@ private fun ListItemContent(
                 color = descriptionTextColor,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = maxDescriptionLines,
-                style = FirefoxTheme.typography.body2
-                    .merge(
-                        // Bug 1915867 - We must force the text direction to correctly truncate a LTR
-                        // description that is too long when the app in RTL mode - at least until this
-                        // bug gets fixed in Compose.
-                        // This isn't the most optional solution but it should have less side-effects
-                        // than forcing no letter spacing (which would be the best approach here).
-                        textDirection = TextDirection.Content,
-                        platformStyle = PlatformTextStyle(includeFontPadding = true),
-                    ),
+                style = FirefoxTheme.typography.body2,
             )
         }
 
