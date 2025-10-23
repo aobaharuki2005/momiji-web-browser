@@ -265,7 +265,6 @@ void CodeGenerator::visitMulI(LMulI* ins) {
         masm.mul32(lhsreg, scratch, destreg, onOverflow);
 
         if (onOverflow) {
-          MOZ_ASSERT(lhsreg != destreg);
           bailoutFrom(&bailout, ins->snapshot());
         }
         return;
