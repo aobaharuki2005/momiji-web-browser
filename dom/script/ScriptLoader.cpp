@@ -2692,6 +2692,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: IsBytecode",
          aRequest));
     aRequest->MarkSkippedAllCaching();
+    MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
     return;
   }
 
@@ -2700,6 +2701,8 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: JSON module",
          aRequest));
     aRequest->MarkSkippedAllCaching();
+    MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
+    MOZ_ASSERT_IF(aRequest->IsSource(), aRequest->SRIAndBytecode().empty());
     return;
   }
 
@@ -2727,6 +2730,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
          "!LoadedScript::HasDiskCacheReference",
          aRequest));
     aRequest->MarkSkippedDiskCaching();
+    MOZ_ASSERT_IF(aRequest->IsSource(), aRequest->SRIAndBytecode().empty());
     return;
   }
 
@@ -2750,6 +2754,8 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
            "pref.",
            aRequest));
       aRequest->MarkSkippedDiskCaching();
+
+      aRequest->getLoadedScript()->DropDiskCacheReferenceAndSRI();
       return;
     }
     case -1: {
@@ -2798,6 +2804,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
            "small.",
            aRequest));
       aRequest->MarkSkippedDiskCaching();
+      aRequest->getLoadedScript()->DropDiskCacheReferenceAndSRI();
       return;
     }
   }
@@ -2818,6 +2825,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
              "fetchCount.",
              aRequest));
         aRequest->MarkSkippedDiskCaching();
+        aRequest->getLoadedScript()->DropDiskCacheReferenceAndSRI();
         return;
       }
     }
@@ -2827,6 +2835,20 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: fetchCount",
            aRequest));
       aRequest->MarkSkippedDiskCaching();
+
+      if (!mCache) {
+        // If in-memory cache is not enabled, the disk cache reference
+        // and the SRI data is necessary only when the current request
+        // reaches the minimum fetch count.  And they can be discarded here
+        // if the fetch count is less than the minimum.
+        //
+        // If in-memory cache is enabled, the disk cache reference and the
+        // SRI data is cached with the LoadedScript, and the LoadedScript
+        // is reused by the subsequent requests, and the fetch count
+        // can reach the minimum later.  We need to keep the disk cache
+        // reference and the SRI data until then.
+        aRequest->getLoadedScript()->DropDiskCacheReferenceAndSRI();
+      }
       return;
     }
   }

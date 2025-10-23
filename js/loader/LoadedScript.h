@@ -252,6 +252,11 @@ class LoadedScript : public nsIMemoryReporter {
     mSRIAndBytecode.clearAndFree();
   }
 
+  void DropSRI() {
+    MOZ_ASSERT(IsSource() || IsCachedStencil());
+    mSRIAndBytecode.clearAndFree();
+  }
+
   bool HasStencil() const { return mStencil; }
 
   Stencil* GetStencil() const {
@@ -274,6 +279,13 @@ class LoadedScript : public nsIMemoryReporter {
 
   // Drop the reference to the cache info channel.
   void DropDiskCacheReference() { mCacheInfo = nullptr; }
+
+  void DropDiskCacheReferenceAndSRI() {
+    DropDiskCacheReference();
+    if (IsSource()) {
+      DropSRI();
+    }
+  }
 
   /*
    * Set the mBaseURL, based on aChannel.
