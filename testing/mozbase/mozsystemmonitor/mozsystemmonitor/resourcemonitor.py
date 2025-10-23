@@ -420,6 +420,18 @@ class SystemResourceMonitor:
     def convert_to_monotonic_time(self, timestamp):
         return timestamp - self.start_timestamp + self.start_time
 
+    def get_monotonic_time_from_data(self, data):
+        """Convert structured logging timestamp to monotonic time.
+
+        Args:
+            data: Dictionary with "time" field in milliseconds
+
+        Returns:
+            Monotonic timestamp
+        """
+        time_sec = data["time"] / 1000
+        return self.convert_to_monotonic_time(time_sec)
+
     # Methods to control monitoring.
 
     def start(self):
@@ -767,11 +779,13 @@ class SystemResourceMonitor:
         """Begin tracking a test with enhanced metadata support.
 
         Args:
-            data: Dictionary containing test data (e.g., {"test": "test_name"})
+            data: Dictionary containing test data (e.g., {"test": "test_name", "time": timestamp})
         """
         if SystemResourceMonitor.instance and "test" in data:
             test_name = data["test"]
-            SystemResourceMonitor.instance._active_markers[test_name] = time.monotonic()
+            SystemResourceMonitor.instance._active_markers[test_name] = (
+                SystemResourceMonitor.instance.get_monotonic_time_from_data(data)
+            )
 
     @staticmethod
     def end_test(data):
@@ -792,7 +806,7 @@ class SystemResourceMonitor:
             return
 
         start = SystemResourceMonitor.instance._active_markers.pop(test_name)
-        end = time.monotonic()
+        end = SystemResourceMonitor.instance.get_monotonic_time_from_data(data)
 
         # Create marker data with test information
         marker_data = {
@@ -848,8 +862,7 @@ class SystemResourceMonitor:
         if not SystemResourceMonitor.instance:
             return
 
-        time_sec = data["time"] / 1000
-        timestamp = SystemResourceMonitor.instance.convert_to_monotonic_time(time_sec)
+        timestamp = SystemResourceMonitor.instance.get_monotonic_time_from_data(data)
 
         marker_data = {"type": "TestStatus"}
 
@@ -902,8 +915,7 @@ class SystemResourceMonitor:
         if not SystemResourceMonitor.instance:
             return
 
-        time_sec = data["time"] / 1000
-        timestamp = SystemResourceMonitor.instance.convert_to_monotonic_time(time_sec)
+        timestamp = SystemResourceMonitor.instance.get_monotonic_time_from_data(data)
 
         marker_data = {
             "type": "Crash",
