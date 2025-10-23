@@ -732,7 +732,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                           ScriptLoadRequest* aRequest);
 
   /**
-   * Register the script load request to be cached.
+   * Register the script load request to be cached on the disk.
    *
    * The caller can call this at the same time instantiating the stencil,
    * and also start collecting delazifications.
@@ -740,12 +740,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * The cache handling will be performed when the page initialization ends.
    * The page initialization end is defined as being the time when the load
    * event got received, and when no more scripts are waiting to be executed.
-   *
-   * The initial stencil and collected delazifications will be stored into
-   *   - the in-memory cache, and/or
-   *   - the necko cache
    */
-  void RegisterForCache(ScriptLoadRequest* aRequest);
+  void RegisterForDiskCache(ScriptLoadRequest* aRequest);
 
   /**
    * Check if all conditions are met, i-e that the onLoad event fired and that
@@ -814,7 +810,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   //   * necko alternative stream as Stencil XDR
   //
   // If the request is a non-top-level module request and it passed the
-  // condition, it's stored into mCacheableDependencyModules in order
+  // condition, it's stored into mDiskCacheableDependencyModules in order
   // to iterate over them later.
   void CalculateCacheFlag(ScriptLoadRequest* aRequest);
 
@@ -861,15 +857,15 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   // the original list if any.
   JS::loader::ScriptLoadRequestList mOffThreadCompilingRequests;
 
-  // Holds non-top-level module requests which passed caching conditions, until
-  // it's queued to mCachingQueue.
+  // Holds non-top-level module requests which passed disk caching conditions,
+  // until it's queued to mDiskCacheQueue.
   //
   // TODO: Remove this and per-ScriptLoader caching queue (bug 1902951).
-  JS::loader::ScriptLoadRequestList mCacheableDependencyModules;
+  JS::loader::ScriptLoadRequestList mDiskCacheableDependencyModules;
 
   // Holds already-evaluted requests that are holding a buffer which has to be
-  // saved on the cache, until it's cached or the caching is aborted.
-  JS::loader::ScriptLoadRequestList mCachingQueue;
+  // saved on the disk cache, until it's cached or the caching is aborted.
+  JS::loader::ScriptLoadRequestList mDiskCacheQueue;
 
   // In mRequests, the additional information here is stored by the element.
   struct PreloadInfo {

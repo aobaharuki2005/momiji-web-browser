@@ -175,7 +175,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoader)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(
       mNonAsyncExternalScriptInsertedRequests, mLoadingAsyncRequests,
       mLoadedAsyncRequests, mOffThreadCompilingRequests, mDeferRequests,
-      mXSLTRequests, mParserBlockingRequest, mCachingQueue, mPreloads,
+      mXSLTRequests, mParserBlockingRequest, mDiskCacheQueue, mPreloads,
       mPendingChildLoaders, mModuleLoader, mWebExtModuleLoaders,
       mShadowRealmModuleLoaders)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -184,7 +184,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ScriptLoader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
       mNonAsyncExternalScriptInsertedRequests, mLoadingAsyncRequests,
       mLoadedAsyncRequests, mOffThreadCompilingRequests, mDeferRequests,
-      mXSLTRequests, mParserBlockingRequest, mCachingQueue, mPreloads,
+      mXSLTRequests, mParserBlockingRequest, mDiskCacheQueue, mPreloads,
       mPendingChildLoaders, mModuleLoader, mWebExtModuleLoaders,
       mShadowRealmModuleLoaders)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -2710,12 +2710,6 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Mark in-memory: Stencil",
          aRequest));
     aRequest->MarkPassedConditionForMemoryCache();
-
-    if (aRequest->IsModuleRequest() &&
-        aRequest->AsModuleRequest()->IsStaticImport()) {
-      MOZ_ASSERT(!aRequest->isInList());
-      mCacheableDependencyModules.AppendElement(aRequest);
-    }
   } else {
     aRequest->MarkSkippedMemoryCaching();
   }
@@ -2857,11 +2851,10 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
        aRequest));
   aRequest->MarkPassedConditionForDiskCache();
 
-  if (!aRequest->PassedConditionForMemoryCache() &&
-      aRequest->IsModuleRequest() &&
+  if (aRequest->IsModuleRequest() &&
       aRequest->AsModuleRequest()->IsStaticImport()) {
     MOZ_ASSERT(!aRequest->isInList());
-    mCacheableDependencyModules.AppendElement(aRequest);
+    mDiskCacheableDependencyModules.AppendElement(aRequest);
   }
 }
 
@@ -3203,13 +3196,13 @@ void ScriptLoader::InstantiateClassicScriptFromCachedStencil(
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip: IsAlreadyCollecting",
          aRequest));
 
-    // NOTE: non-top-level modules are added to mCacheableDependencyModules
+    // NOTE: non-top-level modules are added to mDiskCacheableDependencyModules
     //       at the same time as MarkPassedConditionForMemoryCache.
     //       Undo it here.
     if (aRequest->IsModuleRequest() &&
         !aRequest->AsModuleRequest()->IsTopLevel()) {
       MOZ_ASSERT(aRequest->isInList());
-      mCacheableDependencyModules.Remove(aRequest);
+      mDiskCacheableDependencyModules.Remove(aRequest);
     }
 
     aRequest->MarkSkippedMemoryCaching();
@@ -3342,29 +3335,33 @@ nsCString& ScriptLoader::BytecodeMimeTypeFor(
 
 nsresult ScriptLoader::MaybePrepareForCacheAfterExecute(
     ScriptLoadRequest* aRequest, nsresult aRv) {
-  if (aRequest->PassedConditionForEitherCache() && aRequest->HasStencil()) {
-    TRACE_FOR_TEST(aRequest, "scriptloader_encode");
-    // Bytecode-encoding branch is used for 2 purposes right now:
-    //   * If the request is stencil, reflect delazifications to cached stencil
-    //   * otherwise, encode the initial stencil and delazifications
-    //
-    // For latter case, check that the TranscodeBuffer which is going to
-    // receive the encoded bytecode only contains the SRI, and nothing more.
-    //
-    // NOTE: This assertion will fail once we start encoding more data after the
-    //       first encode.
-    MOZ_ASSERT_IF(
-        !aRequest->IsCachedStencil(),
-        aRequest->GetSRILength() == aRequest->SRIAndBytecode().length());
-    RegisterForCache(aRequest);
+  if (!aRequest->PassedConditionForDiskCache() || !aRequest->HasStencil()) {
+    LOG(("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X)", aRequest,
+         unsigned(aRv)));
+    TRACE_FOR_TEST_NONE(aRequest, "scriptloader_no_encode");
+
+    // For in-memory cached requests, the disk cache references are necessary
+    // for later load.
+    MOZ_ASSERT_IF(!aRequest->PassedConditionForMemoryCache(),
+                  !aRequest->getLoadedScript()->HasDiskCacheReference());
 
     return aRv;
   }
 
-  LOG(("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X)", aRequest,
-       unsigned(aRv)));
-  TRACE_FOR_TEST_NONE(aRequest, "scriptloader_no_encode");
-  MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
+  TRACE_FOR_TEST(aRequest, "scriptloader_encode");
+  // Bytecode-encoding branch is used for 2 purposes right now:
+  //   * If the request is stencil, reflect delazifications to cached stencil
+  //   * otherwise, encode the initial stencil and delazifications
+  //
+  // For latter case, check that the TranscodeBuffer which is going to
+  // receive the encoded bytecode only contains the SRI, and nothing more.
+  //
+  // NOTE: This assertion will fail once we start encoding more data after the
+  //       first encode.
+  MOZ_ASSERT_IF(
+      !aRequest->IsCachedStencil(),
+      aRequest->GetSRILength() == aRequest->SRIAndBytecode().length());
+  RegisterForDiskCache(aRequest);
 
   return aRv;
 }
@@ -3376,7 +3373,7 @@ nsresult ScriptLoader::MaybePrepareModuleForCacheAfterExecute(
   if (aRequest->isInList()) {
     // Top-level modules are part of lists only while loading, or
     // after queued for cache.
-    // NOTE: Non-top-level modules are part of mCacheableDependencyModules
+    // NOTE: Non-top-level modules are part of mDiskCacheableDependencyModules
     //       after it's loaded.
     //
     // This filters out modules which is already queued for cache.
@@ -3385,9 +3382,9 @@ nsresult ScriptLoader::MaybePrepareModuleForCacheAfterExecute(
 
   aRv = MaybePrepareForCacheAfterExecute(aRequest, aRv);
 
-  for (auto* r = mCacheableDependencyModules.getFirst(); r;) {
+  for (auto* r = mDiskCacheableDependencyModules.getFirst(); r;) {
     auto* dep = r->AsModuleRequest();
-    MOZ_ASSERT(dep->PassedConditionForEitherCache());
+    MOZ_ASSERT(dep->PassedConditionForDiskCache());
 
     r = r->getNext();
 
@@ -3395,7 +3392,7 @@ nsresult ScriptLoader::MaybePrepareModuleForCacheAfterExecute(
       continue;
     }
 
-    mCacheableDependencyModules.Remove(dep);
+    mDiskCacheableDependencyModules.Remove(dep);
 
     aRv = MaybePrepareForCacheAfterExecute(dep, aRv);
   }
@@ -3497,13 +3494,12 @@ LoadedScript* ScriptLoader::GetActiveScript(JSContext* aCx) {
   return static_cast<LoadedScript*>(value.toPrivate());
 }
 
-void ScriptLoader::RegisterForCache(ScriptLoadRequest* aRequest) {
-  MOZ_ASSERT(aRequest->PassedConditionForEitherCache());
+void ScriptLoader::RegisterForDiskCache(ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->PassedConditionForDiskCache());
   MOZ_ASSERT(aRequest->HasStencil());
-  MOZ_ASSERT_IF(aRequest->PassedConditionForDiskCache(),
-                aRequest->getLoadedScript()->HasDiskCacheReference());
+  MOZ_ASSERT(aRequest->getLoadedScript()->HasDiskCacheReference());
   MOZ_DIAGNOSTIC_ASSERT(!aRequest->isInList());
-  mCachingQueue.AppendElement(aRequest);
+  mDiskCacheQueue.AppendElement(aRequest);
 }
 
 void ScriptLoader::LoadEventFired() {
@@ -3540,8 +3536,9 @@ void ScriptLoader::MaybeUpdateCache() {
   }
 
   // No need to fire any event if there is no bytecode to be saved.
-  if (mCachingQueue.isEmpty()) {
-    LOG(("ScriptLoader (%p): No script in queue to be encoded.", this));
+  if (mDiskCacheQueue.isEmpty()) {
+    LOG(("ScriptLoader (%p): No script in queue to be saved to the disk.",
+         this));
     return;
   }
 
@@ -3586,19 +3583,23 @@ void ScriptLoader::UpdateCache() {
   }
 
   RefPtr<ScriptLoadRequest> request;
-  while (!mCachingQueue.isEmpty()) {
-    request = mCachingQueue.StealFirst();
+  while (!mDiskCacheQueue.isEmpty()) {
+    request = mDiskCacheQueue.StealFirst();
     MOZ_ASSERT(!IsWebExtensionRequest(request),
                "Bytecode for web extension content scrips is not cached");
 
     // The bytecode encoding is performed only when there was no
     // bytecode stored in the necko cache.
     //
+    // For in-memory cached case, the save might already be performed
+    // by other request.
+    //
     // TODO: Move this to SharedScriptCache.
-    if (request->PassedConditionForDiskCache() &&
-        request->getLoadedScript()->HasDiskCacheReference()) {
-      EncodeBytecodeAndSave(fc, request->getLoadedScript());
+    if (!request->getLoadedScript()->HasDiskCacheReference()) {
+      continue;
     }
+
+    EncodeBytecodeAndSave(fc, request->getLoadedScript());
 
     request->DropBytecode();
     request->getLoadedScript()->DropDiskCacheReference();
@@ -3689,8 +3690,8 @@ void ScriptLoader::GiveUpCaching() {
   // to avoid queuing more scripts.
   mGiveUpCaching = true;
 
-  while (!mCachingQueue.isEmpty()) {
-    RefPtr<ScriptLoadRequest> request = mCachingQueue.StealFirst();
+  while (!mDiskCacheQueue.isEmpty()) {
+    RefPtr<ScriptLoadRequest> request = mDiskCacheQueue.StealFirst();
     LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", request.get()));
     TRACE_FOR_TEST_NONE(request, "scriptloader_bytecode_failed");
     MOZ_ASSERT(!IsWebExtensionRequest(request));
@@ -3699,9 +3700,9 @@ void ScriptLoader::GiveUpCaching() {
     request->getLoadedScript()->DropDiskCacheReference();
   }
 
-  while (!mCacheableDependencyModules.isEmpty()) {
+  while (!mDiskCacheableDependencyModules.isEmpty()) {
     RefPtr<ScriptLoadRequest> request =
-        mCacheableDependencyModules.StealFirst();
+        mDiskCacheableDependencyModules.StealFirst();
   }
 }
 
