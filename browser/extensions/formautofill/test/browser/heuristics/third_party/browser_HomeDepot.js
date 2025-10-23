@@ -28,10 +28,6 @@ add_heuristic_tests(
               reason: "autocomplete",
               addressType: "billing",
             },
-            {
-              fieldName: "tel",
-              reason: "regex-heuristic",
-            },
           ],
         },
         {
