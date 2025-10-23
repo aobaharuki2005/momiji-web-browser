@@ -231,6 +231,14 @@ class SelectableProfileServiceClass extends EventEmitter {
       () => this.updateEnabledState(),
       "profile-after-change"
     );
+
+    Services.prefs.addObserver(PROFILES_CREATED_PREF_NAME, () =>
+      Services.obs.notifyObservers(
+        null,
+        "sps-profile-created",
+        lazy.PROFILES_CREATED ? "true" : "false"
+      )
+    );
   }
 
   // Migrate any early users who created profiles before the datastore service
@@ -240,6 +248,10 @@ class SelectableProfileServiceClass extends EventEmitter {
     if (this.groupToolkitProfile?.storeID && !lazy.PROFILES_CREATED) {
       Services.prefs.setBoolPref(PROFILES_CREATED_PREF_NAME, true);
     }
+  }
+
+  hasCreatedSelectableProfiles() {
+    return Services.prefs.getBoolPref(PROFILES_CREATED_PREF_NAME, false);
   }
 
   #getEnabledState() {

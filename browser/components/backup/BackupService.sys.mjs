@@ -19,6 +19,7 @@ import {
 } from "chrome://browser/content/backup/backup-constants.mjs";
 import { BackupError } from "resource:///modules/backup/BackupError.mjs";
 
+const BACKUP_PREFS_UI_PREF_NAME = "browser.backup.preferences.ui.enabled";
 const BACKUP_DIR_PREF_NAME = "browser.backup.location";
 const BACKUP_ERROR_CODE_PREF_NAME = "browser.backup.errorCode";
 const SCHEDULED_BACKUPS_ENABLED_PREF_NAME = "browser.backup.scheduled.enabled";
@@ -1023,6 +1024,15 @@ export class BackupService extends EventTarget {
       // Ignore exceptions.  The OneDrive folder not existing is an exception.
     }
     return null;
+  }
+
+  static get #observedPrefs() {
+    return [
+      BACKUP_PREFS_UI_PREF_NAME,
+      BACKUP_ARCHIVE_ENABLED_PREF_NAME,
+      BACKUP_RESTORE_ENABLED_PREF_NAME,
+      SCHEDULED_BACKUPS_ENABLED_PREF_NAME,
+    ];
   }
 
   /**
@@ -3756,6 +3766,15 @@ export class BackupService extends EventTarget {
     Services.obs.addObserver(this.#observer, "session-cookie-changed");
     Services.obs.addObserver(this.#observer, "newtab-linkBlocked");
     Services.obs.addObserver(this.#observer, "quit-application-granted");
+    Services.obs.addObserver(this.#observer, "sps-profile-created");
+
+    for (const pref of BackupService.#observedPrefs) {
+      Services.prefs.addObserver(pref, this.#observer);
+    }
+    if (lazy.SelectableProfileService.hasCreatedSelectableProfiles()) {
+      // Trigger our observer, to make sure backups are disabled.
+      this.onObserve(null, "sps-profile-created", "true");
+    }
   }
 
   /**
@@ -3792,10 +3811,24 @@ export class BackupService extends EventTarget {
     Services.obs.removeObserver(this.#observer, "session-cookie-changed");
     Services.obs.removeObserver(this.#observer, "newtab-linkBlocked");
     Services.obs.removeObserver(this.#observer, "quit-application-granted");
+
+    for (const pref of BackupService.#observedPrefs) {
+      Services.prefs.removeObserver(pref, this.#observer);
+    }
+
     this.#observer = null;
 
     this.#regenerationDebouncer.disarm();
     this.#backupWriteAbortController.abort();
+  }
+
+  #disableBackupAndRestore() {
+    if (lazy.SelectableProfileService.hasCreatedSelectableProfiles()) {
+      // This will end up clearing SCHEDULED_BACKUPS_ENABLED_PREF_NAME.
+      this.setScheduledBackups(false);
+      Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, false);
+      Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, false);
+    }
   }
 
   /**
@@ -3864,6 +3897,29 @@ export class BackupService extends EventTarget {
           !notification.browsingContextId
         ) {
           this.#debounceRegeneration();
+        }
+        break;
+      }
+      case "sps-profile-created": {
+        // Disallow (scheduled and manual) backups of selectable profiles and
+        // restores from selectable profiles.  See bug 1990980.
+        if (data == "true") {
+          this.#disableBackupAndRestore();
+        } else {
+          lazy.logConsole.error("Received sps-profile-created = false");
+        }
+        break;
+      }
+      case "nsPref:changed": {
+        switch (data) {
+          case BACKUP_ARCHIVE_ENABLED_PREF_NAME:
+          case BACKUP_RESTORE_ENABLED_PREF_NAME:
+          case SCHEDULED_BACKUPS_ENABLED_PREF_NAME:
+          case BACKUP_PREFS_UI_PREF_NAME:
+            // Disallow (scheduled and manual) backups of selectable profiles and
+            // restores from selectable profiles.  See bug 1990980.
+            this.#disableBackupAndRestore();
+            break;
         }
         break;
       }
