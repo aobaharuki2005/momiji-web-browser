@@ -37,15 +37,15 @@ class ScriptHashKey : public PLDHashEntryHdr {
 
   explicit ScriptHashKey(const ScriptHashKey& aKey)
       : PLDHashEntryHdr(),
+        mKind(aKey.mKind),
+        mCORSMode(aKey.mCORSMode),
+        mIsLinkRelPreload(aKey.mIsLinkRelPreload),
         mURI(aKey.mURI),
         mLoaderPrincipal(aKey.mLoaderPrincipal),
         mPartitionPrincipal(aKey.mPartitionPrincipal),
-        mCORSMode(aKey.mCORSMode),
         mSRIMetadata(aKey.mSRIMetadata),
-        mKind(aKey.mKind),
         mNonce(aKey.mNonce),
-        mHintCharset(aKey.mHintCharset),
-        mIsLinkRelPreload(aKey.mIsLinkRelPreload) {
+        mHintCharset(aKey.mHintCharset) {
     MOZ_COUNT_CTOR(ScriptHashKey);
   }
 
@@ -53,15 +53,15 @@ class ScriptHashKey : public PLDHashEntryHdr {
 
   ScriptHashKey(ScriptHashKey&& aKey)
       : PLDHashEntryHdr(),
+        mKind(std::move(aKey.mKind)),
+        mCORSMode(std::move(aKey.mCORSMode)),
+        mIsLinkRelPreload(std::move(aKey.mIsLinkRelPreload)),
         mURI(std::move(aKey.mURI)),
         mLoaderPrincipal(std::move(aKey.mLoaderPrincipal)),
         mPartitionPrincipal(std::move(aKey.mPartitionPrincipal)),
-        mCORSMode(std::move(aKey.mCORSMode)),
         mSRIMetadata(std::move(aKey.mSRIMetadata)),
-        mKind(std::move(aKey.mKind)),
         mNonce(std::move(aKey.mNonce)),
-        mHintCharset(std::move(aKey.mHintCharset)),
-        mIsLinkRelPreload(std::move(aKey.mIsLinkRelPreload)) {
+        mHintCharset(std::move(aKey.mHintCharset)) {
     MOZ_COUNT_CTOR(ScriptHashKey);
   }
 
@@ -98,12 +98,14 @@ class ScriptHashKey : public PLDHashEntryHdr {
   enum { ALLOW_MEMMOVE = true };
 
  protected:
+  const JS::loader::ScriptKind mKind;
+  const CORSMode mCORSMode;
+  const bool mIsLinkRelPreload;
+
   const nsCOMPtr<nsIURI> mURI;
   const nsCOMPtr<nsIPrincipal> mLoaderPrincipal;
   const nsCOMPtr<nsIPrincipal> mPartitionPrincipal;
-  const CORSMode mCORSMode;
   const SRIMetadata mSRIMetadata;
-  const JS::loader::ScriptKind mKind;
   const nsString mNonce;
 
   // charset attribute for classic script.
@@ -116,8 +118,6 @@ class ScriptHashKey : public PLDHashEntryHdr {
   // top-level document's host
   //   maybe part of principal?
   //   what if it's inside frame in different host?
-
-  const bool mIsLinkRelPreload;
 };
 
 class ScriptLoadData final

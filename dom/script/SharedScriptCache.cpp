@@ -24,14 +24,14 @@ ScriptHashKey::ScriptHashKey(
     const JS::loader::ScriptFetchOptions* aFetchOptions,
     const nsCOMPtr<nsIURI> aURI)
     : PLDHashEntryHdr(),
+      mKind(aRequest->mKind),
+      mCORSMode(aFetchOptions->mCORSMode),
+      mIsLinkRelPreload(aRequest->GetScriptLoadContext()->IsPreload()),
       mURI(aURI),
       mLoaderPrincipal(aLoader->LoaderPrincipal()),
       mPartitionPrincipal(aLoader->PartitionedPrincipal()),
-      mCORSMode(aFetchOptions->mCORSMode),
       mSRIMetadata(aRequest->mIntegrity),
-      mKind(aRequest->mKind),
-      mNonce(aFetchOptions->mNonce),
-      mIsLinkRelPreload(aRequest->GetScriptLoadContext()->IsPreload()) {
+      mNonce(aFetchOptions->mNonce) {
   if (mKind == JS::loader::ScriptKind::eClassic) {
     if (aRequest->GetScriptLoadContext()->HasScriptElement()) {
       aRequest->GetScriptLoadContext()->GetHintCharset(mHintCharset);
