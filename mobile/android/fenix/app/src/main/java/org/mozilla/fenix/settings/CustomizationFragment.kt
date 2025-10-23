@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.navigation.fragment.navArgs
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
@@ -38,6 +39,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     private lateinit var radioDarkTheme: RadioButtonPreference
     private lateinit var radioAutoBatteryTheme: RadioButtonPreference
     private lateinit var radioFollowDeviceTheme: RadioButtonPreference
+    private val args by navArgs<CustomizationFragmentArgs>()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.customization_preferences, rootKey)
@@ -48,6 +50,9 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.preferences_customize))
+        args.preferenceToScrollTo?.let {
+            scrollToPreference(it)
+        }
     }
 
     private fun setupPreferences() {
