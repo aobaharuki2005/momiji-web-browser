@@ -1389,7 +1389,9 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
     if ((aFlags & nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT) &&
         f->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
         nsLayoutUtils::IsReallyFixedPos(f)) {
-      return f->PresShell()->GetRootScrollContainerFrame();
+      if (nsIFrame* root = f->PresShell()->GetRootScrollContainerFrame()) {
+        return root;
+      }
     }
   }
   return nullptr;
