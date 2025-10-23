@@ -918,7 +918,7 @@ add_task(async function merinoCache() {
   );
 
   // Set the date forward 0.5 minutes, which is shorter than the geolocation
-  // cache period of 2 minutes and the weather cache period of 1 minute.
+  // cache period of 2 hours and the weather cache period of 1 minute.
   dateNowStub.returns(startDateMs + 0.5 * 60 * 1000);
 
   // Search 2: Firefox should use the cached responses, so it should not call
@@ -972,10 +972,12 @@ add_task(async function merinoCache() {
     "accuweather provider should have been called on search 3"
   );
 
-  // Set the date forward 3 minutes.
-  dateNowStub.returns(startDateMs + 3 * 60 * 1000);
+  // Set the date forward 1.5 hours that is still shorter than the geolocation
+  // period.
+  dateNowStub.returns(startDateMs + 1.5 * 60 * 60 * 1000);
 
-  // Search 4: Firefox should call Merino for both weather and geolocation.
+  // Search 4: Firefox should still call Merino for the weather suggestion but
+  // not for geolocation.
   info("Doing search 4");
   callsByProvider = await doSearch({
     query,
@@ -988,15 +990,41 @@ add_task(async function merinoCache() {
     },
   });
   info("search 4 callsByProvider: " + JSON.stringify(callsByProvider));
-  Assert.equal(
-    callsByProvider.geolocation.length,
-    1,
-    "geolocation provider should have been called on search 4"
+  Assert.ok(
+    !callsByProvider.geolocation,
+    "geolocation provider should not have been called on search 4"
   );
   Assert.equal(
     callsByProvider.accuweather.length,
     1,
     "accuweather provider should have been called on search 4"
+  );
+
+  // Set the date forward 3 hours.
+  dateNowStub.returns(startDateMs + 3 * 60 * 60 * 1000);
+
+  // Search 5: Firefox should call Merino for both weather and geolocation.
+  info("Doing search 5");
+  callsByProvider = await doSearch({
+    query,
+    expectedTitleL10n: {
+      id: "urlbar-result-weather-title",
+      args: {
+        city: "Waterloo",
+        region: "IA",
+      },
+    },
+  });
+  info("search 5 callsByProvider: " + JSON.stringify(callsByProvider));
+  Assert.equal(
+    callsByProvider.geolocation.length,
+    1,
+    "geolocation provider should have been called on search 5"
+  );
+  Assert.equal(
+    callsByProvider.accuweather.length,
+    1,
+    "accuweather provider should have been called on search 5"
   );
 
   sandbox.restore();

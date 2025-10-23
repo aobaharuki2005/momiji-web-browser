@@ -15,7 +15,7 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
 
 // Cache period for Merino's geolocation response. This is intentionally a small
 // amount of time. See the `cachePeriodMs` discussion in `MerinoClient`.
-const GEOLOCATION_CACHE_PERIOD_MS = 120000; // 2 minutes
+const GEOLOCATION_CACHE_PERIOD_MS = 2 * 60 * 60 * 1000; // 2 hours.
 
 // The mean Earth radius used in distance calculations.
 const EARTH_RADIUS_KM = 6371.009;
