@@ -152,15 +152,17 @@ export default class MozMessageBar extends MozLitElement {
             <div class="text-content">
               ${this.headingTemplate()}
               <div>
-                <span
-                  class="message"
-                  data-l10n-id=${ifDefined(this.messageL10nId)}
-                  data-l10n-args=${ifDefined(
-                    JSON.stringify(this.messageL10nArgs)
-                  )}
-                >
-                  ${this.message}
-                </span>
+                <slot name="message">
+                  <span
+                    class="message"
+                    data-l10n-id=${ifDefined(this.messageL10nId)}
+                    data-l10n-args=${ifDefined(
+                      JSON.stringify(this.messageL10nArgs)
+                    )}
+                  >
+                    ${this.message}
+                  </span>
+                </slot>
                 <span class="link">
                   <slot
                     name="support-link"
