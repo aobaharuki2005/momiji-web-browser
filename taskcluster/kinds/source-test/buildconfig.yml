@@ -23,7 +23,7 @@ task-defaults:
     platform: lint/opt
     treeherder:
         kind: other
-        tier: 2
+        tier: 1
     fetches:
         toolchain:
             - linux64-jdk-repack
