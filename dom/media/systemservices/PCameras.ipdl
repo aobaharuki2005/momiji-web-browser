@@ -63,7 +63,7 @@ async protocol PCameras
 child:
   async CaptureEnded(int[] streamIds);
   // transfers ownership of |buffer| from parent to child
-  async DeliverFrame(int[] streamIds, Shmem buffer, VideoFrameProperties props);
+  async DeliverFrame(int captureId, int[] streamIds, Shmem buffer, VideoFrameProperties props);
   async DeviceChange();
   async ReplyNumberOfCaptureDevices(int deviceCount);
   async ReplyNumberOfCapabilities(int capabilityCount);
@@ -92,7 +92,7 @@ parent:
   async FocusOnSelectedSource(CaptureEngine engine, int streamId);
   async StopCapture(CaptureEngine engine, int streamId);
   // transfers frame back
-  async ReleaseFrame(Shmem s);
+  async ReleaseFrame(int captureId, Shmem s);
 
   // setup camera engine
   async EnsureInitialized(CaptureEngine engine);
