@@ -856,9 +856,10 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   // TODO: Remove this and per-ScriptLoader caching queue (bug 1902951).
   JS::loader::ScriptLoadRequestList mDiskCacheableDependencyModules;
 
-  // Holds already-evaluted requests that are holding a buffer which has to be
-  // saved on the disk cache, until it's cached or the caching is aborted.
-  JS::loader::ScriptLoadRequestList mDiskCacheQueue;
+  // Holds already-evaluted requests' script that are holding a stencil which
+  // has to be saved on the disk cache, until it's cached or the caching is
+  // aborted.
+  nsTArray<RefPtr<JS::loader::LoadedScript>> mDiskCacheQueue;
 
   // In mRequests, the additional information here is stored by the element.
   struct PreloadInfo {
