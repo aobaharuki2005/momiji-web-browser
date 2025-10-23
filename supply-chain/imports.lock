@@ -37,8 +37,8 @@ user-login = "padenot"
 user-name = "Paul Adenot"
 
 [[publisher.authenticator]]
-version = "0.4.1"
-when = "2024-09-25"
+version = "0.5.0"
+when = "2025-10-22"
 user-id = 175410
 user-login = "jschanck"
 user-name = "John Schanck"
