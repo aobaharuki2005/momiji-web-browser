@@ -756,7 +756,7 @@ index 822b565610..f2ea548824 100644
  import("../webrtc.gni")
  
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index f5039000f6..27fbece69e 100644
+index f3d2496773..28ac646821 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -6,10 +6,10 @@
@@ -772,7 +772,7 @@ index f5039000f6..27fbece69e 100644
    import("//third_party/jni_zero/jni_zero.gni")
  }
  
-@@ -415,7 +415,7 @@ if (is_ios && !build_with_chromium) {
+@@ -434,7 +434,7 @@ if (is_ios && !build_with_chromium) {
      testonly = true
      visibility = [ "*" ]
      sources = [ "ios/google_test_runner.mm" ]
