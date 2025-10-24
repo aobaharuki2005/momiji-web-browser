@@ -4090,7 +4090,7 @@
   operands:
     lhs: WordSized
     rhs: WordSized
-#if !defined(JS_CODEGEN_ARM) && !defined(JS_CODEGEN_ARM64)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   num_temps: 1
 #endif
   mir_op: Mod

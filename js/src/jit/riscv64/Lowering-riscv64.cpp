@@ -242,9 +242,17 @@ void LIRGeneratorRiscv64::lowerModI(MMod* mod) {
       return;
     }
   }
-  LModI* lir = new (alloc())
-      LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
 
+  LAllocation lhs, rhs;
+  if (mod->canBeNegativeDividend() && !mod->isTruncated()) {
+    lhs = useRegister(mod->lhs());
+    rhs = useRegister(mod->rhs());
+  } else {
+    lhs = useRegisterAtStart(mod->lhs());
+    rhs = useRegisterAtStart(mod->rhs());
+  }
+
+  auto* lir = new (alloc()) LModI(lhs, rhs);
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }

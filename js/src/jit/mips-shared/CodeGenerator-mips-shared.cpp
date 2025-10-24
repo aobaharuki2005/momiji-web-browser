@@ -595,11 +595,8 @@ void CodeGenerator::visitModI(LModI* ins) {
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register dest = ToRegister(ins->output());
-  Register callTemp = ToRegister(ins->temp0());
   MMod* mir = ins->mir();
   Label done;
-
-  masm.move32(lhs, callTemp);
 
   // Prevent X % 0.
   // For X % Y, Compare Y with 0.
@@ -644,7 +641,7 @@ void CodeGenerator::visitModI(LModI* ins) {
       MOZ_ASSERT(mir->fallible());
       // See if X < 0
       masm.ma_b(dest, Imm32(0), &done, Assembler::NotEqual, ShortJump);
-      bailoutCmp32(Assembler::Signed, callTemp, Imm32(0), ins->snapshot());
+      bailoutCmp32(Assembler::Signed, lhs, Imm32(0), ins->snapshot());
     }
   }
   masm.bind(&done);

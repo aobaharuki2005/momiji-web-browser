@@ -1116,15 +1116,11 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
 }
 
 void CodeGenerator::visitModI(LModI* ins) {
-  // Extract the registers from this instruction
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register dest = ToRegister(ins->output());
-  Register callTemp = ToRegister(ins->temp0());
   MMod* mir = ins->mir();
   Label done;
-
-  masm.move32(lhs, callTemp);
 
   // Prevent INT_MIN % -1;
   // The integer division will give INT_MIN, but we want -(double)INT_MIN.
@@ -1174,8 +1170,10 @@ void CodeGenerator::visitModI(LModI* ins) {
   // out. -0.0|0 == 0
   if (mir->canBeNegativeDividend() && !mir->isTruncated()) {
     MOZ_ASSERT(mir->fallible());
+    MOZ_ASSERT(lhs != dest);
+
     masm.ma_b(dest, Imm32(0), &done, Assembler::NotEqual, ShortJump);
-    bailoutCmp32(Assembler::Signed, callTemp, callTemp, ins->snapshot());
+    bailoutCmp32(Assembler::Signed, lhs, lhs, ins->snapshot());
   }
   masm.bind(&done);
 }

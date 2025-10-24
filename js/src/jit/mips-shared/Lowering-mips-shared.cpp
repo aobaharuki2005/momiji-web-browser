@@ -218,8 +218,8 @@ void LIRGeneratorMIPSShared::lowerModI(MMod* mod) {
       return;
     }
   }
-  LModI* lir = new (alloc())
-      LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
+  auto* lir =
+      new (alloc()) LModI(useRegister(mod->lhs()), useRegister(mod->rhs()));
 
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
