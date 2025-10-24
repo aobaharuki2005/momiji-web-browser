@@ -14,7 +14,6 @@
 #include "js/RootingAPI.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/SourceBufferBinding.h"

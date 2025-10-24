@@ -8,7 +8,6 @@
 #define mozilla_dom_ImageDecoder_h
 
 #include "FrameTimeout.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"

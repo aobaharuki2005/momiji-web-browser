@@ -12,7 +12,6 @@
 #include "RemoteWorkerService.h"
 #include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/PermissionManager.h"

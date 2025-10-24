@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_XMLStylesheetProcessingInstruction_h
 #define mozilla_dom_XMLStylesheetProcessingInstruction_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/LinkStyle.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "nsIURI.h"

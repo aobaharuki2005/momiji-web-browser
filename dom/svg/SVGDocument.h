@@ -7,7 +7,6 @@
 #ifndef DOM_SVG_SVGDOCUMENT_H_
 #define DOM_SVG_SVGDOCUMENT_H_
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/XMLDocument.h"
 
 namespace mozilla {

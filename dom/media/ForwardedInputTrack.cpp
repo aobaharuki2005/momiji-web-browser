@@ -17,7 +17,6 @@
 #include "MediaTrackGraph.h"
 #include "Tracing.h"
 #include "VideoSegment.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "nsContentUtils.h"

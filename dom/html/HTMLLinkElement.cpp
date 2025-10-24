@@ -12,7 +12,6 @@
 #include "MediaList.h"
 #include "imgLoader.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Components.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"

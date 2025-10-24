@@ -8,7 +8,6 @@
 #define mozilla_dom_AudioDecoder_h
 
 #include "js/TypeDecls.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"

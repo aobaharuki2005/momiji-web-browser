@@ -11,7 +11,6 @@
 #include "Performance.h"
 #include "ipc/IPCMessageUtils.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/PerformanceTimingTypes.h"

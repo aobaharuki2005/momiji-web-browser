@@ -20,7 +20,6 @@
 #include "js/Value.h"       // JS::{,Undefined}Value
 #include "jsapi.h"          // JS_ClearPendingException
 #include "mozilla/AppShutdown.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Components.h"

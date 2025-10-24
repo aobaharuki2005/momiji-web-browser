@@ -9,7 +9,6 @@
 #include "GeolocationPosition.h"
 #include "MLSFallback.h"
 #include "WindowsLocationParent.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
 #include "mozilla/dom/WindowsUtilsParent.h"

@@ -6,7 +6,6 @@
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
 
-#include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAtom.h"
 #include "nsString.h"

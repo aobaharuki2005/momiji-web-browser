@@ -7,7 +7,6 @@
 #include "mozilla/dom/HTMLSelectElement.h"
 
 #include "mozAutoDocUpdate.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MappedDeclarationsBuilder.h"

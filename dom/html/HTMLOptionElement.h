@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_HTMLOptionElement_h__
 #define mozilla_dom_HTMLOptionElement_h__
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsGenericHTMLElement.h"
 

@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_Storage_h
 #define mozilla_dom_Storage_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
