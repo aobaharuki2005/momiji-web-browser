@@ -5827,36 +5827,40 @@ static bool ComputeDecorationTrim(
     std::swap(trimLeft, trimRight);
   }
 
-  nsPoint offset;
-  nsSize containingSize;
-  const nsSize size = aFrame->GetSize();
+  // These rects must be based on the same origin.
+  // If the decorating frame is an inline frame, then these rects are relative
+  // to the decorating frame.
+  // Otherwise, these rects are relative to the line container.
+  nsRect inlineRect, frameRect;
+
   // If the decorating frame is an inline frame, we can use it as the
   // reference frame for measurements.
   // If the decorating frame is not inline, then we will need to consider
   // text indentation and calculate geometry using line boxes.
   if (aDecFrame->IsInlineFrame()) {
-    offset = aFrame->GetOffsetTo(aDecFrame);
-    containingSize = aDecFrame->GetSize();
+    frameRect = nsRect{aFrame->GetOffsetTo(aDecFrame), aFrame->GetSize()};
+    inlineRect = nsRect{nsPoint(0, 0), aDecFrame->GetSize()};
   } else {
     nsIFrame* const lineContainer = FindLineContainer(aFrame);
     nsILineIterator* const iter = lineContainer->GetLineIterator();
     const nsILineIterator::LineInfo lineInfo =
         iter->GetLine(GetFrameLineNum(aFrame, iter)).unwrap();
 
-    offset = aFrame->GetOffsetTo(lineContainer);
-    offset -= lineInfo.mLineBounds.TopLeft();
-    containingSize = lineInfo.mLineBounds.Size();
+    frameRect = nsRect{aFrame->GetOffsetTo(lineContainer), aFrame->GetSize()};
+    inlineRect = lineInfo.mLineBounds;
   }
 
-  nscoord start, end, max;
+  // Find the margin of the of this frame inside its container.
+  nscoord marginLeft, marginRight, frameSize;
+  const nsMargin difference = inlineRect - frameRect;
   if (verticalDec) {
-    start = offset.y;
-    max = size.height;
-    end = containingSize.height - (size.height + offset.y);
+    marginLeft = difference.top;
+    marginRight = difference.bottom;
+    frameSize = frameRect.height;
   } else {
-    start = offset.x;
-    max = size.width;
-    end = containingSize.width - (size.width + offset.x);
+    marginLeft = difference.left;
+    marginRight = difference.right;
+    frameSize = frameRect.width;
   }
 
   const bool cloneDecBreak = aDecFrame->StyleBorder()->mBoxDecorationBreak ==
@@ -5871,17 +5875,17 @@ static bool ComputeDecorationTrim(
     std::swap(applyLeft, applyRight);
   }
   if (applyLeft) {
-    trimLeft -= NSAppUnitsToDoublePixels(start, app);
+    trimLeft -= NSAppUnitsToDoublePixels(marginLeft, app);
   } else {
     trimLeft = 0;
   }
   if (applyRight) {
-    trimRight -= NSAppUnitsToDoublePixels(end, app);
+    trimRight -= NSAppUnitsToDoublePixels(marginRight, app);
   } else {
     trimRight = 0;
   }
 
-  if (trimLeft >= NSAppUnitsToDoublePixels(max, app) - trimRight) {
+  if (trimLeft >= NSAppUnitsToDoublePixels(frameSize, app) - trimRight) {
     // This frame does not contain the decoration at all.
     return false;
   }
@@ -5896,10 +5900,10 @@ static bool ComputeDecorationTrim(
   // I am unsure if it's possible that the first/last frame might be inset
   // for some reason, as well, in which case we will not draw the outset
   // decorations.
-  if (trimLeft > 0.0 || start == 0) {
+  if (trimLeft > 0.0 || marginLeft == 0) {
     aParams.trimLeft = trimLeft;
   }
-  if (trimRight > 0.0 || end == 0) {
+  if (trimRight > 0.0 || marginRight == 0) {
     aParams.trimRight = trimRight;
   }
   return true;
