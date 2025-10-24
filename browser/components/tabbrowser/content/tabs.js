@@ -19,6 +19,7 @@
 
     #mustUpdateTabMinHeight = false;
     #tabMinHeight = 36;
+    #animatingGroups = new Set();
 
     constructor() {
       super();
@@ -34,6 +35,7 @@
       this.addEventListener("TabGroupLabelHoverEnd", this);
       this.addEventListener("TabGroupExpand", this);
       this.addEventListener("TabGroupCollapse", this);
+      this.addEventListener("TabGroupAnimationComplete", this);
       this.addEventListener("TabGroupCreate", this);
       this.addEventListener("TabGroupRemoved", this);
       this.addEventListener("transitionend", this);
@@ -371,13 +373,19 @@
       this.previewPanel?.deactivate(event.target.group);
     }
 
-    on_TabGroupExpand() {
+    on_TabGroupExpand(event) {
       this._invalidateCachedVisibleTabs();
+      this.#animatingGroups.add(event.target.id);
     }
 
-    on_TabGroupCollapse() {
+    on_TabGroupCollapse(event) {
       this._invalidateCachedVisibleTabs();
       this._unlockTabSizing();
+      this.#animatingGroups.add(event.target.id);
+    }
+
+    on_TabGroupAnimationComplete(event) {
+      this.#animatingGroups.delete(event.target.id);
     }
 
     on_TabGroupCreate() {
@@ -737,7 +745,10 @@
 
       this.toggleAttribute("overflow", true);
       this._updateCloseButtons();
-      this._handleTabSelect(true);
+
+      if (!this.#animatingGroups.size) {
+        this._handleTabSelect(true);
+      }
 
       document
         .getElementById("tab-preview-panel")
