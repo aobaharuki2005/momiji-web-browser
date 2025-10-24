@@ -1860,24 +1860,20 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
   return AbortReason::Disable;
 }
 
-static bool CheckFrame(JSContext* cx, BaselineFrame* frame) {
+static void AssertBaselineFrameCanEnterIon(JSContext* cx,
+                                           BaselineFrame* frame) {
   MOZ_ASSERT(!frame->isDebuggerEvalFrame());
   MOZ_ASSERT(!frame->isEvalFrame());
 
-  // This check is to not overrun the stack.
-  if (frame->isFunctionFrame()) {
-    if (TooManyActualArguments(frame->numActualArgs())) {
-      JitSpew(JitSpew_IonAbort, "too many actual arguments");
-      return false;
-    }
+  // Baseline has the same limit for the number of actual arguments, so if we
+  // entered Baseline we can also enter Ion.
+  MOZ_ASSERT_IF(frame->isFunctionFrame(),
+                !TooManyActualArguments(frame->numActualArgs()));
 
-    if (TooManyFormalArguments(frame->numFormalArgs())) {
-      JitSpew(JitSpew_IonAbort, "too many arguments");
-      return false;
-    }
-  }
-
-  return true;
+  // The number of formal arguments is checked in CanIonCompileScript. The
+  // Baseline JIT shouldn't attempt to tier up if that returns false.
+  MOZ_ASSERT_IF(frame->isFunctionFrame(),
+                !TooManyFormalArguments(frame->numFormalArgs()));
 }
 
 static bool ScriptIsTooLarge(JSContext* cx, JSScript* script) {
@@ -1917,12 +1913,14 @@ bool CanIonCompileScript(JSContext* cx, JSScript* script) {
     // Additionally, JSOp::GlobalOrEvalDeclInstantiation in WarpBuilder
     // currently doesn't support eval scripts. See bug 1996190.
     JitSpew(JitSpew_IonAbort, "eval script");
+    script->disableIon();
     return false;
   }
 
   if (script->isAsync() && script->isModule()) {
     // Async modules are not supported (bug 1996189).
     JitSpew(JitSpew_IonAbort, "async module");
+    script->disableIon();
     return false;
   }
 
@@ -1932,10 +1930,19 @@ bool CanIonCompileScript(JSContext* cx, JSScript* script) {
     // object as scope chain, and this is not valid when the script has a
     // non-syntactic global scope.
     JitSpew(JitSpew_IonAbort, "has non-syntactic global scope");
+    script->disableIon();
+    return false;
+  }
+
+  if (script->function() &&
+      TooManyFormalArguments(script->function()->nargs())) {
+    JitSpew(JitSpew_IonAbort, "too many formal arguments");
+    script->disableIon();
     return false;
   }
 
   if (ScriptIsTooLarge(cx, script)) {
+    script->disableIon();
     return false;
   }
 
@@ -2042,13 +2049,6 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
       ForbidCompilation(cx, script);
       return Method_CantCompile;
     }
-
-    if (TooManyFormalArguments(
-            invoke.args().callee().as<JSFunction>().nargs())) {
-      JitSpew(JitSpew_IonAbort, "too many args");
-      ForbidCompilation(cx, script);
-      return Method_CantCompile;
-    }
   }
 
   // If --ion-eager is used, compile with Baseline first, so that we
@@ -2100,11 +2100,7 @@ static MethodStatus BaselineCanEnterAtEntry(JSContext* cx, HandleScript script,
   MOZ_ASSERT(!script->hasIonScript());
   MOZ_ASSERT(frame->isFunctionFrame());
 
-  // Mark as forbidden if frame can't be handled.
-  if (!CheckFrame(cx, frame)) {
-    ForbidCompilation(cx, script);
-    return Method_CantCompile;
-  }
+  AssertBaselineFrameCanEnterIon(cx, frame);
 
   if (script->baselineScript()->hasPendingIonCompileTask()) {
     LinkIonScript(cx, script);
@@ -2148,11 +2144,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
     return Method_Skipped;
   }
 
-  // Mark as forbidden if frame can't be handled.
-  if (!CheckFrame(cx, osrFrame)) {
-    ForbidCompilation(cx, script);
-    return Method_CantCompile;
-  }
+  AssertBaselineFrameCanEnterIon(cx, osrFrame);
 
   // Check if the jitcode still needs to get linked and do this
   // to have a valid IonScript.
