@@ -8,8 +8,6 @@ prefs = [
   "browser.startup.homepage.abouthome_cache.testing=true",
 ]
 
-["test_AboutHomeStartupCacheChild.js"]
-
 ["test_AboutHomeStartupCacheWorker.js"]
 support-files = ["topstories.json"]
 

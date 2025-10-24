@@ -21,11 +21,10 @@ const { PREFS_CONFIG } = ChromeUtils.importESModule(
  * for the Discovery Stream cards to finish loading before running the taskFn function.
  * Once taskFn exits, the about:home tab will be closed.
  *
- * @param {function} taskFn
+ * @param {Function} taskFn
  *   A function that will be run after about:home has finished loading. This can be
  *   an async function.
- * @return {Promise}
- * @resolves {undefined}
+ * @returns {Promise<undefined>}
  */
 async function withFullyLoadedAboutHome(taskFn) {
   // Some Activity Stream preferences are JSON encoded, and quite complex.
@@ -86,33 +85,26 @@ async function withFullyLoadedAboutHome(taskFn) {
  *   after the restart simultion is complete, and that reload will attempt
  *   to read any about:home cache contents.
  * @param options (object, optional)
- *
  *   An object with the following properties:
- *
- *     withAutoShutdownWrite (boolean, optional):
- *       Whether or not the shutdown part of the simulation should cause the
- *       shutdown handler to run, which normally causes the cache to be
- *       written. Setting this to false is handy if the cache has been
- *       specially prepared for the subsequent startup, and we don't want to
- *       overwrite it. This defaults to true.
- *
- *     ensureCacheWinsRace (boolean, optional):
- *       Ensures that the privileged about content process will be able to
- *       read the bytes from the streams sent down from the HTTP cache. Use
- *       this to avoid the HTTP cache "losing the race" against reading the
- *       about:home document from the omni.ja. This defaults to true.
- *
- *     expectTimeout (boolean, optional):
- *       If true, indicates that it's expected that AboutHomeStartupCache will
- *       timeout when shutting down. If false, such timeouts will result in
- *       test failures. Defaults to false.
- *
- *     skipAboutHomeLoad (boolean, optional):
- *       If true, doesn't automatically load about:home after the simulated
- *       restart. Defaults to false.
- *
- * @returns Promise
- * @resolves undefined
+ * @param options.withAutoShutdownWrite (boolean, optional)
+ *   Whether or not the shutdown part of the simulation should cause the
+ *   shutdown handler to run, which normally causes the cache to be
+ *   written. Setting this to false is handy if the cache has been
+ *   specially prepared for the subsequent startup, and we don't want to
+ *   overwrite it. This defaults to true.
+ * @param options.ensureCacheWinsRace (boolean, optional)
+ *   Ensures that the privileged about content process will be able to
+ *   read the bytes from the streams sent down from the HTTP cache. Use
+ *   this to avoid the HTTP cache "losing the race" against reading the
+ *   about:home document from the omni.ja. This defaults to true.
+ * @param options.expectTimeout (boolean, optional)
+ *   If true, indicates that it's expected that AboutHomeStartupCache will
+ *   timeout when shutting down. If false, such timeouts will result in
+ *   test failures. Defaults to false.
+ * @param options.skipAboutHomeLoad (boolean, optional)
+ *   If true, doesn't automatically load about:home after the simulated
+ *   restart. Defaults to false.
+ * @returns {Promise<undefined>}
  *   Resolves once the restart simulation is complete, and the <xul:browser>
  *   pointed at about:home finishes reloading.
  */
@@ -209,8 +201,7 @@ async function simulateRestart(
  * @param script (String)
  *   The JS content to write into the cache that can be loaded via
  *   about:home?jscache. This cannot be the empty string.
- * @returns Promise
- * @resolves undefined
+ * @returns {Promise<undefined>}
  *   When the page and script content has been successfully written.
  */
 async function injectIntoCache(page, script) {
@@ -241,8 +232,8 @@ async function injectIntoCache(page, script) {
 
 /**
  * Clears out any pre-existing about:home cache.
- * @returns Promise
- * @resolves undefined
+ *
+ * @returns {Promise<undefined>}
  *   Resolves when the cache is cleared.
  */
 async function clearCache() {
@@ -283,8 +274,7 @@ function assertCacheResultScalar(cacheResultScalar) {
  *
  * @param browser (<xul:browser>)
  *   A <xul:browser> with about:home running in it.
- * @returns Promise
- * @resolves undefined
+ * @returns {Promise<undefined>}
  *   Resolves once the cache entry has been destroyed.
  */
 async function ensureCachedAboutHome(browser) {
@@ -337,8 +327,7 @@ async function ensureCachedAboutHome(browser) {
  *   One of the AboutHomeStartupCache.CACHE_RESULT_SCALARS values. It is
  *   asserted that the cache result Telemetry scalar will have been set
  *   to this value to explain why the dynamic about:home was used.
- * @returns Promise
- * @resolves undefined
+ * @returns {Promise<undefined>}
  *   Resolves once the cache entry has been destroyed.
  */
 async function ensureDynamicAboutHome(browser, expectedResultScalar) {
