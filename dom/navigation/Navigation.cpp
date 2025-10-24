@@ -301,7 +301,11 @@ bool Navigation::HasEntriesAndEventsDisabled() const {
          // channels from having events or entries. See bug 1996218 and bug
          // 1996221
          SupportsInterface<nsIMultiPartChannel>(doc->GetChannel()) ||
-         SupportsInterface<nsIScriptChannel>(doc->GetChannel());
+         SupportsInterface<nsIScriptChannel>(doc->GetChannel()) ||
+         // We also disallow documents embedded using <object>/<embed>. See bug
+         // 1996215.
+         !doc->GetBrowsingContext() ||
+         doc->GetBrowsingContext()->IsEmbedderTypeObjectOrEmbed();
 }
 
 // https://html.spec.whatwg.org/#initialize-the-navigation-api-entries-for-a-new-document
