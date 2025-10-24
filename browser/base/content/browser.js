@@ -3296,14 +3296,23 @@ const DynamicShortcutTooltip = {
     if (!this.cache.has(nodeId) && nodeId in this.nodeToTooltipMap) {
       let strId = this.nodeToTooltipMap[nodeId];
       let args = [];
+      let shouldCache = true;
       if (nodeId in this.nodeToShortcutMap) {
         let shortcutId = this.nodeToShortcutMap[nodeId];
         let shortcut = document.getElementById(shortcutId);
         if (shortcut) {
-          args.push(ShortcutUtils.prettifyShortcut(shortcut));
+          let prettyShortcut = ShortcutUtils.prettifyShortcut(shortcut);
+          args.push(prettyShortcut);
+          if (!prettyShortcut) {
+            shouldCache = false;
+          }
         }
       }
-      this.cache.set(nodeId, gNavigatorBundle.getFormattedString(strId, args));
+      let string = gNavigatorBundle.getFormattedString(strId, args);
+      if (shouldCache) {
+        this.cache.set(nodeId, string);
+      }
+      return string;
     }
     return this.cache.get(nodeId);
   },
