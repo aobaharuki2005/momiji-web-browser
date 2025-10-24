@@ -964,6 +964,38 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
   aKidFrame->DidReflow(aPresContext, aReflowInput);
 }
 
+void nsContainerFrame::FinishReflowWithAbsoluteFrames(
+    nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+    const ReflowInput& aReflowInput, nsReflowStatus& aStatus) {
+  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
+  FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
+}
+
+void nsContainerFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
+                                            ReflowOutput& aDesiredSize,
+                                            const ReflowInput& aReflowInput,
+                                            nsReflowStatus& aStatus) {
+  if (HasAbsolutelyPositionedChildren()) {
+    AbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
+
+    // The containing block for the abs pos kids is formed by our padding edge.
+    nsMargin usedBorder = GetUsedBorder();
+    nscoord containingBlockWidth =
+        std::max(0, aDesiredSize.Width() - usedBorder.LeftRight());
+    nscoord containingBlockHeight =
+        std::max(0, aDesiredSize.Height() - usedBorder.TopBottom());
+    nsRect containingBlock(0, 0, containingBlockWidth, containingBlockHeight);
+    // XXX: To optimize the performance, set the flags only when the CB width or
+    // height actually changes.
+    AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation,
+                            AbsPosReflowFlag::CBWidthChanged,
+                            AbsPosReflowFlag::CBHeightChanged};
+    absoluteContainer->Reflow(this, aPresContext, aReflowInput, aStatus,
+                              containingBlock, flags,
+                              &aDesiredSize.mOverflowAreas);
+  }
+}
+
 void nsContainerFrame::ReflowOverflowContainerChildren(
     nsPresContext* aPresContext, const ReflowInput& aReflowInput,
     OverflowAreas& aOverflowRects, ReflowChildFlags aFlags,

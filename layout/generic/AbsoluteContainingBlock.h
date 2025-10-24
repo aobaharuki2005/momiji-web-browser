@@ -75,9 +75,8 @@ class AbsoluteContainingBlock {
    * coordinate space) the overflow areas of the absolutely positioned
    * children.
    *
-   * @param aReflowStatus is assumed to be already-initialized, e.g. with the
-   * status of the delegating frame's main reflow. This function merges in the
-   * statuses of the absolutely positioned children's reflows.
+   * @param aReflowStatus This function merges in the statuses of the absolutely
+   * positioned children's reflows.
    *
    * @param aFlags zero or more AbsPosReflowFlags
    */
