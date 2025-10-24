@@ -658,6 +658,7 @@ export class ProtonScreen extends React.PureComponent {
             AboutWelcomeUtils.getValidStyle(content.screen_style, [
               "width",
               "padding",
+              "height",
             ])
           }
         >
