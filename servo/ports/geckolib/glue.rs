@@ -163,15 +163,12 @@ use style::values::computed::length_percentage::{
     AllowAnchorPosResolutionInCalcPercentage, Unpacked,
 };
 use style::values::computed::position::{AnchorFunction, PositionArea};
-use style::values::computed::{
-    self, ContentVisibility, Context, PositionAreaKeyword, ToComputedValue,
-};
+use style::values::computed::{self, ContentVisibility, Context, ToComputedValue};
 use style::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use style::values::generics::color::ColorMixFlags;
 use style::values::generics::easing::BeforeFlag;
 use style::values::generics::length::GenericAnchorSizeFunction;
 use style::values::resolved;
-use style::values::specified::align::AlignFlags;
 use style::values::specified::intersection_observer::IntersectionObserverMargin;
 use style::values::specified::position::DashedIdentAndOrTryTactic;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -10760,20 +10757,4 @@ pub extern "C" fn Servo_PhysicalizePositionArea(
     self_wm: &WritingMode,
 ) {
     *area = area.to_physical(*cb_wm, *self_wm);
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_ResolvePositionAreaSelfAlignment(
-    area: &PositionAreaKeyword,
-    out: &mut AlignFlags,
-) {
-    let Some(align) = area.to_self_alignment() else {
-        debug_assert!(
-            false,
-            "ResolvePositionAreaSelfAlignment called on {:?}",
-            area
-        );
-        return;
-    };
-    *out = align;
 }

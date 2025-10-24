@@ -114,7 +114,7 @@ struct AnchorPositioningUtils {
   static nsRect AdjustAbsoluteContainingBlockRectForPositionArea(
       const nsRect& aAnchorRect, const nsRect& aCBRect,
       WritingMode aPositionedWM, WritingMode aCBWM,
-      const StylePositionArea& aPosArea, StylePositionArea* aOutResolvedArea);
+      const StylePositionArea& aPosArea);
 
   /**
    * Gets the used anchor name for an anchor positioned frame.
