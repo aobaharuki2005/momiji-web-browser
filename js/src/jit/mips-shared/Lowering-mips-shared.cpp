@@ -308,17 +308,6 @@ void LIRGeneratorMIPSShared::lowerBigIntPtrMod(MBigIntPtrMod* ins) {
   define(lir, ins);
 }
 
-void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
-  if (ins->type() == MIRType::Int32) {
-    lowerForALU(new (alloc()) LNegI, ins, ins->input());
-  } else if (ins->type() == MIRType::Float32) {
-    define(new (alloc()) LNegF(useRegisterAtStart(ins->input())), ins);
-  } else {
-    MOZ_ASSERT(ins->type() == MIRType::Double);
-    define(new (alloc()) LNegD(useRegisterAtStart(ins->input())), ins);
-  }
-}
-
 void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   MDefinition* base = ins->base();
   // 'base' is a GPR but may be of either type. If it is 32-bit, it is

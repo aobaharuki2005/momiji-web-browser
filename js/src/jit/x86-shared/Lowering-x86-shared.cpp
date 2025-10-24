@@ -151,6 +151,12 @@ void LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0>* ins,
   defineReuseInput(ins, mir, 0);
 }
 
+void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 1, 0>* ins,
+                                        MDefinition* mir, MDefinition* input) {
+  ins->setOperand(0, useRegisterAtStart(input));
+  defineReuseInput(ins, mir, 0);
+}
+
 void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
                                         MDefinition* mir, MDefinition* lhs,
                                         MDefinition* rhs) {
@@ -279,24 +285,6 @@ void LIRGeneratorX86Shared::lowerModI(MMod* mod) {
     assignSnapshot(lir, mod->bailoutKind());
   }
   defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
-}
-
-void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
-  switch (ins->type()) {
-    case MIRType::Int32:
-      lowerForALU(new (alloc()) LNegI, ins, ins->input());
-      break;
-    case MIRType::Float32:
-      defineReuseInput(new (alloc()) LNegF(useRegisterAtStart(ins->input())),
-                       ins, 0);
-      break;
-    case MIRType::Double:
-      defineReuseInput(new (alloc()) LNegD(useRegisterAtStart(ins->input())),
-                       ins, 0);
-      break;
-    default:
-      MOZ_CRASH();
-  }
 }
 
 void LIRGeneratorX86Shared::lowerWasmSelectI(MWasmSelect* select) {

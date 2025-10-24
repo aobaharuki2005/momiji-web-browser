@@ -36,8 +36,11 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared {
   void lowerForShiftInt64(LInstr* ins, MDefinition* mir, MDefinition* lhs,
                           MDefinition* rhs);
 
+  void lowerForFPU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir,
+                   MDefinition* input);
   void lowerForFPU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir,
                    MDefinition* lhs, MDefinition* rhs);
+
   void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
   void lowerDivI(MDiv* div);
   void lowerModI(MMod* mod);

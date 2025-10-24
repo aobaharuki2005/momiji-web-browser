@@ -824,17 +824,6 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
   add(lir, ins);
 }
 
-void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
-  if (ins->type() == MIRType::Int32) {
-    lowerForALU(new (alloc()) LNegI, ins, ins->input());
-  } else if (ins->type() == MIRType::Float32) {
-    define(new (alloc()) LNegF(useRegisterAtStart(ins->input())), ins);
-  } else {
-    MOZ_ASSERT(ins->type() == MIRType::Double);
-    define(new (alloc()) LNegD(useRegisterAtStart(ins->input())), ins);
-  }
-}
-
 void LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) {
   MDefinition* opd = ins->input();
   MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);

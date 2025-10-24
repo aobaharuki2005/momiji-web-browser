@@ -507,22 +507,6 @@ bool LIRGeneratorARM64::canEmitWasmReduceSimd128AtUses(
 
 #endif
 
-void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
-  switch (ins->type()) {
-    case MIRType::Int32:
-      lowerForALU(new (alloc()) LNegI, ins, ins->input());
-      break;
-    case MIRType::Float32:
-      define(new (alloc()) LNegF(useRegisterAtStart(ins->input())), ins);
-      break;
-    case MIRType::Double:
-      define(new (alloc()) LNegD(useRegisterAtStart(ins->input())), ins);
-      break;
-    default:
-      MOZ_CRASH("unexpected type");
-  }
-}
-
 void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
   LAllocation lhs = useRegister(div->lhs());
   if (div->rhs()->isConstant()) {

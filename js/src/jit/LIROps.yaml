@@ -1126,12 +1126,14 @@
   result_type: WordSized
   operands:
     input: WordSized
+  defer_init: true
 
 # Negative of float32
 - name: NegF
   result_type: WordSized
   operands:
     input: WordSized
+  defer_init: true
 
 # Absolute value of an integer.
 - name: AbsI

@@ -575,17 +575,6 @@ void LIRGeneratorARM::lowerBigIntPtrMod(MBigIntPtrMod* ins) {
   }
 }
 
-void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
-  if (ins->type() == MIRType::Int32) {
-    lowerForALU(new (alloc()) LNegI, ins, ins->input());
-  } else if (ins->type() == MIRType::Float32) {
-    define(new (alloc()) LNegF(useRegisterAtStart(ins->input())), ins);
-  } else {
-    MOZ_ASSERT(ins->type() == MIRType::Double);
-    define(new (alloc()) LNegD(useRegisterAtStart(ins->input())), ins);
-  }
-}
-
 void LIRGeneratorARM::lowerUDiv(MDiv* div) {
   MDefinition* lhs = div->getOperand(0);
   MDefinition* rhs = div->getOperand(1);

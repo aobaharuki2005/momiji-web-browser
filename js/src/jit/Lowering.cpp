@@ -2405,7 +2405,7 @@ void LIRGenerator::visitMul(MMul* ins) {
     // If our RHS is a constant -1.0, we can optimize to an LNegD.
     if (!ins->mustPreserveNaN() && rhs->isConstant() &&
         rhs->toConstant()->toDouble() == -1.0) {
-      defineReuseInput(new (alloc()) LNegD(useRegisterAtStart(lhs)), ins, 0);
+      lowerForFPU(new (alloc()) LNegD, ins, lhs);
       return;
     }
 
@@ -2420,7 +2420,7 @@ void LIRGenerator::visitMul(MMul* ins) {
     // We apply the same optimizations as for doubles
     if (!ins->mustPreserveNaN() && rhs->isConstant() &&
         rhs->toConstant()->toFloat32() == -1.0f) {
-      defineReuseInput(new (alloc()) LNegF(useRegisterAtStart(lhs)), ins, 0);
+      lowerForFPU(new (alloc()) LNegF, ins, lhs);
       return;
     }
 
@@ -2429,6 +2429,22 @@ void LIRGenerator::visitMul(MMul* ins) {
   }
 
   MOZ_CRASH("Unhandled number specialization");
+}
+
+void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
+  switch (ins->type()) {
+    case MIRType::Int32:
+      lowerForALU(new (alloc()) LNegI, ins, ins->input());
+      break;
+    case MIRType::Float32:
+      lowerForFPU(new (alloc()) LNegF, ins, ins->input());
+      break;
+    case MIRType::Double:
+      lowerForFPU(new (alloc()) LNegD, ins, ins->input());
+      break;
+    default:
+      MOZ_CRASH();
+  }
 }
 
 void LIRGenerator::visitDiv(MDiv* ins) {
