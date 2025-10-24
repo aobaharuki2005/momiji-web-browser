@@ -499,6 +499,7 @@ class TrustPanel {
 
     let children = blockers.map(async blocker => {
       let button = document.createElement("moz-button");
+      button.classList.add("moz-button-subviewbutton-nav");
       button.setAttribute("iconsrc", blocker.iconSrc);
       button.setAttribute("type", "ghost icon");
       document.l10n.setAttributes(

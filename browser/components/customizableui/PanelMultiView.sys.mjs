@@ -1594,6 +1594,7 @@ export var PanelView = class extends AssociatedToNode {
         localName == "toolbarbutton" ||
         localName == "checkbox" ||
         localName == "a" ||
+        localName == "moz-button" ||
         localName == "moz-toggle" ||
         node.classList.contains("text-link") ||
         (!arrowKey && isNavigableWithTabOnly) ||
@@ -1884,7 +1885,13 @@ export var PanelView = class extends AssociatedToNode {
         // If the current button is _not_ one that points to a subview, pressing
         // the arrow key shouldn't do anything.
         let button = this.selectedElement;
-        if (!button || !button.classList.contains("subviewbutton-nav")) {
+        if (
+          !button ||
+          !(
+            button.classList.contains("subviewbutton-nav") ||
+            button.classList.contains("moz-button-subviewbutton-nav")
+          )
+        ) {
           break;
         }
       }
