@@ -297,9 +297,9 @@ void CodeGenerator::visitMulI(LMulI* ins) {
 
     if (constant > 0) {
       uint32_t shift = mozilla::FloorLog2(constant);
+
       if (!mul->canOverflow()) {
         // If it cannot overflow, we can do lots of optimizations.
-        uint32_t rest = constant - (1 << shift);
 
         // See if the constant has one bit set, meaning it can be
         // encoded as a bitshift.
@@ -311,28 +311,33 @@ void CodeGenerator::visitMulI(LMulI* ins) {
         // If the constant cannot be encoded as (1<<C1), see if it can
         // be encoded as (1<<C1) | (1<<C2), which can be computed
         // using an add and a shift.
+        uint32_t rest = constant - (1 << shift);
         uint32_t shift_rest = mozilla::FloorLog2(rest);
-        if (lhs != dest && (1u << shift_rest) == rest) {
-          masm.ma_sll(dest, lhs, Imm32(shift - shift_rest));
-          masm.add32(lhs, dest);
+        if ((1u << shift_rest) == rest) {
+          UseScratchRegisterScope temps(masm);
+          Register scratch = temps.Acquire();
+
+          masm.ma_sll(scratch, lhs, Imm32(shift - shift_rest));
+          masm.as_addu(dest, scratch, lhs);
           if (shift_rest != 0) {
             masm.ma_sll(dest, dest, Imm32(shift_rest));
           }
           return;
         }
       } else {
-        // To stay on the safe side, only optimize things that are a
-        // power of 2.
-        if (lhs != dest && (1 << shift) == constant) {
+        // To stay on the safe side, only optimize things that are a power of 2.
+        if ((1 << shift) == constant) {
           UseScratchRegisterScope temps(masm);
           Register scratch = temps.Acquire();
+
           // dest = lhs * pow(2, shift)
-          masm.ma_sll(dest, lhs, Imm32(shift));
-          // At runtime, check (lhs == dest >> shift), if this does
-          // not hold, some bits were lost due to overflow, and the
+          masm.ma_dsll(dest, lhs, Imm32(shift));
+
+          // At runtime, check (dest >> shift == intptr_t(dest) >> shift), if
+          // this does not hold, some bits were lost due to overflow, and the
           // computation should be resumed as a double.
-          masm.ma_sra(scratch, dest, Imm32(shift));
-          bailoutCmp32(Assembler::NotEqual, lhs, scratch, ins->snapshot());
+          masm.ma_sll(scratch, dest, Imm32(0));
+          bailoutCmp32(Assembler::NotEqual, dest, scratch, ins->snapshot());
           return;
         }
       }

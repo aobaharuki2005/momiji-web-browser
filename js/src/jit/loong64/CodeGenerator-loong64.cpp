@@ -800,41 +800,44 @@ void CodeGenerator::visitMulI(LMulI* ins) {
 
       if (!mul->canOverflow()) {
         // If it cannot overflow, we can do lots of optimizations.
-        uint32_t rest = constant - (1 << shift);
 
         // See if the constant has one bit set, meaning it can be
         // encoded as a bitshift.
         if ((1 << shift) == constant) {
-          masm.as_slli_w(dest, lhs, shift % 32);
+          masm.as_slli_w(dest, lhs, shift);
           return;
         }
 
         // If the constant cannot be encoded as (1<<C1), see if it can
         // be encoded as (1<<C1) | (1<<C2), which can be computed
         // using an add and a shift.
+        uint32_t rest = constant - (1 << shift);
         uint32_t shift_rest = mozilla::FloorLog2(rest);
-        if (lhs != dest && (1u << shift_rest) == rest) {
-          masm.as_slli_w(dest, lhs, (shift - shift_rest) % 32);
-          masm.add32(lhs, dest);
+        if ((1u << shift_rest) == rest) {
+          UseScratchRegisterScope temps(masm);
+          Register scratch = temps.Acquire();
+
+          masm.as_slli_w(scratch, lhs, (shift - shift_rest));
+          masm.as_add_w(dest, scratch, lhs);
           if (shift_rest != 0) {
-            masm.as_slli_w(dest, dest, shift_rest % 32);
+            masm.as_slli_w(dest, dest, shift_rest);
           }
           return;
         }
       } else {
-        // To stay on the safe side, only optimize things that are a
-        // power of 2.
-        if (lhs != dest && (1 << shift) == constant) {
+        // To stay on the safe side, only optimize things that are a power of 2.
+        if ((1 << shift) == constant) {
           UseScratchRegisterScope temps(masm);
           Register scratch = temps.Acquire();
+
           // dest = lhs * pow(2, shift)
-          masm.as_slli_w(dest, lhs, shift % 32);
-          // At runtime, check (lhs == dest >> shift), if this does
-          // not hold, some bits were lost due to overflow, and the
+          masm.as_slli_d(dest, lhs, shift);
+
+          // At runtime, check (dest >> shift == intptr_t(dest) >> shift), if
+          // this does not hold, some bits were lost due to overflow, and the
           // computation should be resumed as a double.
-          masm.as_srai_w(scratch, dest, shift % 32);
-          bailoutCmp32(Assembler::NotEqual, lhs, Register(scratch),
-                       ins->snapshot());
+          masm.as_slli_w(scratch, dest, 0);
+          bailoutCmp32(Assembler::NotEqual, dest, scratch, ins->snapshot());
           return;
         }
       }
