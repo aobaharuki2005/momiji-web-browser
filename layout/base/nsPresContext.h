@@ -639,20 +639,20 @@ class nsPresContext : public nsISupports,
     return NSAppUnitsToIntPixels(aAppUnits, float(AppUnitsPerDevPixel()));
   }
 
-  float AppUnitsToFloatDevPixels(nscoord aAppUnits) {
+  float AppUnitsToFloatDevPixels(nscoord aAppUnits) const {
     return aAppUnits / float(AppUnitsPerDevPixel());
   }
 
-  int32_t CSSPixelsToDevPixels(int32_t aPixels) {
+  int32_t CSSPixelsToDevPixels(int32_t aPixels) const {
     return AppUnitsToDevPixels(CSSPixelsToAppUnits(aPixels));
   }
 
-  float CSSPixelsToDevPixels(float aPixels) {
+  float CSSPixelsToDevPixels(float aPixels) const {
     return NSAppUnitsToFloatPixels(CSSPixelsToAppUnits(aPixels),
                                    float(AppUnitsPerDevPixel()));
   }
 
-  int32_t DevPixelsToIntCSSPixels(int32_t aPixels) {
+  int32_t DevPixelsToIntCSSPixels(int32_t aPixels) const {
     return AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPixels));
   }
 
