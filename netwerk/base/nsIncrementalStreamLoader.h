@@ -9,7 +9,6 @@
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsIIncrementalStreamLoader.h"
 #include "nsCOMPtr.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Vector.h"
 
 class nsIRequest;

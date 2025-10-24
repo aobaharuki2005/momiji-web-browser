@@ -21,7 +21,6 @@
 #include "nsString.h"
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "Dictionary.h"

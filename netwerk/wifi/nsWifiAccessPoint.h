@@ -11,7 +11,6 @@
 
 #include "nsString.h"
 #include "nsCOMArray.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Sprintf.h"
 
 class nsWifiAccessPoint final : public nsIWifiAccessPoint {

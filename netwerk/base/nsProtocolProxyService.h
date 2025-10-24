@@ -17,7 +17,6 @@
 #include "nsHashKeys.h"
 #include "nsITimer.h"
 #include "prio.h"
-#include "mozilla/Attributes.h"
 
 class nsIPrefBranch;
 class nsISystemProxySettings;

@@ -41,7 +41,6 @@
 #include "nsQueryObject.h"
 #include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/glean/NetwerkProtocolHttpMetrics.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/glean/NetwerkMetrics.h"

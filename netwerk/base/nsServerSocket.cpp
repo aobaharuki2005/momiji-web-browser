@@ -11,7 +11,6 @@
 #include "prnetdb.h"
 #include "prio.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/net/DNS.h"
 #include "nsServiceManagerUtils.h"

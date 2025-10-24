@@ -23,7 +23,6 @@
 #  include "nsIX509Cert.h"
 #  include "nsITransportSecurityInfo.h"
 #endif
-#include "mozilla/Attributes.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"

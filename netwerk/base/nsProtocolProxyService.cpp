@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SimpleChannel.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 
 #include "nsProtocolProxyService.h"

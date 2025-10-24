@@ -19,7 +19,6 @@
 #include "nsISpeculativeConnect.h"
 #include "nsWeakReference.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/RWLock.h"
 #include "mozilla/net/ProtocolHandlerInfo.h"
 #include "prtime.h"

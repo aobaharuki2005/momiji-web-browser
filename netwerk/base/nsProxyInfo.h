@@ -10,7 +10,6 @@
 #include "nsIProxyInfo.h"
 #include "nsString.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 
 // Use to support QI nsIProxyInfo to nsProxyInfo
 #define NS_PROXYINFO_IID                      \

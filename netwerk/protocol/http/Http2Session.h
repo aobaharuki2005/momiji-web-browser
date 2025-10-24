@@ -10,7 +10,6 @@
 // https://www.rfc-editor.org/rfc/rfc7540.txt
 
 #include "ASpdySession.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Queue.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"

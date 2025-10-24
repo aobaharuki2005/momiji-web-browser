@@ -36,7 +36,6 @@
 #include "DNSAdditionalInfo.h"
 #include "TRRService.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/ChildDNSService.h"

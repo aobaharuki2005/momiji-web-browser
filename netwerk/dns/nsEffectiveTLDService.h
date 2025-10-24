@@ -9,7 +9,6 @@
 #include "nsIEffectiveTLDService.h"
 
 #include "mozilla/AutoMemMap.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Dafsa.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
