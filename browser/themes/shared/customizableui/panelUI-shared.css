@@ -2280,6 +2280,10 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   display: none;
 }
 
+#profiles-copy-profile-button {
+  list-style-image: url("chrome://global/skin/icons/edit-copy.svg");
+}
+
 #profiles-create-profile-button {
   list-style-image: url("chrome://global/skin/icons/plus.svg");
 }

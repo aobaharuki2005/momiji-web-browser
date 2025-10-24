@@ -8,6 +8,8 @@ run-if = [
   "os != 'linux'",
 ] # This seems to mess up focus on Linux for some reason.
 
+["browser_appmenu.js"]
+
 ["browser_appmenu_menuitem_updates.js"]
 head = "../unit/head.js head.js"
 

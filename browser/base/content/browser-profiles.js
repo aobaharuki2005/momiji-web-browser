@@ -4,6 +4,7 @@
 
 var gProfiles = {
   async init() {
+    this.copyProfile = this.copyProfile.bind(this);
     this.createNewProfile = this.createNewProfile.bind(this);
     this.handleCommand = this.handleCommand.bind(this);
     this.launchProfile = this.launchProfile.bind(this);
@@ -165,6 +166,10 @@ var gProfiles = {
     });
   },
 
+  copyProfile() {
+    SelectableProfileService.currentProfile.copyProfile();
+  },
+
   createNewProfile() {
     SelectableProfileService.createNewProfile();
   },
@@ -216,6 +221,10 @@ var gProfiles = {
       }
       case "profiles-manage-profiles-button": {
         this.manageProfiles();
+        break;
+      }
+      case "profiles-copy-profile-button": {
+        this.copyProfile();
         break;
       }
       case "profiles-create-profile-button": {
@@ -313,6 +322,18 @@ var gProfiles = {
       );
     }
 
+    let copyProfileButton = PanelMultiView.getViewNode(
+      document,
+      "profiles-copy-profile-button"
+    );
+
+    if (!copyProfileButton) {
+      copyProfileButton = document.createXULElement("toolbarbutton");
+      copyProfileButton.id = "profiles-copy-profile-button";
+      copyProfileButton.classList.add("subviewbutton", "subviewbutton-iconic");
+      copyProfileButton.setAttribute("data-l10n-id", "appmenu-copy-profile");
+    }
+
     let manageProfilesButton = PanelMultiView.getViewNode(
       document,
       "profiles-manage-profiles-button"
@@ -339,6 +360,7 @@ var gProfiles = {
       footerSeparator.hidden = true;
       const subviewBody = subview.querySelector(".panel-subview-body");
       subview.insertBefore(createProfileButton, subviewBody);
+      subview.insertBefore(copyProfileButton, subviewBody);
       subview.insertBefore(manageProfilesButton, subviewBody);
     } else {
       profilesHeader.style.backgroundColor = "var(--appmenu-profiles-theme-bg)";
@@ -352,8 +374,10 @@ var gProfiles = {
       subview.style.setProperty("--appmenu-profiles-theme-fg", themeFg);
 
       headerSeparator.hidden = true;
+      footerSeparator.hidden = false;
       subview.appendChild(footerSeparator);
       subview.appendChild(createProfileButton);
+      subview.appendChild(copyProfileButton);
       subview.appendChild(manageProfilesButton);
 
       let headerText = PanelMultiView.getViewNode(
