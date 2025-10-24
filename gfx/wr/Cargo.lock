@@ -1232,9 +1232,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "65.2.2"
+version = "66.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "895946f5a54f9d54c24175af3a064c9ecf8b4f9374afb26132b583f179fc6be2"
+checksum = "3acc348bbf540abeedf7c271daf952b1e24311e2ea1c1f8ac172a5cedf37ac91"
 dependencies = [
  "crossbeam-channel",
  "glean-core",
@@ -1247,9 +1247,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "65.2.2"
+version = "66.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b22a5ae2c3fd542fb8388da0de68542748f466c8df9a815c8b9cc274894ab919"
+checksum = "540e40007a01e43b73904d1ee8f7efd4782f1a7f4a20ef1dd6d2c00fc18d54b6"
 dependencies = [
  "android_logger",
  "bincode",
@@ -4280,9 +4280,9 @@ dependencies = [
 
 [[package]]
 name = "zeitstempel"
-version = "0.1.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94652f036694517fa67509942c3b60a51a19e1cd9cfd0f456eeb830ae8798d3d"
+checksum = "f523a0d9326c4f3242ad3a9d306baa7fe4572fd532cc891cabecfb714c786c1e"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",

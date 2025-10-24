@@ -58,7 +58,7 @@ swgl = { path = "../swgl", optional = true }
 topological-sort = "0.1"
 peek-poke = { version = "0.3", path = "../peek-poke" }
 allocator-api2 = { version = "0.2.18", features = ["alloc", "serde"] }
-zeitstempel = "0.1.2"
+zeitstempel = "0.2.0"
 hyper = { version = "0.14.32", optional = true, features = ["server", "http1", "tcp", "stream"] }
 tokio = { version = "1", optional = true, features = ["rt-multi-thread", "net", "io-util"] }
 serde_json = { optional=true, version="1" }
