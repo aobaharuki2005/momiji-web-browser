@@ -5,6 +5,7 @@
 
 import logging
 
+import taskcluster_urls as liburls
 from taskcluster import Hooks
 from taskgraph.util import taskcluster as tc_util
 from taskgraph.util.taskcluster import (
@@ -14,6 +15,13 @@ from taskgraph.util.taskcluster import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def get_index_url(index_path, multiple=False, block_proxy=True):
+    index_tmpl = liburls.api(
+        get_root_url(block_proxy=block_proxy), "index", "v1", "task{}/{}"
+    )
+    return index_tmpl.format("s" if multiple else "", index_path)
 
 
 def insert_index(index_path, task_id, data=None):
