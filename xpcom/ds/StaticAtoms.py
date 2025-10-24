@@ -516,6 +516,7 @@ STATIC_ATOMS = [
     Atom("handler", "handler"),
     Atom("handlers", "handlers"),
     Atom("HARD", "HARD"),
+    Atom("hasActions", "has-actions"),
     Atom("hasSameNode", "has-same-node"),
     Atom("hbox", "hbox"),
     Atom("head", "head"),

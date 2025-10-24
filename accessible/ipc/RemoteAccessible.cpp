@@ -1872,6 +1872,11 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
     if (!popupType.IsEmpty()) {
       attributes->SetAttribute(nsGkAtoms::ispopup, std::move(popupType));
     }
+
+    if (auto hasActions =
+            mCachedFields->GetAttribute<bool>(CacheKey::HasActions)) {
+      attributes->SetAttribute(nsGkAtoms::hasActions, *hasActions);
+    }
   }
 
   nsAutoString name;

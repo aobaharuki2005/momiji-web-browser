@@ -1149,6 +1149,10 @@ already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
     attribIter.ExposeAttr(attributes);
   }
 
+  if (nsAccUtils::HasARIAAttr(Elm(), nsGkAtoms::aria_actions)) {
+    attributes->SetAttribute(nsGkAtoms::hasActions, true);
+  }
+
   // If there is no aria-live attribute then expose default value of 'live'
   // object attribute used for ARIA role of this accessible.
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
@@ -1404,6 +1408,14 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
         mDoc->FireDelayedEvent(event);
       }
     }
+  }
+
+  if (aAttribute == nsGkAtoms::aria_actions && IsAdditionOrRemoval(aModType)) {
+    // We only care about the presence of aria-actions, not its value.
+    mDoc->QueueCacheUpdate(this, CacheDomain::ARIA);
+    RefPtr<AccEvent> event =
+        new AccObjectAttrChangedEvent(this, nsGkAtoms::hasActions);
+    mDoc->FireDelayedEvent(event);
   }
 
   dom::Element* elm = Elm();
@@ -4035,6 +4047,12 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(CacheKey::ARIAAttributes, std::move(ariaAttrs));
     } else if (IsUpdatePush(CacheDomain::ARIA)) {
       fields->SetAttribute(CacheKey::ARIAAttributes, DeleteEntry());
+    }
+
+    if (nsAccUtils::HasARIAAttr(Elm(), nsGkAtoms::aria_actions)) {
+      fields->SetAttribute(CacheKey::HasActions, true);
+    } else if (IsUpdatePush(CacheDomain::ARIA)) {
+      fields->SetAttribute(CacheKey::HasActions, DeleteEntry());
     }
   }
 

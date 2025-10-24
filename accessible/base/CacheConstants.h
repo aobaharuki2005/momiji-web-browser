@@ -178,6 +178,9 @@ class CacheKey {
   // nsTArray<int32_t>, no domain
   // As returned by HyperTextAccessibleBase::CachedHyperTextOffsets.
   static constexpr nsStaticAtom* HyperTextOffsets = nsGkAtoms::offset;
+  // bool, CacheDomain::ARIA
+  // Accessible has aria-actions
+  static constexpr nsStaticAtom* HasActions = nsGkAtoms::hasActions;
   // bool, CacheDomain::Actions
   // Whether this image has a longdesc.
   static constexpr nsStaticAtom* HasLongdesc = nsGkAtoms::longdesc;
