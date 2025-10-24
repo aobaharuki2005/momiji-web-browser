@@ -1168,7 +1168,7 @@ def gtest(
 
         processes = []
 
-        def add_process(job_id, env, **kwargs):
+        def add_process(job_id, append_env, **kwargs):
             def log_line(line):
                 # Prepend the job identifier to output
                 command_context.log(
@@ -1177,6 +1177,10 @@ def gtest(
                     {"job_id": job_id, "line": line.strip()},
                     "[{job_id}] {line}",
                 )
+
+            env = os.environ.copy()
+            # Allow the new environment to overwrite system environment variables.
+            env.update(append_env)
 
             report.set_output_in_env(env, job_id)
 
@@ -1250,7 +1254,7 @@ def gtest(
             for filt in suite_filters(suites):
                 proc = add_process(
                     filt.suite,
-                    filt(gtest_env),
+                    filt(gtest_env.copy()),
                     onFinish=functools.partial(run_next, filt.suite),
                 )
                 processes_to_run.append((filt.suite, proc))
