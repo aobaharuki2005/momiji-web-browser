@@ -174,10 +174,6 @@ void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
   }
 }
 
-void LIRGenerator::visitAbs(MAbs* ins) {
-  defineReuseInput(allocateAbs(ins, useRegisterAtStart(ins->input())), ins, 0);
-}
-
 void LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs,
                                       MDefinition* rhs) {
   // Note: If we need a negative zero check, lhs is used twice.

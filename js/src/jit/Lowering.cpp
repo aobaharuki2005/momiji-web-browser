@@ -1985,30 +1985,29 @@ void LIRGenerator::visitMinMaxArray(MMinMaxArray* ins) {
   define(lir, ins);
 }
 
-LInstructionHelper<1, 1, 0>* LIRGenerator::allocateAbs(MAbs* ins,
-                                                       LAllocation input) {
+void LIRGenerator::visitAbs(MAbs* ins) {
   MDefinition* num = ins->input();
   MOZ_ASSERT(IsNumberType(num->type()));
 
-  LInstructionHelper<1, 1, 0>* lir;
   switch (num->type()) {
-    case MIRType::Int32:
-      lir = new (alloc()) LAbsI(input);
+    case MIRType::Int32: {
+      auto* lir = new (alloc()) LAbsI;
       // needed to handle abs(INT32_MIN)
       if (ins->fallible()) {
         assignSnapshot(lir, ins->bailoutKind());
       }
+      lowerForALU(lir, ins, num);
       break;
+    }
     case MIRType::Float32:
-      lir = new (alloc()) LAbsF(input);
+      lowerForFPU(new (alloc()) LAbsF, ins, num);
       break;
     case MIRType::Double:
-      lir = new (alloc()) LAbsD(input);
+      lowerForFPU(new (alloc()) LAbsD, ins, num);
       break;
     default:
       MOZ_CRASH();
   }
-  return lir;
 }
 
 void LIRGenerator::visitClz(MClz* ins) {

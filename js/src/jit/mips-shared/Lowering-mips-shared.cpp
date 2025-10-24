@@ -172,10 +172,6 @@ void LIRGeneratorMIPSShared::lowerDivI(MDiv* div) {
   define(lir, div);
 }
 
-void LIRGenerator::visitAbs(MAbs* ins) {
-  define(allocateAbs(ins, useRegisterAtStart(ins->input())), ins);
-}
-
 void LIRGeneratorMIPSShared::lowerMulI(MMul* mul, MDefinition* lhs,
                                        MDefinition* rhs) {
   LMulI* lir = new (alloc()) LMulI;

@@ -355,10 +355,6 @@ void LIRGeneratorARM::lowerDivI(MDiv* div) {
   defineReturn(lir, div);
 }
 
-void LIRGenerator::visitAbs(MAbs* ins) {
-  define(allocateAbs(ins, useRegisterAtStart(ins->input())), ins);
-}
-
 void LIRGeneratorARM::lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs) {
   LMulI* lir = new (alloc()) LMulI;
   if (mul->fallible()) {

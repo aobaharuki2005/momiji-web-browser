@@ -498,10 +498,6 @@ void LIRGenerator::visitUnbox(MUnbox* unbox) {
   define(lir, unbox);
 }
 
-void LIRGenerator::visitAbs(MAbs* ins) {
-  define(allocateAbs(ins, useRegisterAtStart(ins->input())), ins);
-}
-
 void LIRGenerator::visitCopySign(MCopySign* ins) {
   MDefinition* lhs = ins->lhs();
   MDefinition* rhs = ins->rhs();

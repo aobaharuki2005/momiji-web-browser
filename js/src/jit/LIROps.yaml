@@ -1140,6 +1140,7 @@
   result_type: WordSized
   operands:
     input: WordSized
+  defer_init: true
   mir_op: Abs
 
 # Absolute value of a double.
@@ -1147,12 +1148,14 @@
   result_type: WordSized
   operands:
     input: WordSized
+  defer_init: true
 
 # Absolute value of a float32.
 - name: AbsF
   result_type: WordSized
   operands:
     input: WordSized
+  defer_init: true
 
 # Copysign for doubles.
 - name: CopySignD
