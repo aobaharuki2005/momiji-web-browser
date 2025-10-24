@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: glean-parser
-Version: 17.2.0
+Version: 18.0.3
 Summary: Parser tools for Mozilla's Glean telemetry
 Project-URL: Homepage, https://mozilla.github.io/glean
 Project-URL: Repository, https://github.com/mozilla/glean_parser
@@ -12,13 +12,12 @@ Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Natural Language :: English
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
 Classifier: Programming Language :: Python :: 3.12
 Classifier: Programming Language :: Python :: 3.13
-Requires-Python: >=3.8
+Requires-Python: >=3.9
 Requires-Dist: click>=7
 Requires-Dist: diskcache>=4
 Requires-Dist: jinja2>=2.10.1
@@ -45,7 +44,7 @@ code for various integrations, linting and coverage testing.
 
 ## Requirements
 
-- Python 3.8 (or later)
+- Python 3.9 (or later)
 
 ## Usage
 
