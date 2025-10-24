@@ -182,6 +182,9 @@ void LIRGeneratorARM::lowerForALU(LInstructionHelper<1, 2, 0>* ins,
 void LIRGeneratorARM::lowerForALUInt64(
     LInstructionHelper<INT64_PIECES, INT64_PIECES, 0>* ins, MDefinition* mir,
     MDefinition* input) {
+  // Reuse the input.  Define + use-at-start would create risk that the output
+  // uses the same register pair as the input but in reverse order.  Reusing
+  // probably has less spilling than the alternative, define + use.
   ins->setInt64Operand(0, useInt64RegisterAtStart(input));
   defineInt64ReuseInput(ins, mir, 0);
 }
@@ -350,14 +353,6 @@ void LIRGeneratorARM::lowerDivI(MDiv* div) {
   }
 
   defineReturn(lir, div);
-}
-
-void LIRGeneratorARM::lowerNegI64(MInstruction* ins, MDefinition* input) {
-  // Reuse the input.  Define + use-at-start would create risk that the output
-  // uses the same register pair as the input but in reverse order.  Reusing
-  // probably has less spilling than the alternative, define + use.
-  defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
-                        ins, 0);
 }
 
 void LIRGenerator::visitAbs(MAbs* ins) {

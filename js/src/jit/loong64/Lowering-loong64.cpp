@@ -150,11 +150,6 @@ void LIRGeneratorLOONG64::defineInt64Phi(MPhi* phi, size_t lirIndex) {
   defineTypedPhi(phi, lirIndex);
 }
 
-void LIRGeneratorLOONG64::lowerNegI64(MInstruction* ins, MDefinition* input) {
-  defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
-                        ins, 0);
-}
-
 void LIRGeneratorLOONG64::lowerMulI(MMul* mul, MDefinition* lhs,
                                     MDefinition* rhs) {
   LMulI* lir = new (alloc()) LMulI;

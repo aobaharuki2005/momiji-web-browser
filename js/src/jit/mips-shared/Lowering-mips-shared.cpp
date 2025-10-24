@@ -172,12 +172,6 @@ void LIRGeneratorMIPSShared::lowerDivI(MDiv* div) {
   define(lir, div);
 }
 
-void LIRGeneratorMIPSShared::lowerNegI64(MInstruction* ins,
-                                         MDefinition* input) {
-  defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
-                        ins, 0);
-}
-
 void LIRGenerator::visitAbs(MAbs* ins) {
   define(allocateAbs(ins, useRegisterAtStart(ins->input())), ins);
 }

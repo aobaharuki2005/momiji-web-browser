@@ -1119,6 +1119,7 @@
   result_type: Int64
   operands:
     input: Int64
+  defer_init: true
 
 # Negative of double
 - name: NegD

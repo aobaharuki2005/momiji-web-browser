@@ -168,11 +168,6 @@ void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
   }
 }
 
-void LIRGeneratorX86Shared::lowerNegI64(MInstruction* ins, MDefinition* input) {
-  defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
-                        ins, 0);
-}
-
 void LIRGenerator::visitAbs(MAbs* ins) {
   defineReuseInput(allocateAbs(ins, useRegisterAtStart(ins->input())), ins, 0);
 }

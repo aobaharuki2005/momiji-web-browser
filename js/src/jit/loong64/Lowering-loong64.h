@@ -62,7 +62,6 @@ class LIRGeneratorLOONG64 : public LIRGeneratorShared {
   void lowerInt64PhiInput(MPhi*, uint32_t, LBlock*, size_t);
   void defineInt64Phi(MPhi*, size_t);
 
-  void lowerNegI64(MInstruction* ins, MDefinition* input);
   void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
   void lowerDivI(MDiv* div);
   void lowerDivI64(MDiv* div);
