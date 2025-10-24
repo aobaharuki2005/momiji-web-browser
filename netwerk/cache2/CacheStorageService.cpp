@@ -746,7 +746,12 @@ static bool RemoveExactEntry(CacheEntryTable* aEntries, nsACString const& aKey,
 
   // Remove from DictionaryCache immediately, to ensure the removal is
   // synchronous
-  DictionaryCache::RemoveDictionaryFor(aEntry->GetURI());
+
+  if (aEntry->GetEnhanceID().EqualsLiteral("dict:")) {
+    DictionaryCache::RemoveOriginFor(aEntry->GetURI());
+  } else {
+    DictionaryCache::RemoveDictionaryFor(aEntry->GetURI());
+  }
 
   LOG(("RemoveExactEntry [entry=%p removed]", aEntry));
   aEntries->Remove(aKey);
@@ -1511,8 +1516,7 @@ Result<size_t, nsresult> CacheStorageService::MemoryPool::PurgeByFrecency(
         if (entry->GetEnhanceID().EqualsLiteral("dict:")) {
           LOG(
               ("*** Ignored Entry is a dictionary origin, metadata size %d, "
-               "referenced "
-               "%d, Frecency %f",
+               "referenced %d, Frecency %f",
                entry->GetMetadataMemoryConsumption(), entry->IsReferenced(),
                entry->GetFrecency()));
         }
