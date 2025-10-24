@@ -202,7 +202,7 @@ index 84b00b711e..c8058ea132 100644
    RTC_DCHECK_RUN_ON(&main_thread_);
    last_codec_type_ = codec_type;
 diff --git a/video/receive_statistics_proxy.h b/video/receive_statistics_proxy.h
-index 111b7f3c45..fb411d4bbf 100644
+index e3cd922647..9e58f41521 100644
 --- a/video/receive_statistics_proxy.h
 +++ b/video/receive_statistics_proxy.h
 @@ -106,6 +106,7 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
@@ -272,7 +272,7 @@ index 1acb0ac70e..272f83ccba 100644
        RTC_GUARDED_BY(packet_sequence_checker_);
    // h26x_packet_buffer_ is applicable to H.264 and H.265. For H.265 it is
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index e7a224e8c3..7fc4e69446 100644
+index bc997550df..59b5282229 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
 @@ -256,6 +256,7 @@ VideoReceiveStream2::VideoReceiveStream2(
