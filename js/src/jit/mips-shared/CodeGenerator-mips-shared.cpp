@@ -6,7 +6,6 @@
 
 #include "jit/mips-shared/CodeGenerator-mips-shared.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jsnum.h"
@@ -30,9 +29,6 @@ using namespace js;
 using namespace js::jit;
 
 using JS::GenericNaN;
-using JS::ToInt32;
-using mozilla::DebugOnly;
-using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
 
 // shared
@@ -189,17 +185,15 @@ void CodeGenerator::visitAddIntPtr(LAddIntPtr* ins) {
 }
 
 void CodeGenerator::visitAddI64(LAddI64* lir) {
-  LInt64Allocation lhs = lir->lhs();
+  Register lhs = ToRegister64(lir->lhs()).reg;
   LInt64Allocation rhs = lir->rhs();
-
-  MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+  Register dest = ToOutRegister64(lir).reg;
 
   if (IsConstant(rhs)) {
-    masm.add64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-    return;
+    masm.ma_daddu(dest, lhs, ImmWord(ToInt64(rhs)));
+  } else {
+    masm.as_daddu(dest, lhs, ToRegister64(rhs).reg);
   }
-
-  masm.add64(ToRegister64(rhs), ToRegister64(lhs));
 }
 
 void CodeGenerator::visitSubI(LSubI* ins) {
@@ -244,17 +238,15 @@ void CodeGenerator::visitSubIntPtr(LSubIntPtr* ins) {
 }
 
 void CodeGenerator::visitSubI64(LSubI64* lir) {
-  LInt64Allocation lhs = lir->lhs();
+  Register lhs = ToRegister64(lir->lhs()).reg;
   LInt64Allocation rhs = lir->rhs();
-
-  MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+  Register dest = ToOutRegister64(lir).reg;
 
   if (IsConstant(rhs)) {
-    masm.sub64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-    return;
+    masm.ma_dsubu(dest, lhs, ImmWord(ToInt64(rhs)));
+  } else {
+    masm.as_dsubu(dest, lhs, ToRegister64(rhs).reg);
   }
-
-  masm.sub64(ToRegister64(rhs), ToRegister64(lhs));
 }
 
 void CodeGenerator::visitMulI(LMulI* ins) {
@@ -723,38 +715,37 @@ void CodeGenerator::visitModMaskI(LModMaskI* ins) {
 }
 
 void CodeGenerator::visitBitNotI(LBitNotI* ins) {
-  const LAllocation* input = ins->input();
-  const LDefinition* dest = ins->output();
-  MOZ_ASSERT(!input->isConstant());
-
-  masm.ma_not(ToRegister(dest), ToRegister(input));
+  Register input = ToRegister(ins->input());
+  Register dest = ToRegister(ins->output());
+  masm.ma_not(dest, input);
 }
 
 void CodeGenerator::visitBitOpI(LBitOpI* ins) {
-  const LAllocation* lhs = ins->lhs();
+  Register lhs = ToRegister(ins->lhs());
   const LAllocation* rhs = ins->rhs();
-  const LDefinition* dest = ins->output();
+  Register dest = ToRegister(ins->output());
+
   // all of these bitops should be either imm32's, or integer registers.
   switch (ins->bitop()) {
     case JSOp::BitOr:
       if (rhs->isConstant()) {
-        masm.ma_or(ToRegister(dest), ToRegister(lhs), Imm32(ToInt32(rhs)));
+        masm.ma_or(dest, lhs, Imm32(ToInt32(rhs)));
       } else {
-        masm.as_or(ToRegister(dest), ToRegister(lhs), ToRegister(rhs));
+        masm.as_or(dest, lhs, ToRegister(rhs));
       }
       break;
     case JSOp::BitXor:
       if (rhs->isConstant()) {
-        masm.ma_xor(ToRegister(dest), ToRegister(lhs), Imm32(ToInt32(rhs)));
+        masm.ma_xor(dest, lhs, Imm32(ToInt32(rhs)));
       } else {
-        masm.as_xor(ToRegister(dest), ToRegister(lhs), ToRegister(rhs));
+        masm.as_xor(dest, lhs, ToRegister(rhs));
       }
       break;
     case JSOp::BitAnd:
       if (rhs->isConstant()) {
-        masm.ma_and(ToRegister(dest), ToRegister(lhs), Imm32(ToInt32(rhs)));
+        masm.ma_and(dest, lhs, Imm32(ToInt32(rhs)));
       } else {
-        masm.as_and(ToRegister(dest), ToRegister(lhs), ToRegister(rhs));
+        masm.as_and(dest, lhs, ToRegister(rhs));
       }
       break;
     default:
@@ -763,32 +754,30 @@ void CodeGenerator::visitBitOpI(LBitOpI* ins) {
 }
 
 void CodeGenerator::visitBitOpI64(LBitOpI64* lir) {
-  LInt64Allocation lhs = lir->lhs();
-  LInt64Allocation rhs = lir->rhs();
+  Register lhs = ToRegister64(lir->lhs()).reg;
+  Register rhs;
+  Register dest = ToOutRegister64(lir).reg;
 
-  MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+  UseScratchRegisterScope temps(masm);
+  if (IsConstant(lir->rhs())) {
+    rhs = temps.Acquire();
+
+    // Small immediates can be handled without the load immediate instruction,
+    // but this optimisation isn't yet implemented.
+    masm.ma_li(rhs, ImmWord(ToInt64(lir->rhs())));
+  } else {
+    rhs = ToRegister64(lir->rhs()).reg;
+  }
 
   switch (lir->bitop()) {
     case JSOp::BitOr:
-      if (IsConstant(rhs)) {
-        masm.or64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-      } else {
-        masm.or64(ToRegister64(rhs), ToRegister64(lhs));
-      }
+      masm.as_or(dest, lhs, rhs);
       break;
     case JSOp::BitXor:
-      if (IsConstant(rhs)) {
-        masm.xor64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-      } else {
-        masm.xor64(ToRegister64(rhs), ToRegister64(lhs));
-      }
+      masm.as_xor(dest, lhs, rhs);
       break;
     case JSOp::BitAnd:
-      if (IsConstant(rhs)) {
-        masm.and64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
-      } else {
-        masm.and64(ToRegister64(rhs), ToRegister64(lhs));
-      }
+      masm.as_and(dest, lhs, rhs);
       break;
     default:
       MOZ_CRASH("unexpected binary opcode");
@@ -860,18 +849,22 @@ void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
 
   if (rhs->isConstant()) {
     int32_t shift = ToIntPtr(rhs) & 0x3F;
-    switch (ins->bitop()) {
-      case JSOp::Lsh:
-        masm.ma_dsll(dest, lhs, Imm32(shift));
-        break;
-      case JSOp::Rsh:
-        masm.ma_dsra(dest, lhs, Imm32(shift));
-        break;
-      case JSOp::Ursh:
-        masm.ma_dsrl(dest, lhs, Imm32(shift));
-        break;
-      default:
-        MOZ_CRASH("Unexpected shift op");
+    if (shift) {
+      switch (ins->bitop()) {
+        case JSOp::Lsh:
+          masm.ma_dsll(dest, lhs, Imm32(shift));
+          break;
+        case JSOp::Rsh:
+          masm.ma_dsra(dest, lhs, Imm32(shift));
+          break;
+        case JSOp::Ursh:
+          masm.ma_dsrl(dest, lhs, Imm32(shift));
+          break;
+        default:
+          MOZ_CRASH("Unexpected shift op");
+      }
+    } else if (lhs != dest) {
+      masm.movePtr(lhs, dest);
     }
   } else {
     Register shift = ToRegister(rhs);
@@ -892,44 +885,42 @@ void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
 }
 
 void CodeGenerator::visitShiftI64(LShiftI64* lir) {
-  LInt64Allocation lhs = lir->lhs();
+  Register lhs = ToRegister64(lir->lhs()).reg;
   const LAllocation* rhs = lir->rhs();
-
-  MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
+  Register dest = ToOutRegister64(lir).reg;
 
   if (rhs->isConstant()) {
     int32_t shift = int32_t(rhs->toConstant()->toInt64() & 0x3F);
-    switch (lir->bitop()) {
-      case JSOp::Lsh:
-        if (shift) {
-          masm.lshift64(Imm32(shift), ToRegister64(lhs));
-        }
-        break;
-      case JSOp::Rsh:
-        if (shift) {
-          masm.rshift64Arithmetic(Imm32(shift), ToRegister64(lhs));
-        }
-        break;
-      case JSOp::Ursh:
-        if (shift) {
-          masm.rshift64(Imm32(shift), ToRegister64(lhs));
-        }
-        break;
-      default:
-        MOZ_CRASH("Unexpected shift op");
+    if (shift) {
+      switch (lir->bitop()) {
+        case JSOp::Lsh:
+          masm.ma_dsll(dest, lhs, Imm32(shift));
+          break;
+        case JSOp::Rsh:
+          masm.ma_dsra(dest, lhs, Imm32(shift));
+          break;
+        case JSOp::Ursh:
+          masm.ma_dsrl(dest, lhs, Imm32(shift));
+          break;
+        default:
+          MOZ_CRASH("Unexpected shift op");
+      }
+    } else if (lhs != dest) {
+      masm.movePtr(lhs, dest);
     }
     return;
   }
 
+  Register shift = ToRegister(rhs);
   switch (lir->bitop()) {
     case JSOp::Lsh:
-      masm.lshift64(ToRegister(rhs), ToRegister64(lhs));
+      masm.ma_dsll(dest, lhs, shift);
       break;
     case JSOp::Rsh:
-      masm.rshift64Arithmetic(ToRegister(rhs), ToRegister64(lhs));
+      masm.ma_dsra(dest, lhs, shift);
       break;
     case JSOp::Ursh:
-      masm.rshift64(ToRegister(rhs), ToRegister64(lhs));
+      masm.ma_dsrl(dest, lhs, shift);
       break;
     default:
       MOZ_CRASH("Unexpected shift op");
@@ -1809,9 +1800,10 @@ void CodeGenerator::visitNegI(LNegI* ins) {
 }
 
 void CodeGenerator::visitNegI64(LNegI64* ins) {
-  Register64 input = ToRegister64(ins->input());
-  MOZ_ASSERT(input == ToOutRegister64(ins));
-  masm.neg64(input);
+  Register input = ToRegister64(ins->input()).reg;
+  Register output = ToOutRegister64(ins).reg;
+
+  masm.ma_dnegu(output, input);
 }
 
 void CodeGenerator::visitNegD(LNegD* ins) {
