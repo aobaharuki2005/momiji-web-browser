@@ -56,11 +56,6 @@ class AbsoluteContainingBlock {
   }
 
   const nsFrameList& GetChildList() const { return mAbsoluteFrames; }
-  void AppendChildList(nsTArray<FrameChildList>* aLists,
-                       FrameChildListID aListID) const {
-    NS_ASSERTION(aListID == mChildListID, "wrong list ID");
-    GetChildList().AppendIfNonempty(aLists, aListID);
-  }
 
   void SetInitialChildList(nsIFrame* aDelegatingFrame, FrameChildListID aListID,
                            nsFrameList&& aChildList);
