@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "AnchorPositioningUtils.h"
 #include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
@@ -2624,7 +2625,9 @@ StyleAlignFlags nsContainerFrame::CSSAlignmentForAbsPosChild(
 
 StyleAlignFlags
 nsContainerFrame::CSSAlignmentForAbsPosChildWithinContainingBlock(
-    const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const {
+    const ReflowInput& aChildRI, LogicalAxis aLogicalAxis,
+    const StylePositionArea& aResolvedPositionArea,
+    const LogicalSize& aCBSize) const {
   MOZ_ASSERT(aChildRI.mFrame->IsAbsolutelyPositioned(),
              "This method should only be called for abspos children");
   // When determining the position of absolutely-positioned boxes,
@@ -2633,6 +2636,51 @@ nsContainerFrame::CSSAlignmentForAbsPosChildWithinContainingBlock(
       (aLogicalAxis == LogicalAxis::Inline)
           ? aChildRI.mStylePosition->UsedJustifySelf(nullptr)._0
           : aChildRI.mStylePosition->UsedAlignSelf(nullptr)._0;
+
+  // Check if position-area is set - if so, it determines the default alignment
+  // https://drafts.csswg.org/css-anchor-position/#position-area-alignment
+  if (!aResolvedPositionArea.IsNone() && alignment == StyleAlignFlags::NORMAL) {
+    // Check if exactly one inset in the axis is auto
+    // https://drafts.csswg.org/css-anchor-position/#position-area-alignment
+    // "However, if only one inset property in the relevant axis is auto, the
+    // default alignment is instead towards the edge with the non-auto inset;
+    // and this is an unsafe alignment."
+    const WritingMode cbWM = GetWritingMode();
+    const auto anchorResolutionParams = AnchorPosResolutionParams::From(
+        &aChildRI, /* aIgnorePositionArea = */ true);
+    const auto anchorOffsetResolutionParams =
+        AnchorPosOffsetResolutionParams::ExplicitCBFrameSize(
+            anchorResolutionParams, &aCBSize);
+
+    const LogicalSide startSide = aLogicalAxis == LogicalAxis::Inline
+                                      ? LogicalSide::IStart
+                                      : LogicalSide::BStart;
+    const LogicalSide endSide = GetOppositeSide(startSide);
+
+    const bool startInsetIsAuto =
+        aChildRI.mStylePosition
+            ->GetAnchorResolvedInset(startSide, cbWM,
+                                     anchorOffsetResolutionParams)
+            ->IsAuto();
+    const bool endInsetIsAuto =
+        aChildRI.mStylePosition
+            ->GetAnchorResolvedInset(endSide, cbWM,
+                                     anchorOffsetResolutionParams)
+            ->IsAuto();
+
+    // Exactly one inset is auto - align toward the non-auto edge, unsafely
+    if (startInsetIsAuto != endInsetIsAuto) {
+      alignment =
+          startInsetIsAuto ? StyleAlignFlags::END : StyleAlignFlags::START;
+      alignment |= StyleAlignFlags::UNSAFE;
+    } else {
+      auto keyword = aLogicalAxis == LogicalAxis::Inline
+                         ? aResolvedPositionArea.first
+                         : aResolvedPositionArea.second;
+      // Use normal position-area alignment
+      Servo_ResolvePositionAreaSelfAlignment(&keyword, &alignment);
+    }
+  }
 
   return MapCSSAlignment(alignment, aChildRI, aLogicalAxis, GetWritingMode());
 }

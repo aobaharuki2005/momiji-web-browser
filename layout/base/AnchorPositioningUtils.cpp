@@ -504,7 +504,8 @@ static StylePositionArea ToPhysicalPositionArea(StylePositionArea aPosArea,
 
 nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
     const nsRect& aAnchorRect, const nsRect& aCBRect, WritingMode aPositionedWM,
-    WritingMode aCBWM, const StylePositionArea& aPosArea) {
+    WritingMode aCBWM, const StylePositionArea& aPosArea,
+    StylePositionArea* aOutResolvedArea) {
   // Get the boundaries of 3x3 grid in CB's frame space. The edges of the
   // default anchor box are clamped to the bounds of the CB, even if that
   // results in zero width/height cells.
@@ -536,6 +537,7 @@ nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
   // PositionArea, resolved to only contain Left/Right/Top/Bottom values.
   StylePositionArea posArea =
       ToPhysicalPositionArea(aPosArea, aCBWM, aPositionedWM);
+  *aOutResolvedArea = posArea;
 
   nscoord right = ltrEdges[3];
   if (posArea.first == StylePositionAreaKeyword::Left) {

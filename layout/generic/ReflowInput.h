@@ -981,9 +981,12 @@ struct ReflowInput : public SizeComputationInput {
 }  // namespace mozilla
 
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
-    const mozilla::ReflowInput* aRI) {
-  return {aRI->mFrame, aRI->mStyleDisplay->mPosition,
-          aRI->mStylePosition->mPositionArea, aRI->mAnchorPosReferenceData};
+    const mozilla::ReflowInput* aRI, bool aIgnorePositionArea) {
+  const mozilla::StylePositionArea posArea =
+      aIgnorePositionArea ? mozilla::StylePositionArea{}
+                          : aRI->mStylePosition->mPositionArea;
+  return {aRI->mFrame, aRI->mStyleDisplay->mPosition, posArea,
+          aRI->mAnchorPosReferenceData};
 }
 
 #endif  // mozilla_ReflowInput_h
