@@ -1097,7 +1097,8 @@ def gtest(
     # Use GTest environment variable to control test execution
     # For details see:
     # https://google.github.io/googletest/advanced.html#running-test-programs-advanced-options
-    gtest_env = {"GTEST_FILTER": gtest_filter}
+    gtest_env = dict(os.environ)
+    gtest_env["GTEST_FILTER"] = gtest_filter
 
     # Note: we must normalize the path here so that gtest on Windows sees
     # a MOZ_GMP_PATH which has only Windows dir seperators, because
