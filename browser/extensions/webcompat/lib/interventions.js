@@ -219,15 +219,23 @@ class Interventions {
         ) {
           continue;
         }
-        if (!(await InterventionHelpers.checkPlatformMatches(intervention))) {
-          continue;
-        }
         if (
           InterventionHelpers.isMissingCustomFunctions(
             intervention,
             customFunctionNames
           )
         ) {
+          continue;
+        }
+        if (!(await InterventionHelpers.checkPlatformMatches(intervention))) {
+          // special case: allow platforms=[] to indicate "disabled by default"
+          if (
+            intervention.platforms &&
+            !intervention.platforms.length &&
+            !intervention.not_platforms
+          ) {
+            config.availableOnPlatform = true;
+          }
           continue;
         }
         intervention.enabled = true;
@@ -264,9 +272,9 @@ class Interventions {
     resolveReady();
   }
 
-  async enableIntervention(config) {
+  async enableIntervention(config, force = false) {
     return navigator.locks.request("intervention_lock", async () => {
-      await this._enableInterventionNow(config);
+      await this._enableInterventionNow(config, force);
     });
   }
 
@@ -276,7 +284,7 @@ class Interventions {
     });
   }
 
-  async _enableInterventionNow(config) {
+  async _enableInterventionNow(config, force = false) {
     if (config.active) {
       return;
     }
@@ -291,8 +299,9 @@ class Interventions {
       .flat()
       .filter(v => v !== undefined);
 
+    let somethingWasEnabled = false;
     for (const intervention of config.interventions) {
-      if (!intervention.enabled) {
+      if (!intervention.enabled && !force) {
         continue;
       }
 
@@ -307,6 +316,8 @@ class Interventions {
       }
       await this._enableUAOverrides(label, intervention, matches);
       await this._enableRequestBlocks(label, intervention, blocks);
+      somethingWasEnabled = true;
+      intervention.enabled = true;
     }
 
     if (!this._getActiveInterventionById(config.id)) {
@@ -325,7 +336,7 @@ class Interventions {
       }
     }
 
-    config.active = true;
+    config.active = somethingWasEnabled;
   }
 
   async _disableInterventionNow(_config) {
