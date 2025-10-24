@@ -870,6 +870,11 @@ class nsHttpChannel final : public HttpBaseChannel,
   // OnCacheEntryCheck being called at the same time.
   mozilla::Mutex mRCWNLock MOZ_UNANNOTATED{"nsHttpChannel.mRCWNLock"};
 
+  // Set to true when OnSuspendTimeout calls SetBypassWriterLock(true)
+  // for the cache entry. Gets reset back to false when Resume calls
+  // SetBypassWriterLock(false)
+  bool mBypassCacheWriterSet{false};
+
   TimeStamp mNavigationStartTimeStamp;
 
   // Promise that blocks connection creation when we want to resolve the origin
