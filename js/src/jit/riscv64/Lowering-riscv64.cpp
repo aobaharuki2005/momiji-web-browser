@@ -210,8 +210,8 @@ void LIRGeneratorRiscv64::lowerDivI64(MDiv* div) {
     return;
   }
 
-  LDivOrModI64* lir = new (alloc())
-      LDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()), temp());
+  auto* lir = new (alloc()) LDivOrModI64(useRegisterAtStart(div->lhs()),
+                                         useRegisterAtStart(div->rhs()));
   defineInt64(lir, div);
 }
 
@@ -257,8 +257,8 @@ void LIRGeneratorRiscv64::lowerModI64(MMod* mod) {
     return;
   }
 
-  LDivOrModI64* lir = new (alloc())
-      LDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
+  auto* lir = new (alloc()) LDivOrModI64(useRegisterAtStart(mod->lhs()),
+                                         useRegisterAtStart(mod->rhs()));
   defineInt64(lir, mod);
 }
 
@@ -277,8 +277,8 @@ void LIRGeneratorRiscv64::lowerUDiv(MDiv* div) {
 }
 
 void LIRGeneratorRiscv64::lowerUDivI64(MDiv* div) {
-  LUDivOrModI64* lir = new (alloc())
-      LUDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()), temp());
+  auto* lir = new (alloc()) LUDivOrModI64(useRegisterAtStart(div->lhs()),
+                                          useRegisterAtStart(div->rhs()));
   defineInt64(lir, div);
 }
 
@@ -297,8 +297,8 @@ void LIRGeneratorRiscv64::lowerUMod(MMod* mod) {
 }
 
 void LIRGeneratorRiscv64::lowerUModI64(MMod* mod) {
-  LUDivOrModI64* lir = new (alloc())
-      LUDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
+  auto* lir = new (alloc()) LUDivOrModI64(useRegisterAtStart(mod->lhs()),
+                                          useRegisterAtStart(mod->rhs()));
   defineInt64(lir, mod);
 }
 
