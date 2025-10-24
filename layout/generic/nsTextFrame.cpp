@@ -5823,7 +5823,7 @@ static bool ComputeDecorationTrim(
     trimRight = NSAppUnitsToDoublePixels(length.end.ToAppUnits(), app);
   }
 
-  if (wm.IsBidiRTL()) {
+  if (wm.IsInlineReversed()) {
     std::swap(trimLeft, trimRight);
   }
   const nsPoint offset = aFrame->GetOffsetTo(aDecFrame);
@@ -5844,11 +5844,14 @@ static bool ComputeDecorationTrim(
                              StyleBoxDecorationBreak::Clone;
   // TODO alaskanemily: This will not correctly account for the case that the
   // continuations are bidi continuations.
-  const bool applyLeft = cloneDecBreak || !aDecFrame->GetPrevContinuation();
+  bool applyLeft = cloneDecBreak || !aDecFrame->GetPrevContinuation();
+  bool applyRight = cloneDecBreak || !aDecFrame->GetNextContinuation();
+  if (wm.IsInlineReversed()) {
+    std::swap(applyLeft, applyRight);
+  }
   if (applyLeft) {
     trimLeft -= NSAppUnitsToDoublePixels(start, app);
   }
-  const bool applyRight = cloneDecBreak || !aDecFrame->GetNextContinuation();
   if (applyRight) {
     trimRight -= NSAppUnitsToDoublePixels(end, app);
   }
