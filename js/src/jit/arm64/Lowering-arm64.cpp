@@ -139,13 +139,6 @@ void LIRGeneratorARM64::lowerForALUInt64(
   defineInt64(ins, mir);
 }
 
-// These all currently have codegen that depends on reuse but only because the
-// masm API depends on that.  We need new three-address masm APIs, for both
-// constant and variable rhs.
-//
-// MAdd => LAddI64
-// MSub => LSubI64
-// MBitAnd, MBitOr, MBitXor => LBitOpI64
 void LIRGeneratorARM64::lowerForALUInt64(
     LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
     MDefinition* mir, MDefinition* lhs, MDefinition* rhs) {
@@ -156,9 +149,7 @@ void LIRGeneratorARM64::lowerForALUInt64(
 
 void LIRGeneratorARM64::lowerForMulInt64(LMulI64* ins, MMul* mir,
                                          MDefinition* lhs, MDefinition* rhs) {
-  ins->setLhs(useInt64RegisterAtStart(lhs));
-  ins->setRhs(useInt64RegisterOrConstantAtStart(rhs));
-  defineInt64(ins, mir);
+  lowerForALUInt64(ins, mir, lhs, rhs);
 }
 
 template <class LInstr>
