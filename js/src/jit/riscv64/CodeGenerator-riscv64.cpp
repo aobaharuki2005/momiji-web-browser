@@ -2076,15 +2076,25 @@ void CodeGenerator::visitUDivOrMod(LUDivOrMod* ins) {
     }
   }
 
-  masm.ma_modu32(output, lhs, rhs);
-
   // If the remainder is > 0, bailout since this must be a double.
   if (ins->mir()->isDiv()) {
-    if (!ins->mir()->toDiv()->canTruncateRemainder()) {
-      bailoutCmp32(Assembler::NonZero, output, output, ins->snapshot());
+    if (ins->mir()->toDiv()->canTruncateRemainder()) {
+      masm.ma_divu32(output, lhs, rhs);
+    } else {
+      MOZ_ASSERT(lhs != output && rhs != output);
+
+      UseScratchRegisterScope temps(&masm);
+      Register scratch = temps.Acquire();
+
+      // The recommended code sequence to obtain both the quotient and remainder
+      // is div[u] followed by mod[u].
+      masm.ma_divu32(output, lhs, rhs);
+      masm.ma_modu32(scratch, lhs, rhs);
+
+      bailoutCmp32(Assembler::NonZero, scratch, scratch, ins->snapshot());
     }
-    // Get quotient
-    masm.ma_divu32(output, lhs, rhs);
+  } else {
+    masm.ma_modu32(output, lhs, rhs);
   }
 
   if (!ins->mir()->isTruncated()) {

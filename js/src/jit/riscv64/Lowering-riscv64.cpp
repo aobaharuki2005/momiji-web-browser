@@ -271,12 +271,18 @@ void LIRGeneratorRiscv64::lowerModI64(MMod* mod) {
 }
 
 void LIRGeneratorRiscv64::lowerUDiv(MDiv* div) {
-  MDefinition* lhs = div->getOperand(0);
-  MDefinition* rhs = div->getOperand(1);
+  LAllocation lhs, rhs;
+  if (!div->canTruncateRemainder()) {
+    lhs = useRegister(div->lhs());
+    rhs = useRegister(div->rhs());
+  } else {
+    lhs = useRegisterAtStart(div->lhs());
+    rhs = useRegisterAtStart(div->rhs());
+  }
 
-  LUDivOrMod* lir = new (alloc()) LUDivOrMod;
-  lir->setOperand(0, useRegister(lhs));
-  lir->setOperand(1, useRegister(rhs));
+  auto* lir = new (alloc()) LUDivOrMod;
+  lir->setOperand(0, lhs);
+  lir->setOperand(1, rhs);
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
@@ -291,12 +297,9 @@ void LIRGeneratorRiscv64::lowerUDivI64(MDiv* div) {
 }
 
 void LIRGeneratorRiscv64::lowerUMod(MMod* mod) {
-  MDefinition* lhs = mod->getOperand(0);
-  MDefinition* rhs = mod->getOperand(1);
-
-  LUDivOrMod* lir = new (alloc()) LUDivOrMod;
-  lir->setOperand(0, useRegister(lhs));
-  lir->setOperand(1, useRegister(rhs));
+  auto* lir = new (alloc()) LUDivOrMod;
+  lir->setOperand(0, useRegisterAtStart(mod->lhs()));
+  lir->setOperand(1, useRegisterAtStart(mod->rhs()));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }
