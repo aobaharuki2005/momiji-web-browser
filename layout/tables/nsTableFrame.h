@@ -588,9 +588,6 @@ class nsTableFrame : public nsContainerFrame {
                                  ReflowOutput& aDesiredSize,
                                  const ReflowInput& aReflowInput);
 
-  // Clears the list of positioned table parts.
-  void ClearAllPositionedTableParts();
-
   nsITableLayoutStrategy* LayoutStrategy() const {
     return static_cast<nsTableFrame*>(FirstInFlow())
         ->mTableLayoutStrategy.get();
