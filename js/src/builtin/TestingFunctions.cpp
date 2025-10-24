@@ -9597,7 +9597,8 @@ static bool SetBaselineHint(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!cx->runtime()->jitRuntime()->hasJitHintsMap()) {
+  if (!cx->runtime()->jitRuntime() ||
+      !cx->runtime()->jitRuntime()->hasJitHintsMap()) {
     args.rval().setUndefined();
     return true;
   }
@@ -9623,7 +9624,8 @@ static bool HasBaselineHint(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!cx->runtime()->jitRuntime()->hasJitHintsMap()) {
+  if (!cx->runtime()->jitRuntime() ||
+      !cx->runtime()->jitRuntime()->hasJitHintsMap()) {
     args.rval().setBoolean(false);
     return true;
   }
