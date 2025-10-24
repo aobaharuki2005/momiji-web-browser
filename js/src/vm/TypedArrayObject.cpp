@@ -4335,29 +4335,23 @@ static UniqueChars QuoteString(JSContext* cx, char16_t ch) {
   return sprinter.release();
 }
 
-namespace Hex {
-static constexpr int8_t InvalidChar = -1;
+// Constant for an invalid nibble. Choosen so that validation can be performed
+// with just 1-2 instructions on all supported architectures.
+static constexpr uint32_t InvalidNibble = -1;
 
-static constexpr auto DecodeTable() {
-  std::array<int8_t, 256> result = {};
-
-  // Initialize all elements to InvalidChar.
-  for (auto& e : result) {
-    e = InvalidChar;
+template <typename Char>
+static inline uint32_t HexDigitToNibbleOrInvalid(Char ch) {
+  if ('0' <= ch && ch <= '9') {
+    return ch - '0';
   }
-
-  // Map the ASCII hexadecimal characters to their values.
-  for (uint8_t i = 0; i < 128; ++i) {
-    if (mozilla::IsAsciiHexDigit(char(i))) {
-      result[i] = mozilla::AsciiAlphanumericToNumber(char(i));
-    }
+  if ('A' <= ch && ch <= 'F') {
+    return ch - 'A' + 10;
   }
-
-  return result;
+  if ('a' <= ch && ch <= 'f') {
+    return ch - 'a' + 10;
+  }
+  return InvalidNibble;
 }
-
-static constexpr auto Table = DecodeTable();
-}  // namespace Hex
 
 /**
  * FromHex ( string [ , maxLength ] )
@@ -4368,22 +4362,6 @@ template <typename Ops, typename CharT>
 static size_t FromHex(const CharT* chars, size_t length,
                       TypedArrayObject* tarray) {
   auto data = Ops::extract(tarray).template cast<uint8_t*>();
-
-  static_assert(std::size(Hex::Table) == 256,
-                "can access decode table using Latin-1 character");
-
-  auto decodeChar = [&](CharT ch) -> int32_t {
-    if constexpr (sizeof(CharT) == 1) {
-      return Hex::Table[ch];
-    } else {
-      return ch <= 255 ? Hex::Table[ch] : Hex::InvalidChar;
-    }
-  };
-
-  auto decode4Chars = [&](const CharT* chars) {
-    return (decodeChar(chars[2]) << 12) | (decodeChar(chars[3]) << 8) |
-           (decodeChar(chars[0]) << 4) | (decodeChar(chars[1]) << 0);
-  };
 
   // Step 4.
   size_t index = 0;
@@ -4398,23 +4376,38 @@ static size_t FromHex(const CharT* chars, size_t length,
 
     // Step 6.
     while (index < alignedLength) {
-      // Steps 6.a and 6.d.
-      uint32_t word1 = decode4Chars(chars + index);
+      // Step 6.a.
+      auto c0 = chars[index + 0];
+      auto c1 = chars[index + 1];
+      auto c2 = chars[index + 2];
+      auto c3 = chars[index + 3];
 
+      // Step 6.d.
+      uint32_t word1 = (HexDigitToNibbleOrInvalid(c2) << 12) |
+                       (HexDigitToNibbleOrInvalid(c3) << 8) |
+                       (HexDigitToNibbleOrInvalid(c0) << 4) |
+                       (HexDigitToNibbleOrInvalid(c1) << 0);
       // Step 6.b.
       if (MOZ_UNLIKELY(int32_t(word1) < 0)) {
         break;
       }
-      MOZ_ASSERT(0 <= word1 && word1 <= 0xffff);
 
-      // Step 6.a and 6.d.
-      uint32_t word2 = decode4Chars(chars + index + 4);
+      // Step 6.a.
+      auto c4 = chars[index + 4];
+      auto c5 = chars[index + 5];
+      auto c6 = chars[index + 6];
+      auto c7 = chars[index + 7];
+
+      // Step 6.d.
+      uint32_t word2 = (HexDigitToNibbleOrInvalid(c6) << 12) |
+                       (HexDigitToNibbleOrInvalid(c7) << 8) |
+                       (HexDigitToNibbleOrInvalid(c4) << 4) |
+                       (HexDigitToNibbleOrInvalid(c5) << 0);
 
       // Step 6.b.
       if (MOZ_UNLIKELY(int32_t(word2) < 0)) {
         break;
       }
-      MOZ_ASSERT(0 <= word2 && word2 <= 0xffff);
 
       // Step 6.c.
       index += 4 * 2;
@@ -4438,13 +4431,13 @@ static size_t FromHex(const CharT* chars, size_t length,
     auto c1 = chars[index + 1];
 
     // Step 6.d.
-    uint32_t byte = (decodeChar(c0) << 4) | (decodeChar(c1) << 0);
+    uint32_t byte = (HexDigitToNibbleOrInvalid(c0) << 4) |
+                    (HexDigitToNibbleOrInvalid(c1) << 0);
 
     // Step 6.b.
     if (MOZ_UNLIKELY(int32_t(byte) < 0)) {
       return index;
     }
-    MOZ_ASSERT(0 <= byte && byte <= 0xff);
 
     // Step 6.c.
     index += 2;
@@ -4523,10 +4516,10 @@ static bool FromHex(JSContext* cx, JSString* string, size_t maxLength,
 }
 
 namespace Base64 {
-static constexpr int8_t InvalidChar = -1;
+static constexpr uint8_t InvalidChar = UINT8_MAX;
 
 static constexpr auto DecodeTable(const char (&alphabet)[65]) {
-  std::array<int8_t, 256> result = {};
+  std::array<uint8_t, 128> result = {};
 
   // Initialize all elements to InvalidChar.
   for (auto& e : result) {
@@ -4554,12 +4547,12 @@ static_assert(std::char_traits<char>::length(Base64Url) == 64);
 
 namespace Base64::Decode {
 static constexpr auto Base64 = DecodeTable(Base64::Encode::Base64);
-static_assert(Base64.size() == 256,
-              "256 elements to allow access through Latin-1 characters");
+static_assert(Base64.size() == 128,
+              "128 elements to allow access through ASCII characters");
 
 static constexpr auto Base64Url = DecodeTable(Base64::Encode::Base64Url);
-static_assert(Base64Url.size() == 256,
-              "256 elements to allow access through Latin-1 characters");
+static_assert(Base64Url.size() == 128,
+              "128 elements to allow access through ASCII characters");
 }  // namespace Base64::Decode
 
 enum class Alphabet {
@@ -4719,118 +4712,11 @@ static auto FromBase64(const CharT* chars, size_t length, Alphabet alphabet,
   if (maxLength == 0) {
     return Base64Result::Ok(0, 0);
   }
-  MOZ_ASSERT(canAppend(1), "can append at least one byte if maxLength > 0");
-
-  // Step 8.
-  //
-  // Current string index.
-  size_t index = 0;
-
-  // Step 9. (Passed as parameter)
-
-  static_assert(std::size(Base64::Decode::Base64) == 256 &&
-                    std::size(Base64::Decode::Base64Url) == 256,
-                "can access decode tables using Latin-1 character");
-
-  const auto& decode = alphabet == Alphabet::Base64 ? Base64::Decode::Base64
-                                                    : Base64::Decode::Base64Url;
-
-  auto decodeChar = [&](CharT ch) -> int32_t {
-    if constexpr (sizeof(CharT) == 1) {
-      return decode[ch];
-    } else {
-      return ch <= 255 ? decode[ch] : Base64::InvalidChar;
-    }
-  };
-
-  auto decode4Chars = [&](const CharT* chars) {
-    return (decodeChar(chars[0]) << 18) | (decodeChar(chars[1]) << 12) |
-           (decodeChar(chars[2]) << 6) | (decodeChar(chars[3]));
-  };
-
-  // Initial loop to process only full chunks. Doesn't perform any error
-  // reporting and expects that at least four characters can be read per loop
-  // iteration and that the output has enough space for a decoded chunk.
-
-  size_t alignedLength = length & ~0x3;
-  while (canAppend(3) && index < alignedLength) {
-    // Fast path: Read four consecutive characters.
-
-    // Step 10.a. (Performed in slow path.)
-
-    // Step 10.b. (Moved out of loop.)
-
-    // Steps 10.c and 10.e-g.
-    uint32_t chunk = decode4Chars(chars + index);
-
-    // Steps 10.h-i. (Not applicable in this loop.)
-
-    // Steps 10.d and 10.j-l.
-    if (MOZ_LIKELY(int32_t(chunk) >= 0)) {
-      // Step 10.j-l.
-      decodeChunk(chunk);
-
-      // Step 10.d.
-      index += 4;
-      continue;
-    }
-
-    // Slow path: Read four characters, ignoring whitespace.
-
-    // Steps 10.a and 10.b.
-    CharT part[4];
-    size_t i = index;
-    size_t j = 0;
-    while (i < length && j < 4) {
-      auto ch = chars[i++];
-
-      // Step 10.a.
-      if (mozilla::IsAsciiWhitespace(ch)) {
-        continue;
-      }
-
-      // Step 10.c.
-      part[j++] = ch;
-    }
-
-    // Steps 10.d-l.
-    if (MOZ_LIKELY(j == 4)) {
-      // Steps 10.e-g.
-      uint32_t chunk = decode4Chars(part);
-
-      // Steps 10.h-i. (Not applicable in this loop.)
-
-      // Steps 10.d and 10.j-l.
-      if (MOZ_LIKELY(int32_t(chunk) >= 0)) {
-        // Step 10.j-l.
-        decodeChunk(chunk);
-
-        // Step 10.d.
-        index = i;
-        continue;
-      }
-    }
-
-    // Padding or invalid characters, or end of input. The next loop will
-    // process any characters left in the input.
-    break;
-  }
-
-  // Step 10.b.ii.
-  if (index == length) {
-    return Base64Result::Ok(length, written());
-  }
 
   // Step 4.
   //
   // String index after the last fully read base64 chunk.
-  size_t read = index;
-
-  // Step 10.l.v. (Reordered)
-  if (!canAppend(1)) {
-    MOZ_ASSERT(written() > 0);
-    return Base64Result::Ok(read, written());
-  }
+  size_t read = 0;
 
   // Step 5. (Not applicable in our implementation.)
 
@@ -4843,6 +4729,16 @@ static auto FromBase64(const CharT* chars, size_t length, Alphabet alphabet,
   //
   // Current base64 chunk length, in the range [0..4].
   size_t chunkLength = 0;
+
+  // Step 8.
+  //
+  // Current string index.
+  size_t index = 0;
+
+  // Step 9. (Passed as parameter)
+
+  const auto& decode = alphabet == Alphabet::Base64 ? Base64::Decode::Base64
+                                                    : Base64::Decode::Base64Url;
 
   // Step 10.
   for (; index < length; index++) {
@@ -4864,11 +4760,13 @@ static auto FromBase64(const CharT* chars, size_t length, Alphabet alphabet,
     }
 
     // Steps 10.f-g.
-    uint32_t value = decodeChar(ch);
-    if (MOZ_UNLIKELY(int32_t(value) < 0)) {
+    uint8_t value = Base64::InvalidChar;
+    if (mozilla::IsAscii(ch)) {
+      value = decode[ch];
+    }
+    if (MOZ_UNLIKELY(value == Base64::InvalidChar)) {
       return Base64Result::ErrorAt(Base64Error::BadChar, index);
     }
-    MOZ_ASSERT(0 <= value && value <= 0x7f);
 
     // Step 10.h. (Not applicable in our implementation.)
 
@@ -4883,8 +4781,27 @@ static auto FromBase64(const CharT* chars, size_t length, Alphabet alphabet,
     // Step 10.k.
     chunkLength += 1;
 
-    // Step 10.l. (Full chunks are processed in the initial loop.)
-    MOZ_ASSERT(chunkLength < 4);
+    // Step 10.l.
+    if (chunkLength == 4) {
+      // Step 10.l.i.
+      decodeChunk(chunk);
+
+      // Step 10.l.ii.
+      chunk = 0;
+
+      // Step 10.l.iii.
+      chunkLength = 0;
+
+      // Step 10.l.iv.
+      //
+      // NB: Add +1 to include the |index| update from step 10.d.
+      read = index + 1;
+
+      // Step 10.l.v.
+      if (!canAppend(1)) {
+        return Base64Result::Ok(read, written());
+      }
+    }
   }
 
   // Step 10.b.
