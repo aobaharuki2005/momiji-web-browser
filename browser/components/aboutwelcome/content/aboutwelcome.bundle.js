@@ -3883,7 +3883,9 @@ function addUtmParams(url, utmTerm) {
       returnUrl.searchParams.append(key, value);
     }
   }
-  returnUrl.searchParams.append("utm_term", utmTerm);
+  if (!returnUrl.searchParams.has("utm_term")) {
+    returnUrl.searchParams.append("utm_term", utmTerm);
+  }
   return returnUrl;
 }
 
