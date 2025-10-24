@@ -186,8 +186,8 @@ void LIRGeneratorRiscv64::lowerDivI(MDiv* div) {
     // constants can be optimized by a reciprocal multiplication technique.
     int32_t shift = FloorLog2(rhs);
     if (rhs > 0 && 1 << shift == rhs) {
-      LDivPowTwoI* lir =
-          new (alloc()) LDivPowTwoI(useRegister(div->lhs()), temp(), shift);
+      auto* lir = new (alloc())
+          LDivPowTwoI(useRegisterAtStart(div->lhs()), temp(), shift);
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
       }
@@ -196,8 +196,16 @@ void LIRGeneratorRiscv64::lowerDivI(MDiv* div) {
     }
   }
 
-  LDivI* lir = new (alloc())
-      LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp());
+  LAllocation lhs, rhs;
+  if (!div->canTruncateRemainder()) {
+    lhs = useRegister(div->lhs());
+    rhs = useRegister(div->rhs());
+  } else {
+    lhs = useRegisterAtStart(div->lhs());
+    rhs = useRegisterAtStart(div->rhs());
+  }
+
+  auto* lir = new (alloc()) LDivI(lhs, rhs, temp());
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
