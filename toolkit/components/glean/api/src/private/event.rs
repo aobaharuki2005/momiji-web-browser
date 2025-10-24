@@ -212,7 +212,9 @@ impl<K: 'static + ExtraKeys + Send + Sync + Clone> Event for EventMetric<K> {
 }
 
 #[inherent]
-impl<K> glean::TestGetValue<Vec<RecordedEvent>> for EventMetric<K> {
+impl<K> glean::TestGetValue for EventMetric<K> {
+    type Output = Vec<RecordedEvent>;
+
     pub fn test_get_value(&self, ping_name: Option<String>) -> Option<Vec<RecordedEvent>> {
         match self {
             EventMetric::Parent { inner, .. } => inner.test_get_value(ping_name),
