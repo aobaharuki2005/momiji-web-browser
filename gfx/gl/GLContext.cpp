@@ -885,7 +885,6 @@ bool GLContext::InitImpl() {
   raw_fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, &mMaxCubeMapTextureSize);
   raw_fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
   raw_fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, mMaxViewportDims);
-  raw_fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIB_STRIDE, &mMaxVertexAttribStride);
 
   if (mWorkAroundDriverBugs) {
     int maxTexSize = INT32_MAX;
@@ -942,15 +941,6 @@ bool GLContext::InitImpl() {
   }
 
   mMaxTexOrRbSize = std::min(mMaxTextureSize, mMaxRenderbufferSize);
-
-#ifdef MOZ_WIDGET_ANDROID
-  if (Renderer() == GLRenderer::SamsungXclipse && jni::GetAPIVersion() == 35) {
-    // On Samsung Xclipse GPUs on Android 15 attribute values for the final
-    // vertex in a buffer may be incorrect. Padding the buffer to contain
-    // enough space for an additional vertex avoids the issue. See bug 1983036.
-    mVertexBufferExtraPadding = Some(mMaxVertexAttribStride);
-  }
-#endif
 
   ////////////////////////////////////////////////////////////////////////////
 
