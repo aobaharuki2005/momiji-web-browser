@@ -2297,17 +2297,17 @@ void LIRGenerator::visitSub(MSub* ins) {
   if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
 
-    LSubI* lir = new (alloc()) LSubI;
-    if (ins->fallible()) {
-      assignSnapshot(lir, ins->bailoutKind());
-    }
-
     // If our LHS is a constant 0 and we don't have to worry about results that
     // can't be represented as an int32, we can optimize to an LNegI.
     if (!ins->fallible() && lhs->isConstant() &&
         lhs->toConstant()->toInt32() == 0) {
-      lowerNegI(ins, rhs);
+      lowerForALU(new (alloc()) LNegI, ins, rhs);
       return;
+    }
+
+    LSubI* lir = new (alloc()) LSubI;
+    if (ins->fallible()) {
+      assignSnapshot(lir, ins->bailoutKind());
     }
 
     lowerForALU(lir, ins, lhs, rhs);
@@ -2366,7 +2366,7 @@ void LIRGenerator::visitMul(MMul* ins) {
     // can't be represented as an int32, we can optimize to an LNegI.
     if (!ins->fallible() && rhs->isConstant() &&
         rhs->toConstant()->toInt32() == -1) {
-      lowerNegI(ins, lhs);
+      lowerForALU(new (alloc()) LNegI, ins, lhs);
       return;
     }
 

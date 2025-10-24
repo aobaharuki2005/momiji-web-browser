@@ -1112,6 +1112,7 @@
   result_type: WordSized
   operands:
     input: WordSized
+  defer_init: true
 
 # Negative of an int64
 - name: NegI64

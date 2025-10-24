@@ -56,7 +56,6 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared {
   void lowerWasmBuiltinTruncateToInt32(MWasmBuiltinTruncateToInt32* ins);
   void lowerDivI(MDiv* div);
   void lowerModI(MMod* mod);
-  void lowerNegI(MInstruction* ins, MDefinition* input);
   void lowerNegI64(MInstruction* ins, MDefinition* input);
   void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
   void lowerUDiv(MDiv* div);

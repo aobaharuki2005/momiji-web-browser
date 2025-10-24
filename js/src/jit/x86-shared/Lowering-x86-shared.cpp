@@ -168,10 +168,6 @@ void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
   }
 }
 
-void LIRGeneratorX86Shared::lowerNegI(MInstruction* ins, MDefinition* input) {
-  defineReuseInput(new (alloc()) LNegI(useRegisterAtStart(input)), ins, 0);
-}
-
 void LIRGeneratorX86Shared::lowerNegI64(MInstruction* ins, MDefinition* input) {
   defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
                         ins, 0);
@@ -293,8 +289,7 @@ void LIRGeneratorX86Shared::lowerModI(MMod* mod) {
 void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   switch (ins->type()) {
     case MIRType::Int32:
-      defineReuseInput(new (alloc()) LNegI(useRegisterAtStart(ins->input())),
-                       ins, 0);
+      lowerForALU(new (alloc()) LNegI, ins, ins->input());
       break;
     case MIRType::Float32:
       defineReuseInput(new (alloc()) LNegF(useRegisterAtStart(ins->input())),

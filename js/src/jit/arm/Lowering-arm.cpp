@@ -352,10 +352,6 @@ void LIRGeneratorARM::lowerDivI(MDiv* div) {
   defineReturn(lir, div);
 }
 
-void LIRGeneratorARM::lowerNegI(MInstruction* ins, MDefinition* input) {
-  define(new (alloc()) LNegI(useRegisterAtStart(input)), ins);
-}
-
 void LIRGeneratorARM::lowerNegI64(MInstruction* ins, MDefinition* input) {
   // Reuse the input.  Define + use-at-start would create risk that the output
   // uses the same register pair as the input but in reverse order.  Reusing
@@ -586,7 +582,7 @@ void LIRGeneratorARM::lowerBigIntPtrMod(MBigIntPtrMod* ins) {
 
 void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   if (ins->type() == MIRType::Int32) {
-    define(new (alloc()) LNegI(useRegisterAtStart(ins->input())), ins);
+    lowerForALU(new (alloc()) LNegI, ins, ins->input());
   } else if (ins->type() == MIRType::Float32) {
     define(new (alloc()) LNegF(useRegisterAtStart(ins->input())), ins);
   } else {

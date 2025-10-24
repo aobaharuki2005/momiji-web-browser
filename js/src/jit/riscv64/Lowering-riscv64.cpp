@@ -150,9 +150,6 @@ void LIRGeneratorRiscv64::defineInt64Phi(MPhi* phi, size_t lirIndex) {
   defineTypedPhi(phi, lirIndex);
 }
 
-void LIRGeneratorRiscv64::lowerNegI(MInstruction* ins, MDefinition* input) {
-  define(new (alloc()) LNegI(useRegisterAtStart(input)), ins);
-}
 void LIRGeneratorRiscv64::lowerNegI64(MInstruction* ins, MDefinition* input) {
   defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
                         ins, 0);
@@ -834,7 +831,7 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
 
 void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   if (ins->type() == MIRType::Int32) {
-    define(new (alloc()) LNegI(useRegisterAtStart(ins->input())), ins);
+    lowerForALU(new (alloc()) LNegI, ins, ins->input());
   } else if (ins->type() == MIRType::Float32) {
     define(new (alloc()) LNegF(useRegisterAtStart(ins->input())), ins);
   } else {

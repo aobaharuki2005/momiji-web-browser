@@ -172,10 +172,6 @@ void LIRGeneratorMIPSShared::lowerDivI(MDiv* div) {
   define(lir, div);
 }
 
-void LIRGeneratorMIPSShared::lowerNegI(MInstruction* ins, MDefinition* input) {
-  define(new (alloc()) LNegI(useRegisterAtStart(input)), ins);
-}
-
 void LIRGeneratorMIPSShared::lowerNegI64(MInstruction* ins,
                                          MDefinition* input) {
   defineInt64ReuseInput(new (alloc()) LNegI64(useInt64RegisterAtStart(input)),
@@ -320,7 +316,7 @@ void LIRGeneratorMIPSShared::lowerBigIntPtrMod(MBigIntPtrMod* ins) {
 
 void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   if (ins->type() == MIRType::Int32) {
-    define(new (alloc()) LNegI(useRegisterAtStart(ins->input())), ins);
+    lowerForALU(new (alloc()) LNegI, ins, ins->input());
   } else if (ins->type() == MIRType::Float32) {
     define(new (alloc()) LNegF(useRegisterAtStart(ins->input())), ins);
   } else {

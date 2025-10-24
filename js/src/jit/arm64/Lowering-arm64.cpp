@@ -240,10 +240,6 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
   define(lir, div);
 }
 
-void LIRGeneratorARM64::lowerNegI(MInstruction* ins, MDefinition* input) {
-  define(new (alloc()) LNegI(useRegisterAtStart(input)), ins);
-}
-
 void LIRGeneratorARM64::lowerNegI64(MInstruction* ins, MDefinition* input) {
   defineInt64(new (alloc()) LNegI64(useInt64RegisterAtStart(input)), ins);
 }
@@ -518,7 +514,7 @@ bool LIRGeneratorARM64::canEmitWasmReduceSimd128AtUses(
 void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   switch (ins->type()) {
     case MIRType::Int32:
-      define(new (alloc()) LNegI(useRegisterAtStart(ins->input())), ins);
+      lowerForALU(new (alloc()) LNegI, ins, ins->input());
       break;
     case MIRType::Float32:
       define(new (alloc()) LNegF(useRegisterAtStart(ins->input())), ins);
