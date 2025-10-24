@@ -3554,8 +3554,7 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * Extracts a substring of visible text from the content document and
-   * runs it through the language detector to determine the page's language.
+   * Uses the page extractor to identify the current page's language.
    *
    * @returns {Promise<DetectionResult>}
    */
@@ -3564,88 +3563,52 @@ export class TranslationsParent extends JSWindowActorParent {
       return this.languageState.detectedLanguages.identified;
     }
 
-    lazy.console.log(
-      "Beginning text extraction:",
-      this.browsingContext?.currentURI?.spec
-    );
+    const actor =
+      this.browsingContext?.currentWindowGlobal?.getActor("PageExtractor");
 
-    const extractionStartTime = ChromeUtils.now();
-    const pageText = await this.sendQuery("Translations:ExtractPageText", {
-      sufficientLength: 4096,
-    });
-
-    if (this.#isDestroyed) {
-      return { language: "en", confident: false, languages: [] };
+    if (!actor) {
+      throw new Error("Unable to get the PageExtractor actor.");
     }
 
-    const extractionTime = ChromeUtils.now() - extractionStartTime;
+    const startTime = ChromeUtils.now();
 
-    lazy.console.debug(
-      `Extracted Page Text (${pageText.length} code units):\n\n`,
-      pageText
-    );
+    // Manual profiling on 10 page loads of https://es.wikipedia.org/wiki/Felis_catus:
+    // -------------------------------------------------------------------------------
+    //
+    //   No limit: 2064 samples, 224/237/294 [min/med/max]ms (~85k code units)
+    // 8192 limit:  681 samples,  75/ 87/128 [min/med/max]ms
+    // 4096 limit:  457 samples,  51/ 55/ 97 [min/med/max]ms
+    // 2048 limit:  240 samples,  29/ 39/ 64 [min/med/max]ms
+    // 1024 limit:  142 samples,  19/ 28/ 58 [min/med/max]ms
+    //
+    // 2048 Code units feels like a decent length for performance and sample size.
+    const pageText = await actor.getText({ sufficientLength: 2048 });
+    if (this.#isDestroyed) {
+      return { language: "", confident: false, languages: [] };
+    }
 
-    const extractionLog =
-      `Extracted ${pageText.length} code units of text in ` +
-      `${extractionTime.toFixed(3)} ms.`;
-
-    lazy.console.log(extractionLog);
-    ChromeUtils.addProfilerMarker(
-      "TranslationsParent",
-      { startTime: extractionStartTime, innerWindowId: this.innerWindowId },
-      extractionLog
-    );
-
-    const identificationStartTime = ChromeUtils.now();
     const result = await lazy.LanguageDetector.detectLanguage(pageText);
-
     if (this.#isDestroyed) {
-      return { language: "en", confident: false, languages: [] };
+      return { language: "", confident: false, languages: [] };
     }
 
-    const identificationTime = ChromeUtils.now() - identificationStartTime;
-    const identificationLog =
-      `Identified ${pageText.length} code units of text as "${result.language}" ` +
-      `in ${identificationTime.toFixed(3)} ms.`;
+    const message =
+      `Identified page language as "${result.language}" ` +
+      `in ${((ChromeUtils.now() - startTime) / 1000).toFixed(3)} seconds: ` +
+      this.browsingContext?.currentURI?.spec;
 
-    lazy.console.log(identificationLog);
     ChromeUtils.addProfilerMarker(
       "TranslationsParent",
-      { startTime: identificationStartTime, innerWindowId: this.innerWindowId },
-      identificationLog
+      { startTime, innerWindowId: this.innerWindowId },
+      message
     );
-    ChromeUtils.addProfilerMarker(
-      "TranslationsParent",
-      { startTime: extractionStartTime, innerWindowId: this.innerWindowId },
-      "Total time to identify page language."
-    );
+
+    lazy.console.debug("\nExtracted Page Text:\n\n", pageText);
+    lazy.console.log(message);
 
     if (pageText.length < TranslationsParent.#DOC_CONFIDENCE_THRESHOLD) {
       result.confident = false;
     }
-
-    const htmlLangAttribute =
-      this.languageState?.detectedLanguages?.htmlLangAttribute ?? null;
-    const identifiedLanguage = result.language;
-
-    TranslationsParent.telemetry().onIdentifyPageLanguage({
-      htmlLangAttribute,
-      identifiedLanguage,
-      langTagsMatch: htmlLangAttribute
-        ? lazy.TranslationsUtils.langTagsMatch(
-            htmlLangAttribute,
-            identifiedLanguage
-          )
-        : null,
-      isLangAttributeValid: htmlLangAttribute
-        ? lazy.TranslationsUtils.isLangTagValid(htmlLangAttribute)
-        : null,
-      extractedCodeUnits: pageText.length,
-      extractionTime,
-      identificationTime,
-      totalTime: extractionTime + identificationTime,
-      confident: result.confident,
-    });
 
     return result;
   }
