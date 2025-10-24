@@ -139,19 +139,6 @@ void MacroAssembler::and64(Register64 src, Register64 dest) {
   as_and(dest.reg, dest.reg, src.reg);
 }
 
-void MacroAssembler::and64(const Operand& src, Register64 dest) {
-  if (src.getTag() == Operand::MEM) {
-    UseScratchRegisterScope temps(*this);
-    Register scratch = temps.Acquire();
-    Register64 scratch64(scratch);
-
-    load64(src.toAddress(), scratch64);
-    and64(scratch64, dest);
-  } else {
-    and64(Register64(src.toReg()), dest);
-  }
-}
-
 void MacroAssembler::and32(Register src, Register dest) {
   as_and(dest, dest, src);
 }
@@ -225,34 +212,8 @@ void MacroAssembler::or64(Register64 src, Register64 dest) {
   as_or(dest.reg, dest.reg, src.reg);
 }
 
-void MacroAssembler::or64(const Operand& src, Register64 dest) {
-  if (src.getTag() == Operand::MEM) {
-    UseScratchRegisterScope temps(asMasm());
-    Register scratch = temps.Acquire();
-    Register64 scratch64(scratch);
-
-    load64(src.toAddress(), scratch64);
-    or64(scratch64, dest);
-  } else {
-    or64(Register64(src.toReg()), dest);
-  }
-}
-
 void MacroAssembler::xor64(Register64 src, Register64 dest) {
   as_xor(dest.reg, dest.reg, src.reg);
-}
-
-void MacroAssembler::xor64(const Operand& src, Register64 dest) {
-  if (src.getTag() == Operand::MEM) {
-    UseScratchRegisterScope temps(asMasm());
-    Register scratch = temps.Acquire();
-    Register64 scratch64(scratch);
-
-    load64(src.toAddress(), scratch64);
-    xor64(scratch64, dest);
-  } else {
-    xor64(Register64(src.toReg()), dest);
-  }
 }
 
 void MacroAssembler::xorPtr(Register src, Register dest) {
@@ -336,19 +297,6 @@ void MacroAssembler::addPtr(ImmWord imm, Register dest) {
 
 void MacroAssembler::add64(Register64 src, Register64 dest) {
   addPtr(src.reg, dest.reg);
-}
-
-void MacroAssembler::add64(const Operand& src, Register64 dest) {
-  if (src.getTag() == Operand::MEM) {
-    UseScratchRegisterScope temps(asMasm());
-    Register scratch = temps.Acquire();
-    Register64 scratch64(scratch);
-
-    load64(src.toAddress(), scratch64);
-    add64(scratch64, dest);
-  } else {
-    add64(Register64(src.toReg()), dest);
-  }
 }
 
 void MacroAssembler::add64(Imm32 imm, Register64 dest) {
@@ -441,19 +389,6 @@ void MacroAssembler::sub64(Register64 src, Register64 dest) {
   as_sub_d(dest.reg, dest.reg, src.reg);
 }
 
-void MacroAssembler::sub64(const Operand& src, Register64 dest) {
-  if (src.getTag() == Operand::MEM) {
-    UseScratchRegisterScope temps(asMasm());
-    Register scratch = temps.Acquire();
-    Register64 scratch64(scratch);
-
-    load64(src.toAddress(), scratch64);
-    sub64(scratch64, dest);
-  } else {
-    sub64(Register64(src.toReg()), dest);
-  }
-}
-
 void MacroAssembler::sub64(Imm64 imm, Register64 dest) {
   UseScratchRegisterScope temps(asMasm());
   Register scratch = temps.Acquire();
@@ -518,20 +453,6 @@ void MacroAssembler::mul64(const Register64& src, const Register64& dest,
                            const Register temp) {
   MOZ_ASSERT(temp == Register::Invalid());
   as_mul_d(dest.reg, dest.reg, src.reg);
-}
-
-void MacroAssembler::mul64(const Operand& src, const Register64& dest,
-                           const Register temp) {
-  if (src.getTag() == Operand::MEM) {
-    UseScratchRegisterScope temps(asMasm());
-    Register scratch = temps.Acquire();
-    Register64 scratch64(scratch);
-
-    load64(src.toAddress(), scratch64);
-    mul64(scratch64, dest, temp);
-  } else {
-    mul64(Register64(src.toReg()), dest, temp);
-  }
 }
 
 void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
