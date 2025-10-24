@@ -525,9 +525,7 @@ void LIRGenerator::visitCopySign(MCopySign* ins) {
     lir = new (alloc()) LCopySignF();
   }
 
-  lir->setOperand(0, useRegisterAtStart(lhs));
-  lir->setOperand(1, useRegisterAtStart(rhs));
-  define(lir, ins);
+  lowerForFPU(lir, ins, lhs, rhs);
 }
 
 void LIRGenerator::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins) {
