@@ -582,8 +582,7 @@ nsresult nsZipArchive::FindInit(const char* aPattern, nsZipFind** aFind) {
 // nsZipFind::FindNext
 //---------------------------------------------
 nsresult nsZipFind::FindNext(const char** aResult, uint16_t* aNameLen) {
-  if (!aResult || !aNameLen) return NS_ERROR_ILLEGAL_VALUE;
-  NS_ENSURE_TRUE(mArchive, NS_ERROR_FILE_NOT_FOUND);
+  if (!mArchive || !aResult || !aNameLen) return NS_ERROR_ILLEGAL_VALUE;
 
   MutexAutoLock lock(mArchive->mLock);
   *aResult = 0;
@@ -617,9 +616,6 @@ nsresult nsZipFind::FindNext(const char** aResult, uint16_t* aNameLen) {
   }
   MMAP_FAULT_HANDLER_CATCH(NS_ERROR_FAILURE)
   LOG(("ZipHandle::FindNext[%p] not found %s", this, mPattern));
-  // Release the archive.
-  mArchive = nullptr;
-  mItem = nullptr;
   return NS_ERROR_FILE_NOT_FOUND;
 }
 
@@ -971,7 +967,6 @@ nsZipFind::nsZipFind(nsZipArchive* aZip, char* aPattern, bool aRegExp)
       mSlot(0),
       mRegExp(aRegExp) {
   MOZ_COUNT_CTOR(nsZipFind);
-  MOZ_ASSERT(mArchive);
 }
 
 nsZipFind::~nsZipFind() {

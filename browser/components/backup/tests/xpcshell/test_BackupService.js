@@ -3,6 +3,9 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 const { BasePromiseWorker } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseWorker.sys.mjs"
 );
@@ -337,7 +340,7 @@ async function testCreateBackupHelper(sandbox, taskFn) {
       "initiated recovery"
   );
 
-  await taskFn(bs, manifest);
+  taskFn(bs, manifest);
 
   await maybeRemovePath(backupFilePath);
   await maybeRemovePath(fakeProfilePath);
@@ -406,11 +409,7 @@ async function testDeleteLastBackupHelper(taskFn) {
       await taskFn(LAST_BACKUP_FILE_PATH);
     }
 
-    // NB: On Windows, deletes of backups in tests run into an issue where
-    // the file is locked briefly by the system and deletes fail with
-    // NS_ERROR_FILE_IS_LOCKED.  See doFileRemovalOperation for details.
-    // We therefore retry this delete a few times before accepting failure.
-    await doFileRemovalOperation(async () => await bs.deleteLastBackup());
+    await bs.deleteLastBackup();
 
     Assert.equal(
       bs.state.lastBackupDate,
@@ -804,126 +803,6 @@ add_task(
 add_task(
   async function test_createBackup_robustToNonReadonlyFileSystemErrors() {
     await checkBackupWithUnremovableItems(0);
-  }
-);
-
-/**
- * Tests that the existence of selectable profiles prevent backups (see bug
- * 1990980).
- *
- * @param {boolean} aSetCreatedSelectableProfilesBeforeSchedulingBackups
- *    If true (respectively, false), set browser.profiles.created before
- *    (respectively, after) attempting to setScheduledBackups.
- */
-async function testSelectableProfilesPreventBackup(
-  aSetCreatedSelectableProfilesBeforeSchedulingBackups
-) {
-  let sandbox = sinon.createSandbox();
-  Services.fog.testResetFOG();
-  const TEST_UID = "ThisIsMyTestUID";
-  const TEST_EMAIL = "foxy@mozilla.org";
-  sandbox.stub(UIState, "get").returns({
-    status: UIState.STATUS_SIGNED_IN,
-    uid: TEST_UID,
-    email: TEST_EMAIL,
-  });
-
-  const SELECTABLE_PROFILES_CREATED_PREF = "browser.profiles.created";
-
-  // Make sure backup and restore are enabled.
-  const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
-  const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
-  Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true);
-  Assert.ok(
-    Services.prefs.getBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME),
-    `${BACKUP_ARCHIVE_ENABLED_PREF_NAME} = true`
-  );
-  Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, true);
-  Assert.ok(
-    Services.prefs.getBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME),
-    `${BACKUP_RESTORE_ENABLED_PREF_NAME} = true`
-  );
-
-  // Make sure created profiles pref is not set until we want it to be.
-  Services.prefs.setBoolPref(SELECTABLE_PROFILES_CREATED_PREF, false);
-  Assert.ok(
-    !Services.prefs.getBoolPref(SELECTABLE_PROFILES_CREATED_PREF),
-    `${SELECTABLE_PROFILES_CREATED_PREF} = false`
-  );
-
-  const setHasSelectableProfiles = () => {
-    // "Enable" selectable profiles by pref.
-    Services.prefs.setBoolPref(SELECTABLE_PROFILES_CREATED_PREF, true);
-    Assert.ok(
-      Services.prefs.getBoolPref(SELECTABLE_PROFILES_CREATED_PREF),
-      "set has selectable profiles | browser.profiles.created = true"
-    );
-  };
-
-  if (aSetCreatedSelectableProfilesBeforeSchedulingBackups) {
-    setHasSelectableProfiles();
-  }
-
-  let bs = new BackupService({});
-  bs.initBackupScheduler();
-  bs.setScheduledBackups(true);
-
-  const SCHEDULED_BACKUP_ENABLED_PREF = "browser.backup.scheduled.enabled";
-  if (!aSetCreatedSelectableProfilesBeforeSchedulingBackups) {
-    Assert.ok(
-      Services.prefs.getBoolPref(SCHEDULED_BACKUP_ENABLED_PREF, true),
-      "enabled scheduled backups | browser.backup.scheduled.enabled = true"
-    );
-    registerCleanupFunction(() => {
-      // Just in case the test fails.
-      bs.setScheduledBackups(false);
-      info("cleared scheduled backups");
-    });
-
-    setHasSelectableProfiles();
-  }
-
-  // browser.backup.archive.enabled, browser.backup.restore.enabled and
-  // browser.backup.scheduled.enabled should ignore earlier setting and be
-  // false.
-  Assert.ok(
-    !Services.prefs.getBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true),
-    `backups are disabled | ${BACKUP_ARCHIVE_ENABLED_PREF_NAME} = false`
-  );
-  Assert.ok(
-    !Services.prefs.getBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, true),
-    `restore is disabled | ${BACKUP_RESTORE_ENABLED_PREF_NAME} = false`
-  );
-  Assert.ok(
-    !Services.prefs.getBoolPref(SCHEDULED_BACKUP_ENABLED_PREF, true),
-    `scheduled backups are not enabled | ${SCHEDULED_BACKUP_ENABLED_PREF} = false`
-  );
-
-  // Test cleanup
-  if (!aSetCreatedSelectableProfilesBeforeSchedulingBackups) {
-    bs.uninitBackupScheduler();
-  }
-
-  Services.prefs.clearUserPref(SELECTABLE_PROFILES_CREATED_PREF);
-  // These tests assume that backups and restores have been enabled.
-  Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true);
-  Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, true);
-  sandbox.restore();
-}
-
-add_task(
-  async function test_managing_profiles_before_scheduling_prevents_backup() {
-    await testSelectableProfilesPreventBackup(
-      true /* aSetCreatedSelectableProfilesBeforeSchedulingBackups */
-    );
-  }
-);
-
-add_task(
-  async function test_managing_profiles_after_scheduling_prevents_backup() {
-    await testSelectableProfilesPreventBackup(
-      false /* aSetCreatedSelectableProfilesBeforeSchedulingBackups */
-    );
   }
 );
 
