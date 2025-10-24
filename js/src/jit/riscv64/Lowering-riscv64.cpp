@@ -226,7 +226,7 @@ void LIRGeneratorRiscv64::lowerModI(MMod* mod) {
     int32_t shift = FloorLog2(rhs);
     if (rhs > 0 && 1 << shift == rhs) {
       LModPowTwoI* lir =
-          new (alloc()) LModPowTwoI(useRegister(mod->lhs()), shift);
+          new (alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
       if (mod->fallible()) {
         assignSnapshot(lir, mod->bailoutKind());
       }

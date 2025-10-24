@@ -1184,22 +1184,20 @@ void CodeGenerator::visitModPowTwoI(LModPowTwoI* ins) {
   MMod* mir = ins->mir();
   Label negative, done;
 
-  masm.move32(in, out);
-  masm.ma_b(in, in, &done, Assembler::Zero, ShortJump);
   // Switch based on sign of the lhs.
   // Positive numbers are just a bitmask
   masm.ma_b(in, in, &negative, Assembler::Signed, ShortJump);
   {
-    masm.and32(Imm32((1 << ins->shift()) - 1), out);
+    masm.ma_and(out, in, Imm32((1 << ins->shift()) - 1));
     masm.ma_branch(&done, ShortJump);
   }
 
   // Negative numbers need a negate, bitmask, negate
   {
     masm.bind(&negative);
-    masm.neg32(out);
-    masm.and32(Imm32((1 << ins->shift()) - 1), out);
-    masm.neg32(out);
+    masm.negw(out, in);
+    masm.ma_and(out, out, Imm32((1 << ins->shift()) - 1));
+    masm.negw(out, out);
   }
   if (mir->canBeNegativeDividend()) {
     if (!mir->isTruncated()) {
