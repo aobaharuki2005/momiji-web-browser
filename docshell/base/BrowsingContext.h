@@ -150,6 +150,9 @@ struct EmbedderColorSchemes {
   /* Hold the pinned/app-tab state and should be used on top level browsing   \
    * contexts only */                                                         \
   FIELD(IsAppTab, bool)                                                       \
+  /* Whether this is a captive portal tab. Should be used on top level        \
+   * browsing contexts only */                                                \
+  FIELD(IsCaptivePortalTab, bool)                                             \
   /* Whether there's more than 1 tab / toplevel browsing context in this      \
    * parent window. Used to determine if a given BC is allowed to resize      \
    * and/or move the window or not. */                                        \
@@ -1289,6 +1292,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_IsAppTab>, const bool& aValue,
               ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_IsCaptivePortalTab>, const bool& aValue,
+              ContentParent* aSource) {
+    return true;
+  }
 
   bool CanSet(FieldIndex<IDX_HasSiblings>, const bool& aValue,
               ContentParent* aSource);

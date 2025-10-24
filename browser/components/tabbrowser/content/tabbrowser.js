@@ -2887,13 +2887,13 @@
         bulkOrderedOpen,
         charset,
         createLazyBrowser,
-        disableTRR,
         eventDetail,
         focusUrlBar,
         forceNotRemote,
         forceAllowDataURI,
         fromExternal,
         inBackground = true,
+        isCaptivePortalTab,
         elementIndex,
         tabIndex,
         lazyTabTitle,
@@ -3103,8 +3103,8 @@
           allowInheritPrincipal,
           allowThirdPartyFixup,
           fromExternal,
-          disableTRR,
           forceAllowDataURI,
+          isCaptivePortalTab,
           skipLoad,
           referrerInfo,
           charset,
@@ -3784,8 +3784,8 @@
         allowInheritPrincipal,
         allowThirdPartyFixup,
         fromExternal,
-        disableTRR,
         forceAllowDataURI,
+        isCaptivePortalTab,
         skipLoad,
         referrerInfo,
         charset,
@@ -3843,7 +3843,7 @@
         if (!allowInheritPrincipal) {
           loadFlags |= LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
         }
-        if (disableTRR) {
+        if (isCaptivePortalTab) {
           loadFlags |= LOAD_FLAGS_DISABLE_TRR;
         }
         if (forceAllowDataURI) {
@@ -3862,6 +3862,7 @@
             schemelessInput,
             hasValidUserGestureActivation,
             textDirectiveUserActivation,
+            isCaptivePortalTab,
           });
         } catch (ex) {
           console.error(ex);
@@ -9080,6 +9081,10 @@
         uriString || uri.spec,
         loadURIOptions
       );
+
+      if (loadURIOptions.isCaptivePortalTab) {
+        browser.browsingContext.isCaptivePortalTab = true;
+      }
 
       // XXX(nika): Is `browser.isNavigating` necessary anymore?
       // XXX(gijs): Unsure. But it mirrors docShell.isNavigating, but in the parent process

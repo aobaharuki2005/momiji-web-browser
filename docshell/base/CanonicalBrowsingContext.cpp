@@ -263,6 +263,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   Transaction txn;
   txn.SetBrowserId(GetBrowserId());
   txn.SetIsAppTab(GetIsAppTab());
+  txn.SetIsCaptivePortalTab(GetIsCaptivePortalTab());
   txn.SetHasSiblings(GetHasSiblings());
   txn.SetTopLevelCreatedByWebContent(GetTopLevelCreatedByWebContent());
   txn.SetHistoryID(GetHistoryID());
@@ -1908,6 +1909,11 @@ void CanonicalBrowsingContext::LoadURI(nsIURI* aURI,
     return;
   }
 
+  // Set the captive portal tab flag on the browsing context if requested
+  if (loadState->GetIsCaptivePortalTab()) {
+    (void)SetIsCaptivePortalTab(true);
+  }
+
   LoadURI(loadState, true);
 }
 
@@ -1926,6 +1932,11 @@ void CanonicalBrowsingContext::FixupAndLoadURIString(
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
     return;
+  }
+
+  // Set the captive portal tab flag on the browsing context if requested
+  if (loadState->GetIsCaptivePortalTab()) {
+    (void)SetIsCaptivePortalTab(true);
   }
 
   LoadURI(loadState, true);

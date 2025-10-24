@@ -117,6 +117,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   }
   mUnstrippedURI = aLoadState.UnstrippedURI();
   mRemoteTypeOverride = aLoadState.RemoteTypeOverride();
+  mIsCaptivePortalTab = aLoadState.IsCaptivePortalTab();
 
   if (aLoadState.NavigationAPIState()) {
     mNavigationAPIState = MakeRefPtr<nsStructuredCloneContainer>();
@@ -534,6 +535,7 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
 
   loadState->SetForceMediaDocument(aLoadURIOptions.mForceMediaDocument);
   loadState->SetAppLinkLaunchType(aLoadURIOptions.mAppLinkLaunchType);
+  loadState->SetIsCaptivePortalTab(aLoadURIOptions.mIsCaptivePortalTab);
 
   loadState.forget(aResult);
   return NS_OK;
@@ -1449,6 +1451,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize(
   }
   loadState.UnstrippedURI() = mUnstrippedURI;
   loadState.RemoteTypeOverride() = mRemoteTypeOverride;
+  loadState.IsCaptivePortalTab() = mIsCaptivePortalTab;
 
   if (mNavigationAPIState) {
     loadState.NavigationAPIState().emplace();
@@ -1526,4 +1529,12 @@ uint32_t nsDocShellLoadState::GetAppLinkLaunchType() const {
 
 void nsDocShellLoadState::SetAppLinkLaunchType(uint32_t aAppLinkLaunchType) {
   mAppLinkLaunchType = aAppLinkLaunchType;
+}
+
+bool nsDocShellLoadState::GetIsCaptivePortalTab() const {
+  return mIsCaptivePortalTab;
+}
+
+void nsDocShellLoadState::SetIsCaptivePortalTab(bool aIsCaptivePortalTab) {
+  mIsCaptivePortalTab = aIsCaptivePortalTab;
 }

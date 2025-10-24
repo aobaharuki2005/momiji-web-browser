@@ -464,6 +464,10 @@ class nsDocShellLoadState final {
   uint32_t GetAppLinkLaunchType() const;
   void SetAppLinkLaunchType(uint32_t aAppLinkLaunchType);
 
+  // This is used as the getter/setter for the captive portal tab flag.
+  bool GetIsCaptivePortalTab() const;
+  void SetIsCaptivePortalTab(bool aIsCaptivePortalTab);
+
  protected:
   // Destructor can't be defaulted or inlined, as header doesn't have all type
   // includes it needs to do so.
@@ -744,6 +748,9 @@ class nsDocShellLoadState final {
 
   // App link intent launch type: 0 = unknown, 1 = cold, 2 = warm, 3 = hot.
   uint32_t mAppLinkLaunchType = 0;
+
+  // Whether this is a captive portal tab.
+  bool mIsCaptivePortalTab = false;
 };
 
 #endif /* nsDocShellLoadState_h__ */
