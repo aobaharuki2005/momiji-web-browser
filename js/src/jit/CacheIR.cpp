@@ -2454,11 +2454,6 @@ AttachDecision GetPropIRGenerator::tryAttachInlinableNativeGetter(
     Handle<NativeObject*> holder, PropertyInfo prop, ValOperandId receiverId) {
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
 
-  // Suppress GC because |CacheIRWriter::trace()| doesn't yet support stub
-  // field tracing and stub fields were already added for shape and prototype
-  // guards.
-  gc::AutoSuppressGC suppressGC(cx_);
-
   Rooted<JSFunction*> target(cx_, &holder->getGetter(prop)->as<JSFunction>());
   MOZ_ASSERT(target->isNativeWithoutJitEntry());
 
