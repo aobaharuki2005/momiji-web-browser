@@ -5468,7 +5468,7 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .meta .sections-card-footer .source-wrapper {
     max-width: 245px;
   }
-  .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .meta .sections-card-footer .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .meta .sections-card-footer .source {
     width: 217px;
   }
   .ds-section-grid.ds-card-grid .col-1-medium.refined-cards .meta:has(.story-footer .story-sponsored-label) .sections-card-footer {
@@ -5849,7 +5849,7 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .meta .sections-card-footer .source-wrapper {
     max-width: 245px;
   }
-  .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .meta .sections-card-footer .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .meta .sections-card-footer .source {
     width: 217px;
   }
   .ds-section-grid.ds-card-grid .col-2-medium.refined-cards .meta:has(.story-footer .story-sponsored-label) .sections-card-footer {
@@ -6239,7 +6239,7 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .meta .sections-card-footer .source-wrapper {
     max-width: 245px;
   }
-  .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .meta .sections-card-footer .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .meta .sections-card-footer .source {
     width: 217px;
   }
   .ds-section-grid.ds-card-grid .col-3-medium.refined-cards .meta:has(.story-footer .story-sponsored-label) .sections-card-footer {
@@ -6628,7 +6628,7 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .meta .sections-card-footer .source-wrapper {
     max-width: 245px;
   }
-  .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .meta .sections-card-footer .source-wrapper .source {
+  .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .meta .sections-card-footer .source {
     width: 217px;
   }
   .ds-section-grid.ds-card-grid .col-4-medium.refined-cards .meta:has(.story-footer .story-sponsored-label) .sections-card-footer {
