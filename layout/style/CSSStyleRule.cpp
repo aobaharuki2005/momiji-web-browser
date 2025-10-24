@@ -282,28 +282,34 @@ static Maybe<PseudoStyleType> GetPseudoType(const nsAString& aPseudo) {
       .map([](const PseudoStyleRequest& aRequest) { return aRequest.mType; });
 }
 
-Element* GetHost(StyleSheet* aSheet, const Element& aElement) {
+static void GetHosts(StyleSheet* aSheet, const Element& aElement,
+                     nsTArray<Element*>& aHosts) {
   if (!aSheet) {
-    return nullptr;
+    return;
   }
+
   if (auto* owner = aSheet->GetAssociatedDocumentOrShadowRoot()) {
     if (auto* shadow = ShadowRoot::FromNode(owner->AsNode())) {
-      return shadow->Host();
+      aHosts.AppendElement(shadow->Host());
     }
   }
+
   for (auto* adopter : aSheet->SelfOrAncestorAdopters()) {
-    // Try to guess. This is not fully correct but it's the best we can do
-    // with the info at hand...
     auto* shadow = ShadowRoot::FromNode(adopter->AsNode());
     if (!shadow) {
       continue;
     }
     if (shadow->Host() == &aElement ||
         shadow == aElement.GetContainingShadow()) {
-      return shadow->Host();
+      aHosts.AppendElement(shadow->Host());
     }
   }
-  return nullptr;
+}
+
+Element* GetHost(StyleSheet* aSheet, const Element& aElement) {
+  nsTArray<Element*> hosts;
+  GetHosts(aSheet, aElement, hosts);
+  return hosts.SafeElementAt(0, nullptr);
 }
 
 bool CSSStyleRule::SelectorMatchesElement(uint32_t aSelectorIndex,
@@ -315,16 +321,27 @@ bool CSSStyleRule::SelectorMatchesElement(uint32_t aSelectorIndex,
     return false;
   }
 
-  auto* host = GetHost(GetStyleSheet(), aElement);
-  AutoTArray<const StyleLockedStyleRule*, 8> rules;
   AutoTArray<StyleScopeRuleData, 1> scopes;
+  AutoTArray<const StyleLockedStyleRule*, 8> rules;
   CollectStyleRules(*this, /* aDesugared = */ true, rules, &scopes);
 
-  // FIXME: Bug 1909173. This function is used for the devtool, so we may need
-  // to revist here once we finish the support of view-transitions.
-  return Servo_StyleRule_SelectorMatchesElement(&rules, &scopes, &aElement,
-                                                aSelectorIndex, host, *pseudo,
-                                                aRelevantLinkVisited);
+  AutoTArray<Element*, 4> hosts;
+  GetHosts(GetStyleSheet(), aElement, hosts);
+  if (hosts.IsEmpty()) {
+    hosts.AppendElement(nullptr);
+  }
+
+  for (auto* host : hosts) {
+    // FIXME: Bug 1909173. This function is used for DevTools, so we may need
+    // to revist here once we finish the support of view-transitions.
+    if (Servo_StyleRule_SelectorMatchesElement(&rules, &scopes, &aElement,
+                                               aSelectorIndex, host, *pseudo,
+                                               aRelevantLinkVisited)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 Element* CSSStyleRule::GetScopeRootFor(uint32_t aSelectorIndex,
