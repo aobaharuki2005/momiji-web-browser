@@ -430,7 +430,7 @@ export default class BackupSettings extends MozLitElement {
         >
           <span
             id="backup-sensitive-data-checkbox-description-span"
-            data-l10n-id="settings-data-toggle-encryption-description"
+            data-l10n-id="settings-sensitive-data-encryption-description"
           ></span>
           <a
             id="settings-data-toggle-encryption-learn-more-link"

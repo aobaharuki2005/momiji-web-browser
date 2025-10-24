@@ -151,7 +151,7 @@ export default class EnableBackupEncryption extends MozLitElement {
       <div id="backup-enable-encryption-description">
         <span
           id="backup-enable-encryption-description-span"
-          data-l10n-id="enable-backup-encryption-description"
+          data-l10n-id="settings-sensitive-data-encryption-description"
         >
         </span>
         <a
