@@ -24,9 +24,25 @@ add_setup(async () => {
  */
 add_task(async function test_preferences_visibility() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    const sandbox = sinon.createSandbox();
     let backupSection =
-      browser.contentDocument.querySelector("#dataBackupGroup");
+      browser.contentDocument.querySelector("#dataBackupSection");
+    let syncPane = gBrowser.contentWindow.gSyncPane;
+    let settings = browser.contentDocument.querySelector("backup-settings");
+
+    const spy = sandbox.spy(syncPane, "updateBackupUIVisibility");
+    Services.obs.addObserver(
+      syncPane.updateBackupUIVisibility,
+      "backup-service-status-updated"
+    );
+
     Assert.ok(backupSection, "Found backup preferences section");
+
+    const waitForCall = () =>
+      BrowserTestUtils.waitForCondition(
+        () => spy.callCount >= 1,
+        `Waiting for updateBackupUIVisibility() to be called 1 time`
+      );
 
     // Our mochitest-browser tests are configured to have the section visible
     // by default.
@@ -34,23 +50,36 @@ add_task(async function test_preferences_visibility() {
       BrowserTestUtils.isVisible(backupSection),
       "Backup section is visible"
     );
-  });
 
-  await SpecialPowers.pushPrefEnv({
-    set: [[BACKUP_ARCHIVE_ENABLED_PREF, false]],
-  });
+    await SpecialPowers.pushPrefEnv({
+      set: [["privacy.sanitize.sanitizeOnShutdown", true]],
+    });
 
-  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    let backupSection =
-      browser.contentDocument.querySelector("#dataBackupGroup");
-    Assert.ok(backupSection, "Found backup preferences section");
+    await waitForCall();
+
+    Assert.ok(
+      BrowserTestUtils.isHidden(backupSection),
+      "Backup section is not available"
+    );
+
+    await SpecialPowers.popPrefEnv();
+
+    await waitForCall();
 
     Assert.ok(
       BrowserTestUtils.isVisible(backupSection),
-      "Backup section is still visible"
+      "Backup section is visible"
     );
 
-    let settings = browser.contentDocument.querySelector("backup-settings");
+    await SpecialPowers.pushPrefEnv({
+      set: [[BACKUP_ARCHIVE_ENABLED_PREF, false]],
+    });
+
+    Assert.ok(
+      BrowserTestUtils.isVisible(backupSection),
+      "Backup section is now visible"
+    );
+
     let backupArchiveSection = settings.querySelector("#scheduled-backups");
 
     Assert.ok(!backupArchiveSection, "Backup archive section is not available");
@@ -59,27 +88,31 @@ add_task(async function test_preferences_visibility() {
       settings.restoreFromBackupEl,
       "Backup restore section is available"
     );
-  });
-  await SpecialPowers.pushPrefEnv({
-    set: [[BACKUP_RESTORE_ENABLED_PREF, false]],
-  });
-  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    let settings = browser.contentDocument.querySelector("backup-settings");
+
+    await SpecialPowers.pushPrefEnv({
+      set: [[BACKUP_RESTORE_ENABLED_PREF, false]],
+    });
+
+    await settings.updateComplete;
+
+    Assert.ok(
+      BrowserTestUtils.isHidden(backupSection),
+      "Backup section is not available"
+    );
+
     Assert.ok(
       !settings.restoreFromBackupEl,
       "Backup Restore section is not available"
     );
 
-    let backupSection =
-      browser.contentDocument.querySelector("#dataBackupGroup");
-    Assert.ok(
-      BrowserTestUtils.isHidden(backupSection),
-      "Backup section is now hidden"
+    await SpecialPowers.popPrefEnv();
+    await SpecialPowers.popPrefEnv();
+
+    Services.obs.removeObserver(
+      gBrowser.contentWindow.gSyncPane.updateBackupUIVisibility,
+      "backup-service-status-updated"
     );
   });
-
-  await SpecialPowers.popPrefEnv();
-  await SpecialPowers.popPrefEnv();
 });
 
 /**
