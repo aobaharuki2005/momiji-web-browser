@@ -1495,8 +1495,7 @@ void MacroAssemblerLOONG64::ma_fmovn(FloatFormat fmt, FloatRegister fd,
   bind(&done);
 }
 
-void MacroAssemblerLOONG64::ma_and(Register rd, Register rj, Imm32 imm,
-                                   bool bit32) {
+void MacroAssemblerLOONG64::ma_and(Register rd, Register rj, Imm32 imm) {
   if (is_uintN(imm.value, 12)) {
     as_andi(rd, rj, imm.value);
   } else if (rd != rj) {
@@ -1511,8 +1510,7 @@ void MacroAssemblerLOONG64::ma_and(Register rd, Register rj, Imm32 imm,
   }
 }
 
-void MacroAssemblerLOONG64::ma_or(Register rd, Register rj, Imm32 imm,
-                                  bool bit32) {
+void MacroAssemblerLOONG64::ma_or(Register rd, Register rj, Imm32 imm) {
   if (is_uintN(imm.value, 12)) {
     as_ori(rd, rj, imm.value);
   } else {
@@ -1524,8 +1522,7 @@ void MacroAssemblerLOONG64::ma_or(Register rd, Register rj, Imm32 imm,
   }
 }
 
-void MacroAssemblerLOONG64::ma_xor(Register rd, Register rj, Imm32 imm,
-                                   bool bit32) {
+void MacroAssemblerLOONG64::ma_xor(Register rd, Register rj, Imm32 imm) {
   if (is_uintN(imm.value, 12)) {
     as_xori(rd, rj, imm.value);
   } else {

@@ -273,11 +273,11 @@ class MacroAssemblerLOONG64 : public Assembler {
   void ma_fmovn(FloatFormat fmt, FloatRegister fd, FloatRegister fj,
                 Register rk);
 
-  void ma_and(Register rd, Register rj, Imm32 imm, bool bit32 = false);
+  void ma_and(Register rd, Register rj, Imm32 imm);
 
-  void ma_or(Register rd, Register rj, Imm32 imm, bool bit32 = false);
+  void ma_or(Register rd, Register rj, Imm32 imm);
 
-  void ma_xor(Register rd, Register rj, Imm32 imm, bool bit32 = false);
+  void ma_xor(Register rd, Register rj, Imm32 imm);
 
   // load
   FaultingCodeOffset ma_load(Register dest, const BaseIndex& src,
