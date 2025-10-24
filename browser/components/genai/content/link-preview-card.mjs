@@ -53,10 +53,10 @@ class LinkPreviewCard extends MozLitElement {
     isMissingDataErrorState: { type: Boolean },
     generationError: { type: Object }, // null = no error, otherwise contains error info
     keyPoints: { type: Array },
-    canShowKeyPoints: { type: Boolean },
     optin: { type: Boolean },
     pageData: { type: Object },
     progress: { type: Number }, // -1 = off, 0-100 = download progress
+    regionSupported: { type: Boolean },
   };
 
   constructor() {
@@ -65,10 +65,10 @@ class LinkPreviewCard extends MozLitElement {
     this.generationError = null;
     this.isMissingDataErrorState = false;
     this.keyPoints = [];
-    this.canShowKeyPoints = true;
     this.optin = false;
     this.optinRef = createRef();
     this.progress = -1;
+    this.regionSupported = true;
   }
 
   /**
@@ -420,7 +420,14 @@ class LinkPreviewCard extends MozLitElement {
    * @returns {import('lit').TemplateResult} The content card HTML
    */
   renderKeyPointsSection(pageUrl) {
-    if (!this.canShowKeyPoints) {
+    if (!this.regionSupported) {
+      return "";
+    }
+
+    if (
+      !this.optin &&
+      Services.prefs.prefIsLocked("browser.ml.linkPreview.optin")
+    ) {
       return "";
     }
 
