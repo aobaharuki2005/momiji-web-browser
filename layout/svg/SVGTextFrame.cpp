@@ -3371,7 +3371,7 @@ void SVGTextFrame::ReflowSVG() {
   if (r.IsEmpty()) {
     mRect.SetEmpty();
   } else {
-    mRect = nsLayoutUtils::RoundGfxRectToAppRect(r.ToThebesRect(),
+    mRect = nsLayoutUtils::RoundGfxRectToAppRect((const Rect&)r,
                                                  AppUnitsPerCSSPixel());
 
     // Due to rounding issues when we have a transform applied, we sometimes
