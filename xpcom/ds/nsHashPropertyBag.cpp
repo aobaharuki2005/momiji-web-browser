@@ -8,7 +8,6 @@
 
 #include <utility>
 
-#include "mozilla/Attributes.h"
 #include "mozilla/SimpleEnumerator.h"
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"

@@ -8,7 +8,6 @@
 
 #include "chrome/common/ipc_message.h"  // for IPC::Message
 #include "MaybeLeakRefPtr.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/TimeStamp.h"

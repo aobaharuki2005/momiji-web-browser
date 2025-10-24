@@ -29,7 +29,6 @@
 #include "nsNetCID.h"
 #include "nsThread.h"
 #include "VRProcessManager.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
