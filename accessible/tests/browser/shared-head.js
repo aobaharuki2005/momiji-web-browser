@@ -150,8 +150,8 @@ let Logger = {
  *                            attribute
  * @return {Promise}          promise indicating that attribute is set/removed
  */
-function invokeSetAttribute(browser, id, attr, value) {
-  if (value) {
+function invokeSetAttribute(browser, id, attr, value = null) {
+  if (value !== null) {
     Logger.log(`Setting ${attr} attribute to ${value} for node with id: ${id}`);
   } else {
     Logger.log(`Removing ${attr} attribute from node with id: ${id}`);
@@ -162,7 +162,7 @@ function invokeSetAttribute(browser, id, attr, value) {
     [id, attr, value],
     (contentId, contentAttr, contentValue) => {
       let elm = content.document.getElementById(contentId);
-      if (contentValue) {
+      if (contentValue !== null) {
         elm.setAttribute(contentAttr, contentValue);
       } else {
         elm.removeAttribute(contentAttr);
