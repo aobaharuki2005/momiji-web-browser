@@ -25,7 +25,7 @@ def test_detached_shadow_root(session, get_test_page, as_frame):
 
     if as_frame:
         frame = session.find.css("iframe", all=False)
-        session.switch_frame(frame)
+        session.switch_to_frame(frame)
 
     element = session.find.css("custom-element", all=False)
 
@@ -46,7 +46,7 @@ def test_stale_element(session, get_test_page, as_frame):
 
     if as_frame:
         frame = session.find.css("iframe", all=False)
-        session.switch_frame(frame)
+        session.switch_to_frame(frame)
 
     element = session.find.css("div", all=False)
 
