@@ -132,10 +132,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
       mozilla::ipc::EndpointProcInfo aOtherProcess);
 #endif
 
-  // Maps the layer tree and process together so that aOwningPID is allowed
-  // to access aLayersId across process.
-  void MapLayerTreeId(LayersId aLayersId, base::ProcessId aOwningId);
-
   // Release compositor-thread resources referred to by |aID|.
   //
   // Must run on the content main thread.
@@ -158,6 +154,9 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // Allocate a layers ID and connect it to a compositor. If the compositor is
   // null, the connect operation will not be performed, but an ID will still be
   // allocated. This must be called from the browser main thread.
+  //
+  // It also maps the layer tree and process together so that aOwningPID is
+  // allowed to access aLayersId across process.
   //
   // Note that a layer tree id is always allocated, even if this returns false.
   bool AllocateAndConnectLayerTreeId(PCompositorBridgeChild* aCompositorBridge,

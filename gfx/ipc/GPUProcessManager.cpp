@@ -1592,23 +1592,6 @@ nsresult GPUProcessManager::EnsureVideoBridge(
   return NS_OK;
 }
 
-void GPUProcessManager::MapLayerTreeId(LayersId aLayersId,
-                                       base::ProcessId aOwningId) {
-  if (NS_WARN_IF(NS_FAILED(EnsureGPUReady()))) {
-    return;
-  }
-
-  if (mGPUChild) {
-    mGPUChild->SendAddLayerTreeIdMapping(
-        LayerTreeIdMapping(aLayersId, aOwningId));
-  }
-
-  // Must do this *after* the call to EnsureGPUReady, so that if the
-  // process is launched as a result then it is initialized without this
-  // LayersId, meaning it can be successfully mapped.
-  LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwningId);
-}
-
 void GPUProcessManager::UnmapLayerTreeId(LayersId aLayersId,
                                          base::ProcessId aOwningId) {
   // If the GPU process is down, but not disabled, there is no need to relaunch
@@ -1673,26 +1656,40 @@ uint32_t GPUProcessManager::AllocateNamespace() {
 bool GPUProcessManager::AllocateAndConnectLayerTreeId(
     PCompositorBridgeChild* aCompositorBridge, base::ProcessId aOtherPid,
     LayersId* aOutLayersId, CompositorOptions* aOutCompositorOptions) {
+  MOZ_ASSERT(aOutLayersId);
+
   LayersId layersId = AllocateLayerTreeId();
   *aOutLayersId = layersId;
 
-  if (!mGPUChild || !aCompositorBridge) {
-    // If we're not remoting to another process, or there is no compositor,
-    // then we'll send at most one message. In this case we can just keep
-    // the old behavior of making sure the mapping occurs, and maybe sending
-    // a creation notification.
-    MapLayerTreeId(layersId, aOtherPid);
-    if (!aCompositorBridge) {
-      return false;
+  // We always map the layer ID in the parent process so that we can recover
+  // from GPU process crashes. In that case, the tree will be shared with the
+  // new GPU process at initialization.
+  LayerTreeOwnerTracker::Get()->Map(layersId, aOtherPid);
+
+  if (NS_WARN_IF(NS_FAILED(EnsureGPUReady()))) {
+    return false;
+  }
+
+  // If we have a CompositorBridgeChild, then we need to call
+  // CompositorBridgeParent::NotifyChildCreated. If this is in the GPU process,
+  // we can combine it with LayerTreeOwnerTracker::Map to minimize IPC.
+  // messages.
+  if (aCompositorBridge) {
+    if (mGPUChild) {
+      return aCompositorBridge->SendMapAndNotifyChildCreated(
+          layersId, aOtherPid, aOutCompositorOptions);
     }
     return aCompositorBridge->SendNotifyChildCreated(layersId,
                                                      aOutCompositorOptions);
   }
 
-  // Use the combined message path.
-  LayerTreeOwnerTracker::Get()->Map(layersId, aOtherPid);
-  return aCompositorBridge->SendMapAndNotifyChildCreated(layersId, aOtherPid,
-                                                         aOutCompositorOptions);
+  // If we don't have a CompositorBridgeChild, we just need to call
+  // LayerTreeOwnerTracker::Map in the compositing process.
+  if (mGPUChild) {
+    mGPUChild->SendAddLayerTreeIdMapping(
+        LayerTreeIdMapping(layersId, aOtherPid));
+  }
+  return false;
 }
 
 void GPUProcessManager::EnsureVsyncIOThread() {
