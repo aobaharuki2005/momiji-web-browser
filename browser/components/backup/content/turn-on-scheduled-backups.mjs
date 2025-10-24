@@ -330,7 +330,7 @@ export default class TurnOnScheduledBackups extends MozLitElement {
             </label>
             <span
               class="text-deemphasized"
-              data-l10n-id="turn-on-scheduled-backups-encryption-description"
+              data-l10n-id="settings-sensitive-data-encryption-description"
             ></span>
           </div>
 
