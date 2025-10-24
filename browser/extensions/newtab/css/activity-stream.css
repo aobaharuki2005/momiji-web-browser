@@ -4455,10 +4455,8 @@ dialog::after {
   display: flex;
   flex-direction: column;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .lists:hover {
-    background: var(--newtab-background-color-secondary);
-  }
+.lists:hover {
+  background: var(--newtab-background-color-secondary);
 }
 .lists .confetti-canvas {
   position: absolute;
@@ -4677,10 +4675,8 @@ dialog::after {
   align-items: center;
   box-shadow: var(--box-shadow-card);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .focus-timer:hover {
-    background: var(--newtab-background-color-secondary);
-  }
+.focus-timer:hover {
+  background: var(--newtab-background-color-secondary);
 }
 
 .focus-timer-tabs {
@@ -7505,10 +7501,8 @@ dialog::after {
   background: var(--newtab-background-card);
   transition: opacity 0.2s ease;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .ds-card-grid .sections-card-ui:hover {
-    background: var(--newtab-background-color-secondary);
-  }
+.ds-card-grid .sections-card-ui:hover {
+  background: var(--newtab-background-color-secondary);
 }
 .ds-card-grid .sections-card-ui:not(.placeholder) {
   box-shadow: 0 1px 2px 0 rgba(58, 57, 68, 0.2);
@@ -7523,6 +7517,24 @@ dialog::after {
 }
 .ds-card-grid .sections-card-ui:not(.placeholder) .img-wrapper > .ds-image.img > img {
   border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+}
+@media (forced-colors: active) {
+  .ds-card-grid .sections-card-ui:not(.placeholder) {
+    border: var(--border-width) solid var(--border-color-card);
+  }
+  .ds-card-grid .sections-card-ui:not(.placeholder):hover {
+    --newtab-background-color-secondary: SelectedItemText;
+    --newtab-text-secondary-color: SelectedItem;
+    color: SelectedItem;
+    border-color: var(--border-color-interactive-hover);
+  }
+  .ds-card-grid .sections-card-ui:not(.placeholder):hover .meta .title {
+    color: var(--link-color-hover);
+  }
+  .ds-card-grid .sections-card-ui .meta .title {
+    text-decoration: underline;
+    color: var(--link-color);
+  }
 }
 .ds-card-grid .sections-card-ui .meta {
   padding: var(--space-large);
@@ -7629,11 +7641,9 @@ dialog::after {
   background: var(--newtab-background-card);
   transition: opacity 0.2s ease;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .ds-card-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards:hover,
+.ds-card-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards:hover,
 .ds-section-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards:hover {
-    background: var(--newtab-background-color-secondary);
-  }
+  background: var(--newtab-background-color-secondary);
 }
 .ds-card-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards .img-wrapper .ds-image img,
 .ds-section-grid .ds-card.ds-spoc-rectangle.ds-spoc-rectangle.refined-cards .img-wrapper .ds-image img {
@@ -7724,11 +7734,22 @@ dialog::after {
 .ds-card-grid .refined-cards .context-menu-button {
   background-color: var(--button-background-color-ghost);
 }
+@media (forced-colors: active) {
+  .ds-card-grid .refined-cards .context-menu-button {
+    border: var(--border-width) solid var(--button-border-color-ghost);
+  }
+}
 .ds-card-grid .refined-cards:hover h3, .ds-card-grid .refined-cards.active h3 {
   color: var(--color-accent-primary);
 }
 .ds-card-grid .refined-cards:hover .context-menu-button:hover, .ds-card-grid .refined-cards.active .context-menu-button:hover {
   background-color: var(--button-background-color-ghost-hover);
+}
+@media (forced-colors: active) {
+  .ds-card-grid .refined-cards:hover .context-menu-button:hover, .ds-card-grid .refined-cards.active .context-menu-button:hover {
+    border-color: var(--button-border-color-ghost-hover);
+    fill: var(--button-text-color-ghost-hover);
+  }
 }
 .ds-card-grid .refined-cards:hover .context-menu-button:hover:active, .ds-card-grid .refined-cards.active .context-menu-button:hover:active {
   background-color: var(--button-background-color-ghost-active);
@@ -8905,10 +8926,8 @@ dialog::after {
   box-shadow: var(--box-shadow-card);
   border-radius: var(--border-radius-large);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .ad-banner-wrapper .ad-banner-inner:hover {
-    background: var(--newtab-background-color-secondary);
-  }
+.ad-banner-wrapper .ad-banner-inner:hover {
+  background: var(--newtab-background-color-secondary);
 }
 .ad-banner-wrapper .ad-banner-inner:hover {
   box-shadow: var(--box-shadow-card-hover);
@@ -9033,10 +9052,8 @@ dialog::after {
   position: relative;
   padding: var(--space-large);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .promo-card-wrapper:hover {
-    background: var(--newtab-background-color-secondary);
-  }
+.promo-card-wrapper:hover {
+  background: var(--newtab-background-color-secondary);
 }
 .promo-card-wrapper .promo-card-title {
   display: block;
