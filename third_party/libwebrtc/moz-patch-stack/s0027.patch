@@ -203,7 +203,7 @@ index ef07265bf3..348be89bb9 100644
      }
  
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 036a23ca9b..ac2234a065 100644
+index ea3a8a4acd..3603d4f4b0 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -44,6 +44,9 @@ rtc_library("enable_media") {
@@ -1258,7 +1258,7 @@ index 2e8752ab0c..f9bcdf7a0d 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index e3122cbc18..b58bef6ad6 100644
+index 0e43130593..eeeddba86f 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {

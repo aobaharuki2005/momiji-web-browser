@@ -261,10 +261,10 @@ index 7a178ea664..41c3d608ad 100644
  
      VideoBitrateAllocationObserver* bitrate_allocation_observer = nullptr;
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index ea6325087d..30a0d37d5a 100644
+index 30e97de170..07c84e5ada 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -130,7 +130,8 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
+@@ -127,7 +127,8 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
      RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
      RtcpCnameCallback* rtcp_cname_callback,
      bool non_sender_rtt_measurement,
@@ -274,7 +274,7 @@ index ea6325087d..30a0d37d5a 100644
    RtpRtcpInterface::Configuration configuration;
    configuration.audio = false;
    configuration.receiver_only = true;
-@@ -141,6 +142,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
+@@ -138,6 +139,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
        rtcp_packet_type_counter_observer;
    configuration.rtcp_cname_callback = rtcp_cname_callback;
    configuration.local_media_ssrc = local_ssrc;
@@ -282,7 +282,7 @@ index ea6325087d..30a0d37d5a 100644
    configuration.non_sender_rtt_measurement = non_sender_rtt_measurement;
  
    auto rtp_rtcp = std::make_unique<ModuleRtpRtcpImpl2>(env, configuration);
-@@ -314,7 +316,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+@@ -311,7 +313,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
            rtcp_packet_type_counter_observer,
            rtcp_cname_callback,
            config_.rtp.rtcp_xr.receiver_reference_time_report,
