@@ -242,7 +242,7 @@ add_task(async function test_about_glean_histogram() {
       //            td        svg        g.boxes    g*n     >rect+text+text
       const boxes = valueCell.firstChild.firstChild.children;
 
-      Assert.equal(boxes.length, 3);
+      Assert.equal(boxes.length, 2, "Bar graphs for bucket 0 and 1 shown");
       Assert.equal(boxes[0].children[1].textContent, "2");
       Assert.equal(boxes[0].children[2].textContent, "0");
       Assert.equal(boxes[1].children[1].textContent, "3");

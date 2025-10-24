@@ -292,8 +292,6 @@ nimbus_targeting_context:
     unit: addresses
 
   arch_bits:
-    no_lint:
-      - UNIT_IN_NAME # metric name must match the targeting context attribute
     bugs: *targeting_context_bugs
     data_reviews: *targeting_context_data_reviews
     expires: *targeting_context_expiry

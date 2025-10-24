@@ -5012,8 +5012,6 @@ activation:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
-    no_lint:
-      - USER_LIFETIME_EXPIRATION
     metadata:
       tags:
         - Privacy&Security
@@ -12008,6 +12006,8 @@ wallpapers:
     metadata:
       tags:
         - Wallpapers
+    no_lint:
+      - HIGHER_DATA_SENSITIVITY_REQUIRED
 
 recently_visited_homepage:
   history_highlight_opened:

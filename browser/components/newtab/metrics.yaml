@@ -2797,6 +2797,8 @@ newtab_content:
         type: string
     send_in_pings:
       - newtab-content
+    no_lint:
+      - HIGHER_DATA_SENSITIVITY_REQUIRED
 
 top_sites: # Replacement for PingCentre "topsites-impression|click" pings.
   ping_type:
