@@ -12,7 +12,6 @@
 #include <d2d1effecthelpers.h>
 
 #include "2D.h"
-#include "mozilla/Attributes.h"
 
 // {97143DC6-CBC4-4DD4-A8BA-13342B0BA46D}
 DEFINE_GUID(CLSID_RadialGradientEffect, 0x97143dc6, 0xcbc4, 0x4dd4, 0xa8, 0xba,

@@ -8,7 +8,6 @@
 #define MOZILLA_GFX_CANVASCLIENT_H
 
 #include "mozilla/Assertions.h"                 // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"                 // for override
 #include "mozilla/RefPtr.h"                     // for RefPtr, already_AddRefed
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"     // for TextureInfo, etc

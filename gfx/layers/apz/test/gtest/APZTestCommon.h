@@ -15,7 +15,6 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/DoubleTapToZoom.h"

@@ -9,7 +9,6 @@
 
 #include "base/basictypes.h"     // for DISALLOW_EVIL_CONSTRUCTORS
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2
-#include "mozilla/Attributes.h"  // for override
 #include "mozilla/Monitor.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorBridgeChild.h"

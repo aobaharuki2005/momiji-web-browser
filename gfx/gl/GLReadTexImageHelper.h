@@ -8,7 +8,6 @@
 #define GLREADTEXIMAGEHELPER_H_
 
 #include "GLContextTypes.h"
-#include "mozilla/Attributes.h"
 #include "nsSize.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/MatrixFwd.h"

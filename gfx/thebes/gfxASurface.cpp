@@ -5,7 +5,6 @@
 
 #include "nsIMemoryReporter.h"
 #include "mozilla/Base64.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/gfx/2D.h"

@@ -12,7 +12,6 @@
 #include <d2d1effecthelpers.h>
 
 #include "2D.h"
-#include "mozilla/Attributes.h"
 
 // {97143DC6-CBC4-4DD4-A8BA-13342B0BA46D}
 DEFINE_GUID(CLSID_ExtendInputEffect, 0x5fb55c7c, 0xd795, 0x4ba3, 0xa9, 0x5c,

@@ -24,7 +24,6 @@
 #include "nsXULAppAPI.h"
 
 #include "mozilla/AppShutdown.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
