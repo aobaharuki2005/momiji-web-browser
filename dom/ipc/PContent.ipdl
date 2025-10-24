@@ -1985,6 +1985,11 @@ parent:
     async SignalFuzzingReady();
 #endif
 
+#ifdef FUZZING
+    // Used by the child process to signal restarting the GPU process.
+    async KillGPUProcess();
+#endif
+
   async AttributionEvent(nsCString aSourceHost,
                          PrivateAttributionImpressionType aType,
                          uint32_t aIndex, nsString aAd, nsCString aTargetHost);

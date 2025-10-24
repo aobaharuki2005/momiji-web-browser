@@ -8060,6 +8060,16 @@ IPCResult ContentParent::RecvSignalFuzzingReady() {
 }
 #endif
 
+#ifdef FUZZING
+IPCResult ContentParent::RecvKillGPUProcess() {
+  gfx::GPUProcessManager* gpm = gfx::GPUProcessManager::Get();
+  if (gpm) {
+    gpm->KillProcess();
+  }
+  return IPC_OK();
+}
+#endif
+
 nsCString ThreadsafeContentParentHandle::GetRemoteType() {
   RecursiveMutexAutoLock lock(mMutex);
   return mRemoteType;

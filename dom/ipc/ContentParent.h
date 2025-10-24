@@ -1420,6 +1420,10 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvSignalFuzzingReady();
 #endif
 
+#ifdef FUZZING
+  mozilla::ipc::IPCResult RecvKillGPUProcess();
+#endif
+
  public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);
