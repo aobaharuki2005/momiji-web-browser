@@ -51,10 +51,10 @@ export class GuardianClient {
   async isLinkedToGuardian(onlyCached = false) {
     const guardian_clientId = CLIENT_ID_MAP[this.#successURL.origin];
     if (!guardian_clientId) {
-      throw new Error(
-        `No client_id found for Guardian origin: ${this.#successURL.origin}`
-      );
+      // If we end up using an unknown successURL, we are definitely not linked to Guardian.
+      return false;
     }
+
     const cached_clients = await lazy.fxAccounts.listAttachedOAuthClients();
     if (cached_clients.some(client => client.id === guardian_clientId)) {
       return true;

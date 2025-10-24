@@ -106,7 +106,7 @@ add_task(async function test_IPProtectionService_enroll() {
   await IPProtectionService.updateState();
   Assert.equal(
     IPProtectionService.state,
-    IPProtectionStates.ENROLLING,
+    IPProtectionStates.READY,
     "User should now be enrolling"
   );
 
@@ -519,7 +519,7 @@ add_task(async function test_IPProtectionService_addon() {
       },
     },
   });
-  await IPProtectionService.updateState();
+  await IPProtectionService.refetchEntitlement();
 
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
