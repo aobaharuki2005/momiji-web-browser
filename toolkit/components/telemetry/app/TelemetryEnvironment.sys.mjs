@@ -1739,7 +1739,6 @@ EnvironmentCache.prototype = {
    */
   _getGFXData() {
     let gfxData = {
-      D2DEnabled: getGfxField("D2DEnabled", null),
       DWriteEnabled: getGfxField("DWriteEnabled", null),
       ContentBackend: getGfxField("ContentBackend", null),
       Headless: getGfxField("isHeadless", null),
@@ -1750,9 +1749,6 @@ EnvironmentCache.prototype = {
       monitors: [],
       features: {},
     };
-    if (gfxData.D2DEnabled !== null) {
-      Glean.gfx.d2dEnabled.set(gfxData.D2DEnabled);
-    }
     if (gfxData.DWriteEnabled !== null) {
       Glean.gfx.dwriteEnabled.set(gfxData.DWriteEnabled);
     }

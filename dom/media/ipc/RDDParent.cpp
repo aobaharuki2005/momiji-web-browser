@@ -220,7 +220,6 @@ mozilla::ipc::IPCResult RDDParent::RecvInitVideoBridge(
           Feature::HW_COMPOSITING,
           Feature::D3D11_COMPOSITING,
           Feature::OPENGL_COMPOSITING,
-          Feature::DIRECT2D,
       },
       aContentDeviceData.prefs());
 #ifdef XP_WIN

@@ -136,11 +136,6 @@ GfxInfo::GfxInfo()
 
 GfxInfo::~GfxInfo() {}
 
-/* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after
- * gfxPlatform initialization has occurred because they depend on it for
- * information. (See bug 591561) */
-nsresult GfxInfo::GetD2DEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
-
 nsresult GfxInfo::GetDWriteEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
 
 nsresult GfxInfo::GetHasBattery(bool* aHasBattery) {

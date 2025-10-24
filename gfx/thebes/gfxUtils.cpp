@@ -272,15 +272,7 @@ void gfxUtils::ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength) {
  * alpha channel or their alpha channel is uniformly opaque.
  * This differs per render mode.
  */
-static CompositionOp OptimalFillOp() {
-#  ifdef XP_WIN
-  if (gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend()) {
-    // D2D -really- hates operator source.
-    return CompositionOp::OP_OVER;
-  }
-#  endif
-  return CompositionOp::OP_SOURCE;
-}
+static CompositionOp OptimalFillOp() { return CompositionOp::OP_SOURCE; }
 
 // EXTEND_PAD won't help us here; we have to create a temporary surface to hold
 // the subimage of pixels we're allowed to sample.

@@ -163,7 +163,6 @@ mozilla::ipc::IPCResult UtilityMediaServiceParent::RecvInitVideoBridge(
           gfx::Feature::HW_COMPOSITING,
           gfx::Feature::D3D11_COMPOSITING,
           gfx::Feature::OPENGL_COMPOSITING,
-          gfx::Feature::DIRECT2D,
       },
       aContentDeviceData.prefs());
 

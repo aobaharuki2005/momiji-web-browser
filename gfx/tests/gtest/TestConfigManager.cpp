@@ -179,9 +179,6 @@ class MockGfxInfo final : public nsIGfxInfo {
   }
   NS_IMETHOD_(void)
   SetCodecSupportInfo(const nsACString& aCodecSupportInfo) override {}
-  NS_IMETHOD GetD2DEnabled(bool* aD2DEnabled) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
   NS_IMETHOD GetDWriteEnabled(bool* aDWriteEnabled) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

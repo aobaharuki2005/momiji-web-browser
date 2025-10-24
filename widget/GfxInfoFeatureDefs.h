@@ -13,8 +13,6 @@
 GFXINFO_FEATURE(ALL, "ALL", "all")
 /* Wildcard to block all optional features, starting in 123. */
 GFXINFO_FEATURE(OPTIONAL, "OPTIONAL", "optional")
-/* Whether Direct2D is supported for content rendering, always present. */
-GFXINFO_FEATURE(DIRECT2D, "DIRECT2D", "direct2d")
 /* Whether Direct3D 9 is supported for layers, always present. */
 GFXINFO_FEATURE(DIRECT3D_9_LAYERS, "DIRECT3D_9_LAYERS", "layers.direct3d9")
 /* Whether Direct3D 10.0 is supported for layers, always present. */

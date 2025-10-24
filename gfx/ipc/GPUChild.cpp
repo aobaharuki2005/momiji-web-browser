@@ -58,7 +58,6 @@ void GPUChild::Init() {
       gfxConfig::GetValue(Feature::D3D11_COMPOSITING);
   devicePrefs.oglCompositing() =
       gfxConfig::GetValue(Feature::OPENGL_COMPOSITING);
-  devicePrefs.useD2D1() = gfxConfig::GetValue(Feature::DIRECT2D);
   devicePrefs.d3d11HwAngle() = gfxConfig::GetValue(Feature::D3D11_HW_ANGLE);
 
   nsTArray<LayerTreeIdMapping> mappings;

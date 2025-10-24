@@ -3951,11 +3951,7 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
   }
 
   // We aren't using Software WebRender + D3D11 compositing, so turn off the
-  // D3D11 and D2D.
-  if (gfxConfig::IsEnabled(Feature::DIRECT2D)) {
-    gfxConfig::GetFeature(Feature::DIRECT2D)
-        .ForceDisable(aStatus, aMessage, aFailureId);
-  }
+  // D3D11.
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     gfxConfig::GetFeature(Feature::D3D11_COMPOSITING)
         .ForceDisable(aStatus, aMessage, aFailureId);

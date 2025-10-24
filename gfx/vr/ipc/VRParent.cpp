@@ -54,7 +54,6 @@ IPCResult VRParent::RecvInit(nsTArray<GfxVarUpdate>&& vars,
   gfxConfig::Inherit(Feature::D3D11_COMPOSITING,
                      devicePrefs.d3d11Compositing());
   gfxConfig::Inherit(Feature::OPENGL_COMPOSITING, devicePrefs.oglCompositing());
-  gfxConfig::Inherit(Feature::DIRECT2D, devicePrefs.useD2D1());
 
 #if defined(XP_WIN)
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {

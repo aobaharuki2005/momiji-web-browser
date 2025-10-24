@@ -166,9 +166,6 @@ void gfxConfig::Inherit(EnumSet<Feature> aFeatures,
       case Feature::OPENGL_COMPOSITING:
         status = aDevicePrefs.oglCompositing();
         break;
-      case Feature::DIRECT2D:
-        status = aDevicePrefs.useD2D1();
-        break;
       default:
         break;
     }
