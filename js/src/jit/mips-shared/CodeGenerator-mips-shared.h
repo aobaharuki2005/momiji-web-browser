@@ -121,6 +121,8 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared {
                                   Register flagTemp, Register valueTemp,
                                   Register offsetTemp, Register maskTemp);
 
+  void emitMulI64(Register lhs, int64_t rhs, Register dest);
+
  public:
   // Out of line visitors.
   void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);

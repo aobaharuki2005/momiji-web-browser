@@ -138,6 +138,8 @@ class CodeGeneratorRiscv64 : public CodeGeneratorShared {
                         Register output);
   void emitBigIntPtrMod(LBigIntPtrMod* ins, Register dividend, Register divisor,
                         Register output);
+
+  void emitMulI64(Register lhs, int64_t rhs, Register dest);
 };
 
 typedef CodeGeneratorRiscv64 CodeGeneratorSpecific;
