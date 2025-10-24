@@ -41,6 +41,11 @@ support-files = ["!/netwerk/test/unit/proxy-ca.pem", "!/netwerk/test/unit/http2-
 skip-if = [
   "msix", # H3 server not working on msix
   "os == 'android'", # bug 1992996
+  # Setting dontfragment socket option on MacOS 10.15 fails with -5987. Without
+  # dontfragment, PMTUD needs to be disabled. Without PMTUD, the HTTP/3 proxy
+  # outer connection can not carry the UDP datagrams of the HTTP/3 proxied inner
+  # connection. Disable test on MacOS 10.15.
+  "os == 'mac' && os_version == '10.15'",
 ]
 
 ["test_extension_process_alive.js"]

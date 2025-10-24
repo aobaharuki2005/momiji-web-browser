@@ -727,6 +727,11 @@ skip-if = [
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix", # Bug 1807931
+  # Setting dontfragment socket option on MacOS 10.15 fails with -5987. Without
+  # dontfragment, PMTUD needs to be disabled. Without PMTUD, the HTTP/3 proxy
+  # outer connection can not carry the UDP datagrams of the HTTP/3 proxied inner
+  # connection. Disable test on MacOS 10.15.
+  "os == 'mac' && os_version == '10.15'",
 ]
 
 ["test_http3_0rtt.js"]
@@ -876,6 +881,11 @@ run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'", # Bug 1808049
+  # Setting dontfragment socket option on MacOS 10.15 fails with -5987. Without
+  # dontfragment, PMTUD needs to be disabled. Without PMTUD, the HTTP/3 proxy
+  # outer connection can not carry the UDP datagrams of the HTTP/3 proxied inner
+  # connection. Disable test on MacOS 10.15.
+  "os == 'mac' && os_version == '10.15'",
 ]
 
 ["test_http3_proxy_no_speculative.js"]
@@ -884,6 +894,11 @@ run-sequentially = ["true"] # node server exceptions dont replay well
 skip-if = [
   "os == 'android'",
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix'", # Bug 1808049
+  # Setting dontfragment socket option on MacOS 10.15 fails with -5987. Without
+  # dontfragment, PMTUD needs to be disabled. Without PMTUD, the HTTP/3 proxy
+  # outer connection can not carry the UDP datagrams of the HTTP/3 proxied inner
+  # connection. Disable test on MacOS 10.15.
+  "os == 'mac' && os_version == '10.15'",
 ]
 
 ["test_http3_server.js"]
