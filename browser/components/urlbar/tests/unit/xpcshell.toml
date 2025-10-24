@@ -47,6 +47,7 @@ support-files = ["data/engine.xml"]
 ["test_autofill_origins.js"]
 
 ["test_autofill_originsAndQueries.js"]
+requesttimeoutfactor = 2  # Slow on Linux debug
 
 ["test_autofill_origins_alt_frecency.js"]
 prefs = [
