@@ -471,8 +471,8 @@ const char* ChildListName(FrameChildListID aListID) {
       return "OverflowOutOfFlowList";
     case FrameChildListID::Float:
       return "FloatList";
-    case FrameChildListID::Bullet:
-      return "BulletList";
+    case FrameChildListID::Marker:
+      return "MarkerList";
     case FrameChildListID::PushedFloats:
       return "PushedFloatsList";
     case FrameChildListID::Backdrop:

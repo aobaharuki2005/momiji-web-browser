@@ -725,7 +725,7 @@ const nsFrameList& nsBlockFrame::GetChildList(ChildListID aListID) const {
       const nsFrameList* list = GetPushedFloats();
       return list ? *list : nsFrameList::EmptyList();
     }
-    case FrameChildListID::Bullet: {
+    case FrameChildListID::Marker: {
       const nsFrameList* list = GetOutsideMarkerList();
       return list ? *list : nsFrameList::EmptyList();
     }
@@ -744,7 +744,7 @@ void nsBlockFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
     list->AppendIfNonempty(aLists, FrameChildListID::OverflowOutOfFlow);
   }
   if (const nsFrameList* list = GetOutsideMarkerList()) {
-    list->AppendIfNonempty(aLists, FrameChildListID::Bullet);
+    list->AppendIfNonempty(aLists, FrameChildListID::Marker);
   }
   if (const nsFrameList* list = GetFloats()) {
     list->AppendIfNonempty(aLists, FrameChildListID::Float);

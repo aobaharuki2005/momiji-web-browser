@@ -9707,8 +9707,7 @@ void nsCSSFrameConstructor::ProcessChildren(
       for (auto* childFrame : aFrameList) {
         if (markerFrame == childFrame) {
           if (isOutsideMarker) {
-            // SetMarkerFrameForListItem will add childFrame to the
-            // FrameChildListID::Bullet
+            // SetMarkerFrameForListItem will add childFrame to the marker list.
             aFrameList.RemoveFrame(childFrame);
             auto* grandParent = listItem->GetParent()->GetParent();
             if (listItem->Style()->GetPseudoType() ==

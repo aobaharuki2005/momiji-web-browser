@@ -43,7 +43,7 @@ enum class FrameChildListID {
   ExcessOverflowContainers,
   OverflowOutOfFlow,
   Float,
-  Bullet,
+  Marker,
   PushedFloats,
   Backdrop,
   // A special alias for FrameChildListID::Principal that suppress the reflow
