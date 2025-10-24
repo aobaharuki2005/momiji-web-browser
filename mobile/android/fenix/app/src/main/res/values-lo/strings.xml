@@ -807,6 +807,10 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">ແຖບສະແດງແຖບ</string>
   <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_shortcut">ທາງລັດແຖບເຄື່ອງມື</string>
+  <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_select_shortcut">ເລືອກທາງລັດ</string>
+  <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ທ່າທາງ</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">ການປັບແຕ່ງ</string>

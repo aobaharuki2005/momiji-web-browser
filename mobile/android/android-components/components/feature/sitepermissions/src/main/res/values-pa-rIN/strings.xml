@@ -44,6 +44,8 @@
     this button will not give access to this permission
   -->
   <string name="mozac_feature_sitepermissions_block">ਪਾਬੰਦੀ</string>
+  <!-- Message of a dialog offering more context about the app level notification permission request. %1$s will be replaced with the name of the app. -->
+  <string name="mozac_feature_sitepermissions_notification_permission_rationale_dialog_message">ਇਸ ਵੈੱਬਸਾਈਟ ਤੋਂ ਨੋਟੀਫਿਕੇਸ਼ਨ ਲੈਣ ਲਈ ਤੁਹਾਨੂੰ %1$s ਵਿੱਚ ਨੋਟੀਫਿਕੇਸ਼ਨਾਂ ਦੀ ਮਨਜ਼ੂਰੀ ਦੇਣੀ ਪਵੇਗੀ।</string>
   <!-- Button label in a notification permission request dialog to dismiss the dialog. -->
   <string name="mozac_feature_sitepermissions_notification_permission_rationale_dialog_dismiss_label">ਰੱਦ ਕਰੋ</string>
   <!-- Button label in a notification permission request dialog. It will let the user go to Android Settings to grant the permission. -->
