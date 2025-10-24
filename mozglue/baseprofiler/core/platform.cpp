@@ -42,6 +42,7 @@
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/DoubleConversion.h"
 #include "mozilla/Printf.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/ProfilerBufferSize.h"
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"

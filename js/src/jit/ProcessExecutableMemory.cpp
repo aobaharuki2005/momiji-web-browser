@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 #include "mozilla/XorShift128PlusRNG.h"
 

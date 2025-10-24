@@ -95,7 +95,6 @@
 #include "double-conversion/double-conversion.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/Span.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
