@@ -9,7 +9,6 @@
 #include "mozilla/NativeNt.h"
 #include "mozilla/PolicyChecks.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/WindowsStackCookie.h"
 #include "mozilla/WinHeaderOnlyUtils.h"

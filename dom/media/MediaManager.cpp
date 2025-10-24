@@ -26,7 +26,6 @@
 #include "mozilla/PermissionDelegateHandler.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/Types.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"

@@ -16,7 +16,6 @@
 #include "mozilla/NativeNt.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypedEnumBits.h"
-#include "mozilla/Types.h"
 #include "mozilla/interceptor/PatcherBase.h"
 #include "mozilla/interceptor/Trampoline.h"
 #include "mozilla/interceptor/VMSharingPolicies.h"

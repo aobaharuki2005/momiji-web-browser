@@ -48,7 +48,6 @@
 #include <vector>
 #include <sys/wait.h>
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Types.h"
 
 #include "mozilla/GfxInfoUtils.h"
 

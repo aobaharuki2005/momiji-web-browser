@@ -10,7 +10,6 @@
 #  include "mozilla/StaticPrefs_media.h"
 #endif
 #include "PlatformDecoderModule.h"
-#include "mozilla/Types.h"
 #include "prlink.h"
 #ifdef MOZ_WIDGET_GTK
 #  include "VALibWrapper.h"

@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Types.h"
 #include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/WindowsUnwindInfo.h"
 

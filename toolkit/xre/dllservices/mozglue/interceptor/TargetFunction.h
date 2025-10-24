@@ -13,7 +13,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 
-#include "mozilla/Types.h"
 #include "mozilla/Vector.h"
 
 #include <memory>

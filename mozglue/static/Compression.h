@@ -10,7 +10,6 @@
 #define mozilla_Compression_h_
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Types.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/Span.h"
 

@@ -9,7 +9,6 @@
 #define jit_riscv64_disasm_Disasm_riscv64_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Types.h"
 
 #include <stdio.h>
 
