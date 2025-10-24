@@ -37,8 +37,14 @@ skip-if = [
 ]
 
 ["browser_genai_actors.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1992527
+]
 
 ["browser_genai_init.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1992527
+]
 
 ["browser_link_preview.js"]
 support-files = [
