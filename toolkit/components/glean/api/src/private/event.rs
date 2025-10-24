@@ -165,6 +165,18 @@ impl<K: 'static + ExtraKeys + Send + Sync + Clone> EventMetric<K> {
     }
 }
 
+impl<K> crate::private::TestGetNumErrors for EventMetric<K> {
+    fn test_get_num_recorded_errors(&self, error_type: glean::ErrorType) -> i32 {
+        match self {
+            EventMetric::Parent { inner, .. } => inner.test_get_num_recorded_errors(error_type),
+            EventMetric::Child(c) => panic!(
+                "Cannot get the number of recorded errors for {:?} in non-main process!",
+                c.id
+            ),
+        }
+    }
+}
+
 #[inherent]
 impl<K: 'static + ExtraKeys + Send + Sync + Clone> Event for EventMetric<K> {
     type Extra = K;
@@ -197,16 +209,6 @@ impl<K: 'static + ExtraKeys + Send + Sync + Clone> Event for EventMetric<K> {
                 };
                 self.record_with_time(now, extra);
             }
-        }
-    }
-
-    pub fn test_get_num_recorded_errors(&self, error: glean::ErrorType) -> i32 {
-        match self {
-            EventMetric::Parent { inner, .. } => inner.test_get_num_recorded_errors(error),
-            EventMetric::Child(meta) => panic!(
-                "Cannot get the number of recorded errors for {:?} in non-main process!",
-                meta.id
-            ),
         }
     }
 }

@@ -199,6 +199,12 @@ macro_rules! test_get_errors {
             glean::ErrorType::InvalidOverflow,
         ];
         let mut error_str = None;
+        // Only `events` use this trait right now
+        // Ignoring the unused import simplifies the macro right now.
+        // This might change in the future.
+        #[allow(unused_imports)]
+        use crate::private::TestGetNumErrors;
+
         for &error_type in error_types.iter() {
             let num_errors = $metric.test_get_num_recorded_errors(error_type);
             if num_errors > 0 {
