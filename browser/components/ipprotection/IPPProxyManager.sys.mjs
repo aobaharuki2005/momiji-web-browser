@@ -11,9 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionUsage.sys.mjs",
   IPPNetworkErrorObserver:
     "resource:///modules/ipprotection/IPPNetworkErrorObserver.sys.mjs",
-  getDefaultLocation:
-    "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
-  selectServer:
+  IPProtectionServerlist:
     "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
 });
 
@@ -117,8 +115,13 @@ class IPPProxyManager {
       this.#pass = await this.#getProxyPass();
     }
 
-    const location = await lazy.getDefaultLocation();
-    const server = await lazy.selectServer(location?.city);
+    const location = lazy.IPProtectionServerlist.getDefaultLocation();
+    const server = lazy.IPProtectionServerlist.selectServer(location?.city);
+    if (!server) {
+      lazy.logConsole.error("No server found");
+      throw new Error("No server found");
+    }
+
     lazy.logConsole.debug("Server:", server?.hostname);
 
     this.#connection.initialize(

@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const STATE_CACHE_PREF = "browser.ipProtection.stateCache";
 const ENTITLEMENT_CACHE_PREF = "browser.ipProtection.entitlementCache";
+const LOCATIONLIST_CACHE_PREF = "browser.ipProtection.locationListCache";
 
 /**
  * This class implements a cache for the IPP state machine. The cache is used
@@ -113,6 +114,25 @@ class IPPStartupCacheSingleton {
         ""
       );
       return JSON.parse(entitlement);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  storeLocationList(locationList) {
+    Services.prefs.setCharPref(
+      LOCATIONLIST_CACHE_PREF,
+      JSON.stringify(locationList)
+    );
+  }
+
+  get locationList() {
+    try {
+      const locationList = Services.prefs.getCharPref(
+        LOCATIONLIST_CACHE_PREF,
+        ""
+      );
+      return JSON.parse(locationList);
     } catch (e) {
       return null;
     }

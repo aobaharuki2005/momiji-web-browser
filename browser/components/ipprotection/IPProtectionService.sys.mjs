@@ -12,6 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
   IPPNimbusHelper: "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
+  IPProtectionServerlist:
+    "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
   IPPSignInWatcher: "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs",
   IPPStartupCache: "resource:///modules/ipprotection/IPPStartupCache.sys.mjs",
   SpecialMessageActions:
@@ -203,6 +205,8 @@ class IPProtectionServiceSingleton extends EventTarget {
    * True if started by user action, false if system action
    */
   async start(userAction = true) {
+    await lazy.IPProtectionServerlist.maybeFetchList();
+
     // Wait for enrollment to finish.
     const enrollData = await lazy.IPPEnrollHelper.maybeEnroll();
     if (!enrollData || !enrollData.isEnrolled) {

@@ -26,6 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 import { IPPAutoStartHelpers } from "resource:///modules/ipprotection/IPPAutoStart.sys.mjs";
 import { IPPEnrollHelper } from "resource:///modules/ipprotection/IPPEnrollHelper.sys.mjs";
 import { IPPNimbusHelper } from "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs";
+import { IPProtectionServerlist } from "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs";
 import { IPPSignInWatcher } from "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs";
 import { IPPStartupCache } from "resource:///modules/ipprotection/IPPStartupCache.sys.mjs";
 
@@ -150,6 +151,7 @@ const IPPHelpers = [
   IPPStartupCache,
   IPPSignInWatcher,
   IPPEnrollHelper,
+  IPProtectionServerlist,
   new UIHelper(),
   new AccountResetHelper(),
   new VPNAddonHelper(),

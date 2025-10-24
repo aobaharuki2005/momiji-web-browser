@@ -7,6 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  IPProtectionServerlist:
+    "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   IPProtectionStates:
@@ -20,13 +22,13 @@ const AUTOSTART_PREF = "browser.ipProtection.autoStartEnabled";
  * calls `start()`. This is done only if the previous state was not a ACTIVE
  * because, in that case, more likely the VPN on/off state is an user decision.
  */
-class IPPAutoStart {
+class IPPAutoStartSingleton {
   #shouldStartWhenReady = false;
 
   constructor() {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "autoStart",
+      "autoStartPref",
       AUTOSTART_PREF,
       false,
       (_pref, _oldVal, featureEnabled) => {
@@ -65,6 +67,12 @@ class IPPAutoStart {
     }
   }
 
+  get autoStart() {
+    // We activate the auto-start feature only if the pref is true and we have
+    // the serverlist already.
+    return this.autoStartPref && lazy.IPProtectionServerlist.hasList;
+  }
+
   #handleEvent(_event) {
     switch (lazy.IPProtectionService.state) {
       case lazy.IPProtectionStates.UNINITIALIZED:
@@ -87,6 +95,8 @@ class IPPAutoStart {
   }
 }
 
+const IPPAutoStart = new IPPAutoStartSingleton();
+
 /**
  * This class monitors the startup phases and registers/unregisters the channel
  * filter to avoid data leak. The activation of the VPN is done by the
@@ -97,11 +107,7 @@ class IPPEarlyStartupFilter {
 
   constructor() {
     this.handleEvent = this.#handleEvent.bind(this);
-
-    this.#autoStartAndAtStartup = Services.prefs.getBoolPref(
-      AUTOSTART_PREF,
-      false
-    );
+    this.#autoStartAndAtStartup = IPPAutoStart.autoStart;
   }
 
   init() {
@@ -154,6 +160,6 @@ class IPPEarlyStartupFilter {
   }
 }
 
-const IPPAutoStartHelpers = [new IPPAutoStart(), new IPPEarlyStartupFilter()];
+const IPPAutoStartHelpers = [IPPAutoStart, new IPPEarlyStartupFilter()];
 
 export { IPPAutoStartHelpers };
