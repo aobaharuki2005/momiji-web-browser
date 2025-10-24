@@ -22,6 +22,9 @@ skip-if = [
 ]
 
 ["browser_chat_request.js"]
+support-files = [
+  "file_chat-autosubmit.html",
+]
 
 ["browser_chat_shortcuts.js"]
 
