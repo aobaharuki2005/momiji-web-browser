@@ -54,18 +54,6 @@ Operand CodeGeneratorLOONG64::ToOperand(const LDefinition* def) {
   return ToOperand(def->output());
 }
 
-#ifdef JS_PUNBOX64
-Operand CodeGeneratorLOONG64::ToOperandOrRegister64(
-    const LInt64Allocation& input) {
-  return ToOperand(input.value());
-}
-#else
-Register64 CodeGeneratorLOONG64::ToOperandOrRegister64(
-    const LInt64Allocation& input) {
-  return ToRegister64(input);
-}
-#endif
-
 void CodeGeneratorLOONG64::branchToBlock(Assembler::FloatFormat fmt,
                                          FloatRegister lhs, FloatRegister rhs,
                                          MBasicBlock* mir,
@@ -707,7 +695,7 @@ void CodeGenerator::visitAddI64(LAddI64* lir) {
     return;
   }
 
-  masm.add64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+  masm.add64(ToRegister64(rhs), ToRegister64(lhs));
 }
 
 void CodeGenerator::visitSubI(LSubI* ins) {
@@ -763,7 +751,7 @@ void CodeGenerator::visitSubI64(LSubI64* lir) {
     return;
   }
 
-  masm.sub64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+  masm.sub64(ToRegister64(rhs), ToRegister64(lhs));
 }
 
 void CodeGenerator::visitMulI(LMulI* ins) {
@@ -990,7 +978,7 @@ void CodeGenerator::visitMulI64(LMulI64* lir) {
     }
   } else {
     Register temp = ToTempRegisterOrInvalid(lir->temp0());
-    masm.mul64(ToOperandOrRegister64(rhs), ToRegister64(lhs), temp);
+    masm.mul64(ToRegister64(rhs), ToRegister64(lhs), temp);
   }
 }
 
@@ -1268,21 +1256,21 @@ void CodeGenerator::visitBitOpI64(LBitOpI64* lir) {
       if (IsConstant(rhs)) {
         masm.or64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {
-        masm.or64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        masm.or64(ToRegister64(rhs), ToRegister64(lhs));
       }
       break;
     case JSOp::BitXor:
       if (IsConstant(rhs)) {
         masm.xor64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {
-        masm.xor64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        masm.xor64(ToRegister64(rhs), ToRegister64(lhs));
       }
       break;
     case JSOp::BitAnd:
       if (IsConstant(rhs)) {
         masm.and64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {
-        masm.and64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
+        masm.and64(ToRegister64(rhs), ToRegister64(lhs));
       }
       break;
     default:

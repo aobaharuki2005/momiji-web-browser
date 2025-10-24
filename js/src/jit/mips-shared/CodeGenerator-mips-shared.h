@@ -32,8 +32,6 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared {
   Operand ToOperand(const LAllocation* a);
   Operand ToOperand(const LDefinition* def);
 
-  Operand ToOperandOrRegister64(const LInt64Allocation& input);
-
   MoveOperand toMoveOperand(LAllocation a) const;
 
   template <typename T1, typename T2>

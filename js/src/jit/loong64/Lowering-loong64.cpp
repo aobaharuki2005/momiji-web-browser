@@ -87,9 +87,10 @@ void LIRGeneratorLOONG64::lowerForALUInt64(
     LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>* ins,
     MDefinition* mir, MDefinition* lhs, MDefinition* rhs) {
   ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-  ins->setInt64Operand(INT64_PIECES, willHaveDifferentLIRNodes(lhs, rhs)
-                                         ? useInt64OrConstant(rhs)
-                                         : useInt64OrConstantAtStart(rhs));
+  ins->setInt64Operand(INT64_PIECES,
+                       willHaveDifferentLIRNodes(lhs, rhs)
+                           ? useInt64RegisterOrConstant(rhs)
+                           : useInt64RegisterOrConstantAtStart(rhs));
   defineInt64ReuseInput(ins, mir, 0);
 }
 
@@ -101,8 +102,8 @@ void LIRGeneratorLOONG64::lowerForMulInt64(LMulI64* ins, MMul* mir,
 
   ins->setLhs(useInt64RegisterAtStart(lhs));
   ins->setRhs((willHaveDifferentLIRNodes(lhs, rhs) || cannotAliasRhs)
-                  ? useInt64OrConstant(rhs)
-                  : useInt64OrConstantAtStart(rhs));
+                  ? useInt64RegisterOrConstant(rhs)
+                  : useInt64RegisterOrConstantAtStart(rhs));
 
   if (needsTemp) {
     ins->setTemp0(temp());
