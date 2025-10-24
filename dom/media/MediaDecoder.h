@@ -565,8 +565,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   void ConnectMirrors(MediaDecoderStateMachineBase* aObject);
   void DisconnectMirrors();
 #  ifdef MOZ_WMF_MEDIA_ENGINE
-  // Return true if we switched to a new state machine.
-  bool SwitchStateMachine(const MediaResult& aError);
+  void SwitchStateMachine(const MediaResult& aError);
 #  endif
 
   virtual bool CanPlayThroughImpl() = 0;
