@@ -77,8 +77,6 @@ https_first_disabled = true
 ["browser_UsageTelemetry_uniqueOriginsVisitedInPast24Hours.js"]
 https_first_disabled = true
 
-["browser_aboutnewtab_init_gate.js"]
-
 ["browser_preloading_tab_moving.js"]
 
 ["browser_taskbar_preview.js"]
