@@ -34,6 +34,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDocShell.h"
 #include "nsGlobalWindowInner.h"
+#include "nsIMultiPartChannel.h"
 #include "nsIPrincipal.h"
 #include "nsISHistory.h"
 #include "nsIScriptChannel.h"
@@ -282,6 +283,12 @@ NavigationTransition* Navigation::GetTransition() const { return mTransition; }
 
 NavigationActivation* Navigation::GetActivation() const { return mActivation; }
 
+template <typename I>
+bool SupportsInterface(nsISupports* aSupports) {
+  nsCOMPtr<I> ptr = do_QueryInterface(aSupports);
+  return ptr;
+}
+
 // https://html.spec.whatwg.org/#has-entries-and-events-disabled
 bool Navigation::HasEntriesAndEventsDisabled() const {
   Document* doc = GetAssociatedDocument();
@@ -289,11 +296,12 @@ bool Navigation::HasEntriesAndEventsDisabled() const {
          doc->GetInitialStatus() == Document::InitialStatus::IsInitial ||
          doc->GetInitialStatus() ==
              Document::InitialStatus::IsInitialButExplicitlyOpened ||
-         doc->GetPrincipal()->GetIsNullPrincipal() || [&doc]() {
-           nsCOMPtr<nsIScriptChannel> channel =
-               do_QueryInterface(doc->GetChannel());
-           return channel;
-         }();
+         doc->GetPrincipal()->GetIsNullPrincipal() ||
+         // We explicitly disallow documents loaded through multipart and script
+         // channels from having events or entries. See bug 1996218 and bug
+         // 1996221
+         SupportsInterface<nsIMultiPartChannel>(doc->GetChannel()) ||
+         SupportsInterface<nsIScriptChannel>(doc->GetChannel());
 }
 
 // https://html.spec.whatwg.org/#initialize-the-navigation-api-entries-for-a-new-document
