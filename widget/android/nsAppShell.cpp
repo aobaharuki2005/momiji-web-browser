@@ -78,6 +78,7 @@
 #include "ScreenHelperAndroid.h"
 #include "WebExecutorSupport.h"
 #include "Base64UtilsSupport.h"
+#include "MozLogSupport.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #  define EVLOG(args...) ALOG(args)
@@ -433,6 +434,7 @@ nsAppShell::nsAppShell()
       GeckoThreadSupport::Init();
       GeckoAppShellSupport::Init();
       XPCOMEventTargetWrapper::Init();
+      mozilla::widget::MozLogSupport::Init();
 
       if (XRE_IsGPUProcess()) {
         mozilla::gl::AndroidSurfaceTexture::Init();
@@ -462,6 +464,7 @@ nsAppShell::nsAppShell()
     mozilla::widget::Base64UtilsSupport::Init();
     nsWindow::InitNatives();
     mozilla::gl::AndroidSurfaceTexture::Init();
+    mozilla::widget::MozLogSupport::Init();
 
     java::GeckoThread::SetState(java::GeckoThread::State::JNI_READY());
 
