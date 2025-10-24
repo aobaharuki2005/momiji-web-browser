@@ -6,7 +6,6 @@
 
 #include "DrawEventRecorder.h"
 
-#include "mozilla/UniquePtrExtensions.h"
 #include "PathRecording.h"
 #include "RecordingTypes.h"
 #include "RecordedEventImpl.h"

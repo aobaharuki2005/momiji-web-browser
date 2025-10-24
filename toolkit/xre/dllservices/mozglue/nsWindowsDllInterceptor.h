@@ -20,7 +20,6 @@
 #include "mozilla/NativeNt.h"
 
 #include "mozilla/Types.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/interceptor/MMPolicies.h"
 #include "mozilla/interceptor/PatcherDetour.h"

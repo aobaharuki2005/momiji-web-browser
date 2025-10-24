@@ -16,7 +16,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/RemoteCDMParent.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 

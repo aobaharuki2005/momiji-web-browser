@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "mozilla/UniquePtr.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "nsGkAtoms.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"

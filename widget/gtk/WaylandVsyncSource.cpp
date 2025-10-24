@@ -7,7 +7,6 @@
 #ifdef MOZ_WAYLAND
 
 #  include "WaylandVsyncSource.h"
-#  include "mozilla/UniquePtr.h"
 #  include "nsThreadUtils.h"
 #  include "nsISupportsImpl.h"
 #  include "MainThreadUtils.h"

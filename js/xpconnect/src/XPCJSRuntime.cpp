@@ -70,7 +70,6 @@
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "AccessCheck.h"
 #include "nsGlobalWindowInner.h"
 #include "nsAboutProtocolUtils.h"

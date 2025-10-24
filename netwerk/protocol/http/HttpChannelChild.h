@@ -10,7 +10,6 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPrefsBase.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/NeckoTargetHolder.h"

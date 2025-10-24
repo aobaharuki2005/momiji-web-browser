@@ -18,7 +18,6 @@
 
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/LateWriteChecks.h"
-#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 

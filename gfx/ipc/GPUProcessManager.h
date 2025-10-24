@@ -9,7 +9,6 @@
 #include "base/basictypes.h"
 #include "base/process.h"
 #include "Units.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/GPUProcessHost.h"
 #include "mozilla/gfx/PGPUChild.h"

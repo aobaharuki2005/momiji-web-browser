@@ -13,7 +13,6 @@
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FetchEventOpParent.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/InternalResponse.h"

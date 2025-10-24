@@ -5,7 +5,6 @@
 
 #include "nsParserUtils.h"
 #include "mozilla/NullPrincipal.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptLoader.h"

@@ -18,7 +18,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/UniquePtr.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nscore.h"

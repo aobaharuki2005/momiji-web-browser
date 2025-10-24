@@ -9,7 +9,6 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/net/CookieJarSettings.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/widget/WidgetLogging.h"
 #include "nsContentUtils.h"
 

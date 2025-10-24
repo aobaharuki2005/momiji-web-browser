@@ -10,7 +10,6 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
-#include "mozilla/UniquePtr.h"
 #include "nsBaseClipboard.h"
 #include "nsIClipboard.h"
 #include "nsIObserver.h"

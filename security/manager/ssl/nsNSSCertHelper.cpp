@@ -11,7 +11,6 @@
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/net/DNS.h"
 #include "nsCOMPtr.h"

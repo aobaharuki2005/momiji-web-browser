@@ -13,7 +13,6 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/StyleColorInlines.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/gfx/Types.h"
 #include "nsCOMPtr.h"

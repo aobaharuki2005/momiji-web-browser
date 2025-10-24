@@ -19,7 +19,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/UniquePtr.h"
 #include "nsXULAppAPI.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"

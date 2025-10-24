@@ -13,7 +13,6 @@
 #include "UtfConvert.h"
 
 #include "mozilla/Result.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 using namespace mozilla::default_agent;

@@ -20,7 +20,6 @@
 #include "mozilla/net/DashboardTypes.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
 #include "nsHostRecord.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIThreadPool.h"

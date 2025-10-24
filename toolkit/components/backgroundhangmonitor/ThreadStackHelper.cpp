@@ -23,7 +23,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/UniquePtr.h"
 #include "nsThread.h"
 
 #ifdef __GNUC__

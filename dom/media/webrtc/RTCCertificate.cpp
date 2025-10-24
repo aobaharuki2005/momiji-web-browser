@@ -23,7 +23,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/OwningNonNull.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/CryptoKey.h"

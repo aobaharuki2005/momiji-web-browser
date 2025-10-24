@@ -12,7 +12,6 @@
 
 #include "base/trace_event/common/trace_event_common.h"
 
-#include "mozilla/UniquePtr.h"
 #include "ProfilerNativeStack.h"
 #include "MicroGeckoProfiler.h"
 

@@ -31,7 +31,6 @@
 #    include <sys/utsname.h>
 #    include <termios.h>
 #    include "mozilla/ProcInfo_linux.h"
-#    include "mozilla/UniquePtrExtensions.h"
 #    ifdef MOZ_X11
 #      include "X11/Xlib.h"
 #      include "X11UndefineNone.h"

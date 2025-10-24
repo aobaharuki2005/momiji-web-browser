@@ -9,7 +9,6 @@
 
 #include "js/loader/ModuleLoaderBase.h"
 #include "js/loader/ScriptFetchOptions.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 
 namespace mozilla::dom::workerinternals::loader {

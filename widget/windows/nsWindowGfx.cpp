@@ -35,7 +35,6 @@
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGImageContext.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "nsGfxCIID.h"
 #include "gfxContext.h"
 #include "WinUtils.h"

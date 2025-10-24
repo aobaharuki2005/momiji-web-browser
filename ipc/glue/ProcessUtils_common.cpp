@@ -11,7 +11,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/RemoteType.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "nsPrintfCString.h"
 
 #include "XPCSelfHostedShmem.h"

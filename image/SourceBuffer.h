@@ -19,7 +19,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
 class nsIInputStream;

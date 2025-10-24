@@ -21,7 +21,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextRange.h"
-#include "mozilla/UniquePtr.h"
 
 struct ANPEvent;
 

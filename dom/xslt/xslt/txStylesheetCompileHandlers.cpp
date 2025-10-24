@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "nsGkAtoms.h"
 #include "nsStringFlags.h"
 #include "nsStringIterator.h"

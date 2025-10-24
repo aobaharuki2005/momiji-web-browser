@@ -30,7 +30,6 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StoragePrincipalHelper.h"
-#include "mozilla/UniquePtr.h"
 #include "HttpBackgroundChannelParent.h"
 #include "ParentChannelListener.h"
 #include "nsDebug.h"

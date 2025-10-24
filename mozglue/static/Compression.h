@@ -13,7 +13,6 @@
 #include "mozilla/Types.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/Span.h"
-#include "mozilla/UniquePtr.h"
 
 struct LZ4F_cctx_s;  // compression context
 struct LZ4F_dctx_s;  // decompression context

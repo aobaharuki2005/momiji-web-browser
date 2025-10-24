@@ -13,7 +13,6 @@
 #include "WinUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "mozilla/ipc/LaunchError.h"
 #include "mozilla/ipc/ProtocolUtils.h"

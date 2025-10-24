@@ -13,7 +13,6 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ErrorEvent.h"

@@ -14,7 +14,6 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
-#include "mozilla/UniquePtr.h"
 #include "gfxPlatform.h"
 #include "VsyncSource.h"
 

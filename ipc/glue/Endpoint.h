@@ -13,7 +13,6 @@
 #include "base/process_util.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/NodeController.h"

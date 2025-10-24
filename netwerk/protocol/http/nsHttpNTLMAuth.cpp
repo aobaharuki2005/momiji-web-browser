@@ -28,7 +28,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Tokenizer.h"
-#include "mozilla/UniquePtr.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"

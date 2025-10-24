@@ -28,7 +28,6 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/glean/IpcMetrics.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/NodeController.h"
 #include "mozilla/ipc/ProcessChild.h"

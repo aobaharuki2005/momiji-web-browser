@@ -17,7 +17,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CallState.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/UniquePtr.h"
 
 class nsViewManager;
 class nsIWidget;

@@ -8,7 +8,6 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/ByteBuf.h"

@@ -9,7 +9,6 @@
 
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/Array.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/net/NeqoHttp3Conn.h"
 #include "nsAHttpConnection.h"

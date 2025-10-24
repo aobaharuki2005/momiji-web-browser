@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"

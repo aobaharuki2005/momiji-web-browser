@@ -12,7 +12,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/Logging.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "mozilla/widget/AsyncDBus.h"
 #include "mozilla/dom/Promise.h"

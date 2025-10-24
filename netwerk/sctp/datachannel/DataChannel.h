@@ -16,7 +16,6 @@
 #include "nsCOMPtr.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/StopGapEventTarget.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "nsString.h"

@@ -20,7 +20,6 @@
 #include "mozilla/ServoBindings.h"  // StyleLockedDeclarationBlock
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/layers/LayersMessages.h"
