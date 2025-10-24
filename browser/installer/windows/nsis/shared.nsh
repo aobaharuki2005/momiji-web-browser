@@ -336,9 +336,8 @@ Function InstallDesktopLauncher
   ClearErrors
   ; Copy the launcher into the user's Desktop with an appropriate name
   CopyFiles /SILENT /FILESONLY "$INSTDIR\desktop-launcher\desktop-launcher.exe" "$DESKTOP\${BrandShortName}.exe"
-  ${IfNot} ${Errors}
+  ${If} ${FileExists} "$DESKTOP\${BrandShortName}.exe"
     WriteRegDWORD HKCU "Software\Mozilla\${BrandFullNameInternal}" DesktopLauncherAppInstalled 1
-    ${LogDesktopShortcut} "${BrandShortName}.exe"
   ${EndIf}
 FunctionEnd
 
