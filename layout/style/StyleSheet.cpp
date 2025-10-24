@@ -352,7 +352,9 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy, StyleSheet* aPrimarySheet)
       // We don't rebuild the child because we're making a copy without
       // children.
       mSourceMapURL(aCopy.mSourceMapURL),
-      mContents(Servo_StyleSheet_Clone(aCopy.mContents.get()).Consume())
+      mContents(Servo_StyleSheet_Clone(aCopy.mContents.get(),
+                                       aPrimarySheet->URLData())
+                    .Consume())
 #ifdef DEBUG
       ,
       mPrincipalSet(aCopy.mPrincipalSet)

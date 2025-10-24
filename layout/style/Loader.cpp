@@ -1822,14 +1822,18 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
   if (!isSheetFromCache) {
     sheet = MakeRefPtr<StyleSheet>(eAuthorSheetFeatures, aInfo.mCORSMode,
                                    SRIMetadata{});
-    nsIReferrerInfo* referrerInfo =
-        aInfo.mContent->OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
-    sheet->SetURIs(nullptr, baseURI, referrerInfo, sheetPrincipal);
     // If an extension creates an inline stylesheet, we don't want to consider
     // it same-origin with the page.
     // FIXME(emilio): That's rather odd.
     sheet->SetOriginClean(LoaderPrincipal()->Subsumes(sheetPrincipal));
   }
+  // We allow sharing inline sheets with e.g. different base URIs, iff there's
+  // no dependency on that base URI. However, we still need to keep track of the
+  // right URIs in case the sheet is then mutated. EnsureUniqueInner will make
+  // sure the StylesheetContents get fixed up.
+  nsIReferrerInfo* referrerInfo =
+      aInfo.mContent->OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
+  sheet->SetURIs(nullptr, baseURI, referrerInfo, sheetPrincipal);
 
   auto matched = PrepareSheet(*sheet, aInfo.mTitle, aInfo.mMedia, nullptr,
                               isAlternate, aInfo.mIsExplicitlyEnabled);

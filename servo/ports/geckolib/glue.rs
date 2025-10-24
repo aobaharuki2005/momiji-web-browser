@@ -2064,11 +2064,14 @@ pub extern "C" fn Servo_StyleSheet_GetRules(sheet: &StylesheetContents) -> Stron
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_Clone(
     contents: &StylesheetContents,
+    data: *mut URLExtraData,
 ) -> Strong<StylesheetContents> {
-    use style::shared_lock::DeepCloneWithLock;
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    Arc::new(contents.deep_clone_with_lock(&global_style_data.shared_lock, &guard)).into()
+    let url_data = unsafe { UrlExtraData::from_ptr_ref(&data) };
+    contents
+        .deep_clone(&global_style_data.shared_lock, Some(url_data), &guard)
+        .into()
 }
 
 #[no_mangle]
