@@ -9,7 +9,6 @@
 
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContainerFrame.h"
 #include "mozilla/gfx/2D.h"

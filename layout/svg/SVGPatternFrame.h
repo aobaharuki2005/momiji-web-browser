@@ -8,7 +8,6 @@
 #define LAYOUT_SVG_SVGPATTERNFRAME_H_
 
 #include "gfxMatrix.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGPaintServerFrame.h"
 #include "mozilla/UniquePtr.h"

@@ -7,7 +7,6 @@
 
 #include "TableArea.h"
 #include "celldata.h"
-#include "mozilla/Attributes.h"
 #include "nsCellMap.h"
 #include "nsContainerFrame.h"
 #include "nsDisplayList.h"

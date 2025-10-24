@@ -11,7 +11,6 @@
 
 #include <algorithm>
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "nsIFrame.h"
 #include "nsILineIterator.h"

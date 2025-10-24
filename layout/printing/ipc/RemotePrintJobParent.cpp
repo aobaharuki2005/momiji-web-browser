@@ -10,7 +10,6 @@
 
 #include "PrintTranslator.h"
 #include "gfxContext.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppDirectoryServiceDefs.h"

@@ -7,8 +7,6 @@
 #ifndef nsPrintData_h___
 #define nsPrintData_h___
 
-#include "mozilla/Attributes.h"
-
 // Interfaces
 #include "nsCOMArray.h"
 #include "nsDeviceContext.h"
