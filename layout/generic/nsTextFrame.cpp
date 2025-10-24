@@ -5843,11 +5843,45 @@ static bool ComputeDecorationTrim(
   } else {
     nsIFrame* const lineContainer = FindLineContainer(aFrame);
     nsILineIterator* const iter = lineContainer->GetLineIterator();
-    const nsILineIterator::LineInfo lineInfo =
-        iter->GetLine(GetFrameLineNum(aFrame, iter)).unwrap();
+    MOZ_ASSERT(iter,
+               "Line container of a text frame must be able to produce a "
+               "line iterator");
+    MOZ_ASSERT(
+        lineContainer->GetWritingMode().IsVertical() == wm.IsVertical(),
+        "Decorating frame and line container must have writing modes in the "
+        "same axis");
+    const int32_t lineNum = GetFrameLineNum(aFrame, iter);
+    const nsILineIterator::LineInfo lineInfo = iter->GetLine(lineNum).unwrap();
 
+    // Create the rects, relative to the line container.
     frameRect = nsRect{aFrame->GetOffsetTo(lineContainer), aFrame->GetSize()};
     inlineRect = lineInfo.mLineBounds;
+
+    // Account for text-indent, which will push text frames into the line box.
+    const StyleTextIndent& textIndent = aFrame->StyleText()->mTextIndent;
+    if (!textIndent.length.IsDefinitelyZero()) {
+      bool isFirstLineOrAfterHardBreak = true;
+      if (lineNum > 0 && !textIndent.each_line) {
+        isFirstLineOrAfterHardBreak = false;
+      } else if (nsBlockFrame* prevBlock =
+                     do_QueryFrame(lineContainer->GetPrevInFlow())) {
+        if (!(textIndent.each_line &&
+              (prevBlock->Lines().empty() ||
+               !prevBlock->LinesEnd().prev()->IsLineWrapped()))) {
+          isFirstLineOrAfterHardBreak = false;
+        }
+      }
+      if (isFirstLineOrAfterHardBreak != textIndent.hanging) {
+        // Determine which side to shrink.
+        const Side side = wm.PhysicalSide(LogicalSide::IStart);
+        // Calculate the text indent, and shrink the line box by this amount to
+        // acount for the indent size at the start of the line.
+        const nscoord basis = lineContainer->GetLogicalSize(wm).ISize(wm);
+        nsMargin indentMargin;
+        indentMargin.Side(side) = textIndent.length.Resolve(basis);
+        inlineRect.Deflate(indentMargin);
+      }
+    }
   }
 
   // Find the margin of the of this frame inside its container.
