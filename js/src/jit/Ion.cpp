@@ -1880,35 +1880,6 @@ static bool CheckFrame(JSContext* cx, BaselineFrame* frame) {
   return true;
 }
 
-static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
-  if (script->isForEval()) {
-    // Eval frames are not yet supported. Supporting this will require new
-    // logic in pushBailoutFrame to deal with linking prev.
-    // Additionally, JSOp::GlobalOrEvalDeclInstantiation support will require
-    // baking in isEvalFrame().
-    *reason = "eval script";
-    return false;
-  }
-
-  if (script->isAsync()) {
-    if (script->isModule()) {
-      *reason = "async module";
-      return false;
-    }
-  }
-
-  if (script->hasNonSyntacticScope() && !script->function()) {
-    // Support functions with a non-syntactic global scope but not other
-    // scripts. For global scripts, WarpBuilder currently uses the global
-    // object as scope chain, this is not valid when the script has a
-    // non-syntactic global scope.
-    *reason = "has non-syntactic global scope";
-    return false;
-  }
-
-  return true;
-}  // namespace jit
-
 static bool ScriptIsTooLarge(JSContext* cx, JSScript* script) {
   if (!JitOptions.limitScriptSize) {
     return false;
@@ -1940,9 +1911,27 @@ bool CanIonCompileScript(JSContext* cx, JSScript* script) {
     return false;
   }
 
-  const char* reason = nullptr;
-  if (!CanIonCompileOrInlineScript(script, &reason)) {
-    JitSpew(JitSpew_IonAbort, "%s", reason);
+  if (script->isForEval()) {
+    // Eval frames are not yet supported. Fixing this will require adding
+    // support for the eval frame's environment chain, also for bailouts.
+    // Additionally, JSOp::GlobalOrEvalDeclInstantiation in WarpBuilder
+    // currently doesn't support eval scripts. See bug 1996190.
+    JitSpew(JitSpew_IonAbort, "eval script");
+    return false;
+  }
+
+  if (script->isAsync() && script->isModule()) {
+    // Async modules are not supported (bug 1996189).
+    JitSpew(JitSpew_IonAbort, "async module");
+    return false;
+  }
+
+  if (script->hasNonSyntacticScope() && !script->function()) {
+    // Support functions with a non-syntactic global scope but not other
+    // scripts. For global scripts, WarpBuilder currently uses the global
+    // object as scope chain, and this is not valid when the script has a
+    // non-syntactic global scope.
+    JitSpew(JitSpew_IonAbort, "has non-syntactic global scope");
     return false;
   }
 
