@@ -3906,6 +3906,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             }
 
             if (aVisitor.mPresContext) {
+              aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
               MaybeSubmitForm(aVisitor.mPresContext);
             }
           }
