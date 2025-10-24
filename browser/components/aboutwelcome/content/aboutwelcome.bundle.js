@@ -168,6 +168,7 @@ __webpack_require__.r(__webpack_exports__);
 const TRANSITION_OUT_TIME = 1000;
 const LANGUAGE_MISMATCH_SCREEN_ID = "AW_LANGUAGE_MISMATCH";
 const MultiStageAboutWelcome = props => {
+  const gateInitialPaint = props.gateInitialPaint ?? false;
   let {
     defaultScreens
   } = props;
@@ -176,6 +177,8 @@ const MultiStageAboutWelcome = props => {
   const [screens, setScreens] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultScreens);
   const [index, setScreenIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen);
   const [previousOrder, setPreviousOrder] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen - 1);
+  // Gate first paint until we've finished the initial filtering pass.
+  const [ready, setReady] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     (async () => {
       // If we want to load index from history state, we don't want to send impression yet
@@ -194,7 +197,11 @@ const MultiStageAboutWelcome = props => {
       // Use existing screen for the filtered screen to carry over any modification
       // e.g. if AW_LANGUAGE_MISMATCH exists, use it from existing screens
       setScreens(filteredScreens.map(filtered => screens.find(s => s.id === filtered.id) ?? filtered));
-      didFilter.current = true;
+      // Mark the initial filter pass complete and allow the first paint.
+      if (!didFilter.current) {
+        didFilter.current = true;
+        setReady(true);
+      }
 
       // After completing screen filtering, trigger any unhandled campaign
       // action present in the attribution campaign data. This updates the
@@ -361,6 +368,12 @@ const MultiStageAboutWelcome = props => {
       setInstalledAddons(addons);
     })();
   }, [index]);
+
+  // Do not render anything until the first filtering pass completes if gating
+  // initial paint is enabled.
+  if (gateInitialPaint && !ready) {
+    return null;
+  }
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: `outer-wrapper onboardingContainer proton transition-${transition}`,
     style: props.backdrop ? {
@@ -4031,7 +4044,8 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       backdrop: props.backdrop,
       startScreen: props.startScreen || 0,
       appAndSystemLocaleInfo: props.appAndSystemLocaleInfo,
-      ariaRole: props.aria_role
+      ariaRole: props.aria_role,
+      gateInitialPaint: true
     });
   }
 }
