@@ -5,6 +5,8 @@
 let lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+  AboutNewTabResourceMapping:
+    "resource:///modules/AboutNewTabResourceMapping.sys.mjs",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
@@ -37,6 +39,10 @@ export var AboutHomeStartupCache = {
   // The version is currently set to the build ID, meaning that the cache
   // is invalidated after every upgrade (like the main startup cache).
   CACHE_VERSION_META_KEY: "version",
+  // Similar, with newtab now able to update out-of-band from the rest of the
+  // application, it's possible that the newtab version has changed since the
+  // cache was written. If so, we should ignore the cache.
+  CACHE_NEWTAB_VERSION_META_KEY: "newtab-version",
 
   LOG_NAME: "AboutHomeStartupCache",
 
@@ -458,7 +464,9 @@ export var AboutHomeStartupCache = {
       );
     } catch (e) {
       if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
-        this.log.debug("Cache meta data does not exist. Closing streams.");
+        this.log.debug(
+          "Cache meta data for version does not exist. Closing streams."
+        );
         this.pagePipe.outputStream.close();
         this.scriptPipe.outputStream.close();
         this.setDeferredResult(this.CACHE_RESULT_SCALARS.DOES_NOT_EXIST);
@@ -471,7 +479,38 @@ export var AboutHomeStartupCache = {
     this.log.info("Version retrieved is", version);
 
     if (version != Services.appinfo.appBuildID) {
-      this.log.info("Version does not match! Dooming and closing streams.\n");
+      this.log.info("Version does not match! Dooming and closing streams.");
+      // This cache is no good - doom it, and prepare for a new one.
+      this.clearCache();
+      this.pagePipe.outputStream.close();
+      this.scriptPipe.outputStream.close();
+      this.setDeferredResult(this.CACHE_RESULT_SCALARS.INVALIDATED);
+      return;
+    }
+
+    let newtabVersion;
+    try {
+      newtabVersion = this._cacheEntry.getMetaDataElement(
+        this.CACHE_NEWTAB_VERSION_META_KEY
+      );
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_NOT_AVAILABLE) {
+        this.log.debug(
+          "Cache meta data for newtab version does not exist. Closing streams."
+        );
+        this.pagePipe.outputStream.close();
+        this.scriptPipe.outputStream.close();
+        this.setDeferredResult(this.CACHE_RESULT_SCALARS.DOES_NOT_EXIST);
+        return;
+      }
+
+      throw e;
+    }
+
+    if (newtabVersion != lazy.AboutNewTabResourceMapping.addonVersion) {
+      this.log.info(
+        "New Tab version does not match! Dooming and closing streams."
+      );
       // This cache is no good - doom it, and prepare for a new one.
       this.clearCache();
       this.pagePipe.outputStream.close();
@@ -607,11 +646,21 @@ export var AboutHomeStartupCache = {
             );
             try {
               this._cacheEntry.setMetaDataElement(
-                "version",
+                this.CACHE_VERSION_META_KEY,
                 Services.appinfo.appBuildID
               );
             } catch (e) {
               this.log.error("Failed to write version.");
+              reject(e);
+              return;
+            }
+            try {
+              this._cacheEntry.setMetaDataElement(
+                this.CACHE_NEWTAB_VERSION_META_KEY,
+                lazy.AboutNewTabResourceMapping.addonVersion
+              );
+            } catch (e) {
+              this.log.error("Failed to write newtab version.");
               reject(e);
               return;
             }
