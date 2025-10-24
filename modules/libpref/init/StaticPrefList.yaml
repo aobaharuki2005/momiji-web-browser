@@ -9145,7 +9145,7 @@
 -   name: javascript.options.wasm_relaxed_simd
     type: bool
 #if defined(ENABLE_WASM_RELAXED_SIMD)
-    value: true
+    value: @IS_NIGHTLY_BUILD@
 #else
     value: false
 #endif
