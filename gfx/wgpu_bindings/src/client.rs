@@ -21,6 +21,7 @@ use parking_lot::Mutex;
 
 use nsstring::{nsACString, nsCString, nsString};
 
+use std::array;
 use std::fmt::Write;
 use std::{borrow::Cow, ptr};
 
@@ -516,16 +517,6 @@ pub extern "C" fn wgpu_client_request_device(
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_client_make_buffer_id(client: &Client) -> id::BufferId {
-    client.identities.lock().buffers.process()
-}
-
-#[no_mangle]
-pub extern "C" fn wgpu_client_free_buffer_id(client: &Client, id: id::BufferId) {
-    client.identities.lock().buffers.free(id)
-}
-
-#[no_mangle]
 pub extern "C" fn wgpu_client_make_render_pass_encoder_id(
     client: &Client,
 ) -> id::RenderPassEncoderId {
@@ -826,6 +817,13 @@ pub extern "C" fn wgpu_client_receive_server_message(client: &Client, byte_buf: 
         ServerMessage::QueueOnSubmittedWorkDoneResponse(queue_id) => unsafe {
             wgpu_child_resolve_on_submitted_work_done_promise(client.owner, queue_id);
         },
+
+        ServerMessage::FreeSwapChainBufferIds(buffer_ids) => {
+            let identities = client.identities.lock();
+            for id in buffer_ids {
+                identities.buffers.free(id);
+            }
+        }
     }
 }
 
@@ -881,17 +879,21 @@ pub extern "C" fn wgpu_client_create_swap_chain(
     width: i32,
     height: i32,
     format: crate::SurfaceFormat,
-    buffers: FfiSlice<'_, id::BufferId>,
     remote_texture_owner_id: crate::RemoteTextureOwnerId,
     use_shared_texture_in_swap_chain: bool,
 ) {
+    let identities = client.identities.lock();
+    let buffer_ids: [id::BufferId; crate::MAX_SWAPCHAIN_BUFFER_COUNT] =
+        array::from_fn(|_| identities.buffers.process());
+    drop(identities);
+
     let message = Message::CreateSwapChain {
         device_id,
         queue_id,
         width,
         height,
         format,
-        buffer_ids: Cow::Borrowed(unsafe { buffers.as_slice() }),
+        buffer_ids,
         remote_texture_owner_id,
         use_shared_texture_in_swap_chain,
     };

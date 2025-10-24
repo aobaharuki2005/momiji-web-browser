@@ -2543,6 +2543,19 @@ pub unsafe extern "C" fn wgpu_server_pack_work_done(bb: &mut ByteBuf, queue_id: 
     *bb = make_byte_buf(&ServerMessage::QueueOnSubmittedWorkDoneResponse(queue_id));
 }
 
+/// # Panics
+///
+/// If the size of `buffer_ids` is not [`crate::MAX_SWAPCHAIN_BUFFER_COUNT`].
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_server_pack_free_swap_chain_buffer_ids(
+    bb: &mut ByteBuf,
+    buffer_ids: FfiSlice<'_, id::BufferId>,
+) {
+    *bb = make_byte_buf(&ServerMessage::FreeSwapChainBufferIds(
+        buffer_ids.as_slice().try_into().unwrap(),
+    ));
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_server_messages(
     global: &Global,
