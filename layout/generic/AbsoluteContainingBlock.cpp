@@ -962,15 +962,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       }
 
       auto positionArea = aKidFrame->StylePosition()->mPositionArea;
-      const StylePositionTryFallbacksTryTactic* tactic = nullptr;
-      if (currentFallback) {
-        if (currentFallback->IsIdentAndOrTactic()) {
-          const auto& item = currentFallback->AsIdentAndOrTactic();
-          tactic = &item.try_tactic;
-        } else {
-          MOZ_ASSERT(currentFallback->IsPositionArea());
-          positionArea = currentFallback->AsPositionArea();
-        }
+      if (currentFallback && currentFallback->IsPositionArea()) {
+        MOZ_ASSERT(currentFallback->IsPositionArea());
+        positionArea = currentFallback->AsPositionArea();
       }
 
       if (!positionArea.IsNone()) {
@@ -981,7 +975,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
               AdjustAbsoluteContainingBlockRectForPositionArea(
                   *defaultAnchorInfo.mRect, aOriginalContainingBlockRect,
                   aKidFrame->GetWritingMode(),
-                  aDelegatingFrame->GetWritingMode(), positionArea, tactic);
+                  aDelegatingFrame->GetWritingMode(), positionArea);
         }
       }
 
