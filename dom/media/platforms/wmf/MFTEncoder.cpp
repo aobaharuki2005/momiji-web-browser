@@ -1282,7 +1282,14 @@ void MFTEncoder::EventHandler(MediaEventType aEventType, HRESULT aStatus) {
         }
       }
       break;
-    case ProcessedResult::OutputYielded:
+    case ProcessedResult::OutputHeaderYielded:
+      if (mState == State::Encoding) {
+        if (!waitForOutput) {
+          MaybeResolveOrRejectEncodePromise();
+        }
+      }
+      break;
+    case ProcessedResult::OutputDataYielded:
       if (mState == State::Encoding) {
         MaybeResolveOrRejectEncodePromise();
       }
@@ -1486,7 +1493,7 @@ Result<MFTEncoder::ProcessedResult, HRESULT> MFTEncoder::ProcessOutput() {
   if (result.IsHeader()) {
     mOutputHeader = result.TakeHeader();
     MFT_ENC_LOGD("Got new MPEG header, size: %zu", mOutputHeader.Length());
-    return ProcessedResult::OutputYielded;
+    return ProcessedResult::OutputHeaderYielded;
   }
 
   MOZ_ASSERT(result.IsSample());
@@ -1494,7 +1501,7 @@ Result<MFTEncoder::ProcessedResult, HRESULT> MFTEncoder::ProcessOutput() {
   if (!mOutputHeader.IsEmpty()) {
     mOutputs.LastElement().mHeader = std::move(mOutputHeader);
   }
-  return ProcessedResult::OutputYielded;
+  return ProcessedResult::OutputDataYielded;
 }
 
 Result<MFTEncoder::ProcessedResult, HRESULT>
@@ -1550,6 +1557,7 @@ Result<MFTEncoder::OutputResult, HRESULT> MFTEncoder::GetOutputOrNewHeader() {
     }
     // TODO: We should query for updated stream identifiers here. For now,
     // handle this as an error.
+    MFT_ENC_LOGE("Stream identifiers changed");
     return Err(hr);
   }
 
