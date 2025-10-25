@@ -288,9 +288,9 @@
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Tunigin</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button">Tallalt</string>
+  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Tallalt</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button">Iɣewwaṛen</string>
+  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Iɣewwaṛen</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Mdel tiferkit n wumuɣ n yisiɣzaf</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -434,15 +434,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">Wali ayɣer aṭas i iḥemmlen Firefox</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Wali ayɣer aṭas i iḥemmlen Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Tunigin tusligt s wugar n yifranen</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Tunigin tusligt s wugar n yifranen</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Iminig-nneɣ tettallit yiwet n tkebbanit ur nettnadi ɣef tedrimt, tessewḥal tikebbaniyin ara ak-iḍefren deg web.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Ugar n 100 yimelyan n yimdanen mmestnen tabaḍnit-nsen s ufran n yiminig n tkebbanit ur nettnadi ara ɣef tedrimt.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Ugar n 100 yimelyan n yimdanen mmestnen tabaḍnit-nsen s ufran n yiminig n tkebbanit ur nettnadi ara ɣef tedrimt.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Ineḍfaren i yettwassnen? Ttusweḥlen s wudem awurman. Isiɣzaf? Ԑreḍ-iten i 700. Ifuyla PDFs? Imeɣri-nneɣ usliɣ yessifsus asefrek-nsen.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Ineḍfaren i yettwassnen? Ttusweḥlen s wudem awurman. Isiɣzaf? Ԑreḍ-iten i 700. Ifuyla PDFs? Imeɣri-nneɣ usliɣ yessifsus asefrek-nsen.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Sbadu-t d iminig amezwer</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

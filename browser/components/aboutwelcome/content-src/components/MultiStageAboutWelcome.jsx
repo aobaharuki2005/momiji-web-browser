@@ -387,26 +387,22 @@ const renderSingleSecondaryCTAButton = ({
     className += " split-button-container";
   }
 
-  const isDisabled = React.useCallback(
-    disabledValue => {
-      if (disabledValue === "hasActiveMultiSelect") {
-        if (!activeMultiSelect) {
-          return true;
-        }
-
-        for (const key in activeMultiSelect) {
-          if (activeMultiSelect[key]?.length > 0) {
-            return false;
-          }
-        }
-
+  const computeDisabled = disabledValue => {
+    if (disabledValue === "hasActiveMultiSelect") {
+      if (!activeMultiSelect) {
         return true;
       }
 
-      return disabledValue;
-    },
-    [activeMultiSelect]
-  );
+      for (const key in activeMultiSelect) {
+        if (activeMultiSelect[key]?.length > 0) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+    return disabledValue;
+  };
 
   if (isTextLink) {
     buttonStyling += " text-link";
@@ -438,7 +434,7 @@ const renderSingleSecondaryCTAButton = ({
           id={buttonId}
           className={buttonStyling}
           value={targetElement}
-          disabled={isDisabled(button?.disabled)}
+          disabled={computeDisabled(button?.disabled)}
           onClick={shimmedHandleAction}
         />
       </Localized>
@@ -461,14 +457,46 @@ export const SecondaryCTA = props => {
     return null;
   }
 
-  if (Array.isArray(buttonData)) {
-    if (buttonData.length === 0) {
-      return null;
-    }
+  const buttons = React.useMemo(
+    () => (Array.isArray(buttonData) ? buttonData : [buttonData]),
+    [buttonData]
+  );
 
+  const [visibleButtons, setVisibleButtons] = React.useState([]);
+
+  React.useEffect(() => {
+    (async () => {
+      const filteredButtons = [];
+      for (const button of buttons) {
+        // No targeting, show by default for backwards compatibility
+        if (!button?.targeting) {
+          filteredButtons.push(button);
+          continue;
+        }
+
+        try {
+          const shouldShowButton = await window.AWEvaluateAttributeTargeting(
+            button.targeting
+          );
+          if (shouldShowButton) {
+            filteredButtons.push(button);
+          }
+        } catch (e) {
+          console.error("SecondaryCTA targeting failed:", button.targeting, e);
+        }
+      }
+      setVisibleButtons(filteredButtons);
+    })();
+  }, [buttons]);
+
+  if (!visibleButtons.length) {
+    return null;
+  }
+
+  if (Array.isArray(buttonData)) {
     return (
       <div className="secondary-buttons-top-container">
-        {buttonData.map((button, index) =>
+        {visibleButtons.map((button, index) =>
           renderSingleSecondaryCTAButton({
             content,
             button,
@@ -486,7 +514,7 @@ export const SecondaryCTA = props => {
 
   return renderSingleSecondaryCTAButton({
     content,
-    button: buttonData,
+    button: visibleButtons[0],
     targetElement,
     position,
     handleAction: props.handleAction,

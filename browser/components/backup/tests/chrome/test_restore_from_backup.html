@@ -262,6 +262,98 @@
       }
       restoreFromBackup.remove();
     });
+
+    /**
+     * Helper function to test that a support link has correct attributes
+     * and UTM params when used with aboutWelcomeEmbedded
+     *
+     * @param {Element} link - The support link element to test
+     * @param {string} linkName - The name of the link to test
+     */
+
+    function assertEmbeddedSupportLink(link, linkName) {
+      ok(link, `${linkName} should be present`);
+      ok(
+        !link.hasAttribute("is"),
+        `${linkName} should not have 'is' attribute`
+      );
+      ok(
+        !link.hasAttribute("support-page"),
+        `${linkName} should not have support-page attribute`
+      );
+      ok(
+        link.hasAttribute("href"),
+        `${linkName} should have href attribute`
+      );
+
+      let url = new URL(link.getAttribute("href"));
+
+      is(
+        url.searchParams.get("utm_medium"),
+        "firefox-desktop",
+        `${linkName} should have correct utm_medium`
+      );
+      is(
+        url.searchParams.get("utm_source"),
+        "npo",
+        `${linkName} should have correct utm_source`
+      );
+      is(
+        url.searchParams.get("utm_campaign"),
+        "fx-backup-restore",
+        `${linkName} should have correct utm_campaign`
+      );
+      is(
+        url.searchParams.get("utm_content"),
+        "restore-error",
+        `${linkName} should have correct utm_content`
+      );
+      is(
+        link.getAttribute("target"),
+        "_blank",
+        `${linkName} should have target='_blank'`
+      );
+    }
+
+    /**
+     * Tests that support links have UTM parameters when aboutWelcomeEmbedded is true
+     */
+    add_task(async function test_support_links_with_utm_params() {
+      let content = document.getElementById("content");
+      let restoreFromBackup = document.createElement("restore-from-backup");
+      content.appendChild(restoreFromBackup);
+
+      // Set up the support base link for testing, otherwise links will be broken
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        supportBaseLink: "https://support.mozilla.org/",
+      };
+      restoreFromBackup.aboutWelcomeEmbedded = true;
+      await restoreFromBackup.updateComplete;
+
+      // Test the "no backup file" link
+      let noBackupFileLink = restoreFromBackup.shadowRoot.querySelector(
+        "#restore-from-backup-no-backup-file-link"
+      );
+      assertEmbeddedSupportLink(noBackupFileLink, "No backup file link");
+
+      // Test the incorrect password support link
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: {
+          date: new Date(),
+          isEncrypted: true,
+        },
+        recoveryErrorCode: ERRORS.UNAUTHORIZED,
+      };
+      await restoreFromBackup.updateComplete;
+      let passwordErrorLink = restoreFromBackup.shadowRoot.querySelector(
+        "#backup-incorrect-password-support-link"
+      );
+      assertEmbeddedSupportLink(passwordErrorLink, "Password error link");
+
+      restoreFromBackup.remove();
+    });
   </script>
 </head>
 <body>

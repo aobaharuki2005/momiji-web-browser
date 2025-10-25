@@ -65,7 +65,11 @@ export const EmbeddedBackupRestore = ({ handleAction, skipButton }) => {
             <Localized text={skipButton.label}>
               <button
                 id="secondary_button"
-                className="secondary"
+                className={
+                  skipButton?.has_arrow_icon
+                    ? "secondary arrow-icon"
+                    : "secondary"
+                }
                 value="skip_button"
                 disabled={recoveryInProgress}
                 aria-busy={recoveryInProgress || undefined}

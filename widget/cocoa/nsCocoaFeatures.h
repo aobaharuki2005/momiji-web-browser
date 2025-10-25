@@ -52,9 +52,7 @@ class nsCocoaFeatures {
 
  private:
   nsCocoaFeatures() = delete;  // Prevent instantiation.
-  static void InitializeVersionNumbers();
-
-  static int32_t mOSVersion;
+  static int32_t ComputeVersion();
 };
 
 // C-callable helper for cairo-quartz-font.c and SkFontHost_mac.cpp

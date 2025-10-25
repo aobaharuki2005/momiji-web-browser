@@ -309,15 +309,15 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">Tawila\' aruma\' yeb\'uchu\' winaqi\' nikajo\' Firefox</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Tawila\' aruma\' yeb\'uchu\' winaqi\' nikajo\' Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Jikil okem rik\'in k\'ïy taq cha\'oj</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Jikil okem rik\'in k\'ïy taq cha\'oj</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Ri qokik\'amaya\'l re majun ch\'akoj rojqan nito\'on chi ri taq ajk\'ay man katkojqaj pan ewäl chupam ri web.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Jotöl chi re ri 100 taq miyon winaqi\' nikichajij ri kichinanem toq nikicha\' jun okik\'amaya\'l jikib\'an tzij pa ruwi\' ruma jun moloj majun chakoj rojqan.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Jotöl chi re ri 100 taq miyon winaqi\' nikichajij ri kichinanem toq nikicha\' jun okik\'amaya\'l jikib\'an tzij pa ruwi\' ruma jun moloj majun chakoj rojqan.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Achike taq ojqanela\' etaman kiwäch? Anin yeq\'at. Achike taq k\'amal? ke\'atojtob\'ej ri 700. Atux PDFs? Ri tz\'etöy qasik\'inel qaya\'on chupam anin yerunuk\'samajij.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Achike taq ojqanela\' etaman kiwäch? Anin yeq\'at. Achike taq k\'amal? ke\'atojtob\'ej ri 700. Atux PDFs? Ri tz\'etöy qasik\'inel qaya\'on chupam anin yerunuk\'samajij.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Tiya\' kan achi\'el kanob\'äl k\'o wi</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

@@ -269,11 +269,11 @@ void nsViewManager::Refresh(nsView* aView,
         printf_stderr("--COMPOSITE-- %p\n", presShell.get());
       }
 #endif
-      RefPtr<WindowRenderer> renderer = widget->GetWindowRenderer();
+      WindowRenderer* renderer = widget->GetWindowRenderer();
       if (!renderer->NeedsWidgetInvalidation()) {
         renderer->FlushRendering(wr::RenderReasons::WIDGET);
       } else {
-        presShell->SyncPaintFallback(aView->GetFrame(), renderer);
+        presShell->SyncPaintFallback(aView);
       }
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -396,8 +396,7 @@ void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
       }
 #endif
 
-      presShell->PaintAndRequestComposite(
-          view->GetFrame(), aWidget->GetWindowRenderer(), PaintFlags::None);
+      presShell->PaintAndRequestComposite(view, PaintFlags::None);
       view->SetForcedRepaint(false);
 
 #ifdef MOZ_DUMP_PAINTING

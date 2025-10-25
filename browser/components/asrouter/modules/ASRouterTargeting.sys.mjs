@@ -1323,6 +1323,26 @@ const TargetingGetters = {
     return QueryCache.getters.backupsInfo.get().catch(() => null);
   },
 
+  get backupArchiveEnabled() {
+    let bs;
+    try {
+      bs = lazy.BackupService.get();
+    } catch {
+      bs = lazy.BackupService.init();
+    }
+    return bs.archiveEnabledStatus.enabled;
+  },
+
+  get backupRestoreEnabled() {
+    let bs;
+    try {
+      bs = lazy.BackupService.get();
+    } catch {
+      bs = lazy.BackupService.init();
+    }
+    return bs.restoreEnabledStatus.enabled;
+  },
+
   get isEncryptedBackup() {
     const isEncryptedBackup =
       Services.prefs.getStringPref(

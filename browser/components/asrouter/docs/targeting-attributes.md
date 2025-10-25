@@ -17,6 +17,8 @@ Please note that some targeting attributes require stricter controls on the tele
 * [attributionData](#attributiondata)
 * [backgroundTaskName](#backgroundtaskname)
 * [backupsInfo](#backupsinfo)
+* [backupArchiveEnabled](#backuparchiveenabled)
+* [backupRestoreEnabled](#backuprestoreenabled)
 * [blockedCountByType](#blockedcountbytype)
 * [browserIsSelected](#browserisselected)
 * [browserSettings](#browsersettings)
@@ -50,6 +52,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isDefaultBrowserUncached](#isdefaultbrowseruncached)
 * [isDefaultHandler](#isdefaulthandler)
 * [isDeviceMigration](#isdevicemigration)
+* [isEncryptedBackup](#isEncryptedBackup)
 * [isFxAEnabled](#isfxaenabled)
 * [isFxASignedIn](#isfxasignedin)
 * [isMajorUpgrade](#ismajorupgrade)
@@ -92,7 +95,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [usesFirefoxSync](#usesfirefoxsync)
 * [xpinstallEnabled](#xpinstallenabled)
 * [totalSearches](#totalsearches)
-* [isEncryptedBackup](#isEncryptedBackup)
 
 ## Detailed usage
 
@@ -1185,6 +1187,14 @@ declare const backupsInfo: {
   backupFileToRestore: string | null;
 };
 ```
+
+### `backupArchiveEnabled`
+
+Indicates whether the archive function is enabled by BackupService.
+
+### `backupRestoreEnabled`
+
+Indicates whether the restore function is enabled by BackupService.
 
 ### `isEncryptedBackup`
 

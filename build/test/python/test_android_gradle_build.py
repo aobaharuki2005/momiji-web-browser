@@ -61,6 +61,9 @@ def run_mach(mozconfig):
         env["MACH_NO_TERMINAL_FOOTER"] = "1"
         env["MACH_NO_WRITE_TIMES"] = "1"
 
+        if os.environ.get("MOZ_AUTOMATION"):
+            env["MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE"] = "system"
+
         def pol(line):
             logger.debug(line)
 

@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.315
- * pdfjsBuild = 8ba18075f
+ * pdfjsVersion = 5.4.322
+ * pdfjsBuild = 657a18d7a
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -1973,23 +1973,34 @@ class EditorToolbar {
   async addButton(name, tool) {
     switch (name) {
       case "colorPicker":
-        this.addColorPicker(tool);
+        if (tool) {
+          this.addColorPicker(tool);
+        }
         break;
       case "altText":
-        await this.addAltText(tool);
+        if (tool) {
+          await this.addAltText(tool);
+        }
         break;
       case "editSignature":
-        await this.addEditSignatureButton(tool);
+        if (tool) {
+          await this.addEditSignatureButton(tool);
+        }
         break;
       case "delete":
         this.addDeleteButton();
         break;
       case "comment":
-        this.addComment(tool);
+        if (tool) {
+          this.addComment(tool);
+        }
         break;
     }
   }
   async addButtonBefore(name, tool, beforeSelector) {
+    if (!tool && name === "comment") {
+      return;
+    }
     const beforeElement = this.#buttons.querySelector(beforeSelector);
     if (!beforeElement) {
       return;
@@ -3190,11 +3201,11 @@ class AnnotationEditorUIManager {
   }
   addEditListeners() {
     this.#addKeyboardManager();
-    this.#addCopyPasteListeners();
+    this.setEditingState(true);
   }
   removeEditListeners() {
     this.#removeKeyboardManager();
-    this.#removeCopyPasteListeners();
+    this.setEditingState(false);
   }
   dragOver(event) {
     for (const {
@@ -4890,6 +4901,7 @@ class AnnotationEditor {
     this.annotationElementId = parameters.annotationElementId || null;
     this.creationDate = parameters.creationDate || new Date();
     this.modificationDate = parameters.modificationDate || null;
+    this.canAddComment = true;
     const {
       rotation,
       rawDims: {
@@ -5569,7 +5581,7 @@ class AnnotationEditor {
     this.#comment?.focusButton();
   }
   addCommentButton() {
-    return this.#comment ||= new Comment(this);
+    return this.canAddComment ? this.#comment ||= new Comment(this) : null;
   }
   addStandaloneCommentButton() {
     if (this.#commentStandaloneButton) {
@@ -6142,7 +6154,7 @@ class AnnotationEditor {
     return this.div;
   }
   setCommentButtonStates(options) {
-    this.#comment.setCommentButtonStates(options);
+    this.#comment?.setCommentButtonStates(options);
   }
   keydown(event) {
     if (!this.isResizable || event.target !== this.div || event.key !== "Enter") {
@@ -12794,7 +12806,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.315",
+    apiVersion: "5.4.322",
     data,
     password,
     disableAutoFetch,
@@ -14371,8 +14383,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.315";
-const build = "8ba18075f";
+const version = "5.4.322";
+const build = "657a18d7a";
 
 ;// ./src/display/editor/color_picker.js
 
@@ -14628,11 +14640,11 @@ class BasicColorPicker {
     const {
       editorType,
       colorType,
-      colorValue
+      color
     } = this.#editor;
     const input = this.#input = document.createElement("input");
     input.type = "color";
-    input.value = colorValue || "#000000";
+    input.value = color || "#000000";
     input.className = "basicColorPicker";
     input.tabIndex = 0;
     input.setAttribute("data-l10n-id", BasicColorPicker.#l10nColor[editorType]);
@@ -16950,6 +16962,9 @@ class PopupElement {
     }
     this.#firstElement.commentText = this.#commentText = text;
   }
+  focus() {
+    this.#firstElement.container?.focus();
+  }
   get parentBoundingClientRect() {
     return this.#firstElement.layer.getBoundingClientRect();
   }
@@ -18112,6 +18127,7 @@ class FreeTextEditor extends AnnotationEditor {
     if (!this.annotationElementId) {
       this._uiManager.a11yAlert("pdfjs-editor-freetext-added-alert");
     }
+    this.canAddComment = false;
   }
   static initialize(l10n, uiManager) {
     AnnotationEditor.initialize(l10n, uiManager);

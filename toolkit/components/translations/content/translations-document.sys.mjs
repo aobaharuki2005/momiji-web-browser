@@ -3213,6 +3213,48 @@ export class TranslationsDocument {
   }
 
   /**
+   * Ensure the element and certain structured ancestors use the target
+   * script direction when it differs from the source script direction.
+   *
+   * No-op if the source and target directions match.
+   *
+   * @param {Element | null} element
+   */
+  #maybeUpdateScriptDirection(element) {
+    const targetScriptDirection = this.#targetScriptDirection;
+
+    if (!element || this.#sourceScriptDirection === targetScriptDirection) {
+      return;
+    }
+
+    /** @param {Element?} [el] */
+    const ensureDirection = el => {
+      el?.setAttribute("dir", targetScriptDirection);
+    };
+
+    ensureDirection(element);
+
+    const listItemAncestor = element.closest("li");
+    if (listItemAncestor) {
+      ensureDirection(listItemAncestor);
+      ensureDirection(listItemAncestor.closest("ul, ol"));
+    }
+
+    const tableCell = element.closest("th, td, caption");
+    if (tableCell) {
+      ensureDirection(tableCell);
+
+      const row = tableCell.closest("tr");
+      ensureDirection(row);
+
+      const body = row?.closest("tbody");
+      ensureDirection(body);
+
+      ensureDirection(body?.closest("table"));
+    }
+  }
+
+  /**
    * Updates all nodes that have completed attribute translation requests.
    *
    * This function is called asynchronously, so nodes may already be dead. Before
@@ -3258,19 +3300,16 @@ export class TranslationsDocument {
             "text/html"
           );
 
-          if (this.#sourceScriptDirection !== this.#targetScriptDirection) {
-            element.setAttribute("dir", this.#targetScriptDirection);
-          }
-
           updateElement(translationsDocument, element);
+          this.#maybeUpdateScriptDirection(element);
+
           this.#processedContentNodes.add(targetNode);
         } else {
-          if (this.#sourceScriptDirection !== this.#targetScriptDirection) {
-            const parentElement = asElement(targetNode.parentNode);
-            parentElement?.setAttribute("dir", this.#targetScriptDirection);
-          }
           textNodeCount++;
+
           targetNode.textContent = translatedContent;
+          this.#maybeUpdateScriptDirection(asElement(targetNode.parentNode));
+
           this.#processedContentNodes.add(targetNode);
         }
 

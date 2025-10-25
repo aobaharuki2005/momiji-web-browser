@@ -196,6 +196,18 @@ add_task(async function test_checkEnvironment() {
   );
 
   let data = TelemetryEnvironment.currentEnvironment;
+
+  // NOTE: about:telemetry expects the active theme to always be set, if no theme
+  // was enabled and active (eg. because the theme has not been installed yet and
+  // enabled yet) then it should be set to an empty object. This assertion is
+  // meant to prevent issues like Bug 1994389 to regress without being caught by
+  // the TelemetryEnvironment unit tests.
+  Assert.deepEqual(
+    data.addons.theme,
+    {},
+    "Expect active theme property to be set to an empty object"
+  );
+
   TelemetryEnvironmentTesting.checkAddonsSection(data, false, true);
 
   // Check that settings.intl is lazily loaded.

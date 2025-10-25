@@ -246,9 +246,9 @@
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">nimi open</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button">o sona</string>
+  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">o sona</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button">nasin ilo</string>
+  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">nasin ilo</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">o lukin ala e lipu pi ilo namako</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
@@ -354,7 +354,7 @@
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
   -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources">o sona e pona tan ilo Firefox</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">o sona e pona tan ilo Firefox</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">kulupu mi li utala e ni: kulupu mani li wile alasa ike e sina lon ilo.</string>
   <!-- Text for the button to set firefox as default browser on the device -->

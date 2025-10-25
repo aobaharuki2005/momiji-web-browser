@@ -13510,7 +13510,7 @@
 # Include an idempotency-key header for POST requests
 - name: network.http.idempotencyKey.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether to respect the redirected-tainted origin flag
@@ -18837,6 +18837,15 @@
 - name: widget.window-transforms.disabled
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# When looking for a recent window (for example, when a link is clicked
+# on from an external application), whether to prefer windows on the
+# current virtual desktop (aka workspace). For now this only applies on Windows.
+# See bug 1994825
+- name: widget.prefer_windows_on_current_virtual_desktop
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 #ifdef XP_MACOSX

@@ -5071,7 +5071,9 @@ export class EnvironmentAddonBuilder {
 
     let addons = {
       activeAddons: await this._getActiveAddons(),
-      theme: await this._getActiveTheme(),
+      // NOTE: about:telemetry expects `theme` to always be set to an object (potentially empty
+      // if no theme was yet found installed and active), see Bug 1994389.
+      theme: (await this._getActiveTheme()) ?? {},
       activeGMPlugins: await this._getActiveGMPlugins(),
     };
 

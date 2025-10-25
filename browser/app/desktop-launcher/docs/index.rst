@@ -39,6 +39,25 @@ At update time:
                         - NO: Do nothing
 
 
+
+In elevated installer, we will delete the public shortcut and record the event if:
+    - It exists
+    - We haven't deleted it before
+    - This is a stub installed Firefox
+
+In the unelevated installer, we will delete the user shortcut and record the event if:
+    - There is a user shortcut (i.e. this is a personal install)
+    - We haven't deleted it before
+    - This is a stub installed Firefox
+
+In the unelevated installer, we will install the desktop launcher and record the event if:
+    - It is already installed OR
+        - It wasn't previously installed
+        - There is or was a shortcut (shared or personal)
+        - The installation type is "stub"
+
+
+
 FAQ
 ===
 

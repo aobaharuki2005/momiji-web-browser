@@ -2438,3 +2438,53 @@ add_task(async function check_isEncryptedBackup() {
     "should return true if the pref value is full"
   );
 });
+
+add_task(async function check_backupArchiveEnabled() {
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => sandbox.restore());
+
+  is(
+    await ASRouterTargeting.Environment.backupArchiveEnabled,
+    true,
+    "should return true if the killswitch is not on"
+  );
+
+  const archiveExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
+    featureId: "backupService",
+    value: { archiveKillswitch: true },
+  });
+
+  is(
+    await ASRouterTargeting.Environment.backupArchiveEnabled,
+    false,
+    "should return false if the killswitch is on"
+  );
+
+  // End the experiment.
+  await archiveExperiment();
+});
+
+add_task(async function check_backupRestoreEnabled() {
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => sandbox.restore());
+
+  is(
+    await ASRouterTargeting.Environment.backupRestoreEnabled,
+    true,
+    "should return true if the killswitch is not on"
+  );
+
+  const restoreExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
+    featureId: "backupService",
+    value: { restoreKillswitch: true },
+  });
+
+  is(
+    await ASRouterTargeting.Environment.backupRestoreEnabled,
+    false,
+    "should return false if the killswitch is on"
+  );
+
+  // End the experiment.
+  await restoreExperiment();
+});
