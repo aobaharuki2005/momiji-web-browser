@@ -1243,12 +1243,16 @@ void MFTEncoder::EventHandler(MediaEventType aEventType, HRESULT aStatus) {
     return;
   }
 
+  const bool waitForOutput =
+      StaticPrefs::media_wmf_encoder_realtime_wait_for_output();
+
   ProcessedResult result = processed.unwrap();
   MFT_ENC_LOGV(
       "%s processed: %s\n\tpending inputs: %zu\n\tinput needed: %zu\n\tpending "
-      "outputs: %zu",
+      "outputs: %zu (waitForOutput=%s)",
       MediaEventTypeStr(aEventType), MFTEncoder::EnumValueToString(result),
-      mPendingInputs.size(), mNumNeedInput, mOutputs.Length());
+      mPendingInputs.size(), mNumNeedInput, mOutputs.Length(),
+      waitForOutput ? "yes" : "no");
   switch (result) {
     case ProcessedResult::AllAvailableInputsProcessed:
       // Since mNumNeedInput was incremented in ProcessEvent(), before calling
@@ -1266,9 +1270,12 @@ void MFTEncoder::EventHandler(MediaEventType aEventType, HRESULT aStatus) {
       if (mState == State::Encoding) {
         // In realtime mode, we could resolve the encode promise only upon
         // receiving an output. However, since the performance gain is minor,
-        // it's not worth risking a scenario where the encode promise is
-        // resolved by the timer callback if no output is produced in time.
-        MaybeResolveOrRejectEncodePromise();
+        // unless the wait-for-output setting is enabled, it's better to prevent
+        // the encode promise from being resolved by the timer callback if no
+        // output is produced in time.
+        if (!waitForOutput) {
+          MaybeResolveOrRejectEncodePromise();
+        }
       } else if (mState == State::PreDraining) {
         if (mPendingInputs.empty()) {
           MaybeResolveOrRejectPreDrainPromise();
