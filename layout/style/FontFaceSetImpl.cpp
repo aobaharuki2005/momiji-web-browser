@@ -58,6 +58,10 @@
 #include "nsPrintfCString.h"
 #include "nsUTF8Utils.h"
 
+#ifdef MOZ_WIDGET_COCOA
+#  include "nsCocoaFeatures.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
@@ -499,7 +503,11 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
 
                 if (valueString.LowerCaseEqualsASCII("woff")) {
                   face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff;
-                } else if (valueString.LowerCaseEqualsASCII("woff2")) {
+                } else if (valueString.LowerCaseEqualsASCII("woff2")
+#ifdef XP_MACOSX
+                    && nsCocoaFeatures::OnSierraOrLater()
+#endif
+                ) {
                   face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff2;
                 } else if (valueString.LowerCaseEqualsASCII("opentype")) {
                   face->mFormatHint =
@@ -522,7 +530,11 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
                   if (valueString.LowerCaseEqualsASCII("woff-variations")) {
                     face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff;
                   } else if (valueString.LowerCaseEqualsASCII(
-                                 "woff2-variations")) {
+                                 "woff2-variations")
+#ifdef XP_MACOSX
+                      && nsCocoaFeatures::OnSierraOrLater()
+#endif
+                  ) {
                     face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff2;
                   } else if (valueString.LowerCaseEqualsASCII(
                                  "opentype-variations")) {
