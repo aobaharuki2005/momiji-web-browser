@@ -1729,6 +1729,8 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ປິດ</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">ເກີດຫຍັງຂຶ້ນ? ສິ່ງທີ່ຄວນເກີດຂຶ້ນ?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">ສົ່ງ URL ທີ່ຖືກບລັອກໂດຍການປ້ອງກັນການຕິດຕາມ</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2483,6 +2485,10 @@
   <string name="preference_doh_increased_protection_info_1">ໃຊ້ຜູ້ໃຫ້ບໍລິການທີ່ທ່ານເລືອກ</string>
   <!-- Title displayed for "Max Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection">ການປົກປ້ອງສູງສຸດ</string>
+  <!-- Bullet point 2 for "Max Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_max_protection_info_2">ເຕືອນສະເໝີຖ້າ DNS ປອດໄພບໍ່ສາມາດໃຊ້ໄດ້</string>
+  <!-- Bullet point 3 for "Max Protection" information page under "DNS over HTTPS" -->
+  <string name="preference_doh_max_protection_info_3">ຖ້າ DNS ປອດໄພບໍ່ສາມາດໃຊ້ໄດ້ ເວັບໄຊຈະບໍ່ໂຫຼດ ຫຼື ເຮັດວຽກຢ່າງຖືກຕ້ອງ</string>
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off">ປິດ</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
