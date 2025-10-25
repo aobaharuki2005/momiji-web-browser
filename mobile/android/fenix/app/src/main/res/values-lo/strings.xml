@@ -2491,12 +2491,16 @@
   <string name="preference_doh_max_protection_info_3">ຖ້າ DNS ປອດໄພບໍ່ສາມາດໃຊ້ໄດ້ ເວັບໄຊຈະບໍ່ໂຫຼດ ຫຼື ເຮັດວຽກຢ່າງຖືກຕ້ອງ</string>
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off">ປິດ</string>
+  <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->
+  <string name="preference_doh_off_summary">ໃຊ້ຕົວແກ້ໄຂ DNS ເລີ່ມຕົ້ນຂອງທ່ານ</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
   <string name="preference_doh_choose_provider">ເລືອກຜູ້ໃຫ້ບໍລິການ</string>
   <!-- Text displayed for "Default provider" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_default">(ຄ່າເລີ່ມຕົ້ນ)</string>
   <!-- Text displayed for "Custom" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_custom">ກຳນົດເອງ</string>
+  <!-- Text displayed for "Custom provider" dialog under "DNS over HTTPS" -->
+  <string name="preference_doh_provider_custom_dialog_title">ຜູ້ໃຫ້ບໍລິການທີ່ກໍາຫນົດເອງ</string>
   <!-- Text displayed above provider textfield under "DNS over HTTPS" -->
   <string name="preference_doh_provider_custom_dialog_textfield">ຜູ້ໃຫ້ບໍລິການ</string>
   <!-- Error text displayed for provider textfield under "DNS over HTTPS" if the URL does not start with "https://" or its scheme is not "https" -->

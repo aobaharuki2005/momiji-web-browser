@@ -2736,7 +2736,7 @@
   <!-- Preference option for managing saved cards -->
   <string name="preferences_credit_cards_manage_saved_cards_2">Gestionează cardurile</string>
   <!-- Preference option for adding an address -->
-  <string name="preferences_addresses_add_address">Adaugă adresă</string>
+  <string name="preferences_addresses_add_address">Adaugă o adresă</string>
   <!-- Preference option for managing saved addresses -->
   <string name="preferences_addresses_manage_addresses">Gestionează adresele</string>
   <!-- Preference for saving and filling addresses -->
@@ -2796,7 +2796,7 @@
   <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
   <string name="credit_cards_biometric_prompt_unlock_message_2">Deblochează pentru a utiliza metodele de plată salvate</string>
   <!-- Title of the "Add address" screen -->
-  <string name="addresses_add_address">Adaugă adresă</string>
+  <string name="addresses_add_address">Adaugă o adresă</string>
   <!-- Title of the "Edit address" screen -->
   <string name="addresses_edit_address">Editează adresa</string>
   <!-- Title of the "Manage addresses" screen -->
