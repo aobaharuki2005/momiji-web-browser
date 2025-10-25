@@ -1251,9 +1251,9 @@ void MFTEncoder::EventHandler(MediaEventType aEventType, HRESULT aStatus) {
       mPendingInputs.size(), mNumNeedInput, mOutputs.Length());
   switch (result) {
     case ProcessedResult::AllAvailableInputsProcessed:
-      // Since mNumNeedInput was incremented in ProcessInput(), a result
-      // indicating no input was processed means there were not enough pending
-      // inputs in the queue.
+      // Since mNumNeedInput was incremented in ProcessEvent(), before calling
+      // ProcessInput(), a result indicating no input was processed means there
+      // were not enough pending inputs in the queue.
       MOZ_ASSERT(mPendingInputs.empty());
       // If EventHandler is in the PreDraining state here, it means there were
       // pending inputs to process before draining started. Processing those
