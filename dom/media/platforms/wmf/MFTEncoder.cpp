@@ -1612,12 +1612,12 @@ HRESULT MFTEncoder::ProcessInput(InputSample&& aInput) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   MOZ_ASSERT(mEncoder);
 
-  MFT_RETURN_IF_FAILED(
-      mEncoder->ProcessInput(mInputStreamID, aInput.mSample, 0));
   if (aInput.mKeyFrameRequested) {
     VARIANT v = {.vt = VT_UI4, .ulVal = 1};
     mConfig->SetValue(&CODECAPI_AVEncVideoForceKeyFrame, &v);
   }
+  MFT_RETURN_IF_FAILED(
+      mEncoder->ProcessInput(mInputStreamID, aInput.mSample, 0));
   return S_OK;
 }
 
