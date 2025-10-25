@@ -1917,6 +1917,13 @@
   value: false
   mirror: always
 
+# Whether to restore windows to the virtual desktop (aka workspace)
+# they were on when they were closed.
+- name: browser.sessionstore.restore_windows_to_virtual_desktop
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # If set, when a link is opened to a new tab, do not switch to the new tab.
 #
 # This pref is used when the link is opened with "Open Link in New Tab",

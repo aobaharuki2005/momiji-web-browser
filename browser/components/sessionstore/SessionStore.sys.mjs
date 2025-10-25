@@ -202,6 +202,12 @@ ChromeUtils.defineLazyGetter(lazy, "blankURI", () => {
   return Services.io.newURI("about:blank");
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "gRestoreWindowsToVirtualDesktop",
+  "browser.sessionstore.restore_windows_to_virtual_desktop"
+);
+
 /**
  * |true| if we are in debug mode, |false| otherwise.
  * Debug mode is controlled by preference browser.sessionstore.debug
@@ -5737,7 +5743,7 @@ var SessionStoreInternal = {
     this._sendWindowRestoringNotification(aWindow);
     this._setWindowStateBusy(aWindow);
 
-    if (winData.workspaceID) {
+    if (winData.workspaceID && lazy.gRestoreWindowsToVirtualDesktop) {
       this._log.debug(`Moving window to workspace: ${winData.workspaceID}`);
       aWindow.moveToWorkspace(winData.workspaceID);
     }
