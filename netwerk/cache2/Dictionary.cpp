@@ -644,7 +644,7 @@ DictionaryCacheEntry::OnCacheEntryAvailable(nsICacheEntry* entry, bool isNew,
 // Read the metadata for an Origin and parse it, creating DictionaryCacheEntrys
 // as needed. If aType is TYPE_OTHER, there is no Match() to do
 void DictionaryOriginReader::Start(
-    bool aCreate, DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
+    DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
     ExtContentPolicyType aType, DictionaryCache* aCache,
     const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback) {
   mOrigin = aOrigin;
@@ -668,7 +668,7 @@ void DictionaryOriginReader::Start(
                     PromiseFlatCString(aKey).get(), this));
     DictionaryCache::sCacheStorage->AsyncOpenURIString(
         aKey, META_DICTIONARY_PREFIX,
-        aCreate
+        aOrigin
             ? nsICacheStorage::OPEN_NORMALLY |
                   nsICacheStorage::CHECK_MULTITHREADED
             : nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY |
@@ -858,13 +858,12 @@ already_AddRefed<DictionaryCacheEntry> DictionaryCache::AddEntry(
 
       // This creates a cycle until the dictionary is removed from the cache
       aDictEntry->SetOrigin(origin);
-      DICTIONARY_LOG(("Creating cache entry for origin %s", prepath.get()));
 
       // Open (and parse metadata) or create
       RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
       // the type is irrelevant; we won't be calling Match()
       reader->Start(
-          true, origin, prepath, aURI, ExtContentPolicy::TYPE_OTHER, this,
+          origin, prepath, aURI, ExtContentPolicy::TYPE_OTHER, this,
           [entry = RefPtr(aDictEntry)](
               bool, DictionaryCacheEntry* aDict) {  // XXX avoid so many lambdas
                                                     // which cause allocations
@@ -929,34 +928,6 @@ void DictionaryCache::RemoveDictionary(const nsACString& aKey) {
     if (auto origin = mDictionaryCache.Lookup(prepath)) {
       origin.Data()->RemoveEntry(aKey);
     }
-  }
-}
-
-// static
-void DictionaryCache::RemoveOriginFor(const nsACString& aKey) {
-  RefPtr<DictionaryCache> cache = GetInstance();
-  DICTIONARY_LOG(
-      ("Removing dictionary for %80s", PromiseFlatCString(aKey).get()));
-  NS_DispatchToMainThread(NewRunnableMethod<const nsCString>(
-      "DictionaryCache::RemoveDictionaryFor", cache,
-      &DictionaryCache::RemoveDictionary, aKey));
-}
-
-// Remove a dictionary if it exists for the key given
-void DictionaryCache::RemoveOrigin(const nsACString& aKey) {
-  DICTIONARY_LOG(("Removing origin for %80s", PromiseFlatCString(aKey).get()));
-
-  nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aKey))) {
-    return;
-  }
-  nsAutoCString prepath;
-  if (NS_SUCCEEDED(GetDictPath(uri, prepath))) {
-    if (auto origin = mDictionaryCache.Lookup(prepath)) {
-      origin.Data()->AssertEmpty();
-    }
-
-    mDictionaryCache.Remove(prepath);
   }
 }
 
@@ -1031,9 +1002,10 @@ void DictionaryCache::RemoveAllDictionaries() {
 // Once we have a DictionaryOrigin (in-memory or parsed), scan it for matches.
 // If it's not in the cache, return nullptr via callback.
 void DictionaryCache::GetDictionaryFor(
-    nsIURI* aURI, ExtContentPolicyType aType, nsHttpChannel* aChan,
-    void (*aSuspend)(nsHttpChannel*),
+    nsIURI* aURI, ExtContentPolicyType aType, bool& aAsync,
+    nsHttpChannel* aChan, void (*aSuspend)(nsHttpChannel*),
     const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback) {
+  aAsync = false;
   // Note: IETF 2.2.3 Multiple Matching Directories
   // We need to return match-dest matches first
   // If no match-dest, then the longest match
@@ -1063,10 +1035,9 @@ void DictionaryCache::GetDictionaryFor(
       RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
       // Must do this before calling start, which can run the callbacks and call
       // Resume
-      DICTIONARY_LOG(("Suspending to get Dictionary headers"));
+      aAsync = true;
       aSuspend(aChan);
-      reader->Start(false, existing.Data(), prepath, aURI, aType, this,
-                    aCallback);
+      reader->Start(existing.Data(), prepath, aURI, aType, this, aCallback);
     }
     return;
   }
@@ -1102,9 +1073,8 @@ void DictionaryCache::GetDictionaryFor(
     RefPtr<DictionaryOriginReader> reader = new DictionaryOriginReader();
     // After Start(), if we drop this ref reader will kill itself on
     // completion; it holds a self-ref
-    DICTIONARY_LOG(("Suspending to get Dictionary headers"));
-    aSuspend(aChan);
-    reader->Start(false, origin, prepath, aURI, aType, this, aCallback);
+    reader->Start(origin, prepath, aURI, aType, this, aCallback);
+    aAsync = true;
     return;
   }
   // No dictionaries for origin
