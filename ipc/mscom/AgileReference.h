@@ -7,7 +7,6 @@
 #ifndef mozilla_mscom_AgileReference_h
 #define mozilla_mscom_AgileReference_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
 #include "nsDebug.h"

@@ -52,7 +52,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Sprintf.h"
 #include "nsPrintfCString.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"

@@ -38,7 +38,6 @@
 #include "Entries.h"
 #include "Classifier.h"
 #include "ProtocolParser.h"
-#include "mozilla/Attributes.h"
 #include "nsIHttpChannel.h"
 #include "nsIPrincipal.h"
 #include "nsIUrlListManager.h"

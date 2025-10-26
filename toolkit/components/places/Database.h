@@ -11,7 +11,6 @@
 #include "nsIObserver.h"
 #include "mozilla/storage.h"
 #include "mozilla/storage/StatementCache.h"
-#include "mozilla/Attributes.h"
 #include "nsIEventTarget.h"
 #include "Shutdown.h"
 #include "nsCategoryCache.h"

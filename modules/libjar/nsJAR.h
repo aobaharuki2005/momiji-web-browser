@@ -25,7 +25,6 @@
 #include "nsZipArchive.h"
 #include "nsWeakReference.h"
 #include "nsIObserver.h"
-#include "mozilla/Attributes.h"
 
 class nsZipReaderCache;
 

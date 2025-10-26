@@ -17,7 +17,6 @@
 #include <utility>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/HangTypes.h"
 #include "mozilla/IntegerPrintfMacros.h"

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BaseVFS.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsIFile.h"

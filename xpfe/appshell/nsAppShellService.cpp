@@ -27,7 +27,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIWindowlessBrowser.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"

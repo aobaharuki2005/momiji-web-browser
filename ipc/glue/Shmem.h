@@ -7,8 +7,6 @@
 #ifndef mozilla_ipc_Shmem_h
 #define mozilla_ipc_Shmem_h
 
-#include "mozilla/Attributes.h"
-
 #include "base/basictypes.h"
 #include "base/process.h"
 #include "chrome/common/ipc_message_utils.h"

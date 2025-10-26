@@ -40,7 +40,6 @@
 #include "nsMimeTypes.h"
 
 #include "nsDocLoader.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Result.h"

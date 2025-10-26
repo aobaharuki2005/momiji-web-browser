@@ -6,7 +6,6 @@
 
 #include "ExecutionTracerIntegration.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Document.h"

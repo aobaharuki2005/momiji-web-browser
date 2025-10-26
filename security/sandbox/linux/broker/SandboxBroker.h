@@ -10,7 +10,6 @@
 #include "mozilla/SandboxBrokerCommon.h"
 
 #include "base/platform_thread.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTHashMap.h"

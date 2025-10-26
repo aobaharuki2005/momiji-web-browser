@@ -20,7 +20,6 @@
 #include "ImageLogging.h"
 #include "ReferrerInfo.h"
 #include "imgRequestProxy.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/ClearOnShutdown.h"

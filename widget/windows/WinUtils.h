@@ -35,7 +35,6 @@
 #include "nsIWidget.h"
 #include "nsWindowsHelpers.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/UniquePtr.h"

@@ -29,7 +29,6 @@
 #include "ISurfaceProvider.h"
 #include "Orientation.h"
 #include "mozilla/AtomicBitfields.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"

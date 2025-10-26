@@ -10,7 +10,6 @@
 #define js_Debug_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/BaseProfilerUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Vector.h"

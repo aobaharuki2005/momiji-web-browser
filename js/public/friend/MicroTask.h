@@ -7,8 +7,6 @@
 #ifndef js_friend_MicroTask_h
 #define js_friend_MicroTask_h
 
-#include "mozilla/Attributes.h"
-
 #include "jstypes.h"
 
 #include "js/GCPolicyAPI.h"

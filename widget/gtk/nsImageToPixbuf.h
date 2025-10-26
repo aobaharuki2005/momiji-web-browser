@@ -6,7 +6,6 @@
 #ifndef NSIMAGETOPIXBUF_H_
 #define NSIMAGETOPIXBUF_H_
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "nsSize.h"

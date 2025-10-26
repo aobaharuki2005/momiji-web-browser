@@ -5,7 +5,6 @@
 
 #include "nsView.h"
 
-#include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"

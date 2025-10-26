@@ -9,7 +9,6 @@
 
 #include "ErrorList.h"
 #include "base/process.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ProfileJSONWriter.h"
