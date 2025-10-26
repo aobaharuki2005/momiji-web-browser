@@ -1,4 +1,4 @@
-// |reftest| skip||skip-if(!this.hasOwnProperty('Intl')||!xulRuntime.shell)
+// |reftest| skip-if(true||!this.hasOwnProperty('Intl')||!xulRuntime.shell)
 
 // Don't run in browser because `SpecialPowers.Cu.getJSTestingFunctions()` doesn't
 // appear to be able to change time zone in other Realms.
