@@ -1438,9 +1438,8 @@ public class GeckoAppShell {
     return result;
   }
 
-  @WrapForJNI(calledFrom = "gecko")
   // For any-pointer and any-hover media queries features.
-  private static int getAllPointerCapabilities() {
+  /* package */ static int getAllPointerCapabilities() {
     int result = NO_POINTER;
 
     for (final int deviceId : InputDevice.getDeviceIds()) {
@@ -1490,9 +1489,8 @@ public class GeckoAppShell {
     return result;
   }
 
-  @WrapForJNI(calledFrom = "gecko")
   // For pointing devices telemetry.
-  private static int getPointingDeviceKinds() {
+  /* package */ static int getPointingDeviceKinds() {
     int result = POINTING_DEVICE_NONE;
 
     for (final int deviceId : InputDevice.getDeviceIds()) {
