@@ -8,7 +8,6 @@
 #define mozilla_ipc_IdleSchedulerParent_h__
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ipc/PIdleSchedulerParent.h"

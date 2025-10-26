@@ -11,7 +11,6 @@
 #include <utility>
 
 #include "MainThreadUtils.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/dom/WorkerPrivate.h"

@@ -15,7 +15,6 @@
 #include "nsIServiceManager.h"
 #include "nsIFile.h"
 #include "mozilla/ArenaAllocator.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
 #include "mozilla/Monitor.h"

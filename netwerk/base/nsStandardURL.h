@@ -16,6 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
 #include "nsISizeOf.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsISensitiveInfoHiddenURI.h"

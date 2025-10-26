@@ -10,7 +10,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "mozilla/Atomics.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"

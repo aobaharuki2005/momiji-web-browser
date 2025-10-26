@@ -12,7 +12,6 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Poison.h"
 #include "mozilla/SharedThreadPool.h"

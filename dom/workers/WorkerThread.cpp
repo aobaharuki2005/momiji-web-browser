@@ -11,7 +11,6 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/Logging.h"

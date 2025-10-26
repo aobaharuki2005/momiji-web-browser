@@ -9,7 +9,6 @@
 #define ipc_glue_MessageChannel_h
 
 #include "ipc/EnumSerializer.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"

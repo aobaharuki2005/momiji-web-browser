@@ -20,7 +20,6 @@
 #  include "nsDebug.h"
 #endif
 #include "2D.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "Point.h"
 #include "BaseRect.h"

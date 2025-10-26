@@ -6,7 +6,6 @@
 
 #include "ThrottledEventQueue.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/EventQueue.h"

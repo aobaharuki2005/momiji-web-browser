@@ -9,7 +9,6 @@
 
 #include "PDMFactory.h"
 #include "PlatformDecoderModule.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 

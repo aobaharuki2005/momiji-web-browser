@@ -6,7 +6,6 @@
 #ifndef ScriptPreloader_h
 #define ScriptPreloader_h
 
-#include "mozilla/Atomics.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EventTargetAndLockCapability.h"
 #include "mozilla/LinkedList.h"

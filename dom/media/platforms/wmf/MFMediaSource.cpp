@@ -14,7 +14,6 @@
 #include "MFMediaEngineVideoStream.h"
 #include "VideoUtils.h"
 #include "WMF.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 

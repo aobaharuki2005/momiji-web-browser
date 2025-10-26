@@ -11,7 +11,6 @@
 #include "js/RootingAPI.h"
 #include "js/SourceText.h"
 #include "js/TypeDecls.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/CacheExpirationTime.h"
 #include "mozilla/dom/SRIMetadata.h"

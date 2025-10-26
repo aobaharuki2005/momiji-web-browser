@@ -15,7 +15,6 @@
 #include "js/Object.h"     // JS::GetCompartment
 #include "js/StructuredClone.h"
 #include "jsfriendapi.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/HoldDropJSObjects.h"

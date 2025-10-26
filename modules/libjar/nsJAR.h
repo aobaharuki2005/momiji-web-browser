@@ -11,7 +11,6 @@
 #include "mozilla/Logging.h"
 #include "prinrval.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/RecursiveMutex.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
