@@ -1653,25 +1653,14 @@ void CanonicalBrowsingContext::NavigationTraverse(
   RefPtr<SessionHistoryEntry> targetEntry;
   // 12.1 Let navigableSHEs be the result of getting session history entries
   //      given navigable.
-  Maybe<int32_t> activeIndex;
-  Maybe<int32_t> targetIndex;
-  uint32_t index = 0;
   nsSHistory::WalkContiguousEntriesInOrder(
-      mActiveEntry, [&targetEntry, aKey, activeEntry = mActiveEntry,
-                     &activeIndex, &targetIndex, &index](auto* aEntry) {
-        if (nsCOMPtr<SessionHistoryEntry> entry = do_QueryObject(aEntry)) {
-          if (entry->Info().NavigationKey() == aKey) {
-            targetEntry = entry;
-            targetIndex = Some(index);
-          }
-
-          if (entry == activeEntry) {
-            activeIndex = Some(index);
-          }
+      mActiveEntry, [&targetEntry, aKey](auto* aEntry) {
+        auto* entry = static_cast<SessionHistoryEntry*>(aEntry);
+        if (entry->Info().NavigationKey() == aKey) {
+          targetEntry = entry;
+          return false;
         }
-
-        index++;
-        return !targetIndex || !activeIndex;
+        return true;
       });
 
   if (!targetEntry) {
@@ -1682,11 +1671,18 @@ void CanonicalBrowsingContext::NavigationTraverse(
     return aResolver(NS_OK);
   }
 
-  if (!activeIndex || !targetIndex) {
+  nsCOMPtr targetRoot = nsSHistory::GetRootSHEntry(targetEntry);
+  nsCOMPtr activeRoot = nsSHistory::GetRootSHEntry(mActiveEntry);
+  if (!targetRoot || !activeRoot) {
     return aResolver(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
-  int32_t offset = *targetIndex - *activeIndex;
+  int32_t targetIndex = shistory->GetIndexOfEntry(targetRoot);
+  int32_t activeIndex = shistory->GetIndexOfEntry(activeRoot);
+  if (targetIndex == -1 || activeIndex == -1) {
+    return aResolver(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 
+  int32_t offset = targetIndex - activeIndex;
   MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, "Performing traversal by {}",
               offset);
 
