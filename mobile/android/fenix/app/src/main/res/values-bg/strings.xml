@@ -3795,7 +3795,7 @@
   -->
   <string name="setup_checklist_task_default_browser">Четец по подразбиране</string>
   <!-- The title of the sign-in task for the setup checklist -->
-  <string name="setup_checklist_task_account_sync">Влезте в профила си</string>
+  <string name="setup_checklist_task_account_sync">Вписване в профила ви</string>
   <!-- The title of the theme selection task for the setup checklist -->
   <string name="setup_checklist_task_theme_selection">Избор на тема</string>
   <!-- The title of the toolbar selection task for the setup checklist -->

@@ -807,6 +807,10 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">Hiển thị thanh thẻ</string>
   <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_shortcut">Phím tắt thanh công cụ</string>
+  <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_select_shortcut">Chọn một phím tắt</string>
+  <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Cử chỉ</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Tùy biến</string>
