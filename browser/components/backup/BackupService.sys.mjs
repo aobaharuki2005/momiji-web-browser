@@ -2989,6 +2989,19 @@ export class BackupService extends EventTarget {
       );
       await IOUtils.writeJSON(postRecoveryPath, postRecovery);
 
+      // In a release scenario, this should always be true
+      // this makes it easier to get around setting up profiles for testing other functionality
+      if (profileSvc.currentProfile) {
+        // if our current profile was default, let's make the new one default
+        if (profileSvc.currentProfile === profileSvc.defaultProfile) {
+          profileSvc.defaultProfile = profile;
+        }
+
+        // let's rename the old profile with a prefix old-[profile_name]
+        profile.name = profileSvc.currentProfile.name;
+        profileSvc.currentProfile.name = `old-${profileSvc.currentProfile.name}`;
+      }
+
       await profileSvc.asyncFlush();
 
       if (shouldLaunch) {

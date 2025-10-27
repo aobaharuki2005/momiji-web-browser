@@ -273,6 +273,14 @@ async function testCreateBackupHelper(sandbox, taskFn) {
     "createBackupTestRecoveredProfile"
   );
 
+  let originalProfileName = currentProfile.name;
+
+  let profileSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
+    Ci.nsIToolkitProfileService
+  );
+  // make our current profile default
+  profileSvc.defaultProfile = currentProfile;
+
   let recoveredProfile = await bs.recoverFromBackupArchive(
     backupFilePath,
     null,
@@ -282,8 +290,20 @@ async function testCreateBackupHelper(sandbox, taskFn) {
   );
 
   Assert.ok(
-    recoveredProfile.name.startsWith(currentProfile.name),
+    recoveredProfile.name.startsWith(originalProfileName),
     "Should maintain profile name across backup and restore"
+  );
+
+  Assert.strictEqual(
+    currentProfile.name,
+    `old-${originalProfileName}`,
+    "The old profile should be prefixed with old-"
+  );
+
+  Assert.strictEqual(
+    profileSvc.defaultProfile,
+    recoveredProfile,
+    "The new profile should now be the default"
   );
 
   // Check that resources were recovered from highest to lowest backup priority.
