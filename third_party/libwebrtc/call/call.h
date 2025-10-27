@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -149,9 +150,8 @@ class Call {
   // Decides which RTCP feedback type to use for congestion control.
   virtual void SetPreferredRtcpCcAckType(
       RtcpFeedbackType preferred_rtcp_cc_ack_type) = 0;
-
-  virtual int FeedbackAccordingToRfc8888Count() = 0;
-  virtual int FeedbackAccordingToTransportCcCount() = 0;
+  virtual std::optional<int> FeedbackAccordingToRfc8888Count() = 0;
+  virtual std::optional<int> FeedbackAccordingToTransportCcCount() = 0;
 
   virtual TaskQueueBase* network_thread() const = 0;
   virtual TaskQueueBase* worker_thread() const = 0;

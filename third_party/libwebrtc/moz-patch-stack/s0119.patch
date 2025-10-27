@@ -7,12 +7,12 @@ Differential Revision: https://phabricator.services.mozilla.com/D258499
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/19164e58323d59c1f66f7fcf671b8d0b6366f708
 ---
  call/call.cc                     | 13 -------------
- call/call.h                      | 11 ++---------
+ call/call.h                      | 12 ++----------
  modules/desktop_capture/BUILD.gn |  5 +++++
- 3 files changed, 7 insertions(+), 22 deletions(-)
+ 3 files changed, 7 insertions(+), 23 deletions(-)
 
 diff --git a/call/call.cc b/call/call.cc
-index 0b756c03a1..8cbffd0374 100644
+index 91ec1a54bc..e41922dffa 100644
 --- a/call/call.cc
 +++ b/call/call.cc
 @@ -513,19 +513,6 @@ class Call final : public webrtc::Call,
@@ -36,10 +36,10 @@ index 0b756c03a1..8cbffd0374 100644
    std::unique_ptr<RtpTransportControllerSendInterface> transport_send;
    if (config.rtp_transport_controller_send_factory != nullptr) {
 diff --git a/call/call.h b/call/call.h
-index 5e3d3de221..aa9da48ebe 100644
+index b2146118ff..cda8733859 100644
 --- a/call/call.h
 +++ b/call/call.h
-@@ -25,6 +25,7 @@
+@@ -26,6 +26,7 @@
  #include "api/transport/bitrate_settings.h"
  #include "call/audio_receive_stream.h"
  #include "call/audio_send_stream.h"
@@ -47,7 +47,7 @@ index 5e3d3de221..aa9da48ebe 100644
  #include "call/call_config.h"
  #include "call/flexfec_receive_stream.h"
  #include "call/packet_receiver.h"
-@@ -50,15 +51,7 @@ namespace webrtc {
+@@ -51,16 +52,7 @@ namespace webrtc {
  
  class Call {
   public:
@@ -59,6 +59,7 @@ index 5e3d3de221..aa9da48ebe 100644
 -    int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
 -    int64_t pacer_delay_ms = 0;
 -    int64_t rtt_ms = -1;
+-    std::optional<int64_t> ccfb_messages_received = std::nullopt;
 -  };
 +  using Stats = CallBasicStats;
  
