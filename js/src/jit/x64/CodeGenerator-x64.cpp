@@ -123,41 +123,77 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
 }
 
 void CodeGenerator::visitMulI64(LMulI64* lir) {
-  Register64 lhs = ToRegister64(lir->lhs());
+  Register lhs = ToRegister64(lir->lhs()).reg;
   LInt64Allocation rhs = lir->rhs();
-
-  MOZ_ASSERT(ToOutRegister64(lir) == lhs);
+  Register out = ToOutRegister64(lir).reg;
 
   if (IsConstant(rhs)) {
     int64_t constant = ToInt64(rhs);
     switch (constant) {
       case -1:
-        masm.neg64(lhs);
-        return;
-      case 0:
-        masm.xor64(lhs, lhs);
-        return;
-      case 1:
-        // nop
-        return;
-      case 2:
-        masm.add64(lhs, lhs);
-        return;
-      default:
-        if (constant > 0) {
-          // Use shift if constant is power of 2.
-          int32_t shift = mozilla::FloorLog2(constant);
-          if (int64_t(1) << shift == constant) {
-            masm.lshift64(Imm32(shift), lhs);
-            return;
-          }
+        if (lhs != out) {
+          masm.movq(lhs, out);
         }
-        Register temp = ToTempRegisterOrInvalid(lir->temp0());
-        masm.mul64(Imm64(constant), lhs, temp);
+        masm.negq(out);
+        break;
+      case 0:
+        masm.xorq(out, out);
+        break;
+      case 1:
+        if (lhs != out) {
+          masm.movq(lhs, out);
+        }
+        break;
+      case 2:
+        if (lhs == out) {
+          masm.addq(lhs, lhs);
+        } else {
+          masm.lea(Operand(lhs, lhs, TimesOne), out);
+        }
+        break;
+      case 3:
+        masm.lea(Operand(lhs, lhs, TimesTwo), out);
+        break;
+      case 4:
+        if (lhs == out) {
+          masm.shlq(Imm32(2), lhs);
+        } else {
+          masm.lea(Operand(lhs, TimesFour, 0), out);
+        }
+        break;
+      case 5:
+        masm.lea(Operand(lhs, lhs, TimesFour), out);
+        break;
+      case 8:
+        if (lhs == out) {
+          masm.shlq(Imm32(3), lhs);
+        } else {
+          masm.lea(Operand(lhs, TimesEight, 0), out);
+        }
+        break;
+      case 9:
+        masm.lea(Operand(lhs, lhs, TimesEight), out);
+        break;
+      default: {
+        // Use shift if constant is power of 2.
+        int32_t shift = mozilla::FloorLog2(constant);
+        if (constant > 0 && (1 << shift) == constant) {
+          if (lhs != out) {
+            masm.movq(lhs, out);
+          }
+          masm.shlq(Imm32(shift), out);
+        } else if (int32_t(constant) == constant) {
+          masm.imulq(Imm32(constant), lhs, out);
+        } else {
+          MOZ_ASSERT(out == lhs);
+          masm.mul64(Imm64(constant), Register64(lhs));
+        }
+        break;
+      }
     }
   } else {
-    Register temp = ToTempRegisterOrInvalid(lir->temp0());
-    masm.mul64(ToOperandOrRegister64(rhs), lhs, temp);
+    MOZ_ASSERT(out == lhs);
+    masm.imulq(ToOperandOrRegister64(rhs), lhs);
   }
 }
 

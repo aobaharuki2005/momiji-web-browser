@@ -62,12 +62,22 @@ void LIRGeneratorX64::lowerForALUInt64(
 
 void LIRGeneratorX64::lowerForMulInt64(LMulI64* ins, MMul* mir,
                                        MDefinition* lhs, MDefinition* rhs) {
-  // X64 doesn't need a temp for 64bit multiplication.
+  // No input reuse needed when we can use imulq with an int32 immediate.
+  bool reuseInput = true;
+  if (rhs->isConstant()) {
+    int64_t constant = rhs->toConstant()->toInt64();
+    reuseInput = int32_t(constant) != constant;
+  }
+
   ins->setLhs(useInt64RegisterAtStart(lhs));
   ins->setRhs(willHaveDifferentLIRNodes(lhs, rhs)
                   ? useInt64OrConstant(rhs)
                   : useInt64OrConstantAtStart(rhs));
-  defineInt64ReuseInput(ins, mir, 0);
+  if (reuseInput) {
+    defineInt64ReuseInput(ins, mir, 0);
+  } else {
+    defineInt64(ins, mir);
+  }
 }
 
 void LIRGenerator::visitBox(MBox* box) {

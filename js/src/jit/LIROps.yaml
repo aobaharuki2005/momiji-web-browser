@@ -1351,7 +1351,7 @@
   operands:
     lhs: Int64
     rhs: Int64
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
   num_temps: 1
 #endif
   defer_init: true
