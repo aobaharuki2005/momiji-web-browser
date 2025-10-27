@@ -1701,10 +1701,6 @@ Operand CodeGeneratorX86Shared::ToOperand(const LAllocation* a) {
   return ToOperand(*a);
 }
 
-Operand CodeGeneratorX86Shared::ToOperand(const LDefinition* def) {
-  return ToOperand(def->output());
-}
-
 MoveOperand CodeGeneratorX86Shared::toMoveOperand(LAllocation a) const {
   if (a.isGeneralReg()) {
     return MoveOperand(ToRegister(a));
