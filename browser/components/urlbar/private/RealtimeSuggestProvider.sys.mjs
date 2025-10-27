@@ -135,6 +135,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
 
   get enablingPreferences() {
     return [
+      "suggest.quicksuggest.all",
       "suggest.realtimeOptIn",
       "quicksuggest.realtimeOptIn.dismissTypes",
       "quicksuggest.realtimeOptIn.notNowTimeSeconds",
@@ -144,12 +145,11 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       this.featureGatePref,
       this.suggestPref,
 
-      // We could check `this.isSponsored` here and only include the appropriate
-      // pref, but for maximum flexibility `this.isSponsored` is only a fallback
-      // for when individual suggestions do not have an `isSponsored` property.
-      // Since individual suggestions may be sponsored or not, we include both
-      // prefs here.
-      "suggest.quicksuggest.nonsponsored",
+      // We could include the sponsored pref only if `this.isSponsored` is true,
+      // but for maximum flexibility `this.isSponsored` is only a fallback for
+      // when individual suggestions do not have an `isSponsored` property.
+      // Since individual suggestions may be sponsored or not, we include the
+      // pref here.
       "suggest.quicksuggest.sponsored",
     ];
   }
@@ -167,10 +167,12 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   get shouldEnable() {
     if (
       !lazy.UrlbarPrefs.get(this.featureGatePref) ||
-      !lazy.UrlbarPrefs.get("quickSuggestOnlineAvailable")
+      !lazy.UrlbarPrefs.get("quickSuggestOnlineAvailable") ||
+      !lazy.UrlbarPrefs.get("suggest.quicksuggest.all")
     ) {
-      // The feature gate is disabled or online suggestions aren't available.
-      // Don't show opt-in or online suggestions for this realtime type.
+      // The feature gate is disabled, online suggestions aren't available, or
+      // all Suggest suggestions are disabled. Don't show opt-in or online
+      // suggestions for this realtime type.
       return false;
     }
 
@@ -271,12 +273,10 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   makeResult(queryContext, suggestion, searchString) {
     // For maximum flexibility individual suggestions can indicate whether they
     // are sponsored or not, despite `this.isSponsored`, which is a fallback.
-    let isSponsored = this.isSuggestionSponsored(suggestion);
     if (
-      (isSponsored &&
-        !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
-      (!isSponsored &&
-        !lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
+      !lazy.UrlbarPrefs.get("suggest.quicksuggest.all") ||
+      (this.isSuggestionSponsored(suggestion) &&
+        !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored"))
     ) {
       return null;
     }

@@ -165,7 +165,7 @@ add_setup(async function () {
     prefs: [
       ["flightStatus.featureGate", true],
       ["suggest.flightStatus", true],
-      ["suggest.quicksuggest.nonsponsored", true],
+      ["suggest.quicksuggest.all", true],
     ],
   });
 });

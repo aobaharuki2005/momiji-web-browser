@@ -50,7 +50,7 @@ add_setup(async function init() {
     prefs: [
       ["market.featureGate", true],
       ["suggest.market", true],
-      ["suggest.quicksuggest.nonsponsored", true],
+      ["suggest.quicksuggest.all", true],
     ],
   });
 });
@@ -61,6 +61,41 @@ add_task(async function telemetryType() {
     "market",
     "Telemetry type should be 'market'"
   );
+});
+
+add_task(async function disabledPrefs() {
+  let prefs = [
+    "quicksuggest.enabled",
+    "suggest.market",
+    "suggest.quicksuggest.all",
+  ];
+
+  for (let pref of prefs) {
+    info("Testing pref: " + pref);
+
+    // First make sure the suggestion is added.
+    await check_results({
+      context: createContext("test", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [marketResult()],
+    });
+
+    // Now disable them.
+    UrlbarPrefs.set(pref, false);
+    await check_results({
+      context: createContext("test", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [],
+    });
+
+    // Revert.
+    UrlbarPrefs.set(pref, true);
+    await QuickSuggestTestUtils.forceSync();
+  }
 });
 
 // Tests the "Not interested" command: all Market suggestions should be disabled

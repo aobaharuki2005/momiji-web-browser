@@ -227,8 +227,8 @@ async function doLocaleTest({
 function assertSuggestPrefs(expectedEnabled) {
   let prefs = [
     "browser.urlbar.quicksuggest.enabled",
+    "browser.urlbar.suggest.quicksuggest.all",
     "browser.urlbar.suggest.quicksuggest.sponsored",
-    "browser.urlbar.suggest.quicksuggest.nonsponsored",
   ];
   for (let p of prefs) {
     Assert.equal(

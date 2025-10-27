@@ -101,7 +101,7 @@ add_setup(async function init() {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: REMOTE_SETTINGS_RESULTS,
     merinoSuggestions: MERINO_SUGGESTIONS,
-    prefs: [["suggest.quicksuggest.nonsponsored", true]],
+    prefs: [["suggest.quicksuggest.all", true]],
   });
 });
 
@@ -114,9 +114,16 @@ add_task(async function telemetryType() {
 });
 
 // When quick suggest prefs are disabled, addon suggestions should be disabled.
-add_task(async function quickSuggestPrefsDisabled() {
-  let prefs = ["quicksuggest.enabled", "suggest.quicksuggest.nonsponsored"];
+add_task(async function prefsDisabled() {
+  let prefs = [
+    "quicksuggest.enabled",
+    "addons.featureGate",
+    "suggest.quicksuggest.all",
+    "suggest.addons",
+  ];
   for (let pref of prefs) {
+    info("Testing pref: " + pref);
+
     // Before disabling the pref, first make sure the suggestion is added.
     await check_results({
       context: createContext("test", {
@@ -143,42 +150,6 @@ add_task(async function quickSuggestPrefsDisabled() {
     });
 
     UrlbarPrefs.set(pref, true);
-    await QuickSuggestTestUtils.forceSync();
-  }
-});
-
-// When addon suggestions specific preference is disabled, addon suggestions
-// should not be added.
-add_task(async function addonSuggestionsSpecificPrefDisabled() {
-  const prefs = ["suggest.addons", "addons.featureGate"];
-  for (const pref of prefs) {
-    // First make sure the suggestion is added.
-    await check_results({
-      context: createContext("test", {
-        providers: [UrlbarProviderQuickSuggest.name],
-        isPrivate: false,
-      }),
-      matches: [
-        makeExpectedResult({
-          suggestion: MERINO_SUGGESTIONS[0],
-          source: "merino",
-          provider: "amo",
-        }),
-      ],
-    });
-
-    // Now disable the pref.
-    UrlbarPrefs.set(pref, false);
-    await check_results({
-      context: createContext("test", {
-        providers: [UrlbarProviderQuickSuggest.name],
-        isPrivate: false,
-      }),
-      matches: [],
-    });
-
-    // Revert.
-    UrlbarPrefs.clear(pref);
     await QuickSuggestTestUtils.forceSync();
   }
 });

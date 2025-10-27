@@ -185,8 +185,8 @@ add_task(async function enablingPrefs() {
 });
 
 // Important dates are considered "utility" suggestions and not part of the
-// Suggest brand, so they should be enabled regardless of the sponsored and
-// nonsponsored Suggest prefs.
+// Suggest brand, so they should be enabled regardless of the `all` and
+// sponsored Suggest prefs.
 add_task(async function neitherSponsoredNorNonsponsored() {
   setTime("2025-03-01T00:00");
 
@@ -199,23 +199,22 @@ add_task(async function neitherSponsoredNorNonsponsored() {
     },
   });
 
-  for (let sponsored of [true, false]) {
-    for (let nonsponsored of [true, false]) {
+  for (let all of [true, false]) {
+    for (let sponsored of [true, false]) {
       info(
-        "Doing sponsored/nonsponsored test: " +
-          JSON.stringify({ sponsored, nonsponsored })
+        "Doing all/sponsored pref test: " + JSON.stringify({ all, sponsored })
       );
 
+      UrlbarPrefs.set("suggest.quicksuggest.all", all);
       UrlbarPrefs.set("suggest.quicksuggest.sponsored", sponsored);
-      UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", nonsponsored);
       await QuickSuggestTestUtils.forceSync();
 
       await checkDatesResults(query, expected);
     }
   }
 
+  UrlbarPrefs.clear("suggest.quicksuggest.all");
   UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
-  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
   await QuickSuggestTestUtils.forceSync();
 });
 
@@ -321,8 +320,8 @@ add_task(async function lastDayDuringMultiDay() {
 // Test whether the date suggestion is before the other
 // isBestMatch suggestion.
 add_task(async function testTwoSuggestions() {
-  // `other_suggestions` is nonsponsored so it depends on the nonsponsored pref.
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  // `other_suggestions` is nonsponsored so it depends on the `all` pref.
+  UrlbarPrefs.set("suggest.quicksuggest.all", true);
   await QuickSuggestTestUtils.forceSync();
 
   setTime("2025-03-01T00:00");
@@ -367,7 +366,7 @@ add_task(async function testTwoSuggestions() {
     expectedOtherSuggestion,
   ]);
 
-  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
+  UrlbarPrefs.clear("suggest.quicksuggest.all");
   await QuickSuggestTestUtils.forceSync();
 });
 

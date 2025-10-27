@@ -51,6 +51,41 @@ add_task(async function telemetry_type_on_realtime() {
   );
 });
 
+add_task(async function disabledPrefs() {
+  let prefs = [
+    "quicksuggest.enabled",
+    "suggest.yelpRealtime",
+    "suggest.quicksuggest.all",
+  ];
+
+  for (let pref of prefs) {
+    info("Testing pref: " + pref);
+
+    // First make sure the suggestion is added.
+    await check_results({
+      context: createContext("coffee", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [yelpMerinoResult()],
+    });
+
+    // Now disable them.
+    UrlbarPrefs.set(pref, false);
+    await check_results({
+      context: createContext("coffee", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [],
+    });
+
+    // Revert.
+    UrlbarPrefs.set(pref, true);
+    await QuickSuggestTestUtils.forceSync();
+  }
+});
+
 add_task(async function not_interested_on_realtime() {
   await doDismissAllTest({
     result: yelpMerinoResult(),

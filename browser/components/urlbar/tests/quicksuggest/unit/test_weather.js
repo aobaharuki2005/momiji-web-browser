@@ -56,20 +56,18 @@ add_setup(async () => {
   gWeather = QuickSuggest.getFeature("WeatherSuggestions");
 });
 
-// The feature should be properly enabled according to `weather.featureGate`.
-add_task(async function disableAndEnable_featureGate() {
-  await doBasicDisableAndEnableTest("weather.featureGate");
-});
-
-// The feature should be properly enabled according to `suggest.weather`.
-add_task(async function disableAndEnable_suggestPref() {
-  await doBasicDisableAndEnableTest("suggest.weather");
-});
-
-// The feature should be properly enabled according to
-// `suggest.quicksuggest.sponsored`.
-add_task(async function disableAndEnable_sponsoredPref() {
-  await doBasicDisableAndEnableTest("suggest.quicksuggest.sponsored");
+// The feature should be properly enabled according to relavant prefs.
+add_task(async function disableAndEnable() {
+  let prefs = [
+    "weather.featureGate",
+    "suggest.weather",
+    "suggest.quicksuggest.all",
+    "suggest.quicksuggest.sponsored",
+  ];
+  for (let pref of prefs) {
+    info("Testing pref: " + pref);
+    await doBasicDisableAndEnableTest(pref);
+  }
 });
 
 async function doBasicDisableAndEnableTest(pref) {

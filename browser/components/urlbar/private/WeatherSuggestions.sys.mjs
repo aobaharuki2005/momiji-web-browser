@@ -153,6 +153,7 @@ export class WeatherSuggestions extends SuggestProvider {
     return [
       "weatherFeatureGate",
       "suggest.weather",
+      "suggest.quicksuggest.all",
       "suggest.quicksuggest.sponsored",
     ];
   }
