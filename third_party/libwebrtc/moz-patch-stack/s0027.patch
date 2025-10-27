@@ -1280,7 +1280,7 @@ index 033331442f..ed00c2cbef 100644
      "../api:sequence_checker",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/webrtc.gni b/webrtc.gni
-index f2f9c82153..fb00aef0f7 100644
+index 613d872b69..88e0441d9e 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1380,7 +1380,7 @@ index f2f9c82153..fb00aef0f7 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1204,7 +1214,7 @@ if (is_mac || is_ios) {
+@@ -1209,7 +1219,7 @@ if (is_mac || is_ios) {
    }
  }
  
