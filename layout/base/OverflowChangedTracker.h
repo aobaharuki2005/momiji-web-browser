@@ -7,9 +7,9 @@
 #ifndef mozilla_OverflowChangedTracker_h
 #define mozilla_OverflowChangedTracker_h
 
+#include "mozilla/SplayTree.h"
 #include "nsContainerFrame.h"
 #include "nsIFrame.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -37,7 +37,7 @@ class OverflowChangedTracker {
   OverflowChangedTracker() : mSubtreeRoot(nullptr) {}
 
   ~OverflowChangedTracker() {
-    MOZ_ASSERT(mEntryList.IsEmpty(), "Need to flush before destroying!");
+    NS_ASSERTION(mEntryList.empty(), "Need to flush before destroying!");
   }
 
   /**
@@ -55,19 +55,32 @@ class OverflowChangedTracker {
     MOZ_ASSERT(
         aFrame->FrameMaintainsOverflow(),
         "Why add a frame that doesn't maintain overflow to the tracker?");
-    AddFrameWithDepth(aFrame, aFrame->GetDepthInFrameTree(), aChangeKind);
+    uint32_t depth = aFrame->GetDepthInFrameTree();
+    Entry* entry = nullptr;
+    if (!mEntryList.empty()) {
+      entry = mEntryList.find(Entry(aFrame, depth));
+    }
+    if (entry == nullptr) {
+      // Add new entry.
+      mEntryList.insert(new Entry(aFrame, depth, aChangeKind));
+    } else {
+      // Update the existing entry if the new value is stronger.
+      entry->mChangeKind = std::max(entry->mChangeKind, aChangeKind);
+    }
   }
 
   /**
    * Remove a frame.
    */
   void RemoveFrame(nsIFrame* aFrame) {
-    if (mEntryList.IsEmpty()) {
+    if (mEntryList.empty()) {
       return;
     }
 
-    mEntryList.RemoveElementSorted(
-        Entry(aFrame, aFrame->GetDepthInFrameTree()));
+    uint32_t depth = aFrame->GetDepthInFrameTree();
+    if (mEntryList.find(Entry(aFrame, depth))) {
+      delete mEntryList.remove(Entry(aFrame, depth));
+    }
   }
 
   /**
@@ -86,12 +99,12 @@ class OverflowChangedTracker {
    * us from processing the same frame twice.
    */
   void Flush() {
-    while (!mEntryList.IsEmpty()) {
-      Entry entry = mEntryList.PopLastElement();
-      nsIFrame* frame = entry.mFrame;
+    while (!mEntryList.empty()) {
+      Entry* entry = mEntryList.removeMin();
+      nsIFrame* frame = entry->mFrame;
 
       bool overflowChanged = false;
-      if (entry.mChangeKind == CHILDREN_CHANGED) {
+      if (entry->mChangeKind == CHILDREN_CHANGED) {
         // Need to union the overflow areas of the children.
         // Only update the parent if the overflow changes.
         overflowChanged = frame->UpdateOverflow();
@@ -99,7 +112,7 @@ class OverflowChangedTracker {
         // Take a faster path that doesn't require unioning the overflow areas
         // of our children.
 
-        MOZ_ASSERT(
+        NS_ASSERTION(
             frame->GetProperty(nsIFrame::DebugInitialOverflowPropertyApplied()),
             "InitialOverflowProperty must be set first.");
 
@@ -131,33 +144,40 @@ class OverflowChangedTracker {
         // should not add it to the list if that's true.
         if (parent && parent != mSubtreeRoot &&
             parent->FrameMaintainsOverflow()) {
-          AddFrameWithDepth(parent, entry.mDepth - 1, CHILDREN_CHANGED);
+          Entry* parentEntry =
+              mEntryList.find(Entry(parent, entry->mDepth - 1));
+          if (parentEntry) {
+            parentEntry->mChangeKind =
+                std::max(parentEntry->mChangeKind, CHILDREN_CHANGED);
+          } else {
+            mEntryList.insert(
+                new Entry(parent, entry->mDepth - 1, CHILDREN_CHANGED));
+          }
         }
       }
+      delete entry;
     }
   }
 
  private:
-  struct Entry {
+  struct Entry : SplayTreeNode<Entry> {
     Entry(nsIFrame* aFrame, uint32_t aDepth,
           ChangeKind aChangeKind = CHILDREN_CHANGED)
         : mFrame(aFrame), mDepth(aDepth), mChangeKind(aChangeKind) {}
 
-    /**
-     * Note that "equality" tests only the frame pointer.
-     */
     bool operator==(const Entry& aOther) const {
       return mFrame == aOther.mFrame;
     }
 
     /**
-     * Sort by depth in the tree, and break ties with the frame pointer.
+     * Sort by *reverse* depth in the tree, and break ties with
+     * the frame pointer.
      */
     bool operator<(const Entry& aOther) const {
       if (mDepth == aOther.mDepth) {
         return mFrame < aOther.mFrame;
       }
-      return mDepth < aOther.mDepth;
+      return mDepth > aOther.mDepth; /* reverse, want "min" to be deepest */
     }
 
     static int compare(const Entry& aOne, const Entry& aTwo) {
@@ -176,22 +196,8 @@ class OverflowChangedTracker {
     ChangeKind mChangeKind;
   };
 
-  void AddFrameWithDepth(nsIFrame* aFrame, uint32_t aDepth,
-                         ChangeKind aChangeKind) {
-    Entry entry(aFrame, aDepth, aChangeKind);
-    auto index = mEntryList.IndexOfFirstElementGt(entry);
-    if (index > 0 && mEntryList[index - 1] == entry) {
-      // Update the existing entry if the new value is stronger.
-      Entry& existing = mEntryList[index - 1];
-      existing.mChangeKind = std::max(existing.mChangeKind, aChangeKind);
-    } else {
-      // Add new entry.
-      mEntryList.InsertElementAt(index, entry);
-    }
-  }
-
   /* A list of frames to process, sorted by their depth in the frame tree */
-  nsTArray<Entry> mEntryList;
+  SplayTree<Entry, Entry> mEntryList;
 
   /* Don't update overflow of this frame or its ancestors. */
   const nsIFrame* mSubtreeRoot;
