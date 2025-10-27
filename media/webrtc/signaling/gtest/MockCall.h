@@ -311,8 +311,10 @@ class MockCall : public webrtc::Call {
 
   void SetPreferredRtcpCcAckType(
       webrtc::RtcpFeedbackType preferred_rtcp_cc_ack_type) override {}
-  int FeedbackAccordingToRfc8888Count() override { return 0; }
-  int FeedbackAccordingToTransportCcCount() override { return 0; }
+  std::optional<int> FeedbackAccordingToRfc8888Count() override { return 0; }
+  std::optional<int> FeedbackAccordingToTransportCcCount() override {
+    return 0;
+  }
 
   std::vector<webrtc::VideoStream> CreateEncoderStreams(int width, int height) {
     mVideoSendEncoderConfig->video_stream_factory->SetEncoderInfo(mEncoderInfo);
