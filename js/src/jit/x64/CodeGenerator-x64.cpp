@@ -305,6 +305,66 @@ void CodeGeneratorX64::emitBigIntPtrMod(LBigIntPtrMod* ins, Register dividend,
   masm.idivq(divisor);
 }
 
+void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
+  Register lhs = ToRegister(ins->lhs());
+  const LAllocation* rhs = ins->rhs();
+  Register out = ToRegister(ins->output());
+
+  if (rhs->isConstant()) {
+    MOZ_ASSERT(out == lhs);
+
+    int32_t shift = ToIntPtr(rhs) & 0x3f;
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        if (shift) {
+          masm.lshiftPtr(Imm32(shift), lhs);
+        }
+        break;
+      case JSOp::Rsh:
+        if (shift) {
+          masm.rshiftPtrArithmetic(Imm32(shift), lhs);
+        }
+        break;
+      case JSOp::Ursh:
+        if (shift) {
+          masm.rshiftPtr(Imm32(shift), lhs);
+        }
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  } else {
+    Register shift = ToRegister(rhs);
+    MOZ_ASSERT_IF(out != lhs, Assembler::HasBMI2());
+
+    switch (ins->bitop()) {
+      case JSOp::Lsh:
+        if (out != lhs) {
+          masm.shlxq(lhs, shift, out);
+        } else {
+          masm.lshiftPtr(shift, lhs);
+        }
+        break;
+      case JSOp::Rsh:
+        if (out != lhs) {
+          masm.sarxq(lhs, shift, out);
+        } else {
+          masm.rshiftPtrArithmetic(shift, lhs);
+        }
+        break;
+      case JSOp::Ursh:
+        if (out != lhs) {
+          masm.shrxq(lhs, shift, out);
+        } else {
+          masm.rshiftPtr(shift, lhs);
+        }
+        break;
+      default:
+        MOZ_CRASH("Unexpected shift op");
+    }
+  }
+}
+
 void CodeGenerator::visitAtomicLoad64(LAtomicLoad64* lir) {
   Register elements = ToRegister(lir->elements());
   Register64 out = ToOutRegister64(lir);

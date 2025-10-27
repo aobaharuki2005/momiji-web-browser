@@ -1528,10 +1528,11 @@ void CodeGenerator::visitBitOpI64(LBitOpI64* lir) {
 void CodeGenerator::visitShiftI(LShiftI* ins) {
   Register lhs = ToRegister(ins->lhs());
   const LAllocation* rhs = ins->rhs();
-
-  MOZ_ASSERT(ToRegister(ins->output()) == lhs);
+  Register out = ToRegister(ins->output());
 
   if (rhs->isConstant()) {
+    MOZ_ASSERT(out == lhs);
+
     int32_t shift = ToInt32(rhs) & 0x1F;
     switch (ins->bitop()) {
       case JSOp::Lsh:
@@ -1558,66 +1559,34 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
     }
   } else {
     Register shift = ToRegister(rhs);
+    MOZ_ASSERT_IF(out != lhs, Assembler::HasBMI2());
+
     switch (ins->bitop()) {
       case JSOp::Lsh:
-        masm.lshift32(shift, lhs);
+        if (out != lhs) {
+          masm.shlxl(lhs, shift, out);
+        } else {
+          masm.lshift32(shift, lhs);
+        }
         break;
       case JSOp::Rsh:
-        masm.rshift32Arithmetic(shift, lhs);
+        if (out != lhs) {
+          masm.sarxl(lhs, shift, out);
+        } else {
+          masm.rshift32Arithmetic(shift, lhs);
+        }
         break;
       case JSOp::Ursh:
-        masm.rshift32(shift, lhs);
+        if (out != lhs) {
+          masm.shrxl(lhs, shift, out);
+        } else {
+          masm.rshift32(shift, lhs);
+        }
         if (ins->mir()->toUrsh()->fallible()) {
           // x >>> 0 can overflow.
-          masm.test32(lhs, lhs);
+          masm.test32(out, out);
           bailoutIf(Assembler::Signed, ins->snapshot());
         }
-        break;
-      default:
-        MOZ_CRASH("Unexpected shift op");
-    }
-  }
-}
-
-void CodeGenerator::visitShiftIntPtr(LShiftIntPtr* ins) {
-  Register lhs = ToRegister(ins->lhs());
-  const LAllocation* rhs = ins->rhs();
-
-  MOZ_ASSERT(ToRegister(ins->output()) == lhs);
-
-  if (rhs->isConstant()) {
-    constexpr intptr_t mask = (sizeof(intptr_t) * CHAR_BIT) - 1;
-    int32_t shift = ToIntPtr(rhs) & mask;
-    switch (ins->bitop()) {
-      case JSOp::Lsh:
-        if (shift) {
-          masm.lshiftPtr(Imm32(shift), lhs);
-        }
-        break;
-      case JSOp::Rsh:
-        if (shift) {
-          masm.rshiftPtrArithmetic(Imm32(shift), lhs);
-        }
-        break;
-      case JSOp::Ursh:
-        if (shift) {
-          masm.rshiftPtr(Imm32(shift), lhs);
-        }
-        break;
-      default:
-        MOZ_CRASH("Unexpected shift op");
-    }
-  } else {
-    Register shift = ToRegister(rhs);
-    switch (ins->bitop()) {
-      case JSOp::Lsh:
-        masm.lshiftPtr(shift, lhs);
-        break;
-      case JSOp::Rsh:
-        masm.rshiftPtrArithmetic(shift, lhs);
-        break;
-      case JSOp::Ursh:
-        masm.rshiftPtr(shift, lhs);
         break;
       default:
         MOZ_CRASH("Unexpected shift op");

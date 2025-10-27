@@ -68,17 +68,23 @@ void LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
 
   if (rhs->isConstant()) {
     ins->setOperand(1, useOrConstantAtStart(rhs));
+    defineReuseInput(ins, mir, 0);
   } else if (!mir->isRotate()) {
-    ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
-                           ? useShiftRegister(rhs)
-                           : useShiftRegisterAtStart(rhs));
+    if (Assembler::HasBMI2()) {
+      ins->setOperand(1, useRegisterAtStart(rhs));
+      define(ins, mir);
+    } else {
+      ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
+                             ? useShiftRegister(rhs)
+                             : useShiftRegisterAtStart(rhs));
+      defineReuseInput(ins, mir, 0);
+    }
   } else {
     ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
                            ? useFixed(rhs, ecx)
                            : useFixedAtStart(rhs, ecx));
+    defineReuseInput(ins, mir, 0);
   }
-
-  defineReuseInput(ins, mir, 0);
 }
 
 template <class LInstr>
