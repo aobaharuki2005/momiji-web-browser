@@ -54,6 +54,20 @@ def get_session():
     return requests_retry_session(retries=5, session=s)
 
 
+def _next_indexed_path(base_path):
+    base_dir = base_path.parent
+    stem = base_path.stem
+    pattern = f"{stem}-*.json"
+    max_index = 1
+    for file in base_dir.glob(pattern):
+        try:
+            index = int(file.stem.replace(stem + "-", ""))
+            max_index = max(max_index, index + 1)
+        except ValueError:
+            continue
+    return base_dir / f"{stem}-{max_index}.json"
+
+
 def _write_perfherder_data(lower_is_better):
     if os.environ.get("MOZ_AUTOMATION", "0") == "1":
         perfherder_data = {
@@ -82,7 +96,8 @@ def _write_perfherder_data(lower_is_better):
             return
 
         upload_path.parent.mkdir(parents=True, exist_ok=True)
-        with upload_path.open("w", encoding="utf-8") as f:
+        target = _next_indexed_path(upload_path)
+        with target.open("w", encoding="utf-8") as f:
             json.dump(perfherder_data, f)
 
 

@@ -12,12 +12,12 @@ task-defaults:
             - type: file
               name: public/shadow-scheduler/optimized-tasks.json
               path: /builds/worker/optimized-tasks.json
-            - type: file
-              name: public/build/perfherder-data-bugbug.json
-              path: /builds/worker/perfherder-data-bugbug.json
+            - type: directory
+              name: public/build
+              path: /builds/worker/artifacts/perf
         env:
             DECISION_TASK_ID: {task-reference: <decision>}
-            MOZ_PERFHERDER_UPLOAD: /builds/worker/perfherder-data-bugbug.json
+            MOZ_PERFHERDER_UPLOAD: /builds/worker/artifacts/perf/perfherder-data-bugbug.json
     treeherder:
         kind: other
         tier: 3
