@@ -185,12 +185,21 @@ void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
 
 void LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs,
                                       MDefinition* rhs) {
+  if (rhs->isConstant()) {
+    auto* lir = new (alloc()) LMulI(useRegisterAtStart(lhs),
+                                    useOrConstantAtStart(rhs), LAllocation());
+    if (mul->fallible()) {
+      assignSnapshot(lir, mul->bailoutKind());
+    }
+    define(lir, mul);
+    return;
+  }
+
   // Note: If we need a negative zero check, lhs is used twice.
   LAllocation lhsCopy = mul->canBeNegativeZero() ? use(lhs) : LAllocation();
   LMulI* lir = new (alloc())
       LMulI(useRegisterAtStart(lhs),
-            willHaveDifferentLIRNodes(lhs, rhs) ? useOrConstant(rhs)
-                                                : useOrConstantAtStart(rhs),
+            willHaveDifferentLIRNodes(lhs, rhs) ? use(rhs) : useAtStart(rhs),
             lhsCopy);
   if (mul->fallible()) {
     assignSnapshot(lir, mul->bailoutKind());
