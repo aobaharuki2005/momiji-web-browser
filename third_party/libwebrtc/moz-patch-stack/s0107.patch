@@ -116,10 +116,10 @@ index 12c65b29f3..22057def53 100644
    public_configs = []
    if (!build_with_chromium) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 8309bcaadc..c99788fbef 100644
+index a21820e9e7..8208b5d0e1 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -1534,6 +1534,7 @@ rtc_source_set("ssl_header") {
+@@ -1536,6 +1536,7 @@ rtc_source_set("ssl_header") {
  }
  
  rtc_library("digest") {
@@ -127,7 +127,7 @@ index 8309bcaadc..c99788fbef 100644
    visibility = [ "*" ]
    sources = [
      "message_digest.cc",
-@@ -1555,8 +1556,10 @@ rtc_library("digest") {
+@@ -1557,8 +1558,10 @@ rtc_library("digest") {
      configs += [ "..:external_ssl_library" ]
    }
  }
@@ -138,7 +138,7 @@ index 8309bcaadc..c99788fbef 100644
    visibility = [ "*" ]
    sources = [
      "crypto_random.cc",
-@@ -1577,6 +1580,7 @@ rtc_library("crypto_random") {
+@@ -1579,6 +1582,7 @@ rtc_library("crypto_random") {
      configs += [ "..:external_ssl_library" ]
    }
  }
