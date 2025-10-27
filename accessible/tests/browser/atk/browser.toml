@@ -22,5 +22,8 @@ prefs = [
 ["browser_prune_children.js"]
 
 ["browser_role.js"]
+skip-if = [
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && opt && a11y_checks", # Bug 1984205
+]
 
 ["browser_table.js"]
