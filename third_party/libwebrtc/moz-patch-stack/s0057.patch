@@ -186,10 +186,10 @@ index f17b00efb1..e205032fa6 100644
  
    void ForceSpsPpsIdrIsH264Keyframe();
 diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index 84b00b711e..c8058ea132 100644
+index bce7093e94..152e5f8e05 100644
 --- a/video/receive_statistics_proxy.cc
 +++ b/video/receive_statistics_proxy.cc
-@@ -817,6 +817,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+@@ -820,6 +820,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
        }));
  }
  
@@ -202,10 +202,10 @@ index 84b00b711e..c8058ea132 100644
    RTC_DCHECK_RUN_ON(&main_thread_);
    last_codec_type_ = codec_type;
 diff --git a/video/receive_statistics_proxy.h b/video/receive_statistics_proxy.h
-index e3cd922647..9e58f41521 100644
+index b72ed92160..82b5e54db2 100644
 --- a/video/receive_statistics_proxy.h
 +++ b/video/receive_statistics_proxy.h
-@@ -106,6 +106,7 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
+@@ -105,6 +105,7 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
    void OnDecodableFrame(TimeDelta jitter_buffer_delay,
                          TimeDelta target_delay,
                          TimeDelta minimum_delay) override;

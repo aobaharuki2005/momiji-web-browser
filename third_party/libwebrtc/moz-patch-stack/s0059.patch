@@ -116,7 +116,7 @@ index 467ceaa42d..b6e67a4309 100644
    num_discarded_packets_ += num_discarded_packets;
  }
 diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index 568fd441d2..30eec9f090 100644
+index aa36333a10..e8e5e5ba08 100644
 --- a/video/receive_statistics_proxy.cc
 +++ b/video/receive_statistics_proxy.cc
 @@ -39,6 +39,7 @@
@@ -127,7 +127,7 @@ index 568fd441d2..30eec9f090 100644
  #include "system_wrappers/include/clock.h"
  #include "system_wrappers/include/metrics.h"
  #include "video/stats_counter.h"
-@@ -785,6 +786,9 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
+@@ -788,6 +789,9 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
                                               VideoContentType content_type) {
    RTC_DCHECK_RUN_ON(&main_thread_);
  
@@ -137,7 +137,7 @@ index 568fd441d2..30eec9f090 100644
    // Content type extension is set only for keyframes and should be propagated
    // for all the following delta frames. Here we may receive frames out of order
    // and miscategorise some delta frames near the layer switch.
-@@ -810,6 +814,8 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
+@@ -813,6 +817,8 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
  void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
    // Can be called on either the decode queue or the worker thread
    // See FrameBuffer2 for more details.
@@ -146,7 +146,7 @@ index 568fd441d2..30eec9f090 100644
    worker_thread_->PostTask(
        SafeTask(task_safety_.flag(), [frames_dropped, this]() {
          RTC_DCHECK_RUN_ON(&main_thread_);
-@@ -820,6 +826,9 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+@@ -823,6 +829,9 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
  void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
    // Can be called on either the decode queue or the worker thread
    // See FrameBuffer2 for more details.
@@ -156,7 +156,7 @@ index 568fd441d2..30eec9f090 100644
    worker_thread_->PostTask(
        SafeTask(task_safety_.flag(), [packets_discarded, this]() {
          RTC_DCHECK_RUN_ON(&main_thread_);
-@@ -848,6 +857,8 @@ void ReceiveStatisticsProxy::OnStreamInactive() {
+@@ -851,6 +860,8 @@ void ReceiveStatisticsProxy::OnStreamInactive() {
  
  void ReceiveStatisticsProxy::OnRttUpdate(int64_t avg_rtt_ms) {
    RTC_DCHECK_RUN_ON(&main_thread_);
