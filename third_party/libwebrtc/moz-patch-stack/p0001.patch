@@ -38,7 +38,7 @@ Cr-Commit-Position: refs/heads/main@{#45518}
  6 files changed, 61 insertions(+), 67 deletions(-)
 
 diff --git a/p2p/BUILD.gn b/p2p/BUILD.gn
-index 281a0d0d2d..985afdc690 100644
+index 825e3995b1..34f6ef11ea 100644
 --- a/p2p/BUILD.gn
 +++ b/p2p/BUILD.gn
 @@ -81,10 +81,7 @@ rtc_library("basic_ice_controller") {
