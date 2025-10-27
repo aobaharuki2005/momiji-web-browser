@@ -27,7 +27,7 @@ add_task(async function test_error_visibility_heuristic() {
       sandbox.restore();
     });
 
-    const bs = BackupService.get();
+    const bs = getAndMaybeInitBackupService();
     sandbox
       .stub(bs, "resolveArchiveDestFolderPath")
       .rejects(new BackupError("forced failure", ERRORS.UNKNOWN));

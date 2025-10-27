@@ -22,7 +22,12 @@ class BackupTest(MarionetteTestCase):
         # by default for Marionette. Also "browser.backup.log" has to be set
         # to true before Firefox starts in order for it to be displayed.
         self.marionette.enforce_gecko_prefs(
-            {"browser.backup.enabled": True, "browser.backup.log": True}
+            {
+                "browser.backup.enabled": True,
+                "browser.backup.log": True,
+                "browser.backup.archive.enabled": True,
+                "browser.backup.restore.enabled": True,
+            }
         )
 
         self.marionette.set_context("chrome")

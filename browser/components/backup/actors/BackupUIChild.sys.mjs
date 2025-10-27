@@ -101,6 +101,9 @@ export class BackupUIChild extends JSWindowActorChild {
 
       if (result.success) {
         event.target.restoreFromBackupDialogEl?.close();
+
+        // Since we always launch the new profile from this event, let's close the current instance now
+        this.sendAsyncMessage("QuitCurrentProfile");
       }
     } else if (event.type == "BackupUI:RestoreFromBackupChooseFile") {
       this.sendAsyncMessage("RestoreFromBackupChooseFile");

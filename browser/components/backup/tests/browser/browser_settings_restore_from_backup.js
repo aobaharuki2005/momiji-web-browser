@@ -23,7 +23,7 @@ add_setup(async () => {
   // It's possible for other tests to change the internal state of the BackupService
   // which can lead to complications with the auto detection behaviour. Let's just reset
   // these states before testing
-  let bs = BackupService.get();
+  let bs = getAndMaybeInitBackupService();
   bs.resetLastBackupInternalState();
 
   registerCleanupFunction(async () => {
@@ -59,6 +59,15 @@ add_task(async function test_restore_from_backup() {
       };
     });
     MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+    let quitObservedPromise = TestUtils.topicObserved(
+      "quit-application-requested",
+      subject => {
+        let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancelQuit.data = true;
+        return true;
+      }
+    );
 
     let settings = browser.contentDocument.querySelector("backup-settings");
 
@@ -149,6 +158,8 @@ add_task(async function test_restore_from_backup() {
       );
     });
 
+    await quitObservedPromise;
+
     Assert.ok(
       recoverFromBackupArchiveStub.calledOnce,
       "BackupService was called to start a recovery from a backup archive."
@@ -164,13 +175,22 @@ add_task(async function test_restore_from_backup() {
 add_task(async function test_restore_in_progress() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
-    let bs = BackupService.get();
+    let bs = getAndMaybeInitBackupService();
 
     let { promise: recoverPromise, resolve: recoverResolve } =
       Promise.withResolvers();
     let recoverFromBackupArchiveStub = sandbox
       .stub(bs, "recoverFromBackupArchive")
       .returns(recoverPromise);
+
+    let quitObservedPromise = TestUtils.topicObserved(
+      "quit-application-requested",
+      subject => {
+        let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancelQuit.data = true;
+        return true;
+      }
+    );
 
     let settings = browser.contentDocument.querySelector("backup-settings");
 
@@ -282,6 +302,8 @@ add_task(async function test_restore_in_progress() {
       !settings.restoreFromBackupDialogEl.open,
       "Restore dialog should now be closed."
     );
+
+    await quitObservedPromise;
 
     sandbox.restore();
   });

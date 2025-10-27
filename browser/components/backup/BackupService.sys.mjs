@@ -22,6 +22,8 @@ import { BackupError } from "resource:///modules/backup/BackupError.mjs";
 const BACKUP_DIR_PREF_NAME = "browser.backup.location";
 const BACKUP_ERROR_CODE_PREF_NAME = "browser.backup.errorCode";
 const SCHEDULED_BACKUPS_ENABLED_PREF_NAME = "browser.backup.scheduled.enabled";
+const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
+const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
 const IDLE_THRESHOLD_SECONDS_PREF_NAME =
   "browser.backup.scheduled.idle-threshold-seconds";
 const MINIMUM_TIME_BETWEEN_BACKUPS_SECONDS_PREF_NAME =
@@ -618,6 +620,13 @@ export class BackupService extends EventTarget {
       };
     }
 
+    if (!Services.prefs.getBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME)) {
+      return {
+        enabled: false,
+        reason: "Archiving a profile disabled by user pref.",
+      };
+    }
+
     return { enabled: true };
   }
 
@@ -634,6 +643,13 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Restore from backup disabled remotely.",
+      };
+    }
+
+    if (!Services.prefs.getBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME)) {
+      return {
+        enabled: false,
+        reason: "Restoring a profile disabled by user pref.",
       };
     }
 
@@ -1051,6 +1067,7 @@ export class BackupService extends EventTarget {
   constructor(backupResources = DefaultBackupResources) {
     super();
     lazy.logConsole.debug("Instantiated");
+    this.#registerStatusObservers();
 
     for (const resourceName in backupResources) {
       let resource = backupResources[resourceName];
@@ -2629,6 +2646,14 @@ export class BackupService extends EventTarget {
       osVersion: Services.sysinfo.getProperty("version"),
       legacyClientID: await lazy.ClientID.getClientID(),
       profileGroupID: await lazy.ClientID.getProfileGroupID(),
+      healthTelemetryEnabled: Services.prefs.getBoolPref(
+        "datareporting.healthreport.uploadEnabled",
+        false
+      ),
+      usageTelemetryEnabled: Services.prefs.getBoolPref(
+        "datareporting.usage.uploadEnabled",
+        false
+      ),
     };
 
     let fxaState = lazy.UIState.get();
@@ -2989,6 +3014,19 @@ export class BackupService extends EventTarget {
       );
       await IOUtils.writeJSON(postRecoveryPath, postRecovery);
 
+      // In a release scenario, this should always be true
+      // this makes it easier to get around setting up profiles for testing other functionality
+      if (profileSvc.currentProfile) {
+        // if our current profile was default, let's make the new one default
+        if (profileSvc.currentProfile === profileSvc.defaultProfile) {
+          profileSvc.defaultProfile = profile;
+        }
+
+        // let's rename the old profile with a prefix old-[profile_name]
+        profile.name = profileSvc.currentProfile.name;
+        profileSvc.currentProfile.name = `old-${profileSvc.currentProfile.name}`;
+      }
+
       await profileSvc.asyncFlush();
 
       if (shouldLaunch) {
@@ -3142,6 +3180,12 @@ export class BackupService extends EventTarget {
     if (shouldEnableScheduledBackups) {
       // reset the error states when reenabling backup
       Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
+    } else {
+      // set user-disabled pref if backup is being disabled
+      Services.prefs.setBoolPref(
+        "browser.backup.scheduled.user-disabled",
+        true
+      );
     }
   }
 
@@ -3561,6 +3605,7 @@ export class BackupService extends EventTarget {
       }
       case "quit-application-granted": {
         this.uninitBackupScheduler();
+        this.#unregisterStatusObservers();
         break;
       }
       case "passwordmgr-storage-changed": {
@@ -3610,6 +3655,38 @@ export class BackupService extends EventTarget {
       }
     }
   }
+
+  #registerStatusObservers() {
+    // We don't use this.#observer since any changes to the prefs or nimbus should
+    // immediately reflect across any observers, instead of waiting on idle
+    Services.prefs.addObserver(
+      BACKUP_ARCHIVE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+    Services.prefs.addObserver(
+      BACKUP_RESTORE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+    lazy.NimbusFeatures.backupService.onUpdate(this.#notifyStatusObservers);
+  }
+
+  #unregisterStatusObservers() {
+    Services.prefs.removeObserver(
+      BACKUP_ARCHIVE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+    Services.prefs.removeObserver(
+      BACKUP_RESTORE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+  }
+
+  /**
+   * Notify any listeners about the availability of the backup service.
+   */
+  #notifyStatusObservers = () => {
+    Services.obs.notifyObservers(null, "backup-service-status-updated");
+  };
 
   /**
    * Called when the last known backup should be deleted and a new one
@@ -3779,13 +3856,31 @@ export class BackupService extends EventTarget {
    */
   async getBackupFileInfo(backupFilePath) {
     lazy.logConsole.debug(`Getting info from backup file at ${backupFilePath}`);
-    let { archiveJSON, isEncrypted } = await this.sampleArchive(backupFilePath);
-    this.#_state.backupFileInfo = {
-      isEncrypted,
-      date: archiveJSON?.meta?.date,
-      deviceName: archiveJSON?.meta?.deviceName,
-    };
-    this.#_state.backupFileToRestore = backupFilePath;
+    try {
+      let { archiveJSON, isEncrypted } =
+        await this.sampleArchive(backupFilePath);
+      this.#_state.backupFileInfo = {
+        isEncrypted,
+        date: archiveJSON?.meta?.date,
+        deviceName: archiveJSON?.meta?.deviceName,
+      };
+      this.#_state.backupFileToRestore = backupFilePath;
+      // Clear any existing recovery error from state since we've successfully got our file info
+      this.setRecoveryError(ERRORS.NONE);
+    } catch (error) {
+      this.setRecoveryError(error.cause);
+      // Nullify the file info when we catch errors that indicate the file is invalid
+      switch (error.cause) {
+        case ERRORS.FILE_SYSTEM_ERROR:
+        case ERRORS.CORRUPTED_ARCHIVE:
+        case ERRORS.UNSUPPORTED_BACKUP_VERSION:
+          this.#_state.backupFileInfo = null;
+          this.#_state.backupFileToRestore = null;
+          break;
+        default:
+          break;
+      }
+    }
     this.stateUpdate();
   }
 

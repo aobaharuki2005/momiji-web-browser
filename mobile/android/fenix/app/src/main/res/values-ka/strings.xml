@@ -285,7 +285,7 @@
   <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
   <string name="browser_menu_sign_in_caption_3">დაასინქრონეთ პაროლები, სანიშნები და სხვა</string>
   <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
-  <string name="browser_menu_sign_back_in_to_sync">შესვლა სინქრონიზაციისთვის</string>
+  <string name="browser_menu_sign_back_in_to_sync">კვლავ შესვლა და სინქ.</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
   <string name="browser_menu_syncing_paused_caption">დასინქრონება შეჩერებულია</string>
   <!-- Browser menu caption label for an authenticated user -->
@@ -697,7 +697,7 @@
   <!-- Preference Category for settings related to Search address bar -->
   <string name="preferences_settings_address_bar">მისამართის ველის პარამეტრები</string>
   <!-- Preference Category for settings to Firefox Suggest -->
-  <string name="preference_search_address_bar_fx_suggest" tools:ignore="BrandUsage">მისამართების ველი – Firefox-შემოთავაზება</string>
+  <string name="preference_search_address_bar_fx_suggest" tools:ignore="BrandUsage">მისამართების ველში Firefox-შემოთავაზება</string>
   <!-- Preference link to Learn more about Firefox Suggest -->
   <string name="preference_search_learn_about_fx_suggest" tools:ignore="BrandUsage">ვრცლად Firefox-შემოთავაზების შესახებ</string>
   <!-- Preference link to rating Fenix on the Play Store -->

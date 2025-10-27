@@ -138,6 +138,7 @@
   .field-error {
     color: var(--text-color-error);
     font-size: var(--font-size-small);
+    margin-block-start: var(--space-xsmall);
   }
 }
 
@@ -167,6 +168,10 @@
           flex: 1 1 auto;
         }
       }
+    }
+
+    .field-error {
+      text-align: start;
     }
 
     @media (width <= 800px) {

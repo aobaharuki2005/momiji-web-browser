@@ -66,7 +66,7 @@ const BASE_MESSAGES = () => [
     groups: ["win10-eos-sync", "eco"],
     // TODO: The backup preferences in this expression should be updated once BackupService exposes getters; see Bug 1993272
     targeting:
-      "source == newtab && os.isWindows && os.windowsVersion == 10 && os.windowsBuildNumber <= 19045 && isFxAEnabled && !isFxASignedIn && !hasSelectableProfiles && !hasActiveEnterprisePolicies && backupArchiveEnabled && (!'browser.backup.scheduled.enabled' | preferenceValue) && (!'browser.backup.scheduled.user-disabled' | preferenceValue) && !isMajorUpgrade && !willShowDefaultPrompt && !activeNotifications && previousSessionEnd && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false",
+      "source == 'newtab' && os.isWindows && os.windowsVersion == 10 && os.windowsBuildNumber <= 19045 && isFxAEnabled && !isFxASignedIn && !hasSelectableProfiles && !hasActiveEnterprisePolicies && backupArchiveEnabled && (!'browser.backup.scheduled.enabled' | preferenceValue) && (!'browser.backup.scheduled.user-disabled' | preferenceValue) && !isMajorUpgrade && !willShowDefaultPrompt && !activeNotifications && previousSessionEnd && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features' | preferenceValue != false",
     trigger: {
       id: "defaultBrowserCheck",
     },
@@ -88,7 +88,7 @@ const BASE_MESSAGES = () => [
             position: "center",
             screen_style: {
               width: "650px",
-              minHeight: "485px",
+              height: "500px",
             },
             split_content_padding_block: "32px",
             title: {
@@ -310,7 +310,7 @@ const BASE_MESSAGES = () => [
             position: "center",
             screen_style: {
               width: "650px",
-              minHeight: "485px",
+              height: "560px",
             },
             split_content_padding_block: "32px",
             title: {
@@ -542,7 +542,7 @@ const BASE_MESSAGES = () => [
             isEncryptedBackup: false,
             screen_style: {
               width: "650px",
-              minHeight: "485px",
+              height: "560px",
             },
             tiles: {
               type: "fx_backup_file_path",
@@ -588,7 +588,7 @@ const BASE_MESSAGES = () => [
             },
             screen_style: {
               width: "650px",
-              minHeight: "485px",
+              height: "560px",
             },
             tiles: {
               type: "fx_backup_file_path",
@@ -634,8 +634,8 @@ const BASE_MESSAGES = () => [
               fontSize: "13px",
             },
             screen_style: {
-              width: "650px",
-              minHeight: "485px",
+              width: "664px",
+              height: "620px",
             },
             logo: {
               imageURL:
@@ -675,8 +675,8 @@ const BASE_MESSAGES = () => [
           targeting: "!isEncryptedBackup",
           content: {
             screen_style: {
-              width: "650px",
-              minHeight: "485px",
+              width: "664px",
+              height: "620px",
             },
             logo: {
               imageURL:
@@ -768,8 +768,8 @@ const BASE_MESSAGES = () => [
           content: {
             isEncryptedBackup: true,
             screen_style: {
-              width: "650px",
-              minHeight: "485px",
+              width: "664px",
+              height: "620px",
             },
             logo: {
               imageURL:
@@ -2010,7 +2010,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "backupRestoreEnabled && source == 'startup' && !doesAppNeedPin && isDefaultBrowser && !'browser.shell.checkDefaultBrowser'|preferenceValue && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "backupRestoreEnabled && source == 'startup' && !doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },

@@ -240,6 +240,26 @@ export class BackupUIParent extends JSWindowActorParent {
     } else if (message.name == "EditBackupLocation") {
       const window = this.browsingContext.topChromeWindow;
       this.#bs.editBackupLocation(window);
+    } else if (message.name == "QuitCurrentProfile") {
+      // Notify windows that a quit has been requested.
+      let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
+        Ci.nsISupportsPRBool
+      );
+      Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
+      if (cancelQuit.data) {
+        // Something blocked our attempt to quit.
+        return null;
+      }
+
+      try {
+        Services.startup.quit(Services.startup.eAttemptQuit);
+      } catch (e) {
+        // let's silently resolve this error
+        lazy.logConsole.error(
+          `There was a problem while quitting the current profile: `,
+          e
+        );
+      }
     }
 
     return null;

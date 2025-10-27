@@ -42,7 +42,6 @@ ChromeUtils.defineLazyGetter(lazy, "semanticManager", function () {
     0.6
   );
   return getPlacesSemanticHistoryManager({
-    embeddingSize: 384,
     rowLimit: 10000,
     samplingAttrib: "frecency",
     changeThresholdCount: 3,

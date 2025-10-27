@@ -44,7 +44,7 @@ const MESSAGES = () => [
             position: "center",
             screen_style: {
               width: "650px",
-              minHeight: "485px",
+              height: "500px",
             },
             split_content_padding_block: "32px",
             title: {
@@ -266,7 +266,7 @@ const MESSAGES = () => [
             position: "center",
             screen_style: {
               width: "650px",
-              minHeight: "485px",
+              height: "560px",
             },
             split_content_padding_block: "32px",
             title: {
@@ -498,7 +498,7 @@ const MESSAGES = () => [
             isEncryptedBackup: false,
             screen_style: {
               width: "650px",
-              minHeight: "485px",
+              height: "560px",
             },
             tiles: {
               type: "fx_backup_file_path",
@@ -544,7 +544,7 @@ const MESSAGES = () => [
             },
             screen_style: {
               width: "650px",
-              minHeight: "485px",
+              height: "560px",
             },
             tiles: {
               type: "fx_backup_file_path",
@@ -590,8 +590,8 @@ const MESSAGES = () => [
               fontSize: "13px",
             },
             screen_style: {
-              width: "650px",
-              minHeight: "485px",
+              width: "664px",
+              height: "620px",
             },
             logo: {
               imageURL:
@@ -631,8 +631,8 @@ const MESSAGES = () => [
           targeting: "!isEncryptedBackup",
           content: {
             screen_style: {
-              width: "650px",
-              minHeight: "485px",
+              width: "664px",
+              height: "620px",
             },
             logo: {
               imageURL:
@@ -724,8 +724,8 @@ const MESSAGES = () => [
           content: {
             isEncryptedBackup: true,
             screen_style: {
-              width: "650px",
-              minHeight: "485px",
+              width: "664px",
+              height: "620px",
             },
             logo: {
               imageURL:

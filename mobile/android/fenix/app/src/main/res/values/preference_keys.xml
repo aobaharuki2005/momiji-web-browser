@@ -314,7 +314,6 @@
     <string name="pref_key_encryption_key_generated" translatable="false">pref_key_encryption_key_generated</string>
 
     <!-- Homepage -->
-    <string name="pref_key_override_user_specified_homepage_sections" translatable="false">pref_key_override_user_specified_homepage_sections</string>
     <string name="pref_key_enable_homepage_header" translatable="false">pref_key_enable_homepage_header</string>
 
     <!-- Top Sites -->
