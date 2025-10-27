@@ -83,20 +83,31 @@ void LIRGeneratorX64::lowerForMulInt64(LMulI64* ins, MMul* mir,
 template <class LInstr>
 void LIRGeneratorX64::lowerForShiftInt64(LInstr* ins, MDefinition* mir,
                                          MDefinition* lhs, MDefinition* rhs) {
-  LAllocation rhsAlloc;
-  if (rhs->isConstant()) {
-    rhsAlloc = useOrConstantAtStart(rhs);
-  } else if (std::is_same_v<LInstr, LShiftI64>) {
-    rhsAlloc = useShiftRegister(rhs);
-  } else {
-    rhsAlloc = useFixed(rhs, rcx);
-  }
-
   if constexpr (std::is_same_v<LInstr, LShiftI64>) {
+    LAllocation rhsAlloc;
+    if (rhs->isConstant()) {
+      rhsAlloc = useOrConstantAtStart(rhs);
+    } else if (Assembler::HasBMI2()) {
+      rhsAlloc = useRegisterAtStart(rhs);
+    } else {
+      rhsAlloc = useShiftRegister(rhs);
+    }
+
     ins->setLhs(useInt64RegisterAtStart(lhs));
     ins->setRhs(rhsAlloc);
-    defineInt64ReuseInput(ins, mir, LShiftI64::LhsIndex);
+    if (rhs->isConstant() || !Assembler::HasBMI2()) {
+      defineInt64ReuseInput(ins, mir, LShiftI64::LhsIndex);
+    } else {
+      defineInt64(ins, mir);
+    }
   } else {
+    LAllocation rhsAlloc;
+    if (rhs->isConstant()) {
+      rhsAlloc = useOrConstantAtStart(rhs);
+    } else {
+      rhsAlloc = useFixed(rhs, rcx);
+    }
+
     ins->setInput(useInt64RegisterAtStart(lhs));
     ins->setCount(rhsAlloc);
     defineInt64ReuseInput(ins, mir, LRotateI64::InputIndex);
