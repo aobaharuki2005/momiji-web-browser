@@ -148,7 +148,7 @@ ObjectRealm::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx,
   MOZ_ASSERT(&ObjectRealm::get(enclosing) == this);
 
   if (!nonSyntacticLexicalEnvironments_) {
-    auto map = cx->make_unique<ObjectWeakMap>(cx);
+    auto map = cx->make_unique<NonSyntacticLexialEnvironmentsMap>(cx);
     if (!map) {
       return nullptr;
     }
@@ -419,7 +419,7 @@ void Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj) {
     cx->check(metadata);
 
     if (!objects_.objectMetadataTable) {
-      auto table = cx->make_unique<ObjectWeakMap>(cx);
+      auto table = cx->make_unique<ObjectRealm::ObjectMetadataTable>(cx);
       if (!table) {
         oomUnsafe.crash("setNewObjectMetadata");
       }
