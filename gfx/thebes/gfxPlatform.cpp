@@ -1241,8 +1241,7 @@ bool gfxPlatform::UseRemoteCanvas() {
 /* static */
 bool gfxPlatform::IsBackendAccelerated(
     const mozilla::gfx::BackendType aBackendType) {
-  return aBackendType == BackendType::DIRECT2D ||
-         aBackendType == BackendType::DIRECT2D1_1;
+  return false;
 }
 
 /* static */
@@ -1955,17 +1954,8 @@ void gfxPlatform::InitBackendPrefs(BackendPrefsData&& aPrefsData) {
     mPreferredCanvasBackend = aPrefsData.mCanvasDefault;
   }
 
-  if (mPreferredCanvasBackend == BackendType::DIRECT2D1_1) {
-    // Falling back to D2D 1.0 won't help us here. When D2D 1.1 DT creation
-    // fails it means the surface was too big or there's something wrong with
-    // the device. D2D 1.0 will encounter a similar situation.
-    mFallbackCanvasBackend = GetCanvasBackendPref(
-        aPrefsData.mCanvasBitmask & ~(BackendTypeBit(mPreferredCanvasBackend) |
-                                      BackendTypeBit(BackendType::DIRECT2D)));
-  } else {
-    mFallbackCanvasBackend = GetCanvasBackendPref(
-        aPrefsData.mCanvasBitmask & ~BackendTypeBit(mPreferredCanvasBackend));
-  }
+  mFallbackCanvasBackend = GetCanvasBackendPref(
+      aPrefsData.mCanvasBitmask & ~BackendTypeBit(mPreferredCanvasBackend));
 
   mContentBackendBitmask = aPrefsData.mContentBitmask;
   mContentBackend = GetContentBackendPref(mContentBackendBitmask);
@@ -3950,8 +3940,7 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
     return true;
   }
 
-  // We aren't using Software WebRender + D3D11 compositing, so turn off the
-  // D3D11.
+  // We aren't using Software WebRender + D3D11 compositing, so turn off D3D11.
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     gfxConfig::GetFeature(Feature::D3D11_COMPOSITING)
         .ForceDisable(aStatus, aMessage, aFailureId);

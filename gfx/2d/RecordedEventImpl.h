@@ -1884,8 +1884,6 @@ static std::string NameFromBackend(BackendType aType) {
   switch (aType) {
     case BackendType::NONE:
       return "None";
-    case BackendType::DIRECT2D:
-      return "Direct2D";
     default:
       return "Unknown";
   }

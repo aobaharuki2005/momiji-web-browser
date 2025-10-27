@@ -135,8 +135,6 @@ class D3D11TextureData final : public TextureData {
                    const RefPtr<FenceD3D11> aWriteFence,
                    TextureAllocationFlags aFlags);
 
-  bool PrepareDrawTargetInLock(OpenMode aMode);
-
   friend class gl::GLBlitHelper;
   bool SerializeSpecific(SurfaceDescriptorD3D10* aOutDesc);
 
@@ -145,10 +143,6 @@ class D3D11TextureData final : public TextureData {
                                   gfx::SourceSurface* aSurface,
                                   TextureAllocationFlags aAllocFlags,
                                   ID3D11Device* aDevice = nullptr);
-
-  // Hold on to the DrawTarget because it is expensive to create one each
-  // ::Lock.
-  RefPtr<gfx::DrawTarget> mDrawTarget;
 
  public:
   const gfx::IntSize mSize;

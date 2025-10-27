@@ -42,14 +42,12 @@
 #endif
 
 #ifdef WIN32
-#  include "DrawTargetD2D1.h"
-#  include "PathD2D.h"
 #  include "ScaledFontDWrite.h"
 #  include "NativeFontResourceDWrite.h"
 #  include "UnscaledFontDWrite.h"
 #  include <d3d10_1.h>
 #  include <stdlib.h>
-#  include "HelpersD2D.h"
+#  include "HelpersWin.h"
 #  include "ImageContainer.h"
 #  include "mozilla/layers/LayersSurfaces.h"
 #  include "mozilla/layers/TextureD3D11.h"
@@ -228,16 +226,11 @@ already_AddRefed<SharedFTFace> FTUserFontData::CloneFace(int aFaceIndex) {
 
 #ifdef WIN32
 // Note: mDeviceLock must be held when mutating these values.
-static uint32_t mDeviceSeq = 0;
 StaticRefPtr<ID3D11Device> Factory::mD3D11Device;
-StaticRefPtr<ID2D1Device> Factory::mD2D1Device;
 StaticRefPtr<IDWriteFactory> Factory::mDWriteFactory;
-StaticRefPtr<ID2D1DeviceContext> Factory::mMTDC;
-StaticRefPtr<ID2D1DeviceContext> Factory::mOffMTDC;
 bool Factory::mDWriteFactoryInitialized = false;
 StaticRefPtr<IDWriteFontCollection> Factory::mDWriteSystemFonts;
 StaticMutex Factory::mDeviceLock;
-StaticMutex Factory::mDTDependencyLock;
 #endif
 
 SubpixelOrder Factory::mSubpixelOrder = SubpixelOrder::UNKNOWN;
@@ -377,16 +370,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTarget(BackendType aBackend,
 
   RefPtr<DrawTarget> retVal;
   switch (aBackend) {
-#ifdef WIN32
-    case BackendType::DIRECT2D1_1: {
-      RefPtr<DrawTargetD2D1> newTarget;
-      newTarget = new DrawTargetD2D1();
-      if (newTarget->Init(aSize, aFormat)) {
-        retVal = newTarget;
-      }
-      break;
-    }
-#endif
     case BackendType::SKIA: {
       RefPtr<DrawTargetSkia> newTarget;
       newTarget = new DrawTargetSkia();
@@ -422,10 +405,6 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTarget(BackendType aBackend,
 already_AddRefed<PathBuilder> Factory::CreatePathBuilder(BackendType aBackend,
                                                          FillRule aFillRule) {
   switch (aBackend) {
-#ifdef WIN32
-    case BackendType::DIRECT2D1_1:
-      return PathBuilderD2D::Create(aFillRule);
-#endif
     case BackendType::SKIA:
     case BackendType::WEBGL:
       return PathBuilderSkia::Create(aFillRule);
@@ -510,8 +489,6 @@ already_AddRefed<DrawTarget> Factory::CreateOffsetDrawTarget(
 
 bool Factory::DoesBackendSupportDataDrawtarget(BackendType aType) {
   switch (aType) {
-    case BackendType::DIRECT2D:
-    case BackendType::DIRECT2D1_1:
     case BackendType::RECORDING:
     case BackendType::NONE:
     case BackendType::BACKEND_LAST:
@@ -532,10 +509,6 @@ uint32_t Factory::GetMaxSurfaceSize(BackendType aType) {
       return DrawTargetCairo::GetMaxSurfaceSize();
     case BackendType::SKIA:
       return DrawTargetSkia::GetMaxSurfaceSize();
-#ifdef WIN32
-    case BackendType::DIRECT2D1_1:
-      return DrawTargetD2D1::GetMaxSurfaceSize();
-#endif
     default:
       return 0;
   }
@@ -750,91 +723,13 @@ FT_Error Factory::LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex,
 }
 #endif
 
-AutoSerializeWithMoz2D::AutoSerializeWithMoz2D(BackendType aBackendType) {
 #ifdef WIN32
-  // We use a multi-threaded ID2D1Factory1, so that makes the calls through the
-  // Direct2D API thread-safe. However, if the Moz2D objects are using Direct3D
-  // resources we need to make sure that calls through the Direct3D or DXGI API
-  // use the Direct2D synchronization. It's possible that this should be pushed
-  // down into the TextureD3D11 objects, so that we always use this.
-  if (aBackendType == BackendType::DIRECT2D1_1 ||
-      aBackendType == BackendType::DIRECT2D) {
-    auto factory = D2DFactory();
-    if (factory) {
-      factory->QueryInterface(
-          static_cast<ID2D1Multithread**>(getter_AddRefs(mMT)));
-      if (mMT) {
-        mMT->Enter();
-      }
-    }
-  }
-#endif
-}
-
-AutoSerializeWithMoz2D::~AutoSerializeWithMoz2D() {
-#ifdef WIN32
-  if (mMT) {
-    mMT->Leave();
-  }
-#endif
-};
-
-#ifdef WIN32
-already_AddRefed<DrawTarget> Factory::CreateDrawTargetForD3D11Texture(
-    ID3D11Texture2D* aTexture, SurfaceFormat aFormat) {
-  MOZ_ASSERT(aTexture);
-
-  RefPtr<DrawTargetD2D1> newTarget;
-
-  newTarget = new DrawTargetD2D1();
-  if (newTarget->Init(aTexture, aFormat)) {
-    RefPtr<DrawTarget> retVal = newTarget;
-    return retVal.forget();
-  }
-
-  gfxWarning() << "Failed to create draw target for D3D11 texture.";
-
-  // Failed
-  return nullptr;
-}
-
 bool Factory::SetDirect3D11Device(ID3D11Device* aDevice) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  // D2DFactory already takes the device lock, so we get the factory before
-  // entering the lock scope.
-  RefPtr<ID2D1Factory1> factory = D2DFactory();
 
   StaticMutexAutoLock lock(mDeviceLock);
 
   mD3D11Device = aDevice;
-
-  if (mD2D1Device) {
-    mD2D1Device = nullptr;
-    mMTDC = nullptr;
-    mOffMTDC = nullptr;
-  }
-
-  if (!aDevice) {
-    return true;
-  }
-
-  RefPtr<IDXGIDevice> device;
-  aDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(device));
-
-  RefPtr<ID2D1Device> d2dDevice;
-  HRESULT hr = factory->CreateDevice(device, getter_AddRefs(d2dDevice));
-  if (FAILED(hr)) {
-    gfxCriticalError()
-        << "[D2D1] Failed to create gfx factory's D2D1 device, code: "
-        << hexa(hr);
-
-    mD3D11Device = nullptr;
-    return false;
-  }
-
-  mDeviceSeq++;
-  mD2D1Device = d2dDevice;
   return true;
 }
 
@@ -842,16 +737,6 @@ RefPtr<ID3D11Device> Factory::GetDirect3D11Device() {
   StaticMutexAutoLock lock(mDeviceLock);
   return mD3D11Device;
 }
-
-RefPtr<ID2D1Device> Factory::GetD2D1Device(uint32_t* aOutSeqNo) {
-  StaticMutexAutoLock lock(mDeviceLock);
-  if (aOutSeqNo) {
-    *aOutSeqNo = mDeviceSeq;
-  }
-  return mD2D1Device.get();
-}
-
-bool Factory::HasD2D1Device() { return !!GetD2D1Device(); }
 
 RefPtr<IDWriteFactory> Factory::GetDWriteFactory() {
   StaticMutexAutoLock lock(mDeviceLock);
@@ -925,61 +810,9 @@ RefPtr<IDWriteFontCollection> Factory::GetDWriteSystemFonts(bool aUpdate) {
   return mDWriteSystemFonts;
 }
 
-RefPtr<ID2D1DeviceContext> Factory::GetD2DDeviceContext() {
-  StaticRefPtr<ID2D1DeviceContext>* ptr;
-
-  if (NS_IsMainThread()) {
-    ptr = &mMTDC;
-  } else {
-    ptr = &mOffMTDC;
-  }
-
-  if (*ptr) {
-    return *ptr;
-  }
-
-  RefPtr<ID2D1Device> device = GetD2D1Device();
-
-  if (!device) {
-    return nullptr;
-  }
-
-  RefPtr<ID2D1DeviceContext> dc;
-  HRESULT hr = device->CreateDeviceContext(
-      D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS,
-      getter_AddRefs(dc));
-
-  if (FAILED(hr)) {
-    gfxCriticalError() << "Failed to create global device context";
-    return nullptr;
-  }
-
-  *ptr = dc;
-
-  return *ptr;
-}
-
-bool Factory::SupportsD2D1() { return !!D2DFactory(); }
-
 BYTE sSystemTextQuality = CLEARTYPE_QUALITY;
 void Factory::SetSystemTextQuality(uint8_t aQuality) {
   sSystemTextQuality = aQuality;
-}
-
-uint64_t Factory::GetD2DVRAMUsageDrawTarget() {
-  return DrawTargetD2D1::mVRAMUsageDT;
-}
-
-uint64_t Factory::GetD2DVRAMUsageSourceSurface() {
-  return DrawTargetD2D1::mVRAMUsageSS;
-}
-
-void Factory::D2DCleanup() {
-  StaticMutexAutoLock lock(mDeviceLock);
-  if (mD2D1Device) {
-    mD2D1Device = nullptr;
-  }
-  DrawTargetD2D1::CleanupD2D();
 }
 
 already_AddRefed<ScaledFont> Factory::CreateScaledFontForDWriteFont(

@@ -109,8 +109,7 @@ class gfxUtils {
                                const mozilla::gfx::SurfaceFormat aFormat,
                                mozilla::gfx::SamplingFilter aSamplingFilter,
                                uint32_t aImageFlags = imgIContainer::FLAG_NONE,
-                               gfxFloat aOpacity = 1.0,
-                               bool aUseOptimalFillOp = true);
+                               gfxFloat aOpacity = 1.0);
 
   /**
    * Clip aContext to the region aRegion.
