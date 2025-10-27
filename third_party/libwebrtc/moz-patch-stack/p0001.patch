@@ -1,285 +1,109 @@
-From: Daniel Baker <dbaker@mozilla.com>
-Date: Mon, 27 Oct 2025 11:52:23 -0600
-Subject: (tmp-cherry-pick) Revert "Remove CreateModularPeerConnectionFactory
- from peer_connection_interface.h" (b8de3144a3)
+From: Jonas Oreland <jonaso@webrtc.org>
+Date: Tue, 26 Aug 2025 15:57:29 +0200
+Subject: (cherry-pick-branch-heads/7339) [M140] DTLS1.3: Fix missing
+ retransmission due to failure to set timer.
 
-This reverts commit a680f2910081769e299614a18695a85e3df3af2d.
+DTLS 1.3 considers itself connected earlier than DTLS 1.2 did - when
+second flight reaches the client. This CL fixes a bug that when
+client is connected (state_ != SSL_CONNECTING), it would not
+continue retransmitting. Continuous retransmission is needed
+when the third flight is lost multiple times. Or really anytime that DTLS request it :)
 
-Reason for revert: missed some downstream usage
+This fixes the TODO in dtls_ice_integrationtest.cc in which dtls1.3
+spuriously failed with certain (packet loss intensive) configurations.
 
-Bug: webrtc:42220069
-Original change's description:
-> Remove CreateModularPeerConnectionFactory from peer_connection_interface.h
->
-> build target with peer_connection_interface.h doesn't have definition
-> of that symbols, which is confusing.
->
-> Users are updated to depend on create_modular_peer_connection_factory
-> instead that does include the definition.
->
-> Bug: webrtc:42220069
-> Change-Id: I881c0ceb71afe2fec70dbe68b2392e42d9ad6cbd
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/400520
-> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45418}
+CREDITS: sergeysu@ that found and fixed the problem!
 
-Bug: webrtc:42220069
-Change-Id: Ia3cf6169a6140ad849af724343b78ecec5ee1229
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/406061
-Owners-Override: Danil Chapovalov <danilchap@webrtc.org>
-Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-Auto-Submit: Danil Chapovalov <danilchap@webrtc.org>
-Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+(cherry picked from commit 4221e1bc2fc360448c1663f0bbae058ff9f65a48)
+
+No-Try: true
+Bug: chromium:441245658, chromium:441486101
+Change-Id: I3302f6f384d7e4cda090184094a6fadaf7e4f129
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/406320
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#45419}
+Commit-Queue: Jonas Oreland <jonaso@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#45439}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407780
+Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/7339@{#2}
+Cr-Branched-From: 9bd64751d9b3b35a820cb72c9029993e218146a1-refs/heads/main@{#45270}
 ---
- api/BUILD.gn                                  | 22 +++++----
- api/create_modular_peer_connection_factory.cc | 46 -------------------
- ...modular_peer_connection_factory_internal.h | 39 ++++++++++++++++
- api/peer_connection_interface.h               |  4 ++
- pc/BUILD.gn                                   |  4 +-
- pc/peer_connection_factory.cc                 | 26 +++++++++++
- 6 files changed, 86 insertions(+), 55 deletions(-)
- delete mode 100644 api/create_modular_peer_connection_factory.cc
- create mode 100644 api/create_modular_peer_connection_factory_internal.h
+ p2p/dtls/dtls_ice_integrationtest.cc |  6 +-----
+ rtc_base/openssl_stream_adapter.cc   | 15 ++++++++++++---
+ rtc_base/openssl_stream_adapter.h    |  2 ++
+ 3 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index fa772e5bfd..5b25a93d90 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -70,20 +70,14 @@ rtc_library("enable_media_with_defaults") {
-   ]
- }
+diff --git a/p2p/dtls/dtls_ice_integrationtest.cc b/p2p/dtls/dtls_ice_integrationtest.cc
+index 339238d664..1610f0002a 100644
+--- a/p2p/dtls/dtls_ice_integrationtest.cc
++++ b/p2p/dtls/dtls_ice_integrationtest.cc
+@@ -127,11 +127,7 @@ class DtlsIceIntegrationTest : public ::testing::TestWithParam<std::tuple<
  
--rtc_library("create_modular_peer_connection_factory") {
-+rtc_source_set("create_modular_peer_connection_factory") {
-   visibility = [ "*" ]
-   allow_poison = [ "environment_construction" ]
--  sources = [
--    "create_modular_peer_connection_factory.cc",
--    "create_modular_peer_connection_factory.h",
--  ]
-+  sources = [ "create_modular_peer_connection_factory.h" ]
-   deps = [
-     ":libjingle_peerconnection_api",
-     ":scoped_refptr",
--    ":sequence_checker",
-     "../pc:peer_connection_factory",
--    "../pc:peer_connection_factory_proxy",
--    "../rtc_base:threading",
-     "../rtc_base/system:rtc_export",
-     "../stats:rtc_stats",
-   ]
-@@ -295,6 +289,17 @@ rtc_library("rtp_sender_interface") {
-   ]
- }
+     BuiltInNetworkBehaviorConfig networkBehavior;
+     networkBehavior.link_capacity = DataRate::KilobitsPerSec(220);
+-    // TODO (webrtc:383141571) : Investigate why this testcase fails for
+-    // DTLS 1.3 delay if networkBehavior.queue_delay_ms = 100ms.
+-    // - unless both peers support dtls in stun, in which case it passes.
+-    // - note: only for dtls1.3, it works for dtls1.2!
+-    networkBehavior.queue_delay_ms = 50;
++    networkBehavior.queue_delay_ms = 100;
+     networkBehavior.queue_length_packets = 30;
+     networkBehavior.loss_percent = 50;
  
-+# TODO: bugs.webrtc.org/42220069 - Remove when downstream has been updated
-+# to depend on `create_modular_peer_connection_factory` instead.
-+rtc_source_set("create_modular_peer_connection_factory_internal") {
-+  visibility = [ ":libjingle_peerconnection_api" ]
-+  sources = [ "create_modular_peer_connection_factory_internal.h" ]
-+  deps = [
-+    ":scoped_refptr",
-+    "../rtc_base/system:rtc_export",
-+  ]
+diff --git a/rtc_base/openssl_stream_adapter.cc b/rtc_base/openssl_stream_adapter.cc
+index 4acbb55890..2b45d37df7 100644
+--- a/rtc_base/openssl_stream_adapter.cc
++++ b/rtc_base/openssl_stream_adapter.cc
+@@ -852,10 +852,15 @@ void OpenSSLStreamAdapter::SetTimeout(int delay_ms) {
+           // We check the timer even after SSL_CONNECTED,
+           // but ContinueSSL() is only needed when SSL_CONNECTING
+           if (state_ == SSL_CONNECTING) {
++            // Note: timeout is set inside ContinueSSL()
+             ContinueSSL();
++          } else if (state_ == SSL_CONNECTED) {
++            MaybeSetTimeout();
++          } else {
++            RTC_DCHECK_NOTREACHED() << "state_: " << state_;
+           }
+         } else {
+-          RTC_DCHECK_NOTREACHED();
++          RTC_DCHECK_NOTREACHED() << "flag->alive() == false";
+         }
+         // This callback will never run again (stopped above).
+         return TimeDelta::PlusInfinity();
+@@ -970,6 +975,12 @@ int OpenSSLStreamAdapter::ContinueSSL() {
+     }
+   }
+ 
++  MaybeSetTimeout();
++
++  return 0;
 +}
 +
- rtc_library("libjingle_peerconnection_api") {
-   visibility = [ "*" ]
-   cflags = []
-@@ -335,6 +340,7 @@ rtc_library("libjingle_peerconnection_api") {
-     ":async_dns_resolver",
-     ":audio_options_api",
-     ":candidate",
-+    ":create_modular_peer_connection_factory_internal",
-     ":data_channel_event_observer_interface",
-     ":dtls_transport_interface",
-     ":fec_controller_api",
-diff --git a/api/create_modular_peer_connection_factory.cc b/api/create_modular_peer_connection_factory.cc
-deleted file mode 100644
-index 1b43eaecc4..0000000000
---- a/api/create_modular_peer_connection_factory.cc
-+++ /dev/null
-@@ -1,46 +0,0 @@
--/*
-- *  Copyright 2025 The WebRTC project authors. All Rights Reserved.
-- *
-- *  Use of this source code is governed by a BSD-style license
-- *  that can be found in the LICENSE file in the root of the source
-- *  tree. An additional intellectual property rights grant can be found
-- *  in the file PATENTS.  All contributing project authors may
-- *  be found in the AUTHORS file in the root of the source tree.
-- */
++void OpenSSLStreamAdapter::MaybeSetTimeout() {
+   if (ssl_ != nullptr) {
+     struct timeval timeout;
+     if (DTLSv1_get_timeout(ssl_, &timeout)) {
+@@ -977,8 +988,6 @@ int OpenSSLStreamAdapter::ContinueSSL() {
+       SetTimeout(delay);
+     }
+   }
 -
--#include "api/create_modular_peer_connection_factory.h"
--
--#include <utility>
--
--#include "api/peer_connection_interface.h"
--#include "api/scoped_refptr.h"
--#include "api/sequence_checker.h"
--#include "pc/peer_connection_factory.h"
--#include "pc/peer_connection_factory_proxy.h"
--#include "rtc_base/thread.h"
--
--namespace webrtc {
--
--scoped_refptr<PeerConnectionFactoryInterface>
--CreateModularPeerConnectionFactory(
--    PeerConnectionFactoryDependencies dependencies) {
--  // The PeerConnectionFactory must be created on the signaling thread.
--  if (dependencies.signaling_thread &&
--      !dependencies.signaling_thread->IsCurrent()) {
--    return dependencies.signaling_thread->BlockingCall([&dependencies] {
--      return CreateModularPeerConnectionFactory(std::move(dependencies));
--    });
--  }
--
--  auto pc_factory = PeerConnectionFactory::Create(std::move(dependencies));
--  if (!pc_factory) {
--    return nullptr;
--  }
--  // Verify that the invocation and the initialization ended up agreeing on the
--  // thread.
--  RTC_DCHECK_RUN_ON(pc_factory->signaling_thread());
--  return PeerConnectionFactoryProxy::Create(
--      pc_factory->signaling_thread(), pc_factory->worker_thread(), pc_factory);
--}
--
--}  // namespace webrtc
-diff --git a/api/create_modular_peer_connection_factory_internal.h b/api/create_modular_peer_connection_factory_internal.h
-new file mode 100644
-index 0000000000..370c148deb
---- /dev/null
-+++ b/api/create_modular_peer_connection_factory_internal.h
-@@ -0,0 +1,39 @@
-+/*
-+ *  Copyright 2025 The WebRTC project authors. All Rights Reserved.
-+ *
-+ *  Use of this source code is governed by a BSD-style license
-+ *  that can be found in the LICENSE file in the root of the source
-+ *  tree. An additional intellectual property rights grant can be found
-+ *  in the file PATENTS.  All contributing project authors may
-+ *  be found in the AUTHORS file in the root of the source tree.
-+ */
-+
-+// This temporary header is here to steer users of the
-+// CreateModularPeerConnectionFactory to include
-+// `create_modular_peer_connection_factory.h` and thus depend on
-+// `create_modular_peer_connection_factory` build target. Once users are
-+// migrated this file can be deleted.
-+
-+// IWYU pragma: private, include "api/create_modular_peer_connection_factory.h"
-+
-+#ifndef API_CREATE_MODULAR_PEER_CONNECTION_FACTORY_INTERNAL_H_
-+#define API_CREATE_MODULAR_PEER_CONNECTION_FACTORY_INTERNAL_H_
-+
-+#include "api/scoped_refptr.h"
-+#include "rtc_base/system/rtc_export.h"
-+
-+namespace webrtc {
-+
-+// Forward declare to avoid circular dependencies with
-+// `api/peer_connection_interface.h`. This file exists to be included from that
-+// header, and same time requires classes defined in that header.
-+class PeerConnectionFactoryInterface;
-+struct PeerConnectionFactoryDependencies;
-+
-+RTC_EXPORT scoped_refptr<PeerConnectionFactoryInterface>
-+CreateModularPeerConnectionFactory(
-+    PeerConnectionFactoryDependencies dependencies);
-+
-+}  // namespace webrtc
-+
-+#endif  // API_CREATE_MODULAR_PEER_CONNECTION_FACTORY_INTERNAL_H_
-diff --git a/api/peer_connection_interface.h b/api/peer_connection_interface.h
-index d80f5453a3..032320a433 100644
---- a/api/peer_connection_interface.h
-+++ b/api/peer_connection_interface.h
-@@ -148,6 +148,10 @@
- #include "rtc_base/system/rtc_export.h"
- #include "rtc_base/thread.h"
- 
-+// TODO: bugs.webrtc.org/42220069 - Remove this include when users of this
-+// function include "create_modular_peer_connection_factory.h" instead.
-+#include "api/create_modular_peer_connection_factory_internal.h"  // IWYU pragma: keep
-+
- namespace webrtc {
- // IWYU pragma: begin_keep
- // MediaFactory class definition is not part of the api.
-diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index a197ff8714..f48ba6e784 100644
---- a/pc/BUILD.gn
-+++ b/pc/BUILD.gn
-@@ -476,7 +476,7 @@ rtc_source_set("media_stream_track_proxy") {
+-  return 0;
  }
  
- rtc_source_set("peer_connection_factory_proxy") {
--  visibility = [ "../api:create_modular_peer_connection_factory" ]
-+  visibility = [ ":*" ]
-   sources = [ "peer_connection_factory_proxy.h" ]
-   deps = [
-     ":proxy",
-@@ -1550,6 +1550,7 @@ rtc_library("peer_connection_factory") {
-     ":media_stream_proxy",
-     ":media_stream_track_proxy",
-     ":peer_connection",
-+    ":peer_connection_factory_proxy",
-     ":peer_connection_proxy",
-     ":rtp_parameters_conversion",
-     ":video_track",
-@@ -2439,6 +2440,7 @@ if (rtc_include_tests && !build_with_chromium) {
-       ":pc_test_utils",
-       ":peer_connection",
-       ":peer_connection_factory",
-+      ":peer_connection_factory_proxy",
-       ":peer_connection_internal",
-       ":peer_connection_proxy",
-       ":peerconnection_wrapper",
-diff --git a/pc/peer_connection_factory.cc b/pc/peer_connection_factory.cc
-index df3a4176f4..39038d5660 100644
---- a/pc/peer_connection_factory.cc
-+++ b/pc/peer_connection_factory.cc
-@@ -54,6 +54,7 @@
- #include "pc/media_stream_proxy.h"
- #include "pc/media_stream_track_proxy.h"
- #include "pc/peer_connection.h"
-+#include "pc/peer_connection_factory_proxy.h"
- #include "pc/peer_connection_proxy.h"
- #include "pc/rtp_parameters_conversion.h"
- #include "pc/video_track.h"
-@@ -85,6 +86,31 @@ Environment AssembleEnvironment(PeerConnectionFactoryDependencies& deps) {
+ void OpenSSLStreamAdapter::Error(absl::string_view context,
+diff --git a/rtc_base/openssl_stream_adapter.h b/rtc_base/openssl_stream_adapter.h
+index 856d37c156..c10e93e3d4 100644
+--- a/rtc_base/openssl_stream_adapter.h
++++ b/rtc_base/openssl_stream_adapter.h
+@@ -210,6 +210,8 @@ class OpenSSLStreamAdapter final : public SSLStreamAdapter {
+            !peer_certificate_digest_value_.empty();
+   }
  
- }  // namespace
++  void MaybeSetTimeout();
++
+   const std::unique_ptr<StreamInterface> stream_;
+   absl::AnyInvocable<void(SSLHandshakeError)> handshake_error_;
  
-+// TODO: bugs.webrtc.org/42220069 - Move this function to
-+// 'create_modular_peer_connection_factory' build target when all users of this
-+// function would depend on that build target.
-+scoped_refptr<PeerConnectionFactoryInterface>
-+CreateModularPeerConnectionFactory(
-+    PeerConnectionFactoryDependencies dependencies) {
-+  // The PeerConnectionFactory must be created on the signaling thread.
-+  if (dependencies.signaling_thread &&
-+      !dependencies.signaling_thread->IsCurrent()) {
-+    return dependencies.signaling_thread->BlockingCall([&dependencies] {
-+      return CreateModularPeerConnectionFactory(std::move(dependencies));
-+    });
-+  }
-+
-+  auto pc_factory = PeerConnectionFactory::Create(std::move(dependencies));
-+  if (!pc_factory) {
-+    return nullptr;
-+  }
-+  // Verify that the invocation and the initialization ended up agreeing on the
-+  // thread.
-+  RTC_DCHECK_RUN_ON(pc_factory->signaling_thread());
-+  return PeerConnectionFactoryProxy::Create(
-+      pc_factory->signaling_thread(), pc_factory->worker_thread(), pc_factory);
-+}
-+
- // Static
- scoped_refptr<PeerConnectionFactory> PeerConnectionFactory::Create(
-     PeerConnectionFactoryDependencies dependencies) {
