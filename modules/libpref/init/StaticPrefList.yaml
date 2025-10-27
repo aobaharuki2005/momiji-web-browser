@@ -10862,7 +10862,7 @@
 # below.
 - name: layout.css.webkit-fill-available.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
   rust: true
 
