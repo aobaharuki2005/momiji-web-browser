@@ -877,8 +877,7 @@ void CanvasTranslator::BeginTransaction() {
   mIsInTransaction = true;
 }
 
-void CanvasTranslator::Flush() {
-}
+void CanvasTranslator::Flush() {}
 
 void CanvasTranslator::EndTransaction() {
   Flush();
