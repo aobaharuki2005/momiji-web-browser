@@ -18,4 +18,7 @@ head = ""
 ["test_isOriginPotentiallyTrustworthy.js"]
 
 ["test_privileged_eval_blocking.js"]
-skip-if = ["debug"] # Using eval in debug builds triggers an assert.
+skip-if = [
+  "debug",  # Using eval in debug builds triggers an assert.
+  "appname == 'thunderbird'", # The test doesn't work with security.allow_eval_in_parent_process true
+]
