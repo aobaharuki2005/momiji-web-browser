@@ -30,8 +30,8 @@ export var FormAutofillContent = {
     return Services.cpmm.sharedData.get("FormAutofill:savedFieldNames");
   },
 
-  get controlledElement() {
-    return formFillController.controlledElement;
+  get focusedElement() {
+    return formFillController.focusedElement;
   },
 
   /**
