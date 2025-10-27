@@ -1,7 +1,8 @@
 [DEFAULT]
 prefs = [
   "browser.backup.enabled=true",
-  "browser.backup.preferences.ui.enabled=true",
+  "browser.backup.archive.enabled=true",
+  "browser.backup.restore.enabled=true",
   "browser.backup.scheduled.enabled=false",
 ]
 support-files = [

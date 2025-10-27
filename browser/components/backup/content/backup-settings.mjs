@@ -7,6 +7,12 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { getErrorL10nId } from "chrome://browser/content/backup/backup-errors.mjs";
 import { ERRORS } from "chrome://browser/content/backup/backup-constants.mjs";
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  BackupService: "resource:///modules/backup/BackupService.sys.mjs",
+});
+
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/backup/turn-on-scheduled-backups.mjs";
 // eslint-disable-next-line import/no-unassigned-import
@@ -26,11 +32,14 @@ const BACKUP_ERROR_CODE_PREF_NAME = "browser.backup.errorCode";
  */
 export default class BackupSettings extends MozLitElement {
   #placeholderIconURL = "chrome://global/skin/icons/page-portrait.svg";
+  #backupService = lazy.BackupService.init();
 
   static properties = {
     backupServiceState: { type: Object },
     backupErrorCode: { type: Number },
     _enableEncryptionTypeAttr: { type: String },
+    _archiveEnabled: { type: Boolean },
+    _restoreEnabled: { type: Boolean },
   };
 
   static get queries() {
@@ -88,7 +97,13 @@ export default class BackupSettings extends MozLitElement {
     };
     this.backupErrorCode = this.#readBackupErrorPref();
     this._enableEncryptionTypeAttr = "";
+    this.updateArchiveAndRestoreState();
   }
+
+  updateArchiveAndRestoreState = () => {
+    this._archiveEnabled = this.#backupService.archiveEnabledStatus.enabled;
+    this._restoreEnabled = this.#backupService.restoreEnabledStatus.enabled;
+  };
 
   /**
    * Dispatches the BackupUI:InitWidget custom event upon being attached to the
@@ -99,6 +114,21 @@ export default class BackupSettings extends MozLitElement {
     this.dispatchEvent(
       new CustomEvent("BackupUI:InitWidget", { bubbles: true })
     );
+
+    Services.obs.addObserver(
+      this.updateArchiveAndRestoreState,
+      "backup-service-status-updated"
+    );
+
+    this._cleanupObs = () => {
+      Services.obs.removeObserver(
+        this.updateArchiveAndRestoreState,
+        "backup-service-status-updated"
+      );
+      window.removeEventListener("unload", this._cleanupObs);
+    };
+
+    window.addEventListener("unload", this._cleanupObs, { once: true });
 
     this.addEventListener("dialogCancel", this);
     this.addEventListener("restoreFromBackupConfirm", this);
@@ -467,46 +497,46 @@ export default class BackupSettings extends MozLitElement {
       ${this.turnOffScheduledBackupsDialogTemplate()}
       ${this.enableBackupEncryptionDialogTemplate()}
       ${this.disableBackupEncryptionDialogTemplate()}
+      ${this._archiveEnabled
+        ? html` <section id="scheduled-backups">
+            <div class="backups-control">
+              <span
+                id="scheduled-backups-enabled"
+                data-l10n-id=${scheduledBackupsEnabledL10nID}
+                class="heading-medium"
+              ></span>
 
-      <section id="scheduled-backups">
-        <div class="backups-control">
-          <span
-            id="scheduled-backups-enabled"
-            data-l10n-id=${scheduledBackupsEnabledL10nID}
-            class="heading-medium"
-          ></span>
+              <moz-button
+                id="backup-trigger-button"
+                @click=${this.handleBackupTrigger}
+                data-l10n-id=${backupTriggerL10nID}
+                ?disabled=${this.backupServiceState.backupInProgress ||
+                !this.backupServiceState.scheduledBackupsEnabled}
+              ></moz-button>
 
-          <moz-button
-            id="backup-trigger-button"
-            @click=${this.handleBackupTrigger}
-            data-l10n-id=${backupTriggerL10nID}
-            ?disabled=${this.backupServiceState.backupInProgress ||
-            !this.backupServiceState.scheduledBackupsEnabled}
-          ></moz-button>
+              <moz-button
+                id="backup-toggle-scheduled-button"
+                @click=${this.handleShowScheduledBackups}
+                data-l10n-id="settings-data-backup-toggle"
+              ></moz-button>
 
-          <moz-button
-            id="backup-toggle-scheduled-button"
-            @click=${this.handleShowScheduledBackups}
-            data-l10n-id="settings-data-backup-toggle"
-          ></moz-button>
+              ${this.backupServiceState.scheduledBackupsEnabled
+                ? null
+                : this.scheduledBackupsDescriptionTemplate()}
+            </div>
 
-          ${this.backupServiceState.scheduledBackupsEnabled
-            ? null
-            : this.scheduledBackupsDescriptionTemplate()}
-        </div>
-
-        ${this.backupServiceState.lastBackupDate
-          ? this.lastBackupInfoTemplate()
-          : null}
-        ${this.backupServiceState.scheduledBackupsEnabled
-          ? this.backupLocationTemplate()
-          : null}
-        ${this.backupServiceState.scheduledBackupsEnabled
-          ? this.sensitiveDataTemplate()
-          : null}
-      </section>
-
-      ${this.restoreFromBackupTemplate()} `;
+            ${this.backupServiceState.lastBackupDate
+              ? this.lastBackupInfoTemplate()
+              : null}
+            ${this.backupServiceState.scheduledBackupsEnabled
+              ? this.backupLocationTemplate()
+              : null}
+            ${this.backupServiceState.scheduledBackupsEnabled
+              ? this.sensitiveDataTemplate()
+              : null}
+          </section>`
+        : null}
+      ${this._restoreEnabled ? this.restoreFromBackupTemplate() : null} `;
   }
 }
 

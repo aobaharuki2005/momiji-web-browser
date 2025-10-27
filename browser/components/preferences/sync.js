@@ -19,7 +19,12 @@ const FXA_LOGIN_FAILED = 2;
 const SYNC_DISCONNECTED = 0;
 const SYNC_CONNECTED = 1;
 
-const BACKUP_UI_ENABLED_PREF = "browser.backup.preferences.ui.enabled";
+const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
+const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  BackupService: "resource:///modules/backup/BackupService.sys.mjs",
+});
 
 var gSyncPane = {
   get page() {
@@ -293,10 +298,9 @@ var gSyncPane = {
   },
 
   updateBackupUIVisibility() {
-    const isBackupUIEnabled = Services.prefs.getBoolPref(
-      BACKUP_UI_ENABLED_PREF,
-      false
-    );
+    let bs = lazy.BackupService.get();
+    let isBackupUIEnabled =
+      bs.archiveEnabledStatus.enabled || bs.restoreEnabledStatus.enabled;
 
     let dataBackupSectionEl = document.getElementById("dataBackupSection");
 
@@ -308,23 +312,25 @@ var gSyncPane = {
     let dataBackupGroupEl = document.getElementById("dataBackupGroup");
     let backupGroupHeaderEl = document.getElementById("backupCategory");
 
+    dataBackupSectionEl.hidden = !isBackupUIEnabled;
     dataBackupGroupEl.hidden = !isBackupUIEnabled;
     backupGroupHeaderEl.hidden = !isBackupUIEnabled;
   },
 
   _addPrefObservers() {
-    Services.prefs.addObserver(
-      BACKUP_UI_ENABLED_PREF,
-      this.updateBackupUIVisibility
+    Services.obs.addObserver(
+      this.updateBackupUIVisibility,
+      "backup-service-status-updated"
     );
 
     window.addEventListener(
       "unload",
-      () =>
-        Services.prefs.removeObserver(
-          BACKUP_UI_ENABLED_PREF,
-          this.updateBackupUIVisibility
-        ),
+      () => {
+        Services.obs.removeObserver(
+          this.updateBackupUIVisibility,
+          "backup-service-status-updated"
+        );
+      },
       { once: true }
     );
   },

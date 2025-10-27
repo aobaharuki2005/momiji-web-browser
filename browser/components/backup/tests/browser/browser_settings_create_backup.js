@@ -36,7 +36,7 @@ add_task(async function test_create_new_backup_trigger() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let settings = browser.contentDocument.querySelector("backup-settings");
 
-    let bs = BackupService.get();
+    let bs = getAndMaybeInitBackupService();
 
     Assert.ok(!bs.state.backupInProgress, "There is no backup in progress");
 
@@ -93,7 +93,7 @@ add_task(async function test_create_new_backup_trigger() {
  * Tests if the "Backup now" button is disabled if a backup is already underway
  */
 add_task(async function test_create_backup_trigger_disabled() {
-  let bs = BackupService.get();
+  let bs = getAndMaybeInitBackupService();
 
   const sandbox = sinon.createSandbox();
 
