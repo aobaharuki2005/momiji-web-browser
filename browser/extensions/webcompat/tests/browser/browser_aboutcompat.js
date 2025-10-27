@@ -1,9 +1,6 @@
 "use strict";
 
 add_task(async function test_about_compat_loads_properly() {
-  // wait for all interventions to load before testing (can be quite slow on tsan builds).
-  await WebCompatExtension.noOngoingInterventionChanges();
-
   const tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: "about:compat",
