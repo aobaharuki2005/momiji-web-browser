@@ -1,440 +1,423 @@
 From: Daniel Baker <dbaker@mozilla.com>
-Date: Mon, 27 Oct 2025 16:59:03 -0600
-Subject: (tmp-cherry-pick) Revert "Propagate clock into BasicIceController"
- (0bac8c3d11)
+Date: Mon, 27 Oct 2025 17:11:17 -0600
+Subject: (tmp-cherry-pick) [M141] Revert "Propagate content name to ports at
+ construction time, add sanity checks" (71dfd3bde9)
 
-This reverts commit 16b12af18f5cc9f5d16f4c8e5372c6d31a81948e.
-
-Reason for revert: breaks roll into chromium
-
-Bug: webrtc:42223992
 Original change's description:
-> Propagate clock into BasicIceController
+> Revert "Propagate content name to ports at construction time, add sanity checks"
 >
-> Bug: webrtc:42223992
-> Change-Id: I15e4d1a8c692e8a04f50d0f0b51cabecc584b0ab
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407100
-> Reviewed-by: Per Kjellander <perkj@webrtc.org>
-> Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45508}
+> I get a SIG_SEGV in basic_port_allocator.cc:AllocationSequence::OnReadPacket() on iOS. Reinstating the subscription to the OnPortDestroyedSignal for TURN ports fixes it but I'll leave it to the original author to determine what the correct approach is.
+>
+> This reverts commit 5dded01501f2e29e9f13de67dcf59d00dc2606de.
+>
+> Change-Id: I9c5497a1dbe1fc338aede54dd5e112e51cf40d5d
+> Bug: none
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407048
+> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+> Commit-Queue: Peter Hanspers <peterhanspers@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#45522}
 
-Bug: webrtc:42223992
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Change-Id: I4de8a8541b8f54ad1d7783febcdf74ef189c967e
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407421
-Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Auto-Submit: Danil Chapovalov <danilchap@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#45518}
+(cherry picked from commit 924e561d6370dbc7bc4e8ef9bffc984dd401b196)
+
+Bug: chromium:442851756,none
+Change-Id: I9c5497a1dbe1fc338aede54dd5e112e51cf40d5d
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407740
+Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Auto-Submit: Chrome Cherry Picker <chrome-cherry-picker@chops-service-accounts.iam.gserviceaccount.com>
+Cr-Commit-Position: refs/branch-heads/7390@{#1}
+Cr-Branched-From: 2f553bf8d573c90176d51559b76dfc836996c8f5-refs/heads/main@{#45520}
 ---
- p2p/BUILD.gn                                  |  4 --
- p2p/base/basic_ice_controller.cc              | 67 +++++++++----------
- p2p/base/basic_ice_controller.h               | 16 ++---
- p2p/base/ice_controller_factory_interface.h   |  2 -
- p2p/base/p2p_transport_channel.cc             |  1 -
- ...wrapping_active_ice_controller_unittest.cc | 38 +++++++----
- 6 files changed, 61 insertions(+), 67 deletions(-)
+ p2p/base/connection.cc                    |  4 ---
+ p2p/base/connection.h                     | 22 ++++----------
+ p2p/base/p2p_transport_channel.cc         | 15 +++++-----
+ p2p/base/p2p_transport_channel.h          |  4 +--
+ p2p/base/port.cc                          |  1 -
+ p2p/base/port.h                           |  1 -
+ p2p/base/port_allocator.cc                |  4 +--
+ p2p/base/port_allocator.h                 | 10 +------
+ p2p/base/port_allocator_unittest.cc       |  1 -
+ p2p/base/turn_port.h                      |  2 --
+ p2p/client/basic_port_allocator.cc        | 35 ++++++++++++-----------
+ p2p/client/basic_port_allocator.h         |  5 +---
+ p2p/client/relay_port_factory_interface.h |  1 -
+ 13 files changed, 38 insertions(+), 67 deletions(-)
 
-diff --git a/p2p/BUILD.gn b/p2p/BUILD.gn
-index 825e3995b1..34f6ef11ea 100644
---- a/p2p/BUILD.gn
-+++ b/p2p/BUILD.gn
-@@ -81,10 +81,7 @@ rtc_library("basic_ice_controller") {
-     ":transport_description",
-     "../api:array_view",
-     "../api:candidate",
--    "../api/environment",
-     "../api/transport:enums",
--    "../api/units:time_delta",
--    "../api/units:timestamp",
-     "../rtc_base:checks",
-     "../rtc_base:ip_address",
-     "../rtc_base:logging",
-@@ -389,7 +386,6 @@ rtc_source_set("ice_controller_factory_interface") {
-     ":ice_transport_internal",
-     ":p2p_transport_channel_ice_field_trials",
-     ":transport_description",
--    "../api/environment",
-   ]
+diff --git a/p2p/base/connection.cc b/p2p/base/connection.cc
+index 577e4b0d3f..1afd41bfaa 100644
+--- a/p2p/base/connection.cc
++++ b/p2p/base/connection.cc
+@@ -287,19 +287,16 @@ const Candidate& Connection::remote_candidate() const {
  }
  
-diff --git a/p2p/base/basic_ice_controller.cc b/p2p/base/basic_ice_controller.cc
-index 8da13f52ae..ca8f8266ab 100644
---- a/p2p/base/basic_ice_controller.cc
-+++ b/p2p/base/basic_ice_controller.cc
-@@ -22,8 +22,6 @@
- #include "absl/algorithm/container.h"
- #include "api/candidate.h"
- #include "api/transport/enums.h"
--#include "api/units/time_delta.h"
--#include "api/units/timestamp.h"
- #include "p2p/base/connection.h"
- #include "p2p/base/connection_info.h"
- #include "p2p/base/ice_controller_factory_interface.h"
-@@ -38,6 +36,7 @@
- #include "rtc_base/net_helper.h"
- #include "rtc_base/network.h"
- #include "rtc_base/network_constants.h"
-+#include "rtc_base/time_utils.h"
- 
- namespace {
- 
-@@ -87,8 +86,7 @@ int CompareCandidatePairsByNetworkPreference(
- namespace webrtc {
- 
- BasicIceController::BasicIceController(const IceControllerFactoryArgs& args)
--    : env_(args.env),
--      ice_transport_state_func_(args.ice_transport_state_func),
-+    : ice_transport_state_func_(args.ice_transport_state_func),
-       ice_role_func_(args.ice_role_func),
-       is_connection_pruned_func_(args.is_connection_pruned_func),
-       field_trials_(args.ice_field_trials) {}
-@@ -118,7 +116,7 @@ void BasicIceController::OnConnectionDestroyed(const Connection* connection) {
+ const Network* Connection::network() const {
+-  RTC_DCHECK_RUN_ON(network_thread_);
+   RTC_DCHECK(port_) << ToDebugId() << ": port_ null in network()";
+   return port()->Network();
  }
  
- bool BasicIceController::HasPingableConnection() const {
--  Timestamp now = Connection::AlignTime(env_.clock().CurrentTime());
-+  int64_t now = TimeMillis();
-   return absl::c_any_of(connections_, [this, now](const Connection* c) {
-     return IsPingable(c, now);
-   });
-@@ -139,8 +137,7 @@ IceControllerInterface::PingResult BasicIceController::SelectConnectionToPing(
-                           : strong_ping_interval();
- 
-   const Connection* conn = nullptr;
--  if (Connection::AlignTime(env_.clock().CurrentTime()).ms() >=
--      last_ping_sent_ms + ping_interval) {
-+  if (TimeMillis() >= last_ping_sent_ms + ping_interval) {
-     conn = FindNextPingableConnection();
-   }
-   PingResult res(conn, std::min(ping_interval, check_receiving_interval()));
-@@ -155,7 +152,7 @@ void BasicIceController::MarkConnectionPinged(const Connection* conn) {
- 
- // Returns the next pingable connection to ping.
- const Connection* BasicIceController::FindNextPingableConnection() {
--  Timestamp now = Connection::AlignTime(env_.clock().CurrentTime());
-+  int64_t now = TimeMillis();
- 
-   // Rule 1: Selected connection takes priority over non-selected ones.
-   if (selected_connection_ && selected_connection_->connected() &&
-@@ -241,7 +238,7 @@ const Connection* BasicIceController::FindNextPingableConnection() {
- // (last_ping_received > last_ping_sent).  But we shouldn't do
- // triggered checks if the connection is already writable.
- const Connection* BasicIceController::FindOldestConnectionNeedingTriggeredCheck(
--    Timestamp now) {
-+    int64_t now) {
-   const Connection* oldest_needing_triggered_check = nullptr;
-   for (auto* conn : connections_) {
-     if (!IsPingable(conn, now)) {
-@@ -267,24 +264,24 @@ const Connection* BasicIceController::FindOldestConnectionNeedingTriggeredCheck(
- 
- bool BasicIceController::WritableConnectionPastPingInterval(
-     const Connection* conn,
--    Timestamp now) const {
--  TimeDelta interval = CalculateActiveWritablePingInterval(conn, now);
--  return conn->LastPingSent() + interval <= now;
-+    int64_t now) const {
-+  int interval = CalculateActiveWritablePingInterval(conn, now);
-+  return conn->last_ping_sent() + interval <= now;
+ int Connection::generation() const {
+-  RTC_DCHECK_RUN_ON(network_thread_);
+   RTC_DCHECK(port_) << ToDebugId() << ": port_ null in generation()";
+   return port()->generation();
  }
  
--TimeDelta BasicIceController::CalculateActiveWritablePingInterval(
-+int BasicIceController::CalculateActiveWritablePingInterval(
-     const Connection* conn,
--    Timestamp now) const {
-+    int64_t now) const {
-   // Ping each connection at a higher rate at least
-   // MIN_PINGS_AT_WEAK_PING_INTERVAL times.
-   if (conn->num_pings_sent() < MIN_PINGS_AT_WEAK_PING_INTERVAL) {
--    return TimeDelta::Millis(weak_ping_interval());
-+    return weak_ping_interval();
-   }
+ uint64_t Connection::priority() const {
+-  RTC_DCHECK_RUN_ON(network_thread_);
+   RTC_DCHECK(port_) << ToDebugId() << ": port_ null in priority()";
+   if (!port_)
+     return 0;
+@@ -1394,7 +1391,6 @@ std::string Connection::ToDebugId() const {
+ }
  
--  TimeDelta stable_interval = TimeDelta::Millis(
--      config_.stable_writable_connection_ping_interval_or_default());
--  TimeDelta weak_or_stablizing_interval = std::min(
--      stable_interval, kWeakOrStabilizingWritableConnectionPingInterval);
-+  int stable_interval =
-+      config_.stable_writable_connection_ping_interval_or_default();
-+  int weak_or_stablizing_interval = std::min(
-+      stable_interval, WEAK_OR_STABILIZING_WRITABLE_CONNECTION_PING_INTERVAL);
-   // If the channel is weak or the connection is not stable yet, use the
-   // weak_or_stablizing_interval.
-   return (!weak() && conn->stable(now)) ? stable_interval
-@@ -294,8 +291,7 @@ TimeDelta BasicIceController::CalculateActiveWritablePingInterval(
- // Is the connection in a state for us to even consider pinging the other side?
- // We consider a connection pingable even if it's not connected because that's
- // how a TCP connection is kicked into reconnecting on the active side.
--bool BasicIceController::IsPingable(const Connection* conn,
--                                    Timestamp now) const {
-+bool BasicIceController::IsPingable(const Connection* conn, int64_t now) const {
-   const Candidate& remote = conn->remote_candidate();
-   // We should never get this far with an empty remote ufrag.
-   RTC_DCHECK(!remote.username().empty());
-@@ -331,10 +327,8 @@ bool BasicIceController::IsPingable(const Connection* conn,
-   // or not, but backup connections are pinged at a slower rate.
-   if (IsBackupConnection(conn)) {
-     return conn->rtt_samples() == 0 ||
--           (now >=
--            conn->LastPingResponseReceived() +
--                TimeDelta::Millis(
--                    config_.backup_connection_ping_interval_or_default()));
-+           (now >= conn->last_ping_response_received() +
-+                       config_.backup_connection_ping_interval_or_default());
-   }
-   // Don't ping inactive non-backup connections.
-   if (!conn->active()) {
-@@ -458,7 +452,7 @@ BasicIceController::HandleInitialSelectDampening(
-     return {.connection = new_connection};
-   }
+ uint32_t Connection::ComputeNetworkCost() const {
+-  RTC_DCHECK_RUN_ON(network_thread_);
+   // TODO(honghaiz): Will add rtt as part of the network cost.
+   RTC_DCHECK(port_) << ToDebugId() << ": port_ null in ComputeNetworkCost()";
+   return port()->network_cost() + remote_candidate_.network_cost();
+diff --git a/p2p/base/connection.h b/p2p/base/connection.h
+index 1cb0c20424..55de3f9bc9 100644
+--- a/p2p/base/connection.h
++++ b/p2p/base/connection.h
+@@ -117,10 +117,7 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
+   bool connected() const;
+   bool weak() const;
+   bool active() const;
+-  bool pending_delete() const {
+-    RTC_DCHECK_RUN_ON(network_thread_);
+-    return !port_;
+-  }
++  bool pending_delete() const { return !port_; }
  
--  Timestamp now = Connection::AlignTime(env_.clock().CurrentTime());
-+  int64_t now = TimeMillis();
-   int64_t max_delay = 0;
-   if (new_connection->last_ping_received() > 0 &&
-       field_trials_->initial_select_dampening_ping_received.has_value()) {
-@@ -467,24 +461,26 @@ BasicIceController::HandleInitialSelectDampening(
-     max_delay = *field_trials_->initial_select_dampening;
-   }
+   // A connection is dead if it can be safely deleted.
+   bool dead(Timestamp now) const;
+@@ -394,14 +391,8 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
+   void SendResponseMessage(const StunMessage& response);
  
--  Timestamp start_wait = initial_select_timestamp_.value_or(now);
--  Timestamp max_wait_until = start_wait + TimeDelta::Millis(max_delay);
-+  int64_t start_wait =
-+      initial_select_timestamp_ms_ == 0 ? now : initial_select_timestamp_ms_;
-+  int64_t max_wait_until = start_wait + max_delay;
+   // An accessor for unit tests.
+-  PortInterface* PortForTest() {
+-    RTC_DCHECK_RUN_ON(network_thread_);
+-    return port_.get();
+-  }
+-  const PortInterface* PortForTest() const {
+-    RTC_DCHECK_RUN_ON(network_thread_);
+-    return port_.get();
+-  }
++  PortInterface* PortForTest() { return port_.get(); }
++  const PortInterface* PortForTest() const { return port_.get(); }
  
-   if (now >= max_wait_until) {
-     RTC_LOG(LS_INFO) << "reset initial_select_timestamp_ = "
--                     << initial_select_timestamp_.value_or(Timestamp::Zero())
--                     << " selection delayed by: " << (now - start_wait);
--    initial_select_timestamp_ = std::nullopt;
-+                     << initial_select_timestamp_ms_
-+                     << " selection delayed by: " << (now - start_wait) << "ms";
-+    initial_select_timestamp_ms_ = 0;
-     return {.connection = new_connection};
-   }
+   std::unique_ptr<IceMessage> BuildPingRequestForTest() {
+     RTC_DCHECK_RUN_ON(network_thread_);
+@@ -487,10 +478,7 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
+   void set_connected(bool value);
  
-   // We are not yet ready to select first connection...
--  if (!initial_select_timestamp_.has_value()) {
-+  if (initial_select_timestamp_ms_ == 0) {
-     // Set timestamp on first time...
-     // but run the delayed invokation everytime to
-     // avoid possibility that we miss it.
--    initial_select_timestamp_ = now;
--    RTC_LOG(LS_INFO) << "set initial_select_timestamp_ = " << now;
-+    initial_select_timestamp_ms_ = now;
-+    RTC_LOG(LS_INFO) << "set initial_select_timestamp_ms_ = "
-+                     << initial_select_timestamp_ms_;
-   }
+   // The local port where this connection sends and receives packets.
+-  PortInterface* port() {
+-    RTC_DCHECK_RUN_ON(network_thread_);
+-    return port_.get();
+-  }
++  PortInterface* port() { return port_.get(); }
  
-   int min_delay = max_delay;
-@@ -523,8 +519,7 @@ IceControllerInterface::SwitchResult BasicIceController::ShouldSwitchConnection(
+   const Environment& env() { return env_; }
+   ConnectionInfo& mutable_stats() { return stats_; }
+@@ -523,7 +511,7 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
+   // TODO(tommi): This ^^^ should be fixed.
+   TaskQueueBase* const network_thread_;
+   const uint32_t id_;
+-  WeakPtr<PortInterface> port_ RTC_GUARDED_BY(network_thread_);
++  WeakPtr<PortInterface> port_;
+   Candidate local_candidate_ RTC_GUARDED_BY(network_thread_);
+   Candidate remote_candidate_;
  
-   bool missed_receiving_unchanged_threshold = false;
-   std::optional<int64_t> receiving_unchanged_threshold(
--      Connection::AlignTime(env_.clock().CurrentTime()).ms() -
--      config_.receiving_switching_delay_or_default());
-+      TimeMillis() - config_.receiving_switching_delay_or_default());
-   int cmp = CompareConnections(selected_connection_, new_connection,
-                                receiving_unchanged_threshold,
-                                &missed_receiving_unchanged_threshold);
-diff --git a/p2p/base/basic_ice_controller.h b/p2p/base/basic_ice_controller.h
-index 66a0402f5f..b2aa3c3cee 100644
---- a/p2p/base/basic_ice_controller.h
-+++ b/p2p/base/basic_ice_controller.h
-@@ -20,9 +20,6 @@
- #include <vector>
- 
- #include "api/array_view.h"
--#include "api/environment/environment.h"
--#include "api/units/time_delta.h"
--#include "api/units/timestamp.h"
- #include "p2p/base/connection.h"
- #include "p2p/base/ice_controller_factory_interface.h"
- #include "p2p/base/ice_controller_interface.h"
-@@ -94,7 +91,7 @@ class BasicIceController : public IceControllerInterface {
-                     config_.receiving_timeout_or_default() / 10);
-   }
- 
--  const Connection* FindOldestConnectionNeedingTriggeredCheck(Timestamp now);
-+  const Connection* FindOldestConnectionNeedingTriggeredCheck(int64_t now);
-   // Between `conn1` and `conn2`, this function returns the one which should
-   // be pinged first.
-   const Connection* MorePingable(const Connection* conn1,
-@@ -107,14 +104,14 @@ class BasicIceController : public IceControllerInterface {
-   const Connection* LeastRecentlyPinged(const Connection* conn1,
-                                         const Connection* conn2);
- 
--  bool IsPingable(const Connection* conn, Timestamp now) const;
-+  bool IsPingable(const Connection* conn, int64_t now) const;
-   bool IsBackupConnection(const Connection* conn) const;
-   // Whether a writable connection is past its ping interval and needs to be
-   // pinged again.
-   bool WritableConnectionPastPingInterval(const Connection* conn,
--                                          Timestamp now) const;
--  TimeDelta CalculateActiveWritablePingInterval(const Connection* conn,
--                                                Timestamp now) const;
-+                                          int64_t now) const;
-+  int CalculateActiveWritablePingInterval(const Connection* conn,
-+                                          int64_t now) const;
- 
-   std::map<const Network*, const Connection*> GetBestConnectionByNetwork()
-       const;
-@@ -155,7 +152,6 @@ class BasicIceController : public IceControllerInterface {
-   SwitchResult HandleInitialSelectDampening(IceSwitchReason reason,
-                                             const Connection* new_connection);
- 
--  const Environment env_;
-   std::function<IceTransportStateInternal()> ice_transport_state_func_;
-   std::function<IceRole()> ice_role_func_;
-   std::function<bool(const Connection*)> is_connection_pruned_func_;
-@@ -174,7 +170,7 @@ class BasicIceController : public IceControllerInterface {
-   std::set<const Connection*> unpinged_connections_;
- 
-   // Timestamp for when we got the first selectable connection.
--  std::optional<Timestamp> initial_select_timestamp_;
-+  int64_t initial_select_timestamp_ms_ = 0;
- };
- 
- }  //  namespace webrtc
-diff --git a/p2p/base/ice_controller_factory_interface.h b/p2p/base/ice_controller_factory_interface.h
-index 966d3e3542..2f8754e3aa 100644
---- a/p2p/base/ice_controller_factory_interface.h
-+++ b/p2p/base/ice_controller_factory_interface.h
-@@ -15,7 +15,6 @@
- #include <memory>
- #include <string>
- 
--#include "api/environment/environment.h"
- #include "p2p/base/connection.h"
- #include "p2p/base/ice_controller_interface.h"
- #include "p2p/base/ice_transport_internal.h"
-@@ -26,7 +25,6 @@ namespace webrtc {
- 
- // struct with arguments to IceControllerFactoryInterface::Create
- struct IceControllerFactoryArgs {
--  Environment env;
-   std::function<IceTransportStateInternal()> ice_transport_state_func;
-   std::function<IceRole()> ice_role_func;
-   std::function<bool(const Connection*)> is_connection_pruned_func;
 diff --git a/p2p/base/p2p_transport_channel.cc b/p2p/base/p2p_transport_channel.cc
-index 82d854fe1d..eee1092080 100644
+index db6c987c67..82d854fe1d 100644
 --- a/p2p/base/p2p_transport_channel.cc
 +++ b/p2p/base/p2p_transport_channel.cc
-@@ -215,7 +215,6 @@ P2PTransportChannel::P2PTransportChannel(
-   ParseFieldTrials(env_.field_trials());
+@@ -866,16 +866,17 @@ void P2PTransportChannel::MaybeStartGathering() {
+                                       ice_parameters_.ufrag,
+                                       ice_parameters_.pwd);
+     if (pooled_session) {
+-      PortAllocatorSession* raw_session = pooled_session.get();
+       AddAllocatorSession(std::move(pooled_session));
+-      RTC_DCHECK_EQ(raw_session, allocator_sessions_.back().get());
++      PortAllocatorSession* raw_pooled_session =
++          allocator_sessions_.back().get();
+       // Process the pooled session's existing candidates/ports, if they exist.
+-      OnCandidatesReady(raw_session, raw_session->ReadyCandidates());
+-      for (PortInterface* port : raw_session->ReadyPorts()) {
+-        OnPortReady(raw_session, port);
++      OnCandidatesReady(raw_pooled_session,
++                        raw_pooled_session->ReadyCandidates());
++      for (PortInterface* port : allocator_sessions_.back()->ReadyPorts()) {
++        OnPortReady(raw_pooled_session, port);
+       }
+-      if (raw_session->CandidatesAllocationDone()) {
+-        OnCandidatesAllocationDone(raw_session);
++      if (allocator_sessions_.back()->CandidatesAllocationDone()) {
++        OnCandidatesAllocationDone(raw_pooled_session);
+       }
+     } else {
+       AddAllocatorSession(allocator_->CreateSession(
+diff --git a/p2p/base/p2p_transport_channel.h b/p2p/base/p2p_transport_channel.h
+index 8ce03f60f4..7f087ba22d 100644
+--- a/p2p/base/p2p_transport_channel.h
++++ b/p2p/base/p2p_transport_channel.h
+@@ -443,9 +443,9 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal,
+   void GoogDeltaAckReceived(RTCErrorOr<const StunUInt64Attribute*>);
  
-   IceControllerFactoryArgs args{
--      .env = env_,
-       .ice_transport_state_func = [this] { return GetState(); },
-       .ice_role_func = [this] { return GetIceRole(); },
-       .is_connection_pruned_func =
-diff --git a/p2p/base/wrapping_active_ice_controller_unittest.cc b/p2p/base/wrapping_active_ice_controller_unittest.cc
-index 8b5601358b..074f3b6474 100644
---- a/p2p/base/wrapping_active_ice_controller_unittest.cc
-+++ b/p2p/base/wrapping_active_ice_controller_unittest.cc
-@@ -26,13 +26,24 @@
- #include "rtc_base/event.h"
- #include "rtc_base/fake_clock.h"
- #include "rtc_base/thread.h"
--#include "test/create_test_environment.h"
- #include "test/gmock.h"
- #include "test/gtest.h"
- 
--namespace webrtc {
- namespace {
- 
-+using ::webrtc::Connection;
-+using ::webrtc::IceConfig;
-+using ::webrtc::IceControllerFactoryArgs;
-+using ::webrtc::IceControllerInterface;
-+using ::webrtc::IceMode;
-+using ::webrtc::IceRecheckEvent;
-+using ::webrtc::IceSwitchReason;
-+using ::webrtc::MockIceAgent;
-+using ::webrtc::MockIceController;
-+using ::webrtc::MockIceControllerFactory;
-+using ::webrtc::NominationMode;
-+using ::webrtc::WrappingActiveIceController;
-+
- using ::testing::_;
- using ::testing::ElementsAreArray;
- using ::testing::IsEmpty;
-@@ -41,6 +52,11 @@ using ::testing::Ref;
- using ::testing::Return;
- using ::testing::Sequence;
- 
-+using ::webrtc::AutoThread;
-+using ::webrtc::Event;
-+using ::webrtc::ScopedFakeClock;
-+using ::webrtc::TimeDelta;
-+
- using NiceMockIceController = NiceMock<MockIceController>;
- 
- const Connection* kConnection = reinterpret_cast<const Connection*>(0xabcd);
-@@ -56,7 +72,7 @@ constexpr TimeDelta kTick = TimeDelta::Millis(1);
- TEST(WrappingActiveIceControllerTest, CreateLegacyIceControllerFromFactory) {
-   AutoThread main;
-   MockIceAgent agent;
--  IceControllerFactoryArgs args = {.env = CreateTestEnvironment()};
-+  IceControllerFactoryArgs args;
-   MockIceControllerFactory legacy_controller_factory;
-   EXPECT_CALL(legacy_controller_factory, RecordIceControllerCreated()).Times(1);
-   WrappingActiveIceController controller(&agent, &legacy_controller_factory,
-@@ -67,8 +83,7 @@ TEST(WrappingActiveIceControllerTest, PassthroughIceControllerInterface) {
-   AutoThread main;
-   MockIceAgent agent;
-   std::unique_ptr<MockIceController> will_move =
--      std::make_unique<MockIceController>(
--          IceControllerFactoryArgs{.env = CreateTestEnvironment()});
-+      std::make_unique<MockIceController>(IceControllerFactoryArgs{});
-   MockIceController* wrapped = will_move.get();
-   WrappingActiveIceController controller(&agent, std::move(will_move));
- 
-@@ -105,8 +120,7 @@ TEST(WrappingActiveIceControllerTest, HandlesImmediateSwitchRequest) {
-   ScopedFakeClock clock;
-   NiceMock<MockIceAgent> agent;
-   std::unique_ptr<NiceMockIceController> will_move =
--      std::make_unique<NiceMockIceController>(
--          IceControllerFactoryArgs{.env = CreateTestEnvironment()});
-+      std::make_unique<NiceMockIceController>(IceControllerFactoryArgs{});
-   NiceMockIceController* wrapped = will_move.get();
-   WrappingActiveIceController controller(&agent, std::move(will_move));
- 
-@@ -151,8 +165,7 @@ TEST(WrappingActiveIceControllerTest, HandlesImmediateSortAndSwitchRequest) {
-   ScopedFakeClock clock;
-   NiceMock<MockIceAgent> agent;
-   std::unique_ptr<NiceMockIceController> will_move =
--      std::make_unique<NiceMockIceController>(
--          IceControllerFactoryArgs{.env = CreateTestEnvironment()});
-+      std::make_unique<NiceMockIceController>(IceControllerFactoryArgs{});
-   NiceMockIceController* wrapped = will_move.get();
-   WrappingActiveIceController controller(&agent, std::move(will_move));
- 
-@@ -210,8 +223,7 @@ TEST(WrappingActiveIceControllerTest, HandlesSortAndSwitchRequest) {
- 
-   NiceMock<MockIceAgent> agent;
-   std::unique_ptr<NiceMockIceController> will_move =
--      std::make_unique<NiceMockIceController>(
--          IceControllerFactoryArgs{.env = CreateTestEnvironment()});
-+      std::make_unique<NiceMockIceController>(IceControllerFactoryArgs{});
-   NiceMockIceController* wrapped = will_move.get();
-   WrappingActiveIceController controller(&agent, std::move(will_move));
- 
-@@ -256,8 +268,7 @@ TEST(WrappingActiveIceControllerTest, StartPingingAfterSortAndSwitch) {
- 
-   NiceMock<MockIceAgent> agent;
-   std::unique_ptr<NiceMockIceController> will_move =
--      std::make_unique<NiceMockIceController>(
--          IceControllerFactoryArgs{.env = CreateTestEnvironment()});
-+      std::make_unique<NiceMockIceController>(IceControllerFactoryArgs{});
-   NiceMockIceController* wrapped = will_move.get();
-   WrappingActiveIceController controller(&agent, std::move(will_move));
- 
-@@ -308,4 +319,3 @@ TEST(WrappingActiveIceControllerTest, StartPingingAfterSortAndSwitch) {
+   const Environment env_;
+-  const std::string transport_name_ RTC_GUARDED_BY(network_thread_);
++  std::string transport_name_ RTC_GUARDED_BY(network_thread_);
+   int component_ RTC_GUARDED_BY(network_thread_);
+-  PortAllocator* const allocator_ RTC_GUARDED_BY(network_thread_);
++  PortAllocator* allocator_ RTC_GUARDED_BY(network_thread_);
+   AsyncDnsResolverFactoryInterface* const async_dns_resolver_factory_
+       RTC_GUARDED_BY(network_thread_);
+   const std::unique_ptr<AsyncDnsResolverFactoryInterface>
+diff --git a/p2p/base/port.cc b/p2p/base/port.cc
+index ea6b045a11..c7c1de2ef5 100644
+--- a/p2p/base/port.cc
++++ b/p2p/base/port.cc
+@@ -121,7 +121,6 @@ Port::Port(const PortParametersRef& args,
+       network_(args.network),
+       min_port_(min_port),
+       max_port_(max_port),
+-      content_name_(args.content_name),
+       component_(ICE_CANDIDATE_COMPONENT_DEFAULT),
+       generation_(0),
+       ice_username_fragment_(args.ice_username_fragment),
+diff --git a/p2p/base/port.h b/p2p/base/port.h
+index 134d9eb854..1a237be898 100644
+--- a/p2p/base/port.h
++++ b/p2p/base/port.h
+@@ -169,7 +169,6 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
+     const ::webrtc::Network* network;
+     absl::string_view ice_username_fragment;
+     absl::string_view ice_password;
+-    absl::string_view content_name;
+     LocalNetworkAccessPermissionFactoryInterface* lna_permission_factory =
+         nullptr;
+   };
+diff --git a/p2p/base/port_allocator.cc b/p2p/base/port_allocator.cc
+index cd7bd076ce..ba95687415 100644
+--- a/p2p/base/port_allocator.cc
++++ b/p2p/base/port_allocator.cc
+@@ -241,7 +241,6 @@ std::unique_ptr<PortAllocatorSession> PortAllocator::TakePooledSession(
+   auto it =
+       pooled_sessions_.begin() + std::distance(pooled_sessions_.cbegin(), cit);
+   std::unique_ptr<PortAllocatorSession> ret = std::move(*it);
+-  RTC_DCHECK(ret->pooled());
+   ret->SetIceParameters(content_name, component, ice_ufrag, ice_pwd);
+   ret->set_pooled(false);
+   // According to JSEP, a pooled session should filter candidates only
+@@ -257,8 +256,9 @@ const PortAllocatorSession* PortAllocator::GetPooledSession(
+   auto it = FindPooledSession(ice_credentials);
+   if (it == pooled_sessions_.end()) {
+     return nullptr;
++  } else {
++    return it->get();
+   }
+-  return it->get();
  }
  
- }  // namespace
--}  // namespace webrtc
+ std::vector<std::unique_ptr<PortAllocatorSession>>::const_iterator
+diff --git a/p2p/base/port_allocator.h b/p2p/base/port_allocator.h
+index 643fb7b656..87490f2652 100644
+--- a/p2p/base/port_allocator.h
++++ b/p2p/base/port_allocator.h
+@@ -303,9 +303,6 @@ class RTC_EXPORT PortAllocatorSession : public sigslot::has_slots<> {
+                         int component,
+                         absl::string_view ice_ufrag,
+                         absl::string_view ice_pwd) {
+-    RTC_DCHECK(pooled_);
+-    RTC_DCHECK(!content_name.empty());
+-    RTC_DCHECK(content_name_.empty());
+     content_name_ = std::string(content_name);
+     component_ = component;
+     ice_ufrag_ = std::string(ice_ufrag);
+@@ -313,12 +310,7 @@ class RTC_EXPORT PortAllocatorSession : public sigslot::has_slots<> {
+     UpdateIceParametersInternal();
+   }
+ 
+-  void set_pooled(bool value) {
+-    pooled_ = value;
+-    if (pooled_) {
+-      content_name_.clear();
+-    }
+-  }
++  void set_pooled(bool value) { pooled_ = value; }
+ 
+   uint32_t flags_;
+   uint32_t generation_;
+diff --git a/p2p/base/port_allocator_unittest.cc b/p2p/base/port_allocator_unittest.cc
+index d7272baa0e..8bc61dadd8 100644
+--- a/p2p/base/port_allocator_unittest.cc
++++ b/p2p/base/port_allocator_unittest.cc
+@@ -239,7 +239,6 @@ TEST_F(PortAllocatorTest, TakePooledSessionUpdatesIceParameters) {
+       static_cast<webrtc::FakePortAllocatorSession*>(
+           allocator_->TakePooledSession(kContentName, 1, kIceUfrag, kIcePwd)
+               .release()));
+-  EXPECT_FALSE(session->pooled());
+   EXPECT_EQ(1, session->transport_info_update_count());
+   EXPECT_EQ(kContentName, session->content_name());
+   EXPECT_EQ(1, session->component());
+diff --git a/p2p/base/turn_port.h b/p2p/base/turn_port.h
+index 0674a5a320..c74feae432 100644
+--- a/p2p/base/turn_port.h
++++ b/p2p/base/turn_port.h
+@@ -93,7 +93,6 @@ class TurnPort : public Port {
+                       .network = args.network,
+                       .ice_username_fragment = args.username,
+                       .ice_password = args.password,
+-                      .content_name = args.content_name,
+                       .lna_permission_factory = args.lna_permission_factory},
+                      socket, *args.server_address, args.config->credentials,
+                      args.relative_priority, args.config->tls_alpn_protocols,
+@@ -117,7 +116,6 @@ class TurnPort : public Port {
+          .network = args.network,
+          .ice_username_fragment = args.username,
+          .ice_password = args.password,
+-         .content_name = args.content_name,
+          .lna_permission_factory = args.lna_permission_factory},
+         min_port, max_port, *args.server_address, args.config->credentials,
+         args.relative_priority, args.config->tls_alpn_protocols,
+diff --git a/p2p/client/basic_port_allocator.cc b/p2p/client/basic_port_allocator.cc
+index e288c7122d..ee4762815e 100644
+--- a/p2p/client/basic_port_allocator.cc
++++ b/p2p/client/basic_port_allocator.cc
+@@ -567,7 +567,6 @@ bool BasicPortAllocatorSession::CandidatesAllocationDone() const {
+ 
+ void BasicPortAllocatorSession::UpdateIceParametersInternal() {
+   RTC_DCHECK_RUN_ON(network_thread_);
+-  RTC_DCHECK(pooled());
+   for (PortData& port : ports_) {
+     port.port()->set_content_name(content_name());
+     port.port()->SetIceParameters(component(), ice_ufrag(), ice_pwd());
+@@ -908,15 +907,18 @@ void BasicPortAllocatorSession::DisableEquivalentPhases(
+ void BasicPortAllocatorSession::AddAllocatedPort(Port* port,
+                                                  AllocationSequence* seq) {
+   RTC_DCHECK_RUN_ON(network_thread_);
+-  RTC_DCHECK_EQ(port->content_name(), content_name());
++  if (!port)
++    return;
+ 
+   RTC_LOG(LS_INFO) << "Adding allocated port for " << content_name();
++  port->set_content_name(content_name());
+   port->set_component(component());
+   port->set_generation(generation());
+   port->set_send_retransmit_count_attribute(
+       (flags() & PORTALLOCATOR_ENABLE_STUN_RETRANSMIT_ATTRIBUTE) != 0);
+ 
+-  ports_.emplace_back(port, seq);
++  PortData data(port, seq);
++  ports_.push_back(data);
+ 
+   port->SubscribeCandidateReadyCallback(
+       [this](Port* port, const Candidate& c) { OnCandidateReady(port, c); });
+@@ -1451,7 +1453,6 @@ void AllocationSequence::CreateUDPPorts() {
+          .network = network_,
+          .ice_username_fragment = session_->username(),
+          .ice_password = session_->password(),
+-         .content_name = session_->content_name(),
+          .lna_permission_factory =
+              session_->allocator()->lna_permission_factory()},
+         udp_socket_.get(), emit_local_candidate_for_anyaddress,
+@@ -1464,7 +1465,6 @@ void AllocationSequence::CreateUDPPorts() {
+          .network = network_,
+          .ice_username_fragment = session_->username(),
+          .ice_password = session_->password(),
+-         .content_name = session_->content_name(),
+          .lna_permission_factory =
+              session_->allocator()->lna_permission_factory()},
+         session_->allocator()->min_port(), session_->allocator()->max_port(),
+@@ -1478,6 +1478,9 @@ void AllocationSequence::CreateUDPPorts() {
+     // UDPPort.
+     if (IsFlagSet(PORTALLOCATOR_ENABLE_SHARED_SOCKET)) {
+       udp_port_ = port.get();
++      port->SubscribePortDestroyed(
++          [this](PortInterface* port) { OnPortDestroyed(port); });
++
+       // If STUN is not disabled, setting stun server address to port.
+       if (!IsFlagSet(PORTALLOCATOR_DISABLE_STUN)) {
+         if (config_ && !config_->StunServers().empty()) {
+@@ -1500,15 +1503,12 @@ void AllocationSequence::CreateTCPPorts() {
+   }
+ 
+   std::unique_ptr<Port> port = TCPPort::Create(
+-      {
+-          .env = session_->allocator()->env(),
+-          .network_thread = session_->network_thread(),
+-          .socket_factory = session_->socket_factory(),
+-          .network = network_,
+-          .ice_username_fragment = session_->username(),
+-          .ice_password = session_->password(),
+-          .content_name = session_->content_name(),
+-      },
++      {.env = session_->allocator()->env(),
++       .network_thread = session_->network_thread(),
++       .socket_factory = session_->socket_factory(),
++       .network = network_,
++       .ice_username_fragment = session_->username(),
++       .ice_password = session_->password()},
+       session_->allocator()->min_port(), session_->allocator()->max_port(),
+       session_->allocator()->allow_tcp_listen());
+   if (port) {
+@@ -1542,7 +1542,6 @@ void AllocationSequence::CreateStunPorts() {
+        .network = network_,
+        .ice_username_fragment = session_->username(),
+        .ice_password = session_->password(),
+-       .content_name = session_->content_name(),
+        .lna_permission_factory =
+            session_->allocator()->lna_permission_factory()},
+       session_->allocator()->min_port(), session_->allocator()->max_port(),
+@@ -1612,7 +1611,6 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config,
+     args.network = network_;
+     args.username = session_->username();
+     args.password = session_->password();
+-    args.content_name = session_->content_name();
+     args.server_address = &(*relay_port);
+     args.config = &config;
+     args.turn_customizer = session_->allocator()->turn_customizer();
+@@ -1637,6 +1635,11 @@ void AllocationSequence::CreateTurnPort(const RelayServerConfig& config,
+       }
+ 
+       relay_ports_.push_back(port.get());
++      // Listen to the port destroyed signal, to allow AllocationSequence to
++      // remove the entry from it's map.
++      port->SubscribePortDestroyed(
++          [this](PortInterface* port) { OnPortDestroyed(port); });
++
+     } else {
+       port = session_->allocator()->relay_port_factory()->Create(
+           args, session_->allocator()->min_port(),
+diff --git a/p2p/client/basic_port_allocator.h b/p2p/client/basic_port_allocator.h
+index f2242a7236..ced785f66a 100644
+--- a/p2p/client/basic_port_allocator.h
++++ b/p2p/client/basic_port_allocator.h
+@@ -201,13 +201,10 @@ class RTC_EXPORT BasicPortAllocatorSession : public PortAllocatorSession {
+                          // interface. Only TURN ports may be pruned.
+     };
+ 
+-    PortData() = delete;
+-    PortData(PortData&&) = default;
++    PortData() {}
+     PortData(Port* port, AllocationSequence* seq)
+         : port_(port), sequence_(seq) {}
+ 
+-    PortData& operator=(PortData&&) = default;
+-
+     Port* port() const { return port_; }
+     AllocationSequence* sequence() const { return sequence_; }
+     bool has_pairable_candidate() const { return has_pairable_candidate_; }
+diff --git a/p2p/client/relay_port_factory_interface.h b/p2p/client/relay_port_factory_interface.h
+index 2bcb2e0f55..63b7c8bd77 100644
+--- a/p2p/client/relay_port_factory_interface.h
++++ b/p2p/client/relay_port_factory_interface.h
+@@ -40,7 +40,6 @@ struct CreateRelayPortArgs {
+   const RelayServerConfig* config;
+   std::string username;
+   std::string password;
+-  std::string content_name;
+   TurnCustomizer* turn_customizer = nullptr;
+   // Relative priority of candidates from this TURN server in relation
+   // to the candidates from other servers. Required because ICE priorities
