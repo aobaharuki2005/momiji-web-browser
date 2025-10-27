@@ -47,12 +47,6 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         requirePreference<Preference>(R.string.pref_key_learn_about_fx_suggest).apply {
             isVisible = context.settings().enableFxSuggest
         }
-        requirePreference<CheckBoxPreference>(R.string.pref_key_show_trending_search_suggestions).apply {
-            isVisible = context.settings().isTrendingSearchesVisible
-        }
-        requirePreference<SwitchPreference>(R.string.pref_key_show_recent_search_suggestions).apply {
-            isVisible = context.settings().isRecentSearchesVisible
-        }
 
         view?.hideKeyboard()
     }
@@ -78,7 +72,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
 
         val trendingSearchSuggestionsPreference =
             requirePreference<CheckBoxPreference>(R.string.pref_key_show_trending_search_suggestions).apply {
-                isVisible = context.settings().isTrendingSearchesVisible
+                isChecked = context.settings().trendingSearchSuggestionsEnabled
                 isEnabled = getSelectedSearchEngine(requireContext())?.trendingUrl != null &&
                     context.settings().shouldShowSearchSuggestions
             }

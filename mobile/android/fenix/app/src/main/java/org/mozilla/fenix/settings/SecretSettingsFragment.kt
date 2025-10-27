@@ -193,12 +193,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_trending_searches).apply {
-            isVisible = true
-            isChecked = context.settings().isTrendingSearchesVisible
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_enable_lna_blocking_enabled).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().isLnaBlockingEnabled
@@ -209,12 +203,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
                     return super.onPreferenceChange(preference, newValue)
                 }
             }
-        }
-
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_recent_searches).apply {
-            isVisible = true
-            isChecked = context.settings().isRecentSearchesVisible
-            onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_allow_settings_search).apply {

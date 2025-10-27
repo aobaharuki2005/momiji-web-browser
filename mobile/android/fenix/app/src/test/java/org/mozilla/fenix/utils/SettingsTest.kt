@@ -1115,23 +1115,6 @@ class SettingsTest {
     }
 
     @Test
-    fun `GIVEN recent search is enable THEN should show recent searches only if recent search is visible`() {
-        val settings = spyk(settings)
-        every { settings.recentSearchSuggestionsEnabled } returns true
-        every { settings.isRecentSearchesVisible } returns true
-
-        assertTrue(settings.shouldShowRecentSearchSuggestions)
-
-        every { settings.isRecentSearchesVisible } returns false
-        every { settings.recentSearchSuggestionsEnabled } returns true
-        assertFalse(settings.shouldShowRecentSearchSuggestions)
-
-        every { settings.isRecentSearchesVisible } returns true
-        every { settings.recentSearchSuggestionsEnabled } returns false
-        assertFalse(settings.shouldShowRecentSearchSuggestions)
-    }
-
-    @Test
     fun `GIVEN the conditions to show a prompt are not met WHEN checking prompt eligibility THEN shouldShowSetAsDefaultPrompt is false`() {
         settings.numberOfSetAsDefaultPromptShownTimes = 0
         settings.lastSetAsDefaultPromptShownTimeInMillis = System.currentTimeMillis()

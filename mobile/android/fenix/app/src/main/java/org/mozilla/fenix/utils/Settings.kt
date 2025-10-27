@@ -1499,17 +1499,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the user have enabled recent search in the search suggestions setting preference.
      */
-    @VisibleForTesting
-    internal var recentSearchSuggestionsEnabled by booleanPreference(
+    internal var shouldShowRecentSearchSuggestions by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_recent_search_suggestions),
         default = true,
     )
-
-    /**
-     * Returns true if recent searches should be shown to the user.
-     */
-    val shouldShowRecentSearchSuggestions: Boolean
-        get() = recentSearchSuggestionsEnabled && isRecentSearchesVisible
 
     var showSearchSuggestionsInPrivateOnboardingFinished by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions_in_private_onboarding),
@@ -2327,24 +2320,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var enableUnifiedTrustPanel by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_unified_trust_panel),
         default = { FxNimbus.features.unifiedTrustPanel.value().enabled },
-        featureFlag = true,
-    )
-
-    /**
-     * Indicates if Trending Search Suggestions are enabled.
-     */
-    var isTrendingSearchesVisible by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_trending_searches),
-        default = { FxNimbus.features.trendingSearches.value().enabled },
-        featureFlag = true,
-    )
-
-    /**
-     * Indicates if Recent Search Suggestions are enabled.
-     */
-    var isRecentSearchesVisible by lazyFeatureFlagPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_recent_searches),
-        default = { FxNimbus.features.recentSearches.value().enabled },
         featureFlag = true,
     )
 

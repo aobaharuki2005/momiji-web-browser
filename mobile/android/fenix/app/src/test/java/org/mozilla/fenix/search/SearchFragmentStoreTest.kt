@@ -766,7 +766,6 @@ class SearchFragmentStoreTest {
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
         every { settings.trendingSearchSuggestionsEnabled } returns true
-        every { settings.isTrendingSearchesVisible } returns true
         every { settings.shouldShowRecentSearchSuggestions } returns true
 
         store.dispatch(
@@ -1245,10 +1244,9 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun `GIVEN trending searches is enabled, visible and search engine supports it THEN should show trending searches`() {
+    fun `GIVEN trending searches is enabled and search engine supports it THEN should show trending searches`() {
         var settings: Settings = mockk {
             every { trendingSearchSuggestionsEnabled } returns true
-            every { isTrendingSearchesVisible } returns true
             every { shouldShowSearchSuggestions } returns true
             every { shouldShowSearchSuggestionsInPrivate } returns true
         }
@@ -1258,7 +1256,6 @@ class SearchFragmentStoreTest {
 
         settings = mockk {
             every { trendingSearchSuggestionsEnabled } returns false
-            every { isTrendingSearchesVisible } returns true
             every { shouldShowSearchSuggestions } returns true
             every { shouldShowSearchSuggestionsInPrivate } returns true
         }
@@ -1268,17 +1265,6 @@ class SearchFragmentStoreTest {
 
         settings = mockk {
             every { trendingSearchSuggestionsEnabled } returns true
-            every { isTrendingSearchesVisible } returns false
-            every { shouldShowSearchSuggestions } returns true
-            every { shouldShowSearchSuggestionsInPrivate } returns true
-        }
-
-        assertFalse(shouldShowTrendingSearchSuggestions(BrowsingMode.Private, settings, true))
-        assertFalse(shouldShowTrendingSearchSuggestions(BrowsingMode.Normal, settings, true))
-
-        settings = mockk {
-            every { trendingSearchSuggestionsEnabled } returns true
-            every { isTrendingSearchesVisible } returns true
             every { shouldShowSearchSuggestions } returns false
             every { shouldShowSearchSuggestionsInPrivate } returns true
         }
@@ -1291,7 +1277,6 @@ class SearchFragmentStoreTest {
     fun `GIVEN search engine does not supports trending search THEN should not show trending searches`() {
         val settings: Settings = mockk {
             every { trendingSearchSuggestionsEnabled } returns true
-            every { isTrendingSearchesVisible } returns true
             every { shouldShowSearchSuggestions } returns true
             every { shouldShowSearchSuggestionsInPrivate } returns true
         }
@@ -1304,7 +1289,6 @@ class SearchFragmentStoreTest {
     fun `GIVEN is private tab THEN should show trending searches only if allowed`() {
         var settings: Settings = mockk {
             every { trendingSearchSuggestionsEnabled } returns true
-            every { isTrendingSearchesVisible } returns true
             every { shouldShowSearchSuggestions } returns true
             every { shouldShowSearchSuggestionsInPrivate } returns false
         }
@@ -1314,7 +1298,6 @@ class SearchFragmentStoreTest {
 
         settings = mockk {
             every { trendingSearchSuggestionsEnabled } returns true
-            every { isTrendingSearchesVisible } returns true
             every { shouldShowSearchSuggestions } returns true
             every { shouldShowSearchSuggestionsInPrivate } returns true
         }

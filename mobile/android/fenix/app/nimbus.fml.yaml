@@ -693,32 +693,6 @@ features:
         value:
           enabled: true
 
-  trending-searches:
-    description: Enables trending searches.
-    variables:
-      enabled:
-        description: >
-          Whether or not to enable trending searches.
-        type: Boolean
-        default: true
-      max-suggestions:
-        description: The number of maximum suggestions.
-        type: Int
-        default: 5
-
-  recent-searches:
-    description: Enables recent searches.
-    variables:
-      enabled:
-        description: >
-          Whether or not to enable recent searches.
-        type: Boolean
-        default: true
-      max-suggestions:
-        description: The number of maximum suggestions.
-        type: Int
-        default: 5
-
   search-suggestions-on-homepage:
     description: Enables search suggestions on homepage.
     variables:

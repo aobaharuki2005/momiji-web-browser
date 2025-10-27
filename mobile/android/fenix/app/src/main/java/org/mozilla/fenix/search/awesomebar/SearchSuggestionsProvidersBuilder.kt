@@ -36,7 +36,6 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.Core.Companion.METADATA_HISTORY_SUGGESTION_LIMIT
 import org.mozilla.fenix.components.Core.Companion.METADATA_SHORTCUT_SUGGESTION_LIMIT
 import org.mozilla.fenix.ext.containsQueryParameters
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.search.SearchEngineSource
 
 /**
@@ -117,7 +116,6 @@ class SearchSuggestionsProvidersBuilder(
                 fetchClient = components.core.client,
                 privateMode = browsingModeManager.mode.isPrivate,
                 searchUseCase = searchUseCase,
-                limit = FxNimbus.features.trendingSearches.value().maxSuggestions,
                 icon = searchBitmap,
             )
 
@@ -179,7 +177,6 @@ class SearchSuggestionsProvidersBuilder(
         if (state.showRecentSearches) {
             getRecentSearchSuggestionsProvider(
                 searchEngineSource = state.searchEngineSource,
-                maxNumberOfSuggestions = FxNimbus.features.recentSearches.value().maxSuggestions,
             )?.let { providersToAdd.add(it) }
         }
 

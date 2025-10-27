@@ -674,5 +674,5 @@ internal fun shouldShowTrendingSearchSuggestions(
     settings: Settings,
     isTrendingSuggestionSupported: Boolean,
 ) =
-    settings.trendingSearchSuggestionsEnabled && settings.isTrendingSearchesVisible &&
+    settings.trendingSearchSuggestionsEnabled &&
         isTrendingSuggestionSupported && shouldShowSearchSuggestions(browsingMode, settings)

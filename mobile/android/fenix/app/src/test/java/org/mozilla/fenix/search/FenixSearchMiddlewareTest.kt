@@ -257,7 +257,6 @@ class FenixSearchMiddlewareTest {
     fun `GIVEN trending searches are enabled WHEN search starts starts for the current webpage THEN show new search suggestions`() {
         val (_, store) = buildMiddlewareAndAddToSearchStore()
         every { settings.trendingSearchSuggestionsEnabled } returns true
-        every { settings.isTrendingSearchesVisible } returns true
         every { settings.shouldShowSearchSuggestions } returns true
         val defaultSearchEngine = fakeSearchEnginesState().selectedOrDefaultSearchEngine
 
