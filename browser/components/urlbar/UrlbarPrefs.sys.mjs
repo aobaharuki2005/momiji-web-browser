@@ -496,10 +496,11 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // Whether results will include QuickActions in the default search mode.
   ["suggest.quickactions", false],
 
-  // Whether results will include non-sponsored quick suggest suggestions.
-  ["suggest.quicksuggest.nonsponsored", false],
+  // Whether results will include Suggest suggestions.
+  ["suggest.quicksuggest.all", false],
 
-  // Whether results will include sponsored quick suggest suggestions.
+  // Whether results will include sponsored Suggest suggestions. Only relevant
+  // if the `all` pref is true.
   ["suggest.quicksuggest.sponsored", false],
 
   // Whether results will include Realtime suggestion opt-in result.

@@ -157,8 +157,8 @@ add_setup(async function init() {
     remoteSettingsRecords: REMOTE_SETTINGS_RECORDS,
     merinoSuggestions: [],
     prefs: [
+      ["suggest.quicksuggest.all", true],
       ["suggest.quicksuggest.sponsored", true],
-      ["suggest.quicksuggest.nonsponsored", true],
       ["quicksuggest.ampTopPickCharThreshold", 0],
     ],
   });

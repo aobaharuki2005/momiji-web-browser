@@ -23,8 +23,10 @@ requesttimeoutfactor = 2  # Slow on Linux and Windows
 ["test_quicksuggest_dynamicSuggestions.js"]
 
 ["test_quicksuggest_exposures.js"]
+requesttimeoutfactor = 2  # Slow on Mac in verify mode
 
 ["test_quicksuggest_exposures_locales.js"]
+requesttimeoutfactor = 2  # Slow on Mac in verify mode
 
 ["test_quicksuggest_flight_status.js"]
 

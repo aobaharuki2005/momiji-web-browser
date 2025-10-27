@@ -81,8 +81,7 @@ const SUGGEST_PREFS = Object.freeze({
       US: [EN_LOCALES, SETTINGS_UI.OFFLINE_ONLY],
     },
   },
-  "suggest.quicksuggest.nonsponsored": {
-    nimbusVariableIfExposedInUi: "quickSuggestNonSponsoredEnabled",
+  "suggest.quicksuggest.all": {
     defaultValues: {
       DE: [["de"], true],
       FR: [["fr"], true],

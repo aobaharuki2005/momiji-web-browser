@@ -40,7 +40,7 @@ add_setup(async () => {
   // Set up the remote settings client with the test data.
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     prefs: [
-      ["suggest.quicksuggest.nonsponsored", true],
+      ["suggest.quicksuggest.all", true],
       ["suggest.quicksuggest.sponsored", true],
       ["quicksuggest.ampTopPickCharThreshold", 0],
     ],
@@ -317,42 +317,6 @@ add_task(async function timestamps() {
   });
 
   MerinoTestUtils.server.reset();
-  merinoClient().resetSession();
-});
-
-// When both suggestion types are disabled but online is enabled, we should
-// still send requests to Merino, and the requests should include an empty
-// `providers` to tell Merino not to fetch any suggestions.
-add_task(async function suggestedDisabled_onlineEnabled() {
-  UrlbarPrefs.set("quicksuggest.online.available", true);
-  UrlbarPrefs.set("quicksuggest.online.enabled", true);
-
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
-
-  let context = createContext("test", {
-    providers: [UrlbarProviderQuickSuggest.name],
-    isPrivate: false,
-  });
-  await check_results({
-    context,
-    matches: [],
-  });
-
-  // Check that the request is received and includes an empty `providers`.
-  MerinoTestUtils.server.checkAndClearRequests([
-    {
-      params: {
-        [MerinoTestUtils.SEARCH_PARAMS.QUERY]: "test",
-        [MerinoTestUtils.SEARCH_PARAMS.SEQUENCE_NUMBER]: 0,
-        [MerinoTestUtils.SEARCH_PARAMS.PROVIDERS]: "",
-      },
-    },
-  ]);
-
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-  await QuickSuggestTestUtils.forceSync();
   merinoClient().resetSession();
 });
 
@@ -813,8 +777,24 @@ add_task(async function bestMatch() {
   merinoClient().resetSession();
 });
 
-// Tests a sponsored suggestion that isn't managed by a feature.
-add_task(async function unmanaged_sponsored() {
+// Tests a sponsored suggestion that isn't managed by a feature. When the `all`
+// pref is disabled, a result for the suggestion should not be added.
+add_task(async function unmanaged_sponsored_allDisabled() {
+  await doUnmanagedTest({
+    pref: "suggest.quicksuggest.all",
+    suggestion: {
+      title: "Sponsored without feature",
+      url: "https://example.com/sponsored-without-feature",
+      provider: "sponsored-unrecognized-provider",
+      is_sponsored: true,
+    },
+    shouldBeAdded: false,
+  });
+});
+
+// Tests a sponsored suggestion that isn't managed by a feature. When the
+// sponsored pref is disabled, a result for the suggestion should not be added.
+add_task(async function unmanaged_sponsored_sponsoredDisabled() {
   await doUnmanagedTest({
     pref: "suggest.quicksuggest.sponsored",
     suggestion: {
@@ -823,24 +803,43 @@ add_task(async function unmanaged_sponsored() {
       provider: "sponsored-unrecognized-provider",
       is_sponsored: true,
     },
+    shouldBeAdded: false,
   });
 });
 
-// Tests a nonsponsored suggestion that isn't managed by a feature.
-add_task(async function unmanaged_nonsponsored() {
+// Tests a nonsponsored suggestion that isn't managed by a feature. When the
+// `all` pref is disabled, a result for the suggestion should not be added.
+add_task(async function unmanaged_nonsponsored_allDisabled() {
   await doUnmanagedTest({
-    pref: "suggest.quicksuggest.nonsponsored",
+    pref: "suggest.quicksuggest.all",
     suggestion: {
       title: "Nonsponsored without feature",
       url: "https://example.com/nonsponsored-without-feature",
       provider: "nonsponsored-unrecognized-provider",
       // no is_sponsored
     },
+    shouldBeAdded: false,
   });
 });
 
-async function doUnmanagedTest({ pref, suggestion }) {
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+// Tests a nonsponsored suggestion that isn't managed by a feature. When the
+// `all` pref is enabled and the sponsored pref is disabled, a result for the
+// suggestion should be added.
+add_task(async function unmanaged_nonsponsored_sponsoredDisabled() {
+  await doUnmanagedTest({
+    pref: "suggest.quicksuggest.sponsored",
+    suggestion: {
+      title: "Nonsponsored without feature",
+      url: "https://example.com/nonsponsored-without-feature",
+      provider: "nonsponsored-unrecognized-provider",
+      // no is_sponsored
+    },
+    shouldBeAdded: true,
+  });
+});
+
+async function doUnmanagedTest({ pref, suggestion, shouldBeAdded }) {
+  UrlbarPrefs.set("suggest.quicksuggest.all", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await QuickSuggestTestUtils.forceSync();
 
@@ -866,7 +865,7 @@ async function doUnmanagedTest({ pref, suggestion }) {
     },
   };
 
-  // Do an initial search. Sponsored and nonsponsored suggestions are both
+  // Do an initial search. The `all` pref and sponsored suggestions are both
   // enabled, so the suggestion should be matched.
   info("Doing search 1");
   await check_results({
@@ -877,8 +876,8 @@ async function doUnmanagedTest({ pref, suggestion }) {
     matches: [expectedResult],
   });
 
-  // Set the pref to false and do another search. The suggestion shouldn't be
-  // matched.
+  // Set the passed-in pref to false and do another search. The suggestion
+  // should be matched as expected.
   UrlbarPrefs.set(pref, false);
   await QuickSuggestTestUtils.forceSync();
 
@@ -888,7 +887,7 @@ async function doUnmanagedTest({ pref, suggestion }) {
       providers: [UrlbarProviderQuickSuggest.name],
       isPrivate: false,
     }),
-    matches: [],
+    matches: shouldBeAdded ? [expectedResult] : [],
   });
 
   // Flip the pref back to true and do a third search.

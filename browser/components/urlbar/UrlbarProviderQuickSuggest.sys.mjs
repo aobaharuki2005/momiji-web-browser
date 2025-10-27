@@ -569,10 +569,9 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
     let feature = lazy.QuickSuggest.getFeatureByResult(result);
     if (
       !feature &&
-      ((result.payload.isSponsored &&
-        !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
-        (!result.payload.isSponsored &&
-          !lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")))
+      (!lazy.UrlbarPrefs.get("suggest.quicksuggest.all") ||
+        (result.payload.isSponsored &&
+          !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")))
     ) {
       return false;
     }

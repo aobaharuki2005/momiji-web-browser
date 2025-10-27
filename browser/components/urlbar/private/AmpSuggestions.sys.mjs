@@ -30,7 +30,12 @@ const TIMESTAMP_REGEXP = /^\d{10}$/;
  */
 export class AmpSuggestions extends SuggestProvider {
   get enablingPreferences() {
-    return ["ampFeatureGate", "suggest.amp", "suggest.quicksuggest.sponsored"];
+    return [
+      "ampFeatureGate",
+      "suggest.amp",
+      "suggest.quicksuggest.all",
+      "suggest.quicksuggest.sponsored",
+    ];
   }
 
   get primaryUserControlledPreferences() {

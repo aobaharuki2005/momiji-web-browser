@@ -13,11 +13,6 @@ add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit();
 });
 
-// Toggles the `suggest.quicksuggest.nonsponsored` pref.
-add_task(function nonsponsoredToggled() {
-  doToggleTest("suggest.quicksuggest.nonsponsored");
-});
-
 // Toggles the `suggest.quicksuggest.sponsored` pref.
 add_task(async function sponsoredToggled() {
   doToggleTest("suggest.quicksuggest.sponsored");
@@ -77,7 +72,7 @@ add_task(async function telemetryEnvironmentOnStartup() {
   // array here.
   Assert.deepEqual(
     prefs.sort(),
-    ["suggest.quicksuggest.nonsponsored", "suggest.quicksuggest.sponsored"],
+    ["suggest.quicksuggest.sponsored"],
     "Expected startup prefs"
   );
 

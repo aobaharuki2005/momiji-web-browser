@@ -73,8 +73,8 @@ add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords,
     prefs: [
+      ["suggest.quicksuggest.all", true],
       ["suggest.quicksuggest.sponsored", true],
-      ["suggest.quicksuggest.nonsponsored", true],
       ["quicksuggest.ampTopPickCharThreshold", 0],
     ],
   });

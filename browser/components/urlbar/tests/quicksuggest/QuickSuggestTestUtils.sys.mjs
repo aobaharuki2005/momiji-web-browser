@@ -1609,7 +1609,7 @@ class _QuickSuggestTestUtils {
                 "Timed out waiting for TOPIC_SEARCH_SERVICE (not an error)"
               );
               resolve();
-            }, 2000);
+            }, 1000);
           }),
         ])
       );

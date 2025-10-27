@@ -41,15 +41,16 @@ browser.urlbar.suggest.openpage (boolean, default: true)
   Whether results will include switch-to-tab results.
   Can be controlled from Privacy Preferences.
 
-browser.urlbar.suggest.quicksuggest.nonsponsored (boolean, default: false)
+browser.urlbar.suggest.quicksuggest.all (boolean, default: false)
   If ``browser.urlbar.quicksuggest.enabled`` is true, this controls whether
-  results will include non-sponsored quick suggest suggestions. Otherwise
-  non-sponsored suggestions will not be shown.
+  results will include suggestions that are part of the Firefox Suggest brand.
+  Otherwise they will not be included.
 
 browser.urlbar.suggest.quicksuggest.sponsored (boolean, default: false)
- If ``browser.urlbar.quicksuggest.enabled`` is true, this controls whether
-  results will include sponsored quick suggest suggestions. Otherwise sponsored
-  suggestions will not be shown.
+  If ``browser.urlbar.quicksuggest.enabled`` and
+  ``browser.urlbar.suggest.quicksuggest.all`` are true, this controls whether
+  results will include sponsored Firefox Suggest suggestions. Otherwise they
+  will not be included.
 
 browser.urlbar.suggest.searches (boolean, default: true)
   Whether results will include search suggestions.
@@ -168,7 +169,7 @@ browser.urlbar.quicksuggest.enabled (boolean, default: false)
   results related to the user's search string. This pref can be overridden by
   the ``quickSuggestEnabled`` Nimbus variable. If false, neither sponsored nor
   non-sponsored quick suggest results will be shown. If true, then we look at
-  the individual prefs ``browser.urlbar.suggest.quicksuggest.nonsponsored`` and
+  the individual prefs ``browser.urlbar.suggest.quicksuggest.all`` and
   ``browser.urlbar.suggest.quicksuggest.sponsored``.
 
 browser.urlbar.quicksuggest.online.available (boolean, default: false)

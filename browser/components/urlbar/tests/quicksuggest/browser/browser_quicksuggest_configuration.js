@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 // We use this pref in enterprise preference policy tests. We specifically use a
 // pref that's sticky and exposed in the UI to make sure it can be set properly.
-const POLICY_PREF = "suggest.quicksuggest.nonsponsored";
+const POLICY_PREF = "suggest.quicksuggest.sponsored";
 
 let gDefaultBranch = Services.prefs.getDefaultBranch("browser.urlbar.");
 let gUserBranch = Services.prefs.getBranch("browser.urlbar.");
@@ -94,17 +94,14 @@ add_task(async function () {
     {
       initialPrefsToSet: {
         defaultBranch: {
-          "suggest.quicksuggest.nonsponsored": true,
           "suggest.quicksuggest.sponsored": true,
         },
       },
       valueOverrides: {
-        quickSuggestNonSponsoredEnabled: false,
         quickSuggestSponsoredEnabled: false,
       },
       expectedPrefs: {
         defaultBranch: {
-          "suggest.quicksuggest.nonsponsored": false,
           "suggest.quicksuggest.sponsored": false,
         },
       },
@@ -112,21 +109,17 @@ add_task(async function () {
     {
       initialPrefsToSet: {
         userBranch: {
-          "suggest.quicksuggest.nonsponsored": true,
           "suggest.quicksuggest.sponsored": true,
         },
       },
       valueOverrides: {
-        quickSuggestNonSponsoredEnabled: false,
         quickSuggestSponsoredEnabled: false,
       },
       expectedPrefs: {
         defaultBranch: {
-          "suggest.quicksuggest.nonsponsored": false,
           "suggest.quicksuggest.sponsored": false,
         },
         userBranch: {
-          "suggest.quicksuggest.nonsponsored": true,
           "suggest.quicksuggest.sponsored": true,
         },
       },
@@ -146,25 +139,20 @@ add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: {
-        "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
       },
       userBranch: {
-        "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
       },
     },
     valueOverrides: {
-      quickSuggestNonSponsoredEnabled: true,
       quickSuggestSponsoredEnabled: true,
     },
     expectedPrefs: {
       defaultBranch: {
-        "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
       },
       userBranch: {
-        "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
       },
     },
@@ -191,17 +179,14 @@ add_task(async function () {
     {
       initialPrefsToSet: {
         defaultBranch: {
-          "suggest.quicksuggest.nonsponsored": false,
           "suggest.quicksuggest.sponsored": false,
         },
       },
       valueOverrides: {
-        quickSuggestNonSponsoredEnabled: true,
         quickSuggestSponsoredEnabled: true,
       },
       expectedPrefs: {
         defaultBranch: {
-          "suggest.quicksuggest.nonsponsored": true,
           "suggest.quicksuggest.sponsored": true,
         },
       },
@@ -209,21 +194,17 @@ add_task(async function () {
     {
       initialPrefsToSet: {
         userBranch: {
-          "suggest.quicksuggest.nonsponsored": false,
           "suggest.quicksuggest.sponsored": false,
         },
       },
       valueOverrides: {
-        quickSuggestNonSponsoredEnabled: true,
         quickSuggestSponsoredEnabled: true,
       },
       expectedPrefs: {
         defaultBranch: {
-          "suggest.quicksuggest.nonsponsored": true,
           "suggest.quicksuggest.sponsored": true,
         },
         userBranch: {
-          "suggest.quicksuggest.nonsponsored": false,
           "suggest.quicksuggest.sponsored": false,
         },
       },
@@ -243,25 +224,20 @@ add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: {
-        "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
       },
       userBranch: {
-        "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
       },
     },
     valueOverrides: {
-      quickSuggestNonSponsoredEnabled: false,
       quickSuggestSponsoredEnabled: false,
     },
     expectedPrefs: {
       defaultBranch: {
-        "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
       },
       userBranch: {
-        "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
       },
     },
