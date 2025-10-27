@@ -746,8 +746,7 @@ void CodeGenerator::visitSubI64(LSubI64* lir) {
 void CodeGenerator::visitMulI(LMulI* ins) {
   Register lhs = ToRegister(ins->lhs());
   const LAllocation* rhs = ins->rhs();
-
-  MOZ_ASSERT(ToRegister(ins->output()) == lhs);
+  Register out = ToRegister(ins->output());
 
   MMul* mul = ins->mir();
   MOZ_ASSERT_IF(mul->mode() == MMul::Integer,
@@ -763,29 +762,74 @@ void CodeGenerator::visitMulI(LMulI* ins) {
       bailoutIf(bailoutCond, ins->snapshot());
     }
 
-    switch (constant) {
-      case -1:
-        masm.negl(lhs);
-        break;
-      case 0:
-        masm.xorl(lhs, lhs);
-        return;  // escape overflow check;
-      case 1:
-        // nop
-        return;  // escape overflow check;
-      case 2:
-        masm.addl(lhs, lhs);
-        break;
-      default:
-        if (!mul->canOverflow() && constant > 0) {
+    if (!mul->canOverflow()) {
+      switch (constant) {
+        case 2:
+          if (lhs == out) {
+            masm.addl(lhs, lhs);
+          } else {
+            masm.leal(Operand(lhs, lhs, TimesOne), out);
+          }
+          return;
+        case 3:
+          masm.leal(Operand(lhs, lhs, TimesTwo), out);
+          return;
+        case 4:
+          if (lhs == out) {
+            masm.shll(Imm32(2), lhs);
+          } else {
+            masm.leal(Operand(lhs, TimesFour, 0), out);
+          }
+          return;
+        case 5:
+          masm.leal(Operand(lhs, lhs, TimesFour), out);
+          return;
+        case 8:
+          if (lhs == out) {
+            masm.shll(Imm32(3), lhs);
+          } else {
+            masm.leal(Operand(lhs, TimesEight, 0), out);
+          }
+          return;
+        case 9:
+          masm.leal(Operand(lhs, lhs, TimesEight), out);
+          return;
+        default:
           // Use shift if cannot overflow and constant is power of 2
           int32_t shift = FloorLog2(constant);
-          if ((1 << shift) == constant) {
-            masm.shll(Imm32(shift), lhs);
+          if (constant > 0 && (1 << shift) == constant) {
+            if (lhs != out) {
+              masm.movl(lhs, out);
+            }
+            masm.shll(Imm32(shift), out);
             return;
           }
+      }
+    }
+
+    switch (constant) {
+      case -1:
+        if (lhs != out) {
+          masm.movl(lhs, out);
         }
-        masm.imull(Imm32(constant), lhs);
+        masm.negl(out);
+        break;
+      case 0:
+        masm.xorl(out, out);
+        return;  // escape overflow check;
+      case 1:
+        if (lhs != out) {
+          masm.movl(lhs, out);
+        }
+        return;  // escape overflow check;
+      case 2:
+        if (lhs == out) {
+          masm.addl(lhs, lhs);
+          break;
+        }
+        [[fallthrough]];
+      default:
+        masm.imull(Imm32(constant), lhs, out);
     }
 
     // Bailout on overflow
@@ -793,6 +837,8 @@ void CodeGenerator::visitMulI(LMulI* ins) {
       bailoutIf(Assembler::Overflow, ins->snapshot());
     }
   } else {
+    MOZ_ASSERT(out == lhs);
+
     masm.imull(ToOperand(rhs), lhs);
 
     // Bailout on overflow
