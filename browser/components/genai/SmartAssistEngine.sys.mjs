@@ -223,11 +223,19 @@ export const SmartAssistEngine = {
       const engine = await this._createEngine({
         featureId: "smart-intent",
         modelId: "mozilla/mobilebert-query-intent-detection",
-        modelRevision: "v0.1.0",
+        modelRevision: "v0.2.0",
         taskName: "text-classification",
       });
+      const threshold = 0.6;
       const resp = await engine.run({ args: [[query]] });
-      return resp[0].label.toLowerCase();
+      // resp example: [{ label: "chat", score: 0.95 }, { label: "search", score: 0.04 }]
+      if (
+        resp[0].label.toLowerCase() === "chat" &&
+        resp[0].score >= threshold
+      ) {
+        return "chat";
+      }
+      return "search";
     } catch (error) {
       console.error("Error using intent detection model:", error);
       throw error;
