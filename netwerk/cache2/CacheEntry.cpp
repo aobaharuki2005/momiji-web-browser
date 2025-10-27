@@ -1770,6 +1770,15 @@ void CacheEntry::DoomAlreadyRemoved() {
 
   mIsDoomed = true;
 
+  // Remove from DictionaryCache immediately, to ensure the removal is
+  // synchronous
+  LOG(("DoomAlreadyRemoved [entry=%p removed]", this));
+  if (mEnhanceID.EqualsLiteral("dict:")) {
+    DictionaryCache::RemoveOriginFor(mURI);
+  } else {
+    DictionaryCache::RemoveDictionaryFor(mURI);
+  }
+
   // Pretend pinning is know.  This entry is now doomed for good, so don't
   // bother with defering doom because of unknown pinning state any more.
   mPinningKnown = true;

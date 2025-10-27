@@ -918,7 +918,7 @@ void DictionaryCache::RemoveDictionaryFor(const nsACString& aKey) {
 // Remove a dictionary if it exists for the key given
 void DictionaryCache::RemoveDictionary(const nsACString& aKey) {
   DICTIONARY_LOG(
-      ("Removing dictionary for %80s", PromiseFlatCString(aKey).get()));
+      ("Removing dictionary for %s", PromiseFlatCString(aKey).get()));
 
   nsCOMPtr<nsIURI> uri;
   if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aKey))) {
@@ -936,10 +936,10 @@ void DictionaryCache::RemoveDictionary(const nsACString& aKey) {
 void DictionaryCache::RemoveOriginFor(const nsACString& aKey) {
   RefPtr<DictionaryCache> cache = GetInstance();
   DICTIONARY_LOG(
-      ("Removing dictionary for %80s", PromiseFlatCString(aKey).get()));
+      ("Removing dictionary origin %s", PromiseFlatCString(aKey).get()));
   NS_DispatchToMainThread(NewRunnableMethod<const nsCString>(
-      "DictionaryCache::RemoveDictionaryFor", cache,
-      &DictionaryCache::RemoveDictionary, aKey));
+      "DictionaryCache::RemoveOriginFor", cache, &DictionaryCache::RemoveOrigin,
+      aKey));
 }
 
 // Remove a dictionary if it exists for the key given
