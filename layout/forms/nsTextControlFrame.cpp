@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "gfxContext.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"

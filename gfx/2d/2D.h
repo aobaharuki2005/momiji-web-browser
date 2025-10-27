@@ -34,8 +34,6 @@
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/Atomics.h"
 
-#include "mozilla/DebugOnly.h"
-
 #include "nsRegionFwd.h"
 
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)

@@ -17,7 +17,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedArithmetic.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
