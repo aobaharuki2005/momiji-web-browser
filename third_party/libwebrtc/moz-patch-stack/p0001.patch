@@ -130,10 +130,10 @@ index 1cb0c20424..55de3f9bc9 100644
    Candidate remote_candidate_;
  
 diff --git a/p2p/base/p2p_transport_channel.cc b/p2p/base/p2p_transport_channel.cc
-index db6c987c67..82d854fe1d 100644
+index 9b99b90bee..eee1092080 100644
 --- a/p2p/base/p2p_transport_channel.cc
 +++ b/p2p/base/p2p_transport_channel.cc
-@@ -866,16 +866,17 @@ void P2PTransportChannel::MaybeStartGathering() {
+@@ -865,16 +865,17 @@ void P2PTransportChannel::MaybeStartGathering() {
                                        ice_parameters_.ufrag,
                                        ice_parameters_.pwd);
      if (pooled_session) {
