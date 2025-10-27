@@ -28,6 +28,7 @@ enum class AbsPosReflowFlag : uint8_t {
   IsGridContainerCB,
 };
 using AbsPosReflowFlags = EnumSet<AbsPosReflowFlag>;
+struct StylePositionArea;
 
 /**
  * This class contains the logic for being an absolute containing block.  This
@@ -122,11 +123,10 @@ class AbsoluteContainingBlock {
    *
    * aOffset is an outparam.
    */
-  void ResolveSizeDependentOffsets(ReflowInput& aKidReflowInput,
-                                   const LogicalSize& aLogicalCBSize,
-                                   const LogicalSize& aKidSize,
-                                   const LogicalMargin& aMargin,
-                                   LogicalMargin& aOffsets);
+  void ResolveSizeDependentOffsets(
+      ReflowInput& aKidReflowInput, const LogicalSize& aLogicalCBSize,
+      const LogicalSize& aKidSize, const LogicalMargin& aMargin,
+      const StylePositionArea& aResolvedPositionArea, LogicalMargin& aOffsets);
 
   /**
    * For frames that have intrinsic block sizes, since we want to use the
