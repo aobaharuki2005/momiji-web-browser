@@ -72,7 +72,7 @@
     <!-- Label for enabling the Homepage Search Bar -->
     <string name="preferences_debug_settings_homepage_searchbar" translatable="false">Enable Homepage Search Bar</string>
     <!-- Label for overriding user specified homepage sections -->
-    <string name="preferences_debug_settings_override_user_specified_homepage_sections" translatable="false">Override user specified homepage sections</string>
+    <string name="preferences_debug_settings_override_user_specified_homepage_sections"  tools:ignore="UnusedResources" moz:removedIn="146" translatable="false">Override user specified homepage sections</string>
     <!-- Label for enabling the Compose Logins -->
     <string name="preferences_debug_settings_compose_logins" translatable="false">Enable Compose Logins</string>
     <!-- Label for enabling Homepage as a New Tab -->
