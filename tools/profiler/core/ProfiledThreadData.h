@@ -16,7 +16,6 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/ProfilerThreadRegistrationInfo.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"

@@ -35,7 +35,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/Logging.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/ProfilerUtils.h"

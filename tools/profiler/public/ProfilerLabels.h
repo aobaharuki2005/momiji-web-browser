@@ -23,7 +23,6 @@
 #include "mozilla/BaseProfilerRAIIMacro.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfilerThreadRegistration.h"
-#include "mozilla/ThreadLocal.h"
 #include "nsString.h"
 
 #include <stdint.h>
