@@ -772,11 +772,11 @@ void ShmemTextureHost::ForgetSharedData() {
 
 void ShmemTextureHost::OnShutdown() { mShmem = nullptr; }
 
-uint8_t* ShmemTextureHost::GetBuffer() const {
+uint8_t* ShmemTextureHost::GetBuffer() {
   return mShmem ? mShmem->get<uint8_t>() : nullptr;
 }
 
-size_t ShmemTextureHost::GetBufferSize() const {
+size_t ShmemTextureHost::GetBufferSize() {
   return mShmem ? mShmem->Size<uint8_t>() : 0;
 }
 
@@ -804,9 +804,9 @@ void MemoryTextureHost::DeallocateSharedData() {
 
 void MemoryTextureHost::ForgetSharedData() { mBuffer = nullptr; }
 
-uint8_t* MemoryTextureHost::GetBuffer() const { return mBuffer; }
+uint8_t* MemoryTextureHost::GetBuffer() { return mBuffer; }
 
-size_t MemoryTextureHost::GetBufferSize() const {
+size_t MemoryTextureHost::GetBufferSize() {
   // MemoryTextureHost just trusts that the buffer size is large enough to read
   // anything we need to. That's because MemoryTextureHost has to trust the
   // buffer pointer anyway, so the security model here is just that

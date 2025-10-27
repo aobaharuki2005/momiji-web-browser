@@ -1466,8 +1466,6 @@ bool DXGITextureHostD3D11::SupportsExternalCompositing(
 DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
     TextureFlags aFlags, const SurfaceDescriptorDXGIYCbCr& aDescriptor)
     : TextureHost(TextureHostType::DXGIYCbCr, aFlags),
-      mHandles{aDescriptor.handleY(), aDescriptor.handleCb(),
-               aDescriptor.handleCr()},
       mSize(aDescriptor.size()),
       mSizeY(aDescriptor.sizeY()),
       mSizeCbCr(aDescriptor.sizeCbCr()),
@@ -1480,6 +1478,9 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
   } else {
     MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
   }
+  mHandles[0] = aDescriptor.handleY();
+  mHandles[1] = aDescriptor.handleCb();
+  mHandles[2] = aDescriptor.handleCr();
 }
 
 DXGIYCbCrTextureHostD3D11::~DXGIYCbCrTextureHostD3D11() {
