@@ -90,7 +90,7 @@ img.inline-icon {
 }
 
 strong {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
 }
 
 /* type="system" infobar styles */

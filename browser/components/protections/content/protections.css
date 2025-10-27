@@ -67,7 +67,7 @@ body[focuseddatatype="cryptominer"] {
 }
 
 h2 {
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 
 #report-title {

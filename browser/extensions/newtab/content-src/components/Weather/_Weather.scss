@@ -312,7 +312,7 @@
 
     h3 {
       font-size: var(--button-font-size);
-      font-weight: var(--heading-font-weight);
+      font-weight: var(--font-weight-bold);
       margin-block: 0 var(--space-medium);
     }
 
@@ -514,13 +514,7 @@ dialog::after {
 
 .weatherForecastRow {
   text-transform: uppercase;
-
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 
 .weatherCityRow {

@@ -14,7 +14,7 @@ fieldset {
 
 legend {
   padding: 0;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   display: inline-flex;
   gap: var(--space-small);
   align-items: baseline;

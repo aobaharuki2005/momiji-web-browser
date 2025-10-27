@@ -46,7 +46,7 @@
 
 #primary {
   font-size: 1.154em;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   margin-block-end: var(--space-xsmall);
 }
 

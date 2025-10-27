@@ -7,6 +7,7 @@
 
 :host {
   --margin-inline-start-checkbox-content: calc(var(--checkbox-margin-inline) + var(--checkbox-size));
+  --font-weight-heading: var(--font-weight-bold, 600);
   --font-size-heading: 17px;
   --font-size-sub-heading: 15px;
   --font-weight-label: var(--font-weight, normal);
@@ -136,7 +137,7 @@
     }
 
     #backup-turn-on-scheduled-header {
-      font-weight: var(--heading-font-weight);
+      font-weight: var(--font-weight-heading);
       font-size: var(--font-size-heading);
       text-align: start;
     }

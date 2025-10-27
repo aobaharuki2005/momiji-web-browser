@@ -963,7 +963,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 
 #fxa-menu-header-description {
   color: var(--text-color-deemphasized);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   text-wrap: wrap;
 }
 
@@ -1581,7 +1581,7 @@ toolbarbutton[itemtype="showinactivebutton"] {
 
 .remote-tabs-undo-button {
   font-size: 0.8em;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
 }
 
 .toolbaritem-combined-buttons {
@@ -2151,7 +2151,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
 }
 
 #reset-pbm-panel-header > description {
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 
 #reset-pbm-panel-checkbox {

@@ -1442,12 +1442,7 @@ main section {
 }
 .top-stories-bottom-container a {
   color: var(--newtab-primary-action-background);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .top-stories-bottom-container a.more-recommendations {
   font-weight: var(--font-weight);
@@ -2151,7 +2146,7 @@ main section {
 .home-section .widgets-section h2 {
   font-size: inherit;
   margin-block-start: 0;
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .home-section .settings-widgets,
 .home-section .settings-toggles {
@@ -3010,7 +3005,7 @@ main section {
 }
 .weatherOptIn dialog .weatherOptInContent h3 {
   font-size: var(--button-font-size);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin-block: 0 var(--space-medium);
 }
 .weatherOptIn dialog .weatherOptInContent moz-button-group {
@@ -3180,12 +3175,7 @@ dialog::after {
 
 .weatherForecastRow {
   text-transform: uppercase;
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 
 .weatherCityRow {
@@ -3678,7 +3668,7 @@ dialog::after {
 }
 .card-outer .card-title {
   font-size: inherit;
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   line-height: 19px;
   margin: 0 0 var(--space-xxsmall);
   word-wrap: break-word;
@@ -3837,7 +3827,7 @@ dialog::after {
 }
 .collapsible-section .section-title {
   font-size: var(--font-size-large);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   color: var(--newtab-text-primary-color);
 }
 .collapsible-section .section-title.grey-title {
@@ -4208,7 +4198,7 @@ dialog::after {
 .ds-layout .section-title span {
   color: var(--newtab-contextual-text-primary-color);
   font-size: var(--font-size-large);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .lightWallpaper .ds-header,
 .lightWallpaper .ds-layout .section-title span {
@@ -4234,12 +4224,7 @@ dialog::after {
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
   color: var(--newtab-primary-action-background);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a:is(:focus, :hover) {
   text-decoration: none;
@@ -4398,12 +4383,7 @@ dialog::after {
 }
 .widgets-wrapper .widgets-scroll-message p {
   margin: 0;
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 @media (prefers-reduced-motion: no-preference) {
   .widgets-wrapper .widgets-scroll-message {
@@ -4735,7 +4715,7 @@ dialog::after {
 }
 .newtab-widget-timer-notification-title-wrapper h3 {
   font-size: var(--button-font-size);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin-block: 0;
 }
 
@@ -4822,12 +4802,7 @@ dialog::after {
   color: var(--text-color);
   display: flex;
   font-size: calc(var(--font-size-large) * 2);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   font-variant-numeric: tabular-nums;
   height: 100%;
   inset-block-start: 0;
@@ -5214,7 +5189,7 @@ dialog::after {
   align-items: flex-start;
 }
 .ds-section-wrapper .ds-section .section-title {
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   font-size: var(--font-size-xlarge);
   color: var(--newtab-contextual-text-primary-color);
   margin-block: 0;
@@ -5638,7 +5613,7 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-1-large.ds-card.sections-card-ui .meta .title {
     -webkit-line-clamp: 3;
     font-size: var(--font-size-large);
-    font-weight: var(--heading-font-weight);
+    font-weight: var(--font-weight-bold);
     margin-block: 0 var(--space-small);
   }
   .ds-section-grid.ds-card-grid .col-1-large.ds-card.sections-card-ui .meta .excerpt {
@@ -6019,7 +5994,7 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-2-large.ds-card.sections-card-ui .meta .title {
     -webkit-line-clamp: 3;
     font-size: var(--font-size-large);
-    font-weight: var(--heading-font-weight);
+    font-weight: var(--font-weight-bold);
     margin-block: 0 var(--space-small);
   }
   .ds-section-grid.ds-card-grid .col-2-large.ds-card.sections-card-ui .meta .excerpt {
@@ -6409,7 +6384,7 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-3-large.ds-card.sections-card-ui .meta .title {
     -webkit-line-clamp: 3;
     font-size: var(--font-size-large);
-    font-weight: var(--heading-font-weight);
+    font-weight: var(--font-weight-bold);
     margin-block: 0 var(--space-small);
   }
   .ds-section-grid.ds-card-grid .col-3-large.ds-card.sections-card-ui .meta .excerpt {
@@ -6798,7 +6773,7 @@ dialog::after {
   .ds-section-grid.ds-card-grid .col-4-large.ds-card.sections-card-ui .meta .title {
     -webkit-line-clamp: 3;
     font-size: var(--font-size-large);
-    font-weight: var(--heading-font-weight);
+    font-weight: var(--font-weight-bold);
     margin-block: 0 var(--space-small);
   }
   .ds-section-grid.ds-card-grid .col-4-large.ds-card.sections-card-ui .meta .excerpt {
@@ -6859,7 +6834,7 @@ dialog::after {
 }
 .ds-highlights .section .section-list .card-outer .card-title {
   font-size: var(--font-size-small);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   line-height: 20px;
   max-height: 20px;
 }
@@ -6895,12 +6870,7 @@ dialog::after {
 .ds-navigation {
   color: var(--newtab-contextual-text-primary-color);
   font-size: var(--font-size-small);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   padding: var(--space-xsmall) 0;
 }
 @media (min-width: 1122px) {
@@ -6957,7 +6927,7 @@ dialog::after {
 }
 .ds-navigation.ds-navigation-new-topics .ds-navigation-header {
   font-size: var(--font-size-small);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   display: inline-block;
   margin-block-end: var(--space-small);
 }
@@ -7005,12 +6975,7 @@ dialog::after {
   border-top: 1px solid var(--newtab-border-color);
   line-height: 24px;
   font-size: var(--font-size-small);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .ds-navigation.ds-navigation-new-topics ul li::after {
   content: "";
@@ -7418,7 +7383,7 @@ dialog::after {
   -webkit-line-clamp: 3;
   line-height: normal;
   margin-block: 0;
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .ds-card .meta .excerpt {
   font-size: var(--font-size-small);
@@ -7500,12 +7465,7 @@ dialog::after {
   border: none;
   padding: var(--space-xsmall) var(--space-large);
   font-size: var(--font-size-small);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   min-height: var(--size-item-large);
   min-width: 97px;
   color: var(--newtab-text-primary-color);
@@ -7517,7 +7477,7 @@ dialog::after {
 .ds-card.ds-card-cta-button.variant-a .cta-header, .ds-card.ds-card-cta-button.variant-b .cta-header {
   background: var(--button-background-color);
   font-size: var(--font-size-root);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   text-align: end;
   padding: var(--space-xsmall) var(--space-large);
   color: var(--newtab-text-primary-color);
@@ -7583,7 +7543,7 @@ dialog::after {
   -webkit-line-clamp: 3;
   font-size: var(--font-size-root);
   margin-block-end: var(--space-small);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .ds-card-grid .sections-card-ui .meta .excerpt {
   -webkit-line-clamp: 3;
@@ -7979,7 +7939,7 @@ dialog::after {
 .ds-message .title .title-text {
   font-size: var(--font-size-small);
   color: var(--newtab-text-secondary-color);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   padding-inline-end: var(--space-medium);
 }
 .ds-message .title .link {
@@ -8072,7 +8032,7 @@ dialog::after {
 }
 .section-empty-state h2 {
   font-size: inherit;
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin: 0;
 }
 .section-empty-state p {
@@ -8127,7 +8087,7 @@ dialog::after {
 .ds-text-promo h3 {
   color: var(--newtab-text-primary-color);
   margin: 0;
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   font-size: inherit;
 }
 .ds-text-promo .subtitle {
@@ -8282,12 +8242,7 @@ dialog::after {
   position: relative;
   text-align: center;
   font-size: var(--font-size-large);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .ds-signup:hover {
   background: var(--newtab-element-hover-color);
@@ -8331,12 +8286,7 @@ dialog::after {
 .ds-privacy-link {
   text-align: center;
   font-size: var(--font-size-small);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .ds-privacy-link a:hover {
   text-decoration: none;
@@ -8600,7 +8550,7 @@ dialog::after {
   padding: 0;
 }
 .download-firefox-feature-highlight .feature-highlight .feature-highlight-modal .title {
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin-block: var(--space-small);
 }
 .download-firefox-feature-highlight .feature-highlight .feature-highlight-modal .subtitle {
@@ -8669,7 +8619,7 @@ dialog::after {
   font-size: var(--font-size-small);
 }
 .follow-section-button-highlight .follow-section-button-highlight-copy .title {
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin-block-end: var(--space-xsmall);
 }
 
@@ -8710,7 +8660,7 @@ dialog::after {
   inset-block-end: calc(var(--arrow-size) - var(--space-xxsmall));
 }
 .wallpaper-feature-highlight .feature-highlight .feature-highlight-modal .title {
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin-block: var(--space-medium);
 }
 .wallpaper-feature-highlight .feature-highlight .feature-highlight-modal .subtitle {
@@ -8774,7 +8724,7 @@ dialog::after {
   font-size: var(--font-size-small);
 }
 .shortcut-feature-highlight .shortcut-feature-highlight-copy .title {
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin-block-end: var(--space-xsmall);
   text-align: inherit;
 }
@@ -8824,7 +8774,7 @@ dialog::after {
 .topic-selection-container .title {
   text-align: center;
   font-size: var(--font-size-xlarge);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin-block-end: var(--space-small);
 }
 .topic-selection-container .subtitle {
@@ -9108,7 +9058,7 @@ dialog::after {
 .promo-card-wrapper .promo-card-title {
   display: block;
   font-size: var(--font-size-medium);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
   margin-block: var(--space-medium);
 }
 .promo-card-wrapper .promo-card-title::before {
@@ -9295,7 +9245,7 @@ dialog::after {
 }
 .personalized-card-wrapper .personalized-card-inner h2 {
   font-size: var(--font-size-xxlarge);
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 .personalized-card-wrapper .personalized-card-inner .personalized-card-link {
   color: var(--link-color);

@@ -49,7 +49,7 @@
 }
 
 .urlbarView-dynamic-quickSuggestContextualOptIn-title {
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-bold);
 }
 
 .urlbarView-dynamic-quickSuggestContextualOptIn-description {

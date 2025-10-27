@@ -56,7 +56,7 @@ td {
 }
 
 .total-row {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
 }
 
 @media (prefers-color-scheme: dark) {
