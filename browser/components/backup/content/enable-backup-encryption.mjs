@@ -153,13 +153,13 @@ export default class EnableBackupEncryption extends MozLitElement {
           id="backup-enable-encryption-description-span"
           data-l10n-id="enable-backup-encryption-description"
         >
-          <!--TODO: finalize support page links (bug 1900467)-->
         </span>
         <a
           id="backup-enable-encryption-learn-more-link"
           is="moz-support-link"
-          support-page="todo-backup"
+          support-page="firefox-backup"
           data-l10n-id="enable-backup-encryption-support-link"
+          utm-content="add-password"
         ></a>
       </div>
     `;

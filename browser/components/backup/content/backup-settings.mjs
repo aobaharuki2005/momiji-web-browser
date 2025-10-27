@@ -205,11 +205,11 @@ export default class BackupSettings extends MozLitElement {
         id="scheduled-backups-description"
         data-l10n-id="settings-data-backup-scheduled-backups-description"
       >
-        <!--TODO: finalize support page links (bug 1900467)-->
         <a
           is="moz-support-link"
-          support-page="todo-backup"
+          support-page="firefox-backup"
           data-l10n-name="support-link"
+          utm-content="backup-off"
         ></a>
       </div>
     `;
@@ -396,11 +396,11 @@ export default class BackupSettings extends MozLitElement {
             id="backup-sensitive-data-checkbox-description-span"
             data-l10n-id="settings-data-toggle-encryption-description"
           ></span>
-          <!--TODO: finalize support page links (bug 1900467)-->
           <a
             id="settings-data-toggle-encryption-learn-more-link"
             is="moz-support-link"
-            support-page="todo-backup"
+            support-page="firefox-backup"
+            utm-content="encryption"
             data-l10n-id="settings-data-toggle-encryption-support-link"
           ></a>
         </div>
@@ -424,7 +424,16 @@ export default class BackupSettings extends MozLitElement {
         dismissable
         data-l10n-id=${l10nId}
         @message-bar:user-dismissed=${this.handleErrorBarDismiss}
-      ></moz-message-bar>
+      >
+        <a
+          id="create-backup-error-learn-more-link"
+          slot="support-link"
+          is="moz-support-link"
+          support-page="firefox-backup"
+          data-l10n-id="settings-data-toggle-encryption-support-link"
+          utm-content="backup-error"
+        ></a>
+      </moz-message-bar>
     `;
   }
 
