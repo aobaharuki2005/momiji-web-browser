@@ -363,10 +363,6 @@ main-context-menu-manage-passwords =
     .label = Manage Passwords
     .accesskey = M
 
-main-context-menu-keyword =
-    .label = Add a Keyword for this Search…
-    .accesskey = K
-
 main-context-menu-add-engine =
     .label = Add Search Engine
     .accesskey = S

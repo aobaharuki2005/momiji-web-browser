@@ -31,7 +31,6 @@ Preferences.addAll([
   { id: "browser.urlbar.recentsearches.featureGate", type: "bool" },
   { id: "browser.urlbar.suggest.recentsearches", type: "bool" },
   { id: "browser.urlbar.scotchBonnet.enableOverride", type: "bool" },
-  { id: "browser.urlbar.update2.engineAliasRefresh", type: "bool" },
 
   // Suggest Section.
   { id: "browser.urlbar.suggest.bookmark", type: "bool" },
@@ -96,11 +95,6 @@ var gSearchPane = {
     let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
     let privateSuggestsPref = Preferences.get(
       "browser.search.suggest.enabled.private"
-    );
-
-    Preferences.get("browser.urlbar.update2.engineAliasRefresh").on(
-      "change",
-      () => gEngineView.updateUserEngineButtonVisibility()
     );
 
     let updateSuggestionCheckboxes =
@@ -830,7 +824,6 @@ class EngineView {
 
     this.loadL10nNames();
     this.#addListeners();
-    this.updateUserEngineButtonVisibility();
   }
 
   async loadL10nNames() {
@@ -882,18 +875,6 @@ class EngineView {
     this._engineList.addEventListener("keypress", this);
     this._engineList.addEventListener("select", this);
     this._engineList.addEventListener("dblclick", this);
-  }
-
-  /**
-   * Shows the Add and Edit Search Engines buttons if the pref is enabled.
-   */
-  updateUserEngineButtonVisibility() {
-    let aliasRefresh = Services.prefs.getBoolPref(
-      "browser.urlbar.update2.engineAliasRefresh",
-      false
-    );
-    document.getElementById("addEngineButton").hidden = !aliasRefresh;
-    document.getElementById("editEngineButton").hidden = !aliasRefresh;
   }
 
   get lastEngineIndex() {

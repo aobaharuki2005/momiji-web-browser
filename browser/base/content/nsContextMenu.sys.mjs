@@ -22,7 +22,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/LoginManagerContextMenu.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-  PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
@@ -242,7 +241,6 @@ export class nsContextMenu {
     this.onPiPVideo = context.onPiPVideo;
     this.onEditable = context.onEditable;
     this.onImage = context.onImage;
-    this.onKeywordField = context.onKeywordField;
     this.onSearchField = context.onSearchField;
     this.onLink = context.onLink;
     this.onLoadedImage = context.onLoadedImage;
@@ -936,7 +934,6 @@ export class nsContextMenu {
         this.onPlainTextLink
     );
     this.showItem("context-add-engine", this.shouldShowAddEngine());
-    this.showItem("context-keywordfield", this.shouldShowAddKeyword());
     this.showItem("frame", this.inFrame);
 
     if (this.inFrame) {
@@ -2308,28 +2305,6 @@ export class nsContextMenu {
     }
   }
 
-  addKeywordForSearchField() {
-    this.actor.getSearchFieldBookmarkData(this.targetIdentifier).then(data => {
-      let title = this.window.gNavigatorBundle.getFormattedString(
-        "addKeywordTitleAutoFill",
-        [data.title]
-      );
-      lazy.PlacesUIUtils.showBookmarkDialog(
-        {
-          action: "add",
-          type: "bookmark",
-          uri: this.window.makeURI(data.spec),
-          title,
-          keyword: "",
-          postData: data.postData,
-          charSet: data.charset,
-          hiddenRows: ["location", "tags"],
-        },
-        this.window
-      );
-    });
-  }
-
   async addSearchFieldAsEngine() {
     let { url, formData, charset, method } =
       await this.actor.getSearchFieldEngineData(this.targetIdentifier);
@@ -2508,18 +2483,6 @@ export class nsContextMenu {
     return false;
   }
 
-  shouldShowAddKeyword() {
-    return (
-      this.onTextInput &&
-      this.onKeywordField &&
-      !this.isLoginForm() &&
-      !Services.prefs.getBoolPref(
-        "browser.urlbar.update2.engineAliasRefresh",
-        false
-      )
-    );
-  }
-
   shouldShowAddEngine() {
     let uri = this.browser.currentURI;
 
@@ -2527,11 +2490,7 @@ export class nsContextMenu {
       this.onTextInput &&
       this.onSearchField &&
       !this.isLoginForm() &&
-      (uri.schemeIs("http") || uri.schemeIs("https")) &&
-      Services.prefs.getBoolPref(
-        "browser.urlbar.update2.engineAliasRefresh",
-        false
-      )
+      (uri.schemeIs("http") || uri.schemeIs("https"))
     );
   }
 

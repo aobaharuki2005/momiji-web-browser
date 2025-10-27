@@ -117,12 +117,6 @@ export class ContextMenuParent extends JSWindowActorParent {
     });
   }
 
-  getSearchFieldBookmarkData(targetIdentifier) {
-    return this.sendQuery("ContextMenu:SearchFieldBookmarkData", {
-      targetIdentifier,
-    });
-  }
-
   getSearchFieldEngineData(targetIdentifier) {
     return this.sendQuery("ContextMenu:SearchFieldEngineData", {
       targetIdentifier,

@@ -752,9 +752,6 @@ pref("browser.urlbar.wikipedia.featureGate", false);
 // Wikipedia suggestions are turned on.
 pref("browser.urlbar.suggest.wikipedia", true);
 
-// Enable creating and editing user defined search engines.
-pref("browser.urlbar.update2.engineAliasRefresh", true);
-
 // Controls whether realtime opt-in suggestions are turned on.
 pref("browser.urlbar.suggest.realtimeOptIn", true);
 

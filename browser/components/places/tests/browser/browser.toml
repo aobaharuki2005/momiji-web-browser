@@ -25,8 +25,6 @@ run-if = ["os == 'mac'"] # Mac-only functionality
 
 ["browser_bookmarkProperties_addFolderDefaultButton.js"]
 
-["browser_bookmarkProperties_addKeywordForThisSearch.js"]
-
 ["browser_bookmarkProperties_bookmarkAllTabs.js"]
 
 ["browser_bookmarkProperties_cancel.js"]
