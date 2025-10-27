@@ -75,7 +75,7 @@ index 4df8681a9b..269ca2f5a7 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index b602b8d2ce..4603ed3cfd 100644
+index 771e0b196a..7e1e8353ab 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -107,7 +107,7 @@ index b602b8d2ce..4603ed3cfd 100644
      defines = []
  
      deps = [
-@@ -856,7 +856,7 @@ rtc_static_library("dcsctp") {
+@@ -857,7 +857,7 @@ rtc_static_library("dcsctp") {
    visibility = [ "//:default" ]
    sources = []
    complete_static_lib = true
@@ -116,7 +116,7 @@ index b602b8d2ce..4603ed3cfd 100644
    defines = []
    deps = [
      "net/dcsctp/public:factory",
-@@ -891,7 +891,7 @@ group("poison_software_video_codecs") {
+@@ -892,7 +892,7 @@ group("poison_software_video_codecs") {
  if (!build_with_chromium) {
    # Write debug logs to gn_logs.txt.
    # This is also required for Siso builds.
@@ -616,7 +616,7 @@ index 696829d6ca..81bd2a6215 100644
  
  if (rtc_build_libsrtp) {
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index fea1177742..15e24ce17e 100644
+index ec8f58e606..aa626933d5 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -9,8 +9,8 @@
@@ -630,7 +630,7 @@ index fea1177742..15e24ce17e 100644
  }
  
  rtc_source_set("protobuf_utils") {
-@@ -1908,8 +1908,8 @@ if (!rtc_rusty_base64) {
+@@ -1919,8 +1919,8 @@ if (!rtc_rusty_base64) {
      ]
    }
  } else {
