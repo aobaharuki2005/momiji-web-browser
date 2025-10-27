@@ -565,6 +565,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
+    @SuppressLint("NewApi")
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
 
@@ -573,17 +574,21 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         logger.info("onTrimMemory(), level=$level, main=${isMainProcess()}")
 
-        components.analytics.crashReporter.recordCrashBreadcrumb(
-            Breadcrumb(
-                category = "Memory",
-                message = "onTrimMemory()",
-                data = mapOf(
-                    "level" to level.toString(),
-                    "main" to isMainProcess().toString(),
+        // See Bug 1969818: Crash reporting requires updates to be compatible with
+        // isolated content process.
+        if (!android.os.Process.isIsolated()) {
+            components.analytics.crashReporter.recordCrashBreadcrumb(
+                Breadcrumb(
+                    category = "Memory",
+                    message = "onTrimMemory()",
+                    data = mapOf(
+                        "level" to level.toString(),
+                        "main" to isMainProcess().toString(),
+                    ),
+                    level = Breadcrumb.Level.INFO,
                 ),
-                level = Breadcrumb.Level.INFO,
-            ),
-        )
+            )
+        }
 
         runOnlyInMainProcess {
             components.core.icons.onTrimMemory(level)
