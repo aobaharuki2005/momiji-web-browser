@@ -87,51 +87,6 @@ void LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
   }
 }
 
-template <class LInstr>
-void LIRGeneratorX86Shared::lowerForShiftInt64(LInstr* ins, MDefinition* mir,
-                                               MDefinition* lhs,
-                                               MDefinition* rhs) {
-  LAllocation rhsAlloc;
-  if (rhs->isConstant()) {
-    rhsAlloc = useOrConstantAtStart(rhs);
-#ifdef JS_CODEGEN_X64
-  } else if (std::is_same_v<LInstr, LShiftI64>) {
-    rhsAlloc = useShiftRegister(rhs);
-  } else {
-    rhsAlloc = useFixed(rhs, rcx);
-  }
-#else
-  } else {
-    // The operands are int64, but we only care about the lower 32 bits of
-    // the RHS. On 32-bit, the code below will load that part in ecx and
-    // will discard the upper half.
-    rhsAlloc = useLowWordFixed(rhs, ecx);
-  }
-#endif
-
-  if constexpr (std::is_same_v<LInstr, LShiftI64>) {
-    ins->setLhs(useInt64RegisterAtStart(lhs));
-    ins->setRhs(rhsAlloc);
-    defineInt64ReuseInput(ins, mir, LShiftI64::LhsIndex);
-  } else {
-    ins->setInput(useInt64RegisterAtStart(lhs));
-    ins->setCount(rhsAlloc);
-#if defined(JS_NUNBOX32)
-    ins->setTemp0(temp());
-#endif
-    defineInt64ReuseInput(ins, mir, LRotateI64::InputIndex);
-  }
-}
-
-template void LIRGeneratorX86Shared::lowerForShiftInt64(LShiftI64* ins,
-                                                        MDefinition* mir,
-                                                        MDefinition* lhs,
-                                                        MDefinition* rhs);
-template void LIRGeneratorX86Shared::lowerForShiftInt64(LRotateI64* ins,
-                                                        MDefinition* mir,
-                                                        MDefinition* lhs,
-                                                        MDefinition* rhs);
-
 void LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 1, 0>* ins,
                                         MDefinition* mir, MDefinition* input) {
   ins->setOperand(0, useRegisterAtStart(input));

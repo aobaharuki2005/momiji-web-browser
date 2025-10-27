@@ -1594,55 +1594,6 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   }
 }
 
-void CodeGenerator::visitShiftI64(LShiftI64* lir) {
-  Register64 lhs = ToRegister64(lir->lhs());
-  const LAllocation* rhs = lir->rhs();
-
-  MOZ_ASSERT(ToOutRegister64(lir) == lhs);
-
-  if (rhs->isConstant()) {
-    int32_t shift = int32_t(rhs->toConstant()->toInt64() & 0x3F);
-    switch (lir->bitop()) {
-      case JSOp::Lsh:
-        if (shift) {
-          masm.lshift64(Imm32(shift), lhs);
-        }
-        break;
-      case JSOp::Rsh:
-        if (shift) {
-          masm.rshift64Arithmetic(Imm32(shift), lhs);
-        }
-        break;
-      case JSOp::Ursh:
-        if (shift) {
-          masm.rshift64(Imm32(shift), lhs);
-        }
-        break;
-      default:
-        MOZ_CRASH("Unexpected shift op");
-    }
-    return;
-  }
-
-  Register shift = ToRegister(rhs);
-#ifdef JS_CODEGEN_X86
-  MOZ_ASSERT(shift == ecx);
-#endif
-  switch (lir->bitop()) {
-    case JSOp::Lsh:
-      masm.lshift64(shift, lhs);
-      break;
-    case JSOp::Rsh:
-      masm.rshift64Arithmetic(shift, lhs);
-      break;
-    case JSOp::Ursh:
-      masm.rshift64(shift, lhs);
-      break;
-    default:
-      MOZ_CRASH("Unexpected shift op");
-  }
-}
-
 void CodeGenerator::visitUrshD(LUrshD* ins) {
   Register lhs = ToRegister(ins->lhs());
   const LAllocation* rhs = ins->rhs();
