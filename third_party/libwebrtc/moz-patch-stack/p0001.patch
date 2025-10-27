@@ -35,7 +35,7 @@ Cr-Branched-From: 9bd64751d9b3b35a820cb72c9029993e218146a1-refs/heads/main@{#452
  3 files changed, 15 insertions(+), 8 deletions(-)
 
 diff --git a/p2p/dtls/dtls_ice_integrationtest.cc b/p2p/dtls/dtls_ice_integrationtest.cc
-index 339238d664..1610f0002a 100644
+index c0011ca677..b6b8d40b5d 100644
 --- a/p2p/dtls/dtls_ice_integrationtest.cc
 +++ b/p2p/dtls/dtls_ice_integrationtest.cc
 @@ -127,11 +127,7 @@ class DtlsIceIntegrationTest : public ::testing::TestWithParam<std::tuple<
