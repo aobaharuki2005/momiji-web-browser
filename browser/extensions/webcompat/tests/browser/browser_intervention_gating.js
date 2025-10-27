@@ -157,3 +157,96 @@ add_task(async function test_min_max_versions() {
   await WebCompatExtension.disableInterventions(["test2"]);
   await WebCompatExtension.overrideFirefoxVersion();
 });
+
+add_task(async function test_disabling_by_default() {
+  // platforms=[] means disabled by default
+  const config3 = getConfig("test3", [
+    {
+      platforms: [],
+      js: ["lib/run.js"],
+    },
+  ]);
+  // also check that other criteria not matching still disables completely
+  const config4 = getConfig("test4", [
+    {
+      platforms: [],
+      not_platforms: ["android", "desktop"],
+      js: ["lib/shims.js"],
+    },
+  ]);
+  const configs = await WebCompatExtension.updateInterventions([
+    config3,
+    config4,
+  ]);
+  Assert.deepEqual(
+    configs.map(c => c.active),
+    [false, false],
+    "The correct interventions were activated on startup"
+  );
+  Assert.deepEqual(
+    configs.map(c => c.interventions.map(i => i.enabled)),
+    [[false], [false]],
+    "The interventions were not enabled by default"
+  );
+  const reg = await WebCompatExtension.getRegisteredContentScriptsFor(["test"]);
+  Assert.deepEqual(
+    reg.map(r => r.js).flat(),
+    [],
+    "Content scripts were not registered"
+  );
+
+  const tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: "about:compat",
+    waitForLoad: true,
+  });
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
+    is(
+      content.origin,
+      "moz-extension://9a310967-e580-48bf-b3e8-4eafebbc122d",
+      "Expected origin of about:compat"
+    );
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.querySelector(
+          "#interventions tr[data-id=test3] [data-l10n-id=label-enable]"
+        ),
+      "test3 is correctly shown"
+    );
+    ok(
+      !content.document.querySelector("#interventions tr[data-id=test4]"),
+      "test4 is correctly hidden"
+    );
+
+    // click enable, confirm it is enabled
+    content.document
+      .querySelector(
+        "#interventions tr[data-id=test3] [data-l10n-id=label-enable]"
+      )
+      .click();
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.querySelector(
+          "#interventions tr[data-id=test3] [data-l10n-id=label-disable]"
+        ),
+      "test3 is correctly enabled on click"
+    );
+
+    // now click disable, confirm it is disabled
+    content.document
+      .querySelector(
+        "#interventions tr[data-id=test3] [data-l10n-id=label-disable]"
+      )
+      .click();
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.querySelector(
+          "#interventions tr[data-id=test3] [data-l10n-id=label-enable]"
+        ),
+      "test3 is correctly disabled again on second click"
+    );
+  });
+  await BrowserTestUtils.removeTab(tab);
+
+  await WebCompatExtension.disableInterventions(["test3", "test4"]);
+});
