@@ -45,8 +45,8 @@ add_task(async function boolPref() {
       pref: "quicksuggest.online.enabled",
     },
     {
-      green: "prefSuggestNonsponsored",
-      pref: "suggest.quicksuggest.nonsponsored",
+      green: "prefSuggestAll",
+      pref: "suggest.quicksuggest.all",
     },
     {
       green: "prefSuggestSponsored",

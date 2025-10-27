@@ -1292,7 +1292,7 @@ interface GleanImpl {
     heuristicResultMissing: GleanRate;
     keywordExposure: GleanEventWithExtras<{ keyword?: string, result?: string, terminal?: string }>;
     prefMaxResults: GleanQuantity;
-    prefSuggestNonsponsored: GleanBoolean;
+    prefSuggestAll: GleanBoolean;
     prefSuggestOnlineAvailable: GleanBoolean;
     prefSuggestOnlineEnabled: GleanBoolean;
     prefSuggestSponsored: GleanBoolean;

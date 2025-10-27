@@ -1625,7 +1625,7 @@ class TelemetryEvent {
     maxRichResults: Glean.urlbar.prefMaxResults,
     "quicksuggest.online.available": Glean.urlbar.prefSuggestOnlineAvailable,
     "quicksuggest.online.enabled": Glean.urlbar.prefSuggestOnlineEnabled,
-    "suggest.quicksuggest.nonsponsored": Glean.urlbar.prefSuggestNonsponsored,
+    "suggest.quicksuggest.all": Glean.urlbar.prefSuggestAll,
     "suggest.quicksuggest.sponsored": Glean.urlbar.prefSuggestSponsored,
     "suggest.topsites": Glean.urlbar.prefSuggestTopsites,
   };
@@ -1651,7 +1651,7 @@ class TelemetryEvent {
       metric.set(prefValue);
     }
     switch (pref) {
-      case "suggest.quicksuggest.nonsponsored":
+      case "suggest.quicksuggest.all":
       case "suggest.quicksuggest.sponsored":
       case "quicksuggest.enabled":
         if (!prefValue) {

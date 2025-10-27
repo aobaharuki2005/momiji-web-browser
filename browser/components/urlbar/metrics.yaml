@@ -816,18 +816,17 @@ urlbar:
     send_in_pings:
       - events
 
-  pref_suggest_nonsponsored:
+  pref_suggest_all:
     lifetime: application
     type: boolean
     description: >
-      Whether non-sponsored quick suggest results are shown in the urlbar.
+      Whether Suggest results are shown in the urlbar.
       Corresponds to the value of the
-      `browser.urlbar.suggest.quicksuggest.nonsponsored` pref.
+      `browser.urlbar.suggest.quicksuggest.all` pref.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849726
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1995574
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1995574
     data_sensitivity:
       - interaction
     notification_emails:
