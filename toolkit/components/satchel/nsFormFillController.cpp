@@ -21,6 +21,7 @@
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/PageTransitionEvent.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
@@ -729,7 +730,7 @@ nsFormFillController::HandleEvent(Event* aEvent) {
   NS_ENSURE_STATE(internalEvent);
 
   switch (internalEvent->mMessage) {
-    case eFocus:
+    case eFocusIn:
       return Focus(aEvent);
     case eMouseDown:
       return MouseDown(aEvent);
@@ -802,7 +803,7 @@ void nsFormFillController::AttachListeners(EventTarget* aEventTarget) {
   EventListenerManager* elm = aEventTarget->GetOrCreateListenerManager();
   NS_ENSURE_TRUE_VOID(elm);
 
-  elm->AddEventListenerByType(this, u"focus"_ns, TrustedEventsAtCapture());
+  elm->AddEventListenerByType(this, u"focusin"_ns, TrustedEventsAtCapture());
   elm->AddEventListenerByType(this, u"blur"_ns, TrustedEventsAtCapture());
   elm->AddEventListenerByType(this, u"pagehide"_ns, TrustedEventsAtCapture());
   elm->AddEventListenerByType(this, u"mousedown"_ns, TrustedEventsAtCapture());
@@ -870,14 +871,7 @@ nsresult nsFormFillController::HandleFocus(Element* aElement) {
 
   MaybeStartControllingInput(aElement);
 
-  // Bail if we didn't start controlling the input.
-  if (!mFocusedElement) {
-    return NS_OK;
-  }
-
-  // if there is a delayed task to restart the controller after an attribute
-  // change, cancel it to prevent it overriding the focused input
-  MaybeCancelAttributeChangeTask();
+  bool shouldShowPopup = false;
 
   // If this focus doesn't follow a right click within our specified
   // threshold then show the autocomplete popup for all password fields.
@@ -887,25 +881,66 @@ nsresult nsFormFillController::HandleFocus(Element* aElement) {
   // multiple input forms and the fact that a mousedown into an already focused
   // field does not trigger another focus.
 
-  if (!HasBeenTypePassword(mFocusedElement)) {
-    return NS_OK;
-  }
-
   // If we have not seen a right click yet, just show the popup.
-  if (mLastRightClickTimeStamp.IsNull()) {
-    mPasswordPopupAutomaticallyOpened = true;
-    ShowPopup();
-    return NS_OK;
+  if (mFocusedElement) {
+    // if there is a delayed task to restart the controller after an attribute
+    // change, cancel it to prevent it overriding the focused input
+    MaybeCancelAttributeChangeTask();
+
+    if (HasBeenTypePassword(mFocusedElement)) {
+      if (mLastRightClickTimeStamp.IsNull()) {
+        mPasswordPopupAutomaticallyOpened = true;
+        shouldShowPopup = true;
+      }
+
+      uint64_t timeDiff =
+          (TimeStamp::Now() - mLastRightClickTimeStamp).ToMilliseconds();
+      if (timeDiff > mFocusAfterRightClickThreshold) {
+        shouldShowPopup = true;
+      }
+    }
   }
 
-  uint64_t timeDiff =
-      (TimeStamp::Now() - mLastRightClickTimeStamp).ToMilliseconds();
-  if (timeDiff > mFocusAfterRightClickThreshold) {
-    mPasswordPopupAutomaticallyOpened = true;
+  // Some handlers, such as the form fill component need time to identify
+  // which fields match which field types, so ask them to provide a promise
+  // which will resolve when this task is complete. This allows the
+  // autocomplete popup to be delayed until the field type is known. Note
+  // that this only handles popups that open when a field is focused; popups
+  // opened via, for example, a user keyboard action do not wait for this
+  // promise.
+  for (uint32_t idx = 0; idx < mFocusListeners.Length(); idx++) {
+    RefPtr<Promise> promise;
+    nsCOMPtr<nsIFormFillFocusListener> formFillFocus = mFocusListeners[idx];
+    formFillFocus->HandleFocus(aElement, getter_AddRefs(promise));
+    if (promise && promise->State() == Promise::PromiseState::Pending) {
+      // Cache the promise. If some other handler calls ShowPopup()
+      // it will also need to wait on this promise.
+      mFocusPendingPromise = promise;
+      WaitForPromise(shouldShowPopup);
+      return NS_OK;
+    }
+  }
+
+  if (shouldShowPopup) {
     ShowPopup();
   }
 
   return NS_OK;
+}
+
+void nsFormFillController::WaitForPromise(bool showPopup) {
+  mFocusPendingPromise->AddCallbacksWithCycleCollectedArgs(
+      [showPopup](JSContext* aCx, JS::Handle<JS::Value> aValue,
+                  ErrorResult& aRv, nsFormFillController* self)
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+            self->mFocusPendingPromise = nullptr;
+            if (showPopup) {
+              self->ShowPopup();
+            }
+          },
+      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
+         nsFormFillController* self) { self->mFocusPendingPromise = nullptr; },
+      this);
 }
 
 nsresult nsFormFillController::Focus(Event* aEvent) {
@@ -1063,6 +1098,11 @@ nsresult nsFormFillController::MouseDown(Event* aEvent) {
 
 NS_IMETHODIMP
 nsFormFillController::ShowPopup() {
+  if (mFocusPendingPromise) {
+    WaitForPromise(true);
+    return NS_OK;
+  }
+
   bool isOpen = false;
   GetPopupOpen(&isOpen);
   if (isOpen) {
@@ -1098,6 +1138,15 @@ nsFormFillController::ShowPopup() {
 NS_IMETHODIMP nsFormFillController::GetPasswordPopupAutomaticallyOpened(
     bool* _retval) {
   *_retval = mPasswordPopupAutomaticallyOpened;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::AddFocusListener(nsIFormFillFocusListener* aListener) {
+  if (!mFocusListeners.Contains(aListener)) {
+    mFocusListeners.AppendElement(aListener);
+  }
+
   return NS_OK;
 }
 
