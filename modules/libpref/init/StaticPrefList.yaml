@@ -6788,38 +6788,11 @@
   value: 0x7fff
   mirror: always
 
-- name: gfx.canvas.remote
-  type: bool
-#if defined(XP_WIN)
-  value: true
-#else
-  value: false
-#endif
-  mirror: once
-
-- name: gfx.canvas.remote.allow-in-parent
-  type: bool
-  value: false
-  mirror: once
-
 # Whether OffscreenCanvas can use remote canvas
 - name: gfx.canvas.remote.allow-offscreen
   type: RelaxedAtomicBool
   value: true
   mirror: always
-
-# How many worker threads spawned for remote canvas
-#  -1 - Calculate based on processor cores
-#   0 - No worker threads spawned, will do work on CanvasRenderThread
-#  >0 - Create worker thread pool with given size
-- name: gfx.canvas.remote.worker-threads
-  type: int32_t
-#if defined(XP_WIN)
-  value: -1
-#else
-  value: 0
-#endif
-  mirror: once
 
 # Default size of the shmem buffers used for recording
 - name: gfx.canvas.remote.default-buffer-size
@@ -6864,7 +6837,7 @@
 
 - name: gfx.canvas.remote.use-draw-image-fast-path-d3d
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: gfx.canvas.remote.recycle-used-data-surface

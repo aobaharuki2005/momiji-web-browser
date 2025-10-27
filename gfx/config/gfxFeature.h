@@ -53,7 +53,6 @@ namespace gfx {
   _(H264_HW_DECODE, Feature, "H.264 hardware decoding")                      \
   _(AV1_HW_DECODE, Feature, "AV1 hardware decoding")                         \
   _(HEVC_HW_DECODE, Feature, "HEVC hardware decoding")                       \
-  _(REMOTE_CANVAS, Feature, "Remote canvas")                                 \
   _(DMABUF_WEBGL, Feature, "DMABuf for WebGL")                               \
   _(VP8_HW_ENCODE, Feature, "VP8 hardware encoding")                         \
   _(VP9_HW_ENCODE, Feature, "VP9 hardware encoding")                         \

@@ -1234,8 +1234,7 @@ bool gfxPlatform::IsHeadless() {
 
 /* static */
 bool gfxPlatform::UseRemoteCanvas() {
-  return XRE_IsContentProcess() && (gfx::gfxVars::RemoteCanvasEnabled() ||
-                                    gfx::gfxVars::UseAcceleratedCanvas2D());
+  return XRE_IsContentProcess() && gfx::gfxVars::UseAcceleratedCanvas2D();
 }
 
 /* static */
@@ -2466,23 +2465,6 @@ void gfxPlatform::InitAcceleration() {
 
   if (XRE_IsParentProcess()) {
     InitGPUProcessPrefs();
-
-    FeatureState& feature = gfxConfig::GetFeature(Feature::REMOTE_CANVAS);
-    feature.SetDefault(StaticPrefs::gfx_canvas_remote_AtStartup(),
-                       FeatureStatus::Disabled, "Disabled via pref");
-
-    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) &&
-        !StaticPrefs::gfx_canvas_remote_allow_in_parent_AtStartup()) {
-      feature.Disable(FeatureStatus::UnavailableNoGpuProcess,
-                      "Disabled without GPU process",
-                      "FEATURE_REMOTE_CANVAS_NO_GPU_PROCESS"_ns);
-    }
-
-    gfxConfig::ForceDisable(Feature::REMOTE_CANVAS, FeatureStatus::Blocked,
-                            "Remote Canvas not supported",
-                            "FEATURE_REMOTE_CANVAS_NOT_SUPPORTED"_ns);
-
-    gfxVars::SetRemoteCanvasEnabled(feature.IsEnabled());
   }
 }
 
@@ -3422,11 +3404,6 @@ static void AcceleratedCanvas2DPrefChangeCallback(const char*, void*) {
     feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
 
-  if (gfxVars::RemoteCanvasEnabled()) {
-    feature.ForceDisable(FeatureStatus::Failed, "Disabled by Remote Canvas",
-                         "FEATURE_FAILURE_DISABLED_BY_REMOTE_CANVAS"_ns);
-  }
-
   gfxVars::SetUseAcceleratedCanvas2D(feature.IsEnabled());
 }
 
@@ -4006,12 +3983,10 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
     return true;
   }
 
-  if ((gfxVars::RemoteCanvasEnabled() &&
-       !StaticPrefs::dom_webgpu_allow_in_parent_AtStartup()) ||
-      (gfxVars::UseAcceleratedCanvas2D() &&
+  if ((gfxVars::UseAcceleratedCanvas2D() &&
        !StaticPrefs::gfx_canvas_accelerated_allow_in_parent_AtStartup()) ||
       (gfxVars::AllowWebGPU() &&
-       !StaticPrefs::gfx_canvas_remote_allow_in_parent_AtStartup()) ||
+       !StaticPrefs::dom_webgpu_allow_in_parent_AtStartup()) ||
       (kIsAndroid && gfxVars::AllowWebglOop())) {
     // Because content has a lot of control over inputs to remote canvas, we
     // try to disable it as part of our final fallback step before disabling
@@ -4058,12 +4033,6 @@ void gfxPlatform::DisableAllCanvasForFallback(FeatureStatus aStatus,
     gfxVars::SetAllowWebGPU(false);
   }
 
-  if (gfxVars::RemoteCanvasEnabled() &&
-      !StaticPrefs::gfx_canvas_remote_allow_in_parent_AtStartup()) {
-    gfxConfig::Disable(Feature::REMOTE_CANVAS, aStatus, aMessage, aFailureId);
-    gfxVars::SetRemoteCanvasEnabled(false);
-  }
-
   if (kIsAndroid) {
     // On android, enable out-of-process WebGL only when GPU process exists.
     gfxVars::SetAllowWebglOop(false);
@@ -4089,12 +4058,6 @@ void gfxPlatform::DisableGPUProcess() {
 }
 
 /* static */ void gfxPlatform::DisableRemoteCanvas() {
-  if (gfxVars::RemoteCanvasEnabled()) {
-    gfxConfig::ForceDisable(Feature::REMOTE_CANVAS, FeatureStatus::Failed,
-                            "Disabled by runtime error",
-                            "FEATURE_REMOTE_CANVAS_RUNTIME_ERROR"_ns);
-    gfxVars::SetRemoteCanvasEnabled(false);
-  }
   if (gfxVars::UseAcceleratedCanvas2D()) {
     gfxConfig::ForceDisable(Feature::ACCELERATED_CANVAS2D,
                             FeatureStatus::Failed, "Disabled by runtime error",

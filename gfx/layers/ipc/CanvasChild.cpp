@@ -343,14 +343,6 @@ static void NotifyCanvasDeviceChanged() {
   }
 }
 
-ipc::IPCResult CanvasChild::RecvNotifyDeviceChanged() {
-  NS_ASSERT_OWNINGTHREAD(CanvasChild);
-
-  NotifyCanvasDeviceChanged();
-  mRecorder->RecordEvent(RecordedDeviceChangeAcknowledged());
-  return IPC_OK();
-}
-
 ipc::IPCResult CanvasChild::RecvNotifyDeviceReset(
     const nsTArray<RemoteTextureOwnerId>& aOwnerIds) {
   NS_ASSERT_OWNINGTHREAD(CanvasChild);

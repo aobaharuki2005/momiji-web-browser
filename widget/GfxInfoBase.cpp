@@ -1954,12 +1954,6 @@ GfxInfoBase::GetUsingGPUProcess(bool* aOutValue) {
 }
 
 NS_IMETHODIMP
-GfxInfoBase::GetUsingRemoteCanvas(bool* aOutValue) {
-  *aOutValue = gfx::gfxVars::RemoteCanvasEnabled();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 GfxInfoBase::GetUsingAcceleratedCanvas(bool* aOutValue) {
   *aOutValue = gfx::gfxVars::UseAcceleratedCanvas2D();
   return NS_OK;

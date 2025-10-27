@@ -31,7 +31,6 @@
 namespace mozilla {
 
 using EventType = gfx::RecordedEvent::EventType;
-class TaskQueue;
 
 class WebGLContext;
 
@@ -151,11 +150,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * Flushes canvas drawing, for example to a device.
    */
   void Flush();
-
-  /**
-   * Marks that device change processing in the writing process has finished.
-   */
-  void DeviceChangeAcknowledged();
 
   /**
    * Marks that device reset processing in the writing process has finished.
@@ -424,8 +418,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   bool ReadPendingEvent(EventType& aEventType);
 
-  bool CheckDeactivated();
-
   void Deactivate();
 
   bool TryDrawTargetWebglFallback(const RemoteTextureOwnerId aTextureOwnerId,
@@ -453,8 +445,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   bool HandleExtensionEvent(int32_t aType);
 
   bool CreateReferenceTexture();
-  bool CheckForFreshCanvasDevice(int aLineNumber);
-  void NotifyDeviceChanged();
 
   void NotifyDeviceReset(const RemoteTextureOwnerIdSet& aIds);
   bool EnsureSharedContextWebgl();
@@ -483,10 +473,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void NotifyTextureDestruction(const RemoteTextureOwnerId aTextureOwnerId);
 
-  const RefPtr<TaskQueue> mTranslationTaskQueue;
   const RefPtr<SharedSurfacesHolder> mSharedSurfacesHolder;
 #if defined(XP_WIN)
-  RefPtr<ID3D11Device> mDevice;
   DataMutex<RefPtr<VideoProcessorD3D11>> mVideoProcessorD3D11;
 #endif
   static StaticRefPtr<gfx::SharedContextWebgl> sSharedContext;
@@ -578,7 +566,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   Atomic<bool> mBlocked{false};
   Atomic<bool> mIPDLClosed{false};
   bool mIsInTransaction = false;
-  bool mDeviceResetInProgress = false;
 
   RefPtr<gfx::DataSourceSurface> mUsedDataSurfaceForSurfaceDescriptor;
   RefPtr<gfx::DataSourceSurfaceWrapper> mUsedWrapperForSurfaceDescriptor;

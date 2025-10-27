@@ -75,7 +75,6 @@ class MOZ_STACK_CLASS gfxVarsCollectUpdates;
   _(SystemTextRenderingMode, int32_t, 0)                           \
   _(SystemGDIGamma, float, 1.4f)                                   \
   _(LayersWindowRecordingPath, nsCString, nsCString())             \
-  _(RemoteCanvasEnabled, bool, false)                              \
   _(UseDoubleBufferingWithCompositor, bool, false)                 \
   _(UseGLSwizzle, bool, true)                                      \
   _(ForceSubpixelAAWherePossible, bool, false)                     \
