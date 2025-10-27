@@ -2686,29 +2686,6 @@ static nsresult MacErrorMapper(OSErr inErr) {
   return outErr;
 }
 
-static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr) {
-  // first see if the conversion would succeed and find the length of the
-  // result
-  CFIndex usedBufLen, inStrLen = ::CFStringGetLength(aInStrRef);
-  CFIndex charsConverted = ::CFStringGetBytes(
-      aInStrRef, CFRangeMake(0, inStrLen), kCFStringEncodingUTF8, 0, false,
-      nullptr, 0, &usedBufLen);
-  if (charsConverted == inStrLen) {
-    // all characters converted, do the actual conversion
-    aOutStr.SetLength(usedBufLen);
-    if (aOutStr.Length() != (unsigned int)usedBufLen) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    UInt8* buffer = (UInt8*)aOutStr.BeginWriting();
-    ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
-                       kCFStringEncodingUTF8, 0, false, buffer, usedBufLen,
-                       &usedBufLen);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsLocalFile::InitWithCFURL(CFURLRef aCFURL) {
   UInt8 path[PATH_MAX];
@@ -2782,31 +2759,6 @@ nsLocalFile::GetFSSpec(FSSpec* aResult) {
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetFileSizeWithResFork(int64_t* aFileSizeWithResFork) {
-  if (NS_WARN_IF(!aFileSizeWithResFork)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  FSRef fsRef;
-  nsresult rv = GetFSRef(&fsRef);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  FSCatalogInfo catalogInfo;
-  OSErr err =
-      ::FSGetCatalogInfo(&fsRef, kFSCatInfoDataSizes + kFSCatInfoRsrcSizes,
-                         &catalogInfo, nullptr, nullptr, nullptr);
-  if (err != noErr) {
-    return MacErrorMapper(err);
-  }
-
-  *aFileSizeWithResFork =
-      catalogInfo.dataLogicalSize + catalogInfo.rsrcLogicalSize;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2902,60 +2854,6 @@ nsLocalFile::LaunchWithDoc(nsIFile* aDocToLoad, bool aLaunchInBackground) {
 }
 
 NS_IMETHODIMP
-nsLocalFile::OpenDocWithApp(nsIFile* aAppToOpenWith, bool aLaunchInBackground) {
-  FSRef docFSRef;
-  nsresult rv = GetFSRef(&docFSRef);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (!aAppToOpenWith) {
-    OSErr err = ::LSOpenFSRef(&docFSRef, nullptr);
-    return MacErrorMapper(err);
-  }
-
-  nsCOMPtr<nsILocalFileMac> appFileMac = do_QueryInterface(aAppToOpenWith, &rv);
-  if (!appFileMac) {
-    return rv;
-  }
-
-  bool isExecutable;
-  rv = appFileMac->IsExecutable(&isExecutable);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!isExecutable) {
-    return NS_ERROR_FILE_EXECUTION_FAILED;
-  }
-
-  FSRef appFSRef;
-  rv = appFileMac->GetFSRef(&appFSRef);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  LSLaunchFlags theLaunchFlags = kLSLaunchDefaults;
-  LSLaunchFSRefSpec thelaunchSpec;
-
-  if (aLaunchInBackground) {
-    theLaunchFlags |= kLSLaunchDontSwitch;
-  }
-  memset(&thelaunchSpec, 0, sizeof(LSLaunchFSRefSpec));
-
-  thelaunchSpec.appRef = &appFSRef;
-  thelaunchSpec.numDocs = 1;
-  thelaunchSpec.itemRefs = &docFSRef;
-  thelaunchSpec.launchFlags = theLaunchFlags;
-
-  OSErr err = ::LSOpenFromRefSpec(&thelaunchSpec, nullptr);
-  if (err != noErr) {
-    return MacErrorMapper(err);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsLocalFile::IsPackage(bool* aResult) {
   if (NS_WARN_IF(!aResult)) {
     return NS_ERROR_INVALID_ARG;
@@ -3003,55 +2901,6 @@ nsLocalFile::GetBundleDisplayName(nsAString& aOutBundleName) {
     aOutBundleName = Substring(name, 0, length - 4);
   } else {
     aOutBundleName = name;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetBundleIdentifier(nsACString& aOutBundleIdentifier) {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  CFURLRef urlRef;
-  if (NS_SUCCEEDED(GetCFURL(&urlRef))) {
-    CFBundleRef bundle = ::CFBundleCreate(nullptr, urlRef);
-    if (bundle) {
-      CFStringRef bundleIdentifier = ::CFBundleGetIdentifier(bundle);
-      if (bundleIdentifier) {
-        rv = CFStringReftoUTF8(bundleIdentifier, aOutBundleIdentifier);
-      }
-      ::CFRelease(bundle);
-    }
-    ::CFRelease(urlRef);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetBundleContentsLastModifiedTime(int64_t* aLastModTime) {
-  CHECK_mPath();
-  if (NS_WARN_IF(!aLastModTime)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  bool isPackage = false;
-  nsresult rv = IsPackage(&isPackage);
-  if (NS_FAILED(rv) || !isPackage) {
-    return GetLastModifiedTime(aLastModTime);
-  }
-
-  nsAutoCString infoPlistPath(mPath);
-  infoPlistPath.AppendLiteral("/Contents/Info.plist");
-  PRFileInfo64 info;
-  if (PR_GetFileInfo64(infoPlistPath.get(), &info) != PR_SUCCESS) {
-    return GetLastModifiedTime(aLastModTime);
-  }
-  int64_t modTime = int64_t(info.modifyTime);
-  if (modTime == 0) {
-    *aLastModTime = 0;
-  } else {
-    *aLastModTime = modTime / int64_t(PR_USEC_PER_MSEC);
   }
 
   return NS_OK;
