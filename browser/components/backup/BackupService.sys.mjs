@@ -3155,6 +3155,12 @@ export class BackupService extends EventTarget {
     if (shouldEnableScheduledBackups) {
       // reset the error states when reenabling backup
       Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
+    } else {
+      // set user-disabled pref if backup is being disabled
+      Services.prefs.setBoolPref(
+        "browser.backup.scheduled.user-disabled",
+        true
+      );
     }
   }
 
