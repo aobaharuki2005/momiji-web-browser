@@ -164,10 +164,6 @@ class AllocationWrapper final : public MediaDataDecoder {
     return mDecoder->NeedsConversion();
   }
 
-  Maybe<PropertyValue> GetDecodeProperty(PropertyName aName) const override {
-    return mDecoder->GetDecodeProperty(aName);
-  }
-
   typedef MozPromise<RefPtr<MediaDataDecoder>, MediaResult,
                      /* IsExclusive = */ true>
       AllocateDecoderPromise;

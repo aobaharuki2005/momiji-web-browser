@@ -223,13 +223,6 @@ struct ParamTraits<mozilla::MediaDataDecoder::ConversionRequired>
               mozilla::MediaDataDecoder::ConversionRequired::kNeedHVCC)> {};
 
 template <>
-struct ParamTraits<mozilla::MediaDataDecoder::PropertyName>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::MediaDataDecoder::PropertyName,
-          mozilla::MediaDataDecoder::PropertyName(0),
-          mozilla::MediaDataDecoder::sHighestPropertyName> {};
-
-template <>
 struct ParamTraits<mozilla::media::TimeUnit> {
   using paramType = mozilla::media::TimeUnit;
 

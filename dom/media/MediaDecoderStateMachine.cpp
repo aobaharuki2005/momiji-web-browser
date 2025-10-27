@@ -137,7 +137,11 @@ static constexpr auto EXHAUSTED_DATA_MARGIN =
 
 static const uint32_t MIN_VIDEO_QUEUE_SIZE = 3;
 static const uint32_t MAX_VIDEO_QUEUE_SIZE = 10;
+#ifdef MOZ_APPLEMEDIA
+static const uint32_t HW_VIDEO_QUEUE_SIZE = 10;
+#else
 static const uint32_t HW_VIDEO_QUEUE_SIZE = 3;
+#endif
 static const uint32_t VIDEO_QUEUE_SEND_TO_COMPOSITOR_SIZE = 9999;
 
 static uint32_t sVideoQueueDefaultSize = MAX_VIDEO_QUEUE_SIZE;
@@ -748,12 +752,10 @@ class MediaDecoderStateMachine::DecodingState
   }
 
   uint32_t VideoPrerollFrames() const {
-    uint32_t preroll = static_cast<uint32_t>(
-        mMaster->GetAmpleVideoFrames() / 2. * mMaster->mPlaybackRate + 1);
-    // Keep it under maximal queue size.
-    mMaster->mReader->GetMaxVideoQueueSize().apply(
-        [&preroll](const uint32_t& x) { preroll = std::min(preroll, x); });
-    return preroll;
+    return std::min(
+        static_cast<uint32_t>(
+            mMaster->GetAmpleVideoFrames() / 2. * mMaster->mPlaybackRate + 1),
+        sVideoQueueDefaultSize);
   }
 
   bool DonePrerollingAudio() const {
@@ -4239,9 +4241,6 @@ void MediaDecoderStateMachine::FinishDecodeFirstFrame() {
   LOG("FinishDecodeFirstFrame");
 
   mMediaSink->Redraw(Info().mVideo);
-  mReader->GetSendToCompositorSize().apply([self = RefPtr{this}](uint32_t x) {
-    self->mMediaSink->SetVideoQueueSendToCompositorSize(x);
-  });
 
   LOG("Media duration %" PRId64 ", mediaSeekable=%d",
       Duration().ToMicroseconds(), mMediaSeekable);
@@ -4658,23 +4657,9 @@ void MediaDecoderStateMachine::OnMediaSinkAudioError(nsresult aResult) {
 
 uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const {
   MOZ_ASSERT(OnTaskQueue());
-  if (mReader->VideoIsHardwareAccelerated()) {
-    // HW decoding should be fast so queue size can be as small as possible
-    // to lower frame latency.
-    uint32_t hw =
-        std::max<uint32_t>(sVideoQueueHWAccelSize, MIN_VIDEO_QUEUE_SIZE);
-    mReader->GetMinVideoQueueSize().apply(
-        [&hw](const uint32_t& x) { hw = std::max(hw, x); });
-    return hw;
-  } else {
-    // SW decoding is slower and queuing more frames in advance reduces the
-    // chances of dropping late frames.
-    uint32_t sw =
-        std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
-    mReader->GetMaxVideoQueueSize().apply(
-        [&sw](const uint32_t& x) { sw = std::min(sw, x); });
-    return sw;
-  }
+  return mReader->VideoIsHardwareAccelerated()
+             ? std::max<uint32_t>(sVideoQueueHWAccelSize, MIN_VIDEO_QUEUE_SIZE)
+             : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
 }
 
 void MediaDecoderStateMachine::GetDebugInfo(

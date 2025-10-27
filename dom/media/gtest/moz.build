@@ -47,7 +47,6 @@ UNIFIED_SOURCES += [
     "TestImageConversion.cpp",
     "TestIntervalSet.cpp",
     "TestMediaCodecsSupport.cpp",
-    "TestMediaDataDecoder.cpp",
     "TestMediaDataEncoder.cpp",
     "TestMediaEventSource.cpp",
     "TestMediaFormatReader.cpp",

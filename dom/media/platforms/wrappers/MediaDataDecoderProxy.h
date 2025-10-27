@@ -46,7 +46,6 @@ class MediaDataDecoderProxy
   bool SupportDecoderRecycling() const override;
   bool ShouldDecoderAlwaysBeRecycled() const override;
   ConversionRequired NeedsConversion() const override;
-  Maybe<PropertyValue> GetDecodeProperty(PropertyName aName) const override;
 
  protected:
   ~MediaDataDecoderProxy() = default;

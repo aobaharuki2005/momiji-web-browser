@@ -152,11 +152,4 @@ MediaDataDecoder::ConversionRequired MediaDataDecoderProxy::NeedsConversion()
   return mProxyDecoder->NeedsConversion();
 }
 
-Maybe<MediaDataDecoder::PropertyValue> MediaDataDecoderProxy::GetDecodeProperty(
-    MediaDataDecoder::PropertyName aName) const {
-  MOZ_ASSERT(!mIsShutdown);
-
-  return mProxyDecoder->GetDecodeProperty(aName);
-}
-
 }  // namespace mozilla

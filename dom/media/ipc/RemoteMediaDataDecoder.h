@@ -7,7 +7,6 @@
 #define include_dom_media_ipc_RemoteMediaDataDecoder_h
 #include "MediaData.h"
 #include "PlatformDecoderModule.h"
-#include "mozilla/EnumeratedArray.h"
 
 namespace mozilla {
 
@@ -45,7 +44,6 @@ class RemoteMediaDataDecoder final
   nsCString GetProcessName() const override;
   nsCString GetCodecName() const override;
   ConversionRequired NeedsConversion() const override;
-  Maybe<PropertyValue> GetDecodeProperty(PropertyName aName) const override;
   bool ShouldDecoderAlwaysBeRecycled() const override;
 
  private:
@@ -66,8 +64,6 @@ class RemoteMediaDataDecoder final
   nsCString mHardwareAcceleratedReason MOZ_GUARDED_BY(mMutex);
   ConversionRequired mConversion MOZ_GUARDED_BY(mMutex);
   bool mShouldDecoderAlwaysBeRecycled MOZ_GUARDED_BY(mMutex);
-  EnumeratedArray<PropertyName, Maybe<PropertyValue>, sPropertyNameCount>
-      mDecodeProperties MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla

@@ -79,13 +79,6 @@ class MediaChangeMonitor final
     return ConversionRequired::kNeedNone;
   }
 
-  Maybe<PropertyValue> GetDecodeProperty(PropertyName aName) const override {
-    if (RefPtr<MediaDataDecoder> decoder = GetDecoderOnNonOwnerThread()) {
-      return decoder->GetDecodeProperty(aName);
-    }
-    return MediaDataDecoder::GetDecodeProperty(aName);
-  }
-
   class CodecChangeMonitor {
    public:
     virtual bool CanBeInstantiated() const = 0;
