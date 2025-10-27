@@ -80,6 +80,38 @@ void LIRGeneratorX64::lowerForMulInt64(LMulI64* ins, MMul* mir,
   }
 }
 
+template <class LInstr>
+void LIRGeneratorX64::lowerForShiftInt64(LInstr* ins, MDefinition* mir,
+                                         MDefinition* lhs, MDefinition* rhs) {
+  LAllocation rhsAlloc;
+  if (rhs->isConstant()) {
+    rhsAlloc = useOrConstantAtStart(rhs);
+  } else if (std::is_same_v<LInstr, LShiftI64>) {
+    rhsAlloc = useShiftRegister(rhs);
+  } else {
+    rhsAlloc = useFixed(rhs, rcx);
+  }
+
+  if constexpr (std::is_same_v<LInstr, LShiftI64>) {
+    ins->setLhs(useInt64RegisterAtStart(lhs));
+    ins->setRhs(rhsAlloc);
+    defineInt64ReuseInput(ins, mir, LShiftI64::LhsIndex);
+  } else {
+    ins->setInput(useInt64RegisterAtStart(lhs));
+    ins->setCount(rhsAlloc);
+    defineInt64ReuseInput(ins, mir, LRotateI64::InputIndex);
+  }
+}
+
+template void LIRGeneratorX64::lowerForShiftInt64(LShiftI64* ins,
+                                                  MDefinition* mir,
+                                                  MDefinition* lhs,
+                                                  MDefinition* rhs);
+template void LIRGeneratorX64::lowerForShiftInt64(LRotateI64* ins,
+                                                  MDefinition* mir,
+                                                  MDefinition* lhs,
+                                                  MDefinition* rhs);
+
 void LIRGenerator::visitBox(MBox* box) {
   MDefinition* opd = box->getOperand(0);
 
