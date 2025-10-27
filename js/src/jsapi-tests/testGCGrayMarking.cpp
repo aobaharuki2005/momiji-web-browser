@@ -26,8 +26,9 @@ static constexpr CellColor MarkedCellColors[] = {CellColor::Gray,
 
 namespace js {
 
-struct GCManagedObjectWeakMap : public WeakMap<JSObject*, JSObject*> {
-  using Base = WeakMap<JSObject*, JSObject*>;
+struct GCManagedObjectWeakMap
+    : public WeakMap<JSObject*, JSObject*, ZoneAllocPolicy> {
+  using Base = WeakMap<JSObject*, JSObject*, ZoneAllocPolicy>;
   using Base::Base;
 };
 
