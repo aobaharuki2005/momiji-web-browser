@@ -122,6 +122,45 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
   }
 }
 
+void CodeGenerator::visitMulI64(LMulI64* lir) {
+  Register64 lhs = ToRegister64(lir->lhs());
+  LInt64Allocation rhs = lir->rhs();
+
+  MOZ_ASSERT(ToOutRegister64(lir) == lhs);
+
+  if (IsConstant(rhs)) {
+    int64_t constant = ToInt64(rhs);
+    switch (constant) {
+      case -1:
+        masm.neg64(lhs);
+        return;
+      case 0:
+        masm.xor64(lhs, lhs);
+        return;
+      case 1:
+        // nop
+        return;
+      case 2:
+        masm.add64(lhs, lhs);
+        return;
+      default:
+        if (constant > 0) {
+          // Use shift if constant is power of 2.
+          int32_t shift = mozilla::FloorLog2(constant);
+          if (int64_t(1) << shift == constant) {
+            masm.lshift64(Imm32(shift), lhs);
+            return;
+          }
+        }
+        Register temp = ToTempRegisterOrInvalid(lir->temp0());
+        masm.mul64(Imm64(constant), lhs, temp);
+    }
+  } else {
+    Register temp = ToTempRegisterOrInvalid(lir->temp0());
+    masm.mul64(ToOperandOrRegister64(rhs), lhs, temp);
+  }
+}
+
 void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   Register lhs = ToRegister(lir->lhs());
   Register rhs = ToRegister(lir->rhs());
