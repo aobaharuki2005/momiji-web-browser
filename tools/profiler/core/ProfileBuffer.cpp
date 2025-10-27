@@ -10,6 +10,7 @@
 #include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin
 #include "js/GCAPI.h"
 #include "jsfriendapi.h"
+#include "mozilla/MathAlgorithms.h"
 #include "nsJSPrincipals.h"
 #include "nsScriptSecurityManager.h"
 

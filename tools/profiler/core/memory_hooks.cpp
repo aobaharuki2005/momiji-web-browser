@@ -13,6 +13,7 @@
 #include "mozilla/CheckedArithmetic.h"
 #include "mozilla/FastBernoulliTrial.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/JSONWriter.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/ProfilerCounts.h"
