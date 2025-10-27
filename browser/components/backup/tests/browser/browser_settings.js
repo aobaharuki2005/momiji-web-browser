@@ -242,6 +242,16 @@ add_task(async function test_restore_from_backup() {
     );
 
     await restoreFromBackup.updateComplete;
+
+    let quitObservedPromise = TestUtils.topicObserved(
+      "quit-application-requested",
+      subject => {
+        let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
+        cancelQuit.data = true;
+        return true;
+      }
+    );
+
     restoreFromBackup.confirmButtonEl.click();
 
     await restorePromise.then(e => {
@@ -255,6 +265,8 @@ add_task(async function test_restore_from_backup() {
         "Event should contain the file and password"
       );
     });
+
+    await quitObservedPromise;
 
     Assert.ok(
       recoverFromBackupArchiveStub.calledOnce,
