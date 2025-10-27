@@ -40,6 +40,7 @@ async function doTest({
   policies,
   labsEnabled,
   studiesEnabled,
+  existingEnrollments = [],
   expectedEnrollments,
   expectedOptIns,
 }) {
@@ -53,10 +54,26 @@ async function doTest({
     "Policy engine is active"
   );
 
+  let storePath = undefined;
+  if (existingEnrollments) {
+    const store = NimbusTestUtils.stubs.store();
+    await store.init();
+
+    for (const slug of existingEnrollments) {
+      NimbusTestUtils.addEnrollmentForRecipe(
+        RECIPES.find(e => e.slug === slug),
+        { store }
+      );
+    }
+
+    storePath = await NimbusTestUtils.saveStore(store);
+  }
+
   const { initExperimentAPI, cleanup, loader } =
     await NimbusTestUtils.setupTest({
       init: false,
       experiments: RECIPES,
+      storePath,
     });
 
   sinon.spy(loader, "updateRecipes");
@@ -142,6 +159,17 @@ add_task(async function testNimbusDisabled() {
     labsEnabled: false,
     studiesEnabled: false,
     expectedEnrollments: [],
+    expectedOptIns: [],
+  });
+});
+
+add_task(async function testDisableLabsPolicyCausesUnenrollments() {
+  await doTest({
+    policies: { UserMessaging: { FirefoxLabs: false } },
+    labsEnabled: false,
+    studiesEnabled: true,
+    expectedEnrollments: ["experiment", "rollout"],
+    existingEnrollments: ["optin"],
     expectedOptIns: [],
   });
 });
