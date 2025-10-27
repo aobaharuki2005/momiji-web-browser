@@ -20,8 +20,13 @@ const {
 const ruleName = namespace("use-space-tokens");
 
 const messages = ruleMessages(ruleName, {
-  rejected: value =>
-    `${value} should be using a space design token. This may be fixable by running the same command again with --fix.`,
+  rejected: (value, suggestedValue) => {
+    if (suggestedValue != null) {
+      return `${value} should be using a space design token. Suggested value: ${suggestedValue}. This may be fixable by running the same command again with --fix.`;
+    }
+
+    return `${value} should be using a space design token.`;
+  },
 });
 
 const meta = {
@@ -87,6 +92,25 @@ const RAW_VALUE_TO_TOKEN_VALUE = {
   "32px": "var(--space-xxlarge)",
 };
 
+const getFixedValue = currentValue => {
+  const val = valueParser(currentValue);
+  let hasFixes = false;
+  val.walk(node => {
+    if (node.type == "word") {
+      const token = RAW_VALUE_TO_TOKEN_VALUE[node.value.trim()];
+      if (token) {
+        hasFixes = true;
+        node.value = token;
+      }
+    }
+  });
+  if (hasFixes) {
+    return val.toString();
+  }
+
+  return null;
+};
+
 const ruleFunction = primaryOption => {
   return (root, result) => {
     const validOptions = validateOptions(result, ruleName, {
@@ -127,25 +151,16 @@ const ruleFunction = primaryOption => {
         return;
       }
 
+      const fixedValue = getFixedValue(declarations.value);
+
       report({
-        message: messages.rejected(declarations.value),
+        message: messages.rejected(declarations.value, fixedValue),
         node: declarations,
         result,
         ruleName,
         fix: () => {
-          const val = valueParser(declarations.value);
-          let hasFixes = false;
-          val.walk(node => {
-            if (node.type == "word") {
-              const token = RAW_VALUE_TO_TOKEN_VALUE[node.value.trim()];
-              if (token) {
-                hasFixes = true;
-                node.value = token;
-              }
-            }
-          });
-          if (hasFixes) {
-            declarations.value = val.toString();
+          if (fixedValue != null) {
+            declarations.value = fixedValue;
           }
         },
       });

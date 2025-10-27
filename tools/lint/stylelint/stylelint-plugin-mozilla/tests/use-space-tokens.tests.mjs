@@ -715,13 +715,16 @@ testRule({
     {
       code: ".a { margin: 2px; }",
       fixed: ".a { margin: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin: 8px 16px; }",
       fixed: ".a { margin: var(--space-small) var(--space-large); }",
-      message: messages.rejected("8px 16px"),
+      message: messages.rejected(
+        "8px 16px",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
@@ -729,7 +732,10 @@ testRule({
       code: ".a { margin: 8px 16px 4px; }",
       fixed:
         ".a { margin: var(--space-small) var(--space-large) var(--space-xsmall); }",
-      message: messages.rejected("8px 16px 4px"),
+      message: messages.rejected(
+        "8px 16px 4px",
+        "var(--space-small) var(--space-large) var(--space-xsmall)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
@@ -737,94 +743,106 @@ testRule({
       code: ".a { margin: 8px 16px 4px 12px; }",
       fixed:
         ".a { margin: var(--space-small) var(--space-large) var(--space-xsmall) var(--space-medium); }",
-      message: messages.rejected("8px 16px 4px 12px"),
+      message: messages.rejected(
+        "8px 16px 4px 12px",
+        "var(--space-small) var(--space-large) var(--space-xsmall) var(--space-medium)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { margin-block: 2px; }",
       fixed: ".a { margin-block: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-block: 8px var(--space-large); }",
       fixed: ".a { margin-block: var(--space-small) var(--space-large); }",
-      message: messages.rejected("8px var(--space-large)"),
+      message: messages.rejected(
+        "8px var(--space-large)",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { margin-inline: 2px; }",
       fixed: ".a { margin-inline: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-inline: var(--space-small) 16px; }",
       fixed: ".a { margin-inline: var(--space-small) var(--space-large); }",
-      message: messages.rejected("var(--space-small) 16px"),
+      message: messages.rejected(
+        "var(--space-small) 16px",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { margin-block-end: 2px; }",
       fixed: ".a { margin-block-end: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-block-start: 4px; }",
       fixed: ".a { margin-block-start: var(--space-xsmall); }",
-      message: messages.rejected("4px"),
+      message: messages.rejected("4px", "var(--space-xsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-inline-end: 8px; }",
       fixed: ".a { margin-inline-end: var(--space-small); }",
-      message: messages.rejected("8px"),
+      message: messages.rejected("8px", "var(--space-small)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-inline-start: 12px; }",
       fixed: ".a { margin-inline-start: var(--space-medium); }",
-      message: messages.rejected("12px"),
+      message: messages.rejected("12px", "var(--space-medium)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-top: 16px; }",
       fixed: ".a { margin-top: var(--space-large); }",
-      message: messages.rejected("16px"),
+      message: messages.rejected("16px", "var(--space-large)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-right: 24px; }",
       fixed: ".a { margin-right: var(--space-xlarge); }",
-      message: messages.rejected("24px"),
+      message: messages.rejected("24px", "var(--space-xlarge)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-bottom: 32px; }",
       fixed: ".a { margin-bottom: var(--space-xxlarge); }",
-      message: messages.rejected("32px"),
+      message: messages.rejected("32px", "var(--space-xxlarge)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-left: 2px; }",
       fixed: ".a { margin-left: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { padding: 2px; }",
       fixed: ".a { padding: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { padding: 8px 16px; }",
       fixed: ".a { padding: var(--space-small) var(--space-large); }",
-      message: messages.rejected("8px 16px"),
+      message: messages.rejected(
+        "8px 16px",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
@@ -832,7 +850,10 @@ testRule({
       code: ".a { padding: 8px 16px 4px; }",
       fixed:
         ".a { padding: var(--space-small) var(--space-large) var(--space-xsmall); }",
-      message: messages.rejected("8px 16px 4px"),
+      message: messages.rejected(
+        "8px 16px 4px",
+        "var(--space-small) var(--space-large) var(--space-xsmall)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
@@ -840,94 +861,106 @@ testRule({
       code: ".a { padding: 8px 16px 4px 12px; }",
       fixed:
         ".a { padding: var(--space-small) var(--space-large) var(--space-xsmall) var(--space-medium); }",
-      message: messages.rejected("8px 16px 4px 12px"),
+      message: messages.rejected(
+        "8px 16px 4px 12px",
+        "var(--space-small) var(--space-large) var(--space-xsmall) var(--space-medium)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { padding-block: 2px; }",
       fixed: ".a { padding-block: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { padding-block: 8px var(--space-large); }",
       fixed: ".a { padding-block: var(--space-small) var(--space-large); }",
-      message: messages.rejected("8px var(--space-large)"),
+      message: messages.rejected(
+        "8px var(--space-large)",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { padding-inline: 2px; }",
       fixed: ".a { padding-inline: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { padding-inline: var(--space-small) 16px; }",
       fixed: ".a { padding-inline: var(--space-small) var(--space-large); }",
-      message: messages.rejected("var(--space-small) 16px"),
+      message: messages.rejected(
+        "var(--space-small) 16px",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { margin-block-end: 2px; }",
       fixed: ".a { margin-block-end: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-block-start: 4px; }",
       fixed: ".a { margin-block-start: var(--space-xsmall); }",
-      message: messages.rejected("4px"),
+      message: messages.rejected("4px", "var(--space-xsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-inline-end: 8px; }",
       fixed: ".a { margin-inline-end: var(--space-small); }",
-      message: messages.rejected("8px"),
+      message: messages.rejected("8px", "var(--space-small)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-inline-start: 12px; }",
       fixed: ".a { margin-inline-start: var(--space-medium); }",
-      message: messages.rejected("12px"),
+      message: messages.rejected("12px", "var(--space-medium)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-top: 16px; }",
       fixed: ".a { margin-top: var(--space-large); }",
-      message: messages.rejected("16px"),
+      message: messages.rejected("16px", "var(--space-large)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-right: 24px; }",
       fixed: ".a { margin-right: var(--space-xlarge); }",
-      message: messages.rejected("24px"),
+      message: messages.rejected("24px", "var(--space-xlarge)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-bottom: 32px; }",
       fixed: ".a { margin-bottom: var(--space-xxlarge); }",
-      message: messages.rejected("32px"),
+      message: messages.rejected("32px", "var(--space-xxlarge)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { margin-left: 2px; }",
       fixed: ".a { margin-left: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { inset: 2px; }",
       fixed: ".a { inset: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { inset: 8px 16px; }",
       fixed: ".a { inset: var(--space-small) var(--space-large); }",
-      message: messages.rejected("8px 16px"),
+      message: messages.rejected(
+        "8px 16px",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
@@ -935,7 +968,10 @@ testRule({
       code: ".a { inset: 8px 16px 4px; }",
       fixed:
         ".a { inset: var(--space-small) var(--space-large) var(--space-xsmall); }",
-      message: messages.rejected("8px 16px 4px"),
+      message: messages.rejected(
+        "8px 16px 4px",
+        "var(--space-small) var(--space-large) var(--space-xsmall)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
@@ -943,107 +979,119 @@ testRule({
       code: ".a { inset: 8px 16px 4px 12px; }",
       fixed:
         ".a { inset: var(--space-small) var(--space-large) var(--space-xsmall) var(--space-medium); }",
-      message: messages.rejected("8px 16px 4px 12px"),
+      message: messages.rejected(
+        "8px 16px 4px 12px",
+        "var(--space-small) var(--space-large) var(--space-xsmall) var(--space-medium)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { inset-block: 2px; }",
       fixed: ".a { inset-block: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { inset-block: 8px var(--space-large); }",
       fixed: ".a { inset-block: var(--space-small) var(--space-large); }",
-      message: messages.rejected("8px var(--space-large)"),
+      message: messages.rejected(
+        "8px var(--space-large)",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { inset-inline: 2px; }",
       fixed: ".a { inset-inline: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { inset-inline: var(--space-small) 16px; }",
       fixed: ".a { inset-inline: var(--space-small) var(--space-large); }",
-      message: messages.rejected("var(--space-small) 16px"),
+      message: messages.rejected(
+        "var(--space-small) 16px",
+        "var(--space-small) var(--space-large)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { inset-block-end: 2px; }",
       fixed: ".a { inset-block-end: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { inset-block-start: 4px; }",
       fixed: ".a { inset-block-start: var(--space-xsmall); }",
-      message: messages.rejected("4px"),
+      message: messages.rejected("4px", "var(--space-xsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { inset-inline-end: 8px; }",
       fixed: ".a { inset-inline-end: var(--space-small); }",
-      message: messages.rejected("8px"),
+      message: messages.rejected("8px", "var(--space-small)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { inset-inline-start: 12px; }",
       fixed: ".a { inset-inline-start: var(--space-medium); }",
-      message: messages.rejected("12px"),
+      message: messages.rejected("12px", "var(--space-medium)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { top: 2px; }",
       fixed: ".a { top: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { right: 4px; }",
       fixed: ".a { right: var(--space-xsmall); }",
-      message: messages.rejected("4px"),
+      message: messages.rejected("4px", "var(--space-xsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { bottom: 8px; }",
       fixed: ".a { bottom: var(--space-small); }",
-      message: messages.rejected("8px"),
+      message: messages.rejected("8px", "var(--space-small)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { left: 32px; }",
       fixed: ".a { left: var(--space-xxlarge); }",
-      message: messages.rejected("32px"),
+      message: messages.rejected("32px", "var(--space-xxlarge)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { gap: 2px; }",
       fixed: ".a { gap: var(--space-xxsmall); }",
-      message: messages.rejected("2px"),
+      message: messages.rejected("2px", "var(--space-xxsmall)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { gap: 24px 32px; }",
       fixed: ".a { gap: var(--space-xlarge) var(--space-xxlarge); }",
-      message: messages.rejected("24px 32px"),
+      message: messages.rejected(
+        "24px 32px",
+        "var(--space-xlarge) var(--space-xxlarge)"
+      ),
       description:
         "Space values in shorthand should be fixed to use a design token.",
     },
     {
       code: ".a { column-gap: 24px; }",
       fixed: ".a { column-gap: var(--space-xlarge); }",
-      message: messages.rejected("24px"),
+      message: messages.rejected("24px", "var(--space-xlarge)"),
       description: "Space value in px should be fixed to use a design token.",
     },
     {
       code: ".a { row-gap: 16px; }",
       fixed: ".a { row-gap: var(--space-large); }",
-      message: messages.rejected("16px"),
+      message: messages.rejected("16px", "var(--space-large)"),
       description: "Space value in px should be fixed to use a design token.",
     },
   ],
