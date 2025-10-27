@@ -386,10 +386,8 @@
     }
 
     get splitview() {
-      if (
-        this.parentElement?.parentElement?.tagName == "tab-split-view-wrapper"
-      ) {
-        return this.parentElement.parentElement;
+      if (this.parentElement?.tagName == "tab-split-view-wrapper") {
+        return this.parentElement;
       }
       return null;
     }

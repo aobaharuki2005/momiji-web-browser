@@ -1158,7 +1158,6 @@
 
 tab-group > tab-split-view-wrapper {
   #tabbrowser-tabs[orient="vertical"] & {
-    margin-inline-start: var(--space-xxsmall);
     margin-block: calc(var(--space-xsmall) * -1);
 
     .tabbrowser-tab:last-child {
@@ -1180,22 +1179,21 @@ tab-group > tab-split-view-wrapper {
     }
   }
 
-  #tabbrowser-tabs[orient="horizontal"] & > .tab-split-view-container {
+  #tabbrowser-tabs[orient="horizontal"] & {
     margin-inline: 0;
     padding-block-end: 0;
     padding-inline: 0;
   }
 }
 
-#tabbrowser-tabs .tab-split-view-container {
+#tabbrowser-tabs tab-split-view-wrapper {
   display: grid;
   grid-template-columns: 50% 50%;
   margin-inline: var(--space-small);
-  width: 100%;
   padding: var(--space-xsmall);
   border-radius: var(--tab-border-radius);
 
-  tab-split-view-wrapper[hasactivetab] > & {
+  &[hasactivetab] {
     background-color: var(--tab-hover-background-color);
 
     @media (forced-colors) {
@@ -1204,7 +1202,7 @@ tab-group > tab-split-view-wrapper {
     }
   }
 
-  > .tabbrowser-tab {
+  .tabbrowser-tab {
     padding-block: 0 !important;
 
     .tab-background {
@@ -1237,7 +1235,7 @@ tab-group > tab-split-view-wrapper {
     }
   }
 
-  tab-split-view-wrapper:not([hasactivetab]) & {
+  &:not([hasactivetab]) {
     outline: var(--tab-outline);
     outline-offset: var(--tab-outline-offset);
 
@@ -1257,9 +1255,7 @@ tab-group > tab-split-view-wrapper {
       }
 
       &:last-child {
-        tab-split-view-wrapper:not([hasactivetab]) & {
-          border-inline-start: 1px solid var(--toolbarbutton-icon-fill);
-        }
+        border-inline-start: 1px solid var(--toolbarbutton-icon-fill);
       }
     }
   }
@@ -1271,16 +1267,14 @@ tab-group > tab-split-view-wrapper {
     @container vertical-tabs-container (max-width: 210px) {
       grid-template-columns: 1fr;
 
-      tab-split-view-wrapper:not([hasactivetab]) > & {
-        .tabbrowser-tab {
-          &:first-child {
-            border-block-end: 1px solid var(--toolbarbutton-icon-fill);
-            border-inline-end: transparent;
-          }
+      &:not([hasactivetab]) .tabbrowser-tab {
+        &:first-child {
+          border-block-end: 1px solid var(--toolbarbutton-icon-fill);
+          border-inline-end: transparent;
+        }
 
-          &:last-child {
-            border-inline-start: transparent !important;
-          }
+        &:last-child {
+          border-inline-start: transparent !important;
         }
       }
     }
