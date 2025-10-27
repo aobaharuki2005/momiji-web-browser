@@ -320,10 +320,6 @@ class MockCall : public webrtc::Call {
         mUnusedConfig, width, height, *mVideoSendEncoderConfig);
   }
 
-  virtual const webrtc::FieldTrialsView& trials() const override {
-    return mUnusedConfig;
-  }
-
   virtual webrtc::TaskQueueBase* network_thread() const override {
     return nullptr;
   }
@@ -331,8 +327,6 @@ class MockCall : public webrtc::Call {
   virtual webrtc::TaskQueueBase* worker_thread() const override {
     return nullptr;
   }
-
-  virtual const webrtc::Environment& env() const override;
 
   virtual ~MockCall() {};
 
