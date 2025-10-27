@@ -8,6 +8,7 @@
 
 #include <algorithm>
 
+#include "AncestorIterator.h"
 #include "BrowserChild.h"
 #include "ChildIterator.h"
 #include "ContentParent.h"
@@ -926,22 +927,40 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
     return NS_OK;
   }
 
-  // if the content is currently focused in the window, or is an
-  // shadow-including inclusive ancestor of the currently focused element,
-  // reset the focus within that window.
-  Element* previousFocusedElementPtr = windowPtr->GetFocusedElement();
-  if (!previousFocusedElementPtr) {
+  const Element* focusWithinElement = [&]() -> Element* {
+    if (auto* el = Element::FromNode(aContent)) {
+      return el;
+    }
+    if (auto* shadow = ShadowRoot::FromNode(aContent)) {
+      // Note that we only get here with ShadowRoots for shadow roots of form
+      // controls that we can un-attach. So if there's a focused element it must
+      // be inside our shadow tree already.
+      return shadow->Host();
+    }
+    // Removing text / comments / etc can't affect the focus state.
+    return nullptr;
+  }();
+  if (!focusWithinElement ||
+      !focusWithinElement->State().HasAtLeastOneOfStates(
+          ElementState::FOCUS | ElementState::FOCUS_WITHIN)) {
     return NS_OK;
   }
 
-  if (!nsContentUtils::ContentIsHostIncludingDescendantOf(
-          previousFocusedElementPtr, aContent)) {
+  // if the content is currently focused in the window, or is an
+  // shadow-including inclusive ancestor of the currently focused element,
+  // reset the focus within that window.
+  RefPtr previousFocusedElement = windowPtr->GetFocusedElement();
+  if (!previousFocusedElement) {
+    // If we're in-between a blur and an incoming focus, we might have stale
+    // :focus-within in our ancestor chain. Fix it up now.
+    for (auto* el :
+         focusWithinElement->InclusiveFlatTreeAncestorsOfType<Element>()) {
+      el->RemoveStates(ElementState::FOCUS_WITHIN, true);
+    }
     return NS_OK;
   }
 
   RefPtr<nsPIDOMWindowOuter> window = windowPtr;
-  RefPtr<Element> previousFocusedElement = previousFocusedElementPtr;
-
   RefPtr<Element> newFocusedElement = [&]() -> Element* {
     if (auto* sr = ShadowRoot::FromNode(aContent)) {
       if (sr->IsUAWidget() && sr->Host()->IsHTMLElement(nsGkAtoms::input)) {
@@ -1014,7 +1033,7 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
   }
 
   if (!newFocusedElement) {
-    NotifyFocusStateChange(previousFocusedElement, newFocusedElement, 0,
+    NotifyFocusStateChange(previousFocusedElement, nullptr, 0,
                            /* aGettingFocus = */ false, false);
   } else {
     // We should already have the right state, which is managed by the <input>
