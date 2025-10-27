@@ -18,7 +18,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentIterator.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/Result.h"
