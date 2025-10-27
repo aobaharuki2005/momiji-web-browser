@@ -7,7 +7,6 @@
 #include "nsHTMLDocument.h"
 
 #include "DocumentInlines.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/css/Loader.h"

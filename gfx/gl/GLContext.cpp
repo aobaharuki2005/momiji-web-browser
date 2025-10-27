@@ -49,7 +49,6 @@
 
 #include "OGLShaderProgram.h"  // for ShaderProgramType
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
 #ifdef XP_MACOSX

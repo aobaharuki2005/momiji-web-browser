@@ -24,7 +24,6 @@
 #include "gfxUtils.h"
 #include "imgIContainer.h"
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"

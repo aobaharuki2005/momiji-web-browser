@@ -12,6 +12,7 @@
 #endif  // defined(_M_ARM64)
 #include <utility>
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NativeNt.h"
 #include "mozilla/ScopeExit.h"

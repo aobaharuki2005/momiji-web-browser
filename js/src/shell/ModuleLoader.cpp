@@ -6,7 +6,6 @@
 
 #include "shell/ModuleLoader.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 

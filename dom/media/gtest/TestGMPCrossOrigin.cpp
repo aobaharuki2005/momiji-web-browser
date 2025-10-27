@@ -9,7 +9,6 @@
 #include "GMPVideoDecoderProxy.h"
 #include "GMPVideoEncoderProxy.h"
 #include "gtest/gtest.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/gtest/MozAssertions.h"
 #include "nsAppDirectoryServiceDefs.h"

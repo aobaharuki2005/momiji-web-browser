@@ -10,7 +10,6 @@
 #include "Types.h"
 #include <math.h>
 #include <ostream>
-#include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/gfx/Point.h"
 
