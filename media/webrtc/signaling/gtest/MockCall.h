@@ -309,7 +309,8 @@ class MockCall : public webrtc::Call {
     mEncoderInfo = aInfo;
   }
 
-  void EnableSendCongestionControlFeedbackAccordingToRfc8888() override {}
+  void SetPreferredRtcpCcAckType(
+      webrtc::RtcpFeedbackType preferred_rtcp_cc_ack_type) override {}
   int FeedbackAccordingToRfc8888Count() override { return 0; }
   int FeedbackAccordingToTransportCcCount() override { return 0; }
 
