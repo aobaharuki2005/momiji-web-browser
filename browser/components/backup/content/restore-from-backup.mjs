@@ -536,12 +536,11 @@ export default class RestoreFromBackup extends MozLitElement {
       return null;
     }
 
-    // Note: the l10n id used here is interim, and will be updated in Bug 1994877
     return html`
       <span
         id="backup-generic-file-error"
         class="field-error"
-        data-l10n-id="restored-from-backup-error-subtitle"
+        data-l10n-id="backup-file-restore-file-validation-error"
       >
         <a
           id="backup-generic-error-link"
