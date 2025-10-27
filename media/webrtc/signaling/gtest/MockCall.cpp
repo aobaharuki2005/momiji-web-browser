@@ -40,4 +40,8 @@ void MockVideoSendStream::SetSource(
       degradation_preference;
 }
 
+const webrtc::Environment& MockCall::env() const {
+  return mCallWrapper->mEnvWrapper->Environment();
+}
+
 }  // namespace test

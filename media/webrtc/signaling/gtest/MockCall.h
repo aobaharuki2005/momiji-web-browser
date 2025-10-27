@@ -331,6 +331,8 @@ class MockCall : public webrtc::Call {
     return nullptr;
   }
 
+  virtual const webrtc::Environment& env() const override;
+
   virtual ~MockCall() {};
 
   const RefPtr<MockCallWrapper> mCallWrapper;
