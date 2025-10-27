@@ -38,7 +38,7 @@
 #if defined(WEBRTC_ARCH_X86_FAMILY) && defined(_MSC_VER)
 #include <intrin.h>
 #endif
-#if defined(WEBRTC_ARCH_ARM_FAMILY) && (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD))
+#if defined(WEBRTC_ARCH_ARM_FAMILY) && defined(WEBRTC_LINUX)
 #include <asm/hwcap.h>
 #include <sys/auxv.h>
 #endif
