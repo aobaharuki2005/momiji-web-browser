@@ -84,6 +84,7 @@ skip-if = [
 ["browser_console_many_toggles.js"]
 skip-if = [
   "verify",
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && debug", # Bug 1812593
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt", # Bug 1812593
 ]
 
