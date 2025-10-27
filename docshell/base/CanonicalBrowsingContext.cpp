@@ -487,8 +487,13 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntryFromBFCache(
     SessionHistoryEntry* aEntry) {
   mActiveEntry = aEntry;
   if (Navigation::IsAPIEnabled()) {
-    MOZ_DIAGNOSTIC_ASSERT(!aEntry || mActiveEntryList.contains(aEntry));
-    MOZ_DIAGNOSTIC_ASSERT(aEntry || mActiveEntryList.isEmpty());
+    if (StaticPrefs::dom_navigation_api_strict_enabled()) {
+      MOZ_DIAGNOSTIC_ASSERT(!aEntry || mActiveEntryList.contains(aEntry));
+      MOZ_DIAGNOSTIC_ASSERT(aEntry || mActiveEntryList.isEmpty());
+    } else {
+      MOZ_ASSERT(!aEntry || mActiveEntryList.contains(aEntry));
+      MOZ_ASSERT(aEntry || mActiveEntryList.isEmpty());
+    }
   }
 }
 
