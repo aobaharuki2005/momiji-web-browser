@@ -5998,6 +5998,14 @@ class BaseAssembler : public GenericAssembler {
       memoryModRM(offset, base, index, scale, reg);
     }
 
+    void oneByteOp64_disp32(OneByteOpcodeID opcode, int32_t offset,
+                            RegisterID index, int scale, int reg) {
+      m_buffer.ensureSpace(MaxInstructionSize);
+      emitRexW(reg, index, 0);
+      m_buffer.putByteUnchecked(opcode);
+      memoryModRM_disp32(offset, index, scale, reg);
+    }
+
     void oneByteOp64(OneByteOpcodeID opcode, const void* address, int reg) {
       m_buffer.ensureSpace(MaxInstructionSize);
       emitRexW(reg, 0, 0);

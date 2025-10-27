@@ -711,6 +711,12 @@ class BaseAssemblerX64 : public BaseAssembler {
     m_formatter.oneByteOp64(OP_LEA, offset, base, index, scale, dst);
   }
 
+  void leaq_mr(int32_t offset, RegisterID index, int scale, RegisterID dst) {
+    spew("leaq       " MEM_os ", %s", ADDR_os(offset, index, scale),
+         GPReg64Name(dst));
+    m_formatter.oneByteOp64_disp32(OP_LEA, offset, index, scale, dst);
+  }
+
   void movq_i32m(int32_t imm, int32_t offset, RegisterID base) {
     spew("movq       $%d, " MEM_ob, imm, ADDR_ob(offset, base));
     m_formatter.oneByteOp64(OP_GROUP11_EvIz, offset, base, GROUP11_MOV);
