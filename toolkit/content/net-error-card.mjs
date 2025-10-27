@@ -42,6 +42,8 @@ export class NetErrorCard extends MozLitElement {
     viewCertificate: "#viewCertificate",
     certErrorBodyTitle: "#certErrorBodyTitle",
     returnButton: "#returnButton",
+    learnMoreLink: "#learnMoreLink",
+    whatCanYouDo: "#whatCanYouDo",
   };
 
   static ERROR_CODES = new Set([
@@ -86,7 +88,6 @@ export class NetErrorCard extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
-
     this.init();
   }
 
@@ -318,6 +319,7 @@ export class NetErrorCard extends MozLitElement {
         ? html`<p>
             <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
             <span
+              id="whatCanYouDo"
               data-l10n-id=${whatCanYouDoL10nId}
               data-l10n-args=${JSON.stringify(whatCanYouDoL10nArgs)}
             ></span>
@@ -332,6 +334,7 @@ export class NetErrorCard extends MozLitElement {
               data-l10n-id=${learnMoreL10nId}
               data-l10n-args=${JSON.stringify(learnMoreL10nArgs)}
               data-telemetry-id="learn_more_link"
+              id="learnMoreLink"
               @click=${this.handleTelemetryClick}
             ></a>
           </p>`
