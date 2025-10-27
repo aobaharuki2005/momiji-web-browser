@@ -83,4 +83,6 @@ run-sequentially = ["true"] # Mock Windows registry interferes with normal opera
 
 ["test_SessionStoreBackupResource.js"]
 
+["test_SessionStoreBackupResource_mockSessionStore.js"]
+
 ["test_backupService_findBackupsInWellKnownLocations.js"]
