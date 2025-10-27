@@ -48,7 +48,7 @@ index 348be89bb9..19ff7e3f98 100644
      if (mips_float_abi == "hard") {
        defines += [ "MIPS_FPU_LE" ]
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index 7eb2aca444..1e17368bf8 100644
+index 9176dbcc47..a95c90df2c 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
 @@ -67,7 +67,7 @@ rtc_library("common_audio") {
@@ -60,7 +60,7 @@ index 7eb2aca444..1e17368bf8 100644
      deps += [ ":common_audio_sse2" ]
      deps += [ ":common_audio_avx2" ]
    }
-@@ -89,7 +89,7 @@ rtc_source_set("mock_common_audio") {
+@@ -90,7 +90,7 @@ rtc_source_set("mock_common_audio") {
  rtc_source_set("common_audio_c_arm_asm") {
    sources = []
    deps = []
@@ -69,7 +69,7 @@ index 7eb2aca444..1e17368bf8 100644
      sources += [ "signal_processing/complex_bit_reverse_arm.S" ]
  
      if (arm_version >= 7) {
-@@ -153,7 +153,7 @@ rtc_library("common_audio_c") {
+@@ -154,7 +154,7 @@ rtc_library("common_audio_c") {
      "vad/webrtc_vad.c",
    ]
  
@@ -78,7 +78,7 @@ index 7eb2aca444..1e17368bf8 100644
      sources += [
        "signal_processing/complex_bit_reverse_mips.c",
        "signal_processing/complex_fft_mips.c",
-@@ -171,7 +171,7 @@ rtc_library("common_audio_c") {
+@@ -172,7 +172,7 @@ rtc_library("common_audio_c") {
      sources += [ "signal_processing/complex_fft.c" ]
    }
  
@@ -87,7 +87,7 @@ index 7eb2aca444..1e17368bf8 100644
      sources += [
        "signal_processing/complex_bit_reverse.c",
        "signal_processing/filter_ar_fast_q12.c",
-@@ -229,7 +229,7 @@ rtc_library("fir_filter_factory") {
+@@ -230,7 +230,7 @@ rtc_library("fir_filter_factory") {
      "../rtc_base:cpu_info",
      "../rtc_base/system:arch",
    ]
@@ -96,7 +96,7 @@ index 7eb2aca444..1e17368bf8 100644
      deps += [ ":common_audio_sse2" ]
      deps += [ ":common_audio_avx2" ]
    }
-@@ -238,7 +238,7 @@ rtc_library("fir_filter_factory") {
+@@ -239,7 +239,7 @@ rtc_library("fir_filter_factory") {
    }
  }
  
@@ -105,7 +105,7 @@ index 7eb2aca444..1e17368bf8 100644
    rtc_library("common_audio_sse2") {
      sources = [
        "fir_filter_sse.cc",
-@@ -287,7 +287,7 @@ if (rtc_build_with_neon) {
+@@ -288,7 +288,7 @@ if (rtc_build_with_neon) {
        "resampler/sinc_resampler_neon.cc",
      ]
  
@@ -114,7 +114,7 @@ index 7eb2aca444..1e17368bf8 100644
        # Enable compilation for the NEON instruction set.
        suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
        cflags = [ "-mfpu=neon" ]
-@@ -310,7 +310,7 @@ if (rtc_build_with_neon) {
+@@ -311,7 +311,7 @@ if (rtc_build_with_neon) {
        "signal_processing/min_max_operations_neon.c",
      ]
  
