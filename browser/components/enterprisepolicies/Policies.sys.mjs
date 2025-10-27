@@ -2924,6 +2924,10 @@ export var Policies = {
         );
       }
       if ("FirefoxLabs" in param) {
+        if (!param.FirefoxLabs) {
+          manager.disallowFeature("FirefoxLabs");
+        }
+
         PoliciesUtils.setDefaultPref(
           "browser.preferences.experimental",
           param.FirefoxLabs,

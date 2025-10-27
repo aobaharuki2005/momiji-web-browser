@@ -114,6 +114,7 @@ export const MatchStatus = Object.freeze({
   TARGETING_ONLY: "TARGETING_ONLY",
   TARGETING_AND_BUCKETING: "TARGETING_AND_BUCKETING",
   UNENROLLED_IN_ANOTHER_PROFILE: "UNENROLLED_IN_ANOTHER_PROFILE",
+  DISABLED: "DISABLED",
 });
 
 export const CheckRecipeResult = {
@@ -261,9 +262,9 @@ export class RemoteSettingsExperimentLoader {
       return;
     }
 
-    if (!lazy.ExperimentAPI.studiesEnabled) {
+    if (!lazy.ExperimentAPI.enabled) {
       lazy.log.debug(
-        "Not enabling RemoteSettingsExperimentLoader: studies disabled"
+        "Not enabling RemoteSettingsExperimentLoader: Nimbus disabled"
       );
       return;
     }
@@ -431,6 +432,8 @@ export class RemoteSettingsExperimentLoader {
         recipeValidator,
         {
           validationEnabled,
+          labsEnabled: lazy.ExperimentAPI.labsEnabled,
+          studiesEnabled: lazy.ExperimentAPI.studiesEnabled,
           shouldCheckTargeting: true,
           unenrolledExperimentSlugs,
         }
@@ -768,15 +771,15 @@ export class RemoteSettingsExperimentLoader {
   }
 
   /**
-   * Handles feature status based on STUDIES_OPT_OUT_PREF.
-   *
-   * Changing this pref to false will turn off any recipe fetching and
-   * processing.
+   * Disable the RemoteSettingsExperimentLoader if Nimbus has become disabled
+   * and vice versa.
    */
   async onEnabledPrefChange() {
-    if (this._enabled && !lazy.ExperimentAPI.studiesEnabled) {
+    const nimbusEnabled = lazy.ExperimentAPI.enabled;
+
+    if (this._enabled && !nimbusEnabled) {
       this.disable();
-    } else if (!this._enabled && lazy.ExperimentAPI.studiesEnabled) {
+    } else if (!this._enabled && nimbusEnabled) {
       // If the feature pref is turned on then turn on recipe processing.
       // If the opt in pref is turned on then turn on recipe processing only if
       // the feature pref is also enabled.
@@ -823,7 +826,7 @@ export class RemoteSettingsExperimentLoader {
    * immediately.
    */
   finishedUpdating() {
-    if (!lazy.ExperimentAPI.studiesEnabled || !this._enabled) {
+    if (!lazy.ExperimentAPI.enabled || !this._enabled) {
       return Promise.resolve();
     }
 
@@ -912,12 +915,17 @@ export class EnrollmentsContext {
       validationEnabled = true,
       shouldCheckTargeting = true,
       unenrolledExperimentSlugs,
+      studiesEnabled = true,
+      labsEnabled = true,
     } = {}
   ) {
     this.manager = manager;
     this.recipeValidator = recipeValidator;
 
     this.validationEnabled = validationEnabled;
+    this.studiesEnabled = studiesEnabled;
+    this.labsEnabled = labsEnabled;
+
     this.validatorCache = {};
     this.shouldCheckTargeting = shouldCheckTargeting;
     this.unenrolledExperimentSlugs = unenrolledExperimentSlugs;
@@ -949,6 +957,13 @@ export class EnrollmentsContext {
 
         return CheckRecipeResult.InvalidRecipe();
       }
+    }
+
+    if (
+      (recipe.isFirefoxLabsOptIn && !this.labsEnabled) ||
+      (!recipe.isFirefoxLabsOptIn && !this.studiesEnabled)
+    ) {
+      return CheckRecipeResult.Ok(MatchStatus.DISABLED);
     }
 
     // We don't include missing features here because if validation is enabled we report those errors later.

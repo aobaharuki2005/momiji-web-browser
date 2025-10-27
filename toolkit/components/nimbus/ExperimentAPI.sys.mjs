@@ -370,6 +370,14 @@ export const ExperimentAPI = new (class {
     this.#initialized = false;
   }
 
+  get enabled() {
+    return this.studiesEnabled || this.labsEnabled;
+  }
+
+  get labsEnabled() {
+    return Services.policies.isAllowed("FirefoxLabs");
+  }
+
   get studiesEnabled() {
     return (
       this.#prefValues.studiesEnabled &&
@@ -441,7 +449,7 @@ export const ExperimentAPI = new (class {
     }
 
     if (!this.studiesEnabled) {
-      await this.manager._handleStudiesOptOut();
+      this.manager._handleStudiesOptOut();
     }
 
     await this._rsLoader.onEnabledPrefChange();
