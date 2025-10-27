@@ -294,6 +294,11 @@ support-files = ["file_sessionHistory_hashchange.html"]
 
 ["browser_sessionStorage.js"]
 tags = "os_integration"
+skip-if = [
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && opt", # Bug 1775609
+  "os == 'mac' && os_version == '10.15' && processor == 'x86_64' && opt", # Bug 1775609
+  "os == 'mac' && os_version == '15.30' &&& arch == 'aarch64' && opt", # Bug 1775609
+]
 
 ["browser_sessionStorage_size.js"]
 
