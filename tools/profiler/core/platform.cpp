@@ -91,7 +91,6 @@
 #  include "mozilla/WindowsStackWalkInitialization.h"
 #endif
 #include "mozilla/StaticPtr.h"
-#include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
