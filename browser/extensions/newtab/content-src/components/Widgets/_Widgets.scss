@@ -38,7 +38,13 @@
 
     p {
       margin: 0;
-      font-weight: var(--font-weight-bold);
+
+      /**
+       * @backward-compat { version 146 }
+       *
+       * Replace this with `--font-weight-semibold` once 146 hits release.
+       */
+      font-weight: var(--heading-font-weight);
     }
 
     @media (prefers-reduced-motion: no-preference) {

@@ -30,7 +30,7 @@ body {
 }
 
 #tag-pings:invalid + label > span {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   text-decoration: underline;
   color: var(--text-color-error);
 }

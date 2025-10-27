@@ -1559,7 +1559,7 @@ tab-group {
 .tab-group-label {
   -moz-window-dragging: no-drag;
   text-align: center;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -1613,7 +1613,7 @@ tab-group {
 
       &::first-letter {
         font: message-box;
-        font-weight: var(--font-weight-bold);
+        font-weight: var(--font-weight-semibold);
         line-height: 24px;
       }
     }
@@ -2302,7 +2302,7 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
   }
 
   &[selected] {
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-semibold);
   }
 
   > toolbarbutton {

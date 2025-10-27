@@ -53,7 +53,7 @@ toolbar[overflowable][customizing] > .customization-target {
 }
 
 #customization-header {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--heading-font-weight);
   font-size: 1.2em;
   margin: 20px 20px 15px;
 }

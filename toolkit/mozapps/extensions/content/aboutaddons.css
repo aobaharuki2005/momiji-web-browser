@@ -322,7 +322,7 @@ addon-card[expanded] .update-postponed-bar,
 
 .addon-name {
   font-size: 16px;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   line-height: 22px;
   margin: 0;
   margin-inline-end: 8px;

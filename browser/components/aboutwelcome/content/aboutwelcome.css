@@ -3115,7 +3115,7 @@ html {
   flex-direction: column;
 }
 .onboardingContainer #content-tiles-container .content-tile button.tile-header .header-text-container .header-title {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--heading-font-weight);
   line-height: 1.5;
 }
 .onboardingContainer #content-tiles-container .content-tile button.tile-header .header-text-container .header-subtitle {

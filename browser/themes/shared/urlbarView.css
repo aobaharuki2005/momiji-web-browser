@@ -489,7 +489,7 @@
   border-radius: var(--urlbar-inner-border-radius);
   padding: 0.5em 1em;
   font-size: 0.93em;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   background-clip: padding-box;
   min-height: 16px;
   min-width: 6em;
@@ -1206,7 +1206,7 @@
 
 .urlbarView-action-btn {
   font-size: smaller;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
   border-radius: var(--toolbarbutton-border-radius);
   border: 1px solid transparent;
   padding: 0.4em 0.6em;
@@ -1300,7 +1300,7 @@
       padding: var(--space-xlarge);
 
       > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title {
-        font-weight: var(--font-weight-bold);
+        font-weight: var(--heading-font-weight);
       }
     }
   }
@@ -1440,13 +1440,13 @@
   > .urlbarView-realtime-description {
     > .urlbarView-realtime-description-top {
       > .urlbarView-market-name {
-        font-weight: var(--font-weight-bold);
+        font-weight: var(--font-weight-semibold);
       }
     }
 
     > .urlbarView-realtime-description-bottom {
       > .urlbarView-market-todays-change-perc {
-        font-weight: var(--font-weight-bold);
+        font-weight: var(--font-weight-semibold);
       }
 
       > .urlbarView-market-last-price {
@@ -1490,7 +1490,7 @@
 
   > .urlbarView-realtime-description {
     > .urlbarView-realtime-description-top > .urlbarView-yelpRealtime-title {
-      font-weight: var(--font-weight-bold);
+      font-weight: var(--heading-font-weight);
     }
 
     > .urlbarView-realtime-description-bottom {
@@ -1585,13 +1585,13 @@
 
   > .urlbarView-realtime-description {
     > .urlbarView-realtime-description-top > .urlbarView-flightStatus-time {
-      font-weight: var(--font-weight-bold);
+      font-weight: var(--font-weight-semibold);
       margin-inline-end: var(--space-small);
     }
 
     > .urlbarView-realtime-description-bottom {
       > .urlbarView-flightStatus-status {
-        font-weight: var(--font-weight-bold);
+        font-weight: var(--font-weight-semibold);
       }
 
       .urlbarView-row:not([selected])

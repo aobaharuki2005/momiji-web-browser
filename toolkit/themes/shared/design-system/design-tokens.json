@@ -432,7 +432,7 @@
         }
       },
       "weight": {
-        "value": "{font.weight.bold}"
+        "value": "{font.weight.semibold}"
       }
     },
     "icon": {
@@ -1157,8 +1157,11 @@
       "@base": {
         "value": "normal"
       },
-      "bold": {
+      "semibold": {
         "value": 600
+      },
+      "bold": {
+        "value": 700
       }
     }
   },
@@ -1176,7 +1179,7 @@
         }
       },
       "weight": {
-        "value": "{font.weight.bold}"
+        "value": "{font.weight.semibold}"
       }
     }
   },

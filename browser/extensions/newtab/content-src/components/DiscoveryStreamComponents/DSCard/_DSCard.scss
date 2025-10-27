@@ -261,7 +261,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       @include limit-visible-lines(3, $header-line-height, $header-font-size);
 
       margin-block: 0;
-      font-weight: var(--font-weight-bold);
+      font-weight: var(--heading-font-weight);
     }
 
     .excerpt {
@@ -365,7 +365,13 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       border: none;
       padding: var(--space-xsmall) var(--space-large);
       font-size: var(--font-size-small);
-      font-weight: var(--font-weight-bold);
+
+      /**
+       * @backward-compat { version 146 }
+       *
+       * Replace this with `--font-weight-semibold` once 146 hits release.
+       */
+      font-weight: var(--heading-font-weight);
       min-height: var(--size-item-large);
       min-width: 97px;
       color: var(--newtab-text-primary-color);
@@ -379,7 +385,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     .cta-header {
       background: var(--button-background-color);
       font-size: var(--font-size-root);
-      font-weight: var(--font-weight-bold);
+      font-weight: var(--heading-font-weight);
       text-align: end;
       padding: var(--space-xsmall) var(--space-large);
       color: var(--newtab-text-primary-color);
@@ -463,7 +469,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
         -webkit-line-clamp: 3;
         font-size: var(--font-size-root);
         margin-block-end: var(--space-small);
-        font-weight: var(--font-weight-bold);
+        font-weight: var(--heading-font-weight);
       }
 
       .excerpt {
