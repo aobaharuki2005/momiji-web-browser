@@ -1645,22 +1645,29 @@ void CodeGenerator::visitShiftI64(LShiftI64* lir) {
 
 void CodeGenerator::visitUrshD(LUrshD* ins) {
   Register lhs = ToRegister(ins->lhs());
-  MOZ_ASSERT(ToRegister(ins->temp0()) == lhs);
-
   const LAllocation* rhs = ins->rhs();
   FloatRegister out = ToFloatRegister(ins->output());
+  Register temp = ToRegister(ins->temp0());
 
   if (rhs->isConstant()) {
+    MOZ_ASSERT(temp == lhs);
+
     int32_t shift = ToInt32(rhs) & 0x1F;
     if (shift) {
       masm.shrl(Imm32(shift), lhs);
     }
   } else {
+    MOZ_ASSERT_IF(temp != lhs, Assembler::HasBMI2());
+
     Register shift = ToRegister(rhs);
-    masm.rshift32(shift, lhs);
+    if (temp != lhs) {
+      masm.shrxl(lhs, shift, temp);
+    } else {
+      masm.rshift32(shift, lhs);
+    }
   }
 
-  masm.convertUInt32ToDouble(lhs, out);
+  masm.convertUInt32ToDouble(temp, out);
 }
 
 Operand CodeGeneratorX86Shared::ToOperand(const LAllocation& a) {
