@@ -30,7 +30,6 @@
 #include "Orientation.h"
 #include "mozilla/AtomicBitfields.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/TimeStamp.h"
