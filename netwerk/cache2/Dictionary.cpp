@@ -1301,10 +1301,16 @@ void DictionaryOrigin::DumpEntries() {
 void DictionaryOrigin::Clear() {
   mEntries.Clear();
   mPendingEntries.Clear();
+  mPendingRemove.Clear();
   // We may be under a lock; doom this asynchronously
-  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-      "DictionaryOrigin::Clear",
-      [entry = mEntry]() { entry->AsyncDoom(nullptr); }));
+  if (mEntry) {
+    // This will attempt to delete the DictionaryOrigin, but we'll do
+    // that more directly
+    NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+        "DictionaryOrigin::Clear",
+        [entry = mEntry]() { entry->AsyncDoom(nullptr); }));
+  }
+  DictionaryCache::RemoveOriginFor(mOrigin);  // async
 }
 
 // caller will throw this into a RefPtr
