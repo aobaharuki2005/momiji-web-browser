@@ -12,10 +12,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/19164e58323d59c1f
  3 files changed, 7 insertions(+), 22 deletions(-)
 
 diff --git a/call/call.cc b/call/call.cc
-index 9a78aa6fb1..8423297fac 100644
+index 01c6cc7be6..7b9ef6b5a9 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -515,19 +515,6 @@ class Call final : public webrtc::Call,
+@@ -517,19 +517,6 @@ class Call final : public webrtc::Call,
  };
  }  // namespace internal
  
@@ -36,10 +36,10 @@ index 9a78aa6fb1..8423297fac 100644
    std::unique_ptr<RtpTransportControllerSendInterface> transport_send;
    if (config.rtp_transport_controller_send_factory != nullptr) {
 diff --git a/call/call.h b/call/call.h
-index 08e883da06..c3119cc18c 100644
+index f100da4d15..4361577be4 100644
 --- a/call/call.h
 +++ b/call/call.h
-@@ -26,6 +26,7 @@
+@@ -27,6 +27,7 @@
  #include "api/transport/bitrate_settings.h"
  #include "call/audio_receive_stream.h"
  #include "call/audio_send_stream.h"
@@ -47,7 +47,7 @@ index 08e883da06..c3119cc18c 100644
  #include "call/call_config.h"
  #include "call/flexfec_receive_stream.h"
  #include "call/packet_receiver.h"
-@@ -51,15 +52,7 @@ namespace webrtc {
+@@ -52,15 +53,7 @@ namespace webrtc {
  
  class Call {
   public:
