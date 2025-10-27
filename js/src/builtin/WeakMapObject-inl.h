@@ -32,11 +32,11 @@ static MOZ_ALWAYS_INLINE bool EnsureObjectHasWeakMap(
   if (obj->getMap()) {
     return true;
   }
-  auto newMap = cx->make_unique<WeakCollectionObject::Map>(cx, obj);
+  auto newMap = cx->make_unique<ValueValueWeakMap>(cx, obj);
   if (!newMap) {
     return false;
   }
-  WeakCollectionObject::Map* map = newMap.release();
+  ValueValueWeakMap* map = newMap.release();
   InitReservedSlot(obj, WeakCollectionObject::DataSlot, map,
                    MemoryUse::WeakMapObject);
   return true;

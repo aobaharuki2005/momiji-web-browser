@@ -188,5 +188,5 @@ void WeakMapBase::restoreMarkedWeakMaps(WeakMapColors& markedWeakMaps) {
 }
 
 namespace js {
-template class WeakMap<JSObject*, JSObject*, ZoneAllocPolicy>;
+template class WeakMap<JSObject*, JSObject*>;
 }  // namespace js

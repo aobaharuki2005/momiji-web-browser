@@ -17,8 +17,9 @@ class WeakCollectionObject : public NativeObject {
  public:
   enum { DataSlot, SlotCount };
 
-  using Map = WeakMap<Value, Value, CellAllocPolicy>;
-  Map* getMap() { return maybePtrFromReservedSlot<Map>(DataSlot); }
+  ValueValueWeakMap* getMap() {
+    return maybePtrFromReservedSlot<ValueValueWeakMap>(DataSlot);
+  }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
@@ -29,9 +30,6 @@ class WeakCollectionObject : public NativeObject {
 
  protected:
   static const JSClassOps classOps_;
-
-  static void trace(JSTracer* trc, JSObject* obj);
-  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 class WeakMapObject : public WeakCollectionObject {

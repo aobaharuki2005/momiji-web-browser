@@ -106,7 +106,6 @@ class GCContext {
 
   js::gc::GCUse gcUse() const { return gcUse_; }
   bool isCollecting() const { return gcUse() != js::gc::GCUse::None; }
-  bool isSweeping() const { return gcUse_ == js::gc::GCUse::Sweeping; }
   bool isFinalizing() const { return gcUse_ == js::gc::GCUse::Finalizing; }
 
 #ifdef DEBUG

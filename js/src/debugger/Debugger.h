@@ -336,7 +336,7 @@ extern void CheckDebuggeeThing(JSObject* obj, bool invisibleOk);
  * beacomes a debuggee again later, new Frame objects are created.)
  */
 template <class Referent, class Wrapper, bool InvisibleKeysOk = false>
-class DebuggerWeakMap : private WeakMap<Referent*, Wrapper*, ZoneAllocPolicy> {
+class DebuggerWeakMap : private WeakMap<Referent*, Wrapper*> {
  private:
   using Key = Referent*;
   using Value = Wrapper*;
@@ -344,7 +344,7 @@ class DebuggerWeakMap : private WeakMap<Referent*, Wrapper*, ZoneAllocPolicy> {
   JS::Compartment* compartment;
 
  public:
-  using Base = WeakMap<Key, Value, ZoneAllocPolicy>;
+  using Base = WeakMap<Key, Value>;
   using ReferentType = Referent;
   using WrapperType = Wrapper;
 
