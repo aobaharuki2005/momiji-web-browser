@@ -478,19 +478,21 @@ void LIRGeneratorX86Shared::lowerUrshD(MUrsh* mir) {
   MOZ_ASSERT(rhs->type() == MIRType::Int32);
   MOZ_ASSERT(mir->type() == MIRType::Double);
 
-#ifdef JS_CODEGEN_X64
-  static_assert(ecx == rcx);
-#endif
-
   LUse lhsUse = useRegisterAtStart(lhs);
   LAllocation rhsAlloc;
+  LDefinition tempDef;
   if (rhs->isConstant()) {
     rhsAlloc = useOrConstant(rhs);
+    tempDef = tempCopy(lhs, 0);
+  } else if (Assembler::HasBMI2()) {
+    rhsAlloc = useRegisterAtStart(rhs);
+    tempDef = temp();
   } else {
     rhsAlloc = useShiftRegister(rhs);
+    tempDef = tempCopy(lhs, 0);
   }
 
-  LUrshD* lir = new (alloc()) LUrshD(lhsUse, rhsAlloc, tempCopy(lhs, 0));
+  auto* lir = new (alloc()) LUrshD(lhsUse, rhsAlloc, tempDef);
   define(lir, mir);
 }
 
