@@ -112,7 +112,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_enable_toolbar_redesign).apply {
-            isVisible = Config.channel.isNightlyOrDebug
             isEnabled = context.settings().shouldUseComposableToolbar
             summary = when (context.settings().shouldUseComposableToolbar) {
                 true -> null
