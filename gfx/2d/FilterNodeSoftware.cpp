@@ -14,6 +14,7 @@
 #include "FilterProcessing.h"
 #include "Logging.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/DebugOnly.h"
 
 // #define DEBUG_DUMP_SURFACES
 

@@ -24,6 +24,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FlowMarkers.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"

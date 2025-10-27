@@ -5,6 +5,7 @@
 #include "mozilla/intl/Locale.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"

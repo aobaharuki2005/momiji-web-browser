@@ -8,6 +8,7 @@
 #define mozilla_UntrustedModulesProcessor_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/glue/WindowsDllServices.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Maybe.h"

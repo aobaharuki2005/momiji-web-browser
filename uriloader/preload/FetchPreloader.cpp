@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/ScopeExit.h"

@@ -8,6 +8,7 @@
 
 #include "nsScanner.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/UniquePtr.h"
 #include "nsDebug.h"

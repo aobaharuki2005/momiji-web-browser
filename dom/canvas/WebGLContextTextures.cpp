@@ -23,6 +23,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "jsfriendapi.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ImageData.h"
 #include "nsContentUtils.h"

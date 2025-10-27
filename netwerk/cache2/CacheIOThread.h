@@ -10,6 +10,7 @@
 #include "prthread.h"
 #include "nsTArray.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/UniquePtr.h"
 

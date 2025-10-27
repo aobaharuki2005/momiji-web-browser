@@ -9,6 +9,7 @@
 
 #include "DisplayItemClip.h"
 #include "DisplayItemClipChain.h"
+#include "mozilla/DebugOnly.h"
 
 class nsIFrame;
 

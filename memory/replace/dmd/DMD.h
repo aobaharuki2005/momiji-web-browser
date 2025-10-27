@@ -12,6 +12,7 @@
 
 #include <utility>
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/UniquePtr.h"
 #include "replace_malloc_bridge.h"
 

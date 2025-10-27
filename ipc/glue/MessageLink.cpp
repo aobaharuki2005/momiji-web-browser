@@ -15,6 +15,7 @@
 #include "base/task.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
 #include "nsExceptionHandler.h"
 #include "nsISupportsImpl.h"

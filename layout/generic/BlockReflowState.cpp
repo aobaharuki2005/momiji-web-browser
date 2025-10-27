@@ -13,6 +13,7 @@
 #include "LayoutLogging.h"
 #include "TextOverflow.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsBlockFrame.h"

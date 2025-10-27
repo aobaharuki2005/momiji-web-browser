@@ -6,6 +6,8 @@
 
 #include "OggCodecStore.h"
 
+#include "mozilla/DebugOnly.h"
+
 namespace mozilla {
 
 OggCodecStore::OggCodecStore() : mMonitor("CodecStore") {}

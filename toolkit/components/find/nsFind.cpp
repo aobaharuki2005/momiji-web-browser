@@ -21,6 +21,7 @@
 #include "nsRange.h"
 #include "nsReadableUtils.h"
 #include "nsContentUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/CharacterDataBuffer.h"
 #include "mozilla/dom/ChildIterator.h"

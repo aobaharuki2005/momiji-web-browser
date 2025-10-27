@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"

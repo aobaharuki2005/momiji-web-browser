@@ -34,6 +34,7 @@
 #include "TRRLoadInfo.h"
 
 #include "mozilla/Base64.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"

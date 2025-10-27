@@ -13,6 +13,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "nsIIconURI.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/CheckedInt.h"
