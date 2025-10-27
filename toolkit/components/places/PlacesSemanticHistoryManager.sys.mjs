@@ -73,10 +73,22 @@ class PlacesSemanticHistoryManager {
   #lastMaxChunksCount = 0;
 
   /**
+   * Checks if a value is an array or a typed array.
+   *
+   * @param {Array|ArrayBufferView} val
+   * @returns {boolean} Whether the input is like an array.
+   */
+  #isArrayLike(val) {
+    return Array.isArray(val) || ArrayBuffer.isView(val);
+  }
+
+  /**
    * Constructor for PlacesSemanticHistoryManager.
    *
    * @param {object} options - Configuration options.
-   * @param {number} [options.embeddingSize=384] - Size of embeddings used for vector operations.
+   * @param {string} [options.backend] - The backend to use for embeddings.
+   *   See EmbeddingsGenerator.sys.mjs for a list of available backends.
+   * @param {number} [options.embeddingSize=512] - Size of embeddings used for vector operations.
    * @param {number} [options.rowLimit=10000] - Maximum number of rows to process from the database.
    * @param {string} [options.samplingAttrib="frecency"] - Attribute used for sampling rows.
    * @param {number} [options.changeThresholdCount=3] - Threshold of changed rows to trigger updates.
@@ -84,7 +96,8 @@ class PlacesSemanticHistoryManager {
    * @param {boolean} [options.testFlag=false] - Flag for test behavior.
    */
   constructor({
-    embeddingSize = 384,
+    backend = "static-embeddings",
+    embeddingSize = 512,
     rowLimit = 10000,
     samplingAttrib = "frecency",
     changeThresholdCount = 3,
@@ -105,7 +118,10 @@ class PlacesSemanticHistoryManager {
       this.#finalized = true;
       return;
     }
-    this.embedder = new lazy.EmbeddingsGenerator(embeddingSize);
+    this.embedder = new lazy.EmbeddingsGenerator({
+      backend,
+      embeddingSize,
+    });
     this.semanticDB = new lazy.PlacesSemanticHistoryDatabase({
       embeddingSize,
       fileName: "places_semantic.sqlite",
@@ -576,13 +592,16 @@ class PlacesSemanticHistoryManager {
     if (rowsToAdd.length) {
       // Instead of calling engineRun in a loop for each row,
       // you prepare an array of requests.
-      batchTensors = await this.embedder.embedMany(
-        rowsToAdd.map(r => r.content)
-      );
-      if (batchTensors.length != rowsToAdd.length) {
-        throw new Error(
-          `Expected ${rowsToAdd.length} tensors, got ${batchTensors.length}`
+      try {
+        batchTensors = await this.embedder.embedMany(
+          rowsToAdd.map(r => r.content)
         );
+        batchTensors = this.#convertTensor(batchTensors, rowsToAdd.length);
+      } catch (ex) {
+        lazy.logger.error(`Error processing tensors: ${ex}`);
+        // If we failed generating tensors skip the addition, but proceed
+        // with removals below.
+        rowsToAdd.clear();
       }
     }
 
@@ -590,15 +609,8 @@ class PlacesSemanticHistoryManager {
       // Process each new row and the corresponding tensor.
       for (let i = 0; i < rowsToAdd.length; i++) {
         const { url_hash } = rowsToAdd[i];
-        const tensor = batchTensors[i];
+        const tensor = batchTensors.values[i];
         try {
-          if (!Array.isArray(tensor) || tensor.length !== this.#embeddingSize) {
-            lazy.logger.error(
-              `Got tensor with invalid length: ${Array.isArray(tensor) ? tensor.length : "non-array value"}`
-            );
-            continue;
-          }
-
           // We first insert the url into vec_history_mapping, get the rowid
           // and then insert the embedding into vec_history using that.
           // Doing the opposite doesn't work, as RETURNING is not properly
@@ -752,27 +764,18 @@ class PlacesSemanticHistoryManager {
     const inferStartTime = ChromeUtils.now();
     let results = [];
     await this.embedder.ensureEngine();
-    let tensor = await this.embedder.embed(queryContext.searchString);
 
-    if (!tensor) {
+    let tensor;
+    try {
+      tensor = await this.embedder.embed(queryContext.searchString);
+      tensor = this.#convertTensor(tensor, 1);
+    } catch (ex) {
+      lazy.logger.error(`Error processing tensor: ${ex}`);
       return results;
     }
 
     let metrics = tensor.metrics;
 
-    // If tensor is a nested array with a single element, extract the inner array.
-    if (
-      Array.isArray(tensor) &&
-      tensor.length === 1 &&
-      Array.isArray(tensor[0])
-    ) {
-      tensor = tensor[0];
-    }
-
-    if (!Array.isArray(tensor) || tensor.length !== this.#embeddingSize) {
-      lazy.logger.info(`Got tensor with length ${tensor.length}`);
-      return results;
-    }
     let conn = await this.getConnection();
 
     let rows = await conn.executeCached(
@@ -805,7 +808,7 @@ class PlacesSemanticHistoryManager {
       ORDER BY distance
       `,
       {
-        vector: lazy.PlacesUtils.tensorToSQLBindable(tensor),
+        vector: lazy.PlacesUtils.tensorToSQLBindable(tensor.values[0]),
         distanceThreshold: this.#distanceThreshold,
       }
     );
@@ -834,6 +837,63 @@ class PlacesSemanticHistoryManager {
   // for easier testing purpose.
   async engineRun(request) {
     return await this.#engine.run(request);
+  }
+
+  /**
+   * Converts result of an engine run into a consistent structure.
+   *
+   * @param {Array|object} tensor
+   * @param {number} expectedLength
+   * @returns {{ metrics: object, values: Array <Array|Float32Array>[]}}
+   */
+  #convertTensor(tensor, expectedLength) {
+    if (!tensor) {
+      throw new Error("Unexpected empty tensor");
+    }
+    let result = { metrics: tensor?.metrics ?? null, values: [] };
+    if (expectedLength == 0) {
+      return result;
+    }
+
+    // It may be a { metrics, output } object.
+    if (tensor.output) {
+      if (Array.isArray(tensor.output) && this.#isArrayLike(tensor.output[0])) {
+        result.values = tensor.output;
+      } else {
+        result.values.push(tensor.output);
+      }
+    } else {
+      // It may be a nested array, then we must extract it first.
+      if (
+        Array.isArray(tensor) &&
+        tensor.length === 1 &&
+        Array.isArray(tensor[0])
+      ) {
+        tensor = tensor[0];
+      }
+
+      // Then we check if it's an array of arrays or just a single value.
+      if (Array.isArray(tensor) && this.#isArrayLike(tensor[0])) {
+        result.values = tensor;
+      } else {
+        result.values.push(tensor);
+      }
+    }
+
+    if (result.values.length != expectedLength) {
+      throw new Error(
+        `Got ${result.values.length} embeddings instead of ${expectedLength}`
+      );
+    }
+    if (
+      !this.#isArrayLike(result.values[0]) ||
+      result.values[0].length != this.#embeddingSize
+    ) {
+      throw new Error(
+        `Got tensors with dimension ${tensor.values[0].length} instead of ${this.#embeddingSize}`
+      );
+    }
+    return result;
   }
 
   /**

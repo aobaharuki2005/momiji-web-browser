@@ -2147,14 +2147,19 @@ export var PlacesUtils = {
   /**
    * Converts an array of Float32 into a SQL bindable blob format.
    *
-   * @param {Array<number>} tensor
+   * @param {Array<number>|Float32Array} tensor
    * @returns {Uint8ClampedArray} SQL bindable blob.
    */
   tensorToSQLBindable(tensor) {
-    if (!tensor || !Array.isArray(tensor)) {
+    if (!tensor) {
+      throw new Error("tensorToSQLBindable received an invalid tensor");
+    } else if (Array.isArray(tensor)) {
+      return new Uint8ClampedArray(new Float32Array(tensor).buffer);
+    } else if (tensor instanceof Float32Array) {
+      return new Uint8ClampedArray(tensor.buffer);
+    } else {
       throw new Error("tensorToSQLBindable received an invalid tensor");
     }
-    return new Uint8ClampedArray(new Float32Array(tensor).buffer);
   },
 
   /**
