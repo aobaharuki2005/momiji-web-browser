@@ -609,10 +609,10 @@ index 589b387d11..2b936a151e 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 2c31b17568..39eb769f1c 100644
+index 83afe0fe6b..c0e46cc918 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -421,6 +421,45 @@ bool PlayoutDelayLimits::Write(ArrayView<uint8_t> data,
+@@ -422,6 +422,45 @@ bool PlayoutDelayLimits::Write(ArrayView<uint8_t> data,
    return true;
  }
  
@@ -701,7 +701,7 @@ index 66147a2ef0..60e582bf29 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index ab5cc141cc..b37a131947 100644
+index 06804b6a11..7f58ad6376 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 @@ -140,6 +140,18 @@ constexpr uint8_t kPacketWithMid[] = {
@@ -769,7 +769,7 @@ index 0b87d6d065..d69ae9420b 100644
  }  // namespace webrtc
  
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 45d5dbf686..c7e9a2a594 100644
+index ef9d0250f6..7e2e5eb3e2 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -139,6 +139,10 @@ bool IsNonVolatile(RTPExtensionType type) {

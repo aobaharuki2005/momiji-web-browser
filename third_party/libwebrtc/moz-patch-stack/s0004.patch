@@ -63,7 +63,7 @@ index c5e84e0368..3b0ca48f5b 100644
    std::optional<TimeDelta> AverageRtt() const;
    std::optional<TimeDelta> LastRtt() const;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 4f461f159e..3949ca3804 100644
+index 77b38cb463..72e5645d03 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 @@ -530,8 +530,10 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
