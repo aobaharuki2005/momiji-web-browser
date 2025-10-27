@@ -862,7 +862,21 @@ class QuotaManager final : public BackgroundThreadObject {
 
   OriginInfosNestedTraversable GetOriginInfosWithZeroUsage() const;
 
+  /**
+   * Clears the given set of origins.
+   *
+   * @param aDoomedOriginInfos
+   *   Origins to be cleared.
+   * @param aChecker
+   *   A callable invoked for each origin before clearing. Typically used to
+   *   enforce or assert invariants at the call site.
+   * @param aMaxOriginsToClear
+   *   Optional cap on the number of origins cleared in a single run. If
+   *   Nothing(), all doomed origins are cleared.
+   */
+  template <typename Checker>
   void ClearOrigins(const OriginInfosNestedTraversable& aDoomedOriginInfos,
+                    Checker&& aChecker,
                     const Maybe<size_t>& aMaxOriginsToClear = Nothing());
 
   void CleanupTemporaryStorage();

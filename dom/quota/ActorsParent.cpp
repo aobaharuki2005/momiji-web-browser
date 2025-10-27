@@ -8052,10 +8052,38 @@ QuotaManager::GetOriginInfosWithZeroUsage() const {
   return res;
 }
 
+// Based on discussions in
+// https://stackoverflow.com/questions/41847525/should-templated-functions-take-lambda-arguments-by-value-or-by-rvalue-reference
+// and
+// https://stackoverflow.com/questions/56988299/should-i-pass-a-lambda-by-const-reference,
+// passing a callable by universal (forwarding) reference is considered a more
+// flexible choice from an interface point of view.
+//
+// In future, we should also ensure this pattern is compatible with clang-tidy
+// checks such as modernize-pass-by-value and consider enabling
+// cppcoreguidelines-missing-std-forward to catch potential oversights.
+template <typename Checker>
 void QuotaManager::ClearOrigins(
-    const OriginInfosNestedTraversable& aDoomedOriginInfos,
+    const OriginInfosNestedTraversable& aDoomedOriginInfos, Checker&& aChecker,
     const Maybe<size_t>& aMaxOriginsToClear) {
   AssertIsOnIOThread();
+
+  if (QuotaManager::IsShuttingDown()) {
+    // Don't block shutdown.
+    return;
+  }
+
+  auto doomedOriginInfos =
+      Flatten<OriginInfosFlatTraversable::value_type>(aDoomedOriginInfos);
+
+  // If there's nothing to do, exit early.
+  if (doomedOriginInfos.begin() == doomedOriginInfos.end()) {
+    return;
+  }
+
+  // It's safer to take ownership of the checker and keep it outside the loop
+  // (the checker can have side effects or use move).
+  std::decay_t<Checker> checker = std::forward<Checker>(aChecker);
 
   // If we are in shutdown, we could break off early from clearing origins.
   // In such cases, we would like to track the ones that were already cleared
@@ -8069,14 +8097,8 @@ void QuotaManager::ClearOrigins(
   nsTArray<OriginMetadata> clearedOrigins;
 
   // XXX Does this need to be done a) in order and/or b) sequentially?
-  for (const auto& doomedOriginInfo :
-       Flatten<OriginInfosFlatTraversable::value_type>(aDoomedOriginInfos)) {
-#ifdef DEBUG
-    {
-      MutexAutoLock lock(mQuotaMutex);
-      MOZ_ASSERT(!doomedOriginInfo->LockedPersisted());
-    }
-#endif
+  for (const auto& doomedOriginInfo : doomedOriginInfos) {
+    std::invoke(checker, doomedOriginInfo);
 
     //  TODO: We are currently only checking for this flag here which
     //  means that we cannot break off once we start cleaning an origin. It
@@ -8122,8 +8144,19 @@ void QuotaManager::CleanupTemporaryStorage() {
   // Evicting origins that exceed their group limit also affects the global
   // temporary storage usage, so these steps have to be taken sequentially.
   // Combining them doesn't seem worth the added complexity.
-  ClearOrigins(GetOriginInfosExceedingGroupLimit());
-  ClearOrigins(GetOriginInfosExceedingGlobalLimit());
+
+#ifdef DEBUG
+  auto nonPersistedChecker = [&self = *this](const auto& doomedOriginInfo) {
+    MutexAutoLock lock(self.mQuotaMutex);
+    MOZ_ASSERT(!doomedOriginInfo->LockedPersisted());
+  };
+#else
+  auto nonPersistedChecker = [](const auto&) {};
+#endif
+
+  ClearOrigins(GetOriginInfosExceedingGroupLimit(), nonPersistedChecker);
+  ClearOrigins(GetOriginInfosExceedingGlobalLimit(),
+               std::move(nonPersistedChecker));
 
   if (mTemporaryStorageUsage > mTemporaryStorageLimit) {
     // If disk space is still low after origin clear, notify storage pressure.
