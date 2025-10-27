@@ -234,7 +234,7 @@ html|select:where(:not([size], [multiple])) {
   border: none;
   border-radius: var(--button-border-radius);
 
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 
   color: var(--button-text-color);
   background-color: var(--button-background-color);
@@ -263,7 +263,7 @@ html|select:where(:not([size], [multiple])) {
 }
 
 .header {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--heading-font-weight);
 }
 
 .indent {

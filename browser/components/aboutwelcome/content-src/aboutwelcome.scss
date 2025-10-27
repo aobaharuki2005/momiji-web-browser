@@ -901,7 +901,7 @@ html {
 
         h1 {
           color: var(--mr-screen-heading-color);
-          font-weight: 700;
+          font-weight: var(--font-weight-bold);
           font-size: 47px;
           line-height: 110%;
           max-width: 340px;
@@ -2315,7 +2315,7 @@ html {
           flex-direction: column;
 
           .header-title {
-            font-weight: var(--font-weight-bold);
+            font-weight: var(--heading-font-weight);
             line-height: 1.5;
           }
 

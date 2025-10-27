@@ -88,7 +88,7 @@ td.integer {
 }
 
 #codec-table tr > td.lack-of-extension {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 #codec-table tr:nth-child(even) > td.unsupported {

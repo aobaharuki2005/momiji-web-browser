@@ -5,7 +5,13 @@
   position: relative;
   text-align: center;
   font-size: var(--font-size-large);
-  font-weight: var(--font-weight-bold);
+
+  /**
+   * @backward-compat { version 146 }
+   *
+   * Replace this with `--font-weight-semibold` once 146 hits release.
+   */
+  font-weight: var(--heading-font-weight);
 
   &:hover {
     background: var(--newtab-element-hover-color);

@@ -499,7 +499,7 @@ button:disabled {
 
   h2 {
     font-size: var(--font-size-large);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--heading-font-weight);
     color: var(--popup-foreground);
     margin-block: var(--space-small);
   }
@@ -668,7 +668,7 @@ body.hcm .color-scheme-buttons {
     background-color: var(--popup-button-background);
     color: var(--popup-button-foreground);
     font-size: inherit;
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-semibold);
     padding-inline: var(--space-large) var(--space-xxlarge);
     text-overflow: ellipsis;
     background-image: url("chrome://global/skin/icons/arrow-down.svg");

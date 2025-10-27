@@ -456,7 +456,7 @@ richlistitem[selected] .actionsMenu:focus-visible {
 }
 
 #homeContentsGroup > [data-subcategory] .section-checkbox {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-semibold);
 }
 
 #homeContentsGroup > [data-subcategory] > vbox menulist {
@@ -628,7 +628,7 @@ html|dialog,
 }
 
 .dialogTitle {
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--heading-font-weight);
   text-align: center;
   user-select: none;
 }
