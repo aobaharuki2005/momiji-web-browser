@@ -134,7 +134,7 @@ export default class RestoreFromBackup extends MozLitElement {
     }
   }
 
-  async handleChooseBackupFile() {
+  handleChooseBackupFile() {
     this.dispatchEvent(
       new CustomEvent("BackupUI:ShowFilepicker", {
         bubbles: true,
@@ -142,7 +142,7 @@ export default class RestoreFromBackup extends MozLitElement {
         detail: {
           win: window.browsingContext,
           filter: "filterHTML",
-          displayDirectoryPath: this.backupServiceState?.backupFileToRestore,
+          existingBackupPath: this.backupServiceState?.backupFileToRestore,
         },
       })
     );

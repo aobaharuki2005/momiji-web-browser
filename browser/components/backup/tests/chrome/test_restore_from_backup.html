@@ -85,6 +85,7 @@
      */
     add_task(async function test_choose() {
       let restoreFromBackup = document.getElementById("test-restore-from-backup");
+      restoreFromBackup.backupServiceState.backupFileToRestore = "/backup/file\\path.html";
 
       ok(restoreFromBackup.chooseButtonEl, "Choose button should be found");
 
@@ -93,8 +94,11 @@
 
       restoreFromBackup.chooseButtonEl.click();
 
-      await promise;
+      let event = await promise;
       ok(true, "Detected event after pressing the choose button");
+      is(event.detail.win, window.browsingContext, "Current window will be the parent");
+      is(event.detail.filter, "filterHTML", "Only HTML files will be shown");
+      is(event.detail.existingBackupPath, "/backup/file\\path.html", "Path to the backup file is given");
     });
 
     /**

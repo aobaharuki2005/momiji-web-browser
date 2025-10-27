@@ -60,7 +60,7 @@ export class BackupUIChild extends JSWindowActorChild {
       let { path, filename, iconURL } = await this.sendQuery("ShowFilepicker", {
         win: event.detail?.win,
         filter: event.detail?.filter,
-        displayDirectoryPath: event.detail?.displayDirectoryPath,
+        existingBackupPath: event.detail?.existingBackupPath,
       });
 
       let widgets = ChromeUtils.nondeterministicGetWeakSetKeys(

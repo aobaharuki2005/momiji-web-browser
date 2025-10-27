@@ -128,7 +128,7 @@ export class BackupUIParent extends JSWindowActorParent {
       }
       this.#bs.setScheduledBackups(false);
     } else if (message.name == "ShowFilepicker") {
-      let { win, filter, displayDirectoryPath } = message.data;
+      let { win, filter, existingBackupPath } = message.data;
 
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
@@ -141,11 +141,11 @@ export class BackupUIParent extends JSWindowActorParent {
         fp.appendFilters(Ci.nsIFilePicker[filter]);
       }
 
-      if (displayDirectoryPath) {
+      if (existingBackupPath) {
         try {
-          let exists = await IOUtils.exists(displayDirectoryPath);
-          if (exists) {
-            fp.displayDirectory = await IOUtils.getFile(displayDirectoryPath);
+          let folder = (await IOUtils.getFile(existingBackupPath)).parent;
+          if (folder.exists()) {
+            fp.displayDirectory = folder;
           }
         } catch (_) {
           // If the file can not be found we will skip setting the displayDirectory.
