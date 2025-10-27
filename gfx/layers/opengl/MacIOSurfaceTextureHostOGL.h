@@ -78,7 +78,7 @@ class MacIOSurfaceTextureHostOGL : public TextureHost {
 
   const RefPtr<MacIOSurface> mSurface;
   const RefPtr<GpuFence> mGpuFence;
-  
+
  protected:
   RefPtr<GLTextureSource> mTextureSource;
 };
