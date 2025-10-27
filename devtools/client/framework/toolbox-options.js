@@ -554,11 +554,6 @@ class OptionsPanel extends EventEmitter {
     } else {
       // Hide the checkbox and label
       this.disableJSNode.parentNode.style.display = "none";
-
-      const triggersPageRefreshLabel = this.panelDoc.getElementById(
-        "triggers-page-refresh-label"
-      );
-      triggersPageRefreshLabel.style.display = "none";
     }
   }
 
