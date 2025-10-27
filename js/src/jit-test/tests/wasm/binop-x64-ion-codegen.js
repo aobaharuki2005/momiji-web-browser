@@ -47,7 +47,7 @@ let zero64 = `(module
 codegenTestX64_adhoc(
     zero64,
     'f',
-    'xor %rax, %rax', {no_prefix:true});
+    'xor %rax, %rax');
 assertEq(wasmEvalText(zero64).exports.f(-37000000000n), 0n)
 assertEq(wasmEvalText(zero64).exports.f(42000000000n), 0n)
 
@@ -74,7 +74,7 @@ codegenTestX64_adhoc(
 assertEq(wasmEvalText(one64).exports.f(-37000000000n), -37000000000n)
 assertEq(wasmEvalText(one64).exports.f(42000000000n), 42000000000n)
 
-// Test that multiplication by two yields lea/add
+// Test that multiplication by two yields lea
 
 let double32 =
     `(module
@@ -93,11 +93,11 @@ let double64 = `(module
 codegenTestX64_adhoc(
     double64,
     'f',
-    'add %rax, %rax', {no_prefix:true});
+    'lea \\(%rdi,%rdi,1\\), %rax');
 assertEq(wasmEvalText(double64).exports.f(-37000000000n), -74000000000n)
 assertEq(wasmEvalText(double64).exports.f(42000000000n), 84000000000n)
 
-// Test that multiplication by four yields lea/shift
+// Test that multiplication by four yields lea
 
 let quad32 =
     `(module
@@ -116,11 +116,11 @@ let quad64 = `(module
 codegenTestX64_adhoc(
     quad64,
     'f',
-    'shl \\$0x02, %rax', {no_prefix:true});
+    'lea \\(,%rdi,4\\), %rax');
 assertEq(wasmEvalText(quad64).exports.f(-37000000000n), -148000000000n)
 assertEq(wasmEvalText(quad64).exports.f(42000000000n), 168000000000n)
 
-// Test that multiplication by five yields lea/imul
+// Test that multiplication by five yields lea
 
 let quint32 =
     `(module
@@ -139,9 +139,45 @@ let quint64 = `(module
 codegenTestX64_adhoc(
     quint64,
     'f',
-    `imul \\$0x05, %rax, %rax`, {no_prefix:true})
+    `lea \\(%rdi,%rdi,4\\), %rax`)
 assertEq(wasmEvalText(quint64).exports.f(-37000000000n), -37000000000n*5n)
 assertEq(wasmEvalText(quint64).exports.f(42000000000n), 42000000000n*5n)
+
+// Test that multiplication by six yields imul
+
+let sext32 =
+    `(module
+       (func (export "f") (param i32) (result i32)
+         (i32.mul (local.get 0) (i32.const 6))))`;
+codegenTestX64_adhoc(
+    sext32,
+    'f',
+    'imul \\$0x06, %edi, %eax');
+assertEq(wasmEvalText(sext32).exports.f(-37), -37*6)
+assertEq(wasmEvalText(sext32).exports.f(42), 42*6)
+
+let sext64 = `(module
+       (func (export "f") (param i64) (result i64)
+         (i64.mul (local.get 0) (i64.const 6))))`
+codegenTestX64_adhoc(
+    sext64,
+    'f',
+    `imul \\$0x06, %rdi, %rax`)
+assertEq(wasmEvalText(sext64).exports.f(-37000000000n), -37000000000n*6n)
+assertEq(wasmEvalText(sext64).exports.f(42000000000n), 42000000000n*6n)
+
+// Test that multiplication by UINT32_MAX yields imul
+
+let uint32max64 = `(module
+       (func (export "f") (param i64) (result i64)
+         (i64.mul (local.get 0) (i64.const 0xffffffff))))`
+codegenTestX64_adhoc(
+    uint32max64,
+    'f',
+    `mov \\$-0x01, %r11d
+     imul %r11, %rax`, {no_prefix:true})
+assertEq(wasmEvalText(uint32max64).exports.f(-37000000000n), BigInt.asIntN(64, -37000000000n*0xffffffffn))
+assertEq(wasmEvalText(uint32max64).exports.f(42000000000n), BigInt.asIntN(64, 42000000000n*0xffffffffn))
 
 // Test that 0-n yields negation.
 
