@@ -7,7 +7,6 @@
 #define __nsFormFillController__
 
 #include "mozilla/TimeStamp.h"
-#include "mozilla/dom/Promise.h"
 #include "nsIFormFillController.h"
 #include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompleteSearch.h"
@@ -15,7 +14,6 @@
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
-#include "nsCOMArray.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashMap.h"
 #include "nsInterfaceHashtable.h"
@@ -109,9 +107,6 @@ class nsFormFillController final : public nsIFormFillController,
 
   bool IsTextControl(nsINode* aNode);
 
-  MOZ_CAN_RUN_SCRIPT
-  void WaitForPromise(bool showPopup);
-
   // members //////////////////////////////////////////
 
   nsCOMPtr<nsIAutoCompleteController> mController;
@@ -131,10 +126,6 @@ class nsFormFillController final : public nsIFormFillController,
   nsString mLastSearchString;
 
   nsTHashMap<nsPtrHashKey<const nsINode>, bool> mAutoCompleteInputs;
-
-  nsCOMArray<nsIFormFillFocusListener> mFocusListeners;
-
-  RefPtr<mozilla::dom::Promise> mFocusPendingPromise;
 
   uint16_t mFocusAfterRightClickThreshold;
   uint32_t mTimeout;
