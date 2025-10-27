@@ -61,9 +61,8 @@ task-defaults:
                     by-shipping-product:
                         fenix:
                             slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
-                            slackBlocks: |
-                                {
-                                    "attachments": [
+                            slackAttachments: |
+                              [
                                     {
                                         "color": "#FF0000",
                                         "blocks": [
@@ -120,13 +119,11 @@ task-defaults:
                                         }
                                         ]
                                     }
-                                    ]
-                                }
+                              ]
                         focus:
                             slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
-                            slackBlocks: |
-                                {
-                                    "attachments": [
+                            slackAttachments: |
+                                [
                                     {
                                         "color": "#FF0000",
                                         "blocks": [
@@ -183,8 +180,7 @@ task-defaults:
                                         }
                                         ]
                                     }
-                                    ]
-                                }
+                                ]
                         default: {}
                 'default': {}
 
