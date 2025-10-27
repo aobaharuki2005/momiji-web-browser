@@ -6,6 +6,15 @@
 
 /* globals browser, InterventionHelpers */
 
+const debugLoggingPrefPromise = browser.aboutConfigPrefs.getPref(
+  "disable_debug_logging"
+);
+let debugLog = async function () {
+  if ((await debugLoggingPrefPromise) !== true) {
+    console.debug.apply(this, arguments);
+  }
+};
+
 class Interventions {
   constructor(availableInterventions, customFunctions) {
     this._originalInterventions = availableInterventions;
@@ -210,12 +219,12 @@ class Interventions {
           );
           if (value === true) {
             await this.disableIntervention(config);
-            console.debug(
+            debugLog(
               `Webcompat intervention for ${config.label} disabled by pref`
             );
           } else {
             await this.enableIntervention(config);
-            console.debug(
+            debugLog(
               `Webcompat intervention for ${config.label} enabled by pref`
             );
           }
@@ -289,7 +298,7 @@ class Interventions {
     }
 
     if (skipped.length) {
-      console.debug(
+      debugLog(
         "Skipping",
         skipped.length,
         "un-needed interventions",
@@ -356,15 +365,11 @@ class Interventions {
 
     if (!this._getActiveInterventionById(config.id)) {
       this._availableInterventions.push(config);
-      console.debug("Added webcompat intervention", config.id, config);
+      debugLog("Added webcompat intervention", config.id, config);
     } else {
       for (const [index, oldConfig] of this._availableInterventions.entries()) {
         if (oldConfig.id === config.id && oldConfig !== config) {
-          console.debug(
-            "Replaced webcompat intervention",
-            oldConfig.id,
-            config
-          );
+          debugLog("Replaced webcompat intervention", oldConfig.id, config);
           this._availableInterventions[index] = config;
         }
       }
@@ -480,7 +485,7 @@ class Interventions {
 
     listeners.onBeforeSendHeaders = listener;
 
-    console.debug(`Enabled UA override for ${label}`);
+    debugLog(`Enabled UA override for ${label}`);
   }
 
   async _enableRequestBlocks(label, intervention, blocks) {
@@ -503,7 +508,7 @@ class Interventions {
     ]);
 
     listeners.onBeforeRequest = listener;
-    console.debug(`Blocking requests as specified for ${label}`);
+    debugLog(`Blocking requests as specified for ${label}`);
   }
 
   async _enableContentScripts(bug, label, intervention, matches) {
@@ -531,14 +536,14 @@ class Interventions {
         ({ id }) => !alreadyReggedIds.includes(id)
       );
       await browser.scripting.registerContentScripts(stillNeeded);
-      console.debug(
+      debugLog(
         `Registered still-not-active content scripts for ${label}`,
         stillNeeded
       );
     } catch (e) {
       try {
         await browser.scripting.registerContentScripts(scriptsToReg);
-        console.debug(
+        debugLog(
           `Registered all content scripts for ${label} after error registering just non-active ones`,
           scriptsToReg,
           e
