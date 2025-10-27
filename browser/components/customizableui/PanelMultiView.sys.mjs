@@ -1916,14 +1916,23 @@ export var PanelView = class extends AssociatedToNode {
           shiftKey: event.shiftKey,
           metaKey: event.metaKey,
         };
+        // The a11y-checks want the target to be accessible. For moz-button the
+        // focus is really on the inner button which is accessible, but we check
+        // a11y against the event target (moz-button) which fails. Dispatch from
+        // the inner button element instead.
+        let target = button;
+        if (button.localName == "moz-button") {
+          target = button.buttonEl;
+          details.composed = true;
+        }
         let dispEvent = new event.target.ownerGlobal.MouseEvent(
           "mousedown",
           details
         );
-        button.dispatchEvent(dispEvent);
+        target.dispatchEvent(dispEvent);
         // This event will trigger a command event too.
         dispEvent = new event.target.ownerGlobal.PointerEvent("click", details);
-        button.dispatchEvent(dispEvent);
+        target.dispatchEvent(dispEvent);
         this._doingKeyboardActivation = false;
         break;
       }
