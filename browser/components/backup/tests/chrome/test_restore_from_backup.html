@@ -354,6 +354,166 @@
 
       restoreFromBackup.remove();
     });
+
+    /**
+     * Tests that the correct status is displayed under the input
+     * for different backup file info states.
+     */
+    add_task(async function test_backup_file_status_rendering() {
+      let content = document.getElementById("content");
+      let restoreFromBackup = document.createElement("restore-from-backup");
+      content.appendChild(restoreFromBackup);
+
+      // Test that when no backup file is selected, the support link is displayed
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: null,
+        recoveryErrorCode: ERRORS.NONE,
+      };
+      await restoreFromBackup.updateComplete;
+
+      let noBackupLink = restoreFromBackup.shadowRoot.querySelector(
+        "#restore-from-backup-no-backup-file-link"
+      );
+      ok(noBackupLink, "Should show support link when no backup file is selected");
+
+      let backupInfo = restoreFromBackup.shadowRoot.querySelector(
+        "#restore-from-backup-backup-found-info"
+      );
+      ok(!backupInfo, "Should not show backup info when no backup file is selected");
+
+      // Test that when a backup file is selected, the backup info is displayed
+      const IS_ENCRYPTED = true;
+      const DATE = new Date("2024-01-01T00:00:00.000Z");
+      const DEVICE_NAME = "test-device";
+
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: {
+          isEncrypted: IS_ENCRYPTED,
+          date: DATE,
+          deviceName: DEVICE_NAME
+        },
+        recoveryErrorCode: ERRORS.NONE,
+      };
+      await restoreFromBackup.updateComplete;
+
+      noBackupLink = restoreFromBackup.shadowRoot.querySelector(
+        "#restore-from-backup-no-backup-file-link"
+      );
+      ok(!noBackupLink, "Should not show support link when backup file is found");
+
+      backupInfo = restoreFromBackup.shadowRoot.querySelector(
+        "#restore-from-backup-backup-found-info"
+      );
+      ok(backupInfo, "Should show backup info when backup file is found");
+      is(backupInfo.getAttribute("data-l10n-id"), "backup-file-creation-date-and-device",
+        "Should have correct l10n id for backup info");
+
+      // Test that when embedded in about:welcome, if an error occurs,
+      // the generic file error template is displayed
+      restoreFromBackup.aboutWelcomeEmbedded = true;
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: null,
+        recoveryErrorCode: ERRORS.CORRUPTED_ARCHIVE,
+      };
+      await restoreFromBackup.updateComplete;
+
+      let errorTemplate = restoreFromBackup.shadowRoot.querySelector(
+        "#backup-generic-file-error"
+      );
+      ok(errorTemplate, "Should show error template in embedded context with error");
+
+      // Test that when not embedded in about:welcome, if an error occurs,
+      // the support link is displayed instead of the generic file error template
+      restoreFromBackup.aboutWelcomeEmbedded = false;
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: null,
+        recoveryErrorCode: ERRORS.FILE_SYSTEM_ERROR,
+      };
+      await restoreFromBackup.updateComplete;
+
+      errorTemplate = restoreFromBackup.shadowRoot.querySelector(
+        "#backup-generic-file-error"
+      );
+      ok(!errorTemplate, "Should not show generic file error template when not embedded in about:welcome");
+
+      noBackupLink = restoreFromBackup.shadowRoot.querySelector(
+        "#restore-from-backup-no-backup-file-link"
+      );
+      ok(noBackupLink, "Should show support link when not embedded in about:welcome, with error");
+
+      restoreFromBackup.remove();
+    });
+
+    /**
+     * Tests that when embedded in about:welcome, the textarea's aria-describedby
+     * attribute correctly references the appropriate element based on the displayed status.
+     */
+    add_task(async function test_textarea_aria_describedby_accessibility() {
+      let content = document.getElementById("content");
+      let restoreFromBackup = document.createElement("restore-from-backup");
+      content.appendChild(restoreFromBackup);
+
+      restoreFromBackup.aboutWelcomeEmbedded = true;
+      await restoreFromBackup.updateComplete;
+
+      let textarea = restoreFromBackup.shadowRoot.querySelector("#backup-filepicker-input");
+      ok(textarea, "Textarea should be present when aboutWelcomeEmbedded is true");
+
+      // Test that when there is no backup file info, we should reference no-backup-file-link
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: null,
+        recoveryErrorCode: ERRORS.NONE,
+      };
+      await restoreFromBackup.updateComplete;
+
+      let ariaDescribedBy = textarea.getAttribute("aria-describedby");
+      is(ariaDescribedBy, "restore-from-backup-no-backup-file-link",
+        "aria-describedby should reference no-backup-file-link when no backup info");
+
+      let referencedElement = restoreFromBackup.shadowRoot.querySelector("#restore-from-backup-no-backup-file-link");
+      ok(referencedElement, "Referenced element should exist");
+
+      // Test that when a backup file is found, we should reference backup-found-info
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: {
+          date: new Date(),
+          deviceName: "test-device",
+          isEncrypted: false,
+        },
+        recoveryErrorCode: ERRORS.NONE,
+      };
+      await restoreFromBackup.updateComplete;
+
+      ariaDescribedBy = textarea.getAttribute("aria-describedby");
+      is(ariaDescribedBy, "restore-from-backup-backup-found-info",
+        "aria-describedby should reference backup-found-info when backup file is found");
+
+      referencedElement = restoreFromBackup.shadowRoot.querySelector("#restore-from-backup-backup-found-info");
+      ok(referencedElement, "Referenced element should exist");
+
+      // Test that when we're in an error state, we should reference the generic-file-error
+      restoreFromBackup.backupServiceState = {
+        ...restoreFromBackup.backupServiceState,
+        backupFileInfo: null,
+        recoveryErrorCode: ERRORS.CORRUPTED_ARCHIVE,
+      };
+      await restoreFromBackup.updateComplete;
+
+      ariaDescribedBy = textarea.getAttribute("aria-describedby");
+      is(ariaDescribedBy, "backup-generic-file-error",
+        "aria-describedby should reference generic-file-error when there's a recovery error");
+
+      referencedElement = restoreFromBackup.shadowRoot.querySelector("#backup-generic-file-error");
+      ok(referencedElement, "Referenced element should exist");
+
+      restoreFromBackup.remove();
+    });
   </script>
 </head>
 <body>
