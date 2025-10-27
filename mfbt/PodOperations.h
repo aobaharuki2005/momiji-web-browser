@@ -53,6 +53,8 @@ static MOZ_ALWAYS_INLINE void PodZero(T* aT, size_t aNElem) {
    * loop anyway, so even if GCC doesn't, keep the codebase simple and clearly
    * convey the intent instead of trying to outsmart the compiler.
    */
+  MOZ_ASSERT(aNElem <= std::numeric_limits<size_t>::max() / sizeof(T),
+             "trying to zero an impossible number of elements");
   memset(aT, 0, sizeof(T) * aNElem);
 }
 
@@ -79,6 +81,7 @@ template <class T, size_t N>
 static MOZ_ALWAYS_INLINE void PodArrayZero(T (&aT)[N]) {
   static_assert(std::is_trivially_copyable_v<T>,
                 "PodArrayZero requires trivially copyable types");
+  static_assert(N < std::numeric_limits<size_t>::max() / sizeof(T));
   memset(aT, 0, N * sizeof(T));
 }
 
@@ -86,6 +89,7 @@ template <typename T, size_t N>
 static MOZ_ALWAYS_INLINE void PodArrayZero(Array<T, N>& aArr) {
   static_assert(std::is_trivially_copyable_v<T>,
                 "PodArrayZero requires trivially copyable types");
+  static_assert(N < std::numeric_limits<size_t>::max() / sizeof(T));
   memset(&aArr[0], 0, N * sizeof(T));
 }
 
@@ -99,6 +103,8 @@ static MOZ_ALWAYS_INLINE void PodCopy(T* aDst, const T* aSrc, size_t aNElem) {
                 "PodCopy requires trivially copyable types");
   MOZ_ASSERT(aDst + aNElem <= aSrc || aSrc + aNElem <= aDst,
              "destination and source must not overlap");
+  MOZ_ASSERT(aNElem <= std::numeric_limits<size_t>::max() / sizeof(T),
+             "trying to copy an impossible number of elements");
 
 // Linux memcpy for small sizes seems slower than on other
 // platforms. So we use a loop for small sizes there only.
