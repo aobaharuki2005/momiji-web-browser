@@ -2010,7 +2010,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "backupRestoreEnabled && source == 'startup' && !doesAppNeedPin && isDefaultBrowser && !'browser.shell.checkDefaultBrowser'|preferenceValue && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "backupRestoreEnabled && source == 'startup' && !doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },
