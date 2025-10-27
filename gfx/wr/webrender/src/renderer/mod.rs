@@ -3999,7 +3999,7 @@ impl Renderer {
             }
         }
 
-        let mut full_render = false;
+        let mut full_render = self.debug_overlay_state.is_enabled;
 
         // Start compositing if using OS compositor
         if let Some(ref mut compositor) = self.compositor_config.layer_compositor() {
@@ -4007,7 +4007,7 @@ impl Renderer {
                 enable_screenshot,
                 layers: &input_layers,
             };
-            full_render = compositor.begin_frame(&input);
+            full_render |= compositor.begin_frame(&input);
         }
 
         // Full render is requested when layer tree is updated.
