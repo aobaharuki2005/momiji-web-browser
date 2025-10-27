@@ -45,7 +45,7 @@ const EN_LOCALES = ["en-CA", "en-GB", "en-US", "en-ZA"];
  * @property {string} [nimbusVariableIfExposedInUi]
  *   If the pref is exposed in the settings UI and it's a fallback for a Nimbus
  *   variable, then this should be set to the variable's name. See point 3 in
- *   the comment in `#initDefaultPrefs()` for more.
+ *   the comment in `#initPrefs()` for more.
  */
 
 /**
@@ -314,7 +314,7 @@ class _QuickSuggest {
    * Initializes Suggest. It's safe to call more than once.
    *
    * @param {object} testOverrides
-   *   This is intended for tests only. See `#initDefaultPrefs()`.
+   *   This is intended for tests only. See `#initPrefs()`.
    */
   async init(testOverrides = null) {
     if (this.#initStarted) {
@@ -337,7 +337,7 @@ class _QuickSuggest {
       await lazy.TelemetryEnvironment.onInitialized();
     }
 
-    this.#initDefaultPrefs(testOverrides);
+    this.#initPrefs(testOverrides);
 
     // Create an instance of each feature and keep it in `#featuresByName`.
     for (let [name, uri] of Object.entries(FEATURES)) {
@@ -727,7 +727,7 @@ class _QuickSuggest {
    *   This is intended for tests only. Pass to force the following:
    *   `{ region, locale, migrationVersion, defaultPrefs }`
    */
-  #initDefaultPrefs(testOverrides = null) {
+  #initPrefs(testOverrides = null) {
     // Updating prefs is tricky and it's important to preserve the user's
     // choices, so we describe the process in detail below. tl;dr:
     //
@@ -829,10 +829,10 @@ class _QuickSuggest {
     //    settings UI and configurable via Nimbus.
     this.#syncNimbusVariablesToUiPrefs();
 
-    // 4. Migrate prefs across app versions.
+    // 4. Migrate user-branch prefs across app versions.
     let shouldEnableSuggest =
       !!this.#intendedDefaultPrefs["quicksuggest.enabled"];
-    this._ensureFirefoxSuggestPrefsMigrated(shouldEnableSuggest, testOverrides);
+    this.#ensureUserPrefsMigrated(shouldEnableSuggest, testOverrides);
   }
 
   /**
@@ -889,12 +889,12 @@ class _QuickSuggest {
    * @returns {number}
    */
   get MIGRATION_VERSION() {
-    return 4;
+    return 5;
   }
 
   /**
-   * Migrates Firefox Suggest prefs to the current version if they haven't been
-   * migrated already.
+   * Migrates user-branch Suggest prefs to the current version if they haven't
+   * been migrated already.
    *
    * @param {boolean} shouldEnableSuggest
    *   Whether Suggest should be enabled right now.
@@ -902,7 +902,7 @@ class _QuickSuggest {
    *   This is intended for tests only. Pass to force a migration version:
    *   `{ migrationVersion }`
    */
-  _ensureFirefoxSuggestPrefsMigrated(shouldEnableSuggest, testOverrides) {
+  #ensureUserPrefsMigrated(shouldEnableSuggest, testOverrides) {
     let currentVersion =
       testOverrides?.migrationVersion !== undefined
         ? testOverrides.migrationVersion
@@ -917,12 +917,13 @@ class _QuickSuggest {
     }
 
     // Migrate from the last-seen version up to the current version.
+    let userBranch = Services.prefs.getBranch("browser.urlbar.");
     let version = lastSeenVersion;
     for (; version < currentVersion; version++) {
       let nextVersion = version + 1;
-      let methodName = "_migrateFirefoxSuggestPrefsTo_" + nextVersion;
+      let methodName = "_migrateUserPrefsTo_" + nextVersion;
       try {
-        this[methodName](shouldEnableSuggest);
+        this[methodName](userBranch, shouldEnableSuggest);
       } catch (error) {
         console.error(
           `Error migrating Firefox Suggest prefs to version ${nextVersion}:`,
@@ -936,16 +937,29 @@ class _QuickSuggest {
     lazy.UrlbarPrefs.set("quicksuggest.migrationVersion", version);
   }
 
-  _migrateFirefoxSuggestPrefsTo_1(shouldEnableSuggest) {
+  _migrateUserPrefsTo_1(userBranch, shouldEnableSuggest) {
+    // Previously prefs were unversioned and worked like this: When
+    // `suggest.quicksuggest` is false, all quick suggest results are disabled
+    // and `suggest.quicksuggest.sponsored` is ignored. To show sponsored
+    // suggestions, both prefs must be true.
+    //
+    // Version 1 makes the following changes:
+    //
+    // `suggest.quicksuggest` is removed, `suggest.quicksuggest.nonsponsored` is
+    // introduced. `suggest.quicksuggest.nonsponsored` and
+    // `suggest.quicksuggest.sponsored` are independent:
+    // `suggest.quicksuggest.nonsponsored` controls non-sponsored results and
+    // `suggest.quicksuggest.sponsored` controls sponsored results.
+    // `quicksuggest.dataCollection.enabled` is introduced.
+
     // Copy `suggest.quicksuggest` to `suggest.quicksuggest.nonsponsored` and
     // clear the first.
-    let suggestQuicksuggest = "browser.urlbar.suggest.quicksuggest";
-    if (Services.prefs.prefHasUserValue(suggestQuicksuggest)) {
-      lazy.UrlbarPrefs.set(
+    if (userBranch.prefHasUserValue("suggest.quicksuggest")) {
+      userBranch.setBoolPref(
         "suggest.quicksuggest.nonsponsored",
-        Services.prefs.getBoolPref(suggestQuicksuggest)
+        userBranch.getBoolPref("suggest.quicksuggest")
       );
-      Services.prefs.clearUserPref(suggestQuicksuggest);
+      userBranch.clearUserPref("suggest.quicksuggest");
     }
 
     // In the unversioned prefs, sponsored suggestions were shown only if the
@@ -953,56 +967,75 @@ class _QuickSuggest {
     // two independent prefs, so disable sponsored if the main pref was false.
     if (
       shouldEnableSuggest &&
-      !lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")
+      userBranch.prefHasUserValue("suggest.quicksuggest.nonsponsored") &&
+      !userBranch.getBoolPref("suggest.quicksuggest.nonsponsored")
     ) {
       // Set the pref on the user branch. Suggestions are enabled by default
       // for offline; we want to preserve the user's choice of opting out,
       // and we want to preserve the default-branch true value.
-      lazy.UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+      userBranch.setBoolPref("suggest.quicksuggest.sponsored", false);
     }
   }
 
-  _migrateFirefoxSuggestPrefsTo_2() {
+  _migrateUserPrefsTo_2(userBranch) {
+    // For online, the defaults for `suggest.quicksuggest.nonsponsored` and
+    // `suggest.quicksuggest.sponsored` are now true. Previously they were
+    // false.
+
     // In previous versions of the prefs for online, suggestions were disabled
     // by default; in version 2, they're enabled by default. For users who were
     // already in online and did not enable suggestions (because they did not
     // opt in, they did opt in but later disabled suggestions, or they were not
     // shown the modal) we don't want to suddenly enable them, so if the prefs
     // do not have user-branch values, set them to false.
-    let scenario = Services.prefs.getCharPref(
-      "browser.urlbar.quicksuggest.scenario",
-      ""
-    );
+    let scenario = userBranch.getCharPref("quicksuggest.scenario", "");
     if (scenario == "online") {
-      if (
-        !Services.prefs.prefHasUserValue(
-          "browser.urlbar.suggest.quicksuggest.nonsponsored"
-        )
-      ) {
-        lazy.UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
+      if (!userBranch.prefHasUserValue("suggest.quicksuggest.nonsponsored")) {
+        userBranch.setBoolPref("suggest.quicksuggest.nonsponsored", false);
       }
-      if (
-        !Services.prefs.prefHasUserValue(
-          "browser.urlbar.suggest.quicksuggest.sponsored"
-        )
-      ) {
-        lazy.UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+      if (!userBranch.prefHasUserValue("suggest.quicksuggest.sponsored")) {
+        userBranch.setBoolPref("suggest.quicksuggest.sponsored", false);
       }
     }
   }
 
-  _migrateFirefoxSuggestPrefsTo_3() {
+  _migrateUserPrefsTo_3() {
     // This used to check the `quicksuggest.dataCollection.enabled` preference
     // and set `quicksuggest.settingsUi` to `SETTINGS_UI.FULL` if data collection
     // was enabled. However, this is now cleared for everyone in the v4 migration,
     // hence there is nothing to do here.
   }
 
-  _migrateFirefoxSuggestPrefsTo_4() {
+  _migrateUserPrefsTo_4(userBranch) {
     // This will reset the pref to the default value, i.e. SETTINGS_UI.OFFLINE_ONLY
     // for users where suggest is enabled, or SETTINGS_UI.NONE where it is not
     // enabled.
-    lazy.UrlbarPrefs.clear("quicksuggest.settingsUi");
+    userBranch.clearUserPref("quicksuggest.settingsUi");
+  }
+
+  _migrateUserPrefsTo_5(userBranch) {
+    // This migration clears the sponsored pref for region-locales where, at the
+    // time of this migration, the Suggest technical platform is enabled
+    // (`quicksuggest.enabled` is true) but features that are part of the
+    // Suggest brand are not. It was incorrectly set to false on the user branch
+    // due to the combination of two things:
+    //
+    // 1. In 146, bug 1992811 enabled the Suggest platform for `en` locales in
+    //    DE, FR, and IT in order to ship important-dates suggestions, which
+    //    aren't considered part of the Suggest brand. For these region-locales,
+    //    `quicksuggest.enabled` was defaulted to true and the sponsored and
+    //    nonsponsored prefs retained their false values from `firefox.js`.
+    // 2. A previous implementation of the version 1 migration incorrectly set
+    //    the sponsored pref to false on the user branch if
+    //    `quicksuggest.enabled` is true and the nonsponsored pref is false on
+    //    either the user or default branch. The migration should have only
+    //    checked the user branch and has since been fixed.
+    if (
+      ["DE", "FR", "IT"].includes(lazy.Region.home) &&
+      EN_LOCALES.includes(Services.locale.appLocaleAsBCP47)
+    ) {
+      userBranch.clearUserPref("suggest.quicksuggest.sponsored");
+    }
   }
 
   async _test_reset(testOverrides = null) {
@@ -1014,7 +1047,7 @@ class _QuickSuggest {
       await this.rustBackend.ingestPromise;
     }
 
-    this.#initDefaultPrefs(testOverrides);
+    this.#initPrefs(testOverrides);
     this.#updateAll();
     if (this.rustBackend) {
       // `#updateAll()` triggers ingest, so wait for it to finish.

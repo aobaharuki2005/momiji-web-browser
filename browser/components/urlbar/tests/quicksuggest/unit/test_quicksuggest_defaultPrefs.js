@@ -156,17 +156,26 @@ async function doTest({ locale, region }) {
     EXPECTED_PREFS_BY_LOCALE_BY_REGION[region]?.[locale] ??
     EXPECTED_PREFS_SUGGEST_DISABLED;
 
-  let defaults = new Preferences({
+  let defaultBranch = new Preferences({
     branch: "browser.urlbar.",
     defaultBranch: true,
+  });
+  let userBranch = new Preferences({
+    branch: "browser.urlbar.",
+    defaultBranch: false,
   });
 
   // Setup: Clear any user values and save original default-branch values.
   let originalDefaults = {};
   for (let name of Object.keys(expectedPrefs)) {
-    Services.prefs.clearUserPref("browser.urlbar." + name);
-    originalDefaults[name] = defaults.get(name);
+    userBranch.reset(name);
+    originalDefaults[name] = defaultBranch.get(name);
   }
+
+  // Clear the migration version to simulate a new profile. `QuickSuggest` will
+  // perform a full migration process, applying each migration version in turn
+  // until it reaches the current version.
+  userBranch.reset("quicksuggest.migrationVersion");
 
   // Set the region and locale, call the function, check the pref values.
   await QuickSuggestTestUtils.withRegionAndLocale({
@@ -176,7 +185,7 @@ async function doTest({ locale, region }) {
       for (let [name, value] of Object.entries(expectedPrefs)) {
         // Check the default-branch value.
         Assert.strictEqual(
-          defaults.get(name),
+          defaultBranch.get(name),
           value,
           `Default pref value for ${name}, locale ${locale}, region ${region}`
         );
@@ -189,6 +198,12 @@ async function doTest({ locale, region }) {
           value,
           `UrlbarPrefs.get() value for ${name}, locale ${locale}, region ${region}`
         );
+
+        // Make sure migration didn't unexpectedly set any user-branch values.
+        Assert.ok(
+          !userBranch.isSet(name),
+          "Pref should not be set on the user branch: " + name
+        );
       }
     },
   });
@@ -198,7 +213,7 @@ async function doTest({ locale, region }) {
     if (originalDefault === undefined) {
       Services.prefs.deleteBranch("browser.urlbar." + name);
     } else {
-      defaults.set(name, originalDefault);
+      defaultBranch.set(name, originalDefault);
     }
   }
 }

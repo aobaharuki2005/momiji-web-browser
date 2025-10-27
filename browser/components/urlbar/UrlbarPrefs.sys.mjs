@@ -320,21 +320,7 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
 
   // If the user has gone through a quick suggest prefs migration, then this
   // pref will have a user-branch value that records the latest prefs version.
-  // Version changelog:
-  //
-  // 0: (Unversioned) When `suggest.quicksuggest` is false, all quick suggest
-  //    results are disabled and `suggest.quicksuggest.sponsored` is ignored. To
-  //    show sponsored suggestions, both prefs must be true.
-  //
-  // 1: `suggest.quicksuggest` is removed, `suggest.quicksuggest.nonsponsored`
-  //    is introduced. `suggest.quicksuggest.nonsponsored` and
-  //    `suggest.quicksuggest.sponsored` are independent:
-  //    `suggest.quicksuggest.nonsponsored` controls non-sponsored results and
-  //    `suggest.quicksuggest.sponsored` controls sponsored results.
-  //    `quicksuggest.dataCollection.enabled` is introduced.
-  //
-  // 2: For online, the defaults for `suggest.quicksuggest.nonsponsored` and
-  //    `suggest.quicksuggest.sponsored` are true. Previously they were false.
+  // See `QuickSuggest` for details on each version.
   ["quicksuggest.migrationVersion", 0],
 
   // Whether Suggest will use the ML backend in addition to Rust.
