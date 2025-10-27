@@ -1209,6 +1209,7 @@ if (!build_with_mozilla) {
     ":mdns_responder_interface",
     ":net_helpers",
     ":network_constants",
+    ":sigslot_trampoline",
     ":socket",
     ":socket_address",
     ":socket_factory",
@@ -1237,6 +1238,15 @@ if (!build_with_mozilla) {
     deps += [ ":win32" ]
   }
 }
+}
+
+rtc_source_set("sigslot_trampoline") {
+  sources = [ "sigslot_trampoline.h" ]
+  deps = [
+    ":callback_list",
+    "third_party/sigslot",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+  ]
 }
 
 rtc_library("socket_address_pair") {
@@ -1813,6 +1823,7 @@ rtc_library("rtc_base_tests_utils") {
     ":network",
     ":network_constants",
     ":rtc_event",
+    ":sigslot_trampoline",
     ":socket",
     ":socket_adapters",
     ":socket_address",
