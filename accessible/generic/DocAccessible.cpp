@@ -775,7 +775,7 @@ void DocAccessible::HandleScroll(nsINode* aTarget) {
 }
 
 std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
-    const LocalAccessible* aAcc) {
+    const LocalAccessible* aAcc, bool aShouldScaleByResolution) {
   nsPoint scrollPoint;
   nsRect scrollRange;
 
@@ -789,9 +789,13 @@ std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
     // is currently only used on Android, and popups are rendered natively
     // there.
     if (sf) {
-      scrollPoint = sf->GetScrollPosition() * mPresShell->GetResolution();
+      scrollPoint = sf->GetScrollPosition();
       scrollRange = sf->GetScrollRange();
-      scrollRange.ScaleRoundOut(mPresShell->GetResolution());
+
+      if (aShouldScaleByResolution) {
+        scrollPoint = scrollPoint * mPresShell->GetResolution();
+        scrollRange.ScaleRoundOut(mPresShell->GetResolution());
+      }
     }
   }
 
