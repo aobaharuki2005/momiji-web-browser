@@ -101,7 +101,11 @@ ChromeUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
     },
 
     getMessagingSystemList() {
-      return lazy.ExperimentAPI.manager.store.getAll();
+      // Do not include Firefox Labs. Those are shown on
+      // about:preferences#experimental.
+      return lazy.ExperimentAPI.manager.store
+        .getAll()
+        .filter(e => !e.isFirefoxLabsOptIn);
     },
 
     async optInToExperiment(data) {
@@ -220,7 +224,7 @@ ChromeUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
       );
       this._sendToAll(
         "Shield:UpdateMessagingSystemExperimentList",
-        lazy.ExperimentAPI.manager.store.getAll()
+        this.getMessagingSystemList()
       );
     },
 
