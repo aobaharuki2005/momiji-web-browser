@@ -575,12 +575,17 @@ export class DiscoveryStreamFeed {
     switch (key) {
       case "spocs":
         return !spocs || !(Date.now() - spocs.lastUpdated < EXPIRATION_TIME);
-      case "feed":
-        return (
-          !feeds ||
-          !feeds[url] ||
-          !(Date.now() - feeds[url].lastUpdated < EXPIRATION_TIME)
-        );
+      case "feed": {
+        if (!feeds || !feeds[url]) {
+          return true;
+        }
+        const feed = feeds[url];
+        const isTimeExpired = Date.now() - feed.lastUpdated >= EXPIRATION_TIME;
+        const sectionsEnabled =
+          this.store.getState().Prefs.values[PREF_SECTIONS_ENABLED];
+        const sectionsEnabledChanged = feed.sectionsEnabled !== sectionsEnabled;
+        return isTimeExpired || sectionsEnabledChanged;
+      }
       default:
         // istanbul ignore next
         throw new Error(`${key} is not a valid key`);
@@ -1964,6 +1969,7 @@ export class DiscoveryStreamFeed {
         feed = {
           lastUpdated: Date.now(),
           personalized,
+          sectionsEnabled,
           data: {
             settings,
             sections,
