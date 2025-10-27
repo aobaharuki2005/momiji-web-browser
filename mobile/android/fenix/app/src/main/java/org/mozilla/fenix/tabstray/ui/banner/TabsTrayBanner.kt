@@ -63,7 +63,7 @@ import kotlin.math.max
 import mozilla.components.ui.icons.R as iconsR
 
 private const val TAB_COUNT_SHOW_CFR = 6
-private const val ROW_HEIGHT_DP = 48
+private val RowHeight = 48.dp
 private val TabIndicatorRoundedCornerDp = 100.dp
 
 /**
@@ -273,7 +273,7 @@ private fun TabPageBanner(
                         .semantics {
                             contentDescription = privateTabDescription
                         }
-                        .height(ROW_HEIGHT_DP.dp),
+                        .height(RowHeight),
                     unselectedContentColor = inactiveColor,
                 ) {
                     Text(
@@ -290,7 +290,7 @@ private fun TabPageBanner(
                         .semantics {
                             contentDescription = normalTabDescription
                         }
-                        .height(ROW_HEIGHT_DP.dp),
+                        .height(RowHeight),
                     unselectedContentColor = inactiveColor,
                 ) {
                     Text(
@@ -307,7 +307,7 @@ private fun TabPageBanner(
                         .semantics {
                             contentDescription = syncedTabDescription
                         }
-                        .height(ROW_HEIGHT_DP.dp),
+                        .height(RowHeight),
                     unselectedContentColor = inactiveColor,
                 ) {
                     Text(
@@ -317,7 +317,7 @@ private fun TabPageBanner(
                 }
             }
         },
-        expandedHeight = ROW_HEIGHT_DP.dp,
+        expandedHeight = RowHeight,
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
@@ -430,7 +430,7 @@ private fun MultiSelectBanner(
                 )
             }
         },
-        expandedHeight = ROW_HEIGHT_DP.dp,
+        expandedHeight = RowHeight,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             actionIconContentColor = buttonTint,
