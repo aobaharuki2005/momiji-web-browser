@@ -282,7 +282,6 @@ module.exports = {
   },
 
   overrides: [
-    ...rollouts,
     {
       files: "*.scss",
       customSyntax: "postcss-scss",
@@ -419,15 +418,15 @@ module.exports = {
         "browser/components/backup/content/archive.css",
       ],
       rules: {
-        "stylelint-plugin-mozilla/use-background-color-tokens": false,
-        "stylelint-plugin-mozilla/use-border-color-tokens": false,
-        "stylelint-plugin-mozilla/use-border-radius-tokens": false,
-        "stylelint-plugin-mozilla/use-font-size-tokens": false,
-        "stylelint-plugin-mozilla/use-font-weight-tokens": false,
-        "stylelint-plugin-mozilla/use-space-tokens": false,
-        "stylelint-plugin-mozilla/use-text-color-tokens": false,
-        "stylelint-plugin-mozilla/use-box-shadow-tokens": false,
-        "stylelint-plugin-mozilla/no-non-semantic-token-usage": false,
+        "stylelint-plugin-mozilla/use-background-color-tokens": null,
+        "stylelint-plugin-mozilla/use-border-color-tokens": null,
+        "stylelint-plugin-mozilla/use-border-radius-tokens": null,
+        "stylelint-plugin-mozilla/use-font-size-tokens": null,
+        "stylelint-plugin-mozilla/use-font-weight-tokens": null,
+        "stylelint-plugin-mozilla/use-space-tokens": null,
+        "stylelint-plugin-mozilla/use-text-color-tokens": null,
+        "stylelint-plugin-mozilla/use-box-shadow-tokens": null,
+        "stylelint-plugin-mozilla/no-non-semantic-token-usage": null,
       },
     },
     {
@@ -437,12 +436,12 @@ module.exports = {
         "devtools/client/aboutdebugging/src/**",
       ],
       rules: {
-        "stylelint-plugin-mozilla/use-background-color-tokens": false,
-        "stylelint-plugin-mozilla/use-border-color-tokens": false,
+        "stylelint-plugin-mozilla/use-background-color-tokens": true,
+        "stylelint-plugin-mozilla/use-border-color-tokens": true,
         "stylelint-plugin-mozilla/use-border-radius-tokens": true,
-        "stylelint-plugin-mozilla/use-space-tokens": false,
-        "stylelint-plugin-mozilla/use-text-color-tokens": false,
-        "stylelint-plugin-mozilla/no-non-semantic-token-usage": false,
+        "stylelint-plugin-mozilla/use-space-tokens": true,
+        "stylelint-plugin-mozilla/use-text-color-tokens": true,
+        "stylelint-plugin-mozilla/no-non-semantic-token-usage": true,
       },
     },
     {
@@ -451,5 +450,8 @@ module.exports = {
         "stylelint-plugin-mozilla/no-browser-refs-in-toolkit": true,
       },
     },
+    // Rollouts should always be applied last in the overrides section
+    // to ensure that they take precedence over other overrides.
+    ...rollouts,
   ],
 };
