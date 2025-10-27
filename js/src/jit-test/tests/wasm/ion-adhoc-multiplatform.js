@@ -30,7 +30,18 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul32_zeroL") (param $p1 i32) (result i32)
        (i32.mul (i32.const 0) (local.get $p1))))`,
     "mul32_zeroL",
-    {x64:   `xor %eax, %eax`,
+    {x64:   // FIXME move folding to MIR level
+            // First we move edi to eax unnecessarily via ecx (bug 1752520),
+            // then we overwrite eax.  Presumably because the folding
+            // 0 * x => 0 is done at the LIR level, not the MIR level, hence
+            // the now-pointless WasmParameter node is not DCE'd away, since
+            // DCE only happens at the MIR level.  In fact all targets suffer
+            // from the latter problem, but on x86 no_prefix_x86:true
+            // hides it, and on arm32/64 the pointless move is correctly
+            // transformed by RA into a no-op.
+            `mov %edi, %ecx
+             mov %ecx, %eax
+             xor %eax, %eax`,
      x86:   `xor %eax, %eax`,
      arm64: `mov w0, wzr`,
      arm:   `mov r0, #0`},
@@ -40,8 +51,11 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_zeroL") (param $p1 i64) (result i64)
        (i64.mul (i64.const 0) (local.get $p1))))`,
     "mul64_zeroL",
-    // FIXME zero-creation insns could be improved
-    {x64:   `xor %rax, %rax`,     // REX.W is redundant
+    // FIXME folding happened, zero-creation insns could be improved
+    {x64:   // Same shenanigans as above.  Also, on xor, REX.W is redundant.
+            `mov %rdi, %rcx
+             mov %rcx, %rax
+             xor %rax, %rax`,
      x86:   `xor %eax, %eax
              xor %edx, %edx`,
      arm64: `mov x0, xzr`,
@@ -54,14 +68,7 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul32_oneL") (param $p1 i32) (result i32)
        (i32.mul (i32.const 1) (local.get $p1))))`,
     "mul32_oneL",
-    {x64:   // We move edi to eax unnecessarily via ecx (bug 1752520).
-            // Presumably because the folding 1 * x => x is done at the LIR
-            // level, not the MIR level, hence the now-pointless WasmParameter
-            // node is not DCE'd away, since DCE only happens at the MIR level.
-            // In fact all targets suffer from the latter problem, but on x86
-            // no_prefix_x86:true hides it, and on arm32/64 the pointless move
-            // is correctly transformed by RA into a no-op.
-            `mov %edi, %ecx
+    {x64:   `mov %edi, %ecx
              mov %ecx, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax`,
      arm64: ``,
@@ -111,7 +118,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul32_twoL") (param $p1 i32) (result i32)
        (i32.mul (i32.const 2) (local.get $p1))))`,
     "mul32_twoL",
-    {x64:   `lea \\(%rdi,%rdi,1\\), %eax`,
+    {x64:   `mov %edi, %ecx
+             mov %ecx, %eax
+             add %eax, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax
              add %eax, %eax`,
      arm64: `add w0, w0, w0`,
@@ -122,7 +131,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_twoL") (param $p1 i64) (result i64)
        (i64.mul (i64.const 2) (local.get $p1))))`,
     "mul64_twoL",
-    {x64:   `lea \\(%rdi,%rdi,1\\), %rax`,
+    {x64:   `mov %rdi, %rcx
+             mov %rcx, %rax
+             add %rax, %rax`,
      x86:   `movl 0x14\\(%rbp\\), %edx
              movl 0x10\\(%rbp\\), %eax
              add %eax, %eax
@@ -137,7 +148,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul32_fourL") (param $p1 i32) (result i32)
        (i32.mul (i32.const 4) (local.get $p1))))`,
     "mul32_fourL",
-    {x64:   `lea \\(,%rdi,4\\), %eax`,
+    {x64:   `mov %edi, %ecx
+             mov %ecx, %eax
+             shl \\$0x02, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax
              shl \\$0x02, %eax`,
      arm64: `lsl w0, w0, #2`,
@@ -148,7 +161,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_fourL") (param $p1 i64) (result i64)
        (i64.mul (i64.const 4) (local.get $p1))))`,
     "mul64_fourL",
-    {x64:   `lea \\(,%rdi,4\\), %rax`,
+    {x64:   `mov %rdi, %rcx
+             mov %rcx, %rax
+             shl \\$0x02, %rax`,
      x86:   `movl 0x14\\(%rbp\\), %edx
              movl 0x10\\(%rbp\\), %eax
              shld \\$0x02, %eax, %edx
@@ -172,7 +187,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul32_zeroR") (param $p1 i32) (result i32)
        (i32.mul (local.get $p1) (i32.const 0))))`,
     "mul32_zeroR",
-    {x64:   `xor %eax, %eax`,
+    {x64:   `mov %edi, %ecx
+             mov %ecx, %eax
+             xor %eax, %eax`,
      x86:   `xor %eax, %eax`,
      arm64: `mov w0, wzr`,
      arm:   `mov r0, #0`},
@@ -182,7 +199,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_zeroR") (param $p1 i64) (result i64)
        (i64.mul (local.get $p1) (i64.const 0))))`,
     "mul64_zeroR",
-    {x64:   `xor %rax, %rax`,     // REX.W is redundant
+    {x64:   `mov %rdi, %rcx
+             mov %rcx, %rax
+             xor %rax, %rax`,     // REX.W is redundant
      x86:   `xor %eax, %eax
              xor %edx, %edx`,
      arm64: `mov x0, xzr`,
@@ -245,7 +264,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul32_twoR") (param $p1 i32) (result i32)
        (i32.mul (local.get $p1) (i32.const 2))))`,
     "mul32_twoR",
-    {x64:   `lea \\(%rdi,%rdi,1\\), %eax`,
+    {x64:   `mov %edi, %ecx
+             mov %ecx, %eax
+             add %eax, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax
              add %eax, %eax`,
      arm64: `add w0, w0, w0`,
@@ -256,7 +277,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_twoR") (param $p1 i64) (result i64)
        (i64.mul (local.get $p1) (i64.const 2))))`,
     "mul64_twoR",
-    {x64:   `lea \\(%rdi,%rdi,1\\), %rax`,
+    {x64:   `mov %rdi, %rcx
+             mov %rcx, %rax
+             add %rax, %rax`,
      x86:   `movl 0x14\\(%rbp\\), %edx
              movl 0x10\\(%rbp\\), %eax
              add %eax, %eax
@@ -271,7 +294,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul32_fourR") (param $p1 i32) (result i32)
        (i32.mul (local.get $p1) (i32.const 4))))`,
     "mul32_fourR",
-    {x64:   `lea \\(,%rdi,4\\), %eax`,
+    {x64:   `mov %edi, %ecx
+             mov %ecx, %eax
+             shl \\$0x02, %eax`,
      x86:   `movl 0x10\\(%rbp\\), %eax
              shl \\$0x02, %eax`,
      arm64: `lsl w0, w0, #2`,
@@ -282,7 +307,9 @@ codegenTestMultiplatform_adhoc(
     `(module (func (export "mul64_fourR") (param $p1 i64) (result i64)
        (i64.mul (local.get $p1) (i64.const 4))))`,
     "mul64_fourR",
-    {x64:   `lea \\(,%rdi,4\\), %rax`,
+    {x64:   `mov %rdi, %rcx
+             mov %rcx, %rax
+             shl \\$0x02, %rax`,
      x86:   `movl 0x14\\(%rbp\\), %edx
              movl 0x10\\(%rbp\\), %eax
              shld \\$0x02, %eax, %edx

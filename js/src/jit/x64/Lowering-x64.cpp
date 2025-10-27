@@ -62,66 +62,13 @@ void LIRGeneratorX64::lowerForALUInt64(
 
 void LIRGeneratorX64::lowerForMulInt64(LMulI64* ins, MMul* mir,
                                        MDefinition* lhs, MDefinition* rhs) {
-  // No input reuse needed when we can use imulq with an int32 immediate.
-  bool reuseInput = true;
-  if (rhs->isConstant()) {
-    int64_t constant = rhs->toConstant()->toInt64();
-    reuseInput = int32_t(constant) != constant;
-  }
-
+  // X64 doesn't need a temp for 64bit multiplication.
   ins->setLhs(useInt64RegisterAtStart(lhs));
   ins->setRhs(willHaveDifferentLIRNodes(lhs, rhs)
                   ? useInt64OrConstant(rhs)
                   : useInt64OrConstantAtStart(rhs));
-  if (reuseInput) {
-    defineInt64ReuseInput(ins, mir, 0);
-  } else {
-    defineInt64(ins, mir);
-  }
+  defineInt64ReuseInput(ins, mir, 0);
 }
-
-template <class LInstr>
-void LIRGeneratorX64::lowerForShiftInt64(LInstr* ins, MDefinition* mir,
-                                         MDefinition* lhs, MDefinition* rhs) {
-  if constexpr (std::is_same_v<LInstr, LShiftI64>) {
-    LAllocation rhsAlloc;
-    if (rhs->isConstant()) {
-      rhsAlloc = useOrConstantAtStart(rhs);
-    } else if (Assembler::HasBMI2()) {
-      rhsAlloc = useRegisterAtStart(rhs);
-    } else {
-      rhsAlloc = useShiftRegister(rhs);
-    }
-
-    ins->setLhs(useInt64RegisterAtStart(lhs));
-    ins->setRhs(rhsAlloc);
-    if (rhs->isConstant() || !Assembler::HasBMI2()) {
-      defineInt64ReuseInput(ins, mir, LShiftI64::LhsIndex);
-    } else {
-      defineInt64(ins, mir);
-    }
-  } else {
-    LAllocation rhsAlloc;
-    if (rhs->isConstant()) {
-      rhsAlloc = useOrConstantAtStart(rhs);
-    } else {
-      rhsAlloc = useFixed(rhs, rcx);
-    }
-
-    ins->setInput(useInt64RegisterAtStart(lhs));
-    ins->setCount(rhsAlloc);
-    defineInt64ReuseInput(ins, mir, LRotateI64::InputIndex);
-  }
-}
-
-template void LIRGeneratorX64::lowerForShiftInt64(LShiftI64* ins,
-                                                  MDefinition* mir,
-                                                  MDefinition* lhs,
-                                                  MDefinition* rhs);
-template void LIRGeneratorX64::lowerForShiftInt64(LRotateI64* ins,
-                                                  MDefinition* mir,
-                                                  MDefinition* lhs,
-                                                  MDefinition* rhs);
 
 void LIRGenerator::visitBox(MBox* box) {
   MDefinition* opd = box->getOperand(0);

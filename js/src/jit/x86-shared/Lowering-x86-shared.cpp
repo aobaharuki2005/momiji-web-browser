@@ -68,24 +68,63 @@ void LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
 
   if (rhs->isConstant()) {
     ins->setOperand(1, useOrConstantAtStart(rhs));
-    defineReuseInput(ins, mir, 0);
   } else if (!mir->isRotate()) {
-    if (Assembler::HasBMI2()) {
-      ins->setOperand(1, useRegisterAtStart(rhs));
-      define(ins, mir);
-    } else {
-      ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
-                             ? useShiftRegister(rhs)
-                             : useShiftRegisterAtStart(rhs));
-      defineReuseInput(ins, mir, 0);
-    }
+    ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
+                           ? useShiftRegister(rhs)
+                           : useShiftRegisterAtStart(rhs));
   } else {
     ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
                            ? useFixed(rhs, ecx)
                            : useFixedAtStart(rhs, ecx));
-    defineReuseInput(ins, mir, 0);
+  }
+
+  defineReuseInput(ins, mir, 0);
+}
+
+template <class LInstr>
+void LIRGeneratorX86Shared::lowerForShiftInt64(LInstr* ins, MDefinition* mir,
+                                               MDefinition* lhs,
+                                               MDefinition* rhs) {
+  LAllocation rhsAlloc;
+  if (rhs->isConstant()) {
+    rhsAlloc = useOrConstantAtStart(rhs);
+#ifdef JS_CODEGEN_X64
+  } else if (std::is_same_v<LInstr, LShiftI64>) {
+    rhsAlloc = useShiftRegister(rhs);
+  } else {
+    rhsAlloc = useFixed(rhs, rcx);
+  }
+#else
+  } else {
+    // The operands are int64, but we only care about the lower 32 bits of
+    // the RHS. On 32-bit, the code below will load that part in ecx and
+    // will discard the upper half.
+    rhsAlloc = useLowWordFixed(rhs, ecx);
+  }
+#endif
+
+  if constexpr (std::is_same_v<LInstr, LShiftI64>) {
+    ins->setLhs(useInt64RegisterAtStart(lhs));
+    ins->setRhs(rhsAlloc);
+    defineInt64ReuseInput(ins, mir, LShiftI64::LhsIndex);
+  } else {
+    ins->setInput(useInt64RegisterAtStart(lhs));
+    ins->setCount(rhsAlloc);
+#if defined(JS_NUNBOX32)
+    ins->setTemp0(temp());
+#endif
+    defineInt64ReuseInput(ins, mir, LRotateI64::InputIndex);
   }
 }
+
+template void LIRGeneratorX86Shared::lowerForShiftInt64(LShiftI64* ins,
+                                                        MDefinition* mir,
+                                                        MDefinition* lhs,
+                                                        MDefinition* rhs);
+template void LIRGeneratorX86Shared::lowerForShiftInt64(LRotateI64* ins,
+                                                        MDefinition* mir,
+                                                        MDefinition* lhs,
+                                                        MDefinition* rhs);
 
 void LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 1, 0>* ins,
                                         MDefinition* mir, MDefinition* input) {
@@ -96,35 +135,26 @@ void LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 1, 0>* ins,
 void LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0>* ins,
                                         MDefinition* mir, MDefinition* lhs,
                                         MDefinition* rhs) {
-  if (MOZ_UNLIKELY(mir->isAdd() && mir->type() == MIRType::Int32 &&
-                   rhs->isConstant() && !mir->toAdd()->fallible())) {
-    // Special case instruction that is widely used in Wasm during address
-    // calculation. And x86 platform has LEA instruction for it.
-    // See CodeGenerator::visitAddI for codegen.
-    ins->setOperand(0, useRegisterAtStart(lhs));
-    ins->setOperand(1, useOrConstantAtStart(rhs));
-    define(ins, mir);
-    return;
-  }
-
   ins->setOperand(0, useRegisterAtStart(lhs));
   ins->setOperand(1, willHaveDifferentLIRNodes(lhs, rhs)
                          ? useOrConstant(rhs)
                          : useOrConstantAtStart(rhs));
+  if (MOZ_UNLIKELY(mir->isAdd() && mir->type() == MIRType::Int32 &&
+                   mir->getOperand(1)->isConstant() &&
+                   !mir->toAdd()->fallible())) {
+    // Special case instruction that is widely used in Wasm during address
+    // calculation. And x86 platform has LEA instruction for it.
+    // See CodeGenerator::visitAddI for codegen.
+    define(ins, mir);
+    return;
+  }
   defineReuseInput(ins, mir, 0);
 }
 
 void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 1, 0>* ins,
                                         MDefinition* mir, MDefinition* input) {
-  // Without AVX, we'll need to use the x86 encodings where the input must be
-  // the same location as the output.
-  if (!Assembler::HasAVX()) {
-    ins->setOperand(0, useRegisterAtStart(input));
-    defineReuseInput(ins, mir, 0);
-  } else {
-    ins->setOperand(0, useRegisterAtStart(input));
-    define(ins, mir);
-  }
+  ins->setOperand(0, useRegisterAtStart(input));
+  defineReuseInput(ins, mir, 0);
 }
 
 void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
@@ -146,21 +176,12 @@ void LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0>* ins,
 
 void LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs,
                                       MDefinition* rhs) {
-  if (rhs->isConstant()) {
-    auto* lir = new (alloc()) LMulI(useRegisterAtStart(lhs),
-                                    useOrConstantAtStart(rhs), LAllocation());
-    if (mul->fallible()) {
-      assignSnapshot(lir, mul->bailoutKind());
-    }
-    define(lir, mul);
-    return;
-  }
-
   // Note: If we need a negative zero check, lhs is used twice.
   LAllocation lhsCopy = mul->canBeNegativeZero() ? use(lhs) : LAllocation();
   LMulI* lir = new (alloc())
       LMulI(useRegisterAtStart(lhs),
-            willHaveDifferentLIRNodes(lhs, rhs) ? use(rhs) : useAtStart(rhs),
+            willHaveDifferentLIRNodes(lhs, rhs) ? useOrConstant(rhs)
+                                                : useOrConstantAtStart(rhs),
             lhsCopy);
   if (mul->fallible()) {
     assignSnapshot(lir, mul->bailoutKind());
@@ -433,21 +454,19 @@ void LIRGeneratorX86Shared::lowerUrshD(MUrsh* mir) {
   MOZ_ASSERT(rhs->type() == MIRType::Int32);
   MOZ_ASSERT(mir->type() == MIRType::Double);
 
+#ifdef JS_CODEGEN_X64
+  static_assert(ecx == rcx);
+#endif
+
   LUse lhsUse = useRegisterAtStart(lhs);
   LAllocation rhsAlloc;
-  LDefinition tempDef;
   if (rhs->isConstant()) {
     rhsAlloc = useOrConstant(rhs);
-    tempDef = tempCopy(lhs, 0);
-  } else if (Assembler::HasBMI2()) {
-    rhsAlloc = useRegisterAtStart(rhs);
-    tempDef = temp();
   } else {
     rhsAlloc = useShiftRegister(rhs);
-    tempDef = tempCopy(lhs, 0);
   }
 
-  auto* lir = new (alloc()) LUrshD(lhsUse, rhsAlloc, tempDef);
+  LUrshD* lir = new (alloc()) LUrshD(lhsUse, rhsAlloc, tempCopy(lhs, 0));
   define(lir, mir);
 }
 
