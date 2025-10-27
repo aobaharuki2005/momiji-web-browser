@@ -888,7 +888,7 @@ class _QuickSuggest {
    * @returns {number}
    */
   get MIGRATION_VERSION() {
-    return 5;
+    return 6;
   }
 
   /**
@@ -1034,6 +1034,25 @@ class _QuickSuggest {
       EN_LOCALES.includes(Services.locale.appLocaleAsBCP47)
     ) {
       userBranch.clearUserPref("suggest.quicksuggest.sponsored");
+    }
+  }
+
+  _migrateUserPrefsTo_6(userBranch) {
+    // Firefox 146 no longer uses `suggest.quicksuggest.nonsponsored` and stops
+    // setting it on the default branch. It introduces
+    // `suggest.quicksuggest.all`, which now controls all suggestions that are
+    // part of the Suggest brand, both sponsored and nonsponsored. To show
+    // nonsponsored suggestions, `all` must be true. To show sponsored
+    // suggestions, both `all` and `suggest.quicksuggest.sponsored` must be
+    // true.
+    //
+    // This migration copies the user-branch value of `nonsponsored` to the new
+    // `all` pref. We keep the user-branch value in case we need it later.
+    if (userBranch.prefHasUserValue("suggest.quicksuggest.nonsponsored")) {
+      userBranch.setBoolPref(
+        "suggest.quicksuggest.all",
+        userBranch.getBoolPref("suggest.quicksuggest.nonsponsored")
+      );
     }
   }
 
