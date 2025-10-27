@@ -8,7 +8,6 @@
 
 #include <algorithm>
 
-#include "AncestorIterator.h"
 #include "BrowserChild.h"
 #include "ChildIterator.h"
 #include "ContentParent.h"
@@ -911,45 +910,6 @@ void nsFocusManager::ContentAppended(nsIContent* aFirstNewContent,
   FocusedElementMayHaveMoved(aFirstNewContent, aInfo.mOldParent);
 }
 
-static void UpdateFocusWithinState(Element* aElement,
-                                   nsIContent* aCommonAncestor,
-                                   bool aGettingFocus) {
-  for (nsIContent* content = aElement; content && content != aCommonAncestor;
-       content = content->GetFlattenedTreeParent()) {
-    Element* element = Element::FromNode(content);
-    if (!element) {
-      continue;
-    }
-
-    if (aGettingFocus) {
-      if (element->State().HasState(ElementState::FOCUS_WITHIN)) {
-        break;
-      }
-      element->AddStates(ElementState::FOCUS_WITHIN);
-    } else {
-      element->RemoveStates(ElementState::FOCUS_WITHIN);
-    }
-  }
-}
-
-static void MaybeFixUpFocusWithinState(Element* aElementToFocus,
-                                       Element* aFocusedElement) {
-  if (!aElementToFocus || aElementToFocus == aFocusedElement ||
-      !aElementToFocus->IsInComposedDoc()) {
-    return;
-  }
-  // Focus was redirected, make sure the :focus-within state remains consistent.
-  auto* commonAncestor = [&]() -> nsIContent* {
-    if (!aFocusedElement ||
-        aElementToFocus->OwnerDoc() != aFocusedElement->OwnerDoc()) {
-      return nullptr;
-    }
-    return nsContentUtils::GetCommonFlattenedTreeAncestor(aFocusedElement,
-                                                          aElementToFocus);
-  }();
-  UpdateFocusWithinState(aElementToFocus, commonAncestor, false);
-}
-
 nsresult nsFocusManager::ContentRemoved(Document* aDocument,
                                         nsIContent* aContent,
                                         const ContentRemoveInfo& aInfo) {
@@ -966,37 +926,22 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
     return NS_OK;
   }
 
-  Element* focusWithinElement = [&]() -> Element* {
-    if (auto* el = Element::FromNode(aContent)) {
-      return el;
-    }
-    if (auto* shadow = ShadowRoot::FromNode(aContent)) {
-      // Note that we only get here with ShadowRoots for shadow roots of form
-      // controls that we can un-attach. So if there's a focused element it must
-      // be inside our shadow tree already.
-      return shadow->Host();
-    }
-    // Removing text / comments / etc can't affect the focus state.
-    return nullptr;
-  }();
-  if (!focusWithinElement ||
-      !focusWithinElement->State().HasAtLeastOneOfStates(
-          ElementState::FOCUS | ElementState::FOCUS_WITHIN)) {
-    return NS_OK;
-  }
-
   // if the content is currently focused in the window, or is an
   // shadow-including inclusive ancestor of the currently focused element,
   // reset the focus within that window.
-  RefPtr previousFocusedElement = windowPtr->GetFocusedElement();
-  if (!previousFocusedElement) {
-    // If we're in-between a blur and an incoming focus, we might have stale
-    // :focus-within in our ancestor chain. Fix it up now.
-    UpdateFocusWithinState(focusWithinElement, nullptr, false);
+  Element* previousFocusedElementPtr = windowPtr->GetFocusedElement();
+  if (!previousFocusedElementPtr) {
+    return NS_OK;
+  }
+
+  if (!nsContentUtils::ContentIsHostIncludingDescendantOf(
+          previousFocusedElementPtr, aContent)) {
     return NS_OK;
   }
 
   RefPtr<nsPIDOMWindowOuter> window = windowPtr;
+  RefPtr<Element> previousFocusedElement = previousFocusedElementPtr;
+
   RefPtr<Element> newFocusedElement = [&]() -> Element* {
     if (auto* sr = ShadowRoot::FromNode(aContent)) {
       if (sr->IsUAWidget() && sr->Host()->IsHTMLElement(nsGkAtoms::input)) {
@@ -1069,7 +1014,7 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
   }
 
   if (!newFocusedElement) {
-    NotifyFocusStateChange(previousFocusedElement, nullptr, 0,
+    NotifyFocusStateChange(previousFocusedElement, newFocusedElement, 0,
                            /* aGettingFocus = */ false, false);
   } else {
     // We should already have the right state, which is managed by the <input>
@@ -1511,7 +1456,22 @@ void nsFocusManager::NotifyFocusStateChange(Element* aElement,
     }
   }
 
-  UpdateFocusWithinState(aElement, commonAncestor, aGettingFocus);
+  for (nsIContent* content = aElement; content && content != commonAncestor;
+       content = content->GetFlattenedTreeParent()) {
+    Element* element = Element::FromNode(content);
+    if (!element) {
+      continue;
+    }
+
+    if (aGettingFocus) {
+      if (element->State().HasState(ElementState::FOCUS_WITHIN)) {
+        break;
+      }
+      element->AddStates(ElementState::FOCUS_WITHIN);
+    } else {
+      element->RemoveStates(ElementState::FOCUS_WITHIN);
+    }
+  }
 }
 
 // static
@@ -1917,7 +1877,6 @@ Maybe<uint64_t> nsFocusManager::SetFocusInner(Element* aNewContent,
                                   : nullptr),
                 commonAncestor, focusMovesToDifferentBC, aAdjustWidget,
                 remainActive, actionId, elementToFocus)) {
-        MaybeFixUpFocusWithinState(elementToFocus, mFocusedElement);
         return Some(actionId);
       }
     }
@@ -2869,9 +2828,6 @@ void nsFocusManager::Focus(
       }
     }
   } else {
-    // We only need this on this branch, on the branch above
-    // NotifyFocusStateChange takes care of it.
-    MaybeFixUpFocusWithinState(elementToFocus, mFocusedElement);
     if (!mFocusedElement && mFocusedWindow == aWindow) {
       // When there is no focused element, IMEStateManager needs to adjust IME
       // enabled state with the document.
