@@ -35,7 +35,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared {
 
   Operand ToOperand(const LAllocation& a);
   Operand ToOperand(const LAllocation* a);
-  Operand ToOperand(const LDefinition* def);
 
 #ifdef JS_PUNBOX64
   Operand ToOperandOrRegister64(const LInt64Allocation& input);
