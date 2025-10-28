@@ -36,6 +36,7 @@ internal fun MoreSettingsSubmenu(
     isOpenInAppMenuHighlighted: Boolean,
     translationInfo: TranslationInfo,
     showShortcuts: Boolean,
+    isAndroidAutomotiveAvailable: Boolean,
     onWebCompatReporterClick: () -> Unit,
     onShortcutsMenuClick: () -> Unit,
     onAddToHomeScreenMenuClick: () -> Unit,
@@ -113,12 +114,13 @@ internal fun MoreSettingsSubmenu(
             beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_save_file_24),
             onClick = onSaveAsPDFMenuClick,
         )
-
-        MenuItem(
-            label = stringResource(id = R.string.browser_menu_print_2),
-            beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_print_24),
-            onClick = onPrintMenuClick,
-        )
+        if (!isAndroidAutomotiveAvailable) {
+            MenuItem(
+                label = stringResource(id = R.string.browser_menu_print_2),
+                beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_print_24),
+                onClick = onPrintMenuClick,
+            )
+        }
     }
 }
 
@@ -204,6 +206,7 @@ private fun MoreSettingsSubmenuPreview() {
                         onTranslatePageMenuClick = {},
                     ),
                     showShortcuts = true,
+                    isAndroidAutomotiveAvailable = false,
                     onWebCompatReporterClick = {},
                     onShortcutsMenuClick = {},
                     onAddToHomeScreenMenuClick = {},
@@ -245,6 +248,7 @@ private fun MoreSettingsSubmenuPrivatePreview() {
                         onTranslatePageMenuClick = {},
                     ),
                     showShortcuts = true,
+                    isAndroidAutomotiveAvailable = false,
                     onWebCompatReporterClick = {},
                     onShortcutsMenuClick = {},
                     onAddToHomeScreenMenuClick = {},
