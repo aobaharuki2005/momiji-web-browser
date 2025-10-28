@@ -51,6 +51,8 @@ export default class PasswordValidationInputs extends MozLitElement {
 
   reset() {
     this.formEl.reset();
+    this.inputNewPasswordEl.revealPassword = false;
+    this.inputRepeatPasswordEl.revealPassword = false;
     this._showRules = false;
     this._hasEmail = false;
     this._tooShort = true;
