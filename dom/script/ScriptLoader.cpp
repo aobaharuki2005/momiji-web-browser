@@ -3342,8 +3342,13 @@ nsresult ScriptLoader::MaybePrepareForDiskCacheAfterExecute(
 
     // For in-memory cached requests, the disk cache references are necessary
     // for later load.
-    MOZ_ASSERT_IF(!aRequest->PassedConditionForMemoryCache(),
-                  !aRequest->getLoadedScript()->HasDiskCacheReference());
+    if (aRequest->HasStencil()) {
+      MOZ_ASSERT_IF(!aRequest->PassedConditionForMemoryCache(),
+                    !aRequest->getLoadedScript()->HasDiskCacheReference());
+    } else {
+      // This hits compile error.
+      aRequest->getLoadedScript()->DropDiskCacheReferenceAndSRI();
+    }
 
     return aRv;
   }
