@@ -30,7 +30,6 @@
 #include "nsUnicharInputStream.h"
 #include "nsContentUtils.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/glean/ParserHtmlparserMetrics.h"
