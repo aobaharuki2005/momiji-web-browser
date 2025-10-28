@@ -13765,13 +13765,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     return AttachDecision::NoAction;
   }
 
-  if (isConstructing && !calleeFunc->hasJitScript()) {
-    // If we're constructing, require the callee to have a JitScript. This isn't
-    // required for correctness but avoids allocating a template object below
-    // for constructors that aren't hot. See bug 1419758.
-    return AttachDecision::TemporarilyUnoptimizable;
-  }
-
   // Verify that spread calls have a reasonable number of arguments.
   if (isSpread && args_.length() > JIT_ARGS_LENGTH_MAX) {
     return AttachDecision::NoAction;
