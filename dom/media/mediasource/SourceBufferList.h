@@ -9,7 +9,6 @@
 
 #include "SourceBuffer.h"
 #include "js/RootingAPI.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"

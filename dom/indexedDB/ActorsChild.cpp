@@ -33,7 +33,6 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ProfilerLabels.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/BrowserChild.h"

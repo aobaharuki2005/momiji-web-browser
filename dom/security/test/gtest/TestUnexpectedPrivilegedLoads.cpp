@@ -15,7 +15,6 @@
 #include "js/PropertyAndElement.h"  // JS_GetElement, JS_GetProperty
 #include "js/TypeDecls.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"

@@ -10,7 +10,6 @@
 #include "FileSystemHashSource.h"
 #include "FileSystemParentTypes.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/NotNull.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/dom/quota/QuotaManager.h"

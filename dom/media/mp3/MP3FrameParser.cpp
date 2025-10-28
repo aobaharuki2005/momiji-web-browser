@@ -15,7 +15,6 @@
 #include "VideoUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Try.h"
 

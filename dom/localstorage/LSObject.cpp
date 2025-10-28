@@ -18,7 +18,6 @@
 #include "mozilla/AppShutdown.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/MacroForEach.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"

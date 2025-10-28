@@ -20,7 +20,6 @@
 #include "VideoUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Logging.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"

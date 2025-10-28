@@ -12,7 +12,6 @@
 #include "SourceBufferTask.h"
 #include "TrackBuffersManager.h"
 #include "js/RootingAPI.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MozPromise.h"

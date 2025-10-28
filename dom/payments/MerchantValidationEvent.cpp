@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/MerchantValidationEvent.h"
 
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/PaymentRequest.h"

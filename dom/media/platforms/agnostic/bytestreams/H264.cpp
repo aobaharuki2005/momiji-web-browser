@@ -15,7 +15,6 @@
 #include "MediaInfo.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
 
 #define READSE(var, min, max)     \

@@ -15,7 +15,6 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/Likely.h"
 #include "mozilla/SMILTypes.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/Document.h"

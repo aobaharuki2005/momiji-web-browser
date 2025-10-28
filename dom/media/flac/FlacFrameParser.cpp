@@ -10,7 +10,6 @@
 #include "OggCodecState.h"
 #include "OpusParser.h"
 #include "VideoUtils.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
 #include "nsTArray.h"
 

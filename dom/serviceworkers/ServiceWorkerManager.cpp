@@ -34,7 +34,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/PermissionManager.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_privacy.h"

@@ -28,7 +28,6 @@
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/FunctionRef.h"
-#include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"

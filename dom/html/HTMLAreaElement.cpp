@@ -7,7 +7,6 @@
 #include "mozilla/dom/HTMLAreaElement.h"
 
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLAnchorElement.h"

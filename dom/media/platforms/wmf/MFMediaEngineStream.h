@@ -15,7 +15,6 @@
 #include "PlatformDecoderModule.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/SPSCQueue.h"
 
 namespace mozilla {
 

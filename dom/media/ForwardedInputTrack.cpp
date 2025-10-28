@@ -18,7 +18,6 @@
 #include "Tracing.h"
 #include "VideoSegment.h"
 #include "mozilla/Logging.h"
-#include "mozilla/MathAlgorithms.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"

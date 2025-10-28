@@ -16,7 +16,6 @@
 #include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "mozilla/Logging.h"
-#include "mozilla/MathAlgorithms.h"
 #include "webaudio/MediaStreamAudioDestinationNode.h"
 
 using namespace mozilla::layers;

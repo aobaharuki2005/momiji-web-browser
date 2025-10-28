@@ -9,7 +9,6 @@
 #include "DOMSVGAngle.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGContentUtils.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"

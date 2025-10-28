@@ -7,7 +7,6 @@
 #include "MediaControlService.h"
 #include "MediaControlUtils.h"
 #include "mozilla/AbstractThread.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"

@@ -8,7 +8,6 @@
 
 #include "chrome/common/ipc_channel.h"
 #include "js/Promise.h"
-#include "mozilla/FunctionRef.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/ClonedErrorHolder.h"

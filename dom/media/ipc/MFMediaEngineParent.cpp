@@ -26,7 +26,6 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/ipc/UtilityMediaServiceParent.h"
 #include "mozilla/ipc/UtilityProcessChild.h"

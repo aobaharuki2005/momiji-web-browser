@@ -28,7 +28,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
-#include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ErrorEvent.h"

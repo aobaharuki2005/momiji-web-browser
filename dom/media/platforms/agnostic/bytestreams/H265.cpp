@@ -18,7 +18,6 @@
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "nsFmtString.h"
 

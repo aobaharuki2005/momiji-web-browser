@@ -38,7 +38,6 @@
 #include "mozStorageHelper.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/MacroForEach.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/ProfilerLabels.h"

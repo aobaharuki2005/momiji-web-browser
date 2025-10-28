@@ -15,7 +15,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/BindingNames.h"
 #include "mozilla/dom/DOMJSClass.h"

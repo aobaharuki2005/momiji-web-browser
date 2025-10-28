@@ -8,7 +8,6 @@
 #include <unordered_set>
 
 #include "ExternalTexture.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/gfx/FileHandleWrapper.h"

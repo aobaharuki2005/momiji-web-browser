@@ -8,7 +8,6 @@
 #define mozilla_dom_Storage_h
 
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"

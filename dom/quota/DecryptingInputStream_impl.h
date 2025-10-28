@@ -17,7 +17,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Span.h"
 #include "mozilla/fallible.h"
 #include "mozilla/ipc/InputStreamUtils.h"

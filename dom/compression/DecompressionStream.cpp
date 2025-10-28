@@ -10,7 +10,6 @@
 #include "FormatZlib.h"
 #include "FormatZstd.h"
 #include "js/TypeDecls.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/DecompressionStreamBinding.h"
 #include "mozilla/dom/ReadableStream.h"

@@ -13,7 +13,6 @@
 #include "GLTypes.h"
 #include "mozilla/Array.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/ThreadLocal.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathSkia.h"

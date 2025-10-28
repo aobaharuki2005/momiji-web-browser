@@ -10,7 +10,6 @@
 #include <memory>
 
 #include "js/TypeDecls.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/dom/TypedArray.h"  // ArrayBuffer
 
 class nsIGlobalObject;

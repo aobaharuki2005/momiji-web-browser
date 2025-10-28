@@ -105,7 +105,6 @@
 #include "imgRequestProxy.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "nsContentCreatorFunctions.h"

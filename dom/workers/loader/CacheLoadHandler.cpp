@@ -11,7 +11,6 @@
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Encoding.h"
-#include "mozilla/Result.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/CacheBinding.h"

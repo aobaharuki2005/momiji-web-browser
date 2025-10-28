@@ -16,7 +16,6 @@
 #include "VideoSegment.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
-#include "mozilla/MathAlgorithms.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "nsPrintfCString.h"

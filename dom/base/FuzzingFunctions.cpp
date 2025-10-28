@@ -8,7 +8,6 @@
 
 #include "js/GCAPI.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Fuzzing.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextEvents.h"

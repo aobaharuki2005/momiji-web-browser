@@ -20,7 +20,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/Logging.h"
-#include "mozilla/NotNull.h"
 #include "mozilla/PerfStats.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SharedSubResourceCache.h"

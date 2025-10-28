@@ -10,7 +10,6 @@
 #include "Adts.h"
 #include "MediaDataDemuxer.h"
 #include "MediaResource.h"
-#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
