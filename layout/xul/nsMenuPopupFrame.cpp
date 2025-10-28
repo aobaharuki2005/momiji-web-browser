@@ -1088,18 +1088,12 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
   mHFlip = mVFlip = false;
   mConstrainedByLayout = false;
 
-  if (auto* widget = GetWidget()) {
+  RefPtr widget = GetWidget();
+  if (widget) {
     widget->ClearCachedWebrenderResources();
     if (!aFromFrameDestruction && !ShouldHaveWidgetWhenHidden()) {
       PopupExpirationTracker::GetOrCreate().AddObject(this);
     }
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("HideWidget", [widget = RefPtr{widget}] {
-          auto* frame = widget->GetPopupFrame();
-          if (!frame || !frame->IsVisibleOrShowing()) {
-            widget->Show(false);
-          }
-        }));
   }
 
   ClearPendingWidgetMoveResize();
@@ -1114,6 +1108,16 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
     esm->SetContentState(nullptr, dom::ElementState::HOVER);
   }
   popup->PopupClosed(aDeselectMenu);
+
+  if (widget) {
+    nsContentUtils::AddScriptRunner(
+        NS_NewRunnableFunction("HideWidget", [widget = std::move(widget)] {
+          auto* frame = widget->GetPopupFrame();
+          if (!frame || !frame->IsVisibleOrShowing()) {
+            widget->Show(false);
+          }
+        }));
+  }
 }
 
 void nsMenuPopupFrame::SchedulePendingWidgetMoveResize() {
