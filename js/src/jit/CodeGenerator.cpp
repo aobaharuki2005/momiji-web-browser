@@ -6986,7 +6986,15 @@ void CodeGenerator::emitAllocateSpaceForApply(T* apply, Register calleeReg,
         }
         masm.lshiftPtr(Imm32(ValueShift), scratch);
         masm.subFromStackPtr(scratch);
-        masm.rshiftPtr(Imm32(ValueShift), scratch);
+
+        // We need callee->nargs in `scratch`. If we rounded it up
+        // above, we need to reload it. If we only shifted it, we can
+        // simply shift it back.
+        if (JitStackValueAlignment > 1) {
+          masm.loadFunctionArgCount(calleeReg, scratch);
+        } else {
+          masm.rshiftPtr(Imm32(ValueShift), scratch);
+        }
       }
 
       // Count from callee->nargs() down to argc, storing undefined values.
@@ -7104,7 +7112,15 @@ void CodeGenerator::emitAllocateSpaceForConstructAndPushNewTarget(
         }
         masm.lshiftPtr(Imm32(ValueShift), scratch);
         masm.subFromStackPtr(scratch);
-        masm.rshiftPtr(Imm32(ValueShift), scratch);
+
+        // We need callee->nargs in `scratch`. If we rounded it down
+        // above, we need to reload it. If we only shifted it, we can
+        // simply shift it back.
+        if (JitStackValueAlignment > 1) {
+          masm.loadFunctionArgCount(calleeReg, scratch);
+        } else {
+          masm.rshiftPtr(Imm32(ValueShift), scratch);
+        }
       }
 
       // Count from callee->nargs() down to argc, storing undefined values.
