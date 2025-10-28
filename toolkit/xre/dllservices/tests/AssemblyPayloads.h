@@ -78,6 +78,9 @@ __declspec(dllexport) MOZ_NAKED void NearJump() {
       "jae label3;"
       "je  label3;"
       "jne label3;"
+      // This is past the 13 bytes that we patch (each instruction
+      // above is 6 bytes long)), so any instructions after
+      // this won't be patched.
 
       "label4:"
       "mov %0, %%rax;"
@@ -88,6 +91,44 @@ __declspec(dllexport) MOZ_NAKED void NearJump() {
 
       "label3:"
       "jmp label4;"
+      :
+      : "i"(JumpDestination));
+}
+
+__declspec(dllexport) MOZ_NAKED void NearJump2() {
+  asm volatile(
+      "js  label5;"
+      // Above instruction takes up 6 bytes of the 13 bytes
+      // that we patch.
+
+      "label6:"
+      "mov %0, %%rax;"
+      "jmpq *%%rax;"
+
+      // 0x100 bytes padding to generate js rel32 instead of js rel8
+      PADDING_256_NOP
+
+      "label5:"
+      "jmp label6;"
+      :
+      : "i"(JumpDestination));
+}
+
+__declspec(dllexport) MOZ_NAKED void JumpWith8BitOffset() {
+  asm volatile(
+      "jae label7;"
+      "je  label7;"
+      "jne label7;"
+      "js  label7;"
+      // Above instructions take up 8 bytes (each one is 2 bytes long)
+      // of the 13 bytes that we patch.
+
+      "label8:"
+      "mov %0, %%rax;"
+      "jmpq *%%rax;"
+
+      "label7:"
+      "jmp label8;"
       :
       : "i"(JumpDestination));
 }
