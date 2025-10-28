@@ -21,7 +21,7 @@ moz-breadcrumb-third =
   },
 };
 
-const Template = ({ l10nId, width, slot }) => {
+const Template = ({ l10nId, width }) => {
   return html`
     <style>
       ${width
@@ -31,7 +31,7 @@ const Template = ({ l10nId, width, slot }) => {
           }`
         : ""}
     </style>
-    <moz-breadcrumb-group slot=${ifDefined(slot)}>
+    <moz-breadcrumb-group>
       <moz-breadcrumb
         href="about#firstpage"
         data-l10n-id=${ifDefined(l10nId + "-first")}
