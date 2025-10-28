@@ -18,6 +18,7 @@
 #include "xpcpublic.h"
 
 #include "mozilla/Components.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Logging.h"

@@ -8,6 +8,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Components.h"
+#include "mozilla/HelperMacros.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIAppStartup.h"
 #include "nsIChannel.h"

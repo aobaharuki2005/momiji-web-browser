@@ -33,7 +33,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RDDProcessManager.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/glean/XpcomMetrics.h"
 #include "mozilla/UniquePtrExtensions.h"

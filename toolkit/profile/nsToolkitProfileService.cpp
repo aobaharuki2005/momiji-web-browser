@@ -5,6 +5,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/HelperMacros.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"

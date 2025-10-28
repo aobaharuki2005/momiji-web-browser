@@ -14,6 +14,7 @@
 #include "gmp-api/gmp-entrypoints.h"
 #include "gmp-api/gmp-video-codec.h"
 #include "mozilla/HelperMacros.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/dom/KeySystemNames.h"
 
 #ifdef XP_WIN

@@ -11,6 +11,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/css/Loader.h"

@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "RecordingTypes.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/ipc/ByteBuf.h"

@@ -8,7 +8,6 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DelayedRunnable.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"  // We initialize the MozPromise logging in this file.
 #include "mozilla/ProfilerRunnable.h"
 #include "mozilla/StateWatching.h"  // We initialize the StateWatching logging in this file.

@@ -6,7 +6,6 @@
 
 #include "nsEscape.h"
 
-#include "mozilla/BinarySearch.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/TextUtils.h"
 #include "nsTArray.h"

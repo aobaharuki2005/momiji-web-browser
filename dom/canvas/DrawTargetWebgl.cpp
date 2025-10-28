@@ -21,6 +21,7 @@
 #include "WebGLVertexArray.h"
 #include "gfxPlatform.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/HelperMacros.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/AAStroke.h"
 #include "mozilla/gfx/Blur.h"

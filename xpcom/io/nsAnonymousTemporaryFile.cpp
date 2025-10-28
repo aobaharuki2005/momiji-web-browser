@@ -14,7 +14,6 @@
 #ifdef XP_WIN
 #  include "nsIObserver.h"
 #  include "nsIObserverService.h"
-#  include "mozilla/ResultExtensions.h"
 #  include "mozilla/Services.h"
 #  include "nsIUserIdleService.h"
 #  include "nsISimpleEnumerator.h"

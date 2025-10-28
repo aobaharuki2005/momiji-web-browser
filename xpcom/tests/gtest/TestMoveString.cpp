@@ -10,7 +10,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsCRTGlue.h"
-#include "mozilla/RefPtr.h"
 #include "gtest/gtest.h"
 
 namespace TestMoveString {
