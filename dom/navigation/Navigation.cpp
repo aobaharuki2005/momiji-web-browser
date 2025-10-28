@@ -1171,6 +1171,45 @@ struct NavigationWaitForAllScope final : public nsISupports,
 
  private:
   ~NavigationWaitForAllScope() {}
+
+ public:
+  // https://html.spec.whatwg.org/#process-navigate-event-handler-failure
+  MOZ_CAN_RUN_SCRIPT void ProcessNavigateEventHandlerFailure(
+      JS::Handle<JS::Value> aRejectionReason) {
+    // To process navigate event handler failure given a NavigateEvent object
+    // event and a reason:
+    LogEvent(mEvent, mEvent, "Rejected"_ns);
+
+    // 1. If event's relevant global object's associated Document is not fully
+    //    active, then return.
+    if (RefPtr document = mEvent->GetDocument();
+        !document || !document->IsFullyActive()) {
+      return;
+    }
+
+    // 2. If event's abort controller's signal is aborted, then return.
+    if (AbortSignal* signal = mEvent->Signal(); signal->Aborted()) {
+      return;
+    }
+
+    // 3. Assert: event is event's relevant global object's navigation API's
+    //    ongoing navigate event.
+    MOZ_DIAGNOSTIC_ASSERT(mEvent == mNavigation->mOngoingNavigateEvent);
+
+    // 4. If event's interception state is not "intercepted", then finish event
+    //    given false.
+    RefPtr event = mEvent;
+    if (mEvent->InterceptionState() !=
+        NavigateEvent::InterceptionState::Intercepted) {
+      event->Finish(false);
+    }
+
+    // 5. Abort event given reason.
+    if (AutoJSAPI jsapi; !NS_WARN_IF(!jsapi.Init(mEvent->GetParentObject()))) {
+      RefPtr navigation = mNavigation;
+      navigation->AbortNavigateEvent(jsapi.cx(), event, aRejectionReason);
+    }
+  }
 };
 
 NS_IMPL_CYCLE_COLLECTION_WEAK_PTR(NavigationWaitForAllScope, mNavigation,
@@ -1529,56 +1568,7 @@ bool Navigation::InnerFireNavigateEvent(
               if (!weakScope) {
                 return;
               }
-
-              RefPtr event = weakScope->mEvent;
-              RefPtr self = weakScope->mNavigation;
-              RefPtr apiMethodTracker = weakScope->mAPIMethodTracker;
-
-              LogEvent(event, event, "Rejected"_ns);
-
-              // Failure steps
-              // Step 1
-              if (RefPtr document = event->GetDocument();
-                  !document || !document->IsFullyActive()) {
-                return;
-              }
-
-              // Step 2
-              if (AbortSignal* signal = event->Signal(); signal->Aborted()) {
-                return;
-              }
-
-              // Step 3
-              MOZ_DIAGNOSTIC_ASSERT(event == self->mOngoingNavigateEvent);
-
-              // Step 4
-              self->mOngoingNavigateEvent = nullptr;
-
-              // Step 5
-              event->Finish(false);
-
-              // Step 7
-              if (apiMethodTracker) {
-                apiMethodTracker->RejectFinishedPromise(aRejectionReason);
-              }
-
-              if (AutoJSAPI jsapi;
-                  !NS_WARN_IF(!jsapi.Init(event->GetParentObject()))) {
-                // Step 6
-                RootedDictionary<ErrorEventInit> init(jsapi.cx());
-                ExtractErrorInformation(jsapi.cx(), aRejectionReason, init);
-
-                // Step 8
-                self->FireErrorEvent(u"navigateerror"_ns, init);
-              }
-
-              // Step 9
-              if (self->mTransition) {
-                self->mTransition->Finished()->MaybeReject(aRejectionReason);
-              }
-
-              // Step 10
-              self->mTransition = nullptr;
+              weakScope->ProcessNavigateEventHandlerFailure(aRejectionReason);
             };
 
     // If the committed promise in the api method tracker hasn't resolved yet,

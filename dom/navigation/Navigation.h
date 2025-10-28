@@ -200,6 +200,7 @@ class Navigation final : public DOMEventTargetHelper {
 
  private:
   friend struct NavigationAPIMethodTracker;
+  friend struct NavigationWaitForAllScope;
   using UpcomingTraverseAPIMethodTrackers =
       nsTHashMap<nsIDHashKey, RefPtr<NavigationAPIMethodTracker>>;
 
