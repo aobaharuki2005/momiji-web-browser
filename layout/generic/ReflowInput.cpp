@@ -1829,29 +1829,24 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
     }
   }
 
-  nsIFrame::SizeComputationResult sizeResult = {
-      LogicalSize(wm), nsIFrame::AspectRatioUsage::None};
   {
     AutoMaybeDisableFontInflation an(mFrame);
 
-    sizeResult = mFrame->ComputeSize(
+    auto size = mFrame->ComputeSize(
         mRenderingContext, wm, aCBSize.ConvertTo(wm, cbwm),
         aCBSize.ConvertTo(wm, cbwm).ISize(wm),  // XXX or AvailableISize()?
         ComputedLogicalMargin(wm).Size(wm) +
             ComputedLogicalOffsets(wm).Size(wm),
         ComputedLogicalBorderPadding(wm).Size(wm), {}, mComputeSizeFlags);
-    mComputedSize = sizeResult.mLogicalSize;
+    mComputedSize = size.mLogicalSize;
     NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");
     NS_ASSERTION(
         ComputedBSize() == NS_UNCONSTRAINEDSIZE || ComputedBSize() >= 0,
         "Bogus block-size");
+
+    mFlags.mIsBSizeSetByAspectRatio =
+        size.mAspectRatioUsage == nsIFrame::AspectRatioUsage::ToComputeBSize;
   }
-
-  LogicalSize& computedSize = sizeResult.mLogicalSize;
-  computedSize = computedSize.ConvertTo(cbwm, wm);
-
-  mFlags.mIsBSizeSetByAspectRatio = sizeResult.mAspectRatioUsage ==
-                                    nsIFrame::AspectRatioUsage::ToComputeBSize;
 
   // XXX Now that we have ComputeSize, can we condense many of the
   // branches off of widthIsAuto?
@@ -1867,9 +1862,11 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
   bool marginBEndIsAuto = false;
   const bool hasIntrinsicKeywordForBSize =
       mFrame->HasIntrinsicKeywordForBSize();
+
   // Unconstrained size implies fit-content sizing, so auto margin(s) cannot
   // be resolved at this time, except for cases where any inset is auto (Which
   // will take up available space and leave auto margins to be zero).
+  const LogicalSize computedSize = mComputedSize.ConvertTo(cbwm, wm);
   const bool nonZeroAutoMarginOnUnconstrainedSize =
       isOrthogonal ? computedSize.ISize(cbwm) == NS_UNCONSTRAINEDSIZE &&
                          !(iStartIsAuto || iEndIsAuto)
@@ -1981,7 +1978,6 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
     ComputeAbsPosBlockAutoMargin(availMarginSpace, cbwm, marginBStartIsAuto,
                                  marginBEndIsAuto, margin, offsets);
   }
-  mComputedSize = computedSize.ConvertTo(wm, cbwm);
 
   SetComputedLogicalOffsets(cbwm, offsets);
   SetComputedLogicalMargin(cbwm, margin);
