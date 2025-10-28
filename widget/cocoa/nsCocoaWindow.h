@@ -85,7 +85,7 @@ class TextInputHandler;
 - (void)createTrackingArea;
 - (void)removeTrackingArea;
 
-- (void)setBeingShown:(BOOL)aValue;
+- (void)setIsBeingShown:(BOOL)aValue;
 - (BOOL)isBeingShown;
 - (BOOL)isVisibleOrBeingShown;
 

@@ -129,14 +129,6 @@ static NSString* const CGSSpacesKey = @"Spaces";
 extern CGSConnection _CGSDefaultConnection(void);
 extern CGError CGSSetWindowTransform(CGSConnection cid, CGSWindow wid,
                                      CGAffineTransform transform);
-CG_EXTERN void CGContextResetCTM(CGContextRef);
-CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
-CG_EXTERN void CGContextResetClip(CGContextRef);
-
-typedef CFTypeRef CGSRegionObj;
-CGError CGSNewRegionWithRect(const CGRect* rect, CGSRegionObj* outRegion);
-CGError CGSNewRegionWithRectList(const CGRect* rects, int rectCount,
-                                 CGSRegionObj* outRegion);
 }
 
 static void RollUpPopups(nsIRollupListener::AllowAnimations aAllowAnimations =
@@ -5203,7 +5195,7 @@ void nsCocoaWindow::Show(bool aState) {
     return;
   }
 
-  [mWindow setBeingShown:aState];
+  mWindow.isBeingShown = aState;
   if (aState && !mWasShown) {
     mWasShown = true;
   }
@@ -5248,7 +5240,7 @@ void nsCocoaWindow::Show(bool aState) {
       // NSException.  These errors shouldn't be fatal.  So we need to wrap
       // calls to ...orderFront: in TRY blocks.  See bmo bug 470864.
       NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-      [[mWindow contentView] setNeedsDisplay:YES];
+      mWindow.contentView.needsDisplay = YES;
       if (!nativeParentWindow || mPopupLevel != PopupLevel::Parent) {
         [mWindow orderFront:nil];
       }
@@ -5315,8 +5307,7 @@ void nsCocoaWindow::Show(bool aState) {
     }
   } else {
     // roll up any popups if a top-level window is going away
-    if (mWindowType == WindowType::TopLevel ||
-        mWindowType == WindowType::Dialog) {
+    if (IsTopLevelWidget()) {
       RollUpPopups();
     }
 
@@ -5339,7 +5330,7 @@ void nsCocoaWindow::Show(bool aState) {
     }
   }
 
-  [mWindow setBeingShown:NO];
+  mWindow.isBeingShown = NO;
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -7667,7 +7658,7 @@ static NSImage* GetMenuMaskImage() {
   return mTouchBar;
 }
 
-- (void)setBeingShown:(BOOL)aValue {
+- (void)setIsBeingShown:(BOOL)aValue {
   mBeingShown = aValue;
 }
 
