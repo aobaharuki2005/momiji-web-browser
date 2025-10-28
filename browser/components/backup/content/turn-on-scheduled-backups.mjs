@@ -134,6 +134,9 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     // listen to events from <password-validation-inputs>
     this.addEventListener("ValidPasswordsDetected", this);
     this.addEventListener("InvalidPasswordsDetected", this);
+
+    // listens to keydown events
+    this.addEventListener("keydown", this);
   }
 
   handleEvent(event) {
@@ -149,6 +152,15 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     } else if (event.type == "InvalidPasswordsDetected") {
       this._passwordsMatch = false;
       this._inputPassValue = "";
+    } else if (event.type == "keydown") {
+      if (
+        event.key === "Enter" &&
+        (event.originalTarget.id ==
+          "backup-location-filepicker-input-default" ||
+          event.originalTarget.id == "backup-location-filepicker-input-custom")
+      ) {
+        event.preventDefault();
+      }
     }
   }
 
