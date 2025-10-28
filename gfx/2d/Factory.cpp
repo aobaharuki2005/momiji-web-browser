@@ -432,7 +432,8 @@ already_AddRefed<DrawTarget> Factory::CreateRecordingDrawTarget(
 
 already_AddRefed<DrawTarget> Factory::CreateDrawTargetForData(
     BackendType aBackend, unsigned char* aData, const IntSize& aSize,
-    int32_t aStride, SurfaceFormat aFormat, bool aUninitialized) {
+    int32_t aStride, SurfaceFormat aFormat, bool aUninitialized,
+    bool aIsClear) {
   MOZ_ASSERT(aData);
   if (!AllowedSurfaceSize(aSize)) {
     gfxCriticalError(LoggerOptionsBasedOnSize(aSize))
@@ -446,7 +447,8 @@ already_AddRefed<DrawTarget> Factory::CreateDrawTargetForData(
     case BackendType::SKIA: {
       RefPtr<DrawTargetSkia> newTarget;
       newTarget = new DrawTargetSkia();
-      if (newTarget->Init(aData, aSize, aStride, aFormat, aUninitialized)) {
+      if (newTarget->Init(aData, aSize, aStride, aFormat, aUninitialized,
+                          aIsClear)) {
         retVal = newTarget;
       }
       break;

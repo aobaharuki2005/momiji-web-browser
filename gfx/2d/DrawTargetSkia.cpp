@@ -1847,6 +1847,7 @@ bool DrawTargetSkia::Init(const IntSize& aSize, SurfaceFormat aFormat) {
   if (info.isOpaque()) {
     mCanvas->clear(SK_ColorBLACK);
   }
+  mIsClear = true;
   return true;
 }
 
@@ -1861,6 +1862,7 @@ bool DrawTargetSkia::Init(SkCanvas* aCanvas) {
     SkColor clearColor =
         imageInfo.isOpaque() ? SK_ColorBLACK : SK_ColorTRANSPARENT;
     mCanvas->clear(clearColor);
+    mIsClear = true;
   }
 
   SkISize size = mCanvas->getBaseLayerSize();
@@ -1874,7 +1876,7 @@ bool DrawTargetSkia::Init(SkCanvas* aCanvas) {
 
 bool DrawTargetSkia::Init(unsigned char* aData, const IntSize& aSize,
                           int32_t aStride, SurfaceFormat aFormat,
-                          bool aUninitialized) {
+                          bool aUninitialized, bool aIsClear) {
   MOZ_ASSERT((aFormat != SurfaceFormat::B8G8R8X8) || aUninitialized ||
              VerifyRGBXFormat(aData, aSize, aStride, aFormat));
 
@@ -1894,6 +1896,7 @@ bool DrawTargetSkia::Init(unsigned char* aData, const IntSize& aSize,
   mFormat = aFormat;
   mCanvas = mSurface->getCanvas();
   SetPermitSubpixelAA(IsOpaque(mFormat));
+  mIsClear = aIsClear;
   return true;
 }
 
@@ -1958,6 +1961,10 @@ already_AddRefed<PathBuilder> DrawTargetSkia::CreatePathBuilder(
 }
 
 void DrawTargetSkia::ClearRect(const Rect& aRect) {
+  if (mIsClear) {
+    return;
+  }
+
   MarkChanged();
   SkPaint paint;
   paint.setAntiAlias(true);
@@ -2142,7 +2149,7 @@ already_AddRefed<FilterNode> DrawTargetSkia::CreateFilter(FilterType aType) {
   return FilterNodeSoftware::Create(aType);
 }
 
-void DrawTargetSkia::MarkChanged() {
+void DrawTargetSkia::DetachAllSnapshots() {
   // I'm not entirely certain whether this lock is needed, as multiple threads
   // should never modify the DrawTarget at the same time anyway, but this seems
   // like the safest.
@@ -2162,6 +2169,11 @@ void DrawTargetSkia::MarkChanged() {
       mSurface->notifyContentWillChange(SkSurface::kRetain_ContentChangeMode);
     }
   }
+}
+
+void DrawTargetSkia::MarkChanged() {
+  DetachAllSnapshots();
+  mIsClear = false;
 }
 
 }  // namespace mozilla::gfx

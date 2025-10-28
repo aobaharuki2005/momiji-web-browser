@@ -1771,7 +1771,7 @@ already_AddRefed<DrawTarget> gfxPlatform::CreateSimilarSoftwareDrawTarget(
 /* static */
 already_AddRefed<DrawTarget> gfxPlatform::CreateDrawTargetForData(
     unsigned char* aData, const IntSize& aSize, int32_t aStride,
-    SurfaceFormat aFormat, bool aUninitialized) {
+    SurfaceFormat aFormat, bool aUninitialized, bool aIsClear) {
   BackendType backendType = gfxVars::ContentBackend();
   NS_ASSERTION(backendType != BackendType::NONE, "No backend.");
 
@@ -1780,7 +1780,7 @@ already_AddRefed<DrawTarget> gfxPlatform::CreateDrawTargetForData(
   }
 
   RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(
-      backendType, aData, aSize, aStride, aFormat, aUninitialized);
+      backendType, aData, aSize, aStride, aFormat, aUninitialized, aIsClear);
 
   return dt.forget();
 }

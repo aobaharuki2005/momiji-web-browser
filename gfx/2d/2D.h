@@ -2206,7 +2206,8 @@ class GFX2D_API Factory {
 
   static already_AddRefed<DrawTarget> CreateDrawTargetForData(
       BackendType aBackend, unsigned char* aData, const IntSize& aSize,
-      int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false);
+      int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false,
+      bool aIsClear = false);
 
 #ifdef XP_DARWIN
   static already_AddRefed<ScaledFont> CreateScaledFontForMacFont(
