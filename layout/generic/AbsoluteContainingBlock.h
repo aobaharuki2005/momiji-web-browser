@@ -117,14 +117,13 @@ class AbsoluteContainingBlock {
    * resolve size-dependent values in the ComputedLogicalOffsets on its
    * reflow input.
    *
-   * aLogicalCBSize is expected in the abspos child's writing-mode. aKidSize,
-   * aMargin, aOffsets, are all expected in the absolute containing block's
-   * writing-mode.
+   * aCBSize, aKidSize, aMargin, aOffsets, are all expected in the absolute
+   * containing block's writing-mode.
    *
    * aOffset is an outparam.
    */
   void ResolveSizeDependentOffsets(
-      ReflowInput& aKidReflowInput, const LogicalSize& aLogicalCBSize,
+      ReflowInput& aKidReflowInput, const LogicalSize& aCBSize,
       const LogicalSize& aKidSize, const LogicalMargin& aMargin,
       const StylePositionArea& aResolvedPositionArea, LogicalMargin& aOffsets);
 
@@ -134,15 +133,14 @@ class AbsoluteContainingBlock {
    * InitAbsoluteConstraints because the block-size isn't computed yet. This
    * method computes the margins for them after layout.
    *
-   * aLogicalCBSize is expected in the abspos child's writing-mode. aKidSize,
-   * aMargin, aOffsets, are all expected in the absolute containing block's
-   * writing-mode.
+   * aCBSize, aKidSize, aMargin, aOffsets, are all expected in the absolute
+   * containing block's writing-mode.
    *
    * aMargin and aOffsets are both outparams (though we only touch aOffsets if
    * the position is overconstrained)
    */
   void ResolveAutoMarginsAfterLayout(ReflowInput& aKidReflowInput,
-                                     const LogicalSize& aLogicalCBSize,
+                                     const LogicalSize& aCBSize,
                                      const LogicalSize& aKidSize,
                                      LogicalMargin& aMargin,
                                      LogicalMargin& aOffsets);
