@@ -1834,6 +1834,7 @@ void MediaFormatReader::NotifyNewOutput(
         // update the decoder name again, instead of using the wrong name.
         if (decoder.mNumSamplesOutput == 1) {
           decoder.mDescription = mVideo.mDecoder->GetDescriptionName();
+          decoder.LoadDecodeProperties();
         }
       }
       decoder.mDecodePerfRecorder->Record(
@@ -3533,6 +3534,22 @@ void MediaFormatReader::OnFirstDemuxFailed(TrackInfo::TrackType aType,
 void MediaFormatReader::SetEncryptedCustomIdent() {
   LOG("Set mEncryptedCustomIdent");
   mEncryptedCustomIdent = true;
+}
+
+void MediaFormatReader::VideoDecodeProperties::Load(
+    RefPtr<MediaDataDecoder>& aDecoder) {
+  using V = MediaDataDecoder::PropertyValue;
+  aDecoder
+      ->GetDecodeProperty(MediaDataDecoder::PropertyName::MaxNumVideoBuffers)
+      .apply([this](const V& v) { mMaxQueueSize = Some(v.as<uint32_t>()); });
+  aDecoder
+      ->GetDecodeProperty(MediaDataDecoder::PropertyName::MinNumVideoBuffers)
+      .apply([this](const V& v) { mMinQueueSize = Some(v.as<uint32_t>()); });
+  aDecoder
+      ->GetDecodeProperty(MediaDataDecoder::PropertyName::MaxNumCurrentImages)
+      .apply([this](const V& v) {
+        mSendToCompositorSize = Some(v.as<uint32_t>());
+      });
 }
 
 }  // namespace mozilla
