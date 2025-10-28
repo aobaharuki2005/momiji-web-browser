@@ -161,6 +161,14 @@ skip-if = [
 ["test_UtilityScalars.js"]
 run-if = ["os == 'win'"]
 
+["test_canUpload_truth_table.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'",
+]
+# The policy notification/acceptance flows are desktop only and not used by
+# Thunderbird or Android.
+
 ["test_client_id.js"]
 
 ["test_failover_retry.js"]
