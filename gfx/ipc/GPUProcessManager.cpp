@@ -1361,10 +1361,6 @@ bool GPUProcessManager::CreateContentBridges(
     ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
     ipc::Endpoint<PRemoteMediaManagerChild>* aOutVideoManager,
     dom::ContentParentId aChildId, nsTArray<uint32_t>* aNamespaces) {
-  if (NS_WARN_IF(NS_FAILED(EnsureGPUReady()))) {
-    return false;
-  }
-
   const uint32_t cmNamespace = AllocateNamespace();
   if (!CreateContentCompositorManager(aOtherProcess, aChildId, cmNamespace,
                                       aOutCompositor) ||
@@ -1372,7 +1368,7 @@ bool GPUProcessManager::CreateContentBridges(
       !CreateContentVRManager(aOtherProcess, aChildId, aOutVRBridge)) {
     return false;
   }
-  // VideoDeocderManager is only supported in the GPU process, so we allow this
+  // RemoteMediaManager is only supported in the GPU process, so we allow this
   // to be fallible.
   CreateContentRemoteMediaManager(aOtherProcess, aChildId, aOutVideoManager);
   // Allocates 3 namespaces(for CompositorManagerChild, CompositorBridgeChild

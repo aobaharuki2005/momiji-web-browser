@@ -117,6 +117,9 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
       bool aUseExternalSurfaceSize, const gfx::IntSize& aSurfaceSize,
       uint64_t aInnerWindowId, bool* aRetry);
 
+  // It is asserted that IsGPUReady() is true for this method. If not on a path
+  // which guarantees that, then the caller must call EnsureGPUReady() and check
+  // its return code first.
   bool CreateContentBridges(
       mozilla::ipc::EndpointProcInfo aOtherProcess,
       mozilla::ipc::Endpoint<PCompositorManagerChild>* aOutCompositor,
