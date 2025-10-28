@@ -2522,7 +2522,7 @@ class TestTranslationsTelemetry {
           if (typeof expected === "function") {
             ok(
               expected(event.extra[key]),
-              `Telemetry event ${name} value for ${key} should match the expected predicate`
+              `Telemetry event ${name} value for ${key} should match the expected predicate: got ${event.extra[key]}`
             );
           } else {
             is(
@@ -2545,7 +2545,7 @@ class TestTranslationsTelemetry {
         if (typeof expected === "function") {
           ok(
             expected(events[eventCount - 1].extra[key]),
-            `Telemetry event ${name} value for ${key} should match the expected predicate`
+            `Telemetry event ${name} value for ${key} should match the expected predicate: got ${events[eventCount - 1].extra[key]}`
           );
         } else {
           is(

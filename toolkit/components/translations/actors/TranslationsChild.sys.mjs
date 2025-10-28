@@ -93,8 +93,10 @@ export class TranslationsChild extends JSWindowActorChild {
           Ci.nsIDocumentEncoder.OutputBodyOnly |
             Ci.nsIDocumentEncoder.SkipInvisibleContent |
             Ci.nsIDocumentEncoder.AllowCrossShadowBoundary |
+            Ci.nsIDocumentEncoder.OutputForPlainTextClipboardCopy |
+            Ci.nsIDocumentEncoder.OutputDisallowLineBreaking |
             Ci.nsIDocumentEncoder.OutputDropInvisibleBreak |
-            Ci.nsIDocumentEncoder.OutputDisallowLineBreaking
+            Ci.nsIDocumentEncoder.OutputLFLineBreak
         );
 
         return encoder.encodeToStringWithMaxLength(sufficientLength);

@@ -89,6 +89,49 @@ export class TranslationsTelemetry {
   }
 
   /**
+   * Records a telemetry event when the language of a page is identified for Translations.
+   *
+   * @param {object} data
+   * @param {string | null} [data.htmlLangAttribute]
+   * @param {string} data.identifiedLanguage
+   * @param {boolean | null} [data.langTagsMatch]
+   * @param {boolean | null} [data.isLangAttributeValid]
+   * @param {number} data.extractedCodeUnits
+   * @param {number} data.extractionTime
+   * @param {number} data.identificationTime
+   * @param {number} data.totalTime
+   * @param {boolean} data.confident
+   */
+  static onIdentifyPageLanguage(data) {
+    const {
+      htmlLangAttribute,
+      identifiedLanguage,
+      langTagsMatch,
+      isLangAttributeValid,
+      extractedCodeUnits,
+      extractionTime,
+      identificationTime,
+      totalTime,
+      confident,
+    } = data;
+    Glean.translations.identifyPageLanguage.record({
+      html_lang_attribute: htmlLangAttribute,
+      identified_language: identifiedLanguage,
+      lang_tags_match: langTagsMatch,
+      is_lang_attribute_valid: isLangAttributeValid,
+      extracted_code_units: extractedCodeUnits,
+      extraction_time: extractionTime,
+      identification_time: identificationTime,
+      total_time: totalTime,
+      confident,
+    });
+    TranslationsTelemetry.logEventToConsole(
+      TranslationsTelemetry.onIdentifyPageLanguage,
+      data
+    );
+  }
+
+  /**
    * Records a telemetry event when full page translation fails.
    *
    * @param {string} errorMessage

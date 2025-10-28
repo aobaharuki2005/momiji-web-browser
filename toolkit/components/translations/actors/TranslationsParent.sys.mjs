@@ -3578,6 +3578,8 @@ export class TranslationsParent extends JSWindowActorParent {
       return { language: "en", confident: false, languages: [] };
     }
 
+    const extractionTime = ChromeUtils.now() - extractionStartTime;
+
     lazy.console.debug(
       `Extracted Page Text (${pageText.length} code units):\n\n`,
       pageText
@@ -3585,7 +3587,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
     const extractionLog =
       `Extracted ${pageText.length} code units of text in ` +
-      `${(ChromeUtils.now() - extractionStartTime).toFixed(3)} ms.`;
+      `${extractionTime.toFixed(3)} ms.`;
 
     lazy.console.log(extractionLog);
     ChromeUtils.addProfilerMarker(
@@ -3601,9 +3603,10 @@ export class TranslationsParent extends JSWindowActorParent {
       return { language: "en", confident: false, languages: [] };
     }
 
+    const identificationTime = ChromeUtils.now() - identificationStartTime;
     const identificationLog =
       `Identified ${pageText.length} code units of text as "${result.language}" ` +
-      `in ${(ChromeUtils.now() - identificationStartTime).toFixed(3)} ms.`;
+      `in ${identificationTime.toFixed(3)} ms.`;
 
     lazy.console.log(identificationLog);
     ChromeUtils.addProfilerMarker(
@@ -3620,6 +3623,29 @@ export class TranslationsParent extends JSWindowActorParent {
     if (pageText.length < TranslationsParent.#DOC_CONFIDENCE_THRESHOLD) {
       result.confident = false;
     }
+
+    const htmlLangAttribute =
+      this.languageState?.detectedLanguages?.htmlLangAttribute ?? null;
+    const identifiedLanguage = result.language;
+
+    TranslationsParent.telemetry().onIdentifyPageLanguage({
+      htmlLangAttribute,
+      identifiedLanguage,
+      langTagsMatch: htmlLangAttribute
+        ? lazy.TranslationsUtils.langTagsMatch(
+            htmlLangAttribute,
+            identifiedLanguage
+          )
+        : null,
+      isLangAttributeValid: htmlLangAttribute
+        ? lazy.TranslationsUtils.isLangTagValid(htmlLangAttribute)
+        : null,
+      extractedCodeUnits: pageText.length,
+      extractionTime,
+      identificationTime,
+      totalTime: extractionTime + identificationTime,
+      confident: result.confident,
+    });
 
     return result;
   }
