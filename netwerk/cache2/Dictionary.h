@@ -280,7 +280,7 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   void DumpEntries();
   void Clear();
   void AssertEmpty() const {
-    MOZ_DIAGNOSTIC_ASSERT(mEntries.IsEmpty() && mPendingEntries.IsEmpty());
+    MOZ_ASSERT(mEntries.IsEmpty() && mPendingEntries.IsEmpty());
   }
 
  private:
