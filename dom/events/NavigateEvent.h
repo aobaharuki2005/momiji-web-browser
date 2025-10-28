@@ -109,6 +109,11 @@ class NavigateEvent final : public Event {
   MOZ_CAN_RUN_SCRIPT
   void Finish(bool aDidFulfill);
 
+  nsTArray<RefPtr<NavigationPrecommitHandler>>&
+  NavigationPrecommitHandlerList() {
+    return mNavigationPrecommitHandlerList;
+  }
+
   void PerformSharedChecks(ErrorResult& aRv);
 
  private:

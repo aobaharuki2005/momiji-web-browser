@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Navigation.h"
 
+#include "NavigationPrecommitController.h"
 #include "fmt/format.h"
 #include "jsapi.h"
 #include "mozilla/CycleCollectedJSContext.h"
@@ -1661,8 +1662,49 @@ bool Navigation::InnerFireNavigateEvent(
   RefPtr scope = MakeRefPtr<NavigationWaitForAllScope>(this, apiMethodTracker,
                                                        event, aDestination);
   // Step 30
-  scope->CommitNavigateEvent(aNavigationType);
-
+  if (event->NavigationPrecommitHandlerList().IsEmpty()) {
+    LOG_FMTD("No precommit handlers, committing directly");
+    scope->CommitNavigateEvent(aNavigationType);
+  } else {
+    LOG_FMTD("Running {} precommit handlers",
+             event->NavigationPrecommitHandlerList().Length());
+    // Step 31.1
+    RefPtr precommitController =
+        new NavigationPrecommitController(event, globalObject);
+    // Step 31.2
+    nsTArray<RefPtr<Promise>> precommitPromiseList;
+    // Step 31.3
+    for (auto& handler : event->NavigationPrecommitHandlerList().Clone()) {
+      // Step 31.3.1
+      RefPtr promise = MOZ_KnownLive(handler)->Call(*precommitController);
+      if (promise) {
+        precommitPromiseList.AppendElement(promise);
+      }
+    }
+    // Step 31.4
+    Promise::WaitForAll(
+        globalObject, precommitPromiseList,
+        [weakScope = WeakPtr(scope),
+         aNavigationType](const Span<JS::Heap<JS::Value>>&)
+            MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+              // If weakScope is null we've been cycle collected
+              if (!weakScope) {
+                return;
+              }
+              RefPtr scope = weakScope.get();
+              scope->CommitNavigateEvent(aNavigationType);
+            },
+        [weakScope = WeakPtr(scope)](JS::Handle<JS::Value> aRejectionReason)
+            MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+              // If weakScope is null we've been cycle collected
+              if (!weakScope) {
+                return;
+              }
+              RefPtr scope = weakScope.get();
+              scope->ProcessNavigateEventHandlerFailure(aRejectionReason);
+            },
+        scope);
+  }
   // Step 32 and 33
   return event->InterceptionState() == NavigateEvent::InterceptionState::None;
 }
