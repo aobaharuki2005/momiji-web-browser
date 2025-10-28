@@ -13192,6 +13192,7 @@ bool InitOptionParser(OptionParser& op) {
                         "Disable Explicit Resource Management") ||
       !op.addBoolOption('\0', "enable-temporal", "Enable Temporal") ||
       !op.addBoolOption('\0', "enable-upsert", "Enable Upsert proposal") ||
+      !op.addBoolOption('\0', "enable-import-bytes", "Enable import bytes") ||
       !op.addBoolOption('\0', "enable-arraybuffer-immutable",
                         "Enable immutable ArrayBuffers")) {
     return false;
@@ -13268,6 +13269,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   }
   if (op.getBoolOption("enable-arraybuffer-immutable")) {
     JS::Prefs::setAtStartup_experimental_arraybuffer_immutable(true);
+  }
+  if (op.getBoolOption("enable-import-bytes")) {
+    JS::Prefs::setAtStartup_experimental_import_bytes(true);
   }
 #endif
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
