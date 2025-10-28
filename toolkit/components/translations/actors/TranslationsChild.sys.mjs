@@ -78,6 +78,27 @@ export class TranslationsChild extends JSWindowActorChild {
         this.#translatedDoc?.enterLazyTranslationsMode();
         return undefined;
       }
+      case "Translations:ExtractPageText": {
+        const { document } = this;
+        if (!document) {
+          return "";
+        }
+
+        const { sufficientLength } = data;
+
+        const encoder = Cu.createDocumentEncoder("text/plain");
+        encoder.init(
+          document,
+          "text/plain",
+          Ci.nsIDocumentEncoder.OutputBodyOnly |
+            Ci.nsIDocumentEncoder.SkipInvisibleContent |
+            Ci.nsIDocumentEncoder.AllowCrossShadowBoundary |
+            Ci.nsIDocumentEncoder.OutputDropInvisibleBreak |
+            Ci.nsIDocumentEncoder.OutputDisallowLineBreaking
+        );
+
+        return encoder.encodeToStringWithMaxLength(sufficientLength);
+      }
       case "Translations:TranslatePage": {
         if (this.#translatedDoc?.engineStatus === "error") {
           this.#translatedDoc.destroy();
