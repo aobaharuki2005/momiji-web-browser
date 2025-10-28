@@ -382,7 +382,7 @@ class AppLinksFeatureTest {
 
         verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
 
-        doReturn(mockDialog).`when`(feature).getOrCreateDialog(false, "", null)
+        doReturn(mockDialog).`when`(feature).getOrCreateDialog(false, false, "", null)
         doReturn(mockDialog).`when`(mockFragmentManager).findFragmentByTag(RedirectDialogFragment.FRAGMENT_TAG)
         feature.handleAppIntent(tab, intentUrl, mock(), null, null)
         verify(mockDialog, times(1)).showNow(mockFragmentManager, RedirectDialogFragment.FRAGMENT_TAG)
