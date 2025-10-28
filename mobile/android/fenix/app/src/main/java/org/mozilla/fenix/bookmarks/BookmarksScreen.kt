@@ -1030,7 +1030,7 @@ private fun SelectFolderTopBar(store: BookmarksStore) {
                 SelectFolderSortOverflowMenu(store = store)
             }
             if (onNewFolderClick != null) {
-                IconButton(onClick = { onNewFolderClick }) {
+                IconButton(onClick = { onNewFolderClick() }) {
                     Icon(
                         painter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
                         contentDescription = stringResource(
