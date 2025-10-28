@@ -1519,6 +1519,23 @@ let SETTINGS_CONFIG = {
           },
         ],
       },
+      {
+        id: "ipProtectionAutoStart",
+        l10nId: "ip-protection-autostart",
+        control: "moz-fieldset",
+        items: [
+          {
+            id: "ipProtectionAutoStartCheckbox",
+            l10nId: "ip-protection-autostart-checkbox",
+            control: "moz-checkbox",
+          },
+          {
+            id: "ipProtectionAutoStartPrivateCheckbox",
+            l10nId: "ip-protection-autostart-private-checkbox",
+            control: "moz-checkbox",
+          },
+        ],
+      },
     ],
   },
   cookiesAndSiteData: {

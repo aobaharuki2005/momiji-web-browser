@@ -202,6 +202,8 @@ Preferences.addAll([
   // Firefox VPN
   { id: "browser.ipProtection.variant", type: "string" },
   { id: "browser.ipProtection.exceptionsMode", type: "string" },
+  { id: "browser.ipProtection.autoStartEnabled", type: "bool" },
+  { id: "browser.ipProtection.autoStartPrivateEnabled", type: "bool" },
 
   // Media
   { id: "media.autoplay.default", type: "int" },
@@ -1278,6 +1280,23 @@ Preferences.addSetting({
     // We can read the target id to verify the button type and open a dialog
     // with gSubDialog.open
   },
+});
+Preferences.addSetting({
+  id: "ipProtectionAutoStart",
+  deps: ["ipProtectionVisible"],
+  visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
+});
+Preferences.addSetting({
+  id: "ipProtectionAutoStartCheckbox",
+  pref: "browser.ipProtection.autoStartEnabled",
+  deps: ["ipProtectionVisible", "ipProtectionAutoStart"],
+  visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
+});
+Preferences.addSetting({
+  id: "ipProtectionAutoStartPrivateCheckbox",
+  pref: "browser.ipProtection.autoStartPrivateEnabled",
+  deps: ["ipProtectionVisible", "ipProtectionAutoStart"],
+  visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
 });
 
 // Study opt out

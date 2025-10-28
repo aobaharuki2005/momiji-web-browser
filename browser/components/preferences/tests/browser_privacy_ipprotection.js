@@ -7,14 +7,23 @@
 
 const FEATURE_PREF = "browser.ipProtection.variant";
 const MODE_PREF = "browser.ipProtection.exceptionsMode";
+const AUTOSTART_PREF = "browser.ipProtection.autoStartEnabled";
+const AUTOSTART_PRIVATE_PREF = "browser.ipProtection.autoStartPrivateEnabled";
 
 const SECTION_ID = "dataIPProtectionGroup";
 
-async function setupVpnPrefs({ feature, mode = "all" }) {
+async function setupVpnPrefs({
+  feature,
+  mode = "all",
+  autostart = false,
+  autostartprivate = false,
+}) {
   return SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, feature],
       [MODE_PREF, mode],
+      [AUTOSTART_PREF, autostart],
+      [AUTOSTART_PRIVATE_PREF, autostartprivate],
     ],
   });
 }
@@ -48,8 +57,6 @@ add_task(
         is_element_visible(section, "#dataIPProtectionGroup is shown");
       }
     );
-
-    await SpecialPowers.popPrefEnv();
   }
 );
 
@@ -106,8 +113,6 @@ add_task(async function test_exceptions_load_with_all_mode() {
       );
     }
   );
-
-  await SpecialPowers.popPrefEnv();
 });
 
 // Test the site exceptions controls load correctly with mode set to "select"
@@ -163,9 +168,6 @@ add_task(async function test_exceptions_with_select_mode() {
       );
     }
   );
-
-  await SpecialPowers.popPrefEnv();
-  await SpecialPowers.popPrefEnv();
 });
 
 // Test the site exceptions controls and pref update correctly after selecting another mode option.
@@ -219,7 +221,49 @@ add_task(async function test_exceptions_change_mode_and_buttons() {
       Services.prefs.clearUserPref(MODE_PREF);
     }
   );
+});
 
-  await SpecialPowers.popPrefEnv();
-  await SpecialPowers.popPrefEnv();
+// Test that autostart checkboxes exist and map to the correct preferences
+add_task(async function test_autostart_checkboxes() {
+  await setupVpnPrefs({
+    feature: "beta",
+    autostart: true,
+    autostartprivate: true,
+  });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:preferences#privacy" },
+    async function (browser) {
+      let section = browser.contentDocument.getElementById(SECTION_ID);
+      let settingGroup = section.querySelector(
+        `setting-group[groupid="ipprotection"]`
+      );
+      is_element_visible(section, "#dataIPProtectionGroup is shown");
+      is_element_visible(settingGroup, "ipprotection setting group is shown");
+
+      let autoStartSettings = settingGroup?.querySelector(
+        "#ipProtectionAutoStart"
+      );
+      is_element_visible(
+        autoStartSettings,
+        "autoStart settings group is shown"
+      );
+
+      let autoStartCheckbox = autoStartSettings?.querySelector(
+        "#ipProtectionAutoStartCheckbox"
+      );
+      let autoStartPrivateCheckbox = autoStartSettings?.querySelector(
+        "#ipProtectionAutoStartPrivateCheckbox"
+      );
+
+      Assert.ok(
+        autoStartCheckbox.checked,
+        "Autostart checkbox should be checked"
+      );
+      Assert.ok(
+        autoStartPrivateCheckbox.checked,
+        "Autostart in private browsing checkbox should be checked"
+      );
+    }
+  );
 });

@@ -90,6 +90,13 @@ ip-protection-site-exceptions-all-sites-button =
   .label = { -firefox-vpn-brand-name } is off for these websites
   .description = No websites added yet
 
+ip-protection-autostart =
+  .label = Turn on VPN automatically
+ip-protection-autostart-checkbox =
+  .label = When I open { -brand-short-name }
+ip-protection-autostart-private-checkbox =
+  .label = In private windows
+
 # "Select" is an adjective here to describe a setting that allows running the VPN on certain sites only.
 # Not to be confused with the action of selecting a site, which is not at all applicable to this setting.
 ip-protection-site-exceptions-select-sites-radio =
