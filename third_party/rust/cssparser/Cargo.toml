@@ -52,7 +52,7 @@ smallvec = "1.0"
 
 [dependencies.cssparser-macros]
 version = "0.6.1"
-path = "./macros"
+path = "../cssparser-macros"
 
 [dependencies.malloc_size_of]
 version = "0.1"
