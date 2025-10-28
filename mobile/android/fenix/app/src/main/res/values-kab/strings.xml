@@ -80,6 +80,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">%1$s itekkes inagan n tuqqna, azray, akked yisefka n yismal web mi ara tmedleḍ akk accaren usligen. %2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">%1$s itekkes inagan n tuqqna, azray, akked yisefka n yismal web mi ara tmedleḍ akk accaren usligen.</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -497,6 +502,8 @@
   <string name="onboarding_preferences_dialog_crash_reporting_description">Ineqqisen n uɣelluy ttaǧǧan-aɣ ad nesnined syen ad nṣeggem uguren akked yiminig. Ineqqisen zemren ad d-skecmen isefka udmawanen neɣ imḥulfa.</string>
   <!-- Learn more link for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Issin ugar</string>
+  <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_title">%s yesra allus n tnekkra</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">Azen aneqqis n uɣelluy</string>
   <!-- Button text to continue and not send a startup crash report -->
@@ -767,6 +774,8 @@
   <string name="preferences_home_2">Asebter agejdan</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Tignit n usnas</string>
+  <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_select_shortcut">Fren anegzum</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Isillifen</string>
   <!-- Preference for settings related to visual options -->
@@ -1308,6 +1317,8 @@
   <string name="close_tabs_after_one_month">Seld yiwen n waggur</string>
   <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
   <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Amdal awurman n waccaren yeldin</string>
+  <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+  <string name="tab_manager_close_tabs">Mdel</string>
   <!--
     Opening screen
 
@@ -1402,6 +1413,8 @@
   <string name="tab_tray_multiselect_menu_item_bookmark">Ticreḍt n usebter</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">Mdel</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">Mdel accaren i yettwafernen</string>
   <!-- Text shown in the multiselect menu for sharing selected tabs. -->
   <string name="tab_manager_multiselect_menu_item_share">Bḍu</string>
   <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
@@ -1700,6 +1713,8 @@
   <string name="bookmark_add_folder">Rnu akaram</string>
   <!-- Snackbar title that confirms a bookmark was saved into a folder. %s is the name of the folder the bookmark was saved into. -->
   <string name="bookmark_saved_in_folder_snackbar">Yettwasekles deg “%s”</string>
+  <!-- Snackbar title describing failure to edit an existing folder -->
+  <string name="bookmark_error_edit_folder">Yegguma ad yeẓreg ukaram</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">ẒREG</string>
   <!-- Bookmark menu move button -->
@@ -2533,6 +2548,10 @@
   <string name="saved_login_hide_password">Ffer awal uffir</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Kkes asekkeṛ i wakken ad twaliḍ wawalen-ik·im n uεeddi yettwaskelsen</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Serreḥ</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Ffeɣ</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Seɣles awalen-ik·im uffiren i yettwaskelsen</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -2641,6 +2660,8 @@
   <string name="addresses_manage_addresses">Sefrek tansiwin</string>
   <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
   <string name="addresses_name">Isem</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The organization's name related to the address helps in distinguishing addresses used for business or personal purposes. -->
+  <string name="addresses_organization" tools:ignore="UnusedResources">Takebbanit</string>
   <!-- The header for the street address of an address -->
   <string name="addresses_street_address">Tansa n taddart</string>
   <!-- The header for the city of an address -->
@@ -2657,6 +2678,14 @@
   <string name="addresses_phone">Uṭṭun n tiliɣri</string>
   <!-- The header for the email of an address -->
   <string name="addresses_email">Imayl</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Village or Township field, specific to Malaysia is crucial for addresses in rural areas. -->
+  <string name="addresses_village_township" tools:ignore="UnusedResources">Taddart neɣ adrum</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
+  <string name="addresses_island" tools:ignore="UnusedResources">Tigzirt</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Townland field, specific to Ireland is a specific type of land division used in rural areas. -->
+  <string name="addresses_townland" tools:ignore="UnusedResources">Tamurt</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
+  <string name="addresses_district" tools:ignore="UnusedResources">Tamnaḍt</string>
   <!-- The text for the "Save" button for saving an address -->
   <string name="addresses_save_button">Sekles</string>
   <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
