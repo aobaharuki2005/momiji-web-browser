@@ -19,10 +19,9 @@ add_task(async function test_firefox_suggest_with_policy() {
     "about:preferences#search",
     async browser => {
       is(
-        browser.contentDocument.getElementById("firefoxSuggestNonsponsored")
-          .checked,
+        browser.contentDocument.getElementById("firefoxSuggestAll").checked,
         false,
-        "Web suggestions is disabled"
+        "All suggestions are turned off"
       );
       is(
         browser.contentDocument.getElementById("firefoxSuggestSponsored")
@@ -38,10 +37,9 @@ add_task(async function test_firefox_suggest_with_policy() {
         "Suggest online checkbox is checked"
       );
       is(
-        browser.contentDocument.getElementById("firefoxSuggestNonsponsored")
-          .disabled,
+        browser.contentDocument.getElementById("firefoxSuggestAll").disabled,
         true,
-        "Web suggestions is disabled"
+        "All suggestions checkbox is disabled"
       );
       is(
         browser.contentDocument.getElementById("firefoxSuggestSponsored")

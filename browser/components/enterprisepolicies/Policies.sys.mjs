@@ -1629,7 +1629,7 @@ export var Policies = {
         await lazy.QuickSuggest.initPromise;
         if ("WebSuggestions" in param) {
           PoliciesUtils.setDefaultPref(
-            "browser.urlbar.suggest.quicksuggest.nonsponsored",
+            "browser.urlbar.suggest.quicksuggest.all",
             param.WebSuggestions,
             param.Locked
           );

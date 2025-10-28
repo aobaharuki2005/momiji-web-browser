@@ -1341,10 +1341,10 @@ addressbar-locbar-showtrendingsuggestions-option =
     .label = Show trending search suggestions
     .accesskey = t
 
-# Nonsponsored suggestions refers to Firefox Suggest suggestions like Wikipedia.
-addressbar-locbar-suggest-nonsponsored-option =
+# Toggles whether suggestions are obtained from Firefox Suggest or not (local or online).
+addressbar-locbar-suggest-all-option =
   .label = Suggestions from { -brand-short-name }
-addressbar-locbar-suggest-nonsponsored-desc = Get suggestions from the web related to your search.
+addressbar-locbar-suggest-all-option-desc = Get suggestions from the web related to your search.
 
 addressbar-locbar-suggest-sponsored-option =
   .label = Suggestions from sponsors

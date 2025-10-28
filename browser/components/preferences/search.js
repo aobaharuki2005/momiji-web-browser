@@ -39,7 +39,7 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
   { id: "browser.urlbar.suggest.topsites", type: "bool" },
   { id: "browser.urlbar.suggest.engines", type: "bool" },
-  { id: "browser.urlbar.suggest.quicksuggest.nonsponsored", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest.all", type: "bool" },
   { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
   { id: "browser.urlbar.quicksuggest.online.enabled", type: "bool" },
 ]);
@@ -138,6 +138,11 @@ var gSearchPane = {
       privateSuggestsPref.value = privateWindowCheckbox.checked;
     });
 
+    Preferences.addSyncFromPrefListener(
+      document.getElementById("firefoxSuggestAll"),
+      this._onFirefoxSuggestAllChange.bind(this)
+    );
+
     setEventListener(
       "browserSeparateDefaultEngine",
       "command",
@@ -214,6 +219,17 @@ var gSearchPane = {
 
     const vbox = document.getElementById("browserPrivateEngineSelection");
     vbox.hidden = !separateEnabled || !separateDefault;
+  },
+
+  _onFirefoxSuggestAllChange() {
+    var prefValue = Preferences.get(
+      "browser.urlbar.suggest.quicksuggest.all"
+    ).value;
+    document.getElementById("firefoxSuggestSponsored").disabled = !prefValue;
+    document.getElementById("firefoxSuggestOnlineEnabledToggle").disabled =
+      !prefValue;
+    // Don't override pref value in the UI.
+    return undefined;
   },
 
   _onBrowserSeparateDefaultEngineChange(event) {
