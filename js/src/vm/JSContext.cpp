@@ -1177,7 +1177,7 @@ JS_PUBLIC_API bool JS::HasRegularMicroTasks(JSContext* cx) {
 JS_PUBLIC_API JS::MicroTask JS::DequeueNextRegularMicroTask(JSContext* cx) {
   auto& queue = cx->microTaskQueues->microTaskQueue;
   if (!queue.empty()) {
-    auto p = std::move(queue.front());
+    JS::MicroTask p = queue.front();
     queue.popFront();
     return p;
   }

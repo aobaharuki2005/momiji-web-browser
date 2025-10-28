@@ -13,6 +13,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
+#include "js/Value.h"
 #include "js/ValueArray.h"
 
 namespace JS {
@@ -165,4 +166,5 @@ JS_PUBLIC_API bool GetFlowIdFromJSMicroTask(const MicroTask& entry,
                                             uint64_t* uid);
 
 }  // namespace JS
+
 #endif /* js_friend_MicroTask_h */
