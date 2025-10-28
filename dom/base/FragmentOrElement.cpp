@@ -1816,7 +1816,7 @@ bool FragmentOrElement::TextIsOnlyWhitespace() { return false; }
 
 bool FragmentOrElement::ThreadSafeTextIsOnlyWhitespace() const { return false; }
 
-static inline bool IsVoidTag(nsAtom* aTag) {
+static inline bool IsVoidTag(const nsAtom* aTag) {
   static const nsAtom* voidElements[] = {
       nsGkAtoms::area,    nsGkAtoms::base,  nsGkAtoms::basefont,
       nsGkAtoms::bgsound, nsGkAtoms::br,    nsGkAtoms::col,
@@ -1845,7 +1845,7 @@ static inline bool IsVoidTag(nsAtom* aTag) {
 }
 
 /* static */
-bool FragmentOrElement::IsHTMLVoid(nsAtom* aLocalName) {
+bool FragmentOrElement::IsHTMLVoid(const nsAtom* aLocalName) {
   return aLocalName && IsVoidTag(aLocalName);
 }
 
