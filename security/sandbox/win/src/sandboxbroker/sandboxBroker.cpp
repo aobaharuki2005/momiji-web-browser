@@ -1217,12 +1217,6 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       }
     }
 #endif
-
-    // We still currently create IPC named pipes in the content process.
-    result = config->AllowNamedPipes(L"\\\\.\\pipe\\chrome.*");
-    MOZ_RELEASE_ASSERT(
-        sandbox::SBOX_ALL_OK == result,
-        "With these static arguments AddRule should never fail.");
   }
 }
 
