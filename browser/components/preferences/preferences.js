@@ -168,7 +168,7 @@ function srdSectionEnabled(section) {
 const CONFIG_PANES = {
   containers2: {
     parent: "general",
-    l10nId: "containers-header",
+    l10nId: "containers-section-header",
     groupIds: ["containers"],
   },
 };
