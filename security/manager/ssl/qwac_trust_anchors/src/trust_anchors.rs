@@ -5,7 +5,7 @@
 
 pub(crate) struct TrustAnchor {
     bytes: &'static [u8],
-    subject: &'static [u8],
+    subject: (u16, u8),
 }
 
 impl TrustAnchor {
@@ -14,7 +14,7 @@ impl TrustAnchor {
     }
 
     pub fn subject(&self) -> &'static [u8] {
-        self.subject
+        &self.bytes[self.subject.0 as usize..][..self.subject.1 as usize]
     }
 }
 

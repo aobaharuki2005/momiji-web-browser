@@ -14,6 +14,8 @@ use std::path::PathBuf;
 struct TrustAnchor {
     bytes: Vec<u8>,
     subject: Vec<u8>,
+    subject_start: u16,
+    subject_len: u8,
 }
 
 impl PartialOrd for TrustAnchor {
@@ -27,7 +29,23 @@ impl TrustAnchor {
         let (_, _, subject) =
             rsclientcerts_util::read_encoded_certificate_identifiers(bytes.as_slice())
                 .expect("Couldn't decode certificate.");
-        TrustAnchor { bytes, subject }
+        let subject_start = bytes
+            .windows(subject.len())
+            .position(|s| s == subject)
+            .expect("subject should appear in bytes");
+        let subject_start: u16 = subject_start
+            .try_into()
+            .expect("subject start hopefully fits in u16");
+        let subject_len = subject
+            .len()
+            .try_into()
+            .expect("subject length hopefully fits in u8");
+        TrustAnchor {
+            bytes,
+            subject,
+            subject_start,
+            subject_len,
+        }
     }
 }
 
@@ -76,11 +94,6 @@ fn emit_trust_anchors(
             "static {prefix}TRUST_ANCHOR_{index:0>4}_BYTES: &[u8] = &{:?};",
             trust_anchor.bytes
         )?;
-        writeln!(
-            out,
-            "static {prefix}TRUST_ANCHOR_{index:0>4}_SUBJECT_BYTES: &[u8] = &{:?};",
-            trust_anchor.subject
-        )?;
     }
 
     writeln!(
@@ -88,7 +101,7 @@ fn emit_trust_anchors(
         "pub (crate) static {prefix}TRUST_ANCHORS: [TrustAnchor; {num_trust_anchors}] = [",
         num_trust_anchors = trust_anchors.len()
     )?;
-    for index in 0..trust_anchors.len() {
+    for (index, trust_anchor) in trust_anchors.iter().enumerate() {
         writeln!(out, "    TrustAnchor {{")?;
         writeln!(
             out,
@@ -96,7 +109,8 @@ fn emit_trust_anchors(
         )?;
         writeln!(
             out,
-            "        subject: {prefix}TRUST_ANCHOR_{index:0>4}_SUBJECT_BYTES,"
+            "        subject: ({}, {}),",
+            trust_anchor.subject_start, trust_anchor.subject_len
         )?;
         writeln!(out, "    }},")?;
     }
