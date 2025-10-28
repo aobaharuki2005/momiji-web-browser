@@ -8262,6 +8262,14 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
     return false;
   }
 
+  // AccessibleCaretEventHub::HandleEvent may return nsEventStatus_eIgnore to
+  // allow the context menu to appear correctly on desktop Firefox (see
+  // AccessibleCaretEventHub::LongTapState::OnLongTap). When this happens, and
+  // the event hub at the event location is the same as the hub attached to
+  // the currently‑focused window, HandleEvent would be invoked a second time.
+  // Avoid the duplicate call by explicitly checking for this condition.
+  AccessibleCaretEventHub* alreadyHandledEventHub = nullptr;
+
   AutoEventTargetPointResetter autoEventTargetPointResetter(aGUIEvent);
   // First, try the event hub at the event point to handle a long press to
   // select a word in an unfocused window.
@@ -8281,6 +8289,7 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
     if (!eventHub) {
       break;
     }
+    alreadyHandledEventHub = eventHub.get();
 
     *aEventStatus = eventHub->HandleEvent(aGUIEvent);
     if (*aEventStatus != nsEventStatus_eConsumeNoDefault) {
@@ -8310,7 +8319,7 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
 
   RefPtr<AccessibleCaretEventHub> eventHub =
       presShell->GetAccessibleCaretEventHub();
-  if (!eventHub) {
+  if (!eventHub || eventHub.get() == alreadyHandledEventHub) {
     return false;
   }
   *aEventStatus = eventHub->HandleEvent(aGUIEvent);

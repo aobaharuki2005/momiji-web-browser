@@ -45,6 +45,7 @@ import android.os.Debug;
 import android.os.LocaleList;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
@@ -202,12 +203,12 @@ public class GeckoAppShell {
   private static boolean sUseMaxScreenDepth;
   private static Float sScreenRefreshRate;
 
-  /* Is the value in sVibrationEndTime valid? */
-  private static boolean sVibrationMaybePlaying;
-
-  /* Time (in System.nanoTime() units) when the currently-playing vibration
-   * is scheduled to end.  This value is valid only when
-   * sVibrationMaybePlaying is true. */
+  /*
+   * Time (in System.nanoTime() units) when the currently-playing vibration
+   * is scheduled to end. This value could be zero when the vibration is
+   * cancelled. `System.nanoTime() > sVibrationEndTime` means there is not a
+   * playing vibration now.
+   */
   private static long sVibrationEndTime;
 
   private static Sensor gAccelerometerSensor;
@@ -962,16 +963,24 @@ public class GeckoAppShell {
   private static void performHapticFeedback(final boolean aIsLongPress) {
     // Don't perform haptic feedback if a vibration is currently playing,
     // because the haptic feedback will nuke the vibration.
-    if (!sVibrationMaybePlaying || System.nanoTime() >= sVibrationEndTime) {
-      final int[] pattern;
-      if (aIsLongPress) {
-        pattern = new int[] {0, 1, 20, 21};
+    if (System.nanoTime() >= sVibrationEndTime) {
+      final VibrationEffect effect;
+      if (Build.VERSION.SDK_INT >= 29) {
+        // API level 29 introduces pre-defined vibration effects for better
+        // haptic feedback, prefer to use them.
+        if (aIsLongPress) {
+          effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK);
+        } else {
+          effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK);
+        }
       } else {
-        pattern = new int[] {0, 10, 20, 30};
+        if (aIsLongPress) {
+          effect = VibrationEffect.createWaveform(new long[] {0, 1, 20, 21}, -1);
+        } else {
+          effect = VibrationEffect.createWaveform(new long[] {0, 10, 20, 30}, -1);
+        }
       }
-      vibrateOnHapticFeedbackEnabled(pattern);
-      sVibrationMaybePlaying = false;
-      sVibrationEndTime = 0;
+      vibrateOnHapticFeedbackEnabled(effect);
     }
   }
 
@@ -979,26 +988,21 @@ public class GeckoAppShell {
     return (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
   }
 
-  // Helper method to convert integer array to long array.
-  private static long[] convertIntToLongArray(final int[] input) {
-    final long[] output = new long[input.length];
-    for (int i = 0; i < input.length; i++) {
-      output[i] = input[i];
-    }
-    return output;
-  }
-
   // Vibrate only if haptic feedback is enabled.
-  private static void vibrateOnHapticFeedbackEnabled(final int[] milliseconds) {
+  @SuppressLint("MissingPermission")
+  private static void vibrateOnHapticFeedbackEnabled(final VibrationEffect effect) {
     if (Settings.System.getInt(
             getApplicationContext().getContentResolver(),
             Settings.System.HAPTIC_FEEDBACK_ENABLED,
             0)
         > 0) {
-      if (milliseconds.length == 1) {
-        vibrate(milliseconds[0]);
-      } else {
-        vibrate(convertIntToLongArray(milliseconds), -1);
+      // Here, sVibrationEndTime is not set. Compared to other kinds of
+      // vibration, haptic feedbacks are usually shorter and less important,
+      // which means it's ok to "nuke" them.
+      try {
+        vibrator().vibrate(effect);
+      } catch (final SecurityException ignore) {
+        Log.w(LOGTAG, "No VIBRATE permission");
       }
     }
   }
@@ -1007,7 +1011,6 @@ public class GeckoAppShell {
   @WrapForJNI(calledFrom = "gecko")
   private static void vibrate(final long milliseconds) {
     sVibrationEndTime = System.nanoTime() + milliseconds * 1000000;
-    sVibrationMaybePlaying = true;
     try {
       vibrator().vibrate(milliseconds);
     } catch (final SecurityException ignore) {
@@ -1027,7 +1030,6 @@ public class GeckoAppShell {
     }
 
     sVibrationEndTime = System.nanoTime() + vibrationDuration * 1000000;
-    sVibrationMaybePlaying = true;
     try {
       vibrator().vibrate(pattern, repeat);
     } catch (final SecurityException ignore) {
@@ -1038,7 +1040,6 @@ public class GeckoAppShell {
   @SuppressLint("MissingPermission")
   @WrapForJNI(calledFrom = "gecko")
   private static void cancelVibrate() {
-    sVibrationMaybePlaying = false;
     sVibrationEndTime = 0;
     try {
       vibrator().cancel();
