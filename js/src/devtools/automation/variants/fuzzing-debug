@@ -1,6 +1,6 @@
 {
     "configure-args": "--enable-fuzzing --enable-gczeal --enable-debug-symbols --disable-jemalloc --disable-stdcxx-compat --enable-ctypes --enable-nspr-build --enable-rust-simd",
-    "optimize": true,
+    "debug": true,
     "use_minidump": false,
     "env": {
         "LLVM_SYMBOLIZER": "{MOZ_FETCHES_DIR}/llvm-symbolizer/bin/llvm-symbolizer",
