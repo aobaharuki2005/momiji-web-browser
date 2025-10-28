@@ -24,7 +24,6 @@
 #include "mozilla/FStream.h"
 #include "mozilla/GetKnownFolderPath.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/HelperMacros.h"
 #include "mozilla/glue/Debug.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/mscom/ProcessRuntime.h"

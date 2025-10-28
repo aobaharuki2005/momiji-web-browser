@@ -109,7 +109,6 @@ class FrameSkipper {
 #  include <malloc.h>
 #  include "mozilla/Atomics.h"
 #  include "mozilla/StackWalk_windows.h"
-#  include "mozilla/WindowsVersion.h"
 
 #  include <imagehlp.h>
 // We need a way to know if we are building for WXP (or later), as if we are, we

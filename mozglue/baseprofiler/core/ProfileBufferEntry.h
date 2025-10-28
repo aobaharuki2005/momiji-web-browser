@@ -16,7 +16,6 @@
 #include "mozilla/ProfileBufferEntryKinds.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
-#include "mozilla/Vector.h"
 
 #include <string>
 #include <type_traits>
