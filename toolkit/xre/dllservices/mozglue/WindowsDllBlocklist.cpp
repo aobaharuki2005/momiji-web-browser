@@ -332,6 +332,11 @@ static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo& info,
     return false;
   }
 
+  if ((info.mFlags & DllBlockInfoFlags::RDD_PROCESSES_ONLY) &&
+      !(sInitFlags & eDllBlocklistInitFlagIsRDDProcess)) {
+    return false;
+  }
+
   *fVersion = DllBlockInfo::ALL_VERSIONS;
 
   if (info.mMaxVersion != DllBlockInfo::ALL_VERSIONS) {

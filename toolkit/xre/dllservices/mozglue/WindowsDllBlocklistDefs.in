@@ -465,3 +465,20 @@ GMPLUGIN_PROCESSES_TESTS += [
     # DLLs used by TestDllBlocklist* gTests
     DllBlocklistEntry("testdllblocklist_gmpluginprocessonly.dll", ALL_VERSIONS),
 ]
+
+RDD_PROCESSES += [
+    # McAfee/Musarubra DLLs, bug 1994743
+    DllBlocklistEntry("epclient64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("EpMPApi.dll", ALL_VERSIONS),
+    DllBlocklistEntry("EpMPThe.dll", ALL_VERSIONS),
+    DllBlocklistEntry("fcagpph64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("fcagff64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("mfehcinj.dll", ALL_VERSIONS),
+    DllBlocklistEntry("mfehcthe.dll", ALL_VERSIONS),
+    DllBlocklistEntry("mvcairo_x64.dll", ALL_VERSIONS),
+]
+
+RDD_PROCESSES_TESTS += [
+    # DLLs used by TestDllBlocklist* gTests
+    DllBlocklistEntry("testdllblocklist_rddprocessonly.dll", ALL_VERSIONS),
+]

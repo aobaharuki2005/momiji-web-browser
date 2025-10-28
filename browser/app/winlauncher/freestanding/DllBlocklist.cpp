@@ -193,6 +193,11 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
     return BlockAction::Allow;
   }
 
+  if ((aInfo->mFlags & DllBlockInfoFlags::RDD_PROCESSES_ONLY) &&
+      !(gBlocklistInitFlags & eDllBlocklistInitFlagIsRDDProcess)) {
+    return BlockAction::Allow;
+  }
+
   if (aInfo->mMaxVersion == DllBlockInfo::ALL_VERSIONS) {
     return BlockAction::Deny;
   }
