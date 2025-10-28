@@ -667,7 +667,17 @@ class WindowsDllDetourPatcher final
   enum class JumpType { Je, Jne, Jae, Jmp, Call, Js };
 
   static bool GenerateJump(Trampoline<MMPolicyT>& aTramp,
-                           uintptr_t aAbsTargetAddress, const JumpType aType) {
+                           uintptr_t aAbsTargetAddress, const JumpType aType,
+                           const ReadOnlyTargetFunction<MMPolicyT>& origBytes,
+                           uint32_t aBytesToPatch) {
+    if (aAbsTargetAddress >= origBytes.GetBaseAddress() &&
+        aAbsTargetAddress < origBytes.GetBaseAddress() + aBytesToPatch) {
+      // We don't correctly detour jumps or calls with target inside the section
+      // that we are patching. We don't think we need this for any realistic
+      // use case, so just fail here.
+      return false;
+    }
+
     // Near call, absolute indirect, address given in r/m32
     if (aType == JumpType::Call) {
       // CALL [RIP+0]
@@ -1176,8 +1186,8 @@ class WindowsDllDetourPatcher final
           ++origBytes;
           --tramp;  // overwrite the 0x0f we copied above
 
-          if (!GenerateJump(tramp, origBytes.ReadDisp32AsAbsolute(),
-                            jumpType)) {
+          if (!GenerateJump(tramp, origBytes.ReadDisp32AsAbsolute(), jumpType,
+                            origBytes, bytesRequired)) {
             return;
           }
         } else if (*origBytes == 0x88) {
@@ -1186,7 +1196,7 @@ class WindowsDllDetourPatcher final
           --tramp;  // overwrite the 0x0f we copied above
 
           if (!GenerateJump(tramp, origBytes.ReadDisp32AsAbsolute(),
-                            JumpType::Js)) {
+                            JumpType::Js, origBytes, bytesRequired)) {
             return;
           }
         } else {
@@ -1367,7 +1377,8 @@ class WindowsDllDetourPatcher final
 
             foundJmp = (origBytes[1] & 0x38) == 0x20;
             if (!GenerateJump(tramp, origBytes.ChasePointerFromDisp(),
-                              foundJmp ? JumpType::Jmp : JumpType::Call)) {
+                              foundJmp ? JumpType::Jmp : JumpType::Call,
+                              origBytes, bytesRequired)) {
               return;
             }
           } else {
@@ -1539,7 +1550,8 @@ class WindowsDllDetourPatcher final
         ++origBytes;
 
         if (!GenerateJump(tramp, origBytes.ReadDisp32AsAbsolute(),
-                          foundJmp ? JumpType::Jmp : JumpType::Call)) {
+                          foundJmp ? JumpType::Jmp : JumpType::Call, origBytes,
+                          bytesRequired)) {
           return;
         }
       } else if (*origBytes >= 0x73 && *origBytes <= 0x75) {
@@ -1560,8 +1572,8 @@ class WindowsDllDetourPatcher final
 
         origBytes += 2;
 
-        if (!GenerateJump(tramp, origBytes.OffsetToAbsolute(offset),
-                          jumpType)) {
+        if (!GenerateJump(tramp, origBytes.OffsetToAbsolute(offset), jumpType,
+                          origBytes, bytesRequired)) {
           return;
         }
       } else if (*origBytes == 0x78) {
@@ -1578,7 +1590,7 @@ class WindowsDllDetourPatcher final
         origBytes += 2;
 
         if (!GenerateJump(tramp, origBytes.OffsetToAbsolute(offset),
-                          JumpType::Js)) {
+                          JumpType::Js, origBytes, bytesRequired)) {
           return;
         }
       } else if (*origBytes == 0xff) {
@@ -1593,7 +1605,7 @@ class WindowsDllDetourPatcher final
           // FF 15    CALL [disp32]
           origBytes += 2;
           if (!GenerateJump(tramp, origBytes.ChasePointerFromDisp(),
-                            JumpType::Call)) {
+                            JumpType::Call, origBytes, bytesRequired)) {
             return;
           }
         } else if (reg == 4) {
@@ -1606,7 +1618,8 @@ class WindowsDllDetourPatcher final
 
             uintptr_t jmpDest = origBytes.ChasePointerFromDisp();
 
-            if (!GenerateJump(tramp, jmpDest, JumpType::Jmp)) {
+            if (!GenerateJump(tramp, jmpDest, JumpType::Jmp, origBytes,
+                              bytesRequired)) {
               return;
             }
           } else {
@@ -1710,7 +1723,8 @@ class WindowsDllDetourPatcher final
     // if we found a _conditional_ jump or a CALL (or no control operations
     // at all) then we still need to run the rest of aOriginalFunction.
     if (!foundJmp) {
-      if (!GenerateJump(tramp, origBytes.GetAddress(), JumpType::Jmp)) {
+      if (!GenerateJump(tramp, origBytes.GetAddress(), JumpType::Jmp, origBytes,
+                        bytesRequired)) {
         return;
       }
     }
