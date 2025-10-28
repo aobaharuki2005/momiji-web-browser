@@ -112,7 +112,7 @@ export const SingleSelect = ({
               tilebutton,
             }) => {
               const value = id || theme;
-              let inputName = "select-item";
+              let inputName = `select-item-${id}`;
               if (!isSingleSelect) {
                 inputName = category === "theme" ? "theme" : id; // unique names per item are currently used in the wallpaper picker
               }
