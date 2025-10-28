@@ -407,5 +407,3 @@ partial dictionary AuthenticationExtensionsClientInputs {
 partial dictionary AuthenticationExtensionsClientInputsJSON {
   boolean minPinLength;
 };
-
-
