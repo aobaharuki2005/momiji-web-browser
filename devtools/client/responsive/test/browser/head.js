@@ -1003,32 +1003,3 @@ async function waitForDevicePixelRatio(
 
   return dpx;
 }
-
-async function moveMouse(x, y) {
-  info(`Moving mouse to (${x}, ${y})`);
-  await BrowserTestUtils.synthesizeMouse(
-    "html",
-    x,
-    y,
-    { type: "mousemove", isSynthesized: false },
-    gBrowser.selectedBrowser
-  );
-}
-
-async function openEyeDropper(inspector, highlighterTestFront) {
-  info("Opening the eyedropper");
-  const toggleButton = inspector.panelDoc.querySelector(
-    "#inspector-eyedropper-toggle"
-  );
-  toggleButton.click();
-  await TestUtils.waitForCondition(() =>
-    highlighterTestFront.isEyeDropperVisible()
-  );
-}
-
-async function waitForEyedropperColor(highlighterTestFront, expectedColor) {
-  await waitFor(async () => {
-    const color = await highlighterTestFront.getEyeDropperColorValue();
-    return color === expectedColor;
-  }, `Wait for the eyedropper color to be ${expectedColor}`);
-}

@@ -91,8 +91,6 @@ tags = "devtools webextensions"
 
 ["browser_eyedropper.js"]
 
-["browser_eyedropper_desktop.js"]
-
 ["browser_eyedropper_update.js"]
 skip-if = [
   "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && tsan",

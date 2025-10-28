@@ -66,16 +66,23 @@ exports.ScreenshotContentActor = class ScreenshotContentActor extends Actor {
     const windowZoom = getCurrentZoom(window);
     const messages = [];
 
+    // If we're going to take the current view of the page, we don't need to compute a rect,
+    // since it's the default behaviour of drawSnapshot.
+    if (!fullpage && !selector && !nodeActorID) {
+      return {
+        rect: null,
+        messages,
+        windowDpr,
+        windowZoom,
+      };
+    }
+
     let left;
     let top;
     let width;
     let height;
 
-    // If we're going to take the current view of the page (!fullpage && !selector && !nodeActorID),
-    // we could leave the computation of the rect to drawSnapshot since that is its default behaviour.
-    // However, drawSnapshot computes the wrong size for a page without a viewport meta tag in RDM
-    // (Bug 1972770). Until that bug is fixed, we work around it by always computing the rect here.
-    if (fullpage || (!selector && !nodeActorID)) {
+    if (fullpage) {
       // We don't want to render the scrollbars
       const winUtils = window.windowUtils;
       const scrollbarHeight = {};
@@ -84,12 +91,16 @@ exports.ScreenshotContentActor = class ScreenshotContentActor extends Actor {
 
       left = 0;
       top = 0;
-      width = window.innerWidth - scrollbarWidth.value;
-      height = window.innerHeight - scrollbarHeight.value;
-      if (fullpage) {
-        width = width + window.scrollMaxX - window.scrollMinX;
-        height = height + window.scrollMaxY - window.scrollMinY;
-      }
+      width =
+        window.innerWidth +
+        window.scrollMaxX -
+        window.scrollMinX -
+        scrollbarWidth.value;
+      height =
+        window.innerHeight +
+        window.scrollMaxY -
+        window.scrollMinY -
+        scrollbarHeight.value;
     } else if (selector) {
       const node = window.document.querySelector(selector);
 
