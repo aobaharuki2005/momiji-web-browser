@@ -20,6 +20,10 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
     return "flightaware";
   }
 
+  get baseTelemetryType() {
+    return "flights";
+  }
+
   getViewTemplateForDescriptionTop(index) {
     return [
       {

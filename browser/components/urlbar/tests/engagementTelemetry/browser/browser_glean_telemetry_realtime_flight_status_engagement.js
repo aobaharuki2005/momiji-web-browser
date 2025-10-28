@@ -63,10 +63,10 @@ add_task(async function click() {
     assertEngagementTelemetry([
       {
         engagement_type: "click",
-        selected_result: "merino_flightStatus",
+        selected_result: "merino_flights",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,merino_flightStatus",
+        results: "search_engine,merino_flights",
       },
     ]);
     await PlacesUtils.history.clear();
@@ -85,10 +85,10 @@ add_task(async function enter() {
     assertEngagementTelemetry([
       {
         engagement_type: "enter",
-        selected_result: "merino_flightStatus",
+        selected_result: "merino_flights",
         selected_position: 2,
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,merino_flightStatus",
+        results: "search_engine,merino_flights",
       },
     ]);
     await PlacesUtils.history.clear();

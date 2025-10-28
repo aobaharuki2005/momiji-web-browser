@@ -56,8 +56,8 @@ add_task(async function telemetry_type() {
     QuickSuggest.getFeature(
       "FlightStatusSuggestions"
     ).getSuggestionTelemetryType({}),
-    "flightStatus",
-    "Telemetry type should be 'flightStatus'"
+    "flights",
+    "Telemetry type should be 'flights'"
   );
 });
 
@@ -222,7 +222,7 @@ function merinoResult() {
       source: "merino",
       provider: "flightaware",
       dynamicType: "flightStatus",
-      telemetryType: "flightStatus",
+      telemetryType: "flights",
       isSponsored: false,
       flightaware: {
         values: [
