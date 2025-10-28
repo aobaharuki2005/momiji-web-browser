@@ -1726,31 +1726,47 @@ void Navigation::AbortOngoingNavigation(JSContext* aCx,
   }
 
   // Step 7
-  event->AbortController()->Abort(aCx, error);
+  AbortNavigateEvent(aCx, event, error);
+}
 
-  // Step 8
+// https://html.spec.whatwg.org/#abort-a-navigateevent
+void Navigation::AbortNavigateEvent(JSContext* aCx, NavigateEvent* aEvent,
+                                    JS::Handle<JS::Value> aReason) {
+  // 1. Let navigation be event's relevant global object's navigation API.
+  // Omitted since this is called from a Navigation object.
+
+  // 2. Signal abort on event's abort controller given reason.
+  aEvent->AbortController()->Abort(aCx, aReason);
+
+  // 3. Let errorInfo be the result of extracting error information from reason.
+  RootedDictionary<ErrorEventInit> init(aCx);
+  ExtractErrorInformation(aCx, aReason, init);
+
+  // 4. Set navigation's ongoing navigate event to null.
   mOngoingNavigateEvent = nullptr;
 
-  // Step 9
-  RootedDictionary<ErrorEventInit> init(aCx);
-  ExtractErrorInformation(aCx, error, init);
-
-  // Step 10
+  // 5. If navigation's ongoing API method tracker is non-null, then reject the
+  //    finished promise for apiMethodTracker with error.
   if (mOngoingAPIMethodTracker) {
-    mOngoingAPIMethodTracker->RejectFinishedPromise(error);
+    mOngoingAPIMethodTracker->RejectFinishedPromise(aReason);
   }
 
-  // Step 11
+  // 6. Fire an event named navigateerror at navigation using ErrorEvent, with
+  //    additional attributes initialized according to errorInfo.
   FireErrorEvent(u"navigateerror"_ns, init);
 
-  // Step 12
-  if (mTransition) {
-    // Step 12.1
-    mTransition->Finished()->MaybeReject(error);
-
-    // Step 12.2
-    mTransition = nullptr;
+  // 7. If navigation's transition is null, then return.
+  if (!mTransition) {
+    return;
   }
+
+  // 8. Reject navigation's transition's committed promise with error.
+  mTransition->Committed()->MaybeReject(aReason);
+  // 9. Reject navigation's transition's finished promise with error.
+  mTransition->Finished()->MaybeReject(aReason);
+
+  // 10. Set navigation's transition to null.
+  mTransition = nullptr;
 }
 
 // https://html.spec.whatwg.org/#inform-the-navigation-api-about-child-navigable-destruction
