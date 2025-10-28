@@ -17003,6 +17003,15 @@
     type: RelaxedAtomicUint32
     value: 0
     mirror: always
+
+  # Whether \\??\\pipe\\chrome.* rule is added to the sandbox configurations.
+  # We are removing this using a pref because we know that in the past some
+  # injected DLLs have relied on this rule existing for their own pipes.
+  # This gives users a work-around if they have issues.
+-   name: security.sandbox.chrome-pipe-rule.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
