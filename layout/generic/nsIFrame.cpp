@@ -4172,9 +4172,13 @@ static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
   if (aBuilder->IsBackgroundOnly()) {
     return true;
   }
-  if (aBuilder->IsForGenerateGlyphMask() &&
-      (!aFrame->IsTextFrame() && aFrame->IsLeaf())) {
-    return true;
+  if (aBuilder->IsForGenerateGlyphMask()) {
+    if ((aFrame->IsLeaf() && !aFrame->IsTextFrame()) ||
+        aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+      // Only in-flow text frames are painted for background-clip: text mask
+      // generation.
+      return true;
+    }
   }
   if (aBuilder->GetSelectedFramesOnly() && aFrame->IsLeaf() &&
       !aFrame->IsSelected()) {
