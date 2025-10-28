@@ -4367,7 +4367,14 @@ export class BackupService extends EventTarget {
     }
 
     // If the location changed, delete the last backup there if one exists.
-    await this.deleteLastBackup();
+    try {
+      await this.deleteLastBackup();
+    } catch {
+      lazy.logConsole.error(
+        "Error deleting last backup while editing the backup location."
+      );
+      // Fall through so the new backup directory is set.
+    }
     this.setParentDirPath(path);
   }
 
