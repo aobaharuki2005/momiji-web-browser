@@ -455,7 +455,7 @@ fun RadioButtonListItem(
         maxDescriptionLines = maxDescriptionLines,
         enabled = enabled,
         onClick = onClick,
-        beforeListItemAction = if (showButtonAfter) radioButton else EmptyListItemSlot,
+        beforeListItemAction = if (showButtonAfter) EmptyListItemSlot else radioButton,
         afterListItemAction = if (showButtonAfter) radioButton else EmptyListItemSlot,
     )
 }
