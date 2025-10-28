@@ -35,7 +35,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/HashFunctions.h"
 
 #include "nsSerializationHelper.h"
 
