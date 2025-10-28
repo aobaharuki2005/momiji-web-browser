@@ -1142,6 +1142,18 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
             supported = types = ("clang", "gcc")
 
         info = other_c_compiler[0] if other_c_compiler else None
+
+        if (
+            info
+            and info.type == "clang-cl"
+            and "clang-cl" not in supported
+            and "clang" in supported
+        ):
+            dir_path = os.path.dirname(info.compiler)
+            basename = os.path.basename(info.compiler)
+            clang_name = basename.replace("clang-cl", "clang")
+            info = namespace(compiler=os.path.join(dir_path, clang_name), type="clang")
+
         if info and info.type in supported:
             # When getting default C compilers for the host, we prioritize the
             # same compiler as the target C compiler.
