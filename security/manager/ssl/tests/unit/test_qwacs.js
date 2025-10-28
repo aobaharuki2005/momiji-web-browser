@@ -12,8 +12,10 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
 
 async function verify_1_qwacs(filename, expectSuccess, extraCertNames = []) {
   let cert = constructCertFromFile(filename);
-  let result = await certdb.asyncVerify1QWAC(
+  let result = await certdb.asyncVerifyQWAC(
+    Ci.nsIX509CertDB.OneQWAC,
     cert,
+    "example.com",
     extraCertNames.map(filename => constructCertFromFile(filename))
   );
   equal(
@@ -24,6 +26,7 @@ async function verify_1_qwacs(filename, expectSuccess, extraCertNames = []) {
 }
 
 add_task(async function test_verify_1_qwacs() {
+  Services.prefs.clearUserPref("security.qwacs.enable_test_trust_anchors");
   // By default, the QWACs test trust anchors are not used.
   await verify_1_qwacs("test_qwacs/1-qwac.pem", false);
   await verify_1_qwacs("test_qwacs/1-qwac-qevcpw.pem", false);
@@ -47,4 +50,40 @@ add_task(async function test_verify_1_qwacs() {
   await verify_1_qwacs("test_qwacs/wrong-qc-type.pem", false);
   await verify_1_qwacs("test_qwacs/no-1-qwac-policies.pem", false);
   await verify_1_qwacs("test_qwacs/no-policies.pem", false);
+  await verify_1_qwacs("test_qwacs/2-qwac.pem", false);
+});
+
+async function verify_2_qwacs(
+  filename,
+  expectSuccess,
+  hostname = "example.com"
+) {
+  let cert = constructCertFromFile(filename);
+  let result = await certdb.asyncVerifyQWAC(
+    Ci.nsIX509CertDB.TwoQWAC,
+    cert,
+    hostname,
+    []
+  );
+  equal(
+    result,
+    expectSuccess,
+    `${filename} ${expectSuccess ? "should" : "should not"} verify as 2-QWAC`
+  );
+}
+
+add_task(async function test_verify_2_qwacs() {
+  Services.prefs.clearUserPref("security.qwacs.enable_test_trust_anchors");
+  // By default, the QWACs test trust anchors are not used.
+  await verify_2_qwacs("test_qwacs/2-qwac.pem", false);
+
+  Services.prefs.setBoolPref("security.qwacs.enable_test_trust_anchors", true);
+
+  await verify_2_qwacs("test_qwacs/2-qwac.pem", true);
+
+  await verify_2_qwacs("test_qwacs/1-qwac.pem", false);
+  await verify_2_qwacs("test_qwacs/2-qwac-no-eku.pem", false);
+  await verify_2_qwacs("test_qwacs/2-qwac-tls-server-eku.pem", false);
+  await verify_2_qwacs("test_qwacs/2-qwac-multiple-key-purpose-eku.pem", false);
+  await verify_2_qwacs("test_qwacs/2-qwac.pem", false, "example.org");
 });

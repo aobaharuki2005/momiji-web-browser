@@ -29,7 +29,7 @@ keyUsage:[digitalSignature,nonRepudiation,keyEncipherment,
           dataEncipherment,keyAgreement,keyCertSign,cRLSign]
 extKeyUsage:[serverAuth,clientAuth,codeSigning,emailProtection
              nsSGC, # Netscape Server Gated Crypto
-             OCSPSigning,timeStamping]
+             OCSPSigning,timeStamping,tlsBinding]
 subjectAlternativeName:[<dNSName|directoryName|"ip4:"iPV4Address>,...]
 authorityInformationAccess:<OCSP URI>
 certificatePolicies:[<policy OID>,...]
@@ -578,6 +578,8 @@ class Certificate:
             return univ.ObjectIdentifier("1.3.6.1.5.5.7.3.9")
         if keyPurpose == "timeStamping":
             return rfc2459.id_kp_timeStamping
+        if keyPurpose == "tlsBinding":
+            return univ.ObjectIdentifier("0.4.0.194115.1.0")
         raise UnknownKeyPurposeTypeError(keyPurpose)
 
     def addExtKeyUsage(self, extKeyUsage, critical):

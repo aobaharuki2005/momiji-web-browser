@@ -386,14 +386,23 @@ interface nsIX509CertDB : nsISupports {
   [must_use]
   nsIX509Cert getAndroidCertificateFromAlias(in AString alias);
 
+  cenum QWACType : 8 {
+    OneQWAC,
+    TwoQWAC,
+  };
+
   /**
-   * Given a certificate and a list of other certificates that may be useful in
-   * path building, asynchronously determines whether or not the certificate in
-   * question is a 1-QWAC ("qualified website authentication certificate") as
-   * per ETSI TS 119 411-5 and related standards.
+   * For a QWAC type (1-QWAC or 2-QWAC), given a certificate, a hostname, and a
+   * list of other certificates that may be useful in path building,
+   * asynchronously determines whether or not the certificate in question is a
+   * QWAC ("qualified website authentication certificate") of that type as per
+   * ETSI TS 119 411-5 and related standards.
    */
   [implicit_jscontext]
-  Promise asyncVerify1QWAC(in nsIX509Cert cert, in Array<nsIX509Cert> collectedCerts);
+  Promise asyncVerifyQWAC(in nsIX509CertDB_QWACType type,
+                          in nsIX509Cert cert,
+                          in ACString hostname,
+                          in Array<nsIX509Cert> collectedCerts);
 
   /**
    * Verifies that the all the signatures in the PKCS7 CMS message are valid for the associated data.
@@ -422,5 +431,4 @@ interface nsIX509CertDB : nsISupports {
     in Array<Array<uint8_t> > data,
     in nsIX509CertDB_PDFSignatureAlgorithm signatureType
   );
-
 };
