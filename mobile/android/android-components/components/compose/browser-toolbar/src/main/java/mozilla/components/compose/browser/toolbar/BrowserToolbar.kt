@@ -12,7 +12,6 @@ import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
-import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.UrlSuggestionAutocompleted
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.CommitUrl
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
@@ -20,6 +19,7 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.DisplayState
 import mozilla.components.compose.browser.toolbar.store.EditState
 import mozilla.components.compose.browser.toolbar.store.Mode
+import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.lib.state.ext.observeAsComposableState
 
 /**
@@ -39,18 +39,17 @@ fun BrowserToolbar(
 
     if (uiState.isEditMode()) {
         BrowserEditToolbar(
-            query = uiState.editState.query,
+            query = uiState.editState.query.current,
             hint = stringResource(uiState.editState.hint),
             isQueryPrefilled = uiState.editState.isQueryPrefilled,
             usePrivateModeQueries = uiState.editState.isQueryPrivate,
             gravity = uiState.gravity,
-            autocompleteProviders = uiState.editState.autocompleteProviders,
+            suggestion = uiState.editState.suggestion,
             editActionsStart = uiState.editState.editActionsStart,
             editActionsEnd = uiState.editState.editActionsEnd,
             onUrlCommitted = { text -> store.dispatch(CommitUrl(text)) },
-            onUrlEdit = { text -> store.dispatch(SearchQueryUpdated(text)) },
+            onUrlEdit = { store.dispatch(SearchQueryUpdated(it)) },
             onUrlEditAborted = { store.dispatch(SearchAborted) },
-            onUrlSuggestionAutocompleted = { store.dispatch(UrlSuggestionAutocompleted(it)) },
             onInteraction = { store.dispatch(it) },
         )
     } else {
@@ -72,8 +71,8 @@ fun BrowserToolbar(
 private fun BrowserToolbarPreview_EditMode() {
     // Mock edit state
     val editState = EditState(
-        query = "https://www.mozilla.org",
-        autocompleteProviders = emptyList(),
+        query = BrowserToolbarQuery("https://www.mozilla.org"),
+        suggestion = null,
         editActionsStart = emptyList(),
         editActionsEnd = emptyList(),
     )

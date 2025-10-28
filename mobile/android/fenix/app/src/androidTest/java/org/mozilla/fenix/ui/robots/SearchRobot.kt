@@ -22,10 +22,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performTextReplacement
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
-import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.PositionAssertions
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
@@ -33,6 +34,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
+import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_SEARCH_BOX
 import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.SEARCH_SELECTOR
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -62,7 +64,6 @@ import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import mozilla.components.browser.toolbar.R as toolbarR
-import mozilla.components.compose.browser.toolbar.R as composeToolbarR
 import mozilla.components.feature.qr.R as qrR
 
 /**
@@ -476,9 +477,9 @@ class SearchRobot {
         Log.i(TAG, "typeSearch: Waited for device to be idle")
     }
 
-    fun typeSearchWithComposableToolbar(searchTerm: String) {
+    fun typeSearchWithComposableToolbar(composeTestRule: ComposeTestRule, searchTerm: String) {
         Log.i(TAG, "typeSearchWithComposableToolbar: Trying to set the edit mode toolbar text to $searchTerm")
-        onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(replaceText(searchTerm))
+        composeTestRule.onNodeWithTag(ADDRESSBAR_SEARCH_BOX).performTextReplacement(searchTerm)
         Log.i(TAG, "typeSearchWithComposableToolbar: Edit mode toolbar text was set to $searchTerm")
     }
 
@@ -537,12 +538,23 @@ class SearchRobot {
             waitingTime = waitingTimeShort,
         )
 
-    fun verifyTypedToolbarTextWithComposableToolbar(expectedText: String, exists: Boolean) =
-        assertUIObjectExists(
-            itemWithResIdAndText("$packageName:id/mozac_addressbar_search_query_input", expectedText),
-            exists = exists,
-            waitingTime = waitingTimeShort,
+    fun verifyTypedToolbarTextWithComposableToolbar(
+        composeTestRule: ComposeTestRule, expectedText: String, exists: Boolean,
+    ) {
+        Log.i(TAG, "verifyTypedToolbarTextWithComposableToolbar: Verifying that text '$expectedText' exists?: $exists")
+
+        val editToolbar = composeTestRule.onNode(
+            hasTestTag(ADDRESSBAR_SEARCH_BOX) and hasText(expectedText),
+            useUnmergedTree = true,
         )
+
+        when (exists) {
+            true -> editToolbar.assertIsDisplayed()
+            false -> editToolbar.assertIsNotDisplayed()
+        }
+
+        Log.i(TAG, "verifyTypedToolbarTextWithComposableToolbar: Verification successful.")
+    }
 
     fun verifySearchBarPosition(bottomPosition: Boolean) {
         Log.i(TAG, "verifySearchBarPosition: Trying to verify that the search bar is set to bottom: $bottomPosition")
@@ -624,12 +636,18 @@ class SearchRobot {
             return BrowserRobot.Transition()
         }
 
-        fun submitQueryWithComposableToolbar(query: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun submitQueryWithComposableToolbar(
+            composeTestRule: ComposeTestRule,
+            query: String, interact: BrowserRobot.() -> Unit,
+        ): BrowserRobot.Transition {
             Log.i(TAG, "submitQueryWithComposableToolbar: Trying to set toolbar text to: $query and pressing IME action")
-            onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(
-                replaceText(query), pressImeActionButton(),
-            )
+
+            composeTestRule.onNodeWithTag(ADDRESSBAR_SEARCH_BOX).apply {
+                performTextReplacement(query)
+                performImeAction()
+            }
             Log.i(TAG, "submitQueryWithComposableToolbar: Toolbar text was set to: $query and IME action performed")
+
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
