@@ -13,7 +13,7 @@ EXTRA_JS_MODULES.ipprotection += [
     "GuardianClient.sys.mjs",
     "IPPAutoStart.sys.mjs",
     "IPPChannelFilter.sys.mjs",
-    "IPPEnrollHelper.sys.mjs",
+    "IPPEnrollAndEntitleManager.sys.mjs",
     "IPPExceptionsManager.sys.mjs",
     "IPPNetworkErrorObserver.sys.mjs",
     "IPPNimbusHelper.sys.mjs",

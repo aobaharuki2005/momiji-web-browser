@@ -8,7 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
-  IPPEnrollHelper: "resource:///modules/ipprotection/IPPEnrollHelper.sys.mjs",
+  IPPEnrollAndEntitleManager:
+    "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs",
   IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
   IPPNimbusHelper: "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
@@ -74,15 +75,10 @@ export const IPProtectionStates = Object.freeze({
 class IPProtectionServiceSingleton extends EventTarget {
   #state = IPProtectionStates.UNINITIALIZED;
 
-  // Prevents multiple `#updateState()` executions at once.
-  #updating = false;
-
   errors = [];
 
   guardian = null;
   proxyManager = null;
-
-  #entitlement = null;
 
   #helpers = null;
 
@@ -94,24 +90,6 @@ class IPProtectionServiceSingleton extends EventTarget {
    */
   get state() {
     return this.#state;
-  }
-
-  /**
-   * Checks if a user has upgraded.
-   *
-   * @returns {boolean}
-   */
-  get hasUpgraded() {
-    return this.#entitlement?.subscribed;
-  }
-
-  /**
-   * Checks if the service has an entitlement object
-   *
-   * @returns {boolean}
-   */
-  get hasEntitlement() {
-    return !!this.#entitlement;
   }
 
   /**
@@ -160,11 +138,10 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
 
     this.proxyManager = new lazy.IPPProxyManager(this.guardian);
-    this.#entitlement = lazy.IPPStartupCache.entitlement;
 
     this.#helpers.forEach(helper => helper.init());
 
-    await this.#updateState();
+    this.#updateState();
 
     if (lazy.IPPStartupCache.isStartupCompleted) {
       this.initOnStartupCompleted();
@@ -184,7 +161,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
     this.proxyManager?.destroy();
 
-    this.#entitlement = null;
     this.errors = [];
 
     this.#helpers.forEach(helper => helper.uninit());
@@ -207,16 +183,16 @@ class IPProtectionServiceSingleton extends EventTarget {
   async start(userAction = true) {
     await lazy.IPProtectionServerlist.maybeFetchList();
 
-    // Wait for enrollment to finish.
-    const enrollData = await lazy.IPPEnrollHelper.maybeEnroll();
-    if (!enrollData || !enrollData.isEnrolled) {
-      this.setErrorState(enrollData.error || ERRORS.GENERIC);
+    const enrollAndEntitleData =
+      await lazy.IPPEnrollAndEntitleManager.maybeEnrollAndEntitle();
+    if (!enrollAndEntitleData || !enrollAndEntitleData.isEnrolledAndEntitled) {
+      this.setErrorState(enrollAndEntitleData.error || ERRORS.GENERIC);
       return;
     }
 
     // Retry getting state if the previous attempt failed.
     if (this.#state === IPProtectionStates.ERROR) {
-      await this.#updateState();
+      this.#updateState();
     }
 
     if (this.#state !== IPProtectionStates.READY) {
@@ -285,60 +261,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
   }
 
-  /**
-   * Reset the statuses that are set based on a FxA account.
-   */
-  resetAccount() {
-    this.#entitlement = null;
-    lazy.IPPStartupCache.storeEntitlement(null);
-
-    if (this.proxyManager?.active) {
-      this.stop(false);
-    }
-    this.proxyManager.reset();
-  }
-
-  /**
-   * Clear the current entitlement and requests a state update to dispatch
-   * the current hasUpgraded status.
-   *
-   * @returns {Promise<void>}
-   */
-  async refetchEntitlement() {
-    let prevState = this.#state;
-    this.#entitlement = null;
-    lazy.IPPStartupCache.storeEntitlement(null);
-
-    await this.#updateState();
-    // hasUpgraded might not change the state.
-    if (prevState === this.#state) {
-      this.#stateChanged(this.#state, prevState);
-    }
-  }
-
-  /**
-   * Gets the entitlement information for the user.
-   */
-  async #getEntitlement() {
-    if (this.#entitlement) {
-      return this.#entitlement;
-    }
-
-    let { status, entitlement, error } = await this.guardian.fetchUserInfo();
-    lazy.logConsole.debug("Entitlement:", { status, entitlement, error });
-
-    if (error || !entitlement || status != 200) {
-      this.#setErrorState(error || `Status: ${status}`);
-      return null;
-    }
-
-    // Entitlement is set until the user changes or it is cleared to check subscription status.
-    this.#entitlement = entitlement;
-    lazy.IPPStartupCache.storeEntitlement(entitlement);
-
-    return entitlement;
-  }
-
   async startLoginFlow(browser) {
     return lazy.SpecialMessageActions.fxaSignInFlow(SIGNIN_DATA, browser);
   }
@@ -348,16 +270,8 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * Updates will be queued if another update is in progress.
    */
-  async #updateState() {
-    // Wait for any current updates to finish.
-    await this.#updating;
-
-    // Start a new update
-    this.#updating = this.#checkState();
-    let newState = await this.#updating;
-    this.#updating = false;
-
-    this.#setState(newState);
+  #updateState() {
+    this.#setState(this.#checkState());
   }
 
   /**
@@ -365,7 +279,7 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * @returns {Promise<IPProtectionStates>}
    */
-  async #checkState() {
+  #checkState() {
     // The IPP feature is disabled.
     if (!this.featureEnabled) {
       return IPProtectionStates.UNINITIALIZED;
@@ -391,23 +305,8 @@ class IPProtectionServiceSingleton extends EventTarget {
       return IPProtectionStates.ACTIVE;
     }
 
-    // The proxy can be started if the current entitlement is valid.
-    if (this.#entitlement?.uid) {
-      return IPProtectionStates.READY;
-    }
-
-    if (!lazy.IPPEnrollHelper.isEnrolled) {
-      return !eligible
-        ? IPProtectionStates.UNAVAILABLE
-        : IPProtectionStates.READY;
-    }
-
-    // The following are remote authentication checks and should be avoided
-    // whenever possible.
-
-    // Check if the current account can get an entitlement.
-    let entitled = await this.#getEntitlement();
-    if (!entitled && !eligible) {
+    // Check if the current account is enrolled and has an entitlement.
+    if (!lazy.IPPEnrollAndEntitleManager.isEnrolledAndEntitled && !eligible) {
       return IPProtectionStates.UNAVAILABLE;
     }
 

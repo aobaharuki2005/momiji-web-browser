@@ -49,9 +49,9 @@ add_task(async function user_toggle_on_and_off() {
 
   setupService({
     isSignedIn: true,
-    isEnrolled: true,
+    isEnrolledAndEntitled: true,
   });
-  await IPProtectionService.updateState();
+  IPProtectionService.updateState();
   await content.updateComplete;
 
   let toggle = content.connectionToggleEl;
@@ -134,7 +134,7 @@ add_task(async function toggle_off_on_shutdown() {
 
   setupService({
     isSignedIn: true,
-    isEnrolled: true,
+    isEnrolledAndEntitled: true,
   });
   IPProtectionService.updateState();
   await content.updateComplete;

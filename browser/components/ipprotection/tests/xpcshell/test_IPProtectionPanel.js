@@ -12,8 +12,8 @@ const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
 const { IPPSignInWatcher } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );
-const { IPPEnrollHelper } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPEnrollHelper.sys.mjs"
+const { IPPEnrollAndEntitleManager } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
 );
 
 /**
@@ -135,7 +135,9 @@ add_task(async function test_updateState() {
 add_task(async function test_IPProtectionPanel_signedIn() {
   let sandbox = sinon.createSandbox();
   sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
-  sandbox.stub(IPPEnrollHelper, "isEnrolled").get(() => true);
+  sandbox
+    .stub(IPPEnrollAndEntitleManager, "isEnrolledAndEntitled")
+    .get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(true);
@@ -159,7 +161,7 @@ add_task(async function test_IPProtectionPanel_signedIn() {
     "IPProtectionService:StateChanged",
     () => IPProtectionService.state === IPProtectionStates.READY
   );
-  await IPProtectionService.updateState();
+  IPProtectionService.updateState();
 
   await signedInEventPromise;
 
@@ -196,7 +198,7 @@ add_task(async function test_IPProtectionPanel_signedOut() {
     "IPProtectionService:StateChanged",
     () => IPProtectionService.state === IPProtectionStates.UNAVAILABLE
   );
-  await IPProtectionService.updateState();
+  IPProtectionService.updateState();
 
   await signedOutEventPromise;
 
@@ -226,7 +228,9 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
 
   let sandbox = sinon.createSandbox();
   sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
-  sandbox.stub(IPPEnrollHelper, "isEnrolled").get(() => true);
+  sandbox
+    .stub(IPPEnrollAndEntitleManager, "isEnrolledAndEntitled")
+    .get(() => true);
   sandbox
     .stub(IPProtectionService.guardian, "isLinkedToGuardian")
     .resolves(true);
@@ -248,7 +252,7 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
     },
   });
 
-  await IPProtectionService.updateState();
+  IPProtectionService.updateState();
 
   let startedEventPromise = waitForEvent(
     IPProtectionService,

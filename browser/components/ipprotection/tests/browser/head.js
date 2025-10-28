@@ -17,8 +17,8 @@ const { IPPSignInWatcher } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );
 
-const { IPPEnrollHelper } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPEnrollHelper.sys.mjs"
+const { IPPEnrollAndEntitleManager } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
 );
 
 const { HttpServer, HTTP_403 } = ChromeUtils.importESModule(
@@ -223,7 +223,7 @@ let DEFAULT_EXPERIMENT = {
 
 let DEFAULT_SERVICE_STATUS = {
   isSignedIn: false,
-  isEnrolled: false,
+  isEnrolledAndEntitled: false,
   canEnroll: true,
   entitlement: {
     status: 200,
@@ -243,7 +243,7 @@ let DEFAULT_SERVICE_STATUS = {
 /* exported DEFAULT_SERVICE_STATUS */
 
 let STUBS = {
-  isEnrolled: undefined,
+  isEnrolledAndEntitled: undefined,
   enroll: undefined,
   fetchUserInfo: undefined,
   fetchProxyPass: undefined,
@@ -275,7 +275,10 @@ add_setup(async function setupVPN() {
 
 function setupStubs(stubs = STUBS) {
   stubs.isSignedIn = setupSandbox.stub(IPPSignInWatcher, "isSignedIn");
-  stubs.isEnrolled = setupSandbox.stub(IPPEnrollHelper, "isEnrolled");
+  stubs.isEnrolledAndEntitled = setupSandbox.stub(
+    IPPEnrollAndEntitleManager,
+    "isEnrolledAndEntitled"
+  );
   stubs.enroll = setupSandbox.stub(IPProtectionService.guardian, "enroll");
   stubs.fetchUserInfo = setupSandbox.stub(
     IPProtectionService.guardian,
@@ -291,7 +294,7 @@ function setupStubs(stubs = STUBS) {
 function setupService(
   {
     isSignedIn,
-    isEnrolled,
+    isEnrolledAndEntitled,
     canEnroll,
     entitlement,
     proxyPass,
@@ -302,8 +305,8 @@ function setupService(
     stubs.isSignedIn.get(() => isSignedIn);
   }
 
-  if (typeof isEnrolled != "undefined") {
-    stubs.isEnrolled.get(() => isEnrolled);
+  if (typeof isEnrolledAndEntitled != "undefined") {
+    stubs.isEnrolledAndEntitled.get(() => isEnrolledAndEntitled);
   }
 
   if (typeof canEnroll != "undefined") {

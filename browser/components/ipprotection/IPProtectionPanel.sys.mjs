@@ -7,6 +7,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
+  IPPEnrollAndEntitleManager:
+    "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   IPProtectionStates:
@@ -110,8 +112,7 @@ export class IPProtectionPanel {
   constructor(window, variant = "") {
     this.handleEvent = this.#handleEvent.bind(this);
 
-    let { activatedAt: protectionEnabledSince, hasUpgraded } =
-      lazy.IPProtectionService;
+    let { activatedAt: protectionEnabledSince } = lazy.IPProtectionService;
 
     this.state = {
       isSignedOut: !lazy.IPPSignInWatcher.isSignedIn,
@@ -123,7 +124,7 @@ export class IPProtectionPanel {
       },
       error: "",
       variant,
-      hasUpgraded,
+      hasUpgraded: lazy.IPPEnrollAndEntitleManager.hasUpgraded,
     };
 
     if (window) {
@@ -200,7 +201,7 @@ export class IPProtectionPanel {
    */
   showing(panelView) {
     if (this.initiatedUpgrade) {
-      lazy.IPProtectionService.refetchEntitlement();
+      lazy.IPPEnrollAndEntitleManager.refetchEntitlement();
       this.initiatedUpgrade = false;
     }
 
@@ -326,9 +327,17 @@ export class IPProtectionPanel {
       "IPProtectionService:StateChanged",
       this.handleEvent
     );
+    lazy.IPPEnrollAndEntitleManager.addEventListener(
+      "IPPEnrollAndEntitleManager:StateChanged",
+      this.handleEvent
+    );
   }
 
   #removeProxyListeners() {
+    lazy.IPPEnrollAndEntitleManager.removeEventListener(
+      "IPPEnrollAndEntitleManager:StateChanged",
+      this.handleEvent
+    );
     lazy.IPProtectionService.removeEventListener(
       "IPProtectionService:StateChanged",
       this.handleEvent
@@ -354,12 +363,12 @@ export class IPProtectionPanel {
       this.close();
     } else if (event.type == "IPProtection:SignIn") {
       this.startLoginFlow();
-    } else if (event.type == "IPProtectionService:StateChanged") {
-      let {
-        state,
-        activatedAt: protectionEnabledSince,
-        hasUpgraded,
-      } = lazy.IPProtectionService;
+    } else if (
+      event.type == "IPProtectionService:StateChanged" ||
+      event.type === "IPPEnrollAndEntitleManager:StateChanged"
+    ) {
+      let { state, activatedAt: protectionEnabledSince } =
+        lazy.IPProtectionService;
       let hasError =
         state === lazy.IPProtectionStates.ERROR &&
         lazy.IPProtectionService.errors.includes(ERRORS.GENERIC);
@@ -368,7 +377,7 @@ export class IPProtectionPanel {
         isSignedOut: !lazy.IPPSignInWatcher.isSignedIn,
         isProtectionEnabled: !!protectionEnabledSince,
         protectionEnabledSince,
-        hasUpgraded,
+        hasUpgraded: lazy.IPPEnrollAndEntitleManager.hasUpgraded,
         error: hasError ? ERRORS.GENERIC : "",
       });
     }

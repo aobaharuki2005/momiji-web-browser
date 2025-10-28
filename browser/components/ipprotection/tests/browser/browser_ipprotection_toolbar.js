@@ -73,9 +73,9 @@ add_task(async function toolbar_icon_status() {
   let content = panelView.querySelector(IPProtectionPanel.CONTENT_TAGNAME);
   setupService({
     isSignedIn: true,
-    isEnrolled: true,
+    isEnrolledAndEntitled: true,
   });
-  await IPProtectionService.updateState();
+  IPProtectionService.updateState();
   await putServerInRemoteSettings();
   content.requestUpdate();
   await content.updateComplete;
@@ -125,9 +125,9 @@ add_task(async function toolbar_icon_status() {
 add_task(async function toolbar_icon_status_new_window() {
   setupService({
     isSignedIn: true,
-    isEnrolled: true,
+    isEnrolledAndEntitled: true,
   });
-  await IPProtectionService.updateState();
+  IPProtectionService.updateState();
 
   let content = await openPanel();
 
@@ -204,7 +204,7 @@ add_task(async function customize_toolbar_remove_widget() {
 add_task(async function toolbar_placement_customized() {
   setupService({
     isSignedIn: true,
-    isEnrolled: true,
+    isEnrolledAndEntitled: true,
   });
 
   let start = CustomizableUI.getPlacementOfWidget(IPProtectionWidget.WIDGET_ID);

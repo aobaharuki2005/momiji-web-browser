@@ -34,5 +34,4 @@ Events and integration points
 - ``IPProtectionService:StateChanged`` is dispatched on state changes with
   ``detail.state`` and ``detail.prevState``.
 - Helpers can call ``IPProtectionService.updateState()`` to request a recomputation.
-- Public actions: ``start(userAction)``, ``stop(userAction)``,
-  ``resetAccount()``, and ``startLoginFlow(browser)``.
+- Public actions: ``start(userAction)``, ``stop(userAction)``, and ``startLoginFlow(browser)``.

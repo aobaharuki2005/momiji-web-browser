@@ -35,7 +35,7 @@ A diagram of all the main components is the following:
        IPPNimbusHelper["Nimbus Eligibility Helper"]
        IPPAutoStart["Auto-Start Helper"]
        IPPEarlyStartupFilter["Early Startup Filter Helper"]
-       IPPEnrollHelper["Enrollment Helper"]
+       IPPEnrollAndEntitleManager["Enroll & Entitle Manager"]
      end
 
      %% Proxy stack
@@ -137,7 +137,7 @@ IPPNimbusHelper
   Monitors the Nimbus feature (``NimbusFeatures.ipProtection``) and triggers a
   state recomputation on updates.
 
-IPPEnrollHelper
+IPPEnrollAndEntitleManager
   Orchestrates the user enrollment flow with Guardian and updates the service
   when enrollment status changes.
 

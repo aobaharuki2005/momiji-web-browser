@@ -24,7 +24,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 import { IPPAutoStartHelpers } from "resource:///modules/ipprotection/IPPAutoStart.sys.mjs";
-import { IPPEnrollHelper } from "resource:///modules/ipprotection/IPPEnrollHelper.sys.mjs";
+import { IPPEnrollAndEntitleManager } from "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs";
 import { IPPNimbusHelper } from "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs";
 import { IPProtectionServerlist } from "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs";
 import { IPPSignInWatcher } from "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs";
@@ -75,7 +75,7 @@ class UIHelper {
 /**
  * This simple class resets the account data when needed
  */
-class AccountResetHelper {
+class ProxyResetHelper {
   constructor() {
     this.handleEvent = this.#handleEvent.bind(this);
   }
@@ -97,15 +97,19 @@ class AccountResetHelper {
   }
 
   #handleEvent(_event) {
-    // Reset stored account information and stop the proxy,
-    // if the account is no longer available.
+    if (!lazy.IPProtectionService.proxyManager) {
+      return;
+    }
+
     if (
-      (lazy.IPProtectionService.hasEntitlement &&
-        lazy.IPProtectionService.state ===
-          lazy.IPProtectionStates.UNAVAILABLE) ||
+      lazy.IPProtectionService.state === lazy.IPProtectionStates.UNAVAILABLE ||
       lazy.IPProtectionService.state === lazy.IPProtectionStates.UNAUTHENTICATED
     ) {
-      lazy.IPProtectionService.resetAccount();
+      if (lazy.IPProtectionService.proxyManager.active) {
+        lazy.IPProtectionService.proxyManager.stop(false);
+      }
+
+      lazy.IPProtectionService.proxyManager.reset();
     }
   }
 }
@@ -122,7 +126,10 @@ class VPNAddonHelper {
   initOnStartupCompleted() {
     this.addonVPNListener = {
       onInstallEnded(_install, addon) {
-        if (addon.id === VPN_ADDON_ID && lazy.IPProtectionService.hasUpgraded) {
+        if (
+          addon.id === VPN_ADDON_ID &&
+          IPPEnrollAndEntitleManager.hasUpgraded
+        ) {
           // Place the widget in the customization palette.
           lazy.CustomizableUI.removeWidgetFromArea(
             lazy.IPProtectionWidget.WIDGET_ID
@@ -150,10 +157,10 @@ class VPNAddonHelper {
 const IPPHelpers = [
   IPPStartupCache,
   IPPSignInWatcher,
-  IPPEnrollHelper,
   IPProtectionServerlist,
+  IPPEnrollAndEntitleManager,
   new UIHelper(),
-  new AccountResetHelper(),
+  new ProxyResetHelper(),
   new VPNAddonHelper(),
   ...IPPAutoStartHelpers,
   IPPNimbusHelper,
