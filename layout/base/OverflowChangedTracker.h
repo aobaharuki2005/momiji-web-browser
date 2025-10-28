@@ -7,6 +7,7 @@
 #ifndef mozilla_OverflowChangedTracker_h
 #define mozilla_OverflowChangedTracker_h
 
+#include "mozilla/HashTable.h"
 #include "nsContainerFrame.h"
 #include "nsIFrame.h"
 #include "nsTArray.h"
@@ -37,7 +38,7 @@ class OverflowChangedTracker {
   OverflowChangedTracker() : mSubtreeRoot(nullptr) {}
 
   ~OverflowChangedTracker() {
-    NS_ASSERTION(mEntryList.IsEmpty(), "Need to flush before destroying!");
+    NS_ASSERTION(mEntries.empty(), "Need to flush before destroying!");
   }
 
   /**
@@ -55,19 +56,22 @@ class OverflowChangedTracker {
     MOZ_ASSERT(
         aFrame->FrameMaintainsOverflow(),
         "Why add a frame that doesn't maintain overflow to the tracker?");
-    AddFrameWithDepth(aFrame, aFrame->GetDepthInFrameTree(), aChangeKind);
+    if (auto p = mEntries.lookupForAdd(aFrame)) {
+      p->value() = std::max(p->value(), aChangeKind);
+    } else {
+      // Ignore failure to add an entry; this could result in cosmetic
+      // errors but is non-fatal.
+      (void)mEntries.add(p, aFrame, aChangeKind);
+    }
   }
 
   /**
    * Remove a frame.
    */
   void RemoveFrame(nsIFrame* aFrame) {
-    if (mEntryList.IsEmpty()) {
-      return;
+    if (!mEntries.empty()) {
+      mEntries.remove(aFrame);
     }
-
-    mEntryList.RemoveElementSorted(
-        Entry(aFrame, aFrame->GetDepthInFrameTree()));
   }
 
   /**
@@ -86,8 +90,28 @@ class OverflowChangedTracker {
    * us from processing the same frame twice.
    */
   void Flush() {
-    while (!mEntryList.IsEmpty()) {
-      Entry entry = mEntryList.PopLastElement();
+    // Collect all the entries into an array, sort by depth, and process them
+    // from the deepest upwards.
+
+    AutoTArray<Entry, 8> sortedEntries;
+    // We use fallible allocations to avoid crashing on OOM; in the event that
+    // of allocation failure, we'll effectively ignore the entries that weren't
+    // added to the array, which could result in painting glitches but should
+    // be otherwise harmless.
+    (void)sortedEntries.SetCapacity(mEntries.count(), fallible);
+    for (auto iter = mEntries.iter(); !iter.done(); iter.next()) {
+      nsIFrame* frame = iter.get().key();
+      uint32_t depth = frame->GetDepthInFrameTree();
+      ChangeKind kind = iter.get().value();
+      if (!sortedEntries.AppendElement(Entry(frame, depth, kind), fallible)) {
+        break;
+      }
+    }
+    mEntries.clearAndCompact();
+    sortedEntries.Sort();
+
+    while (!sortedEntries.IsEmpty()) {
+      Entry entry = sortedEntries.PopLastElement();
       nsIFrame* frame = entry.mFrame;
 
       bool overflowChanged = false;
@@ -131,13 +155,27 @@ class OverflowChangedTracker {
         // should not add it to the list if that's true.
         if (parent && parent != mSubtreeRoot &&
             parent->FrameMaintainsOverflow()) {
-          AddFrameWithDepth(parent, entry.mDepth - 1, CHILDREN_CHANGED);
+          Entry parentEntry(parent, entry.mDepth - 1, CHILDREN_CHANGED);
+          auto index = sortedEntries.IndexOfFirstElementGt(parentEntry);
+          if (index > 0 && sortedEntries[index - 1] == parentEntry) {
+            // Update the existing entry if the new value is stronger.
+            Entry& existing = sortedEntries[index - 1];
+            existing.mChangeKind =
+                std::max(existing.mChangeKind, CHILDREN_CHANGED);
+          } else {
+            // Add new entry. We ignore failure here; we'll just potentially
+            // miss some updates that ought to happen.
+            // (Allocation failure seems unlikely here anyhow, as we just
+            // popped an element off the array at the top of the loop.)
+            (void)sortedEntries.InsertElementAt(index, parentEntry, fallible);
+          }
         }
       }
     }
   }
 
  private:
+  /* Entry type used for the sorted array in Flush(). */
   struct Entry {
     Entry(nsIFrame* aFrame, uint32_t aDepth,
           ChangeKind aChangeKind = CHILDREN_CHANGED)
@@ -160,38 +198,14 @@ class OverflowChangedTracker {
       return mDepth < aOther.mDepth;
     }
 
-    static int compare(const Entry& aOne, const Entry& aTwo) {
-      if (aOne == aTwo) {
-        return 0;
-      } else if (aOne < aTwo) {
-        return -1;
-      } else {
-        return 1;
-      }
-    }
-
     nsIFrame* mFrame;
     /* Depth in the frame tree */
     uint32_t mDepth;
     ChangeKind mChangeKind;
   };
 
-  void AddFrameWithDepth(nsIFrame* aFrame, uint32_t aDepth,
-                         ChangeKind aChangeKind) {
-    Entry entry(aFrame, aDepth, aChangeKind);
-    auto index = mEntryList.IndexOfFirstElementGt(entry);
-    if (index > 0 && mEntryList[index - 1] == entry) {
-      // Update the existing entry if the new value is stronger.
-      Entry& existing = mEntryList[index - 1];
-      existing.mChangeKind = std::max(existing.mChangeKind, aChangeKind);
-    } else {
-      // Add new entry.
-      mEntryList.InsertElementAt(index, entry);
-    }
-  }
-
-  /* A list of frames to process, sorted by their depth in the frame tree */
-  nsTArray<Entry> mEntryList;
+  /* A collection of frames to be processed. */
+  HashMap<nsIFrame*, ChangeKind> mEntries;
 
   /* Don't update overflow of this frame or its ancestors. */
   const nsIFrame* mSubtreeRoot;
