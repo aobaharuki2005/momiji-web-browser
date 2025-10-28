@@ -88,6 +88,10 @@ already_AddRefed<NavigateEvent> NavigateEvent::Constructor(
 
 NavigationType NavigateEvent::NavigationType() const { return mNavigationType; }
 
+void NavigateEvent::SetNavigationType(enum NavigationType aNavigationType) {
+  mNavigationType = aNavigationType;
+}
+
 already_AddRefed<NavigationDestination> NavigateEvent::Destination() const {
   return do_AddRef(mDestination);
 }

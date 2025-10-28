@@ -96,6 +96,10 @@ void NavigationDestination::GetState(JSContext* aCx,
   }
 }
 
+void NavigationDestination::SetState(nsIStructuredCloneContainer* aState) {
+  mState = aState;
+}
+
 JSObject* NavigationDestination::WrapObject(JSContext* aCx,
                                             JS::Handle<JSObject*> aGivenProto) {
   return NavigationDestination_Binding::Wrap(aCx, this, aGivenProto);
@@ -108,5 +112,7 @@ NavigationHistoryEntry* NavigationDestination::GetEntry() const {
 }
 
 nsIURI* NavigationDestination::GetURL() const { return mURL; }
+
+void NavigationDestination::SetURL(nsIURI* aURI) { mURL = aURI; }
 
 }  // namespace mozilla::dom

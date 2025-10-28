@@ -53,6 +53,9 @@ struct NavigationAPIMethodTracker final : public nsISupports {
   void ResolveFinishedPromise();
   void RejectFinishedPromise(JS::Handle<JS::Value> aException);
   void CreateResult(JSContext* aCx, NavigationResult& aResult);
+  void SetSerializedState(nsIStructuredCloneContainer* aSerializedState) {
+    mSerializedState = aSerializedState;
+  }
 
   Promise* CommittedPromise() { return mCommittedPromise; }
   Promise* FinishedPromise() { return mFinishedPromise; }
@@ -77,6 +80,10 @@ class Navigation final : public DOMEventTargetHelper {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Navigation, DOMEventTargetHelper)
 
   explicit Navigation(nsPIDOMWindowInner* aWindow);
+
+  bool IsNavigation() const override { return true; }
+
+  NS_IMPL_FROMEVENTTARGET_HELPER(Navigation, IsNavigation())
 
   using EventTarget::EventListenerAdded;
   virtual void EventListenerAdded(nsAtom* aType) override;
@@ -184,6 +191,9 @@ class Navigation final : public DOMEventTargetHelper {
       SessionHistoryInfo* aPreviousEntryForActivation,
       NavigationType aNavigationType);
 
+  void SetSerializedStateIntoOngoingAPIMethodTracker(
+      nsIStructuredCloneContainer* aSerializedState);
+
  private:
   friend struct NavigationAPIMethodTracker;
   using UpcomingTraverseAPIMethodTrackers =
@@ -281,6 +291,21 @@ class Navigation final : public DOMEventTargetHelper {
   // https://html.spec.whatwg.org/#navigation-activation
   RefPtr<NavigationActivation> mActivation;
 };
+
+inline Navigation* EventTarget::GetAsNavigation() {
+  return IsNavigation() ? AsNavigation() : nullptr;
+}
+inline const Navigation* EventTarget::GetAsNavigation() const {
+  return IsNavigation() ? AsNavigation() : nullptr;
+}
+inline Navigation* EventTarget::AsNavigation() {
+  MOZ_DIAGNOSTIC_ASSERT(IsNavigation());
+  return static_cast<Navigation*>(this);
+}
+inline const Navigation* EventTarget::AsNavigation() const {
+  MOZ_DIAGNOSTIC_ASSERT(IsNavigation());
+  return static_cast<const Navigation*>(this);
+}
 
 }  // namespace mozilla::dom
 
