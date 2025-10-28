@@ -27,12 +27,11 @@ extern mozilla::LazyLogModule gNavigationAPILog;
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_WITH_JS_MEMBERS(NavigateEvent, Event,
-                                                   (mDestination, mSignal,
-                                                    mFormData, mSourceElement,
-                                                    mNavigationHandlerList,
-                                                    mAbortController),
-                                                   (mInfo))
+NS_IMPL_CYCLE_COLLECTION_INHERITED_WITH_JS_MEMBERS(
+    NavigateEvent, Event,
+    (mDestination, mSignal, mFormData, mSourceElement, mNavigationHandlerList,
+     mAbortController, mNavigationPrecommitHandlerList),
+    (mInfo))
 
 NS_IMPL_ADDREF_INHERITED(NavigateEvent, Event)
 NS_IMPL_RELEASE_INHERITED(NavigateEvent, Event)
@@ -163,21 +162,34 @@ void NavigateEvent::Intercept(const NavigationInterceptOptions& aOptions,
   }
 
   // Step 4
+  if (aOptions.mPrecommitHandler.WasPassed()) {
+    // Step 4.1
+    if (!Cancelable()) {
+      aRv.ThrowInvalidStateError("Event is not cancelable");
+      return;
+    }
+
+    // Step 4.2
+    mNavigationPrecommitHandlerList.AppendElement(
+        aOptions.mPrecommitHandler.InternalValue().get());
+  }
+
+  // Step 5
   MOZ_DIAGNOSTIC_ASSERT(mInterceptionState == InterceptionState::None ||
                         mInterceptionState == InterceptionState::Intercepted);
 
-  // Step 5
+  // Step 6
   mInterceptionState = InterceptionState::Intercepted;
 
-  // Step 6
+  // Step 7
   if (aOptions.mHandler.WasPassed()) {
     mNavigationHandlerList.AppendElement(
         aOptions.mHandler.InternalValue().get());
   }
 
-  // Step 7
+  // Step 8
   if (aOptions.mFocusReset.WasPassed()) {
-    // Step 7.1
+    // Step 8.1
     if (mFocusResetBehavior &&
         *mFocusResetBehavior != aOptions.mFocusReset.Value()) {
       RefPtr<Document> document = GetDocument();
@@ -186,20 +198,20 @@ void NavigateEvent::Intercept(const NavigationInterceptOptions& aOptions,
                                   aOptions.mFocusReset.Value());
     }
 
-    // Step 7.2
+    // Step 8.2
     mFocusResetBehavior = Some(aOptions.mFocusReset.Value());
   }
 
-  // Step 8
+  // Step 9
   if (aOptions.mScroll.WasPassed()) {
-    // Step 8.1
+    // Step 9.1
     if (mScrollBehavior && *mScrollBehavior != aOptions.mScroll.Value()) {
       RefPtr<Document> document = GetDocument();
       MaybeReportWarningToConsole(document, u"scroll"_ns, *mScrollBehavior,
                                   aOptions.mScroll.Value());
     }
 
-    // Step 8.2
+    // Step 9.2
     mScrollBehavior.emplace(aOptions.mScroll.Value());
   }
 }

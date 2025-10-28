@@ -15,6 +15,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/NavigateEventBinding.h"
+#include "mozilla/dom/NavigationPrecommitControllerBinding.h"
 #include "nsCycleCollectionParticipant.h"
 
 namespace mozilla::dom {
@@ -134,6 +135,8 @@ class NavigateEvent final : public Event {
   bool mHasUAVisualTransition = false;
   RefPtr<Element> mSourceElement;
   uint32_t mLastScrollGeneration;
+
+  nsTArray<RefPtr<NavigationPrecommitHandler>> mNavigationPrecommitHandlerList;
 
   // https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-navigateevent-interface:navigateevent-2
   enum InterceptionState mInterceptionState = InterceptionState::None;
