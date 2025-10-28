@@ -6,6 +6,7 @@ package mozilla.components.compose.browser.toolbar.ui
 
 import android.view.inputmethod.EditorInfo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -142,6 +143,38 @@ class InlineAutocompleteTextFieldTest {
         composeTestRule.onNodeWithText("mo").assertIsDisplayed()
         composeTestRule.onNodeWithText("moz").assertDoesNotExist()
         verify(onUrlEdit).invoke(BrowserToolbarQuery(previous = "moz", current = "mo"))
+    }
+
+    @Test
+    fun `WHEN query is empty THE the hint is displayed`() {
+        composeTestRule.setContent {
+            InlineAutocompleteTextField(
+                query = "",
+                hint = "Search or enter address",
+                suggestion = null,
+                showQueryAsPreselected = false,
+                usePrivateModeQueries = false,
+                onUrlEdit = { },
+            )
+        }
+
+        composeTestRule.onNodeWithText("Search or enter address").assertIsDisplayed()
+    }
+
+    @Test
+    fun `WHEN query is not empty THE the hint is not displayed`() {
+        composeTestRule.setContent {
+            InlineAutocompleteTextField(
+                query = "test",
+                hint = "Search or enter address",
+                suggestion = null,
+                showQueryAsPreselected = false,
+                usePrivateModeQueries = false,
+                onUrlEdit = { },
+            )
+        }
+
+        composeTestRule.onNodeWithText("Search or enter address").assertIsNotDisplayed()
     }
 
     @Test

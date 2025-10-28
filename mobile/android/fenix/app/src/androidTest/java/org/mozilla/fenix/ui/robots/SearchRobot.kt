@@ -54,7 +54,6 @@ import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -376,13 +375,15 @@ class SearchRobot {
         assertItemTextEquals(browserToolbarEditView(), expectedText = text)
     }
 
-    fun verifySearchBarPlaceholderWithComposableToolbar(searchHint: String) {
-        assertUIObjectExists(
-            itemWithResIdContainingText(
-                "$packageName:id/mozac_addressbar_search_query_input",
-                searchHint,
-            ),
+    fun verifySearchBarPlaceholderWithComposableToolbar(
+        composeTestRule: ComposeTestRule, searchHint: String,
+    ) {
+        Log.i(TAG, "verifySearchBarPlaceholderWithComposableToolbar: Verify hint is $searchHint")
+        composeTestRule.onNode(
+            hasTestTag(ADDRESSBAR_SEARCH_BOX) and hasText(searchHint),
+            useUnmergedTree = true,
         )
+        Log.i(TAG, "verifySearchBarPlaceholderWithComposableToolbar: Verification successful")
     }
 
     fun verifySearchShortcutListContains(vararg searchEngineName: String, shouldExist: Boolean = true) {

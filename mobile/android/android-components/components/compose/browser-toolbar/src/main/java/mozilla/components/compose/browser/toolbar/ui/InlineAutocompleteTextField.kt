@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -250,6 +251,15 @@ internal fun InlineAutocompleteTextField(
                             LayoutDirection.Rtl -> Alignment.CenterEnd
                         },
                     ) {
+                    if (textFieldValue.text.isEmpty()) {
+                        Text(
+                            text = hint,
+                            style = TextStyle(
+                                fontSize = TEXT_SIZE.sp,
+                                color = AcornTheme.colors.textSecondary,
+                            ),
+                        )
+                    }
                         innerTextField()
                     }
                 },
@@ -332,7 +342,7 @@ private fun InlineAutocompleteTextFieldWithSuggestion() {
         ) {
             InlineAutocompleteTextField(
                 query = "wiki",
-                hint = "preview",
+                hint = "hint",
                 showQueryAsPreselected = false,
                 usePrivateModeQueries = false,
                 suggestion = AutocompleteResult(
@@ -342,6 +352,24 @@ private fun InlineAutocompleteTextFieldWithSuggestion() {
                     "test",
                     1,
                 ),
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun InlineAutocompleteTextFieldWithNoQuery() {
+    AcornTheme {
+        Box(
+            Modifier.background(AcornTheme.colors.layer1),
+        ) {
+            InlineAutocompleteTextField(
+                query = "",
+                hint = "hint",
+                showQueryAsPreselected = false,
+                usePrivateModeQueries = false,
+                suggestion = null,
             )
         }
     }

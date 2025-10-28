@@ -833,7 +833,7 @@ class NavigationToolbarTestCompose : TestSetup() {
             }.openSearchWithComposableToolbar(composeTestRule) {
                 typeSearchWithComposableToolbar(composeTestRule, queryString)
                 clickClearButtonWithComposableToolbar(composeTestRule)
-//                verifySearchBarPlaceholderWithComposableToolbar("Search or enter address")
+                verifySearchBarPlaceholderWithComposableToolbar(composeTestRule, "Search or enter address")
             }
         }
     }
@@ -883,7 +883,7 @@ class NavigationToolbarTestCompose : TestSetup() {
                 typeSearchWithComposableToolbar(composeTestRule, searchTerm = "Mozilla")
                 verifySuggestionsAreNotDisplayed(rule = composeTestRule, "Mozilla")
                 clickClearButtonWithComposableToolbar(composeTestRule)
-//                verifySearchBarPlaceholderWithComposableToolbar("Search history")
+                verifySearchBarPlaceholderWithComposableToolbar(composeTestRule, "Search history")
             }
         }
     }
@@ -903,7 +903,7 @@ class NavigationToolbarTestCompose : TestSetup() {
                 verifyKeyboardVisibility(isExpectedToBeVisible = true)
                 verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = true)
                 verifyVoiceSearchButtonVisibility(enabled = true)
-//                verifySearchBarPlaceholderWithComposableToolbar("Search or enter address")
+                verifySearchBarPlaceholderWithComposableToolbar(composeTestRule, "Search or enter address")
                 typeSearchWithComposableToolbar(composeTestRule, "mozilla ")
                 verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
                 verifyVoiceSearchButtonVisibility(enabled = true)
@@ -943,7 +943,7 @@ class NavigationToolbarTestCompose : TestSetup() {
                 clickSearchSelectorButtonWithComposableToolbar(composeTestRule)
                 selectTemporarySearchMethodWithComposableToolbar(composeTestRule, "Tabs")
                 verifyVoiceSearchButtonWithComposableToolbar(composeTestRule, isDisplayed = true)
-//                verifySearchBarPlaceholderWithComposableToolbar("Search tabs")
+                verifySearchBarPlaceholderWithComposableToolbar(composeTestRule, "Search tabs")
                 verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
             }
         }
@@ -961,7 +961,7 @@ class NavigationToolbarTestCompose : TestSetup() {
                 clickSearchSelectorButtonWithComposableToolbar(composeTestRule)
                 selectTemporarySearchMethodWithComposableToolbar(composeTestRule, "History")
                 verifyVoiceSearchButtonWithComposableToolbar(composeTestRule, isDisplayed = true)
-//                verifySearchBarPlaceholderWithComposableToolbar("Search history")
+                verifySearchBarPlaceholderWithComposableToolbar(composeTestRule, "Search history")
                 verifyScanButtonWithComposableToolbar(composeTestRule, isDisplayed = false)
             }
         }
