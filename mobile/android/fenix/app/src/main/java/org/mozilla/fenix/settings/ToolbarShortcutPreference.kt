@@ -39,8 +39,21 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
 
     private val options: List<Option> by lazy {
         listOf(
-            Option(Keys.NEW_TAB, iconsR.drawable.mozac_ic_plus_24, R.string.home_screen_shortcut_open_new_tab_2),
-            Option(Keys.SHARE, iconsR.drawable.mozac_ic_share_android_24, R.string.browser_menu_share),
+            Option(
+                Keys.NEW_TAB,
+                iconsR.drawable.mozac_ic_plus_24,
+                R.string.toolbar_customize_shortcut_new_tab,
+            ),
+            Option(
+                Keys.SHARE,
+                iconsR.drawable.mozac_ic_share_android_24,
+                R.string.toolbar_customize_shortcut_share,
+            ),
+            Option(
+                Keys.BOOKMARK,
+                iconsR.drawable.mozac_ic_bookmark_24,
+                R.string.toolbar_customize_shortcut_add_bookmark,
+            ),
         )
     }
 
@@ -171,5 +184,6 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
     object Keys {
         const val NEW_TAB = "new_tab"
         const val SHARE = "share"
+        const val BOOKMARK = "bookmark"
     }
 }
