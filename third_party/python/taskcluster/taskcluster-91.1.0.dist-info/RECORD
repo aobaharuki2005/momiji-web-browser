@@ -5,7 +5,7 @@ taskcluster/awsprovisioner.py,sha256=5-orMBEkSvOS-wjJOQEunkteyGhMiOsu1Ho-WsgSr14
 taskcluster/client.py,sha256=UrGUADfM0DXnA7FpDPI8FNaHSVTXGq2_eGim_eHvZxY,26952
 taskcluster/download.py,sha256=XH4qre6luvOYtjKuuwNcUSktL18DrRSpi3QZQ5_pr3I,3709
 taskcluster/ec2manager.py,sha256=D7abzT8gwqNP-p3YsGLRwOf3HH2yVvwvQUIIIsS6YIc,84
-taskcluster/exceptions.py,sha256=KIHs0QkidNfGuMRdF9i7mafjfUAFwXVkDggQuLBO37U,1468
+taskcluster/exceptions.py,sha256=IveRJ_v_cH9NUXItoey_XF10OQyhPl-GrXgVbvzeAms,1900
 taskcluster/github.py,sha256=77_G0H9vKy6-gqKw5vzU_Ny9l4iTQZYvPgVNUtMzc9M,80
 taskcluster/githubevents.py,sha256=fZPDLXcruH1-1V7EVAFxXNh5zabp3ifOvYtqH3Ql6Uo,86
 taskcluster/helper.py,sha256=QeF3HpzXfWlP8hGcqTb2EIcKgLL8vLCwWhv0yZ3FQ54,6595
@@ -85,8 +85,7 @@ taskcluster/generated/aio/queueevents.py,sha256=MXwJLTagKpFi3UMTHIAaP-eAwUT1_e22
 taskcluster/generated/aio/secrets.py,sha256=-ExGBbeHWTwV15en5KUcZ2_AwNyo33dS9c_H0asT4qo,6119
 taskcluster/generated/aio/workermanager.py,sha256=Zpny8YgEVj_ZiYAc48qCIcpJ89j6JVoiV3dmglz9Ae0,21283
 taskcluster/generated/aio/workermanagerevents.py,sha256=LvPBsN-r8XWOX6WL2P-nv7wGnfE1IUk_7HhjvvrTNi0,23771
-taskcluster-91.0.0.dist-info/licenses/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
-taskcluster-91.0.0.dist-info/METADATA,sha256=rsntr8Z8ZWrADpdxuKMKBfAd9Gp9pyh6PODvXXniHyM,25554
-taskcluster-91.0.0.dist-info/WHEEL,sha256=_zCd3N1l69ArxyTb8rzEoP9TpbYXkqRFSNOD5OuxnTs,91
-taskcluster-91.0.0.dist-info/top_level.txt,sha256=Uxnnep-l0fTSnwOst3XkLMA-KHfY5ONwwtSgRmcErXU,12
-taskcluster-91.0.0.dist-info/RECORD,,
+taskcluster-91.1.0.dist-info/METADATA,sha256=KkZ7cNaIbGV9UV3Dg1y4FsxB3J4xB9f_qHI6NUxO2cI,25343
+taskcluster-91.1.0.dist-info/WHEEL,sha256=qtCwoSJWgHk21S1Kb4ihdzI2rlJ1ZKaIurTj_ngOhyQ,87
+taskcluster-91.1.0.dist-info/licenses/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
+taskcluster-91.1.0.dist-info/RECORD,,

@@ -1032,9 +1032,9 @@ slugid==2.0.0 \
     #   mozilla-third-party-python-vendor-dir
     #   taskcluster
     #   taskcluster-taskgraph
-taskcluster==91.0.0 \
-    --hash=sha256:2e21feac068750503a32f4ca4273c904d8455d6b1db8e7295c3aa119af65abf4 \
-    --hash=sha256:c6301a5f730bb65feb2811b1190bef8124af0aeddd931eb877e066202348f5bd
+taskcluster==91.1.0 \
+    --hash=sha256:87cad1b7c54689c5d635a9422c59554cf648014d67af3cb3a30af20bb6f81879 \
+    --hash=sha256:e58fbcdcd33ba9c4a4dbd5a71cb7cbe2dc7f4918cd92025dd53d590ab85f472b
     # via
     #   mozilla-third-party-python-vendor-dir
     #   taskcluster-taskgraph
