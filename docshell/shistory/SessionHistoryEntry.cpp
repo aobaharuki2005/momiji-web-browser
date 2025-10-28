@@ -949,6 +949,30 @@ SessionHistoryEntry::SetDocshellID(const nsID& aDocshellID) {
 }
 
 NS_IMETHODIMP
+SessionHistoryEntry::GetNavigationKey(nsID& aNavigationKey) {
+  aNavigationKey = mInfo->NavigationKey();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::SetNavigationKey(const nsID& aNavigationKey) {
+  mInfo->mNavigationKey = aNavigationKey;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::GetNavigationId(nsID& aNavigationId) {
+  aNavigationId = mInfo->NavigationId();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SessionHistoryEntry::SetNavigationId(const nsID& aNavigationId) {
+  mInfo->mNavigationId = aNavigationId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SessionHistoryEntry::GetIsSrcdocEntry(bool* aIsSrcdocEntry) {
   *aIsSrcdocEntry = mInfo->mSrcdocData.isSome();
   return NS_OK;
