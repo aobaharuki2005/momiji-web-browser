@@ -74,6 +74,21 @@ export class BackupUIParent extends JSWindowActorParent {
   }
 
   /**
+   * Trigger a createBackup call.
+   *
+   * @returns {object} Result of the backup attempt.
+   */
+  async #triggerCreateBackup() {
+    try {
+      await this.#bs.createBackup();
+      return { success: true };
+    } catch (e) {
+      lazy.logConsole.error(`Failed to retrigger backup`, e);
+      return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
+    }
+  }
+
+  /**
    * Handles messages sent by BackupUIChild.
    *
    * @param {ReceiveMessageArgument} message
@@ -89,12 +104,7 @@ export class BackupUIParent extends JSWindowActorParent {
     if (message.name == "RequestState") {
       this.sendState();
     } else if (message.name == "TriggerCreateBackup") {
-      try {
-        await this.#bs.createBackup();
-      } catch (e) {
-        return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
-      }
-      return { success: true };
+      return await this.#triggerCreateBackup();
     } else if (message.name == "EnableScheduledBackups") {
       try {
         let { parentDirPath, password } = message.data;
@@ -201,11 +211,8 @@ export class BackupUIParent extends JSWindowActorParent {
         lazy.logConsole.error(`Failed to enable encryption`, e);
         return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
       }
-      /**
-       * TODO: (Bug 1901640) after enabling encryption, recreate the backup,
-       * this time with sensitive data.
-       */
-      return { success: true };
+
+      return await this.#triggerCreateBackup();
     } else if (message.name == "DisableEncryption") {
       try {
         await this.#bs.disableEncryption();
@@ -214,11 +221,8 @@ export class BackupUIParent extends JSWindowActorParent {
         lazy.logConsole.error(`Failed to disable encryption`, e);
         return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
       }
-      /**
-       * TODO: (Bug 1901640) after disabling encryption, recreate the backup,
-       * this time without sensitive data.
-       */
-      return { success: true };
+
+      return await this.#triggerCreateBackup();
     } else if (message.name == "RerunEncryption") {
       try {
         let { password } = message.data;
