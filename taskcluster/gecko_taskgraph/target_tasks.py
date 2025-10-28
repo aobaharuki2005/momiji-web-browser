@@ -789,7 +789,13 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 if "safari" and "benchmark" in try_name:
                     if "jetstream2" in try_name and "safari" in try_name:
                         return False
-                    return True
+                    # JetStream 3 fails with Safari 18.3 but not Safari-TP.
+                    # See bug 1996277.
+                    if (
+                        "safari-jetstream3" in try_name
+                        and "macosx1500-aarch64" in platform
+                    ):
+                        return True
         # Android selection
         elif accept_raptor_android_build(platform):
             if "hw-s24" in platform and "speedometer3" not in try_name:
