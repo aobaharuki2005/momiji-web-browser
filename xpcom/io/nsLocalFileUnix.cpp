@@ -2906,20 +2906,6 @@ nsLocalFile::GetBundleDisplayName(nsAString& aOutBundleName) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsLocalFile::InitWithFile(nsIFile* aFile) {
-  if (NS_WARN_IF(!aFile)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsAutoCString nativePath;
-  nsresult rv = aFile->GetNativePath(nativePath);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return InitWithNativePath(nativePath);
-}
-
 nsresult NS_NewLocalFileWithFSRef(const FSRef* aFSRef,
                                   nsILocalFileMac** aResult) {
   RefPtr<nsLocalFile> file = new nsLocalFile();
