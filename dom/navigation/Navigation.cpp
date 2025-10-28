@@ -1382,12 +1382,15 @@ bool Navigation::InnerFireNavigateEvent(
     MOZ_DIAGNOSTIC_ASSERT(fromNHE);
 
     // Step 33.4
-    RefPtr<Promise> promise = Promise::CreateInfallible(globalObject);
+    RefPtr<Promise> committedPromise = Promise::CreateInfallible(globalObject);
+    RefPtr<Promise> finishedPromise = Promise::CreateInfallible(globalObject);
     mTransition = MakeAndAddRef<NavigationTransition>(
-        globalObject, aNavigationType, fromNHE, promise);
+        globalObject, aNavigationType, fromNHE, committedPromise,
+        finishedPromise);
 
     // Step 33.5
-    MOZ_ALWAYS_TRUE(promise->SetAnyPromiseIsHandled());
+    MOZ_ALWAYS_TRUE(committedPromise->SetAnyPromiseIsHandled());
+    MOZ_ALWAYS_TRUE(finishedPromise->SetAnyPromiseIsHandled());
 
     switch (aNavigationType) {
       case NavigationType::Traverse:
