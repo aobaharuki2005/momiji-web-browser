@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,7 +75,6 @@ private const val TEXT_HIGHLIGHT_COLOR = "#5C592ACB"
  * @param modifier The [Modifier] to be applied to this text field.
  * @param onUrlEdit Callback invoked when the user types or deletes text, providing [BrowserToolbarQuery]
  * with information about the previous and the new query.
- * @param onUrlEditAborted A callback for when an edit is aborted.
  * @param onUrlCommitted A callback for when the user commits the text via an IME action like "Go".
  */
 @OptIn(ExperimentalComposeUiApi::class) // for InterceptPlatformTextInput
@@ -88,7 +88,6 @@ internal fun InlineAutocompleteTextField(
     usePrivateModeQueries: Boolean,
     modifier: Modifier = Modifier,
     onUrlEdit: (BrowserToolbarQuery) -> Unit = {},
-    onUrlEditAborted: () -> Unit = {},
     onUrlCommitted: (String) -> Unit = {},
 ) {
     var textFieldValue by remember { mutableStateOf(TextFieldValue("")) }
@@ -156,8 +155,8 @@ internal fun InlineAutocompleteTextField(
                 onValueChange = { newValue ->
                     // Remove suggestion if cursor placement changed
                     val onlySelectionChanged = textFieldValue.text == newValue.text &&
-                        textFieldValue.composition == newValue.composition &&
-                        textFieldValue.annotatedString == newValue.annotatedString
+                            textFieldValue.composition == newValue.composition &&
+                            textFieldValue.annotatedString == newValue.annotatedString
                     if (onlySelectionChanged) {
                         currentSuggestion = null
                         textFieldValue = newValue
@@ -169,8 +168,8 @@ internal fun InlineAutocompleteTextField(
                     val originalText = textFieldValue.text
                     val newText = newValue.text
                     val isBackspaceHidingSuggestion = originalText.length == newText.length + 1 &&
-                        originalText.startsWith(newText) &&
-                        currentSuggestion?.text?.startsWith(originalText) == true
+                            originalText.startsWith(newText) &&
+                            currentSuggestion?.text?.startsWith(originalText) == true
                     if (isBackspaceHidingSuggestion) {
                         currentSuggestion = null
                     } else {
@@ -205,6 +204,17 @@ internal fun InlineAutocompleteTextField(
                     keyboardType = KeyboardType.Uri,
                     imeAction = ImeAction.Go,
                     autoCorrectEnabled = !usePrivateModeQueries,
+                ),
+                keyboardActions = KeyboardActions(
+                    onGo = {
+                        keyboardController?.hide()
+                        onUrlCommitted(
+                            when (currentSuggestion?.text?.isNotEmpty()) {
+                                true -> currentSuggestion?.text.orEmpty()
+                                else -> textFieldValue.text
+                            },
+                        )
+                    },
                 ),
                 singleLine = true,
                 visualTransformation = suggestionVisualTransformation,
@@ -251,15 +261,15 @@ internal fun InlineAutocompleteTextField(
                             LayoutDirection.Rtl -> Alignment.CenterEnd
                         },
                     ) {
-                    if (textFieldValue.text.isEmpty()) {
-                        Text(
-                            text = hint,
-                            style = TextStyle(
-                                fontSize = TEXT_SIZE.sp,
-                                color = AcornTheme.colors.textSecondary,
-                            ),
-                        )
-                    }
+                        if (textFieldValue.text.isEmpty()) {
+                            Text(
+                                text = hint,
+                                style = TextStyle(
+                                    fontSize = TEXT_SIZE.sp,
+                                    color = AcornTheme.colors.textSecondary,
+                                ),
+                            )
+                        }
                         innerTextField()
                     }
                 },

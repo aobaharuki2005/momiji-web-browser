@@ -11,7 +11,6 @@ import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAct
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction.PageActionsStartUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserDisplayToolbarAction.PageOriginUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.AutocompleteSuggestionUpdated
-import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.lib.state.Middleware
@@ -143,7 +142,6 @@ private fun reduce(state: BrowserToolbarState, action: BrowserToolbarAction): Br
 
         is EnvironmentRehydrated,
         is EnvironmentCleared,
-        is SearchAborted,
         is BrowserToolbarEvent,
             -> {
             // no-op

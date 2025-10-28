@@ -6,7 +6,6 @@ package org.mozilla.fenix.search
 
 import android.content.Intent
 import android.content.res.Resources
-import android.os.Build
 import android.speech.RecognizerIntent
 import androidx.annotation.VisibleForTesting
 import androidx.core.graphics.drawable.toDrawable
@@ -38,7 +37,6 @@ import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.HintUpdated
-import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchActionsEndUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchActionsStartUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
@@ -204,17 +202,6 @@ class BrowserToolbarSearchMiddleware(
                 }
                 observeQRScannerInputJob?.cancel()
                 observeVoiceInputJob?.cancel()
-            }
-
-            is SearchAborted -> {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                    val sourceTabId = appStore.state.searchState.sourceTabId
-                    appStore.dispatch(SearchEnded)
-                    browserStore.dispatch(EngagementFinished(abandoned = true))
-                    if (sourceTabId != null) {
-                        environment?.navController?.navigate(R.id.browserFragment)
-                    }
-                }
             }
 
             is SearchSelectorClicked -> {

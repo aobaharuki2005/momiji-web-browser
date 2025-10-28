@@ -10,7 +10,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
-import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.CommitUrl
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
@@ -49,7 +48,6 @@ fun BrowserToolbar(
             editActionsEnd = uiState.editState.editActionsEnd,
             onUrlCommitted = { text -> store.dispatch(CommitUrl(text)) },
             onUrlEdit = { store.dispatch(SearchQueryUpdated(it)) },
-            onUrlEditAborted = { store.dispatch(SearchAborted) },
             onInteraction = { store.dispatch(it) },
         )
     } else {

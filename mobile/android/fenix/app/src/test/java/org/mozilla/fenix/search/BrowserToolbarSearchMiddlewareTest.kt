@@ -34,7 +34,6 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButton
 import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.Action.SearchSelectorAction
-import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchAborted
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.CommitUrl
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.EnterEditMode
@@ -107,7 +106,6 @@ import org.mozilla.fenix.telemetry.SOURCE_ADDRESS_BAR
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
-import org.robolectric.annotation.Config
 import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.feature.qr.R as qrR
 import mozilla.components.ui.icons.R as iconsR
@@ -728,54 +726,6 @@ class BrowserToolbarSearchMiddlewareTest {
             expectedSearchSelector(selectedSearchEngine, newSearchEngines),
             store.state.editState.editActionsStart[0] as SearchSelectorAction,
         )
-    }
-
-    @Test
-    @Config(sdk = [33])
-    fun `GIVEN on Android 33+ WHEN the search is aborted THEN don't exit search mode`() {
-        val appStore: AppStore = mockk(relaxed = true) {
-            every { state.searchState } returns AppSearchState.EMPTY
-        }
-        val browserStore: BrowserStore = mockk(relaxed = true)
-        val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
-
-        store.dispatch(SearchAborted)
-
-        verify(exactly = 0) { appStore.dispatch(SearchEnded) }
-        verify(exactly = 0) { browserStore.dispatch(EngagementFinished(abandoned = true)) }
-    }
-
-    @Test
-    @Config(sdk = [32])
-    fun `GIVEN on Android 32- WHEN the search is aborted THEN sync this in application and browser state`() {
-        val appStore: AppStore = mockk(relaxed = true) {
-            every { state.searchState } returns AppSearchState.EMPTY
-        }
-        val browserStore: BrowserStore = mockk(relaxed = true)
-        val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
-
-        store.dispatch(SearchAborted)
-
-        verify { appStore.dispatch(SearchEnded) }
-        verify { browserStore.dispatch(EngagementFinished(abandoned = true)) }
-    }
-
-    @Test
-    @Config(sdk = [32])
-    fun `GIVEN on Android 32- and search was started from a tab WHEN the search is aborted THEN sync this data and navigate back to the tab that started search`() {
-        val appStore: AppStore = mockk(relaxed = true) {
-            every { state.searchState } returns AppSearchState.EMPTY.copy(
-                sourceTabId = "test",
-            )
-        }
-        val browserStore: BrowserStore = mockk(relaxed = true)
-        val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
-
-        store.dispatch(SearchAborted)
-
-        verify { appStore.dispatch(SearchEnded) }
-        verify { browserStore.dispatch(EngagementFinished(abandoned = true)) }
-        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test

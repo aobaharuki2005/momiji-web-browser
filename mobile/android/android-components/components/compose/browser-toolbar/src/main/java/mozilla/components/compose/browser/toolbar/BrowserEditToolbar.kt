@@ -55,8 +55,6 @@ private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(90.dp)
  * the edit toolbar.
  * @param onUrlEdit Will be called when the URL value changes. An updated text value comes as a
  * parameter of the callback.
- * @param onUrlEditAborted Will be called when the user has aborted editing the URL.
- * This callback works only up until Android API 33.
  * @param onUrlCommitted Will be called when the user has finished editing and wants to initiate
  * loading the entered URL. The committed text value comes as a parameter of the callback.
  * @param onInteraction Callback for handling [BrowserToolbarEvent]s on user interactions.
@@ -72,7 +70,6 @@ fun BrowserEditToolbar(
     editActionsStart: List<Action> = emptyList(),
     editActionsEnd: List<Action> = emptyList(),
     onUrlEdit: (BrowserToolbarQuery) -> Unit = {},
-    onUrlEditAborted: () -> Unit = {},
     onUrlCommitted: (String) -> Unit = {},
     onInteraction: (BrowserToolbarEvent) -> Unit,
 ) {
@@ -105,7 +102,6 @@ fun BrowserEditToolbar(
                 modifier = Modifier.weight(1f),
                 onUrlEdit = onUrlEdit,
                 onUrlCommitted = onUrlCommitted,
-                onUrlEditAborted = onUrlEditAborted,
             )
 
             ActionContainer(

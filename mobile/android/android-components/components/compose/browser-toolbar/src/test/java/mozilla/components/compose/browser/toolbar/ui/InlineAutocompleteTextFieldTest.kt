@@ -5,6 +5,9 @@
 package mozilla.components.compose.browser.toolbar.ui
 
 import android.view.inputmethod.EditorInfo
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -12,6 +15,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
@@ -184,5 +188,84 @@ class InlineAutocompleteTextFieldTest {
         NoPersonalizedLearningHelper.addNoPersonalizedLearning(editorInfo)
 
         assertTrue(editorInfo.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0)
+    }
+
+    @Test
+    fun `GIVEN a query but no suggestion WHEN the IME action button is tapped THEN hide the IME and inform callbacks of the query accepted`() {
+        val userQuery = "mozilla"
+        val keyboardController: SoftwareKeyboardController = mock()
+        val urlCommitedCallback: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboardController) {
+                InlineAutocompleteTextField(
+                    query = userQuery,
+                    hint = "test",
+                    suggestion = null, // No suggestion
+                    showQueryAsPreselected = false,
+                    usePrivateModeQueries = false,
+                    onUrlCommitted = urlCommitedCallback,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag(ADDRESSBAR_SEARCH_BOX).performImeAction()
+
+        verify(keyboardController).hide()
+        verify(urlCommitedCallback).invoke(userQuery)
+    }
+
+    @Test
+    fun `GIVEN a query and suggestion WHEN the IME action button is tapped THEN hide the IME and inform callbacks of the suggestion accepted`() {
+        val userQuery = "wiki"
+        val suggestion = AutocompleteResult(
+            input = "wiki",
+            text = "wikipedia.org",
+            url = "https://wikipedia.org",
+            source = "test",
+            totalItems = 1,
+        )
+        val keyboardController: SoftwareKeyboardController = mock()
+        val urlCommitedCallback: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboardController) {
+                InlineAutocompleteTextField(
+                    query = userQuery,
+                    hint = "test",
+                    suggestion = suggestion,
+                    showQueryAsPreselected = false,
+                    usePrivateModeQueries = false,
+                    onUrlCommitted = urlCommitedCallback,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag(ADDRESSBAR_SEARCH_BOX).performImeAction()
+
+        verify(keyboardController).hide()
+        verify(urlCommitedCallback).invoke(suggestion.text)
+    }
+
+    @Test
+    fun `GIVEN no query and no suggestion WHEN the IME action button is tapped THEN hide keyboard and inform callbacks`() {
+        val userQuery = ""
+        val keyboardController: SoftwareKeyboardController = mock()
+        val urlCommitedCallback: (String) -> Unit = mock()
+        composeTestRule.setContent {
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboardController) {
+                InlineAutocompleteTextField(
+                    query = userQuery,
+                    hint = "test",
+                    suggestion = null, // No suggestion
+                    showQueryAsPreselected = false,
+                    usePrivateModeQueries = false,
+                    onUrlCommitted = urlCommitedCallback,
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag(ADDRESSBAR_SEARCH_BOX).performImeAction()
+
+        verify(keyboardController).hide()
+        verify(urlCommitedCallback).invoke(userQuery)
     }
 }

@@ -136,12 +136,6 @@ sealed class BrowserEditToolbarAction : BrowserToolbarAction {
     data class PrivateModeUpdated(val inPrivateMode: Boolean) : BrowserEditToolbarAction()
 
     /**
-     * Indicates that the user has aborted editing the URL/text.
-     * This callback works only up until Android API 33.
-     */
-    data object SearchAborted : BrowserEditToolbarAction()
-
-    /**
      * Indicates that a new autocomplete suggestion is available or that the previous one is not valid anymore.
      *
      * @property autocompletedSuggestion The new autocomplete suggestion. `null` if none is available.
