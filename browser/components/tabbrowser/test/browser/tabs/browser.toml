@@ -580,10 +580,6 @@ tags = "vertical-tabs"
 
 ["browser_tab_preview.js"]
 tags = "vertical-tabs"
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && swgl", # Bug 1980036
-  "os == 'mac' && os_version == '10.15' && processor == 'x86_64'", # Bug 1980036
-]
 
 ["browser_tab_splitview.js"]
 
