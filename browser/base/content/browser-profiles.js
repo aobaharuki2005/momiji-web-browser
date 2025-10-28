@@ -167,7 +167,9 @@ var gProfiles = {
   },
 
   copyProfile() {
-    SelectableProfileService.currentProfile.copyProfile();
+    SelectableProfileService.maybeSetupDataStore().then(() => {
+      SelectableProfileService.currentProfile.copyProfile();
+    });
   },
 
   createNewProfile() {
