@@ -19,17 +19,15 @@ for (const URL of [TEST_URL, TEST_URL2]) {
     const { toolWindow } = ui;
     const { document } = toolWindow;
 
-    const whenScreenshotSucceeded = waitUntilDownload();
-
     info("Click the screenshot button");
     const screenshotButton = document.getElementById("screenshot-button");
     screenshotButton.click();
 
+    const whenScreenshotSucceeded = waitUntilDownload();
+
     const filePath = await whenScreenshotSucceeded;
     const image = new Image();
-    // Bug 1949036: we run this test twice and the 2 screenshot files may have
-    // the same filename, so we need to add a cache buster.
-    image.src = PathUtils.toFileURI(filePath) + `?nocache=${Date.now()}`;
+    image.src = PathUtils.toFileURI(filePath);
 
     await once(image, "load");
 
