@@ -763,40 +763,6 @@ urlbar:
     send_in_pings:
       - urlbar-keyword-exposure
 
-  quick_suggest_contextual_opt_in:
-    type: event
-    description: >
-      Recorded when the contextual opt-in UI is shown or interacted with.
-    extra_keys:
-      interaction:
-        description: >
-          The type of interaction. Possible values: `impression`, `dismiss`,
-          `allow`, `learn_more`.
-        type: string
-      top_position:
-        description: >
-          Whether the opt-in result appeared at the very top of results or at
-          the bottom, after one-off buttons.
-        type: boolean
-      say_hello:
-        description: >
-          Whether the alternative copy was used for the opt-in result.
-        type: boolean
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852058
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1958147
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852058#c2
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866204#c8
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892377#c2
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1912174#c8
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1933863#c5
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
-    expires: 147
-
   pref_max_results:
     lifetime: application
     type: quantity

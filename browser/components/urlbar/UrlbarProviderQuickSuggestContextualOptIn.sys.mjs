@@ -282,8 +282,6 @@ export class UrlbarProviderQuickSuggestContextualOptIn extends UrlbarProvider {
         return;
     }
 
-    this._recordGlean(commandName);
-
     // Remove the result if it shouldn't be active anymore due to above
     // actions.
     if (!this.#shouldDisplayContextualOptIn()) {
@@ -346,12 +344,6 @@ export class UrlbarProviderQuickSuggestContextualOptIn extends UrlbarProvider {
       },
     });
     addCallback(this, result);
-
-    this._recordGlean("impression");
-  }
-
-  _recordGlean(interaction) {
-    Glean.urlbar.quickSuggestContextualOptIn.record({ interaction });
   }
 }
 
