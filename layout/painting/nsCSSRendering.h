@@ -602,7 +602,7 @@ struct nsCSSRendering {
     bool vertical = false;
     bool sidewaysLeft = false;
     gfxTextRun::Range glyphRange;
-    gfxTextRun::PropertyProvider* provider;
+    gfxTextRun::PropertyProvider* provider = nullptr;
   };
 
   struct PaintDecorationLineParams : DecorationRectParams {
@@ -620,6 +620,9 @@ struct nsCSSRendering {
     Float baselineOffset = 0.0f;
     // Whether text-decoration-skip-ink behavior is to be supported.
     bool allowInkSkipping = true;
+
+    mozilla::StyleTextDecorationSkipInk skipInk =
+        mozilla::StyleTextDecorationSkipInk::None;
   };
 
   /**

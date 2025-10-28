@@ -1050,11 +1050,13 @@ class nsTextFrame : public nsIFrame {
    */
   void DrawSelectionDecorations(
       gfxContext* aContext, const LayoutDeviceRect& aDirtyRect,
-      mozilla::SelectionType aSelectionType, nsTextPaintStyle& aTextPaintStyle,
-      const TextRangeStyle& aRangeStyle, const Point& aPt,
-      gfxFloat aICoordInFrame, gfxFloat aWidth, gfxFloat aAscent,
-      const gfxFont::Metrics& aFontMetrics, DrawPathCallbacks* aCallbacks,
-      bool aVertical, mozilla::StyleTextDecorationLine aDecoration);
+      mozilla::SelectionType aSelectionType, nsAtom* aHighlightName,
+      nsTextPaintStyle& aTextPaintStyle, const TextRangeStyle& aRangeStyle,
+      const Point& aPt, gfxFloat aICoordInFrame, gfxFloat aWidth,
+      gfxFloat aAscent, const gfxFont::Metrics& aFontMetrics,
+      DrawPathCallbacks* aCallbacks, bool aVertical,
+      mozilla::StyleTextDecorationLine aDecoration, const Range& aGlyphRange,
+      PropertyProvider* aProvider);
 
   void PaintDecorationLine(const PaintDecorationLineParams& aParams);
   /**
