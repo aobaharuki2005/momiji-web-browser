@@ -13,7 +13,6 @@
 #include "chrome/common/ipc_channel.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "ipc/EnumSerializer.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 

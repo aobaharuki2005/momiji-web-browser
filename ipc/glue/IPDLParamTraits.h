@@ -9,7 +9,6 @@
 
 #include "chrome/common/ipc_message_utils.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
-#include "mozilla/Variant.h"
 
 #include "nsTArray.h"
 

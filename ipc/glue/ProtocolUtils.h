@@ -19,7 +19,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FunctionRef.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MoveOnlyFunction.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"

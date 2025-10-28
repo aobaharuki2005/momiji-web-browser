@@ -13,7 +13,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MoveOnlyFunction.h"
-#include "mozilla/Vector.h"
 #if defined(XP_WIN)
 #  include "mozilla/ipc/Neutering.h"
 #endif  // defined(XP_WIN)

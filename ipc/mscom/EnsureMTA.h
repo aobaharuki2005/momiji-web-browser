@@ -13,7 +13,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/mscom/AgileReference.h"
 #include "mozilla/mscom/Utils.h"
-#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"

@@ -9,7 +9,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/ipc/PIdleSchedulerParent.h"
 #include "mozilla/ipc/SharedMemoryMapping.h"
 #include <bitset>

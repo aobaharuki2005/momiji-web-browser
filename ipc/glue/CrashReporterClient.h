@@ -8,7 +8,6 @@
 #define mozilla_ipc_CrashReporterClient_h
 
 #include "CrashReporter/CrashReporterInitArgs.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsExceptionHandler.h"
