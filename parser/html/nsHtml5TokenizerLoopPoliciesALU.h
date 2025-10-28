@@ -2,32 +2,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5TokenizerLoopPolicies_h
-#define nsHtml5TokenizerLoopPolicies_h
+#ifndef nsHtml5TokenizerLoopPoliciesALU_h
+#define nsHtml5TokenizerLoopPoliciesALU_h
 
 /**
  * This policy does not report tokenizer transitions anywhere and does not
- * track line and column numbers. To be used for innerHTML.
+ * track line and column numbers. To be used for innerHTML. Non-SIMD version.
  */
-struct nsHtml5FastestPolicy {
+struct nsHtml5FastestPolicyALU {
   static const bool reportErrors = false;
-  static int32_t transition(nsHtml5Highlighter* aHighlighter, int32_t aState,
-                            bool aReconsume, int32_t aPos) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static int32_t transition(
+      nsHtml5Highlighter* aHighlighter, int32_t aState, bool aReconsume,
+      int32_t aPos) {
     return aState;
   }
-  static void completedNamedCharacterReference(
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void completedNamedCharacterReference(
       nsHtml5Highlighter* aHighlighter) {}
 
-  static char16_t checkChar(nsHtml5Tokenizer* aTokenizer, char16_t* buf,
-                            int32_t pos) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static int32_t accelerateAdvancementData(
+      nsHtml5Tokenizer* aTokenizer, char16_t* buf, int32_t pos,
+      int32_t endPos) {
+    return 0;
+  }
+
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static char16_t checkChar(
+      nsHtml5Tokenizer* aTokenizer, char16_t* buf, int32_t pos) {
     return buf[pos];
   }
 
-  static void silentCarriageReturn(nsHtml5Tokenizer* aTokenizer) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void silentCarriageReturn(
+      nsHtml5Tokenizer* aTokenizer) {
     aTokenizer->lastCR = true;
   }
 
-  static void silentLineFeed(nsHtml5Tokenizer* aTokenizer) {}
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void silentLineFeed(
+      nsHtml5Tokenizer* aTokenizer) {}
 };
 
 /**
@@ -35,17 +44,24 @@ struct nsHtml5FastestPolicy {
  * when _not_ viewing source and when not parsing innerHTML (or other
  * script execution-preventing fragment).
  */
-struct nsHtml5LineColPolicy {
+struct nsHtml5LineColPolicyALU {
   static const bool reportErrors = false;
-  static int32_t transition(nsHtml5Highlighter* aHighlighter, int32_t aState,
-                            bool aReconsume, int32_t aPos) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static int32_t transition(
+      nsHtml5Highlighter* aHighlighter, int32_t aState, bool aReconsume,
+      int32_t aPos) {
     return aState;
   }
-  static void completedNamedCharacterReference(
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void completedNamedCharacterReference(
       nsHtml5Highlighter* aHighlighter) {}
 
-  static char16_t checkChar(nsHtml5Tokenizer* aTokenizer, char16_t* buf,
-                            int32_t pos) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static int32_t accelerateAdvancementData(
+      nsHtml5Tokenizer* aTokenizer, char16_t* buf, int32_t pos,
+      int32_t endPos) {
+    return 0;
+  }
+
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static char16_t checkChar(
+      nsHtml5Tokenizer* aTokenizer, char16_t* buf, int32_t pos) {
     // The name of this method comes from the validator.
     // We aren't checking a char here. We read the next
     // UTF-16 code unit and, before returning it, adjust
@@ -80,12 +96,14 @@ struct nsHtml5LineColPolicy {
     return c;
   }
 
-  static void silentCarriageReturn(nsHtml5Tokenizer* aTokenizer) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void silentCarriageReturn(
+      nsHtml5Tokenizer* aTokenizer) {
     aTokenizer->nextCharOnNewLine = true;
     aTokenizer->lastCR = true;
   }
 
-  static void silentLineFeed(nsHtml5Tokenizer* aTokenizer) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void silentLineFeed(
+      nsHtml5Tokenizer* aTokenizer) {
     aTokenizer->nextCharOnNewLine = true;
   }
 };
@@ -94,30 +112,39 @@ struct nsHtml5LineColPolicy {
  * This policy reports the tokenizer transitions to a highlighter. To be used
  * when viewing source.
  */
-struct nsHtml5ViewSourcePolicy {
+struct nsHtml5ViewSourcePolicyALU {
   static const bool reportErrors = true;
-  static int32_t transition(nsHtml5Highlighter* aHighlighter, int32_t aState,
-                            bool aReconsume, int32_t aPos) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static int32_t transition(
+      nsHtml5Highlighter* aHighlighter, int32_t aState, bool aReconsume,
+      int32_t aPos) {
     return aHighlighter->Transition(aState, aReconsume, aPos);
   }
-  static void completedNamedCharacterReference(
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void completedNamedCharacterReference(
       nsHtml5Highlighter* aHighlighter) {
     aHighlighter->CompletedNamedCharacterReference();
   }
 
-  static char16_t checkChar(nsHtml5Tokenizer* aTokenizer, char16_t* buf,
-                            int32_t pos) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static int32_t accelerateAdvancementData(
+      nsHtml5Tokenizer* aTokenizer, char16_t* buf, int32_t pos,
+      int32_t endPos) {
+    return 0;
+  }
+
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static char16_t checkChar(
+      nsHtml5Tokenizer* aTokenizer, char16_t* buf, int32_t pos) {
     return buf[pos];
   }
 
-  static void silentCarriageReturn(nsHtml5Tokenizer* aTokenizer) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void silentCarriageReturn(
+      nsHtml5Tokenizer* aTokenizer) {
     aTokenizer->line++;
     aTokenizer->lastCR = true;
   }
 
-  static void silentLineFeed(nsHtml5Tokenizer* aTokenizer) {
+  MOZ_ALWAYS_INLINE_EVEN_DEBUG static void silentLineFeed(
+      nsHtml5Tokenizer* aTokenizer) {
     aTokenizer->line++;
   }
 };
 
-#endif  // nsHtml5TokenizerLoopPolicies_h
+#endif  // nsHtml5TokenizerLoopPoliciesALU_h
