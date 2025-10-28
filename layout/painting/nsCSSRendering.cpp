@@ -3990,35 +3990,25 @@ static void SkipInk(nsIFrame* aFrame, DrawTarget& aDrawTarget,
   nsCSSRendering::PaintDecorationLineParams clipParams = aParams;
   const unsigned length = aIntercepts.Length();
 
-  // For selections, this points to the selection start, which may not be at the
-  // line start.
-  const Float relativeTextStart =
-      aParams.vertical ? aParams.pt.y : aParams.pt.x;
-  const Float relativeTextEnd = relativeTextStart + aParams.lineSize.width;
-  // The actual line start position needs to be adjusted by the offset of the
-  // start position in the frame, because the intercept positions are based off
-  // the whole text run.
-  const Float absoluteLineStart = relativeTextStart - aParams.icoordInFrame;
+  Float lineStart = aParams.vertical ? aParams.pt.y : aParams.pt.x;
+  Float lineEnd = lineStart + aParams.lineSize.width;
 
   // Compute the min/max positions based on trim.
-  const Float trimLineDrawAreaStart =
-      relativeTextStart + (aParams.trimLeft - aPadding);
-  const Float trimLineDrawAreaEnd =
-      relativeTextEnd - (aParams.trimRight - aPadding);
+  const Float trimLineStart = lineStart + (aParams.trimLeft - aPadding);
+  const Float trimLineEnd = lineEnd - (aParams.trimRight - aPadding);
 
   for (unsigned i = 0; i <= length; i += 2) {
     // Handle start/end edge cases and set up general case.
     // While we use the trim start/end values, it is possible the trim cuts
     // of the first intercept and into the next, so we will need to clamp
     // the dimensions in the other case too.
-    SkScalar startIntercept = trimLineDrawAreaStart;
+    SkScalar startIntercept = trimLineStart;
     if (i > 0) {
-      startIntercept =
-          std::max(aIntercepts[i - 1] + absoluteLineStart, startIntercept);
+      startIntercept = std::max(aIntercepts[i - 1] + lineStart, startIntercept);
     }
-    SkScalar endIntercept = trimLineDrawAreaEnd;
+    SkScalar endIntercept = trimLineEnd;
     if (i < length) {
-      endIntercept = std::min(aIntercepts[i] + absoluteLineStart, endIntercept);
+      endIntercept = std::min(aIntercepts[i] + lineStart, endIntercept);
     }
 
     // remove padding at both ends for width
@@ -4039,10 +4029,9 @@ static void SkipInk(nsIFrame* aFrame, DrawTarget& aDrawTarget,
     // padding; snap the rect edges to device pixels for consistent rendering
     // of dots across separate fragments of a dotted line.
     if (aParams.vertical) {
-      clipParams.pt.y =
-          aParams.sidewaysLeft
-              ? relativeTextEnd - (endIntercept - relativeTextStart) + aPadding
-              : startIntercept + aPadding;
+      clipParams.pt.y = aParams.sidewaysLeft
+                            ? lineEnd - (endIntercept - lineStart) + aPadding
+                            : startIntercept + aPadding;
       aRect.y = std::floor(clipParams.pt.y + 0.5);
       aRect.SetBottomEdge(
           std::floor(clipParams.pt.y + clipParams.lineSize.width + 0.5));
@@ -4078,8 +4067,10 @@ void nsCSSRendering::PaintDecorationLine(
 
   // Check if decoration line will skip past ascenders/descenders
   // text-decoration-skip-ink only applies to overlines/underlines
+  mozilla::StyleTextDecorationSkipInk skipInk =
+      aFrame->StyleText()->mTextDecorationSkipInk;
   bool skipInkEnabled =
-      aParams.skipInk != mozilla::StyleTextDecorationSkipInk::None &&
+      skipInk != mozilla::StyleTextDecorationSkipInk::None &&
       aParams.decoration != StyleTextDecorationLine::LINE_THROUGH &&
       aParams.allowInkSkipping && aFrame->IsTextFrame();
 
@@ -4139,7 +4130,7 @@ void nsCSSRendering::PaintDecorationLine(
     if (iter.GlyphRun()->mOrientation ==
             mozilla::gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_UPRIGHT ||
         (iter.GlyphRun()->mIsCJK &&
-         aParams.skipInk == mozilla::StyleTextDecorationSkipInk::Auto)) {
+         skipInk == mozilla::StyleTextDecorationSkipInk::Auto)) {
       // We don't support upright text in vertical modes currently
       // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1572294),
       // but we do need to update textPos so that following runs will be
