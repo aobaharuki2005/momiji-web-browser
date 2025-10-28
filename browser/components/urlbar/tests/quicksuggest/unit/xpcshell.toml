@@ -76,4 +76,6 @@ requesttimeoutfactor = 2  # Slow on Linux and Windows
 
 ["test_weather.js"]
 
+["test_weather_geolocation.js"]
+
 ["test_weather_keywords.js"]

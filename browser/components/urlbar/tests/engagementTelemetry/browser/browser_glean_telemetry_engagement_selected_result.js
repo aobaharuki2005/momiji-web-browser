@@ -487,9 +487,11 @@ add_task(async function selected_result_weather() {
 
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
   await MerinoTestUtils.initWeather();
+  const cleanupGeolocation = GeolocationTestUtils.stubGeolocation();
 
-  let provider = "UrlbarProviderQuickSuggest";
   await doTest(async () => {
+    let provider = "UrlbarProviderQuickSuggest";
+
     await openPopup("weather");
     await selectRowByProvider(provider);
     await doEnter();
@@ -504,6 +506,7 @@ add_task(async function selected_result_weather() {
     ]);
   });
 
+  await cleanupGeolocation();
   await cleanupQuickSuggest();
   await SpecialPowers.popPrefEnv();
 });
