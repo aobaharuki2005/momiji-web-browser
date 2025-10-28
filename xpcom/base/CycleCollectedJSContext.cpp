@@ -1207,6 +1207,11 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
 
           mSuppressedMicroTaskList->mSuppressedMicroTaskRunnables.get().append(
               std::move(job.get()));
+        } else {
+          // Consume the runnable & simultaneously drop a ref count.
+          RefPtr<MicroTaskRunnable> refToDrop(
+              MaybeUnwrapTaskToOwnedRunnable(&job));
+          MOZ_ASSERT(refToDrop);
         }
       } else {
         // MG:XXX: It's sort of too bad that we can't handle the JobQueueIsEmpty
