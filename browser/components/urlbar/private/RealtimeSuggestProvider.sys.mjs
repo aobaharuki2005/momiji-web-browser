@@ -43,7 +43,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
-  getViewUpdateForValues(_values) {
+  getViewUpdateForValue(_index, _value) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
@@ -447,30 +447,29 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       return null;
     }
 
-    return mergeObjects(
-      Object.assign(
-        {
-          root: {
-            dataset: {
-              // This `url` or `query` will be used when there's only one value.
-              url: values[0].url,
-              query: values[0].query,
-            },
-          },
+    let update = {
+      root: {
+        dataset: {
+          // This `url` or `query` will be used when there's only one value.
+          url: values[0].url,
+          query: values[0].query,
         },
-        ...values.flatMap((v, i) => ({
-          [`item_${i}`]: {
-            dataset: {
-              // These `url` or `query`s will be used when there are multiple
-              // values.
-              url: v.url,
-              query: v.query,
-            },
-          },
-        }))
-      ),
-      this.getViewUpdateForValues(values)
-    );
+      },
+    };
+
+    for (let i = 0; i < values.length; i++) {
+      let value = values[i];
+      Object.assign(update, this.getViewUpdateForValue(i, value));
+
+      // These `url` or `query`s will be used when there are multiple values.
+      let itemName = `item_${i}`;
+      update[itemName] ??= {};
+      update[itemName].dataset ??= {};
+      update[itemName].dataset.url ??= value.url;
+      update[itemName].dataset.query ??= value.query;
+    }
+
+    return update;
   }
 
   getResultCommands(result) {
@@ -633,26 +632,4 @@ export class RealtimeSuggestProvider extends SuggestProvider {
         : nimbusValue;
     return Math.max(minLength, 0);
   }
-}
-
-function mergeObjects(dest, source) {
-  if (!source || typeof source != "object") {
-    return source;
-  }
-
-  if (Array.isArray(source)) {
-    if (!Array.isArray(dest)) {
-      dest = [];
-    }
-    dest.push(...source);
-    return dest;
-  }
-
-  if (!dest || typeof dest != "object") {
-    dest = {};
-  }
-  for (let [key, value] of Object.entries(source)) {
-    dest[key] = mergeObjects(dest[key], value);
-  }
-  return dest;
 }

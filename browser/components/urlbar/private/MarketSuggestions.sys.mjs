@@ -95,64 +95,59 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewUpdateForValues(values) {
-    return Object.assign(
-      {},
-      ...values.flatMap((v, i) => {
-        let arrowImageUri;
-        let changeDescription;
-        let changePercent = parseFloat(v.todays_change_perc);
-        if (changePercent < 0) {
-          changeDescription = "down";
-          arrowImageUri = "chrome://browser/skin/urlbar/market-down.svg";
-        } else if (changePercent > 0) {
-          changeDescription = "up";
-          arrowImageUri = "chrome://browser/skin/urlbar/market-up.svg";
-        } else {
-          changeDescription = "unchanged";
-          arrowImageUri = "chrome://browser/skin/urlbar/market-unchanged.svg";
-        }
+  getViewUpdateForValue(i, v) {
+    let arrowImageUri;
+    let changeDescription;
+    let changePercent = parseFloat(v.todays_change_perc);
+    if (changePercent < 0) {
+      changeDescription = "down";
+      arrowImageUri = "chrome://browser/skin/urlbar/market-down.svg";
+    } else if (changePercent > 0) {
+      changeDescription = "up";
+      arrowImageUri = "chrome://browser/skin/urlbar/market-up.svg";
+    } else {
+      changeDescription = "unchanged";
+      arrowImageUri = "chrome://browser/skin/urlbar/market-unchanged.svg";
+    }
 
-        let imageUri = v.image_url;
-        let isImageAnArrow = false;
-        if (!imageUri) {
-          isImageAnArrow = true;
-          imageUri = arrowImageUri;
-        }
+    let imageUri = v.image_url;
+    let isImageAnArrow = false;
+    if (!imageUri) {
+      isImageAnArrow = true;
+      imageUri = arrowImageUri;
+    }
 
-        return {
-          [`item_${i}`]: {
-            attributes: {
-              change: changeDescription,
-            },
-          },
-          [`image_container_${i}`]: {
-            attributes: {
-              "is-arrow": isImageAnArrow ? "" : null,
-            },
-          },
-          [`image_${i}`]: {
-            attributes: {
-              src: imageUri,
-            },
-          },
-          [`name_${i}`]: {
-            textContent: v.name,
-          },
-          [`ticker_${i}`]: {
-            textContent: v.ticker,
-          },
-          [`todays_change_perc_${i}`]: {
-            textContent: `${v.todays_change_perc}%`,
-          },
-          [`last_price_${i}`]: {
-            textContent: v.last_price,
-          },
-          [`exchange_${i}`]: {
-            textContent: v.exchange,
-          },
-        };
-      })
-    );
+    return {
+      [`item_${i}`]: {
+        attributes: {
+          change: changeDescription,
+        },
+      },
+      [`image_container_${i}`]: {
+        attributes: {
+          "is-arrow": isImageAnArrow ? "" : null,
+        },
+      },
+      [`image_${i}`]: {
+        attributes: {
+          src: imageUri,
+        },
+      },
+      [`name_${i}`]: {
+        textContent: v.name,
+      },
+      [`ticker_${i}`]: {
+        textContent: v.ticker,
+      },
+      [`todays_change_perc_${i}`]: {
+        textContent: `${v.todays_change_perc}%`,
+      },
+      [`last_price_${i}`]: {
+        textContent: v.last_price,
+      },
+      [`exchange_${i}`]: {
+        textContent: v.exchange,
+      },
+    };
   }
 }

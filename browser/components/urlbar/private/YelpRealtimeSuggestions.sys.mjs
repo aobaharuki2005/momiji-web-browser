@@ -83,60 +83,55 @@ export class YelpRealtimeSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewUpdateForValues(values) {
-    return Object.assign(
-      {},
-      ...values.flatMap((v, i) => {
-        return {
-          [`item_${i}`]: {
-            attributes: {
-              state: v.business_hours[0].is_open_now ? "open" : "closed",
-            },
+  getViewUpdateForValue(i, v) {
+    return {
+      [`item_${i}`]: {
+        attributes: {
+          state: v.business_hours[0].is_open_now ? "open" : "closed",
+        },
+      },
+      [`image_${i}`]: {
+        attributes: {
+          src: v.image_url,
+        },
+      },
+      [`title_${i}`]: {
+        textContent: v.name,
+      },
+      [`address_${i}`]: {
+        textContent: v.address,
+      },
+      [`pricing_${i}`]: {
+        textContent: v.pricing,
+      },
+      [`business_hours_${i}`]: {
+        l10n: {
+          id: v.business_hours[0].is_open_now
+            ? "urlbar-result-yelp-realtime-business-hours-open"
+            : "urlbar-result-yelp-realtime-business-hours-closed",
+          args: {
+            // TODO: Need to pass "time until keeping the status" after resolving
+            // the timezone issue.
+            timeUntil: new Intl.DateTimeFormat(undefined, {
+              hour: "numeric",
+            }).format(new Date()),
           },
-          [`image_${i}`]: {
-            attributes: {
-              src: v.image_url,
-            },
+          parseMarkup: true,
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
+        },
+      },
+      [`popularity_${i}`]: {
+        l10n: {
+          id: "urlbar-result-yelp-realtime-popularity",
+          args: {
+            rating: v.rating,
+            review_count: v.review_count,
           },
-          [`title_${i}`]: {
-            textContent: v.name,
-          },
-          [`address_${i}`]: {
-            textContent: v.address,
-          },
-          [`pricing_${i}`]: {
-            textContent: v.pricing,
-          },
-          [`business_hours_${i}`]: {
-            l10n: {
-              id: v.business_hours[0].is_open_now
-                ? "urlbar-result-yelp-realtime-business-hours-open"
-                : "urlbar-result-yelp-realtime-business-hours-closed",
-              args: {
-                // TODO: Need to pass "time until keeping the status" after resolving
-                // the timezone issue.
-                timeUntil: new Intl.DateTimeFormat(undefined, {
-                  hour: "numeric",
-                }).format(new Date()),
-              },
-              parseMarkup: true,
-              cacheable: true,
-              excludeArgsFromCacheKey: true,
-            },
-          },
-          [`popularity_${i}`]: {
-            l10n: {
-              id: "urlbar-result-yelp-realtime-popularity",
-              args: {
-                rating: v.rating,
-                review_count: v.review_count,
-              },
-              cacheable: true,
-              excludeArgsFromCacheKey: true,
-            },
-          },
-        };
-      })
-    );
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
+        },
+      },
+    };
   }
 }

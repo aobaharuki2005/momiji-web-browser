@@ -86,183 +86,177 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewUpdateForValues(values) {
-    return Object.assign(
-      {},
-      ...values.flatMap((v, i) => {
-        let status;
-        switch (v.status) {
-          case "Scheduled": {
-            status = "ontime";
-            break;
-          }
-          case "En Route": {
-            status = "inflight";
-            break;
-          }
-          case "Arrived": {
-            status = "arrived";
-            break;
-          }
-          case "Cancelled": {
-            status = "cancelled";
-            break;
-          }
-          case "Delayed": {
-            status = "delayed";
-            break;
-          }
-        }
+  getViewUpdateForValue(i, v) {
+    let status;
+    switch (v.status) {
+      case "Scheduled": {
+        status = "ontime";
+        break;
+      }
+      case "En Route": {
+        status = "inflight";
+        break;
+      }
+      case "Arrived": {
+        status = "arrived";
+        break;
+      }
+      case "Cancelled": {
+        status = "cancelled";
+        break;
+      }
+      case "Delayed": {
+        status = "delayed";
+        break;
+      }
+    }
 
-        let departureTime;
-        let departureTimeZone;
-        let arrivalTime;
-        let arrivalTimeZone;
-        if (status == "delayed" || !v.delayed) {
-          departureTime = new Date(v.departure.scheduled_time);
-          departureTimeZone = getTimeZone(v.departure.scheduled_time);
-          arrivalTime = new Date(v.arrival.scheduled_time);
-          arrivalTimeZone = getTimeZone(v.arrival.scheduled_time);
-        } else {
-          departureTime = new Date(v.departure.estimated_time);
-          departureTimeZone = getTimeZone(v.departure.estimated_time);
-          arrivalTime = new Date(v.arrival.estimated_time);
-          arrivalTimeZone = getTimeZone(v.arrival.estimated_time);
-        }
+    let departureTime;
+    let departureTimeZone;
+    let arrivalTime;
+    let arrivalTimeZone;
+    if (status == "delayed" || !v.delayed) {
+      departureTime = new Date(v.departure.scheduled_time);
+      departureTimeZone = getTimeZone(v.departure.scheduled_time);
+      arrivalTime = new Date(v.arrival.scheduled_time);
+      arrivalTimeZone = getTimeZone(v.arrival.scheduled_time);
+    } else {
+      departureTime = new Date(v.departure.estimated_time);
+      departureTimeZone = getTimeZone(v.departure.estimated_time);
+      arrivalTime = new Date(v.arrival.estimated_time);
+      arrivalTimeZone = getTimeZone(v.arrival.estimated_time);
+    }
 
-        let statusL10nId = `urlbar-result-flight-status-status-${status}`;
-        let statusL10nArgs;
-        if (status == "delayed") {
-          statusL10nArgs = {
-            departureEstimatedTime: new Intl.DateTimeFormat(undefined, {
-              hour: "numeric",
-              minute: "numeric",
-              timeZone: getTimeZone(v.departure.estimated_time),
-            }).format(new Date(v.departure.estimated_time)),
-          };
-        }
+    let statusL10nId = `urlbar-result-flight-status-status-${status}`;
+    let statusL10nArgs;
+    if (status == "delayed") {
+      statusL10nArgs = {
+        departureEstimatedTime: new Intl.DateTimeFormat(undefined, {
+          hour: "numeric",
+          minute: "numeric",
+          timeZone: getTimeZone(v.departure.estimated_time),
+        }).format(new Date(v.departure.estimated_time)),
+      };
+    }
 
-        let foregroundImage;
-        let backgroundImage;
-        if (status == "inflight") {
-          let backgroundImageId =
-            v.progress_percent == 100 ? 4 : Math.floor(v.progress_percent / 20);
-          backgroundImage = {
-            style: {
-              "--airline-color": v.airline.color,
-            },
-            attributes: {
-              backgroundImageId,
-              hasForegroundImage: !!v.airline.icon,
-            },
-          };
-          foregroundImage = {
-            attributes: {
-              src: v.airline.icon,
-            },
-          };
-        } else {
-          foregroundImage = {
-            attributes: {
-              src:
-                v.airline.icon ??
-                "chrome://browser/skin/urlbar/flight-airline.svg",
-              fallback: !v.airline.icon,
-            },
-          };
-        }
+    let foregroundImage;
+    let backgroundImage;
+    if (status == "inflight") {
+      let backgroundImageId =
+        v.progress_percent == 100 ? 4 : Math.floor(v.progress_percent / 20);
+      backgroundImage = {
+        style: {
+          "--airline-color": v.airline.color,
+        },
+        attributes: {
+          backgroundImageId,
+          hasForegroundImage: !!v.airline.icon,
+        },
+      };
+      foregroundImage = {
+        attributes: {
+          src: v.airline.icon,
+        },
+      };
+    } else {
+      foregroundImage = {
+        attributes: {
+          src:
+            v.airline.icon ?? "chrome://browser/skin/urlbar/flight-airline.svg",
+          fallback: !v.airline.icon,
+        },
+      };
+    }
 
-        return {
-          [`item_${i}`]: {
-            attributes: {
-              status,
-            },
+    return {
+      [`item_${i}`]: {
+        attributes: {
+          status,
+        },
+      },
+      [`image_container_${i}`]: backgroundImage,
+      [`image_${i}`]: foregroundImage,
+      [`departure_time_${i}`]: {
+        textContent: new Intl.DateTimeFormat(undefined, {
+          hour: "numeric",
+          minute: "numeric",
+          timeZone: departureTimeZone,
+        }).format(departureTime),
+      },
+      [`departure_date_${i}`]: {
+        textContent: new Intl.DateTimeFormat(undefined, {
+          month: "long",
+          day: "numeric",
+          weekday: "short",
+          timeZone: departureTimeZone,
+        }).format(departureTime),
+      },
+      [`arrival_time_${i}`]: {
+        textContent: new Intl.DateTimeFormat(undefined, {
+          hour: "numeric",
+          minute: "numeric",
+          timeZone: arrivalTimeZone,
+        }).format(arrivalTime),
+      },
+      [`origin_airport_${i}`]: {
+        l10n: {
+          id: "urlbar-result-flight-status-airport",
+          args: {
+            city: v.origin.city,
+            code: v.origin.code,
           },
-          [`image_container_${i}`]: backgroundImage,
-          [`image_${i}`]: foregroundImage,
-          [`departure_time_${i}`]: {
-            textContent: new Intl.DateTimeFormat(undefined, {
-              hour: "numeric",
-              minute: "numeric",
-              timeZone: departureTimeZone,
-            }).format(departureTime),
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
+        },
+      },
+      [`destination_airport_${i}`]: {
+        l10n: {
+          id: "urlbar-result-flight-status-airport",
+          args: {
+            city: v.destination.city,
+            code: v.destination.code,
           },
-          [`departure_date_${i}`]: {
-            textContent: new Intl.DateTimeFormat(undefined, {
-              month: "long",
-              day: "numeric",
-              weekday: "short",
-              timeZone: departureTimeZone,
-            }).format(departureTime),
-          },
-          [`arrival_time_${i}`]: {
-            textContent: new Intl.DateTimeFormat(undefined, {
-              hour: "numeric",
-              minute: "numeric",
-              timeZone: arrivalTimeZone,
-            }).format(arrivalTime),
-          },
-          [`origin_airport_${i}`]: {
+          cacheable: true,
+          excludeArgsFromCacheKey: true,
+        },
+      },
+      [`flight_number_${i}`]: v.airline.name
+        ? {
             l10n: {
-              id: "urlbar-result-flight-status-airport",
+              id: "urlbar-result-flight-status-flight-number-with-airline",
               args: {
-                city: v.origin.city,
-                code: v.origin.code,
+                flightNumber: v.flight_number,
+                airlineName: v.airline.name,
               },
-              cacheable: true,
-              excludeArgsFromCacheKey: true,
-            },
-          },
-          [`destination_airport_${i}`]: {
-            l10n: {
-              id: "urlbar-result-flight-status-airport",
-              args: {
-                city: v.destination.city,
-                code: v.destination.code,
-              },
-              cacheable: true,
-              excludeArgsFromCacheKey: true,
-            },
-          },
-          [`flight_number_${i}`]: v.airline.name
-            ? {
-                l10n: {
-                  id: "urlbar-result-flight-status-flight-number-with-airline",
-                  args: {
-                    flightNumber: v.flight_number,
-                    airlineName: v.airline.name,
-                  },
-                  cacheable: true,
-                  excludeArgsFromCacheKey: !!statusL10nArgs,
-                },
-              }
-            : {
-                textContent: v.flight_number,
-              },
-          [`status_${i}`]: {
-            l10n: {
-              id: statusL10nId,
-              args: statusL10nArgs,
               cacheable: true,
               excludeArgsFromCacheKey: !!statusL10nArgs,
             },
+          }
+        : {
+            textContent: v.flight_number,
           },
-          [`time_left_minutes_${i}`]:
-            v.time_left_minutes != undefined
-              ? {
-                  l10n: {
-                    id: "urlbar-result-flight-status-time-left-minutes",
-                    args: {
-                      timeLeftMinutes: v.time_left_minutes,
-                    },
-                    cacheable: true,
-                    excludeArgsFromCacheKey: !!statusL10nArgs,
-                  },
-                }
-              : null,
-        };
-      })
-    );
+      [`status_${i}`]: {
+        l10n: {
+          id: statusL10nId,
+          args: statusL10nArgs,
+          cacheable: true,
+          excludeArgsFromCacheKey: !!statusL10nArgs,
+        },
+      },
+      [`time_left_minutes_${i}`]:
+        v.time_left_minutes != undefined
+          ? {
+              l10n: {
+                id: "urlbar-result-flight-status-time-left-minutes",
+                args: {
+                  timeLeftMinutes: v.time_left_minutes,
+                },
+                cacheable: true,
+                excludeArgsFromCacheKey: !!statusL10nArgs,
+              },
+            }
+          : null,
+    };
   }
 }
 
