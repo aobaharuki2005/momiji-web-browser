@@ -14,6 +14,7 @@
 #include "Flatten.h"
 #include "GroupInfo.h"
 #include "GroupInfoPair.h"
+#include "GroupInfoPairImpl.h"
 #include "NormalOriginOperationBase.h"
 #include "OpenClientDirectoryUtils.h"
 #include "OriginInfo.h"
@@ -7863,57 +7864,6 @@ already_AddRefed<OriginInfo> QuotaManager::LockedGetOriginInfo(
   return nullptr;
 }
 
-template <typename Iterator, typename Pred>
-void QuotaManager::MaybeInsertOriginInfos(
-    Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
-    const RefPtr<GroupInfo>& aDefaultGroupInfo,
-    const RefPtr<GroupInfo>& aPrivateGroupInfo, Pred aPred) {
-  const auto copy = [&aDest, &aPred](const GroupInfo& groupInfo) {
-    std::copy_if(groupInfo.mOriginInfos.cbegin(), groupInfo.mOriginInfos.cend(),
-                 aDest, aPred);
-  };
-
-  if (aTemporaryGroupInfo) {
-    MOZ_ASSERT(PERSISTENCE_TYPE_TEMPORARY ==
-               aTemporaryGroupInfo->GetPersistenceType());
-
-    copy(*aTemporaryGroupInfo);
-  }
-  if (aDefaultGroupInfo) {
-    MOZ_ASSERT(PERSISTENCE_TYPE_DEFAULT ==
-               aDefaultGroupInfo->GetPersistenceType());
-
-    copy(*aDefaultGroupInfo);
-  }
-  if (aPrivateGroupInfo) {
-    MOZ_ASSERT(PERSISTENCE_TYPE_PRIVATE ==
-               aPrivateGroupInfo->GetPersistenceType());
-    copy(*aPrivateGroupInfo);
-  }
-}
-
-template <typename Iterator>
-void QuotaManager::MaybeInsertNonPersistedOriginInfos(
-    Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
-    const RefPtr<GroupInfo>& aDefaultGroupInfo,
-    const RefPtr<GroupInfo>& aPrivateGroupInfo) {
-  return MaybeInsertOriginInfos(
-      aDest, aTemporaryGroupInfo, aDefaultGroupInfo, aPrivateGroupInfo,
-      [](const auto& originInfo) { return !originInfo->LockedPersisted(); });
-}
-
-template <typename Iterator>
-void QuotaManager::MaybeInsertNonPersistedZeroUsageOriginInfos(
-    Iterator aDest, const RefPtr<GroupInfo>& aTemporaryGroupInfo,
-    const RefPtr<GroupInfo>& aDefaultGroupInfo,
-    const RefPtr<GroupInfo>& aPrivateGroupInfo) {
-  return MaybeInsertOriginInfos(aDest, aTemporaryGroupInfo, aDefaultGroupInfo,
-                                aPrivateGroupInfo, [](const auto& originInfo) {
-                                  return !originInfo->LockedPersisted() &&
-                                         originInfo->LockedUsage() == 0;
-                                });
-}
-
 template <typename Collect, typename Pred>
 QuotaManager::OriginInfosFlatTraversable
 QuotaManager::CollectLRUOriginInfosUntil(Collect&& aCollect, Pred&& aPred) {
@@ -7969,11 +7919,8 @@ QuotaManager::GetOriginInfosExceedingGroupLimit() const {
 
       if (groupUsage > quotaManager->GetGroupLimit()) {
         originInfos.AppendElement(CollectLRUOriginInfosUntil(
-            [&temporaryGroupInfo, &defaultGroupInfo,
-             &privateGroupInfo](auto inserter) {
-              MaybeInsertNonPersistedOriginInfos(
-                  std::move(inserter), temporaryGroupInfo, defaultGroupInfo,
-                  privateGroupInfo);
+            [&pair](auto inserter) {
+              pair->MaybeInsertNonPersistedOriginInfos(std::move(inserter));
             },
             [&groupUsage, quotaManager](const auto& originInfo) {
               groupUsage -= originInfo->LockedUsage();
@@ -8004,10 +7951,7 @@ QuotaManager::GetOriginInfosExceedingGlobalLimit() const {
           MOZ_ASSERT(!entry.GetKey().IsEmpty());
           MOZ_ASSERT(pair);
 
-          MaybeInsertNonPersistedOriginInfos(
-              inserter, pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY),
-              pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT),
-              pair->LockedGetGroupInfo(PERSISTENCE_TYPE_PRIVATE));
+          pair->MaybeInsertNonPersistedOriginInfos(inserter);
         }
       },
       [temporaryStorageUsage = mTemporaryStorageUsage,
@@ -8040,10 +7984,7 @@ QuotaManager::GetOriginInfosWithZeroUsage() const {
     MOZ_ASSERT(!entry.GetKey().IsEmpty());
     MOZ_ASSERT(pair);
 
-    MaybeInsertNonPersistedZeroUsageOriginInfos(
-        inserter, pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY),
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT),
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_PRIVATE));
+    pair->MaybeInsertNonPersistedZeroUsageOriginInfos(inserter);
   }
 
   res.AppendElement(std::move(originInfos));
