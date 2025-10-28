@@ -992,11 +992,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     }();
 
     const WritingMode outerWM = aReflowInput.GetWritingMode();
+    const WritingMode wm = aKidFrame->GetWritingMode();
     const LogicalSize cbSize(outerWM, usedCb.Size());
-
-    WritingMode wm = aKidFrame->GetWritingMode();
-    LogicalSize logicalCBSize(wm, usedCb.Size());
-    nscoord availISize = logicalCBSize.ISize(wm);
 
     ReflowInput::InitFlags initFlags;
     const bool staticPosIsCBOrigin = [&] {
@@ -1050,16 +1047,16 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     // Get the border values
     const LogicalMargin border =
         aDelegatingFrame->GetLogicalUsedBorder(outerWM);
-
-    const nscoord availBSize =
-        kidFrameMaySplit ? aReflowInput.AvailableBSize() -
-                               border.ConvertTo(wm, outerWM).BStart(wm)
-                         : NS_UNCONSTRAINEDSIZE;
+    const LogicalSize availSize(
+        outerWM, cbSize.ISize(outerWM),
+        kidFrameMaySplit
+            ? aReflowInput.AvailableBSize() - border.BStart(outerWM)
+            : NS_UNCONSTRAINEDSIZE);
 
     ReflowInput kidReflowInput(aPresContext, aReflowInput, aKidFrame,
-                               LogicalSize(wm, availISize, availBSize),
-                               Some(logicalCBSize), initFlags, {}, {},
-                               aAnchorPosReferenceData);
+                               availSize.ConvertTo(wm, outerWM),
+                               Some(cbSize.ConvertTo(wm, outerWM)), initFlags,
+                               {}, {}, aAnchorPosReferenceData);
 
     if (nscoord kidAvailBSize = kidReflowInput.AvailableBSize();
         kidAvailBSize != NS_UNCONSTRAINEDSIZE) {
@@ -1183,7 +1180,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
                            margin.StartOffset(outerWM),
                        kidSize);
       nsRect r = rect.GetPhysicalRect(
-          outerWM, logicalCBSize.GetPhysicalSize(wm) +
+          outerWM, cbSize.GetPhysicalSize(outerWM) +
                        border.Size(outerWM).GetPhysicalSize(outerWM));
 
       // Offset the frame rect by the given origin of the absolute CB.
