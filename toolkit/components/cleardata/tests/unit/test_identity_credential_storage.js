@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIIdentityCredentialStorageService
 );
 
-do_get_profile();
-
 add_task(async function test_deleteByRange() {
   Services.prefs.setBoolPref(
     "dom.security.credentialmanagement.identity.enabled",

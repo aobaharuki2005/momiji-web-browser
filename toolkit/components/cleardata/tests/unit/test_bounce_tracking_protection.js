@@ -119,8 +119,6 @@ function addTestData() {
   );
 }
 
-do_get_profile();
-
 add_task(async function test_deleteAll() {
   addTestData();
 

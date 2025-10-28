@@ -41,6 +41,9 @@ add_task(async function setup() {
 
   // Enables us to test localStorage in xpcshell.
   Services.prefs.setBoolPref("dom.storage.client_validation", false);
+
+  // Needed for BounceTrackingProtection.
+  do_get_profile(true);
 });
 
 /**
