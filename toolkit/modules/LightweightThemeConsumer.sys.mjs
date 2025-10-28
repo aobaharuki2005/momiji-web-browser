@@ -227,6 +227,9 @@ export function LightweightThemeConsumer(aDocument) {
   this.darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
   this.darkThemeMediaQuery.addListener(this);
 
+  this.forcedColorsMediaQuery = this._win.matchMedia("(forced-colors)");
+  this.forcedColorsMediaQuery.addListener(this);
+
   const { LightweightThemeManager } = ChromeUtils.importESModule(
     "resource://gre/modules/LightweightThemeManager.sys.mjs"
   );
@@ -252,7 +255,10 @@ LightweightThemeConsumer.prototype = {
   },
 
   handleEvent(aEvent) {
-    if (aEvent.target == this.darkThemeMediaQuery) {
+    if (
+      aEvent.target == this.darkThemeMediaQuery ||
+      aEvent.target == this.forcedColorsMediaQuery
+    ) {
       this._update(this._lastData);
       return;
     }
@@ -262,10 +268,10 @@ LightweightThemeConsumer.prototype = {
         Services.obs.removeObserver(this, "lightweight-theme-styling-update");
         Services.ppmm.sharedData.delete(`theme/${this._winId}`);
         this._win = this._doc = null;
-        if (this.darkThemeMediaQuery) {
-          this.darkThemeMediaQuery.removeListener(this);
-          this.darkThemeMediaQuery = null;
-        }
+        this.darkThemeMediaQuery?.removeListener(this);
+        this.darkThemeMediaQuery = null;
+        this.forcedColorsMediaQuery?.removeListener(this);
+        this.forcedColorsMediaQuery = null;
         break;
     }
   },
@@ -303,7 +309,7 @@ LightweightThemeConsumer.prototype = {
     })();
 
     let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
-    if (!theme) {
+    if (!theme || this.forcedColorsMediaQuery?.matches) {
       theme = { id: DEFAULT_THEME_ID };
     }
     let builtinThemeConfig = lazy.BuiltInThemeConfig.get(theme.id);
