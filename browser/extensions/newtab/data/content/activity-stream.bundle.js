@@ -13834,6 +13834,8 @@ function Widgets() {
   const {
     messageData
   } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Messages);
+  const timerType = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget.timerType);
+  const timerData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget);
   const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
   const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
   const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
@@ -13842,6 +13844,40 @@ function Widgets() {
   const listsEnabled = (nimbusListsTrainhopEnabled || nimbusListsEnabled || prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED]) && prefs[PREF_WIDGETS_LISTS_ENABLED];
   const timerEnabled = (nimbusTimerTrainhopEnabled || nimbusTimerEnabled || prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED]) && prefs[PREF_WIDGETS_TIMER_ENABLED];
   const recommendedStoriesEnabled = prefs[PREF_FEEDS_SECTION_TOPSTORIES];
+
+  // track previous timerEnabled state to detect when it becomes disabled
+  const prevTimerEnabledRef = (0,external_React_namespaceObject.useRef)(timerEnabled);
+
+  // Reset timer when it becomes disabled
+  (0,external_React_namespaceObject.useEffect)(() => {
+    const wasTimerEnabled = prevTimerEnabledRef.current;
+    const isTimerEnabled = timerEnabled;
+    const originalTime = timerType === "focus" ? 1500 : 300;
+
+    // Only reset if timer was enabled and is now disabled
+    if (wasTimerEnabled && !isTimerEnabled && timerData) {
+      // Reset both focus and break timers to their initial durations
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_TIMER_RESET,
+        data: {
+          timerType,
+          duration: originalTime,
+          initialDuration: originalTime
+        }
+      }));
+
+      // Set the timer type back to "focus"
+      dispatch(actionCreators.AlsoToMain({
+        type: actionTypes.WIDGETS_TIMER_SET_TYPE,
+        data: {
+          timerType: "focus"
+        }
+      }));
+    }
+
+    // Update the ref to track current state
+    prevTimerEnabledRef.current = isTimerEnabled;
+  }, [timerEnabled, timerData, dispatch, timerType]);
   function handleUserInteraction(widgetName) {
     const prefName = `widgets.${widgetName}.interaction`;
     const hasInteracted = prefs[prefName];
