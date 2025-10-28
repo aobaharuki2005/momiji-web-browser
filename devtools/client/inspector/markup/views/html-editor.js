@@ -41,15 +41,24 @@ class HTMLEditor extends EventEmitter {
       mode: Editor.modes.html,
       lineWrapping: true,
       styleActiveLine: false,
-      extraKeys: {},
+      keyMap: [
+        { key: HTMLEditor.#ctrl("Enter"), run: this.hide },
+        { key: "F2", run: this.hide },
+        {
+          key: "Escape",
+          run: this.hide.bind(this, false),
+          preventDefault: true,
+        },
+      ],
       theme: "mozilla markup-view",
+      cm6: true,
     };
-    config.extraKeys[HTMLEditor.#ctrl("Enter")] = this.hide;
-    config.extraKeys.F2 = this.hide;
-    config.extraKeys.Esc = this.hide.bind(this, false);
 
     this.#container.addEventListener("click", this.hide);
     this.#editorInner.addEventListener("click", HTMLEditor.#stopPropagation);
+    // Avoid the hijack of the backspace key by the markup when the
+    // html editor is open.
+    this.#editorInner.addEventListener("keydown", HTMLEditor.#stopPropagation);
 
     this.editor = new Editor(config);
     this.editor.appendToLocalElement(this.#editorInner);
@@ -63,6 +72,7 @@ class HTMLEditor extends EventEmitter {
   #container = null;
   #editorInner = null;
   #attachedElement = null;
+  #originalValue;
 
   static #ctrl(k) {
     return (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") + k;
@@ -76,7 +86,7 @@ class HTMLEditor extends EventEmitter {
    * Need to refresh position by manually setting CSS values, so this will
    * need to be called on resizes and other sizing changes.
    */
-  refresh() {
+  refresh = () => {
     const element = this.#attachedElement;
 
     if (element) {
@@ -84,9 +94,8 @@ class HTMLEditor extends EventEmitter {
       this.#container.style.left = element.offsetLeft + "px";
       this.#container.style.width = element.offsetWidth + "px";
       this.#container.style.height = element.parentNode.offsetHeight + "px";
-      this.editor.refresh();
     }
-  }
+  };
 
   /**
    * Anchor the editor to a particular element.
@@ -128,15 +137,13 @@ class HTMLEditor extends EventEmitter {
       return;
     }
 
-    this._originalValue = text;
-    this.editor.setText(text);
+    this.#originalValue = text;
+    this.editor.setText(text, { saveTransactionToHistory: false });
     this.#attach(element);
     this.#container.style.display = "flex";
     this.isVisible = true;
 
-    this.editor.refresh();
     this.editor.focus();
-    this.editor.clearHistory();
 
     this.emit("popupshown");
   };
@@ -157,9 +164,9 @@ class HTMLEditor extends EventEmitter {
     this.#detach();
 
     const newValue = this.editor.getText();
-    const valueHasChanged = this._originalValue !== newValue;
+    const valueHasChanged = this.#originalValue !== newValue;
     const preventCommit = shouldCommit === false || !valueHasChanged;
-    this._originalValue = undefined;
+    this.#originalValue = undefined;
     this.isVisible = undefined;
     this.emit("popuphidden", !preventCommit, newValue);
   };
@@ -171,6 +178,10 @@ class HTMLEditor extends EventEmitter {
     this.doc.defaultView.removeEventListener("resize", this.refresh, true);
     this.#container.removeEventListener("click", this.hide);
     this.#editorInner.removeEventListener("click", HTMLEditor.#stopPropagation);
+    this.#editorInner.removeEventListener(
+      "keydown",
+      HTMLEditor.#stopPropagation
+    );
 
     this.hide(false);
     this.#container.remove();
