@@ -499,36 +499,36 @@ user-login = "afranchuk"
 user-name = "Alex Franchuk"
 
 [[publisher.phf]]
-version = "0.11.2"
-when = "2023-06-24"
+version = "0.13.1"
+when = "2025-08-23"
 user-id = 51017
 user-login = "JohnTitor"
 user-name = "Yuki Okushi"
 
 [[publisher.phf_codegen]]
-version = "0.11.2"
-when = "2023-06-24"
+version = "0.13.1"
+when = "2025-08-23"
 user-id = 51017
 user-login = "JohnTitor"
 user-name = "Yuki Okushi"
 
 [[publisher.phf_generator]]
-version = "0.11.2"
-when = "2023-06-24"
+version = "0.13.1"
+when = "2025-08-23"
 user-id = 51017
 user-login = "JohnTitor"
 user-name = "Yuki Okushi"
 
 [[publisher.phf_macros]]
-version = "0.11.2"
-when = "2023-06-24"
+version = "0.13.1"
+when = "2025-08-23"
 user-id = 51017
 user-login = "JohnTitor"
 user-name = "Yuki Okushi"
 
 [[publisher.phf_shared]]
-version = "0.11.2"
-when = "2023-06-24"
+version = "0.13.1"
+when = "2025-08-23"
 user-id = 51017
 user-login = "JohnTitor"
 user-name = "Yuki Okushi"
@@ -3003,6 +3003,12 @@ aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-c
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.11.1 -> 0.12.0"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.siphasher]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.10 -> 0.3.11"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
 [[audits.mozilla.audits.smawk]]
