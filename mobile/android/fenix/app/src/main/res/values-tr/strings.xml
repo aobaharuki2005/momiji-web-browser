@@ -2831,12 +2831,20 @@
   <string name="addresses_townland" tools:ignore="UnusedResources">Kasaba</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
   <string name="addresses_district" tools:ignore="UnusedResources">İl</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in the United Kingdom, Norway and Sweden -->
+  <string name="addresses_post_town" tools:ignore="UnusedResources">Posta kasabası</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as a tertiary address information (below the state level, e.g. Tasmania in Australia -->
+  <string name="addresses_suburb" tools:ignore="UnusedResources">Yörekent</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is crucial for addressing in regions where county lines play a key role in postal services. -->
+  <string name="addresses_county" tools:ignore="UnusedResources">İlçe</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Significant in places where parishes are used for local administration and addressing. Ensures users can specify parish details for better autofill accuracy. Used in Barbados and Jamaica. -->
   <string name="addresses_parish" tools:ignore="UnusedResources">Mahalle</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in countries like Japan where prefectures are a major administrative division. -->
   <string name="addresses_prefecture" tools:ignore="UnusedResources">Vilayet</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Allowing users to specify a particular area within a city or region. Used in Hong Kong -->
   <string name="addresses_area" tools:ignore="UnusedResources">Bölge</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The header for the Do/Si of the address. Do/Si refers to provincial level divisions, pertinent to addresses in South Korea. -->
+  <string name="addresses_do_si" tools:ignore="UnusedResources">Do/Si</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in countries like Nicaragua and Colombia where departments are a key administrative division. -->
   <string name="addresses_department" tools:ignore="UnusedResources">Departman</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in the United Arab Emirates. -->
