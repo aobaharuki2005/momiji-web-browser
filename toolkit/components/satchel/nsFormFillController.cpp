@@ -271,6 +271,27 @@ nsFormFillController::MarkAsAutoCompletableField(Element* aElement) {
 }
 
 NS_IMETHODIMP
+nsFormFillController::SetControlledElement(Element* aElement) {
+  if (!aElement ||
+      !aElement->IsAnyOfHTMLElements(nsGkAtoms::input, nsGkAtoms::textarea)) {
+    return NS_OK;
+  }
+
+  MaybeStartControllingInput(aElement);
+
+  // Bail if we didn't start controlling the input.
+  if (!mControlledElement) {
+    return NS_OK;
+  }
+
+  // if there is a delayed task to restart the controller after an attribute
+  // change, cancel it to prevent it overriding the controlled input
+  MaybeCancelAttributeChangeTask();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFormFillController::GetControlledElement(Element** aElement) {
   *aElement = mControlledElement;
   NS_IF_ADDREF(*aElement);
@@ -864,21 +885,7 @@ void nsFormFillController::MaybeStartControllingInput(Element* aElement) {
 }
 
 nsresult nsFormFillController::HandleFocus(Element* aElement) {
-  if (!aElement ||
-      !aElement->IsAnyOfHTMLElements(nsGkAtoms::input, nsGkAtoms::textarea)) {
-    return NS_OK;
-  }
-
-  MaybeStartControllingInput(aElement);
-
-  // Bail if we didn't start controlling the input.
-  if (!mControlledElement) {
-    return NS_OK;
-  }
-
-  // if there is a delayed task to restart the controller after an attribute
-  // change, cancel it to prevent it overriding the focused input
-  MaybeCancelAttributeChangeTask();
+  MOZ_TRY(SetControlledElement(aElement));
 
   // If this focus doesn't follow a right click within our specified
   // threshold then show the autocomplete popup for all password fields.
@@ -1135,7 +1142,8 @@ void nsFormFillController::StartControllingInput(Element* aElement) {
 }
 
 bool nsFormFillController::IsFocusedInputControlled() const {
-  return mControlledElement && mController && !ReadOnly(mControlledElement);
+  return mControlledElement && mController && !ReadOnly(mControlledElement) &&
+         nsFocusManager::GetFocusedElementStatic() == mControlledElement;
 }
 
 void nsFormFillController::StopControllingInput() {

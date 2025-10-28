@@ -72,7 +72,7 @@ class nsFormFillController final : public nsIFormFillController,
   bool IsFocusedInputControlled() const;
 
   MOZ_CAN_RUN_SCRIPT
-  nsresult HandleFocus(mozilla::dom::Element* aInput);
+  nsresult HandleFocus(mozilla::dom::Element* aElement);
 
   void AttachListeners(mozilla::dom::EventTarget* aEventTarget);
 
