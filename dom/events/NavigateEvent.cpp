@@ -291,28 +291,38 @@ bool NavigateEvent::IsBeingDispatched() const {
 
 // https://html.spec.whatwg.org/#navigateevent-finish
 void NavigateEvent::Finish(bool aDidFulfill) {
-  switch (mInterceptionState) {
-    // Step 1
-    case InterceptionState::Intercepted:
-    case InterceptionState::Finished:
-      MOZ_DIAGNOSTIC_ASSERT(false);
-      break;
-      // Step 2
-    case InterceptionState::None:
-      return;
-    default:
-      break;
+  // Step 1
+  MOZ_DIAGNOSTIC_ASSERT(mInterceptionState != InterceptionState::Finished);
+
+  // Step 2
+  if (mInterceptionState == InterceptionState::Intercepted) {
+    // Step 2.1
+    MOZ_DIAGNOSTIC_ASSERT(!aDidFulfill);
+
+    // Step 2.2
+    MOZ_DIAGNOSTIC_ASSERT(!mNavigationPrecommitHandlerList.IsEmpty());
+
+    // Step 2.3
+    mInterceptionState = InterceptionState::Finished;
+
+    // Step 2.4
+    return;
   }
 
   // Step 3
-  PotentiallyResetFocus();
+  if (mInterceptionState == InterceptionState::None) {
+    return;
+  }
 
   // Step 4
+  PotentiallyResetFocus();
+
+  // Step 5
   if (aDidFulfill) {
     PotentiallyProcessScrollBehavior();
   }
 
-  // Step 5
+  // Step 6
   mInterceptionState = InterceptionState::Finished;
 }
 
