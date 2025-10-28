@@ -818,7 +818,7 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final {
 
   uint32_t GetOffset() const { return mOffset; }
 
-  uintptr_t OffsetToAbsolute(const uint8_t aOffset) const {
+  uintptr_t OffsetToAbsolute(const int8_t aOffset) const {
     return mTargetBytes->GetBase() + mOffset + aOffset;
   }
 

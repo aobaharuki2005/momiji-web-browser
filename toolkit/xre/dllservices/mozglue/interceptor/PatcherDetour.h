@@ -1536,7 +1536,14 @@ class WindowsDllDetourPatcher final
         const JumpType kJumpTypes[] = {JumpType::Jae, JumpType::Je,
                                        JumpType::Jne};
         auto jumpType = kJumpTypes[*origBytes - 0x73];
-        uint8_t offset = origBytes[1];
+        int8_t offset = origBytes[1];
+        if (offset < 0) {
+          // We don't support backwards relative jumps. If we want to in the
+          // future we should find a good way to test them.
+          MOZ_ASSERT_UNREACHABLE(
+              "Unrecognized opcode sequence - backwards relative jump");
+          return;
+        }
 
         origBytes += 2;
 
