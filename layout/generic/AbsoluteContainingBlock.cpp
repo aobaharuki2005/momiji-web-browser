@@ -1111,12 +1111,11 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       // to align the child by its margin box:
       // https://drafts.csswg.org/css-position-3/#abspos-layout
       const auto* stylePos = aKidFrame->StylePosition();
-      const LogicalSize logicalCBSizeOuterWM(outerWM, usedCb.Size());
       const auto anchorResolutionParams =
           AnchorPosOffsetResolutionParams::ExplicitCBFrameSize(
               AnchorPosResolutionParams::From(aKidFrame,
                                               aAnchorPosReferenceData),
-              &logicalCBSizeOuterWM);
+              &cbSize);
       const bool iInsetAuto =
           stylePos
               ->GetAnchorResolvedInset(LogicalSide::IStart, outerWM,
@@ -1147,8 +1146,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
             "Non-auto inline inset but requires CSS alignment for static "
             "position?");
         auto alignOffset = OffsetToAlignedStaticPos(
-            kidReflowInput, kidMarginBox, logicalCBSizeOuterWM,
-            placeholderContainer, outerWM, LogicalAxis::Inline,
+            kidReflowInput, kidMarginBox, cbSize, placeholderContainer, outerWM,
+            LogicalAxis::Inline,
             Some(NonAutoAlignParams{
                 offsets.IStart(outerWM),
                 offsets.IEnd(outerWM),
@@ -1157,7 +1156,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 
         offsets.IStart(outerWM) += alignOffset;
         offsets.IEnd(outerWM) =
-            logicalCBSizeOuterWM.ISize(outerWM) -
+            cbSize.ISize(outerWM) -
             (offsets.IStart(outerWM) + kidMarginBox.ISize(outerWM));
       }
       if (!bInsetAuto) {
@@ -1165,8 +1164,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
                    "Non-auto block inset but requires CSS alignment for static "
                    "position?");
         auto alignOffset = OffsetToAlignedStaticPos(
-            kidReflowInput, kidMarginBox, logicalCBSizeOuterWM,
-            placeholderContainer, outerWM, LogicalAxis::Block,
+            kidReflowInput, kidMarginBox, cbSize, placeholderContainer, outerWM,
+            LogicalAxis::Block,
             Some(NonAutoAlignParams{
                 offsets.BStart(outerWM),
                 offsets.BEnd(outerWM),
@@ -1174,7 +1173,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
             resolvedPositionArea);
         offsets.BStart(outerWM) += alignOffset;
         offsets.BEnd(outerWM) =
-            logicalCBSizeOuterWM.BSize(outerWM) -
+            cbSize.BSize(outerWM) -
             (offsets.BStart(outerWM) + kidMarginBox.BSize(outerWM));
       }
 
