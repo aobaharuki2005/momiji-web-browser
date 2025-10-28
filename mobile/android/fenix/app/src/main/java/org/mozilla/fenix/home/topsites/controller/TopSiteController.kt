@@ -33,6 +33,7 @@ import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.GleanMetrics.ShortcutsLibrary
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -98,6 +99,11 @@ interface TopSiteController {
      * @see [TopSiteInteractor.onShowAllTopSitesClicked]
      */
     fun handleShowAllTopSitesClicked()
+
+    /**
+     * @see [TopSiteInteractor.onShortcutsLibraryViewed]
+     */
+    fun handleShortcutsLibraryViewed()
 }
 
 /**
@@ -368,6 +374,10 @@ class DefaultTopSiteController(
             R.id.homeFragment,
             HomeFragmentDirections.actionHomeFragmentToShortcutsFragment(),
         )
+    }
+
+    override fun handleShortcutsLibraryViewed() {
+        ShortcutsLibrary.viewed.record(NoExtras())
     }
 
     /**

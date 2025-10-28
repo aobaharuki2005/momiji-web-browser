@@ -251,6 +251,10 @@ class SessionControlInteractor(
         topSiteController.handleShowAllTopSitesClicked()
     }
 
+    override fun onShortcutsLibraryViewed() {
+        topSiteController.handleShortcutsLibraryViewed()
+    }
+
     override fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean {
         return controller.handleShowWallpapersOnboardingDialog(state)
     }
