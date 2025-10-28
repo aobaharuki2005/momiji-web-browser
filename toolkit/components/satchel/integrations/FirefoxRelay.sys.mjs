@@ -514,7 +514,7 @@ async function getListCollection({
   | www.google.com            | https://www.google.com            | True   |
   | google.com.ar             | https://accounts.google.com.ar    | True   |
   | google.com.ar             | https://google.com                | False  |
-  | google.com                | https://google.com.ar             | True   |
+  | google.com                | https://google.com.ar             | False  |
   | mozilla.org               | https://vpn.mozilla.org           | True   |
   | vpn.mozilla.org           | https://vpn.mozilla.org           | True   |
   | substack.com              | https://hunterharris.substack.com | True   |
@@ -524,6 +524,9 @@ async function getListCollection({
   | localhost                 | http://localhost                  | True   |
   | google.com.ar             | https://mail.google.com.br        | False  |
   +---------------------------+-----------------------------------+--------+
+ *
+ * Note: Cross-TLD matching (e.g., google.com matching google.com.ar) requires
+ * explicit list entries or Related Realms integration. See bug 1996332.
  *
  * @param {Array} list   Array of {domain: ...} records. Each domain is a string.
  * @param {string} origin Origin URL (e.g., https://www.google.com.ar).
@@ -558,21 +561,6 @@ function isOriginInList(list, origin) {
     })
   ) {
     return true;
-  }
-
-  // 3. Special case: "universal" domain match, e.g. allowlist has "google.com" and origin is "google.com.ar"
-  // Only apply for domains ending with common one-level TLDs
-  const UNIVERSAL_TLDS = [".com", ".org", ".net", ".edu", ".gov"];
-  for (const record of list) {
-    for (const tld of UNIVERSAL_TLDS) {
-      if (
-        record.domain.endsWith(tld) &&
-        host.length > record.domain.length &&
-        host.startsWith(record.domain + ".")
-      ) {
-        return true;
-      }
-    }
   }
 
   return false;

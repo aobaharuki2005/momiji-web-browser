@@ -18,7 +18,7 @@ const TESTS = [
   ["www.google.com", "https://www.google.com", true],
   ["google.com.ar", "https://accounts.google.com.ar", true],
   ["google.com.ar", "https://google.com", false],
-  ["google.com", "https://google.com.ar", true],
+  ["google.com", "https://google.com.ar", false],
   ["mozilla.org", "https://vpn.mozilla.org", true],
   ["vpn.mozilla.org", "https://vpn.mozilla.org", true],
   ["substack.com", "https://hunterharris.substack.com", true],
