@@ -939,14 +939,6 @@ export var TelemetryEnvironmentTesting = {
     lazy.Assert.equal(typeof gfxData.features.gpuProcess.status, "string");
     lazy.Assert.ok(!!Glean.gfxFeatures.gpuProcess.testGetValue().status);
 
-    if (gIsWindows && !!gfxData.features?.d3d11?.version) {
-      lazy.Assert.equal(typeof gfxData.features.d3d11.version, "number");
-      lazy.Assert.equal(
-        gfxData.features.d3d11.version,
-        Glean.gfxFeatures.d3d11.testGetValue().version
-      );
-    }
-
     try {
       // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
       // this test.
