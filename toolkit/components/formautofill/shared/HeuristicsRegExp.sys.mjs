@@ -381,6 +381,7 @@ export const HeuristicsRegExp = {
 
       // ==== Telephone ====
       tel:
+        "?<neg>phonetic" +
         "phone|mobile|contact.?number" +
         "|telefonnummer" + // de-DE
         "|telefono|teléfono" + // es
