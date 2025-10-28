@@ -91,6 +91,7 @@ interface TabManagerController : SyncedTabsController, InactiveTabsController, T
     /**
      * Deletes the [TabSessionState] with the specified [tabId] or calls [DownloadCancelDialogFragment]
      * if user tries to close the last private tab while private downloads are active.
+     * This method has no effect if the tab does not exist.
      *
      * @param tabId The id of the [TabSessionState] to be removed from the Tab Manager.
      * @param source app feature from which the tab with [tabId] was closed.
@@ -140,7 +141,8 @@ interface TabManagerController : SyncedTabsController, InactiveTabsController, T
     fun handleNavigateToRecentlyClosed()
 
     /**
-     * Sets the current state of selected tabs into the inactive state.
+     * Marks all selected tabs with the [TabSessionState.lastAccess] to 15 days or [numDays];
+     * enough time to have a tab considered as inactive.
      *
      * ⚠️ DO NOT USE THIS OUTSIDE OF DEBUGGING/TESTING.
      *
@@ -288,9 +290,6 @@ class DefaultTabManagerController(
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(page))
     }
 
-    /**
-     * Dismisses the tab manager and navigates to the browser.
-     */
     override fun handleNavigateToBrowser() {
         if (navController.currentDestination?.id == R.id.browserFragment) {
             return
@@ -300,9 +299,6 @@ class DefaultTabManagerController(
         }
     }
 
-    /**
-     * Dismisses the tab manager and navigates to the homepage.
-     */
     override fun handleNavigateToHome() {
         if (navController.currentDestination?.id == R.id.homeFragment) {
             return
@@ -314,13 +310,6 @@ class DefaultTabManagerController(
         }
     }
 
-    /**
-     * Deletes the [TabSessionState] with the specified [tabId].
-     *
-     * @param tabId The id of the [TabSessionState] to be removed from Tab Manager.
-     * @param source app feature from which the tab with [tabId] was closed.
-     * This method has no effect if the tab does not exist.
-     */
     override fun handleTabDeletion(tabId: String, source: String?) {
         deleteTab(tabId, source, isConfirmed = false)
     }
@@ -395,21 +384,10 @@ class DefaultTabManagerController(
         }
     }
 
-    /**
-     * Dismisses the tab manager and navigates to the Recently Closed section in the History fragment.
-     */
     override fun handleNavigateToRecentlyClosed() {
         navController.navigate(R.id.recentlyClosedFragment)
     }
 
-    /**
-     * Marks all selected tabs with the [TabSessionState.lastAccess] to 15 days or [numDays]; enough time to
-     * have a tab considered as inactive.
-     *
-     * ⚠️ DO NOT USE THIS OUTSIDE OF DEBUGGING/TESTING.
-     *
-     * @param numDays The number of days to mark a tab's last access date.
-     */
     @OptIn(DelicateAction::class)
     override fun handleForceSelectedTabsAsInactiveClicked(numDays: Long) {
         val tabs = tabsTrayStore.state.mode.selectedTabs
