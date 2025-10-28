@@ -57,6 +57,38 @@ add_task(async function test_exclusion_and_proxy() {
   });
 });
 
+add_task(async function test_essential_exclusion() {
+  const server = new HttpServer();
+  server.registerPathHandler("/", (request, response) => {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.setHeader("Content-Type", "text/plain");
+    response.write("Hello World");
+  });
+  server.start(-1);
+
+  await withProxyServer(async proxyInfo => {
+    // Create the IPP connection filter
+    const filter = IPPChannelFilter.create();
+    // Add essential URL to exclusion list
+    filter.addEssentialExclusion(
+      "http://localhost:" + server.identity.primaryPort
+    );
+    filter.initialize("", proxyInfo.host, proxyInfo.port, proxyInfo.type);
+    proxyInfo.gotConnection.then(() => {
+      Assert.ok(false, "Proxy connection should not be made for excluded URL");
+    });
+    filter.start();
+
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://localhost:" + server.identity.primaryPort
+    );
+    await BrowserTestUtils.removeTab(tab);
+    filter.stop();
+  });
+});
+
 add_task(async function test_channel_suspend_resume() {
   const server = new HttpServer();
   server.registerPathHandler("/", (request, response) => {

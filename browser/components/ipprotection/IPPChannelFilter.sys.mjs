@@ -20,6 +20,12 @@ const DEFAULT_EXCLUDED_URL_PREFS = [
   "identity.fxaccounts.remote.profile.uri",
 ];
 
+const ESSENTIAL_URL_PREFS = [
+  "toolkit.telemetry.server",
+  "network.trr.uri",
+  "network.trr.default_provider_uri",
+];
+
 /**
  * IPPChannelFilter is a class that implements the nsIProtocolProxyChannelFilter
  * when active it will funnel all requests to its provided proxy.
@@ -88,6 +94,15 @@ export class IPPChannelFilter {
         this.addPageExclusion(prefValue);
       }
     });
+    // Get origins essential to starting the proxy and exclude
+    // them prior to connecting
+    this.#essentialOrigins = new Set();
+    ESSENTIAL_URL_PREFS.forEach(pref => {
+      const prefValue = Services.prefs.getStringPref(pref, "");
+      if (prefValue) {
+        this.addEssentialExclusion(prefValue);
+      }
+    });
   }
 
   /**
@@ -140,6 +155,11 @@ export class IPPChannelFilter {
       }
 
       const origin = uri.prePath; // scheme://host[:port]
+
+      if (!this.proxyInfo && this.#essentialOrigins.has(origin)) {
+        return true;
+      }
+
       return this.#excludedOrigins.has(origin);
     } catch (_) {
       return true;
@@ -150,15 +170,25 @@ export class IPPChannelFilter {
    * Adds a page URL to the exclusion list.
    *
    * @param {string} url - The URL to exclude.
+   * @param {Set<string>} [list] - The exclusion list to add the URL to.
    */
-  addPageExclusion(url) {
+  addPageExclusion(url, list = this.#excludedOrigins) {
     try {
       const uri = Services.io.newURI(url);
       // prePath is scheme://host[:port]
-      this.#excludedOrigins.add(uri.prePath);
+      list.add(uri.prePath);
     } catch (_) {
       // ignore bad entries
     }
+  }
+
+  /**
+   * Adds a URL to the essential exclusion list.
+   *
+   * @param {string} url - The URL to exclude.
+   */
+  addEssentialExclusion(url) {
+    this.addPageExclusion(url, this.#essentialOrigins);
   }
 
   /**
@@ -285,6 +315,7 @@ export class IPPChannelFilter {
   #observers = [];
   #active = false;
   #excludedOrigins = new Set();
+  #essentialOrigins = new Set();
   #pendingChannels = [];
 
   static makeIsolationKey() {
