@@ -6,39 +6,41 @@
 
 namespace mozilla::dom::sanitizer {
 
-bool CanonicalName::IsDataAttribute() const {
-  return StringBeginsWith(nsDependentAtomString(mLocalName), u"data-"_ns) &&
-         !mNamespace;
-}
-
-template <typename SanitizerName>
-void CanonicalName::SetSanitizerName(SanitizerName& aSanitizerName) const {
-  mLocalName->ToString(aSanitizerName.mName);
-  if (mNamespace) {
-    mNamespace->ToString(aSanitizerName.mNamespace);
+template <typename CanonicalName, typename SanitizerName>
+static void SetSanitizerName(const CanonicalName& aName,
+                             SanitizerName& aSanitizerName) {
+  aName->LocalName()->ToString(aSanitizerName.mName);
+  if (nsAtom* ns = aName->GetNamespace()) {
+    ns->ToString(aSanitizerName.mNamespace);
   } else {
     aSanitizerName.mNamespace.SetIsVoid(true);
   }
 }
 
-SanitizerAttributeNamespace CanonicalName::ToSanitizerAttributeNamespace()
+bool CanonicalAttribute::IsDataAttribute() const {
+  return StringBeginsWith(nsDependentAtomString(mLocalName), u"data-"_ns) &&
+         !mNamespace;
+}
+
+SanitizerAttributeNamespace CanonicalAttribute::ToSanitizerAttributeNamespace()
     const {
   SanitizerAttributeNamespace result;
-  SetSanitizerName(result);
+  SetSanitizerName(this, result);
   return result;
 }
 
-SanitizerElementNamespace CanonicalName::ToSanitizerElementNamespace() const {
+SanitizerElementNamespace CanonicalElement::ToSanitizerElementNamespace()
+    const {
   SanitizerElementNamespace result;
-  SetSanitizerName(result);
+  SetSanitizerName(this, result);
   return result;
 }
 
 SanitizerElementNamespaceWithAttributes
-CanonicalName::ToSanitizerElementNamespaceWithAttributes(
+CanonicalElement::ToSanitizerElementNamespaceWithAttributes(
     const CanonicalElementAttributes& aElementAttributes) const {
   SanitizerElementNamespaceWithAttributes result;
-  SetSanitizerName(result);
+  SetSanitizerName(this, result);
   if (aElementAttributes.mAttributes) {
     result.mAttributes.Construct(
         ToSanitizerAttributes(*aElementAttributes.mAttributes));
@@ -50,16 +52,26 @@ CanonicalName::ToSanitizerElementNamespaceWithAttributes(
   return result;
 }
 
-std::ostream& operator<<(std::ostream& aStream, const CanonicalName& aName) {
+template <typename CanonicalName>
+static std::ostream& Write(std::ostream& aStream, const CanonicalName& aName) {
   nsAutoCString localName;
-  aName.mLocalName->ToUTF8String(localName);
+  aName.LocalName()->ToUTF8String(localName);
   aStream << '"' << localName << '"';
-  if (aName.mNamespace) {
+  if (nsAtom* ns = aName.GetNamespace()) {
     nsAutoCString nameSpace;
-    aName.mNamespace->ToUTF8String(nameSpace);
+    ns->ToUTF8String(nameSpace);
     return aStream << " (namespace: \"" << nameSpace << "\")";
   }
   return aStream << " (namespace: null)";
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const CanonicalAttribute& aName) {
+  return Write(aStream, aName);
+}
+
+std::ostream& operator<<(std::ostream& aStream, const CanonicalElement& aName) {
+  return Write(aStream, aName);
 }
 
 bool CanonicalElementAttributes::Equals(
@@ -74,7 +86,7 @@ bool CanonicalElementAttributes::Equals(
       return false;
     }
 
-    for (const CanonicalName& attr : *mAttributes) {
+    for (const CanonicalAttribute& attr : *mAttributes) {
       if (!aOther.mAttributes->Contains(attr)) {
         return false;
       }
@@ -86,7 +98,7 @@ bool CanonicalElementAttributes::Equals(
       return false;
     }
 
-    for (const CanonicalName& attr : *mRemoveAttributes) {
+    for (const CanonicalAttribute& attr : *mRemoveAttributes) {
       if (!aOther.mRemoveAttributes->Contains(attr)) {
         return false;
       }
@@ -97,9 +109,9 @@ bool CanonicalElementAttributes::Equals(
 }
 
 nsTArray<OwningStringOrSanitizerAttributeNamespace> ToSanitizerAttributes(
-    const CanonicalNameSet& aSet) {
+    const CanonicalAttributeSet& aSet) {
   nsTArray<OwningStringOrSanitizerAttributeNamespace> attributes;
-  for (const CanonicalName& canonical : aSet) {
+  for (const CanonicalAttribute& canonical : aSet) {
     OwningStringOrSanitizerAttributeNamespace owning;
     owning.SetAsSanitizerAttributeNamespace() =
         canonical.ToSanitizerAttributeNamespace();
