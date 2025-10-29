@@ -12,7 +12,6 @@
 // values defined here may be determined at runtime.
 
 #include "mozilla/Assertions.h"
-#include "mozilla/HelperMacros.h"
 #include "mozilla/Literals.h"
 #include "mozilla/MathAlgorithms.h"
 
