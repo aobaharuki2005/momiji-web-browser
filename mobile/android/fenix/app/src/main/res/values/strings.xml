@@ -1150,6 +1150,8 @@
     <string name="toolbar_customize_shortcut_translate">Translate</string>
     <!-- Homepage shortcut in toolbar customization -->
     <string name="toolbar_customize_shortcut_homepage">Homepage</string>
+    <!-- Back shortcut in toolbar customization -->
+    <string name="toolbar_customize_shortcut_back">Back</string>
 
     <!-- App icon Preferences -->
     <!-- Title for the preference that lets the user pick a new app icon -->

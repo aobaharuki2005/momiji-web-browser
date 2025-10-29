@@ -64,6 +64,11 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
                 iconsR.drawable.mozac_ic_home_24,
                 R.string.toolbar_customize_shortcut_homepage,
             ),
+            Option(
+                Keys.BACK,
+                iconsR.drawable.mozac_ic_back_24,
+                R.string.toolbar_customize_shortcut_back,
+            ),
         )
     }
 
@@ -197,5 +202,6 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         const val BOOKMARK = "bookmark"
         const val TRANSLATE = "translate"
         const val HOMEPAGE = "homepage"
+        const val BACK = "back"
     }
 }

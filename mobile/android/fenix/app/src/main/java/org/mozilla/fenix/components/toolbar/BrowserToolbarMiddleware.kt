@@ -1035,6 +1035,7 @@ class BrowserToolbarMiddleware(
                     it.selectedTab?.content?.canGoForward,
                 )
             }.collect {
+                updateEndBrowserActions(context)
                 updateStartBrowserActions(context)
             }
         }
@@ -1301,6 +1302,7 @@ class BrowserToolbarMiddleware(
             }
             ToolbarShortcutPreference.Keys.TRANSLATE -> ToolbarAction.Translate
             ToolbarShortcutPreference.Keys.HOMEPAGE -> ToolbarAction.Homepage
+            ToolbarShortcutPreference.Keys.BACK -> ToolbarAction.Back
             else -> ToolbarAction.NewTab
         }
     }
