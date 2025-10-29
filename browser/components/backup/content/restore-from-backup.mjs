@@ -77,12 +77,7 @@ export default class RestoreFromBackup extends MozLitElement {
     );
 
     // If we have a backup file, but not the associated info, fetch the info
-    if (
-      this.backupServiceState?.backupFileToRestore &&
-      !this.backupServiceState?.backupFileInfo
-    ) {
-      this.getBackupFileInfo();
-    }
+    this.maybeGetBackupFileInfo();
 
     this.addEventListener("BackupUI:SelectNewFilepickerPath", this);
 
@@ -90,6 +85,15 @@ export default class RestoreFromBackup extends MozLitElement {
     if (this.aboutWelcomeEmbedded) {
       this._handleWindowResize = () => this.resizeTextarea();
       window.addEventListener("resize", this._handleWindowResize);
+    }
+  }
+
+  maybeGetBackupFileInfo() {
+    if (
+      this.backupServiceState?.backupFileToRestore &&
+      !this.backupServiceState?.backupFileInfo
+    ) {
+      this.getBackupFileInfo();
     }
   }
 
@@ -123,6 +127,10 @@ export default class RestoreFromBackup extends MozLitElement {
           detail: { recoveryInProgress: inProgress },
         })
       );
+
+      // It's possible that backupFileToRestore got updated and we need to
+      // refetch the fileInfo
+      this.maybeGetBackupFileInfo();
     }
   }
 
