@@ -15,8 +15,6 @@ const execProcess = sinon.fake();
 const sendCommandLine = sinon.fake.throws(Cr.NS_ERROR_NOT_AVAILABLE);
 
 add_setup(async () => {
-  await initSelectableProfileService();
-
   sinon.replace(
     getSelectableProfileService(),
     "sendCommandLine",
@@ -53,7 +51,7 @@ add_task(async function test_delete_last_profile() {
 
   profile = profiles[0];
 
-  let expected = ["-url", "about:newprofile"];
+  let expected = ["-new-tab", "about:newprofile"];
 
   await TestUtils.waitForCondition(
     () => sendCommandLine.callCount > 1,
