@@ -177,10 +177,9 @@ internal class FakeCreditCardsAddressesStorage : CreditCardsAddressesStorage {
 
     companion object {
         fun getAllPossibleLocaleLangTags(): List<String> = listOf(
-            "en-US",
-            "en-CA",
-            "fr-CA",
-        ) + DebugLocale.entries.map { it.langTag }
+            "US",
+            "CA",
+        ) + DebugRegion.entries.map { it.country }
 
         private val randomNames = listOf("John Doe", "Jane Doe", "Bob Smith", "Alice Johnson")
         private val randomCardNumbers = listOf(

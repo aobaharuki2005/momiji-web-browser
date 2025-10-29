@@ -12,7 +12,7 @@ import mozilla.components.concept.storage.CreditCardsAddressesStorage
 import mozilla.components.concept.storage.LoginsStorage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.debugsettings.addons.ui.AddonsDebugToolsScreen
-import org.mozilla.fenix.debugsettings.addresses.AddressesDebugLocalesRepository
+import org.mozilla.fenix.debugsettings.addresses.AddressesDebugRegionRepository
 import org.mozilla.fenix.debugsettings.addresses.AddressesTools
 import org.mozilla.fenix.debugsettings.cfrs.CfrToolsState
 import org.mozilla.fenix.debugsettings.cfrs.CfrToolsStore
@@ -85,7 +85,7 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
          * @param cfrToolsStore [CfrToolsStore] used to access [CfrToolsState].
          * @param gleanDebugToolsStore [GleanDebugToolsStore] used to dispatch glean debug tools actions.
          * @param loginsStorage [LoginsStorage] used to access logins for [LoginsScreen].
-         * @param addressesDebugLocalesRepository used to control storage for [AddressesTools].
+         * @param addressesDebugRegionRepository used to control storage for [AddressesTools].
          * @param creditCardsAddressesStorage used to access addresses for [AddressesTools].
          * @param inactiveTabsEnabled Whether the inactive tabs feature is enabled.
          */
@@ -96,7 +96,7 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
             cfrToolsStore: CfrToolsStore,
             gleanDebugToolsStore: GleanDebugToolsStore,
             loginsStorage: LoginsStorage,
-            addressesDebugLocalesRepository: AddressesDebugLocalesRepository,
+            addressesDebugRegionRepository: AddressesDebugRegionRepository,
             creditCardsAddressesStorage: CreditCardsAddressesStorage,
             inactiveTabsEnabled: Boolean,
         ): List<DebugDrawerDestination> =
@@ -134,7 +134,7 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
                         }
                         content = {
                             AddressesTools(
-                                debugLocalesRepository = addressesDebugLocalesRepository,
+                                debugRegionRepository = addressesDebugRegionRepository,
                                 creditCardsAddressesStorage = creditCardsAddressesStorage,
                             )
                         }
