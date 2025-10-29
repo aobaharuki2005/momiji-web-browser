@@ -197,9 +197,7 @@ mobile/android/android-components/samples/sync-logins/lint-baseline.xml
 mobile/android/android-components/samples/sync/lint-baseline.xml
 mobile/android/android-components/samples/toolbar/lint-baseline.xml
 mobile/android/fenix/app/lint-baseline.xml
-mobile/android/fenix/app/src/debug/res/raw/initial_experiments.json
 mobile/android/fenix/app/src/main/res/
-mobile/android/fenix/app/src/main/res/raw/initial_experiments.json
 mobile/android/fenix/config/detekt-baseline.xml
 mobile/android/fenix/gradle/wrapper/
 mobile/android/focus-android/app/lint-baseline.xml
