@@ -4059,22 +4059,40 @@ export class BackupService extends EventTarget {
         now - lastBackupDate > lazy.minimumTimeBetweenBackupsSeconds
       ) {
         lazy.logConsole.debug(
-          "Last backup exceeded minimum time between backups. Queing a " +
+          "Last backup exceeded minimum time between backups. Queueing a " +
             "backup via idleDispatch."
         );
+
         // Just because the user hasn't sent us events in a while doesn't mean
         // that the browser itself isn't busy. It might be, for example, playing
         // video or doing a complex calculation that the user is actively
         // waiting to complete, and we don't want to draw resources from that.
         // Instead, we'll use ChromeUtils.idleDispatch to wait until the event
         // loop in the parent process isn't so busy with higher priority things.
-        this.createBackupOnIdleDispatch();
+        let expectedBackupTime =
+          lastBackupDate + lazy.minimumTimeBetweenBackupsSeconds;
+        this.createBackupOnIdleDispatch({
+          reason:
+            expectedBackupTime < this._startupTimeUnixSeconds
+              ? "missed"
+              : "idle",
+        });
       } else {
         lazy.logConsole.debug(
           "Last backup was too recent. Not creating one for now."
         );
       }
     }
+  }
+
+  /**
+   * Gets the time that Firefox started as milliseconds since the Unix epoch.
+   *
+   * This is in a getter to make it easier for tests to stub it out.
+   */
+  get _startupTimeUnixSeconds() {
+    let startupTimeMs = Services.startup.getStartupInfo().process.getTime();
+    return Math.floor(startupTimeMs / 1000);
   }
 
   /**
