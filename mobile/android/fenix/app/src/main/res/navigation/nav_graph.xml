@@ -96,6 +96,9 @@
         android:id="@+id/action_global_settingsFragment"
         app:destination="@id/settingsFragment" />
     <action
+        android:id="@+id/action_global_appIconSelectionFragment"
+        app:destination="@id/appIconSelectionFragment" />
+    <action
         android:id="@+id/action_global_homeSettingsFragment"
         app:destination="@id/homeSettingsFragment" />
     <action

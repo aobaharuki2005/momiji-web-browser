@@ -539,6 +539,8 @@
                 <data android:scheme="${deepLinkScheme}"
                     android:host="settings_tracking_protection"/>
                 <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_app_icon"/>
+                <data android:scheme="${deepLinkScheme}"
                     android:host="share_sheet"/>
                 <data android:scheme="${deepLinkScheme}"
                     android:host="turn_on_sync"/>
