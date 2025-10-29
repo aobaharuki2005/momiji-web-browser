@@ -18,6 +18,14 @@ ChromeUtils.defineLazyGetter(
     ChromeUtils.importESModule("resource://gre/modules/HiddenFrame.sys.mjs")
       .HiddenBrowserManager
 );
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "JsonSchemaValidator",
+  () =>
+    ChromeUtils.importESModule(
+      "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs"
+    ).JsonSchemaValidator
+);
 
 if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
   throw new Error("Guardian.sys.mjs should only run in the parent process");
@@ -209,7 +217,7 @@ export class GuardianClient {
     try {
       const entitlement = await Entitlement.fromResponse(response);
       if (!entitlement) {
-        return { status, error: "invalid_response" };
+        return { status, error: "parse_error" };
       }
       return {
         status,
@@ -369,35 +377,43 @@ export class ProxyPass {
  * Immutable after creation.
  */
 export class Entitlement {
-  /** True if the User has any valid subscription plan to Mozilla VPN */
+  /** True if the User may Use the Autostart feature  */
+  autostart = false;
+  /** The date the entitlement was added to the user */
+  created_at = new Date();
+  /** True if the User has a limited bandwidth */
+  limited_bandwidth = false;
+  /** True if the User may Use the location controls */
+  location_controls = false;
+  /** True if the User has any valid subscription plan to the Mozilla VPN (not firefox VPN) */
   subscribed = false;
   /** The Guardian User ID */
   uid = 0;
-  /** The date the entitlement was added to the user */
-  created_at = new Date();
+  /** True if the User has website inclusion */
+  website_inclusion = false;
 
-  constructor(subscribed, uid, created_at) {
-    if (
-      typeof subscribed !== "boolean" ||
-      typeof uid !== "number" ||
-      typeof created_at !== "string"
-    ) {
-      throw new TypeError("Invalid arguments for Entitlement constructor");
+  constructor(
+    args = {
+      autostart: false,
+      created_at: new Date().toISOString(),
+      limited_bandwidth: false,
+      location_controls: false,
+      subscribed: false,
+      uid: 0,
+      website_inclusion: false,
     }
-    // Assert ISO 8601 format: YYYY-MM-DDTHH:mm:ss.sssZ
-    const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-    if (!iso8601Regex.test(created_at)) {
-      throw new TypeError(
-        "entitlementDate must be in ISO 8601 format: YYYY-MM-DDTHH:mm:ss.sssZ"
-      );
-    }
+  ) {
     // Ensure it parses to a valid date
-    const parsed = Date.parse(created_at);
+    const parsed = Date.parse(args.created_at);
     if (isNaN(parsed)) {
       throw new TypeError("entitlementDate is not a valid date string");
     }
-    this.subscribed = subscribed;
-    this.uid = uid;
+    this.autostart = args.autostart;
+    this.limited_bandwidth = args.limited_bandwidth;
+    this.location_controls = args.location_controls;
+    this.website_inclusion = args.website_inclusion;
+    this.subscribed = args.subscribed;
+    this.uid = args.uid;
     this.created_at = parsed;
     Object.freeze(this);
   }
@@ -407,8 +423,60 @@ export class Entitlement {
       return null;
     }
     return response.json().then(data => {
-      return new Entitlement(data.subscribed, data.uid, data.created_at);
+      const result = lazy.JsonSchemaValidator.validate(
+        data,
+        Entitlement.schema
+      );
+      if (!result.valid) {
+        return null;
+      }
+      return new Entitlement(data);
     });
+  }
+
+  static get schema() {
+    return {
+      $schema: "http://json-schema.org/draft-07/schema#",
+      title: "Entitlement",
+      type: "object",
+      properties: {
+        autostart: {
+          type: "boolean",
+          description: "True if the User may Use the Autostart feature",
+        },
+        created_at: {
+          type: "string",
+          description: "The date the entitlement was added to the user",
+          format: "date-time", // ISO 8601
+          pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$",
+        },
+        limited_bandwidth: {
+          type: "boolean",
+        },
+        location_controls: {
+          type: "boolean",
+        },
+        subscribed: {
+          type: "boolean",
+        },
+        uid: {
+          type: "integer",
+        },
+        website_inclusion: {
+          type: "boolean",
+        },
+      },
+      required: [
+        "autostart",
+        "created_at",
+        "limited_bandwidth",
+        "location_controls",
+        "subscribed",
+        "uid",
+        "website_inclusion",
+      ],
+      additionalProperties: true,
+    };
   }
 }
 
