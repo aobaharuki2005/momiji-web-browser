@@ -2699,6 +2699,18 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     return;
   }
 
+  if (!aRequest->URI()->SchemeIs("http") &&
+      !aRequest->URI()->SchemeIs("https")) {
+    LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: Unsupported scheme",
+         aRequest));
+    // Internal resources can be exposed to the web content, but they don't
+    // have to be cached.
+    aRequest->MarkNotCacheable();
+    MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
+    MOZ_ASSERT(aRequest->SRIAndBytecode().empty());
+    return;
+  }
+
   if (aRequest->IsBytecode()) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: IsBytecode",
          aRequest));
@@ -3246,13 +3258,6 @@ void ScriptLoader::InstantiateClassicScriptFromAny(
 ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
     ScriptLoadRequest* aRequest) {
   if (!mCache) {
-    return CacheBehavior::DoNothing;
-  }
-
-  if (!aRequest->URI()->SchemeIs("http") &&
-      !aRequest->URI()->SchemeIs("https")) {
-    // Internal resources can be exposed to the web content, but they don't
-    // have to be cached.
     return CacheBehavior::DoNothing;
   }
 
