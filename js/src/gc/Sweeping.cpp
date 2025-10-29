@@ -1676,6 +1676,13 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
 
   AutoSetThreadIsSweeping threadIsSweeping;
 
+  // Disable incremental barriers for all zones while we are sweeping/finalizing
+  // zones in this sweep group. Set the |disableBarriersForSweeping| flag so we
+  // enable/disable the barriers on yield/resume.
+  MOZ_ASSERT(!disableBarriersForSweeping);
+  disableBarriersForSweeping = true;
+  disableIncrementalBarriers();
+
   // This must happen before sweeping realm globals.
   sweepDebuggerOnMainThread(gcx);
 
@@ -1834,6 +1841,12 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JS::GCContext* gcx,
     }
   }
   queueZonesAndStartBackgroundSweep(std::move(zones));
+
+  // Re-enable incremental barriers for all zones now we are we done sweeping
+  // zones in this group.
+  MOZ_ASSERT(disableBarriersForSweeping);
+  disableBarriersForSweeping = false;
+  enableIncrementalBarriers();
 
   return Finished;
 }
@@ -2483,6 +2496,29 @@ void GCRuntime::prepareForSweepSlice(JS::GCReason reason) {
   rt->mainContextFromOwnThread()->traceWrapperGCRooters(marker().tracer());
 }
 
+// Ensure barriers are disabled if required when entering a sweep slice and
+// re-enabled when yielding to the mutator. |disableBarriersForSweeping| is set
+// in beginSweepingSweepGroup and cleared in endSweepingSweepGroup.
+class js::gc::AutoUpdateBarriersForSweeping {
+ public:
+  explicit AutoUpdateBarriersForSweeping(GCRuntime* gc) : gc(gc) {
+    MOZ_ASSERT(gc->state() == State::Sweep);
+    if (gc->disableBarriersForSweeping) {
+      gc->disableIncrementalBarriers();
+    }
+  }
+
+  ~AutoUpdateBarriersForSweeping() {
+    MOZ_ASSERT(gc->state() == State::Sweep);
+    if (gc->disableBarriersForSweeping) {
+      gc->enableIncrementalBarriers();
+    }
+  }
+
+ private:
+  GCRuntime* gc;
+};
+
 IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   MOZ_ASSERT_IF(storeBuffer().isEnabled(),
                 !storeBuffer().mayHavePointersToDeadCells());
@@ -2493,9 +2529,6 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   JS::GCContext* gcx = rt->gcContext();
   AutoSetThreadIsSweeping threadIsSweeping(gcx);
   AutoPoisonFreedJitCode pjc(gcx);
-
-  // Don't trigger pre-barriers when finalizing.
-  AutoDisableBarriers disableBarriers(this);
 
   // Drain the mark stack, possibly in a parallel task if we're in a part of
   // sweeping that allows it.
@@ -2514,6 +2547,9 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
       return NotFinished;
     }
   }
+
+  // Don't trigger pre-barriers when sweeping or finalizing.
+  AutoUpdateBarriersForSweeping updateBarriers(this);
 
   // Then continue running sweep actions.
 

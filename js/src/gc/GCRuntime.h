@@ -46,6 +46,7 @@ using BlackGrayEdgeVector = Vector<TenuredCell*, 0, SystemAllocPolicy>;
 using ZoneVector = Vector<JS::Zone*, 4, SystemAllocPolicy>;
 
 class AutoCallGCCallbacks;
+class AutoUpdateBarriersForSweeping;
 class AutoGCSession;
 class AutoHeapSession;
 class AutoTraceSession;
@@ -940,6 +941,8 @@ class GCRuntime {
   void freeFromBackgroundThread(AutoLockHelperThreadState& lock);
   void sweepBackgroundThings(ZoneList& zones);
   void prepareForSweepSlice(JS::GCReason reason);
+  void disableIncrementalBarriers();
+  void enableIncrementalBarriers();
   void assertBackgroundSweepingFinished();
 #ifdef DEBUG
   bool zoneInCurrentSweepGroup(Zone* zone) const;
@@ -1265,6 +1268,8 @@ class GCRuntime {
       weakCachesToSweep;
   MainThreadData<bool> abortSweepAfterCurrentGroup;
   MainThreadOrGCTaskData<IncrementalProgress> sweepMarkResult;
+  MainThreadData<bool> disableBarriersForSweeping;
+  friend class AutoUpdateBarriersForSweeping;
 
   /*
    * During incremental foreground finalization, we may have a list of arenas of

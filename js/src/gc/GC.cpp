@@ -3562,9 +3562,9 @@ void GCRuntime::checkGCStateNotInUse() {
     MOZ_ASSERT(marker->isDrained());
   }
   MOZ_ASSERT(!hasDelayedMarking());
-
   MOZ_ASSERT(!lastMarkSlice);
 
+  MOZ_ASSERT(!disableBarriersForSweeping);
   MOZ_ASSERT(foregroundFinalizedArenas.ref().isNothing());
 
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
@@ -3877,12 +3877,12 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
   return IncrementalResult::Reset;
 }
 
-AutoDisableBarriers::AutoDisableBarriers(GCRuntime* gc) : gc(gc) {
-  /*
-   * Clear needsIncrementalBarrier early so we don't do any write barriers
-   * during sweeping.
-   */
-  for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+void GCRuntime::disableIncrementalBarriers() {
+  // Clear needsIncrementalBarrier so we don't do any write barriers during
+  // foreground finalization. This would otherwise happen when destroying
+  // HeapPtr<>s to GC things in zones which are still marking.
+
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     if (zone->isGCMarking()) {
       MOZ_ASSERT(zone->needsIncrementalBarrier());
       zone->setNeedsIncrementalBarrier(false);
@@ -3891,8 +3891,8 @@ AutoDisableBarriers::AutoDisableBarriers(GCRuntime* gc) : gc(gc) {
   }
 }
 
-AutoDisableBarriers::~AutoDisableBarriers() {
-  for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+void GCRuntime::enableIncrementalBarriers() {
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     MOZ_ASSERT(!zone->needsIncrementalBarrier());
     if (zone->isGCMarking()) {
       zone->setNeedsIncrementalBarrier(true);
