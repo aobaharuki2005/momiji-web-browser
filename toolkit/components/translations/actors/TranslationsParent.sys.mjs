@@ -3624,6 +3624,9 @@ export class TranslationsParent extends JSWindowActorParent {
       result.confident = false;
     }
 
+    // Some language tags are not supported by CLD2
+    result.language = this.maybeRefineMacroLanguageTag(result.language);
+
     const htmlLangAttribute =
       this.languageState?.detectedLanguages?.htmlLangAttribute ?? null;
     const identifiedLanguage = result.language;
