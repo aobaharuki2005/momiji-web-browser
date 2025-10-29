@@ -384,6 +384,7 @@ export default class RestoreFromBackup extends MozLitElement {
           style=${styles}
           @input=${this.handleTextareaResize}
           aria-describedby=${describedBy}
+          data-l10n-id="restore-from-backup-filepicker-input"
         ></textarea>
       `;
     }
@@ -395,6 +396,7 @@ export default class RestoreFromBackup extends MozLitElement {
         readonly
         .value=${backupFileName}
         style=${styles}
+        data-l10n-id="restore-from-backup-filepicker-input"
       />
     `;
   }
