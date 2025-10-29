@@ -474,7 +474,7 @@ const BASE_MESSAGES = () => [
                           string_id: "create-backup-screen-2-all-list-3",
                           marginBlock: "4px",
                           fontSize: "13px",
-                          fontWeight: 500,
+                          fontWeight: "600",
                         },
                       },
                     ],
@@ -676,7 +676,7 @@ const BASE_MESSAGES = () => [
           content: {
             screen_style: {
               width: "664px",
-              height: "620px",
+              height: "580px",
             },
             logo: {
               imageURL:
@@ -702,6 +702,7 @@ const BASE_MESSAGES = () => [
                     text: {
                       string_id:
                         "fx-backup-confirmation-screen-easy-setup-item-text-1",
+                      fontWeight: "600",
                     },
                     subtext: {
                       string_id: "fx-backup-confirmation-screen-item-subtext-1",
@@ -718,6 +719,7 @@ const BASE_MESSAGES = () => [
                     text: {
                       string_id:
                         "fx-backup-confirmation-screen-easy-setup-item-text-2",
+                      fontWeight: "600",
                     },
                     subtext: {
                       string_id: "fx-backup-confirmation-screen-item-subtext-2",
@@ -733,6 +735,7 @@ const BASE_MESSAGES = () => [
                     text: {
                       string_id:
                         "fx-backup-confirmation-screen-easy-setup-item-text-3",
+                      fontWeight: "600",
                     },
                     subtext: {
                       string_id:
@@ -755,6 +758,12 @@ const BASE_MESSAGES = () => [
             additional_button: {
               label: {
                 string_id: "fx-backup-confirmation-screen-close-button",
+                fontSize: "0.75em",
+                minHeight: "24px",
+                minWidth: "revert",
+                lineHeight: "100%",
+                paddingBlock: "4px",
+                paddingInline: "12px",
               },
               style: "secondary",
               action: { dismiss: true },
@@ -769,7 +778,7 @@ const BASE_MESSAGES = () => [
             isEncryptedBackup: true,
             screen_style: {
               width: "664px",
-              height: "620px",
+              height: "580px",
             },
             logo: {
               imageURL:
@@ -795,6 +804,7 @@ const BASE_MESSAGES = () => [
                     text: {
                       string_id:
                         "fx-backup-confirmation-screen-all-data-item-text-1",
+                      fontWeight: "600",
                     },
                     subtext: {
                       string_id: "fx-backup-confirmation-screen-item-subtext-1",
@@ -811,6 +821,7 @@ const BASE_MESSAGES = () => [
                     text: {
                       string_id:
                         "fx-backup-confirmation-screen-all-data-item-text-2",
+                      fontWeight: "600",
                     },
                     subtext: {
                       string_id: "fx-backup-confirmation-screen-item-subtext-2",
@@ -826,6 +837,7 @@ const BASE_MESSAGES = () => [
                     text: {
                       string_id:
                         "fx-backup-confirmation-screen-all-data-item-text-3",
+                      fontWeight: "600",
                     },
                   },
                 ],
@@ -843,6 +855,12 @@ const BASE_MESSAGES = () => [
             additional_button: {
               label: {
                 string_id: "fx-backup-confirmation-screen-close-button",
+                fontSize: "0.75em",
+                minHeight: "24px",
+                minWidth: "revert",
+                lineHeight: "100%",
+                paddingBlock: "4px",
+                paddingInline: "12px",
               },
               style: "secondary",
               action: { dismiss: true },
