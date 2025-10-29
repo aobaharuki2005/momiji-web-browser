@@ -13,7 +13,6 @@
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "ExpandedPrincipal.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "XPCMaps.h"
 #include "js/Object.h"              // JS::GetCompartment

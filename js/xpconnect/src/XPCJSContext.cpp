@@ -70,7 +70,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/SystemPrincipal.h"
 #include "mozilla/TaskController.h"
-#include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "AccessCheck.h"
 #include "nsGlobalWindowInner.h"

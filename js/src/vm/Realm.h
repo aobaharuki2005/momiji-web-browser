@@ -11,7 +11,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Variant.h"
 #include "mozilla/XorShift128PlusRNG.h"
 
 #include <stddef.h>

@@ -51,6 +51,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/glean/ToolkitXreMetrics.h"
 #include "mozilla/Try.h"
+#include "mozilla/Utf8.h"
 #include "mozilla/XREAppData.h"
 #include "nsPrintfCString.h"
 

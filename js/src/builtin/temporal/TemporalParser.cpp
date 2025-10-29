@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Range.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"

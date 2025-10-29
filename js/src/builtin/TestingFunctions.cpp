@@ -20,7 +20,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StringBuffer.h"
-#include "mozilla/TextUtils.h"
 #include "mozilla/ThreadLocal.h"
 
 #include <algorithm>

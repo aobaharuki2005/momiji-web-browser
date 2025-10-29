@@ -21,7 +21,6 @@
 #include "mozilla/SharedSubResourceCache.h"  // mozilla::SubResourceNetworkMetadataHolder
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Variant.h"
-#include "mozilla/Vector.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "LoadedScript.h"

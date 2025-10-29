@@ -11,7 +11,6 @@
 #  include "builtin/DisposableStackObject.h"
 #endif
 #include "mozilla/BinarySearch.h"
-#include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"  // mozilla::MakeScopeExit
 #include "mozilla/Utf8.h"       // mozilla::Utf8Unit

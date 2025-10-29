@@ -7,7 +7,6 @@
 #include "jit/mips-shared/Assembler-mips-shared.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/MathAlgorithms.h"
 
 #include "gc/Marking.h"
 #include "jit/ExecutableAllocator.h"

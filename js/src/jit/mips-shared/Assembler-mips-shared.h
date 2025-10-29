@@ -8,7 +8,6 @@
 #define jit_mips_shared_Assembler_mips_shared_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Sprintf.h"
 
 #include "jit/CompactBuffer.h"

@@ -31,7 +31,6 @@
 
 #ifdef XP_WIN
 #  include "mozilla/StackWalk_windows.h"
-#  include "mozilla/WindowsVersion.h"
 #elif defined(__wasi__)
 #  if defined(JS_CODEGEN_WASM32)
 #    include <cstdlib>

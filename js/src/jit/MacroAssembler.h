@@ -8,7 +8,6 @@
 #define jit_MacroAssembler_h
 
 #include "mozilla/MacroForEach.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Variant.h"
 

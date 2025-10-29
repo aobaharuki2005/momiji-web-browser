@@ -193,7 +193,6 @@
 #include "gc/GC-inl.h"
 
 #include "mozilla/glue/Debug.h"
-#include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/TimeStamp.h"

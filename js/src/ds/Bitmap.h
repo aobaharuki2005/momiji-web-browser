@@ -10,7 +10,6 @@
 #include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/MemoryChecking.h"
 
 #include <algorithm>
 #include <stddef.h>

@@ -33,7 +33,6 @@
 #  include "mozilla/FloatingPoint.h"
 #  include "mozilla/IntegerPrintfMacros.h"
 #  include "mozilla/Likely.h"
-#  include "mozilla/MathAlgorithms.h"
 
 #  include <cinttypes>
 #  include <float.h>

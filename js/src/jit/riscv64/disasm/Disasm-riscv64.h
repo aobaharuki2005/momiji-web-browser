@@ -8,8 +8,6 @@
 #ifndef jit_riscv64_disasm_Disasm_riscv64_h
 #define jit_riscv64_disasm_Disasm_riscv64_h
 
-#include "mozilla/Assertions.h"
-
 #include <stdio.h>
 
 #include "jit/riscv64/constant/Constant-riscv64.h"

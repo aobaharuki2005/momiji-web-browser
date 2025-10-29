@@ -13,7 +13,6 @@
 #include "mozilla/Maybe.h"             // for Maybe, Nothing, Some
 #include "mozilla/ScopeExit.h"         // for MakeScopeExit, ScopeExit
 #include "mozilla/Sprintf.h"           // for SprintfLiteral
-#include "mozilla/ThreadLocal.h"       // for ThreadLocal
 #include "mozilla/TimeStamp.h"         // for TimeStamp
 #include "mozilla/UniquePtr.h"         // for UniquePtr
 #include "mozilla/Variant.h"           // for AsVariant, AsVariantTemporary

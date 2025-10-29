@@ -11,7 +11,6 @@
 #include "vm/JSFunction-inl.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Range.h"
 
 #include <algorithm>
 #include <string.h>

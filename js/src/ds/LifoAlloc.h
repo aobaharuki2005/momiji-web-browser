@@ -11,7 +11,6 @@
 #include "mozilla/CheckedArithmetic.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/PodOperations.h"
 
 #include <algorithm>
 #include <new>

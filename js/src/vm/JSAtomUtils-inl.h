@@ -9,8 +9,6 @@
 
 #include "vm/JSAtomUtils.h"
 
-#include "mozilla/RangedPtr.h"
-
 #include "jsnum.h"
 
 #include "gc/MaybeRooted.h"

@@ -10,7 +10,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ThreadLocal.h"
 
 #include "gc/GCContext.h"
 #include "gc/PublicIterators.h"

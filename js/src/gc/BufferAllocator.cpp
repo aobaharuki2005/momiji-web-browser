@@ -6,7 +6,6 @@
 
 #include "gc/BufferAllocator-inl.h"
 
-#include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 
 #ifdef XP_DARWIN

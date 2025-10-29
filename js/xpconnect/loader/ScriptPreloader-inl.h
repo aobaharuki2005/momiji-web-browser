@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Range.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsString.h"
