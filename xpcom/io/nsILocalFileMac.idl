@@ -80,21 +80,6 @@ interface nsILocalFileMac : nsIFile
   [noscript] FSRef getFSRef();
 
    /**
-    * getFSSpec
-    *
-    * Returns the FSSpec of the file object.
-    *
-    * NOTE: Observes the state of the followLinks attribute.
-    * If the file object is an alias and followLinks is TRUE, returns
-    * the target of the alias. If followLinks is FALSE, returns
-    * the unresolved alias file.
-    *
-    * @return
-    *
-    */
-  [noscript] FSSpec getFSSpec();
-
-   /**
     * fileType, creator
     *
     * File type and creator attributes
