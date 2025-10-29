@@ -525,6 +525,12 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  PageInfoPreview: {
+    child: {
+      esModuleURI: "resource:///actors/PageInfoPreviewChild.sys.mjs",
+    },
+  },
+
   PageStyle: {
     parent: {
       esModuleURI: "resource:///actors/PageStyleParent.sys.mjs",

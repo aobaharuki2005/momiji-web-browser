@@ -33,10 +33,18 @@ add_task(async function () {
     "mediaTab",
     imageInfo
   );
-  await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
+  await BrowserTestUtils.waitForEvent(pageInfo, "page-info-mediapreview-load");
 
-  let pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
-  await BrowserTestUtils.waitForEvent(pageInfoImg, "load");
+  let mediaBrowser = pageInfo.document.getElementById("mediaBrowser");
+  let pageInfoImg = await SpecialPowers.spawn(mediaBrowser, [], () => {
+    let previewImg = content.document.querySelector("img");
+
+    return {
+      src: previewImg.src,
+      width: previewImg.width,
+      height: previewImg.height,
+    };
+  });
   Assert.equal(
     pageInfoImg.src,
     imageInfo.src,
