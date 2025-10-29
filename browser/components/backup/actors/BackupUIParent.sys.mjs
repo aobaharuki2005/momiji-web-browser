@@ -76,11 +76,13 @@ export class BackupUIParent extends JSWindowActorParent {
   /**
    * Trigger a createBackup call.
    *
+   * @param {...any} args
+   *   Arguments to pass through to createBackup.
    * @returns {object} Result of the backup attempt.
    */
-  async #triggerCreateBackup() {
+  async #triggerCreateBackup(...args) {
     try {
-      await this.#bs.createBackup();
+      await this.#bs.createBackup(...args);
       return { success: true };
     } catch (e) {
       lazy.logConsole.error(`Failed to retrigger backup`, e);
@@ -104,7 +106,7 @@ export class BackupUIParent extends JSWindowActorParent {
     if (message.name == "RequestState") {
       this.sendState();
     } else if (message.name == "TriggerCreateBackup") {
-      return await this.#triggerCreateBackup();
+      return await this.#triggerCreateBackup({ reason: "manual" });
     } else if (message.name == "EnableScheduledBackups") {
       try {
         let { parentDirPath, password } = message.data;
@@ -212,7 +214,7 @@ export class BackupUIParent extends JSWindowActorParent {
         return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
       }
 
-      return await this.#triggerCreateBackup();
+      return await this.#triggerCreateBackup({ reason: "encryption" });
     } else if (message.name == "DisableEncryption") {
       try {
         await this.#bs.disableEncryption();
@@ -222,7 +224,7 @@ export class BackupUIParent extends JSWindowActorParent {
         return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
       }
 
-      return await this.#triggerCreateBackup();
+      return await this.#triggerCreateBackup({ reason: "encryption" });
     } else if (message.name == "RerunEncryption") {
       try {
         let { password } = message.data;

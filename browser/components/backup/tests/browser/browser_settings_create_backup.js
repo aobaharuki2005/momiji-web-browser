@@ -34,6 +34,8 @@ add_setup(async () => {
  */
 add_task(async function test_create_new_backup_trigger() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    Services.fog.testResetFOG();
+
     let settings = browser.contentDocument.querySelector("backup-settings");
     // disable the buffer for the test
     settings.MESSAGE_BAR_BUFFER = 0;
@@ -108,6 +110,14 @@ add_task(async function test_create_new_backup_trigger() {
     await BrowserTestUtils.waitForCondition(
       () => !settings.backupInProgressMessageBarEl,
       "A backup is no longer in progress, the message bar should disappear"
+    );
+
+    let gleanEvents = Glean.browserBackup.backupStart.testGetValue();
+    Assert.equal(gleanEvents.length, 1, "backup_start event was recorded");
+    Assert.equal(
+      gleanEvents[0].extra.reason,
+      "manual",
+      "correct reason for the backup was recorded"
     );
   });
 });

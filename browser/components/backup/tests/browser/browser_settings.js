@@ -198,6 +198,11 @@ add_task(async function test_disable_backup_encryption_confirm() {
       createBackupStub.calledOnce,
       "BackupService was called to create a new backup"
     );
+    Assert.equal(
+      createBackupStub.firstCall.args[0].reason,
+      "encryption",
+      "Backup reason is set"
+    );
 
     let legacyEvents = TelemetryTestUtils.getEvents(
       {
