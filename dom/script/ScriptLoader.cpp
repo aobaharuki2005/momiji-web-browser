@@ -2700,7 +2700,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
       aRequest->AsModuleRequest()->mModuleType != JS::ModuleType::JavaScript) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: JSON module",
          aRequest));
-    aRequest->MarkSkippedAllCaching();
+    aRequest->MarkNotCacheable();
     MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
     MOZ_ASSERT_IF(aRequest->IsSource(), aRequest->SRIAndBytecode().empty());
     return;
@@ -3278,6 +3278,12 @@ ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
 
 void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->HasStencil());
+
+  if (aRequest->IsMarkedNotCacheable()) {
+    aRequest->ClearStencil();
+    return;
+  }
+
   CacheBehavior cacheBehavior = GetCacheBehavior(aRequest);
 
   if (cacheBehavior == CacheBehavior::DoNothing) {
