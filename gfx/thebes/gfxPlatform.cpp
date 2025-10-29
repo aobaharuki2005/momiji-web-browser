@@ -2861,6 +2861,14 @@ void gfxPlatform::InitWebRenderConfig() {
       gfxVars::SetUseWebRenderTripleBufferingWin(true);
     }
   }
+
+#  ifdef XP_WIN
+  if (StaticPrefs::
+          gfx_webrender_layer_compositor_use_dcomp_texture_AtStartup() &&
+      IsWin1122H2OrLater() && gfxVars::UseWebRenderDCompWin()) {
+    gfxVars::SetWebRenderLayerCompositorDCompTexture(true);
+  }
+#  endif
 #endif
 
   bool allowOverlayVpAutoHDR = false;

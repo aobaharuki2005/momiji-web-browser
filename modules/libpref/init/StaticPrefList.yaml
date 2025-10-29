@@ -7690,6 +7690,11 @@
   type: bool
   value: false
   mirror: once
+
+- name: gfx.webrender.layer-compositor-use-dcomp-texture
+  type: bool
+  value: false
+  mirror: once
 #endif
 
 - name: gfx.webrender.scissored-cache-clears.enabled
