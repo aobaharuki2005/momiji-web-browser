@@ -474,10 +474,18 @@ export class SelectableProfile {
   }
 
   async copyProfile() {
+    // This pref is used to control targeting for the backup welcome messaging.
+    // If this pref is set, the backup welcome messaging will not show.
+    // We set the pref here so the copied profile will inherit this pref and
+    // the copied profile will not show the backup welcome messaging.
+    Services.prefs.setBoolPref("browser.profiles.profile-copied", true);
     const backupServiceInstance = BackupService.init();
     let result = await backupServiceInstance.createAndPopulateStagingFolder(
       this.path
     );
+
+    // Clear the pref now that the copied profile has inherited it.
+    Services.prefs.clearUserPref("browser.profiles.profile-copied");
 
     if (result.error) {
       throw result.error;

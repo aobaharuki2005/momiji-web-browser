@@ -1497,6 +1497,8 @@ export class BackupService extends EventTarget {
         // reset the error state prefs
         Services.prefs.clearUserPref(BACKUP_DEBUG_INFO_PREF_NAME);
         Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
+        // reset profile copied pref so the backup welcome messaging will show
+        Services.prefs.clearUserPref("browser.profiles.profile-copied");
 
         try {
           lazy.logConsole.debug(
