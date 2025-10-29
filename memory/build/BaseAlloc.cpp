@@ -23,7 +23,7 @@ bool BaseAlloc::pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx) {
   csize = CHUNK_CEILING(minsize);
   base_pages = chunk_alloc(csize, kChunkSize, true);
   if (!base_pages) {
-    return true;
+    return false;
   }
   base_next_addr = base_pages;
   base_past_addr = (void*)((uintptr_t)base_pages + csize);
@@ -37,7 +37,7 @@ bool BaseAlloc::pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx) {
   mStats.mapped += csize;
   mStats.committed += pminsize;
 
-  return false;
+  return true;
 }
 
 void* BaseAlloc::alloc(size_t aSize) {
@@ -50,7 +50,7 @@ void* BaseAlloc::alloc(size_t aSize) {
   MutexAutoLock lock(base_mtx);
   // Make sure there's enough space for the allocation.
   if ((uintptr_t)base_next_addr + csize > (uintptr_t)base_past_addr) {
-    if (pages_alloc(csize)) {
+    if (!pages_alloc(csize)) {
       return nullptr;
     }
   }
