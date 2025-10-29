@@ -263,7 +263,13 @@ bool DMABufDevice::Init() {
     return false;
   }
 
-  DMABufSurface::InitMemoryReporting();
+  if (NS_IsMainThread()) {
+    DMABufSurface::InitMemoryReporting();
+  } else {
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("DMABufSurface::InitMemoryReporting()",
+                               [] { DMABufSurface::InitMemoryReporting(); }));
+  }
 
   LOGDMABUF(("DMABuf is enabled"));
   return true;
