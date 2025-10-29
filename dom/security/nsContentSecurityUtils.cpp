@@ -750,7 +750,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
 #endif
 
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(NIGHTLY_BUILD)
   return true;
 #else
   return false;

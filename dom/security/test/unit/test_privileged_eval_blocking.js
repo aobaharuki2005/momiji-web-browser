@@ -23,9 +23,13 @@ add_task(async function () {
     Services.console.registerListener(listener);
   });
 
-  if (mozinfo.os == "android") {
-    // eslint-disable-next-line no-eval
-    Assert.equal(eval("42"), 42, "eval on Android is not disabled yet");
+  if (mozinfo.os == "android" && !mozinfo.nightly_build) {
+    Assert.equal(
+      // eslint-disable-next-line no-eval
+      eval("42"),
+      42,
+      "eval on Android is not disabled yet outside of Nightly"
+    );
   } else {
     Assert.throws(
       // eslint-disable-next-line no-eval
