@@ -128,6 +128,9 @@ add_task(async function test_disable_backup_encryption_confirm() {
     let disableEncryptionStub = sandbox
       .stub(BackupService.prototype, "disableEncryption")
       .resolves(true);
+    let createBackupStub = sandbox
+      .stub(BackupService.prototype, "createBackup")
+      .resolves(true);
 
     Assert.ok(
       Services.prefs.getBoolPref(BACKUP_RESTORE_ENABLED_PREF),
@@ -189,6 +192,11 @@ add_task(async function test_disable_backup_encryption_confirm() {
     Assert.ok(
       disableEncryptionStub.calledOnce,
       "BackupService was called to disable encryption"
+    );
+
+    Assert.ok(
+      createBackupStub.calledOnce,
+      "BackupService was called to create a new backup"
     );
 
     let legacyEvents = TelemetryTestUtils.getEvents(

@@ -18,6 +18,9 @@ add_task(async function test_enable_backup_encryption_checkbox_confirm() {
     let enableEncryptionStub = sandbox
       .stub(BackupService.prototype, "enableEncryption")
       .resolves(true);
+    let createBackupStub = sandbox
+      .stub(BackupService.prototype, "createBackup")
+      .resolves(true);
 
     await SpecialPowers.pushPrefEnv({
       set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
@@ -103,6 +106,11 @@ add_task(async function test_enable_backup_encryption_checkbox_confirm() {
     Assert.ok(
       enableEncryptionStub.calledOnceWith(MOCK_PASSWORD),
       "BackupService was called to enable encryption with inputted password"
+    );
+
+    Assert.ok(
+      createBackupStub.calledOnce,
+      "BackupService was called to create a new backup"
     );
 
     let legacyEvents = TelemetryTestUtils.getEvents(
