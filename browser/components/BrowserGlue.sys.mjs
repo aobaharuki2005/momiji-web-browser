@@ -1658,7 +1658,7 @@ BrowserGlue.prototype = {
     gBrowser.selectedTab = tab;
   },
 
-  async _showSetToDefaultSpotlight(message, browser) {
+  _showSetToDefaultSpotlight(message, browser) {
     const config = {
       type: "SHOW_SPOTLIGHT",
       data: message,
@@ -1741,11 +1741,13 @@ BrowserGlue.prototype = {
         this._showSetToDefaultSpotlight(message, win.gBrowser.selectedBrowser);
         return;
       }
+
+      // Intentionally don't await the returned user's response promise.
       lazy.DefaultBrowserCheck.prompt(win);
     }
 
     await lazy.ASRouter.waitForInitialized;
-    lazy.ASRouter.sendTriggerMessage({
+    await lazy.ASRouter.sendTriggerMessage({
       browser: lazy.BrowserWindowTracker.getTopWindow({
         allowFromInactiveWorkspace: true,
       })?.gBrowser.selectedBrowser,
