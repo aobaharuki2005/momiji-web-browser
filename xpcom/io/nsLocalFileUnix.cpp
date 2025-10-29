@@ -653,8 +653,6 @@ nsLocalFile::Normalize() {
 
 void nsLocalFile::LocateNativeLeafName(nsACString::const_iterator& aBegin,
                                        nsACString::const_iterator& aEnd) {
-  // XXX perhaps we should cache this??
-
   mPath.BeginReading(aBegin);
   mPath.EndReading(aEnd);
 
@@ -667,8 +665,8 @@ void nsLocalFile::LocateNativeLeafName(nsACString::const_iterator& aBegin,
       return;
     }
   }
-  // else, the entire path is the leaf name (which means this
-  // isn't an absolute path... unexpected??)
+
+  MOZ_ASSERT_UNREACHABLE("nsLocalFile path should be absolute but is not!");
 }
 
 NS_IMETHODIMP
