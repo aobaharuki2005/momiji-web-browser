@@ -31,7 +31,7 @@ function queryAll(el, selector) {
 /**
  * MozLitElement provides extensions to the lit-provided LitElement class.
  *
- *******
+ * ---------
  *
  * `@query` support (define a getter for a querySelector):
  *
@@ -52,14 +52,14 @@ function queryAll(el, selector) {
  * get anotherName() {
  *   return this.renderRoot?.querySelectorAll(".selectorFor .querySelectorAll");
  * }
- *******
+ * ---------
  *
  * Automatic Fluent support for shadow DOM.
  *
  * Fluent requires that a shadowRoot be connected before it can use Fluent.
  * Shadow roots will get connected automatically.
  *
- *******
+ * ---------
  *
  * Automatic Fluent support for localized Reactive Properties
  *
@@ -67,7 +67,7 @@ function queryAll(el, selector) {
  * property definition and it will automatically be added to the data-l10n-attrs
  * attribute so that fluent will allow setting the attribute.
  *
- *******
+ * ---------
  *
  * Mapped properties support (moving a standard attribute to rendered content)
  *
@@ -77,7 +77,7 @@ function queryAll(el, selector) {
  * definition and the attribute will be removed from the host when it is set.
  * Note that the attribute can not be unset once it is set.
  *
- *******
+ * ---------
  *
  * Test helper for sending events after a change: `dispatchOnUpdateComplete`
  *

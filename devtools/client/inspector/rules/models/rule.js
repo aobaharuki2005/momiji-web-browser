@@ -503,7 +503,7 @@ class Rule {
    *        The value to be used for the preview
    * @param {String} priority
    *        The property's priority (either "important" or an empty string).
-   **@return {Promise}
+   * @return {Promise}
    */
   previewPropertyValue(property, value, priority) {
     this.elementStyle.ruleView.emitForTests("start-preview-property-value");

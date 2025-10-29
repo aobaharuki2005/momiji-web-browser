@@ -832,7 +832,8 @@ nsBrowserContentHandler.prototype = {
              * or equal to the maxVersion set by the experiment, we'll try to use
              * the experiment override URL instead of the default or the
              * update-provided URL. Additional policy checks are done in
-             * @see getPostUpdateOverridePage */
+             * @see getPostUpdateOverridePage
+             */
             const nimbusOverrideUrl = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url_nimbus"
             );
