@@ -78,7 +78,6 @@
     <command id="Profiles:CreateProfile" />
     <command id="Profiles:ManageProfiles" />
     <command id="Profiles:LaunchProfile" />
-    <command id="Profiles:MoveTabsToProfile" />
     <command id="Browser:NextTab" />
     <command id="Browser:PrevTab" />
     <command id="Browser:ShowAllTabs" />
