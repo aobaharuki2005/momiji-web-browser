@@ -313,7 +313,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_UsingStorageAccess>,
               const bool& aUsingStorageAccess, ContentParent* aSource);
-  void DidSet(FieldIndex<IDX_UsingStorageAccess>, bool aOldValue);
   bool CanSet(FieldIndex<IDX_ShouldResistFingerprinting>,
               const bool& aShouldResistFingerprinting, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_OverriddenFingerprintingSettings>,
