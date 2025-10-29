@@ -1051,8 +1051,17 @@ class BaseAssemblerX64 : public BaseAssembler {
   [[nodiscard]] JmpSrc vmulpd_ripr(XMMRegisterID src, XMMRegisterID dst) {
     return twoByteRipOpSimd("vmulpd", VEX_PD, OP2_MULPD_VpdWpd, src, dst);
   }
+  [[nodiscard]] JmpSrc vandps_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return twoByteRipOpSimd("vandps", VEX_PS, OP2_ANDPS_VpsWps, src, dst);
+  }
   [[nodiscard]] JmpSrc vandpd_ripr(XMMRegisterID src, XMMRegisterID dst) {
     return twoByteRipOpSimd("vandpd", VEX_PD, OP2_ANDPD_VpdWpd, src, dst);
+  }
+  [[nodiscard]] JmpSrc vxorps_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return twoByteRipOpSimd("vxorps", VEX_PS, OP2_XORPS_VpsWps, src, dst);
+  }
+  [[nodiscard]] JmpSrc vxorpd_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return twoByteRipOpSimd("vxorpd", VEX_PD, OP2_XORPD_VpdWpd, src, dst);
   }
   [[nodiscard]] JmpSrc vminpd_ripr(XMMRegisterID src, XMMRegisterID dst) {
     return twoByteRipOpSimd("vminpd", VEX_PD, OP2_MINPD_VpdWpd, src, dst);

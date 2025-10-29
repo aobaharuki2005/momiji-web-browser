@@ -3731,6 +3731,10 @@ class BaseAssembler : public GenericAssembler {
     twoByteOpSimd("vxorpd", VEX_PD, OP2_XORPD_VpdWpd, src1, src0, dst);
   }
 
+  void vxorpd_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst) {
+    twoByteOpSimd("vxorpd", VEX_PD, OP2_XORPD_VpdWpd, address, src0, dst);
+  }
+
   void vorpd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vorpd", VEX_PD, OP2_ORPD_VpdWpd, src1, src0, dst);
   }
