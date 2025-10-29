@@ -2688,6 +2688,17 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   using mozilla::TimeDuration;
   using mozilla::TimeStamp;
 
+  if (aRequest->GetScriptLoadContext()->mIsInline) {
+    LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: Inline script",
+         aRequest));
+    aRequest->MarkNotCacheable();
+    MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
+    // NOTE: An inline script tag can have an SRI, but we don't calculate it
+    //       for this case.
+    MOZ_ASSERT(aRequest->SRIAndBytecode().empty());
+    return;
+  }
+
   if (aRequest->IsBytecode()) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: IsBytecode",
          aRequest));
@@ -3235,10 +3246,6 @@ void ScriptLoader::InstantiateClassicScriptFromAny(
 ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
     ScriptLoadRequest* aRequest) {
   if (!mCache) {
-    return CacheBehavior::DoNothing;
-  }
-
-  if (aRequest->GetScriptLoadContext()->mIsInline) {
     return CacheBehavior::DoNothing;
   }
 
