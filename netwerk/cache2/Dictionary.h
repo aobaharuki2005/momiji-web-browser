@@ -237,7 +237,7 @@ class DictionaryOriginReader final : public nsICacheEntryOpenCallback,
   DictionaryOriginReader() {}
 
   void Start(
-      bool aCreate, DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
+      DictionaryOrigin* aOrigin, nsACString& aKey, nsIURI* aURI,
       ExtContentPolicyType aType, DictionaryCache* aCache,
       const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback);
   void FinishMatch();
@@ -279,9 +279,6 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   void FinishAddEntry(DictionaryCacheEntry* aEntry);
   void DumpEntries();
   void Clear();
-  void AssertEmpty() const {
-    MOZ_ASSERT(mEntries.IsEmpty() && mPendingEntries.IsEmpty());
-  }
 
  private:
   virtual ~DictionaryOrigin() {}
@@ -333,13 +330,9 @@ class DictionaryCache final {
       nsIURI* aURI, bool aNewEntry, DictionaryCacheEntry* aDictEntry);
 
   static void RemoveDictionaryFor(const nsACString& aKey);
-  // remove the entire origin (should be empty!)
-  static void RemoveOriginFor(const nsACString& aKey);
 
   // Remove a dictionary if it exists for the key given
   void RemoveDictionary(const nsACString& aKey);
-  // Remove an origin for the key given
-  void RemoveOrigin(const nsACString& aKey);
 
   nsresult RemoveEntry(nsIURI* aURI, const nsACString& aKey);
 
@@ -351,8 +344,8 @@ class DictionaryCache final {
 
   // return an entry
   void GetDictionaryFor(
-      nsIURI* aURI, ExtContentPolicyType aType, nsHttpChannel* aChan,
-      void (*aSuspend)(nsHttpChannel*),
+      nsIURI* aURI, ExtContentPolicyType aType, bool& aAsync,
+      nsHttpChannel* aChan, void (*aSuspend)(nsHttpChannel*),
       const std::function<nsresult(bool, DictionaryCacheEntry*)>& aCallback);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
