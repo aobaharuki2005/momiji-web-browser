@@ -10,7 +10,6 @@
 #include "mozilla/devtools/DeserializedNode.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtrExtensions.h"
