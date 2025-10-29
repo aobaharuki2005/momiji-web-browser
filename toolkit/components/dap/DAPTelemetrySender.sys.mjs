@@ -197,7 +197,7 @@ export const DAPTelemetrySender = new (class {
    *
    * @param {Task} task
    *   Definition of the task for which the measurement was taken.
-   * @param {number|Array<Number>} measurement
+   * @param {number|Array<number>} measurement
    *   The measured value for which a report is generated.
    * @param {object} options
    * @param {number} options.timeout
@@ -326,8 +326,7 @@ export const DAPTelemetrySender = new (class {
    *   this case, the OHTTP and DAP keys must be provided and this code will not
    *   attempt to fetch them.
    *
-   * @returns Promise
-   * @resolves {undefined} Once the attempt to send the report completes, whether or not it was successful.
+   * @returns {Promise<undefined>} Once the attempt to send the report completes, whether or not it was successful.
    */
   async sendReport(leader_endpoint, task_id, report, abortSignal, options) {
     // If telemetry disabled, don't upload DAP reports either.

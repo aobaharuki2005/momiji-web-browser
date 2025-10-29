@@ -31,7 +31,21 @@ const DB_VERSION = 1;
 const FREQ_CAP_STORE = "freq_caps";
 const REPORT_STORE = "reports";
 
+/**
+ * Represents a DAP task configuration.
+ */
 export class Task {
+  /**
+   * Constructs a Task object representing a DAP task configuration.
+   *
+   * @param {object} params
+   * @param {string} params.taskId - The unique identifier for the task.
+   * @param {string} params.vdaf - The VDAF algorithm type (e.g., "sum", "sumvec", "histogram").
+   * @param {number} params.bits - The number of bits for the measurement.
+   * @param {number} params.length - The length of the measurement sumvec or histogram.
+   * @param {number} params.timePrecision - The time precision for the task.
+   * @param {number|Array<number>} params.defaultMeasurement - The default measurement value to use.
+   */
   constructor({
     taskId,
     vdaf,
@@ -49,7 +63,24 @@ export class Task {
   }
 }
 
+/**
+ * @typedef {object} DAPReportControllerOptions
+ * @property {number} windowDays - The number of days before resetting the frequency cap.
+ * @property {number} submissionIntervalMins - The interval in minutes between automatic submissions.
+ */
+
+/**
+ * Manages DAP report submission with frequency capping.
+ */
 export class DAPReportController {
+  /**
+   * Constructs a DAPReportController to manage DAP report submission with frequency capping.
+   *
+   * @param {object} params
+   * @param {object} params.tasks - Map of task IDs to Task objects.
+   * @param {DAPReportControllerOptions} params.options - Configuration options for the controller.
+   * @param {Function} params.DateNowFn - Function to get the current time in milliseconds (defaults to Date.now).
+   */
   constructor({ tasks, options, DateNowFn = Date.now } = {}) {
     this._tasks = tasks;
     this._windowDays = options.windowDays;
