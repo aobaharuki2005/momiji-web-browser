@@ -25,7 +25,7 @@ class ServiceWorkerContainerParent final
 
   mozilla::ipc::IPCResult RecvRegister(
       const IPCClientInfo& aClientInfo, const nsACString& aScopeURL,
-      const WorkerType& aType, const nsACString& aScriptURL,
+      const nsACString& aScriptURL,
       const ServiceWorkerUpdateViaCache& aUpdateViaCache,
       RegisterResolver&& aResolver) override;
 

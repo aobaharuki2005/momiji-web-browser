@@ -6,9 +6,8 @@ include protocol PBackground;
 
 include ClientIPCTypes;
 include IPCServiceWorkerRegistrationDescriptor;
-include "mozilla/dom/WorkerIPCUtils.h";
 
-using mozilla::dom::WorkerType from "mozilla/dom/WorkerBinding.h";
+include "mozilla/dom/ServiceWorkerIPCUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -19,8 +18,8 @@ protocol PServiceWorkerContainer
   manager PBackground;
 
 parent:
-  async Register(IPCClientInfo aClientInfo, nsCString aScopeURL, WorkerType aType,
-                 nsCString aScriptURL, ServiceWorkerUpdateViaCache aUpdateViaCache)
+  async Register(IPCClientInfo aClientInfo, nsCString aScopeURL, nsCString aScriptURL,
+                 ServiceWorkerUpdateViaCache aUpdateViaCache)
         returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
 
   async GetRegistration(IPCClientInfo aClientInfo, nsCString aURL)
