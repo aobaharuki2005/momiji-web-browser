@@ -1690,7 +1690,18 @@ export class SearchService {
    *   Returns true if the engine matches a ignorelists entry.
    */
   #engineMatchesIgnoreLists(engine) {
+    /** @type {(name: string, url: string, type: string) => void} */
+    let logIgnored = (name, url, type) => {
+      lazy.logConsole.warn("Search engine", name, `matches ${type}`, url);
+      Services.prefs.setCharPref(
+        lazy.SearchUtils.BROWSER_SEARCH_PREF + "lastEngineIgnored",
+        // Limit length of url to avoid storing too much in prefs.
+        `${Math.trunc(Date.now() / 1000)} Search engine '${name}' matches ${type} ignore list ${url.substring(0, 200)}`
+      );
+    };
+
     if (this.#loadPathIgnoreList.includes(engine._loadPath)) {
+      logIgnored(engine.name, engine._loadPath, "load path");
       return true;
     }
     let url = engine.searchURLWithNoTerms.spec.toLowerCase();
@@ -1699,6 +1710,7 @@ export class SearchService {
         url.includes(code.toLowerCase())
       )
     ) {
+      logIgnored(engine.name, url, "submission url");
       return true;
     }
     return false;
@@ -2486,7 +2498,6 @@ export class SearchService {
    */
   #addEngineToStore(engine, skipDuplicateCheck = false) {
     if (this.#engineMatchesIgnoreLists(engine)) {
-      lazy.logConsole.debug("#addEngineToStore: Ignoring engine");
       return;
     }
 
