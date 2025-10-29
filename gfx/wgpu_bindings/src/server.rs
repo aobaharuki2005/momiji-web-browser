@@ -2665,6 +2665,7 @@ unsafe fn process_message(
                     driver_info,
                     backend,
                     transient_saves_memory,
+                    device_pci_bus_id: _,
                 } = global.adapter_get_info(adapter_id);
 
                 let is_hardware = match device_type {
