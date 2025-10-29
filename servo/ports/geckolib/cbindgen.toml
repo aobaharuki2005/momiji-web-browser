@@ -84,6 +84,14 @@ exclude = [
   "NS_LogDtor",
   "SelectorList",
   "AuthorStyles",
+  "LockedStyleRule",
+  "LockedImportRule",
+  "LockedFontFaceRule",
+  "LockedCounterStyleRule",
+  "LockedKeyframesRule",
+  "LockedPageRule",
+  "LockedPositionTryRule",
+  "LockedNestedDeclarationsRule",
 ]
 include = [
   "AnchorName",
@@ -205,6 +213,7 @@ include = [
   "BorderRadius",
   "ColorScheme",
   "ColumnCount",
+  "CssRuleRef",
   "NonNegativeLengthOrNumberRect",
   "Perspective",
   "ZIndex",

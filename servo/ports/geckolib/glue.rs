@@ -135,13 +135,13 @@ use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesSt
 use style::stylesheets::scope_rule::{ImplicitScopeRoot, ScopeRootCandidate, ScopeSubjectMap};
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
-    AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRuleTypes,
-    CssRules, DocumentRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule, ImportRule,
-    KeyframesRule, LayerBlockRule, LayerStatementRule, MarginRule, MediaRule, NamespaceRule,
-    NestedDeclarationsRule, Origin, OriginSet, PagePseudoClassFlags, PageRule, PositionTryRule,
-    PropertyRule, SanitizationData, SanitizationKind, ScopeRule, StartingStyleRule, StyleRule,
-    StylesheetContents, StylesheetInDocument, StylesheetLoader as StyleStylesheetLoader,
-    SupportsRule, UrlExtraData,
+    AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleRef, CssRuleType,
+    CssRuleTypes, CssRules, DocumentRule, FontFaceRule, FontFeatureValuesRule,
+    FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule,
+    MarginRule, MediaRule, NamespaceRule, NestedDeclarationsRule, Origin, OriginSet,
+    PagePseudoClassFlags, PageRule, PositionTryRule, PropertyRule, SanitizationData,
+    SanitizationKind, ScopeRule, StartingStyleRule, StyleRule, StylesheetContents,
+    StylesheetInDocument, StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
 };
 use style::stylist::{
     add_size_of_ua_cache, replace_parent_selector_with_implicit_scope, scope_root_candidates,
@@ -2359,6 +2359,7 @@ macro_rules! impl_basic_rule_funcs {
             rule: &$maybe_locked_rule_type,
             sheet: &DomStyleSheet,
             change_kind: RuleChangeKind,
+            ancestors: &nsTArray<CssRuleRef>,
         ) {
             let mut data = styleset.borrow_mut();
             let data = &mut *data;
@@ -2368,7 +2369,7 @@ macro_rules! impl_basic_rule_funcs {
             // but it's probably not a huge deal.
             let rule = unsafe { CssRule::$name(Arc::from_raw_addrefed(rule)) };
             let sheet = unsafe { GeckoStyleSheet::new(sheet) };
-            data.stylist.rule_changed(&sheet, &rule, &guard, change_kind);
+            data.stylist.rule_changed(&sheet, &rule, &guard, change_kind, ancestors.as_slice());
         }
 
         impl_basic_rule_funcs_without_getter! {

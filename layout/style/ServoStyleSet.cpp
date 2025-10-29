@@ -992,16 +992,61 @@ void ServoStyleSet::RuleRemoved(StyleSheet& aSheet, css::Rule& aRule) {
   RuleChangedInternal(aSheet, aRule, StyleRuleChangeKind::Removal);
 }
 
+static Maybe<StyleCssRuleRef> ToRuleRef(css::Rule& aRule) {
+  switch (aRule.Type()) {
+#define CASE_FOR(constant_, type_)                          \
+  case StyleCssRuleType::constant_:                         \
+    return Some(StyleCssRuleRef::constant_(                 \
+        static_cast<dom::CSS##type_##Rule&>(aRule).Raw())); \
+    break;
+    CASE_FOR(CounterStyle, CounterStyle)
+    CASE_FOR(Style, Style)
+    CASE_FOR(Import, Import)
+    CASE_FOR(Media, Media)
+    CASE_FOR(Keyframes, Keyframes)
+    CASE_FOR(Margin, Margin)
+    CASE_FOR(FontFeatureValues, FontFeatureValues)
+    CASE_FOR(FontPaletteValues, FontPaletteValues)
+    CASE_FOR(FontFace, FontFace)
+    CASE_FOR(Page, Page)
+    CASE_FOR(Property, Property)
+    CASE_FOR(Document, MozDocument)
+    CASE_FOR(Supports, Supports)
+    CASE_FOR(LayerBlock, LayerBlock)
+    CASE_FOR(LayerStatement, LayerStatement)
+    CASE_FOR(Container, Container)
+    CASE_FOR(Scope, Scope)
+    CASE_FOR(StartingStyle, StartingStyle)
+    CASE_FOR(PositionTry, PositionTry)
+    CASE_FOR(NestedDeclarations, NestedDeclarations)
+    CASE_FOR(Namespace, Namespace)
+#undef CASE_FOR
+    case StyleCssRuleType::Keyframe:
+      // No equivalent.
+      break;
+  }
+  return Nothing{};
+}
+
 void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
                                         const StyleRuleChange& aChange) {
   MOZ_ASSERT(aSheet.IsApplicable());
   SetStylistStyleSheetsDirty();
 
+  nsTArray<StyleCssRuleRef> ancestors;
+
+  auto* parent = aRule.GetParentRule();
+  while (parent) {
+    if (const auto ref = ToRuleRef(*parent)) {
+      ancestors.AppendElement(*ref);
+    }
+    parent = parent->GetParentRule();
+  }
 #define CASE_FOR(constant_, type_)                                        \
   case StyleCssRuleType::constant_:                                       \
     return Servo_StyleSet_##constant_##RuleChanged(                       \
         mRawData.get(), static_cast<dom::CSS##type_##Rule&>(aRule).Raw(), \
-        &aSheet, aChange.mKind);
+        &aSheet, aChange.mKind, &ancestors);
   switch (aRule.Type()) {
     CASE_FOR(CounterStyle, CounterStyle)
     CASE_FOR(Style, Style)
