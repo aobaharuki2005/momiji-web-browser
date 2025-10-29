@@ -175,11 +175,26 @@ class SettingsSubMenuCustomizeRobot {
         Log.i(TAG, "verifyAppIconSettingItems: Trying to verify that the \"App icon\" setting items are displayed")
         verifyAppIconOptionIsDisplayed(
             composeTestRule,
+            // Other section
+            R.string.alternative_app_icon_group_other,
+            R.string.alternative_app_icon_option_retro_2004,
+            R.string.alternative_app_icon_option_pixelated,
+            R.string.alternative_app_icon_option_cuddling,
+            R.string.alternative_app_icon_option_pride,
+            R.string.alternative_app_icon_option_flaming,
+            R.string.alternative_app_icon_option_minimal,
+            R.string.alternative_app_icon_option_momo,
+            R.string.alternative_app_icon_option_momo_subtitle,
+            R.string.alternative_app_icon_option_cool,
             // Solid colors section
             R.string.alternative_app_icon_group_solid_colors,
             R.string.alternative_app_icon_option_default,
             R.string.alternative_app_icon_option_light,
             R.string.alternative_app_icon_option_dark,
+        )
+        scrollToElementByText(getStringResource(R.string.alternative_app_icon_option_gradient_northern_lights))
+        verifyAppIconOptionIsDisplayed(
+            composeTestRule,
             R.string.alternative_app_icon_option_red,
             R.string.alternative_app_icon_option_green,
             R.string.alternative_app_icon_option_blue,
@@ -192,23 +207,8 @@ class SettingsSubMenuCustomizeRobot {
             R.string.alternative_app_icon_option_gradient_blue_hour,
             R.string.alternative_app_icon_option_gradient_twilight,
             R.string.alternative_app_icon_group_gradients,
-            )
-        scrollToElementByText(getStringResource(R.string.alternative_app_icon_option_cool))
-        verifyAppIconOptionIsDisplayed(
-            composeTestRule,
             R.string.alternative_app_icon_option_gradient_midnight,
             R.string.alternative_app_icon_option_gradient_northern_lights,
-            // Other section
-            R.string.alternative_app_icon_group_other,
-            R.string.alternative_app_icon_option_retro_2004,
-            R.string.alternative_app_icon_option_pixelated,
-            R.string.alternative_app_icon_option_cuddling,
-            R.string.alternative_app_icon_option_pride,
-            R.string.alternative_app_icon_option_flaming,
-            R.string.alternative_app_icon_option_minimal,
-            R.string.alternative_app_icon_option_momo,
-            R.string.alternative_app_icon_option_momo_subtitle,
-            R.string.alternative_app_icon_option_cool,
         )
         Log.i(TAG, "verifyAppIconSettingItems: Verified that the \"App icon\" setting items are displayed")
     }
