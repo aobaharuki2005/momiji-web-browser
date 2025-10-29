@@ -412,7 +412,7 @@ nsLocalFile::CreateAllAncestors(uint32_t aPermissions) {
       break;
     }
 
-    /* Temporarily NUL-terminate here */
+    /* Temporarily NULL-terminate here */
     *slashp = '\0';
 #ifdef DEBUG_NSIFILE
     fprintf(stderr, "nsIFile: mkdir(\"%s\")\n", buffer);
@@ -863,7 +863,6 @@ nsresult nsLocalFile::GetNativeTargetPathName(nsIFile* aNewParent,
     }
 
     if (!targetExists) {
-      // XXX create the new directory with some permissions
       rv = aNewParent->Create(DIRECTORY_TYPE, 0755);
       if (NS_FAILED(rv)) {
         return rv;
@@ -899,11 +898,8 @@ nsresult nsLocalFile::GetNativeTargetPathName(nsIFile* aNewParent,
 
 nsresult nsLocalFile::CopyDirectoryTo(nsIFile* aNewParent) {
   nsresult rv;
-  /*
-   * dirCheck is used for various boolean test results such as from Equals,
-   * Exists, isDir, etc.
-   */
-  bool dirCheck, isSymlink;
+  bool dirCheck;  // Used for various tests like Equals, Exists, isDir, etc.
+  bool isSymlink;
   uint32_t oldPerms;
 
   if (NS_FAILED(rv = IsDirectory(&dirCheck))) {
@@ -1845,7 +1841,6 @@ nsLocalFile::GetParent(nsIFile** aParent) {
     return NS_OK;
   }
 
-  // <brendan, after jband> I promise to play nice
   char* buffer = mPath.BeginWriting();
   // find the last significant slash in buffer
   char* slashp = strrchr(buffer, '/');
@@ -1877,10 +1872,6 @@ nsLocalFile::GetParent(nsIFile** aParent) {
   localFile.forget(aParent);
   return NS_OK;
 }
-
-/*
- * The results of Exists, isWritable and isReadable are not cached.
- */
 
 NS_IMETHODIMP
 nsLocalFile::Exists(bool* aResult) {

@@ -24,7 +24,6 @@ interface nsILocalFileMac : nsIFile
     *
     * Init this object with a CFURLRef
     *
-    * NOTE: Supported only for XP_MACOSX
     * NOTE: If the path of the CFURL is /a/b/c, at least a/b must exist beforehand.
     *
     * @param   aCFURL         the CoreFoundation URL
@@ -36,8 +35,6 @@ interface nsILocalFileMac : nsIFile
     * initWithFSRef
     *
     * Init this object with an FSRef
-    *
-    * NOTE: Supported only for XP_MACOSX
     *
     * @param   aFSRef         the native FSRef
     *
@@ -55,8 +52,6 @@ interface nsILocalFileMac : nsIFile
     * the target of the alias. If followLinks is FALSE, returns
     * the unresolved alias file.
     *
-    * NOTE: Supported only for XP_MACOSX
-    *
     * @return
     *
     */
@@ -71,8 +66,6 @@ interface nsILocalFileMac : nsIFile
     * If the file object is an alias and followLinks is TRUE, returns
     * the target of the alias. If followLinks is FALSE, returns
     * the unresolved alias file.
-    *
-    * NOTE: Supported only for XP_MACOSX
     *
     * @return
     *
@@ -102,7 +95,7 @@ interface nsILocalFileMac : nsIFile
    /**
     * isPackage
     *
-    * returns true if a directory is determined to be a package under Mac OS 9/X
+    * returns true if a directory is determined to be a package
     *
     */
    boolean isPackage();
