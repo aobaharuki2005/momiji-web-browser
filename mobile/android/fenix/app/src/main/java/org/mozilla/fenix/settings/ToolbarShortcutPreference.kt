@@ -54,6 +54,11 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
                 iconsR.drawable.mozac_ic_bookmark_24,
                 R.string.toolbar_customize_shortcut_add_bookmark,
             ),
+            Option(
+                Keys.TRANSLATE,
+                iconsR.drawable.mozac_ic_translate_24,
+                R.string.toolbar_customize_shortcut_translate,
+            ),
         )
     }
 
@@ -185,5 +190,6 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         const val NEW_TAB = "new_tab"
         const val SHARE = "share"
         const val BOOKMARK = "bookmark"
+        const val TRANSLATE = "translate"
     }
 }

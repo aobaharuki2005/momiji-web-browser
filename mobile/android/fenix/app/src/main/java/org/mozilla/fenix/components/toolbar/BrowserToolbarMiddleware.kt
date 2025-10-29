@@ -112,8 +112,8 @@ import org.mozilla.fenix.components.toolbar.DisplayActions.NavigateForwardLongCl
 import org.mozilla.fenix.components.toolbar.DisplayActions.RefreshClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.ShareClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.StopRefreshClicked
+import org.mozilla.fenix.components.toolbar.DisplayActions.TranslateClicked
 import org.mozilla.fenix.components.toolbar.PageEndActionsInteractions.ReaderModeClicked
-import org.mozilla.fenix.components.toolbar.PageEndActionsInteractions.TranslateClicked
 import org.mozilla.fenix.components.toolbar.PageOriginInteractions.OriginClicked
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewPrivateTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewTab
@@ -148,6 +148,7 @@ internal sealed class DisplayActions : BrowserToolbarEvent {
     data class AddBookmarkClicked(override val source: Source) : DisplayActions()
     data class EditBookmarkClicked(override val source: Source) : DisplayActions()
     data class ShareClicked(override val source: Source) : DisplayActions()
+    data object TranslateClicked : DisplayActions()
 }
 
 @VisibleForTesting
@@ -174,8 +175,6 @@ internal sealed class PageEndActionsInteractions : BrowserToolbarEvent {
     data class ReaderModeClicked(
         val isActive: Boolean,
     ) : PageEndActionsInteractions()
-
-    data object TranslateClicked : PageEndActionsInteractions()
 }
 
 /**
@@ -731,6 +730,9 @@ class BrowserToolbarMiddleware(
      */
     private fun buildEndPageActions(): List<Action> {
         val isWideScreen = environment?.fragment?.isWideWindow() == true
+        val tabStripEnabled = settings.isTabStripEnabled
+        val translateShortcutEnabled = settings.toolbarShortcutKey == ToolbarShortcutPreference.Keys.TRANSLATE
+        val shareShortcutEnabled = settings.toolbarShortcutKey == ToolbarShortcutPreference.Keys.SHARE
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.ReaderMode) {
@@ -738,10 +740,11 @@ class BrowserToolbarMiddleware(
             },
             ToolbarActionConfig(ToolbarAction.Translate) {
                 browserScreenStore.state.pageTranslationStatus.isTranslationPossible &&
-                    isWideScreen && FxNimbus.features.translations.value().mainFlowToolbarEnabled
+                    isWideScreen && FxNimbus.features.translations.value().mainFlowToolbarEnabled &&
+                        !(translateShortcutEnabled && !tabStripEnabled)
             },
             ToolbarActionConfig(ToolbarAction.Share) {
-                isWideScreen && !settings.isTabStripEnabled
+                isWideScreen && !tabStripEnabled && !shareShortcutEnabled
             },
         ).filter { config ->
             config.isVisible()
@@ -1004,6 +1007,7 @@ class BrowserToolbarMiddleware(
         browserScreenStore.observeWhileActive {
             distinctUntilChangedBy { it.pageTranslationStatus }
             .collect {
+                updateEndBrowserActions(context)
                 updateEndPageActions(context)
             }
         }
@@ -1274,6 +1278,7 @@ class BrowserToolbarMiddleware(
                 true -> ToolbarAction.EditBookmark
                 false -> ToolbarAction.Bookmark
             }
+            ToolbarShortcutPreference.Keys.TRANSLATE -> ToolbarAction.Translate
             else -> ToolbarAction.NewTab
         }
     }

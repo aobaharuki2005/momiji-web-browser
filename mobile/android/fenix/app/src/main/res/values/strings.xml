@@ -1144,6 +1144,8 @@
     <string name="toolbar_customize_shortcut_share">Share</string>
     <!-- Add bookmark shortcut in toolbar customization -->
     <string name="toolbar_customize_shortcut_add_bookmark">Add bookmark</string>
+    <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+    <string name="toolbar_customize_shortcut_translate">Translate</string>
 
     <!-- App icon Preferences -->
     <!-- Title for the preference that lets the user pick a new app icon -->
