@@ -2711,14 +2711,6 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     return;
   }
 
-  if (aRequest->IsBytecode()) {
-    LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: IsBytecode",
-         aRequest));
-    aRequest->MarkSkippedAllCaching();
-    MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
-    return;
-  }
-
   if (aRequest->IsModuleRequest() &&
       aRequest->AsModuleRequest()->mModuleType != JS::ModuleType::JavaScript) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: JSON module",
@@ -2726,6 +2718,14 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     aRequest->MarkNotCacheable();
     MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
     MOZ_ASSERT_IF(aRequest->IsSource(), aRequest->SRIAndBytecode().empty());
+    return;
+  }
+
+  if (aRequest->IsBytecode()) {
+    LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: IsBytecode",
+         aRequest));
+    aRequest->MarkSkippedAllCaching();
+    MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
     return;
   }
 
