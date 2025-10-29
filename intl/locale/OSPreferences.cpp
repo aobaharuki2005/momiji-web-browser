@@ -16,7 +16,6 @@
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Result.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 

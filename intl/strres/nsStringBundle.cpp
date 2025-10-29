@@ -28,7 +28,6 @@
 #include "mozilla/ipc/SharedMemoryHandle.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/Try.h"
 #include "mozilla/dom/ContentParent.h"

@@ -7,7 +7,6 @@
 #include "nsUnicodeProperties.h"
 #include "nsUnicodePropertyData.cpp"
 
-#include "mozilla/HashTable.h"
 #include "mozilla/intl/Segmenter.h"
 
 #include "BaseChars.h"
