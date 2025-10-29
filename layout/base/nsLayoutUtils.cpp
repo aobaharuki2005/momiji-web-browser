@@ -73,7 +73,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/ToString.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelHandlingUtils

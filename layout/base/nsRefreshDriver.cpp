@@ -45,7 +45,6 @@
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/Hal.h"
 #include "mozilla/InputTaskManager.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PendingFullscreenEvent.h"
 #include "mozilla/Preferences.h"

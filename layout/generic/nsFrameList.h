@@ -11,7 +11,6 @@
 
 #include "mozilla/EnumSet.h"
 #include "mozilla/FunctionTypeTraits.h"
-#include "mozilla/RefPtr.h"
 #include "nsDebug.h"
 #include "nsTArray.h"
 

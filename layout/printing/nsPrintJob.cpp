@@ -13,7 +13,6 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/Try.h"
 #include "mozilla/dom/BrowsingContext.h"

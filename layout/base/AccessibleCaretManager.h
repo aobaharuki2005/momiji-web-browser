@@ -8,10 +8,10 @@
 #define AccessibleCaretManager_h
 
 #include "AccessibleCaret.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/CaretStateChangedEvent.h"
 #include "mozilla/dom/MouseEventBinding.h"

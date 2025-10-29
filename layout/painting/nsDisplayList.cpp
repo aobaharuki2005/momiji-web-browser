@@ -38,7 +38,6 @@
 #include "mozilla/HashTable.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"

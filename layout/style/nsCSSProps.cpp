@@ -12,7 +12,6 @@
 #include "nsCSSProps.h"
 
 #include "gfxPlatform.h"
-#include "mozilla/Casting.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/LookAndFeel.h"  // for system colors
 #include "mozilla/Preferences.h"

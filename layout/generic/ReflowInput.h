@@ -13,7 +13,6 @@
 
 #include "LayoutConstants.h"
 #include "ReflowOutput.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/LayoutStructs.h"
 #include "mozilla/Maybe.h"

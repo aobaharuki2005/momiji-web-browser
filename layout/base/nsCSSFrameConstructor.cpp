@@ -24,7 +24,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/ManualNAC.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/PrintedSheetFrame.h"

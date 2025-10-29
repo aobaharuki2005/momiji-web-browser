@@ -24,7 +24,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/Try.h"
 #include "mozilla/dom/CustomEvent.h"

@@ -10,7 +10,6 @@
 
 #include "gfxContext.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresState.h"
 #include "mozilla/ScrollContainerFrame.h"
