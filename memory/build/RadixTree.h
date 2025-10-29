@@ -77,7 +77,7 @@ class AddressRadixTree {
 template <size_t Bits>
 bool AddressRadixTree<Bits>::Init() {
   mLock.Init();
-  mRoot = (void**)base_calloc(1 << kBitsAtLevel1, sizeof(void*));
+  mRoot = (void**)sBaseAlloc.calloc(1 << kBitsAtLevel1, sizeof(void*));
   return mRoot;
 }
 
@@ -95,7 +95,7 @@ void** AddressRadixTree<Bits>::GetSlotInternal(void* aAddr, bool aCreate) {
     subkey = (key << lshift) >> ((sizeof(void*) << 3) - bits);
     child = (void**)node[subkey];
     if (!child && aCreate) {
-      child = (void**)base_calloc(1 << kBitsPerLevel, sizeof(void*));
+      child = (void**)sBaseAlloc.calloc(1 << kBitsPerLevel, sizeof(void*));
       if (child) {
         node[subkey] = child;
       }

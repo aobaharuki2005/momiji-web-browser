@@ -7,16 +7,49 @@
 
 #include "Mutex.h"
 
-extern Mutex base_mtx;
+// The base allocator is a simple memory allocator used internally by
+// mozjemalloc for its own structures.
+class BaseAlloc {
+ public:
+  constexpr BaseAlloc() {};
 
-extern size_t base_mapped MOZ_GUARDED_BY(base_mtx);
-extern size_t base_committed MOZ_GUARDED_BY(base_mtx);
+  void Init() MOZ_REQUIRES(gInitLock);
 
-void base_init() MOZ_REQUIRES(gInitLock);
+  void* alloc(size_t aSize);
 
-void* base_alloc(size_t aSize);
+  void* calloc(size_t aNumber, size_t aSize);
 
-void* base_calloc(size_t aNumber, size_t aSize);
+  Mutex base_mtx;
+
+  struct Stats {
+    size_t mapped = 0;
+    size_t committed = 0;
+  };
+  Stats GetStats() MOZ_EXCLUDES(base_mtx) {
+    MutexAutoLock lock(base_mtx);
+
+    MOZ_ASSERT(mStats.mapped >= mStats.committed);
+    return mStats;
+  }
+
+ private:
+  // Allocate fresh pages to satsify at least minsize.
+  bool pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx);
+
+  // Current pages that are being used for internal memory allocations.  These
+  // pages are carved up in cacheline-size quanta, so that there is no chance of
+  // false cache line sharing.
+  void* base_pages MOZ_GUARDED_BY(base_mtx) = nullptr;
+  void* base_next_addr MOZ_GUARDED_BY(base_mtx) = nullptr;
+
+  void* base_next_decommitted MOZ_GUARDED_BY(base_mtx) = nullptr;
+  // Address immediately past base_pages.
+  void* base_past_addr MOZ_GUARDED_BY(base_mtx) = nullptr;
+
+  Stats mStats MOZ_GUARDED_BY(base_mtx);
+};
+
+extern BaseAlloc sBaseAlloc;
 
 // A specialization of the base allocator with a free list.
 template <typename T>
@@ -28,21 +61,21 @@ struct TypedBaseAlloc {
   static T* alloc() {
     T* ret;
 
-    base_mtx.Lock();
+    sBaseAlloc.base_mtx.Lock();
     if (sFirstFree) {
       ret = sFirstFree;
       sFirstFree = *(T**)ret;
-      base_mtx.Unlock();
+      sBaseAlloc.base_mtx.Unlock();
     } else {
-      base_mtx.Unlock();
-      ret = (T*)base_alloc(size_of());
+      sBaseAlloc.base_mtx.Unlock();
+      ret = (T*)sBaseAlloc.alloc(size_of());
     }
 
     return ret;
   }
 
   static void dealloc(T* aNode) {
-    MutexAutoLock lock(base_mtx);
+    MutexAutoLock lock(sBaseAlloc.base_mtx);
     *(T**)aNode = sFirstFree;
     sFirstFree = aNode;
   }

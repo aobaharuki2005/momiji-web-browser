@@ -2663,7 +2663,7 @@ void arena_t::InitPRNG() {
       *mPRNG = prng;
     } else {
       void* backing =
-          base_alloc(sizeof(mozilla::non_crypto::XorShift128PlusRNG));
+          sBaseAlloc.alloc(sizeof(mozilla::non_crypto::XorShift128PlusRNG));
       mPRNG = new (backing)
           mozilla::non_crypto::XorShift128PlusRNG(std::move(prng));
     }
@@ -3998,7 +3998,7 @@ static bool malloc_init_hard() {
 
   chunks_init();
   huge_init();
-  base_init();
+  sBaseAlloc.Init();
 
   // Initialize arenas collection here.
   if (!gArenas.Init()) {
@@ -4260,12 +4260,9 @@ inline void MozJemalloc::jemalloc_stats_internal(
   }
 
   // Get base mapped/allocated.
-  {
-    MutexAutoLock lock(base_mtx);
-    non_arena_mapped += base_mapped;
-    aStats->bookkeeping += base_committed;
-    MOZ_ASSERT(base_mapped >= base_committed);
-  }
+  auto base_stats = sBaseAlloc.GetStats();
+  non_arena_mapped += base_stats.mapped;
+  aStats->bookkeeping += base_stats.committed;
 
   gArenas.mLock.Lock();
 
@@ -4770,7 +4767,7 @@ void _malloc_prefork(void) MOZ_NO_THREAD_SAFETY_ANALYSIS {
 
   gArenas.mPurgeListLock.Lock();
 
-  base_mtx.Lock();
+  sBaseAlloc.base_mtx.Lock();
 
   huge_mtx.Lock();
 }
@@ -4780,7 +4777,7 @@ void _malloc_postfork_parent(void) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // Release all mutexes, now that fork() has completed.
   huge_mtx.Unlock();
 
-  base_mtx.Unlock();
+  sBaseAlloc.base_mtx.Unlock();
 
   gArenas.mPurgeListLock.Unlock();
 
@@ -4801,7 +4798,7 @@ void _malloc_postfork_child(void) {
   // Reinitialize all mutexes, now that fork() has completed.
   huge_mtx.Init();
 
-  base_mtx.Init();
+  sBaseAlloc.base_mtx.Init();
 
   gArenas.mPurgeListLock.Init();
 

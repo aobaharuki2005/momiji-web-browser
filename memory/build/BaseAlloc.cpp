@@ -10,29 +10,12 @@
 
 using namespace mozilla;
 
-MOZ_CONSTINIT Mutex base_mtx;
-
-// Current pages that are being used for internal memory allocations.  These
-// pages are carved up in cacheline-size quanta, so that there is no chance of
-// false cache line sharing.
-static void* base_pages MOZ_GUARDED_BY(base_mtx);
-static void* base_next_addr MOZ_GUARDED_BY(base_mtx);
-static void* base_next_decommitted MOZ_GUARDED_BY(base_mtx);
-// Address immediately past base_pages.
-static void* base_past_addr MOZ_GUARDED_BY(base_mtx);
-size_t base_mapped MOZ_GUARDED_BY(base_mtx);
-size_t base_committed MOZ_GUARDED_BY(base_mtx);
+MOZ_CONSTINIT BaseAlloc sBaseAlloc;
 
 // Initialize base allocation data structures.
-void base_init() MOZ_REQUIRES(gInitLock) {
-  base_mtx.Init();
-  MOZ_PUSH_IGNORE_THREAD_SAFETY
-  base_mapped = 0;
-  base_committed = 0;
-  MOZ_POP_THREAD_SAFETY
-}
+void BaseAlloc::Init() MOZ_REQUIRES(gInitLock) { base_mtx.Init(); }
 
-static bool base_pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx) {
+bool BaseAlloc::pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx) {
   size_t csize;
   size_t pminsize;
 
@@ -51,13 +34,13 @@ static bool base_pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx) {
   if (pminsize < csize) {
     pages_decommit(base_next_decommitted, csize - pminsize);
   }
-  base_mapped += csize;
-  base_committed += pminsize;
+  mStats.mapped += csize;
+  mStats.committed += pminsize;
 
   return false;
 }
 
-void* base_alloc(size_t aSize) {
+void* BaseAlloc::alloc(size_t aSize) {
   void* ret;
   size_t csize;
 
@@ -67,7 +50,7 @@ void* base_alloc(size_t aSize) {
   MutexAutoLock lock(base_mtx);
   // Make sure there's enough space for the allocation.
   if ((uintptr_t)base_next_addr + csize > (uintptr_t)base_past_addr) {
-    if (base_pages_alloc(csize)) {
+    if (pages_alloc(csize)) {
       return nullptr;
     }
   }
@@ -84,7 +67,7 @@ void* base_alloc(size_t aSize) {
       return nullptr;
     }
 
-    base_committed +=
+    mStats.committed +=
         (uintptr_t)pbase_next_addr - (uintptr_t)base_next_decommitted;
     base_next_decommitted = pbase_next_addr;
   }
@@ -92,8 +75,8 @@ void* base_alloc(size_t aSize) {
   return ret;
 }
 
-void* base_calloc(size_t aNumber, size_t aSize) {
-  void* ret = base_alloc(aNumber * aSize);
+void* BaseAlloc::calloc(size_t aNumber, size_t aSize) {
+  void* ret = alloc(aNumber * aSize);
   if (ret) {
     memset(ret, 0, aNumber * aSize);
   }
