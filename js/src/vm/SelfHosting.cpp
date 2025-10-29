@@ -1228,8 +1228,9 @@ bool js::IsCallSelfHostedNonGenericMethod(NativeImpl impl) {
   return impl == CallSelfHostedNonGenericMethod;
 }
 
-bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
-                                            Handle<Value> thisValue) {
+bool js::ReportIncompatibleSelfHostedMethod(
+    JSContext* cx, Handle<Value> thisValue,
+    IncompatibleContext incompatibleContext) {
   // The contract for this function is the same as
   // CallSelfHostedNonGenericMethod. The normal ReportIncompatible function
   // doesn't work for selfhosted functions, because they always call the
@@ -1264,9 +1265,15 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
     if (std::all_of(
             std::begin(internalNames), std::end(internalNames),
             [funName](auto* name) { return strcmp(funName, name) != 0; })) {
-      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_INCOMPATIBLE_METHOD, funName, "method",
-                               InformalValueTypeName(thisValue));
+      if (incompatibleContext == IncompatibleContext::RegExpExec) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_INCOMPATIBLE_REGEXP_METHOD, funName,
+                                 InformalValueTypeName(thisValue));
+      } else {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_INCOMPATIBLE_METHOD, funName, "method",
+                                 InformalValueTypeName(thisValue));
+      }
       return false;
     }
     ++iter;
