@@ -2761,6 +2761,15 @@ static bool ConvertTranscodeResultToJSException(JSContext* cx,
 static void SetQuitting(JSContext* cx, int32_t code) {
   ShellContext* sc = GetShellContext(cx);
   js::StopDrainingJobQueue(cx);
+#ifdef DEBUG
+  {
+    AutoLockHelperThreadState helperLock;
+
+    OffThreadPromiseRuntimeState& state =
+        cx->runtime()->offThreadPromiseState.ref();
+    state.setForceQuitting();
+  }
+#endif
   sc->exitCode = code;
   sc->quitting = true;
 }
