@@ -493,10 +493,10 @@ class RegExpDepthCheck final : public v8::internal::RegExpVisitor {
 
   // This size is picked to be comfortably larger than any
   // RegExp*::ToNode stack frame.
-#ifndef DEBUG
+#if !defined(DEBUG) && !defined(MOZ_CODE_COVERAGE)
   static const size_t FRAME_PADDING = 256;
 #else
-  // Use a slightly larger padding for debug builds.
+  // Use a slightly larger padding for debug and code coverage builds.
   static const size_t FRAME_PADDING = 256 * 2;
 #endif
 };
