@@ -469,7 +469,14 @@ features:
         description: >
           When the feature is enabled the user will see a new composable toolbar instead the previous View based one.
         type: Boolean
-        default: true
+        default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: true
+      - channel: developer
+        value:
+          enabled: true
 
   remote-tab-management:
     description: >
