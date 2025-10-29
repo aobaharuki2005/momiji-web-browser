@@ -70,11 +70,11 @@ void ServiceWorkerRegistrationInfo::ClearAsCorrupt() {
 bool ServiceWorkerRegistrationInfo::IsCorrupt() const { return mCorrupt; }
 
 ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
-    const nsACString& aScope, nsIPrincipal* aPrincipal,
+    const nsACString& aScope, WorkerType aType, nsIPrincipal* aPrincipal,
     ServiceWorkerUpdateViaCache aUpdateViaCache,
     IPCNavigationPreloadState&& aNavigationPreloadState)
     : mPrincipal(aPrincipal),
-      mDescriptor(GetNextId(), GetNextVersion(), aPrincipal, aScope,
+      mDescriptor(GetNextId(), GetNextVersion(), aPrincipal, aScope, aType,
                   aUpdateViaCache),
       mControlledClientsCounter(0),
       mDelayMultiplier(0),
@@ -128,6 +128,10 @@ void ServiceWorkerRegistrationInfo::RemoveInstance(
 
 const nsCString& ServiceWorkerRegistrationInfo::Scope() const {
   return mDescriptor.Scope();
+}
+
+WorkerType ServiceWorkerRegistrationInfo::Type() const {
+  return mDescriptor.Type();
 }
 
 nsIPrincipal* ServiceWorkerRegistrationInfo::Principal() const {
