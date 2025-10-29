@@ -53,7 +53,7 @@ void OutgoingMsg::Advance(size_t offset) {
 }
 
 DataChannelConnection::~DataChannelConnection() {
-  DC_DEBUG(("%p: Deleting DataChannelConnection", this));
+  DC_INFO(("%p: Deleting DataChannelConnection", this));
   // This may die on the MainThread, or on the STS thread, or on an
   // sctp thread if we were in a callback when the DOM side shut things down.
   MOZ_ASSERT(mState == DataChannelConnectionState::Closed);
@@ -79,7 +79,7 @@ DataChannelConnection::~DataChannelConnection() {
 
 void DataChannelConnection::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
-  DC_DEBUG(("%p: Destroying DataChannelConnection", this));
+  DC_INFO(("%p: Destroying DataChannelConnection", this));
   CloseAll();
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   MOZ_DIAGNOSTIC_ASSERT(mSTS);
@@ -248,7 +248,7 @@ bool DataChannelConnection::ConnectToTransport(const std::string& aTransportId,
 
   const auto params =
       paramString(aTransportId, Some(aClient), aLocalPort, aRemotePort);
-  DC_DEBUG(
+  DC_INFO(
       ("%p: ConnectToTransport connecting DTLS transport with parameters: %s",
        this, params.c_str()));
 
@@ -587,8 +587,9 @@ void DataChannelConnection::HandleOpenRequestMessage(
             mChannels.Insert(channel);
             mStreamIds.InsertElementSorted(stream);
 
-            DC_DEBUG(("%p: sending ON_CHANNEL_CREATED for %s/%s: %u", this,
-                      channel->mLabel.get(), channel->mProtocol.get(), stream));
+            DC_INFO(("%p: sending ON_CHANNEL_CREATED for %p/%s/%s: %u", this,
+                     channel.get(), channel->mLabel.get(),
+                     channel->mProtocol.get(), stream));
 
             // Awkward. If we convert over to using Maybe for this in
             // DataChannel, we won't need to have this extra conversion, since
@@ -653,8 +654,8 @@ void DataChannelConnection::HandleOpenAckMessage(
     return;
   }
 
-  DC_DEBUG(("%p: OpenAck received for stream %u, waiting=%d", this, stream,
-            channel->mWaitingForAck ? 1 : 0));
+  DC_INFO(("%p: OpenAck received for channel %p, stream %u, waiting=%d", this,
+           channel.get(), stream, channel->mWaitingForAck ? 1 : 0));
 
   channel->mWaitingForAck = false;
 }
@@ -740,7 +741,7 @@ void DataChannelConnection::HandleDCEPMessage(IncomingMsg&& aMsg) {
 
   size_t data_length = aMsg.GetLength();
 
-  DC_DEBUG(("%p: Handling DCEP message of length %zu", this, data_length));
+  DC_INFO(("%p: Handling DCEP message of length %zu", this, data_length));
 
   // Ensure minimum message size (ack is the smallest DCEP message)
   if (data_length < sizeof(*ack)) {
@@ -864,7 +865,7 @@ already_AddRefed<DataChannel> DataChannelConnection::Open(
     }
   }
 
-  DC_DEBUG(
+  DC_INFO(
       ("%p: DC Open: label %s/%s, type %s, inorder %d, prValue %u, "
        "external: %s, stream %u",
        this, PromiseFlatCString(label).get(),
@@ -950,9 +951,9 @@ void DataChannelConnection::OpenFinish(RefPtr<DataChannel> aChannel) {
         return;
       }
     }
-    DC_DEBUG(("%p: Queuing channel %p (%u) to finish open", this,
-              aChannel.get(), stream));
     mPending.insert(aChannel);
+    DC_INFO(("%p: Queuing channel %p (%u) to finish open", this, aChannel.get(),
+             stream));
     return;
   }
 
@@ -1265,7 +1266,10 @@ void DataChannelConnection::CloseAll_s() {
   // If there are runnables, they hold a strong ref and keep the channel
   // and/or connection alive (even if in a CLOSED state)
   for (auto& channel : mChannels.GetAll()) {
+    DC_INFO(("%p: closing channel %p, stream %u", this, channel.get(),
+             channel->mStream));
     if (channel->mSendStreamNeedsReset) {
+      DC_INFO(("%p: channel %p needs to send reset", this, channel.get()));
       channel->mSendStreamNeedsReset = false;
       streamsToReset.AppendElement(channel->mStream);
     }
@@ -1280,8 +1284,8 @@ void DataChannelConnection::CloseAll_s() {
   // anything in here.
   mPending.clear();
   for (const auto& channel : temp) {
-    DC_DEBUG(("%p: closing pending channel %p, stream %u", this, channel.get(),
-              channel->mStream));
+    DC_INFO(("%p: closing pending channel %p, stream %u", this, channel.get(),
+             channel->mStream));
     FinishClose_s(channel);  // also releases the ref on each iteration
   }
 
@@ -1294,7 +1298,7 @@ void DataChannelConnection::CloseAll_s() {
 
 void DataChannelConnection::CloseAll() {
   MOZ_ASSERT(NS_IsMainThread());
-  DC_DEBUG(("%p: Closing all channels", this));
+  DC_INFO(("%p: Closing all channels", this));
 
   mSTS->Dispatch(NS_NewCancelableRunnableFunction(
                      "DataChannelConnection::CloseAll",
@@ -1392,9 +1396,9 @@ DataChannel::DataChannel(DataChannelConnection* connection, uint16_t stream,
       mConnection(connection),
       mDomEventTarget(new StopGapEventTarget) {
   DC_INFO(
-      ("%p: Necko DataChannel created. Waiting for RTCDataChannel to be "
-       "created.",
-       this));
+      ("%p: Necko DataChannel created, label '%s'. Waiting for RTCDataChannel "
+       "to be created.",
+       this, mLabel.get()));
   NS_ASSERTION(mConnection, "NULL connection");
 }
 
@@ -1543,6 +1547,7 @@ void DataChannel::AnnounceClosed() {
             // We have to unset this first, and then fire DOM events, so the
             // event handler won't hit an error if it tries to reuse this id.
             if (mStream != INVALID_STREAM) {
+              DC_INFO(("%p: Marking stream id %u available", this, mStream));
               connection->MarkStreamAvailable(mStream);
             }
 
@@ -1551,6 +1556,7 @@ void DataChannel::AnnounceClosed() {
               connection->mListener->NotifyDataChannelClosed(this);
             }
 
+            DC_INFO(("%p: Dispatching AnnounceClosed to DOM thread", this));
             mDomEventTarget->Dispatch(
                 NS_NewCancelableRunnableFunction(
                     "DataChannel::AnnounceClosed",

@@ -103,7 +103,8 @@ RTCDataChannel::RTCDataChannel(const nsACString& aLabel,
       mNegotiated(aNegotiated),
       mDataChannel(aDataChannel),
       mEventTarget(GetCurrentSerialEventTarget()) {
-  DC_INFO(("%p: RTCDataChannel created on main", this));
+  DC_INFO(("%p: RTCDataChannel created on main (necko channel %p)", this,
+           mDataChannel.get()));
   mDataChannel->SetMainthreadDomDataChannel(this);
 }
 
