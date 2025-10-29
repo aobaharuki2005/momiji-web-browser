@@ -961,8 +961,10 @@ GeckoDriver.prototype.getContext = function () {
  *     If an {@link Error} was thrown whilst evaluating the script.
  * @throws {NoSuchElementError}
  *     If an element that was passed as part of <var>args</var> is unknown.
+ * @throws {NoSuchFrameError}
+ *     Child browsing context has been discarded.
  * @throws {NoSuchWindowError}
- *     Browsing context has been discarded.
+ *     Top-level browsing context has been discarded.
  * @throws {ScriptTimeoutError}
  *     If the script was interrupted due to reaching the session's
  *     script timeout.
@@ -1034,8 +1036,10 @@ GeckoDriver.prototype.executeScript = function (cmd) {
  *     If an Error was thrown whilst evaluating the script.
  * @throws {NoSuchElementError}
  *     If an element that was passed as part of <var>args</var> is unknown.
+ * @throws {NoSuchFrameError}
+ *     Child browsing context has been discarded.
  * @throws {NoSuchWindowError}
- *     Browsing context has been discarded.
+ *     Top-level browsing context has been discarded.
  * @throws {ScriptTimeoutError}
  *     If the script was interrupted due to reaching the session's
  *     script timeout.

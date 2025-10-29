@@ -230,6 +230,10 @@ json.clone = function (value, nodeCache) {
  *
  * @throws {NoSuchElementError}
  *     If the WebElement reference has not been seen before.
+ * @throws {NoSuchFrameError}
+ *     Child browsing context has been discarded.
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
  * @throws {StaleElementReferenceError}
  *     If the element is stale, indicating it is no longer attached to the DOM.
  */
@@ -267,7 +271,7 @@ json.deserialize = function (value, nodeCache, browsingContext) {
             const browsingContext = BrowsingContext.get(webRef.uuid);
 
             if (browsingContext === null || browsingContext.parent === null) {
-              throw new lazy.error.NoSuchWindowError(
+              throw new lazy.error.NoSuchFrameError(
                 `Unable to locate frame with id: ${webRef.uuid}`
               );
             }
