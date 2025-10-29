@@ -61,19 +61,16 @@ struct TypedBaseAlloc {
   static size_t size_of() { return sizeof(T); }
 
   static T* alloc() {
-    T* ret;
-
-    sBaseAlloc.mMutex.Lock();
-    if (sFirstFree) {
-      ret = sFirstFree;
-      sFirstFree = *(T**)ret;
-      sBaseAlloc.mMutex.Unlock();
-    } else {
-      sBaseAlloc.mMutex.Unlock();
-      ret = (T*)sBaseAlloc.alloc(size_of());
+    {
+      MutexAutoLock lock(sBaseAlloc.mMutex);
+      T* ret = sFirstFree;
+      if (ret) {
+        sFirstFree = *(T**)ret;
+        return ret;
+      }
     }
 
-    return ret;
+    return (T*)sBaseAlloc.alloc(size_of());
   }
 
   static void dealloc(T* aNode) {
