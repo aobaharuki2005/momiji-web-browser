@@ -11,6 +11,7 @@
 
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/NavigatorLogin.h"
 #include "mozilla/glean/AntitrackingMetrics.h"

@@ -7,6 +7,7 @@
 #include "ScreenHelperWin.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/ToString.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "nsTArray.h"
 #include "WinUtils.h"

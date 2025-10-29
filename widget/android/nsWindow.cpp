@@ -71,7 +71,6 @@
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/WeakPtr.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 #include "mozilla/a11y/SessionAccessibility.h"
 #include "mozilla/dom/BrowsingContext.h"

@@ -14,7 +14,6 @@
 #include "gfxTelemetry.h"
 #include "js/Value.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/gfx/GraphicsMessages.h"

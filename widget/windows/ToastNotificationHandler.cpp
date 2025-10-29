@@ -17,7 +17,6 @@
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"
 #endif
-#include "mozilla/HashFunctions.h"
 #include "mozilla/JSONStringWriteFuncs.h"
 #include "mozilla/Result.h"
 #include "mozilla/Logging.h"
