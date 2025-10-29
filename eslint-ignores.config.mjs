@@ -153,6 +153,7 @@ export default [
 
   // Intentional broken files
   "dom/base/test/file_js_cache_syntax_error.js",
+  "dom/base/test/file_js_cache_large_syntax_error.js",
   "dom/base/test/jsmodules/test_scriptNotParsedAsModule.html",
   "dom/base/test/jsmodules/test_syntaxError.html",
   "dom/base/test/jsmodules/test_syntaxErrorAsync.html",

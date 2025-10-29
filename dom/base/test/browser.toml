@@ -154,6 +154,14 @@ support-files = [
 
 ["browser_screen_orientation_override.js"]
 
+["browser_script_loader_js_cache.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_small.js",
+  "file_js_cache_large.js",
+  "file_js_cache_large_syntax_error.js",
+]
+
 ["browser_set_focus_after_reuse_bcg.js"]
 
 ["browser_state_notifications.js"]
