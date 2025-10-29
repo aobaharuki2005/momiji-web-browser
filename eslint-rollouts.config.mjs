@@ -311,7 +311,6 @@ export default [
       "jsdoc/check-tag-names": "off",
       "jsdoc/check-types": "off",
       "jsdoc/empty-tags": "off",
-      "jsdoc/no-multi-asterisks": "off",
       "jsdoc/require-param-type": "off",
       "jsdoc/require-returns-type": "off",
       "jsdoc/tag-lines": ["off", "any", { startLines: 1 }],

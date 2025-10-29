@@ -17,7 +17,7 @@ export default {
     "jsdoc/empty-tags": "error",
     "jsdoc/multiline-blocks": "error",
     "jsdoc/no-bad-blocks": "error",
-    "jsdoc/no-multi-asterisks": "error",
+    "jsdoc/no-multi-asterisks": ["error", { allowWhitespace: true }],
     "jsdoc/require-param-type": "error",
     "jsdoc/require-returns-type": "error",
     "jsdoc/tag-lines": ["error", "any", { startLines: 1 }],
