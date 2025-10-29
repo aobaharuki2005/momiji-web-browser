@@ -58,11 +58,6 @@
         );
       }
       let isGrid = this._isContainerVerticalPinnedGrid(tab);
-      let animate = !gReduceMotion;
-
-      tab._moveTogetherSelectedTabsData = {
-        finished: !animate,
-      };
 
       tab.toggleAttribute("multiselected-move-together", true);
 
@@ -179,21 +174,13 @@
       // Animate left or top selected tabs
       for (let i = 0; i < tabIndex; i++) {
         let movingTab = selectedTabs[i];
-        if (animate) {
-          addAnimationData(movingTab);
-        } else {
-          gBrowser.moveTabBefore(movingTab, tab);
-        }
+        addAnimationData(movingTab);
       }
 
       // Animate right or bottom selected tabs
       for (let i = selectedTabs.length - 1; i > tabIndex; i--) {
         let movingTab = selectedTabs[i];
-        if (animate) {
-          addAnimationData(movingTab);
-        } else {
-          gBrowser.moveTabAfter(movingTab, tab);
-        }
+        addAnimationData(movingTab);
       }
 
       // Slide the relevant tabs to their new position.
@@ -228,14 +215,9 @@
     }
 
     finishMoveTogetherSelectedTabs(tab) {
-      if (
-        !tab._moveTogetherSelectedTabsData ||
-        tab._moveTogetherSelectedTabsData.finished
-      ) {
+      if (!tab._moveTogetherSelectedTabsData) {
         return;
       }
-
-      tab._moveTogetherSelectedTabsData.finished = true;
 
       let selectedTabs = gBrowser.selectedTabs;
       let tabIndex = selectedTabs.indexOf(tab);
