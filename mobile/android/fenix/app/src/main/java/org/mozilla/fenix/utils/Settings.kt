@@ -1920,7 +1920,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var isAddressSyncEnabled by featureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_address_sync),
-        default = FxNimbus.features.addressSync.value().enabled,
+        default = true,
         featureFlag = isAddressFeatureEnabled(appContext),
     )
 

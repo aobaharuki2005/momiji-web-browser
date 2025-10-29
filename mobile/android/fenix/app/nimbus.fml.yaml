@@ -943,22 +943,6 @@ features:
         value:
           enabled: false
 
-  address-sync:
-    description: Turns on address sync.
-    variables:
-      enabled:
-        description: >
-          Whether or not to turn on address sync.
-        type: Boolean
-        default: false
-    defaults:
-      - channel: nightly
-        value:
-          enabled: false
-      - channel: developer
-        value:
-          enabled: true
-
   suppress-sponsored-top-sites:
     description: Suppress sponsored top sites for new users for 14 days.
     variables:
