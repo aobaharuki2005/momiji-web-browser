@@ -1280,7 +1280,7 @@
         movingTab.setAttribute("dragtarget", "");
         if (isTabGroupLabel(tab)) {
           if (this._tabbrowserTabs.verticalMode) {
-            movingTab.style.top = rect.top - unpinnedRect.top + "px";
+            movingTab.style.top = rect.top - tabContainerRect.top + "px";
           } else {
             movingTab.style.left = rect.left - movingTabsOffsetX + "px";
             movingTab.style.height = rect.height + "px";
