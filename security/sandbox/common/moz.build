@@ -57,5 +57,3 @@ FINAL_LIBRARY = "xul"
 EXPORTS.mozilla += [
     "SandboxSettings.h",
 ]
-
-DEFINES["MOZ_GPU_PROCESS_BUNDLEID"] = '"%s"' % CONFIG["MOZ_GPU_PROCESS_BUNDLEID"]
