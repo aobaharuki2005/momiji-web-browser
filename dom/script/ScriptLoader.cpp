@@ -2855,6 +2855,11 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
         aRequest->getLoadedScript()->DropDiskCacheReferenceAndSRI();
         return;
       }
+      if (fetchCount < UINT8_MAX) {
+        aRequest->mLoadedScript->mFetchCount = fetchCount;
+      } else {
+        aRequest->mLoadedScript->mFetchCount = UINT8_MAX;
+      }
     }
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: fetchCount = %d.", aRequest,
          fetchCount));
@@ -3311,6 +3316,9 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
     auto loadData =
         MakeRefPtr<ScriptLoadData>(this, aRequest, aRequest->getLoadedScript());
     aRequest->ConvertToCachedStencil();
+    if (aRequest->getLoadedScript()->mFetchCount == 0) {
+      aRequest->getLoadedScript()->mFetchCount = 1;
+    }
     mCache->Insert(*loadData);
     LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
          aRequest->URI()->GetSpecOrDefault().get()));
