@@ -941,6 +941,10 @@ export var TelemetryEnvironmentTesting = {
 
     if (gIsWindows && !!gfxData.features?.d3d11?.version) {
       lazy.Assert.equal(typeof gfxData.features.d3d11.version, "number");
+      lazy.Assert.equal(
+        gfxData.features.d3d11.version,
+        Glean.gfxFeatures.d3d11.testGetValue().version
+      );
     }
 
     try {
