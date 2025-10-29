@@ -1520,7 +1520,7 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   }
 
   if (aRequest->HasScriptLoadContext()) {
-    TRACE_FOR_TEST(aRequest, "scriptloader_evaluate_module");
+    TRACE_FOR_TEST(aRequest, "evaluate:module");
   }
 
   Rooted<Value> rval(aCx);

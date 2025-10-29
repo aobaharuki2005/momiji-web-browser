@@ -592,7 +592,7 @@ void ScriptLoader::RunScriptWhenSafe(ScriptLoadRequest* aRequest) {
 
 nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   aRequest->DropBytecode();
-  TRACE_FOR_TEST(aRequest, "scriptloader_fallback");
+  TRACE_FOR_TEST(aRequest, "load:fallback");
 
   // Notify preload restart so that we can register this preload request again.
   aRequest->GetScriptLoadContext()->NotifyRestart(mDocument);
@@ -1656,7 +1656,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
       aElement->GetScriptColumnNumber();
   request->mFetchSourceOnly = true;
   request->SetTextSource(request->mLoadContext.get());
-  TRACE_FOR_TEST_BOOL(request, "scriptloader_load_source");
+  TRACE_FOR_TEST(request, "load:source");
   CollectScriptTelemetry(request);
 
   // Only the 'async' attribute is heeded on an inline module script and
@@ -2056,7 +2056,7 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
   if (aRequest->IsTextSource()) {
     if (!StaticPrefs::javascript_options_parallel_parsing() ||
         aRequest->ScriptTextLength() < OffThreadMinimumTextLength) {
-      TRACE_FOR_TEST(aRequest, "scriptloader_main_thread_compile");
+      TRACE_FOR_TEST(aRequest, "compile:main thread");
       return NS_OK;
     }
   } else {
@@ -2357,17 +2357,17 @@ nsresult ScriptLoader::CreateOffThreadTask(
   if (StaticPrefs::dom_expose_test_interfaces()) {
     switch (aOptions.eagerDelazificationStrategy()) {
       case JS::DelazificationOption::OnDemandOnly:
-        TRACE_FOR_TEST(aRequest, "delazification_on_demand_only");
+        TRACE_FOR_TEST(aRequest, "delazification:OnDemandOnly");
         break;
       case JS::DelazificationOption::CheckConcurrentWithOnDemand:
       case JS::DelazificationOption::ConcurrentDepthFirst:
-        TRACE_FOR_TEST(aRequest, "delazification_concurrent_depth_first");
+        TRACE_FOR_TEST(aRequest, "delazification:ConcurrentDepthFirst");
         break;
       case JS::DelazificationOption::ConcurrentLargeFirst:
-        TRACE_FOR_TEST(aRequest, "delazification_concurrent_large_first");
+        TRACE_FOR_TEST(aRequest, "delazification:ConcurrentLargeFirst");
         break;
       case JS::DelazificationOption::ParseEverythingEagerly:
-        TRACE_FOR_TEST(aRequest, "delazification_parse_everything_eagerly");
+        TRACE_FOR_TEST(aRequest, "delazification:ParseEverythingEagerly");
         break;
     }
   }
@@ -3349,7 +3349,7 @@ nsresult ScriptLoader::MaybePrepareForDiskCacheAfterExecute(
   if (!aRequest->PassedConditionForDiskCache() || !aRequest->HasStencil()) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X)", aRequest,
          unsigned(aRv)));
-    TRACE_FOR_TEST_NONE(aRequest, "scriptloader_no_encode");
+    TRACE_FOR_TEST(aRequest, "diskcache:disabled");
 
     // For in-memory cached requests, the disk cache references are necessary
     // for later load.
@@ -3364,7 +3364,7 @@ nsresult ScriptLoader::MaybePrepareForDiskCacheAfterExecute(
     return aRv;
   }
 
-  TRACE_FOR_TEST(aRequest, "scriptloader_encode");
+  TRACE_FOR_TEST(aRequest, "diskcache:register");
   // Bytecode-encoding branch is used for 2 purposes right now:
   //   * If the request is stencil, reflect delazifications to cached stencil
   //   * otherwise, encode the initial stencil and delazifications
@@ -3453,7 +3453,6 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
          mTotalFullParseSize));
   }
 
-  TRACE_FOR_TEST(aRequest, "scriptloader_execute");
   JS::Rooted<JSObject*> global(cx, aGlobalObject->GetGlobalJSObject());
   if (MOZ_UNLIKELY(!xpc::Scriptability::Get(global).Allowed())) {
     return NS_OK;
@@ -3474,6 +3473,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
                               profilerLabelString);
 
     MOZ_ASSERT(options.noScriptRval);
+    TRACE_FOR_TEST(aRequest, "evaluate:classic");
     ExecuteCompiledScript(cx, classicScript, script, erv);
   }
   rv = EvaluationExceptionToNSResult(erv);
@@ -4798,10 +4798,6 @@ nsAutoScriptLoaderDisabler::~nsAutoScriptLoaderDisabler() {
     mLoader->SetEnabled(true);
   }
 }
-
-#undef TRACE_FOR_TEST
-#undef TRACE_FOR_TEST_BOOL
-#undef TRACE_FOR_TEST_NONE
 
 #undef LOG
 
