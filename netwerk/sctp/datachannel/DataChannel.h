@@ -226,8 +226,8 @@ class DataChannelConnection : public net::NeckoTargetHolder {
       DataChannelReliabilityPolicy prPolicy, bool inOrder, uint32_t prValue,
       bool aExternalNegotiated, uint16_t aStream);
 
-  void EndOfStream(DataChannel* aChannel);
-  void FinishClose_s(DataChannel* aChannel);
+  void EndOfStream(const RefPtr<DataChannel>& aChannel);
+  void FinishClose_s(const RefPtr<DataChannel>& aChannel);
   void CloseAll();
   void CloseAll_s();
   void MarkStreamAvailable(uint16_t aStream);

@@ -273,7 +273,7 @@ bool DataChannelConnection::ConnectToTransport(const std::string& aTransportId,
         DC_DEBUG(("%p: Inserting auto-selected id %u", this,
                   static_cast<unsigned>(id)));
         mStreamIds.InsertElementSorted(id);
-        hasStreamId.AppendElement(channel);
+        hasStreamId.AppendElement(std::move(channel));
       } else {
         // Spec language is very similar to AnnounceClosed, the differences
         // being a lack of a closed check at the top, a different error event,
@@ -290,8 +290,8 @@ bool DataChannelConnection::ConnectToTransport(const std::string& aTransportId,
                        [this, self = RefPtr<DataChannelConnection>(this),
                         hasStreamId = std::move(hasStreamId)]() {
                          SetState(DataChannelConnectionState::Connecting);
-                         for (auto channel : hasStreamId) {
-                           OpenFinish(channel);
+                         for (auto& channel : hasStreamId) {
+                           OpenFinish(std::move(channel));
                          }
                        }),
                    NS_DISPATCH_FALLIBLE);
@@ -951,9 +951,9 @@ void DataChannelConnection::OpenFinish(RefPtr<DataChannel> aChannel) {
         return;
       }
     }
-    mPending.insert(aChannel);
     DC_INFO(("%p: Queuing channel %p (%u) to finish open", this, aChannel.get(),
              stream));
+    mPending.insert(std::move(aChannel));
     return;
   }
 
@@ -1195,7 +1195,7 @@ int DataChannelConnection::SendDataMessage(uint16_t aStream, nsACString&& aMsg,
   return 0;
 }
 
-void DataChannelConnection::EndOfStream(DataChannel* aChannel) {
+void DataChannelConnection::EndOfStream(const RefPtr<DataChannel>& aChannel) {
   mSTS->Dispatch(
       NS_NewCancelableRunnableFunction(
           __func__,
@@ -1204,7 +1204,7 @@ void DataChannelConnection::EndOfStream(DataChannel* aChannel) {
             if (channel->mSendStreamNeedsReset) {
               DC_INFO((
                   "%p: Need to send a reset for channel %p, closing gracefully",
-                  this, channel));
+                  this, channel.get()));
               nsTArray<uint16_t> temp({stream});
               bool success = ResetStreams(temp);
               if (success) {
@@ -1216,7 +1216,7 @@ void DataChannelConnection::EndOfStream(DataChannel* aChannel) {
               DC_INFO(
                   ("%p: Failed to send a reset for channel %p, closing "
                    "immediately",
-                   this, channel));
+                   this, channel.get()));
               channel->mRecvStreamNeedsReset = false;
             }
 
@@ -1226,7 +1226,7 @@ void DataChannelConnection::EndOfStream(DataChannel* aChannel) {
               DC_INFO(
                   ("%p: Stream does not need reset in either direction for "
                    "channel %p",
-                   this, channel));
+                   this, channel.get()));
               FinishClose_s(channel);
             }
           }),
@@ -1240,14 +1240,13 @@ void DataChannel::EndOfStream() {
   }
 }
 
-void DataChannelConnection::FinishClose_s(DataChannel* aChannel) {
+void DataChannelConnection::FinishClose_s(const RefPtr<DataChannel>& aChannel) {
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
 
   // We're removing this from all containers, make sure the passed pointer
   // stays valid.
   // It is possible for this to be called twice if both JS and the transport
   // side cause closure at the same time, but this is idempotent so no big deal
-  RefPtr<DataChannel> channel(aChannel);
   aChannel->mBufferedData.Clear();
   mChannels.Remove(aChannel);
   mPending.erase(aChannel);
