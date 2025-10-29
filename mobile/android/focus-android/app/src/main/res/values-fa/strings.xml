@@ -136,7 +136,7 @@
     Content of about focus. %1$s is the name of the app (for example "Firefox Focus" or "Firefox Klar").
     %2$s is the url for the learn-more link.
   -->
-  <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s شما را تحت کنترل قرار می‌دهد.</p> <p>از این به عنوان یک مرورگر خصوصی استفاده کنید: <ul> <li>مستقیما در برنامه جست‌وجو و مرور کنید</li> <li>ردیاب‌ها را مسدود کنید (یا تنظیمات را برای اجازه دادن به ردیاب‌ها تغییر دهید)</li> <li>کوکی‌ها را مانند جست‌وجو و تاریخچه مرور پاک یا حذف کنید</li> </ul> </p> <p>%1$s توسط موزیلا ساخته شده است. ماموریت ما تا رواج یک اینترنت سالم و باز است.<br/> <a href=\"%2$s\">بیشتر بدانید</a></p>]]></string>
+  <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s شما را تحت کنترل قرار می‌دهد.</p>\n<p>از این به عنوان یک مرورگر خصوصی استفاده کنید:\n<ul>\n<li>مستقیما در برنامه جست‌وجو و مرور کنید</li>\n<li>ردیاب‌ها را مسدود کنید (یا تنظیمات را برای اجازه دادن به ردیاب‌ها تغییر دهید)</li>\n<li>کوکی‌ها را مانند جست‌وجو و تاریخچه مرور پاک یا حذف کنید</li>\n</ul> </p>\n<p>%1$s توسط موزیلا ساخته شده است. ماموریت ما تا رواج یک اینترنت سالم و باز است.<br/>\n<a href=\"%2$s\">بیشتر بدانید</a></p>]]></string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">حریم خصوصی و امنیت</string>
   <!-- Preference summary for settings related to privacy and security -->
@@ -497,7 +497,7 @@
   <string name="download_firefox" tools:ignore="BrandUsage">دریافت فایرفاکس</string>
   <!-- Text shown in prompts for GeckoView -->
   <string name="gv_prompt_username_hint">نام کاربری</string>
-  <string name="gv_prompt_password_hint">کلمه عبور</string>
+  <string name="gv_prompt_password_hint">گذرواژه</string>
   <string name="gv_prompt_clear">پاک کردن</string>
   <!--
     Text shown in Security Information Popup
@@ -642,7 +642,7 @@
   <!-- Label for button to close the tab -->
   <string name="tab_crash_report_close_tab_button_label">بستن زبانه</string>
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
-  <string name="crash_report_send_crash_label">ارسال گزارش خرابی ها به موزیلا</string>
+  <string name="crash_report_send_crash_label">ارسال گزارش ازکارافتادگی به Mozilla</string>
   <!-- Tracking protection bottom sheet -->
 
   <!-- Label for the total number of trackers blocked. %s is the app install date. -->
