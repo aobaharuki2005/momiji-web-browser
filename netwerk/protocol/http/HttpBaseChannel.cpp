@@ -3037,6 +3037,14 @@ nsresult EnsureMIMEOfScript(HttpBaseChannel* aChannel, nsIURI* aURI,
     return NS_OK;
   }
 
+  if (nsContentUtils::IsJsonMimeType(typeString)) {
+    // script and json are both allowed
+    glean::http::script_block_incorrect_mime
+        .EnumGet(glean::http::ScriptBlockIncorrectMimeLabel::eTextJson)
+        .Add();
+    return NS_OK;
+  }
+
   switch (aLoadInfo->InternalContentPolicyType()) {
     case nsIContentPolicy::TYPE_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
@@ -3256,7 +3264,8 @@ void WarnWrongMIMEOfScript(HttpBaseChannel* aChannel, nsIURI* aURI,
   aResponseHead->ContentType(contentType);
   NS_ConvertUTF8toUTF16 typeString(contentType);
 
-  if (nsContentUtils::IsJavascriptMIMEType(typeString)) {
+  if (nsContentUtils::IsJavascriptMIMEType(typeString) ||
+      nsContentUtils::IsJsonMimeType(typeString)) {
     return;
   }
 
