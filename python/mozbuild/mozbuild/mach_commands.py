@@ -1089,7 +1089,9 @@ def gtest(
     if list_tests:
         args.append("--gtest_list_tests")
 
-    if debug or debugger or debugger_args:
+    is_debugging = debug or debugger or debugger_args
+
+    if is_debugging:
         args = _prepend_debugger_args(args, debugger, debugger_args)
         if not args:
             return 1
@@ -1152,7 +1154,7 @@ def gtest(
     # - listing tests
     # - running the debugger
     # - combining suites with one job
-    if list_tests or debug or (combine_suites and jobs == 1):
+    if list_tests or is_debugging or (combine_suites and jobs == 1):
         return command_context.run_process(
             args=args,
             append_env=gtest_env,
