@@ -1474,7 +1474,14 @@ nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
   mozilla::dom::AutoEntryScript aes(mGlobalObject, "EvaluateModule",
                                     NS_IsMainThread());
 
-  return EvaluateModuleInContext(aes.cx(), aRequest, ReportModuleErrorsAsync);
+  // We would like to handle any evaluation errors synchronously for service
+  // workers immediately such that if we are performing service worker
+  // registration we can fail it right away rather than having it fail later on
+  // an event loop turn which might be too late and the registration process
+  // would have succeeded by then.
+  return EvaluateModuleInContext(
+      aes.cx(), aRequest,
+      IsForServiceWorker() ? ThrowModuleErrorsSync : ReportModuleErrorsAsync);
 }
 
 nsresult ModuleLoaderBase::EvaluateModuleInContext(
@@ -1550,6 +1557,13 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   // If the promise is rejected, the value is unwrapped from the promise value.
   if (!ThrowOnModuleEvaluationFailure(aCx, evaluationPromise, errorBehaviour)) {
     LOG(("ScriptLoadRequest (%p):   evaluation failed on throw", aRequest));
+
+    if (IsForServiceWorker()) {
+      // If this module eval is being done for service workers, then we would
+      // like to throw/return right from here, such that if we are in
+      // registration phase, we can fail it synchronously right away.
+      return NS_ERROR_ABORT;
+    }
   }
 
   // TODO: Bug 1973321: Prepare Bytecode encoding for dynamic import
