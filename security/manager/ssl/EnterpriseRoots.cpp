@@ -8,7 +8,6 @@
 
 #include "PKCS11ModuleDB.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozpkix/Result.h"
 #include "nsCRT.h"

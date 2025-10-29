@@ -16,7 +16,6 @@
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Span.h"
-#include "mozilla/TextUtils.h"
 #include "mozilla/ipc/TransportSecurityInfoUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/net/DNS.h"

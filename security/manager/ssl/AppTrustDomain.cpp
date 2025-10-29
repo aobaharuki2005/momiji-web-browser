@@ -13,7 +13,6 @@
 #include "certt.h"
 // }
 #include "certdb.h"
-#include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozpkix/pkixnss.h"

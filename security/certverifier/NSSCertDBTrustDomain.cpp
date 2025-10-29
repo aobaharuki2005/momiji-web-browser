@@ -23,7 +23,6 @@
 #include "mozilla/Casting.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/SyncRunnable.h"

@@ -42,7 +42,6 @@
 #include "mozilla/Range.h"
 #include "mozilla/SandboxInfo.h"
 #include "mozilla/StackWalk.h"
-#include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "prenv.h"

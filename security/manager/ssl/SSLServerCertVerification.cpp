@@ -106,7 +106,6 @@
 #include "VerifySSLServerCertChild.h"
 #include "cert.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Casting.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/UniquePtr.h"

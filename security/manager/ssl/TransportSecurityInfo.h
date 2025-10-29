@@ -9,7 +9,6 @@
 
 #include "CertVerifier.h"  // For CertificateTransparencyInfo, EVStatus
 #include "ScopedNSSTypes.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
 #include "mozilla/Maybe.h"
