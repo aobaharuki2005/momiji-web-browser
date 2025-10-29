@@ -2564,9 +2564,9 @@ abstract class BaseBrowserFragment :
                 }
                 saveLoginJob?.await()
             }
-            saveLoginJob?.invokeOnCompletion {
+            saveLoginJob.invokeOnCompletion {
                 if (it is CancellationException) {
-                    saveLoginJob?.cancel()
+                    saveLoginJob.cancel()
                 }
             }
         }

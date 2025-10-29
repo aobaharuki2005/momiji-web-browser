@@ -224,7 +224,7 @@ fun DownloadLanguagesPreference(
     // The pivot model may be deleted when all of the other models are deleted and it may
     // always be downloaded
     pivotLanguage?.enabled = downloadedItems.size == 1 ||
-        pivotLanguage?.languageModel?.status == ModelState.NOT_DOWNLOADED
+        pivotLanguage.languageModel.status == ModelState.NOT_DOWNLOADED
 }
 
 @Composable

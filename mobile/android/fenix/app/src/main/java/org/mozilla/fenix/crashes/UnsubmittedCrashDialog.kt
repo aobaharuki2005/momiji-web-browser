@@ -115,7 +115,7 @@ private fun CrashCard(
     dispatcher(CrashAction.PromptShown)
 
     val msg = if (requestedByDevs) {
-        if (crashIDs?.size == 1) {
+        if (crashIDs.size == 1) {
             stringResource(
                 R.string.unsubmitted_crash_requested_by_devs_dialog_title,
                 stringResource(R.string.app_name),
@@ -123,7 +123,7 @@ private fun CrashCard(
         } else {
             stringResource(
                 R.string.unsubmitted_crashes_requested_by_devs_dialog_title,
-                crashIDs!!.size,
+                crashIDs.size,
                 stringResource(R.string.app_name),
             )
         }
@@ -271,7 +271,7 @@ private fun CrashCard(
                         dispatcher(
                             CrashAction.ReportTapped(
                                 automaticallySendChecked = false,
-                                crashIDs = crashIDs ?: listOf(),
+                                crashIDs = crashIDs,
                             ),
                         )
                         dismiss()

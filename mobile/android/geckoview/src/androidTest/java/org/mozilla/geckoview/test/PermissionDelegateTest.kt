@@ -1198,11 +1198,11 @@ class PermissionDelegateTest : BaseSessionTest() {
         val importedPerm = ContentPermission.fromJson(jsonPerm!!)
         assertThat("JSON import should not be null", importedPerm, notNullValue())
 
-        assertThat("URIs should match", importedPerm?.uri, equalTo(notificationPerm?.uri))
-        assertThat("Types should match", importedPerm?.permission, equalTo(notificationPerm?.permission))
-        assertThat("Values should match", importedPerm?.value, equalTo(notificationPerm?.value))
-        assertThat("Context IDs should match", importedPerm?.contextId, equalTo(notificationPerm?.contextId))
-        assertThat("Private mode should match", importedPerm?.privateMode, equalTo(notificationPerm?.privateMode))
+        assertThat("URIs should match", importedPerm?.uri, equalTo(notificationPerm.uri))
+        assertThat("Types should match", importedPerm?.permission, equalTo(notificationPerm.permission))
+        assertThat("Values should match", importedPerm?.value, equalTo(notificationPerm.value))
+        assertThat("Context IDs should match", importedPerm?.contextId, equalTo(notificationPerm.contextId))
+        assertThat("Private mode should match", importedPerm?.privateMode, equalTo(notificationPerm.privateMode))
     }
 
     @Test

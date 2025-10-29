@@ -57,10 +57,9 @@ fun HomeSectionHeader(
         val wallpaperState = components.appStore
             .observeAsComposableState { state -> state.wallpaperState }.value
 
-        val wallpaperAdaptedTextColor = wallpaperState?.currentWallpaper?.textColor?.let { Color(it) }
+        val wallpaperAdaptedTextColor = wallpaperState.currentWallpaper.textColor?.let { Color(it) }
 
-        val isWallpaperDefault =
-            (wallpaperState?.currentWallpaper ?: Wallpaper.Default) == Wallpaper.Default
+        val isWallpaperDefault = wallpaperState.currentWallpaper == Wallpaper.Default
 
         HomeSectionHeaderContent(
             headerText = headerText,

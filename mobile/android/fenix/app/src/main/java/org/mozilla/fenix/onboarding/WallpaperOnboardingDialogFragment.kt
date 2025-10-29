@@ -97,10 +97,10 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
             FirefoxTheme {
                 val wallpapers = appStore.observeAsComposableState { state ->
                     state.wallpaperState.availableWallpapers.getWallpapersForOnboarding()
-                }.value ?: listOf()
+                }.value
                 val currentWallpaper = appStore.observeAsComposableState { state ->
                     state.wallpaperState.currentWallpaper
-                }.value ?: Wallpaper.Default
+                }.value
 
                 val coroutineScope = rememberCoroutineScope()
 

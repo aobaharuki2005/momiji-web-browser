@@ -74,7 +74,7 @@ fun SearchEngineShortcuts(
     onDeleteEngineClicked: (SearchEngine) -> Unit,
     onAddEngineClicked: () -> Unit,
 ) {
-    val searchState = store.observeAsComposableState { it.search }.value ?: SearchState()
+    val searchState = store.observeAsComposableState { it.search }.value
     val searchEngines = with(searchState) {
         regionSearchEngines + additionalSearchEngines + availableSearchEngines + customSearchEngines
     }
