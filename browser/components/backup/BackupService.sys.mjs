@@ -627,6 +627,13 @@ export class BackupService extends EventTarget {
       };
     }
 
+    if (Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown")) {
+      return {
+        enabled: false,
+        reason: "Backup is disabled for users with sanitizeOnShutdown enabled.",
+      };
+    }
+
     return { enabled: true };
   }
 
@@ -650,6 +657,13 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Restoring a profile disabled by user pref.",
+      };
+    }
+
+    if (Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown")) {
+      return {
+        enabled: false,
+        reason: "Backup is disabled for users with sanitizeOnShutdown enabled.",
       };
     }
 
@@ -3667,6 +3681,10 @@ export class BackupService extends EventTarget {
       BACKUP_RESTORE_ENABLED_PREF_NAME,
       this.#notifyStatusObservers
     );
+    Services.prefs.addObserver(
+      "privacy.sanitize.sanitizeOnShutdown",
+      this.#notifyStatusObservers
+    );
     lazy.NimbusFeatures.backupService.onUpdate(this.#notifyStatusObservers);
   }
 
@@ -3677,6 +3695,10 @@ export class BackupService extends EventTarget {
     );
     Services.prefs.removeObserver(
       BACKUP_RESTORE_ENABLED_PREF_NAME,
+      this.#notifyStatusObservers
+    );
+    Services.prefs.removeObserver(
+      "privacy.sanitize.sanitizeOnShutdown",
       this.#notifyStatusObservers
     );
   }
@@ -4130,7 +4152,14 @@ export class BackupService extends EventTarget {
     }
 
     // If the location changed, delete the last backup there if one exists.
-    await this.deleteLastBackup();
+    try {
+      await this.deleteLastBackup();
+    } catch {
+      lazy.logConsole.error(
+        "Error deleting last backup while editing the backup location."
+      );
+      // Fall through so the new backup directory is set.
+    }
     this.setParentDirPath(path);
   }
 

@@ -1223,6 +1223,23 @@ const POLICIES_TESTS = [
       "security.webauthn.always_allow_direct_attestation": true,
     },
   },
+
+  // GenerativeAI
+  {
+    policies: {
+      GenerativeAI: {
+        Enabled: false,
+        Chatbot: true,
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "browser.ml.chat.enabled": true,
+      "browser.ml.chat.page": true,
+      "browser.ml.linkPreview.optin": false,
+      "browser.tabs.groups.smart.userEnabled": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

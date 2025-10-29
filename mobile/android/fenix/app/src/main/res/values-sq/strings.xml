@@ -50,6 +50,8 @@
   <string name="tab_tray_collection_button_multiselect_content_description">Ruaji te koleksioni skedat e përzgjedhura</string>
   <!-- The header text displayed on the synced tabs page when the user is not logged into an account. -->
   <string name="tab_manager_empty_synced_tabs_page_header">Përlani skeda nga cilado pajisje</string>
+  <!-- The supplementary text displayed on the synced tabs page when the user is not logged into an account. -->
+  <string name="tab_manager_empty_synced_tabs_page_description">Bëni hyrjen në llogari, që të administroni skeda të njëkohësuara nga krejt pajisjet tuaja.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Hyni</string>
   <!--
@@ -336,6 +338,8 @@
   <string name="browser_menu_default_banner_title">Bëjeni %1$s-in parazgjedhjen tuaj</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle_2">I shpejtë, privat dhe krijuar për ju.</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
+  <string name="browser_menu_default_banner_dismiss_promotion">Hidhe tej promovimin</string>
   <!-- Content description (not visible, for screen readers etc.) for recommended extensions in main menu -->
   <string name="browser_menu_recommended_extensions_content_description">Më tepër hollësi</string>
   <!--
@@ -508,6 +512,8 @@
   <string name="onboarding_preferences_dialog_crash_reporting_learn_more_2">Mësoni më tepër</string>
   <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
   <string name="startup_crash_title">%s i duhet të riniset</string>
+  <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
+  <string name="startup_crash_body">Pati një problem në hapjen e %s.\n\nDërgimi i një raporti vithisjeje na ndihmon të diagnostikojmë dhe ndreqim probleme me shfletuesin. Raportet mund të përfshijnë të dhëna personale, ose rezervat.</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">Dërgo njoftim vithisjeje</string>
   <!-- Button text to continue and not send a startup crash report -->
@@ -553,6 +559,11 @@
   <string name="onboarding_redesign_tou_body_one">Duke vazhduar, pajtoheni me %1$s.</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
   <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">Terma Përdorimi Firefox-i</string>
+  <!--
+    Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
+  -->
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox-i kujdeset për privatësinë tuaj. Mësoni më tepër te %1$s tona.</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
   <string name="onboarding_redesign_tou_body_two_link_text">Shënim Mbi Privatësinë</string>
   <!--
@@ -566,6 +577,8 @@
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Vazhdo</string>
   <!-- Onboarding header for the toolbar selection card. -->
   <string name="onboarding_redesign_customize_toolbar_title">Ku doni të vendoset shtylla e adresave?</string>
+  <!-- Onboarding label for 'Continue' button. -->
+  <string name="onboarding_redesign_continue_button">Vazhdo</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Ndihmonani të fuqizojmë Firefox-in</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
@@ -576,6 +589,12 @@
   <string name="onboarding_marketing_redesign_positive_button">Ripohojeni</string>
   <!-- Set to default browser onboarding redesign title. -->
   <string name="onboarding_redesign_set_default_browser_title">Merrni si parazgjedhje mbrojtje të automatizuar nga gjurmimet</string>
+  <!-- Set to default browser onboarding redesign body. -->
+  <string name="onboarding_redesign_set_default_browser_body">Një prekje ndihmon të ndalen shoqëritë të spiunojnë klikimet tuaja.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Njëkohësojeni kudo ku përdorni Firefox-in</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">Merrni në cilëndo pajisje faqerojtësit, skedat dhe fjalëkalimet. Gjithçka e mbrojtur me fshehtëzim.</string>
   <!-- Sync onboarding redesign positive button text. -->
   <string name="onboarding_redesign_sync_positive_button">Fillo njëkohësim</string>
   <!-- Sync onboarding redesign negative button text. -->
@@ -710,6 +729,8 @@
   <string name="preferences_https_only_title">Mënyra Vetëm-HTTPS</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Përdor kyçje ekrani për fshehje skedash në shfletim privat</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">Shihni skeda përmes shkyçjeje me shenjave tuajat të gishtave, PIN, ose fytyrë. Aktivizimi i kësaj pengon gjithashtu fotografim dhe ndarje të ekranit me të tjerë.</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Shihni skedat përmes shenja gishtash, PIN, shkyçje me fytyrë.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Bllokues Banderolash Cookie-sh</string>
@@ -783,6 +804,8 @@
   <string name="preferences_home_2">Faqe hyrëse</string>
   <!-- Preference for customizing the app icon -->
   <string name="preferences_app_icon">Ikonë aplikacioni</string>
+  <!-- Preference for showing the tab strip -->
+  <string name="preferences_tab_strip">Shfaqje shtylle skedash</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_toolbar_shortcut">Shkurtore paneli</string>
   <!-- Preference for gestures based actions -->
@@ -863,6 +886,12 @@
   <string name="preferences_open_links_in_apps_ask">Pyet para hapjes</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Kurrë</string>
+  <!-- Preference title for choosing an app to handle downloads -->
+  <string name="preferences_choose_app_for_downloads">Administroni shkarkime me aplikacion tjetër</string>
+  <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
+  <string name="preferences_downloads_settings_clean_up_files_title">Fshije nga %s dhe pajisja</string>
+  <!-- Summary for the setting to automatically clean up downloaded files -->
+  <string name="preferences_downloads_settings_clean_up_files_summary">Heqja e kartelave nga përgjegjësi juaj i shkarkimeve i heq edhe nga pajisja juaj</string>
   <!-- Preference for downloads -->
   <string name="preferences_downloads">Shkarkime</string>
   <!-- Preference for enabling gecko engine logs -->
@@ -1002,6 +1031,8 @@
   <string name="alternative_app_icon_option_gradient_twilight">Muzg</string>
   <!-- Title for the "Midnight" gradient alternative app icon variant in the icon picker screen. The app icon features a dark gradient background, resembling the deep tones of the night sky. -->
   <string name="alternative_app_icon_option_gradient_midnight">Mesnatë</string>
+  <!-- Title for the "Northern Lights" gradient alternative app icon variant in the icon picker screen. The app icon has a dynamic green, blue, and purple gradient background, resembling the aurora borealis. -->
+  <string name="alternative_app_icon_option_gradient_northern_lights">Aurora Borealis</string>
   <!-- Title for the "Retro 2004" themed alternative app icon variant in the icon picker screen. This app icon uses the classic Firefox logo from 2004. -->
   <string name="alternative_app_icon_option_retro_2004">Retro 2004</string>
   <!-- Title for the "Retro 2017" themed alternative app icon variant in the icon picker screen. This app icon uses the Firefox logo from 2017, with a more modernized design. -->
@@ -1018,6 +1049,10 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">Krijuar nga @heyheymomodraws</string>
+  <!-- Title for the "Flaming" themed alternative app icon variant in the icon picker screen. The app icon features a fiery design, with the Firefox logo surrounded by flames for a bold, energetic look. -->
+  <string name="alternative_app_icon_option_flaming">Flakërim</string>
+  <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
+  <string name="alternative_app_icon_option_cool">Cool</string>
   <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
   <string name="alternative_app_icon_group_solid_colors">Ngjyra të plota</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
@@ -1028,6 +1063,8 @@
   <string name="restart_warning_dialog_title">Të ndërrohet ikonë aplikacioni?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">Ndërrimi i ikonës lyp rinisje të aplikacionit.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">Aplikacioni mund të mbyllet. Që të rihapni %1$s, thjesht prekni ikonën tuaj të re shkëlqyese.</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Rinise tani</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
@@ -1658,6 +1695,8 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">Njoftoni për sajt të dëmtuar</string>
+  <!-- The description of the Web Compat Reporter feature, which has a "learn more" button text for navigating to a SUMO link to learn more about reporting a broken site. %1$s is the name of the app (for example "Firefox") and %2$s is the learn more button. -->
+  <string name="webcompat_reporter_description_3">Raporti juaj na ndihmon të kuptojmë dhe ndreqim probleme në %1$s për ta bërë më të mirë për këdo. %2$s</string>
   <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
   <string name="webcompat_reporter_learn_more">Mësoni më tepër</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
@@ -1688,6 +1727,8 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Mbylle</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Ç’ndodhi? Ç’duhet të ndodhte?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">Dërgo URL-ra të bllokuara nga mbrojtja nga gjurmimet</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Mbrojtja e Thelluar Nga Gjurmimi mund të bllokojë gjurmues dhe programthe të cilët disa sajti i kanë të nevojshëm për të punuar si duhet.</string>
   <!--
@@ -1726,6 +1767,10 @@
   <string name="tab_crash_restore">Riktheje skedën</string>
   <!-- Unsubmitted crash dialog title, %s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_dialog_title_2">%s i vithis. Të dërgohet njoftim?</string>
+  <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crash_requested_by_devs_dialog_title">Keni një raport vithisjeje të padërguar, lidhur me vithisjet që po hetohen. Dërgimi i tij do të na ndihmojë të përmirësojmë %1$s. Mbyllja e këtij njoftimi do të sjellë shpërfilljen e këtij raporti.</string>
+  <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Keni raporte vithisjeje të padërguar (%1$d) lidhur me vithisjet që po hetohen. Dërgimi i tij do të na ndihmojë të përmirësojmë %2$s. Mbyllja e këtij njoftimi do të sjellë shpërfilljen e këtyre raporteve.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Dërgo vetvetiu njoftime vithisjesh</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
@@ -1889,6 +1934,8 @@
   <string name="clear_permissions_on_all_sites">Spastro lejet në krejt sajtet</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Vetëluaje</string>
+  <!-- Preference for local device access for all websites -->
+  <string name="preference_browser_feature_local_device_access">Aplikacione dhe shërbime pajisjeje</string>
   <!-- Preference for local network access for all websites -->
   <string name="preference_browser_feature_local_network_access">Pajisje rrjeti vendor</string>
   <!-- Preference for altering the camera access for all websites -->
@@ -2306,12 +2353,18 @@
   <string name="preference_enhanced_tracking_protection_strict">Strikte</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Mbrojtje më e fortë kundër gjurmimit dhe punim më i shpejtë, por disa sajte mund të mos funksionojnë siç duhet.</string>
+  <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline">Lejojeni %1$s të aplikojë automatikisht përjashtime e domosdoshme për të shmangur mosfunksionim të rëndësishëm sajtesh.</string>
+  <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience">Apliko automatikisht edhe përjashtime që janë të domosdoshme vetëm për të ndrequr probleme të vockla dhe për të bërë të përdorshme veçori të leverdishme.</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
     Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection
   -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Jeni i sigurt se doni të çaktivizohen ndreqjet?</string>
+  <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Ky rregullim ndihmon të ndreqen shumica e problemeve me sajtin. Nëse e çaktivizoni, disa sajte mund të mos funksionojnë dhe %1$s s’do të jetë në gjendje të diagnostikojë këto probleme.</string>
   <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Çaktivizo ndreqjet</string>
   <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
@@ -2610,10 +2663,22 @@
   <string name="saved_login_clear_username">Spastroje emrin e përdoruesit</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Spastroje strehëemrin</string>
+  <!-- Content description, used by tools like screenreaders, for the 3 dots button that shows commands related to the currently displayed login (edit, delete). -->
+  <string name="login_detail_menu_button_content_description">Menu hollësish hyrjesh</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Shko mbrapsht</string>
   <!-- Edit text for the login detail menu edit button -->
   <string name="login_detail_menu_edit_button">Përpunoni</string>
   <!-- Delete text for the login detail menu delete button -->
   <string name="login_detail_menu_delete_button">Fshije</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">Shko mbrapsht</string>
+  <!-- Content description, used by tools like screenreaders, to press on the save new login button. -->
+  <string name="add_login_save_new_login_button_content_description">Ruaji kredencialet e reja për hyrje</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
+  <string name="edit_login_navigate_back_button_content_description">Shko mbrapsht</string>
+  <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
+  <string name="edit_login_button_content_description">Përpunoni kredenciale hyrjesh</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Hape sajtin në shfletues</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2622,6 +2687,10 @@
   <string name="saved_login_hide_password">Fshihe fjalëkalimin</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Që të shihni fjalëkalimet tuaj të ruajtura, shkyçeni</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Shkyçe</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Braktiseni</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Siguroni fjalëkalimet tuaj të ruajtur</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -2672,6 +2741,8 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Ruaj dhe vetëplotëso adresa</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Përfshin numra telefonash dhe adresa email</string>
+  <!-- Preference option for syncing addresses across devices. This is displayed when the user is not signed into sync -->
+  <string name="preferences_addresses_sync_addresses_across_devices">Njëkohëso adresa mes pajisjesh</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Njëkohëso adresa</string>
   <!-- Title of the "Add card" screen -->
@@ -2984,6 +3055,11 @@
     Title text displayed in the tabs tray when a tab has been unused for 14 days.
   -->
   <string name="inactive_tabs_title">Skeda jo aktive</string>
+  <!--
+    Text displayed in the tabs tray, indicating the number of inactive tabs.
+    %d is the number of inactive tabs.
+  -->
+  <string name="inactive_tabs_num_items">Objekte: %d</string>
   <!-- Content description for closing all inactive tabs -->
   <string name="inactive_tabs_delete_all">Mbylli krejt skedat jo aktive</string>
   <!-- Content description for expanding the inactive tabs section. -->
@@ -3039,6 +3115,13 @@
     Header text for a section on the home screen.
   -->
   <string name="pocket_stories_header_2">Shembuj</string>
+  <!--
+    Context description text for the "Discover more" button in the stories home screen section
+    which navigates the user to a screen displaying more stories.
+  -->
+  <string name="stories_discover_more_content_description">Zbuloni më tepër histori</string>
+  <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
+  <string name="stories_back_button_content_description">Shko mbrapsht</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
   <string name="pocket_stories_sponsor_indication">E sponsorizuar</string>
   <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off. -->
@@ -3339,6 +3422,14 @@
   <string name="protection_panel_banner_protected_description">Jeni i mbrojtur. Nëse vërejmë gjë, do t’ua bëjmë të ditur.</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">Mbrojtje e Thelluar Nga Gjurmimi</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned on -->
+  <string name="protection_panel_etp_toggle_on">On</string>
+  <!-- Toggle if Enhanced Tracking Protection is turned off -->
+  <string name="protection_panel_etp_toggle_off">Off</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
+  <string name="protection_panel_etp_toggle_enabled_description_2">Nëse diçka duket se nuk punon në këtë sajt, provoni ta çaktivizoni.</string>
+  <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
+  <string name="protection_panel_etp_toggle_disabled_description_2">Aktivizimi i mbrojtjes nga gjurmimet është i rekomanduar.</string>
   <!--
     Text for displaying the total number of trackers blocked in the protection panel.
     %d is a placeholder for the number of trackers blocked.
@@ -3346,6 +3437,8 @@
   <string name="protection_panel_num_trackers_blocked">Gjurmues të bllokuar: %d</string>
   <!-- Text for when no trackers have been blocked. -->
   <string name="protection_panel_no_trackers_blocked">S’u gjetën gjurmues</string>
+  <!-- Text for when tracking protection is disabled and no trackers are blocked. -->
+  <string name="protection_panel_etp_disabled_no_trackers_blocked">Gjurmuesit s’janë të bllokuar</string>
   <!-- Link text to navigate to privacy and security settings from the protection panel. -->
   <string name="protection_panel_privacy_and_security_settings_2">Rregullime Privatësie</string>
   <!-- Title text for the protection panel permissions section. -->
@@ -3376,6 +3469,8 @@
   <string name="connection_security_panel_secure">Lidhje e siguruar</string>
   <!-- Text for the connection security panel when the site is not secure. -->
   <string name="connection_security_panel_not_secure">Lidhje jo e siguruar</string>
+  <!-- Text for the connection security panel when accessed from local PDF. -->
+  <string name="connection_security_panel_local_pdf">Kjo faqe është depozituar në pajisjen tuaj</string>
   <!--
     Text for the connection security panel to indicate who the certificate was verified by.
     %s is a placeholder for the name of the certificate authority that issued the certificate.
@@ -3745,6 +3840,42 @@
   <string name="private_tab_cfr_negative">Jo, faleminderit</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
   <string name="private_tab_cfr_positive">Kyçi skedat</string>
+  <!--
+    Review prompt
+
+    Title for a prompt asking the user about their experience using the app. %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="review_prompt_pre_prompt_header">Ç’mendoni për %1$s?</string>
+  <!-- Label for a button negatively rating the user's experience with the app -->
+  <string name="review_prompt_negative_button">Kam probleme</string>
+  <!-- Label for a button positively rating the user's experience with the app -->
+  <string name="review_prompt_positive_button">Është i shkëlqyer!</string>
+  <!-- Title for a prompt asking the user to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_header">Faleminderit që e doni %1$s. Ju tepron një sekondë që të përhapni dashurinë përmes një vlerësimi?</string>
+  <!-- Label for a button proceeding to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_rate_button">Vlerësoni %1$s në Play Store</string>
+  <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
+  <string name="review_prompt_feedback_header">Na vjen keq që keni probleme. Na bëni të diur se si mund ta përmirësojmë %1$s.</string>
+  <!-- Label for a button opening a feedback forum -->
+  <string name="review_prompt_feedback_button">Jepni përshtypjet</string>
+  <!--
+    Terms of use pop up prompt
+
+    Title for the pop up prompt
+  -->
+  <string name="terms_of_use_prompt_title">Kemi një përditësim</string>
+  <!--
+    Message for the terms of use pop up prompt
+    %1$s is the product name "Firefox"
+    %2$s is the string terms_of_use_prompt_link_terms_of_use (Terms of Use) that is a link to the terms of use
+    %3$s is the string terms_of_use_prompt_link_privacy_notice (Privacy Notice) that is a link to the privacy notice
+  -->
+  <string name="terms_of_use_prompt_message_1">Kemi sjellë %2$s %1$s dhe përditësuam %3$s tonat.</string>
+  <!--
+    Second part of the terms of use pop up prompt
+    %1$s is the string terms_of_use_prompt_link_learn_more (Learn more) that is a link to a website with more information about the terms of use
+  -->
+  <string name="terms_of_use_prompt_message_2">Ju lutemi, ndaluni një çast për t’i shqyrtuar dhe pranuar. %1$s.</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Kushtet e Përdorimit</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->

@@ -2893,7 +2893,7 @@ const SingleSelect = ({
     tilebutton
   }) => {
     const value = id || theme;
-    let inputName = "select-item";
+    let inputName = `select-item-${id}`;
     if (!isSingleSelect) {
       inputName = category === "theme" ? "theme" : id; // unique names per item are currently used in the wallpaper picker
     }
@@ -3870,7 +3870,9 @@ function addUtmParams(url, utmTerm) {
       returnUrl.searchParams.append(key, value);
     }
   }
-  returnUrl.searchParams.append("utm_term", utmTerm);
+  if (!returnUrl.searchParams.has("utm_term")) {
+    returnUrl.searchParams.append("utm_term", utmTerm);
+  }
   return returnUrl;
 }
 

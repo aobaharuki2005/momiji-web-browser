@@ -3,49 +3,42 @@
 
 "use strict";
 
-// Test global screenshot button and screenshot size with and without a viewport meta tag.
-// See Bug 1979518.
+// Test global screenshot button
 
 const TEST_URL = "data:text/html;charset=utf-8,";
-const TEST_URL2 =
-  TEST_URL + "<meta name='viewport' content='width=device-width' />";
 
-for (const URL of [TEST_URL, TEST_URL2]) {
-  addRDMTask(URL, async function ({ ui }) {
-    info(
-      `Test global screenshot button and screenshot size ${URL.includes("viewport") ? "with" : "without"} a viewport meta tag`
-    );
+addRDMTask(TEST_URL, async function ({ ui }) {
+  const { toolWindow } = ui;
+  const { store, document } = toolWindow;
 
-    const { toolWindow } = ui;
-    const { document } = toolWindow;
+  info("Click the screenshot button");
+  const screenshotButton = document.getElementById("screenshot-button");
+  screenshotButton.click();
 
-    const whenScreenshotSucceeded = waitUntilDownload();
+  const whenScreenshotSucceeded = waitUntilDownload();
 
-    info("Click the screenshot button");
-    const screenshotButton = document.getElementById("screenshot-button");
-    screenshotButton.click();
+  const filePath = await whenScreenshotSucceeded;
+  const image = new Image();
+  image.src = PathUtils.toFileURI(filePath);
 
-    const filePath = await whenScreenshotSucceeded;
-    const image = new Image();
-    // Bug 1949036: we run this test twice and the 2 screenshot files may have
-    // the same filename, so we need to add a cache buster.
-    image.src = PathUtils.toFileURI(filePath) + `?nocache=${Date.now()}`;
+  await once(image, "load");
 
-    await once(image, "load");
+  // We have only one viewport at the moment
+  const viewport = store.getState().viewports[0];
+  const ratio = window.devicePixelRatio;
 
-    const { width, height, ratio } = await spawnViewportTask(ui, {}, () => {
-      return {
-        width: content.innerWidth,
-        height: content.innerHeight,
-        ratio: content.devicePixelRatio,
-      };
-    });
+  is(
+    image.width,
+    viewport.width * ratio,
+    "screenshot width has the expected width"
+  );
 
-    is(image.width, width * ratio, "screenshot has the expected width");
+  is(
+    image.height,
+    viewport.height * ratio,
+    "screenshot width has the expected height"
+  );
 
-    is(image.height, height * ratio, "screenshot has the expected height");
-
-    await IOUtils.remove(filePath);
-    await resetDownloads();
-  });
-}
+  await IOUtils.remove(filePath);
+  await resetDownloads();
+});

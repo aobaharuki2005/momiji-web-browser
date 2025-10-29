@@ -12,7 +12,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.CustomizationSettings
@@ -191,7 +190,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     private fun setupToolbarLayout() {
         val settings = requireContext().settings()
         (requirePreference(R.string.pref_key_customization_category_toolbar_layout) as PreferenceCategory).apply {
-            isVisible = Config.channel.isNightlyOrDebug && settings.shouldUseComposableToolbar &&
+            isVisible = settings.shouldUseComposableToolbar &&
                     settings.toolbarRedesignEnabled && isTallWindow() && !isWideWindow()
         }
         updateToolbarLayoutIcons()

@@ -169,6 +169,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetApplyConversion(bool* value) override;
   NS_IMETHOD SetApplyConversion(bool value) override;
   NS_IMETHOD GetContentEncodings(nsIUTF8StringEnumerator** aEncodings) override;
+  // Note: Doesn't modify the Content-Encoding
   NS_IMETHOD DoApplyContentConversions(nsIStreamListener* aNextListener,
                                        nsIStreamListener** aNewNextListener,
                                        nsISupports* aCtxt) override;
@@ -507,6 +508,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // request method should be rewritten to GET.
   static bool ShouldRewriteRedirectToGET(
       uint32_t httpStatus, nsHttpRequestHead::ParsedMethodType method);
+
+  [[nodiscard]] nsresult DoApplyContentConversionsInternal(
+      nsIStreamListener* aNextListener, nsIStreamListener** aNewNextListener,
+      bool aRemoveEncodings, nsISupports* aCtxt);
 
   // Like nsIEncodedChannel::DoApplyConversions except context is set to
   // mListenerContext.

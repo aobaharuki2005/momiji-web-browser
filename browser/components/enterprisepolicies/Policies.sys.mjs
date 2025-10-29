@@ -1258,7 +1258,7 @@ export var Policies = {
         ContentBlockingPrefs.matchCBCategory();
         // We don't want to lock the new exceptions UI unless
         // that policy was explicitly set.
-        if (param.Category == "strict") {
+        if (param.Category == "strict" && !param.Locked) {
           Services.prefs.unlockPref(
             "privacy.trackingprotection.allow_list.baseline.enabled"
           );
@@ -1272,8 +1272,23 @@ export var Policies = {
       if ("Exceptions" in param) {
         addAllowDenyPermissions("trackingprotection", param.Exceptions);
       }
+      if ("BaselineExceptions" in param) {
+        PoliciesUtils.setDefaultPref(
+          "privacy.trackingprotection.allow_list.baseline.enabled",
+          param.BaselineExceptions,
+          param.Locked
+        );
+      }
+      if ("ConvenienceExceptions" in param) {
+        PoliciesUtils.setDefaultPref(
+          "privacy.trackingprotection.allow_list.convenience.enabled",
+          param.ConvenienceExceptions,
+          param.Locked
+        );
+      }
       if (param.Category) {
-        // If a category is set, we ignore everything except exceptions.
+        // If a category is set, we ignore everything except exceptions
+        // and the allow lists.
         return;
       }
       if (param.Value) {
@@ -1326,21 +1341,6 @@ export var Policies = {
         PoliciesUtils.setDefaultPref(
           "privacy.fingerprintingProtection.pbmode",
           param.SuspectedFingerprinting,
-          param.Locked
-        );
-      }
-      if ("BaselineExceptions" in param) {
-        PoliciesUtils.setDefaultPref(
-          "privacy.trackingprotection.allow_list.baseline.enabled",
-          param.BaselineExceptions,
-          param.Locked
-        );
-      }
-
-      if ("ConvenienceExceptions" in param) {
-        PoliciesUtils.setDefaultPref(
-          "privacy.trackingprotection.allow_list.convenience.enabled",
-          param.ConvenienceExceptions,
           param.Locked
         );
       }
@@ -1657,15 +1657,17 @@ export var Policies = {
       const defaultValue = "Enabled" in param ? param.Enabled : undefined;
 
       const features = [
-        ["Chatbot", "browser.ml.chat.enabled"],
-        ["LinkPreviews", "browser.ml.linkPreview.optin"],
-        ["TabGroups", "browser.tabs.groups.smart.userEnabled"],
+        ["Chatbot", ["browser.ml.chat.enabled", "browser.ml.chat.page"]],
+        ["LinkPreviews", ["browser.ml.linkPreview.optin"]],
+        ["TabGroups", ["browser.tabs.groups.smart.userEnabled"]],
       ];
 
-      for (const [key, pref] of features) {
+      for (const [key, prefs] of features) {
         const value = key in param ? param[key] : defaultValue;
         if (value !== undefined) {
-          PoliciesUtils.setDefaultPref(pref, value, param.Locked);
+          for (const pref of prefs) {
+            PoliciesUtils.setDefaultPref(pref, value, param.Locked);
+          }
         }
       }
     },
