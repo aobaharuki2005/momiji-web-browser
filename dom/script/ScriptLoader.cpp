@@ -3053,8 +3053,8 @@ static void InstantiateStencil(
     JS::Handle<JS::Value> aDebuggerPrivateValue,
     JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv,
     JS::InstantiationStorage* aStorage = nullptr,
-    CollectDelazifications aCollectDelazifications = CollectDelazifications::No,
-    IsAlreadyCollecting* aIsAlreadyCollecting = nullptr) {
+    CollectDelazifications aCollectDelazifications =
+        CollectDelazifications::No) {
   JS::InstantiateOptions instantiateOptions(aCompileOptions);
   JS::Rooted<JSScript*> script(
       aCx, JS::InstantiateGlobalStencil(aCx, instantiateOptions, aStencil,
@@ -3065,19 +3065,10 @@ static void InstantiateStencil(
   }
 
   if (aCollectDelazifications == CollectDelazifications::Yes) {
-    bool alreadyStarted;
-    if (!JS::StartCollectingDelazifications(aCx, script, aStencil,
-                                            alreadyStarted)) {
+    bool ignored;
+    if (!JS::StartCollectingDelazifications(aCx, script, aStencil, ignored)) {
       aRv.NoteJSContextException(aCx);
       return;
-    }
-    if (aIsAlreadyCollecting) {
-      *aIsAlreadyCollecting =
-          alreadyStarted ? IsAlreadyCollecting::Yes : IsAlreadyCollecting::No;
-    } else {
-      // The consumer can omit the aIsAlreadyCollecting parameter only when
-      // the stencil is exclusively owned.
-      MOZ_ASSERT(!alreadyStarted);
     }
   }
 
@@ -3220,26 +3211,18 @@ void ScriptLoader::InstantiateClassicScriptFromCachedStencil(
 
   MOZ_ASSERT(aRequest->PassedConditionForMemoryCache());
 
-  IsAlreadyCollecting isAlreadyCollecting = IsAlreadyCollecting::No;
+  // For cached stencils, there can be already ongoing work for the in-memory
+  // cache and the disk cache.
+  //
+  // For collecting delazifications, it's detected by
+  // JS::StartCollectingDelazifications API and it's not a problem.
+  //
+  // For disk cache, ScriptLoader::UpdateDiskCache checks the
+  // HasDiskCacheReference condition, and that filters out any loaded scripts
+  // queued multiple times.
   InstantiateStencil(aCx, aCompileOptions, aStencil, aScript,
                      aDebuggerPrivateValue, aDebuggerIntroductionScript, aRv,
-                     /* aStorage = */ nullptr, CollectDelazifications::Yes,
-                     &isAlreadyCollecting);
-  if (isAlreadyCollecting == IsAlreadyCollecting::Yes) {
-    LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip: IsAlreadyCollecting",
-         aRequest));
-
-    // NOTE: non-top-level modules are added to mDiskCacheableDependencyModules
-    //       at the same time as MarkPassedConditionForDiskCache.
-    //       Undo it here.
-    if (aRequest->IsModuleRequest() &&
-        !aRequest->AsModuleRequest()->IsTopLevel()) {
-      MOZ_ASSERT(aRequest->isInList());
-      mDiskCacheableDependencyModules.Remove(aRequest);
-    }
-
-    aRequest->MarkSkippedMemoryCaching();
-  }
+                     /* aStorage = */ nullptr, CollectDelazifications::Yes);
 }
 
 void ScriptLoader::InstantiateClassicScriptFromAny(
@@ -3405,7 +3388,7 @@ nsresult ScriptLoader::MaybePrepareModuleForDiskCacheAfterExecute(
 
   // NOTE: If a module is passed to this multiple times, it can be
   //       enqueued multiple times.
-  //       This is okay because ScriptLoader::UpdateCache filters out
+  //       This is okay because ScriptLoader::UpdateDiskCache filters out
   //       any script without the disk cache reference.
 
   aRv = MaybePrepareForDiskCacheAfterExecute(aRequest, aRv);
@@ -3617,7 +3600,8 @@ void ScriptLoader::UpdateDiskCache() {
     // bytecode stored in the necko cache.
     //
     // For in-memory cached case, the save might already be performed
-    // by other request.
+    // by other requests.
+    // See also ScriptLoader::MaybePrepareModuleForDiskCacheAfterExecute.
     //
     // TODO: Move this to SharedScriptCache.
     if (!loadedScript->HasDiskCacheReference()) {
