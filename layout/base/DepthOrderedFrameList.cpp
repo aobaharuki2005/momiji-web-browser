@@ -13,19 +13,16 @@ namespace mozilla {
 
 void DepthOrderedFrameList::Add(nsIFrame* aFrame) {
   // Is this root already scheduled for reflow?
-  // FIXME: This could possibly be changed to a uniqueness assertion, with some
-  // work in ResizeReflowIgnoreOverride (and maybe others?)
-  // FIXME(emilio): Should probably reuse the traversal for insertion.
-  if (Contains(aFrame)) {
-    // We don't expect frame to change depths.
-    MOZ_ASSERT(aFrame->GetDepthInFrameTree() ==
-               mList[mList.IndexOf(aFrame)].mDepth);
+  FrameAndDepth entry{aFrame, aFrame->GetDepthInFrameTree()};
+  auto index = mList.IndexOfFirstElementGt(
+      entry, FrameAndDepth::CompareByReverseDepth{});
+  if (MOZ_UNLIKELY(index > 0 && mList[index - 1].mFrame == aFrame)) {
+    // FIXME: This could possibly be changed to a uniqueness assertion, with
+    // some work in ResizeReflowIgnoreOverride (and maybe others?)
+    MOZ_ASSERT(mList[index - 1].mDepth == entry.mDepth);
     return;
   }
-
-  mList.InsertElementSorted(
-      FrameAndDepth{aFrame, aFrame->GetDepthInFrameTree()},
-      FrameAndDepth::CompareByReverseDepth{});
+  mList.InsertElementAt(index, std::move(entry));
 }
 
 void DepthOrderedFrameList::Remove(nsIFrame* aFrame) {

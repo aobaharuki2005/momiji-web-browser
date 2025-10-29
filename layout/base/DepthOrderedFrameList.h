@@ -52,11 +52,16 @@ class DepthOrderedFrameList {
     class CompareByReverseDepth {
      public:
       bool Equals(const FrameAndDepth& aA, const FrameAndDepth& aB) const {
-        return aA.mDepth == aB.mDepth;
+        return aA.mFrame == aB.mFrame;
       }
       bool LessThan(const FrameAndDepth& aA, const FrameAndDepth& aB) const {
         // Reverse depth! So '>' instead of '<'.
-        return aA.mDepth > aB.mDepth;
+        if (aA.mDepth != aB.mDepth) {
+          return aA.mDepth > aB.mDepth;
+        }
+        // Untie with the frame pointer, so that all frames have a unique
+        // position in the sorted list.
+        return uintptr_t(aA.mFrame) < uintptr_t(aB.mFrame);
       }
     };
   };
