@@ -471,7 +471,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     val appIconSelection by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_app_icon_selection_enabled),
-        featureFlag = true,
+        featureFlag = FeatureFlags.APP_ICON_SELECTION,
         default = { FxNimbus.features.appIconSelection.value().enabled },
     )
 
