@@ -27,7 +27,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/WindowsVersion.h"
 
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"

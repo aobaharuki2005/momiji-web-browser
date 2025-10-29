@@ -7,7 +7,6 @@
 
 #include "AsyncGtkClipboardRequest.h"
 #include "nsClipboardX11.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WidgetUtilsGtk.h"
 
