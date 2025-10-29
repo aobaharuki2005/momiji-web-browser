@@ -11,7 +11,6 @@
 #include "nsXULAppAPI.h"
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_layout.h"
 
 #include "mozilla/dom/ContentParent.h"
