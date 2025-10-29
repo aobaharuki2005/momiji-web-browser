@@ -225,7 +225,8 @@ class ServiceWorkerRegistrationInfo final
 
   ServiceWorkerUpdateViaCache GetUpdateViaCache() const;
 
-  void SetUpdateViaCache(ServiceWorkerUpdateViaCache aUpdateViaCache);
+  void SetOptions(ServiceWorkerUpdateViaCache aUpdateViaCache,
+                  WorkerType aType);
 
   int64_t GetLastUpdateTime() const;
 
@@ -259,7 +260,8 @@ class ServiceWorkerRegistrationInfo final
   // may get CC-ed.
   void UpdateRegistrationState();
 
-  void UpdateRegistrationState(ServiceWorkerUpdateViaCache aUpdateViaCache);
+  void UpdateRegistrationState(ServiceWorkerUpdateViaCache aUpdateViaCache,
+                               WorkerType aType);
 
   // Used by devtools to track changes to the properties of
   // *nsIServiceWorkerRegistrationInfo*. Note, this doesn't necessarily need to
