@@ -511,7 +511,7 @@ fun SwitchListItem(
         maxDescriptionLines = maxDescriptionLines,
         enabled = enabled,
         onClick = { onClick(!checked) },
-        beforeListItemAction = if (showSwitchAfter) switch else EmptyListItemSlot,
+        beforeListItemAction = if (showSwitchAfter) EmptyListItemSlot else switch,
         afterListItemAction = if (showSwitchAfter) switch else EmptyListItemSlot,
     )
 }
