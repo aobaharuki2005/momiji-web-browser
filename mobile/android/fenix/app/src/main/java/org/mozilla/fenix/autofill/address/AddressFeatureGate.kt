@@ -34,7 +34,7 @@ class RegionAddressFeatureGate(
     }
 
     companion object {
-        private val SUPPORTED_REGIONS = setOf("US", "CA")
+        private val SUPPORTED_REGIONS = setOf("US", "CA", "GB", "FR", "DE", "BR", "ES", "JP")
     }
 }
 

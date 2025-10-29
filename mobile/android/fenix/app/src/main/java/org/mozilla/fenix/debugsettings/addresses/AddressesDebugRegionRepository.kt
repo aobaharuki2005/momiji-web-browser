@@ -15,11 +15,7 @@ private const val SHARED_PREFS_FILENAME = "ADDRESSES_DEBUG_REGION"
  * List of regions that can be enabled for debugging purposes only.
  */
 enum class DebugRegion(val country: String) {
-    DE("DE"),
-    FR("FR"),
     AU("AU"),
-    GB("GB"),
-    JP("JP"),
 }
 
 /**
