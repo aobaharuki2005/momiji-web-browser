@@ -548,7 +548,7 @@ class ManagedProcess extends BaseProcess {
    *
    * @param {array} options
    *        An array of file descriptors from an existing process.
-   * */
+   */
   spawn(options) {
     return this.connectRunning(options);
   }

@@ -279,7 +279,7 @@ class CookiesStorageActor extends BaseStorageActor {
    * this is either null, a single cookie or an array of cookies.
    * @param {nsICookieNotification_Action} action - The cookie operation, see
    * nsICookieNotification for details.
-   **/
+   */
   onCookieChanged(cookie, action) {
     const {
       COOKIE_ADDED,

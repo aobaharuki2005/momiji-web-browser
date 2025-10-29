@@ -847,7 +847,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
   /**
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
-   **/
+   */
   // eslint-disable-next-line complexity
   async receiveMessage(aMessage) {
     let startTime = ChromeUtils.now();

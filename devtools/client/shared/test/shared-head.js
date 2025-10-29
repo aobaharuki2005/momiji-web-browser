@@ -2021,7 +2021,7 @@ async function waitForNextTopLevelDomCompleteResource(commands) {
  * early.
  *
  * @param {BrowsingContext} context
- **/
+ */
 function waitForPresShell(context) {
   return SpecialPowers.spawn(context, [], async () => {
     const winUtils = SpecialPowers.getDOMWindowUtils(content);

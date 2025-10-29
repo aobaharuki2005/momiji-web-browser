@@ -2439,7 +2439,7 @@ class Editor extends EventEmitter {
    *                      },
    *                      ...
    *                    }
-   **/
+   */
   async getBindingReferences(location, scope) {
     const cm = editors.get(this);
     const {

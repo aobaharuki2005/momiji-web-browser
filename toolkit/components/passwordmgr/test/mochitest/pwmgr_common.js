@@ -1131,7 +1131,7 @@ function setContentForTask(html) {
  * task has finished.
  *
  * @param {*Object} preferences
- * */
+ */
 async function setPreferencesForTask(...preferences) {
   await SpecialPowers.pushPrefEnv({
     set: preferences,

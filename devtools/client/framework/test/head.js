@@ -368,7 +368,7 @@ function getElementByToolIdOrExtensionIdOrSelector(toolbox, idOrSelector) {
 
 /**
  * Returns a toolbox tab element, even if it's overflowed
- **/
+ */
 function getToolboxTab(doc, toolId) {
   return (
     doc.getElementById(`toolbox-tab-${toolId}`) ||

@@ -442,7 +442,7 @@ add_task(async function test_rust_migration_failure_event() {
 /**
  * Ensures that migrating a large number of logins (100) from the JSON store to
  * the Rust store completes within a reasonable time frame (under 1 second).
- **/
+ */
 add_task(async function test_migration_time_under_threshold() {
   // ensure mirror is off
   await SpecialPowers.pushPrefEnv({

@@ -416,7 +416,7 @@ function wrapWithIFrame(doc, options = {}) {
  *
  * @return {String}
  *        a base64 encoded data url of the document container the snippet.
- **/
+ */
 function snippetToURL(doc, options = {}) {
   const { contentDocBodyAttrs = {} } = options;
   const attrs = {

@@ -3726,7 +3726,7 @@ function Response(connection) {
   /**
    * Informational response:
    * For example 103 Early Hint
-   **/
+   */
   this._informationalResponseHttpVersion = nsHttpVersion.HTTP_1_1;
   this._informationalResponseHttpCode = 0;
   this._informationalResponseHttpDescription = "";

@@ -1554,7 +1554,7 @@ FxAccountsInternal.prototype = {
   /**
    * Sets the user to be verified in the account state,
    * This prevents any polling for the user's verification state from the FxA server
-   **/
+   */
   async setUserVerified() {
     await this.withCurrentAccountState(async currentState => {
       // TODO: setting `verified` is unnecessary if oauthEnabled - it looks at our key state.

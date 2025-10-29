@@ -388,7 +388,7 @@ PurgeTrackerService.prototype = {
      * We record the creationTime of the last cookie we looked at and
      * start from there next time. This way even if new cookies are added or old ones are deleted we
      * have a reliable way of finding our spot.
-     **/
+     */
     let saved_date = Services.prefs.getStringPref(
       "privacy.purge_trackers.date_in_cookie_database",
       "0"

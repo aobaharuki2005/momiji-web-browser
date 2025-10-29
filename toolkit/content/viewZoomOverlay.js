@@ -9,7 +9,7 @@
  *
  * To use this, you'll need to have a global gBrowser variable
  * or use the methods that accept a browser to be modified.
- **/
+ */
 
 var ZoomManager = {
   set useFullZoom(aVal) {
