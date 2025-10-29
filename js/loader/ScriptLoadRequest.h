@@ -107,7 +107,14 @@ class ScriptLoadRequest : public nsISupports,
   ModuleLoadRequest* AsModuleRequest();
   const ModuleLoadRequest* AsModuleRequest() const;
 
-  CacheExpirationTime ExpirationTime() const { return mExpirationTime; }
+  CacheExpirationTime ExpirationTime() const {
+    // The request's expiration time is used only when it's received from
+    // necko.  For in-memory cached, case, the
+    // SharedSubResourceCache::CompleteSubResource::mExpirationTime field is
+    // used instead.
+    MOZ_ASSERT(!IsCachedStencil());
+    return mExpirationTime;
+  }
 
   void SetMinimumExpirationTime(const CacheExpirationTime& aExpirationTime) {
     mExpirationTime.SetMinimum(aExpirationTime);

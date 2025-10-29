@@ -3283,6 +3283,7 @@ ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
 
 void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->HasStencil());
+  MOZ_ASSERT(!aRequest->IsCachedStencil());
 
   if (aRequest->IsMarkedNotCacheable()) {
     aRequest->ClearStencil();
@@ -3306,11 +3307,10 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
     cacheBehavior = CacheBehavior::Evict;
   }
 
-  aRequest->ConvertToCachedStencil();
-
   if (cacheBehavior == CacheBehavior::Insert) {
     auto loadData =
         MakeRefPtr<ScriptLoadData>(this, aRequest, aRequest->getLoadedScript());
+    aRequest->ConvertToCachedStencil();
     mCache->Insert(*loadData);
     LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
          aRequest->URI()->GetSpecOrDefault().get()));
