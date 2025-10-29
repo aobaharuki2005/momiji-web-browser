@@ -142,6 +142,7 @@ import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.BrowserToolbarMiddleware.ToolbarAction
 import org.mozilla.fenix.components.toolbar.DisplayActions.AddBookmarkClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.EditBookmarkClicked
+import org.mozilla.fenix.components.toolbar.DisplayActions.HomepageClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.MenuClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.NavigateBackClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.NavigateBackLongClicked
@@ -2794,6 +2795,46 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `WHEN clicking the homepage button THEN navigate to application's home screen`() = runTest {
+        val browserAnimatorActionCaptor = slot<(Boolean) -> Unit>()
+        every {
+            browserAnimator.captureEngineViewAndDrawStatically(
+                any<Long>(),
+                capture(browserAnimatorActionCaptor),
+            )
+        } answers { browserAnimatorActionCaptor.captured.invoke(true) }
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.toolbarShortcutKey } returns ToolbarShortcutPreference.Keys.HOMEPAGE
+
+        val middleware = buildMiddleware()
+        val toolbarStore = buildStore(
+            middleware = middleware,
+            navController = navController,
+        )
+        val homepageButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        toolbarStore.dispatch(homepageButton.onClick as BrowserToolbarEvent)
+
+        verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome()) }
+    }
+
+    @Test
+    fun `GIVEN homepage as new tab is enabled WHEN clicking the homepage button THEN navigate to homepage`() = runTest {
+        every { settings.enableHomepageAsNewTab } returns true
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.toolbarShortcutKey } returns ToolbarShortcutPreference.Keys.HOMEPAGE
+
+        val middleware = buildMiddleware()
+        val toolbarStore = buildStore(
+            middleware = middleware,
+            navController = navController,
+        )
+        val newTabButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        toolbarStore.dispatch(newTabButton.onClick as BrowserToolbarEvent)
+
+        verify { useCases.fenixBrowserUseCases.navigateToHomepage() }
+    }
+
+    @Test
     fun `GIVEN simple toolbar use add bookmark shortcut AND the current page is not bookmarked WHEN initializing toolbar THEN show Bookmark in end browser actions`() = runTest {
         every { settings.shouldShowToolbarCustomization } returns true
         every { settings.toolbarShortcutKey } returns ToolbarShortcutPreference.Keys.BOOKMARK
@@ -2871,6 +2912,17 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN simple toolbar use homepage shortcut WHEN initializing toolbar THEN show Homepage in end browser actions`() = runTest {
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.toolbarShortcutKey } returns ToolbarShortcutPreference.Keys.HOMEPAGE
+
+        val toolbarStore = buildStore()
+
+        val homepageButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        assertEquals(expectedHomepageButton(), homepageButton)
+    }
+
+    @Test
     fun `mapShortcutToAction maps keys to actions and falls back to NewTab`() {
         assertEquals(
             ToolbarAction.NewTab,
@@ -2894,6 +2946,10 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(
             ToolbarAction.Translate,
             BrowserToolbarMiddleware.mapShortcutToAction(ToolbarShortcutPreference.Keys.TRANSLATE),
+        )
+        assertEquals(
+            ToolbarAction.Homepage,
+            BrowserToolbarMiddleware.mapShortcutToAction(ToolbarShortcutPreference.Keys.HOMEPAGE),
         )
         assertEquals(
             ToolbarAction.NewTab,
@@ -3075,6 +3131,12 @@ class BrowserToolbarMiddlewareTest {
         drawableResId = iconsR.drawable.mozac_ic_share_android_24,
         contentDescription = R.string.browser_menu_share,
         onClick = ShareClicked(source),
+    )
+
+    private fun expectedHomepageButton(source: Source = Source.AddressBar) = ActionButtonRes(
+        drawableResId = iconsR.drawable.mozac_ic_home_24,
+        contentDescription = R.string.browser_menu_homepage,
+        onClick = HomepageClicked(source),
     )
 
     private fun buildMiddleware(

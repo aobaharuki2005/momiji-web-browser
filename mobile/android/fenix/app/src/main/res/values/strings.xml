@@ -227,6 +227,8 @@
     <string name="browser_menu_save_to_collection_2">Save to collection</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Share</string>
+    <!-- Browser menu button that goes to the homepage screen -->
+    <string name="browser_menu_homepage">Homepage</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         %1$s is the name of the app (for example "Firefox").  -->
     <string name="browser_menu_open_in_fenix">Open in %1$s</string>
@@ -1146,6 +1148,8 @@
     <string name="toolbar_customize_shortcut_add_bookmark">Add bookmark</string>
     <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
     <string name="toolbar_customize_shortcut_translate">Translate</string>
+    <!-- Homepage shortcut in toolbar customization -->
+    <string name="toolbar_customize_shortcut_homepage">Homepage</string>
 
     <!-- App icon Preferences -->
     <!-- Title for the preference that lets the user pick a new app icon -->

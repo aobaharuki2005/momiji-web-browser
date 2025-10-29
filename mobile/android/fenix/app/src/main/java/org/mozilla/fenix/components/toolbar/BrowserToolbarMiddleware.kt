@@ -104,6 +104,7 @@ import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.toolbar.DisplayActions.AddBookmarkClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.EditBookmarkClicked
+import org.mozilla.fenix.components.toolbar.DisplayActions.HomepageClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.MenuClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.NavigateBackClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.NavigateBackLongClicked
@@ -149,6 +150,7 @@ internal sealed class DisplayActions : BrowserToolbarEvent {
     data class EditBookmarkClicked(override val source: Source) : DisplayActions()
     data class ShareClicked(override val source: Source) : DisplayActions()
     data object TranslateClicked : DisplayActions()
+    data class HomepageClicked(override val source: Source) : DisplayActions()
 }
 
 @VisibleForTesting
@@ -583,6 +585,18 @@ class BrowserToolbarMiddleware(
                     )
                 }
 
+                next(action)
+            }
+
+            is HomepageClicked -> runWithinEnvironment {
+                if (settings.enableHomepageAsNewTab) {
+                    useCases.fenixBrowserUseCases.navigateToHomepage()
+                } else {
+                    val directions = BrowserFragmentDirections.actionGlobalHome()
+                    browserAnimator?.captureEngineViewAndDrawStatically {
+                        navController.navigate(directions)
+                    } ?: navController.navigate(directions)
+                }
                 next(action)
             }
 
@@ -1084,6 +1098,7 @@ class BrowserToolbarMiddleware(
         Bookmark,
         EditBookmark,
         Share,
+        Homepage,
     }
 
     private data class ToolbarActionConfig(
@@ -1258,6 +1273,12 @@ class BrowserToolbarMiddleware(
             contentDescription = R.string.browser_menu_share,
             onClick = ShareClicked(source),
         )
+
+        ToolbarAction.Homepage -> ActionButtonRes(
+            drawableResId = iconsR.drawable.mozac_ic_home_24,
+            contentDescription = R.string.browser_menu_homepage,
+            onClick = HomepageClicked(source),
+        )
     }
 
     private fun Source.toMetricSource() = when (this) {
@@ -1279,6 +1300,7 @@ class BrowserToolbarMiddleware(
                 false -> ToolbarAction.Bookmark
             }
             ToolbarShortcutPreference.Keys.TRANSLATE -> ToolbarAction.Translate
+            ToolbarShortcutPreference.Keys.HOMEPAGE -> ToolbarAction.Homepage
             else -> ToolbarAction.NewTab
         }
     }
