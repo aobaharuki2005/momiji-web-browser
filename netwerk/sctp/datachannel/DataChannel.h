@@ -209,6 +209,7 @@ class DataChannelConnection : public net::NeckoTargetHolder {
   void HandleDCEPMessage(IncomingMsg&& aMsg);
   void ProcessQueuedOpens();
   void OnStreamsReset(std::vector<uint16_t>&& aStreams);
+  void OnStreamsResetComplete(std::vector<uint16_t>&& aStreams);
 
   typedef DataChannelStatsPromise::AllPromiseType StatsPromise;
   RefPtr<StatsPromise> GetStats(const DOMHighResTimeStamp aTimestamp) const;
@@ -225,10 +226,11 @@ class DataChannelConnection : public net::NeckoTargetHolder {
       DataChannelReliabilityPolicy prPolicy, bool inOrder, uint32_t prValue,
       bool aExternalNegotiated, uint16_t aStream);
 
-  void FinishClose(DataChannel* aChannel);
+  void EndOfStream(DataChannel* aChannel);
   void FinishClose_s(DataChannel* aChannel);
   void CloseAll();
   void CloseAll_s();
+  void MarkStreamAvailable(uint16_t aStream);
 
   // Returns a POSIX error code.
   int SendMessage(uint16_t stream, nsACString&& aMsg) {
@@ -313,8 +315,6 @@ class DataChannelConnection : public net::NeckoTargetHolder {
 
   void OpenFinish(RefPtr<DataChannel> aChannel);
 
-  void ClearResets();
-  void MarkStreamForReset(DataChannel& aChannel);
   void HandleUnknownMessage(uint32_t ppid, uint32_t length, uint16_t stream);
   void HandleOpenRequestMessage(
       const struct rtcweb_datachannel_open_request* req, uint32_t length,
@@ -343,8 +343,6 @@ class DataChannelConnection : public net::NeckoTargetHolder {
   RefPtr<MediaTransportHandler> mTransportHandler;
   MediaEventListener mPacketReceivedListener;
   MediaEventListener mStateChangeListener;
-  // Streams pending reset.
-  AutoTArray<uint16_t, 4> mStreamsResetting;
   DataChannelConnectionState mState = DataChannelConnectionState::Closed;
   /***********************************************************/
 
@@ -453,7 +451,8 @@ class DataChannel {
   RefPtr<DataChannelStatsPromise> GetStats(
       const DOMHighResTimeStamp aTimestamp);
 
-  void FinishClose();
+  // Called when there will be no more data sent
+  void EndOfStream();
 
   dom::RTCDataChannel* GetDomDataChannel() const {
     MOZ_ASSERT(mDomEventTarget->IsOnCurrentThread());
@@ -487,6 +486,8 @@ class DataChannel {
   // The channel has been opened, but the peer has not yet acked - ensures that
   // the messages are sent ordered until this is cleared.
   bool mWaitingForAck = false;
+  bool mSendStreamNeedsReset = false;
+  bool mRecvStreamNeedsReset = false;
   nsTArray<OutgoingMsg> mBufferedData;
   std::map<uint16_t, IncomingMsg> mRecvBuffers;
 

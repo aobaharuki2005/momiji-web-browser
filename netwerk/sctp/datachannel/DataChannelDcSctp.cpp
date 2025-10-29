@@ -341,15 +341,23 @@ void DataChannelConnectionDcSctp::OnStreamsResetFailed(
   DC_ERROR(("%s: %p", __func__, this));
   // It probably does not make much sense to retry this here. If dcsctp doesn't
   // want to retry, we probably don't either.
-  (void)aOutgoingStreams;
   (void)aReason;
+  std::vector<uint16_t> streamsReset;
+  for (auto id : aOutgoingStreams) {
+    streamsReset.push_back(id.value());
+  }
+  OnStreamsResetComplete(std::move(streamsReset));
 }
 
 void DataChannelConnectionDcSctp::OnStreamsResetPerformed(
     webrtc::ArrayView<const StreamID> aOutgoingStreams) {
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
   DC_DEBUG(("%s: %p", __func__, this));
-  (void)aOutgoingStreams;
+  std::vector<uint16_t> streamsReset;
+  for (auto id : aOutgoingStreams) {
+    streamsReset.push_back(id.value());
+  }
+  OnStreamsResetComplete(std::move(streamsReset));
 }
 
 void DataChannelConnectionDcSctp::OnIncomingStreamsReset(

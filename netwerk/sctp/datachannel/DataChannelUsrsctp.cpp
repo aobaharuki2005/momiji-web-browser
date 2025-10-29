@@ -1256,13 +1256,15 @@ void DataChannelConnectionUsrsctp::HandleStreamResetEvent(
         (strrst->strreset_length - sizeof(struct sctp_stream_reset_event)) /
         sizeof(uint16_t);
     for (size_t i = 0; i < n; ++i) {
-      if (strrst->strreset_flags & SCTP_STREAM_RESET_INCOMING_SSN) {
-        streamsReset.push_back(strrst->strreset_stream_list[i]);
-      }
+      streamsReset.push_back(strrst->strreset_stream_list[i]);
     }
   }
 
-  OnStreamsReset(std::move(streamsReset));
+  if (strrst->strreset_flags & SCTP_STREAM_RESET_INCOMING_SSN) {
+    OnStreamsReset(std::move(streamsReset));
+  } else if (strrst->strreset_flags & SCTP_STREAM_RESET_OUTGOING_SSN) {
+    OnStreamsResetComplete(std::move(streamsReset));
+  }
 }
 
 void DataChannelConnectionUsrsctp::HandleStreamChangeEvent(
