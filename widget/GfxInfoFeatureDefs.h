@@ -27,8 +27,8 @@ GFXINFO_FEATURE(WEBGL_OPENGL, "WEBGL_OPENGL", "webgl.opengl")
 GFXINFO_FEATURE(WEBGL_ANGLE, "WEBGL_ANGLE", "webgl.angle")
 /* (Unused) Whether WebGL antialiasing is supported. */
 GFXINFO_FEATURE(UNUSED_WEBGL_MSAA, "WEBGL_MSAA", "webgl.msaa")
-/* Whether Stagefright is supported, starting in 17. */
-GFXINFO_FEATURE(STAGEFRIGHT, "STAGEFRIGHT", "stagefright")
+/* (Unused) Whether Stagefright is supported, starting in 17. */
+GFXINFO_FEATURE(UNUSED_STAGEFRIGHT, "STAGEFRIGHT", "stagefright")
 /* Whether Webrtc Hardware H.264 acceleration is supported, starting in 71. */
 GFXINFO_FEATURE(WEBRTC_HW_ACCELERATION_H264, "WEBRTC_HW_ACCELERATION_H264", "webrtc.hw.acceleration.h264")
 /* Whether Direct3D 11 is supported for layers, starting in 32. */
