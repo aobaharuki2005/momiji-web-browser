@@ -1220,6 +1220,7 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
        "ScriptLoadRequest(%p) %s.",
        this, aRequest->getLoadedScript(), aRequest,
        aRequest->URI()->GetSpecOrDefault().get()));
+  TRACE_FOR_TEST(aRequest, "load:memorycache");
 
   if (cacheResult.mCompleteValue->mFetchCount < UINT8_MAX) {
     cacheResult.mCompleteValue->mFetchCount++;
@@ -3322,6 +3323,7 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
     mCache->Insert(*loadData);
     LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
          aRequest->URI()->GetSpecOrDefault().get()));
+    TRACE_FOR_TEST(aRequest, "memorycache:saved");
   } else {
     MOZ_ASSERT(cacheBehavior == CacheBehavior::Evict);
     ScriptHashKey key(this, aRequest, aRequest->getLoadedScript());
@@ -3332,6 +3334,7 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
     if (!aRequest->PassedConditionForEitherCache()) {
       aRequest->ClearStencil();
     }
+    TRACE_FOR_TEST(aRequest, "memorycache:evict");
   }
 }
 
