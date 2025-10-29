@@ -2446,7 +2446,7 @@ export class BackupService extends EventTarget {
           if (!(e instanceof BackupError)) {
             throw new BackupError(
               "Failed to parse archive header",
-              ERRORS.FILE_SYSTEM_ERROR
+              ERRORS.CORRUPTED_ARCHIVE
             );
           }
           throw e;
