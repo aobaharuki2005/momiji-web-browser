@@ -226,6 +226,7 @@ tasks:
                         default: []
                 default:
                     by-test-platform:
+                        linux2404-64/.*: built-projects
                         android.*: []
                         .*-wayland.*: []
                         .*/debug: []
