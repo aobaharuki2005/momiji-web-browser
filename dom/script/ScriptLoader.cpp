@@ -3249,7 +3249,7 @@ ScriptLoader::CacheBehavior ScriptLoader::GetCacheBehavior(
     return CacheBehavior::DoNothing;
   }
 
-  if (!aRequest->IsCacheable()) {
+  if (aRequest->ExpirationTime().IsExpired()) {
     return CacheBehavior::Evict;
   }
 

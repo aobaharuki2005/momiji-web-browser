@@ -162,14 +162,6 @@ const ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() const {
   return static_cast<const ModuleLoadRequest*>(this);
 }
 
-bool ScriptLoadRequest::IsCacheable() const {
-  if (HasScriptLoadContext() && GetScriptLoadContext()->mIsInline) {
-    return false;
-  }
-
-  return !mExpirationTime.IsExpired();
-}
-
 void ScriptLoadRequest::CacheEntryFound(LoadedScript* aLoadedScript) {
   MOZ_ASSERT(IsCheckingCache());
 

@@ -107,8 +107,6 @@ class ScriptLoadRequest : public nsISupports,
   ModuleLoadRequest* AsModuleRequest();
   const ModuleLoadRequest* AsModuleRequest() const;
 
-  bool IsCacheable() const;
-
   CacheExpirationTime ExpirationTime() const { return mExpirationTime; }
 
   void SetMinimumExpirationTime(const CacheExpirationTime& aExpirationTime) {
