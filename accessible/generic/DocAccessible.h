@@ -850,6 +850,9 @@ class DocAccessible : public HyperTextAccessible,
    */
   void MaybeHandleChangeToHiddenNameOrDescription(nsIContent* aChild);
 
+  void MaybeHandleChangeToAriaActions(LocalAccessible* aAcc,
+                                      const nsAtom* aAttribute);
+
   void MaybeFireEventsForChangedPopover(LocalAccessible* aAcc);
 
   PresShell* mPresShell;
