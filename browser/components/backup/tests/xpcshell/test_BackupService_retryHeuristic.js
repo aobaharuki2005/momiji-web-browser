@@ -4,10 +4,8 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
   BackupError: "resource:///modules/backup/BackupError.mjs",
   ERRORS: "chrome://browser/content/backup/backup-constants.mjs",
-  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
 });
 
 const BACKUP_RETRY_LIMIT_PREF_NAME = "browser.backup.backup-retry-limit";

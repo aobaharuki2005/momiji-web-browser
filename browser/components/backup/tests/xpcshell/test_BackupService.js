@@ -3,9 +3,6 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { BasePromiseWorker } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseWorker.sys.mjs"
 );
@@ -340,7 +337,7 @@ async function testCreateBackupHelper(sandbox, taskFn) {
       "initiated recovery"
   );
 
-  taskFn(bs, manifest);
+  await taskFn(bs, manifest);
 
   await maybeRemovePath(backupFilePath);
   await maybeRemovePath(fakeProfilePath);
@@ -409,7 +406,11 @@ async function testDeleteLastBackupHelper(taskFn) {
       await taskFn(LAST_BACKUP_FILE_PATH);
     }
 
-    await bs.deleteLastBackup();
+    // NB: On Windows, deletes of backups in tests run into an issue where
+    // the file is locked briefly by the system and deletes fail with
+    // NS_ERROR_FILE_IS_LOCKED.  See doFileRemovalOperation for details.
+    // We therefore retry this delete a few times before accepting failure.
+    await doFileRemovalOperation(async () => await bs.deleteLastBackup());
 
     Assert.equal(
       bs.state.lastBackupDate,
