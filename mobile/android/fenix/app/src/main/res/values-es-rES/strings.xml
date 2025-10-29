@@ -1564,7 +1564,7 @@
   <!-- Text for the snackbar to confirm that a download has completed. -->
   <string name="download_completed_snackbar">Descarga completa</string>
   <!-- Text for the snackbar action button to open a completed download. -->
-  <string name="download_completed_snackbar_action_open">Abierto</string>
+  <string name="download_completed_snackbar_action_open">Abrir</string>
   <!-- Text for the snackbar action button to undo deleting a download. -->
   <string name="download_undo_delete_snackbar_action">Deshacer</string>
   <!-- Text shown when no download exists -->
