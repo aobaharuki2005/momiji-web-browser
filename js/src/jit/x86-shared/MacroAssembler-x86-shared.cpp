@@ -2228,24 +2228,33 @@ void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
                                     FloatRegister output) {
   ScratchDoubleScope scratch(*this);
 
-  // TODO Support AVX2
-  if (rhs == output) {
-    MOZ_ASSERT(lhs != rhs);
-    double keepSignMask = mozilla::BitwiseCast<double>(INT64_MIN);
-    loadConstantDouble(keepSignMask, scratch);
-    vandpd(scratch, rhs, output);
+  double keepSignMask = mozilla::BitwiseCast<double>(INT64_MIN);
+  double clearSignMask = mozilla::BitwiseCast<double>(INT64_MAX);
 
-    double clearSignMask = mozilla::BitwiseCast<double>(INT64_MAX);
-    loadConstantDouble(clearSignMask, scratch);
-    vandpd(lhs, scratch, scratch);
+  if (HasAVX()) {
+    if (rhs == output) {
+      MOZ_ASSERT(lhs != rhs);
+      vandpdSimd128(SimdConstant::SplatX2(keepSignMask), rhs, output);
+      vandpdSimd128(SimdConstant::SplatX2(clearSignMask), lhs, scratch);
+    } else {
+      vandpdSimd128(SimdConstant::SplatX2(clearSignMask), lhs, output);
+      vandpdSimd128(SimdConstant::SplatX2(keepSignMask), rhs, scratch);
+    }
   } else {
-    double clearSignMask = mozilla::BitwiseCast<double>(INT64_MAX);
-    loadConstantDouble(clearSignMask, scratch);
-    vandpd(scratch, lhs, output);
+    if (rhs == output) {
+      MOZ_ASSERT(lhs != rhs);
+      loadConstantDouble(keepSignMask, scratch);
+      vandpd(scratch, rhs, output);
 
-    double keepSignMask = mozilla::BitwiseCast<double>(INT64_MIN);
-    loadConstantDouble(keepSignMask, scratch);
-    vandpd(rhs, scratch, scratch);
+      loadConstantDouble(clearSignMask, scratch);
+      vandpd(lhs, scratch, scratch);
+    } else {
+      loadConstantDouble(clearSignMask, scratch);
+      vandpd(scratch, lhs, output);
+
+      loadConstantDouble(keepSignMask, scratch);
+      vandpd(rhs, scratch, scratch);
+    }
   }
 
   vorpd(scratch, output, output);
@@ -2255,24 +2264,33 @@ void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
                                      FloatRegister output) {
   ScratchFloat32Scope scratch(*this);
 
-  // TODO Support AVX2
-  if (rhs == output) {
-    MOZ_ASSERT(lhs != rhs);
-    float keepSignMask = mozilla::BitwiseCast<float>(INT32_MIN);
-    loadConstantFloat32(keepSignMask, scratch);
-    vandps(scratch, output, output);
+  float keepSignMask = mozilla::BitwiseCast<float>(INT32_MIN);
+  float clearSignMask = mozilla::BitwiseCast<float>(INT32_MAX);
 
-    float clearSignMask = mozilla::BitwiseCast<float>(INT32_MAX);
-    loadConstantFloat32(clearSignMask, scratch);
-    vandps(lhs, scratch, scratch);
+  if (HasAVX()) {
+    if (rhs == output) {
+      MOZ_ASSERT(lhs != rhs);
+      vandpsSimd128(SimdConstant::SplatX4(keepSignMask), rhs, output);
+      vandpsSimd128(SimdConstant::SplatX4(clearSignMask), lhs, scratch);
+    } else {
+      vandpsSimd128(SimdConstant::SplatX4(clearSignMask), lhs, output);
+      vandpsSimd128(SimdConstant::SplatX4(keepSignMask), rhs, scratch);
+    }
   } else {
-    float clearSignMask = mozilla::BitwiseCast<float>(INT32_MAX);
-    loadConstantFloat32(clearSignMask, scratch);
-    vandps(scratch, lhs, output);
+    if (rhs == output) {
+      MOZ_ASSERT(lhs != rhs);
+      loadConstantFloat32(keepSignMask, scratch);
+      vandps(scratch, output, output);
 
-    float keepSignMask = mozilla::BitwiseCast<float>(INT32_MIN);
-    loadConstantFloat32(keepSignMask, scratch);
-    vandps(rhs, scratch, scratch);
+      loadConstantFloat32(clearSignMask, scratch);
+      vandps(lhs, scratch, scratch);
+    } else {
+      loadConstantFloat32(clearSignMask, scratch);
+      vandps(scratch, lhs, output);
+
+      loadConstantFloat32(keepSignMask, scratch);
+      vandps(rhs, scratch, scratch);
+    }
   }
 
   vorps(scratch, output, output);

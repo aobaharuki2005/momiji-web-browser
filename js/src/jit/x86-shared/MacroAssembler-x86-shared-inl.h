@@ -9,6 +9,7 @@
 
 #include "jit/x86-shared/MacroAssembler-x86-shared.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/MathAlgorithms.h"
 
 namespace js {
@@ -292,19 +293,13 @@ void MacroAssembler::divDouble(FloatRegister src, FloatRegister dest) {
 void MacroAssembler::neg32(Register reg) { negl(reg); }
 
 void MacroAssembler::negateFloat(FloatRegister reg) {
-  ScratchFloat32Scope scratch(*this);
-  loadConstantFloat32(-0.0f, scratch);
-
   // XOR the float in a float register with -0.0.
-  vxorps(scratch, reg, reg);  // s ^ 0x80000000
+  vxorpsSimd128(SimdConstant::SplatX4(-0.0f), reg, reg);
 }
 
 void MacroAssembler::negateDouble(FloatRegister reg) {
-  ScratchDoubleScope scratch(*this);
-  loadConstantDouble(-0.0, scratch);
-
   // XOR the float in a float register with -0.0.
-  vxorpd(scratch, reg, reg);  // s ^ 0x80000000000000
+  vxorpdSimd128(SimdConstant::SplatX2(-0.0), reg, reg);
 }
 
 void MacroAssembler::abs32(Register src, Register dest) {
@@ -318,19 +313,13 @@ void MacroAssembler::abs32(Register src, Register dest) {
 }
 
 void MacroAssembler::absFloat32(FloatRegister src, FloatRegister dest) {
-  ScratchFloat32Scope scratch(*this);
-  loadConstantFloat32(mozilla::SpecificNaN<float>(
-                          0, mozilla::FloatingPoint<float>::kSignificandBits),
-                      scratch);
-  vandps(scratch, src, dest);
+  float clearSignMask = mozilla::BitwiseCast<float>(INT32_MAX);
+  vandpsSimd128(SimdConstant::SplatX4(clearSignMask), src, dest);
 }
 
 void MacroAssembler::absDouble(FloatRegister src, FloatRegister dest) {
-  ScratchDoubleScope scratch(*this);
-  loadConstantDouble(mozilla::SpecificNaN<double>(
-                         0, mozilla::FloatingPoint<double>::kSignificandBits),
-                     scratch);
-  vandpd(scratch, src, dest);
+  double clearSignMask = mozilla::BitwiseCast<double>(INT64_MAX);
+  vandpdSimd128(SimdConstant::SplatX2(clearSignMask), src, dest);
 }
 
 void MacroAssembler::sqrtFloat32(FloatRegister src, FloatRegister dest) {
