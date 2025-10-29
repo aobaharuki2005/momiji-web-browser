@@ -479,6 +479,7 @@ class DataChannel {
   dom::RTCDataChannel* mMainthreadDomDataChannel = nullptr;
   bool mHasWorkerDomDataChannel = false;
   bool mEverOpened = false;
+  bool mAnnouncedClosed = false;
   uint16_t mStream;
   RefPtr<DataChannelConnection> mConnection;
 
@@ -488,6 +489,7 @@ class DataChannel {
   bool mWaitingForAck = false;
   bool mSendStreamNeedsReset = false;
   bool mRecvStreamNeedsReset = false;
+  bool mEndOfStreamCalled = false;
   nsTArray<OutgoingMsg> mBufferedData;
   std::map<uint16_t, IncomingMsg> mRecvBuffers;
 
