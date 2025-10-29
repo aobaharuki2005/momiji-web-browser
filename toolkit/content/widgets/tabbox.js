@@ -277,7 +277,6 @@
 
     handleEvent(e) {
       switch (e.type) {
-        case "click":
         case "focus": {
           const browser = e.currentTarget;
           const tab = browser.getTabBrowser().getTabForBrowser(browser);
@@ -362,7 +361,6 @@
         const panelEl = document.getElementById(panel);
         panelEl?.classList.add("split-view-panel");
         panelEl?.setAttribute("column", i);
-        panelEl?.querySelector("browser")?.addEventListener("click", this);
         panelEl?.querySelector("browser")?.addEventListener("focus", this);
       }
       this.#splitViewPanels = newPanels;
@@ -384,7 +382,6 @@
       const panelEl = document.getElementById(panel);
       panelEl?.classList.remove("split-view-panel");
       panelEl?.removeAttribute("column");
-      panelEl?.querySelector("browser")?.removeEventListener("click", this);
       panelEl?.querySelector("browser")?.removeEventListener("focus", this);
       if (updateArray) {
         const index = this.#splitViewPanels.indexOf(panel);

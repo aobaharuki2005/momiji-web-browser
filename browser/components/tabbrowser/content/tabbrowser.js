@@ -3255,7 +3255,6 @@
       const panels = [];
       for (const tab of tabs) {
         this._insertBrowser(tab);
-        this.#insertSplitViewFooter(tab);
         tab.linkedBrowser.docShellIsActive = true;
         panels.push(tab.linkedPanel);
       }
@@ -3271,21 +3270,6 @@
       for (const tab of tabs) {
         this.tabpanels.removePanelFromSplitView(tab.linkedPanel);
       }
-    }
-
-    /**
-     * Ensures the split view footer exists for the given tab.
-     *
-     * @param {MozTabbrowserTab} tab
-     */
-    #insertSplitViewFooter(tab) {
-      const panelEl = document.getElementById(tab.linkedPanel);
-      if (panelEl.querySelector("split-view-footer")) {
-        return;
-      }
-      const footer = document.createXULElement("split-view-footer");
-      footer.setTab(tab);
-      panelEl.appendChild(footer);
     }
 
     /**
@@ -8602,6 +8586,10 @@
           modifiedAttrs.push("progress");
         }
 
+        if (modifiedAttrs.length) {
+          gBrowser._tabAttrModified(this.mTab, modifiedAttrs);
+        }
+
         if (aWebProgress.isTopLevel) {
           let isSuccessful = Components.isSuccessCode(aStatus);
           if (!isSuccessful && !this.mTab.isEmpty) {
@@ -8646,7 +8634,6 @@
           !(originalLocation.spec in FAVICON_DEFAULTS)
         ) {
           this.mTab.removeAttribute("image");
-          modifiedAttrs.push("image");
         } else {
           // Bug 1804166: Allow new tabs to set the favicon correctly if the
           // new tabs behavior is set to open a blank page
@@ -8662,10 +8649,6 @@
 
         if (this.mTab.selected) {
           gBrowser._isBusy = false;
-        }
-
-        if (modifiedAttrs.length) {
-          gBrowser._tabAttrModified(this.mTab, modifiedAttrs);
         }
       }
 
