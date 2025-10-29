@@ -634,21 +634,6 @@ void CookieParser::FixDomain(CookieStruct& aCookieData, nsIURI* aHostURI,
    */
 }
 
-static void RecordPartitionedTelemetry(const CookieStruct& aCookieData,
-                                       bool aIsForeign) {
-  mozilla::glean::networking::set_cookie.Add(1);
-  if (aCookieData.isPartitioned()) {
-    mozilla::glean::networking::set_cookie_partitioned.AddToNumerator(1);
-  }
-  if (aIsForeign) {
-    mozilla::glean::networking::set_cookie_foreign.AddToNumerator(1);
-  }
-  if (aIsForeign && aCookieData.isPartitioned()) {
-    mozilla::glean::networking::set_cookie_foreign_partitioned.AddToNumerator(
-        1);
-  }
-}
-
 // Main entry point for cookie parsing. Parses a single cookie string
 // (from either document.cookie or a Set-Cookie header) and populates
 // the internal CookieStruct data.
@@ -731,12 +716,6 @@ void CookieParser::Parse(const nsACString& aBaseDomain, bool aRequireHostMatch,
 
   if (mValidation->Result() != nsICookieValidation::eOK) {
     return;
-  }
-
-  // We count SetCookie operations in the parent process only for HTTP set
-  // cookies to prevent double counting.
-  if (XRE_IsParentProcess() || !aFromHttp) {
-    RecordPartitionedTelemetry(mCookieData, aIsForeignAndNotAddon);
   }
 }
 
