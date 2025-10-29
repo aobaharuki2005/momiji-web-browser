@@ -1082,15 +1082,16 @@ pub extern "C" fn neqo_http3conn_process_output_and_send(
                 conn.datagram_size_sent.accumulate(dg.data().len() as u64);
                 conn.datagram_segments_sent
                     .accumulate(dg.num_datagrams() as u64);
-                if dg.datagram_size() > 0 {
-                    for _ in 0..(dg.data().len() / dg.datagram_size()) {
-                        conn.datagram_segment_size_sent
-                            .accumulate(dg.datagram_size() as u64);
-                    }
-                    if let Some(remainder) = dg.data().len().checked_rem(dg.datagram_size()) {
-                        conn.datagram_segment_size_sent.accumulate(remainder as u64);
-                    }
+                for _ in 0..(dg.data().len() / dg.datagram_size()) {
+                    conn.datagram_segment_size_sent
+                        .accumulate(dg.datagram_size().get() as u64);
                 }
+                conn.datagram_segment_size_sent.accumulate(
+                    dg.data()
+                        .len()
+                        .checked_rem(dg.datagram_size().get())
+                        .expect("datagram_size is a NonZeroUsize") as u64,
+                );
             }
             OutputBatch::Callback(to) => {
                 let timeout = if to.is_zero() {
