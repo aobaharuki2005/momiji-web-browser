@@ -71,6 +71,7 @@ fun SettingsSearchScreen(
                         }
                         SettingsSearchResultItem(
                             item = settingsSearchItem,
+                            query = state.searchQuery,
                             onClick = {
                                 store.dispatch(
                                     SettingsSearchAction.ResultItemClicked(
