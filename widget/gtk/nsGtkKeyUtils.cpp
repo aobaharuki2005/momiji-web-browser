@@ -31,6 +31,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsWindow.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEventDispatcher.h"

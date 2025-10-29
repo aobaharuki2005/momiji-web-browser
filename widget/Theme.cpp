@@ -9,6 +9,7 @@
 
 #include "ThemeDrawing.h"
 #include "Units.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLMeterElement.h"

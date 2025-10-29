@@ -6,6 +6,7 @@
 #ifndef mozilla_widget_WinModifierKeyState_h_
 #define mozilla_widget_WinModifierKeyState_h_
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/EventForwards.h"
 #include "nsStringFwd.h"
 #include <windows.h>

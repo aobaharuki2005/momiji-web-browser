@@ -12,6 +12,7 @@
 #include "mozilla/gfx/Logging.h"  // for gfxCriticalNote
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/Sprintf.h"

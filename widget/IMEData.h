@@ -9,6 +9,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/NativeKeyBindingsType.h"
+#include "mozilla/ToString.h"
 
 #include "nsCOMPtr.h"
 #include "nsIURI.h"

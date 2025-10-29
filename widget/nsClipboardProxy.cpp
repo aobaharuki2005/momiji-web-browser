@@ -13,6 +13,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsArrayUtils.h"

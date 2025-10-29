@@ -10,6 +10,7 @@
 
 #include <gtk/gtk.h>
 
+#include "mozilla/Maybe.h"
 #include "nsClipboard.h"
 
 class nsRetrievalContextX11 : public nsRetrievalContext {

@@ -23,6 +23,7 @@
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsString.h"
 #include "nsGlobalWindowOuter.h"

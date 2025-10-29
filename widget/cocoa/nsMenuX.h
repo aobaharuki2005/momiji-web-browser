@@ -11,6 +11,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Variant.h"
 #include "nsISupports.h"
 #include "nsMenuParentX.h"
 #include "nsMenuBarX.h"

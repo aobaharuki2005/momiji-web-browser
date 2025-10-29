@@ -21,6 +21,7 @@
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/ToString.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsWindow.h"
 
 #include <algorithm>

@@ -9,6 +9,7 @@
 #  include "X11UndefineNone.h"
 #endif
 
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/HTMLInputElement.h"

@@ -8,6 +8,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/RefPtr.h"
+
 namespace mozilla {
 class Runnable;
 }
