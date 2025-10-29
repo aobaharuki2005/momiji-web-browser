@@ -2731,14 +2731,6 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     return;
   }
 
-  if (aRequest->IsBytecode()) {
-    LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip all: IsBytecode",
-         aRequest));
-    aRequest->MarkSkippedAllCaching();
-    MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
-    return;
-  }
-
   if (mCache) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Mark in-memory: Stencil",
          aRequest));
@@ -2748,6 +2740,14 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   }
 
   // The following conditions apply only to the disk cache.
+
+  if (aRequest->IsBytecode()) {
+    LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: IsBytecode",
+         aRequest));
+    aRequest->MarkSkippedDiskCaching();
+    MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
+    return;
+  }
 
   // We need the nsICacheInfoChannel to exist to be able to open the alternate
   // data output stream.
