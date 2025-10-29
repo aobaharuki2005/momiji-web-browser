@@ -88,7 +88,11 @@ export function escapeHtmlEntities(text) {
     .replace(/'/g, "&#39;");
 }
 
-export function navigateToLink(e, url = e.originalTarget.url) {
+export function navigateToLink(
+  e,
+  url = e.originalTarget.url,
+  { forceNewTab = true } = {}
+) {
   let currentWindow =
     e.target.ownerGlobal.browsingContext.embedderWindowGlobal.browsingContext
       .window;
@@ -98,7 +102,7 @@ export function navigateToLink(e, url = e.originalTarget.url) {
       false,
       true
     );
-    if (where == "current") {
+    if (where == "current" && forceNewTab) {
       where = "tab";
     }
     currentWindow.openTrustedLinkIn(url, where);
