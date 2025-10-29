@@ -152,19 +152,21 @@ void DataChannelConnectionDcSctp::OnSctpPacketReceived(
   mDcSctp->ReceivePacket(data);
 }
 
-void DataChannelConnectionDcSctp::ResetStreams(nsTArray<uint16_t>& aStreams) {
+bool DataChannelConnectionDcSctp::ResetStreams(nsTArray<uint16_t>& aStreams) {
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
   DC_DEBUG(("%s: %p", __func__, this));
   if (!mDcSctp) {
-    return;
+    return false;
   }
   std::vector<StreamID> converted;
   for (auto id : aStreams) {
     DC_DEBUG(("%s: %p Resetting %u", __func__, this, id));
     converted.push_back(StreamID(id));
   }
-  mDcSctp->ResetStreams(webrtc::ArrayView<const StreamID>(converted));
+  auto result =
+      mDcSctp->ResetStreams(webrtc::ArrayView<const StreamID>(converted));
   aStreams.Clear();
+  return result == ResetStreamsStatus::kPerformed;
 }
 
 void DataChannelConnectionDcSctp::OnStreamOpen(uint16_t aStream) {

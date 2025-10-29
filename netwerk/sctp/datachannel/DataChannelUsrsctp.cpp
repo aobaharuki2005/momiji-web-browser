@@ -1213,14 +1213,14 @@ void DataChannelConnectionUsrsctp::HandleSendFailedEvent(
   }
 }
 
-void DataChannelConnectionUsrsctp::ResetStreams(nsTArray<uint16_t>& aStreams) {
+bool DataChannelConnectionUsrsctp::ResetStreams(nsTArray<uint16_t>& aStreams) {
   MOZ_ASSERT(mSTS->IsOnCurrentThread());
 
   DC_DEBUG(("%s %p: Sending outgoing stream reset for %zu streams", __func__,
             this, aStreams.Length()));
   if (aStreams.IsEmpty()) {
     DC_DEBUG(("No streams to reset"));
-    return;
+    return false;
   }
   const size_t len =
       sizeof(sctp_reset_streams) + (aStreams.Length()) * sizeof(uint16_t);
@@ -1244,6 +1244,7 @@ void DataChannelConnectionUsrsctp::ResetStreams(nsTArray<uint16_t>& aStreams) {
     aStreams.Clear();
   }
   free(srs);
+  return aStreams.Length() == 0;
 }
 
 void DataChannelConnectionUsrsctp::HandleStreamResetEvent(

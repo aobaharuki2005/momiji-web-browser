@@ -198,7 +198,7 @@ class DataChannelConnection : public net::NeckoTargetHolder {
   // Called when the base class receives a packet from the transport
   virtual void OnSctpPacketReceived(const MediaPacket& packet) = 0;
   // Called when the base class is closing streams
-  virtual void ResetStreams(nsTArray<uint16_t>& aStreams) = 0;
+  virtual bool ResetStreams(nsTArray<uint16_t>& aStreams) = 0;
   // Called when the SCTP connection is being shut down
   virtual void Destroy();
 
