@@ -20,6 +20,9 @@ const GEOLOCATION_CACHE_PERIOD_MS = 2 * 60 * 60 * 1000; // 2 hours.
 // The mean Earth radius used in distance calculations.
 const EARTH_RADIUS_KM = 6371.009;
 
+// Timeout setting to fetch geolocation from Merino.
+const MERINO_TIMEOUT_MS = 5000;
+
 /**
  * Utils for fetching the client's geolocation from Merino, computing distances
  * between locations, and finding suggestions that best match the geolocation.
@@ -64,6 +67,7 @@ class _GeolocationUtils {
     let results = await this.#merino.fetch({
       providers: ["geolocation"],
       query: "",
+      timeoutMs: MERINO_TIMEOUT_MS,
     });
 
     lazy.logger.debug("Got geolocation from Merino", results);
