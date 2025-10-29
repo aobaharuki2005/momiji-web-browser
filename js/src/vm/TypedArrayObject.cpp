@@ -4380,10 +4380,6 @@ static size_t FromHex(const CharT* chars, size_t length,
     }
   };
 
-  auto decode2Chars = [&](const CharT* chars) {
-    return (decodeChar(chars[0]) << 4) | (decodeChar(chars[1]) << 0);
-  };
-
   auto decode4Chars = [&](const CharT* chars) {
     return (decodeChar(chars[2]) << 12) | (decodeChar(chars[3]) << 8) |
            (decodeChar(chars[0]) << 4) | (decodeChar(chars[1]) << 0);
@@ -4396,34 +4392,12 @@ static size_t FromHex(const CharT* chars, size_t length,
   MOZ_ASSERT(length % 2 == 0);
 
   // Process eight characters per loop iteration.
-  if (length >= 8) {
-    // Align |data| to uint32_t.
-    if (MOZ_UNLIKELY(data.unwrapValue() & 3)) {
-      // Performs at most three iterations until |data| is aligned, reading up
-      // to six characters.
-      while (data.unwrapValue() & 3) {
-        // Step 6.a and 6.d.
-        uint32_t byte = decode2Chars(chars + index);
-
-        // Step 6.b.
-        if (MOZ_UNLIKELY(int32_t(byte) < 0)) {
-          return index;
-        }
-        MOZ_ASSERT(byte <= 0xff);
-
-        // Step 6.c.
-        index += 2;
-
-        // Step 6.e.
-        Ops::store(data++, uint8_t(byte));
-      }
-    }
-
+  size_t alignedLength = length & ~7;
+  if (index < alignedLength) {
     auto data32 = data.template cast<uint32_t*>();
 
     // Step 6.
-    size_t lastValidIndex = length - 8;
-    while (index <= lastValidIndex) {
+    while (index < alignedLength) {
       // Steps 6.a and 6.d.
       uint32_t word1 = decode4Chars(chars + index);
 
@@ -4459,8 +4433,12 @@ static size_t FromHex(const CharT* chars, size_t length,
 
   // Step 6.
   while (index < length) {
-    // Step 6.a and 6.d.
-    uint32_t byte = decode2Chars(chars + index);
+    // Step 6.a.
+    auto c0 = chars[index + 0];
+    auto c1 = chars[index + 1];
+
+    // Step 6.d.
+    uint32_t byte = (decodeChar(c0) << 4) | (decodeChar(c1) << 0);
 
     // Step 6.b.
     if (MOZ_UNLIKELY(int32_t(byte) < 0)) {
@@ -5528,31 +5506,6 @@ static void ToBase64(TypedArrayObject* tarray, size_t length, Alphabet alphabet,
   auto toRead = length;
 
   if (toRead >= 12) {
-    // Align |data| to uint32_t.
-    if (MOZ_UNLIKELY(data.unwrapValue() & 3)) {
-      // Performs at most three iterations until |data| is aligned, reading up
-      // to nine bytes.
-      while (data.unwrapValue() & 3) {
-        // Combine three input bytes into a single uint24 value.
-        auto byte0 = Ops::load(data++);
-        auto byte1 = Ops::load(data++);
-        auto byte2 = Ops::load(data++);
-        auto u24 = (uint32_t(byte0) << 16) | (uint32_t(byte1) << 8) | byte2;
-
-        // Encode the uint24 value as base64.
-        char chars[] = {
-            encode(u24 >> 18),
-            encode(u24 >> 12),
-            encode(u24 >> 6),
-            encode(u24 >> 0),
-        };
-        sb.infallibleAppend(chars, sizeof(chars));
-
-        MOZ_ASSERT(toRead >= 3);
-        toRead -= 3;
-      }
-    }
-
     auto data32 = data.template cast<uint32_t*>();
     for (; toRead >= 12; toRead -= 12) {
       // Read three 32-bit words.
