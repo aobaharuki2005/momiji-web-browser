@@ -92,7 +92,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   ~GPUProcessManager();
 
   // If not using a GPU process, launch a new GPU process asynchronously.
-  bool LaunchGPUProcess();
+  nsresult LaunchGPUProcess();
   bool IsGPUProcessLaunching();
 
   // Ensure that GPU-bound methods can be used. If no GPU process is being
