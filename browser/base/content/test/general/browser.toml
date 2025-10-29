@@ -44,7 +44,7 @@ support-files = [
 ["browser_addCertException.js"]
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
-["browser_backButtonFitts.js"]
+["browser_backOrSidebarButtonFitts.js"]
 https_first_disabled = true
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
