@@ -43,10 +43,10 @@ class BaseAlloc {
   // required (from pages_alloc()).  Else-if an allocation would case
   // mNextAddr > mNextDecommitted then some of the memory is decommitted and
   // pages_committ() is needed before the memory can be used.
-  void* mNextAddr MOZ_GUARDED_BY(mMutex) = nullptr;
-  void* mNextDecommitted MOZ_GUARDED_BY(mMutex) = nullptr;
+  uintptr_t mNextAddr MOZ_GUARDED_BY(mMutex) = 0;
+  uintptr_t mNextDecommitted MOZ_GUARDED_BY(mMutex) = 0;
   // Address immediately past the current chunk of pages.
-  void* mPastAddr MOZ_GUARDED_BY(mMutex) = nullptr;
+  uintptr_t mPastAddr MOZ_GUARDED_BY(mMutex) = 0;
 
   Stats mStats MOZ_GUARDED_BY(mMutex);
 };

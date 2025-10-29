@@ -18,18 +18,19 @@ void BaseAlloc::Init() MOZ_REQUIRES(gInitLock) { mMutex.Init(); }
 bool BaseAlloc::pages_alloc(size_t minsize) MOZ_REQUIRES(mMutex) {
   MOZ_ASSERT(minsize != 0);
   size_t csize = CHUNK_CEILING(minsize);
-  void* base_pages = chunk_alloc(csize, kChunkSize, true);
-  if (!base_pages) {
+  uintptr_t base_pages =
+      reinterpret_cast<uintptr_t>(chunk_alloc(csize, kChunkSize, true));
+  if (base_pages == 0) {
     return false;
   }
-  mNextAddr = base_pages;
-  mPastAddr = (void*)((uintptr_t)base_pages + csize);
+  mNextAddr = reinterpret_cast<uintptr_t>(base_pages);
+  mPastAddr = base_pages + csize;
   // Leave enough pages for minsize committed, since otherwise they would
   // have to be immediately recommitted.
   size_t pminsize = PAGE_CEILING(minsize);
-  mNextDecommitted = (void*)((uintptr_t)base_pages + pminsize);
+  mNextDecommitted = base_pages + pminsize;
   if (pminsize < csize) {
-    pages_decommit(mNextDecommitted, csize - pminsize);
+    pages_decommit(reinterpret_cast<void*>(mNextDecommitted), csize - pminsize);
   }
   mStats.mMapped += csize;
   mStats.mCommitted += pminsize;
@@ -43,25 +44,24 @@ void* BaseAlloc::alloc(size_t aSize) {
 
   MutexAutoLock lock(mMutex);
   // Make sure there's enough space for the allocation.
-  if ((uintptr_t)mNextAddr + csize > (uintptr_t)mPastAddr) {
+  if (mNextAddr + csize > mPastAddr) {
     if (!pages_alloc(csize)) {
       return nullptr;
     }
   }
   // Allocate.
-  void* ret = mNextAddr;
-  mNextAddr = (void*)((uintptr_t)mNextAddr + csize);
+  void* ret = reinterpret_cast<void*>(mNextAddr);
+  mNextAddr = mNextAddr + csize;
   // Make sure enough pages are committed for the new allocation.
-  if ((uintptr_t)mNextAddr > (uintptr_t)mNextDecommitted) {
-    void* pbase_next_addr = (void*)(PAGE_CEILING((uintptr_t)mNextAddr));
+  if (mNextAddr > mNextDecommitted) {
+    uintptr_t pbase_next_addr = PAGE_CEILING(mNextAddr);
 
-    if (!pages_commit(mNextDecommitted,
-                      (uintptr_t)mNextAddr - (uintptr_t)mNextDecommitted)) {
+    if (!pages_commit(reinterpret_cast<void*>(mNextDecommitted),
+                      mNextAddr - mNextDecommitted)) {
       return nullptr;
     }
 
-    mStats.mCommitted +=
-        (uintptr_t)pbase_next_addr - (uintptr_t)mNextDecommitted;
+    mStats.mCommitted += pbase_next_addr - mNextDecommitted;
     mNextDecommitted = pbase_next_addr;
   }
 
