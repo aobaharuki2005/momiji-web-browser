@@ -28,6 +28,16 @@ registerCleanupFunction(async () => {
   }
 });
 
+// Ignore promise rejections for actions triggered after panels are closed.
+{
+  const { PromiseTestUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/PromiseTestUtils.sys.mjs"
+  );
+  PromiseTestUtils.allowMatchingRejectionsGlobally(
+    /REDUX_MIDDLEWARE_IGNORED_REDUX_ACTION/
+  );
+}
+
 // Load the tracker very first in order to ensure tracking all objects created by DevTools.
 // This is especially important for allocation sites. We need to catch the global the
 // earliest possible in order to ensure that all allocation objects come with a stack.
