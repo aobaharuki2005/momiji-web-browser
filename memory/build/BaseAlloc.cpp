@@ -13,9 +13,9 @@ using namespace mozilla;
 MOZ_CONSTINIT BaseAlloc sBaseAlloc;
 
 // Initialize base allocation data structures.
-void BaseAlloc::Init() MOZ_REQUIRES(gInitLock) { base_mtx.Init(); }
+void BaseAlloc::Init() MOZ_REQUIRES(gInitLock) { mMutex.Init(); }
 
-bool BaseAlloc::pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx) {
+bool BaseAlloc::pages_alloc(size_t minsize) MOZ_REQUIRES(mMutex) {
   size_t csize;
   size_t pminsize;
 
@@ -25,17 +25,17 @@ bool BaseAlloc::pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx) {
   if (!base_pages) {
     return false;
   }
-  base_next_addr = base_pages;
-  base_past_addr = (void*)((uintptr_t)base_pages + csize);
+  mNextAddr = base_pages;
+  mPastAddr = (void*)((uintptr_t)base_pages + csize);
   // Leave enough pages for minsize committed, since otherwise they would
   // have to be immediately recommitted.
   pminsize = PAGE_CEILING(minsize);
-  base_next_decommitted = (void*)((uintptr_t)base_pages + pminsize);
+  mNextDecommitted = (void*)((uintptr_t)base_pages + pminsize);
   if (pminsize < csize) {
-    pages_decommit(base_next_decommitted, csize - pminsize);
+    pages_decommit(mNextDecommitted, csize - pminsize);
   }
-  mStats.mapped += csize;
-  mStats.committed += pminsize;
+  mStats.mMapped += csize;
+  mStats.mCommitted += pminsize;
 
   return true;
 }
@@ -47,29 +47,28 @@ void* BaseAlloc::alloc(size_t aSize) {
   // Round size up to nearest multiple of the cacheline size.
   csize = CACHELINE_CEILING(aSize);
 
-  MutexAutoLock lock(base_mtx);
+  MutexAutoLock lock(mMutex);
   // Make sure there's enough space for the allocation.
-  if ((uintptr_t)base_next_addr + csize > (uintptr_t)base_past_addr) {
+  if ((uintptr_t)mNextAddr + csize > (uintptr_t)mPastAddr) {
     if (!pages_alloc(csize)) {
       return nullptr;
     }
   }
   // Allocate.
-  ret = base_next_addr;
-  base_next_addr = (void*)((uintptr_t)base_next_addr + csize);
+  ret = mNextAddr;
+  mNextAddr = (void*)((uintptr_t)mNextAddr + csize);
   // Make sure enough pages are committed for the new allocation.
-  if ((uintptr_t)base_next_addr > (uintptr_t)base_next_decommitted) {
-    void* pbase_next_addr = (void*)(PAGE_CEILING((uintptr_t)base_next_addr));
+  if ((uintptr_t)mNextAddr > (uintptr_t)mNextDecommitted) {
+    void* pbase_next_addr = (void*)(PAGE_CEILING((uintptr_t)mNextAddr));
 
-    if (!pages_commit(
-            base_next_decommitted,
-            (uintptr_t)pbase_next_addr - (uintptr_t)base_next_decommitted)) {
+    if (!pages_commit(mNextDecommitted,
+                      (uintptr_t)mNextAddr - (uintptr_t)mNextDecommitted)) {
       return nullptr;
     }
 
-    mStats.committed +=
-        (uintptr_t)pbase_next_addr - (uintptr_t)base_next_decommitted;
-    base_next_decommitted = pbase_next_addr;
+    mStats.mCommitted +=
+        (uintptr_t)pbase_next_addr - (uintptr_t)mNextDecommitted;
+    mNextDecommitted = pbase_next_addr;
   }
 
   return ret;
