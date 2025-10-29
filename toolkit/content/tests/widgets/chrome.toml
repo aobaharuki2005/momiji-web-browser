@@ -64,6 +64,8 @@ skip-if = ["os == 'mac' && os_version == '14.70' && processor == 'x86_64'"] # Bu
 
 ["test_moz_message_bar.html"]
 
+["test_moz_page_header.html"]
+
 ["test_moz_page_nav.html"]
 
 ["test_moz_promo.html"]
