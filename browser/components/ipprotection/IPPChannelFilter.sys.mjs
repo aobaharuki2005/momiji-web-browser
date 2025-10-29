@@ -13,6 +13,21 @@ const lazy = XPCOMUtils.declareLazy({
 const { TRANSPARENT_PROXY_RESOLVES_HOST } = Ci.nsIProxyInfo;
 const failOverTimeout = 10; // seconds
 
+const MODE_PREF = "browser.ipProtection.mode";
+
+export const IPPMode = Object.freeze({
+  MODE_FULL: 0,
+  MODE_PB: 1,
+  MODE_TRACKER: 2,
+});
+
+const TRACKING_FLAGS =
+  Ci.nsIClassifiedChannel.CLASSIFIED_TRACKING |
+  Ci.nsIClassifiedChannel.CLASSIFIED_TRACKING_AD |
+  Ci.nsIClassifiedChannel.CLASSIFIED_TRACKING_ANALYTICS |
+  Ci.nsIClassifiedChannel.CLASSIFIED_TRACKING_SOCIAL |
+  Ci.nsIClassifiedChannel.CLASSIFIED_TRACKING_CONTENT;
+
 const DEFAULT_EXCLUDED_URL_PREFS = [
   "browser.ipProtection.guardian.endpoint",
   "identity.fxaccounts.remote.profile.uri",
@@ -43,6 +58,15 @@ export class IPPChannelFilter {
    */
   static create(excludedPages = []) {
     return new IPPChannelFilter(excludedPages);
+  }
+
+  /**
+   * Sets the IPP Mode.
+   *
+   * @param {IPPMode} [mode] - the new mode
+   */
+  static setMode(mode) {
+    Services.prefs.setIntPref(MODE_PREF, mode);
   }
 
   /**
@@ -88,12 +112,14 @@ export class IPPChannelFilter {
     excludedPages.forEach(url => {
       this.addPageExclusion(url);
     });
+
     DEFAULT_EXCLUDED_URL_PREFS.forEach(pref => {
       const prefValue = Services.prefs.getStringPref(pref, "");
       if (prefValue) {
         this.addPageExclusion(prefValue);
       }
     });
+
     // Get origins essential to starting the proxy and exclude
     // them prior to connecting
     this.#essentialOrigins = new Set();
@@ -103,6 +129,13 @@ export class IPPChannelFilter {
         this.addEssentialExclusion(prefValue);
       }
     });
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "mode",
+      MODE_PREF,
+      IPPMode.MODE_FULL
+    );
   }
 
   /**
@@ -117,7 +150,7 @@ export class IPPChannelFilter {
    */
   applyFilter(channel, _defaultProxyInfo, proxyFilter) {
     // If this channel should be excluded (origin match), do nothing
-    if (this.shouldExclude(channel)) {
+    if (!this.#matchMode(channel) || this.shouldExclude(channel)) {
       // Calling this with "null" will enforce a non-proxy connection
       proxyFilter.onProxyFilterResult(null);
       return;
@@ -135,6 +168,23 @@ export class IPPChannelFilter {
     this.#observers.forEach(observer => {
       observer(channel);
     });
+  }
+
+  #matchMode(channel) {
+    switch (this.mode) {
+      case IPPMode.MODE_PB:
+        return !!channel.loadInfo.originAttributes.privateBrowsingId;
+
+      case IPPMode.MODE_TRACKER:
+        return (
+          TRACKING_FLAGS &
+          channel.loadInfo.triggeringThirdPartyClassificationFlags
+        );
+
+      case IPPMode.MODE_FULL:
+      default:
+        return true;
+    }
   }
 
   /**
