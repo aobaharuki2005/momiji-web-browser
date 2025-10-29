@@ -219,7 +219,7 @@ class UntypedManagedEndpoint {
   bool BindCommon(IProtocol* aActor, IRefCountedProtocol* aManager);
 
  private:
-  friend struct IPDLParamTraits<UntypedManagedEndpoint>;
+  friend struct IPC::ParamTraits<UntypedManagedEndpoint>;
 
   struct Inner {
     // Pointers to the toplevel actor which will manage this connection. When

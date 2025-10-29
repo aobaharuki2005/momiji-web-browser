@@ -57,11 +57,8 @@ namespace mozilla::ipc {
 class IProtocol;
 class IToplevelProtocol;
 
-template <typename P>
-struct IPDLParamTraits;
-
 class Shmem final {
-  friend struct IPDLParamTraits<Shmem>;
+  friend struct IPC::ParamTraits<Shmem>;
   friend class IProtocol;
   friend class IToplevelProtocol;
 

@@ -18,7 +18,6 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 
 #include "mozilla/ipc/MessageChannel.h"
-#include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/StaticMutex.h"
 #if defined(DEBUG) || defined(FUZZING)
 #  include "mozilla/Tokenizer.h"
@@ -803,7 +802,7 @@ void IPDLResolverInner::ResolveOrReject(
   }
 
   IPC::MessageWriter writer(*reply, actor);
-  WriteIPDLParam(&writer, actor, aResolve);
+  WriteParam(&writer, aResolve);
   aWrite(reply.get(), actor);
 
   actor->ChannelSend(std::move(reply));
@@ -830,7 +829,7 @@ IPDLResolverInner::~IPDLResolverInner() {
     ResolveOrReject(false, [](IPC::Message* aMessage, IProtocol* aActor) {
       IPC::MessageWriter writer(*aMessage, aActor);
       ResponseRejectReason reason = ResponseRejectReason::ResolverDestroyed;
-      WriteIPDLParam(&writer, aActor, reason);
+      WriteParam(&writer, reason);
     });
   }
 }

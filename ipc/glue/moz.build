@@ -38,7 +38,6 @@ EXPORTS.mozilla.ipc += [
     "IPCForwards.h",
     "IPCStreamUtils.h",
     "IPCTypes.h",
-    "IPDLParamTraits.h",
     "IPDLStructMember.h",
     "LaunchError.h",
     "MessageChannel.h",

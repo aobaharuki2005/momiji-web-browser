@@ -6,13 +6,13 @@
 
 #include "ProfileAdditionalInformation.h"
 
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "jsapi.h"
 #include "js/JSON.h"
 #include "js/PropertyAndElement.h"
 #include "js/Value.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/JSONStringWriteFuncs.h"
-#include "mozilla/ipc/IPDLParamTraits.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "platform.h"

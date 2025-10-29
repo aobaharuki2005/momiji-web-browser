@@ -12,7 +12,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/URIUtils.h"  // for IPDLParamTraits<nsIURI*>
+#include "mozilla/ipc/URIUtils.h"  // for ParamTraits<nsIURI*>
 #include "mozilla/net/Cookie.h"
 #include "mozilla/net/CookieCommons.h"
 #include "mozilla/net/CookieParser.h"

@@ -4535,29 +4535,32 @@ void BrowsingContext::SynchronizeNavigationAPIState(
 }
 
 }  // namespace dom
+}  // namespace mozilla
 
-namespace ipc {
+namespace IPC {
 
-void IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Write(
-    IPC::MessageWriter* aWriter, IProtocol* aActor,
-    const dom::MaybeDiscarded<dom::BrowsingContext>& aParam) {
+using mozilla::dom::BrowsingContext;
+using mozilla::dom::MaybeDiscarded;
+
+void ParamTraits<MaybeDiscarded<BrowsingContext>>::Write(
+    IPC::MessageWriter* aWriter,
+    const MaybeDiscarded<BrowsingContext>& aParam) {
   MOZ_DIAGNOSTIC_ASSERT(!aParam.GetMaybeDiscarded() ||
                         aParam.GetMaybeDiscarded()->EverAttached());
   uint64_t id = aParam.ContextId();
-  WriteIPDLParam(aWriter, aActor, id);
+  WriteParam(aWriter, id);
 }
 
-bool IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Read(
-    IPC::MessageReader* aReader, IProtocol* aActor,
-    dom::MaybeDiscarded<dom::BrowsingContext>* aResult) {
+bool ParamTraits<MaybeDiscarded<BrowsingContext>>::Read(
+    IPC::MessageReader* aReader, MaybeDiscarded<BrowsingContext>* aResult) {
   uint64_t id = 0;
-  if (!ReadIPDLParam(aReader, aActor, &id)) {
+  if (!ReadParam(aReader, &id)) {
     return false;
   }
 
   if (id == 0) {
     *aResult = nullptr;
-  } else if (RefPtr<dom::BrowsingContext> bc = dom::BrowsingContext::Get(id)) {
+  } else if (RefPtr<BrowsingContext> bc = BrowsingContext::Get(id)) {
     *aResult = std::move(bc);
   } else {
     aResult->SetDiscarded(id);
@@ -4565,46 +4568,40 @@ bool IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Read(
   return true;
 }
 
-void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
-    IPC::MessageWriter* aWriter, IProtocol* aActor,
-    const dom::BrowsingContext::IPCInitializer& aInit) {
+void ParamTraits<BrowsingContext::IPCInitializer>::Write(
+    IPC::MessageWriter* aWriter, const paramType& aInit) {
   // Write actor ID parameters.
-  WriteIPDLParam(aWriter, aActor, aInit.mId);
-  WriteIPDLParam(aWriter, aActor, aInit.mParentId);
-  WriteIPDLParam(aWriter, aActor, aInit.mWindowless);
-  WriteIPDLParam(aWriter, aActor, aInit.mUseRemoteTabs);
-  WriteIPDLParam(aWriter, aActor, aInit.mUseRemoteSubframes);
-  WriteIPDLParam(aWriter, aActor, aInit.mCreatedDynamically);
-  WriteIPDLParam(aWriter, aActor, aInit.mChildOffset);
-  WriteIPDLParam(aWriter, aActor, aInit.mOriginAttributes);
-  WriteIPDLParam(aWriter, aActor, aInit.mRequestContextId);
-  WriteIPDLParam(aWriter, aActor, aInit.mSessionHistoryIndex);
-  WriteIPDLParam(aWriter, aActor, aInit.mSessionHistoryCount);
-  WriteIPDLParam(aWriter, aActor, aInit.mFields);
+  WriteParam(aWriter, aInit.mId);
+  WriteParam(aWriter, aInit.mParentId);
+  WriteParam(aWriter, aInit.mWindowless);
+  WriteParam(aWriter, aInit.mUseRemoteTabs);
+  WriteParam(aWriter, aInit.mUseRemoteSubframes);
+  WriteParam(aWriter, aInit.mCreatedDynamically);
+  WriteParam(aWriter, aInit.mChildOffset);
+  WriteParam(aWriter, aInit.mOriginAttributes);
+  WriteParam(aWriter, aInit.mRequestContextId);
+  WriteParam(aWriter, aInit.mSessionHistoryIndex);
+  WriteParam(aWriter, aInit.mSessionHistoryCount);
+  WriteParam(aWriter, aInit.mFields);
 }
 
-bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
-    IPC::MessageReader* aReader, IProtocol* aActor,
-    dom::BrowsingContext::IPCInitializer* aInit) {
+bool ParamTraits<BrowsingContext::IPCInitializer>::Read(
+    IPC::MessageReader* aReader, paramType* aInit) {
   // Read actor ID parameters.
-  if (!ReadIPDLParam(aReader, aActor, &aInit->mId) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mParentId) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mWindowless) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mUseRemoteTabs) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mUseRemoteSubframes) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mCreatedDynamically) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mChildOffset) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mOriginAttributes) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mRequestContextId) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mSessionHistoryIndex) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mSessionHistoryCount) ||
-      !ReadIPDLParam(aReader, aActor, &aInit->mFields)) {
-    return false;
-  }
-  return true;
+  return ReadParam(aReader, &aInit->mId) &&
+         ReadParam(aReader, &aInit->mParentId) &&
+         ReadParam(aReader, &aInit->mWindowless) &&
+         ReadParam(aReader, &aInit->mUseRemoteTabs) &&
+         ReadParam(aReader, &aInit->mUseRemoteSubframes) &&
+         ReadParam(aReader, &aInit->mCreatedDynamically) &&
+         ReadParam(aReader, &aInit->mChildOffset) &&
+         ReadParam(aReader, &aInit->mOriginAttributes) &&
+         ReadParam(aReader, &aInit->mRequestContextId) &&
+         ReadParam(aReader, &aInit->mSessionHistoryIndex) &&
+         ReadParam(aReader, &aInit->mSessionHistoryCount) &&
+         ReadParam(aReader, &aInit->mFields);
 }
 
-template struct IPDLParamTraits<dom::BrowsingContext::BaseTransaction>;
+template struct ParamTraits<BrowsingContext::BaseTransaction>;
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace IPC

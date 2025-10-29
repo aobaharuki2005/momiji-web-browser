@@ -7,6 +7,7 @@
 #include "TransportSecurityInfo.h"
 
 #include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/Base64.h"
 #include "mozpkix/pkixtypes.h"
 #include "nsBase64Encoder.h"
@@ -23,8 +24,6 @@
 #include "nsIX509Cert.h"
 #include "secerr.h"
 #include "ssl.h"
-
-#include "mozilla/ipc/IPDLParamTraits.h"
 
 // nsITransportSecurityInfo should not be created via do_CreateInstance. This
 // stub prevents that.
