@@ -8,7 +8,6 @@
 
 #include "TRRService.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ScopeExit.h"
 #include "nsHostResolver.h"
 #include "nsNetUtil.h"
 #include "nsIOService.h"

@@ -14,7 +14,6 @@
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
-#include "mozilla/Span.h"
 #include "nsIInputStream.h"
 #include "nsIStringEnumerator.h"
 

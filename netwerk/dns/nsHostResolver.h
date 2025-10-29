@@ -25,7 +25,6 @@
 #include "nsIThreadPool.h"
 #include "mozilla/net/NetworkConnectivityService.h"
 #include "mozilla/net/DNSByTypeRecord.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {

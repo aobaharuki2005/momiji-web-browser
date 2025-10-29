@@ -40,7 +40,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/glean/NetwerkMetrics.h"
-#include "mozilla/HashFunctions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/glean/NetwerkDnsMetrics.h"
 #include "mozilla/DebugOnly.h"

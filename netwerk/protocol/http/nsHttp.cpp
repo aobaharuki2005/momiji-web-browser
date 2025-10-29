@@ -12,7 +12,6 @@
 #include "CacheControlParser.h"
 #include "PLDHashTable.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/HashFunctions.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"

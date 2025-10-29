@@ -6,7 +6,6 @@
 #include "TestCommon.h"
 #include "gtest/gtest.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/gtest/MozAssertions.h"
 #include "nsCOMPtr.h"
 #include "nsISocketTransport.h"

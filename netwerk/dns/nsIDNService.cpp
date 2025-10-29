@@ -18,7 +18,6 @@
 #include "mozilla/Casting.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Utf8.h"
 #include "mozilla/intl/UnicodeProperties.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
 #include "nsNetUtil.h"

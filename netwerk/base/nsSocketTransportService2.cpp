@@ -9,7 +9,6 @@
 #include "mozilla/ChaosMode.h"
 #include "mozilla/glean/NetwerkMetrics.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Likely.h"
 #include "mozilla/MaybeLeakRefPtr.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"

@@ -20,7 +20,6 @@
 #include "nsIOService.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Try.h"
 

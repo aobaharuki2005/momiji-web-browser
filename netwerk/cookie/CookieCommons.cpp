@@ -9,7 +9,6 @@
 #include "CookieParser.h"
 #include "CookieService.h"
 #include "mozilla/ContentBlockingNotifier.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"

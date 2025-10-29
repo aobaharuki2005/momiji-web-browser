@@ -10,7 +10,6 @@
 
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/Dafsa.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MruCache.h"
 #include "mozilla/RWLock.h"
