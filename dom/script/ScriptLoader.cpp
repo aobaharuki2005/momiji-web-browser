@@ -3623,6 +3623,9 @@ void ScriptLoader::EncodeBytecodeAndSave(
   MOZ_ASSERT(aLoadedScript->HasDiskCacheReference());
   MOZ_ASSERT(aLoadedScript->HasStencil());
 
+  auto bytecodeFailed = mozilla::MakeScopeExit(
+      [&]() { TRACE_FOR_TEST(aLoadedScript, "diskcache:failed"); });
+
   size_t SRILength = aLoadedScript->SRIAndBytecode().length();
   MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(SRILength));
 
@@ -3693,6 +3696,9 @@ void ScriptLoader::EncodeBytecodeAndSave(
   }
 
   MOZ_RELEASE_ASSERT(compressedBytecode.length() == n);
+
+  bytecodeFailed.release();
+  TRACE_FOR_TEST(aLoadedScript, "diskcache:saved");
 }
 
 void ScriptLoader::GiveUpDiskCaching() {
@@ -3702,6 +3708,7 @@ void ScriptLoader::GiveUpDiskCaching() {
 
   for (auto& loadedScript : mDiskCacheQueue) {
     LOG(("LoadedScript (%p): Cannot serialize bytecode", loadedScript.get()));
+    TRACE_FOR_TEST(loadedScript, "diskcache:giveup");
 
     loadedScript->DropDiskCacheReference();
     loadedScript->DropBytecode();
