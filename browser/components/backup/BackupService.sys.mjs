@@ -638,6 +638,14 @@ export class BackupService extends EventTarget {
       };
     }
 
+    if (lazy.SelectableProfileService.hasCreatedSelectableProfiles()) {
+      return {
+        enabled: false,
+        reason:
+          "Archiving a profile is disabled because the user has created selectable profiles.",
+      };
+    }
+
     return { enabled: true };
   }
 
@@ -668,6 +676,14 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Backup is disabled for users with sanitizeOnShutdown enabled.",
+      };
+    }
+
+    if (lazy.SelectableProfileService.hasCreatedSelectableProfiles()) {
+      return {
+        enabled: false,
+        reason:
+          "Restoring a profile is disabled because the user has created selectable profiles.",
       };
     }
 
