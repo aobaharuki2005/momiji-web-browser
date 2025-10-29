@@ -39,7 +39,6 @@ class BaseAlloc {
   // Current pages that are being used for internal memory allocations.  These
   // pages are carved up in cacheline-size quanta, so that there is no chance of
   // false cache line sharing.
-  void* base_pages MOZ_GUARDED_BY(base_mtx) = nullptr;
   void* base_next_addr MOZ_GUARDED_BY(base_mtx) = nullptr;
 
   void* base_next_decommitted MOZ_GUARDED_BY(base_mtx) = nullptr;

@@ -21,7 +21,7 @@ bool BaseAlloc::pages_alloc(size_t minsize) MOZ_REQUIRES(base_mtx) {
 
   MOZ_ASSERT(minsize != 0);
   csize = CHUNK_CEILING(minsize);
-  base_pages = chunk_alloc(csize, kChunkSize, true);
+  void* base_pages = chunk_alloc(csize, kChunkSize, true);
   if (!base_pages) {
     return false;
   }
