@@ -948,7 +948,7 @@ features:
           enabled: false
       - channel: nightly
         value:
-          enabled: false
+          enabled: true
 
   suppress-sponsored-top-sites:
     description: Suppress sponsored top sites for new users for 14 days.
