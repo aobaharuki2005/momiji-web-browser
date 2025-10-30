@@ -63,7 +63,7 @@ dependencies = [
     "toml~=0.10",
     "tomlkit~=0.12",
     "tqdm~=4.66",
-    "typing-extensions~=4.12",
+    "typing-extensions~=4.15",
     "urllib3==2.5",
     "voluptuous~=0.12",
     # 0.45.1 is the last version of wheel to support Python 3.8 - Needed by Ubuntu1804 in CI
