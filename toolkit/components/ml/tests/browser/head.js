@@ -1116,3 +1116,18 @@ async function getMLEngineWorkerCode() {
   );
   return response.text();
 }
+
+/**
+ * Checks that a process exists.
+ *
+ * @param {string} remoteType
+ */
+async function checkForRemoteType(remoteType) {
+  let procinfo3 = await ChromeUtils.requestProcInfo();
+  for (const child of procinfo3.children) {
+    if (child.type === remoteType) {
+      return true;
+    }
+  }
+  return false;
+}
