@@ -49,12 +49,8 @@ def run_if(tests, values, strict=False):
     """
     tag = "run-if"
     for test in tests:
-        if tag in test:
-            # logical &&, not || - find first condition that didn't match
-            for e in test[tag].splitlines():
-                if e and not parse(e, strict=strict, **values):
-                    test.setdefault("disabled", f"{tag}: {e}")
-                    break
+        if tag in test and not _match(test[tag], strict, **values):
+            test.setdefault("disabled", f"{tag}: {test[tag]}")
         yield test
 
 
