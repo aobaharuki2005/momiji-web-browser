@@ -54,7 +54,7 @@ struct AnchorPosResolutionData {
 // * If valid anchors are found,
 // * Cached offset/size resolution, if resolution was valid,
 // * Compensating for scroll [1]
-// * TODO(dshin, bug 1987962): Default scroll shift [2]
+// * Default scroll shift [2]
 //
 // [1]: https://drafts.csswg.org/css-anchor-position-1/#compensate-for-scroll
 // [2]: https://drafts.csswg.org/css-anchor-position-1/#default-scroll-shift
@@ -66,7 +66,7 @@ class AnchorPosReferenceData {
  public:
   // Backup data for attempting a different `@position-try` style, when
   // the default anchor remains the same.
-  using PositionTryBackup = mozilla::PhysicalAxes;
+  using PositionTryBackup = std::pair<mozilla::PhysicalAxes, nsPoint>;
   using Value = mozilla::Maybe<AnchorPosResolutionData>;
 
   AnchorPosReferenceData() = default;
@@ -98,14 +98,20 @@ class AnchorPosReferenceData {
   }
 
   PositionTryBackup TryPositionWithSameDefaultAnchor() {
-    const auto compensatingForScroll =
+    mozilla::PhysicalAxes compensatingForScroll =
         std::exchange(mCompensatingForScroll, {});
-    return compensatingForScroll;
+    nsPoint defaultScrollShift = std::exchange(mDefaultScrollShift, {});
+    return std::make_pair(compensatingForScroll, defaultScrollShift);
   }
 
   void UndoTryPositionWithSameDefaultAnchor(PositionTryBackup&& aBackup) {
-    mCompensatingForScroll = aBackup;
+    std::tie(mCompensatingForScroll, mDefaultScrollShift) = aBackup;
   }
+
+  // https://drafts.csswg.org/css-anchor-position-1/#default-scroll-shift
+  nsPoint mDefaultScrollShift;
+  // TODO(dshin, bug 1987962): Remembered scroll offset
+  // https://drafts.csswg.org/css-anchor-position-1/#remembered-scroll-offset
 
  private:
   ResolutionMap mMap;
@@ -125,6 +131,8 @@ struct AnchorPosDefaultAnchorCache {
 
   AnchorPosDefaultAnchorCache() = default;
   explicit AnchorPosDefaultAnchorCache(const nsIFrame* aAnchor);
+  AnchorPosDefaultAnchorCache(const nsIFrame* aAnchor,
+                              const nsIFrame* aScrollContainer);
 };
 
 // Cache data used by anchor resolution. To be populated on abspos reflow,
@@ -233,6 +241,14 @@ struct AnchorPositioningUtils {
   static const nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
 
   static const nsIFrame* GetNearestScrollFrame(const nsIFrame* aFrame);
+
+  static nsPoint GetScrollOffsetFor(
+      PhysicalAxes aAxes, const nsIFrame* aPositioned,
+      const AnchorPosDefaultAnchorCache& aDefaultAnchorCache);
+
+  static bool FitsInContainingBlock(const nsRect& aOverflowCheckRect,
+                                    const nsRect& aOriginalContainingBlockSize,
+                                    const nsRect& aRect);
 };
 
 }  // namespace mozilla
