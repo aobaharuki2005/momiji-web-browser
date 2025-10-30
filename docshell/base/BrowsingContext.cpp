@@ -38,6 +38,7 @@
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/MediaDevices.h"
 #include "mozilla/dom/Navigation.h"
+#include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -3332,6 +3333,10 @@ void BrowsingContext::DidSet(FieldIndex<IDX_LanguageOverride>,
         } else {
           JS::SetRealmLocaleOverride(
               realm, PromiseFlatCString(languageOverride).get());
+        }
+
+        if (Navigator* navigator = window->Navigator()) {
+          navigator->ClearLanguageCache();
         }
       }
     }
