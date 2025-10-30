@@ -258,6 +258,14 @@ Maybe<layers::SurfaceDescriptor> CanvasContext::SwapChainPresent() {
       !mCurrentTexture) {
     return Nothing();
   }
+
+  if (mCanvasElement) {
+    JSObject* obj = mCanvasElement->GetWrapper();
+    if (obj) {
+      dom::SetUseCounter(obj, eUseCounter_custom_WebgpuRenderOutput);
+    }
+  }
+
   mLastRemoteTextureId = Some(layers::RemoteTextureId::GetNext());
   mChild->SwapChainPresent(mCurrentTexture->GetId(), *mLastRemoteTextureId,
                            *mRemoteTextureOwnerId);
