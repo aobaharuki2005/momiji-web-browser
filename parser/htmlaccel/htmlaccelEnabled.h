@@ -16,7 +16,11 @@ namespace mozilla::htmlaccel {
 ///
 /// Keep this in sync with `HTML_ACCEL_FLAGS` in `toolchain.configure`.
 inline bool htmlaccelEnabled() {
-#if defined(__aarch64__) && defined(__LITTLE_ENDIAN__)
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 12
+  // __GNUC__ is stuck at 4 in clang, so we need to check __clang__ above.
+  // GCC 12 or newer is required for __builtin_shuffle.
+  return false;
+#elif defined(__aarch64__) && defined(__LITTLE_ENDIAN__)
   return true;
 #elif defined(__x86_64__)
   return mozilla::supports_bmi() && mozilla::supports_avx();
