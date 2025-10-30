@@ -817,7 +817,7 @@ firefox-profiler:
     fetch:
         type: git
         repo: https://github.com/firefox-devtools/profiler
-        revision: 5a054f9ae741515b8112d4c248e8ac096ee7a3ce
+        revision: 26904094839504de2b8f9193971a37086e305c27
 
 # See https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/downloads
 windowsappsdk-redist:
