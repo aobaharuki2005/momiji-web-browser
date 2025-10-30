@@ -2064,9 +2064,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                             Imm32 imm) PER_SHARED_ARCH;
 
  private:
-  template <typename T, typename S, typename L>
-  inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, L label)
-      DEFINED_ON(x86_shared);
+  template <typename T, typename S>
+  inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs,
+                            Label* label) DEFINED_ON(x86_shared);
 
   void branchPtrInNurseryChunkImpl(Condition cond, Register ptr, Label* label)
       DEFINED_ON(x86);
@@ -2111,8 +2111,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   template <typename T>
   inline void branchTestPrimitiveImpl(Condition cond, const T& t, Label* label)
       DEFINED_ON(arm, arm64, x86_shared);
-  template <typename T, class L>
-  inline void branchTestMagicImpl(Condition cond, const T& t, L label)
+  template <typename T>
+  inline void branchTestMagicImpl(Condition cond, const T& t, Label* label)
       DEFINED_ON(arm, arm64, x86_shared);
 
  public:

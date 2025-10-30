@@ -640,9 +640,9 @@ void MacroAssembler::branchPtr(Condition cond, const BaseIndex& lhs,
   branchPtrImpl(cond, lhs, rhs, label);
 }
 
-template <typename T, typename S, typename L>
+template <typename T, typename S>
 void MacroAssembler::branchPtrImpl(Condition cond, const T& lhs, const S& rhs,
-                                   L label) {
+                                   Label* label) {
   cmpPtr(Operand(lhs), rhs);
   j(cond, label);
 }
@@ -1150,8 +1150,9 @@ void MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value,
   branchTestMagicImpl(cond, value, label);
 }
 
-template <typename T, class L>
-void MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label) {
+template <typename T>
+void MacroAssembler::branchTestMagicImpl(Condition cond, const T& t,
+                                         Label* label) {
   cond = testMagic(cond, t);
   j(cond, label);
 }

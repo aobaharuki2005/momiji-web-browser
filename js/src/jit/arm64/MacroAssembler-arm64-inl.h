@@ -2138,8 +2138,9 @@ void MacroAssembler::branchTestMagic(Condition cond, const ValueOperand& value,
   branchTestMagicImpl(cond, value, label);
 }
 
-template <typename T, class L>
-void MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label) {
+template <typename T>
+void MacroAssembler::branchTestMagicImpl(Condition cond, const T& t,
+                                         Label* label) {
   Condition c = testMagic(cond, t);
   B(label, c);
 }
