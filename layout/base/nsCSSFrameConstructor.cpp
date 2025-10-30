@@ -51,6 +51,7 @@
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLSharedListElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
+#include "mozilla/intl/LocaleService.h"
 #include "nsAtom.h"
 #include "nsAutoLayoutPhase.h"
 #include "nsBackdropFrame.h"
@@ -488,11 +489,8 @@ static bool InsertSeparatorBeforeAccessKey() {
   static bool sValue = false;
   if (!sInitialized) {
     sInitialized = true;
-
-    const char* prefName = "intl.menuitems.insertseparatorbeforeaccesskeys";
-    nsAutoString val;
-    Preferences::GetLocalizedString(prefName, val);
-    sValue = val.EqualsLiteral("true");
+    sValue =
+        intl::LocaleService::GetInstance()->InsertSeparatorBeforeAccesskeys();
   }
   return sValue;
 }
@@ -502,10 +500,7 @@ static bool AlwaysAppendAccessKey() {
   static bool sValue = false;
   if (!sInitialized) {
     sInitialized = true;
-    const char* prefName = "intl.menuitems.alwaysappendaccesskeys";
-    nsAutoString val;
-    Preferences::GetLocalizedString(prefName, val);
-    sValue = val.EqualsLiteral("true");
+    sValue = intl::LocaleService::GetInstance()->AlwaysAppendAccesskeys();
   }
   return sValue;
 }
