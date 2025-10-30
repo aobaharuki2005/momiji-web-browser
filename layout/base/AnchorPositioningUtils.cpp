@@ -377,7 +377,7 @@ AnchorPosReferenceData::Result AnchorPosReferenceData::InsertOrModify(
 
   // Previous resolution may have been for size only, in which case another
   // anchor resolution is still required.
-  return {result->ref().mOrigin.isSome(), result};
+  return {result->ref().mOffsetData.isSome(), result};
 }
 
 const AnchorPosReferenceData::Value* AnchorPosReferenceData::Lookup(
@@ -433,10 +433,16 @@ static const nsIFrame* TraverseUpToContainerChild(const nsIFrame* aContainer,
   }
 }
 
-Maybe<AnchorPosInfo> AnchorPositioningUtils::GetAnchorPosRect(
+static const nsIFrame* GetAnchorOf(const nsIFrame* aPositioned,
+                                   const nsAtom* aAnchorName) {
+  const auto* presShell = aPositioned->PresShell();
+  MOZ_ASSERT(presShell, "No PresShell for frame?");
+  return presShell->GetAnchorPosAnchor(aAnchorName, aPositioned);
+}
+
+Maybe<nsRect> AnchorPositioningUtils::GetAnchorPosRect(
     const nsIFrame* aAbsoluteContainingBlock, const nsIFrame* aAnchor,
-    bool aCBRectIsvalid,
-    Maybe<AnchorPosResolutionData>* aReferencedAnchorsEntry) {
+    bool aCBRectIsvalid) {
   auto rect = [&]() -> Maybe<nsRect> {
     if (aCBRectIsvalid) {
       const nsRect result =
@@ -477,21 +483,114 @@ Maybe<AnchorPosInfo> AnchorPositioningUtils::GetAnchorPosRect(
     const auto border = aAbsoluteContainingBlock->GetUsedBorder();
     const nsPoint borderTopLeft{border.left, border.top};
     const auto rect = aRect - borderTopLeft;
-    if (aReferencedAnchorsEntry) {
-      // If a partially resolved entry exists, make sure that it matches what we
-      // have now.
-      MOZ_ASSERT_IF(*aReferencedAnchorsEntry,
-                    aReferencedAnchorsEntry->ref().mSize == rect.Size());
-      *aReferencedAnchorsEntry = Some(AnchorPosResolutionData{
-          rect.Size(),
-          Some(rect.TopLeft()),
+    return rect;
+  });
+}
+
+Maybe<AnchorPosInfo> AnchorPositioningUtils::ResolveAnchorPosRect(
+    const nsIFrame* aPositioned, const nsIFrame* aAbsoluteContainingBlock,
+    const nsAtom* aAnchorName, bool aCBRectIsvalid,
+    AnchorPosResolutionCache* aResolutionCache) {
+  MOZ_ASSERT(aPositioned->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
+  MOZ_ASSERT(aPositioned->GetParent() == aAbsoluteContainingBlock);
+
+  if (!aPositioned) {
+    return Nothing{};
+  }
+
+  const auto* anchorName = GetUsedAnchorName(aPositioned, aAnchorName);
+  if (!anchorName) {
+    return Nothing{};
+  }
+
+  Maybe<AnchorPosResolutionData>* entry = nullptr;
+  if (aResolutionCache) {
+    const auto result =
+        aResolutionCache->mReferenceData->InsertOrModify(anchorName, true);
+    if (result.mAlreadyResolved) {
+      MOZ_ASSERT(result.mEntry, "Entry exists but null?");
+      return result.mEntry->map([&](const AnchorPosResolutionData& aData) {
+        MOZ_ASSERT(aData.mOffsetData, "Missing anchor offset resolution.");
+        const auto& offsetData = aData.mOffsetData.ref();
+        return AnchorPosInfo{nsRect{offsetData.mOrigin, aData.mSize},
+                             offsetData.mCompensatesForScroll};
       });
     }
-    return AnchorPosInfo{
-        .mRect = rect,
-        .mContainingBlock = aAbsoluteContainingBlock,
-    };
+    entry = result.mEntry;
+  }
+
+  const auto* anchor = GetAnchorOf(aPositioned, anchorName);
+  if (!anchor) {
+    // If we have a cached entry, just check that it resolved to nothing last
+    // time as well.
+    MOZ_ASSERT_IF(entry, entry->isNothing());
+    return Nothing{};
+  }
+
+  const auto result =
+      GetAnchorPosRect(aAbsoluteContainingBlock, anchor, aCBRectIsvalid);
+  return result.map([&](const nsRect& aRect) {
+    bool compensatesForScroll = false;
+    if (aResolutionCache) {
+      MOZ_ASSERT(entry);
+      // Update the cache.
+      compensatesForScroll = [&]() {
+        auto& defaultAnchorCache = aResolutionCache->mDefaultAnchorCache;
+        if (!aAnchorName) {
+          // Explicitly resolved default anchor for the first time - populate
+          // the cache.
+          defaultAnchorCache = AnchorPosDefaultAnchorCache{anchor};
+        }
+        if (defaultAnchorCache.mAnchor == anchor) {
+          // This is referring to the default anchor, so scroll compensated by
+          // definition.
+          return true;
+        }
+        const auto* scrollContainer =
+            AnchorPositioningUtils::GetNearestScrollFrame(anchor);
+        return scrollContainer ==
+               aResolutionCache->mDefaultAnchorCache.mScrollContainer;
+      }();
+      // If a partially resolved entry exists, make sure that it matches what we
+      // have now.
+      MOZ_ASSERT_IF(*entry, entry->ref().mSize == aRect.Size());
+      *entry = Some(AnchorPosResolutionData{
+          aRect.Size(),
+          Some(AnchorPosOffsetData{aRect.TopLeft(), compensatesForScroll}),
+      });
+    }
+    return AnchorPosInfo{aRect, compensatesForScroll};
   });
+}
+
+Maybe<nsSize> AnchorPositioningUtils::ResolveAnchorPosSize(
+    const nsIFrame* aPositioned, const nsAtom* aAnchorName,
+    AnchorPosResolutionCache* aResolutionCache) {
+  const auto* anchorName = GetUsedAnchorName(aPositioned, aAnchorName);
+  if (!anchorName) {
+    return Nothing{};
+  }
+  Maybe<AnchorPosResolutionData>* entry = nullptr;
+  auto* referencedAnchors =
+      aResolutionCache ? aResolutionCache->mReferenceData : nullptr;
+  if (referencedAnchors) {
+    const auto result = referencedAnchors->InsertOrModify(anchorName, false);
+    if (result.mAlreadyResolved) {
+      MOZ_ASSERT(result.mEntry, "Entry exists but null?");
+      return result.mEntry->map(
+          [](const AnchorPosResolutionData& aData) { return aData.mSize; });
+    }
+    entry = result.mEntry;
+  }
+  const auto* anchor = GetAnchorOf(aPositioned, anchorName);
+  if (!anchor) {
+    return Nothing{};
+  }
+  const auto size = nsLayoutUtils::GetCombinedFragmentRects(anchor).Size();
+  if (entry) {
+    *entry = Some(AnchorPosResolutionData{size, Nothing{}});
+  }
+  return Some(size);
 }
 
 /**
@@ -665,45 +764,6 @@ const nsIFrame* AnchorPositioningUtils::GetAnchorPosImplicitAnchor(
   return pseudoRootFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)
              ? pseudoRootFrame->GetPlaceholderFrame()->GetParent()
              : pseudoRootFrame->GetParent();
-}
-
-AnchorPositioningUtils::DefaultAnchorInfo
-AnchorPositioningUtils::GetDefaultAnchor(
-    const nsIFrame* aPositioned, bool aCBRectIsValid,
-    AnchorPosReferenceData* aAnchorPosReferenceData) {
-  const auto* presShell = aPositioned->PresShell();
-  const auto* name = GetUsedAnchorName(aPositioned, nullptr);
-  if (!name) {
-    return {};
-  }
-
-  Maybe<AnchorPosResolutionData>* entry = nullptr;
-  if (aAnchorPosReferenceData) {
-    auto result = aAnchorPosReferenceData->InsertOrModify(name, true);
-    entry = result.mEntry;
-    if (result.mAlreadyResolved) {
-      return DefaultAnchorInfo{
-          name, entry->map([](const AnchorPosResolutionData& aValue) {
-            MOZ_ASSERT(aValue.mOrigin, "Already resolved but no origin?");
-            return nsRect{*aValue.mOrigin, aValue.mSize};
-          })};
-    }
-  }
-
-  const auto* anchor = presShell->GetAnchorPosAnchor(name, aPositioned);
-  if (!anchor) {
-    return {name, Nothing{}};
-  }
-
-  const auto info =
-      GetAnchorPosRect(aPositioned->GetParent(), anchor, aCBRectIsValid, entry);
-  if (!info) {
-    NS_WARNING("Can find anchor frame but not rect (In multicol?)");
-    // Behave as if anchor is invalid.
-    return {name, Nothing{}};
-  }
-
-  return {name, Some(info->mRect)};
 }
 
 }  // namespace mozilla

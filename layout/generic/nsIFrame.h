@@ -1451,6 +1451,8 @@ class nsIFrame : public nsQueryFrame {
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(LastSuccessfulPositionFallback,
                                         uint32_t);
 
+  mozilla::PhysicalAxes GetAnchorPosCompensatingForScroll() const;
+
   // This tracks the start and end page value for a frame.
   //
   // https://www.w3.org/TR/css-page-3/#using-named-pages

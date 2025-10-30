@@ -155,6 +155,20 @@ static bool IsSnapshotContainingBlock(const nsIFrame* aFrame) {
          PseudoStyleType::mozSnapshotContainingBlock;
 }
 
+static PhysicalAxes CheckEarlyCompensatingForScroll(const nsIFrame* aKidFrame) {
+  // Three conditions to compensate for scroll, once a default anchor
+  // exists:
+  // * Used alignment property is `anchor-center`,
+  // * `position-area` is not `none`, or
+  // * `anchor()` function refers to default anchor, or an anchor that
+  //   shares the same scroller with it.
+  // Second condition is checkable right now, so do that.
+  if (!aKidFrame->StylePosition()->mPositionArea.IsNone()) {
+    return PhysicalAxes{PhysicalAxis::Horizontal, PhysicalAxis::Vertical};
+  }
+  return PhysicalAxes{};
+}
+
 static AnchorPosResolutionCache PopulateAnchorResolutionCache(
     const nsIFrame* aKidFrame, AnchorPosReferenceData* aData) {
   MOZ_ASSERT(aKidFrame->HasAnchorPosReference());
@@ -164,23 +178,15 @@ static AnchorPosResolutionCache PopulateAnchorResolutionCache(
   // counter-productive). This is a prerequisite for scroll compensation. We
   // also need to check for `anchor()` resolutions, so cache information for
   // default anchor and its scrollers right now.
-  AnchorPosDefaultAnchorCache defaultAnchorCache;
-  const auto* defaultAnchorName =
-      AnchorPositioningUtils::GetUsedAnchorName(aKidFrame, nullptr);
-  if (defaultAnchorName) {
-    const auto* anchor = aKidFrame->PresShell()->GetAnchorPosAnchor(
-        defaultAnchorName, aKidFrame);
-    defaultAnchorCache = AnchorPosDefaultAnchorCache{anchor};
-    if (anchor) {
-      const auto entryData = aData->InsertOrModify(defaultAnchorName, false);
-      MOZ_ASSERT(!entryData.mAlreadyResolved);
-      // Put it in the cache with size resolved.
-      // TODO(dshin): May as well resolve offsets here?
-      *entryData.mEntry =
-          Some(AnchorPosResolutionData{anchor->GetSize(), Nothing{}});
-    }
+  AnchorPosResolutionCache result{aData, {}};
+  // Let this call populate the cache.
+  const auto defaultAnchorInfo = AnchorPositioningUtils::ResolveAnchorPosRect(
+      aKidFrame, aKidFrame->GetParent(), nullptr, false, &result);
+  if (defaultAnchorInfo) {
+    aData->AdjustCompensatingForScroll(
+        CheckEarlyCompensatingForScroll(aKidFrame));
   }
-  return {aData, defaultAnchorCache};
+  return result;
 }
 
 void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
@@ -895,6 +901,10 @@ struct MOZ_STACK_CLASS MOZ_RAII AutoFallbackStyleSetter {
       } else {
         mOldCacheState =
             OldCacheState{aCache->TryPositionWithSameDefaultAnchor()};
+        if (aCache->mDefaultAnchorCache.mAnchor) {
+          aCache->mReferenceData->AdjustCompensatingForScroll(
+              CheckEarlyCompensatingForScroll(aFrame));
+        }
       }
     }
   }
@@ -1039,12 +1049,14 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       }
 
       if (!positionArea.IsNone() && aAnchorPosResolutionCache) {
-        const auto defaultAnchorInfo = AnchorPositioningUtils::GetDefaultAnchor(
-            aKidFrame, false, aAnchorPosResolutionCache->mReferenceData);
-        if (defaultAnchorInfo.mRect) {
+        const auto defaultAnchorInfo =
+            AnchorPositioningUtils::ResolveAnchorPosRect(
+                aKidFrame, aDelegatingFrame, nullptr, false,
+                aAnchorPosResolutionCache);
+        if (defaultAnchorInfo) {
           return AnchorPositioningUtils::
               AdjustAbsoluteContainingBlockRectForPositionArea(
-                  *defaultAnchorInfo.mRect, aOriginalContainingBlockRect,
+                  defaultAnchorInfo->mRect, aOriginalContainingBlockRect,
                   aKidFrame->GetWritingMode(),
                   aDelegatingFrame->GetWritingMode(), positionArea,
                   &resolvedPositionArea);
