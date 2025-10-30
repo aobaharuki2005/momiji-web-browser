@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.370
- * pdfjsBuild = f6317ddbb
+ * pdfjsVersion = 5.4.385
+ * pdfjsBuild = 7fc5706e1
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -523,6 +523,9 @@ class FeatureTest {
   }
   static get isFloat16ArraySupported() {
     return shadow(this, "isFloat16ArraySupported", typeof Float16Array !== "undefined");
+  }
+  static get isSanitizerSupported() {
+    return shadow(this, "isSanitizerSupported", typeof Sanitizer !== "undefined");
   }
   static get platform() {
     const {
@@ -30593,7 +30596,7 @@ const BOLDITALIC = {
   weight: "bold"
 };
 const substitutionMap = new Map([["Times-Roman", {
-  local: ["Times New Roman", "Times-Roman", "Times", "Liberation Serif", "Nimbus Roman", "Nimbus Roman L", "Tinos", "Thorndale", "TeX Gyre Termes", "FreeSerif", "Linux Libertine O", "Libertinus Serif", "DejaVu Serif", "Bitstream Vera Serif", "Ubuntu"],
+  local: ["Times New Roman", "Times-Roman", "Times", "Liberation Serif", "Nimbus Roman", "Nimbus Roman L", "Tinos", "Thorndale", "TeX Gyre Termes", "FreeSerif", "Linux Libertine O", "Libertinus Serif", "PT Astra Serif", "DejaVu Serif", "Bitstream Vera Serif", "Ubuntu"],
   style: NORMAL,
   ultimate: "serif"
 }], ["Times-Bold", {
@@ -37052,6 +37055,7 @@ class MetadataParser {
 
 
 
+
 const MAX_DEPTH = 40;
 const StructElementType = {
   PAGE_CONTENT: 1,
@@ -37553,6 +37557,48 @@ class StructElementNode {
     } = this.tree;
     return root.roleMap.get(name) ?? name;
   }
+  get mathML() {
+    let AFs = this.dict.get("AF") || [];
+    if (!Array.isArray(AFs)) {
+      AFs = [AFs];
+    }
+    for (let af of AFs) {
+      af = this.xref.fetchIfRef(af);
+      if (!(af instanceof Dict)) {
+        continue;
+      }
+      if (!isName(af.get("Type"), "Filespec")) {
+        continue;
+      }
+      if (!isName(af.get("AFRelationship"), "Supplement")) {
+        continue;
+      }
+      const ef = af.get("EF");
+      if (!(ef instanceof Dict)) {
+        continue;
+      }
+      const fileStream = ef.get("UF") || ef.get("F");
+      if (!(fileStream instanceof BaseStream)) {
+        continue;
+      }
+      if (!isName(fileStream.dict.get("Type"), "EmbeddedFile")) {
+        continue;
+      }
+      if (!isName(fileStream.dict.get("Subtype"), "application/mathml+xml")) {
+        continue;
+      }
+      return fileStream.getString();
+    }
+    const A = this.dict.get("A");
+    if (A instanceof Dict) {
+      const O = A.get("O");
+      if (isName(O, "MSFT_Office")) {
+        const mathml = A.get("MSFT_MathML");
+        return mathml ? stringToPDFString(mathml) : null;
+      }
+    }
+    return null;
+  }
   parseKids() {
     let pageObjId = null;
     const objRef = this.dict.getRaw("Pg");
@@ -37719,6 +37765,23 @@ class StructTreePage {
     }
     const element = new StructElementNode(this, dict);
     map.set(dict, element);
+    switch (element.role) {
+      case "L":
+      case "LBody":
+      case "LI":
+      case "Table":
+      case "THead":
+      case "TBody":
+      case "TFoot":
+      case "TR":
+        {
+          for (const kid of element.kids) {
+            if (kid.type === StructElementType.ELEMENT) {
+              this.addNode(kid.dict, map, level - 1);
+            }
+          }
+        }
+    }
     const parent = dict.get("P");
     if (!(parent instanceof Dict) || isName(parent.get("Type"), "StructTreeRoot")) {
       if (!this.addTopLevelNode(dict, element)) {
@@ -37768,6 +37831,14 @@ class StructTreePage {
       }
       if (typeof alt === "string") {
         obj.alt = stringToPDFString(alt);
+      }
+      if (obj.role === "Formula") {
+        const {
+          mathML
+        } = node;
+        if (mathML) {
+          obj.mathML = mathML;
+        }
       }
       const a = node.dict.get("A");
       if (a instanceof Dict) {
@@ -58378,7 +58449,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "5.4.370";
+    const workerVersion = "5.4.385";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
