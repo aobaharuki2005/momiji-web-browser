@@ -267,3 +267,36 @@ add_task(async function test_autostart_checkboxes() {
     }
   );
 });
+
+// Test that additional links exist
+add_task(async function test_additional_links() {
+  await setupVpnPrefs({
+    feature: "beta",
+  });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:preferences#privacy" },
+    async function (browser) {
+      let section = browser.contentDocument.getElementById(SECTION_ID);
+      let settingGroup = section.querySelector(
+        `setting-group[groupid="ipprotection"]`
+      );
+      is_element_visible(section, "#dataIPProtectionGroup is shown");
+      is_element_visible(settingGroup, "ipprotection setting group is shown");
+
+      let additionalLinks = settingGroup?.querySelector(
+        "#ipProtectionAdditionalLinks"
+      );
+      is_element_visible(additionalLinks, "Additional links section is shown");
+
+      let ipProtectionSupportLink = additionalLinks?.querySelector(
+        "#ipProtectionSupportLink"
+      );
+      let ipProtectionUpgradeLink = additionalLinks?.querySelector(
+        "#ipProtectionUpgradeLink"
+      );
+      is_element_visible(ipProtectionSupportLink, "Support link is shown");
+      is_element_visible(ipProtectionUpgradeLink, "Upgrade link is shown");
+    }
+  );
+});

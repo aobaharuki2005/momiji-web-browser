@@ -1298,6 +1298,11 @@ Preferences.addSetting({
   deps: ["ipProtectionVisible", "ipProtectionAutoStart"],
   visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
 });
+Preferences.addSetting({
+  id: "ipProtectionAdditionalLinks",
+  deps: ["ipProtectionVisible"],
+  visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
+});
 
 // Study opt out
 if (AppConstants.MOZ_DATA_REPORTING) {

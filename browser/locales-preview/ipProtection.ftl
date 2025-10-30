@@ -97,6 +97,11 @@ ip-protection-autostart-checkbox =
 ip-protection-autostart-private-checkbox =
   .label = In private windows
 
+ip-protection-contact-support-link =
+  .label = Contact support
+ip-protection-upgrade-link =
+  .label = Upgrade to { -mozilla-vpn-brand-name }
+
 # "Select" is an adjective here to describe a setting that allows running the VPN on certain sites only.
 # Not to be confused with the action of selecting a site, which is not at all applicable to this setting.
 ip-protection-site-exceptions-select-sites-radio =

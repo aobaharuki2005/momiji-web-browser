@@ -1536,6 +1536,28 @@ let SETTINGS_CONFIG = {
           },
         ],
       },
+      {
+        id: "ipProtectionAdditionalLinks",
+        control: "moz-box-group",
+        options: [
+          {
+            id: "ipProtectionSupportLink",
+            l10nId: "ip-protection-contact-support-link",
+            control: "moz-box-link",
+            controlAttrs: {
+              href: "https://support.mozilla.org/questions/new/mozilla-vpn/form",
+            },
+          },
+          {
+            id: "ipProtectionUpgradeLink",
+            l10nId: "ip-protection-upgrade-link",
+            control: "moz-box-link",
+            controlAttrs: {
+              href: "https://www.mozilla.org/products/vpn/",
+            },
+          },
+        ],
+      },
     ],
   },
   cookiesAndSiteData: {
