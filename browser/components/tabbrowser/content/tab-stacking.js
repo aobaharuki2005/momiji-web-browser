@@ -58,6 +58,11 @@
         );
       }
       let isGrid = this._isContainerVerticalPinnedGrid(tab);
+      let animate = !gReduceMotion;
+
+      tab._moveTogetherSelectedTabsData = {
+        finished: !animate,
+      };
 
       tab.toggleAttribute("multiselected-move-together", true);
 
@@ -176,7 +181,6 @@
         let movingTab = selectedTabs[i];
         addAnimationData(movingTab);
       }
-
       // Animate right or bottom selected tabs
       for (let i = selectedTabs.length - 1; i > tabIndex; i--) {
         let movingTab = selectedTabs[i];
@@ -215,8 +219,15 @@
     }
 
     finishMoveTogetherSelectedTabs(tab) {
-      if (!tab._moveTogetherSelectedTabsData) {
+      if (
+        !tab._moveTogetherSelectedTabsData ||
+        (tab._moveTogetherSelectedTabsData.finished && !gReduceMotion)
+      ) {
         return;
+      }
+
+      if (tab._moveTogetherSelectedTabsData) {
+        tab._moveTogetherSelectedTabsData.finished = true;
       }
 
       let selectedTabs = gBrowser.selectedTabs;
@@ -396,8 +407,21 @@
 
       let setElPosition = el => {
         let origBounds = tabsOrigBounds.get(el);
+        if (this._tabbrowserTabs.verticalMode && origBounds.top > rect.top) {
+          el.style.top = rect.height + "px";
+        } else if (!this._tabbrowserTabs.verticalMode) {
+          if (!this._rtlMode && origBounds.left > rect.left) {
+            el.style.left = rect.width + "px";
+          } else if (this._rtlMode && origBounds.left < rect.left) {
+            el.style.left = -rect.width + "px";
+          }
+        }
+      };
+
+      let setGridElPosition = el => {
+        let origBounds = tabsOrigBounds.get(el);
         if (!origBounds) {
-          // No bounds saved for this tab
+          // No bounds saved for this pinned tab
           return;
         }
         // We use getBoundingClientRect and force a reflow as we need to know their new positions
@@ -406,20 +430,24 @@
         let shiftX = origBounds.x - newBounds.x;
         let shiftY = origBounds.y - newBounds.y;
 
-        if (!this._tabbrowserTabs.verticalMode || isGrid) {
-          el.style.left = shiftX + "px";
-        }
-        if (this._tabbrowserTabs.verticalMode) {
-          el.style.top = shiftY + "px";
-        }
+        el.style.left = shiftX + "px";
+        el.style.top = shiftY + "px";
       };
 
       // Update tabs in the same container as the dragged tabs so as not
       // to fill the space when the dragged tabs become absolute
       for (let t of allTabs) {
+        let tabIsPinned = t.pinned;
         t = elementToMove(t);
         if (!t.hasAttribute("dragtarget")) {
-          setElPosition(t);
+          if (
+            (!isPinned && !tabIsPinned) ||
+            (tabIsPinned && isPinned && !isGrid)
+          ) {
+            setElPosition(t);
+          } else if (isGrid && tabIsPinned && isPinned) {
+            setGridElPosition(t);
+          }
         }
       }
 
