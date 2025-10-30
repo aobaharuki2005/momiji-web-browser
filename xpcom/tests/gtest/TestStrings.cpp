@@ -1464,7 +1464,7 @@ TEST_F(Strings, bulk_write_fail) {
     EXPECT_TRUE(handleOrErr.isOk());
   }
   EXPECT_EQ(s.Length(), 3U);
-  EXPECT_TRUE(s.Equals(u8"\uFFFD"));
+  EXPECT_TRUE(s.Equals("\uFFFD"));
 }
 
 TEST_F(Strings, huge_capacity) {
