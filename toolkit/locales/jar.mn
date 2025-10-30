@@ -44,9 +44,6 @@
   locale/@AB_CD@/global-platform/mac/platformKeys.properties  (%chrome/global-platform/mac/platformKeys.properties)
   locale/@AB_CD@/global-platform/unix/platformKeys.properties (%chrome/global-platform/unix/platformKeys.properties)
   locale/@AB_CD@/global-platform/win/platformKeys.properties  (%chrome/global-platform/win/platformKeys.properties)
-  locale/@AB_CD@/global-platform/mac/intl.properties          (%chrome/global-platform/mac/intl.properties)
-  locale/@AB_CD@/global-platform/unix/intl.properties         (%chrome/global-platform/unix/intl.properties)
-  locale/@AB_CD@/global-platform/win/intl.properties          (%chrome/global-platform/win/intl.properties)
 % locale mozapps @AB_CD@ %locale/@AB_CD@/mozapps/
   locale/@AB_CD@/mozapps/downloads/unknownContentType.properties  (%chrome/mozapps/downloads/unknownContentType.properties)
   locale/@AB_CD@/mozapps/downloads/downloads.properties           (%chrome/mozapps/downloads/downloads.properties)

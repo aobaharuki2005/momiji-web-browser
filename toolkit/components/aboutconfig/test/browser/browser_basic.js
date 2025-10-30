@@ -36,7 +36,6 @@ add_task(async function test_load_settings() {
     // any of these are removed or their value changes, just update the value
     // here or point to a different preference in the same file.
     Assert.equal(this.getRow("font.language.group").value, "x-western");
-    Assert.equal(this.getRow("intl.ellipsis").value, "\u2026");
 
     // Test to see if user created value is not empty string when it matches
     // /^chrome:\/\/.+\/locale\/.+\.properties/.

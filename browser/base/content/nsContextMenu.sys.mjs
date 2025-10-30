@@ -176,13 +176,6 @@ export class nsContextMenu {
     this.viewFrameSourceElement = this.document.getElementById(
       "context-viewframesource"
     );
-    this.ellipsis = "\u2026";
-    try {
-      this.ellipsis = Services.prefs.getComplexValue(
-        "intl.ellipsis",
-        Ci.nsIPrefLocalizedString
-      ).data;
-    } catch (e) {}
 
     // Reset after "on-build-contextmenu" notification in case selection was
     // changed during the notification.
@@ -2786,7 +2779,8 @@ export class nsContextMenu {
       if (truncChar >= 0xdc00 && truncChar <= 0xdfff) {
         truncLength++;
       }
-      selectedText = selectedText.substr(0, truncLength) + this.ellipsis;
+      selectedText =
+        selectedText.substr(0, truncLength) + Services.locale.ellipsis;
     }
 
     const { gNavigatorBundle } = this.window;

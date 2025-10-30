@@ -224,6 +224,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/glean/GleanPings.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/widget/IMEData.h"
@@ -6822,7 +6823,7 @@ const nsDependentString nsContentUtils::GetLocalizedEllipsis() {
     if (!nsContentUtils::ShouldResistFingerprinting("No context",
                                                     RFPTarget::JSLocale)) {
       nsAutoString tmp;
-      Preferences::GetLocalizedString("intl.ellipsis", tmp);
+      intl::LocaleService::GetInstance()->GetEllipsis(tmp);
       uint32_t len =
           std::min(uint32_t(tmp.Length()), uint32_t(std::size(sBuf) - 1));
       CopyUnicodeTo(tmp, 0, sBuf, len);

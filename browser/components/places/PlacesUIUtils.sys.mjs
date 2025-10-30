@@ -984,7 +984,7 @@ export var PlacesUIUtils = {
           title =
             host +
             (fileName
-              ? (host ? "/" + this.ellipsis + "/" : "") + fileName
+              ? (host ? "/" + Services.locale.ellipsis + "/" : "") + fileName
               : uri.pathQueryRef);
         }
       } catch (e) {
@@ -1775,13 +1775,6 @@ ChromeUtils.defineLazyGetter(PlacesUIUtils, "URI_FLAVORS", () => {
 });
 ChromeUtils.defineLazyGetter(PlacesUIUtils, "SUPPORTED_FLAVORS", () => {
   return [...PlacesUIUtils.PLACES_FLAVORS, ...PlacesUIUtils.URI_FLAVORS];
-});
-
-ChromeUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function () {
-  return Services.prefs.getComplexValue(
-    "intl.ellipsis",
-    Ci.nsIPrefLocalizedString
-  ).data;
 });
 
 ChromeUtils.defineLazyGetter(PlacesUIUtils, "promptLocalization", () => {
