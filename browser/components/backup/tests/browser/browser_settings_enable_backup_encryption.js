@@ -262,3 +262,65 @@ add_task(
     );
   }
 );
+
+/**
+ * Tests that the password boxes are cleared if the dialog is closed by JS.
+ */
+add_task(async function test_turn_on_scheduled_backups_encryption_error() {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let settings = browser.contentDocument.querySelector("backup-settings");
+
+    await SpecialPowers.pushPrefEnv({
+      set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
+    });
+
+    settings.backupServiceState.encryptionEnabled = false;
+    await settings.requestUpdate();
+    await settings.updateComplete;
+
+    let turnOnButton = settings.sensitiveDataCheckboxInputEl;
+    turnOnButton.click();
+    await settings.updateComplete;
+
+    let enableBackupEncryption = settings.enableBackupEncryptionEl;
+    let passwordOptionsExpanded = enableBackupEncryption.passwordInputsEl;
+
+    Assert.ok(
+      passwordOptionsExpanded,
+      "Passwords expanded options should be found"
+    );
+
+    passwordOptionsExpanded.inputNewPasswordEl.value = "firefox"; // secret!!
+    passwordOptionsExpanded.inputNewPasswordEl.revealPassword = true;
+    passwordOptionsExpanded.inputRepeatPasswordEl.value = "www1989";
+    passwordOptionsExpanded.inputRepeatPasswordEl.revealPassword = true;
+
+    let dialog = settings.enableBackupEncryptionDialogEl;
+    let closedPromise = BrowserTestUtils.waitForEvent(dialog, "close");
+    dialog.close();
+    await closedPromise;
+
+    is(
+      passwordOptionsExpanded.inputNewPasswordEl.value,
+      "",
+      "New password field should be cleared"
+    );
+    is(
+      passwordOptionsExpanded.inputRepeatPasswordEl.value,
+      "",
+      "Repeat password field should be cleared"
+    );
+    is(
+      passwordOptionsExpanded.inputNewPasswordEl.revealPassword,
+      false,
+      "New password field should not be revealed"
+    );
+    is(
+      passwordOptionsExpanded.inputRepeatPasswordEl.revealPassword,
+      false,
+      "Repeat password field should not be revealed"
+    );
+
+    await SpecialPowers.popPrefEnv();
+  });
+});

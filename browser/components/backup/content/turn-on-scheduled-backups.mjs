@@ -182,8 +182,6 @@ export default class TurnOnScheduledBackups extends MozLitElement {
         composed: true,
       })
     );
-
-    this.reset();
   }
 
   handleConfirm() {

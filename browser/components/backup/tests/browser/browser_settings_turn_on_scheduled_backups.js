@@ -443,3 +443,73 @@ add_task(async function test_turn_on_scheduled_backups_encryption_error() {
     Services.prefs.clearUserPref(SCHEDULED_BACKUPS_ENABLED_PREF);
   });
 });
+
+/**
+ * Tests that the password boxes are cleared if the dialog is closed by JS.
+ */
+add_task(async function test_turn_on_scheduled_backups_encryption_error() {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let settings = browser.contentDocument.querySelector("backup-settings");
+
+    await settings.updateComplete;
+
+    let turnOnButton = settings.scheduledBackupsButtonEl;
+    Assert.ok(
+      turnOnButton,
+      "Button to turn on scheduled backups should be found"
+    );
+
+    turnOnButton.click();
+    await settings.updateComplete;
+
+    let turnOnScheduledBackups = settings.turnOnScheduledBackupsEl;
+    Assert.ok(
+      turnOnScheduledBackups,
+      "turn-on-scheduled-backups should be found"
+    );
+
+    // Enable passwords
+    let passwordsCheckbox = turnOnScheduledBackups.passwordOptionsCheckboxEl;
+    passwordsCheckbox.click();
+    await turnOnScheduledBackups.updateComplete;
+
+    let passwordOptionsExpanded =
+      turnOnScheduledBackups.passwordOptionsExpandedEl;
+
+    Assert.ok(
+      passwordOptionsExpanded,
+      "Passwords expanded options should be found"
+    );
+
+    passwordOptionsExpanded.inputNewPasswordEl.value = "firefox"; // secret!!
+    passwordOptionsExpanded.inputNewPasswordEl.revealPassword = true;
+    passwordOptionsExpanded.inputRepeatPasswordEl.value = "www1989";
+    passwordOptionsExpanded.inputRepeatPasswordEl.revealPassword = true;
+
+    let dialog = settings.turnOnScheduledBackupsDialogEl;
+    let closedPromise = BrowserTestUtils.waitForEvent(dialog, "close");
+    dialog.close();
+    await closedPromise;
+
+    is(
+      passwordOptionsExpanded.inputNewPasswordEl.value,
+      "",
+      "New password field should be cleared"
+    );
+    is(
+      passwordOptionsExpanded.inputRepeatPasswordEl.value,
+      "",
+      "Repeat password field should be cleared"
+    );
+    is(
+      passwordOptionsExpanded.inputNewPasswordEl.revealPassword,
+      false,
+      "New password field should not be revealed"
+    );
+    is(
+      passwordOptionsExpanded.inputRepeatPasswordEl.revealPassword,
+      false,
+      "Repeat password field should not be revealed"
+    );
+  });
+});

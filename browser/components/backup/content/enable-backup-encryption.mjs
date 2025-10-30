@@ -111,7 +111,6 @@ export default class EnableBackupEncryption extends MozLitElement {
         composed: true,
       })
     );
-    this.reset();
   }
 
   reset() {
