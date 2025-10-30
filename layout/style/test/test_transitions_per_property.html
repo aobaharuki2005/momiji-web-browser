@@ -376,6 +376,12 @@ if (IsCSSPropertyPrefEnabled("layout.css.zoom.enabled")) {
   });
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.text-decoration-inset.enabled")) {
+  Object.assign(supported_properties, {
+    "text-decoration-inset": [ test_length_transition ],
+  });
+}
+
 // For properties which are well-tested by web-platform-tests, we don't need to
 // test animations/transitions again on them.
 var skipped_transitionable_properties = [
