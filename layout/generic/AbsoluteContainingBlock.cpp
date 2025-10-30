@@ -155,6 +155,34 @@ static bool IsSnapshotContainingBlock(const nsIFrame* aFrame) {
          PseudoStyleType::mozSnapshotContainingBlock;
 }
 
+static AnchorPosResolutionCache PopulateAnchorResolutionCache(
+    const nsIFrame* aKidFrame, AnchorPosReferenceData* aData) {
+  MOZ_ASSERT(aKidFrame->HasAnchorPosReference());
+  // If the default anchor exists, it will likely be referenced (Except when
+  // authors then use `anchor()` without referring to anchors whose nearest
+  // scroller that of the default anchor, but that seems
+  // counter-productive). This is a prerequisite for scroll compensation. We
+  // also need to check for `anchor()` resolutions, so cache information for
+  // default anchor and its scrollers right now.
+  AnchorPosDefaultAnchorCache defaultAnchorCache;
+  const auto* defaultAnchorName =
+      AnchorPositioningUtils::GetUsedAnchorName(aKidFrame, nullptr);
+  if (defaultAnchorName) {
+    const auto* anchor = aKidFrame->PresShell()->GetAnchorPosAnchor(
+        defaultAnchorName, aKidFrame);
+    defaultAnchorCache = AnchorPosDefaultAnchorCache{anchor};
+    if (anchor) {
+      const auto entryData = aData->InsertOrModify(defaultAnchorName, false);
+      MOZ_ASSERT(!entryData.mAlreadyResolved);
+      // Put it in the cache with size resolved.
+      // TODO(dshin): May as well resolve offsets here?
+      *entryData.mEntry =
+          Some(AnchorPosResolutionData{anchor->GetSize(), Nothing{}});
+    }
+  }
+  return {aData, defaultAnchorCache};
+}
+
 void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
                                      nsPresContext* aPresContext,
                                      const ReflowInput& aReflowInput,
@@ -179,10 +207,10 @@ void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
   for (nsIFrame* kidFrame : mAbsoluteFrames) {
     Maybe<AnchorPosResolutionCache> anchorPosResolutionCache;
     if (kidFrame->HasAnchorPosReference()) {
-      anchorPosResolutionCache = Some(AnchorPosResolutionCache{});
-      anchorPosResolutionCache->mReferenceData =
-          kidFrame->SetOrUpdateDeletableProperty(
-              nsIFrame::AnchorPosReferences());
+      auto* referenceData = kidFrame->SetOrUpdateDeletableProperty(
+          nsIFrame::AnchorPosReferences());
+      anchorPosResolutionCache =
+          Some(PopulateAnchorResolutionCache(kidFrame, referenceData));
     } else {
       kidFrame->RemoveProperty(nsIFrame::AnchorPosReferences());
     }
@@ -844,11 +872,30 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
   }
 }
 
+struct None {};
+using OldCacheState = Variant<None, AnchorPosResolutionCache::PositionTryBackup,
+                              AnchorPosResolutionCache::PositionTryFullBackup>;
+
 struct MOZ_STACK_CLASS MOZ_RAII AutoFallbackStyleSetter {
-  AutoFallbackStyleSetter(nsIFrame* aFrame, ComputedStyle* aFallbackStyle)
-      : mFrame(aFrame) {
+  AutoFallbackStyleSetter(nsIFrame* aFrame, ComputedStyle* aFallbackStyle,
+                          AnchorPosResolutionCache* aCache, bool aIsFirstTry)
+      : mFrame(aFrame), mCache{aCache}, mOldCacheState{None{}} {
     if (aFallbackStyle) {
       mOldStyle = aFrame->SetComputedStyleWithoutNotification(aFallbackStyle);
+    }
+    // We need to be able to "go back" to the old, first try (Which is not
+    // necessarily base style) cache.
+    if (!aIsFirstTry && aCache) {
+      // New fallback could just be a flip keyword.
+      if (mOldStyle && mOldStyle->StylePosition()->mPositionAnchor !=
+                           aFrame->StylePosition()->mPositionAnchor) {
+        mOldCacheState =
+            OldCacheState{aCache->TryPositionWithDifferentDefaultAnchor()};
+        *aCache = PopulateAnchorResolutionCache(aFrame, aCache->mReferenceData);
+      } else {
+        mOldCacheState =
+            OldCacheState{aCache->TryPositionWithSameDefaultAnchor()};
+      }
     }
   }
 
@@ -856,11 +903,25 @@ struct MOZ_STACK_CLASS MOZ_RAII AutoFallbackStyleSetter {
     if (mOldStyle) {
       mFrame->SetComputedStyleWithoutNotification(std::move(mOldStyle));
     }
+    std::move(mOldCacheState)
+        .match(
+            [](None&&) {},
+            [&](AnchorPosResolutionCache::PositionTryBackup&& aBackup) {
+              mCache->UndoTryPositionWithSameDefaultAnchor(std::move(aBackup));
+            },
+            [&](AnchorPosResolutionCache::PositionTryFullBackup&& aBackup) {
+              mCache->UndoTryPositionWithDifferentDefaultAnchor(
+                  std::move(aBackup));
+            });
   }
+
+  void CommitCurrentFallback() { mOldCacheState = OldCacheState{None{}}; }
 
  private:
   nsIFrame* const mFrame;
   RefPtr<ComputedStyle> mOldStyle;
+  AnchorPosResolutionCache* const mCache;
+  OldCacheState mOldCacheState;
 };
 
 // XXX Optimize the case where it's a resize reflow and the absolutely
@@ -940,14 +1001,19 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     return SeekFallbackTo(nextFallbackIndex);
   };
 
+  Maybe<uint32_t> firstTryIndex;
   // TODO(emilio): Right now fallback only applies to position-area, which only
   // makes a difference with a default anchor... Generalize it?
   if (aAnchorPosResolutionCache) {
     bool found = false;
     uint32_t index = aKidFrame->GetProperty(
         nsIFrame::LastSuccessfulPositionFallback(), &found);
-    if (found && !SeekFallbackTo(index)) {
-      aKidFrame->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
+    if (found) {
+      if (!SeekFallbackTo(index)) {
+        aKidFrame->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
+      } else {
+        firstTryIndex = Some(index);
+      }
     }
   }
 
@@ -956,7 +1022,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   bool isOverflowingCB = true;
 
   do {
-    AutoFallbackStyleSetter fallback(aKidFrame, currentFallbackStyle);
+    AutoFallbackStyleSetter fallback(aKidFrame, currentFallbackStyle,
+                                     aAnchorPosResolutionCache,
+                                     firstTryIndex == currentFallbackIndex);
     auto positionArea = aKidFrame->StylePosition()->mPositionArea;
     StylePositionArea resolvedPositionArea;
     const nsRect usedCb = [&] {
@@ -1209,8 +1277,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     if (fallbacks.IsEmpty() || fits) {
       // We completed the reflow - Either we had a fallback that fit, or we
       // didn't have any to try in the first place.
-      // TODO(dshin, bug 1987963): Hypothetical scroll will be committed here.
       isOverflowingCB = !fits;
+      fallback.CommitCurrentFallback();
       break;
     }
 

@@ -6,6 +6,7 @@
 
 #include "AnchorPositioningUtils.h"
 
+#include "ScrollContainerFrame.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
@@ -384,6 +385,12 @@ const AnchorPosReferenceData::Value* AnchorPosReferenceData::Lookup(
   return mMap.Lookup(aAnchorName).DataPtrOrNull();
 }
 
+AnchorPosDefaultAnchorCache::AnchorPosDefaultAnchorCache(
+    const nsIFrame* aAnchor)
+    : mAnchor{aAnchor},
+      mScrollContainer{AnchorPositioningUtils::GetNearestScrollFrame(aAnchor)} {
+}
+
 nsIFrame* AnchorPositioningUtils::FindFirstAcceptableAnchor(
     const nsAtom* aName, const nsIFrame* aPositionedFrame,
     const nsTArray<nsIFrame*>& aPossibleAnchorFrames) {
@@ -579,6 +586,20 @@ nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
   res.height = bottom - res.y;
 
   return res;
+}
+
+const nsIFrame* AnchorPositioningUtils::GetNearestScrollFrame(
+    const nsIFrame* aFrame) {
+  if (!aFrame) {
+    return nullptr;
+  }
+  // `GetNearestScrollContainerFrame` will return the incoming frame if it's a
+  // scroll frame, so nudge to parent.
+  const nsIFrame* parent = aFrame->GetParent();
+  return nsLayoutUtils::GetNearestScrollContainerFrame(
+      const_cast<nsIFrame*>(parent),
+      nsLayoutUtils::SCROLLABLE_SAME_DOC |
+          nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 }
 
 // Out of line to avoid having to include AnchorPosReferenceData from nsIFrame.h
