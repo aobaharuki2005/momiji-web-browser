@@ -138,6 +138,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 export const LinkPreview = {
   // Shared downloading state to use across multiple previews
   progress: -1, // -1 = off, 0-100 = download progress
+  _abortController: null,
 
   cancelLongPress: null,
   keyboardComboActive: false,
@@ -313,6 +314,12 @@ export const LinkPreview = {
       expand: !collapsed,
     });
     Glean.genaiLinkpreview.keyPoints.set(!collapsed);
+
+    // If user collapses while a model download is in progress, stop showing the progress bar.
+    if (collapsed && this.progress >= 0) {
+      this.progress = -1;
+      this.updateCardProperty("progress", this.progress);
+    }
   },
 
   /**
@@ -787,6 +794,11 @@ export const LinkPreview = {
     ogCard.style.width = "100%";
     ogCard.pageData = pageData;
 
+    ogCard.addEventListener("LinkPreviewCard:cancelDownload", () => {
+      this._abortController?.abort();
+      Services.prefs.setBoolPref("browser.ml.linkPreview.collapsed", true);
+    });
+
     ogCard.optin = lazy.optin;
     ogCard.collapsed = lazy.collapsed;
     ogCard.canShowKeyPoints = this.canShowKeyPoints;
@@ -834,6 +846,7 @@ export const LinkPreview = {
     if (!lazy.optin || lazy.collapsed) {
       return;
     }
+    this._abortController = new AbortController();
 
     // Support prefetching without a card by mocking expected properties.
     let outcome = ogCard ? "success" : "prefetch";
@@ -867,6 +880,7 @@ export const LinkPreview = {
       await lazy.LinkPreviewModel.generateTextAI(
         ogCard.pageData?.article.textContent ?? "",
         {
+          abortSignal: this._abortController.signal,
           onDownload: (downloading, percentage) => {
             // Initial percentage is NaN, so set to 0.
             percentage = isNaN(percentage) ? 0 : percentage;
@@ -876,6 +890,16 @@ export const LinkPreview = {
             download = Date.now() - startTime;
           },
           onError: error => {
+            if (
+              error.name === "AbortError" ||
+              error.message?.includes("AbortError")
+            ) {
+              // This is an expected error when the user cancels the download.
+              // We don't need to show an error state.
+              outcome = "aborted";
+              this.lastRequest = Promise.resolve();
+              return;
+            }
             console.error(error);
             outcome = error;
             ogCard.generationError = error;
