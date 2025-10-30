@@ -20,6 +20,7 @@
 #include "mozilla/gfx/FileHandleWrapper.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/SourceSurfaceD3D11.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/D3D11ZeroCopyTextureImage.h"
@@ -27,7 +28,6 @@
 #include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
 #include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #include "mozilla/layers/HelpersD3D11.h"
-#include "mozilla/layers/VideoProcessorD3D11.h"
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -1023,10 +1023,35 @@ already_AddRefed<gfx::DataSourceSurface> DXGITextureHostD3D11::GetAsSurface(
 }
 
 already_AddRefed<gfx::DataSourceSurface>
-DXGITextureHostD3D11::GetAsSurfaceWithDevice(
-    ID3D11Device* const aDevice,
-    DataMutex<RefPtr<VideoProcessorD3D11>>& aVideoProcessorD3D11) {
-  return nullptr;
+DXGITextureHostD3D11::GetAsSurfaceWithDevice(ID3D11Device* const aDevice) {
+  if (!aDevice) {
+    return nullptr;
+  }
+
+  RefPtr<ID3D11Texture2D> d3dTexture = OpenSharedD3D11Texture(this, aDevice);
+  if (!d3dTexture) {
+    return nullptr;
+  }
+
+  if (mGpuProcessTextureId.isSome()) {
+    auto* textureMap = layers::GpuProcessD3D11TextureMap::Get();
+    if (textureMap) {
+      textureMap->DisableZeroCopyNV12Texture(mGpuProcessTextureId.ref());
+    }
+  }
+
+  RefPtr<gfx::SourceSurface> sourceSurface = gfx::SourceSurfaceD3D11::Create(
+      d3dTexture, mArrayIndex, mColorSpace, mColorRange, mFencesHolderId);
+  if (!sourceSurface) {
+    return nullptr;
+  }
+
+  RefPtr<DataSourceSurface> dataSurface = sourceSurface->GetDataSurface();
+  if (!dataSurface) {
+    return nullptr;
+  }
+
+  return dataSurface.forget();
 }
 
 void DXGITextureHostD3D11::CreateRenderTexture(

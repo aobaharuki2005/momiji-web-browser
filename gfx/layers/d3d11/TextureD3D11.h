@@ -372,8 +372,7 @@ class DXGITextureHostD3D11 : public TextureHost {
 
   // Return DataSourceSurface using aDevice withou readback to CPU.
   already_AddRefed<gfx::DataSourceSurface> GetAsSurfaceWithDevice(
-      ID3D11Device* const aDevice,
-      DataMutex<RefPtr<VideoProcessorD3D11>>& aVideoProcessorD3D11);
+      ID3D11Device* const aDevice);
 
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;

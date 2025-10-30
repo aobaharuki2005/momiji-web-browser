@@ -38,7 +38,6 @@
 #if defined(XP_WIN)
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/layers/TextureD3D11.h"
-#  include "mozilla/layers/VideoProcessorD3D11.h"
 #endif
 
 namespace mozilla {
@@ -69,9 +68,6 @@ CanvasTranslator::CanvasTranslator(
     layers::SharedSurfacesHolder* aSharedSurfacesHolder,
     const dom::ContentParentId& aContentId, uint32_t aManagerId)
     : mSharedSurfacesHolder(aSharedSurfacesHolder),
-#if defined(XP_WIN)
-      mVideoProcessorD3D11("CanvasTranslator::mVideoProcessorD3D11"),
-#endif
       mMaxSpinCount(StaticPrefs::gfx_canvas_remote_max_spin_count()),
       mContentId(aContentId),
       mManagerId(aManagerId),
@@ -467,14 +463,6 @@ void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
     MutexAutoLock lock(mCanvasTranslatorEventsLock);
     mPendingCanvasTranslatorEvents.clear();
   }
-
-#if defined(XP_WIN)
-  {
-    auto lock = mVideoProcessorD3D11.Lock();
-    auto& videoProcessor = lock.ref();
-    videoProcessor = nullptr;
-  }
-#endif
 
   DispatchToTaskQueue(NewRunnableMethod("CanvasTranslator::ClearTextureInfo",
                                         this,
@@ -1544,8 +1532,7 @@ CanvasTranslator::LookupSourceSurfaceFromSurfaceDescriptor(
 
     if (RefPtr<ID3D11Device> device =
             gfx::DeviceManagerDx::Get()->GetCanvasDevice()) {
-      usedSurf = textureHostD3D11->GetAsSurfaceWithDevice(device,
-                                                          mVideoProcessorD3D11);
+      usedSurf = textureHostD3D11->GetAsSurfaceWithDevice(device);
     } else {
       usedSurf = nullptr;
     }
