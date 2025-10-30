@@ -14449,8 +14449,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-decoration-inset.enabled")) {
       applies_to_first_letter: true,
       applies_to_first_line: true,
       applies_to_placeholder: true,
+      applies_to_cue: true,
       initial_values: ["0"],
       other_values: [
+        "0",
         "-14px",
         "25px",
         "100em",
@@ -14463,7 +14465,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-decoration-inset.enabled")) {
         "-1mm -2px",
         "calc(-1mm + 2em)",
         "2px calc(2px - 1em)",
-        "calc(1px) 0",
+        "calc(0) 0",
       ],
       invalid_values: [
         "13",

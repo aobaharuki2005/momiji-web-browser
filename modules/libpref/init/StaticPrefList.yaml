@@ -10449,7 +10449,7 @@
 
 - name: layout.css.text-decoration-inset.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
   rust: true
 
