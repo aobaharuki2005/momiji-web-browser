@@ -2770,6 +2770,7 @@ fn selector_matches_element<F, R>(
     index: u32,
     host: Option<&RawGeckoElement>,
     pseudo_type: PseudoStyleType,
+    pseudo_id: *const nsAtom,
     relevant_link_visited: bool,
     on_match: F,
 ) -> Option<R>
@@ -2787,7 +2788,14 @@ where
         return None;
     };
     let mut matching_mode = MatchingMode::Normal;
-    match PseudoElement::from_pseudo_type(pseudo_type, None) {
+    let pseudo_id = if pseudo_id.is_null() {
+        None
+    } else {
+        Some(AtomIdent::new(unsafe {
+            Atom::from_raw(pseudo_id as *mut nsAtom)
+        }))
+    };
+    match PseudoElement::from_pseudo_type(pseudo_type, pseudo_id) {
         Some(pseudo) => {
             // We need to make sure that the requested pseudo element type
             // matches the selector pseudo element type before proceeding.
@@ -2854,6 +2862,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
     index: u32,
     host: Option<&RawGeckoElement>,
     pseudo_type: PseudoStyleType,
+    pseudo_id: *const nsAtom,
     relevant_link_visited: bool,
 ) -> bool {
     selector_matches_element(
@@ -2863,6 +2872,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         index,
         host,
         pseudo_type,
+        pseudo_id,
         relevant_link_visited,
         |_| true,
     )
@@ -2877,6 +2887,7 @@ pub extern "C" fn Servo_StyleRule_GetScopeRootFor(
     index: u32,
     host: Option<&RawGeckoElement>,
     pseudo_type: PseudoStyleType,
+    pseudo_id: *const nsAtom,
     relevant_link_visited: bool,
 ) -> *const RawGeckoElement {
     let element = GeckoElement(element);
@@ -2887,6 +2898,7 @@ pub extern "C" fn Servo_StyleRule_GetScopeRootFor(
         index,
         host,
         pseudo_type,
+        pseudo_id,
         relevant_link_visited,
         |candidate| {
             candidate

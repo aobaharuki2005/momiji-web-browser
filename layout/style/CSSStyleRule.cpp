@@ -276,12 +276,6 @@ uint64_t CSSStyleRule::SelectorSpecificityAt(uint32_t aSelectorIndex,
   return s;
 }
 
-static Maybe<PseudoStyleType> GetPseudoType(const nsAString& aPseudo) {
-  return nsCSSPseudoElements::ParsePseudoElement(
-             aPseudo, CSSEnabledState::IgnoreEnabledState)
-      .map([](const PseudoStyleRequest& aRequest) { return aRequest.mType; });
-}
-
 static void GetHosts(StyleSheet* aSheet, const Element& aElement,
                      nsTArray<Element*>& aHosts) {
   if (!aSheet) {
@@ -316,7 +310,8 @@ bool CSSStyleRule::SelectorMatchesElement(uint32_t aSelectorIndex,
                                           Element& aElement,
                                           const nsAString& aPseudo,
                                           bool aRelevantLinkVisited) {
-  const auto pseudo = GetPseudoType(aPseudo);
+  const auto pseudo = nsCSSPseudoElements::ParsePseudoElement(
+      aPseudo, CSSEnabledState::IgnoreEnabledState);
   if (!pseudo) {
     return false;
   }
@@ -332,11 +327,9 @@ bool CSSStyleRule::SelectorMatchesElement(uint32_t aSelectorIndex,
   }
 
   for (auto* host : hosts) {
-    // FIXME: Bug 1909173. This function is used for DevTools, so we may need
-    // to revist here once we finish the support of view-transitions.
-    if (Servo_StyleRule_SelectorMatchesElement(&rules, &scopes, &aElement,
-                                               aSelectorIndex, host, *pseudo,
-                                               aRelevantLinkVisited)) {
+    if (Servo_StyleRule_SelectorMatchesElement(
+            &rules, &scopes, &aElement, aSelectorIndex, host, pseudo->mType,
+            pseudo->mIdentifier, aRelevantLinkVisited)) {
       return true;
     }
   }
@@ -348,7 +341,8 @@ Element* CSSStyleRule::GetScopeRootFor(uint32_t aSelectorIndex,
                                        dom::Element& aElement,
                                        const nsAString& aPseudo,
                                        bool aRelevantLinkVisited) {
-  const auto pseudo = GetPseudoType(aPseudo);
+  const auto pseudo = nsCSSPseudoElements::ParsePseudoElement(
+      aPseudo, CSSEnabledState::IgnoreEnabledState);
   if (!pseudo) {
     return nullptr;
   }
@@ -358,8 +352,8 @@ Element* CSSStyleRule::GetScopeRootFor(uint32_t aSelectorIndex,
   AutoTArray<StyleScopeRuleData, 1> scopes;
   CollectStyleRules(*this, /* aDesugared = */ true, rules, &scopes);
   return const_cast<Element*>(Servo_StyleRule_GetScopeRootFor(
-      &rules, &scopes, &aElement, aSelectorIndex, host, *pseudo,
-      aRelevantLinkVisited));
+      &rules, &scopes, &aElement, aSelectorIndex, host, pseudo->mType,
+      pseudo->mIdentifier, aRelevantLinkVisited));
 }
 
 SelectorWarningKind ToWebIDLSelectorWarningKind(
