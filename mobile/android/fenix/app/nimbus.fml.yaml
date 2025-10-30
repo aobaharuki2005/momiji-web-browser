@@ -1009,6 +1009,18 @@ features:
         type: Option<Int>
         default: 4
 
+  relay-email-masks:
+    description: Feature to enable Relay for users on Firefox on Android.
+    variables:
+      enabled:
+        description: If true, Relay email masks feature is enabled.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+
 types:
   objects:
     GleanServerKnobsConfiguration:
