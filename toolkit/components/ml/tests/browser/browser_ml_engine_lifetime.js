@@ -435,7 +435,11 @@ add_task(async function test_ml_engine_infinite_worker() {
   await cleanup();
 });
 
-add_task(async function test_ml_engine_get_status() {
+/**
+ * These status are visualized in about:inference, but aren't used for business
+ * logic.
+ */
+add_task(async function test_ml_engine_get_status_by_engine_id() {
   const { cleanup, remoteClients } = await setup();
 
   info("Get the engine");
@@ -459,7 +463,7 @@ add_task(async function test_ml_engine_get_status() {
 
   const expected = {
     "default-engine": {
-      status: "IDLING",
+      status: "IDLE",
       options: {
         useExternalDataFormat: false,
         engineId: "default-engine",
@@ -496,15 +500,14 @@ add_task(async function test_ml_engine_get_status() {
         baseURL: null,
         apiKey: null,
       },
-      engineId: "default-engine",
     },
   };
 
-  let status = await engineInstance.mlEngineParent.getStatus();
-  status = JSON.parse(JSON.stringify(Object.fromEntries(status)));
-
-  status["default-engine"].options.numThreads = "NOT_COMPARED";
-  Assert.deepEqual(status, expected);
+  const statusByEngineId = Object.fromEntries(
+    await engineInstance.mlEngineParent.getStatusByEngineId()
+  );
+  statusByEngineId["default-engine"].options.numThreads = "NOT_COMPARED";
+  Assert.deepEqual(statusByEngineId, expected);
 
   await ok(
     !EngineProcess.areAllEnginesTerminated(),
