@@ -1694,6 +1694,15 @@ def _get_desktop_run_parser():
         help="Do not pass the --profile argument by default.",
     )
     group.add_argument(
+        "--appdata",
+        "-a",
+        nargs="?",
+        const=True,
+        default=False,
+        help="Overrides the application data storage area defaulting to a "
+        "temporary location in the object directory. Implies --noprofile.",
+    )
+    group.add_argument(
         "--disable-e10s",
         action="store_true",
         help="Run the program with electrolysis disabled.",
@@ -2222,6 +2231,7 @@ def _run_desktop(
     app,
     background,
     noprofile,
+    appdata,
     disable_e10s,
     enable_crash_reporter,
     disable_fission,
@@ -2313,6 +2323,10 @@ def _run_desktop(
     ):
         args.append("-wait-for-browser")
 
+    tmpdir = os.path.join(command_context.topobjdir, "tmp")
+    if not os.path.exists(tmpdir):
+        os.makedirs(tmpdir)
+
     no_profile_option_given = all(
         p not in params for p in ["-profile", "--profile", "-P"]
     )
@@ -2323,6 +2337,7 @@ def _run_desktop(
         no_profile_option_given
         and no_backgroundtask_mode_option_given
         and not noprofile
+        and not appdata
     ):
         prefs = {
             "browser.aboutConfig.showWarning": False,
@@ -2332,10 +2347,6 @@ def _run_desktop(
         prefs.update([p.split("=", 1) for p in setpref])
         for pref in prefs:
             prefs[pref] = Preferences.cast(prefs[pref])
-
-        tmpdir = os.path.join(command_context.topobjdir, "tmp")
-        if not os.path.exists(tmpdir):
-            os.makedirs(tmpdir)
 
         if temp_profile:
             path = tempfile.mkdtemp(dir=tmpdir, prefix="profile-")
@@ -2377,6 +2388,13 @@ def _run_desktop(
         "MOZ_DEVELOPER_OBJ_DIR": command_context.topobjdir,
         "RUST_BACKTRACE": "full",
     }
+
+    if appdata:
+        if appdata is True:
+            appdata = tmpdir
+
+        extra_env["MOZ_APP_DATA"] = os.path.join(appdata, "AppData", "Roaming")
+        extra_env["MOZ_LOCAL_APP_DATA"] = os.path.join(appdata, "Local")
 
     if not enable_crash_reporter:
         extra_env["MOZ_CRASHREPORTER_DISABLE"] = "1"
