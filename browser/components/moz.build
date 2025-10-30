@@ -55,6 +55,7 @@ DIRS += [
     "prompts",
     "protections",
     "protocolhandler",
+    "qrcode",
     "reportbrokensite",
     "resistfingerprinting",
     "screenshots",
