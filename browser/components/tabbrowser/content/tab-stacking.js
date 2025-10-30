@@ -601,7 +601,7 @@
        * @returns {number}
        */
       let getTabShift = (item, dropElementIndex) => {
-        if (!item?.currentIndex) {
+        if (item?.currentIndex == undefined) {
           item.currentIndex = item.elementIndex;
         }
         if (
@@ -1080,7 +1080,7 @@
       let shiftNumber = this._maxTabsPerRow - 1;
 
       let getTabShift = (tab, dropIndex) => {
-        if (!tab?.currentIndex) {
+        if (tab?.currentIndex == undefined) {
           tab.currentIndex = tab.elementIndex;
         }
         if (
