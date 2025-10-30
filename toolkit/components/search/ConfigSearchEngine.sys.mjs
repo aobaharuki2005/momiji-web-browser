@@ -442,6 +442,13 @@ export class ConfigSearchEngine extends SearchEngine {
   #telemetryId;
 
   /**
+   * The order hint for this engine, as determined by the search configuration.
+   *
+   * @type {?number}
+   */
+  #orderHint;
+
+  /**
    * @param {object} options
    *   The options for this search engine.
    * @param {SearchEngineDefinition} options.config
@@ -580,6 +587,16 @@ export class ConfigSearchEngine extends SearchEngine {
   }
 
   /**
+   * Gets the order hint for this engine. This is determined from the search
+   * configuration when the engine is initialized.
+   *
+   * @type {?number}
+   */
+  get orderHint() {
+    return this.#orderHint;
+  }
+
+  /**
    * Returns the icon URL for the search engine closest to the preferred width.
    *
    * @param {number} preferredWidth
@@ -680,7 +697,7 @@ export class ConfigSearchEngine extends SearchEngine {
    *   The engine definition from the search config for this engine.
    */
   #init(engineConfig) {
-    this._orderHint = engineConfig.orderHint;
+    this.#orderHint = engineConfig.orderHint;
     this.#telemetryId = engineConfig.identifier;
     this.#isGeneralPurposeSearchEngine =
       engineConfig.classification == lazy.SearchEngineClassification.GENERAL;

@@ -567,8 +567,6 @@ export class SearchEngine {
   _name = null;
   // The name of the charset used to submit the search terms.
   _queryCharset = null;
-  // The order hint from the configuration (if any).
-  _orderHint = null;
   // Set to true once the engine has been added to the store, and the initial
   // notification sent. This allows to skip sending notifications during
   // initialization.
@@ -1044,7 +1042,6 @@ export class SearchEngine {
       json.queryCharset || lazy.SearchUtils.DEFAULT_QUERY_CHARSET;
     this._iconMapObj = json._iconMapObj || null;
     this._metaData = json._metaData || {};
-    this._orderHint = json._orderHint || null;
     this._definedAliases = json._definedAliases || [];
     // These changed keys in Firefox 80, maintain the old keys
     // for backwards compatibility.
@@ -1078,7 +1075,6 @@ export class SearchEngine {
       "_iconMapObj",
       "_metaData",
       "_urls",
-      "_orderHint",
       "_filePath",
       "_definedAliases",
     ];
@@ -1152,10 +1148,11 @@ export class SearchEngine {
    * Gets the order hint for this engine. This is determined from the search
    * configuration when the engine is initialized.
    *
-   * @type {number}
+   * @type {?number}
    */
   get orderHint() {
-    return this._orderHint;
+    // Overridden in derived classes.
+    return null;
   }
 
   /**
