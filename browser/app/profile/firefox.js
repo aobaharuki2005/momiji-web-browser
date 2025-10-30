@@ -1796,10 +1796,6 @@ pref("services.sync.syncedTabs.showRemoteIcons", true);
 // Anything <= 0 means disabled
 pref("services.sync.syncedTabs.syncDelayAfterTabChange", 5000);
 
-// Whether the character encoding menu is under the main Firefox button. This
-// preference is a string so that localizers can alter it.
-pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
-
 // Whether prompts should be content modal (1) tab modal (2) or window modal(3) by default
 // This is a fallback value for when prompt callers do not specify a modalType.
 pref("prompts.defaultModalType", 3);
