@@ -32,6 +32,29 @@ struct AnchorPosInfo {
   bool mCompensatesForScroll;
 };
 
+class DistanceToNearestScrollContainer {
+ public:
+  DistanceToNearestScrollContainer() : mDistance{kInvalid} {}
+  explicit DistanceToNearestScrollContainer(uint32_t aDistance)
+      : mDistance{aDistance} {}
+  bool Valid() const { return mDistance != kInvalid; }
+  bool operator==(const DistanceToNearestScrollContainer& aOther) const {
+    return mDistance == aOther.mDistance;
+  }
+  bool operator!=(const DistanceToNearestScrollContainer& aOther) const {
+    return !(*this == aOther);
+  }
+
+ private:
+  // 0 is invalid - a frame itself cannot be its own nearest scroll container.
+  static constexpr uint32_t kInvalid = 0;
+  // Ancestor hops to the nearest scroll container. Note that scroll containers
+  // between abspos/fixedpos frames and their containing blocks are irrelevant,
+  // so the distance should be measured from the out-of-flow frame, not the
+  // placeholder frame.
+  uint32_t mDistance;
+};
+
 struct AnchorPosOffsetData {
   // Origin of the referenced anchor, w.r.t. containing block at the time of
   // resolution.
@@ -39,6 +62,8 @@ struct AnchorPosOffsetData {
   // Does this anchor's offset compensate for scroll?
   // https://drafts.csswg.org/css-anchor-position-1/#compensate-for-scroll
   bool mCompensatesForScroll = false;
+  // Distance to this anchor's nearest scroll container.
+  DistanceToNearestScrollContainer mDistanceToNearestScrollContainer;
 };
 
 // Resolved anchor positioning data.
@@ -66,7 +91,13 @@ class AnchorPosReferenceData {
  public:
   // Backup data for attempting a different `@position-try` style, when
   // the default anchor remains the same.
-  using PositionTryBackup = std::pair<mozilla::PhysicalAxes, nsPoint>;
+  // These entries correspond 1:1 to that of `AnchorPosReferenceData`.
+  struct PositionTryBackup {
+    mozilla::PhysicalAxes mCompensatingForScroll;
+    nsPoint mDefaultScrollShift;
+    nsRect mContainingBlockRect;
+    bool mUseScrollableContainingBlock = false;
+  };
   using Value = mozilla::Maybe<AnchorPosResolutionData>;
 
   AnchorPosReferenceData() = default;
@@ -98,20 +129,31 @@ class AnchorPosReferenceData {
   }
 
   PositionTryBackup TryPositionWithSameDefaultAnchor() {
-    mozilla::PhysicalAxes compensatingForScroll =
-        std::exchange(mCompensatingForScroll, {});
-    nsPoint defaultScrollShift = std::exchange(mDefaultScrollShift, {});
-    return std::make_pair(compensatingForScroll, defaultScrollShift);
+    auto compensatingForScroll = std::exchange(mCompensatingForScroll, {});
+    auto defaultScrollShift = std::exchange(mDefaultScrollShift, {});
+    auto insetModifiedContainingBlock = std::exchange(mContainingBlockRect, {});
+    return {compensatingForScroll, defaultScrollShift,
+            insetModifiedContainingBlock};
   }
 
   void UndoTryPositionWithSameDefaultAnchor(PositionTryBackup&& aBackup) {
-    std::tie(mCompensatingForScroll, mDefaultScrollShift) = aBackup;
+    mCompensatingForScroll = aBackup.mCompensatingForScroll;
+    mDefaultScrollShift = aBackup.mDefaultScrollShift;
+    mContainingBlockRect = aBackup.mContainingBlockRect;
   }
 
+  // Distance from the default anchor to the nearest scroll container.
+  DistanceToNearestScrollContainer mDistanceToDefaultScrollContainer;
   // https://drafts.csswg.org/css-anchor-position-1/#default-scroll-shift
   nsPoint mDefaultScrollShift;
+  // Rect of containing block before being inset-modified, at the time of
+  // resolution.
+  nsRect mContainingBlockRect;
   // TODO(dshin, bug 1987962): Remembered scroll offset
   // https://drafts.csswg.org/css-anchor-position-1/#remembered-scroll-offset
+  // Name of the default used anchor. Not necessarily positioned frame's
+  // style, because of fallbacks.
+  RefPtr<const nsAtom> mDefaultAnchorName;
 
  private:
   ResolutionMap mMap;
@@ -130,7 +172,6 @@ struct AnchorPosDefaultAnchorCache {
   const nsIFrame* mScrollContainer = nullptr;
 
   AnchorPosDefaultAnchorCache() = default;
-  explicit AnchorPosDefaultAnchorCache(const nsIFrame* aAnchor);
   AnchorPosDefaultAnchorCache(const nsIFrame* aAnchor,
                               const nsIFrame* aScrollContainer);
 };
@@ -240,7 +281,11 @@ struct AnchorPositioningUtils {
    */
   static const nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
 
-  static const nsIFrame* GetNearestScrollFrame(const nsIFrame* aFrame);
+  struct NearestScrollFrameInfo {
+    const nsIFrame* mScrollContainer = nullptr;
+    DistanceToNearestScrollContainer mDistance;
+  };
+  static NearestScrollFrameInfo GetNearestScrollFrame(const nsIFrame* aFrame);
 
   static nsPoint GetScrollOffsetFor(
       PhysicalAxes aAxes, const nsIFrame* aPositioned,
