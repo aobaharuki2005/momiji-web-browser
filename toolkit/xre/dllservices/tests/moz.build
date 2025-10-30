@@ -8,6 +8,7 @@ GeckoCppUnitTests(
     [
         "TestDllBlocklistAssumptions",
         "TestDllInterceptor",
+        "TestIATPatcher",
         "TestMMPolicy",
         "TestOleAut32Initialization",
     ],
@@ -15,12 +16,10 @@ GeckoCppUnitTests(
 )
 
 if CONFIG["TARGET_CPU"] in ("x86", "x86_64"):
+    # Cross-process interceptors not yet supported on aarch64
     GeckoCppUnitTests(
         [
-            # Cross-process interceptors not yet supported on aarch64
             "TestDllInterceptorCrossProcess",
-            # Requires administrator permission on aarch64
-            "TestIATPatcher",
         ],
         linkage=None,
     )
