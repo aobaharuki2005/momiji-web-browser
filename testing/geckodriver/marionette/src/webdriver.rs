@@ -201,12 +201,6 @@ pub struct UserVerificationParameters {
     pub is_user_verified: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct GlobalPrivacyControlParameters {
-    pub gpc: bool,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ScreenshotOptions {
     pub id: Option<String>,
@@ -374,10 +368,6 @@ pub enum Command {
     WebAuthnRemoveAllCredentials,
     #[serde(rename = "WebAuthn:SetUserVerified")]
     WebAuthnSetUserVerified(UserVerificationParameters),
-    #[serde(rename = "WebAuthn:GetGlobalPrivacyControl")]
-    GetGlobalPrivacyControl,
-    #[serde(rename = "WebAuthn:SetGlobalPrivacyControl")]
-    SetGlobalPrivacyControl(GlobalPrivacyControlParameters),
 }
 
 #[cfg(test)]

@@ -344,16 +344,6 @@ pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static st
             "/session/{sessionId}/webauthn/authenticator/{authenticatorId}/uv",
             Route::WebAuthnSetUserVerified,
         ),
-        (
-            Method::POST,
-            "/session/{sessionId}/privacy",
-            Route::SetGlobalPrivacyControl,
-        ),
-        (
-            Method::GET,
-            "/session/{sessionId}/privacy",
-            Route::GetGlobalPrivacyControl,
-        ),
         (Method::GET, "/status", Route::Status),
     ]
 }
@@ -435,8 +425,6 @@ pub enum Route<U: WebDriverExtensionRoute> {
     WebAuthnRemoveCredential,
     WebAuthnRemoveAllCredentials,
     WebAuthnSetUserVerified,
-    GetGlobalPrivacyControl,
-    SetGlobalPrivacyControl,
 }
 
 pub trait WebDriverExtensionRoute: Clone + Send + PartialEq {
