@@ -37,27 +37,6 @@ install::
 	$(MAKE) -C build install
 	$(MAKE) -C shell install
 
-ifdef HAVE_DTRACE
-javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
-	dtrace -x nolibs -h -s $(srcdir)/devtools/javascript-trace.d -o javascript-trace.h.in
-	sed -e 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
-	    -e '/const/!s/char \*/const char */g' \
-	    javascript-trace.h.in > javascript-trace.h
-
-# We can't automatically generate dependencies on auto-generated headers;
-# we have to list them explicitly.
-$(addsuffix .$(OBJ_SUFFIX),Probes jsinterp jsobj): $(CURDIR)/javascript-trace.h
-
-ifneq ($(OS_ARCH),Darwin)
-DTRACE_PROBE_OBJ = js-dtrace.$(OBJ_SUFFIX)
-$(LIBRARY): $(DTRACE_PROBE_OBJ)
-$(DTRACE_PROBE_OBJ): $(srcdir)/devtools/javascript-trace.d $(OBJS)
-	dtrace -x nolibs -G -C -s $< -o $@ $(filter-out $<, $^)
-
-OBJS += $(DTRACE_PROBE_OBJ)
-endif # OS_ARCH != Darwin
-endif # HAVE_DTRACE
-
 ###############################################
 # Generating source package tarballs
 # (only possible when tar is found)

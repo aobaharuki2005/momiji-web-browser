@@ -3942,16 +3942,3 @@ def htmlaccel_config(target, c_compiler):
 
 
 set_config("HTML_ACCEL_FLAGS", htmlaccel_config)
-
-# dtrace support
-##
-option("--enable-dtrace", help="Build with dtrace support")
-
-dtrace = check_header(
-    "sys/sdt.h",
-    when="--enable-dtrace",
-    onerror=lambda: die("dtrace enabled but sys/sdt.h not found"),
-)
-
-set_config("HAVE_DTRACE", True, when=dtrace)
-set_define("INCLUDE_MOZILLA_DTRACE", True, when=dtrace)

@@ -529,15 +529,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-  value = BooleanValue(true);
-#else
-  value = BooleanValue(false);
-#endif
-  if (!JS_SetProperty(cx, info, "dtrace", value)) {
-    return false;
-  }
-
 #ifdef MOZ_VALGRIND
   value = BooleanValue(true);
 #else

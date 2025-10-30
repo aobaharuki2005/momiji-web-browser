@@ -60,7 +60,6 @@ included_inclnames_to_ignore = set(
         "devtools/Instruments.h",  # we ignore devtools/ in general
         "diplomat_runtime.hpp",  # ICU4X
         "double-conversion/double-conversion.h",  # strange MFBT case
-        "javascript-trace.h",  # generated in $OBJDIR if HAVE_DTRACE is defined
         "frontend/ReservedWordsGenerated.h",  # generated in $OBJDIR
         "gc/StatsPhasesGenerated.h",  # generated in $OBJDIR
         "gc/StatsPhasesGenerated.inc",  # generated in $OBJDIR
