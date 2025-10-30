@@ -65,7 +65,6 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Locale;
 import java.util.StringTokenizer;
 import org.jetbrains.annotations.NotNull;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -513,9 +512,7 @@ public class GeckoAppShell {
       final float accuracy = location.hasAccuracy() ? location.getAccuracy() : Float.NaN;
 
       final float altitudeAccuracy =
-          Build.VERSION.SDK_INT >= 26 && location.hasVerticalAccuracy()
-              ? location.getVerticalAccuracyMeters()
-              : Float.NaN;
+          location.hasVerticalAccuracy() ? location.getVerticalAccuracyMeters() : Float.NaN;
 
       final float speed = location.hasSpeed() ? location.getSpeed() : Float.NaN;
 
@@ -934,29 +931,10 @@ public class GeckoAppShell {
 
   @WrapForJNI(calledFrom = "gecko")
   private static boolean hasHDRScreen() {
-    if (Build.VERSION.SDK_INT < 24) {
-      return false;
-    }
-    final WindowManager wm =
-        (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-    final Display display = wm.getDefaultDisplay();
-    if (Build.VERSION.SDK_INT >= 26) {
-      return display.isHdr();
-    }
-    final Display.HdrCapabilities hdrCapabilities = display.getHdrCapabilities();
-    if (hdrCapabilities == null) {
-      return false;
-    }
-    final int[] supportedHdrTypes = hdrCapabilities.getSupportedHdrTypes();
-    for (final int type : supportedHdrTypes) {
-      if (type == Display.HdrCapabilities.HDR_TYPE_HDR10
-          || type == Display.HdrCapabilities.HDR_TYPE_HDR10_PLUS
-          || type == Display.HdrCapabilities.HDR_TYPE_HLG
-          || type == Display.HdrCapabilities.HDR_TYPE_DOLBY_VISION) {
-        return true;
-      }
-    }
-    return false;
+    final Display display =
+        ((DisplayManager) getApplicationContext().getSystemService(Context.DISPLAY_SERVICE))
+            .getDisplay(Display.DEFAULT_DISPLAY);
+    return display != null && display.isHdr();
   }
 
   @WrapForJNI(calledFrom = "gecko")
@@ -1106,10 +1084,6 @@ public class GeckoAppShell {
 
   @WrapForJNI(calledFrom = "gecko", exceptionMode = "nsresult")
   private static String getDNSDomains() {
-    if (Build.VERSION.SDK_INT < 23) {
-      return "";
-    }
-
     ensureConnectivityManager();
     final Network net = sConnectivityManager.getActiveNetwork();
     if (net == null) {
@@ -1174,11 +1148,7 @@ public class GeckoAppShell {
     // TODO(m_kato):
     // Android 16 will have `layout related APIs such as setLayoutLabelNonLocalized
     // to get keyboard layout label.
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      return ims.getLanguageTag();
-    } else {
-      return ims.getLocale();
-    }
+    return ims.getLanguageTag();
   }
 
   @WrapForJNI(calledFrom = "gecko")
@@ -1482,8 +1452,7 @@ public class GeckoAppShell {
     if (hasInputDeviceSource(sources, InputDevice.SOURCE_STYLUS)) {
       result |= POINTING_DEVICE_PEN;
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-        && hasInputDeviceSource(sources, InputDevice.SOURCE_BLUETOOTH_STYLUS)) {
+    if (hasInputDeviceSource(sources, InputDevice.SOURCE_BLUETOOTH_STYLUS)) {
       result |= POINTING_DEVICE_PEN;
     }
 
@@ -1716,18 +1685,12 @@ public class GeckoAppShell {
 
   @WrapForJNI
   public static String[] getDefaultLocales() {
-    // XXX We may have to convert some language codes such as "id" vs "in".
-    if (Build.VERSION.SDK_INT >= 24) {
-      final LocaleList localeList = LocaleList.getDefault();
-      final String[] locales = new String[localeList.size()];
-      for (int i = 0; i < localeList.size(); i++) {
-        locales[i] = localeList.get(i).toLanguageTag();
-      }
-      return locales;
+    final LocaleList list = LocaleList.getDefault();
+    final int n = list.size();
+    final String[] locales = new String[n];
+    for (int i = 0; i < n; i++) {
+      locales[i] = list.get(i).toLanguageTag();
     }
-    final String[] locales = new String[1];
-    final Locale locale = Locale.getDefault();
-    locales[0] = locale.toLanguageTag();
     return locales;
   }
 
@@ -1750,11 +1713,6 @@ public class GeckoAppShell {
 
   @WrapForJNI(calledFrom = "gecko")
   private static int getMemoryUsage(final String stateName) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      // No API to get Java heap usages.
-      return -1;
-    }
-
     final Debug.MemoryInfo memInfo = new Debug.MemoryInfo();
     Debug.getMemoryInfo(memInfo);
     final String usage = memInfo.getMemoryStat(stateName);

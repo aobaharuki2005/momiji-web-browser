@@ -6,8 +6,6 @@
 
 package org.mozilla.geckoview;
 
-import static android.os.Build.VERSION;
-
 import android.app.Service;
 import android.graphics.Rect;
 import android.os.Build;
@@ -77,9 +75,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     /**
      * Path to configuration file from which GeckoView will read configuration options such as Gecko
      * process arguments, environment variables, and preferences.
-     *
-     * <p>Note: this feature is only available for <code>{@link VERSION#SDK_INT} &gt; 21</code>, on
-     * older devices this will be silently ignored.
      *
      * @param configFilePath Configuration file path to read from, or <code>null</code> to use
      *     default location <code>/data/local/tmp/$PACKAGE-geckoview-config.yaml</code>.
@@ -928,8 +923,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    * Path to configuration file from which GeckoView will read configuration options such as Gecko
    * process arguments, environment variables, and preferences.
    *
-   * <p>Note: this feature is only available for <code>{@link VERSION#SDK_INT} &gt; 21</code>.
-   *
    * @return Path to configuration file from which GeckoView will read configuration options, or
    *     <code>null</code> for default location <code>/data/local/tmp/$PACKAGE-geckoview-config.yaml
    *     </code>.
@@ -1508,18 +1501,12 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   }
 
   private static String[] getSystemLocalesForAcceptLanguage() {
-    if (VERSION.SDK_INT >= 24) {
-      final LocaleList localeList = LocaleList.getDefault();
-      final String[] locales = new String[localeList.size()];
-      for (int i = 0; i < localeList.size(); i++) {
-        // accept-language should be language or language-region format.
-        locales[i] = LocaleUtils.getLanguageTagForAcceptLanguage(localeList.get(i));
-      }
-      return locales;
+    final LocaleList localeList = LocaleList.getDefault();
+    final String[] locales = new String[localeList.size()];
+    for (int i = 0; i < localeList.size(); i++) {
+      // accept-language should be language or language-region format.
+      locales[i] = LocaleUtils.getLanguageTagForAcceptLanguage(localeList.get(i));
     }
-    final String[] locales = new String[1];
-    final Locale locale = Locale.getDefault();
-    locales[0] = LocaleUtils.getLanguageTagForAcceptLanguage(locale);
     return locales;
   }
 

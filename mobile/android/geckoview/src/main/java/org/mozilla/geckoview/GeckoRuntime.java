@@ -18,7 +18,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -218,7 +217,6 @@ public final class GeckoRuntime implements Parcelable {
       // Stop monitoring network status while inactive.
       GeckoNetworkManager.getInstance().stop();
       GeckoThread.onPause();
-      Clipboard.onPause();
     }
   }
 
@@ -367,11 +365,7 @@ public final class GeckoRuntime implements Parcelable {
             i.putExtra(EXTRA_CRASH_PROCESS_TYPE, message.getString(EXTRA_CRASH_PROCESS_TYPE));
             i.putExtra(EXTRA_CRASH_REMOTE_TYPE, message.getString(EXTRA_CRASH_REMOTE_TYPE));
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-              context.startForegroundService(i);
-            } else {
-              context.startService(i);
-            }
+            context.startForegroundService(i);
           } else if ("GeckoView:ServiceWorkerOpenWindow".equals(event)) {
             final String url = message.getString("url", "about:blank");
             serviceWorkerOpenWindow(url)

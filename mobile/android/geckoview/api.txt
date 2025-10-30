@@ -44,7 +44,6 @@ import android.widget.FrameLayout;
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.UiThread;
 import androidx.core.view.OnApplyWindowInsetsListener;
 import androidx.core.view.WindowInsetsCompat;
@@ -402,8 +401,8 @@ package org.mozilla.geckoview {
   public static final class Autofill.Session {
     method @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
     method @NonNull @UiThread public Autofill.NodeData dataFor(@NonNull Autofill.Node);
-    method @RequiresApi(value=23) @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
-    method @RequiresApi(value=23) @UiThread public void fillViewStructure(@NonNull Autofill.Node, @NonNull View, @NonNull ViewStructure, int);
+    method @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
+    method @UiThread public void fillViewStructure(@NonNull Autofill.Node, @NonNull View, @NonNull ViewStructure, int);
     method @NonNull @UiThread public Rect getDefaultDimensions();
     method @Nullable @UiThread public Autofill.Node getFocused();
     method @Nullable @UiThread public Autofill.NodeData getFocusedData();
@@ -1332,7 +1331,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onKill(@NonNull GeckoSession);
     method @UiThread default public void onMetaViewportFitChange(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onPaintStatusReset(@NonNull GeckoSession);
-    method @RequiresApi(value=24) @UiThread default public void onPointerIconChange(@NonNull GeckoSession, @NonNull PointerIcon);
+    method @UiThread default public void onPointerIconChange(@NonNull GeckoSession, @NonNull PointerIcon);
     method @UiThread default public void onPreviewImage(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onShowDynamicToolbar(@NonNull GeckoSession);
     method @Nullable @UiThread default public GeckoResult<SlowScriptResponse> onSlowScript(@NonNull GeckoSession, @NonNull String);
@@ -2113,7 +2112,7 @@ package org.mozilla.geckoview {
     method public void coverUntilFirstPaint(int);
     method public void dispatchDraw(@Nullable Canvas);
     method @Nullable public GeckoView.ActivityContextDelegate getActivityContextDelegate();
-    method @RequiresApi(value=26) public boolean getAutofillEnabled();
+    method public boolean getAutofillEnabled();
     method @NonNull public PanZoomController getPanZoomController();
     method @Nullable public GeckoSession.PrintDelegate getPrintDelegate();
     method public void getPrintDelegate(@Nullable GeckoSession.PrintDelegate);
@@ -2124,7 +2123,7 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread public GeckoSession releaseSession();
     method @UiThread public void removeWindowInsetsListener(@NonNull String);
     method public void setActivityContextDelegate(@Nullable GeckoView.ActivityContextDelegate);
-    method @RequiresApi(value=26) public void setAutofillEnabled(boolean);
+    method public void setAutofillEnabled(boolean);
     method public void setDynamicToolbarMaxHeight(int);
     method @UiThread public void setSession(@NonNull GeckoSession);
     method public void setVerticalClipping(int);

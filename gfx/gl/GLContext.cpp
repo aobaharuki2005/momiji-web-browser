@@ -1847,23 +1847,19 @@ void GLContext::AttachBuffersToFB(GLuint colorTex, GLuint colorRB,
     fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
                           target, colorTex, 0);
   } else if (colorRB) {
-    // On the Android 4.3 emulator, IsRenderbuffer may return false incorrectly.
-    MOZ_GL_ASSERT(this, fIsRenderbuffer(colorRB) ||
-                            Renderer() == GLRenderer::AndroidEmulator);
+    MOZ_GL_ASSERT(this, fIsRenderbuffer(colorRB));
     fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
                              LOCAL_GL_RENDERBUFFER, colorRB);
   }
 
   if (depthRB) {
-    MOZ_GL_ASSERT(this, fIsRenderbuffer(depthRB) ||
-                            Renderer() == GLRenderer::AndroidEmulator);
+    MOZ_GL_ASSERT(this, fIsRenderbuffer(depthRB));
     fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
                              LOCAL_GL_RENDERBUFFER, depthRB);
   }
 
   if (stencilRB) {
-    MOZ_GL_ASSERT(this, fIsRenderbuffer(stencilRB) ||
-                            Renderer() == GLRenderer::AndroidEmulator);
+    MOZ_GL_ASSERT(this, fIsRenderbuffer(stencilRB));
     fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
                              LOCAL_GL_RENDERBUFFER, stencilRB);
   }

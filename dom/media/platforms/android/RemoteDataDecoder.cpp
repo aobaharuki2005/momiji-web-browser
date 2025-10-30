@@ -996,13 +996,6 @@ static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
     return CryptoInfoResult(cryptoInfo);
   }
 
-  static bool supportsCBCS = java::CodecProxy::SupportsCBCS();
-  if ((cryptoObj.mCryptoScheme == CryptoScheme::Cbcs ||
-       cryptoObj.mCryptoScheme == CryptoScheme::Cbcs_1_9) &&
-      !supportsCBCS) {
-    return CryptoInfoResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
-  }
-
   nsresult rv = java::sdk::MediaCodec::CryptoInfo::New(&cryptoInfo);
   NS_ENSURE_SUCCESS(rv, CryptoInfoResult(rv));
 

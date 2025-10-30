@@ -1987,7 +1987,7 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
       outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 && typeHint.length() == 0) {
+    if (typeHint.length() == 0) {
       // contenteditable allows image insertion.
       outAttrs.contentMimeTypes = new String[] {"image/gif", "image/jpeg", "image/png"};
     }

@@ -48,9 +48,6 @@ class PermissionDelegateTest : BaseSessionTest() {
         get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     private fun hasPermission(permission: String): Boolean {
-        if (Build.VERSION.SDK_INT < 23) {
-            return true
-        }
         return PackageManager.PERMISSION_GRANTED ==
             InstrumentationRegistry.getInstrumentation().targetContext.checkSelfPermission(
                 permission,

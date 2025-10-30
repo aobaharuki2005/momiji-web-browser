@@ -264,15 +264,13 @@ public final class HardwareCodecCapabilityUtils {
       for (final int colorFormat : capabilities.colorFormats) {
         Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
       }
-      if (Build.VERSION.SDK_INT >= 24) {
-        for (final MediaCodecInfo.CodecProfileLevel pl : capabilities.profileLevels) {
-          Log.v(
-              LOGTAG,
-              "   Profile: 0x"
-                  + Integer.toHexString(pl.profile)
-                  + "/Level=0x"
-                  + Integer.toHexString(pl.level));
-        }
+      for (final MediaCodecInfo.CodecProfileLevel pl : capabilities.profileLevels) {
+        Log.v(
+            LOGTAG,
+            "   Profile: 0x"
+                + Integer.toHexString(pl.profile)
+                + "/Level=0x"
+                + Integer.toHexString(pl.level));
       }
       final int codecColorFormat = getSupportsYUV420orNV12(capabilities);
       if (codecColorFormat != COLOR_FORMAT_NOT_SUPPORTED) {
@@ -350,11 +348,6 @@ public final class HardwareCodecCapabilityUtils {
 
   @WrapForJNI
   public static boolean decodes10Bit(final String aMimeType) {
-    if (Build.VERSION.SDK_INT < 24) {
-      // Be conservative when we cannot get supported profile.
-      return false;
-    }
-
     final MediaCodecList codecs = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
     for (final MediaCodecInfo info : codecs.getCodecInfos()) {
       if (info.isEncoder()) {
@@ -381,11 +374,6 @@ public final class HardwareCodecCapabilityUtils {
   }
 
   private static boolean is10BitVP9Profile(final int profile) {
-    if (Build.VERSION.SDK_INT < 24) {
-      // Be conservative when we cannot get supported profile.
-      return false;
-    }
-
     if ((profile == MediaCodecInfo.CodecProfileLevel.VP9Profile2)
         || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile3)
         || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile2HDR)

@@ -249,10 +249,6 @@ static XP_CHAR lastCrashTimeFilename[XP_PATH_MAX] = {0};
 // with the current process that gets lost when we fork so we need to
 // explicitly pass it to am
 static char* androidUserSerial = nullptr;
-
-// Before Android 8 we needed to use "startservice" to start the crash reporting
-// service. After Android 8 we need to use "start-foreground-service"
-static const char* androidStartServiceCommand = nullptr;
 #endif
 
 // this holds additional data sent via the API
@@ -1279,14 +1275,14 @@ static bool LaunchCrashHandlerService(const XP_CHAR* aProgramPath,
     // Invoke the crash handler service using am
     if (androidUserSerial) {
       (void)execlp(
-          "/system/bin/am", "/system/bin/am", androidStartServiceCommand,
+          "/system/bin/am", "/system/bin/am", "start-foreground-service",
           "--user", androidUserSerial, "-a", "org.mozilla.gecko.ACTION_CRASHED",
           "-n", aProgramPath, "--es", "minidumpPath", aMinidumpPath, "--es",
           "extrasPath", extrasPath, "--ez", "fatal", "true", "--es",
           "processVisibility", "MAIN", "--es", "processType", "main", (char*)0);
     } else {
       (void)execlp(
-          "/system/bin/am", "/system/bin/am", androidStartServiceCommand, "-a",
+          "/system/bin/am", "/system/bin/am", "start-foreground-service", "-a",
           "org.mozilla.gecko.ACTION_CRASHED", "-n", aProgramPath, "--es",
           "minidumpPath", aMinidumpPath, "--es", "extrasPath", extrasPath,
           "--ez", "fatal", "true", "--es", "processVisibility", "MAIN", "--es",
@@ -1945,17 +1941,6 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
     crashReporterPath = xpstring(androidCrashHandler);
   } else {
     NS_WARNING("No Android crash handler set");
-  }
-
-  const char* deviceAndroidVersion =
-      PR_GetEnv("MOZ_ANDROID_DEVICE_SDK_VERSION");
-  if (deviceAndroidVersion != nullptr) {
-    const int deviceSdkVersion = atol(deviceAndroidVersion);
-    if (deviceSdkVersion >= 26) {
-      androidStartServiceCommand = (char*)"start-foreground-service";
-    } else {
-      androidStartServiceCommand = (char*)"startservice";
-    }
   }
 
   const char* crashHelperPathEnv = PR_GetEnv("MOZ_ANDROID_PACKAGE_NAME");
