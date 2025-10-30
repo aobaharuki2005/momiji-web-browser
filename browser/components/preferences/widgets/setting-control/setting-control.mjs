@@ -59,6 +59,7 @@ export class SettingControl extends SettingElement {
     config: { type: Object },
     value: {},
     parentDisabled: { type: Boolean },
+    showEnableExtensionMessage: { type: Boolean },
   };
 
   constructor() {
@@ -84,6 +85,11 @@ export class SettingControl extends SettingElement {
      * @type {boolean | undefined}
      */
     this.parentDisabled = undefined;
+
+    /**
+     * @type {boolean}
+     */
+    this.showEnableExtensionMessage = false;
   }
 
   createRenderRoot() {
@@ -221,6 +227,7 @@ export class SettingControl extends SettingElement {
 
   async disableExtension() {
     await this.setting.disableControllingExtension();
+    this.showEnableExtensionMessage = true;
   }
 
   isControlledByExtension() {
@@ -228,6 +235,18 @@ export class SettingControl extends SettingElement {
       this.setting.controllingExtensionInfo?.id &&
       this.setting.controllingExtensionInfo?.name
     );
+  }
+
+  handleEnableExtensionDismiss() {
+    this.showEnableExtensionMessage = false;
+  }
+
+  navigateToAddons(event) {
+    if (event.target.matches("a[data-l10n-name='addons-link']")) {
+      event.preventDefault();
+      let mainWindow = window.browsingContext.topChromeWindow;
+      mainWindow.BrowserAddonUI.openAddonsMgr("addons://list/theme");
+    }
   }
 
   get extensionName() {
@@ -279,6 +298,9 @@ export class SettingControl extends SettingElement {
 
     let tag = unsafeStatic(control);
     let messageBar;
+
+    // NOTE: the showEnableMessage message bar should ONLY appear when
+    // there are no extensions controlling the setting.
     if (this.isControlledByExtension()) {
       let args = { name: this.extensionName };
       messageBar = html`<moz-message-bar
@@ -291,6 +313,20 @@ export class SettingControl extends SettingElement {
           @click=${this.disableExtension}
           data-l10n-id="disable-extension"
         ></moz-button>
+      </moz-message-bar>`;
+    } else if (this.showEnableExtensionMessage) {
+      messageBar = html`<moz-message-bar
+        class="reenable-extensions-message-bar"
+        dismissable=""
+        @message-bar:user-dismissed=${this.handleEnableExtensionDismiss}
+      >
+        <span
+          @click=${this.navigateToAddons}
+          slot="message"
+          data-l10n-id="extension-controlled-enable-2"
+        >
+          <a data-l10n-name="addons-link" href="#"></a>
+        </span>
       </moz-message-bar>`;
     }
     return staticHtml`
