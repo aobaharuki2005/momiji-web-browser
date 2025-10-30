@@ -463,8 +463,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false,
     )
 
+    val shouldSecureModeBeOverridden
+        get() = allowScreenshotsInPrivateMode || allowScreenCaptureInSecureScreens
     var allowScreenshotsInPrivateMode by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_allow_screenshots_in_private_mode),
+        default = false,
+    )
+
+    var allowScreenCaptureInSecureScreens by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_dev_debug_allow_capture_of_secure_screens),
         default = false,
     )
 

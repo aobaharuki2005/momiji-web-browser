@@ -252,6 +252,9 @@
     <string name="crash_debug_crash_app_warning">This will crash the app to start crash reporting flow. Please also ensure that the crash report option is set to "Ask before sending" in the data collections settings if you want the dialog to pop up.</string>
     <!-- Timer text for deferral period %s is the timer string -->
     <string name="crash_debug_deferral_timer">Current deferral period: %s</string>
+
+    <!-- Button text for enabling screen capture on private screens -->
+    <string name="autofill_debug_enable_screen_capture">Enable screen capture on secure screens</string>
     <!-- Button text to show startup crash screen -->
     <string name="crash_debug_show_startup_crash_screen">Show startup crash screen</string>
     <!-- Subtitle warning text for crash button -->
