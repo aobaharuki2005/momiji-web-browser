@@ -60,7 +60,7 @@ task-defaults:
                 '3':
                     by-shipping-product:
                         fenix:
-                            slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
+                            slackText: '<https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|${task.metadata.name}>'
                             slackAttachments: |
                               [
                                     {
@@ -102,6 +102,10 @@ task-defaults:
                                             {
                                                 "type": "mrkdwn",
                                                 "text": "*Source:*\n<${task.payload.env.GECKO_BASE_REPOSITORY}/rev/${task.payload.env.GECKO_HEAD_REV}|Commit> :hg:"
+                                            },
+                                            {
+                                                "type": "mrkdwn",
+                                                "text": "*Report:*\n<https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/results/HtmlErrorReport.html|View Report>"
                                             }
                                             ]
                                         },
@@ -121,7 +125,7 @@ task-defaults:
                                     }
                               ]
                         focus:
-                            slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
+                            slackText: '<https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|${task.metadata.name}>'
                             slackAttachments: |
                                 [
                                     {
@@ -163,6 +167,10 @@ task-defaults:
                                             {
                                                 "type": "mrkdwn",
                                                 "text": "*Source:*\n<${task.payload.env.GECKO_BASE_REPOSITORY}/rev/${task.payload.env.GECKO_HEAD_REV}|Commit> :hg:"
+                                            },
+                                            {
+                                                "type": "mrkdwn",
+                                                "text": "*Report:*\n<https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/results/HtmlErrorReport.html|View Report>"
                                             }
                                             ]
                                         },
