@@ -7487,7 +7487,7 @@ void MacroAssembler::wasmNewStructObject(Register instance, Register result,
   // Don't execute the inline path if gc zeal or tracing are active.
   loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfGCZealModeBits()),
           temp);
-  loadPtr(Address(temp, 0), temp);
+  load32(Address(temp, 0), temp);
   branch32(Assembler::NotEqual, temp, Imm32(0), fail);
 #endif
 
@@ -7544,7 +7544,7 @@ void MacroAssembler::wasmNewArrayObject(Register instance, Register result,
   // Don't execute the inline path if gc zeal or tracing are active.
   loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfGCZealModeBits()),
           temp);
-  loadPtr(Address(temp, 0), temp);
+  load32(Address(temp, 0), temp);
   branch32(Assembler::NotEqual, temp, Imm32(0), fail);
 #endif
 
@@ -7708,7 +7708,7 @@ void MacroAssembler::wasmNewArrayObjectFixed(
   // Don't execute the inline path if gc zeal or tracing are active.
   loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfGCZealModeBits()),
           temp1);
-  loadPtr(Address(temp1, 0), temp1);
+  load32(Address(temp1, 0), temp1);
   branch32(Assembler::NotEqual, temp1, Imm32(0), fail);
 #endif
 
