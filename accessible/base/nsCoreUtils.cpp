@@ -730,7 +730,7 @@ nsIFrame* nsCoreUtils::GetPositionedFrameForAnchor(
           continue;
         }
         const auto* data = referencedAnchors->Lookup(name.AsAtom());
-        if (data && *data && data->ref().mOrigin) {
+        if (data && *data && data->ref().mOffsetData) {
           if (aAnchorFrame ==
               aPresShell->GetAnchorPosAnchor(name.AsAtom(), frame)) {
             if (positionedFrame) {

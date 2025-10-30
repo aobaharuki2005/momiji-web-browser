@@ -7,6 +7,8 @@
 #ifndef AnchorPositioningUtils_h__
 #define AnchorPositioningUtils_h__
 
+#include "WritingModes.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "nsRect.h"
 #include "nsTHashMap.h"
@@ -23,41 +25,48 @@ class CopyableTArray;
 namespace mozilla {
 
 struct AnchorPosInfo {
-  // Border-box of the anchor frame, offset against `mContainingBlock`'s padding
-  // box.
+  // Border-box of the anchor frame, offset against the positioned frame's
+  // absolute containing block's padding box.
   nsRect mRect;
-  const nsIFrame* mContainingBlock;
+  // See `AnchorPosOffsetData::mCompensatesForScroll`.
+  bool mCompensatesForScroll;
+};
+
+struct AnchorPosOffsetData {
+  // Origin of the referenced anchor, w.r.t. containing block at the time of
+  // resolution.
+  nsPoint mOrigin;
+  // Does this anchor's offset compensate for scroll?
+  // https://drafts.csswg.org/css-anchor-position-1/#compensate-for-scroll
+  bool mCompensatesForScroll = false;
 };
 
 // Resolved anchor positioning data.
 struct AnchorPosResolutionData {
   // Size of the referenced anchor.
   nsSize mSize;
-  // Origin of the referenced anchor, w.r.t. containing block at the time of
-  // resolution. Includes scroll offsets, for now.
-  // Nothing if the anchor did not resolve, or if the anchor was only referred
-  // to by its size.
-  mozilla::Maybe<nsPoint> mOrigin;
+  // Offset resolution data. Nothing if the anchor did not resolve, or if the
+  // anchor was only referred to by its size.
+  Maybe<AnchorPosOffsetData> mOffsetData;
 };
 
 // Data required for an anchor positioned frame, including:
 // * If valid anchors are found,
 // * Cached offset/size resolution, if resolution was valid,
-// * TODO(dshin, bug 1968745): Compensating for scroll [1]
+// * Compensating for scroll [1]
 // * TODO(dshin, bug 1987962): Default scroll shift [2]
 //
 // [1]: https://drafts.csswg.org/css-anchor-position-1/#compensate-for-scroll
 // [2]: https://drafts.csswg.org/css-anchor-position-1/#default-scroll-shift
 class AnchorPosReferenceData {
  private:
-  using Map =
+  using ResolutionMap =
       nsTHashMap<RefPtr<const nsAtom>, mozilla::Maybe<AnchorPosResolutionData>>;
 
  public:
-  struct Empty {};
   // Backup data for attempting a different `@position-try` style, when
-  // the default anchor remains the same. Empty, for now.
-  using PositionTryBackup = Empty;
+  // the default anchor remains the same.
+  using PositionTryBackup = mozilla::PhysicalAxes;
   using Value = mozilla::Maybe<AnchorPosResolutionData>;
 
   AnchorPosReferenceData() = default;
@@ -77,17 +86,32 @@ class AnchorPosReferenceData {
 
   bool IsEmpty() const { return mMap.IsEmpty(); }
 
-  Map::const_iterator begin() const { return mMap.cbegin(); }
-  Map::const_iterator end() const { return mMap.cend(); }
+  ResolutionMap::const_iterator begin() const { return mMap.cbegin(); }
+  ResolutionMap::const_iterator end() const { return mMap.cend(); }
 
-  PositionTryBackup TryPositionWithSameDefaultAnchor() {
-    return PositionTryBackup{};
+  void AdjustCompensatingForScroll(const mozilla::PhysicalAxes& aAxes) {
+    mCompensatingForScroll += aAxes;
   }
 
-  void UndoTryPositionWithSameDefaultAnchor(PositionTryBackup&&) {}
+  mozilla::PhysicalAxes CompensatingForScrollAxes() const {
+    return mCompensatingForScroll;
+  }
+
+  PositionTryBackup TryPositionWithSameDefaultAnchor() {
+    const auto compensatingForScroll =
+        std::exchange(mCompensatingForScroll, {});
+    return compensatingForScroll;
+  }
+
+  void UndoTryPositionWithSameDefaultAnchor(PositionTryBackup&& aBackup) {
+    mCompensatingForScroll = aBackup;
+  }
 
  private:
-  Map mMap;
+  ResolutionMap mMap;
+  // Axes we need to compensate for scroll [1] in.
+  // [1]: https://drafts.csswg.org/css-anchor-position-1/#compensate-for-scroll
+  mozilla::PhysicalAxes mCompensatingForScroll;
 };
 
 struct StylePositionArea;
@@ -160,10 +184,18 @@ struct AnchorPositioningUtils {
       const nsAtom* aName, const nsIFrame* aPositionedFrame,
       const nsTArray<nsIFrame*>& aPossibleAnchorFrames);
 
-  static Maybe<AnchorPosInfo> GetAnchorPosRect(
+  static Maybe<nsRect> GetAnchorPosRect(
       const nsIFrame* aAbsoluteContainingBlock, const nsIFrame* aAnchor,
-      bool aCBRectIsvalid,
-      Maybe<AnchorPosResolutionData>* aReferencedAnchorsEntry);
+      bool aCBRectIsvalid);
+
+  static Maybe<AnchorPosInfo> ResolveAnchorPosRect(
+      const nsIFrame* aPositioned, const nsIFrame* aAbsoluteContainingBlock,
+      const nsAtom* aAnchorName, bool aCBRectIsvalid,
+      AnchorPosResolutionCache* aResolutionCache);
+
+  static Maybe<nsSize> ResolveAnchorPosSize(
+      const nsIFrame* aPositioned, const nsAtom* aAnchorName,
+      AnchorPosResolutionCache* aResolutionCache);
 
   /**
    * Adjust the containing block rect for the 'position-area' property.
@@ -199,26 +231,6 @@ struct AnchorPositioningUtils {
    * all other cases, returns null.
    */
   static const nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
-
-  struct DefaultAnchorInfo {
-    const nsAtom* mName = nullptr;
-    Maybe<nsRect> mRect;
-  };
-
-  /**
-   * Resolve the default anchor's rect, if the default anchor exists and is
-   * valid.
-   *
-   * @param aFrame The anchor positioned frame.
-   * @param aCBRectIsValid Whether or not the containing block's `GetRect`
-   * returns a valid result. This will be not be the case during the abspos
-   * frame's reflow.
-   * @param aAnchorPosReferenceData Anchor pos references to attempt to reuse &
-   * cache lookups to.
-   */
-  static DefaultAnchorInfo GetDefaultAnchor(
-      const nsIFrame* aPositioned, bool aCBRectIsValid,
-      AnchorPosReferenceData* aAnchorPosReferenceData);
 
   static const nsIFrame* GetNearestScrollFrame(const nsIFrame* aFrame);
 };
