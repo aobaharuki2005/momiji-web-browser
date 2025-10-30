@@ -167,11 +167,7 @@ function paramSubstitution(paramValue, searchTerms, queryCharset) {
 
     // Handle languages for URL results.
     if (name == PARAM_ACCEPT_LANGUAGES) {
-      let languages = Services.prefs
-        .getComplexValue("intl.accept_languages", Ci.nsIPrefLocalizedString)
-        .data.replace(/\s+/g, "");
-
-      return languages || "";
+      return Services.locale.acceptLanguages.replace(/\s+/g, "");
     }
 
     // Handle the less common OpenSearch parameters we're confident about.

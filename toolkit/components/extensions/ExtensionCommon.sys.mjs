@@ -2204,11 +2204,7 @@ LocaleData.prototype = {
   },
 
   get acceptLanguages() {
-    let result = Services.prefs.getComplexValue(
-      "intl.accept_languages",
-      Ci.nsIPrefLocalizedString
-    ).data;
-    return result.split(/\s*,\s*/g);
+    return Services.locale.acceptLanguages.split(/\s*,\s*/g);
   },
 
   get uiLocale() {

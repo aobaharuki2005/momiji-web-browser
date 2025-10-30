@@ -1485,7 +1485,10 @@ pref("network.proxy.enable_wpad_over_dhcp", true);
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 
-pref("intl.accept_languages",               "chrome://global/locale/intl.properties");
+// The default value of this pref depends on the current app locale,
+// and so should always be read via Services.locale.acceptLanguages.
+pref("intl.accept_languages",               "und");
+
 // this pref allows user to request that all internationalization formatters
 // like date/time formatting, unit formatting, calendars etc. should use
 // OS locale set instead of the app locale set.

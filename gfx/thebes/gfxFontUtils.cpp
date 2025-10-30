@@ -940,14 +940,11 @@ void gfxFontUtils::ParseFontList(const nsACString& aFamilyList,
 }
 
 void gfxFontUtils::GetPrefsFontList(const char* aPrefName,
-                                    nsTArray<nsCString>& aFontList,
-                                    bool aLocalized) {
+                                    nsTArray<nsCString>& aFontList) {
   aFontList.Clear();
 
   nsAutoCString fontlistValue;
-  nsresult rv = aLocalized
-                    ? Preferences::GetLocalizedCString(aPrefName, fontlistValue)
-                    : Preferences::GetCString(aPrefName, fontlistValue);
+  nsresult rv = Preferences::GetCString(aPrefName, fontlistValue);
   if (NS_FAILED(rv)) {
     return;
   }

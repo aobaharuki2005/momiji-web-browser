@@ -71,6 +71,7 @@
 #include "mozilla/net/RequestContextService.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/SocketProcessChild.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/glean/NetwerkProtocolHttpMetrics.h"
 #include "mozilla/AntiTrackingRedirectHeuristic.h"
@@ -2090,7 +2091,7 @@ nsresult nsHttpHandler::SetAcceptLanguages() {
   mAcceptLanguagesIsDirty = false;
 
   nsAutoCString acceptLanguages;
-  Preferences::GetLocalizedCString(INTL_ACCEPT_LANGUAGES, acceptLanguages);
+  intl::LocaleService::GetInstance()->GetAcceptLanguages(acceptLanguages);
 
   nsAutoCString buf;
   nsresult rv = PrepareAcceptLanguages(acceptLanguages.get(), buf);

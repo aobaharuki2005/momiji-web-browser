@@ -2892,9 +2892,9 @@ export var Policies = {
         // translations panel intro. Setting a language value simulates a
         // first translation, which skips the intro panel for users with
         // FeatureRecommendations disabled.
-        const topWebPreferredLanguage = Services.prefs
-          .getComplexValue("intl.accept_languages", Ci.nsIPrefLocalizedString)
-          .data.split(/\s*,\s*/g)[0];
+        const topWebPreferredLanguage = Services.locale.acceptLanguages
+          .split(",")[0]
+          .trim();
 
         const preferredLanguage = topWebPreferredLanguage.length
           ? topWebPreferredLanguage

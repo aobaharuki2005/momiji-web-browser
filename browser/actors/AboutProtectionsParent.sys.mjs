@@ -303,10 +303,7 @@ export class AboutProtectionsParent extends JSWindowActorParent {
    */
   async shouldShowProxyCard() {
     const region = lazy.Region.home || "";
-    const languages = Services.prefs.getComplexValue(
-      "intl.accept_languages",
-      Ci.nsIPrefLocalizedString
-    );
+    const languages = Services.locale.acceptLanguages;
     const alreadyInstalled = await lazy.AddonManager.getAddonByID(
       SECURE_PROXY_ADDON_ID
     );
@@ -314,7 +311,7 @@ export class AboutProtectionsParent extends JSWindowActorParent {
     return (
       region.toLowerCase() === "us" &&
       !alreadyInstalled &&
-      languages.data.toLowerCase().includes("en-us")
+      languages.toLowerCase().includes("en-us")
     );
   }
 

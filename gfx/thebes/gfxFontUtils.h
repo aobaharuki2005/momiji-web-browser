@@ -1111,8 +1111,7 @@ class gfxFontUtils {
 
   // for a given pref name, initialize a list of font names
   static void GetPrefsFontList(const char* aPrefName,
-                               nsTArray<nsCString>& aFontList,
-                               bool aLocalized = false);
+                               nsTArray<nsCString>& aFontList);
 
   // generate a unique font name
   static nsresult MakeUniqueUserFontName(nsAString& aName);

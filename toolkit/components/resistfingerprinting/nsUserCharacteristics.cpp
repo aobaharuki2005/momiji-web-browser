@@ -384,7 +384,7 @@ already_AddRefed<PopulatePromise> PopulateFingerprintedFonts() {
 
 void PopulatePrefs() {
   nsAutoCString acceptLang;
-  Preferences::GetLocalizedCString("intl.accept_languages", acceptLang);
+  intl::LocaleService::GetInstance()->GetAcceptLanguages(acceptLang);
   glean::characteristics::prefs_intl_accept_languages.Set(acceptLang);
 
   glean::characteristics::prefs_media_eme_enabled.Set(

@@ -1118,18 +1118,14 @@ export class TranslationsParent extends JSWindowActorParent {
    * The "Accept-Language" values that the localizer or user has indicated for
    * the preferences for the web. https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Accept-Language
    *
-   * Note that this preference always has English in the fallback chain, even if the
+   * Note that this preference often has English in the fallback chain, even if the
    * user doesn't actually speak English, and to other languages they potentially do
    * not speak. However, this preference will be used as an indication that a user may
    * prefer this language.
-   *
-   * https://transvision.flod.org/string/?entity=toolkit/chrome/global/intl.properties:intl.accept_languages&repo=gecko_strings
    */
   static getWebContentLanguages() {
     if (!TranslationsParent.#webContentLanguages) {
-      const values = Services.prefs
-        .getComplexValue(ACCEPT_LANGUAGES_PREF, Ci.nsIPrefLocalizedString)
-        .data.split(/\s*,\s*/g);
+      const values = Services.locale.acceptLanguages.split(/\s*,\s*/g);
 
       TranslationsParent.#webContentLanguages = new Set();
 

@@ -2494,10 +2494,7 @@ export class nsContextMenu {
 
     var locale = "-";
     try {
-      locale = Services.prefs.getComplexValue(
-        "intl.accept_languages",
-        Ci.nsIPrefLocalizedString
-      ).data;
+      locale = Services.locale.acceptLanguages;
     } catch (e) {}
 
     var version = "-";
