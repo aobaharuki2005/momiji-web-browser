@@ -109,10 +109,10 @@ static nscoord FontSizeInflationListMarginAdjustment(const nsIFrame* aFrame) {
 
 SizeComputationInput::SizeComputationInput(
     nsIFrame* aFrame, gfxContext* aRenderingContext,
-    AnchorPosReferenceData* aAnchorPosReferenceData)
+    AnchorPosResolutionCache* aAnchorPosResolutionCache)
     : mFrame(aFrame),
       mRenderingContext(aRenderingContext),
-      mAnchorPosReferenceData(aAnchorPosReferenceData),
+      mAnchorPosResolutionCache(aAnchorPosResolutionCache),
       mWritingMode(aFrame->GetWritingMode()),
       mIsThemed(aFrame->IsThemed()),
       mComputedMargin(mWritingMode),
@@ -180,9 +180,9 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          InitFlags aFlags,
                          const StyleSizeOverrides& aSizeOverrides,
                          ComputeSizeFlags aComputeSizeFlags,
-                         AnchorPosReferenceData* aAnchorPosReferenceData)
+                         AnchorPosResolutionCache* aAnchorPosResolutionCache)
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext,
-                           aAnchorPosReferenceData),
+                           aAnchorPosResolutionCache),
       mParentReflowInput(&aParentReflowInput),
       mFloatManager(aParentReflowInput.mFloatManager),
       mLineLayout(mFrame->IsLineParticipant() ? aParentReflowInput.mLineLayout
@@ -212,7 +212,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
                                      bool* aFixed = nullptr) -> nscoord {
       nscoord limit = NS_UNCONSTRAINEDSIZE;
       const auto* pos = aFrame->StylePosition();
-      // Don't add to referenced anchors, since this function is called for
+      // Don't add to anchor resolution cache, since this function is called for
       // other frames.
       const auto anchorResolutionParams =
           AnchorPosResolutionParams::From(aFrame);
@@ -365,13 +365,13 @@ nscoord SizeComputationInput::ComputeISizeValue(
       contentEdgeToBoxSizing.ISize(wm);
 
   return mFrame
-      ->ComputeISizeValue(
-          mRenderingContext, wm, aContainingBlockSize, contentEdgeToBoxSizing,
-          boxSizingToMarginEdgeISize, aSize,
-          *mFrame->StylePosition()->BSize(
-              wm,
-              AnchorPosResolutionParams::From(mFrame, mAnchorPosReferenceData)),
-          mFrame->GetAspectRatio())
+      ->ComputeISizeValue(mRenderingContext, wm, aContainingBlockSize,
+                          contentEdgeToBoxSizing, boxSizingToMarginEdgeISize,
+                          aSize,
+                          *mFrame->StylePosition()->BSize(
+                              wm, AnchorPosResolutionParams::From(
+                                      mFrame, mAnchorPosResolutionCache)),
+                          mFrame->GetAspectRatio())
       .mISize;
 }
 
@@ -527,7 +527,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
       nsIFrame* containingBlk = mFrame;
       while (containingBlk) {
         const nsStylePosition* stylePos = containingBlk->StylePosition();
-        // It's for containing block, so don't add to referenced anchors
+        // It's for containing block, so don't add to anchor resolution cache
         const auto containingBlkAnchorResolutionParams =
             AnchorPosResolutionParams::From(containingBlk);
         const auto bSizeCoord =
@@ -2945,7 +2945,7 @@ bool SizeComputationInput::ComputeMargin(WritingMode aCBWM,
     }
     LogicalMargin m(aCBWM);
     const auto anchorResolutionParams =
-        AnchorPosResolutionParams::From(mFrame, mAnchorPosReferenceData);
+        AnchorPosResolutionParams::From(mFrame, mAnchorPosResolutionCache);
     for (const LogicalSide side : LogicalSides::All) {
       m.Side(side, aCBWM) = nsLayoutUtils::ComputeCBDependentValue(
           aPercentBasis,

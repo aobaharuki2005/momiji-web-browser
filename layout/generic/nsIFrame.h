@@ -5921,9 +5921,9 @@ inline nsIFrame* nsFrameList::BackwardFrameTraversal::Prev(nsIFrame* aFrame) {
 
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
     const nsIFrame* aFrame,
-    mozilla::AnchorPosReferenceData* aAnchorPosReferenceData) {
+    mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache) {
   return {aFrame, aFrame->StyleDisplay()->mPosition,
-          aFrame->StylePosition()->mPositionArea, aAnchorPosReferenceData};
+          aFrame->StylePosition()->mPositionArea, aAnchorPosResolutionCache};
 }
 
 #endif /* nsIFrame_h___ */

@@ -83,6 +83,24 @@ class AnchorPosReferenceData {
 struct StylePositionArea;
 class WritingMode;
 
+struct AnchorPosDefaultAnchorCache {
+  // Default anchor element's corresponding frame.
+  const nsIFrame* mAnchor = nullptr;
+  // Scroll container for the default anchor.
+  const nsIFrame* mScrollContainer = nullptr;
+};
+
+// Cache data used by anchor resolution. To be populated on abspos reflow,
+// whenever the frame makes any anchor reference.
+struct AnchorPosResolutionCache {
+  // Storage for referenced anchors. Designed to be long-lived (i.e. beyond
+  // a reflow cycle).
+  AnchorPosReferenceData* mReferenceData = nullptr;
+  // Cached data for default anchor resolution. Designed to be short-lived,
+  // so it can contain e.g. frame pointers.
+  AnchorPosDefaultAnchorCache mDefaultAnchorCache;
+};
+
 enum class StylePositionTryFallbacksTryTacticKeyword : uint8_t;
 using StylePositionTryFallbacksTryTactic =
     CopyableTArray<StylePositionTryFallbacksTryTacticKeyword>;
