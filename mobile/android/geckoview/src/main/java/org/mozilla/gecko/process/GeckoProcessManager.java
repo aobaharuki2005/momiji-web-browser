@@ -194,7 +194,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
       mPid = INVALID_PID;
     }
 
-    public int getPid() {
+    public int getPid() throws AssertionError, IncompleteChildConnectionException {
       XPCOMEventTarget.assertOnLauncherThread();
       if (mChild == null) {
         throw new IncompleteChildConnectionException(
