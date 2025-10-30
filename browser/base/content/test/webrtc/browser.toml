@@ -158,6 +158,9 @@ skip-if = ["os == 'win' && bits == 64"] # win8: bug 1334752
 ["browser_devices_select_audio_output.js"]
 
 ["browser_global_mute_toggles.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1996111
+]
 
 ["browser_indicator_popuphiding.js"]
 skip-if = [
