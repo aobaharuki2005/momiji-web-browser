@@ -15,8 +15,6 @@
 #include "mozilla/layers/TextureClient.h"       // for TextureClient, etc
 #include "mozilla/layers/PersistentBufferProvider.h"
 
-#include "mozilla/MaybeOneOf.h"
-
 #include "mozilla/mozalloc.h"  // for operator delete
 
 #include "mozilla/gfx/Point.h"  // for IntSize

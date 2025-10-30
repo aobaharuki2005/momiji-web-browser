@@ -9,7 +9,6 @@
 
 #include <stddef.h>                                // for size_t
 #include <stdint.h>                                // for uint32_t, uint64_t
-#include "mozilla/RefPtr.h"                        // for already_AddRefed
 #include "mozilla/StaticPtr.h"                     // for StaticRefPtr
 #include "mozilla/layers/CompositableForwarder.h"  // for FwdTransactionCounter
 #include "mozilla/layers/PCompositorManagerChild.h"

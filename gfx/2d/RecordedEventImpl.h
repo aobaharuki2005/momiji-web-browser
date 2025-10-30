@@ -18,7 +18,6 @@
 #include "SFNTData.h"
 
 #include "mozilla/dom/CanvasRenderingContextHelper.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/layers/BuildConstants.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/ipc/SerializeToBytesUtil.h"

@@ -5,7 +5,6 @@
 
 #include "AndroidSystemFontIterator.h"
 
-#include "mozilla/Assertions.h"
 #include "nsDebug.h"
 
 namespace mozilla {

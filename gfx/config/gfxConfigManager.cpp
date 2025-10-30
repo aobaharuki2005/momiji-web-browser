@@ -17,7 +17,6 @@
 #include "nsXULAppAPI.h"
 
 #ifdef XP_WIN
-#  include "mozilla/WindowsVersion.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/gfx/DisplayConfigWindows.h"
 #endif

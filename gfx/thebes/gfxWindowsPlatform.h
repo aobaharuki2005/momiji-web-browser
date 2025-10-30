@@ -19,7 +19,6 @@
 #include "nsTArray.h"
 
 #include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
 
 #include <windows.h>
 #include <objbase.h>

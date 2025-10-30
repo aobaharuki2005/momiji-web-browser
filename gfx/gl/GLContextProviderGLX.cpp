@@ -14,7 +14,6 @@
 #include <X11/Xutil.h>
 #include "X11UndefineNone.h"
 
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/Range.h"

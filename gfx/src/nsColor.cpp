@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/mozalloc.h"  // for operator delete, etc
-#include "mozilla/MathAlgorithms.h"
 
 #include "nsColor.h"
 #include <sys/types.h>  // for int32_t

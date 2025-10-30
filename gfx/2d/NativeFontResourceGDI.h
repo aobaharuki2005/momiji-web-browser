@@ -11,7 +11,6 @@
 
 #include "2D.h"
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/Vector.h"
 
 namespace mozilla {
 namespace gfx {

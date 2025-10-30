@@ -7,7 +7,6 @@
 #ifndef MOZILLA_LAYERS_BUFFERETEXTURE
 #define MOZILLA_LAYERS_BUFFERETEXTURE
 
-#include "mozilla/RefPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/TextureClient.h"

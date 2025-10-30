@@ -72,7 +72,6 @@
 #ifdef XP_WIN
 #  include "mozilla/layers/CompositorD3D11.h"
 #  include "mozilla/widget/WinCompositorWidget.h"
-#  include "mozilla/WindowsVersion.h"
 #endif
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "mozilla/Hal.h"

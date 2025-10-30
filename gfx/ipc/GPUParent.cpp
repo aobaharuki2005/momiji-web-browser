@@ -77,7 +77,6 @@
 
 #  include "gfxDWriteFonts.h"
 #  include "gfxWindowsPlatform.h"
-#  include "mozilla/WindowsVersion.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
 #  include "mozilla/layers/GpuProcessD3D11TextureMap.h"

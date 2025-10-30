@@ -9,7 +9,6 @@
 
 #include "Types.h"
 #include "mozilla/RefCounted.h"
-#include "mozilla/RefPtr.h"
 
 #include "Point.h"
 #include "Matrix.h"

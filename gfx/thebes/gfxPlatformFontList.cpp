@@ -41,7 +41,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/TextUtils.h"
 
 #include "base/eintr_wrapper.h"
