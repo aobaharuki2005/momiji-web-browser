@@ -134,7 +134,6 @@ browser.ui.interaction:
 
   tab_movement:
     type: labeled_counter
-    disabled: true
     description: >
       Records information about user tab movements within the tab strip.
     bugs:
@@ -827,7 +826,6 @@ link.handling:
       - COMMON_PREFIX
   open_from_external_app:
     type: event
-    disabled: true
     description: >
       This is recorded when a link is clicked outside of Firefox and this external
       link is then opened inside of Firefox. The "Open links from apps next to
