@@ -3,6 +3,9 @@
 
 "use strict";
 
+/**
+ * Test that model PipelineOptions can override the defaults.
+ */
 add_task(async function test_ml_engine_override_options() {
   const { cleanup, remoteClients } = await setup();
 
@@ -42,6 +45,9 @@ add_task(async function test_ml_engine_override_options() {
   await cleanup();
 });
 
+/**
+ * Verify that features such as the dtype can be picked up via Remote Settings.
+ */
 add_task(async function test_ml_engine_pick_feature_id() {
   // one record sent back from RS contains featureId
   const records = [
@@ -148,6 +154,9 @@ add_task(async function test_ml_generic_pipeline() {
   await cleanup();
 });
 
+/**
+ * Test out the default precision values.
+ */
 add_task(async function test_q8_by_default() {
   const { cleanup, remoteClients } = await setup();
 
@@ -192,6 +201,10 @@ add_task(async function test_q8_by_default() {
   await cleanup();
 });
 
+/**
+ * Test that the preference override options only work for the SAFE_OVERRIDE_OPTIONS
+ * defined in MLEngineChild.sys.mjs
+ */
 add_task(
   async function test_override_ml_engine_pipeline_options_in_allow_list() {
     const { cleanup, remoteClients } = await setup();
@@ -287,6 +300,9 @@ add_task(async function test_override_ml_pipeline_options_not_in_allow_list() {
   await cleanup();
 });
 
+/**
+ * Test that an unsanctioned modelId does not get used.
+ */
 add_task(async function test_override_ml_pipeline_options_unsafe_options() {
   const { cleanup, remoteClients } = await setup();
   await SpecialPowers.pushPrefEnv({
@@ -340,6 +356,9 @@ add_task(async function test_override_ml_pipeline_options_unsafe_options() {
   await cleanup();
 });
 
+/**
+ * Check that DEFAULT_MODELS are used to pick a preferred model for a given task.
+ */
 add_task(async function test_ml_engine_blessed_model() {
   const { cleanup, remoteClients } = await setup();
 
@@ -442,6 +461,9 @@ add_task(async function test_ml_engine_two_tasknames_in_rs() {
   await cleanup();
 });
 
+/**
+ * The modelHub should be applied to the PipelineOptions
+ */
 add_task(async function test_ml_engine_model_hub_applied() {
   const options = {
     taskName: "moz-echo",
@@ -716,7 +738,7 @@ const pipelineOptionsCases = [
 ];
 
 /**
- * Testing PipelineOption validation
+ * Go through all of the pipeline validation test cases.
  */
 add_task(async function test_pipeline_options_validation() {
   pipelineOptionsCases.forEach(testCase => {
@@ -741,6 +763,9 @@ add_task(async function test_pipeline_options_validation() {
   });
 });
 
+/**
+ * The pipeline should only be able to be initialized when there is enough memory.
+ */
 add_task(async function test_ml_engine_not_enough_memory() {
   const { cleanup } = await setup({
     prefs: [
@@ -768,7 +793,8 @@ add_task(async function test_ml_engine_not_enough_memory() {
 });
 
 /**
- * Test threading support
+ * This tests that threading is supported. On certain machines this could be false,
+ * but should be true for our testing infrastructure.
  */
 add_task(async function test_ml_threading_support() {
   const { cleanup, remoteClients } = await setup();

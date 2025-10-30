@@ -31,6 +31,9 @@ const { HttpServer } = ChromeUtils.importESModule(
 const MS_PER_SEC = 1000;
 const IndexedDBCache = TestIndexedDBCache;
 
+/**
+ * @type {import("../../../ml/content/EngineProcess.sys.mjs")}
+ */
 const {
   createEngine,
   PipelineOptions,
@@ -50,8 +53,7 @@ Services.scriptloader.loadSubScript(
 );
 
 /**
- * Sets up the stage for a test
- *
+ * Mock out remote settings and set some default preferences for the testing environment.
  */
 async function setup({
   disabled = false,
