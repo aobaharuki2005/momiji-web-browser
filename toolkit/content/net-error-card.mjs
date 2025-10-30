@@ -44,6 +44,7 @@ export class NetErrorCard extends MozLitElement {
     returnButton: "#returnButton",
     learnMoreLink: "#learnMoreLink",
     whatCanYouDo: "#whatCanYouDo",
+    whyDangerous: "#fp-why-site-dangerous",
   };
 
   static ERROR_CODES = new Set([
@@ -53,6 +54,7 @@ export class NetErrorCard extends MozLitElement {
     "SEC_ERROR_EXPIRED_CERTIFICATE",
     "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE",
     "SSL_ERROR_NO_CYPHER_OVERLAP",
+    "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY",
   ]);
 
   constructor() {
@@ -152,6 +154,11 @@ export class NetErrorCard extends MozLitElement {
       case "SSL_ERROR_NO_CYPHER_OVERLAP":
         return html`<p
           data-l10n-id="fp-neterror-connection-intro"
+          data-l10n-args='{"hostname": "${this.hostname}"}'
+        ></p>`;
+      case "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY":
+        return html`<p
+          data-l10n-id="fp-certerror-transparency-intro"
           data-l10n-args='{"hostname": "${this.hostname}"}'
         ></p>`;
     }
@@ -282,6 +289,20 @@ export class NetErrorCard extends MozLitElement {
         });
         break;
       }
+      case "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY": {
+        content = this.advancedSectionTemplate({
+          whyDangerousL10nId: "fp-certerror-transparency-why-dangerous-body",
+          whyDangerousL10nArgs: {
+            hostname: this.hostname,
+          },
+          whatCanYouDoL10nId: "fp-certerror-transparency-what-can-you-do-body",
+          learnMoreL10nId: "fp-learn-more-about-secure-connection-failures",
+          learnMoreSupportPage: "connection-not-secure",
+          viewCert: true,
+          proceedButton: true,
+        });
+        break;
+      }
     }
 
     return html`<div class="advanced-container">
@@ -310,6 +331,7 @@ export class NetErrorCard extends MozLitElement {
                 data-l10n-id="fp-certerror-why-site-dangerous"
               ></strong>
               <span
+                id="fp-why-site-dangerous"
                 data-l10n-id=${whyDangerousL10nId}
                 data-l10n-args=${JSON.stringify(whyDangerousL10nArgs)}
               ></span>`

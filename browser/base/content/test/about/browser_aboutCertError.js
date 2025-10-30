@@ -107,7 +107,7 @@ add_task(async function checkReturnToAboutHome() {
 
       BrowserTestUtils.removeTab(gBrowser.selectedTab);
     }
-    SpecialPowers.popPrefEnv();
+    await SpecialPowers.popPrefEnv();
   }
 });
 
@@ -691,6 +691,100 @@ add_task(async function testCertificateTransparency() {
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     BrowserTestUtils.removeTab(tab);
+  }
+
+  await SpecialPowers.popPrefEnv();
+
+  // Certificate transparency can only be enforced for our test certificates in
+  // debug builds.
+}).skip(!AppConstants.DEBUG);
+
+add_task(async function testCertificateTransparency_feltPrivacyTrue() {
+  info(
+    "Test that when certificate transparency is enforced, the right error page is shown."
+  );
+  // Enforce certificate transparency for certificates issued by our test root.
+  // This is only possible in debug builds, hence skipping this test in
+  // non-debug builds (see below).
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.pki.certificate_transparency.mode", 2],
+      [
+        "security.test.built_in_root_hash",
+        "8D:9D:57:09:E5:7D:D5:C6:4B:BE:24:70:E9:E5:BF:FF:16:F6:F2:C2:49:4E:0F:B9:37:1C:DD:3A:0E:10:45:F4",
+      ],
+      ["security.certerrors.felt-privacy-v1", true],
+    ],
+  });
+
+  for (let useFrame of [false, true]) {
+    const tab = await openErrorPage(GOOD_PAGE, useFrame);
+    const browser = tab.linkedBrowser;
+
+    let bc = browser.browsingContext;
+    if (useFrame) {
+      bc = bc.children[0];
+    }
+
+    const message = await SpecialPowers.spawn(bc, [], async function () {
+      const doc = content.document;
+
+      const netErrorCard = doc.querySelector("net-error-card").wrappedJSObject;
+      await netErrorCard.getUpdateComplete();
+
+      netErrorCard.advancedButton.scrollIntoView();
+      EventUtils.synthesizeMouseAtCenter(
+        netErrorCard.advancedButton,
+        {},
+        content
+      );
+
+      await ContentTaskUtils.waitForCondition(() => {
+        return (
+          netErrorCard.whyDangerous &&
+          netErrorCard.whyDangerous.textContent != ""
+        );
+      }, "Waiting for why dangerous text");
+      const args = JSON.parse(netErrorCard.whyDangerous.dataset.l10nArgs);
+      Assert.strictEqual(
+        args.hostname,
+        "example.com",
+        "Should list hostname in error message."
+      );
+
+      // Wait until fluent sets the errorCode inner text.
+      await ContentTaskUtils.waitForCondition(() => {
+        return (
+          netErrorCard.errorCode && netErrorCard.errorCode.textContent != ""
+        );
+      }, "error code has been set inside the advanced button panel");
+
+      netErrorCard.errorCode.scrollIntoView();
+      EventUtils.synthesizeMouseAtCenter(netErrorCard.errorCode, {}, content);
+      await ContentTaskUtils.waitForCondition(() => {
+        return (
+          netErrorCard.certErrorText &&
+          netErrorCard.certErrorText.textContent != ""
+        );
+      }, "Certificate Error is showing");
+
+      return {
+        certText: netErrorCard.certErrorText.textContent,
+        errorCode: netErrorCard.errorCode.textContent,
+        tagName: netErrorCard.errorCode.tagName.toLowerCase(),
+      };
+    });
+
+    Assert.ok(
+      message.errorCode.includes(
+        "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY"
+      ),
+      "Correct error message found"
+    );
+    Assert.strictEqual(message.tagName, "a", "Error message is a link");
+    Assert.ok(message.certText.includes(GOOD_PAGE), "Correct URL found");
+
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
   await SpecialPowers.popPrefEnv();
