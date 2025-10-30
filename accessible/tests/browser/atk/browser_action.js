@@ -19,7 +19,7 @@ addAccessibleTask(
       btn = findByDomId(doc, "btn").queryAction()
       return str([[btn.getName(i), btn.getLocalizedName(i), btn.getDescription(i)] for i in range(btn.get_nActions())])
     `);
-    is(actions, "[['press', '', 'Press']]", "btn has correct actions");
+    is(actions, "[['press', 'Press', 'Press']]", "btn has correct actions");
 
     const nameChanged = waitForEvent(EVENT_NAME_CHANGE, "btn");
     await runPython(`
@@ -58,7 +58,7 @@ addAccessibleTask(
     `);
     is(
       actions,
-      "[['custom_btn1', 'Close', 'Press']]",
+      "[['custom_btn1', 'Close', 'Close']]",
       "dlg1 has correct actions"
     );
 
@@ -77,7 +77,7 @@ addAccessibleTask(
     `);
     is(
       actions,
-      "[['click', '', 'Click'], ['custom_btn2', 'Close', 'Press']]",
+      "[['click', 'Click', 'Click'], ['custom_btn2', 'Close', 'Close']]",
       "dlg2 has correct actions"
     );
 
