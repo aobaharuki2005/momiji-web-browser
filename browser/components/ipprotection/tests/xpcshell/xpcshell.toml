@@ -9,9 +9,7 @@ prefs = [
 
 ["test_GuardianClient.js"]
 
-["test_IPPExceptionsManager_exclusions.js"]
-
-["test_IPPExceptionsManager_inclusions.js"]
+["test_IPPExceptionsManager.js"]
 
 ["test_IPPStartupCache.js"]
 

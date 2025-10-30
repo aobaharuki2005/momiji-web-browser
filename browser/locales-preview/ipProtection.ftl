@@ -110,4 +110,11 @@ ip-protection-site-exceptions-select-sites-button =
   .label = { -firefox-vpn-brand-name } is on for these websites
   .description = No websites added yet
 
+## IP Protection dialogs
+
+ip-protection-exceptions-dialog-window =
+  .title = Where to use { -firefox-vpn-brand-name }
+ip-protection-exclusions-desc = Use VPN for all websites except ones on this list.
+ip-protection-inclusions-desc = Use VPN for only select websites.
+
 ##
