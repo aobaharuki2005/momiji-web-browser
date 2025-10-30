@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.ContentState
@@ -327,114 +329,31 @@ fun TabsTray(
     }
 }
 
+@PreviewLightDark
 @FlexibleWindowPreview
 @Composable
-private fun TabsTrayPreview() {
-    val tabs = generateFakeTabsList()
-    TabsTrayPreviewRoot(
-        displayTabsInGrid = false,
-        selectedTabId = tabs[0].id,
-        normalTabs = tabs,
-        privateTabs = generateFakeTabsList(
-            tabCount = 7,
-            isPrivate = true,
-        ),
-        syncedTabs = generateFakeSyncedTabsList(),
-    )
-}
-
-@Suppress("MagicNumber")
-@PreviewLightDark
-@Composable
-private fun TabsTrayMultiSelectPreview() {
-    val tabs = generateFakeTabsList()
-    TabsTrayPreviewRoot(
-        selectedTabId = tabs[0].id,
-        mode = TabsTrayState.Mode.Select(tabs.take(4).toSet()),
-        normalTabs = tabs,
-    )
-}
-
-@PreviewLightDark
-@Composable
-private fun TabsTrayInactiveTabsPreview() {
-    TabsTrayPreviewRoot(
-        normalTabs = generateFakeTabsList(tabCount = 3),
-        inactiveTabs = generateFakeTabsList(),
-        inactiveTabsExpanded = true,
-        showInactiveTabsAutoCloseDialog = true,
-    )
-}
-
-@PreviewLightDark
-@Composable
-private fun TabsTrayPrivateTabsPreview() {
-    TabsTrayPreviewRoot(
-        selectedPage = Page.PrivateTabs,
-        privateTabs = generateFakeTabsList(isPrivate = true),
-    )
-}
-
-@PreviewLightDark
-@Composable
-private fun TabsTraySyncedTabsPreview() {
-    TabsTrayPreviewRoot(
-        selectedPage = Page.SyncedTabs,
-        syncedTabs = generateFakeSyncedTabsList(deviceCount = 3),
-    )
-}
-
-@PreviewLightDark
-@Composable
-private fun TabsTrayAutoCloseBannerPreview() {
-    TabsTrayPreviewRoot(
-        normalTabs = generateFakeTabsList(),
-        showTabAutoCloseBanner = true,
-    )
-}
-
-@PreviewLightDark
-@Composable
-private fun TabsTrayLockedPreview() {
-    TabsTrayPreviewRoot(
-        privateTabs = generateFakeTabsList(isPrivate = true),
-        selectedPage = Page.PrivateTabs,
-        isPbmLocked = true,
-    )
-}
-
 @Suppress("LongMethod")
-@Composable
-private fun TabsTrayPreviewRoot(
-    displayTabsInGrid: Boolean = true,
-    selectedPage: Page = Page.NormalTabs,
-    selectedTabId: String? = null,
-    mode: TabsTrayState.Mode = TabsTrayState.Mode.Normal,
-    normalTabs: List<TabSessionState> = emptyList(),
-    inactiveTabs: List<TabSessionState> = emptyList(),
-    privateTabs: List<TabSessionState> = emptyList(),
-    syncedTabs: List<SyncedTabsListItem> = emptyList(),
-    inactiveTabsExpanded: Boolean = false,
-    showInactiveTabsAutoCloseDialog: Boolean = false,
-    showTabAutoCloseBanner: Boolean = false,
-    isPbmLocked: Boolean = false,
-    isSignedIn: Boolean = true,
+private fun TabsTrayPreview(
+    @PreviewParameter(TabsTrayStateParameterProvider::class)
+    tabTrayState: TabsTrayPreviewModel,
 ) {
-    var showInactiveTabsAutoCloseDialogState by remember { mutableStateOf(showInactiveTabsAutoCloseDialog) }
+    var showInactiveTabsAutoCloseDialogState by remember {
+        mutableStateOf(tabTrayState.showInactiveTabsAutoCloseDialog)
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     val tabsTrayStore = remember {
         TabsTrayStore(
             initialState = TabsTrayState(
-                selectedPage = selectedPage,
-                mode = mode,
-                inactiveTabs = inactiveTabs,
-                inactiveTabsExpanded = inactiveTabsExpanded,
-                normalTabs = normalTabs,
-                privateTabs = privateTabs,
-                syncedTabs = syncedTabs,
-                selectedTabId = selectedTabId,
+                selectedPage = tabTrayState.selectedPage,
+                mode = tabTrayState.mode,
+                inactiveTabs = tabTrayState.inactiveTabs,
+                inactiveTabsExpanded = tabTrayState.inactiveTabsExpanded,
+                normalTabs = tabTrayState.normalTabs,
+                privateTabs = tabTrayState.privateTabs,
+                syncedTabs = tabTrayState.syncedTabs,
+                selectedTabId = tabTrayState.selectedTabId,
             ),
         )
     }
@@ -444,12 +363,12 @@ private fun TabsTrayPreviewRoot(
     FirefoxTheme(theme = getTabManagerTheme(page = page)) {
         TabsTray(
             tabsTrayStore = tabsTrayStore,
-            displayTabsInGrid = displayTabsInGrid,
+            displayTabsInGrid = tabTrayState.displayTabsInGrid,
             isInDebugMode = false,
-            isSignedIn = isSignedIn,
+            isSignedIn = tabTrayState.isSignedIn,
             shouldShowInactiveTabsAutoCloseDialog = { true },
-            shouldShowTabAutoCloseBanner = showTabAutoCloseBanner,
-            isPbmLocked = isPbmLocked,
+            shouldShowTabAutoCloseBanner = tabTrayState.showTabAutoCloseBanner,
+            isPbmLocked = tabTrayState.isPbmLocked,
             snackbarHostState = snackbarHostState,
             onTabPageClick = { page ->
                 tabsTrayStore.dispatch(TabsTrayAction.PageSelected(page))
@@ -578,6 +497,77 @@ private fun TabsTrayPreviewRoot(
         )
     }
 }
+
+private class TabsTrayStateParameterProvider : PreviewParameterProvider<TabsTrayPreviewModel> {
+    val tabs = generateFakeTabsList()
+    override val values = sequenceOf(
+        // TabsTray Preview
+        TabsTrayPreviewModel(
+            displayTabsInGrid = false,
+            selectedTabId = tabs[0].id,
+            normalTabs = tabs,
+            privateTabs = generateFakeTabsList(
+                tabCount = 7,
+                isPrivate = true,
+            ),
+            syncedTabs = generateFakeSyncedTabsList(),
+        ),
+        // TabsTray MultiSelect Preview
+        TabsTrayPreviewModel(
+            selectedTabId = tabs[0].id,
+            mode = TabsTrayState.Mode.Select(tabs.take(4).toSet()),
+            normalTabs = tabs,
+        ),
+        // TabsTray Inactive Tabs Preview
+        TabsTrayPreviewModel(
+            normalTabs = generateFakeTabsList(tabCount = 3),
+            inactiveTabs = generateFakeTabsList(),
+            inactiveTabsExpanded = true,
+            showInactiveTabsAutoCloseDialog = true,
+        ),
+        // TabsTray Private Tabs Preview
+       TabsTrayPreviewModel(
+                selectedPage = Page.PrivateTabs,
+                privateTabs = generateFakeTabsList(isPrivate = true),
+        ),
+        // TabsTray Synced Tab Preview
+        TabsTrayPreviewModel(
+            selectedPage = Page.SyncedTabs,
+            syncedTabs = generateFakeSyncedTabsList(deviceCount = 3),
+        ),
+        // TabsTray AutoClose Banner Preview
+        TabsTrayPreviewModel(
+            normalTabs = generateFakeTabsList(),
+            showTabAutoCloseBanner = true,
+        ),
+        // TabsTray Locked Preview
+        TabsTrayPreviewModel(
+            privateTabs = generateFakeTabsList(isPrivate = true),
+            selectedPage = Page.PrivateTabs,
+            isPbmLocked = true,
+        ),
+    )
+}
+
+/**
+ * This model is necessary because the [TabsTrayPreview] Composable
+ * requires inputs for multiple classes in order to preview all cases.
+ */
+private data class TabsTrayPreviewModel(
+    val displayTabsInGrid: Boolean = true,
+    val selectedPage: Page = Page.NormalTabs,
+    val selectedTabId: String? = null,
+    val mode: TabsTrayState.Mode = TabsTrayState.Mode.Normal,
+    val normalTabs: List<TabSessionState> = emptyList(),
+    val inactiveTabs: List<TabSessionState> = emptyList(),
+    val privateTabs: List<TabSessionState> = emptyList(),
+    val syncedTabs: List<SyncedTabsListItem> = emptyList(),
+    val inactiveTabsExpanded: Boolean = false,
+    val showInactiveTabsAutoCloseDialog: Boolean = false,
+    val showTabAutoCloseBanner: Boolean = false,
+    val isPbmLocked: Boolean = false,
+    val isSignedIn: Boolean = true,
+)
 
 private fun generateFakeTabsList(tabCount: Int = 10, isPrivate: Boolean = false): List<TabSessionState> =
     List(tabCount) { index ->
