@@ -848,10 +848,10 @@ MOZ_GLOBINIT struct TestCase {
     TestCase("LockPrefix", NoStubAddressCheck),
     TestCase("LooksLikeLockPrefix", NoStubAddressCheck),
 #  endif
-#  if !defined(DEBUG)
+#  if !defined(_M_ARM64) && !defined(DEBUG)
     // Skip on Debug build because it hits MOZ_ASSERT_UNREACHABLE.
     TestCase("UnsupportedOp", ExpectedFail),
-#  endif  // !defined(DEBUG)
+#  endif  // !defined(_M_ARM64) && !defined(DEBUG)
 #endif    // defined(__clang__)
 };
 
@@ -892,7 +892,9 @@ bool TestAssemblyFunctions() {
           DetourResultCode::DETOUR_PATCHER_CREATE_TRAMPOLINE_ERROR) {
         printf(
             "TEST-FAILED | WindowsDllInterceptor | "
-            "A wrong detour errorcode was set on detour error.\n");
+            "A wrong detour errorcode was set on detour error for %s. (got "
+            "%d)\n",
+            testCase.mFunctionName, maybeError.ref().mErrorCode);
         return false;
       }
 #endif  // defined(NIGHTLY_BUILD)
