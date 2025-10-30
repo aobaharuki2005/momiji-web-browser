@@ -2,23 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// @ts-check
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 /**
- * @typedef {import("../../promiseworker/PromiseWorker.sys.mjs").BasePromiseWorker} BasePromiseWorker
+ * @import { BasePromiseWorker } from "resource://gre/modules/PromiseWorker.sys.mjs"
+ * @import { PipelineOptions } from "chrome://global/content/ml/EngineProcess.sys.mjs"
+ * @import { ProgressAndStatusCallbackParams } from "chrome://global/content/ml/Utils.sys.mjs"
  */
 
-/**
- * @typedef {object} Lazy
- * @typedef {import("../content/Utils.sys.mjs").ProgressAndStatusCallbackParams} ProgressAndStatusCallbackParams
- * @property {typeof import("../../promiseworker/PromiseWorker.sys.mjs").BasePromiseWorker} BasePromiseWorker
- * @property {typeof setTimeout} setTimeout
- * @property {typeof clearTimeout} clearTimeout
- */
-
-/** @type {Lazy} */
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
+const lazy = XPCOMUtils.declareLazy({
   BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
@@ -27,44 +21,23 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DEFAULT_MODELS: "chrome://global/content/ml/EngineProcess.sys.mjs",
   WASM_BACKENDS: "chrome://global/content/ml/EngineProcess.sys.mjs",
   BACKENDS: "chrome://global/content/ml/EngineProcess.sys.mjs",
+  console: () =>
+    console.createInstance({
+      maxLogLevelPref: "browser.ml.logLevel",
+      prefix: "GeckoMLEngineChild",
+    }),
+  // Prefs:
+  CACHE_TIMEOUT_MS: { pref: "browser.ml.modelCacheTimeout" },
+  MODEL_HUB_ROOT_URL: { pref: "browser.ml.modelHubRootUrl" },
+  MODEL_HUB_URL_TEMPLATE: { pref: "browser.ml.modelHubUrlTemplate" },
+  LOG_LEVEL: { pref: "browser.ml.logLevel" },
+  PIPELINE_OVERRIDE_OPTIONS: {
+    pref: "browser.ml.overridePipelineOptions",
+    default: "{}",
+  },
+  // Services
+  mlUtils: { service: "@mozilla.org/ml-utils;1", iid: Ci.nsIMLUtils },
 });
-
-ChromeUtils.defineLazyGetter(lazy, "console", () => {
-  return console.createInstance({
-    maxLogLevelPref: "browser.ml.logLevel",
-    prefix: "GeckoMLEngineChild",
-  });
-});
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "CACHE_TIMEOUT_MS",
-  "browser.ml.modelCacheTimeout"
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "MODEL_HUB_ROOT_URL",
-  "browser.ml.modelHubRootUrl"
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "MODEL_HUB_URL_TEMPLATE",
-  "browser.ml.modelHubUrlTemplate"
-);
-XPCOMUtils.defineLazyPreferenceGetter(lazy, "LOG_LEVEL", "browser.ml.logLevel");
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "mlUtils",
-  "@mozilla.org/ml-utils;1",
-  Ci.nsIMLUtils
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "PIPELINE_OVERRIDE_OPTIONS",
-  "browser.ml.overridePipelineOptions",
-  "{}"
-);
 
 const SAFE_OVERRIDE_OPTIONS = [
   "dtype",
@@ -260,7 +233,7 @@ export class MLEngineChild extends JSProcessActorChild {
    * Removes an engine by its ID. Optionally shuts down if no engines remain.
    *
    * @param {string} engineId - The ID of the engine to remove.
-   * @param {boolean} [shutDownIfEmpty] - If true, shuts down the engine process if no engines remain.
+   * @param {boolean} shutDownIfEmpty - If true, shuts down the engine process if no engines remain.
    * @param {boolean} replacement - Flag indicating whether the engine is being replaced.
    */
   removeEngine(engineId, shutDownIfEmpty, replacement) {
@@ -335,13 +308,13 @@ class EngineDispatcher {
   /** @type {MessagePort | null} */
   #port = null;
 
-  /** @type {TimeoutID | null} */
+  /** @type {number | null} */
   #keepAliveTimeout = null;
 
   /** @type {PromiseWithResolvers} */
   #modelRequest;
 
-  /** @type {Promise<Engine> | null} */
+  /** @type {Promise<InferenceEngine> | null} */
   #engine = null;
 
   /** @type {string} */
@@ -371,7 +344,7 @@ class EngineDispatcher {
    *
    * @param {PipelineOptions} pipelineOptions
    * @param {?function(ProgressAndStatusCallbackParams):void} notificationsCallback The callback to call for updating about notifications such as dowload progress status.
-   * @returns {Promise<Engine>}
+   * @returns {Promise<InferenceEngine>}
    */
   async initializeInferenceEngine(pipelineOptions, notificationsCallback) {
     let remoteSettingsOptions = await this.mlEngineChild.getInferenceOptions(
@@ -442,6 +415,7 @@ class EngineDispatcher {
    */
   constructor(mlEngineChild, port, pipelineOptions) {
     this.#status = "CREATED";
+    /** @type {MLEngineChild} */
     this.mlEngineChild = mlEngineChild;
     this.#featureId = pipelineOptions.featureId;
     this.#taskName = pipelineOptions.taskName;
@@ -538,7 +512,9 @@ class EngineDispatcher {
    */
   #setupMessageHandler(port) {
     this.#port = port;
-    port.onmessage = async ({ data }) => {
+    port.onmessage = async event => {
+      const { data } = /** @type {any} */ (event);
+
       switch (data.type) {
         case "EnginePort:Discard": {
           port.close();
@@ -710,7 +686,7 @@ class InferenceEngine {
    * @param {?function(ProgressAndStatusCallbackParams):void} config.notificationsCallback The callback to call for updating about notifications such as dowload progress status.
    * @param {?function(object):Promise<[string, object]>} config.getModelFileFn - A function that actually retrieves the model and headers.
    * @param {?function(object):Promise<void>} config.notifyModelDownloadCompleteFn - A function to notify that all files needing downloads are completed.
-   * @returns {InferenceEngine}
+   * @returns {Promise<InferenceEngine>}
    */
   static async create({
     workerUrl,
