@@ -1033,4 +1033,256 @@ describe("ContentTiles component", () => {
     );
     mountedWrapper.unmount();
   });
+
+  it("renders a single tile without container when there is no header or container style", () => {
+    const SINGLE_TILE_NO_CONTAINER = {
+      tiles: {
+        tile_items: {
+          type: "mobile_downloads",
+          data: { email: { link_text: "Email!" } },
+        },
+        container: {},
+      },
+    };
+
+    const mounted = mount(
+      <ContentTiles
+        content={SINGLE_TILE_NO_CONTAINER}
+        handleAction={() => {}}
+        activeMultiSelect={null}
+        setActiveMultiSelect={setActiveMultiSelect}
+      />
+    );
+
+    assert.isFalse(
+      mounted.find("#content-tiles-container").exists(),
+      "should not render container wrapper"
+    );
+    assert.equal(mounted.find(".content-tile").length, 1);
+
+    mounted.unmount();
+  });
+
+  it("renders container when single tile has container.style", () => {
+    const SINGLE_TILE_WITH_STYLE = {
+      tiles: {
+        container: { style: { marginBlock: "40px" } },
+        tile_items: {
+          type: "mobile_downloads",
+          data: { email: { link_text: "Email!!" } },
+        },
+      },
+    };
+
+    const mounted = mount(
+      <ContentTiles
+        content={SINGLE_TILE_WITH_STYLE}
+        handleAction={() => {}}
+        activeMultiSelect={null}
+        setActiveMultiSelect={setActiveMultiSelect}
+      />
+    );
+
+    const container = mounted.find("#content-tiles-container");
+    assert.isTrue(container.exists(), "container should be rendered");
+
+    const el = container.getDOMNode();
+    assert.match(
+      el.style.cssText,
+      "margin-block: 40px",
+      "container style applied"
+    );
+
+    mounted.unmount();
+  });
+
+  it("renders container when single tile has header", () => {
+    const SINGLE_TILE_WITH_HEADER = {
+      tiles: {
+        container: {
+          header: { title: "Toggle tiles header" },
+        },
+        tile_items: {
+          type: "mobile_downloads",
+          data: { email: { link_text: "Email!!" } },
+        },
+      },
+    };
+
+    const mounted = mount(
+      <ContentTiles
+        content={SINGLE_TILE_WITH_HEADER}
+        handleAction={() => {}}
+        activeMultiSelect={null}
+        setActiveMultiSelect={setActiveMultiSelect}
+      />
+    );
+
+    const headerBtn = mounted.find(".content-tiles-header");
+    assert.isTrue(headerBtn.exists(), "header button should render");
+
+    assert.isFalse(
+      mounted.find("#content-tiles-container").exists(),
+      "container should be hidden initially"
+    );
+
+    headerBtn.simulate("click");
+    assert.isTrue(
+      mounted.find("#content-tiles-container").exists(),
+      "container should render after toggle"
+    );
+
+    mounted.unmount();
+  });
+
+  it("supports legacy content.tiles_header as container header", () => {
+    const LEGACY_HEADER_SINGLE_TILE = {
+      tiles_header: { title: "Legacy tile header" },
+      tiles: {
+        type: "multiselect",
+        header: {
+          title: "Multiselect header",
+        },
+        data: [{ id: "option1", defaultValue: true }],
+      },
+    };
+
+    const mounted = mount(
+      <ContentTiles
+        content={LEGACY_HEADER_SINGLE_TILE}
+        handleAction={() => {}}
+        activeMultiSelect={null}
+        setActiveMultiSelect={setActiveMultiSelect}
+      />
+    );
+
+    const headerBtn = mounted.find(".content-tiles-header");
+    assert.isTrue(headerBtn.exists(), "legacy header button should render");
+
+    assert.isFalse(
+      mounted.find("#content-tiles-container").exists(),
+      "container hidden initially"
+    );
+
+    headerBtn.simulate("click");
+    assert.isTrue(
+      mounted.find("#content-tiles-container").exists(),
+      "container visible after toggle"
+    );
+
+    mounted.unmount();
+  });
+
+  it("supports legacy content.contentTilesContainer.style as container style", () => {
+    const LEGACY_CONTAINER_STYLE = {
+      contentTilesContainer: { style: { marginBlock: "6px" } },
+      tiles: [
+        {
+          type: "multiselect",
+          header: {
+            title: "Multiselect Header",
+          },
+          data: [{ id: "option1", defaultValue: true }],
+        },
+      ],
+    };
+
+    const mounted = mount(
+      <ContentTiles
+        content={LEGACY_CONTAINER_STYLE}
+        handleAction={() => {}}
+        activeMultiSelect={null}
+        setActiveMultiSelect={setActiveMultiSelect}
+        setScreenMultiSelects={sandbox.stub()}
+      />
+    );
+
+    const container = mounted.find("#content-tiles-container");
+    assert.isTrue(container.exists(), "container should be rendered");
+
+    const el = container.getDOMNode();
+    assert.match(
+      el.style.cssText,
+      "margin-block: 6px",
+      "legacy container style applied"
+    );
+
+    mounted.unmount();
+  });
+
+  it("renders header toggle when only header.subtitle is provided", () => {
+    const HEADER_WITH_SUBTITLE_ONLY = {
+      tiles: {
+        container: {
+          header: { subtitle: "Only a subtitle" },
+        },
+        tile_items: [
+          {
+            type: "mobile_downloads",
+            data: { email: { link_text: "Email yourself a link" } },
+          },
+        ],
+      },
+    };
+
+    const mounted = mount(
+      <ContentTiles
+        content={HEADER_WITH_SUBTITLE_ONLY}
+        handleAction={() => {}}
+        activeMultiSelect={null}
+        setActiveMultiSelect={setActiveMultiSelect}
+      />
+    );
+
+    const headerBtn = mounted.find(".content-tiles-header");
+    assert.isTrue(
+      headerBtn.exists(),
+      "header toggle renders with subtitle only"
+    );
+
+    headerBtn.simulate("click");
+    assert.isTrue(
+      mounted.find("#content-tiles-container").exists(),
+      "container renders after toggle"
+    );
+
+    mounted.unmount();
+  });
+
+  it("multiple tiles render inside container and count matches", () => {
+    const NEW_SHAPE_MULTIPLE = {
+      tiles: {
+        tile_items: [
+          {
+            type: "mobile_downloads",
+            data: { email: { link_text: "Email" } },
+          },
+          {
+            type: "multiselect",
+            header: {
+              title: "Multiselect header",
+            },
+            data: [{ id: "option1", defaultValue: true }],
+          },
+        ],
+      },
+    };
+
+    const mounted = mount(
+      <ContentTiles
+        content={NEW_SHAPE_MULTIPLE}
+        handleAction={() => {}}
+        activeMultiSelect={null}
+        setActiveMultiSelect={setActiveMultiSelect}
+      />
+    );
+
+    assert.isTrue(
+      mounted.find("#content-tiles-container").exists(),
+      "container present"
+    );
+    assert.equal(mounted.find(".content-tile").length, 2, "renders both tiles");
+
+    mounted.unmount();
+  });
 });

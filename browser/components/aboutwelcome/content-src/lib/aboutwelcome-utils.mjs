@@ -100,4 +100,47 @@ export const AboutWelcomeUtils = {
       true
     );
   },
+
+  /**
+   * Normalize content.tiles into a single shape:
+   * tiles: { tile_items: Array<Tile> | Tile, container?: { style?: Object, header?: Object } }
+   *
+   * Supports legacy tiles array and single tile object and consumes
+   * legacy container `content.contentTilesContainer.style` and
+   * legacy header `content.tiles_header` properties.
+   */
+  normalizeContentTiles(content) {
+    const { tiles } = content;
+    const legacyContainer = content?.contentTilesContainer;
+    const legacyHeader = content?.tiles_header;
+
+    // Prefer tiles.container styles, fallback to legacy style, default {}
+    const style = tiles?.container?.style ?? legacyContainer?.style ?? {};
+
+    // Prefer tiles.container.header, fall back to legacy header
+    const header = tiles?.container?.header ?? legacyHeader;
+
+    let items;
+    // New shape
+    if (tiles?.tile_items !== undefined) {
+      items = Array.isArray(tiles.tile_items)
+        ? tiles.tile_items
+        : [tiles.tile_items];
+    }
+    // Legacy tiles array
+    else if (Array.isArray(tiles)) {
+      items = tiles;
+    }
+    // Legacy tiles object
+    else if (tiles && typeof tiles === "object" && tiles.type) {
+      items = [tiles];
+    } else {
+      items = [];
+    }
+
+    // Omit header when absent
+    const container = header ? { style, header } : { style };
+
+    return { tile_items: items, container };
+  },
 };
