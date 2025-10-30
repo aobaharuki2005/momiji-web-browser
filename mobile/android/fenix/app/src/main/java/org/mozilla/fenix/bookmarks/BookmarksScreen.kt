@@ -953,30 +953,32 @@ private fun FolderListItem(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val modifier = Modifier
-        .padding(start = folder.startPadding)
-        .width(FirefoxTheme.layout.size.containerMaxWidth)
-
     if (folder.isDesktopRoot) {
-        Row(modifier) {
-            Spacer(modifier = Modifier.width(56.dp))
-            Text(
-                text = folder.title,
-                color = MaterialTheme.colorScheme.tertiary,
-                style = FirefoxTheme.typography.headline8,
-            )
+        Box(modifier = Modifier.padding(start = folder.startPadding)) {
+            Row(modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth)) {
+                Spacer(modifier = Modifier.width(56.dp))
+                Text(
+                    text = folder.title,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    style = FirefoxTheme.typography.headline8,
+                )
+            }
         }
     } else {
-        SelectableIconListItem(
-            label = folder.title,
-            isSelected = isSelected,
-            beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
-            modifier = modifier.toggleable(
-                value = isSelected,
-                role = Role.RadioButton,
-                onValueChange = { onClick() },
-            ),
-        )
+        Box(modifier = Modifier.padding(start = folder.startPadding)) {
+            SelectableIconListItem(
+                label = folder.title,
+                isSelected = isSelected,
+                beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                modifier = Modifier
+                    .width(FirefoxTheme.layout.size.containerMaxWidth)
+                    .toggleable(
+                        value = isSelected,
+                        role = Role.RadioButton,
+                        onValueChange = { onClick() },
+                    ),
+            )
+        }
     }
 }
 
