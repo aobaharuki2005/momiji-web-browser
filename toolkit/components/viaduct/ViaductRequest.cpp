@@ -6,7 +6,6 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorNames.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Try.h"

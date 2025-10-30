@@ -14,7 +14,6 @@
 #include "Registry.h"
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/Try.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla::default_agent {

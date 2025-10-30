@@ -13,7 +13,6 @@
 #include "mozilla/HangTypes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/Vector.h"
 #include "nsString.h"
 #include "nsTArray.h"
 

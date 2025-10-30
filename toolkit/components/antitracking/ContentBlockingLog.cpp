@@ -26,7 +26,6 @@
 #include "mozilla/StaticPrefs_telemetry.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/glean/AntitrackingMetrics.h"
-#include "mozilla/XorShift128PlusRNG.h"
 
 namespace mozilla {
 

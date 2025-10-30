@@ -19,7 +19,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"

@@ -22,7 +22,6 @@
 #include "mozilla/RDDChild.h"
 #include "mozilla/RDDParent.h"
 #include "mozilla/RDDProcessManager.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "ModuleEvaluator.h"

@@ -45,7 +45,6 @@
 #include "mozilla/dom/XPathExpression.h"
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 #include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/ReverseIterator.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentList.h"
