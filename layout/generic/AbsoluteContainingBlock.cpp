@@ -1172,6 +1172,10 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       }
       return ContainingBlockRect{aOriginalContainingBlockRect};
     }();
+    if (aAnchorPosResolutionCache) {
+      aAnchorPosResolutionCache->mReferenceData->mContainingBlockRect =
+          cb.mRect;
+    }
     const WritingMode outerWM = aReflowInput.GetWritingMode();
     const WritingMode wm = aKidFrame->GetWritingMode();
     const LogicalSize cbSize(outerWM, cb.mRect.Size());
@@ -1432,6 +1436,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
         overflowCheckRect =
             GrowOverflowCheckRect(overflowCheckRect, aKidFrame->GetNormalRect(),
                                   cb.mAnchorShiftInfo->mResolvedArea);
+        aAnchorPosResolutionCache->mReferenceData->mContainingBlockRect =
+            overflowCheckRect;
         const auto originalContainingBlockRect =
             aOriginalContainingBlockRect + paddingEdgeShift;
         return AnchorPositioningUtils::FitsInContainingBlock(

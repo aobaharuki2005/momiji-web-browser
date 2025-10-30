@@ -386,12 +386,6 @@ const AnchorPosReferenceData::Value* AnchorPosReferenceData::Lookup(
 }
 
 AnchorPosDefaultAnchorCache::AnchorPosDefaultAnchorCache(
-    const nsIFrame* aAnchor)
-    : mAnchor{aAnchor},
-      mScrollContainer{AnchorPositioningUtils::GetNearestScrollFrame(aAnchor)} {
-}
-
-AnchorPosDefaultAnchorCache::AnchorPosDefaultAnchorCache(
     const nsIFrame* aAnchor, const nsIFrame* aScrollContainer)
     : mAnchor{aAnchor}, mScrollContainer{aScrollContainer} {
   MOZ_ASSERT_IF(
@@ -542,6 +536,7 @@ Maybe<AnchorPosInfo> AnchorPositioningUtils::ResolveAnchorPosRect(
       GetAnchorPosRect(aAbsoluteContainingBlock, anchor, aCBRectIsvalid);
   return result.map([&](const nsRect& aRect) {
     bool compensatesForScroll = false;
+    DistanceToNearestScrollContainer distanceToNearestScrollContainer;
     if (aResolutionCache) {
       MOZ_ASSERT(entry);
       // Update the cache.
@@ -550,15 +545,25 @@ Maybe<AnchorPosInfo> AnchorPositioningUtils::ResolveAnchorPosRect(
         if (!aAnchorName) {
           // Explicitly resolved default anchor for the first time - populate
           // the cache.
-          defaultAnchorCache = AnchorPosDefaultAnchorCache{anchor};
+          defaultAnchorCache.mAnchor = anchor;
+          const auto [scrollContainer, distance] =
+              AnchorPositioningUtils::GetNearestScrollFrame(anchor);
+          distanceToNearestScrollContainer = distance;
+          defaultAnchorCache.mScrollContainer = scrollContainer;
+          aResolutionCache->mReferenceData->mDistanceToDefaultScrollContainer =
+              distance;
+          aResolutionCache->mReferenceData->mDefaultAnchorName = anchorName;
+          // This is the default anchor, so scroll compensated by definition.
+          return true;
         }
         if (defaultAnchorCache.mAnchor == anchor) {
           // This is referring to the default anchor, so scroll compensated by
           // definition.
           return true;
         }
-        const auto* scrollContainer =
+        const auto [scrollContainer, distance] =
             AnchorPositioningUtils::GetNearestScrollFrame(anchor);
+        distanceToNearestScrollContainer = distance;
         return scrollContainer ==
                aResolutionCache->mDefaultAnchorCache.mScrollContainer;
       }();
@@ -567,7 +572,8 @@ Maybe<AnchorPosInfo> AnchorPositioningUtils::ResolveAnchorPosRect(
       MOZ_ASSERT_IF(*entry, entry->ref().mSize == aRect.Size());
       *entry = Some(AnchorPosResolutionData{
           aRect.Size(),
-          Some(AnchorPosOffsetData{aRect.TopLeft(), compensatesForScroll}),
+          Some(AnchorPosOffsetData{aRect.TopLeft(), compensatesForScroll,
+                                   distanceToNearestScrollContainer}),
       });
     }
     return AnchorPosInfo{aRect, compensatesForScroll};
@@ -698,18 +704,21 @@ nsRect AnchorPositioningUtils::AdjustAbsoluteContainingBlockRectForPositionArea(
   return res;
 }
 
-const nsIFrame* AnchorPositioningUtils::GetNearestScrollFrame(
-    const nsIFrame* aFrame) {
+AnchorPositioningUtils::NearestScrollFrameInfo
+AnchorPositioningUtils::GetNearestScrollFrame(const nsIFrame* aFrame) {
   if (!aFrame) {
-    return nullptr;
+    return {nullptr, {}};
   }
+  uint32_t distance = 1;
   // `GetNearestScrollContainerFrame` will return the incoming frame if it's a
   // scroll frame, so nudge to parent.
-  const nsIFrame* parent = aFrame->GetParent();
-  return nsLayoutUtils::GetNearestScrollContainerFrame(
-      const_cast<nsIFrame*>(parent),
-      nsLayoutUtils::SCROLLABLE_SAME_DOC |
-          nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  for (const nsIFrame* f = aFrame->GetParent(); f; f = f->GetParent()) {
+    if (f->IsScrollContainerOrSubclass()) {
+      return {f, DistanceToNearestScrollContainer{distance}};
+    }
+    distance++;
+  }
+  return {nullptr, {}};
 }
 
 nsPoint AnchorPositioningUtils::GetScrollOffsetFor(
@@ -726,7 +735,7 @@ nsPoint AnchorPositioningUtils::GetScrollOffsetFor(
   // elements are in different continuation frames of the absolute containing
   // block.
   const auto* absoluteContainingBlock = aPositioned->GetParent();
-  if (GetNearestScrollFrame(aPositioned) ==
+  if (GetNearestScrollFrame(aPositioned).mScrollContainer ==
       aDefaultAnchorCache.mScrollContainer) {
     // Would scroll together anyway, skip.
     return nsPoint{};
