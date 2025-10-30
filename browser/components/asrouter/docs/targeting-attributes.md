@@ -29,7 +29,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [currentTabGroups](#currenttabgroups)
 * [currentTabInstalledAsWebApp](#currenttabinstalledaswebapp)
 * [currentProfileId](#currentprofileid)
-* [profileGroupProfileCount](#profileGroupProfileCount)
 * [defaultPDFHandler](#defaultpdfhandler)
 * [devToolsOpenedCount](#devtoolsopenedcount)
 * [distributionId](#distributionid)
@@ -1168,11 +1167,6 @@ Returns the stable profile group ID used for data reporting.
 ### `currentProfileId`
 
 The integer-valued identifier of the current selectable profile, as reported by `SelectableProfileService`, converted to a string.
-
-### `profileGroupProfileCount`
-
-The number of profiles in the current profile group or zero if either the
-feature is not enabled or the user has not created any profiles.
 
 ### `backupsInfo`
 

@@ -427,23 +427,6 @@ export const QueryCache = {
       FRECENT_SITES_UPDATE_INTERVAL,
       ClientID
     ),
-    profileGroupProfileCount: new CachedTargetingGetter(
-      "getProfileGroupProfileCount",
-      null,
-      FRECENT_SITES_UPDATE_INTERVAL,
-      {
-        getProfileGroupProfileCount() {
-          if (
-            !Services.prefs.getBoolPref("browser.profiles.enabled", false) ||
-            !Services.prefs.getBoolPref("browser.profiles.created", false)
-          ) {
-            return 0;
-          }
-
-          return lazy.SelectableProfileService.getProfileCount();
-        },
-      }
-    ),
     backupsInfo: new CachedTargetingGetter(
       "findBackupsInWellKnownLocations",
       null,
@@ -1333,10 +1316,6 @@ const TargetingGetters = {
       return "";
     }
     return lazy.SelectableProfileService.currentProfile.id.toString();
-  },
-
-  get profileGroupProfileCount() {
-    return QueryCache.getters.profileGroupProfileCount.get();
   },
 
   get buildId() {

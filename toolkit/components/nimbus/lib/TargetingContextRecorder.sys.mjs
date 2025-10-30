@@ -159,7 +159,6 @@ export const ATTRIBUTE_TRANSFORMS = Object.freeze({
   ),
   primaryResolution: pick("height", "width"),
   profileAgeCreated: typeAssertions.quantity,
-  profileGroupProfileCount: typeAssertions.quantity,
   region: typeAssertions.string,
   totalBookmarksCount: typeAssertions.quantity,
   userMonthlyActivity: userMonthlyActivity =>
