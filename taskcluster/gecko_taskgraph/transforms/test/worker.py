@@ -90,6 +90,9 @@ WINDOWS_WORKER_TYPES = {
         "virtual": "win11-64-24h2",
         "virtual-with-gpu": "win11-64-24h2-gpu",
     },
+    "windows11-aarch64-24h2": {
+        "virtual": "win11-a64-24h2",
+    },
 }
 
 # os x worker types keyed by test-platform
