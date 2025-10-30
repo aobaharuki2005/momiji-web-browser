@@ -391,6 +391,17 @@ AnchorPosDefaultAnchorCache::AnchorPosDefaultAnchorCache(
       mScrollContainer{AnchorPositioningUtils::GetNearestScrollFrame(aAnchor)} {
 }
 
+AnchorPosDefaultAnchorCache::AnchorPosDefaultAnchorCache(
+    const nsIFrame* aAnchor, const nsIFrame* aScrollContainer)
+    : mAnchor{aAnchor}, mScrollContainer{aScrollContainer} {
+  MOZ_ASSERT_IF(
+      aAnchor,
+      nsLayoutUtils::GetNearestScrollContainerFrame(
+          const_cast<nsContainerFrame*>(aAnchor->GetParent()),
+          nsLayoutUtils::SCROLLABLE_SAME_DOC |
+              nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN) == mScrollContainer);
+}
+
 nsIFrame* AnchorPositioningUtils::FindFirstAcceptableAnchor(
     const nsAtom* aName, const nsIFrame* aPositionedFrame,
     const nsTArray<nsIFrame*>& aPossibleAnchorFrames) {
@@ -701,6 +712,42 @@ const nsIFrame* AnchorPositioningUtils::GetNearestScrollFrame(
           nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 }
 
+nsPoint AnchorPositioningUtils::GetScrollOffsetFor(
+    PhysicalAxes aAxes, const nsIFrame* aPositioned,
+    const AnchorPosDefaultAnchorCache& aDefaultAnchorCache) {
+  MOZ_ASSERT(aPositioned);
+  if (!aDefaultAnchorCache.mAnchor || aAxes.isEmpty()) {
+    return nsPoint{};
+  }
+  nsPoint offset;
+  const bool trackHorizontal = aAxes.contains(PhysicalAxis::Horizontal);
+  const bool trackVertical = aAxes.contains(PhysicalAxis::Vertical);
+  // TODO(dshin, bug 1991489): Traverse properly, in case anchor and positioned
+  // elements are in different continuation frames of the absolute containing
+  // block.
+  const auto* absoluteContainingBlock = aPositioned->GetParent();
+  if (GetNearestScrollFrame(aPositioned) ==
+      aDefaultAnchorCache.mScrollContainer) {
+    // Would scroll together anyway, skip.
+    return nsPoint{};
+  }
+  // Grab the accumulated offset up to, but not including, the abspos
+  // container.
+  for (const auto* f = aDefaultAnchorCache.mScrollContainer;
+       f && f != absoluteContainingBlock; f = f->GetParent()) {
+    if (const ScrollContainerFrame* scrollFrame = do_QueryFrame(f)) {
+      const auto o = scrollFrame->GetScrollPosition();
+      if (trackHorizontal) {
+        offset.x += o.x;
+      }
+      if (trackVertical) {
+        offset.y += o.y;
+      }
+    }
+  }
+  return offset;
+}
+
 // Out of line to avoid having to include AnchorPosReferenceData from nsIFrame.h
 void DeleteAnchorPosReferenceData(AnchorPosReferenceData* aData) {
   delete aData;
@@ -764,6 +811,14 @@ const nsIFrame* AnchorPositioningUtils::GetAnchorPosImplicitAnchor(
   return pseudoRootFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)
              ? pseudoRootFrame->GetPlaceholderFrame()->GetParent()
              : pseudoRootFrame->GetParent();
+}
+
+bool AnchorPositioningUtils::FitsInContainingBlock(
+    const nsRect& aOverflowCheckRect,
+    const nsRect& aOriginalContainingBlockSize, const nsRect& aRect) {
+  return aOverflowCheckRect.Intersect(aOriginalContainingBlockSize)
+      .Union(aOriginalContainingBlockSize)
+      .Contains(aRect);
 }
 
 }  // namespace mozilla
