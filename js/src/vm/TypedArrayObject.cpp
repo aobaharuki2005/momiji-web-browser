@@ -4773,52 +4773,17 @@ static auto FromBase64(const CharT* chars, size_t length, Alphabet alphabet,
   // Initial loop to process only full chunks. Doesn't perform any error
   // reporting and expects that at least four characters can be read per loop
   // iteration and that the output has enough space for a decoded chunk.
+  if (length >= 4) {
+    size_t lastValidIndex = length - 4;
+    while (canAppend(3) && index <= lastValidIndex) {
+      // Fast path: Read four consecutive characters.
 
-  size_t alignedLength = length & ~0x3;
-  while (canAppend(3) && index < alignedLength) {
-    // Fast path: Read four consecutive characters.
+      // Step 10.a. (Performed in slow path.)
 
-    // Step 10.a. (Performed in slow path.)
+      // Step 10.b. (Moved out of loop.)
 
-    // Step 10.b. (Moved out of loop.)
-
-    // Steps 10.c and 10.e-g.
-    uint32_t chunk = decode4Chars(chars + index);
-
-    // Steps 10.h-i. (Not applicable in this loop.)
-
-    // Steps 10.d and 10.j-l.
-    if (MOZ_LIKELY(int32_t(chunk) >= 0)) {
-      // Step 10.j-l.
-      decodeChunk(chunk);
-
-      // Step 10.d.
-      index += 4;
-      continue;
-    }
-
-    // Slow path: Read four characters, ignoring whitespace.
-
-    // Steps 10.a and 10.b.
-    CharT part[4];
-    size_t i = index;
-    size_t j = 0;
-    while (i < length && j < 4) {
-      auto ch = chars[i++];
-
-      // Step 10.a.
-      if (mozilla::IsAsciiWhitespace(ch)) {
-        continue;
-      }
-
-      // Step 10.c.
-      part[j++] = ch;
-    }
-
-    // Steps 10.d-l.
-    if (MOZ_LIKELY(j == 4)) {
-      // Steps 10.e-g.
-      uint32_t chunk = decode4Chars(part);
+      // Steps 10.c and 10.e-g.
+      uint32_t chunk = decode4Chars(chars + index);
 
       // Steps 10.h-i. (Not applicable in this loop.)
 
@@ -4828,31 +4793,67 @@ static auto FromBase64(const CharT* chars, size_t length, Alphabet alphabet,
         decodeChunk(chunk);
 
         // Step 10.d.
-        index = i;
+        index += 4;
         continue;
       }
+
+      // Slow path: Read four characters, ignoring whitespace.
+
+      // Steps 10.a and 10.b.
+      CharT part[4];
+      size_t i = index;
+      size_t j = 0;
+      while (i < length && j < 4) {
+        auto ch = chars[i++];
+
+        // Step 10.a.
+        if (mozilla::IsAsciiWhitespace(ch)) {
+          continue;
+        }
+
+        // Step 10.c.
+        part[j++] = ch;
+      }
+
+      // Steps 10.d-l.
+      if (MOZ_LIKELY(j == 4)) {
+        // Steps 10.e-g.
+        uint32_t chunk = decode4Chars(part);
+
+        // Steps 10.h-i. (Not applicable in this loop.)
+
+        // Steps 10.d and 10.j-l.
+        if (MOZ_LIKELY(int32_t(chunk) >= 0)) {
+          // Step 10.j-l.
+          decodeChunk(chunk);
+
+          // Step 10.d.
+          index = i;
+          continue;
+        }
+      }
+
+      // Padding or invalid characters, or end of input. The next loop will
+      // process any characters left in the input.
+      break;
     }
 
-    // Padding or invalid characters, or end of input. The next loop will
-    // process any characters left in the input.
-    break;
-  }
+    // Step 10.b.ii.
+    if (index == length) {
+      return Base64Result::Ok(length, written());
+    }
 
-  // Step 10.b.ii.
-  if (index == length) {
-    return Base64Result::Ok(length, written());
+    // Step 10.l.v. (Reordered)
+    if (!canAppend(1)) {
+      MOZ_ASSERT(written() > 0);
+      return Base64Result::Ok(index, written());
+    }
   }
 
   // Step 4.
   //
   // String index after the last fully read base64 chunk.
   size_t read = index;
-
-  // Step 10.l.v. (Reordered)
-  if (!canAppend(1)) {
-    MOZ_ASSERT(written() > 0);
-    return Base64Result::Ok(read, written());
-  }
 
   // Step 5. (Not applicable in our implementation.)
 
