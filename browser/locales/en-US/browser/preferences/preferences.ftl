@@ -1058,6 +1058,16 @@ sync-engine-settings =
 
 sync-device-name-header = Device Name
 
+# Variables:
+#   $placeholder (string) - The placeholder text of the input
+sync-device-name-input =
+    .aria-label = Device Name
+    .placeholder = { $placeholder }
+
+sync-device-name-change-2 =
+    .label = Change Device Name
+    .accesskey = h
+
 sync-device-name-change =
     .label = Change Device Name…
     .accesskey = h
