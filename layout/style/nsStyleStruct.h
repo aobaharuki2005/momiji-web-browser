@@ -43,7 +43,7 @@ namespace mozilla {
 class ComputedStyle;
 struct IntrinsicSize;
 struct ReflowInput;
-struct AnchorPosResolutionCache;
+class AnchorPosReferenceData;
 
 }  // namespace mozilla
 
@@ -390,14 +390,15 @@ struct AnchorPosResolutionParams {
   mozilla::StylePositionProperty mPosition;
   // position-area property of the element in question.
   mozilla::StylePositionArea mPositionArea;
-  // Cache data used for anchor resolution.
-  mozilla::AnchorPosResolutionCache* const mCache;
+  // Storage for anchor reference data. To be populated on abspos reflow,
+  // whenever the frame makes any anchor reference.
+  mozilla::AnchorPosReferenceData* const mAnchorPosReferenceData = nullptr;
 
   // Helper functions for creating anchor resolution parameters.
   // Defined in corresponding header files.
   static inline AnchorPosResolutionParams From(
       const nsIFrame* aFrame,
-      mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache = nullptr);
+      mozilla::AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
   static inline AnchorPosResolutionParams From(
       const mozilla::ReflowInput* aRI, bool aIgnorePositionArea = false);
   static inline AnchorPosResolutionParams From(

@@ -3270,7 +3270,7 @@ void ScrollContainerFrame::ScrollToImpl(
       return;
     }
   }
-  PresShell()->UpdateAnchorPosForScroll(this);
+  PresShell()->UpdateAnchorPosLayoutForScroll(this);
 
   presContext->RecordInteractionTime(
       nsPresContext::InteractionType::ScrollInteraction, TimeStamp::Now());
