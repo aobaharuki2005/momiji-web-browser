@@ -1648,6 +1648,7 @@ export class ActivityStream {
     delete this.geo;
 
     Services.obs.removeObserver(this, "intl:app-locales-changed");
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
 
     Services.prefs.removeObserver(BROWSER_URLBAR_PLACEHOLDERNAME, this);
 
