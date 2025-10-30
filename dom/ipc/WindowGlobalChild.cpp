@@ -661,7 +661,7 @@ void WindowGlobalChild::SetDocumentPrincipal(
                               aNewDocumentStoragePrincipal);
 }
 
-const nsACString& WindowGlobalChild::GetRemoteType() {
+const nsACString& WindowGlobalChild::GetRemoteType() const {
   if (XRE_IsContentProcess()) {
     return ContentChild::GetSingleton()->GetRemoteType();
   }
