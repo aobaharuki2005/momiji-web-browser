@@ -100,7 +100,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             }
         }
         requirePreference<SwitchPreference>(R.string.pref_key_enable_toolbar_customization).apply {
-            isVisible = Config.channel.isDebug
+            isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().shouldShowToolbarCustomization
             val newOption = context.settings().toolbarRedesignEnabled
             isEnabled = newOption
