@@ -327,6 +327,7 @@ opaque-types = [
                                   # https://github.com/rust-lang/rust-bindgen/pull/1515
                                   # is available
     "mozilla::detail::PointerType",
+    "mozilla::HashMap",
     "mozilla::HashSet",
     "mozilla::ScrollAxis",  # <- For some reason the alignment of this is 4
                             # for clang.
