@@ -123,7 +123,7 @@ Preferences.addAll([
   { id: "browser.display.document_color_use", type: "int" },
 
   // Fonts
-  { id: "font.language.group", type: "wstring" },
+  { id: "font.language.group", type: "string" },
 
   // Languages
   { id: "intl.regional_prefs.use_os_locales", type: "bool" },
@@ -3357,10 +3357,9 @@ var gMainPane = {
    * Populates the default font list in UI.
    */
   _rebuildFonts() {
-    var langGroupPref = Preferences.get("font.language.group");
-    var isSerif =
-      this._readDefaultFontTypeForLanguage(langGroupPref.value) == "serif";
-    this._selectDefaultLanguageGroup(langGroupPref.value, isSerif);
+    var langGroup = Services.locale.fontLanguageGroup;
+    var isSerif = this._readDefaultFontTypeForLanguage(langGroup) == "serif";
+    this._selectDefaultLanguageGroup(langGroup, isSerif);
   },
 
   /**

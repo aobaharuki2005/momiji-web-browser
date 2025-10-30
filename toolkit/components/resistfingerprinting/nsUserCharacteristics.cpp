@@ -35,6 +35,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/dom/ScreenBinding.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -490,11 +491,11 @@ void PopulateFontPrefs() {
     return;
   }
 
-  nsCString defaultLanguageGroup;
-  Preferences::GetLocalizedCString("font.language.group", defaultLanguageGroup);
+  nsCString fontLanguageGroup;
+  intl::LocaleService::GetInstance()->GetFontLanguageGroup(fontLanguageGroup);
 
 #define FONT_PREF(PREF_NAME, METRIC_NAME)                                   \
-  CollectFontPrefValue(prefRootBranch, defaultLanguageGroup, PREF_NAME,     \
+  CollectFontPrefValue(prefRootBranch, fontLanguageGroup, PREF_NAME,        \
                        glean::characteristics::METRIC_NAME##_western,       \
                        glean::characteristics::METRIC_NAME##_default_group, \
                        glean::characteristics::METRIC_NAME##_modified)
