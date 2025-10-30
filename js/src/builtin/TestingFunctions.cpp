@@ -3264,12 +3264,6 @@ static bool NondeterministicGetWeakMapKeys(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool GrayBitsValid(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(cx->runtime()->gc.areGrayBitsValid());
-  return true;
-}
-
 static bool SetGrayBitsInvalid(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   cx->runtime()->gc.setGrayBitsInvalid();
@@ -10412,10 +10406,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("nondeterministicGetWeakMapKeys", NondeterministicGetWeakMapKeys, 1, 0,
 "nondeterministicGetWeakMapKeys(weakmap)",
 "  Return an array of the keys in the given WeakMap."),
-
-    JS_FN_HELP("grayBitsValid", GrayBitsValid, 0, 0,
-"grayBitsValid()",
-"  Return whether the gray bits state is valid."),
 
     JS_FN_HELP("setGrayBitsInvalid", SetGrayBitsInvalid, 0, 0,
 "setGrayBitsInvalid()",
