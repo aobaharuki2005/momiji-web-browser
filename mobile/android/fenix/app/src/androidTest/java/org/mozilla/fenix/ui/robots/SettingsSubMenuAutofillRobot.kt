@@ -45,6 +45,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.settings.address.ui.edit.EditAddressTestTag
 
@@ -230,9 +231,6 @@ class SettingsSubMenuAutofillRobot(private val composeTestRule: ComposeTestRule)
     }
 
     fun verifyEditAddressView() {
-        Log.i(TAG, "verifyEditAddressView: Trying to click device back button to dismiss keyboard using device back button")
-        mDevice.pressBack()
-        Log.i(TAG, "verifyEditAddressView: Clicked device back button to dismiss keyboard using device back button")
         Log.i(TAG, "verifyEditAddressView: Trying to verify that the \"Edit address\" items are displayed")
         listOf(
             composeTestRule.navigateBackButton(),
@@ -244,6 +242,11 @@ class SettingsSubMenuAutofillRobot(private val composeTestRule: ComposeTestRule)
             composeTestRule.cityTextInput(),
             composeTestRule.subRegionDropDown(),
         ).forEach { it.assertIsDisplayed() }
+
+        Log.i(TAG, "verifyEditAddressView: Trying to click device back button to dismiss keyboard using device back button")
+        mDevice.pressBack()
+        Log.i(TAG, "verifyEditAddressView: Clicked device back button to dismiss keyboard using device back button")
+        waitForAppWindowToBeUpdated()
 
         if (composeTestRule.countryDropDown().isNotDisplayed()) {
             composeTestRule.countryDropDown().performScrollTo()
