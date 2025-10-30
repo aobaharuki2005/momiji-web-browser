@@ -92,6 +92,10 @@ private val TabListCornerShape = RoundedCornerShape(
     bottomStart = TabListItemCornerRadius,
     bottomEnd = TabListItemCornerRadius,
 )
+private val TabListLastItemShape = RoundedCornerShape(
+    bottomStart = TabListItemCornerRadius,
+    bottomEnd = TabListItemCornerRadius,
+)
 
 /**
  * Top-level UI for displaying a list of tabs.
@@ -332,7 +336,6 @@ private fun TabList(
                     start = TabListPadding,
                     end = TabListPadding,
                     top = TabListPadding,
-                    bottom = tabListBottomPadding,
                 )
                 .clip(TabListCornerShape)
                 .background(MaterialTheme.colorScheme.surface)
@@ -342,6 +345,9 @@ private fun TabList(
                     shouldLongPressToDrag = shouldLongPress,
                 ),
             state = state,
+            contentPadding = PaddingValues(
+                bottom = tabListBottomPadding,
+            ),
         ) {
             header?.let {
                 item(key = HEADER_ITEM_KEY) {
@@ -360,6 +366,11 @@ private fun TabList(
                 ) {
                     TabListItem(
                         tab = tab,
+                        modifier = if (index == tabs.size - 1) {
+                            Modifier.clip(TabListLastItemShape)
+                        } else {
+                           Modifier
+                        },
                         isSelected = tab.id == selectedTabId,
                         multiSelectionEnabled = isInMultiSelectMode,
                         multiSelectionSelected = selectionMode.selectedTabs.any { it.id == tab.id },
