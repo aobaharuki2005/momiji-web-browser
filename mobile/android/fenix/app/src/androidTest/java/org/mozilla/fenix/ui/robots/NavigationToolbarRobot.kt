@@ -647,6 +647,21 @@ class NavigationToolbarRobot {
             SearchRobot().interact()
             return SearchRobot.Transition()
         }
+
+        fun openUnifiedTrustPanel(interact: UnifiedTrustPanelRobot.() -> Unit): UnifiedTrustPanelRobot.Transition {
+            Log.i(TAG, "openUnifiedTrustPanel: Waiting for $waitingTime ms for site security button to exist")
+            itemWithResId("$packageName:id/mozac_browser_toolbar_site_info_indicator").waitForExists(waitingTime)
+            Log.i(TAG, "openUnifiedTrustPanel: Waited for $waitingTime ms for site security button to exist")
+            Log.i(TAG, "openUnifiedTrustPanel: Trying to click site security button")
+            itemWithResId("$packageName:id/mozac_browser_toolbar_site_info_indicator").click()
+            Log.i(TAG, "openUnifiedTrustPanel: Clicked site security button")
+            Log.i(TAG, "openUnifiedTrustPanel: Waiting for $waitingTime for the unified trust panel to exist")
+            itemWithResId("$packageName:id/design_bottom_sheet").waitForExists(waitingTime)
+            Log.i(TAG, "openUnifiedTrustPanel: Waited for $waitingTime for the unified trust panel to exist")
+
+            UnifiedTrustPanelRobot().interact()
+            return UnifiedTrustPanelRobot.Transition()
+        }
     }
 }
 
