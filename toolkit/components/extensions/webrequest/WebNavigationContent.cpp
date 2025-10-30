@@ -16,7 +16,6 @@
 #include "mozilla/extensions/ExtensionsChild.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/Try.h"
 #include "nsCRT.h"

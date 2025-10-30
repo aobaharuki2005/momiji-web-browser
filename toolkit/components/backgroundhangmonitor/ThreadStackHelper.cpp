@@ -20,7 +20,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/HangTypes.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/MemoryChecking.h"
 #include "mozilla/Sprintf.h"
 #include "nsThread.h"
 

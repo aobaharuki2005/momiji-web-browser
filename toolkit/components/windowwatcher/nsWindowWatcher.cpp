@@ -63,7 +63,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_middlemouse.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"

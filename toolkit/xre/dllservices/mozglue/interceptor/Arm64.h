@@ -14,7 +14,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
-#include "mozilla/Saturate.h"
 #include "mozilla/Types.h"
 
 namespace mozilla {

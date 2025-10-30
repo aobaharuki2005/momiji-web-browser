@@ -14,7 +14,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UntrustedModulesData.h"
-#include "mozilla/Vector.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"

@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "Units.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/Maybe.h"
 #include "nsIWindowCreator.h"  // for stupid compilers
 #include "nsIWindowWatcher.h"
 #include "nsIOpenWindowInfo.h"
