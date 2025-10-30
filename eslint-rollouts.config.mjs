@@ -303,7 +303,7 @@ export default [
       "uriloader/**",
       "widget/tests/window_composition_text_querycontent.xhtml",
     ],
-    ignores: ["devtools/startup/**"],
+    ignores: ["devtools/shared/css/parsing-utils.js", "devtools/startup/**"],
     rules: {
       "jsdoc/check-access": "off",
       "jsdoc/check-param-names": "off",
@@ -479,7 +479,7 @@ export default [
       "widget/tests/file*.js",
       "widget/tests/window_composition_text_querycontent.xhtml",
     ],
-    ignores: ["devtools/startup/**"],
+    ignores: ["devtools/shared/css/parsing-utils.js", "devtools/startup/**"],
     rules: mozilla.turnOff(mozilla.configs["flat/require-jsdoc"].rules),
   },
   {
