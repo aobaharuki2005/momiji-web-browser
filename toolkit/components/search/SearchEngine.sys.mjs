@@ -569,8 +569,6 @@ export class SearchEngine {
   _queryCharset = null;
   // The order hint from the configuration (if any).
   _orderHint = null;
-  // The telemetry id from the configuration (if any).
-  _telemetryId = null;
   // Set to true once the engine has been added to the store, and the initial
   // notification sent. This allows to skip sending notifications during
   // initialization.
@@ -1081,7 +1079,6 @@ export class SearchEngine {
       "_metaData",
       "_urls",
       "_orderHint",
-      "_telemetryId",
       "_filePath",
       "_definedAliases",
     ];
@@ -1202,11 +1199,7 @@ export class SearchEngine {
    * id/partner_code/other fields instead.
    */
   get telemetryId() {
-    let telemetryId = this._telemetryId || `other-${this.name}`;
-    if (this.getAttr("overriddenBy")) {
-      return telemetryId + "-addon";
-    }
-    return telemetryId;
+    return `other-${this.name}`;
   }
 
   get hidden() {
