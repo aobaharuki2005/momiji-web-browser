@@ -1057,7 +1057,7 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
       sandbox::MITIGATION_DEP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
-      sandbox::MITIGATION_KTM_COMPONENT |
+      sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
       sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
@@ -1244,7 +1244,7 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   sandbox::MitigationFlags initialMitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
-      sandbox::MITIGATION_KTM_COMPONENT |
+      sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
       sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL | sandbox::MITIGATION_DEP;
 
@@ -1349,7 +1349,7 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_NONSYSTEM_FONT_DISABLE |
-      sandbox::MITIGATION_KTM_COMPONENT |
+      sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
       sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
@@ -1433,7 +1433,7 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_NONSYSTEM_FONT_DISABLE |
-      sandbox::MITIGATION_KTM_COMPONENT |
+      sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
       sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
@@ -1505,7 +1505,7 @@ struct UtilitySandboxProps {
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_NONSYSTEM_FONT_DISABLE |
-      sandbox::MITIGATION_KTM_COMPONENT |
+      sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
       sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32 |
@@ -1602,7 +1602,8 @@ struct WindowsUtilitySandboxProps : public UtilitySandboxProps {
     mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_MEDIUM;
     mUseWin32kLockdown = false;
     mUseCig = false;
-    mExcludedInitialMitigations = sandbox::MITIGATION_KTM_COMPONENT;
+    mExcludedInitialMitigations =
+        sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED;
     mDelayedMitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                           sandbox::MITIGATION_DLL_SEARCH_ORDER;
   }
@@ -1829,7 +1830,7 @@ bool SandboxBroker::SetSecurityLevelForGMPlugin(
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_NONSYSTEM_FONT_DISABLE |
-      sandbox::MITIGATION_KTM_COMPONENT |
+      sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
       sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP;
