@@ -933,6 +933,8 @@ void nsWindow::ConstrainSize(int* aWidth, int* aHeight) {
   nsIWidget::ConstrainSize(aWidth, aHeight);
   *aWidth += mClientMargin.LeftRight();
   *aHeight += mClientMargin.TopBottom();
+  *aWidth = std::max(*aWidth, 1);
+  *aHeight = std::max(*aHeight, 1);
 }
 
 void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
