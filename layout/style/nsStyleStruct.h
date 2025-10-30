@@ -1196,7 +1196,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
   mozilla::StyleInitialLetter mInitialLetter;
   mozilla::StyleColor mTextDecorationColor;
   mozilla::StyleTextDecorationLength mTextDecorationThickness;
-  mozilla::StyleTextDecorationTrim mTextDecorationTrim;
+  mozilla::StyleTextDecorationInset mTextDecorationInset;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {

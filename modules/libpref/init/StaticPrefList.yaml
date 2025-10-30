@@ -10447,7 +10447,7 @@
   value: true
   mirror: always
 
-- name: layout.css.text-decoration-trim.enabled
+- name: layout.css.text-decoration-inset.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always

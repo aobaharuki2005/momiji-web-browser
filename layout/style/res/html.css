@@ -542,7 +542,8 @@ del:lang(zh),
 strike:lang(ja),
 strike:lang(ko),
 strike:lang(zh) {
-  text-decoration-trim: auto;
+  /* stylelint-disable-next-line */
+  text-decoration-inset: auto;
 }
 
 big {

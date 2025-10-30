@@ -14440,10 +14440,10 @@ if (IsCSSPropertyPrefEnabled("dom.viewTransitions.enabled")) {
   });
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.text-decoration-trim.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.text-decoration-inset.enabled")) {
   Object.assign(gCSSProperties, {
-    "text-decoration-trim": {
-      domProp: "textDecorationTrim",
+    "text-decoration-inset": {
+      domProp: "textDecorationInset",
       inherited: false,
       type: CSS_TYPE_LONGHAND,
       applies_to_first_letter: true,

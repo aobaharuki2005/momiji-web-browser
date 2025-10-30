@@ -5783,48 +5783,48 @@ static gfxFloat ComputeDecorationLineOffset(
   return 0;
 }
 
-// Helper to determine decoration trim offset.
-// Returns false if the trim would cut off the decoration entirely.
-static bool ComputeDecorationTrim(
+// Helper to determine decoration inset.
+// Returns false if the inset would cut off the decoration entirely.
+static bool ComputeDecorationInset(
     nsTextFrame* aFrame, const nsPresContext* aPresCtx,
     const nsIFrame* aDecFrame, const gfxFont::Metrics& aMetrics,
     nsCSSRendering::DecorationRectParams& aParams) {
   const WritingMode wm = aDecFrame->GetWritingMode();
   bool verticalDec = wm.IsVertical();
 
-  aParams.trimLeft = 0.0;
-  aParams.trimRight = 0.0;
+  aParams.insetLeft = 0.0;
+  aParams.insetRight = 0.0;
 
-  // Find the trim values for this frame.
-  const StyleTextDecorationTrim& cssTrim =
-      aDecFrame->StyleTextReset()->mTextDecorationTrim;
-  nscoord trimLeft, trimRight;
-  if (cssTrim.IsAuto()) {
-    // Use a trim factor of 1/12.5, so we get 2px of trim (resulting in a 4px
+  // Find the decoration-line inset values for this frame.
+  const StyleTextDecorationInset& cssInset =
+      aDecFrame->StyleTextReset()->mTextDecorationInset;
+  nscoord insetLeft, insetRight;
+  if (cssInset.IsAuto()) {
+    // Use an inset factor of 1/12.5, so we get 2px of inset (resulting in 4px
     // gap between adjacent lines) at font-size 25px.
-    constexpr gfxFloat kAutoTrimFactor = 1.0 / 12.5;
-    // Use the EM size multiplied by kAutoTrimFactor, with a minimum of one
+    constexpr gfxFloat kAutoInsetFactor = 1.0 / 12.5;
+    // Use the EM size multiplied by kAutoInsetFactor, with a minimum of one
     // CSS pixel to ensure that at least some separation occurs.
-    const nscoord autoDecorationTrim =
+    const nscoord autoDecorationInset =
         std::max(aPresCtx->DevPixelsToAppUnits(
-                     NS_round(aMetrics.emHeight * kAutoTrimFactor)),
+                     NS_round(aMetrics.emHeight * kAutoInsetFactor)),
                  nsPresContext::CSSPixelsToAppUnits(1));
-    trimLeft = autoDecorationTrim;
-    trimRight = autoDecorationTrim;
+    insetLeft = autoDecorationInset;
+    insetRight = autoDecorationInset;
   } else {
-    MOZ_ASSERT(cssTrim.IsLength(), "Impossible text-decoration-trim");
-    const auto& length = cssTrim.AsLength();
+    MOZ_ASSERT(cssInset.IsLength(), "Impossible text-decoration-inset");
+    const auto& length = cssInset.AsLength();
     if (length.start.IsZero() && length.end.IsZero()) {
       // We can avoid doing the geometric calculations below, potentially
       // walking up and back down the frame tree, and walking continuations.
       return true;
     }
-    trimLeft = length.start.ToAppUnits();
-    trimRight = length.end.ToAppUnits();
+    insetLeft = length.start.ToAppUnits();
+    insetRight = length.end.ToAppUnits();
   }
 
   if (wm.IsInlineReversed()) {
-    std::swap(trimLeft, trimRight);
+    std::swap(insetLeft, insetRight);
   }
 
   // These rects must be based on the same origin.
@@ -5909,22 +5909,22 @@ static bool ComputeDecorationTrim(
     std::swap(applyLeft, applyRight);
   }
   if (applyLeft) {
-    trimLeft -= marginLeft;
+    insetLeft -= marginLeft;
   } else {
-    trimLeft = 0;
+    insetLeft = 0;
   }
   if (applyRight) {
-    trimRight -= marginRight;
+    insetRight -= marginRight;
   } else {
-    trimRight = 0;
+    insetRight = 0;
   }
 
-  if (trimLeft + trimRight >= frameSize) {
+  if (insetLeft + insetRight >= frameSize) {
     // This frame does not contain the decoration at all.
     return false;
   }
   // TODO alaskanemily: We currently determine if we should have a negative
-  // trim value by checking if we are at the edge of frame from which the
+  // inset value by checking if we are at the edge of frame from which the
   // decloration comes from.
   //
   // This is not absolutely correct, there could in theory be a zero-width
@@ -5934,11 +5934,11 @@ static bool ComputeDecorationTrim(
   // I am unsure if it's possible that the first/last frame might be inset
   // for some reason, as well, in which case we will not draw the outset
   // decorations.
-  if (trimLeft > 0 || marginLeft == 0) {
-    aParams.trimLeft = aPresCtx->AppUnitsToFloatDevPixels(trimLeft);
+  if (insetLeft > 0 || marginLeft == 0) {
+    aParams.insetLeft = aPresCtx->AppUnitsToFloatDevPixels(insetLeft);
   }
-  if (trimRight > 0 || marginRight == 0) {
-    aParams.trimRight = aPresCtx->AppUnitsToFloatDevPixels(trimRight);
+  if (insetRight > 0 || marginRight == 0) {
+    aParams.insetRight = aPresCtx->AppUnitsToFloatDevPixels(insetRight);
   }
   return true;
 }
@@ -6084,8 +6084,8 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                 metrics, appUnitsPerDevUnit, this, parentWM.IsCentralBaseline(),
                 swapUnderline);
 
-            if (!ComputeDecorationTrim(this, aPresContext, dec.mFrame, metrics,
-                                       params)) {
+            if (!ComputeDecorationInset(this, aPresContext, dec.mFrame, metrics,
+                                        params)) {
               return;
             }
 
@@ -7916,8 +7916,8 @@ void nsTextFrame::DrawTextRunAndDecorations(
         GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
     const Metrics metrics = GetFirstFontMetrics(
         GetFontGroupForFrame(dec.mFrame, inflation), useVerticalMetrics);
-    if (!ComputeDecorationTrim(this, aParams.textStyle->PresContext(),
-                               dec.mFrame, metrics, params)) {
+    if (!ComputeDecorationInset(this, aParams.textStyle->PresContext(),
+                                dec.mFrame, metrics, params)) {
       return;
     }
     bCoord = (frameBStart - dec.mBaselineOffset) / app;
@@ -7938,11 +7938,11 @@ void nsTextFrame::DrawTextRunAndDecorations(
     params.allowInkSkipping = dec.mAllowInkSkipping;
     params.skipInk = StyleText()->mTextDecorationSkipInk;
     gfxClipAutoSaveRestore clipRestore(params.context);
-    // If we have a negative trim value, then the decoration will extend
+    // If we have a negative inset value, then the decoration will extend
     // outside the edges of the text.
     // TODO alaskanemily: Ideally we would adjust the clipping rect, but as
     // an initial pass we just disable clipping in this case.
-    if (clipRect && !params.HasNegativeTrim()) {
+    if (clipRect && !params.HasNegativeInset()) {
       clipRestore.Clip(*clipRect);
     }
     PaintDecorationLine(params);

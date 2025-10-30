@@ -16547,44 +16547,10 @@ use.counter.deprecated_ops.doc:
 
 # Total of 704 'CSS (page)' use counters.
 use.counter.css.page:
-  css_align_content:
-    type: counter
-    description: >
-      Whether a page used the CSS property align-content.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
   css_align_items:
     type: counter
     description: >
       Whether a page used the CSS property align-items.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_align_self:
-    type: counter
-    description: >
-      Whether a page used the CSS property align-self.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -17414,44 +17380,10 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
-  css_justify_content:
-    type: counter
-    description: >
-      Whether a page used the CSS property justify-content.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
   css_justify_items:
     type: counter
     description: >
       Whether a page used the CSS property justify-items.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_justify_self:
-    type: counter
-    description: >
-      Whether a page used the CSS property justify-self.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -18978,6 +18910,40 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
+  css_align_content:
+    type: counter
+    description: >
+      Whether a page used the CSS property align-content.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_justify_content:
+    type: counter
+    description: >
+      Whether a page used the CSS property justify-content.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
   css_clip_rule:
     type: counter
     description: >
@@ -19033,6 +18999,40 @@ use.counter.css.page:
     type: counter
     description: >
       Whether a page used the CSS property stroke-opacity.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_align_self:
+    type: counter
+    description: >
+      Whether a page used the CSS property align-self.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_justify_self:
+    type: counter
+    description: >
+      Whether a page used the CSS property justify-self.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -21035,10 +21035,10 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
-  css_text_decoration_thickness:
+  css_text_decoration_inset:
     type: counter
     description: >
-      Whether a page used the CSS property text-decoration-thickness.
+      Whether a page used the CSS property text-decoration-inset.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -21052,10 +21052,10 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
-  css_text_decoration_trim:
+  css_text_decoration_thickness:
     type: counter
     description: >
-      Whether a page used the CSS property text-decoration-trim.
+      Whether a page used the CSS property text-decoration-thickness.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -28517,44 +28517,10 @@ use.counter.css.page:
 
 # Total of 704 'CSS (document)' use counters.
 use.counter.css.doc:
-  css_align_content:
-    type: counter
-    description: >
-      Whether a document used the CSS property align-content.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
   css_align_items:
     type: counter
     description: >
       Whether a document used the CSS property align-items.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_align_self:
-    type: counter
-    description: >
-      Whether a document used the CSS property align-self.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -29384,44 +29350,10 @@ use.counter.css.doc:
     send_in_pings:
       - use-counters
 
-  css_justify_content:
-    type: counter
-    description: >
-      Whether a document used the CSS property justify-content.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
   css_justify_items:
     type: counter
     description: >
       Whether a document used the CSS property justify-items.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_justify_self:
-    type: counter
-    description: >
-      Whether a document used the CSS property justify-self.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -30948,6 +30880,40 @@ use.counter.css.doc:
     send_in_pings:
       - use-counters
 
+  css_align_content:
+    type: counter
+    description: >
+      Whether a document used the CSS property align-content.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_justify_content:
+    type: counter
+    description: >
+      Whether a document used the CSS property justify-content.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
   css_clip_rule:
     type: counter
     description: >
@@ -31003,6 +30969,40 @@ use.counter.css.doc:
     type: counter
     description: >
       Whether a document used the CSS property stroke-opacity.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_align_self:
+    type: counter
+    description: >
+      Whether a document used the CSS property align-self.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_justify_self:
+    type: counter
+    description: >
+      Whether a document used the CSS property justify-self.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -33005,10 +33005,10 @@ use.counter.css.doc:
     send_in_pings:
       - use-counters
 
-  css_text_decoration_thickness:
+  css_text_decoration_inset:
     type: counter
     description: >
-      Whether a document used the CSS property text-decoration-thickness.
+      Whether a document used the CSS property text-decoration-inset.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -33022,10 +33022,10 @@ use.counter.css.doc:
     send_in_pings:
       - use-counters
 
-  css_text_decoration_trim:
+  css_text_decoration_thickness:
     type: counter
     description: >
-      Whether a document used the CSS property text-decoration-trim.
+      Whether a document used the CSS property text-decoration-thickness.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:

@@ -161,7 +161,8 @@
 :any-link:lang(ja),
 :any-link:lang(ko),
 :any-link:lang(zh) {
-  text-decoration-trim: auto;
+  /* stylelint-disable-next-line */
+  text-decoration-inset: auto;
 }
 
 :link {

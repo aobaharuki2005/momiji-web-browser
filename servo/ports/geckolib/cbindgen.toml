@@ -194,7 +194,7 @@ include = [
   "NonNegativeLengthOrAuto",
   "TextDecorationSkipInk",
   "TextDecorationLength",
-  "TextDecorationTrim",
+  "TextDecorationInset",
   "Time",
   "Rect",
   "InitialLetter",

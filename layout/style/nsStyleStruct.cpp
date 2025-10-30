@@ -2884,7 +2884,7 @@ nsStyleTextReset::nsStyleTextReset()
       mInitialLetter{0, 0},
       mTextDecorationColor(StyleColor::CurrentColor()),
       mTextDecorationThickness(StyleTextDecorationLength::Auto()),
-      mTextDecorationTrim(StyleTextDecorationTrim::Length(
+      mTextDecorationInset(StyleTextDecorationInset::Length(
           StyleLength::Zero(), StyleLength::Zero())) {
   MOZ_COUNT_CTOR(nsStyleTextReset);
 }
@@ -2897,7 +2897,7 @@ nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
       mInitialLetter(aSource.mInitialLetter),
       mTextDecorationColor(aSource.mTextDecorationColor),
       mTextDecorationThickness(aSource.mTextDecorationThickness),
-      mTextDecorationTrim(aSource.mTextDecorationTrim) {
+      mTextDecorationInset(aSource.mTextDecorationInset) {
   MOZ_COUNT_CTOR(nsStyleTextReset);
 }
 
@@ -2911,7 +2911,7 @@ nsChangeHint nsStyleTextReset::CalcDifference(
   if (mTextDecorationLine != aNewData.mTextDecorationLine ||
       mTextDecorationStyle != aNewData.mTextDecorationStyle ||
       mTextDecorationThickness != aNewData.mTextDecorationThickness ||
-      mTextDecorationTrim != aNewData.mTextDecorationTrim) {
+      mTextDecorationInset != aNewData.mTextDecorationInset) {
     // Changes to our text-decoration line can impact our overflow area &
     // also our descendants' overflow areas (particularly for text-frame
     // descendants).  So, we update those areas & trigger a repaint.

@@ -3999,23 +3999,23 @@ static void SkipInk(nsIFrame* aFrame, DrawTarget& aDrawTarget,
   // the whole text run.
   const Float absoluteLineStart = relativeTextStart - aParams.icoordInFrame;
 
-  // Compute the min/max positions based on trim.
-  const Float trimLineDrawAreaStart =
-      relativeTextStart + (aParams.trimLeft - aPadding);
-  const Float trimLineDrawAreaEnd =
-      relativeTextEnd - (aParams.trimRight - aPadding);
+  // Compute the min/max positions based on inset.
+  const Float insetLineDrawAreaStart =
+      relativeTextStart + (aParams.insetLeft - aPadding);
+  const Float insetLineDrawAreaEnd =
+      relativeTextEnd - (aParams.insetRight - aPadding);
 
   for (unsigned i = 0; i <= length; i += 2) {
     // Handle start/end edge cases and set up general case.
-    // While we use the trim start/end values, it is possible the trim cuts
+    // While we use the inset start/end values, it is possible the inset cuts
     // of the first intercept and into the next, so we will need to clamp
     // the dimensions in the other case too.
-    SkScalar startIntercept = trimLineDrawAreaStart;
+    SkScalar startIntercept = insetLineDrawAreaStart;
     if (i > 0) {
       startIntercept =
           std::max(aIntercepts[i - 1] + absoluteLineStart, startIntercept);
     }
-    SkScalar endIntercept = trimLineDrawAreaEnd;
+    SkScalar endIntercept = insetLineDrawAreaEnd;
     if (i < length) {
       endIntercept = std::min(aIntercepts[i] + absoluteLineStart, endIntercept);
     }
@@ -4029,7 +4029,7 @@ static void SkipInk(nsIFrame* aFrame, DrawTarget& aDrawTarget,
     // Don't draw decoration lines that have a smaller width than 1, or half
     // the line-end padding dimension.
     // This will catch the case of an intercept being fully removed by the
-    // trim values, in which case the width will be negative.
+    // inset values, in which case the width will be negative.
     if (clipParams.lineSize.width < std::max(aPadding * 0.5, 1.0)) {
       continue;
     }
@@ -4665,9 +4665,9 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
     MOZ_ASSERT_UNREACHABLE("Invalid text decoration value");
   }
 
-  // Take text decoration trim into account.
-  r.x += aParams.trimLeft;
-  r.width -= aParams.trimLeft + aParams.trimRight;
+  // Take text decoration inset into account.
+  r.x += aParams.insetLeft;
+  r.width -= aParams.insetLeft + aParams.insetRight;
   r.width = std::max(r.width, 0.0);
 
   // Convert line-relative coordinate system (x = line-right, y = line-up)
