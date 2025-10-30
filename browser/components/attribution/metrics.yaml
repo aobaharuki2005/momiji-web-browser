@@ -60,6 +60,10 @@ glean.attribution:
     send_in_pings:
       - metrics
       - update
+      - baseline
+      - events
+    no_lint:
+      - BASELINE_PING
 
 glean.distribution:
   ext:
@@ -102,3 +106,7 @@ glean.distribution:
     send_in_pings:
       - metrics
       - update
+      - baseline
+      - events
+    no_lint:
+      - BASELINE_PING
