@@ -14,6 +14,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.debugsettings.addons.ui.AddonsDebugToolsScreen
 import org.mozilla.fenix.debugsettings.addresses.AddressesDebugRegionRepository
 import org.mozilla.fenix.debugsettings.addresses.AddressesTools
+import org.mozilla.fenix.debugsettings.autofill.AutofillTools
 import org.mozilla.fenix.debugsettings.cfrs.CfrToolsState
 import org.mozilla.fenix.debugsettings.cfrs.CfrToolsStore
 import org.mozilla.fenix.debugsettings.crashtools.CrashTools
@@ -53,6 +54,10 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
     CreditCards(
         route = "credit_cards",
         title = R.string.debug_drawer_credit_cards_title,
+    ),
+    Autofill(
+        route = "autofill",
+        title = R.string.debug_drawer_autofill_title,
     ),
     CfrTools(
         route = "cfr_tools",
@@ -101,6 +106,7 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
             inactiveTabsEnabled: Boolean,
         ): List<DebugDrawerDestination> =
             entries.map { debugDrawerRoute ->
+                var isChildDestination: Boolean = false
                 val onClick: () -> Unit
                 val content: @Composable () -> Unit
                 when (debugDrawerRoute) {
@@ -117,6 +123,7 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
                     }
 
                     Logins -> {
+                        isChildDestination = true
                         onClick = {
                             debugDrawerStore.dispatch(DebugDrawerAction.NavigateTo.Logins)
                         }
@@ -129,6 +136,7 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
                     }
 
                     Addresses -> {
+                        isChildDestination = true
                         onClick = {
                             debugDrawerStore.dispatch(DebugDrawerAction.NavigateTo.Addresses)
                         }
@@ -141,12 +149,23 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
                     }
 
                     CreditCards -> {
+                        isChildDestination = true
                         onClick = {
                             debugDrawerStore.dispatch(DebugDrawerAction.NavigateTo.CreditCards)
                         }
                         content = {
                             CreditCardsTools(
                                 creditCardsAddressesStorage = creditCardsAddressesStorage,
+                            )
+                        }
+                    }
+                    Autofill -> {
+                        onClick = {
+                            debugDrawerStore.dispatch(DebugDrawerAction.NavigateTo.Autofill)
+                        }
+                        content = {
+                            AutofillTools(
+                                debugDrawerStore = debugDrawerStore,
                             )
                         }
                     }
@@ -202,6 +221,7 @@ enum class DebugDrawerRoute(val route: String, @param:StringRes val title: Int) 
                 DebugDrawerDestination(
                     route = debugDrawerRoute.route,
                     title = debugDrawerRoute.title,
+                    isChildDestination = isChildDestination,
                     onClick = onClick,
                     content = content,
                 )
