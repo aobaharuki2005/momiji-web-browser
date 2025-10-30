@@ -238,8 +238,7 @@ export class MLEngineParent extends JSProcessActorParent {
       if (currentEngine) {
         if (
           currentEngine.pipelineOptions.equals(pipelineOptions) &&
-          currentEngine.engineStatus !== "closed" &&
-          currentEngine.engineStatus !== "crashed"
+          currentEngine.engineStatus === "ready"
         ) {
           lazy.console.debug(`Reusing existing engine for ${engineId}`);
           return currentEngine;
