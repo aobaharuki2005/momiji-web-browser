@@ -253,7 +253,7 @@ void xpc::ErrorReport::Init(JSContext* aCx, mozilla::dom::Exception* aException,
   }
   mSourceId = aException->SourceId(aCx);
   mLineNumber = aException->LineNumber(aCx);
-  mColumn = aException->ColumnNumber();
+  mColumn = aException->ColumnNumber(aCx);
 }
 
 static LazyLogModule gJSDiagnostics("JSDiagnostics");

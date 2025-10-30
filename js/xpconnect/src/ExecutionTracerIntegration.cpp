@@ -168,7 +168,7 @@ bool ExecutionTracerIntegration::WriteExceptionSummary(
   uint32_t line = exception->LineNumber(aCx);
   aWriter->writeUint32(line);
 
-  uint32_t column = exception->ColumnNumber();
+  uint32_t column = exception->ColumnNumber(aCx);
   aWriter->writeUint32(column);
 
   nsCOMPtr<nsIStackFrame> stack = exception->GetLocation();

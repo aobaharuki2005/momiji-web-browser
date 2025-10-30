@@ -289,7 +289,13 @@ uint32_t Exception::LineNumber(JSContext* aCx) const {
   return 0;
 }
 
-uint32_t Exception::ColumnNumber() const { return 0; }
+uint32_t Exception::ColumnNumber(JSContext* aCx) const {
+  if (mLocation) {
+    return mLocation->GetColumnNumber(aCx);
+  }
+
+  return 0;
+}
 
 already_AddRefed<nsIStackFrame> Exception::GetLocation() const {
   nsCOMPtr<nsIStackFrame> location = mLocation;
