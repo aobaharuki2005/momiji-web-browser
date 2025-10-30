@@ -1130,3 +1130,127 @@ add_task(async function test_aboutwelcome_both_secondary_top_buttons() {
   await cleanup();
   sandbox.restore();
 });
+
+add_task(
+  async function test_aboutwelcome_no_backup_skip_returns_to_easy_setup() {
+    const TEST_SCREENS = [
+      {
+        id: "AW_EASY_SETUP_TEST",
+        targeting: "true",
+        content: {
+          position: "split",
+          progress_bar: true,
+          logo: {},
+          title: "Easy setup test",
+          secondary_button_top: [
+            {
+              label: { string_id: "restore-from-backup-secondary-top-button" },
+              action: {
+                type: "SET_PREF",
+                data: { pref: { name: "showRestoreFromBackup", value: true } },
+                navigate: true,
+              },
+              targeting: "true",
+            },
+          ],
+          primary_button: {
+            label: { raw: "Continue" },
+            action: { navigate: true },
+          },
+        },
+      },
+      {
+        id: "AW_BACKUP_RESTORE_EMBEDDED_NO_BACKUP_FOUND_TEST",
+        targeting:
+          "'messaging-system-action.showRestoreFromBackup'|preferenceValue == true",
+        content: {
+          position: "split",
+          progress_bar: true,
+          logo: {},
+          title: { string_id: "restore-from-backup-title" },
+          subtitle: { string_id: "restore-from-backup-subtitle" },
+          tiles: { type: "backup_restore" },
+          skip_button: {
+            label: { string_id: "restore-from-backup-secondary-button" },
+            has_arrow_icon: true,
+            action: {
+              type: "SET_PREF",
+              data: { pref: { name: "showRestoreFromBackup", value: false } },
+              navigate: true,
+              goBack: true,
+            },
+          },
+        },
+      },
+      {
+        id: "AW_TEST_FOLLOWUP",
+        content: {
+          position: "split",
+          progress_bar: true,
+          logo: {},
+          title: "Test backup skipped",
+          primary_button: {
+            label: { raw: "Done" },
+            action: { navigate: true },
+          },
+        },
+      },
+    ];
+
+    await setAboutWelcomeMultiStage(JSON.stringify(TEST_SCREENS));
+    let { cleanup, browser } = await openMRAboutWelcome();
+
+    await test_screen_content(
+      browser,
+      "Easy Setup test screen is visible with restore from backup CTA",
+      [
+        "main.AW_EASY_SETUP_TEST",
+        "div.secondary-cta.top",
+        "button[data-l10n-id='restore-from-backup-secondary-top-button']",
+        "button[value='primary_button']",
+      ]
+    );
+
+    // Clicking the CTA should set the pref to true and navigate to backup restore screen
+    await clickVisibleButton(
+      browser,
+      "button[data-l10n-id='restore-from-backup-secondary-top-button']"
+    );
+
+    await test_screen_content(
+      browser,
+      "No backup found screen rendered after clicking the top CTA",
+      [
+        "main.AW_BACKUP_RESTORE_EMBEDDED_NO_BACKUP_FOUND_TEST",
+        "[data-l10n-id='restore-from-backup-title']",
+        "[data-l10n-id='restore-from-backup-subtitle']",
+        "button[data-l10n-id='restore-from-backup-secondary-button']",
+      ]
+    );
+
+    // Click skip on backup restore screen
+    await clickVisibleButton(
+      browser,
+      "button[data-l10n-id='restore-from-backup-secondary-button']"
+    );
+
+    await test_screen_content(
+      browser,
+      "Pressing skip returns to Easy Setup screen",
+      ["main.AW_EASY_SETUP_TEST"]
+    );
+
+    await clickVisibleButton(browser, ".action-buttons button.primary");
+
+    await test_screen_content(
+      browser,
+      "Pressing the primary button should proceed to follow up screen and not backup restore again",
+      ["main.AW_TEST_FOLLOWUP"],
+      //unexpected
+      ["AW_BACKUP_RESTORE_EMBEDDED_NO_BACKUP_FOUND_TEST"]
+    );
+
+    await SpecialPowers.popPrefEnv();
+    await cleanup();
+  }
+);
