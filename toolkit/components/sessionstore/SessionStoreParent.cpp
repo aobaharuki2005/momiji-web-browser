@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowserSessionStore.h"
 #include "mozilla/dom/BrowserSessionStoreBinding.h"

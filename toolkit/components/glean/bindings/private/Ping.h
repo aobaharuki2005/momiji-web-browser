@@ -9,6 +9,7 @@
 
 #include "mozilla/DataMutex.h"
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "mozilla/Maybe.h"
 #include "nsIGleanPing.h"
 #include "nsString.h"
 

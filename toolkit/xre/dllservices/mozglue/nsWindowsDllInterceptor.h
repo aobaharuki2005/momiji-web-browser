@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/NativeNt.h"
 
+#include "mozilla/Vector.h"
 #include "mozilla/interceptor/MMPolicies.h"
 #include "mozilla/interceptor/PatcherDetour.h"
 #include "mozilla/interceptor/PatcherNopSpace.h"

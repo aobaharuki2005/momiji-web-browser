@@ -17,6 +17,7 @@
 
 #if defined(XP_WIN)
 #  include "mozilla/UniquePtr.h"
+#  include "mozilla/Vector.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
 
 #  include <wchar.h>

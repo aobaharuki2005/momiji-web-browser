@@ -6,6 +6,7 @@
 
 #include "mozilla/WindowsBCryptInitialization.h"
 
+#include "mozilla/RandomNum.h"
 #include "nsWindowsDllInterceptor.h"
 
 #include <bcrypt.h>

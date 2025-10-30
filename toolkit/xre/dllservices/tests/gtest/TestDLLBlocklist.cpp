@@ -14,6 +14,7 @@
 
 #include "gtest/gtest.h"
 
+#include "mozilla/Char16.h"
 #include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Services.h"
 #include "mozilla/WinDllServices.h"

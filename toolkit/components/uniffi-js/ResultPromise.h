@@ -9,6 +9,7 @@
 
 #include "nsThreadUtils.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UniFFIBinding.h"

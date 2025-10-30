@@ -11,6 +11,7 @@
 #include "mozilla/extensions/PStreamFilterChild.h"
 #include "mozilla/extensions/StreamFilter.h"
 
+#include "mozilla/LinkedList.h"
 #include "mozilla/dom/StreamFilterBinding.h"
 #include "nsISupportsImpl.h"
 

@@ -14,6 +14,8 @@
 #  include "mozilla/AssembleCmdLine.h"
 #endif
 
+#include "mozilla/ResultVariant.h"
+
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS(BackgroundTasksRunner, nsIBackgroundTasksRunner);

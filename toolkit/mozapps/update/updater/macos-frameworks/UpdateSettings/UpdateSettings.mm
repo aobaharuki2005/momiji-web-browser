@@ -4,6 +4,8 @@
 
 #include "UpdateSettings.h"
 
+#include "mozilla/HelperMacros.h"
+
 NSString* UpdateSettingsGetAcceptedMARChannels(void) {
   return
       [NSString stringWithFormat:@"[Settings]\nACCEPTED_MAR_CHANNEL_IDS=%s\n",

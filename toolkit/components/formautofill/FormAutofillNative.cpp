@@ -16,6 +16,7 @@
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/RustRegex.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"

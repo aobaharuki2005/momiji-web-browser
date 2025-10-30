@@ -18,6 +18,7 @@
 #include "nsXPCOM.h"
 #include "prsystem.h"
 #include "mozilla/Casting.h"
+#include "mozilla/SPSCQueue.h"
 #include <cstddef>
 #include "mozilla/dom/Promise.h"
 

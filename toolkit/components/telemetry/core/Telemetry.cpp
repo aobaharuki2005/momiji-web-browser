@@ -37,6 +37,7 @@
 #include "mozilla/FStream.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/ModuleUtils.h"

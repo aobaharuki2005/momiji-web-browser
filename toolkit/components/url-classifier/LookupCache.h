@@ -15,6 +15,7 @@
 #include "nsUrlClassifierPrefixSet.h"
 #include "VariableLengthPrefixSet.h"
 #include "mozilla/Logging.h"
+#include "mozilla/TypedEnumBits.h"
 #include "nsIUrlClassifierInfo.h"
 
 namespace mozilla {

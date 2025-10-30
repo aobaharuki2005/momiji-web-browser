@@ -6,6 +6,7 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"

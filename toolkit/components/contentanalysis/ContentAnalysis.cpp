@@ -11,6 +11,7 @@
 #include "base/process_util.h"
 #include "GMPUtils.h"  // ToHexString
 #include "MainThreadUtils.h"
+#include "mozilla/Array.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"

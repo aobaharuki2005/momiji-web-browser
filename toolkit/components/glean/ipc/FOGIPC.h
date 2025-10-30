@@ -8,6 +8,7 @@
 
 #include <functional>
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "nsTArrayForwardDeclare.h"
 

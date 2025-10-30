@@ -6,6 +6,7 @@
 #ifndef mozilla_ExtensionPolicyService_h
 #define mozilla_ExtensionPolicyService_h
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozIExtensionProcessScript.h"
 #include "nsCOMPtr.h"

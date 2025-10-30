@@ -22,6 +22,7 @@
 
 #include "mozilla/EnumSet.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Result.h"
 
 #include "mozilla/dom/WindowGlobalChild.h"
 

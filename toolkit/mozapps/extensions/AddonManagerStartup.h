@@ -7,6 +7,7 @@
 #define AddonManagerStartup_h
 
 #include "amIAddonManagerStartup.h"
+#include "mozilla/Result.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"

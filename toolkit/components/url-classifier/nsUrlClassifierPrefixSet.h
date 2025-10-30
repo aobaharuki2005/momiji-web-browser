@@ -14,6 +14,7 @@
 #include "nsTArray.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Poison.h"
 
 class nsIInputStream;
 class nsIOutputStream;

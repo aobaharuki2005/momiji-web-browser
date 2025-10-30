@@ -7,6 +7,7 @@
 #ifndef mozilla_dynamicfpinavigationheuristic_h
 #define mozilla_dynamicfpinavigationheuristic_h
 
+#include "mozilla/WeakPtr.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIPrincipal.h"
 #include "nsIWebProgressListener.h"

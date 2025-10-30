@@ -11,6 +11,7 @@
 #ifndef mock_Link_h__
 #define mock_Link_h__
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Link.h"
 #include "mozilla/StaticPrefs_layout.h"
 

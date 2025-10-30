@@ -18,6 +18,7 @@
 #include "jspubtd.h"
 
 #include "mozilla/Result.h"
+#include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
