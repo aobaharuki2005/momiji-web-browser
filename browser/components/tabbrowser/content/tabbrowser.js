@@ -6331,6 +6331,15 @@
       return !!element?.classList?.contains("tab-group-label");
     }
 
+    /**
+     * @param {Element} element
+     * @returns {boolean}
+     *   `true` if element is a `<tab-split-view-wrapper>`
+     */
+    isSplitViewWrapper(element) {
+      return !!(element?.tagName == "tab-split-view-wrapper");
+    }
+
     _updateTabsAfterInsert() {
       for (let i = 0; i < this.tabs.length; i++) {
         this.tabs[i]._tPos = i;
@@ -6607,10 +6616,26 @@
       if (aTab.group && aTab.group.id === aGroup.id) {
         return;
       }
-
-      this.#handleTabMove(aTab, () => aGroup.appendChild(aTab), metricsContext);
-      this.removeFromMultiSelectedTabs(aTab);
-      this.tabContainer._notifyBackgroundTab(aTab);
+      if (aTab.splitview) {
+        let splitViewTabs = aTab.splitview.tabs;
+        this.#handleTabMove(
+          aTab.splitview,
+          () => aGroup.appendChild(aTab.splitview),
+          metricsContext
+        );
+        for (const splitViewTab of splitViewTabs) {
+          this.removeFromMultiSelectedTabs(splitViewTab);
+          this.tabContainer._notifyBackgroundTab(splitViewTab);
+        }
+      } else {
+        this.#handleTabMove(
+          aTab,
+          () => aGroup.appendChild(aTab),
+          metricsContext
+        );
+        this.removeFromMultiSelectedTabs(aTab);
+        this.tabContainer._notifyBackgroundTab(aTab);
+      }
     }
 
     /**
@@ -6685,8 +6710,12 @@
         tabs = [element];
       } else if (this.isTabGroup(element)) {
         tabs = element.tabs;
+      } else if (this.isSplitViewWrapper(element)) {
+        tabs = element.tabs;
       } else {
-        throw new Error("Can only move a tab or tab group within the tab bar");
+        throw new Error(
+          "Can only move a tab, tab group, or split view within the tab bar"
+        );
       }
 
       let wasFocused = document.activeElement == this.selectedTab;
