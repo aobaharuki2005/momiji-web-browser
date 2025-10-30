@@ -3470,7 +3470,8 @@ static void SendNeedGCTelemetry(bool needGC) {
 // reachable only from XPConnect roots that might participate in cycles.
 //
 // That data might not currently be valid, requiring a GC to restore it. This is
-// rare in practice and is caused by an OOM during gray unmarking.
+// rare in practice and is caused by an OOM during gray unmarking or aborting GC
+// part way through marking.
 //
 // We also force GCs on shutdown to collect cycles involving both DOM and JS,
 // and in WantAllTraces CCs to prevent hijinks from ForgetSkippable and

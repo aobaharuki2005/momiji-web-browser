@@ -2929,6 +2929,10 @@ void UnmarkGrayTracer::onChild(JS::GCCellPtr thing, const char* name) {
 void UnmarkGrayTracer::unmark(JS::GCCellPtr cell) {
   MOZ_ASSERT(stack.empty());
 
+  // TODO: We probably don't need to do anything if the gray bits are
+  // invalid. However an early return here causes ExposeGCThingToActiveJS to
+  // fail because it asserts that something gets unmarked.
+
   onChild(cell, "unmarking root");
 
   while (!stack.empty() && !oom) {
@@ -2940,7 +2944,6 @@ void UnmarkGrayTracer::unmark(JS::GCCellPtr cell) {
     // GC again before the next CC.
     stack.clear();
     runtime()->gc.setGrayBitsInvalid();
-    return;
   }
 }
 

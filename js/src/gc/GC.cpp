@@ -3803,6 +3803,11 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
         resetGrayList(c);
       }
 
+      // The gray marking state may not be valid. We depend on the mark stack to
+      // do gray unmarking in zones that are being marked by the GC and we've
+      // just cancelled that part way through.
+      setGrayBitsInvalid();
+
       // Wait for sweeping of nursery owned sized allocations to finish.
       nursery().joinSweepTask();
 
