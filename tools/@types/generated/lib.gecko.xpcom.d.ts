@@ -5379,6 +5379,11 @@ interface mozILocaleService extends nsISupports {
   availableLocales: string[];
   readonly isAppLocaleRTL: boolean;
   readonly packagedLocales: string[];
+  readonly ellipsis: string;
+  readonly alwaysAppendAccesskeys: boolean;
+  readonly insertSeparatorBeforeAccesskeys: boolean;
+  readonly acceptLanguages: string;
+  readonly fontLanguageGroup: string;
 }
 
 // https://searchfox.org/mozilla-central/source/intl/locale/mozIOSPreferences.idl

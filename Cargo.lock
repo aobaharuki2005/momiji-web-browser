@@ -2612,6 +2612,7 @@ dependencies = [
  "l10nregistry",
  "l10nregistry-ffi",
  "libz-rs-sys",
+ "locale_service_glue",
  "localization-ffi",
  "log",
  "mapped_hyph",
@@ -3883,6 +3884,14 @@ name = "litrs"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ce301924b7887e9d637144fdade93f9dfff9b60981d4ac161db09720d39aa5"
+
+[[package]]
+name = "locale_service_glue"
+version = "0.1.0"
+dependencies = [
+ "icu_locale",
+ "nsstring",
+]
 
 [[package]]
 name = "localization-ffi"

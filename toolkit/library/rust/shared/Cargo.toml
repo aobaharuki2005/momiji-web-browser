@@ -28,6 +28,7 @@ cubeb-sys = { version = "0.30.1", optional = true, features=["gecko-in-tree"] }
 audioipc2-client = { git = "https://github.com/mozilla/audioipc", rev = "82fe7fa7e3aaa35468137239a0e4c2f867457214", optional = true }
 audioipc2-server = { git = "https://github.com/mozilla/audioipc", rev = "82fe7fa7e3aaa35468137239a0e4c2f867457214", optional = true }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
+locale_service_glue = { path = "../../../../intl/locale/rust/locale_service_glue" }
 authrs_bridge = { path = "../../../../dom/webauthn/authrs_bridge" }
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
 gecko_logger = { path = "../../../../xpcom/rust/gecko_logger" }
