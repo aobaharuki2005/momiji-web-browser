@@ -79,22 +79,6 @@ class TestDefaultSupportFiles(unittest.TestCase):
             self.assertEqual(test["support-files"], expected)
 
 
-class TestDefaultRunif(unittest.TestCase):
-    """Tests combining support-files field in [DEFAULT] with the value for a test"""
-
-    def test_defaults_toml(self):
-        default = os.path.join(here, "default-runif.toml")
-        parser = ManifestParser(manifests=(default,), use_toml=True)
-        expected_supp_files = {
-            "test7": "os != 'android'",
-            "test8": "os != 'android'\n!condprof",
-            "test9": "os != 'android'",
-        }
-        for test in parser.tests:
-            expected = expected_supp_files[test["name"]]
-            self.assertEqual(test["run-if"], expected)
-
-
 class TestOmitDefaults(unittest.TestCase):
     """Tests passing omit-defaults prevents defaults from propagating to definitions."""
 

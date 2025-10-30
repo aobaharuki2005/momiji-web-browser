@@ -190,7 +190,6 @@ def combine_fields(global_vars, local_vars):
     field_patterns = {
         "args": "%s %s",
         "prefs": "%s\n%s",
-        "run-if": "%s\n%s",  # consider implicit logical OR: "%s ||\n%s"
         "skip-if": "%s\n%s",  # consider implicit logical OR: "%s ||\n%s"
         "support-files": "%s %s",
         "tags": "%s %s",

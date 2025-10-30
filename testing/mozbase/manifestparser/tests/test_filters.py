@@ -160,7 +160,7 @@ def tests(create_tests):
     return create_tests(
         "test0",
         ("test1", {"skip-if": "foo == 'bar'\nintermittent&&!debug"}),
-        ("test2", {"run-if": "foo == 'bar'\nfoo == 'baz'\ndebug"}),
+        ("test2", {"run-if": "foo == 'bar'"}),
         ("test3", {"fail-if": "foo == 'bar'"}),
         ("test4", {"disabled": "some reason"}),
         ("test5", {"subsuite": "baz"}),
@@ -169,10 +169,6 @@ def tests(create_tests):
         (
             "test8",
             {"skip-if": "\nbaz\nfoo == 'bar'\nfoo == 'baz'\nintermittent && debug"},
-        ),
-        (
-            "test9",
-            {"run-if": "os != 'android'\n!condprof"},
         ),
     )
 
@@ -186,45 +182,16 @@ def test_skip_if(tests):
     tests = list(skip_if(tests, {"foo": "bar"}))
     assert "disabled" in tests[1]
     assert "disabled" in tests[8]
-    # Verify only the matching condition is shown, not all conditions
-    assert tests[1]["disabled"] == "skip-if: foo == 'bar'"
-    assert tests[8]["disabled"] == "skip-if: foo == 'bar'"
 
 
 def test_run_if(tests):
     ref = deepcopy(tests)
     tests = list(run_if(tests, {}))
     assert "disabled" in tests[2]
-    # For run-if with AND logic, show the first condition that didn't match
-    assert tests[2]["disabled"] == "run-if: foo == 'bar'"
 
     tests = deepcopy(ref)
     tests = list(run_if(tests, {"foo": "bar"}))
-    # Still disabled because foo == 'baz' fails (AND logic)
-    assert "disabled" in tests[2]
-    assert tests[2]["disabled"] == "run-if: foo == 'baz'"
-
-    tests = deepcopy(ref)
-    tests = list(run_if(tests, {"foo": "bar", "debug": True}))
-    # Still disabled because foo == 'baz' fails
-    assert "disabled" in tests[2]
-    assert tests[2]["disabled"] == "run-if: foo == 'baz'"
-
-    tests = deepcopy(ref)
-    tests = list(run_if(tests, {"os": "android", "condprof": False}))
-    assert "disabled" in tests[9]
-
-    tests = deepcopy(ref)
-    tests = list(run_if(tests, {"os": "win", "condprof": False}))
-    assert "disabled" not in tests[9]
-
-    tests = deepcopy(ref)
-    tests = list(run_if(tests, {"os": "android", "condprof": True}))
-    assert "disabled" in tests[9]
-
-    tests = deepcopy(ref)
-    tests = list(run_if(tests, {"os": "win", "condprof": True}))
-    assert "disabled" in tests[9]
+    assert "disabled" not in tests[2]
 
 
 def test_fail_if(tests):
