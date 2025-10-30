@@ -9809,6 +9809,15 @@
   mirror: always
   rust: true
 
+# Whether to enable CSS @custom-media
+# https://drafts.csswg.org/mediaqueries-5/
+# TODO(emilio): Needs more tests before enabling.
+- name: layout.css.custom-media.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether to enable CSS Module Scripts support.
 # https://html.spec.whatwg.org/#creating-a-css-module-script
 - name: layout.css.module-scripts.enabled

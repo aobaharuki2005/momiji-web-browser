@@ -573,6 +573,7 @@ static uint32_t CollectAtRules(ServoCSSRuleList& aRuleList,
         (void)aResult.AppendElement(OwningNonNull(*rule), fallible);
         break;
       }
+      case StyleCssRuleType::CustomMedia:
       case StyleCssRuleType::Style:
       case StyleCssRuleType::Import:
       case StyleCssRuleType::Document:

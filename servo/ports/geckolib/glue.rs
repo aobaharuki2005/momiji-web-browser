@@ -136,12 +136,13 @@ use style::stylesheets::scope_rule::{ImplicitScopeRoot, ScopeRootCandidate, Scop
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleRef, CssRuleType,
-    CssRuleTypes, CssRules, DocumentRule, FontFaceRule, FontFeatureValuesRule,
-    FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule,
-    MarginRule, MediaRule, NamespaceRule, NestedDeclarationsRule, Origin, OriginSet,
-    PagePseudoClassFlags, PageRule, PositionTryRule, PropertyRule, SanitizationData,
-    SanitizationKind, ScopeRule, StartingStyleRule, StyleRule, StylesheetContents,
-    StylesheetInDocument, StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    CssRuleTypes, CssRules, CustomMediaCondition, CustomMediaEvaluator, CustomMediaRule,
+    DocumentRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule, ImportRule,
+    KeyframesRule, LayerBlockRule, LayerStatementRule, MarginRule, MediaRule, NamespaceRule,
+    NestedDeclarationsRule, Origin, OriginSet, PagePseudoClassFlags, PageRule, PositionTryRule,
+    PropertyRule, SanitizationData, SanitizationKind, ScopeRule, StartingStyleRule, StyleRule,
+    StylesheetContents, StylesheetInDocument, StylesheetLoader as StyleStylesheetLoader,
+    SupportsRule, UrlExtraData,
 };
 use style::stylist::{
     add_size_of_ua_cache, replace_parent_selector_with_implicit_scope, scope_root_candidates,
@@ -1771,7 +1772,9 @@ pub unsafe extern "C" fn Servo_AuthorStyles_AppendStyleSheet(
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let sheet = GeckoStyleSheet::new(sheet);
-    styles.stylesheets.append_stylesheet(None, sheet, &guard);
+    styles
+        .stylesheets
+        .append_stylesheet(None, styles.data.custom_media_map(), sheet, &guard);
 }
 
 #[no_mangle]
@@ -1784,6 +1787,7 @@ pub unsafe extern "C" fn Servo_AuthorStyles_InsertStyleSheetBefore(
     let guard = global_style_data.shared_lock.read();
     styles.stylesheets.insert_stylesheet_before(
         None,
+        styles.data.custom_media_map(),
         GeckoStyleSheet::new(sheet),
         GeckoStyleSheet::new(before_sheet),
         &guard,
@@ -1797,9 +1801,12 @@ pub unsafe extern "C" fn Servo_AuthorStyles_RemoveStyleSheet(
 ) {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    styles
-        .stylesheets
-        .remove_stylesheet(None, GeckoStyleSheet::new(sheet), &guard);
+    styles.stylesheets.remove_stylesheet(
+        None,
+        styles.data.custom_media_map(),
+        GeckoStyleSheet::new(sheet),
+        &guard,
+    );
 }
 
 #[no_mangle]
@@ -2458,6 +2465,13 @@ impl_basic_rule_funcs! { (Margin, MarginRule, MarginRule),
     debug: Servo_MarginRule_Debug,
     to_css: Servo_MarginRule_GetCssText,
     changed: Servo_StyleSet_MarginRuleChanged,
+}
+
+impl_basic_rule_funcs! { (CustomMedia, CustomMediaRule, CustomMediaRule),
+    getter: Servo_CssRules_GetCustomMediaRuleAt,
+    debug: Servo_CustomMediaRule_Debug,
+    to_css: Servo_CustomMediaRule_GetCssText,
+    changed: Servo_StyleSet_CustomMediaRuleChanged,
 }
 
 impl_basic_rule_funcs! { (Namespace, NamespaceRule, NamespaceRule),
@@ -3281,6 +3295,23 @@ pub extern "C" fn Servo_MediaRule_GetMedia(rule: &MediaRule) -> Strong<LockedMed
     rule.media_queries.clone().into()
 }
 
+/// If the condition is null, the true/false gets communicated via the out-param
+#[no_mangle]
+pub extern "C" fn Servo_CustomMediaRule_GetCondition(
+    rule: &CustomMediaRule,
+    value: Option<&mut bool>,
+) -> Strong<LockedMediaList> {
+    let fixed_value = match rule.condition {
+        CustomMediaCondition::True => true,
+        CustomMediaCondition::False => false,
+        CustomMediaCondition::MediaList(ref list) => return list.clone().into(),
+    };
+    if let Some(value) = value {
+        *value = fixed_value;
+    }
+    Strong::null()
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: &NamespaceRule) -> *mut nsAtom {
     rule.prefix
@@ -3301,6 +3332,11 @@ pub extern "C" fn Servo_MarginRule_GetStyle(rule: &MarginRule) -> Strong<LockedD
 #[no_mangle]
 pub extern "C" fn Servo_MarginRule_GetName(rule: &MarginRule, out: &mut nsACString) {
     out.assign(rule.name());
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_CustomMediaRule_GetName(rule: &CustomMediaRule) -> *mut nsAtom {
+    rule.name.0.as_ptr()
 }
 
 #[no_mangle]
@@ -5636,6 +5672,7 @@ pub extern "C" fn Servo_MediaList_Matches(
         list.evaluate(
             per_doc_data.stylist.device(),
             per_doc_data.stylist.quirks_mode(),
+            &mut CustomMediaEvaluator::none(),
         )
     })
 }

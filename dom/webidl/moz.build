@@ -493,6 +493,7 @@ WEBIDL_FILES = [
     "CSSConditionRule.webidl",
     "CSSContainerRule.webidl",
     "CSSCounterStyleRule.webidl",
+    "CSSCustomMediaRule.webidl",
     "CSSFontFaceRule.webidl",
     "CSSFontFeatureValuesRule.webidl",
     "CSSFontPaletteValuesRule.webidl",
