@@ -6,7 +6,6 @@
 
 package org.mozilla.gecko.util;
 
-import android.annotation.SuppressLint;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
@@ -182,7 +181,6 @@ public final class HardwareCodecCapabilityUtils {
     return mimeTypes.toArray(new String[0]);
   }
 
-  @SuppressLint("NewApi")
   private static boolean isHardwareAccelerated(
       final MediaCodecInfo aCodecInfo, final String[] aHwPrefixes) {
     // By public API.
@@ -351,7 +349,6 @@ public final class HardwareCodecCapabilityUtils {
   }
 
   @WrapForJNI
-  @SuppressLint("NewApi")
   public static boolean decodes10Bit(final String aMimeType) {
     if (Build.VERSION.SDK_INT < 24) {
       // Be conservative when we cannot get supported profile.
@@ -383,7 +380,6 @@ public final class HardwareCodecCapabilityUtils {
     return false;
   }
 
-  @SuppressLint("NewApi")
   private static boolean is10BitVP9Profile(final int profile) {
     if (Build.VERSION.SDK_INT < 24) {
       // Be conservative when we cannot get supported profile.
@@ -402,7 +398,6 @@ public final class HardwareCodecCapabilityUtils {
             || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile3HDR10Plus));
   }
 
-  @SuppressLint("NewApi")
   private static boolean is10BitHEVCProfile(final int profile) {
     if (profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10) {
       return true;
@@ -416,7 +411,6 @@ public final class HardwareCodecCapabilityUtils {
         || (profile == MediaCodecInfo.CodecProfileLevel.HEVCProfileMain10HDR10Plus);
   }
 
-  @SuppressLint("NewApi")
   private static boolean is10BitAV1Profile(final int profile) {
     if (Build.VERSION.SDK_INT < 29) {
       // Be conservative when we cannot get supported profile.

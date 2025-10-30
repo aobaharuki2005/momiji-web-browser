@@ -3518,10 +3518,6 @@ static int32_t GetCursorType(nsCursor aCursor) {
 }
 
 void nsWindow::SetCursor(const Cursor& aCursor) {
-  if (mozilla::jni::GetAPIVersion() < 24) {
-    return;
-  }
-
   // Only change cursor if it's actually been changed
   if (!mUpdateCursor && mCursor == aCursor) {
     return;

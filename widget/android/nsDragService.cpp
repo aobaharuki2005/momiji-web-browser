@@ -64,10 +64,6 @@ static nsWindow* GetWindow(dom::Document* aDocument) {
 nsresult nsDragSession::InvokeDragSessionImpl(
     nsIWidget* aWidget, nsIArray* aTransferableArray,
     const Maybe<CSSIntRegion>& aRegion, uint32_t aActionType) {
-  if (jni::GetAPIVersion() < 24) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   uint32_t count = 0;
   aTransferableArray->GetLength(&count);
   if (count != 1) {

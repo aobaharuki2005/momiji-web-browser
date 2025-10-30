@@ -3126,10 +3126,10 @@ void gfxPlatform::InitWebGLConfig() {
     // On android, enable out-of-process WebGL only when GPU process exists.
     gfxVars::SetAllowWebglOop(allowWebGLOop &&
                               gfxConfig::IsEnabled(Feature::GPU_PROCESS));
-    // Enable gl::SharedSurface of AndroidHardwareBuffer when API version is 26+
-    // and out-of-process WebGL is enabled.
+    // Enable gl::SharedSurface of AndroidHardwareBuffer when out-of-process
+    // WebGL is enabled.
 #ifdef MOZ_WIDGET_ANDROID
-    if (gfxVars::AllowWebglOop() && jni::GetAPIVersion() >= 26 &&
+    if (gfxVars::AllowWebglOop() &&
         StaticPrefs::webgl_out_of_process_enable_ahardwarebuffer_AtStartup()) {
       gfxVars::SetUseAHardwareBufferSharedSurfaceWebglOop(true);
     }

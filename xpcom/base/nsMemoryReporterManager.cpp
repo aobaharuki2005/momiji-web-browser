@@ -1678,7 +1678,7 @@ class AndroidMemoryReporter final : public nsIMemoryReporter {
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override {
-    if (!jni::IsAvailable() || jni::GetAPIVersion() < 23) {
+    if (!jni::IsAvailable()) {
       return NS_OK;
     }
 

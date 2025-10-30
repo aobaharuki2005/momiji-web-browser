@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.process;
 
-import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -540,7 +539,6 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
    * @param type The type of service.
    * @return Integer encapsulating the service ID, or null if no ID is necessary.
    */
-  @SuppressLint("NewApi") // Linter cannot follow our hasQApis() checks
   private String allocate(@NonNull final GeckoProcessType type) {
     XPCOMEventTarget.assertOnLauncherThread();
     if (!GeckoProcessManager.isContent(type)) {
