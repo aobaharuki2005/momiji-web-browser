@@ -199,14 +199,21 @@ add_task(async function test_getPromptIntent_basic() {
         "explore",
       ];
       const formattedPrompt = query.toLowerCase();
-
-      const intent = searchKeywords.some(keyword =>
+      const isSearch = searchKeywords.some(keyword =>
         formattedPrompt.includes(keyword)
-      )
-        ? "search"
-        : "chat";
+      );
 
-      return [{ label: intent }];
+      // Simulate model confidence scores
+      if (isSearch) {
+        return [
+          { label: "search", score: 0.95 },
+          { label: "chat", score: 0.05 },
+        ];
+      }
+      return [
+        { label: "chat", score: 0.95 },
+        { label: "search", score: 0.05 },
+      ];
     },
   };
 
@@ -220,4 +227,35 @@ add_task(async function test_getPromptIntent_basic() {
       `getPromptIntent("${prompt}") should return "${expected}"`
     );
   }
+
+  sb.restore();
+});
+
+add_task(async function test_preprocessQuery_removes_question_marks() {
+  const sb = sinon.createSandbox();
+
+  // Use a minimal fake SmartAssistEngine to test only preprocessing
+  const engine = Object.create(SmartAssistEngine);
+
+  const cases = [
+    { input: "hello?", expected: "hello" },
+    { input: "?prompt", expected: "prompt" },
+    { input: "multiple???", expected: "multiple" },
+    { input: "mid?dle", expected: "middle" },
+    { input: "question? ", expected: "question" },
+    { input: " no?  spaces? ", expected: "no  spaces" },
+    { input: "???", expected: "" },
+    { input: "clean input", expected: "clean input" },
+  ];
+
+  for (const { input, expected } of cases) {
+    const result = engine._preprocessQuery(input);
+    Assert.equal(
+      result,
+      expected,
+      `Expected "${input}" to preprocess to "${expected}", got "${result}"`
+    );
+  }
+
+  sb.restore();
 });

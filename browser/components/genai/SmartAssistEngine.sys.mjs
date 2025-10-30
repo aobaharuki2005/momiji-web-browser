@@ -223,14 +223,33 @@ export const SmartAssistEngine = {
       const engine = await this._createEngine({
         featureId: "smart-intent",
         modelId: "mozilla/mobilebert-query-intent-detection",
-        modelRevision: "v0.1.0",
+        modelRevision: "v0.2.0",
         taskName: "text-classification",
       });
-      const resp = await engine.run({ args: [[query]] });
-      return resp[0].label.toLowerCase();
+      const threshold = 0.6;
+      const cleanedQuery = this._preprocessQuery(query);
+      const resp = await engine.run({ args: [[cleanedQuery]] });
+      // resp example: [{ label: "chat", score: 0.95 }, { label: "search", score: 0.04 }]
+      if (
+        resp[0].label.toLowerCase() === "chat" &&
+        resp[0].score >= threshold
+      ) {
+        return "chat";
+      }
+      return "search";
     } catch (error) {
       console.error("Error using intent detection model:", error);
       throw error;
     }
+  },
+
+  // Helper function for preprocessing text input
+  _preprocessQuery(query) {
+    if (typeof query !== "string") {
+      throw new TypeError(
+        `Expected a string for query preprocessing, but received ${typeof query}`
+      );
+    }
+    return query.replace(/\?/g, "").trim();
   },
 };
