@@ -260,6 +260,9 @@
     <!-- Subtitle warning text for crash button -->
     <string name="crash_debug_startup_crash_warning">This will start the startup crash activity in a new process and terminate the current process.</string>
 
+    <!-- Label for enabling Relay email masks -->
+    <string name="preferences_enable_relay_email_masks">Enable Relay email masks</string>
+
     <!-- Settings Search Strings -->
     <!-- Title of Settings Search -->
     <string name="settings_search_title">Settings Search</string>

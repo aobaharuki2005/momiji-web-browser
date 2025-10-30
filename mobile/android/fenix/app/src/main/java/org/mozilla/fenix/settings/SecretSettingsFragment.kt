@@ -348,6 +348,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().isAppZygoteEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_relay_email_masks).apply {
+            isVisible = Config.channel.isDebug
+            isChecked = context.settings().isRelayFeatureEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {

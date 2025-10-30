@@ -2391,6 +2391,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates whether Relay enabled or not.
+     */
+    var isRelayFeatureEnabled by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_relay_email_masks),
+        featureFlag = true,
+        default = { FxNimbus.features.relayEmailMasks.value().enabled },
+    )
+
+    /**
      * Indicates if the feature to close synced tabs is enabled.
      */
     val enableCloseSyncedTabs: Boolean
