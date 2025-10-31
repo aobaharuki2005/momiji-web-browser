@@ -36,6 +36,8 @@ run_task_schema = Schema(
         Required("sparse-profile"): Any(str, None),
         # The relative path to the sparse profile.
         Optional("sparse-profile-prefix"): str,
+        # Whether to use a shallow clone or not, default True (git only).
+        Optional("shallow-clone"): bool,
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
         Required("comm-checkout"): bool,
@@ -74,6 +76,8 @@ def common_setup(config, job, taskdesc, command):
 
         gecko_path = support_vcs_checkout(config, job, taskdesc, repo_configs)
         command.append(f"--gecko-checkout={gecko_path}")
+        if config.params["repository_type"] == "git" and run.get("shallow-clone", True):
+            command.append("--gecko-shallow-clone")
 
         if run_cwd:
             run_cwd = path.normpath(run_cwd.format(checkout=gecko_path))
