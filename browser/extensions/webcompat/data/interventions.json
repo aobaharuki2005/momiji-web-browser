@@ -5439,7 +5439,7 @@
     },
     "interventions": [
       {
-        "platforms": ["all"],
+        "platforms": ["desktop"],
         "content_scripts": {
           "css": ["1981995_www.mygeha.com-fix-location-layout.css"]
         }

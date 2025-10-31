@@ -12,19 +12,21 @@ async def is_state_beside_zip(client):
     return client.execute_script(
         """
         const [city, state] = [...arguments].map(arg => arg.getBoundingClientRect());
-        return city.right < state.left && state.top == city.top;
+        return city.right < state.left && parseInt(state.top) == parseInt(city.top);
       """,
         city,
         state,
     )
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
     assert await is_state_beside_zip(client)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):
