@@ -47,7 +47,6 @@ class WhiteSpaceVisibilityKeeper final {
   using LineBreakType = HTMLEditor::LineBreakType;
   using PointPosition = WSRunScanner::PointPosition;
   using ReferHTMLDefaultStyle = WSRunScanner::ReferHTMLDefaultStyle;
-  using Scan = WSRunScanner::Scan;
   using TextFragmentData = WSRunScanner::TextFragmentData;
   using VisibleWhiteSpacesData = WSRunScanner::VisibleWhiteSpacesData;
 

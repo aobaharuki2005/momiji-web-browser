@@ -551,14 +551,12 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
       WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
           // We want to put caret to an editable point so that we need to scan
           // only editable nodes.
-          WSRunScanner::Scan::EditableNodes, pointToPutCaret,
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {WSRunScanner::Option::OnlyEditableNodes}, pointToPutCaret);
   if (prevVisibleThing.ReachedInvisibleBRElement()) {
     const WSScanResult prevVisibleThingOfBRElement =
         WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
-            WSRunScanner::Scan::EditableNodes,
-            EditorRawDOMPoint(prevVisibleThing.BRElementPtr()),
-            BlockInlineCheck::UseComputedDisplayStyle);
+            {WSRunScanner::Option::OnlyEditableNodes},
+            EditorRawDOMPoint(prevVisibleThing.BRElementPtr()));
     if (prevVisibleThingOfBRElement.InVisibleOrCollapsibleCharacters()) {
       pointToPutCaret = prevVisibleThingOfBRElement
                             .PointAfterReachedContent<EditorDOMPoint>();

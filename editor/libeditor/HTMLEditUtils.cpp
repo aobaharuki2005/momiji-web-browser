@@ -796,9 +796,7 @@ EditorDOMPoint HTMLEditUtils::LineRequiresPaddingLineBreakToBeVisible(
       return false;
     }
     const WSScanResult nextThing =
-        WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-            WSRunScanner::Scan::All, point,
-            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+        WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary({}, point);
     if (nextThing.ReachedBlockBoundary()) {
       if (nextThing.ReachedCurrentBlockBoundary()) {
         preferredPaddingLineBreakPoint = point.AfterContainer<EditorDOMPoint>();
@@ -969,8 +967,7 @@ bool HTMLEditUtils::PointIsImmediatelyBeforeCurrentBlockBoundary(
   }
   const WSScanResult nextThing =
       WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-          WSRunScanner::Scan::EditableNodes, aPoint,
-          BlockInlineCheck::UseComputedDisplayOutsideStyle);
+          {WSRunScanner::Option::OnlyEditableNodes}, aPoint);
   if (nextThing.ReachedCurrentBlockBoundary()) {
     return true;
   }
@@ -980,9 +977,8 @@ bool HTMLEditUtils::PointIsImmediatelyBeforeCurrentBlockBoundary(
     }
     const WSScanResult afterInvisibleBRThing =
         WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-            WSRunScanner::Scan::EditableNodes,
-            nextThing.PointAfterReachedContent<EditorRawDOMPoint>(),
-            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+            {WSRunScanner::Option::OnlyEditableNodes},
+            nextThing.PointAfterReachedContent<EditorRawDOMPoint>());
     return afterInvisibleBRThing.ReachedCurrentBlockBoundary();
   }
   if (nextThing.ReachedPreformattedLineBreak()) {
@@ -991,9 +987,8 @@ bool HTMLEditUtils::PointIsImmediatelyBeforeCurrentBlockBoundary(
     }
     const WSScanResult afterPreformattedLineBreakThing =
         WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-            WSRunScanner::Scan::EditableNodes,
-            nextThing.PointAfterReachedContent<EditorRawDOMPoint>(),
-            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+            {WSRunScanner::Option::OnlyEditableNodes},
+            nextThing.PointAfterReachedContent<EditorRawDOMPoint>());
     return afterPreformattedLineBreakThing.ReachedCurrentBlockBoundary();
   }
   return false;
@@ -1170,9 +1165,7 @@ Maybe<EditorLineBreakType> HTMLEditUtils::GetFollowingUnnecessaryLineBreak(
   MOZ_ASSERT(aPoint.IsInContentNode());
 
   const WSScanResult nextThing =
-      WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-          WSRunScanner::Scan::All, aPoint,
-          BlockInlineCheck::UseComputedDisplayStyle);
+      WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary({}, aPoint);
   if (!nextThing.ReachedBRElement() &&
       !(nextThing.ReachedPreformattedLineBreak() &&
         nextThing.PointAtReachedContent<EditorRawDOMPoint>()
@@ -1181,9 +1174,7 @@ Maybe<EditorLineBreakType> HTMLEditUtils::GetFollowingUnnecessaryLineBreak(
   }
   const WSScanResult nextThingOfLineBreak =
       WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-          WSRunScanner::Scan::All,
-          nextThing.PointAfterReachedContent<EditorRawDOMPoint>(),
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {}, nextThing.PointAfterReachedContent<EditorRawDOMPoint>());
   const Element* const blockElement =
       nextThingOfLineBreak.ReachedBlockBoundary()
           ? nextThingOfLineBreak.ElementPtr()
@@ -1216,8 +1207,7 @@ uint32_t HTMLEditUtils::GetFirstVisibleCharOffset(const Text& aText) {
   }
   const WSScanResult previousThingOfText =
       WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
-          WSRunScanner::Scan::All, EditorRawDOMPoint(&aText),
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {}, EditorRawDOMPoint(&aText));
   if (!previousThingOfText.ReachedLineBoundary()) {
     return 0u;
   }
@@ -1236,8 +1226,7 @@ uint32_t HTMLEditUtils::GetOffsetAfterLastVisibleChar(const Text& aText) {
   }
   const WSScanResult nextThingOfText =
       WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-          WSRunScanner::Scan::All, EditorRawDOMPoint::After(aText),
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {}, EditorRawDOMPoint::After(aText));
   if (!nextThingOfText.ReachedLineBoundary()) {
     return characterDataBuffer.GetLength();
   }
@@ -2195,7 +2184,7 @@ EditorDOMPointType HTMLEditUtils::GetPreviousEditablePoint(
     // There may be invisible trailing white-spaces which should be
     // ignored.  Let's scan its start.
     return WSRunScanner::GetAfterLastVisiblePoint<EditorDOMPointType>(
-        WSRunScanner::Scan::EditableNodes, *textNode);
+        {WSRunScanner::Option::OnlyEditableNodes}, *textNode);
   }
 
   // If it's a container element, return end of it.  Otherwise, return
@@ -2308,7 +2297,7 @@ EditorDOMPointType HTMLEditUtils::GetNextEditablePoint(
     // There may be invisible leading white-spaces which should be
     // ignored.  Let's scan its start.
     return WSRunScanner::GetFirstVisiblePoint<EditorDOMPointType>(
-        WSRunScanner::Scan::EditableNodes, *textNode);
+        {WSRunScanner::Option::OnlyEditableNodes}, *textNode);
   }
 
   // If it's a container element, return start of it.  Otherwise, return
@@ -2709,8 +2698,7 @@ nsIContent* HTMLEditUtils::GetContentToPreserveInlineStyles(
   for (auto point = aPoint.template To<EditorRawDOMPoint>(); point.IsSet();) {
     const WSScanResult nextVisibleThing =
         WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-            WSRunScanner::Scan::EditableNodes, point,
-            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+            {WSRunScanner::Option::OnlyEditableNodes}, point);
     if (nextVisibleThing.InVisibleOrCollapsibleCharacters()) {
       return nextVisibleThing.TextPtr();
     }
@@ -2759,8 +2747,7 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
   }
 
   const WSRunScanner wsScannerForPointToInsert(
-      WSRunScanner::Scan::EditableNodes, pointToInsert,
-      BlockInlineCheck::UseComputedDisplayStyle);
+      {WSRunScanner::Option::OnlyEditableNodes}, pointToInsert);
 
   // If the insertion position is after the last visible item in a line,
   // i.e., the insertion position is just before a visible line break <br>,
@@ -2814,8 +2801,7 @@ EditorDOMPointType HTMLEditUtils::GetBetterCaretPositionToInsertText(
   if (aPoint.IsEndOfContainer()) {
     const WSScanResult previousThing =
         WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
-            WSRunScanner::Scan::EditableNodes, aPoint,
-            BlockInlineCheck::UseComputedDisplayStyle);
+            {WSRunScanner::Option::OnlyEditableNodes}, aPoint);
     if (previousThing.InVisibleOrCollapsibleCharacters()) {
       return EditorDOMPointType::AtEndOf(*previousThing.TextPtr());
     }

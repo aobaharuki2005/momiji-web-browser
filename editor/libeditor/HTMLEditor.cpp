@@ -1189,8 +1189,8 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       // the visible character.
       const WSScanResult scanResultInTextNode =
           WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-              WSRunScanner::Scan::EditableNodes, EditorRawDOMPoint(text, 0),
-              BlockInlineCheck::UseComputedDisplayStyle);
+              {WSRunScanner::Option::OnlyEditableNodes},
+              EditorRawDOMPoint(text, 0));
       if ((scanResultInTextNode.InVisibleOrCollapsibleCharacters() ||
            scanResultInTextNode.ReachedPreformattedLineBreak()) &&
           scanResultInTextNode.TextPtr() == text) {
@@ -4360,9 +4360,7 @@ nsresult HTMLEditor::EnsureNoFollowingUnnecessaryLineBreak(
     if (IsPlaintextMailComposer()) {
       const WSScanResult nextThing =
           WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-              WSRunScanner::Scan::All,
-              unnecessaryLineBreak->After<EditorRawDOMPoint>(),
-              BlockInlineCheck::UseComputedDisplayOutsideStyle);
+              {}, unnecessaryLineBreak->After<EditorRawDOMPoint>());
       if (nextThing.ReachedOtherBlockElement() &&
           HTMLEditUtils::IsMailCiteElement(*nextThing.ElementPtr()) &&
           HTMLEditUtils::IsInlineContent(

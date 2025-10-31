@@ -1534,8 +1534,7 @@ HTMLEditor::GetPreviousCharPointDataForNormalizingWhiteSpaces(
   }
   const auto previousCharPoint =
       WSRunScanner::GetPreviousCharPoint<EditorRawDOMPointInText>(
-          WSRunScanner::Scan::EditableNodes, aPoint,
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {WSRunScanner::Option::OnlyEditableNodes}, aPoint);
   if (!previousCharPoint.IsSet()) {
     return CharPointData::InDifferentTextNode(CharPointType::TextEnd);
   }
@@ -1553,8 +1552,7 @@ HTMLEditor::GetInclusiveNextCharPointDataForNormalizingWhiteSpaces(
   }
   const auto nextCharPoint =
       WSRunScanner::GetInclusiveNextCharPoint<EditorRawDOMPointInText>(
-          WSRunScanner::Scan::EditableNodes, aPoint,
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {WSRunScanner::Option::OnlyEditableNodes}, aPoint);
   if (!nextCharPoint.IsSet()) {
     return CharPointData::InDifferentTextNode(CharPointType::TextEnd);
   }
@@ -2269,12 +2267,10 @@ void HTMLEditor::ExtendRangeToDeleteWithNormalizingWhiteSpaces(
   // adjacent text node's first or last character information in some cases.
   const auto precedingCharPoint =
       WSRunScanner::GetPreviousCharPoint<EditorDOMPointInText>(
-          WSRunScanner::Scan::EditableNodes, aStartToDelete,
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {WSRunScanner::Option::OnlyEditableNodes}, aStartToDelete);
   const auto followingCharPoint =
       WSRunScanner::GetInclusiveNextCharPoint<EditorDOMPointInText>(
-          WSRunScanner::Scan::EditableNodes, aEndToDelete,
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {WSRunScanner::Option::OnlyEditableNodes}, aEndToDelete);
   // Blink-compat: Normalize white-spaces in first node only when not removing
   //               its last character or no text nodes follow the first node.
   //               If removing last character of first node and there are
@@ -2794,8 +2790,7 @@ HTMLEditor::InsertPaddingBRElementToMakeEmptyLineVisibleIfNeeded(
   // here.
   const WSScanResult previousThing =
       WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
-          WSRunScanner::Scan::EditableNodes, aPointToInsert,
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {WSRunScanner::Option::OnlyEditableNodes}, aPointToInsert);
   if (!previousThing.ReachedLineBoundary()) {
     return CreateLineBreakResult::NotHandled();
   }
@@ -2804,8 +2799,7 @@ HTMLEditor::InsertPaddingBRElementToMakeEmptyLineVisibleIfNeeded(
   // line break here.
   const WSScanResult nextThing =
       WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-          WSRunScanner::Scan::EditableNodes, aPointToInsert,
-          BlockInlineCheck::UseComputedDisplayStyle);
+          {WSRunScanner::Option::OnlyEditableNodes}, aPointToInsert);
   if (!nextThing.ReachedBlockBoundary()) {
     return CreateLineBreakResult::NotHandled();
   }
@@ -7212,13 +7206,15 @@ HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction(
     // selection past that, it would visibly change meaning of users selection.
     const WSScanResult prevVisibleThingOfEndPoint =
         WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
-            WSRunScanner::Scan::All, endPoint,
-            // We should refer only the default style of HTML because we need to
-            // wrap any elements with a specific HTML element.  So we should not
-            // refer actual style.  For example, we want to reformat parent HTML
-            // block element even if selected in a blocked phrase element or
-            // non-HTMLelement.
-            BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost);
+            {
+                // We should refer only the default style of HTML because we
+                // need to wrap any elements with a specific HTML element.  So
+                // we should not refer actual style.  For example, we want to
+                // reformat parent HTML block element even if selected in a
+                // blocked phrase element or non-HTMLelement.
+                WSRunScanner::Option::ReferHTMLDefaultStyle,
+            },
+            endPoint, &aEditingHost);
     if (MOZ_UNLIKELY(prevVisibleThingOfEndPoint.Failed())) {
       NS_WARNING(
           "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary() failed");
@@ -7258,8 +7254,8 @@ HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction(
     // selection past that, it would visibly change meaning of users selection.
     const WSScanResult nextVisibleThingOfStartPoint =
         WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-            WSRunScanner::Scan::All, startPoint,
-            BlockInlineCheck::UseHTMLDefaultStyle, &aEditingHost);
+            {WSRunScanner::Option::ReferHTMLDefaultStyle}, startPoint,
+            &aEditingHost);
     if (MOZ_UNLIKELY(nextVisibleThingOfStartPoint.Failed())) {
       NS_WARNING(
           "WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary() failed");
@@ -9685,8 +9681,7 @@ HTMLEditor::InsertPaddingBRElementIfNeeded(
     if (IsPlaintextMailComposer()) {
       const WSScanResult nextVisibleThing =
           WSRunScanner::ScanInclusiveNextVisibleNodeOrBlockBoundary(
-              WSRunScanner::Scan::EditableNodes, aPoint,
-              BlockInlineCheck::UseComputedDisplayOutsideStyle);
+              {WSRunScanner::Option::OnlyEditableNodes}, aPoint);
       if (nextVisibleThing.ReachedBlockBoundary() &&
           HTMLEditUtils::IsMailCiteElement(*nextVisibleThing.ElementPtr()) &&
           HTMLEditUtils::IsInlineContent(
