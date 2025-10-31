@@ -126,7 +126,10 @@ def script_url(config, script):
 def docker_worker_run_task(config, job, taskdesc):
     run = job["run"]
     worker = taskdesc["worker"] = job["worker"]
-    command = ["/builds/worker/bin/run-task"]
+    run_task_bin = (
+        "run-task-git" if config.params["repository_type"] == "git" else "run-task-hg"
+    )
+    command = [f"/builds/worker/bin/{run_task_bin}"]
     common_setup(config, job, taskdesc, command)
 
     if run["tooltool-downloads"]:

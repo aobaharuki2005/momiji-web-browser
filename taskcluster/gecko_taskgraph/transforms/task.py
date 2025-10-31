@@ -316,6 +316,13 @@ def verify_index(config, index):
         raise Exception(UNSUPPORTED_INDEX_PRODUCT_ERROR.format(product=product))
 
 
+RUN_TASK_RE = re.compile(r"run-task(-(git|hg))?$")
+
+
+def is_run_task(cmd: str) -> bool:
+    return bool(re.search(RUN_TASK_RE, cmd))
+
+
 @payload_builder(
     "docker-worker",
     schema={
@@ -503,7 +510,7 @@ def build_docker_worker_payload(config, task, task_def):
     if "max-run-time" in worker:
         payload["maxRunTime"] = worker["max-run-time"]
 
-    run_task = payload.get("command", [""])[0].endswith("run-task")
+    run_task = is_run_task(payload.get("command", [""])[0])
 
     # run-task exits EXIT_PURGE_CACHES if there is a problem with caches.
     # Automatically retry the tasks and purge caches if we see this exit
@@ -2564,7 +2571,7 @@ def check_run_task_caches(config, tasks):
         command = payload.get("command") or [""]
 
         main_command = command[0] if isinstance(command[0], str) else ""
-        run_task = main_command.endswith("run-task")
+        run_task = is_run_task(main_command)
 
         require_sparse_cache = False
         have_sparse_cache = False
