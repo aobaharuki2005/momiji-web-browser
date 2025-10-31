@@ -2223,7 +2223,9 @@ terms_of_use:
 
   dismiss:
     type: event
-    description: The user dismissed the Terms of Use prompt.
+    description: >
+      The user dismissed the Terms of Use prompt by swiping, hitting back, or tapping
+      the background scrim.
     extra_keys:
       tou_version:
         type: quantity

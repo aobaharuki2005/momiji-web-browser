@@ -79,18 +79,27 @@ class TermsOfUseBottomSheetFragment : BottomSheetDialogFragment() {
                         )
                     },
                     onTermsOfUseClicked = {
+                        termsOfUsePromptStore.dispatch(
+                            TermsOfUsePromptAction.OnTermsOfUseClicked(args.surface),
+                        )
                         SupportUtils.launchSandboxCustomTab(
                             context,
                             SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.TERMS_OF_SERVICE),
                         )
                     },
                     onPrivacyNoticeClicked = {
+                        termsOfUsePromptStore.dispatch(
+                            TermsOfUsePromptAction.OnPrivacyNoticeClicked(args.surface),
+                        )
                         SupportUtils.launchSandboxCustomTab(
                             context,
                             SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
                         )
                     },
                     onLearnMoreClicked = {
+                        termsOfUsePromptStore.dispatch(
+                            TermsOfUsePromptAction.OnLearnMoreClicked(args.surface),
+                        )
                         SupportUtils.launchSandboxCustomTab(
                             context,
                             SupportUtils.getSumoURLForTopic(
