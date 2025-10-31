@@ -107,14 +107,6 @@ async function testCreateBackupHelper(sandbox, taskFn) {
     "createBackupTest"
   );
 
-  let testTelemetryStateObject = {
-    clientID: "ed209123-04a1-04a1-04a1-c0ffeec0ffee",
-  };
-  await IOUtils.writeJSON(
-    PathUtils.join(PathUtils.profileDir, "datareporting", "state.json"),
-    testTelemetryStateObject
-  );
-
   Assert.ok(!bs.state.lastBackupDate, "No backup date is stored in state.");
   let { manifest, archivePath: backupFilePath } = await bs.createBackup({
     profilePath: fakeProfilePath,
@@ -327,14 +319,12 @@ async function testCreateBackupHelper(sandbox, taskFn) {
     "Should have post-recovery data from fake backup 3"
   );
 
-  let newProfileTelemetryStateObject = await IOUtils.readJSON(
-    PathUtils.join(recoveredProfilePath, "datareporting", "state.json")
-  );
-  Assert.deepEqual(
-    testTelemetryStateObject,
-    newProfileTelemetryStateObject,
-    "Recovered profile inherited telemetry state from the profile that " +
-      "initiated recovery"
+  await Assert.rejects(
+    IOUtils.readJSON(
+      PathUtils.join(recoveredProfilePath, "datareporting", "state.json")
+    ),
+    /file does not exist/,
+    "The telemetry state was cleared."
   );
 
   await taskFn(bs, manifest);
