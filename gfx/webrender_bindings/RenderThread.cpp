@@ -830,7 +830,7 @@ void RenderThread::UpdateAndRender(
 
   std::string markerName = "Composite #" + std::to_string(AsUint64(aWindowId));
   AutoProfilerTracing tracingCompositeMarker(
-      "Paint", markerName.c_str(), geckoprofiler::category::GRAPHICS,
+      markerName.c_str(), geckoprofiler::category::GRAPHICS,
       Some(renderer->GetCompositorBridge()->GetInnerWindowId()));
 
   bool render = aParams.render;
