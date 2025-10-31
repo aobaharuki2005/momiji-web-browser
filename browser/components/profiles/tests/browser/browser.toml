@@ -45,6 +45,8 @@ skip-if = [
 ["browser_menubar_profiles.js"]
 head = "../unit/head.js head.js"
 
+["browser_moveTabToProfile.js"]
+
 ["browser_notify_changes.js"]
 run-if = ["os != 'linux'"] # Linux clients cannot remote themselves.
 skip-if = ["os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt && !socketprocess_networking"] # Bug 1929273

@@ -3315,8 +3315,10 @@ export class BackupService extends EventTarget {
           profile,
           // Using URL Search Params on this about: page didn't work because
           // the RPM communication so we use the hash and parse that instead.
-          "about:editprofile" +
-            (copiedProfile ? `#copiedProfileName=${copiedProfile.name}` : "")
+          [
+            "about:editprofile" +
+              (copiedProfile ? `#copiedProfileName=${copiedProfile.name}` : ""),
+          ]
         );
       }
 
