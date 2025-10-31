@@ -5273,6 +5273,122 @@
       }
     ]
   },
+  "1913599": {
+    "label": "createEncodedStreams shim test-page",
+    "bugs": {
+      "1913599": {
+        "issue": "broken-meetings",
+        "matches": ["https://jan-ivar.github.io/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "only_channels": ["nightly"],
+        "content_scripts": {
+          "all_frames": true,
+          "js": ["bug1913599-shim-createencodedstreams.js"]
+        }
+      }
+    ]
+  },
+  "1896361": {
+    "label": "Meta Messenger",
+    "bugs": {
+      "1896361": {
+        "issue": "broken-meetings",
+        "matches": ["https://www.facebook.com/*", "https://www.messenger.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "only_channels": ["nightly"],
+        "content_scripts": {
+          "all_frames": true,
+          "js": ["bug1913599-shim-createencodedstreams.js"]
+        }
+      }
+    ]
+  },
+  "1896424": {
+    "label": "meet.google.com legacy group calls (exploratory)",
+    "bugs": {
+      "1896424": {
+        "issue": "broken-meetings",
+        "matches": ["https://meet.google.com/calling/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": [],
+        "only_channels": ["nightly"],
+        "not_platforms": ["android"],
+        "ua_string": ["Chrome_with_FxQuantum"],
+        "content_scripts": {
+          "all_frames": true,
+          "js": ["bug1913599-shim-createencodedstreams.js"]
+        }
+      }
+    ]
+  },
+  "1902507": {
+    "label": "riverside.fm",
+    "bugs": {
+      "1902507": {
+        "issue": "broken-meetings",
+        "matches": ["https://riverside.fm/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "only_channels": ["nightly"],
+        "content_scripts": {
+          "all_frames": true,
+          "js": ["bug1913599-shim-createencodedstreams.js"]
+        }
+      }
+    ]
+  },
+  "1902508": {
+    "label": "goto.com",
+    "bugs": {
+      "1902508": {
+        "issue": "broken-meetings",
+        "matches": ["https://*.goto.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "only_channels": ["nightly"],
+        "content_scripts": {
+          "all_frames": true,
+          "js": ["bug1913599-shim-createencodedstreams.js"]
+        }
+      }
+    ]
+  },
+  "1904141": {
+    "label": "mega.nz",
+    "bugs": {
+      "1904141": {
+        "issue": "broken-meetings",
+        "matches": ["https://mega.nz/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "only_channels": ["nightly"],
+        "content_scripts": {
+          "all_frames": true,
+          "js": ["bug1913599-shim-createencodedstreams.js"]
+        }
+      }
+    ]
+  },
   "1973019": {
     "label": "mitsukoshi.mistore.jp",
     "bugs": {
