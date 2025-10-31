@@ -2500,6 +2500,21 @@ mozilla::dom::SessionHistoryEntry* nsSHistory::FindAdjacentContiguousEntryFor(
   return nullptr;
 }
 
+LinkedList<SessionHistoryEntry> nsSHistory::ConstructContiguousEntryListFrom(
+    SessionHistoryEntry* aEntry) {
+  LinkedList<SessionHistoryEntry> entryList;
+  entryList.insertBack(aEntry);
+  for (auto* entry = aEntry;
+       (entry = FindAdjacentContiguousEntryFor(entry, -1));) {
+    entryList.insertFront(entry);
+  }
+  for (auto* entry = aEntry;
+       (entry = FindAdjacentContiguousEntryFor(entry, 1));) {
+    entryList.insertBack(entry);
+  }
+  return entryList;
+}
+
 bool nsSHistory::ForEachDifferingEntry(
     nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry, BrowsingContext* aParent,
     const std::function<void(nsISHEntry*, BrowsingContext*)>& aCallback) {
