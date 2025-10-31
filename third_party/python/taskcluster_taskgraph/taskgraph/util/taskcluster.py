@@ -65,7 +65,7 @@ def get_taskcluster_client(service: str):
     if "TASKCLUSTER_PROXY_URL" in os.environ:
         options = {"rootUrl": os.environ["TASKCLUSTER_PROXY_URL"]}
     else:
-        options = taskcluster.optionsFromEnvironment()
+        options = taskcluster.optionsFromEnvironment({"rootUrl": get_root_url()})
 
     return getattr(taskcluster, service[0].upper() + service[1:])(options)
 
@@ -73,15 +73,17 @@ def get_taskcluster_client(service: str):
 def _handle_artifact(
     path: str, response: Union[requests.Response, dict[str, Any]]
 ) -> Any:
-    if isinstance(response, dict):
-        # When taskcluster client returns non-JSON responses, it wraps them in {"response": <Response>}
-        if "response" in response and isinstance(
-            response["response"], requests.Response
-        ):
-            response = response["response"]
-        else:
-            # If we already a dict (parsed JSON), return it directly.
-            return response
+    # When taskcluster client returns non-JSON responses, it wraps them in {"response": <Response>}
+    if (
+        isinstance(response, dict)
+        and "response" in response
+        and isinstance(response["response"], requests.Response)
+    ):
+        response = response["response"]
+
+    if not isinstance(response, requests.Response):
+        # At this point, if we don't have a response object, it's already parsed, return it
+        return response
 
     # We have a response object, load the content based on the path extension.
     if path.endswith(".json"):
@@ -141,20 +143,7 @@ def get_session():
 
 
 def get_artifact_url(task_id, path, use_proxy=False):
-    if use_proxy:
-        try:
-            url = liburls.normalize_root_url(os.environ["TASKCLUSTER_PROXY_URL"])
-        except KeyError:
-            if "TASK_ID" not in os.environ:
-                raise RuntimeError(
-                    "taskcluster-proxy is not available when not executing in a task"
-                )
-            else:
-                raise RuntimeError("taskcluster-proxy is not enabled for this task")
-
-    else:
-        url = get_root_url(block_proxy=True)
-
+    url = get_root_url(block_proxy=not use_proxy)
     artifact_tmpl = liburls.api(url, "queue", "v1", "task/{}/artifacts/{}")
     return artifact_tmpl.format(task_id, path)
 
@@ -194,8 +183,10 @@ def get_artifact_path(task, path):
     return f"{get_artifact_prefix(task)}/{path}"
 
 
-def get_index_url(index_path, multiple=False):
-    index_tmpl = liburls.api(get_root_url(), "index", "v1", "task{}/{}")
+def get_index_url(index_path, multiple=False, use_proxy=False):
+    index_tmpl = liburls.api(
+        get_root_url(block_proxy=not use_proxy), "index", "v1", "task{}/{}"
+    )
     return index_tmpl.format("s" if multiple else "", index_path)
 
 

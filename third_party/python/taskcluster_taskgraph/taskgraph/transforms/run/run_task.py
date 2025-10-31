@@ -184,7 +184,7 @@ def script_url(config, script):
         raise Exception("TASK_ID must be defined to use run-task on generic-worker")
     task_id = os.environ.get("TASK_ID", "<TASK_ID>")
     # Assumes the cluster allows anonymous downloads of public artifacts
-    tc_url = taskcluster.get_root_url()
+    tc_url = taskcluster.get_root_url(block_proxy=True)
     # TODO: Use util/taskcluster.py:get_artifact_url once hack for Bug 1405889 is removed
     return f"{tc_url}/api/queue/v1/task/{task_id}/artifacts/public/{script}"
 

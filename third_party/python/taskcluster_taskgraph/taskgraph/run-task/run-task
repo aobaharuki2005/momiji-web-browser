@@ -597,27 +597,18 @@ def _clean_git_checkout(destination_path):
         "-nxdff",
     ]
     print_line(b"vcs", b"executing %r\n" % args)
-    p = subprocess.Popen(
+    p = subprocess.run(
         args,
-        # Disable buffering because we want to receive output
-        # as it is generated so timestamps in logs are
-        # accurate.
-        bufsize=0,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        stdin=sys.stdin.fileno(),
+        encoding="latin1",
         cwd=destination_path,
         env=os.environ,
+        check=True,
     )
-    stdout = io.TextIOWrapper(p.stdout, encoding="latin1")
-    ret = p.wait()
-    if ret:
-        sys.exit(ret)
-    data = stdout.read()
     prefix = "Would remove "
     filenames = [
         os.path.join(destination_path, line[len(prefix) :])
-        for line in data.splitlines()
+        for line in p.stdout.splitlines()
     ]
     print_line(b"vcs", b"removing %r\n" % filenames)
     for filename in filenames:

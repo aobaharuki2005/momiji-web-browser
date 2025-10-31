@@ -603,6 +603,10 @@ def repack_archive(
                         if tarinfo.isfile():
                             tar.addfile(tarinfo, origtar.extractfile(tarinfo))
                         else:
+                            # Hard links are relative to the root of the archive,
+                            # so the filter needs to be applied to its destination.
+                            if tarinfo.islnk():
+                                tarinfo.linkname = filter(tarinfo.linkname)
                             tar.addfile(tarinfo)
             else:
                 # We only change compression here. The tar stream is unchanged.

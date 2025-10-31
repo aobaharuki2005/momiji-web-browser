@@ -64,6 +64,31 @@ def format_taskgraph_yaml(taskgraph):
     return yaml.safe_dump(taskgraph.to_json(), default_flow_style=False)
 
 
+def format_kind_graph_mermaid(kind_graph):
+    """
+    Convert a kind dependency graph to Mermaid flowchart format.
+
+    @param kind_graph: Graph object containing kind nodes and dependencies
+    @return: String representation of the graph in Mermaid format
+    """
+    lines = ["flowchart TD"]
+
+    # Add nodes (kinds)
+    for node in sorted(kind_graph.nodes):
+        # Sanitize node names for Mermaid (replace hyphens with underscores for IDs)
+        node_id = node.replace("-", "_")
+        lines.append(f"    {node_id}[{node}]")
+
+    # Add edges (dependencies)
+    # Reverse the edge direction: if left depends on right, show right --> left
+    for left, right, _ in sorted(kind_graph.edges):
+        left_id = left.replace("-", "_")
+        right_id = right.replace("-", "_")
+        lines.append(f"    {right_id} --> {left_id}")
+
+    return "\n".join(lines)
+
+
 def get_filtered_taskgraph(taskgraph, tasksregex, exclude_keys):
     """
     Filter all the tasks on basis of a regular expression
@@ -223,6 +248,69 @@ def generate_taskgraph(options, parameters, overrides, logdir):
         )
 
     return returncode
+
+
+@command(
+    "kind-graph",
+    help="Generate a Mermaid flowchart diagram source file for the kind dependency graph. To render as a graph, run the output of this command through the Mermaid CLI or an online renderer.",
+)
+@argument("--root", "-r", help="root of the taskgraph definition relative to topsrcdir")
+@argument("--quiet", "-q", action="store_true", help="suppress all logging output")
+@argument(
+    "--verbose", "-v", action="store_true", help="include debug-level logging output"
+)
+@argument(
+    "--parameters",
+    "-p",
+    default=None,
+    help="Parameters to use for the generation. Can be a path to file (.yml or "
+    ".json; see `taskcluster/docs/parameters.rst`), a url, of the form "
+    "`project=mozilla-central` to download latest parameters file for the specified "
+    "project from CI, or of the form `task-id=<decision task id>` to download "
+    "parameters from the specified decision task.",
+)
+@argument(
+    "-o",
+    "--output-file",
+    default=None,
+    help="file path to store generated output.",
+)
+@argument(
+    "-k",
+    "--target-kind",
+    dest="target_kinds",
+    action="append",
+    default=[],
+    help="only return kinds and their dependencies.",
+)
+def show_kind_graph(options):
+    from taskgraph.parameters import parameters_loader  # noqa: PLC0415
+
+    if options.pop("verbose", False):
+        logging.root.setLevel(logging.DEBUG)
+
+    setup_logging()
+
+    target_kinds = options.get("target_kinds", [])
+    parameters = parameters_loader(
+        options.get("parameters"),
+        strict=False,
+        overrides={"target-kinds": target_kinds},
+    )
+
+    tgg = get_taskgraph_generator(options.get("root"), parameters)
+    kind_graph = tgg.kind_graph
+
+    output = format_kind_graph_mermaid(kind_graph)
+
+    if output_file := options.get("output_file"):
+        with open(output_file, "w") as fh:
+            print(output, file=fh)
+        print(f"Kind graph written to {output_file}", file=sys.stderr)
+    else:
+        print(output)
+
+    return 0
 
 
 @command(
