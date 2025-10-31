@@ -1110,81 +1110,6 @@ static bool AvailableSpaceShrunk(WritingMode aWM,
          aNewAvailableSpace.IEnd(aWM) < aOldAvailableSpace.IEnd(aWM);
 }
 
-static LogicalSize CalculateContainingBlockSizeForAbsolutes(
-    WritingMode aWM, const ReflowInput& aReflowInput,
-    const LogicalSize& aFrameSize) {
-  // The issue here is that for a 'height' of 'auto' the reflow input
-  // code won't know how to calculate the containing block height
-  // because it's calculated bottom up. So we use our own computed
-  // size as the dimensions.
-  nsIFrame* frame = aReflowInput.mFrame;
-
-  LogicalSize cbSize(aFrameSize);
-  // Containing block is relative to the padding edge
-  const LogicalMargin border = aReflowInput.ComputedLogicalBorder(aWM);
-  cbSize.ISize(aWM) -= border.IStartEnd(aWM);
-  cbSize.BSize(aWM) -= border.BStartEnd(aWM);
-
-  if (frame->GetParent()->GetContent() != frame->GetContent() ||
-      frame->GetParent()->IsCanvasFrame()) {
-    return cbSize;
-  }
-
-  // We are a wrapped frame for the content (and the wrapper is not the
-  // canvas frame, whose size is not meaningful here).
-  // Use the container's dimensions, if they have been precomputed.
-  // XXX This is a hack! We really should be waiting until the outermost
-  // frame is fully reflowed and using the resulting dimensions, even
-  // if they're intrinsic.
-  // In fact we should be attaching absolute children to the outermost
-  // frame and not always sticking them in block frames.
-
-  // First, find the reflow input for the outermost frame for this content.
-  const ReflowInput* lastRI = &aReflowInput;
-  DebugOnly<const ReflowInput*> lastButOneRI = &aReflowInput;
-  while (lastRI->mParentReflowInput &&
-         lastRI->mParentReflowInput->mFrame->GetContent() ==
-             frame->GetContent()) {
-    lastButOneRI = lastRI;
-    lastRI = lastRI->mParentReflowInput;
-  }
-
-  if (lastRI == &aReflowInput) {
-    return cbSize;
-  }
-
-  // For scroll containers, we can just use cbSize (which is the padding-box
-  // size of the scrolled-content frame).
-  if (lastRI->mFrame->IsScrollContainerOrSubclass()) {
-    // Assert that we're not missing any frames between the abspos containing
-    // block and the scroll container.
-    // the parent.
-    MOZ_ASSERT(lastButOneRI == &aReflowInput);
-    return cbSize;
-  }
-
-  // Same for fieldsets, where the inner anonymous frame has the correct padding
-  // area with the legend taken into account.
-  if (lastRI->mFrame->IsFieldSetFrame()) {
-    return cbSize;
-  }
-
-  // We found a reflow input for the outermost wrapping frame, so use
-  // its computed metrics if available, converted to our writing mode
-  const LogicalSize lastRISize = lastRI->ComputedSize(aWM);
-  const LogicalMargin lastRIPadding = lastRI->ComputedLogicalPadding(aWM);
-  if (lastRISize.ISize(aWM) != NS_UNCONSTRAINEDSIZE) {
-    cbSize.ISize(aWM) =
-        std::max(0, lastRISize.ISize(aWM) + lastRIPadding.IStartEnd(aWM));
-  }
-  if (lastRISize.BSize(aWM) != NS_UNCONSTRAINEDSIZE) {
-    cbSize.BSize(aWM) =
-        std::max(0, lastRISize.BSize(aWM) + lastRIPadding.BStartEnd(aWM));
-  }
-
-  return cbSize;
-}
-
 /**
  * Returns aFrame if it is an in-flow, non-BFC block frame, and null otherwise.
  *
@@ -1776,10 +1701,6 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         }
       }
     } else {
-      LogicalSize containingBlockSize =
-          CalculateContainingBlockSizeForAbsolutes(parentWM, aReflowInput,
-                                                   aMetrics.Size(parentWM));
-
       // Mark frames that depend on changes we just made to this frame as dirty:
       // Now we can assume that the padding edge hasn't moved.
       // We need to reflow the absolutes if one of them depends on
@@ -1799,6 +1720,9 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
           !(isRoot && NS_UNCONSTRAINEDSIZE == aReflowInput.ComputedHeight()) &&
           aMetrics.Height() != oldSize.height;
 
+      const LogicalSize containingBlockSize =
+          aMetrics.Size(parentWM) -
+          aReflowInput.ComputedLogicalBorder(parentWM).Size(parentWM);
       nsRect containingBlock(nsPoint(0, 0),
                              containingBlockSize.GetPhysicalSize(parentWM));
       AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation};
