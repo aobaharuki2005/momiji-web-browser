@@ -6450,7 +6450,7 @@ void nsBlockFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
       MarkSameFloatManagerLinesDirty(
           static_cast<nsBlockFrame*>(f->GetParent()));
     }
-    DoRemoveOutOfFlowFrame(aContext, aOldFrame);
+    DoRemoveFloats(aContext, aOldFrame);
   } else if (FrameChildListID::NoReflowPrincipal == aListID) {
     // Skip the call to |FrameNeedsReflow| below by returning now.
     DoRemoveFrame(aContext, aOldFrame, REMOVE_FIXED_CONTINUATIONS);
@@ -6718,26 +6718,21 @@ void nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
   }
 }
 
-void nsBlockFrame::DoRemoveOutOfFlowFrame(DestroyContext& aContext,
-                                          nsIFrame* aFrame) {
-  // The containing block is always the parent of aFrame.
-  nsBlockFrame* block = (nsBlockFrame*)aFrame->GetParent();
+void nsBlockFrame::DoRemoveFloats(DestroyContext& aContext, nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame->IsFloating(),
+             "DoRemoveFloats() can only remove float elements!");
 
-  // Remove aFrame from the appropriate list.
-  if (aFrame->IsAbsolutelyPositioned()) {
-    // This also deletes the next-in-flows
-    block->GetAbsoluteContainingBlock()->RemoveFrame(
-        aContext, FrameChildListID::Absolute, aFrame);
-  } else {
-    // First remove aFrame's next-in-flows.
-    if (nsIFrame* nif = aFrame->GetNextInFlow()) {
-      nif->GetParent()->DeleteNextInFlowChild(aContext, nif, false);
-    }
-    // Now remove aFrame from its child list and Destroy it.
-    block->RemoveFloatFromFloatCache(aFrame);
-    block->RemoveFloat(aFrame);
-    aFrame->Destroy(aContext);
+  // The containing block is always the parent of aFrame.
+  auto* block = static_cast<nsBlockFrame*>(aFrame->GetParent());
+
+  // First remove aFrame's next-in-flows.
+  if (nsIFrame* nif = aFrame->GetNextInFlow()) {
+    nif->GetParent()->DeleteNextInFlowChild(aContext, nif, false);
   }
+  // Now remove aFrame from its child list and Destroy it.
+  block->RemoveFloatFromFloatCache(aFrame);
+  block->RemoveFloat(aFrame);
+  aFrame->Destroy(aContext);
 }
 
 /**
@@ -7127,22 +7122,10 @@ bool nsBlockInFlowLineIterator::FindValidLine() {
 // on looking for continuations.
 void nsBlockFrame::DoRemoveFrame(DestroyContext& aContext,
                                  nsIFrame* aDeletedFrame, uint32_t aFlags) {
-  // We use the line cursor to attempt to optimize removal, but must ensure
-  // it is cleared if lines change such that it may become invalid.
-
-  if (aDeletedFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW |
-                                     NS_FRAME_IS_OVERFLOW_CONTAINER)) {
-    if (!aDeletedFrame->GetPrevInFlow()) {
-      NS_ASSERTION(aDeletedFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
-                   "Expected out-of-flow frame");
-      DoRemoveOutOfFlowFrame(aContext, aDeletedFrame);
-    } else {
-      // FIXME(emilio): aContext is lost here, maybe it's not a big deal?
-      nsContainerFrame::DeleteNextInFlowChild(aContext, aDeletedFrame,
-                                              (aFlags & FRAMES_ARE_EMPTY) != 0);
-    }
-    return;
-  }
+  MOZ_ASSERT(!aDeletedFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW |
+                                             NS_FRAME_IS_OVERFLOW_CONTAINER),
+             "DoRemoveFrame() does not support removing out-of-flow frames or "
+             "overflow containers!");
 
   // Find the line that contains deletedFrame. Start from the line cursor
   // (if available) and search to the end of the normal line list, then
@@ -7150,6 +7133,8 @@ void nsBlockFrame::DoRemoveFrame(DestroyContext& aContext,
   nsLineList::iterator line_start = mLines.begin(), line_end = mLines.end();
   nsLineList::iterator line = line_start;
 
+  // We use the line cursor to attempt to optimize removal, but must ensure
+  // it is cleared if lines change such that it may become invalid.
   bool found = false;
   if (nsLineBox* cursor = GetLineCursorForDisplay()) {
     for (line.SetPosition(cursor); line != line_end; ++line) {
