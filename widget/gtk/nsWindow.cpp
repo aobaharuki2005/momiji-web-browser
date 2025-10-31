@@ -922,10 +922,10 @@ bool nsWindow::ConstrainSizeWithScale(int* aWidth, int* aHeight,
                                       double aScale) {
   // Ensure minimal 1x1 window size
   if (*aWidth <= mClientMargin.LeftRight()) {
-    *aWidth = mClientMargin.LeftRight()+1;
+    *aWidth = mClientMargin.LeftRight() + 1;
   }
   if (*aHeight <= mClientMargin.TopBottom()) {
-    *aHeight <= mClientMargin.TopBottom()+1;
+    *aHeight <= mClientMargin.TopBottom() + 1;
   }
 
   // We store our constraints in inner sizes for convenience, but that means we
