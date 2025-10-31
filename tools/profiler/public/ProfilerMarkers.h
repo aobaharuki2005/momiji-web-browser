@@ -542,10 +542,11 @@ class AutoProfilerFmtMarker {
 
 class MOZ_RAII AutoProfilerTracing {
  public:
-  AutoProfilerTracing(const char* aMarkerName,
+  AutoProfilerTracing(const char* aCategoryString, const char* aMarkerName,
                       mozilla::MarkerCategory aCategoryPair,
                       const mozilla::Maybe<uint64_t>& aInnerWindowID)
-      : mMarkerName(aMarkerName),
+      : mCategoryString(aCategoryString),
+        mMarkerName(aMarkerName),
         mCategoryPair(aCategoryPair),
         mInnerWindowID(aInnerWindowID) {
     profiler_add_marker(
@@ -553,14 +554,18 @@ class MOZ_RAII AutoProfilerTracing {
         mCategoryPair,
         {mozilla::MarkerTiming::IntervalStart(),
          mozilla::MarkerInnerWindowId(mInnerWindowID)},
-        mozilla::baseprofiler::markers::StackMarker{});
+        mozilla::baseprofiler::markers::StackMarker{},
+        mozilla::ProfilerString8View::WrapNullTerminatedString(
+            mCategoryString));
   }
 
   AutoProfilerTracing(
-      const char* aMarkerName, mozilla::MarkerCategory aCategoryPair,
+      const char* aCategoryString, const char* aMarkerName,
+      mozilla::MarkerCategory aCategoryPair,
       mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aBacktrace,
       const mozilla::Maybe<uint64_t>& aInnerWindowID)
-      : mMarkerName(aMarkerName),
+      : mCategoryString(aCategoryString),
+        mMarkerName(aMarkerName),
         mCategoryPair(aCategoryPair),
         mInnerWindowID(aInnerWindowID) {
     profiler_add_marker(
@@ -569,7 +574,9 @@ class MOZ_RAII AutoProfilerTracing {
         {mozilla::MarkerTiming::IntervalStart(),
          mozilla::MarkerInnerWindowId(mInnerWindowID),
          mozilla::MarkerStack::TakeBacktrace(std::move(aBacktrace))},
-        mozilla::baseprofiler::markers::StackMarker{});
+        mozilla::baseprofiler::markers::StackMarker{},
+        mozilla::ProfilerString8View::WrapNullTerminatedString(
+            mCategoryString));
   }
 
   ~AutoProfilerTracing() {
@@ -578,27 +585,32 @@ class MOZ_RAII AutoProfilerTracing {
         mCategoryPair,
         {mozilla::MarkerTiming::IntervalEnd(),
          mozilla::MarkerInnerWindowId(mInnerWindowID)},
-        mozilla::baseprofiler::markers::StackMarker{});
+        mozilla::baseprofiler::markers::StackMarker{},
+        mozilla::ProfilerString8View::WrapNullTerminatedString(
+            mCategoryString));
   }
 
  protected:
+  const char* mCategoryString;
   const char* mMarkerName;
   const mozilla::MarkerCategory mCategoryPair;
   const mozilla::Maybe<uint64_t> mInnerWindowID;
 };
 
 // Adds a START/END pair of tracing markers.
-#define AUTO_PROFILER_MARKER(markerName, categoryPair) \
-  AutoProfilerTracing PROFILER_RAII(                   \
-      markerName, geckoprofiler::category::categoryPair, mozilla::Nothing())
-#define AUTO_PROFILER_MARKER_INNERWINDOWID(markerName, categoryPair,       \
-                                           innerWindowId)                  \
-  AutoProfilerTracing PROFILER_RAII(markerName,                            \
+#define AUTO_PROFILER_TRACING_MARKER(categoryString, markerName, categoryPair) \
+  AutoProfilerTracing PROFILER_RAII(categoryString, markerName,                \
+                                    geckoprofiler::category::categoryPair,     \
+                                    mozilla::Nothing())
+#define AUTO_PROFILER_TRACING_MARKER_INNERWINDOWID(                        \
+    categoryString, markerName, categoryPair, innerWindowId)               \
+  AutoProfilerTracing PROFILER_RAII(categoryString, markerName,            \
                                     geckoprofiler::category::categoryPair, \
                                     mozilla::Some(innerWindowId))
-#define AUTO_PROFILER_MARKER_DOCSHELL(markerName, categoryPair, docShell) \
+#define AUTO_PROFILER_TRACING_MARKER_DOCSHELL(categoryString, markerName, \
+                                              categoryPair, docShell)     \
   AutoProfilerTracing PROFILER_RAII(                                      \
-      markerName, geckoprofiler::category::categoryPair,                  \
+      categoryString, markerName, geckoprofiler::category::categoryPair,  \
       geckoprofiler::markers::detail::                                    \
           profiler_get_inner_window_id_from_docshell(docShell))
 

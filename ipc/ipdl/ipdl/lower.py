@@ -5207,8 +5207,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         [
                             StmtExpr(
                                 ExprCall(
-                                    ExprVar("AUTO_PROFILER_MARKER"),
+                                    ExprVar("AUTO_PROFILER_TRACING_MARKER"),
                                     [
+                                        ExprLiteral.String("Sync IPC"),
                                         ExprLiteral.String(
                                             self.protocol.name
                                             + "::"
