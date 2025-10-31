@@ -21,7 +21,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,7 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,6 +42,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -55,7 +54,6 @@ import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.compose.base.text.Text.Resource
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.compose.base.textfield.TextFieldColors
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.Config
@@ -63,6 +61,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_CHOOSE_REASON_BUTTON
 import org.mozilla.fenix.webcompat.BrokenSiteReporterTestTags.BROKEN_SITE_REPORTER_SEND_BUTTON
 import org.mozilla.fenix.webcompat.store.WebCompatReporterAction
@@ -97,7 +96,6 @@ fun WebCompatReporter(
                 },
             )
         },
-        containerColor = FirefoxTheme.colors.layer2,
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -121,7 +119,7 @@ fun WebCompatReporter(
                         },
                     ),
                 ),
-                style = FirefoxTheme.typography.body2.copy(color = FirefoxTheme.colors.textPrimary),
+                style = FirefoxTheme.typography.body2.copy(color = MaterialTheme.colorScheme.onSurface),
                 linkTextColor = MaterialTheme.colorScheme.tertiary,
                 linkTextDecoration = TextDecoration.Underline,
                 textAlign = TextAlign.Start,
@@ -170,7 +168,7 @@ fun WebCompatReporter(
                         testTag = BROKEN_SITE_REPORTER_CHOOSE_REASON_BUTTON
                     },
                     style = FirefoxTheme.typography.caption,
-                    color = FirefoxTheme.colors.textCritical,
+                    color = MaterialTheme.colorScheme.error,
                 )
             }
 
@@ -190,9 +188,6 @@ fun WebCompatReporter(
                 label = stringResource(id = R.string.webcompat_reporter_label_description),
                 singleLine = false,
                 maxLines = PROBLEM_DESCRIPTION_MAX_LINES,
-                colors = TextFieldColors.default(
-                    inputColor = FirefoxTheme.colors.textSecondary,
-                ),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -217,10 +212,6 @@ fun WebCompatReporter(
                     checked = state.includeEtpBlockedUrls,
                     onCheckedChange = null,
                     modifier = Modifier,
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = FirefoxTheme.colors.formSelected,
-                        uncheckedColor = FirefoxTheme.colors.formDefault,
-                    ),
                 )
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -228,13 +219,13 @@ fun WebCompatReporter(
                 Column {
                     Text(
                         text = stringResource(id = R.string.webcompat_reporter_etp_checkbox_text),
-                        color = FirefoxTheme.colors.textPrimary,
-                        style = AcornTheme.typography.subtitle1,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = AcornTheme.typography.body1,
                     )
 
                     Text(
                         text = stringResource(id = R.string.webcompat_reporter_etp_checkbox_description),
-                        color = FirefoxTheme.colors.textSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = AcornTheme.typography.body2,
                     )
                 }
@@ -318,12 +309,10 @@ private fun TempAppBar(
     onBackClick: () -> Unit,
 ) {
     TopAppBar(
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = FirefoxTheme.colors.layer1),
         title = {
             Text(
                 text = stringResource(id = R.string.webcompat_reporter_screen_title),
-                color = FirefoxTheme.colors.textPrimary,
-                style = FirefoxTheme.typography.headline6,
+                style = FirefoxTheme.typography.headline5,
             )
         },
         navigationIcon = {
@@ -331,7 +320,6 @@ private fun TempAppBar(
                 Icon(
                     painter = painterResource(iconsR.drawable.mozac_ic_back_24),
                     contentDescription = stringResource(R.string.bookmark_navigate_back_button_content_description),
-                    tint = FirefoxTheme.colors.iconPrimary,
                 )
             }
         },
@@ -373,6 +361,20 @@ private fun WebCompatReporterPreview(
     @PreviewParameter(WebCompatPreviewParameterProvider::class) initialState: WebCompatReporterState,
 ) {
     FirefoxTheme {
+        WebCompatReporter(
+            store = WebCompatReporterStore(
+                initialState = initialState,
+            ),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun WebCompatReporterPrivatePreview(
+    @PreviewParameter(WebCompatPreviewParameterProvider::class) initialState: WebCompatReporterState,
+) {
+    FirefoxTheme(theme = Theme.Private) {
         WebCompatReporter(
             store = WebCompatReporterStore(
                 initialState = initialState,
