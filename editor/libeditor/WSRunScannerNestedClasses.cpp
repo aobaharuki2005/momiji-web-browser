@@ -244,7 +244,7 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
   const BlockInlineCheck blockInlineCheck =
       aOptions.contains(Option::ReferHTMLDefaultStyle)
           ? BlockInlineCheck::UseHTMLDefaultStyle
-          : BlockInlineCheck::UseComputedDisplayOutsideStyle;
+          : BlockInlineCheck::Auto;
   // Then, we need to check previous leaf node.
   const auto leafNodeTypes =
       aOptions.contains(Option::OnlyEditableNodes)
@@ -258,13 +258,14 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
     return BoundaryData(
         aPoint, const_cast<Element&>(aAncestorLimiter),
         HTMLEditUtils::IsBlockElement(
-            aAncestorLimiter, RespectParentBlockBoundary(blockInlineCheck))
+            aAncestorLimiter, UseComputedDisplayStyleIfAuto(blockInlineCheck))
             ? WSType::CurrentBlockBoundary
             : WSType::InlineEditingHostBoundary);
   }
 
-  if (HTMLEditUtils::IsBlockElement(*previousLeafContentOrBlock,
-                                    blockInlineCheck)) {
+  if (HTMLEditUtils::IsBlockElement(
+          *previousLeafContentOrBlock,
+          UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck))) {
     return BoundaryData(aPoint, *previousLeafContentOrBlock,
                         WSType::OtherBlockBoundary);
   }
@@ -399,7 +400,7 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
   const BlockInlineCheck blockInlineCheck =
       aOptions.contains(Option::ReferHTMLDefaultStyle)
           ? BlockInlineCheck::UseHTMLDefaultStyle
-          : BlockInlineCheck::UseComputedDisplayOutsideStyle;
+          : BlockInlineCheck::Auto;
 
   // Then, we need to check next leaf node.
   const auto leafNodeTypes =
@@ -415,13 +416,14 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
         aPoint.template To<EditorDOMPoint>(),
         const_cast<Element&>(aAncestorLimiter),
         HTMLEditUtils::IsBlockElement(
-            aAncestorLimiter, RespectParentBlockBoundary(blockInlineCheck))
+            aAncestorLimiter, UseComputedDisplayStyleIfAuto(blockInlineCheck))
             ? WSType::CurrentBlockBoundary
             : WSType::InlineEditingHostBoundary);
   }
 
-  if (HTMLEditUtils::IsBlockElement(*nextLeafContentOrBlock,
-                                    blockInlineCheck)) {
+  if (HTMLEditUtils::IsBlockElement(
+          *nextLeafContentOrBlock,
+          UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck))) {
     // we encountered a new block.  therefore no more ws.
     return BoundaryData(aPoint, *nextLeafContentOrBlock,
                         WSType::OtherBlockBoundary);
@@ -859,11 +861,13 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetInclusiveNextCharPoint(
   const BlockInlineCheck blockInlineCheck =
       static_cast<bool>(aReferHTMLDefaultStyle)
           ? BlockInlineCheck::UseHTMLDefaultStyle
-          : BlockInlineCheck::UseComputedDisplayOutsideStyle;
+          : BlockInlineCheck::Auto;
   const EditorRawDOMPoint point = [&]() MOZ_NEVER_INLINE_DEBUG {
     nsIContent* const child =
         aPoint.CanContainerHaveChildren() ? aPoint.GetChild() : nullptr;
-    if (!child || HTMLEditUtils::IsBlockElement(*child, blockInlineCheck) ||
+    if (!child ||
+        HTMLEditUtils::IsBlockElement(
+            *child, UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
         HTMLEditUtils::IsVisibleElementEvenIfLeafNode(*child)) {
       return aPoint.template To<EditorRawDOMPoint>();
     }
@@ -878,7 +882,9 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetInclusiveNextCharPoint(
     nsIContent* const leafContent = HTMLEditUtils::GetFirstLeafContent(
         *child, {LeafNodeType::LeafNodeOrChildBlock}, blockInlineCheck);
     if (NS_WARN_IF(!leafContent) ||
-        HTMLEditUtils::IsBlockElement(*leafContent, blockInlineCheck) ||
+        HTMLEditUtils::IsBlockElement(
+            *leafContent,
+            UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
         HTMLEditUtils::IsVisibleElementEvenIfLeafNode(*leafContent)) {
       return EditorRawDOMPoint();
     }
@@ -910,7 +916,7 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetInclusiveNextCharPoint(
                   *aPoint.template ContainerAs<nsIContent>())
                   ? kScanEditableRootAncestorTypes
                   : kScanAnyRootAncestorTypes,
-              RespectParentBlockBoundary(blockInlineCheck));
+              blockInlineCheck);
   if (NS_WARN_IF(
           !editableBlockElementOrInlineEditingHostOrNonEditableRootElement)) {
     return EditorDOMPointType();
@@ -934,7 +940,9 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetInclusiveNextCharPoint(
         (aIgnoreNonEditableNodes == IgnoreNonEditableNodes::Yes &&
          !HTMLEditUtils::IsSimplyEditableNode(*nextContent))) {
       if (nextContent == aFollowingLimiterContent ||
-          HTMLEditUtils::IsBlockElement(*nextContent, blockInlineCheck) ||
+          HTMLEditUtils::IsBlockElement(
+              *nextContent,
+              UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
           HTMLEditUtils::IsVisibleElementEvenIfLeafNode(*nextContent)) {
         break;  // Reached end of current runs.
       }
@@ -961,13 +969,15 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetPreviousCharPoint(
   const BlockInlineCheck blockInlineCheck =
       static_cast<bool>(aReferHTMLDefaultStyle)
           ? BlockInlineCheck::UseHTMLDefaultStyle
-          : BlockInlineCheck::UseComputedDisplayOutsideStyle;
+          : BlockInlineCheck::Auto;
   const EditorRawDOMPoint point = [&]() MOZ_NEVER_INLINE_DEBUG {
     nsIContent* const previousChild = aPoint.CanContainerHaveChildren()
                                           ? aPoint.GetPreviousSiblingOfChild()
                                           : nullptr;
     if (!previousChild ||
-        HTMLEditUtils::IsBlockElement(*previousChild, blockInlineCheck) ||
+        HTMLEditUtils::IsBlockElement(
+            *previousChild,
+            UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
         HTMLEditUtils::IsVisibleElementEvenIfLeafNode(*previousChild)) {
       return aPoint.template To<EditorRawDOMPoint>();
     }
@@ -982,7 +992,9 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetPreviousCharPoint(
     nsIContent* const leafContent = HTMLEditUtils::GetLastLeafContent(
         *previousChild, {LeafNodeType::LeafNodeOrChildBlock}, blockInlineCheck);
     if (NS_WARN_IF(!leafContent) ||
-        HTMLEditUtils::IsBlockElement(*leafContent, blockInlineCheck) ||
+        HTMLEditUtils::IsBlockElement(
+            *leafContent,
+            UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
         HTMLEditUtils::IsVisibleElementEvenIfLeafNode(*leafContent)) {
       return EditorRawDOMPoint();
     }
@@ -1015,7 +1027,7 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetPreviousCharPoint(
                   *aPoint.template ContainerAs<nsIContent>())
                   ? kScanEditableRootAncestorTypes
                   : kScanAnyRootAncestorTypes,
-              RespectParentBlockBoundary(blockInlineCheck));
+              blockInlineCheck);
   if (NS_WARN_IF(
           !editableBlockElementOrInlineEditingHostOrNonEditableRootElement)) {
     return EditorDOMPointType();
@@ -1040,7 +1052,9 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetPreviousCharPoint(
         (aIgnoreNonEditableNodes == IgnoreNonEditableNodes::Yes &&
          !HTMLEditUtils::IsSimplyEditableNode(*previousContent))) {
       if (previousContent == aPrecedingLimiterContent ||
-          HTMLEditUtils::IsBlockElement(*previousContent, blockInlineCheck) ||
+          HTMLEditUtils::IsBlockElement(
+              *previousContent,
+              UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
           HTMLEditUtils::IsVisibleElementEvenIfLeafNode(*previousContent)) {
         break;  // Reached start of current runs.
       }

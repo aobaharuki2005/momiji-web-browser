@@ -276,6 +276,7 @@ static bool IsHTMLBlockElementByDefault(const nsIContent& aContent) {
 bool HTMLEditUtils::IsBlockElement(const nsIContent& aContent,
                                    BlockInlineCheck aBlockInlineCheck) {
   MOZ_ASSERT(aBlockInlineCheck != BlockInlineCheck::Unused);
+  MOZ_ASSERT(aBlockInlineCheck != BlockInlineCheck::Auto);
 
   if (MOZ_UNLIKELY(!aContent.IsElement())) {
     return false;
@@ -328,6 +329,7 @@ bool HTMLEditUtils::IsBlockElement(const nsIContent& aContent,
 bool HTMLEditUtils::IsInlineContent(const nsIContent& aContent,
                                     BlockInlineCheck aBlockInlineCheck) {
   MOZ_ASSERT(aBlockInlineCheck != BlockInlineCheck::Unused);
+  MOZ_ASSERT(aBlockInlineCheck != BlockInlineCheck::Auto);
 
   if (!aContent.IsElement()) {
     return true;
@@ -826,8 +828,7 @@ EditorDOMPoint HTMLEditUtils::LineRequiresPaddingLineBreakToBeVisible(
     nsIContent* const previousVisibleLeafOrChildBlock =
         HTMLEditUtils::GetPreviousNonEmptyLeafContentOrPreviousBlockElement(
             preferredPaddingLineBreakPoint,
-            {LeafNodeType::LeafNodeOrChildBlock},
-            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+            {LeafNodeType::LeafNodeOrChildBlock}, BlockInlineCheck::Auto);
     if (!previousVisibleLeafOrChildBlock) {
       // Reached current block.
       return true;
@@ -1892,7 +1893,8 @@ nsIContent* HTMLEditUtils::GetPreviousContent(
     if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
         aPoint.IsInContentNode() &&
         HTMLEditUtils::IsBlockElement(
-            *aPoint.template ContainerAs<nsIContent>(), aBlockInlineCheck)) {
+            *aPoint.template ContainerAs<nsIContent>(),
+            UseComputedDisplayStyleIfAuto(aBlockInlineCheck))) {
       // If we aren't allowed to cross blocks, don't look before this block.
       return nullptr;
     }
@@ -1951,7 +1953,9 @@ nsIContent* HTMLEditUtils::GetNextContent(
 
   if (point.GetChild()) {
     if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-        HTMLEditUtils::IsBlockElement(*point.GetChild(), aBlockInlineCheck)) {
+        HTMLEditUtils::IsBlockElement(
+            *point.GetChild(),
+            UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck))) {
       return point.GetChild();
     }
 
@@ -1986,8 +1990,9 @@ nsIContent* HTMLEditUtils::GetNextContent(
   // and want the next one.
   if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
       point.IsInContentNode() &&
-      HTMLEditUtils::IsBlockElement(*point.template ContainerAs<nsIContent>(),
-                                    aBlockInlineCheck)) {
+      HTMLEditUtils::IsBlockElement(
+          *point.template ContainerAs<nsIContent>(),
+          UseComputedDisplayStyleIfAuto(aBlockInlineCheck))) {
     // don't cross out of parent block
     return nullptr;
   }
@@ -2016,9 +2021,11 @@ nsIContent* HTMLEditUtils::GetAdjacentLeafContent(
     if (sibling) {
       // XXX If `sibling` belongs to siblings of inclusive ancestors of aNode,
       //     perhaps, we need to use
-      //     IgnoreInsideBlockBoundary(aBlockInlineCheck) here.
+      //     PreferDisplayOutsideIfUsingDisplay(aBlockInlineCheck) here.
       if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-          HTMLEditUtils::IsBlockElement(*sibling, aBlockInlineCheck)) {
+          HTMLEditUtils::IsBlockElement(
+              *sibling,
+              UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck))) {
         // don't look inside previous sibling, since it is a block
         return sibling;
       }
@@ -2042,7 +2049,8 @@ nsIContent* HTMLEditUtils::GetAdjacentLeafContent(
 
     if (parent == aAncestorLimiter ||
         (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-         HTMLEditUtils::IsBlockElement(*parent, aBlockInlineCheck))) {
+         HTMLEditUtils::IsBlockElement(
+             *parent, UseComputedDisplayStyleIfAuto(aBlockInlineCheck)))) {
       return nullptr;
     }
 
@@ -2332,6 +2340,8 @@ Element* HTMLEditUtils::GetAncestorElement(
       aAncestorTypes.contains(AncestorType::ClosestButtonElement),
       !aAncestorTypes.contains(AncestorType::StopAtClosestButtonElement));
 
+  aBlockInlineCheck = UseComputedDisplayStyleIfAuto(aBlockInlineCheck);
+
   const Element* theBodyElement = aContent.OwnerDoc()->GetBody();
   const Element* theDocumentElement = aContent.OwnerDoc()->GetDocumentElement();
   Element* lastAncestorElement = nullptr;
@@ -2458,6 +2468,8 @@ Element* HTMLEditUtils::GetInclusiveAncestorElement(
   MOZ_ASSERT_IF(
       aAncestorTypes.contains(AncestorType::ClosestButtonElement),
       !aAncestorTypes.contains(AncestorType::StopAtClosestButtonElement));
+
+  aBlockInlineCheck = UseComputedDisplayStyleIfAuto(aBlockInlineCheck);
 
   const Element* theBodyElement = aContent.OwnerDoc()->GetBody();
   const Element* theDocumentElement = aContent.OwnerDoc()->GetDocumentElement();
@@ -2952,8 +2964,9 @@ size_t HTMLEditUtils::CollectEmptyInlineContainerDescendants(
     const EmptyCheckOptions& aOptions, BlockInlineCheck aBlockInlineCheck) {
   size_t numberOfFoundElements = 0;
   for (Element* element = aNode.GetFirstElementChild(); element;) {
-    if (HTMLEditUtils::IsEmptyInlineContainer(*element, aOptions,
-                                              aBlockInlineCheck)) {
+    if (HTMLEditUtils::IsEmptyInlineContainer(
+            *element, aOptions,
+            UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck))) {
       aOutArrayOfContents.AppendElement(*element);
       numberOfFoundElements++;
       nsIContent* nextContent = element->GetNextNonChildNode(&aNode);

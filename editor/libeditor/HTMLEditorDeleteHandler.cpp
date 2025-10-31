@@ -4616,7 +4616,9 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
               return false;
             }
             if (!HTMLEditUtils::RangeIsAcrossStartBlockBoundary(
-                    deleteContentResult.DeleteRangeRef())) {
+                    deleteContentResult.DeleteRangeRef(),
+                    // XXX UseComputedDisplayStyle?
+                    BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
               return false;
             }
             WSScanResult nextThing =
