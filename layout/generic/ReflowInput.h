@@ -68,8 +68,8 @@ struct SizeComputationInput {
   // Rendering context to use for measurement.
   gfxContext* mRenderingContext;
 
-  // Cache of referenced anchors for this computation.
-  AnchorPosReferenceData* mAnchorPosReferenceData = nullptr;
+  // Cache for anchor resolution in this computation.
+  AnchorPosResolutionCache* mAnchorPosResolutionCache = nullptr;
 
   nsMargin ComputedPhysicalMargin() const {
     return mComputedMargin.GetPhysicalMargin(mWritingMode);
@@ -132,7 +132,7 @@ struct SizeComputationInput {
   // Callers using this constructor must call InitOffsets on their own.
   SizeComputationInput(
       nsIFrame* aFrame, gfxContext* aRenderingContext,
-      AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
+      AnchorPosResolutionCache* aAnchorPosResolutionCache = nullptr);
 
   SizeComputationInput(nsIFrame* aFrame, gfxContext* aRenderingContext,
                        WritingMode aContainingBlockWritingMode,
@@ -626,9 +626,9 @@ struct ReflowInput : public SizeComputationInput {
    *        call nsIFrame::ComputeSize() internally.
    * @param aComputeSizeFlags A set of flags used when we call
    *        nsIFrame::ComputeSize() internally.
-   * @param aAnchorPosReferenceData A cache of referenced anchors to be
-   * populated (If specified) for this reflowed frame. Should live for the
-   * lifetime of this ReflowInput.
+   * @param aAnchorResolutionCache A cache of referenced anchors to be populated
+   *        (If specified) for this reflowed frame. Should live for the lifetime
+   *        of this ReflowInput.
    */
   ReflowInput(nsPresContext* aPresContext,
               const ReflowInput& aParentReflowInput, nsIFrame* aFrame,
@@ -637,7 +637,7 @@ struct ReflowInput : public SizeComputationInput {
               InitFlags aFlags = {},
               const StyleSizeOverrides& aSizeOverrides = {},
               ComputeSizeFlags aComputeSizeFlags = {},
-              AnchorPosReferenceData* aAnchorPosReferenceData = nullptr);
+              AnchorPosResolutionCache* aAnchorPosResolutionCache = nullptr);
 
   /**
    * This method initializes various data members. It is automatically called by
@@ -985,7 +985,7 @@ inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
       aIgnorePositionArea ? mozilla::StylePositionArea{}
                           : aRI->mStylePosition->mPositionArea;
   return {aRI->mFrame, aRI->mStyleDisplay->mPosition, posArea,
-          aRI->mAnchorPosReferenceData};
+          aRI->mAnchorPosResolutionCache};
 }
 
 #endif  // mozilla_ReflowInput_h

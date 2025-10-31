@@ -1897,6 +1897,14 @@ static Maybe<AnchorPosInfo> GetAnchorPosRect(
                                                   aCBRectIsvalid, entry);
 }
 
+static AnchorPosReferenceData* GetReferenceData(
+    const AnchorPosResolutionParams& aParams) {
+  if (!aParams.mCache) {
+    return nullptr;
+  }
+  return aParams.mCache->mReferenceData;
+}
+
 bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
                               const nsAtom* aAnchorName,
                               StylePhysicalSide aPropSide,
@@ -1911,9 +1919,9 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
 
   // Note: No exit on null anchorName: Instead, GetAnchorPosRect may return the
   // containing block.
-  const auto info = GetAnchorPosRect(
-      aParams->mBaseParams.mFrame, anchorName, !aParams->mCBSize,
-      aParams->mBaseParams.mAnchorPosReferenceData);
+  const auto info = GetAnchorPosRect(aParams->mBaseParams.mFrame, anchorName,
+                                     !aParams->mCBSize,
+                                     GetReferenceData(aParams->mBaseParams));
   if (info.isNothing()) {
     return false;
   }
@@ -2004,9 +2012,9 @@ bool Gecko_GetAnchorPosSize(const AnchorPosResolutionParams* aParams,
   }
   const auto size = [&]() -> Maybe<nsSize> {
     Maybe<AnchorPosResolutionData>* entry = nullptr;
-    if (aParams->mAnchorPosReferenceData) {
-      const auto result =
-          aParams->mAnchorPosReferenceData->InsertOrModify(anchorName, false);
+    auto* referencedAnchors = GetReferenceData(*aParams);
+    if (referencedAnchors) {
+      const auto result = referencedAnchors->InsertOrModify(anchorName, false);
       if (result.mAlreadyResolved) {
         MOZ_ASSERT(result.mEntry, "Entry exists but null?");
         return result.mEntry->map(
