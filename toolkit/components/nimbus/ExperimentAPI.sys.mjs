@@ -299,8 +299,14 @@ export const ExperimentAPI = new (class {
       );
     }
 
-    Services.prefs.addObserver(STUDIES_OPT_OUT_PREF, this._onStudiesEnabledChanged);
-    Services.prefs.addObserver(UPLOAD_ENABLED_PREF, this._onStudiesEnabledChanged);
+    Services.prefs.addObserver(
+      STUDIES_OPT_OUT_PREF,
+      this._onStudiesEnabledChanged
+    );
+    Services.prefs.addObserver(
+      UPLOAD_ENABLED_PREF,
+      this._onStudiesEnabledChanged
+    );
 
     // If Nimbus was disabled between the start of this function and registering
     // the pref observers we have not handled it yet.
@@ -361,21 +367,32 @@ export const ExperimentAPI = new (class {
     this.#experimentManager?.store.off("update", this._annotateCrashReport);
     this.#experimentManager = null;
 
-    Services.prefs.removeObserver(STUDIES_OPT_OUT_PREF, this._onStudiesEnabledChanged);
-    Services.prefs.removeObserver(UPLOAD_ENABLED_PREF, this._onStudiesEnabledChanged);
+    Services.prefs.removeObserver(
+      STUDIES_OPT_OUT_PREF,
+      this._onStudiesEnabledChanged
+    );
+    Services.prefs.removeObserver(
+      UPLOAD_ENABLED_PREF,
+      this._onStudiesEnabledChanged
+    );
 
     this.#initialized = false;
   }
 
   #computeEnabled() {
-    this.#prefValues.studiesEnabled = Services.prefs.getBoolPref(STUDIES_OPT_OUT_PREF, false);
-    this.#prefValues.telemetryEnabled = Services.prefs.getBoolPref(UPLOAD_ENABLED_PREF, false)
+    this.#prefValues.studiesEnabled = Services.prefs.getBoolPref(
+      STUDIES_OPT_OUT_PREF,
+      false
+    );
+    this.#prefValues.telemetryEnabled = Services.prefs.getBoolPref(
+      UPLOAD_ENABLED_PREF,
+      false
+    );
 
-    this.#studiesEnabled = (
+    this.#studiesEnabled =
       this.#prefValues.studiesEnabled &&
       this.#prefValues.telemetryEnabled &&
-      Services.policies.isAllowed("Shield")
-    );
+      Services.policies.isAllowed("Shield");
   }
 
   get enabled() {

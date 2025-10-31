@@ -90,8 +90,8 @@ add_task(async function test_remote_fetch_and_ready() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["datareporting.healthreport.uploadEnabled", true],
-      ["app.shield.optoutstudies.enabled", true]
-    ]
+      ["app.shield.optoutstudies.enabled", true],
+    ],
   });
 
   await ExperimentAPI.ready();
@@ -450,7 +450,7 @@ add_task(async function remote_defaults_active_remote_defaults() {
     set: [
       ["datareporting.healthreport.uploadEnabled", true],
       ["app.shield.optoutstudies.enabled", true],
-    ]
+    ],
   });
 
   await ExperimentAPI._rsLoader.updateRecipes("mochitest");

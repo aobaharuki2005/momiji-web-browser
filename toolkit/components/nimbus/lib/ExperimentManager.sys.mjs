@@ -261,6 +261,10 @@ export class ExperimentManager {
       this._handleStudiesOptOut();
     }
 
+    if (!lazy.ExperimentAPI.labsEnabled) {
+      this._handleLabsDisabled();
+    }
+
     lazy.NimbusFeatures.nimbusTelemetry.onUpdate(() => {
       // Providing default values ensure we disable metrics when unenrolling.
       const cfg = {
@@ -755,7 +759,7 @@ export class ExperimentManager {
     if (result.ok) {
       // Unenrollment due to studies becoming disabled is handled in
       // `_handleStudiesOptOut`. Firefox Labs can only be disabled by policy and
-      // thus its enabled state cannot change at runtime.
+      // thus its enabled state cannot change after Nimbus is initialized.
       if (result.status === lazy.MatchStatus.DISABLED) {
         return false;
       }
@@ -938,9 +942,11 @@ export class ExperimentManager {
    * Unenroll from all active studies if user opts out.
    */
   _handleStudiesOptOut() {
-    for (const enrollment of this.store
+    const enrollments = this.store
       .getAll()
-      .filter(e => e.active && !e.isFirefoxLabsOptIn)) {
+      .filter(e => e.active && !e.isFirefoxLabsOptIn);
+
+    for (const enrollment of enrollments) {
       this._unenroll(
         enrollment,
         UnenrollmentCause.fromReason(
@@ -948,6 +954,26 @@ export class ExperimentManager {
         )
       );
     }
+  }
+
+  /**
+   * Unenroll from all active Firefox Labs opt-ins if Labs becomes disabled.
+   */
+  _handleLabsDisabled() {
+    const enrollments = this.store
+      .getAll()
+      .filter(e => e.active && e.isFirefoxLabsOptIn);
+
+    for (const enrollment of enrollments) {
+      this._unenroll(
+        enrollment,
+        UnenrollmentCause.fromReason(
+          lazy.NimbusTelemetry.UnenrollReason.LABS_DISABLED
+        )
+      );
+    }
+
+    this.optinRecipes = [];
   }
 
   /**
