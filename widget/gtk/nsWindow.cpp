@@ -3584,11 +3584,6 @@ void nsWindow::RecomputeBounds(bool aMayChangeCsdMargin, bool aScaleChange) {
                        oldClientArea.Size() != mClientArea.Size();
 
   if (moved) {
-    if (IsTopLevelWidget()) {
-      // The moved check avoids unwanted rollup on spurious configure events
-      // from Cygwin/X (bug 672103).
-      RollupAllMenus();
-    }
     auto pos = ToLayoutDevicePixels(mClientArea.TopLeft());
     NotifyWindowMoved(pos.x, pos.y);
   }
