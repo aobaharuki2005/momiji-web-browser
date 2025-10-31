@@ -3629,6 +3629,7 @@ void ScriptLoader::UpdateDiskCache() {
   JS::DestroyFrontendContext(fc);
 }
 
+/* static */
 void ScriptLoader::EncodeBytecodeAndSave(
     JS::FrontendContext* aFc, JS::loader::LoadedScript* aLoadedScript) {
   MOZ_ASSERT(aLoadedScript->HasDiskCacheReference());

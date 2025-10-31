@@ -755,12 +755,14 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   void UpdateDiskCache();
 
+ public:
   /**
    * Encode the stencils and save the bytecode to the necko cache.
    */
-  void EncodeBytecodeAndSave(JS::FrontendContext* aFc,
-                             JS::loader::LoadedScript* aLoadedScript);
+  static void EncodeBytecodeAndSave(JS::FrontendContext* aFc,
+                                    JS::loader::LoadedScript* aLoadedScript);
 
+ private:
   /**
    * Discard all disk-cache-related info for scripts queued for the disk cache.
    *
