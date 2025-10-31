@@ -460,6 +460,8 @@ export default [
       "testing/raptor/browsertime/utils/profiling.js",
       "testing/raptor/browsertime/utils/support_measurements.js",
       "testing/raptor/browsertime/welcome.js",
+      "testing/timings/fetch-xpcshell-data.js",
+      "testing/timings/profile-worker.js",
       "testing/web-platform/tests/webrtc/third_party/sdp/sdp.js",
       "testing/xpcshell/moz-http2/moz-http2-child.js",
       "testing/xpcshell/moz-http2/moz-http2.js",

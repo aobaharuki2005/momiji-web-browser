@@ -3,18 +3,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import json
 import logging
 import os
+import subprocess
 import sys
 from datetime import date, timedelta
 
 # ruff linter deprecates List, required for Python 3.8 compatibility
 from typing import List, Optional  # noqa UP035
+from urllib.parse import urlparse
 
 import requests
 from mach.decorators import Command, CommandArgument, SubCommand
-from mozbuild.base import BuildEnvironmentNotFoundException
+from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 from mozbuild.base import MachCommandConditions as conditions
+from mozbuild.nodeutil import find_node_executable
+from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
 UNKNOWN_TEST = """
 I was unable to find tests from the given argument(s).
@@ -256,8 +261,6 @@ def addtest(
 
         proc = None
         if editor:
-            import subprocess
-
             proc = subprocess.Popen(f"{editor} {' '.join(paths)}", shell=True)
 
         if proc:
@@ -586,8 +589,6 @@ def executable_name(name):
     help="Extra arguments to pass down to the test harness.",
 )
 def run_jstests(command_context, shell, params):
-    import subprocess
-
     command_context.virtualenv_manager.ensure()
     python = command_context.virtualenv_manager.python_path
 
@@ -620,8 +621,6 @@ def run_jstests(command_context, shell, params):
     help="Extra arguments to pass down to the test harness.",
 )
 def run_jittests(command_context, shell, cgc, params):
-    import subprocess
-
     command_context.virtualenv_manager.ensure()
     python = command_context.virtualenv_manager.python_path
 
@@ -660,8 +659,6 @@ def run_jittests(command_context, shell, cgc, params):
     "omitted, the entire test suite is executed.",
 )
 def run_jsapitests(command_context, list=False, frontend_only=False, test_name=None):
-    import subprocess
-
     jsapi_tests_cmd = [
         os.path.join(command_context.bindir, executable_name("jsapi-tests"))
     ]
@@ -682,8 +679,6 @@ def run_jsapitests(command_context, list=False, frontend_only=False, test_name=N
 
 
 def run_check_js_msg(command_context):
-    import subprocess
-
     command_context.virtualenv_manager.ensure()
     python = command_context.virtualenv_manager.python_path
 
@@ -720,6 +715,129 @@ def test_info(command_context):
     """
     All functions implemented as subcommands.
     """
+
+
+class TestInfoNodeRunner(MozbuildObject):
+    """Run TestInfo node tests."""
+
+    def run_node_cmd(self, monitor, days=1, revision=None, output_dir=None):
+        """Run the TestInfo node command."""
+
+        self.test_timings_dir = os.path.join(self.topsrcdir, "testing", "timings")
+        test_runner_script = os.path.join(
+            self.test_timings_dir, "fetch-xpcshell-data.js"
+        )
+
+        # Build the command to run
+        node_binary, _ = find_node_executable()
+        cmd = [node_binary, test_runner_script]
+
+        if revision:
+            cmd.extend(["--revision", revision])
+        else:
+            cmd.extend(["--days", str(days)])
+
+        if output_dir:
+            cmd.extend(["--output-dir", os.path.abspath(output_dir)])
+
+        print(f"Running: {' '.join(cmd)}")
+        print(f"Working directory: {self.test_timings_dir}")
+
+        try:
+            # Run the test runner and capture stdout line by line
+            process = subprocess.Popen(
+                cmd,
+                cwd=self.test_timings_dir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+            )
+
+            for line in process.stdout:
+                line = line.rstrip()
+                # Print to console
+                print(line)
+
+                # Add as instant event marker to profile (skip empty lines)
+                if line:
+                    monitor.record_event(line)
+
+            process.wait()
+            return process.returncode
+        except FileNotFoundError:
+            print(
+                "ERROR: Node.js not found. Please ensure Node.js is installed and in your PATH."
+            )
+            return 1
+        except Exception as e:
+            print(f"ERROR: Failed to run TestInfo node command: {e}")
+            return 1
+
+
+@SubCommand(
+    "test-info",
+    "xpcshell-timings",
+    description="Collect timing information for XPCShell test jobs.",
+)
+@CommandArgument(
+    "--days",
+    default=1,
+    help="Number of days to download and aggregate, starting with yesterday",
+)
+@CommandArgument(
+    "--revision",
+    default="",
+    help="revision to fetch data for ('mozilla-central:<revision id>', '<revision id>' for a try push or 'current' to take the revision from the environment)",
+)
+@CommandArgument("--output-dir", help="Path to report file.")
+def test_info_xpcshell_timings(command_context, days, output_dir, revision=None):
+    # Start resource monitoring with 0.1s sampling rate
+    monitor = SystemResourceMonitor(poll_interval=0.1)
+    monitor.start()
+
+    try:
+        # node fetch-xpcshell-data.js --days 1
+        runner = TestInfoNodeRunner.from_environment(
+            cwd=os.getcwd(), detect_virtualenv_mozinfo=False
+        )
+
+        # Handle 'current' special value to use current build's revision
+        if revision == "current":
+            rev = os.environ.get("MOZ_SOURCE_CHANGESET", "")
+            repo = os.environ.get("MOZ_SOURCE_REPO", "")
+
+            if rev and repo:
+                # Extract project name from repository URL
+                # e.g., https://hg.mozilla.org/try -> try
+                # e.g., https://hg.mozilla.org/mozilla-central -> mozilla-central
+                parsed_url = urlparse(repo)
+                project = os.path.basename(parsed_url.path)
+                revision = f"{project}:{rev}"
+        elif revision and ":" not in revision:
+            # Bare revision ID without project prefix - assume it's a try push
+            revision = f"try:{revision}"
+
+        runner.run_node_cmd(
+            monitor, days=days, revision=revision, output_dir=output_dir
+        )
+    finally:
+        # Stop resource monitoring and save profile
+        if output_dir:
+            monitor.stop(upload_dir=output_dir)
+            profile_path = os.path.join(output_dir, "profile_resource-usage.json")
+        else:
+            monitor.stop()
+            # This is where ./mach resource-usage will find the profile.
+            profile_path = command_context._get_state_filename(
+                "profile_build_resources.json"
+            )
+        with open(profile_path, "w", encoding="utf-8", newline="\n") as fh:
+            to_write = json.dumps(monitor.as_profile(), separators=(",", ":"))
+            fh.write(to_write)
+        print(f"Resource usage profile saved to: {profile_path}")
+        if not output_dir:
+            print("View it with: ./mach resource-usage")
 
 
 @SubCommand(
