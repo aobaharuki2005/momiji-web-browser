@@ -524,7 +524,7 @@
     },
     "interventions": [
       {
-        "platforms": ["all"],
+        "platforms": ["desktop"],
         "content_scripts": {
           "css": ["1729435_milkbarstore.com-fix-cart-quantity-counts.css"]
         }

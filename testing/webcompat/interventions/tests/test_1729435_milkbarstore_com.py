@@ -21,13 +21,22 @@ async def do_cart_quantities_appear(client):
     return pre != post
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
     assert await do_cart_quantities_appear(client)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):
     assert not await do_cart_quantities_appear(client)
+
+
+@pytest.mark.only_platforms("android")
+@pytest.mark.asyncio
+@pytest.mark.without_interventions
+async def test_works_on_android(client):
+    assert await do_cart_quantities_appear(client)
