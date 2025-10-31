@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+#include "AnchorPositioningUtils.h"
 #include "LayoutLogging.h"
 #include "RubyUtils.h"
 #include "TextOverflow.h"
@@ -12265,6 +12266,18 @@ bool nsIFrame::IsSuppressedScrollableBlockForPrint() const {
     return false;
   }
   return true;
+}
+
+PhysicalAxes nsIFrame::GetAnchorPosCompensatingForScroll() const {
+  if (!HasAnchorPosReference()) {
+    return {};
+  }
+  const auto* prop = GetProperty(AnchorPosReferences());
+  if (!prop) {
+    return {};
+  }
+
+  return prop->CompensatingForScrollAxes();
 }
 
 bool nsIFrame::HasUnreflowedContainerQueryAncestor() const {

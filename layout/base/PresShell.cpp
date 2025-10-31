@@ -11683,15 +11683,15 @@ static bool NeedReflowForAnchorPos(
     // Size changed, needs reflow.
     return true;
   }
-  if (!anchorReference.mOrigin) {
+  if (!anchorReference.mOffsetData) {
     // Didn't resolve offsets, no need to reflow based on it.
     return false;
   }
   const auto posInfo = AnchorPositioningUtils::GetAnchorPosRect(
-      aPositioned->GetParent(), aAnchor, true, nullptr);
+      aPositioned->GetParent(), aAnchor, true);
   MOZ_ASSERT(posInfo, "Can't resolve anchor rect?");
-  const auto newOrigin = posInfo.ref().mRect.TopLeft();
-  const auto& prevOrigin = anchorReference.mOrigin.ref();
+  const auto newOrigin = posInfo.ref().TopLeft();
+  const auto& prevOrigin = anchorReference.mOffsetData.ref().mOrigin;
   // Did the offset change?
   return newOrigin != prevOrigin;
 }
