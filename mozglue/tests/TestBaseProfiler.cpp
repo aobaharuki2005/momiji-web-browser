@@ -4079,8 +4079,8 @@ void TestProfiler() {
         ::mozilla::baseprofiler::markers::NoPayload{}));
 
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
-        "stackmarker", mozilla::baseprofiler::category::OTHER, {},
-        mozilla::baseprofiler::markers::StackMarker{}));
+        "tracing", mozilla::baseprofiler::category::OTHER, {},
+        mozilla::baseprofiler::markers::Tracing{}, "category"));
 
     MOZ_RELEASE_ASSERT(baseprofiler::AddMarker(
         "text", mozilla::baseprofiler::category::OTHER, {},
@@ -4710,9 +4710,9 @@ void TestPredefinedMarkers() {
       mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex, chunkManager);
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
-      buffer, std::string_view("stackmarker"),
+      buffer, std::string_view("tracing"),
       mozilla::baseprofiler::category::OTHER, {},
-      mozilla::baseprofiler::markers::StackMarker{}));
+      mozilla::baseprofiler::markers::Tracing{}, "category"));
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, std::string_view("text"), mozilla::baseprofiler::category::OTHER,

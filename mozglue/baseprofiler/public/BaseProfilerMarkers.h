@@ -230,7 +230,9 @@ struct StackMarker : public BaseMarkerType<StackMarker> {
   static constexpr bool StoreName = true;
 
   using MS = MarkerSchema;
-  static constexpr MS::PayloadField PayloadFields[0] = {};
+  static constexpr MS::PayloadField PayloadFields[] = {
+      {"category", MS::InputType::CString, "Type", MS::Format::String,
+       MS::PayloadFlags::Searchable}};
 
   static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
                                                MS::Location::MarkerTable,
@@ -238,7 +240,12 @@ struct StackMarker : public BaseMarkerType<StackMarker> {
 
   static constexpr bool IsStackBased = true;
 
-  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter) {}
+  static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aCategory) {
+    if (aCategory.Length() != 0) {
+      aWriter.StringProperty("category", aCategory);
+    }
+  }
 };
 
 }  // namespace mozilla::baseprofiler::markers
