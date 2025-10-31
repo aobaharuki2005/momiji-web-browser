@@ -6,8 +6,9 @@
 
 #include "SharedScriptCache.h"
 
-#include "ScriptLoadHandler.h"          // ScriptLoadHandler
-#include "ScriptLoader.h"               // ScriptLoader
+#include "ScriptLoadHandler.h"  // ScriptLoadHandler
+#include "ScriptLoader.h"       // ScriptLoader
+#include "js/experimental/CompileScript.h"  // JS::FrontendContext, JS::NewFrontendContext, JS::DestroyFrontendContext
 #include "mozilla/Maybe.h"              // Maybe, Some, Nothing
 #include "mozilla/dom/ContentParent.h"  // dom::ContentParent
 #include "nsIMemoryReporter.h"  // nsIMemoryReporter, MOZ_DEFINE_MALLOC_SIZE_OF, RegisterWeakMemoryReporter, UnregisterWeakMemoryReporter, MOZ_COLLECT_REPORT, KIND_HEAP, UNITS_BYTES
@@ -162,6 +163,66 @@ void SharedScriptCache::PrepareForLastCC() {
     sSingleton->mComplete.Clear();
     sSingleton->mPending.Clear();
     sSingleton->mLoading.Clear();
+  }
+}
+
+static bool ShouldSave(JS::loader::LoadedScript* aLoadedScript,
+                       ScriptLoader::DiskCacheStrategy aStrategy) {
+  if (!aLoadedScript->HasDiskCacheReference()) {
+    return false;
+  }
+
+  if (!aLoadedScript->HasSRI()) {
+    return false;
+  }
+
+  if (aStrategy.mHasSourceLengthMin) {
+    size_t len = JS::GetScriptSourceLength(aLoadedScript->GetStencil());
+    if (len < aStrategy.mSourceLengthMin) {
+      return false;
+    }
+  }
+
+  if (aStrategy.mHasFetchCountMin) {
+    if (aLoadedScript->mFetchCount < aStrategy.mFetchCountMin) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void SharedScriptCache::UpdateDiskCache() {
+  auto strategy = ScriptLoader::GetDiskCacheStrategy();
+  if (strategy.mIsDisabled) {
+    return;
+  }
+
+  JS::FrontendContext* fc = nullptr;
+
+  for (auto iter = mComplete.Iter(); !iter.Done(); iter.Next()) {
+    JS::loader::LoadedScript* loadedScript = iter.Data().mResource;
+    if (!ShouldSave(loadedScript, strategy)) {
+      continue;
+    }
+
+    if (!fc) {
+      // Lazily create the context only when there's at least one script
+      // that needs to be saved.
+      fc = JS::NewFrontendContext();
+      if (!fc) {
+        return;
+      }
+    }
+
+    ScriptLoader::EncodeBytecodeAndSave(fc, loadedScript);
+
+    loadedScript->DropDiskCacheReference();
+    loadedScript->DropBytecode();
+  }
+
+  if (fc) {
+    JS::DestroyFrontendContext(fc);
   }
 }
 

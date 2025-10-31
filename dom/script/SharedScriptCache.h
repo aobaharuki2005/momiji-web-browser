@@ -193,6 +193,8 @@ class SharedScriptCache final
   SharedScriptCache();
   void Init();
 
+  void UpdateDiskCache();
+
   // This has to be static because it's also called for loaders that don't have
   // a sheet cache (loaders that are not owned by a document).
   static void LoadCompleted(SharedScriptCache*, ScriptLoadData&);

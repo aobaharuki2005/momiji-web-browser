@@ -252,6 +252,11 @@ class LoadedScript : public nsIMemoryReporter {
     mSRIAndBytecode.clearAndFree();
   }
 
+  bool HasSRI() {
+    MOZ_ASSERT(IsSource() || IsCachedStencil());
+    return !mSRIAndBytecode.empty();
+  }
+
   void DropSRI() {
     MOZ_ASSERT(IsSource() || IsCachedStencil());
     mSRIAndBytecode.clearAndFree();
