@@ -10759,7 +10759,7 @@ fn offset_params_from_base_params(
             mFrame: params.mFrame,
             mPosition: params.mPosition,
             mPositionArea: params.mPositionArea,
-            mCache: params.mCache,
+            mAnchorPosReferenceData: params.mAnchorPosReferenceData,
         },
     }
 }

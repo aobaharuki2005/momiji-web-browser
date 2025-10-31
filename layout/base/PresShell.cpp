@@ -11683,33 +11683,18 @@ static bool NeedReflowForAnchorPos(
     // Size changed, needs reflow.
     return true;
   }
-  if (!anchorReference.mOffsetData) {
+  if (!anchorReference.mOrigin) {
     // Didn't resolve offsets, no need to reflow based on it.
     return false;
   }
-
-  const auto nearestScrollFrameInfo =
-      AnchorPositioningUtils::GetNearestScrollFrame(aAnchor);
-  if (anchorReference.mOffsetData->mDistanceToNearestScrollContainer !=
-      nearestScrollFrameInfo.mDistance) {
-    // Scroll container relationship changed, need to reflow.
-    return true;
-  }
-
   const auto posInfo = AnchorPositioningUtils::GetAnchorPosRect(
-      aPositioned->GetParent(), aAnchor, true);
+      aPositioned->GetParent(), aAnchor, true, nullptr);
   MOZ_ASSERT(posInfo, "Can't resolve anchor rect?");
-  const auto newOrigin = posInfo.ref().TopLeft();
-  const auto& prevOrigin = anchorReference.mOffsetData.ref().mOrigin;
+  const auto newOrigin = posInfo.ref().mRect.TopLeft();
+  const auto& prevOrigin = anchorReference.mOrigin.ref();
   // Did the offset change?
   return newOrigin != prevOrigin;
 }
-
-struct DefaultAnchorInfo {
-  const nsAtom* mName;
-  const nsIFrame* mAnchor;
-  DistanceToNearestScrollContainer mDistanceToNearestScrollContainer;
-};
 
 PresShell::AnchorPosUpdateResult PresShell::UpdateAnchorPosLayout() {
   if (mAnchorPosPositioned.IsEmpty()) {
@@ -11737,237 +11722,191 @@ PresShell::AnchorPosUpdateResult PresShell::UpdateAnchorPosLayout() {
       // Already marked for reflow.
       continue;
     }
-    const auto defaultAnchorInfo = [&]() -> Maybe<DefaultAnchorInfo> {
-      const auto* anchorName =
-          AnchorPositioningUtils::GetUsedAnchorName(positioned, nullptr);
-      if (!anchorName) {
-        return Nothing{};
-      }
+    for (const auto& kv : *anchorPosReferenceData) {
+      const auto& data = kv.GetData();
+      const auto& anchorName = kv.GetKey();
       const auto* anchor = GetAnchorPosAnchor(anchorName, positioned);
-      if (!anchor) {
-        return Nothing{};
+      if (NeedReflowForAnchorPos(anchor, positioned, data)) {
+        result = AnchorPosUpdateResult::NeedReflow;
+        // Abspos frames should not affect ancestor intrinsics.
+        FrameNeedsReflow(positioned, IntrinsicDirty::None,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
       }
-      const auto nearestScrollFrame =
-          AnchorPositioningUtils::GetNearestScrollFrame(anchor);
-      return Some(
-          DefaultAnchorInfo{anchorName, anchor, nearestScrollFrame.mDistance});
-    }();
-    bool shouldReflow = false;
-    if (defaultAnchorInfo &&
-        defaultAnchorInfo->mDistanceToNearestScrollContainer !=
-            anchorPosReferenceData->mDistanceToDefaultScrollContainer) {
-      // Default anchor's nearest scroller changed, reflow.
-      shouldReflow = true;
-    } else {
-      const auto GetAnchor =
-          [&](const nsAtom* aName,
-              const nsIFrame* aPositioned) -> const nsIFrame* {
-        if (!defaultAnchorInfo) {
-          return GetAnchorPosAnchor(aName, aPositioned);
-        }
-        const auto* defaultAnchorName = defaultAnchorInfo->mName;
-        if (aName != defaultAnchorName) {
-          return GetAnchorPosAnchor(aName, aPositioned);
-        }
-        return defaultAnchorInfo->mAnchor;
-      };
-      for (const auto& kv : *anchorPosReferenceData) {
-        const auto& data = kv.GetData();
-        const auto& anchorName = kv.GetKey();
-        const auto* anchor = GetAnchor(anchorName, positioned);
-        if (NeedReflowForAnchorPos(anchor, positioned, data)) {
-          shouldReflow = true;
-          break;
-        }
-      }
-    }
-    if (shouldReflow) {
-      result = AnchorPosUpdateResult::NeedReflow;
-      // Abspos frames should not affect ancestor intrinsics.
-      FrameNeedsReflow(positioned, IntrinsicDirty::None,
-                       NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
   return result;
 }
 
-using AffectedAnchor = AnchorPosDefaultAnchorCache;
-struct AffectedAnchorGroup {
-  const nsAtom* mAnchorName;
-  nsTArray<AffectedAnchor> mFrames;
-};
+static ScrollContainerFrame* FindScrollContainerFrameOf(
+    const nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame, "NULL frame for FindScrollContainerFrameOf()");
+  auto* parent = aFrame->GetParent();
+  return nsLayoutUtils::GetNearestScrollContainerFrame(
+      parent, nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                  nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+}
 
-static nsTArray<AffectedAnchorGroup> FindAnchorsAffectedByScroll(
-    const nsTHashMap<RefPtr<const nsAtom>, nsTArray<nsIFrame*>>& aAnchors,
-    const ScrollContainerFrame* aScrollContainer) {
-  const auto AffectedByScrollContainer =
-      [](const nsIFrame* aFrame, const ScrollContainerFrame* aScrollContainer) {
-        MOZ_ASSERT(aFrame);
-        MOZ_ASSERT(aScrollContainer);
-        return aFrame == aScrollContainer ||
-               nsLayoutUtils::IsProperAncestorFrame(aScrollContainer, aFrame);
-      };
+static bool UnderScrollContainer(nsIFrame* aFrame,
+                                 const ScrollContainerFrame* aScrollContainer) {
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aScrollContainer);
+  return aFrame == aScrollContainer ||
+         nsLayoutUtils::IsProperAncestorFrame(aScrollContainer, aFrame);
+}
 
+void PresShell::UpdateAnchorPosLayoutForScroll(
+    ScrollContainerFrame* aScrollContainer) {
+  if (mAnchorPosAnchors.IsEmpty()) {
+    return;
+  }
+
+  AUTO_PROFILER_MARKER_UNTYPED("UpdateAnchorPosLayoutForScroll", LAYOUT, {});
+  // TODO(dshin, bug 1923401): What follows is a non-spec compliant
+  // implementation of scroll handling for anchor positioning. Specifically, it
+  // will compensate for any offset between anchor and all positioned elements,
+  // instead of compensating in axes anchoring to elements in the same scroller
+  // as the default anchor. As a result, positioned elements will resize to
+  // stay attached to all anchors. This needs to be adressed after we stop
+  // storing anchor offset that includes scroll offsets.
+  // TODO(dshin, bug 1987463): After bug 1923401, we still need this code path
+  // to update the scroll offset, so it's worth investigating further
+  // optimizations.
+  struct AffectedAnchor {
+    const nsIFrame* mFrame;
+    ScrollContainerFrame* mNearestScrollContainer;
+  };
+  struct AffectedAnchorGroup {
+    const nsAtom* mAnchorName;
+    nsTArray<AffectedAnchor> mFrames;
+  };
+  struct Comparator {
+    bool Equals(const AffectedAnchor& aEntry, const nsIFrame* aFrame) const {
+      return aEntry.mFrame == aFrame;
+    }
+  };
+
+  // First, find all anchors under this scroll container. Can look at positioned
+  // frames' anchor references first, but we want to avoid anchor lookups if we
+  // can.
   nsTArray<AffectedAnchorGroup> affectedAnchors;
-  // We keep only referenced anchors' name in positioned frames to avoid dealing
-  // with lifetime issues associated with it. Now we need to re-establish that
-  // association.
-  for (const auto& kv : aAnchors) {
+  for (const auto& kv : mAnchorPosAnchors) {
     const auto& anchorFrames = kv.GetData();
     Maybe<nsTArray<AffectedAnchor>> affected;
     for (const auto& frame : anchorFrames) {
-      const auto* scrollContainer =
-          AnchorPositioningUtils::GetNearestScrollFrame(frame).mScrollContainer;
-      if (!scrollContainer) {
-        // Fixed-pos anchor, likely
+      auto* nearestScrollFrame = FindScrollContainerFrameOf(frame);
+      if (!nearestScrollFrame) {
+        // Fixed-pos anchor.
         continue;
       }
-      // Does this scroll container match a anchor's nearest scroll container,
-      // or contain it?
-      if (!AffectedByScrollContainer(scrollContainer, aScrollContainer)) {
+      if (!UnderScrollContainer(nearestScrollFrame, aScrollContainer)) {
         continue;
       }
       if (affected.isNothing()) {
         affected = Some(nsTArray<AffectedAnchor>{anchorFrames.Length()});
       }
-      affected.ref().AppendElement(AffectedAnchor{frame, scrollContainer});
+      affected.ref().AppendElement(AffectedAnchor{frame, nearestScrollFrame});
     }
     if (affected.isSome()) {
       affectedAnchors.AppendElement(
           AffectedAnchorGroup{kv.GetKey(), std::move(*affected)});
     }
   }
-  return affectedAnchors;
-}
-
-struct FindScrollCompensatedAnchorResult {
-  const AffectedAnchor& mAnchorInfo;
-  AnchorPosReferenceData& mReferenceData;
-};
-
-// Given a list of anchors affected by scrolling, find one that the given
-// positioned frame need to compensate scroll for.
-static Maybe<FindScrollCompensatedAnchorResult> FindScrollCompensatedAnchor(
-    const PresShell* aPresShell,
-    const nsTArray<AffectedAnchorGroup>& aAffectedAnchors,
-    const nsIFrame* aPositioned) {
-  MOZ_ASSERT(aPositioned->IsAbsolutelyPositioned(),
-             "Anchor positioned frame is not absolutely positioned?");
-  auto* referencedAnchors =
-      aPositioned->GetProperty(nsIFrame::AnchorPosReferences());
-  if (!referencedAnchors || referencedAnchors->IsEmpty()) {
-    return Nothing{};
-  }
-
-  if (!referencedAnchors->mDefaultAnchorName) {
-    return Nothing{};
-  }
-
-  const auto compensatingForScroll =
-      referencedAnchors->CompensatingForScrollAxes();
-  if (compensatingForScroll.isEmpty()) {
-    return Nothing{};
-  }
-
-  struct Comparator {
-    bool Equals(const AffectedAnchor& aEntry, const nsIFrame* aFrame) const {
-      return aEntry.mAnchor == aFrame;
-    }
-  };
-
-  // Find the relevant default anchor.
-  const auto* defaultAnchorName =
-      AnchorPositioningUtils::GetUsedAnchorName(aPositioned, nullptr);
-  nsIFrame const* defaultAnchor = nullptr;
-  for (const auto& group : aAffectedAnchors) {
-    if (defaultAnchorName &&
-        !group.mAnchorName->Equals(defaultAnchorName->GetUTF16String(),
-                                   defaultAnchorName->GetLength())) {
-      // Default anchor has a name, and it's different from this affected
-      // anchor group.
-      continue;
-    }
-    if (!defaultAnchor) {
-      defaultAnchor =
-          aPresShell->GetAnchorPosAnchor(defaultAnchorName, aPositioned);
-      if (!defaultAnchor) {
-        // Default anchor not valid for this positioned frame.
-        return Nothing{};
-      }
-    }
-    const auto& anchors = group.mFrames;
-    // Find the affected anchor that not only matches in name, but in actual
-    // frame.
-    const auto idx = anchors.IndexOf(defaultAnchor, 0, Comparator{});
-    if (idx == anchors.NoIndex) {
-      // We found the default anchor, but it wasn't correct.
-      break;
-    }
-    const auto& info = anchors.ElementAt(idx);
-    return Some(FindScrollCompensatedAnchorResult{info, *referencedAnchors});
-  }
-
-  return Nothing{};
-}
-
-static bool CheckOverflow(nsIFrame* aPositioned, const nsPoint& aOffset,
-                          const AnchorPosReferenceData& aData) {
-  const auto* stylePos = aPositioned->StylePosition();
-  const auto hasFallbacks = !stylePos->mPositionTryFallbacks._0.IsEmpty();
-  const auto visibilityDependsOnOverflow =
-      stylePos->mPositionVisibility == StylePositionVisibility::NO_OVERFLOW;
-  if (!hasFallbacks && !visibilityDependsOnOverflow) {
-    return false;
-  }
-  const auto* cb = aPositioned->GetParent();
-  MOZ_ASSERT(cb);
-  const auto overflows = !AnchorPositioningUtils::FitsInContainingBlock(
-      aData.mContainingBlockRect - aOffset, cb->GetPaddingRect(),
-      aPositioned->GetRect());
-  aPositioned->AddOrRemoveStateBits(NS_FRAME_POSITION_VISIBILITY_HIDDEN,
-                                    visibilityDependsOnOverflow && overflows);
-  return hasFallbacks && overflows;
-}
-
-// https://drafts.csswg.org/css-anchor-position-1/#default-scroll-shift
-void PresShell::UpdateAnchorPosForScroll(
-    const ScrollContainerFrame* aScrollContainer) {
-  if (mAnchorPosAnchors.IsEmpty()) {
-    return;
-  }
-
-  AUTO_PROFILER_MARKER_UNTYPED("UpdateAnchorPosForScroll", LAYOUT, {});
-
-  // First, find all anchors under this scroll container. Can look at positioned
-  // frames' anchor references first, but we want to avoid anchor lookups if we
-  // can.
-  nsTArray<AffectedAnchorGroup> affectedAnchors =
-      FindAnchorsAffectedByScroll(mAnchorPosAnchors, aScrollContainer);
 
   if (affectedAnchors.IsEmpty()) {
     return;
   }
 
-  // Now, update all affected positioned elements' scroll offsets.
+  // Now, find positioned frames that depend on anchors under the scroll frame.
   for (auto* positioned : mAnchorPosPositioned) {
-    const auto scrollDependency =
-        FindScrollCompensatedAnchor(this, affectedAnchors, positioned);
-    if (!scrollDependency) {
+    MOZ_ASSERT(positioned->IsAbsolutelyPositioned(),
+               "Anchor positioned frame is not absolutely positioned?");
+    if (positioned->HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
+      // Already dirty? Skip.
       continue;
     }
-    const auto& info = scrollDependency->mAnchorInfo;
-    auto& referenceData = scrollDependency->mReferenceData;
-    const auto offset = AnchorPositioningUtils::GetScrollOffsetFor(
-        referenceData.CompensatingForScrollAxes(), positioned, info);
-    if (referenceData.mDefaultScrollShift != offset) {
-      positioned->SetPosition(positioned->GetNormalPosition() - offset);
-      // Update positioned frame's overflow, then the absolute containing
-      // block's.
-      positioned->UpdateOverflow();
-      nsContainerFrame::PlaceFrameView(positioned);
-      positioned->GetParent()->UpdateOverflow();
-      referenceData.mDefaultScrollShift = offset;
-      if (CheckOverflow(positioned, offset, referenceData)) {
+
+    const auto* anchorPosReferenceData =
+        positioned->GetProperty(nsIFrame::AnchorPosReferences());
+    if (!anchorPosReferenceData || anchorPosReferenceData->IsEmpty()) {
+      // If it doesn't reference any anchors then it doesn't compensate for
+      // scroll.
+      continue;
+    }
+
+    const nsAtom* defaultAnchorName =
+        AnchorPositioningUtils::GetUsedAnchorName(positioned, nullptr);
+    if (!defaultAnchorName) {
+      continue;
+    }
+    // We might not need to do this GetAnchorPosAnchor call at all if none of
+    // the affected anchors are referenced by positioned below. We could
+    // improve this.
+    const nsIFrame* defaultAnchorFrame =
+        GetAnchorPosAnchor(defaultAnchorName, positioned);
+    if (!defaultAnchorFrame) {
+      continue;
+    }
+    auto* nearestScrollToDefaultAnchor =
+        FindScrollContainerFrameOf(defaultAnchorFrame);
+
+    auto* absoluteContainingBlock = positioned->GetParent();
+
+    if (UnderScrollContainer(absoluteContainingBlock,
+                             nearestScrollToDefaultAnchor)) {
+      // If the positioned element's containing block is under the only possible
+      // anchor scroll container that it can scroll with, they'll scroll
+      // together without intervention, so skip the update.
+      continue;
+    }
+
+    const auto* stylePos = positioned->StylePosition();
+    if (!stylePos->mPositionAnchor.IsIdent()) {
+      auto* nearestScrollFrame = FindScrollContainerFrameOf(defaultAnchorFrame);
+      if (!nearestScrollFrame) {
+        // Fixed-pos anchor.
+        continue;
+      }
+      if (!UnderScrollContainer(nearestScrollFrame, aScrollContainer)) {
+        continue;
+      }
+      const auto* data = anchorPosReferenceData->Lookup(defaultAnchorName);
+      if (!data) {
+        continue;
+      }
+      if (NeedReflowForAnchorPos(defaultAnchorFrame, positioned, *data)) {
+        // Abspos frames should not affect ancestor intrinsics.
+        FrameNeedsReflow(positioned, IntrinsicDirty::None,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
+      }
+      continue;
+    }
+
+    for (const auto& entry : affectedAnchors) {
+      const auto* anchorName = entry.mAnchorName;
+      const auto& anchors = entry.mFrames;
+      const auto* data = anchorPosReferenceData->Lookup(anchorName);
+      if (!data) {
+        continue;
+      }
+      const auto* anchorFrame =
+          anchorName == defaultAnchorName
+              ? defaultAnchorFrame
+              : GetAnchorPosAnchor(anchorName, positioned);
+      const auto idx = anchors.IndexOf(anchorFrame, 0, Comparator{});
+      if (idx == nsTArray<AffectedAnchor>::NoIndex) {
+        // Referring to an anchor of the same name but unaffected by scrolling -
+        // skip.
+        continue;
+      }
+      auto* anchorScrollContainer =
+          anchors.ElementAt(idx).mNearestScrollContainer;
+      if (anchorScrollContainer != nearestScrollToDefaultAnchor) {
+        // We do not compensate for scroll for this anchor
+        continue;
+      }
+
+      if (NeedReflowForAnchorPos(anchorFrame, positioned, *data)) {
+        // Abspos frames should not affect ancestor intrinsics.
         FrameNeedsReflow(positioned, IntrinsicDirty::None,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
       }
