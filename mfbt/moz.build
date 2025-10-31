@@ -166,7 +166,6 @@ UNIFIED_SOURCES += [
     "double-conversion/double-conversion/strtod.cc",
     "FloatingPoint.cpp",
     "HashFunctions.cpp",
-    "JSONWriter.cpp",
     "Poison.cpp",
     "RandomNum.cpp",
     "RefCounted.cpp",

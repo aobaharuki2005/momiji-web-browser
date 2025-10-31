@@ -38,7 +38,6 @@ elif CONFIG["OS_TARGET"] == "Android":
 if CONFIG["MOZ_REPLACE_MALLOC_STATIC"] and (CONFIG["MOZ_DMD"] or CONFIG["MOZ_PHC"]):
     UNIFIED_SOURCES += [
         "/mfbt/HashFunctions.cpp",
-        "/mfbt/JSONWriter.cpp",
     ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
