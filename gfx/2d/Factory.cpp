@@ -228,7 +228,6 @@ already_AddRefed<SharedFTFace> FTUserFontData::CloneFace(int aFaceIndex) {
 // Note: mDeviceLock must be held when mutating these values.
 StaticRefPtr<ID3D11Device> Factory::mD3D11Device;
 StaticRefPtr<IDWriteFactory> Factory::mDWriteFactory;
-bool Factory::mDWriteFactoryInitialized = false;
 StaticRefPtr<IDWriteFontCollection> Factory::mDWriteSystemFonts;
 StaticMutex Factory::mDeviceLock;
 #endif
@@ -748,11 +747,9 @@ RefPtr<IDWriteFactory> Factory::GetDWriteFactory() {
 RefPtr<IDWriteFactory> Factory::EnsureDWriteFactory() {
   StaticMutexAutoLock lock(mDeviceLock);
 
-  if (mDWriteFactoryInitialized) {
+  if (mDWriteFactory) {
     return mDWriteFactory;
   }
-
-  mDWriteFactoryInitialized = true;
 
   HMODULE dwriteModule = LoadLibrarySystem32(L"dwrite.dll");
   decltype(DWriteCreateFactory)* createDWriteFactory =
