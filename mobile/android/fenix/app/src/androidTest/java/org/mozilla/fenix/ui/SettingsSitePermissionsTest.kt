@@ -19,6 +19,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getMutedVideoPageAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getVideoPageAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
@@ -466,6 +467,7 @@ class SettingsSitePermissionsTest : TestSetup() {
             browserScreen {
             }.openThreeDotMenu {
             }.refreshPage {
+                waitForPageToLoad(pageLoadWaitingTime = waitingTimeLong)
             }.clickRequestDRMControlledContentAccessButton {}
             browserScreen {
                 verifyPageContent("DRM-controlled content allowed")
