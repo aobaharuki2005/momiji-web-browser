@@ -90,6 +90,9 @@ skip-if = ["os == 'linux' && os_version == '24.04' && arch == 'x86_64' && opt &&
 
 ["browser_html_discover_view_prefs.js"]
 
+["browser_html_forced_colors_notice.js"]
+skip-if = ["os != 'win'"] # Forced-colors is only supported on Windows
+
 ["browser_html_list_view.js"]
 skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt && a11y_checks && swgl"] # Bug 1781893
 

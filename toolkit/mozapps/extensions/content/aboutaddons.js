@@ -4155,6 +4155,33 @@ class ColorwayRemovalNotice extends HTMLElement {
 }
 customElements.define("colorway-removal-notice", ColorwayRemovalNotice);
 
+class ForcedColorsNotice extends HTMLElement {
+  connectedCallback() {
+    this.forcedColorsMediaQuery = window.matchMedia("(forced-colors)");
+    this.forcedColorsMediaQuery.addListener(this);
+    this.render();
+  }
+
+  render() {
+    this.hidden = !this.forcedColorsMediaQuery.matches;
+    if (!this.hidden && this.childElementCount == 0) {
+      this.appendChild(importTemplate("forced-colors-notice"));
+    }
+  }
+
+  handleEvent(e) {
+    if (e.type == "change") {
+      this.render();
+    }
+  }
+
+  disconnectedCallback() {
+    this.forcedColorsMediaQuery?.removeListener(this);
+    this.forcedColorsMediaQuery = null;
+  }
+}
+customElements.define("forced-colors-notice", ForcedColorsNotice);
+
 class TaarMessageBar extends HTMLElement {
   connectedCallback() {
     this.hidden =
@@ -4322,10 +4349,13 @@ gViewController.defineView("list", async type => {
     filterFn: disabledAddonsFilterFn,
   });
 
-  // Show the colorway warning only in themes list view
+  // Show the colorway and forced-colors notice only in themes list view.
   if (type === "theme") {
-    const warning = document.createElement("colorway-removal-notice");
-    frag.appendChild(warning);
+    const colorwayNotice = document.createElement("colorway-removal-notice");
+    frag.appendChild(colorwayNotice);
+
+    const forcedColorsNotice = document.createElement("forced-colors-notice");
+    frag.appendChild(forcedColorsNotice);
   }
 
   list.setSections(sections);

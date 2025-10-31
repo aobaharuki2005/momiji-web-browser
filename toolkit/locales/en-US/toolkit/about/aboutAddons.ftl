@@ -344,6 +344,11 @@ colorway-removal-notice-message =
 colorway-removal-notice-learn-more = Learn more
 colorway-removal-notice-button = Get updated colorways themes
 
+# Notice to make user aware that themes are not applied in forced colors mode.
+# This notice is only visible on Windows.
+forced-colors-theme-notice =
+    .message = Your Windows contrast settings are overriding { -brand-short-name } themes. Turn off these settings to use themes in { -brand-short-name }.
+
 privacy-policy = Privacy Policy
 
 # Refers to the author of an add-on, shown below the name of the add-on.
