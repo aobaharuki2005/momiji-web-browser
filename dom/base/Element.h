@@ -1044,10 +1044,6 @@ class Element : public FragmentOrElement {
                    const nsAString& aValue,
                    nsIPrincipal* aMaybeScriptedPrincipal, bool aNotify);
 
-  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName, nsAtom* aPrefix,
-                   nsAtom* aValue, nsIPrincipal* aMaybeScriptedPrincipal,
-                   bool aNotify);
-
   /**
    * Remove an attribute so that it is no longer explicitly specified.
    *
@@ -2035,16 +2031,6 @@ class Element : public FragmentOrElement {
    * The supported values of blocking attribute for use with nsDOMTokenList.
    */
   static const DOMTokenListSupportedToken sSupportedBlockingValues[];
-
-  /**
-   * Common implementation for SetAttr overloads. Takes a callback to perform
-   * the type-specific parsing and value setting.
-   */
-  template <typename ParseFunc>
-  nsresult SetAttrInternal(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
-                           const nsAttrValueOrString& aValueForComparison,
-                           nsIPrincipal* aSubjectPrincipal, bool aNotify,
-                           ParseFunc&& aParseFn);
 
   /**
    * Set attribute and (if needed) notify documentobservers.  This will send the

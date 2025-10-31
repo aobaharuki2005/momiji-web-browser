@@ -67,8 +67,6 @@ inline nsHtml5HtmlAttributes* GetAttributes() { return attributes; }
  */
 bool EnsureBufferSpace(int32_t aLength);
 
-nsHtml5String TryAtomizeForSingleDigit();
-
 bool TemplatePushedOrHeadPopped();
 
 void RememberGt(int32_t aPos);
