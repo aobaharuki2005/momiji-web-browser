@@ -162,6 +162,8 @@ export const ExperimentAPI = new (class {
     telemetryEnabled: false,
   };
 
+  #studiesEnabled = false;
+
   constructor() {
     if (IS_MAIN_PROCESS) {
       // Ensure that the profile ID is cached in a pref.
@@ -181,24 +183,7 @@ export const ExperimentAPI = new (class {
       }
     }
 
-    const onStudiesEnabledChanged = this.#onStudiesEnabledChanged.bind(this);
-
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this.#prefValues,
-      "studiesEnabled",
-      STUDIES_OPT_OUT_PREF,
-      false,
-      onStudiesEnabledChanged
-    );
-
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this.#prefValues,
-      "telemetryEnabled",
-      UPLOAD_ENABLED_PREF,
-      false,
-      onStudiesEnabledChanged
-    );
-
+    this._onStudiesEnabledChanged = this._onStudiesEnabledChanged.bind(this);
     this._annotateCrashReport = this._annotateCrashReport.bind(this);
     this._removeCrashReportAnnotator =
       this._removeCrashReportAnnotator.bind(this);
@@ -244,6 +229,10 @@ export const ExperimentAPI = new (class {
 
     this.#initialized = true;
 
+    // Compute the enabled state and cache it. It is possible for the enabled
+    // state to change during ExperimentAPI initialization, but we do not
+    // register our observers until the end of this function.
+    this.#computeEnabled();
     const studiesEnabled = this.studiesEnabled;
 
     try {
@@ -310,10 +299,13 @@ export const ExperimentAPI = new (class {
       );
     }
 
+    Services.prefs.addObserver(STUDIES_OPT_OUT_PREF, this._onStudiesEnabledChanged);
+    Services.prefs.addObserver(UPLOAD_ENABLED_PREF, this._onStudiesEnabledChanged);
+
     // If Nimbus was disabled between the start of this function and registering
     // the pref observers we have not handled it yet.
     if (studiesEnabled !== this.studiesEnabled) {
-      await this.#onStudiesEnabledChanged();
+      await this._onStudiesEnabledChanged();
     }
 
     return true;
@@ -369,15 +361,33 @@ export const ExperimentAPI = new (class {
     this.#experimentManager?.store.off("update", this._annotateCrashReport);
     this.#experimentManager = null;
 
+    Services.prefs.removeObserver(STUDIES_OPT_OUT_PREF, this._onStudiesEnabledChanged);
+    Services.prefs.removeObserver(UPLOAD_ENABLED_PREF, this._onStudiesEnabledChanged);
+
     this.#initialized = false;
   }
 
-  get studiesEnabled() {
-    return (
+  #computeEnabled() {
+    this.#prefValues.studiesEnabled = Services.prefs.getBoolPref(STUDIES_OPT_OUT_PREF, false);
+    this.#prefValues.telemetryEnabled = Services.prefs.getBoolPref(UPLOAD_ENABLED_PREF, false)
+
+    this.#studiesEnabled = (
       this.#prefValues.studiesEnabled &&
       this.#prefValues.telemetryEnabled &&
       Services.policies.isAllowed("Shield")
     );
+  }
+
+  get enabled() {
+    return this.studiesEnabled || this.labsEnabled;
+  }
+
+  get labsEnabled() {
+    return Services.policies.isAllowed("FirefoxLabs");
+  }
+
+  get studiesEnabled() {
+    return this.#studiesEnabled;
   }
 
   /**
@@ -445,18 +455,35 @@ export const ExperimentAPI = new (class {
     }
   }
 
-  async #onStudiesEnabledChanged() {
+  async _onStudiesEnabledChanged(_topic, _subject, prefName) {
+    const studiesPreviouslyEnabled = this.studiesEnabled;
+
+    switch (prefName) {
+      case STUDIES_OPT_OUT_PREF:
+      case UPLOAD_ENABLED_PREF:
+        this.#computeEnabled();
+        break;
+
+      default:
+        return;
+    }
+
     if (!this.#initialized) {
       return;
     }
 
-    if (!this.studiesEnabled) {
-      await this.manager._handleStudiesOptOut();
+    if (studiesPreviouslyEnabled !== this.studiesEnabled) {
+      if (!this.studiesEnabled) {
+        this.manager._handleStudiesOptOut();
+      }
+
+      // Labs is disabled only by policy, so it cannot be disabled at runtime.
+      // Thus we only need to notify the RemoteSettingsExperimentLoader when
+      // studies become enabled or disabled.
+      await this._rsLoader.onEnabledPrefChange();
+
+      Services.obs.notifyObservers(null, this.STUDIES_ENABLED_CHANGED);
     }
-
-    await this._rsLoader.onEnabledPrefChange();
-
-    Services.obs.notifyObservers(null, this.STUDIES_ENABLED_CHANGED);
   }
 
   /**

@@ -81,6 +81,7 @@ const UnenrollReason = Object.freeze({
   CHANGED_PREF: "changed-pref",
   FORCE_ENROLLMENT: "force-enrollment",
   INDIVIDUAL_OPT_OUT: "individual-opt-out",
+  LABS_DIABLED: "labs-disabled",
   LABS_OPT_OUT: "labs-opt-out",
   PREF_FLIPS_CONFLICT: "prefFlips-conflict",
   PREF_FLIPS_FAILED: "prefFlips-failed",
