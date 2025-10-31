@@ -90,7 +90,7 @@ def common_setup(config, job, taskdesc, command):
             )
         )
 
-    if run["sparse-profile"]:
+    if config.params["repository_type"] == "hg" and run["sparse-profile"]:
         sparse_profile_prefix = run.pop(
             "sparse-profile-prefix", "build/sparse-profiles"
         )

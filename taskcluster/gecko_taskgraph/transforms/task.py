@@ -2558,6 +2558,7 @@ def check_run_task_caches(config, tasks):
     )
 
     re_sparse_checkout_cache = re.compile("^checkouts-sparse")
+    re_shallow_checkout_cache = re.compile("^checkouts-git-shallow")
 
     cache_prefix = "{trust_domain}-level-{level}-".format(
         trust_domain=config.graph_config["trust-domain"],
@@ -2574,7 +2575,9 @@ def check_run_task_caches(config, tasks):
         run_task = is_run_task(main_command)
 
         require_sparse_cache = False
+        require_shallow_cache = False
         have_sparse_cache = False
+        have_shallow_cache = False
 
         if run_task:
             for arg in command[1:]:
@@ -2601,6 +2604,10 @@ def check_run_task_caches(config, tasks):
                     require_sparse_cache = True
                     break
 
+                if arg == "--gecko-shallow-clone":
+                    require_shallow_cache = True
+                    break
+
         for cache in payload.get("cache", {}):
             if not cache.startswith(cache_prefix):
                 raise Exception(
@@ -2614,6 +2621,9 @@ def check_run_task_caches(config, tasks):
 
             if re_sparse_checkout_cache.match(cache):
                 have_sparse_cache = True
+
+            if re_shallow_checkout_cache.match(cache):
+                have_shallow_cache = True
 
             if not re_reserved_caches.match(cache):
                 continue
@@ -2638,6 +2648,13 @@ def check_run_task_caches(config, tasks):
                 "%s is using a sparse checkout but not using "
                 "a sparse checkout cache; change the checkout "
                 "cache name so it is sparse aware" % task["label"]
+            )
+
+        if require_shallow_cache and not have_shallow_cache:
+            raise Exception(
+                "%s is using a shallow clone but not using "
+                "a shallow checkout cache; change the checkout "
+                "cache name so it is shallow aware" % task["label"]
             )
 
         yield task
