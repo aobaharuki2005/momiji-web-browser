@@ -3089,6 +3089,41 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * Make sure the legacy telemetry client ID exists and write telemetry files
+   * to the profile we are recovering into.
+   *
+   * @param {string} profilePath The path of the newly recovered profile
+   */
+  async #writeTelemetryFiles(profilePath) {
+    // Make sure that a legacy telemetry client ID exists and is written to
+    // disk.
+    let clientID = await lazy.ClientID.getClientID();
+    lazy.logConsole.debug("Current client ID: ", clientID);
+    // Next, copy over the legacy telemetry client ID state from the currently
+    // running profile. The newly created profile that we're recovering into
+    // should inherit this client ID.
+    const TELEMETRY_STATE_FILENAME = "state.json";
+    const TELEMETRY_STATE_FOLDER = "datareporting";
+    await IOUtils.makeDirectory(
+      PathUtils.join(profilePath, TELEMETRY_STATE_FOLDER)
+    );
+    await IOUtils.copy(
+      /* source */
+      PathUtils.join(
+        PathUtils.profileDir,
+        TELEMETRY_STATE_FOLDER,
+        TELEMETRY_STATE_FILENAME
+      ),
+      /* destination */
+      PathUtils.join(
+        profilePath,
+        TELEMETRY_STATE_FOLDER,
+        TELEMETRY_STATE_FILENAME
+      )
+    );
+  }
+
+  /**
    * If the encState exists, write the encrypted state object to the
    * ARCHIVE_ENCRYPTION_STATE_FILE.
    *
@@ -3202,6 +3237,8 @@ export class BackupService extends EventTarget {
         profile.rootDir.path
       );
 
+      await this.#writeTelemetryFiles(profile.rootDir.path);
+
       await this.#maybeWriteEncryptedStateObject(
         encState,
         profile.rootDir.path
@@ -3305,6 +3342,12 @@ export class BackupService extends EventTarget {
         recoveryPath,
         profile.path
       );
+
+      // We don't want to copy the client ID if this is a copied profile
+      // because this profile will be a new profile in the profile group.
+      if (!copiedProfile) {
+        await this.#writeTelemetryFiles(profile.path);
+      }
 
       await this.#maybeWriteEncryptedStateObject(encState, profile.path);
 

@@ -163,11 +163,11 @@ class BackupTest(MarionetteTestCase):
 
         # Recover the created backup into a new profile directory. Also get out
         # the client ID of this profile, because we're going to want to make
-        # sure that this client ID is not inherited from the intermediate profile.
+        # sure that this client ID is inherited by the recovered profile.
         [
             newProfileName,
             newProfilePath,
-            intermediateClientID,
+            expectedClientID,
             osKeyStoreLabel,
         ] = self.marionette.execute_async_script(
             """
@@ -201,9 +201,9 @@ class BackupTest(MarionetteTestCase):
               throw new Error("Could not create recovery profile.");
             }
 
-            let intermediateClientID = await ClientID.getClientID();
+            let expectedClientID = await ClientID.getClientID();
 
-            return [newProfile.name, newProfile.rootDir.path, intermediateClientID, OSKeyStore.STORE_LABEL];
+            return [newProfile.name, newProfile.rootDir.path, expectedClientID, OSKeyStore.STORE_LABEL];
           })().then(outerResolve);
         """,
             script_args=[archivePath, recoveryCode, recoveryPath],
@@ -211,7 +211,7 @@ class BackupTest(MarionetteTestCase):
 
         print(f"Recovery name: {newProfileName}")
         print(f"Recovery path: {newProfilePath}")
-        print(f"Intermediate clientID: {intermediateClientID}")
+        print(f"Expected clientID: {expectedClientID}")
         print(f"Persisting fake OSKeyStore label: {osKeyStoreLabel}")
 
         self.marionette.quit()
@@ -270,8 +270,8 @@ class BackupTest(MarionetteTestCase):
             script_args=[osKeyStoreLabel],
         )
 
-        # Now also ensure that the recovered profile new client ID and not that
-        # one from the intermediate profile that initiated recovery.
+        # Now also ensure that the recovered profile inherited the client ID
+        # from the profile that initiated recovery.
         recoveredClientID = self.marionette.execute_async_script(
             """
           const { ClientID } = ChromeUtils.importESModule("resource://gre/modules/ClientID.sys.mjs");
@@ -281,7 +281,7 @@ class BackupTest(MarionetteTestCase):
           })().then(outerResolve);
         """
         )
-        self.assertNotEqual(recoveredClientID, intermediateClientID)
+        self.assertEqual(recoveredClientID, expectedClientID)
 
         self.marionette.quit()
         self.marionette.instance.profile = originalProfile
