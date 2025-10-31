@@ -25,6 +25,9 @@ const SHARED_TOOLS = [
   },
 ];
 
+/**
+ * Test that createEngine successfully talks to the OpenAI client.
+ */
 add_task(async function test_openai_client() {
   const records = [
     {

@@ -3,6 +3,9 @@
 
 "use strict";
 
+/**
+ * Test the hub return values by default.
+ */
 add_task(async function test_hub_by_default() {
   const { cleanup, remoteClients } = await setup();
 
@@ -45,7 +48,7 @@ add_task(async function test_hub_by_default() {
 });
 
 /**
- * Tests a custom model hub
+ * Tests that the pipeline can use a custom model hub.
  */
 add_task(async function test_ml_custom_hub() {
   const { cleanup, remoteClients } = await setup();

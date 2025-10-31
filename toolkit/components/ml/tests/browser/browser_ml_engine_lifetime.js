@@ -3,17 +3,20 @@
 
 "use strict";
 
-const RAW_PIPELINE_OPTIONS = { taskName: "moz-echo", timeoutMS: -1 };
-const PIPELINE_OPTIONS = new PipelineOptions({
+const MOZ_ECHO_OPTIONS_RAW = { taskName: "moz-echo", timeoutMS: -1 };
+const MOZ_ECHO_OPTIONS = new PipelineOptions({
   taskName: "moz-echo",
   timeoutMS: -1,
 });
 
+/**
+ * Performing a basic engine initialization and run.
+ */
 add_task(async function test_ml_engine_basics() {
   const { cleanup, remoteClients } = await setup();
 
   info("Get the engine");
-  const engineInstance = await createEngine(RAW_PIPELINE_OPTIONS);
+  const engineInstance = await createEngine(MOZ_ECHO_OPTIONS_RAW);
 
   info("Check the inference process is running");
   Assert.equal(await checkForRemoteType("inference"), true);
@@ -42,18 +45,20 @@ add_task(async function test_ml_engine_basics() {
   await cleanup();
 });
 
+/**
+ * Test the Wasm failing to download triggering a rejection.
+ */
 add_task(async function test_ml_engine_wasm_rejection() {
   const { cleanup, remoteClients } = await setup();
 
   info("Get the engine");
-  const engineInstance = await createEngine(RAW_PIPELINE_OPTIONS);
+  const engineInstance = await createEngine(MOZ_ECHO_OPTIONS_RAW);
 
   info("Run the inference");
   const inferencePromise = engineInstance.run({ data: "This gets echoed." });
 
   info("Wait for the pending downloads.");
   await remoteClients["ml-onnx-runtime"].rejectPendingDownloads(1);
-  //await remoteClients.models.resolvePendingDownloads(1);
 
   let error;
   try {
@@ -83,8 +88,10 @@ add_task(async function test_ml_engine_parallel() {
   let sleepTimes = [300, 1000, 700, 0, 500, 900, 400, 800, 600, 100];
   let numCalls = 10;
 
+  const enginesSeen = new Set();
   async function run(x) {
-    const engineInstance = await createEngine(RAW_PIPELINE_OPTIONS);
+    const engineInstance = await createEngine(MOZ_ECHO_OPTIONS_RAW);
+    enginesSeen.add(engineInstance);
 
     let msg = `${x} - This gets echoed.`;
     let res = engineInstance.run({
@@ -117,6 +124,8 @@ add_task(async function test_ml_engine_parallel() {
     );
   }
 
+  Assert.equal(enginesSeen.size, 1, "Only one engine was created.");
+
   ok(
     !EngineProcess.areAllEnginesTerminated(),
     "The engine process is still active."
@@ -134,14 +143,13 @@ add_task(async function test_ml_engine_model_error() {
   const { cleanup, remoteClients } = await setup();
 
   info("Get the engine");
-  const engineInstance = await createEngine(RAW_PIPELINE_OPTIONS);
+  const engineInstance = await createEngine(MOZ_ECHO_OPTIONS_RAW);
 
   info("Run the inference with a throwing example.");
   const inferencePromise = engineInstance.run("throw");
 
   info("Wait for the pending downloads.");
   await remoteClients["ml-onnx-runtime"].resolvePendingDownloads(1);
-  //await remoteClients.models.resolvePendingDownloads(1);
 
   let error;
   try {
@@ -167,7 +175,7 @@ add_task(async function test_ml_engine_destruction() {
   const { cleanup, remoteClients } = await setup();
 
   info("Get engineInstance");
-  const engineInstance = await createEngine(PIPELINE_OPTIONS);
+  const engineInstance = await createEngine(MOZ_ECHO_OPTIONS);
 
   info("Run the inference");
   const inferencePromise = engineInstance.run({ data: "This gets echoed." });
@@ -200,20 +208,19 @@ add_task(async function test_ml_engine_destruction() {
 });
 
 /**
- * Tests that the engineInstanceModel's internal errors are correctly surfaced.
+ * Tests creating an engine after an error.
  */
 add_task(async function test_ml_engine_model_error() {
   const { cleanup, remoteClients } = await setup();
 
   info("Get the engine");
-  const engineInstance = await createEngine(RAW_PIPELINE_OPTIONS);
+  const engineInstance = await createEngine(MOZ_ECHO_OPTIONS_RAW);
 
   info("Run the inference with a throwing example.");
   const inferencePromise = engineInstance.run("throw");
 
   info("Wait for the pending downloads.");
   await remoteClients["ml-onnx-runtime"].resolvePendingDownloads(1);
-  //await remoteClients.models.resolvePendingDownloads(1);
 
   let error;
   try {
@@ -232,7 +239,7 @@ add_task(async function test_ml_engine_model_error() {
 });
 
 /**
- * Tests that we display a nice error message when the pref is off
+ * Tests that we display a nice error message when the "browser.ml.enable" pref is off.
  */
 add_task(async function test_pref_is_off() {
   await SpecialPowers.pushPrefEnv({
@@ -392,6 +399,9 @@ add_task(async function test_ml_dupe_engines() {
   await cleanup();
 });
 
+/**
+ * Tests that a worker can have an infinite timeout.
+ */
 add_task(async function test_ml_engine_infinite_worker() {
   const { cleanup, remoteClients } = await setup();
 
