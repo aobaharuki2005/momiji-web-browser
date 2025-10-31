@@ -194,6 +194,44 @@ const promise = (async function parseJSON() {
   const jsonString = input.jsonText.textContent;
   try {
     input.json = parseJsonLossless(jsonString);
+
+    // Expose a clean public API for accessing JSON data from the console
+    // This is not tied to internal implementation details
+    window.$json = {
+      // The parsed JSON data
+      get data() {
+        return input.json;
+      },
+      // The original JSON text
+      get text() {
+        return jsonString;
+      },
+      // HTTP headers
+      get headers() {
+        return JSONView.headers;
+      },
+    };
+
+    // Log a welcome message to the console
+    const intro = "font-size: 130%;";
+    const bold = "font-family: monospace; font-weight: bold;";
+    const reset = "";
+    console.log(
+      "%cData available from the console:%c\n\n" +
+        "%c$json.data%c - The parsed JSON object\n" +
+        "%c$json.text%c - The original JSON text\n" +
+        "%c$json.headers%c - HTTP request and response headers\n\n" +
+        "The JSON Viewer is documented here:\n" +
+        "https://firefox-source-docs.mozilla.org/devtools-user/json_viewer/",
+      intro,
+      reset,
+      bold,
+      reset,
+      bold,
+      reset,
+      bold,
+      reset
+    );
   } catch (err) {
     input.json = err;
     // Display the raw data tab for invalid json
