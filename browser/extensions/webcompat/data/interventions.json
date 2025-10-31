@@ -82,10 +82,6 @@
         "issue": "broken-interactive-elements",
         "matches": ["*://bathpublishing.com/*"]
       },
-      "1944022": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://drafthouse.com/*"]
-      },
       "1944024": {
         "issue": "broken-interactive-elements",
         "matches": ["*://dylantalkstone.com/*"]
