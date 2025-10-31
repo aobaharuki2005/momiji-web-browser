@@ -4841,23 +4841,6 @@
       }
     ]
   },
-  "1959132": {
-    "label": "www.samsung.com (columns fix)",
-    "bugs": {
-      "1959132": {
-        "issue": "broken-layout",
-        "matches": ["*://www.samsung.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "content_scripts": {
-          "css": ["bug1959132-www.samsung.com-column-size-fix.css"]
-        }
-      }
-    ]
-  },
   "1959444": {
     "label": "m.modanisa.com",
     "bugs": {
