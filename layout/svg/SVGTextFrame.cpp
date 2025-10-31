@@ -3456,8 +3456,8 @@ SVGBBox SVGTextFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
   SVGBBox bbox;
 
   if (aFlags & SVGUtils::eForGetClientRects) {
-    if (!mRect.IsEmpty()) {
-      Rect rect = NSRectToRect(mRect, AppUnitsPerCSSPixel());
+    Rect rect = NSRectToRect(mRect, AppUnitsPerCSSPixel());
+    if (!rect.IsEmpty()) {
       bbox = aToBBoxUserspace.TransformBounds(rect);
     }
     return bbox;
