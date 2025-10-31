@@ -2727,21 +2727,6 @@
       }
     ]
   },
-  "1899948": {
-    "label": "tv.partner.co.il",
-    "bugs": {
-      "1899948": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://tv.partner.co.il/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["desktop"],
-        "ua_string": ["add_Chrome"]
-      }
-    ]
-  },
   "1901000": {
     "label": "eyebuydirect.ca",
     "bugs": {
