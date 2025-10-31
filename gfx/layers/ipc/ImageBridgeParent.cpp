@@ -194,7 +194,7 @@ class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender final {
 mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
     EditArray&& aEdits, OpDestroyArray&& aToDestroy,
     const uint64_t& aFwdTransactionId) {
-  AUTO_PROFILER_TRACING_MARKER("Paint", "ImageBridgeTransaction", GRAPHICS);
+  AUTO_PROFILER_MARKER("ImageBridgeTransaction", GRAPHICS);
   AUTO_PROFILER_LABEL("ImageBridgeParent::RecvUpdate", GRAPHICS);
 
   // This ensures that destroy operations are always processed. It is not safe

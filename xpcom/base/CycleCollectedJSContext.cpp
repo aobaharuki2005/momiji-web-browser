@@ -1152,7 +1152,7 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
   mozilla::AutoRestore<Maybe<uint32_t>> restore(mMicroTaskRecursionDepth);
   mMicroTaskRecursionDepth = Some(currentDepth);
 
-  AUTO_PROFILER_TRACING_MARKER("JS", "Perform microtasks", JS);
+  AUTO_PROFILER_MARKER("Perform microtasks", JS);
 
   bool didProcess = false;
   AutoSlowOperation aso;
