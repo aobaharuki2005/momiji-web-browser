@@ -5452,7 +5452,7 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
             WSRunScanner::Scan::EditableNodes,
             EditorDOMPoint::AtEndOf(mLeftBlockElement),
-            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+            WSRunScanner::ReferHTMLDefaultStyle::No);
     // `WhiteSpaceVisibilityKeeper::
     // MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement()`
     // returns ignored when:
@@ -5483,7 +5483,7 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
             WSRunScanner::Scan::EditableNodes,
             mPointContainingTheOtherBlockElement,
-            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+            WSRunScanner::ReferHTMLDefaultStyle::No);
     // `WhiteSpaceVisibilityKeeper::
     // MergeFirstLineOfRightBlockElementIntoAncestorLeftBlockElement()`
     // returns ignored when:
@@ -5519,7 +5519,7 @@ Result<bool, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
             WSRunScanner::Scan::EditableNodes,
             EditorDOMPoint::AtEndOf(mLeftBlockElement),
-            BlockInlineCheck::UseComputedDisplayOutsideStyle);
+            WSRunScanner::ReferHTMLDefaultStyle::No);
     // `WhiteSpaceVisibilityKeeper::
     // MergeFirstLineOfRightBlockElementIntoLeftBlockElement()` always
     // return "handled".
@@ -7505,7 +7505,7 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
     if (Element* const maybeEditableBlockElement =
             HTMLEditUtils::GetInclusiveAncestorElement(
                 *commonAncestor, HTMLEditUtils::ClosestBlockElement,
-                BlockInlineCheck::UseComputedDisplayOutsideStyle,
+                BlockInlineCheck::UseComputedDisplayStyle,
                 closestEditingHost)) {
       return maybeEditableBlockElement;
     }
@@ -7667,7 +7667,7 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
             HTMLEditUtils::GetInclusiveAncestorElement(
                 *atFirstInvisibleBRElement.ContainerAs<nsIContent>(),
                 HTMLEditUtils::ClosestEditableBlockElement,
-                BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
+                BlockInlineCheck::UseComputedDisplayStyle)) {
       if (rangeToDelete.Contains(
               EditorRawDOMPoint(editableBlockContainingBRElement))) {
         return rangeToDelete;

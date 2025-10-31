@@ -390,6 +390,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   enum class IgnoreNonEditableNodes : bool { No, Yes };
   enum class StopAtNonEditableNode : bool { No, Yes };
   enum class Scan : bool { All, EditableNodes };
+  enum class ReferHTMLDefaultStyle : bool { No, Yes };
 
   [[nodiscard]] constexpr static IgnoreNonEditableNodes
   ShouldIgnoreNonEditableSiblingsOrDescendants(Scan aScan) {
@@ -400,14 +401,22 @@ class MOZ_STACK_CLASS WSRunScanner final {
     return static_cast<StopAtNonEditableNode>(static_cast<bool>(aScan));
   }
 
+  [[nodiscard]] constexpr static ReferHTMLDefaultStyle
+  ShouldReferHTMLDefaultStyle(BlockInlineCheck aBlockInlineCheck) {
+    return static_cast<ReferHTMLDefaultStyle>(
+        aBlockInlineCheck == BlockInlineCheck::UseHTMLDefaultStyle);
+  }
+
   template <typename EditorDOMPointType>
   WSRunScanner(Scan aScanMode, const EditorDOMPointType& aScanStartPoint,
                BlockInlineCheck aBlockInlineCheck,
                const Element* aAncestorLimiter = nullptr)
       : mScanStartPoint(aScanStartPoint.template To<EditorDOMPoint>()),
-        mTextFragmentDataAtStart(aScanMode, mScanStartPoint, aBlockInlineCheck,
+        mTextFragmentDataAtStart(aScanMode, mScanStartPoint,
+                                 ShouldReferHTMLDefaultStyle(aBlockInlineCheck),
                                  aAncestorLimiter),
-        mScanMode(aScanMode) {}
+        mScanMode(aScanMode),
+        mBlockInlineCheck(aBlockInlineCheck) {}
 
   // ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom() returns the first visible
   // node at or after aPoint.  If there is no visible nodes after aPoint,
@@ -580,7 +589,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   MOZ_NEVER_INLINE_DEBUG static HTMLBRElement*
   GetPrecedingBRElementUnlessVisibleContentFound(
       Scan aScanMode, const EditorDOMPointType& aPoint,
-      BlockInlineCheck aBlockInlineCheck,
+      ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
       const Element* aAncestorLimiter = nullptr) {
     MOZ_ASSERT(aPoint.IsSetAndValid());
     // XXX This method behaves differently even in similar point.
@@ -595,7 +604,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     }
     // TODO: Scan for end boundary is redundant in this case, we should optimize
     //       it.
-    TextFragmentData textFragmentData(aScanMode, aPoint, aBlockInlineCheck,
+    TextFragmentData textFragmentData(aScanMode, aPoint, aReferHTMLDefaultStyle,
                                       aAncestorLimiter);
     return textFragmentData.StartsFromBRElement()
                ? textFragmentData.StartReasonBRElementPtr()
@@ -603,7 +612,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   }
 
   constexpr BlockInlineCheck BlockInlineCheckMode() const {
-    return mTextFragmentDataAtStart.BlockInlineCheckMode();
+    return mBlockInlineCheck;
   }
 
   const EditorDOMPoint& ScanStartRef() const { return mScanStartPoint; }
@@ -821,7 +830,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       template <typename EditorDOMPointType>
       static BoundaryData ScanCollapsibleWhiteSpaceStartFrom(
           Scan aScanMode, const EditorDOMPointType& aPoint,
-          NoBreakingSpaceData* aNBSPData, BlockInlineCheck aBlockInlineCheck,
+          NoBreakingSpaceData* aNBSPData,
+          ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
           StopAtNonEditableNode aStopAtNonEditableNode,
           const Element& aAncestorLimiter);
 
@@ -838,7 +848,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
       template <typename EditorDOMPointType>
       static BoundaryData ScanCollapsibleWhiteSpaceEndFrom(
           Scan aScanMode, const EditorDOMPointType& aPoint,
-          NoBreakingSpaceData* aNBSPData, BlockInlineCheck aBlockInlineCheck,
+          NoBreakingSpaceData* aNBSPData,
+          ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
           StopAtNonEditableNode aStopAtNonEditableNode,
           const Element& aAncestorLimiter);
 
@@ -901,12 +912,10 @@ class MOZ_STACK_CLASS WSRunScanner final {
        */
       template <typename EditorDOMPointType>
       static Maybe<BoundaryData> ScanCollapsibleWhiteSpaceStartInTextNode(
-          const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData,
-          BlockInlineCheck aBlockInlineCheck);
+          const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData);
       template <typename EditorDOMPointType>
       static Maybe<BoundaryData> ScanCollapsibleWhiteSpaceEndInTextNode(
-          const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData,
-          BlockInlineCheck aBlockInlineCheck);
+          const EditorDOMPointType& aPoint, NoBreakingSpaceData* aNBSPData);
 
       nsCOMPtr<nsIContent> mReasonContent;
       EditorDOMPoint mPoint;
@@ -955,7 +964,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
      */
     template <typename EditorDOMPointType>
     TextFragmentData(Scan aScanMode, const EditorDOMPointType& aPoint,
-                     BlockInlineCheck aBlockInlineCheck,
+                     ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
                      const Element* aAncestorLimiter = nullptr);
 
     bool IsInitialized() const {
@@ -964,8 +973,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
 
     constexpr Scan ScanMode() const { return mScanMode; }
 
-    constexpr BlockInlineCheck BlockInlineCheckMode() const {
-      return mBlockInlineCheck;
+    constexpr bool ReferredHTMLDefaultStyle() const {
+      return static_cast<bool>(mReferHTMLDefaultStyle);
     }
 
     const Element* GetAncestorLimiter() const { return mAncestorLimiter; }
@@ -1067,7 +1076,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     template <typename EditorDOMPointType, typename PT, typename CT>
     [[nodiscard]] static EditorDOMPointType GetInclusiveNextCharPoint(
         const EditorDOMPointBase<PT, CT>& aPoint,
-        BlockInlineCheck aBlockInlineCheck,
+        ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes,
         const nsIContent* aFollowingLimiterContent = nullptr);
 
@@ -1076,7 +1085,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
         const EditorDOMPointBase<PT, CT>& aPoint,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes) const {
       return GetInclusiveNextCharPoint<EditorDOMPointType>(
-          aPoint, mBlockInlineCheck, aIgnoreNonEditableNodes,
+          aPoint, mReferHTMLDefaultStyle, aIgnoreNonEditableNodes,
           GetEndReasonContent());
     }
 
@@ -1087,7 +1096,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     template <typename EditorDOMPointType, typename PT, typename CT>
     [[nodiscard]] static EditorDOMPointType GetPreviousCharPoint(
         const EditorDOMPointBase<PT, CT>& aPoint,
-        BlockInlineCheck aBlockInlineCheck,
+        ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes,
         const nsIContent* aPrecedingLimiterContent = nullptr);
 
@@ -1095,9 +1104,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
     [[nodiscard]] EditorDOMPointType GetPreviousCharPoint(
         const EditorDOMPointBase<PT, CT>& aPoint,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes) const {
-      return GetPreviousCharPoint<EditorDOMPointType>(aPoint, mBlockInlineCheck,
-                                                      aIgnoreNonEditableNodes,
-                                                      GetStartReasonContent());
+      return GetPreviousCharPoint<EditorDOMPointType>(
+          aPoint, mReferHTMLDefaultStyle, aIgnoreNonEditableNodes,
+          GetStartReasonContent());
     }
 
     /**
@@ -1111,7 +1120,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     [[nodiscard]] static EditorDOMPointType GetEndOfCollapsibleASCIIWhiteSpaces(
         const EditorDOMPointInText& aPointAtASCIIWhiteSpace,
         nsIEditor::EDirection aDirectionToDelete,
-        BlockInlineCheck aBlockInlineCheck,
+        ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes,
         const nsIContent* aFollowingLimiterContent = nullptr);
 
@@ -1121,7 +1130,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
         nsIEditor::EDirection aDirectionToDelete,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes) const {
       return GetEndOfCollapsibleASCIIWhiteSpaces<EditorDOMPointType>(
-          aPointAtASCIIWhiteSpace, aDirectionToDelete, mBlockInlineCheck,
+          aPointAtASCIIWhiteSpace, aDirectionToDelete, mReferHTMLDefaultStyle,
           aIgnoreNonEditableNodes, GetEndReasonContent());
     }
 
@@ -1137,7 +1146,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     GetFirstASCIIWhiteSpacePointCollapsedTo(
         const EditorDOMPointInText& aPointAtASCIIWhiteSpace,
         nsIEditor::EDirection aDirectionToDelete,
-        BlockInlineCheck aBlockInlineCheck,
+        ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes,
         const nsIContent* aPrecedingLimiterContent = nullptr);
 
@@ -1147,7 +1156,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
         nsIEditor::EDirection aDirectionToDelete,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes) const {
       return GetFirstASCIIWhiteSpacePointCollapsedTo<EditorDOMPointType>(
-          aPointAtASCIIWhiteSpace, aDirectionToDelete, mBlockInlineCheck,
+          aPointAtASCIIWhiteSpace, aDirectionToDelete, mReferHTMLDefaultStyle,
           aIgnoreNonEditableNodes, GetStartReasonContent());
     }
 
@@ -1397,7 +1406,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     mutable Maybe<EditorDOMRange> mLeadingWhiteSpaceRange;
     mutable Maybe<EditorDOMRange> mTrailingWhiteSpaceRange;
     mutable Maybe<VisibleWhiteSpacesData> mVisibleWhiteSpacesData;
-    BlockInlineCheck mBlockInlineCheck;
+    const ReferHTMLDefaultStyle mReferHTMLDefaultStyle;
     Scan mScanMode;
   };
 
@@ -1428,6 +1437,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   TextFragmentData mTextFragmentDataAtStart;
 
   const Scan mScanMode;
+  const BlockInlineCheck mBlockInlineCheck;
 
   friend class WhiteSpaceVisibilityKeeper;
   friend class WSScanResult;

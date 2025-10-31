@@ -200,7 +200,7 @@ Result<MoveNodeResult, nsresult> WhiteSpaceVisibilityKeeper::
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
           WSRunScanner::Scan::EditableNodes,
           EditorDOMPoint::AtEndOf(aLeftBlockElement),
-          BlockInlineCheck::UseComputedDisplayStyle);
+          ReferHTMLDefaultStyle::No);
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
       "The preceding invisible BR element computation was different");
@@ -430,7 +430,7 @@ Result<MoveNodeResult, nsresult> WhiteSpaceVisibilityKeeper::
   const RefPtr<HTMLBRElement> invisibleBRElementBeforeLeftBlockElement =
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
           WSRunScanner::Scan::EditableNodes, atLeftBlockChild,
-          BlockInlineCheck::UseComputedDisplayStyle);
+          ReferHTMLDefaultStyle::No);
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementBeforeLeftBlockElement,
       "The preceding invisible BR element computation was different");
@@ -739,7 +739,7 @@ Result<MoveNodeResult, nsresult> WhiteSpaceVisibilityKeeper::
       WSRunScanner::GetPrecedingBRElementUnlessVisibleContentFound(
           WSRunScanner::Scan::EditableNodes,
           EditorDOMPoint::AtEndOf(aLeftBlockElement),
-          BlockInlineCheck::UseComputedDisplayStyle);
+          ReferHTMLDefaultStyle::No);
   NS_ASSERTION(
       aPrecedingInvisibleBRElement == invisibleBRElementAtEndOfLeftBlockElement,
       "The preceding invisible BR element computation was different");
@@ -1881,8 +1881,7 @@ WhiteSpaceVisibilityKeeper::EnsureNoInvisibleWhiteSpaces(
                aPoint.GetContainer()->IsEditingHost())
           ? aPoint
           : aPoint.PreviousPointOrParentPoint<EditorDOMPoint>(),
-      BlockInlineCheck::UseComputedDisplayStyle,
-      maybeNonEditableClosestBlockElement);
+      ReferHTMLDefaultStyle::No, maybeNonEditableClosestBlockElement);
   if (NS_WARN_IF(!textFragmentDataForLeadingWhiteSpaces.IsInitialized())) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -1942,7 +1941,7 @@ WhiteSpaceVisibilityKeeper::EnsureNoInvisibleWhiteSpaces(
       textFragmentDataForLeadingWhiteSpaces.ScanStartRef() == aPoint
           ? textFragmentDataForLeadingWhiteSpaces
           : TextFragmentData(Scan::EditableNodes, aPoint,
-                             BlockInlineCheck::UseComputedDisplayStyle,
+                             ReferHTMLDefaultStyle::No,
                              maybeNonEditableClosestBlockElement);
   const EditorDOMRange& trailingWhiteSpaceRange =
       textFragmentData.InvisibleTrailingWhiteSpaceRangeRef();
@@ -2608,8 +2607,8 @@ Result<CaretPoint, nsresult>
 WhiteSpaceVisibilityKeeper::DeleteInvisibleASCIIWhiteSpaces(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
   MOZ_ASSERT(aPoint.IsSet());
-  const TextFragmentData textFragmentData(
-      Scan::EditableNodes, aPoint, BlockInlineCheck::UseComputedDisplayStyle);
+  const TextFragmentData textFragmentData(Scan::EditableNodes, aPoint,
+                                          ReferHTMLDefaultStyle::No);
   if (NS_WARN_IF(!textFragmentData.IsInitialized())) {
     return Err(NS_ERROR_FAILURE);
   }
