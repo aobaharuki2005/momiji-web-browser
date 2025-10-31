@@ -3619,6 +3619,25 @@ GeckoDriver.prototype.print = async function (cmd) {
   return btoa(binaryString);
 };
 
+GeckoDriver.prototype.getGlobalPrivacyControl = function () {
+  const gpc = Services.prefs.getBoolPref(
+    "privacy.globalprivacycontrol.enabled",
+    true
+  );
+  return { gpc };
+};
+
+GeckoDriver.prototype.setGlobalPrivacyControl = function (cmd) {
+  const { gpc } = cmd.parameters;
+  if (typeof gpc != "boolean") {
+    throw new lazy.error.InvalidArgumentError(
+      "Value of `gpc` should be of type 'boolean'"
+    );
+  }
+  Services.prefs.setBoolPref("privacy.globalprivacycontrol.enabled", gpc);
+  return { gpc };
+};
+
 GeckoDriver.prototype.addVirtualAuthenticator = function (cmd) {
   const {
     protocol,
@@ -3958,6 +3977,10 @@ GeckoDriver.prototype.commands = {
   "WebDriver:SwitchToParentFrame": GeckoDriver.prototype.switchToParentFrame,
   "WebDriver:SwitchToWindow": GeckoDriver.prototype.switchToWindow,
   "WebDriver:TakeScreenshot": GeckoDriver.prototype.takeScreenshot,
+  "WebDriver:GetGlobalPrivacyControl":
+    GeckoDriver.prototype.getGlobalPrivacyControl,
+  "WebDriver:SetGlobalPrivacyControl":
+    GeckoDriver.prototype.setGlobalPrivacyControl,
 
   // WebAuthn
   "WebAuthn:AddVirtualAuthenticator":
