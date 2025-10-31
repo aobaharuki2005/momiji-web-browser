@@ -634,8 +634,8 @@ const BASE_MESSAGES = () => [
               fontSize: "13px",
             },
             screen_style: {
-              width: "664px",
-              height: "620px",
+              width: "764px",
+              height: "650px",
             },
             logo: {
               imageURL:
