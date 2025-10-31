@@ -4134,9 +4134,7 @@
           {
             "find": "Date\\.parse\\(e\\.newsInfoDetail\\.date\\)",
             "replace": "Date.parse(s.newsInfoDetail.date)",
-            "urls": [
-              "https://www.toei-anim.co.jp/_next/static/chunks/585-f8188c5d925661df.js"
-            ]
+            "urls": ["https://www.toei-anim.co.jp/_next/static/chunks/585-*.js"]
           }
         ]
       }
