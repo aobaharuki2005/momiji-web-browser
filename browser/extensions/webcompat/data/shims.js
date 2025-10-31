@@ -649,6 +649,20 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
+    id: "CambridgeDictionaryLogin",
+    platform: "all",
+    name: "Cambridge Dictionary Google Login",
+    bug: "1993727",
+    contentScripts: [
+      {
+        js: "cambridgeDictionaryLogin.js",
+        matches: ["*://dictionary.cambridge.org/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "MicrosoftOfficeAuth",
     platform: "desktop",
     name: "Microsoft Office Auth",

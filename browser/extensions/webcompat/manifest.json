@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "146.5.0",
+  "version": "146.6.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -115,6 +115,7 @@
     "shims/bmauth.js",
     "shims/botd.mjs",
     "shims/branch.js",
+    "shims/cambridgeDictionaryLogin.js",
     "shims/chartbeat.js",
     "shims/crave-ca.js",
     "shims/criteo.js",
