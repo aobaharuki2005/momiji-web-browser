@@ -38,6 +38,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1037519
     #bar::first-letter {
       font-variant: small-caps;
     }
+
+    ::view-transition-group(root), #bar {
+       animation-duration: 3600s;
+    }
   </style>
 </head>
 <body>
@@ -106,6 +110,40 @@ add_task(async () => {
       "Doesn't match on #bar" + pseudo
     );
   }
+
+  info("Create a view transition");
+  const transition = document.startViewTransition(() => {
+    element.replaceChildren("updated foo content");
+  });
+  await transition.ready;
+  await transition.updateCallbackDone;
+
+  const viewTransitionGroupRule = InspectorUtils.getMatchingCSSRules(
+    document.documentElement,
+    "::view-transition-group(root)"
+  ).find(rule => {
+    try {
+      return rule.selectorText === "::view-transition-group(root), #bar";
+    } catch {}
+    return false;
+  });
+
+  ok(
+    !!viewTransitionGroupRule,
+    "Got the expected ::view-transition-group rule"
+  );
+  ok(
+    viewTransitionGroupRule.selectorMatchesElement(
+      0,
+      document.documentElement,
+      "::view-transition-group(root)"
+    ),
+    "Matches ::view-transition-group(root)"
+  );
+  ok(
+    !viewTransitionGroupRule.selectorMatchesElement(1, document.documentElement),
+    "Doesn't match #bar"
+  );
 });
 
 </script>
