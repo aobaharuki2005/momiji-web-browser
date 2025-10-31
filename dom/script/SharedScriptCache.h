@@ -193,6 +193,7 @@ class SharedScriptCache final
   SharedScriptCache();
   void Init();
 
+  bool MaybeScheduleUpdateDiskCache();
   void UpdateDiskCache();
 
   // This has to be static because it's also called for loaders that don't have

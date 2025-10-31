@@ -1,9 +1,9 @@
 const BASE_URL = "http://mochi.test:8888/browser/dom/base/test/";
 
-function ev(event, file, hasElement = true) {
+function ev(event, file, hasElement = !!file) {
   return {
     event,
-    url: BASE_URL + file,
+    url: file ? BASE_URL + file : undefined,
     hasElement,
   };
 }
@@ -23,7 +23,7 @@ async function contentTask(item) {
     const event = item.events[0];
     if (
       event.event === param.event &&
-      event.url === param.url &&
+      (!param.url || event.url === param.url) &&
       (event.hasElement ? param.id === "watchme" : !param.id)
     ) {
       dump("@@@ Got expected event: " + data + "\n");
@@ -232,6 +232,13 @@ add_task(async function testMemoryCache() {
     ],
   });
 
+  // If in-memory cache is enabled, the disk cache is handled by the
+  // SharedScriptCache, and following differences happen:
+  //  * diskcache:disabled and diskcache:register are not notified for
+  //    each script
+  //  * diskcache:noschedule is notified without associated script
+  //    if there's no script to be saved
+
   await runTests([
     // A small file should be saved to the memory on the 1st load, and used on
     // the 2nd load.  But it shouldn't be saved to the disk cache.
@@ -244,7 +251,7 @@ add_task(async function testMemoryCache() {
             ev("load:source", "file_js_cache_small.js"),
             ev("memorycache:saved", "file_js_cache_small.js"),
             ev("evaluate:classic", "file_js_cache_small.js"),
-            ev("diskcache:disabled", "file_js_cache_small.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
@@ -252,7 +259,7 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_small.js"),
             ev("evaluate:classic", "file_js_cache_small.js"),
-            ev("diskcache:disabled", "file_js_cache_small.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
@@ -260,7 +267,7 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_small.js"),
             ev("evaluate:classic", "file_js_cache_small.js"),
-            ev("diskcache:disabled", "file_js_cache_small.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
@@ -268,7 +275,7 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_small.js"),
             ev("evaluate:classic", "file_js_cache_small.js"),
-            ev("diskcache:disabled", "file_js_cache_small.js"),
+            ev("diskcache:noschedule"),
           ],
         },
       ],
@@ -288,7 +295,7 @@ add_task(async function testMemoryCache() {
             ev("load:source", "file_js_cache_large.js"),
             ev("memorycache:saved", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
-            ev("diskcache:disabled", "file_js_cache_large.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
@@ -296,7 +303,7 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
-            ev("diskcache:disabled", "file_js_cache_large.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
@@ -304,7 +311,7 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
-            ev("diskcache:disabled", "file_js_cache_large.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
@@ -312,7 +319,6 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
-            ev("diskcache:register", "file_js_cache_large.js"),
             ev("diskcache:saved", "file_js_cache_large.js", false),
           ],
         },
@@ -321,7 +327,7 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
-            ev("diskcache:disabled", "file_js_cache_large.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
@@ -329,7 +335,7 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
-            ev("diskcache:disabled", "file_js_cache_large.js"),
+            ev("diskcache:noschedule"),
           ],
         },
 
@@ -340,7 +346,7 @@ add_task(async function testMemoryCache() {
             ev("load:diskcache", "file_js_cache_large.js"),
             ev("memorycache:saved", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
-            ev("diskcache:disabled", "file_js_cache_large.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
@@ -348,7 +354,7 @@ add_task(async function testMemoryCache() {
           events: [
             ev("load:memorycache", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
-            ev("diskcache:disabled", "file_js_cache_large.js"),
+            ev("diskcache:noschedule"),
           ],
         },
       ],
@@ -362,28 +368,28 @@ add_task(async function testMemoryCache() {
           file: "file_js_cache_large_syntax_error.js",
           events: [
             ev("load:source", "file_js_cache_large_syntax_error.js"),
-            ev("diskcache:disabled", "file_js_cache_large_syntax_error.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
           file: "file_js_cache_large_syntax_error.js",
           events: [
             ev("load:source", "file_js_cache_large_syntax_error.js"),
-            ev("diskcache:disabled", "file_js_cache_large_syntax_error.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
           file: "file_js_cache_large_syntax_error.js",
           events: [
             ev("load:source", "file_js_cache_large_syntax_error.js"),
-            ev("diskcache:disabled", "file_js_cache_large_syntax_error.js"),
+            ev("diskcache:noschedule"),
           ],
         },
         {
           file: "file_js_cache_large_syntax_error.js",
           events: [
             ev("load:source", "file_js_cache_large_syntax_error.js"),
-            ev("diskcache:disabled", "file_js_cache_large_syntax_error.js"),
+            ev("diskcache:noschedule"),
           ],
         },
       ],

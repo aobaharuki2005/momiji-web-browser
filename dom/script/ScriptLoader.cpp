@@ -2778,9 +2778,12 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: Mark in-memory: Stencil",
          aRequest));
     aRequest->MarkPassedConditionForMemoryCache();
-  } else {
-    aRequest->MarkSkippedMemoryCaching();
+
+    // Disk cache is handled by SharedScriptCache.
+    return;
   }
+
+  aRequest->MarkSkippedMemoryCaching();
 
   // The following conditions apply only to the disk cache.
 
@@ -3360,6 +3363,11 @@ nsCString& ScriptLoader::BytecodeMimeTypeFor(
 
 nsresult ScriptLoader::MaybePrepareForDiskCacheAfterExecute(
     ScriptLoadRequest* aRequest, nsresult aRv) {
+  if (mCache) {
+    // Disk cache is handled by SharedScriptCache.
+    return NS_OK;
+  }
+
   if (!aRequest->PassedConditionForDiskCache() || !aRequest->HasStencil()) {
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X)", aRequest,
          unsigned(aRv)));
@@ -3399,6 +3407,11 @@ nsresult ScriptLoader::MaybePrepareForDiskCacheAfterExecute(
 nsresult ScriptLoader::MaybePrepareModuleForDiskCacheAfterExecute(
     ModuleLoadRequest* aRequest, nsresult aRv) {
   MOZ_ASSERT(aRequest->IsTopLevel());
+
+  if (mCache) {
+    // Disk cache is handled by SharedScriptCache.
+    return NS_OK;
+  }
 
   // NOTE: If a module is passed to this multiple times, it can be
   //       enqueued multiple times.
@@ -3520,6 +3533,7 @@ LoadedScript* ScriptLoader::GetActiveScript(JSContext* aCx) {
 }
 
 void ScriptLoader::RegisterForDiskCache(ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(!mCache);
   MOZ_ASSERT(aRequest->PassedConditionForDiskCache());
   MOZ_ASSERT(aRequest->HasStencil());
   MOZ_ASSERT(aRequest->getLoadedScript()->HasDiskCacheReference());
@@ -3545,14 +3559,6 @@ void ScriptLoader::Destroy() {
 }
 
 void ScriptLoader::MaybeUpdateDiskCache() {
-  // If we already gave up, ensure that we are not going to enqueue any script,
-  // and that we finalize them properly.
-  if (mGiveUpDiskCaching) {
-    LOG(("ScriptLoader (%p): Keep giving-up bytecode encoding.", this));
-    GiveUpDiskCaching();
-    return;
-  }
-
   // We wait for the load event to be fired before saving the bytecode of
   // any script to the cache. It is quite common to have load event
   // listeners trigger more JavaScript execution, that we want to save as
@@ -3562,17 +3568,32 @@ void ScriptLoader::MaybeUpdateDiskCache() {
     return;
   }
 
-  // No need to fire any event if there is no bytecode to be saved.
-  if (mDiskCacheQueue.IsEmpty()) {
-    LOG(("ScriptLoader (%p): No script in queue to be saved to the disk.",
-         this));
-    return;
-  }
-
   // Wait until all scripts are loaded before saving the bytecode, such that
   // we capture most of the intialization of the page.
   if (HasPendingRequests()) {
     LOG(("ScriptLoader (%p): Wait for other pending request to finish.", this));
+    return;
+  }
+
+  if (mCache) {
+    if (!mCache->MaybeScheduleUpdateDiskCache()) {
+      TRACE_FOR_TEST_0("diskcache:noschedule");
+    }
+    return;
+  }
+
+  // If we already gave up, ensure that we are not going to enqueue any script,
+  // and that we finalize them properly.
+  if (mGiveUpDiskCaching) {
+    LOG(("ScriptLoader (%p): Keep giving-up bytecode encoding.", this));
+    GiveUpDiskCaching();
+    return;
+  }
+
+  // No need to fire any event if there is no bytecode to be saved.
+  if (mDiskCacheQueue.IsEmpty()) {
+    LOG(("ScriptLoader (%p): No script in queue to be saved to the disk.",
+         this));
     return;
   }
 
@@ -3717,6 +3738,13 @@ void ScriptLoader::EncodeBytecodeAndSave(
 }
 
 void ScriptLoader::GiveUpDiskCaching() {
+  if (mCache) {
+    // Disk cache is handled by SharedScriptCache.
+    MOZ_ASSERT(mDiskCacheQueue.IsEmpty());
+    MOZ_ASSERT(mDiskCacheableDependencyModules.isEmpty());
+    return;
+  }
+
   // If the document went away prematurely, we still want to set this, in order
   // to avoid queuing more scripts.
   mGiveUpDiskCaching = true;

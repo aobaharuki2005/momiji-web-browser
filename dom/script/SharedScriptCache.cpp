@@ -192,6 +192,35 @@ static bool ShouldSave(JS::loader::LoadedScript* aLoadedScript,
   return true;
 }
 
+bool SharedScriptCache::MaybeScheduleUpdateDiskCache() {
+  auto strategy = ScriptLoader::GetDiskCacheStrategy();
+  if (strategy.mIsDisabled) {
+    return false;
+  }
+
+  bool hasSaveable = false;
+  for (auto iter = mComplete.Iter(); !iter.Done(); iter.Next()) {
+    JS::loader::LoadedScript* loadedScript = iter.Data().mResource;
+    if (ShouldSave(loadedScript, strategy)) {
+      hasSaveable = true;
+      break;
+    }
+  }
+
+  if (!hasSaveable) {
+    return false;
+  }
+
+  // TODO: Apply more flexible scheduling (bug 1902951)
+
+  nsCOMPtr<nsIRunnable> updater =
+      NewRunnableMethod("SharedScriptCache::UpdateDiskCache", this,
+                        &SharedScriptCache::UpdateDiskCache);
+  (void)NS_DispatchToCurrentThreadQueue(updater.forget(),
+                                        EventQueuePriority::Idle);
+  return true;
+}
+
 void SharedScriptCache::UpdateDiskCache() {
   auto strategy = ScriptLoader::GetDiskCacheStrategy();
   if (strategy.mIsDisabled) {

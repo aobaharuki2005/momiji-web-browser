@@ -19,6 +19,11 @@
   mozilla::dom::script::TestingNotifyObserver(requestOrScript, str); \
   PR_END_MACRO
 
+#define TRACE_FOR_TEST_0(str)                       \
+  PR_BEGIN_MACRO                                    \
+  mozilla::dom::script::TestingNotifyObserver(str); \
+  PR_END_MACRO
+
 namespace mozilla::dom::script {
 
 void TestingNotifyObserver(JS::loader::ScriptLoadRequest* aRequest,
@@ -41,6 +46,14 @@ inline void TestingNotifyObserver(JS::loader::ScriptLoadRequest* aRequest,
   }
 
   TestingNotifyObserver(aRequest, aRequest->getLoadedScript(), aEvent);
+}
+
+inline void TestingNotifyObserver(const char* aEvent) {
+  if (!StaticPrefs::dom_expose_test_interfaces()) {
+    return;
+  }
+
+  TestingNotifyObserver(nullptr, nullptr, aEvent);
 }
 
 }  // namespace mozilla::dom::script
