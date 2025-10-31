@@ -2557,6 +2557,7 @@ def check_run_task_caches(config, tasks):
         re.VERBOSE,
     )
 
+    re_checkout_cache = re.compile("^checkouts")
     re_sparse_checkout_cache = re.compile("^checkouts-sparse")
     re_shallow_checkout_cache = re.compile("^checkouts-git-shallow")
 
@@ -2576,6 +2577,7 @@ def check_run_task_caches(config, tasks):
 
         require_sparse_cache = False
         require_shallow_cache = False
+        have_checkout_cache = False
         have_sparse_cache = False
         have_shallow_cache = False
 
@@ -2619,6 +2621,9 @@ def check_run_task_caches(config, tasks):
 
             cache = cache[len(cache_prefix) :]
 
+            if re_checkout_cache.match(cache):
+                have_checkout_cache = True
+
             if re_sparse_checkout_cache.match(cache):
                 have_sparse_cache = True
 
@@ -2643,14 +2648,14 @@ def check_run_task_caches(config, tasks):
                     "naming requirements" % (task["label"], cache)
                 )
 
-        if require_sparse_cache and not have_sparse_cache:
+        if have_checkout_cache and require_sparse_cache and not have_sparse_cache:
             raise Exception(
                 "%s is using a sparse checkout but not using "
                 "a sparse checkout cache; change the checkout "
                 "cache name so it is sparse aware" % task["label"]
             )
 
-        if require_shallow_cache and not have_shallow_cache:
+        if have_checkout_cache and require_shallow_cache and not have_shallow_cache:
             raise Exception(
                 "%s is using a shallow clone but not using "
                 "a shallow checkout cache; change the checkout "
