@@ -50,6 +50,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isTermsOfServiceAccepted = settings.hasAcceptedTermsOfService,
         isComposeLoginsEnabled = settings.enableComposeLogins,
         openLinksInApp = getOpenLinksInApp(settings),
+        tabManagerOpeningAnimationEnabled = settings.tabManagerOpeningAnimationEnabled,
     )
 
     /**
@@ -78,6 +79,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isTermsOfServiceAccepted: Boolean by updatedFeatureFlags::isTermsOfServiceAccepted
     override var isComposeLoginsEnabled: Boolean by updatedFeatureFlags::isComposeLoginsEnabled
     override var openLinksInExternalApp: OpenLinksInApp by updatedFeatureFlags::openLinksInApp
+    override var tabManagerOpeningAnimationEnabled: Boolean by updatedFeatureFlags::tabManagerOpeningAnimationEnabled
 
     override fun applyFlagUpdates() {
         Log.i(TAG, "applyFlagUpdates: Trying to apply the updated feature flags: $updatedFeatureFlags")
@@ -116,6 +118,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.hasAcceptedTermsOfService = featureFlags.isTermsOfServiceAccepted
         settings.enableComposeLogins = featureFlags.isComposeLoginsEnabled
         setOpenLinksInApp(featureFlags.openLinksInApp)
+        settings.tabManagerOpeningAnimationEnabled = featureFlags.tabManagerOpeningAnimationEnabled
     }
 }
 
@@ -142,6 +145,7 @@ private data class FeatureFlags(
     var isTermsOfServiceAccepted: Boolean,
     var isComposeLoginsEnabled: Boolean,
     var openLinksInApp: OpenLinksInApp,
+    var tabManagerOpeningAnimationEnabled: Boolean,
 )
 
 internal fun getETPPolicy(settings: Settings): ETPPolicy {

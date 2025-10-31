@@ -2722,6 +2722,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Whether the Tab Manager opening animation is enabled.
+     */
+    var tabManagerOpeningAnimationEnabled by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_tab_manager_opening_animation),
+        default = { DefaultTabManagementFeatureHelper.openingAnimationEnabled },
+    )
+
+    /**
      * Indicates whether the app should automatically clean up downloaded files.
      */
     fun shouldCleanUpDownloadsAutomatically(): Boolean {

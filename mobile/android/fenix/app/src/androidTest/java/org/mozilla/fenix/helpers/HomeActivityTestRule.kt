@@ -208,6 +208,7 @@ class HomeActivityIntentTestRule internal constructor(
         isTermsOfServiceAccepted: Boolean = true,
         isComposeLoginsEnabled: Boolean = false,
         openLinksInExternalApp: OpenLinksInApp = getOpenLinksInApp(settings),
+        tabManagerOpeningAnimationEnabled: Boolean = false,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomepageHeaderEnabled = isHomepageHeaderEnabled
         this.isPocketEnabled = isPocketEnabled
@@ -231,6 +232,7 @@ class HomeActivityIntentTestRule internal constructor(
         this.isTermsOfServiceAccepted = isTermsOfServiceAccepted
         this.isComposeLoginsEnabled = isComposeLoginsEnabled
         this.openLinksInExternalApp = openLinksInExternalApp
+        this.tabManagerOpeningAnimationEnabled = tabManagerOpeningAnimationEnabled
     }
 
     private val longTapUserPreference = getLongPressTimeout()
@@ -306,6 +308,7 @@ class HomeActivityIntentTestRule internal constructor(
         isTermsOfServiceAccepted = settings.hasAcceptedTermsOfService
         isComposeLoginsEnabled = settings.enableComposeLogins
         openLinksInExternalApp = getOpenLinksInApp(settings)
+        tabManagerOpeningAnimationEnabled = settings.tabManagerOpeningAnimationEnabled
     }
 
     companion object {
@@ -337,6 +340,7 @@ class HomeActivityIntentTestRule internal constructor(
             isTabSwipeCFREnabled = true,
             isTermsOfServiceAccepted = true,
             isComposeLoginsEnabled = false,
+            tabManagerOpeningAnimationEnabled = false,
         )
     }
 }

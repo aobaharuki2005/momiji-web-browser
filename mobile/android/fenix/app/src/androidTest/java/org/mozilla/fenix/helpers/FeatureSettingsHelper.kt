@@ -130,6 +130,11 @@ interface FeatureSettingsHelper {
     var openLinksInExternalApp: OpenLinksInApp
 
     /**
+     * Enable or disable the Tab Manager's opening animation.
+     */
+    var tabManagerOpeningAnimationEnabled: Boolean
+
+    /**
      * Enable or disable the translations prompt after a page that can be translated is loaded.
      */
     fun enableOrDisablePageLoadTranslationsPrompt(enableTranslationsPrompt: Boolean) {
