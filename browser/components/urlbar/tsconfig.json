@@ -5,7 +5,6 @@
     "UrlbarProviderGlobalActions.sys.mjs",
     "UrlbarProviderPlaces.sys.mjs",
     "UrlbarProvidersManager.sys.mjs",
-    "UrlbarSearchOneOffs.sys.mjs",
     "UrlbarView.sys.mjs",
     "private/MLSuggest.sys.mjs",
     "private/SuggestBackendRust.sys.mjs",

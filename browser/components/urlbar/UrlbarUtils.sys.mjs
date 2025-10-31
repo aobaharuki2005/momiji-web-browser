@@ -1115,9 +1115,10 @@ export var UrlbarUtils = {
    * Returns the name of a result source.  The name is the lowercase name of the
    * corresponding property in the RESULT_SOURCE object.
    *
-   * @param {keyof typeof this.RESULT_SOURCE} source A UrlbarUtils.RESULT_SOURCE value.
-   * @returns {string} The token's name, a lowercased name in the RESULT_SOURCE
-   *   object.
+   * @param {Values<typeof this.RESULT_SOURCE>} source
+   *   A UrlbarUtils.RESULT_SOURCE value.
+   * @returns {string}
+   *   The token's name, a lowercased name in the RESULT_SOURCE object.
    */
   getResultSourceName(source) {
     if (!this._resultSourceNamesBySource) {
