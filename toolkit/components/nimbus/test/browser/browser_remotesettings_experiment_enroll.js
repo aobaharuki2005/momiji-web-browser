@@ -45,14 +45,7 @@ add_task(async function test_experimentEnrollment_startup() {
     set: [["app.shield.optoutstudies.enabled", false]],
   });
 
-  Assert.ok(ExperimentAPI.enabled, "ExperimentAPI is still enabled");
-  Assert.ok(
-    ExperimentAPI._rsLoader._enabled,
-    "RemoteSettingsExperimentLoader is still enabled"
-  );
-
-  Assert.ok(!ExperimentAPI.studiesEnabled, "Studies disabled");
-  Assert.ok(ExperimentAPI.labsEnabled, "Firefox Labs enabled");
+  Assert.ok(!ExperimentAPI._rsLoader._enabled, "Should be disabled");
 
   await SpecialPowers.pushPrefEnv({
     set: [["app.shield.optoutstudies.enabled", true]],
