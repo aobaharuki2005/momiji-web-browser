@@ -800,6 +800,18 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
+ public:
+  struct DiskCacheStrategy {
+    bool mIsDisabled = false;
+    bool mHasSourceLengthMin = false;
+    bool mHasFetchCountMin = false;
+    uint8_t mFetchCountMin = 0;
+    size_t mSourceLengthMin = 0;
+  };
+
+  static DiskCacheStrategy GetDiskCacheStrategy();
+
+ private:
   // Check whether the request should be saved to the following or not:
   //   * in-memory cache as Stencil
   //   * necko alternative stream as Stencil XDR
