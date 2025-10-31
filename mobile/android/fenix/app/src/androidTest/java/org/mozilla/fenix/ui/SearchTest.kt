@@ -195,6 +195,8 @@ class SearchTest : TestSetup() {
 
         homeScreen {
         }.openSearch {
+            waitForAppWindowToBeUpdated()
+            verifySearchView()
             clickScanButton()
             denyPermission()
             clickScanButton()

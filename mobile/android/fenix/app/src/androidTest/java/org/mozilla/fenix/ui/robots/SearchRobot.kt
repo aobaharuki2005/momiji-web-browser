@@ -62,6 +62,7 @@ import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import mozilla.components.browser.toolbar.R as toolbarR
 import mozilla.components.feature.qr.R as qrR
 
@@ -419,15 +420,13 @@ class SearchRobot {
         Log.i(TAG, "selectTemporarySearchMethodWithComposableToolbar: Clicked the $searchEngineName search shortcut")
     }
 
-    fun clickScanButton() =
-        scanButton().also {
-            Log.i(TAG, "clickScanButton: Waiting for $waitingTime ms for the scan button to exist")
-            it.waitForExists(waitingTime)
-            Log.i(TAG, "clickScanButton: Waited for $waitingTime ms for the scan button to exist")
-            Log.i(TAG, "clickScanButton: Trying to click the scan button")
-            it.click()
-            Log.i(TAG, "clickScanButton: Clicked the scan button")
-        }
+    fun clickScanButton() {
+        waitForAppWindowToBeUpdated()
+        assertUIObjectExists(scanButton())
+        Log.i(TAG, "clickScanButton: Trying to click the scan button and wait for $waitingTimeShort ms for a new window")
+        scanButton().clickAndWaitForNewWindow(waitingTimeShort)
+        Log.i(TAG, "clickScanButton: Clicked the scan button and waited for $waitingTimeShort ms for a new window")
+    }
 
     fun clickScanButtonWithComposableToolbar(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickScanButtonWithComposableToolbar: Trying to click the scan button")
