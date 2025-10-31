@@ -29,6 +29,11 @@ export default class PasswordValidationInputs extends MozLitElement {
       reflect: true,
       attribute: "create-password-label-l10n-id",
     },
+    embeddedFxBackupOptIn: {
+      type: Boolean,
+      reflect: true,
+      attribute: "embedded-fx-backup-opt-in",
+    },
   };
 
   static get queries() {
@@ -194,6 +199,7 @@ export default class PasswordValidationInputs extends MozLitElement {
             .tooShort=${this._tooShort}
             @focus=${this.handleTooltipFocus}
             @blur=${this.handleTooltipBlur}
+            ?embedded-fx-backup-opt-in=${this.embeddedFxBackupOptIn}
           ></password-rules-tooltip>
           <label id="repeat-password-label" for="repeat-password-input">
             <span
