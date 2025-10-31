@@ -1584,8 +1584,9 @@ class Client:
                   const e = arguments[0],
                   s = window.getComputedStyle(e),
                   v = s.visibility === "visible",
-                  o = Math.abs(parseFloat(s.opacity));
-                  return e.getClientRects().length > 0 && v && (isNaN(o) || o === 1.0);
+                  o = Math.abs(parseFloat(s.opacity)),
+                  d = s.display === "contents" || e.getClientRects().length > 0;
+                  return d && v && (isNaN(o) || o === 1.0);
               """,
                 args=[element],
             )
