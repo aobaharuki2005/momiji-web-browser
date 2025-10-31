@@ -455,6 +455,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   static bool ShouldEnforceParentalControls();
 
+  void MaybeReconstructActiveEntryList();
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();

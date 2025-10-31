@@ -3704,6 +3704,19 @@ bool CanonicalBrowsingContext::ShouldEnforceParentalControls() {
   return false;
 }
 
+void CanonicalBrowsingContext::MaybeReconstructActiveEntryList() {
+  MOZ_ASSERT(IsTop());
+  if (!Navigation::IsAPIEnabled()) {
+    return;
+  }
+
+  auto* shistory = static_cast<nsSHistory*>(GetSessionHistory());
+  if (mActiveEntry && !shistory->ContainsEntry(mActiveEntry)) {
+    mActiveEntryList.clear();
+    mActiveEntryList = shistory->ConstructContiguousEntryList();
+  }
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CanonicalBrowsingContext,

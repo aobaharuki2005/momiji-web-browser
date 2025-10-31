@@ -2515,6 +2515,13 @@ LinkedList<SessionHistoryEntry> nsSHistory::ConstructContiguousEntryListFrom(
   return entryList;
 }
 
+LinkedList<SessionHistoryEntry> nsSHistory::ConstructContiguousEntryList() {
+  MOZ_ASSERT(mIndex >= 0 && mIndex < Length());
+  nsCOMPtr currentEntry = mEntries[mIndex];
+  return ConstructContiguousEntryListFrom(
+      static_cast<SessionHistoryEntry*>(currentEntry.get()));
+}
+
 bool nsSHistory::ForEachDifferingEntry(
     nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry, BrowsingContext* aParent,
     const std::function<void(nsISHEntry*, BrowsingContext*)>& aCallback) {
@@ -2720,4 +2727,13 @@ void nsSHistory::UpdateEntryLength(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry,
   CollectEntries(docshellIDToEntry, oldSHE);
 
   ::UpdateEntryLength(docshellIDToEntry, newSHE, aMove);
+}
+
+bool nsSHistory::ContainsEntry(nsISHEntry* aEntry) {
+  if (!aEntry) {
+    return false;
+  }
+
+  nsCOMPtr rootEntry = GetRootSHEntry(aEntry);
+  return GetIndexOfEntry(rootEntry) != -1;
 }
