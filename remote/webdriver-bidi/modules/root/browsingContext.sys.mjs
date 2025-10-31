@@ -111,6 +111,7 @@ const DownloadEndStatus = {
  */
 export const LocatorType = {
   accessibility: "accessibility",
+  context: "context",
   css: "css",
   innerText: "innerText",
   xpath: "xpath",
@@ -953,8 +954,8 @@ class BrowsingContextModule extends RootBiDiModule {
 
   /**
    * Used as an argument for browsingContext.locateNodes command, as one of the available variants
-   * {AccessibilityLocator}, {CssLocator}, {InnerTextLocator} or {XPathLocator}, to represent a way of how lookup of nodes
-   * is going to be performed.
+   * {AccessibilityLocator}, {ContextLocator}, {CssLocator}, {InnerTextLocator} or {XPathLocator},
+   * to represent a way of how lookup of nodes is going to be performed.
    *
    * @typedef Locator
    */
@@ -977,6 +978,25 @@ class BrowsingContextModule extends RootBiDiModule {
    *
    * @property {LocatorType} [type=LocatorType.accessibility]
    * @property {AccessibilityLocatorValue} value
+   */
+
+  /**
+   * Used as a value argument for browsingContext.locateNodes command
+   * in case of a lookup for a context container.
+   *
+   * @typedef ContextLocatorValue
+   *
+   * @property {string} context
+   */
+
+  /**
+   * Used as an argument for browsingContext.locateNodes command
+   * to represent a lookup for a context container.
+   *
+   * @typedef ContextLocator
+   *
+   * @property {LocatorType} [type=LocatorType.context]
+   * @property {ContextLocatorValue} value
    */
 
   /**
@@ -1042,7 +1062,7 @@ class BrowsingContextModule extends RootBiDiModule {
    */
   async locateNodes(options = {}) {
     const {
-      context: contextId,
+      context: navigableId,
       locator,
       maxNodeCount = null,
       serializationOptions,
@@ -1050,11 +1070,11 @@ class BrowsingContextModule extends RootBiDiModule {
     } = options;
 
     lazy.assert.string(
-      contextId,
-      lazy.pprint`Expected "context" to be a string, got ${contextId}`
+      navigableId,
+      lazy.pprint`Expected "context" to be a string, got ${navigableId}`
     );
 
-    const context = this.#getBrowsingContext(contextId);
+    const context = this.#getBrowsingContext(navigableId);
 
     lazy.assert.object(
       locator,
@@ -1104,10 +1124,46 @@ class BrowsingContextModule extends RootBiDiModule {
       }
     }
 
+    if (locator.type == LocatorType.context) {
+      if (startNodes !== null) {
+        throw new lazy.error.InvalidArgumentError(
+          `Expected "startNodes" to be null when using "locator.type" "${locator.type}", ` +
+            lazy.pprint`got ${startNodes}`
+        );
+      }
+
+      lazy.assert.object(
+        locator.value,
+        `Expected "locator.value" of "locator.type" "${locator.type}" to be an object, ` +
+          lazy.pprint`got ${locator.value}`
+      );
+      const selector = locator.value;
+      const contextId = selector.context;
+      lazy.assert.string(
+        contextId,
+        `Expected "locator.value.context" of "locator.type" "${locator.type}" to be a string, ` +
+          lazy.pprint`got ${contextId}`
+      );
+
+      const childContext = this.#getBrowsingContext(contextId);
+      if (childContext.parent !== context) {
+        throw new lazy.error.InvalidArgumentError(
+          `Expected "locator.context" (${contextId}) to be a direct child context of "context" (${navigableId})`
+        );
+      }
+
+      // Replace the locator selector context value by the internal browsing
+      // context id.
+      locator.value.context = childContext.id;
+    }
+
     if (
-      ![LocatorType.accessibility, LocatorType.css, LocatorType.xpath].includes(
-        locator.type
-      )
+      ![
+        LocatorType.accessibility,
+        LocatorType.context,
+        LocatorType.css,
+        LocatorType.xpath,
+      ].includes(locator.type)
     ) {
       throw new lazy.error.UnsupportedOperationError(
         `"locator.type" argument with value: ${locator.type} is not supported yet.`
