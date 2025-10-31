@@ -877,29 +877,6 @@ translations:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
-  offer_event:
-    type: event
-    description: |
-      The translations engine decided the user may be interested in a translation or that the user
-      should be offered a translation.
-      An "expected" event means the user is expected to want to translate and we should show the feature on the toolbar.
-      An "offer" event means we should popup the translations dialog.
-    extra_keys:
-      item:
-        description: |
-          A string containing the type of signal sent by the translations engine.
-          These signals include:
-          expected, offer
-        type: string
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886851
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886851#c8
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: never
   translate_requested:
     type: event
     description: |
@@ -963,21 +940,15 @@ translations:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
-  engine_supported:
+  engine_unsupported:
     type: event
     description: |
       The translations engine for translating pages is only supported on certain devices.
-      This probe indicates if the device supports the translations engine or not.
-    extra_keys:
-      support:
-        description: |
-          A string describing the support of the engine, either:
-          supported, unsupported,
-        type: string
+      This probe is sent when the device does not support the translations engine.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1978120
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221#c3
+      - https://phabricator.services.mozilla.com/D270865
     data_sensitivity:
       - technical
     notification_emails:
