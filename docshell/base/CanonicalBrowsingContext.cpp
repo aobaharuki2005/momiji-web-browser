@@ -1279,7 +1279,9 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
                       "NotTop: Loading from session history");
           mActiveEntry = newActiveEntry;
           if (Navigation::IsAPIEnabled() && !mActiveEntry->isInList()) {
-            mActiveEntryList.insertBack(mActiveEntry);
+            mActiveEntryList.clear();
+            mActiveEntryList =
+                shistory->ConstructContiguousEntryListFrom(mActiveEntry);
           }
 
           shistory->InternalSetRequestedIndex(indexOfHistoryLoad);

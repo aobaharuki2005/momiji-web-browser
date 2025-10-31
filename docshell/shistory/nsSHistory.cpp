@@ -2502,14 +2502,24 @@ mozilla::dom::SessionHistoryEntry* nsSHistory::FindAdjacentContiguousEntryFor(
 
 LinkedList<SessionHistoryEntry> nsSHistory::ConstructContiguousEntryListFrom(
     SessionHistoryEntry* aEntry) {
+  if (aEntry->isInList()) {
+    aEntry->remove();
+  }
+
   LinkedList<SessionHistoryEntry> entryList;
   entryList.insertBack(aEntry);
   for (auto* entry = aEntry;
        (entry = FindAdjacentContiguousEntryFor(entry, -1));) {
+    if (entry->isInList()) {
+      entry->remove();
+    }
     entryList.insertFront(entry);
   }
   for (auto* entry = aEntry;
        (entry = FindAdjacentContiguousEntryFor(entry, 1));) {
+    if (entry->isInList()) {
+      entry->remove();
+    }
     entryList.insertBack(entry);
   }
   return entryList;
