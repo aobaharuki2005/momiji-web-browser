@@ -82,10 +82,8 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TabsTrayTelemetryMiddleware
 import org.mozilla.fenix.tabstray.binding.SecureTabManagerBinding
 import org.mozilla.fenix.tabstray.browser.TabSorter
-import org.mozilla.fenix.tabstray.controller.DefaultNavigationInteractor
 import org.mozilla.fenix.tabstray.controller.DefaultTabManagerController
 import org.mozilla.fenix.tabstray.controller.DefaultTabManagerInteractor
-import org.mozilla.fenix.tabstray.controller.NavigationInteractor
 import org.mozilla.fenix.tabstray.controller.TabManagerController
 import org.mozilla.fenix.tabstray.controller.TabManagerInteractor
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsIntegration
@@ -105,7 +103,6 @@ class TabManagementFragment : DialogFragment() {
 
     private lateinit var tabManagerInteractor: TabManagerInteractor
     private lateinit var tabManagerController: TabManagerController
-    private lateinit var navigationInteractor: NavigationInteractor
     private lateinit var enablePbmPinLauncher: ActivityResultLauncher<Intent>
 
     @VisibleForTesting
@@ -168,16 +165,8 @@ class TabManagementFragment : DialogFragment() {
             )
         }
 
-        navigationInteractor =
-            DefaultNavigationInteractor(
-                browserStore = requireComponents.core.store,
-                navController = findNavController(),
-                dismissTabManagerAndNavigateHome = ::navigateToHomeAndDeleteSession,
-                showCancelledDownloadWarning = ::showCancelledDownloadWarning,
-                accountManager = requireComponents.backgroundServices.accountManager,
-            )
-
         tabManagerController = DefaultTabManagerController(
+            accountManager = requireComponents.backgroundServices.accountManager,
             activity = activity,
             appStore = requireComponents.appStore,
             tabsTrayStore = tabsTrayStore,
@@ -186,7 +175,6 @@ class TabManagementFragment : DialogFragment() {
             browsingModeManager = activity.browsingModeManager,
             navController = findNavController(),
             navigateToHomeAndDeleteSession = ::navigateToHomeAndDeleteSession,
-            navigationInteractor = navigationInteractor,
             profiler = requireComponents.core.engine.profiler,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
             fenixBrowserUseCases = requireComponents.useCases.fenixBrowserUseCases,
@@ -337,9 +325,9 @@ class TabManagementFragment : DialogFragment() {
                         onSaveToCollectionClick = tabManagerInteractor::onAddSelectedTabsToCollectionClicked,
                         onShareSelectedTabsClick = tabManagerInteractor::onShareSelectedTabs,
 
-                        onTabSettingsClick = navigationInteractor::onTabSettingsClicked,
-                        onRecentlyClosedClick = navigationInteractor::onOpenRecentlyClosedClicked,
-                        onAccountSettingsClick = navigationInteractor::onAccountSettingsClicked,
+                        onTabSettingsClick = tabManagerController::onTabSettingsClicked,
+                        onRecentlyClosedClick = tabManagerController::onOpenRecentlyClosedClicked,
+                        onAccountSettingsClick = tabManagerController::onAccountSettingsClicked,
                         onDeleteAllTabsClick = {
                             if (tabsTrayStore.state.selectedPage == Page.NormalTabs) {
                                 tabsTrayStore.dispatch(TabsTrayAction.CloseAllNormalTabs)
@@ -347,7 +335,7 @@ class TabManagementFragment : DialogFragment() {
                                 tabsTrayStore.dispatch(TabsTrayAction.CloseAllPrivateTabs)
                             }
 
-                            navigationInteractor.onCloseAllTabsClicked(
+                            tabManagerController.onCloseAllTabsClicked(
                                 private = tabsTrayStore.state.selectedPage == Page.PrivateTabs,
                             )
                         },
@@ -361,7 +349,7 @@ class TabManagementFragment : DialogFragment() {
                             PrivateBrowsingLocked.bannerNegativeClicked.record()
                         },
                         onTabAutoCloseBannerViewOptionsClick = {
-                            navigationInteractor.onTabSettingsClicked()
+                            tabManagerController.onTabSettingsClicked()
                             requireContext().settings().shouldShowAutoCloseTabsBanner =
                                 false
                             requireContext().settings().lastCfrShownTimeInMillis =
@@ -387,7 +375,7 @@ class TabManagementFragment : DialogFragment() {
                                 false
                             requireContext().settings().lastCfrShownTimeInMillis =
                                 System.currentTimeMillis()
-                            navigationInteractor.onTabSettingsClicked()
+                            tabManagerController.onTabSettingsClicked()
                             TabsTray.inactiveTabsCfrSettings.record(NoExtras())
                         },
                         onInactiveTabsCFRDismiss = {
@@ -516,7 +504,7 @@ class TabManagementFragment : DialogFragment() {
         if (tabId != null) {
             tabManagerInteractor.onDeletePrivateTabWarningAccepted(tabId, source)
         } else {
-            navigationInteractor.onCloseAllPrivateTabsWarningConfirmed(private = true)
+            tabManagerController.onCloseAllPrivateTabsWarningConfirmed(private = true)
         }
     }
 
