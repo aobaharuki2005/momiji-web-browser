@@ -532,9 +532,6 @@ document.addEventListener(
         case "tabContextMenu":
           TabContextMenu.addNewBadge();
           break;
-        case "moveTabOptionsMenu":
-          gProfiles.populateMoveTabMenu(event.target);
-          break;
       }
     });
 

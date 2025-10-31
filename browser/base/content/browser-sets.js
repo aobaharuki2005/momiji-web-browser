@@ -203,7 +203,6 @@ document.addEventListener(
           case "Profiles:CreateProfile":
           case "Profiles:ManageProfiles":
           case "Profiles:LaunchProfile":
-          case "Profiles:MoveTabsToProfile":
             gProfiles.handleCommand(event);
             break;
           case "Tools:Search":
