@@ -1665,7 +1665,9 @@ void DataChannel::SetMaxMessageSize(double aMaxMessageSize) {
         ("%p: DataChannel has updated its maximum message size. Synchronously "
          "informing mainthread RTCDataChannel.",
          this));
-    mMainthreadDomDataChannel->SetMaxMessageSize(aMaxMessageSize);
+    if (mMainthreadDomDataChannel) {
+      mMainthreadDomDataChannel->SetMaxMessageSize(aMaxMessageSize);
+    }
   }
 }
 
