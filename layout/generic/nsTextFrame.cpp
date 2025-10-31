@@ -5839,7 +5839,7 @@ static bool ComputeDecorationInset(
   // text indentation and calculate geometry using line boxes.
   if (aDecFrame->IsInlineFrame()) {
     frameRect = nsRect{aFrame->GetOffsetTo(aDecFrame), aFrame->GetSize()};
-    inlineRect = nsRect{nsPoint(0, 0), aDecFrame->GetSize()};
+    inlineRect = aDecFrame->GetContentRectRelativeToSelf();
   } else {
     nsIFrame* const lineContainer = FindLineContainer(aFrame);
     nsILineIterator* const iter = lineContainer->GetLineIterator();
