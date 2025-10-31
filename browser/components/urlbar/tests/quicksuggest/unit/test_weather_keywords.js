@@ -391,9 +391,7 @@ async function doKeywordsTest({
   info("Doing keywords test: " + desc);
   info(JSON.stringify({ nimbusValues, settingsData, minKeywordLength }));
 
-  let cleanup = GeolocationTestUtils.stubGeolocation(
-    GeolocationTestUtils.SAN_FRANCISCO
-  );
+  let cleanup = GeolocationTestUtils.stubGeolocation();
 
   let nimbusCleanup;
   if (nimbusValues) {
@@ -567,9 +565,7 @@ async function doShowLessFrequentlyTest({
   info("Doing increment test: " + desc);
   info(JSON.stringify({ weather, configuration, nimbusValues }));
 
-  let cleanup = GeolocationTestUtils.stubGeolocation(
-    GeolocationTestUtils.SAN_FRANCISCO
-  );
+  let cleanup = GeolocationTestUtils.stubGeolocation();
 
   let nimbusCleanup;
   if (nimbusValues) {

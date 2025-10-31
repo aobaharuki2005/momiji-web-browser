@@ -487,9 +487,7 @@ add_task(async function selected_result_weather() {
 
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
   await MerinoTestUtils.initWeather();
-  const cleanupGeolocation = GeolocationTestUtils.stubGeolocation(
-    GeolocationTestUtils.SAN_FRANCISCO
-  );
+  const cleanupGeolocation = GeolocationTestUtils.stubGeolocation();
 
   await doTest(async () => {
     let provider = "UrlbarProviderQuickSuggest";

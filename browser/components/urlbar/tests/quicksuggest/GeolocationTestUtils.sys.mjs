@@ -13,14 +13,6 @@ const lazy = XPCOMUtils.declareLazy({
  *
  */
 class _GeolocationTestUtils {
-  get SAN_FRANCISCO() {
-    return {
-      country_code: "US",
-      city: "San Francisco",
-      region_code: "CA",
-    };
-  }
-
   /**
    * Initializes the utils.
    *
@@ -40,14 +32,24 @@ class _GeolocationTestUtils {
 
   /**
    * Setup stub for GeolocationUtils.geolocation() using given geolocation.
+   * If the geolocation parameter is null, set "San Francisco" geolocation.
+   * NOTE: This returns function to restore the dummy function.
    *
-   * @param {object} geolocation
+   * @param {object} [geolocation]
    * @param {string} [geolocation.country_code]
    * @param {string} [geolocation.city]
    * @param {string} [geolocation.region_code]
    * @returns {Function} function to restore the stub.
    */
   stubGeolocation(geolocation) {
+    if (!geolocation) {
+      geolocation = {
+        country_code: "US",
+        city: "San Francisco",
+        region_code: "CA",
+      };
+    }
+
     let sandbox = lazy.sinon.createSandbox();
     sandbox.stub(lazy.GeolocationUtils, "geolocation").resolves(geolocation);
 
