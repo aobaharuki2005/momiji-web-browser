@@ -57,6 +57,39 @@ let gExceptionsList = [
     key: "MathML_DeprecatedMathVariantWarning",
     type: "single-quote",
   },
+  {
+    file: "dom.properties",
+    key: "MathML_DeprecatedMoExplicitAccentWarning",
+    type: "single-quote",
+  },
+  // dom.properties is packaged twice so we need to have two exceptions for this string.
+  {
+    file: "dom.properties",
+    key: "MathML_DeprecatedMoExplicitAccentWarning",
+    type: "single-quote",
+  },
+  {
+    file: "dom.properties",
+    key: "MathML_DeprecatedMoverNonExplicitAccentWarning",
+    type: "single-quote",
+  },
+  // dom.properties is packaged twice so we need to have two exceptions for this string.
+  {
+    file: "dom.properties",
+    key: "MathML_DeprecatedMoverNonExplicitAccentWarning",
+    type: "single-quote",
+  },
+  {
+    file: "dom.properties",
+    key: "MathML_DeprecatedMunderNonExplicitAccentunderWarning",
+    type: "single-quote",
+  },
+  // dom.properties is packaged twice so we need to have two exceptions for this string.
+  {
+    file: "dom.properties",
+    key: "MathML_DeprecatedMunderNonExplicitAccentunderWarning",
+    type: "single-quote",
+  },
   // These error messages contain references to the CSP keywords like 'unsafe-eval',
   // and those keywords contain actual single-quotes: https://w3c.github.io/webappsec-csp/#grammardef-keyword-source
   {

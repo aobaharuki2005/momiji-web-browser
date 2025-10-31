@@ -11,10 +11,12 @@
 #include "gfxContext.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_mathml.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/MathMLElement.h"
 #include "nsCSSValue.h"
 #include "nsContentUtils.h"
 #include "nsFrameSelection.h"
+#include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 
@@ -225,11 +227,31 @@ void nsMathMLmoFrame::ProcessOperatorData() {
     }
 
     // see if the accent attribute is there
-    mContent->AsElement()->GetAttr(nsGkAtoms::accent, value);
-    if (value.LowerCaseEqualsLiteral("true")) {
-      mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
-    } else if (value.LowerCaseEqualsLiteral("false")) {
-      mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
+    if (mContent->AsElement()->GetAttr(nsGkAtoms::accent, value)) {
+      [&]() {
+        AutoTArray<nsString, 2> params;
+        auto parentName = GetParent()->GetContent()->NodeInfo()->NameAtom();
+        if (parentName == nsGkAtoms::mover) {
+          params.AppendElement(u"accent");
+          params.AppendElement(u"mover");
+        } else if (parentName == nsGkAtoms::munder) {
+          params.AppendElement(u"accentunder");
+          params.AppendElement(u"munder");
+        } else if (parentName == nsGkAtoms::munderover) {
+          params.AppendElement(u"accent/accentunder");
+          params.AppendElement(u"munderover");
+        } else {
+          return;
+        }
+        PresContext()->Document()->WarnOnceAbout(
+            dom::DeprecatedOperations::eMathML_DeprecatedMoExplicitAccent,
+            false, params);
+      }();
+      if (value.LowerCaseEqualsLiteral("true")) {
+        mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
+      } else if (value.LowerCaseEqualsLiteral("false")) {
+        mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
+      }
     }
 
     // see if the movablelimits attribute is there
