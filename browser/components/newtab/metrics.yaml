@@ -1397,6 +1397,7 @@ topsites:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1821556#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1824842#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1996666#c7
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1428,6 +1429,12 @@ topsites:
       visible_topsites: &visible_topsites
         description: The quantity of visible topsites when event occurred
         type: quantity
+      smart_scores: &smart_scores
+        description: stringified json storing scores for each feature during smart shortcut ranking
+        type: string
+      smart_weights: &smart_weights
+        description: stringified json storing weights for each feature during smart shortcut ranking
+        type: string
     send_in_pings:
       - newtab
 
@@ -1449,6 +1456,7 @@ topsites:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1821556#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1824842#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1996666#c7
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1466,6 +1474,8 @@ topsites:
       position: *topsite_position
       is_pinned: *is_pinned
       visible_topsites: *visible_topsites
+      smart_scores: *smart_scores
+      smart_weights: *smart_weights
     send_in_pings:
       - newtab
 

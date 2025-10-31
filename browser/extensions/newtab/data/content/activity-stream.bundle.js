@@ -9170,7 +9170,9 @@ class TopSiteLink extends (external_React_default()).PureComponent {
           source: NEWTAB_SOURCE,
           isPinned: this.props.link.isPinned,
           guid: this.props.link.guid,
-          visible_topsites: visibleTopSites
+          visible_topsites: visibleTopSites,
+          smartScores: this.props.link.scores,
+          smartWeights: this.props.link.weights
         }
         // For testing.
         ,
@@ -9384,7 +9386,9 @@ class TopSite extends (external_React_default()).PureComponent {
             source: NEWTAB_SOURCE,
             isPinned: this.props.link.isPinned,
             guid: this.props.link.guid,
-            visible_topsites: this.props.visibleTopSites
+            visible_topsites: this.props.visibleTopSites,
+            smartScores: this.props.link.scores,
+            smartWeights: this.props.link.weights
           }
         }));
       }

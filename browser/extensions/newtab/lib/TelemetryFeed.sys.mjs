@@ -691,6 +691,13 @@ export class TelemetryFeed {
           position: action.data.position,
           is_pinned: !!action.data.isPinned,
           visible_topsites,
+          // @backward-compat { version 146 } This newtab train-hop compatibility
+          // shim can be removed once Firefox 146 makes it to the release channel.
+          ...(Services.vc.compare(AppConstants.MOZ_APP_VERSION, "146.0a1") >=
+            0 && {
+            smart_scores: JSON.stringify(action.data.smartScores),
+            smart_weights: JSON.stringify(action.data.smartWeights),
+          }),
         });
         break;
 
@@ -701,6 +708,13 @@ export class TelemetryFeed {
           position: action.data.position,
           is_pinned: !!action.data.isPinned,
           visible_topsites,
+          // @backward-compat { version 146 } This newtab train-hop compatibility
+          // shim can be removed once Firefox 146 makes it to the release channel.
+          ...(Services.vc.compare(AppConstants.MOZ_APP_VERSION, "146.0a1") >=
+            0 && {
+            smart_scores: JSON.stringify(action.data.smartScores),
+            smart_weights: JSON.stringify(action.data.smartWeights),
+          }),
         });
         break;
 
