@@ -158,6 +158,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         setupInAllProcesses()
 
+        // If the main process crashes before we've reached visual completeness, we consider it to
+        // be a startup crash and fork into the recovery flow. The activity that is responsible for
+        // that flow is hosted in a separate process, which means that we avoid the majority of
+        // initialization work that is done in `setupInMainProcess`
+        // Please see the README.md in the fenix/startupCrash package for more information.
         if (!isMainProcess()) {
             // If this is not the main process then do not continue with the initialization here. Everything that
             // follows only needs to be done in our app's main process and should not be done in other processes like
@@ -167,6 +172,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
 
         // DO NOT ADD ANYTHING ABOVE HERE.
+        // Note: That the startup crash recovery flow is hosted in a different process,
+        // so this call will be avoided in that case
         setupInMainProcessOnly()
         // DO NOT ADD ANYTHING UNDER HERE.
 
@@ -510,7 +517,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     }
 
     private fun handleCaughtException() {
-        if (isMainProcess() && !components.performance.visualCompletenessQueue.isReady()) {
+        if (
+            isMainProcess() &&
+            Config.channel.isNightlyOrDebug &&
+            !components.performance.visualCompletenessQueue.isReady()
+        ) {
             val intent = Intent(applicationContext, StartupCrashActivity::class.java)
 
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
