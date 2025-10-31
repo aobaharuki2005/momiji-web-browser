@@ -6,6 +6,7 @@
 
 #include "nsMathMLOperators.h"
 
+#include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/intl/UnicodeProperties.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -56,7 +57,8 @@ static void SetBooleanProperty(OperatorData* aOperatorData, nsString aName) {
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY;
   } else if (aName.EqualsLiteral("fence")) {
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_FENCE;
-  } else if (aName.EqualsLiteral("accent")) {
+  } else if (!StaticPrefs::mathml_operator_dictionary_accent_disabled() &&
+             aName.EqualsLiteral("accent")) {
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_ACCENT;
   } else if (aName.EqualsLiteral("largeop")) {
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_LARGEOP;
