@@ -996,31 +996,63 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "NamedNodeMap", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "NavigateEvent", insecureContext: true, disabled: true },
+  {
+    name: "NavigateEvent",
+    insecureContext: true,
+    nightly: true,
+    sessionHistoryInParent: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Navigation", insecureContext: true, disabled: true },
+  {
+    name: "Navigation",
+    insecureContext: true,
+    nightly: true,
+    sessionHistoryInParent: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "NavigationActivation", insecureContext: true, disabled: true },
+  {
+    name: "NavigationActivation",
+    insecureContext: true,
+    nightly: true,
+    sessionHistoryInParent: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "NavigationCurrentEntryChangeEvent",
     insecureContext: true,
-    disabled: true,
+    nightly: true,
+    sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "NavigationDestination", insecureContext: true, disabled: true },
+  {
+    name: "NavigationDestination",
+    insecureContext: true,
+    nightly: true,
+    sessionHistoryInParent: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "NavigationHistoryEntry", insecureContext: true, disabled: true },
+  {
+    name: "NavigationHistoryEntry",
+    insecureContext: true,
+    nightly: true,
+    sessionHistoryInParent: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "NavigationPrecommitController",
     insecureContext: true,
-    disabled: true,
+    nightly: true,
+    sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "NavigationPreloadManager",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "NavigationTransition", insecureContext: true, disabled: true },
+  {
+    name: "NavigationTransition",
+    insecureContext: true,
+    nightly: true,
+    sessionHistoryInParent: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Navigator", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1784,6 +1816,13 @@ let interfaceNamesInGlobalScope = [
   { name: "mozInnerScreenY", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "name", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  {
+    name: "navigation",
+    insecureContext: true,
+    nightly: true,
+    sessionHistoryInParent: true,
+  },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "navigator", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
