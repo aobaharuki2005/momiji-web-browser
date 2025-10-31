@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+/**
+ * @import { MLEngineChild } from "./MLEngineChild.sys.mjs"
+ */
+
 const lazy = XPCOMUtils.declareLazy({
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
@@ -227,10 +231,8 @@ export class MLEngineParent extends JSProcessActorParent {
       // Wait for the existing lock to resolve
       await MLEngineParent.engineLocks.get(engineId);
     }
-    let resolveLock;
-    const lockPromise = new Promise(resolve => {
-      resolveLock = resolve;
-    });
+    const { promise: lockPromise, resolve: resolveLock } =
+      Promise.withResolvers();
     MLEngineParent.engineLocks.set(engineId, lockPromise);
     MLEngineParent.engineCreationAbortSignal.set(engineId, abortSignal);
     try {
@@ -783,10 +785,15 @@ export class MLEngineParent extends JSProcessActorParent {
   }
 
   /**
-   * Gets a status
+   * Goes through the engines and determines their status. This is used by about:inference
+   * to display debug information about the engines.
+   *
+   * @see MLEngineChild#getStatusByEngineId
+   *
+   * @returns {Promise<StatusByEngineId>}
    */
-  getStatus() {
-    return this.sendQuery("MLEngine:GetStatus");
+  getStatusByEngineId() {
+    return this.sendQuery("MLEngine:GetStatusByEngineId");
   }
 
   /**
@@ -941,7 +948,7 @@ export class MLEngine {
   #requests = new Map();
 
   /**
-   * @type {"uninitialized" | "ready" | "error" | "closed"}
+   * @type {"uninitialized" | "ready" | "error" | "closed" | "crashed"}
    */
   engineStatus = "uninitialized";
 

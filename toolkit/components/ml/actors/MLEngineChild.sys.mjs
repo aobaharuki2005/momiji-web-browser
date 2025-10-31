@@ -9,6 +9,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 /**
  * @import { BasePromiseWorker } from "resource://gre/modules/PromiseWorker.sys.mjs"
  * @import { PipelineOptions } from "chrome://global/content/ml/EngineProcess.sys.mjs"
+ * @import { EngineStatus, EngineId, StatusByEngineId } from "../ml.d.ts"
  * @import { ProgressAndStatusCallbackParams } from "chrome://global/content/ml/Utils.sys.mjs"
  */
 
@@ -62,11 +63,11 @@ export class MLEngineChild extends JSProcessActorChild {
   #engineDispatchers = new Map();
 
   /**
-   * Engine statuses
+   * Tracks that an engine is present, even if the dispatcher is not present yet.
    *
-   * @type {Map<string, string>}
+   * @type {Map<EngineId, PipelineOptions>}
    */
-  #engineStatuses = new Map();
+  #enginesPresent = new Map();
 
   // eslint-disable-next-line consistent-return
   async receiveMessage({ name, data }) {
@@ -75,8 +76,8 @@ export class MLEngineChild extends JSProcessActorChild {
         await this.#onNewPortCreated(data);
         break;
       }
-      case "MLEngine:GetStatus": {
-        return this.getStatus();
+      case "MLEngine:GetStatusByEngineId": {
+        return this.getStatusByEngineId();
       }
       case "MLEngine:ForceShutdown": {
         for (const engineDispatcher of this.#engineDispatchers.values()) {
@@ -114,7 +115,7 @@ export class MLEngineChild extends JSProcessActorChild {
         this.getUpdatedPipelineOptions(pipelineOptions);
       options.updateOptions(updatedPipelineOptions);
       const engineId = options.engineId;
-      this.#engineStatuses.set(engineId, "INITIALIZING");
+      this.#enginesPresent.set(engineId, options);
 
       // Check if we already have an engine under this id.
       if (this.#engineDispatchers.has(engineId)) {
@@ -126,8 +127,6 @@ export class MLEngineChild extends JSProcessActorChild {
             type: "EnginePort:EngineReady",
             error: null,
           });
-          this.#engineStatuses.set(engineId, "READY");
-
           return;
         }
 
@@ -138,8 +137,6 @@ export class MLEngineChild extends JSProcessActorChild {
         );
         this.#engineDispatchers.delete(engineId);
       }
-
-      this.#engineStatuses.set(engineId, "CREATING");
 
       const dispatcher = new EngineDispatcher(this, port, options);
       this.#engineDispatchers.set(engineId, dispatcher);
@@ -154,7 +151,6 @@ export class MLEngineChild extends JSProcessActorChild {
         await dispatcher.isReady();
       }
 
-      this.#engineStatuses.set(engineId, "READY");
       port.postMessage({
         type: "EnginePort:EngineReady",
         error: null,
@@ -238,7 +234,7 @@ export class MLEngineChild extends JSProcessActorChild {
    */
   removeEngine(engineId, shutDownIfEmpty, replacement) {
     this.#engineDispatchers.delete(engineId);
-    this.#engineStatuses.delete(engineId);
+    this.#enginesPresent.delete(engineId);
 
     try {
       this.sendAsyncMessage("MLEngine:Removed", {
@@ -262,19 +258,26 @@ export class MLEngineChild extends JSProcessActorChild {
     }
   }
 
-  /*
+  /**
    * Collects information about the current status.
+   *
+   * @returns {StatusByEngineId}
    */
-  async getStatus() {
+  getStatusByEngineId() {
+    /** @type {StatusByEngineId} */
     const statusMap = new Map();
 
-    for (const [key, value] of this.#engineStatuses) {
-      if (this.#engineDispatchers.has(key)) {
-        statusMap.set(key, this.#engineDispatchers.get(key).getStatus());
-      } else {
-        // The engine is probably being created
-        statusMap.set(key, { status: value });
+    for (let [engineId, options] of this.#enginesPresent) {
+      const dispatcher = this.#engineDispatchers.get(engineId);
+      let status = dispatcher.getStatus();
+      if (!status) {
+        // This engine doesn't have a dispatcher yet.
+        status = {
+          status: "SHUTTING_DOWN_PREVIOUS_ENGINE",
+          options,
+        };
       }
+      statusMap.set(engineId, status);
     }
     return statusMap;
   }
@@ -329,7 +332,7 @@ class EngineDispatcher {
   /** @type {PipelineOptions | null} */
   pipelineOptions = null;
 
-  /** @type {string} */
+  /** @type {EngineStatus} */
   #status;
 
   /**
@@ -414,7 +417,7 @@ class EngineDispatcher {
    * @param {PipelineOptions} pipelineOptions
    */
   constructor(mlEngineChild, port, pipelineOptions) {
-    this.#status = "CREATED";
+    this.#status = "INITIALIZING";
     /** @type {MLEngineChild} */
     this.mlEngineChild = mlEngineChild;
     this.#featureId = pipelineOptions.featureId;
@@ -431,7 +434,7 @@ class EngineDispatcher {
 
     this.#engine
       .then(() => {
-        this.#status = "READY";
+        this.#status = "IDLE";
         // Trigger the keep alive timer.
         void this.keepAlive();
       })
@@ -454,7 +457,6 @@ class EngineDispatcher {
     return {
       status: this.#status,
       options: this.pipelineOptions,
-      engineId: this.#engineId,
     };
   }
 
@@ -583,7 +585,7 @@ class EngineDispatcher {
               error,
             });
           }
-          this.#status = "IDLING";
+          this.#status = "IDLE";
           break;
         }
         default:
