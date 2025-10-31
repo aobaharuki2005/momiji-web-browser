@@ -151,7 +151,7 @@ export class MLEngineChild extends JSProcessActorChild {
       // NOTE: This is done after adding to #engineDispatchers to ensure other
       // async calls see the new dispatcher.
       if (!lazy.PipelineOptions.isMocked(pipelineOptions)) {
-        await dispatcher.ensureInferenceEngineIsReady();
+        await dispatcher.isReady();
       }
 
       this.#engineStatuses.set(engineId, "READY");
@@ -314,8 +314,8 @@ class EngineDispatcher {
   /** @type {PromiseWithResolvers} */
   #modelRequest;
 
-  /** @type {Promise<InferenceEngine> | null} */
-  #engine = null;
+  /** @type {Promise<InferenceEngine>} */
+  #engine;
 
   /** @type {string} */
   #taskName;
@@ -429,9 +429,12 @@ class EngineDispatcher {
       }
     );
 
-    // Trigger the keep alive timer.
     this.#engine
-      .then(() => void this.keepAlive())
+      .then(() => {
+        this.#status = "READY";
+        // Trigger the keep alive timer.
+        void this.keepAlive();
+      })
       .catch(error => {
         if (
           // Ignore errors from tests intentionally causing errors.
@@ -453,14 +456,6 @@ class EngineDispatcher {
       options: this.pipelineOptions,
       engineId: this.#engineId,
     };
-  }
-
-  /**
-   * Resolves the engine to fully initialize it.
-   */
-  async ensureInferenceEngineIsReady() {
-    this.#engine = await this.#engine;
-    this.#status = "READY";
   }
 
   handleInitProgressStatus(port, notificationsData) {
@@ -508,6 +503,13 @@ class EngineDispatcher {
   }
 
   /**
+   * Wait for the engine to be ready.
+   */
+  async isReady() {
+    await this.#engine;
+  }
+
+  /**
    * @param {MessagePort} port
    */
   #setupMessageHandler(port) {
@@ -544,7 +546,7 @@ class EngineDispatcher {
         case "EnginePort:Run": {
           const { requestId, request, engineRunOptions } = data;
           try {
-            await this.ensureInferenceEngineIsReady();
+            await this.isReady();
           } catch (error) {
             port.postMessage({
               type: "EnginePort:RunResponse",
@@ -565,15 +567,12 @@ class EngineDispatcher {
           this.keepAlive();
 
           this.#status = "RUNNING";
+          const engine = await this.#engine;
           try {
             port.postMessage({
               type: "EnginePort:RunResponse",
               requestId,
-              response: await this.#engine.run(
-                request,
-                requestId,
-                engineRunOptions
-              ),
+              response: await engine.run(request, requestId, engineRunOptions),
               error: null,
             });
           } catch (error) {
