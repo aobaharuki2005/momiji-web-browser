@@ -214,16 +214,6 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       }
     }
 
-    let localeOverridePerContext = null;
-    let localeOverridePerUserContext = null;
-
-    let timezoneOverridePerContext = null;
-    let timezoneOverridePerUserContext = null;
-
-    let userAgentOverrideGlobal = null;
-    let userAgentOverridePerUserContext = null;
-    let userAgentOverridePerContext = null;
-
     // The following overrides apply only to top-level traversables.
     if (
       (category === "geolocation-override" ||
@@ -234,6 +224,16 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
         category === "user-agent-override") &&
       !this.messageHandler.context.parent
     ) {
+      let localeOverridePerContext = null;
+      let localeOverridePerUserContext = null;
+
+      let timezoneOverridePerContext = null;
+      let timezoneOverridePerUserContext = null;
+
+      let userAgentOverrideGlobal = null;
+      let userAgentOverridePerUserContext = null;
+      let userAgentOverridePerContext = null;
+
       for (const { contextDescriptor, value } of sessionData) {
         if (!this.messageHandler.matchesContext(contextDescriptor)) {
           continue;
@@ -305,23 +305,34 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
           }
         }
       }
+
+      switch (category) {
+        case "locale-override": {
+          this.#localeOverride = this.#findCorrectOverrideValue(
+            localeOverridePerContext,
+            localeOverridePerUserContext
+          );
+          break;
+        }
+        case "timezone-override": {
+          this.#timezoneOverride = this.#findCorrectOverrideValue(
+            timezoneOverridePerContext,
+            timezoneOverridePerUserContext
+          );
+
+          break;
+        }
+        case "user-agent-override": {
+          this.#userAgentOverride = this.#findCorrectOverrideValue(
+            userAgentOverridePerContext,
+            userAgentOverridePerUserContext,
+            userAgentOverrideGlobal
+          );
+
+          break;
+        }
+      }
     }
-
-    this.#localeOverride = this.#findCorrectOverrideValue(
-      localeOverridePerContext,
-      localeOverridePerUserContext
-    );
-
-    this.#timezoneOverride = this.#findCorrectOverrideValue(
-      timezoneOverridePerContext,
-      timezoneOverridePerUserContext
-    );
-
-    this.#userAgentOverride = this.#findCorrectOverrideValue(
-      userAgentOverridePerContext,
-      userAgentOverridePerUserContext,
-      userAgentOverrideGlobal
-    );
   }
 
   // For some emulations a value set per a browsing context overrides
