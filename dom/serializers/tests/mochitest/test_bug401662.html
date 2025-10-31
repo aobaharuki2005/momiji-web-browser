@@ -38,11 +38,11 @@ window.onload = function() {
   var out = encoder.encodeToString();
   is(out, "foo", "style content serialized in plaintext?");
 
-  var encoder = Cu.createDocumentEncoder("text/html");
-  var doc = $("testframe2").contentDocument;
+  encoder = Cu.createDocumentEncoder("text/html");
+  doc = $("testframe2").contentDocument;
   encoder.init(doc, "text/plain", encoder.OutputBodyOnly);
   encoder.setCharset("UTF-8");
-  var out = encoder.encodeToString();
+  out = encoder.encodeToString();
   is(out.replace(/\r\n/g, "\n"), "foo\nbar{}", "visible style content NOT serialized in plaintext?");
 
   SimpleTest.finish();

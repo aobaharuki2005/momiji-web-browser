@@ -56,8 +56,7 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
 function hasExpectedFlavors() {
-  var cb = Cc["@mozilla.org/widget/clipboard;1"].
-           getService(Ci.nsIClipboard);
+  var cb = SpecialPowers.Services.clipboard;
 
   ok(cb.hasDataMatchingFlavors(["text/plain"], cb.kGlobalClipboard),
      "The clipboard has text/plain");

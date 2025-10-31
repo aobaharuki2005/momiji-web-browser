@@ -172,6 +172,10 @@ export default [
   "dom/workers/test/invalid.js",
   "dom/workers/test/threadErrors_worker1.js",
 
+  // Test files for serialization tests
+  "dom/serializers/tests/mochitest/file_htmlserializer_1*",
+  "dom/serializers/tests/mochitest/file_xhtmlserializer_1*",
+
   // Tests the module loader's path handling.
   // Dynamic imports contains non-optimal paths.
   "dom/workers/test/xpcshell/data/base_uri_worker.js",

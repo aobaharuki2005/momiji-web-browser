@@ -58,7 +58,7 @@ async function testCopyPaste(isXHTML) {
       ok(clipboard.hasDataMatchingFlavors(["text/html"], 1), "check text/html");
     }
   }
-  function clear(node, suppressUnicodeCheck) {
+  function clear() {
     textarea.blur();
     var sel = window.getSelection();
     sel.removeAllRanges();
@@ -113,7 +113,7 @@ async function testCopyPaste(isXHTML) {
     var expectedValue = expected;
     if (navigator.platform.includes("Win")) {
       // Windows has extra content.
-      var expectedValue =
+      expectedValue =
         kTextHtmlPrefixClipboardDataWindows +
         expected.replace(/\n/g, "\n") +
         kTextHtmlSuffixClipboardDataWindows;
@@ -247,12 +247,9 @@ async function testCopyPaste(isXHTML) {
     suppressUnicodeCheckIfHidden
   );
   testSelectionToString("");
-  // START Disabled due to bug 564688
-  if (false) {
-    testClipboardValue("text/plain", "");
-    testClipboardValue("text/html", "");
-  }
-  // END Disabled due to bug 564688
+  // XXX: disabled due to bug 564688
+  // testClipboardValue("text/plain", "");
+  // testClipboardValue("text/html", "");
   testInnerHTML("div6", "div6");
 
   await copyRangeToClipboard(
@@ -263,12 +260,9 @@ async function testCopyPaste(isXHTML) {
     suppressUnicodeCheckIfHidden
   );
   testSelectionToString("");
-  // START Disabled due to bug 564688
-  if (false) {
-    testClipboardValue("text/plain", "");
-    testClipboardValue("text/html", "");
-  }
-  // END Disabled due to bug 564688
+  // XXX: disabled due to bug 564688
+  // testClipboardValue("text/plain", "");
+  // testClipboardValue("text/html", "");
   testInnerHTML("div7", "div7");
 
   await copyRangeToClipboard(
@@ -279,12 +273,9 @@ async function testCopyPaste(isXHTML) {
     suppressUnicodeCheckIfHidden
   );
   testSelectionToString("");
-  // START Disabled due to bug 564688
-  if (false) {
-    testClipboardValue("text/plain", "");
-    testClipboardValue("text/html", "");
-  }
-  // END Disabled due to bug 564688
+  // XXX: disabled due to bug 564688
+  // testClipboardValue("text/plain", "");
+  // testClipboardValue("text/html", "");
   testInnerHTML("div8", "div8");
 
   await copyRangeToClipboard(
@@ -344,11 +335,11 @@ async function testCopyPaste(isXHTML) {
     testPasteHTML("contentEditable1", "Copy1then Paste"); // The <ul> should not appear because it has no <li>s
 
     // with text end node
-    var sel = window.getSelection();
+    sel = window.getSelection();
     sel.removeAllRanges();
-    var r = document.createRange();
-    var ul = $("ul2");
-    var parent = ul.parentNode;
+    r = document.createRange();
+    ul = $("ul2");
+    parent = ul.parentNode;
     r.setStart(parent, 0);
     r.setEnd(ul, 1);
     sel.addRange(r); // <div>{<ul id="ul2">\n}<li>LI</li></ul>Copy2then Paste</div>
@@ -361,11 +352,11 @@ async function testCopyPaste(isXHTML) {
     testPasteHTML("contentEditable2", "Copy2then Paste"); // The <ul> should not appear because it has no <li>s
 
     // with text end node and non-empty start
-    var sel = window.getSelection();
+    sel = window.getSelection();
     sel.removeAllRanges();
-    var r = document.createRange();
-    var ul = $("ul3");
-    var parent = ul.parentNode;
+    r = document.createRange();
+    ul = $("ul3");
+    parent = ul.parentNode;
     r.setStart(parent, 0);
     r.setEnd(ul, 1);
     sel.addRange(r); // <div>{<ul id="ul3"><li>\n</li>}<li>LI</li></ul>Copy3then Paste</div>
@@ -384,11 +375,11 @@ async function testCopyPaste(isXHTML) {
     );
 
     // with elements of different depth
-    var sel = window.getSelection();
+    sel = window.getSelection();
     sel.removeAllRanges();
-    var r = document.createRange();
+    r = document.createRange();
     var div1 = $("div1s");
-    var parent = div1.parentNode;
+    parent = div1.parentNode;
     r.setStart(parent, 0);
     r.setEnd(document.getElementById("div1se1"), 1); // after the "inner" DIV
     sel.addRange(r);
@@ -404,11 +395,11 @@ async function testCopyPaste(isXHTML) {
     );
 
     // with elements of different depth, and a text node at the end
-    var sel = window.getSelection();
+    sel = window.getSelection();
     sel.removeAllRanges();
-    var r = document.createRange();
-    var div1 = $("div2s");
-    var parent = div1.parentNode;
+    r = document.createRange();
+    div1 = $("div2s");
+    parent = div1.parentNode;
     r.setStart(parent, 0);
     r.setEnd(document.getElementById("div2se1"), 1); // after the "inner" DIV
     sel.addRange(r);
@@ -430,10 +421,10 @@ async function testCopyPaste(isXHTML) {
     var t1 = e1.childNodes[0];
     var t3 = e3.childNodes[0];
 
-    var sel = window.getSelection();
+    sel = window.getSelection();
     sel.removeAllRanges();
 
-    var r = document.createRange();
+    r = document.createRange();
     r.setStart(t1, 1);
     r.setEnd(e2, 0);
     sel.addRange(r); // <div>\n<span id="1127835crash1">1[</span><div id="1127835crash2">}<div>\n</div></div><a href="..." id="1127835crash3">3</a>\n</div>

@@ -28,8 +28,7 @@ function loadFileContent(aFile, aCharset) {
                                   .setSpec(window.location.href)
                                   .finalize();
 
-    var ios = SpecialPowers.Cc['@mozilla.org/network/io-service;1']
-            .getService(SpecialPowers.Ci.nsIIOService);
+    var ios = SpecialPowers.Services.io;
     var chann = ios.newChannel(aFile,
                                aCharset,
                                baseUri,
@@ -115,7 +114,7 @@ function testHtmlSerializer_1 () {
 
   node = document.getElementById('aList');
 
-  var select = window.getSelection();
+  select = window.getSelection();
   select.selectAllChildren(node);  
 
   encoder.init(document, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputSelectionOnly);
@@ -137,7 +136,6 @@ function testHtmlSerializer_1 () {
   expected = "<ol xmlns=\"http://www.w3.org/1999/xhtml\" id=\"aList\">\n   <li>Lorem ipsum dolor</li>\n  <li>sit amet, <strong>consectetuer</strong> </li>\n  <li>adipiscing elit</li>\n  <li>Nam eu sapien. Sed viverra lacus. Donec quis ipsum. Nunc cursus aliquet lectus. Nunc vitae eros. Class</li>\n  <li>aptent taciti</li>\n</ol>";
   is(out, expected, "test list node");
 
-  var liList = node.getElementsByTagName("li");
   var range = document.createRange();
 
   // selection start at the first child of the ol, and end after the element ol

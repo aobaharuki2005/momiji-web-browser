@@ -61,7 +61,7 @@ function testHtmlClipboardValue(suppressHTMLCheck, mime, expected) {
   var expectedValue = expected;
   if (navigator.platform.includes("Win")) {
     // Windows has extra content.
-    var expectedValue =
+    expectedValue =
       kTextHtmlPrefixClipboardDataWindows +
       expected.replace(/\n/g, "\n") +
       kTextHtmlSuffixClipboardDataWindows;
@@ -107,6 +107,10 @@ async function testCopyPasteShadowDOM() {
     sel.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
     await copySelectionToClipboard();
   }
+
+  let start1 = document.getElementById("start1");
+  let end1 = document.getElementById("end1");
+  let host1 = document.getElementById("host1");
 
   info("Test 1: Start is in Light DOM and end is a slotted node.");
   await copySelectionToClipboardShadow(
@@ -157,6 +161,11 @@ async function testCopyPasteShadowDOM() {
     '<slot><span id="end1">d</span>\n  </slot>\n      <span id="inner1">Inn</span>'
   );
   testPasteText(textarea, "d Inn");
+
+  let start2 = document.getElementById("start2");
+  let host2 = document.getElementById("host2");
+  let host2_slot2 = document.getElementById("host2_slot2");
+  let host2_slot4 = document.getElementById("host2_slot4");
 
   info(
     "Test 4: start is in light DOM and end is a slotted node with multiple assigned nodes in the same slot.\n"
@@ -229,6 +238,10 @@ async function testCopyPasteShadowDOM() {
     '<span id="start2">art</span>\n  <div id="host2">\n      <slot name="slot1"><span id="host2_slot1" slot="slot1">Slotted1</span><span id="host2_slot2" slot="slot1">Slotted2</span></slot>\n      <span id="inner2">Inner</span>\n      <slot name="slot2"><span slot="slot2">Slotted3</span><span id="host2_slot4" slot="slot2">Slotted4</span></slot></div>'
   );
   testPasteText(textarea, "art\nSlotted1Slotted2 Inner Slotted3Slotted4");
+
+  let host3 = document.getElementById("host3");
+  let host3_slot1 = document.getElementById("host3_slot1");
+  let host3_slot4 = document.getElementById("host3_slot4");
 
   info(
     "Test 8: Both start and end are slotted nodes, and their DOM tree order is reversed compare to flat tree order.\n"

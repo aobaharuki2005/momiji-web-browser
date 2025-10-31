@@ -3,18 +3,18 @@
 <!--
 -->
 <head>
-  <title>Test for XHTML serializer</title>
+  <title>Test for HTML serializer</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=422043">Mozilla Bug </a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=424359">Mozilla Bug </a>
 <p id="display"></p>
-<div id="content" style="display: none">
-</div>
 <!-- IMPORTANT: This iframe needs to actually be displayed, so the serializer
      sees the relevant styles for <pre> elements. -->
-<iframe id="testframe" src="file_xhtmlserializer_1.xhtml"></iframe>
+<iframe id="testframe" src="file_htmlserializer_1.html"></iframe>
+<div id="content" style="display: none">
+</div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -29,8 +29,7 @@ function loadFileContent(aFile, aCharset) {
                                   .setSpec(window.location.href)
                                   .finalize();
 
-    var ios = SpecialPowers.Cc['@mozilla.org/network/io-service;1']
-            .getService(SpecialPowers.Ci.nsIIOService);
+    var ios = SpecialPowers.Services.io;
     var chann = ios.newChannel(aFile,
                                aCharset,
                                baseUri,
@@ -52,12 +51,17 @@ function loadFileContent(aFile, aCharset) {
     return content;
 }
 
+function isRoughly(actual, expected, message) {
+  return is(actual.replace("<!DOCTYPE HTML", "<!DOCTYPE html"), 
+            expected, 
+            message);
+}
 
 function testHtmlSerializer_1 () {
-  const de = SpecialPowers.Ci.nsIDocumentEncoder
-  var encoder = SpecialPowers.Cu.createDocumentEncoder("application/xhtml+xml");
+  const de = SpecialPowers.Ci.nsIDocumentEncoder;
+  var encoder = SpecialPowers.Cu.createDocumentEncoder("text/html");
 
-  var doc = SpecialPowers.wrap($("testframe")).contentDocument;
+  var doc = $("testframe").contentDocument;
   var out, expected;
 
   // in the following tests, we must use the OutputLFLineBreak flag, to avoid
@@ -65,86 +69,87 @@ function testHtmlSerializer_1 () {
   // can pass on all platform
 
   //------------ no flags
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_noflag.xhtml");
-  is(out, expected, "test no flags");
+  expected = loadFileContent("file_htmlserializer_1_noflag.html");
+  isRoughly(out, expected, "test no flags");
 
   //------------- unsupported flags
   // since the following flags are not supported, we should
   // have a result like the one without flag
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputPreformatted);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputPreformatted);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputPreformatted");
+  isRoughly(out, expected, "test OutputPreformatted");
 
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputFormatFlowed);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputFormatFlowed);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputFormatFlowed");
+  isRoughly(out, expected, "test OutputFormatFlowed");
 
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputNoScriptContent);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoScriptContent);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputNoScriptContent");
+  isRoughly(out, expected, "test OutputNoScriptContent");
 
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputNoFramesContent);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoFramesContent);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputNoFramesContent");
+  isRoughly(out, expected, "test OutputNoFramesContent");
 
 
   //------------ OutputWrap
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputWrap);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak |de.OutputWrap);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_wrap.xhtml");
-  is(out, expected, "test OutputWrap");
+  expected = loadFileContent("file_htmlserializer_1_wrap.html");
+  isRoughly(out, expected, "test OutputWrap");
 
   //------------ OutputFormatted
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputFormatted);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputFormatted);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_format.xhtml");
-  is(out, expected, "test OutputFormatted");
+  expected = loadFileContent("file_htmlserializer_1_format.html");
+  isRoughly(out, expected, "test OutputFormatted");
 
   //------------ OutputRaw
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputRaw);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputRaw);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_raw.xhtml");
-  is(out, expected, "test OutputRaw");
+  expected = loadFileContent("file_htmlserializer_1_raw.html");
+  isRoughly(out, expected, "test OutputRaw");
 
   //------------ OutputBodyOnly
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputBodyOnly);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputBodyOnly);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_bodyonly.xhtml");
-  is(out, expected, "test OutputBodyOnly");
+  expected = loadFileContent("file_htmlserializer_1_bodyonly.html");
+  isRoughly(out, expected, "test OutputBodyOnly");
+
 
 
   //------------ OutputAbsoluteLinks
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputAbsoluteLinks);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputAbsoluteLinks);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_links.xhtml").trim('\n');
-  is(out, expected, "test OutputAbsoluteLinks");
+  expected = loadFileContent("file_htmlserializer_1_links.html").trim('\n');
+  isRoughly(out, expected, "test OutputAbsoluteLinks");
 
   //------------ OutputLFLineBreak
-  encoder.init(doc, "application/xhtml+xml",de.OutputLFLineBreak);
+  encoder.init(doc, "text/html",de.OutputLFLineBreak);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_linebreak.xhtml");
-  is(out, expected, "test OutputLFLineBreak");
+  expected = loadFileContent("file_htmlserializer_1_linebreak.html");
+  isRoughly(out, expected, "test OutputLFLineBreak");
 
   //------------ OutputCRLineBreak
-  encoder.init(doc, "application/xhtml+xml",de.OutputCRLineBreak);
+  encoder.init(doc, "text/html",de.OutputCRLineBreak);
   out = encoder.encodeToString();
   expected = expected.replace(/\n/mg, "\r");
-  is(out, expected, "test OutputCRLineBreak");
+  isRoughly(out, expected, "test OutputCRLineBreak");
 
   //------------ OutputLFLineBreak + OutputCRLineBreak
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputCRLineBreak);
+  encoder.init(doc, "text/html",de.OutputLFLineBreak | de.OutputCRLineBreak);
   out = encoder.encodeToString();
   expected = expected.replace(/\r/mg, "\r\n");
-  is(out, expected, "test OutputLFLineBreak + OutputCRLineBreak");
+  isRoughly(out, expected, "test OutputLFLineBreak + OutputCRLineBreak");
 
   //------------ OutputNoFormattingInPre
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputNoFormattingInPre);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoFormattingInPre);
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_noformatpre.xhtml");
-  is(out, expected, "test OutputNoFormattingInPre");
+  expected = loadFileContent("file_htmlserializer_1_noformatpre.html");
+  isRoughly(out, expected, "test OutputNoFormattingInPre");
 
   // ------------- nested body elements
   var body2 = doc.createElement('body');
@@ -156,37 +161,37 @@ function testHtmlSerializer_1 () {
 
   is(doc.getElementsByTagName('body').length, 2); // to be sure we have two body elements
 
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_nested_body.xhtml");
-  is(out, expected, "test with two nested body elements");
+  expected = loadFileContent("file_htmlserializer_1_nested_body.html");
+  isRoughly(out, expected, "test with two nested body elements");
 
   // ------------- two body elements
   body.parentNode.insertBefore(body2, body);
 
   is(doc.getElementsByTagName('body').length, 2); // to be sure we have two body elements
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_sibling_body.xhtml");
-  is(out, expected, "test with two body elements");
+  expected = loadFileContent("file_htmlserializer_1_sibling_body.html");
+  isRoughly(out, expected, "test with two body elements");
 
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak | de.OutputBodyOnly);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputBodyOnly);
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_sibling_body_only_body.xhtml");
-  is(out, expected, "test with two body elements, and output body only");
+  expected = loadFileContent("file_htmlserializer_1_sibling_body_only_body.html");
+  isRoughly(out, expected, "test with two body elements, and output body only");
 
   // --------------- no body element
   doc.documentElement.removeChild(body);
   doc.documentElement.removeChild(body2);
 
-  encoder.init(doc, "application/xhtml+xml", de.OutputLFLineBreak);
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
-  expected = loadFileContent("file_xhtmlserializer_1_no_body.xhtml");
-  is(out, expected, "test with no body element");
+  expected = loadFileContent("file_htmlserializer_1_no_body.html");
+  isRoughly(out, expected, "test with no body element");
 
   SimpleTest.finish();
 }
@@ -198,6 +203,9 @@ addLoadEvent(testHtmlSerializer_1);
 
 </script>
 </pre>
+<!--<h1>1</h1><h2>result</h2><textarea id="t1" cols="80" rows="20"></textarea>
+          <h2>expected</h2><textarea id="t1e" cols="80" rows="20"></textarea>-->
+
 </body>
 </html>
 

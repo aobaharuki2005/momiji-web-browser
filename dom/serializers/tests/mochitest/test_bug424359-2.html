@@ -28,8 +28,7 @@ function loadFileContent(aFile, aCharset) {
                                   .setSpec(window.location.href)
                                   .finalize();
 
-    var ios = SpecialPowers.Cc['@mozilla.org/network/io-service;1']
-            .getService(SpecialPowers.Ci.nsIIOService);
+    var ios = SpecialPowers.Services.io;
     var chann = ios.newChannel(aFile,
                                aCharset,
                                baseUri,
@@ -102,7 +101,7 @@ function testHtmlSerializer_1 () {
 
   node = document.getElementById('aList');
 
-  var select = window.getSelection();
+  select = window.getSelection();
   select.selectAllChildren(node);
 
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly);
@@ -214,7 +213,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly | de.OutputRaw);
   encoder.setNode(node);
   out = encoder.encodeToString();
-  expected = '<script id="shortattr4" defer="defer"></'+ 'script>';
+  expected = '<script id="shortattr4" defer="defer"><\/script>';
   is(out, expected, "test short attr #4");
 
   node = document.getElementById('shortattr5');

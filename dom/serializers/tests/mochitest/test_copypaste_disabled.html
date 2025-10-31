@@ -9,7 +9,7 @@
   <style>
   @font-face {
     font-family: Ahem;
-    src: url("Ahem.ttf");
+    src: url("/tests/dom/base/test/Ahem.ttf");
   }
   body { font-family: Ahem; font-size: 20px; margin: 0; }
   input, textarea {
@@ -25,7 +25,7 @@
 
 <script>
 function dragSelect(e, x1, x2, x3) {
-  dir = x2 > x1 ? 1 : -1;
+  let dir = x2 > x1 ? 1 : -1;
   synthesizeMouse(e, x1, 5, { type: "mousedown" });
   synthesizeMouse(e, x1 + dir, 5, { type: "mousemove" });
   if (x3)
