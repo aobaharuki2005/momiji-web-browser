@@ -160,6 +160,20 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "ArtstationLogin",
+    platform: "all",
+    name: "Artstation Google Login",
+    bug: "1926551",
+    contentScripts: [
+      {
+        js: "artstationLogin.js",
+        matches: ["*://www.artstation.com/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
     id: "BmAuth",
     platform: "all",
     name: "BmAuth by 9c9media",

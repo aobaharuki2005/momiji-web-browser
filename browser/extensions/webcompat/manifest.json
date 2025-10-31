@@ -111,6 +111,7 @@
     "shims/adnexus-prebid.js",
     "shims/adsafeprotected-ima.js",
     "shims/apstag.js",
+    "shims/artstationLogin.js",
     "shims/bmauth.js",
     "shims/botd.mjs",
     "shims/branch.js",
