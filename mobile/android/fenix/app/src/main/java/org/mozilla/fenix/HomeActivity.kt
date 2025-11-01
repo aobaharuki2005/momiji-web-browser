@@ -136,6 +136,7 @@ import org.mozilla.fenix.home.intent.OpenSpecificTabIntentProcessor
 import org.mozilla.fenix.home.intent.ReEngagementIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.home.topsites.DefaultTopSitesBinding
 import org.mozilla.fenix.messaging.FenixMessageSurfaceId
 import org.mozilla.fenix.messaging.MessageNotificationWorker
 import org.mozilla.fenix.nimbus.FxNimbus
@@ -217,6 +218,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                     )
                 }
             },
+        )
+    }
+
+    private val defaultTopSitesBinding by lazy {
+        DefaultTopSitesBinding(
+            browserStore = components.core.store,
+            topSitesStorage = components.core.topSitesStorage,
+            settings = settings(),
+            resources = resources,
+            crashReporter = components.analytics.crashReporter,
         )
     }
 
@@ -526,6 +537,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             serviceWorkerSupport,
             aboutHomeBinding,
             crashReporterBinding,
+            defaultTopSitesBinding,
             TopSitesRefresher(
                 settings = settings(),
                 topSitesProvider = components.core.marsTopSitesProvider,

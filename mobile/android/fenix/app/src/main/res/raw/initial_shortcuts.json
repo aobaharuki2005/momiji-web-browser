@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "url": "https://www.google.com/",
+      "order": 0,
+      "title": "Google",
+      "schema": 1,
+      "exclude_locales": [],
+      "exclude_regions": [
+        "CN",
+        "RU",
+        "TR",
+        "KZ",
+        "BY"
+      ],
+      "include_locales": [],
+      "include_regions": [],
+      "exclude_experiments": [],
+      "include_experiments": [],
+      "id": "",
+      "last_modified": 1
+    },
+    {
+      "url": "https://www.wikipedia.org/",
+      "order": 1,
+      "title": "Wikipedia",
+      "schema": 1,
+      "exclude_locales": [],
+      "exclude_regions": [
+        "CN"
+      ],
+      "include_locales": [],
+      "include_regions": [],
+      "exclude_experiments": [],
+      "include_experiments": [],
+      "id": "",
+      "last_modified": 1
+    }
+  ]
+}
