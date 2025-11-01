@@ -1907,8 +1907,9 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
       case StyleAnchorSideKeyword::Bottom:
         return GetEdge(wm.LogicalSideForPhysicalSide(eSideBottom));
       case StyleAnchorSideKeyword::Inside:
-      case StyleAnchorSideKeyword::Outside:
         return propEdge;
+      case StyleAnchorSideKeyword::Outside:
+        return GetOppositeEdge(propEdge);
       case StyleAnchorSideKeyword::Start:
       case StyleAnchorSideKeyword::SelfStart:
       case StyleAnchorSideKeyword::Center:
