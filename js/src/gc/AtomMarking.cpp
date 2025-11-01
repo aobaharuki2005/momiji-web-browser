@@ -171,19 +171,19 @@ void AtomMarkingRuntime::refineZoneBitmapsForCollectedZones(GCRuntime* gc) {
 // marked black this works on its own. For kinds that can be marked gray we must
 // preprocess the mark bitmap so that both mark bits are set for black cells.
 
-// Mask of bit positions in a mark bitmap word that can be black bits, which is
-// every other bit.
+// Masks of bit positions in a mark bitmap word that can be ColorBit::BlackBit
+// or GrayOrBlackBit, which alternative throughout the word.
 #if JS_BITS_PER_WORD == 32
 static constexpr uintptr_t BlackBitMask = 0x55555555;
 #else
 static constexpr uintptr_t BlackBitMask = 0x5555555555555555;
 #endif
+static constexpr uintptr_t GrayOrBlackBitMask = ~BlackBitMask;
 
 static void PropagateBlackBitsToGrayOrBlackBits(DenseBitmap& bitmap,
                                                 Arena* arena) {
   // This only works if the gray bit and black bits are in the same word,
   // which is true for symbols.
-
   MOZ_ASSERT(
       TraceKindCanBeMarkedGray(MapAllocToTraceKind(arena->getAllocKind())));
   MOZ_ASSERT((arena->getThingSize() / CellBytesPerMarkBit) % 2 == 0);
@@ -198,6 +198,19 @@ static void PropagateBlackBitsToGrayOrBlackBits(
   for (size_t i = 0; i < ArenaBitmapWords; i++) {
     words[i] |= (words[i] & BlackBitMask) << 1;
   }
+}
+
+static void PropagateGrayOrBlackBitsToBlackBits(SparseBitmap& bitmap,
+                                                Arena* arena) {
+  // This only works if the gray bit and black bits are in the same word,
+  // which is true for symbols.
+  MOZ_ASSERT(
+      TraceKindCanBeMarkedGray(MapAllocToTraceKind(arena->getAllocKind())));
+  MOZ_ASSERT((arena->getThingSize() / CellBytesPerMarkBit) % 2 == 0);
+
+  bitmap.forEachWord(
+      arena->atomBitmapStart(), ArenaBitmapWords,
+      [](uintptr_t& word) { word |= (word & GrayOrBlackBitMask) >> 1; });
 }
 
 #ifdef DEBUG
@@ -325,6 +338,24 @@ UniquePtr<DenseBitmap> AtomMarkingRuntime::getOrMarkAtomsUsedByUncollectedZones(
 void AtomMarkingRuntime::markAtomsUsedByUncollectedZones(
     GCRuntime* gc, UniquePtr<DenseBitmap> markedUnion) {
   BitwiseOrIntoChunkMarkBits(gc->atomsZone(), *markedUnion);
+}
+
+void AtomMarkingRuntime::unmarkAllGrayReferences(GCRuntime* gc) {
+  for (ZonesIter sourceZone(gc, SkipAtoms); !sourceZone.done();
+       sourceZone.next()) {
+    MOZ_ASSERT(!sourceZone->isAtomsZone());
+    auto& bitmap = sourceZone->markedAtoms();
+    for (ArenaIter arena(gc->atomsZone(), AllocKind::SYMBOL); !arena.done();
+         arena.next()) {
+      PropagateGrayOrBlackBitsToBlackBits(bitmap, arena);
+    }
+#ifdef DEBUG
+    for (auto cell = gc->atomsZone()->cellIter<JS::Symbol>(); !cell.done();
+         cell.next()) {
+      MOZ_ASSERT(getAtomMarkColor(sourceZone, cell.get()) != CellColor::Gray);
+    }
+#endif
+  }
 }
 
 template <typename T>

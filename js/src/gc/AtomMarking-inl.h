@@ -99,11 +99,13 @@ inline void AtomMarkingRuntime::maybeUnmarkGrayAtomically(Zone* zone,
     return;
   }
 
+  // The atom is currently marked black or gray.
   MOZ_ASSERT(atomIsMarked(zone, symbol));
 
+  // Set the black bit. This has the effect of making the mark black if it was
+  // previously gray.
   size_t blackBit = getAtomBit(symbol) + size_t(ColorBit::BlackBit);
   MOZ_ASSERT(blackBit / JS_BITS_PER_WORD < allocatedWords);
-
   zone->markedAtoms().atomicSetExistingBit(blackBit);
 
   MOZ_ASSERT(getAtomMarkColor(zone, symbol) == CellColor::Black);

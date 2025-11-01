@@ -104,9 +104,8 @@ class ContextChecks {
     // marking is taking place.
     gc::GCRuntime* gc = &cx->runtime()->gc;
     bool isGCMarking =
-        gc->state() >= gc::State::Mark && gc->state() <= gc::State::Sweep;
+        gc->state() >= gc::State::Prepare && gc->state() <= gc::State::Sweep;
     if (zone() && !isGCMarking) {
-      gc::GCRuntime* gc = &cx->runtime()->gc;
       gc::CellColor color = gc->atomMarking.getAtomMarkColor(zone(), thing);
       if (color != gc::CellColor::Black) {
         MOZ_CRASH_UNSAFE_PRINTF(

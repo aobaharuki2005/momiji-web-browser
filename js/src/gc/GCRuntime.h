@@ -547,7 +547,7 @@ class GCRuntime {
   bool didCompactZones() const { return isCompacting && zonesCompacted; }
 
   bool areGrayBitsValid() const { return grayBitsValid; }
-  void setGrayBitsInvalid() { grayBitsValid = false; }
+  void setGrayBitsInvalid();
 
   mozilla::TimeStamp lastGCStartTime() const { return lastGCStartTime_; }
   mozilla::TimeStamp lastGCEndTime() const { return lastGCEndTime_; }

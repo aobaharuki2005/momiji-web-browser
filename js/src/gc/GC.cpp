@@ -3882,6 +3882,11 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
   return IncrementalResult::Reset;
 }
 
+void GCRuntime::setGrayBitsInvalid() {
+  grayBitsValid = false;
+  atomMarking.unmarkAllGrayReferences(this);
+}
+
 void GCRuntime::disableIncrementalBarriers() {
   // Clear needsIncrementalBarrier so we don't do any write barriers during
   // foreground finalization. This would otherwise happen when destroying

@@ -2904,7 +2904,7 @@ void UnmarkGrayTracer::onChild(JS::GCCellPtr thing, const char* name) {
   Zone* zone = tenured.zoneFromAnyThread();
 
   // If the cell is in a zone whose mark bits are being cleared, then it will
-  // end up white.
+  // end up being marked black by GC marking.
   if (zone->isGCPreparing()) {
     return;
   }
@@ -2915,24 +2915,28 @@ void UnmarkGrayTracer::onChild(JS::GCCellPtr thing, const char* name) {
   }
 
   if (zone->isGCMarking()) {
-    // If the cell is in a zone that we're currently marking, then it's possible
-    // that it is currently white but will end up gray. To handle this case,
-    // trigger the barrier for any cells in zones that are currently being
-    // marked. This will ensure they will eventually get marked black.
+    // If the cell is in a zone that we're currently marking, then it's
+    // possible that it is currently white but will end up gray. To handle
+    // this case, trigger the barrier for any cells in zones that are
+    // currently being marked. This will ensure they will eventually get
+    // marked black.
     TraceEdgeForBarrier(marker, &tenured, thing.kind());
   } else if (tenured.isMarkedGray()) {
-    // TODO: It may be a small improvement to only use the atomic version during
-    // parallel marking.
+    // TODO: It may be a small improvement to only use the atomic version
+    // during parallel marking.
     tenured.markBlackAtomic();
     if (!stack.append(thing)) {
       oom = true;
     }
   }
 
+  // As well as updating the mark bits, we may need to update the color in the
+  // atom marking bitmap to record that |zone| now has a black edge to |thing|.
   if (zone->isAtomsZone() && sourceZone) {
     MOZ_ASSERT(tenured.is<JS::Symbol>());
-    runtime()->gc.atomMarking.maybeUnmarkGrayAtomically(
-        sourceZone, tenured.as<JS::Symbol>());
+    GCRuntime* gc = &runtime()->gc;
+    JS::Symbol* symbol = tenured.as<JS::Symbol>();
+    gc->atomMarking.maybeUnmarkGrayAtomically(sourceZone, symbol);
   }
 
   unmarkedAny = true;

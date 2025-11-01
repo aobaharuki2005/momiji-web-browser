@@ -65,6 +65,13 @@ class AtomMarkingRuntime {
   void markAtomsUsedByUncollectedZones(GCRuntime* gc,
                                        UniquePtr<DenseBitmap> markedUnion);
 
+  // If gray unmarking fails or GC marking is aborted then the gray bits may end
+  // up in an invalid state. This updates references to all things that could be
+  // gray in the atom marking bitmaps, marking them as black if they were
+  // previously (and perhaps incorrectly) considered gray. This is always safe
+  // but loses information.
+  void unmarkAllGrayReferences(GCRuntime* gc);
+
   // Get the index into the atom marking bitmaps for the first bit associated
   // with an atom.
   // This is public for testing access.
