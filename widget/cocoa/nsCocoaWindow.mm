@@ -107,8 +107,8 @@ BOOL sTouchBarIsInitialized = NO;
 
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu;  // Application menu shared by all menubars
-extern BOOL gSomeMenuBarPainted;
-
+extern bool gSomeMenuBarPainted;
+extern bool gCreatedFileForFilePromise;
 static uint32_t sModalWindowCount = 0;
 
 // Don't put more than this many rects in the dirty region, just fluff
@@ -4244,7 +4244,7 @@ willBeginAtPoint:(NSPoint)aPoint {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-static NSURL* GetPasteLocation(NSPasteboard* aPasteboard) {
+static NSURL* GetPasteLocation(NSPasteboard* aPasteboard, bool aUseFallback) {
   // First, try to get the paste location from the low level pasteboard.
   PasteboardRef pboardRef = nullptr;
   PasteboardCreate((CFStringRef)[aPasteboard name], &pboardRef);
@@ -4259,6 +4259,11 @@ static NSURL* GetPasteLocation(NSPasteboard* aPasteboard) {
   if (urlRef) {
     return [(NSURL*)urlRef autorelease];
   }
+
+  if (!aUseFallback) {
+    return nil;
+  }
+
   // If no paste location was present on the pasteboard, fall back to a temp
   // directory instead.
   return [NSURL
@@ -4323,12 +4328,18 @@ provideDataForType:(NSString*)aType {
                                           stringFromPboardType:
                                               (NSString*)kUTTypeFileURL]] &&
                   !gCreatedFileForFileURL) ||
-                 [curType
-                     isEqualToString:
-                         [UTIHelper
-                             stringFromPboardType:
-                                 (NSString*)kPasteboardTypeFileURLPromise]]) {
-        NSURL* url = GetPasteLocation(aPasteboard);
+                 ([curType
+                      isEqualToString:
+                          [UTIHelper
+                              stringFromPboardType:
+                                  (NSString*)kPasteboardTypeFileURLPromise]] &&
+                  !gCreatedFileForFilePromise)) {
+        NSURL* url = GetPasteLocation(
+            aPasteboard,
+            [curType
+                isEqualToString:[UTIHelper
+                                    stringFromPboardType:(NSString*)
+                                                             kUTTypeFileURL]]);
         nsCOMPtr<nsILocalFileMac> macLocalFile;
         if (NS_FAILED(NS_NewLocalFileWithCFURL((__bridge CFURLRef) url,
                 getter_AddRefs(macLocalFile)))) {
@@ -4380,6 +4391,8 @@ provideDataForType:(NSString*)aType {
                 setString:[[NSURL fileURLWithPath:filePath] absoluteString]
                   forType:curType];
             gCreatedFileForFileURL = true;
+          } else {
+            gCreatedFileForFilePromise = true;
           }
         }
       } else if ([curType isEqualToString:[UTIHelper
