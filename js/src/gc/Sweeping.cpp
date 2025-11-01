@@ -2571,14 +2571,12 @@ bool GCRuntime::allCCVisibleZonesWereCollected() {
   // The gray bits change from invalid to valid if we finished a full GC from
   // the point of view of the cycle collector. We ignore the following:
   //
-  //  - Helper thread zones, as these are not reachable from the main heap.
-  //  - The atoms zone, since strings and symbols are never marked gray.
   //  - Empty zones.
   //
-  // These exceptions ensure that when the CC requests a full GC the gray mark
-  // state ends up valid even it we don't collect all of the zones.
+  // This exception ensures that when the CC requests a full GC the gray mark
+  // state ends up valid even if we don't collect all of the zones.
 
-  for (ZonesIter zone(this, SkipAtoms); !zone.done(); zone.next()) {
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     if (!zone->isCollecting() && !zone->arenas.arenaListsAreEmpty()) {
       return false;
     }

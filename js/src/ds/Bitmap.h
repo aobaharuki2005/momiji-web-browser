@@ -9,6 +9,7 @@
 
 #include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 
 #include <algorithm>
@@ -80,6 +81,14 @@ class DenseBitmap {
       target[i] |= data[wordStart + i];
     }
   }
+
+  template <typename F>
+  void forEachWord(size_t wordStart, size_t numWords, F&& func) {
+    MOZ_ASSERT(wordStart + numWords <= data.length());
+    for (size_t i = 0; i < numWords; i++) {
+      func(data[wordStart + i]);
+    }
+  }
 };
 
 class SparseBitmap {
@@ -117,8 +126,7 @@ class SparseBitmap {
     return p ? p->value() : nullptr;
   }
 
-  MOZ_ALWAYS_INLINE const BitBlock* readonlyThreadsafeGetBlock(
-      size_t blockId) const {
+  MOZ_ALWAYS_INLINE BitBlock* readonlyThreadsafeGetBlock(size_t blockId) const {
     Data::Ptr p = data.readonlyThreadsafeLookup(blockId);
     return p ? p->value() : nullptr;
   }
@@ -145,6 +153,15 @@ class SparseBitmap {
     }
     (*block)[word - blockWord] |= bitMask(bit);
     return true;
+  }
+
+  void atomicSetExistingBit(size_t bit) {
+    size_t word = bit / JS_BITS_PER_WORD;
+    size_t blockWord = blockStartWord(word);
+    BitBlock* block = readonlyThreadsafeGetBlock(blockWord / WordsInBlock);
+    MOZ_ASSERT(block);
+    uintptr_t* ptr = &(*block)[word - blockWord];
+    __atomic_fetch_or(ptr, bitMask(bit), __ATOMIC_RELAXED);
   }
 
   bool getBit(size_t bit) const;

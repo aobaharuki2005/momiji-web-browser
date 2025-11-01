@@ -565,9 +565,9 @@ class GCMarker {
   friend class JS::Zone;
 
 #ifdef DEBUG
-  void checkZone(void* p);
+  void checkZone(gc::Cell* cell);
 #else
-  void checkZone(void* p) {}
+  void checkZone(gc::Cell* cell) {}
 #endif
 
   template <uint32_t markingOptions>
