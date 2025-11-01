@@ -10,6 +10,7 @@
 #include "gc/AtomMarking.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 
 #include <type_traits>
 
@@ -56,12 +57,21 @@ MOZ_ALWAYS_INLINE bool AtomMarkingRuntime::inlinedMarkAtomInternal(
   size_t bit = GetAtomBit(cell);
   MOZ_ASSERT(bit / JS_BITS_PER_WORD < allocatedWords);
 
-  if (Fallible) {
-    if (!cx->zone()->markedAtoms().setBitFallible(bit)) {
-      return false;
+  {
+    mozilla::Maybe<AutoEnterOOMUnsafeRegion> oomUnsafe;
+    if constexpr (!Fallible) {
+      oomUnsafe.emplace();
     }
-  } else {
-    cx->zone()->markedAtoms().setBit(bit);
+
+    bool ok = cx->zone()->markedAtoms().setBit(bit);
+
+    if (!ok) {
+      if constexpr (!Fallible) {
+        oomUnsafe->crash("AtomMarkingRuntime::inlinedMarkAtomInternal");
+      } else {
+        return false;
+      }
+    }
   }
 
   // Trigger a read barrier on the atom, in case there is an incremental

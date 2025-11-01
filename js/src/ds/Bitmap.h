@@ -110,9 +110,6 @@ class SparseBitmap {
     return static_cast<size_t>(std::clamp(count, 0l, (long)WordsInBlock));
   }
 
-  BitBlock& createBlock(Data::AddPtr p, size_t blockId,
-                        AutoEnterOOMUnsafeRegion& oomUnsafe);
-
   BitBlock* createBlock(Data::AddPtr p, size_t blockId);
 
   MOZ_ALWAYS_INLINE BitBlock* getBlock(size_t blockId) const {
@@ -126,18 +123,7 @@ class SparseBitmap {
     return p ? p->value() : nullptr;
   }
 
-  MOZ_ALWAYS_INLINE BitBlock& getOrCreateBlock(size_t blockId) {
-    // The lookupForAdd() needs protection against injected OOMs, as does
-    // the add() within createBlock().
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    Data::AddPtr p = data.lookupForAdd(blockId);
-    if (p) {
-      return *p->value();
-    }
-    return createBlock(p, blockId, oomUnsafe);
-  }
-
-  MOZ_ALWAYS_INLINE BitBlock* getOrCreateBlockFallible(size_t blockId) {
+  MOZ_ALWAYS_INLINE BitBlock* getOrCreateBlock(size_t blockId) {
     Data::AddPtr p = data.lookupForAdd(blockId);
     if (p) {
       return p->value();
@@ -150,17 +136,10 @@ class SparseBitmap {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-  MOZ_ALWAYS_INLINE void setBit(size_t bit) {
+  [[nodiscard]] MOZ_ALWAYS_INLINE bool setBit(size_t bit) {
     size_t word = bit / JS_BITS_PER_WORD;
     size_t blockWord = blockStartWord(word);
-    BitBlock& block = getOrCreateBlock(blockWord / WordsInBlock);
-    block[word - blockWord] |= bitMask(bit);
-  }
-
-  MOZ_ALWAYS_INLINE bool setBitFallible(size_t bit) {
-    size_t word = bit / JS_BITS_PER_WORD;
-    size_t blockWord = blockStartWord(word);
-    BitBlock* block = getOrCreateBlockFallible(blockWord / WordsInBlock);
+    BitBlock* block = getOrCreateBlock(blockWord / WordsInBlock);
     if (!block) {
       return false;
     }
@@ -172,7 +151,7 @@ class SparseBitmap {
   bool readonlyThreadsafeGetBit(size_t bit) const;
 
   void bitwiseAndWith(const DenseBitmap& other);
-  void bitwiseOrWith(const SparseBitmap& other);
+  [[nodiscard]] bool bitwiseOrWith(const SparseBitmap& other);
   void bitwiseOrInto(DenseBitmap& other) const;
 
   // Currently, the following APIs only supports a range of words that is in a
