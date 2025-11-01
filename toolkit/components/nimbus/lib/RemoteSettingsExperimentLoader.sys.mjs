@@ -114,6 +114,7 @@ export const MatchStatus = Object.freeze({
   TARGETING_ONLY: "TARGETING_ONLY",
   TARGETING_AND_BUCKETING: "TARGETING_AND_BUCKETING",
   UNENROLLED_IN_ANOTHER_PROFILE: "UNENROLLED_IN_ANOTHER_PROFILE",
+  DISABLED: "DISABLED",
 });
 
 export const CheckRecipeResult = {
@@ -257,40 +258,39 @@ export class RemoteSettingsExperimentLoader {
       );
     }
 
-    if (this._enabled) {
-      return;
-    }
+    if (!this._enabled) {
+      if (!lazy.ExperimentAPI.enabled) {
+        lazy.log.debug(
+          "Not enabling RemoteSettingsExperimentLoader: Nimbus disabled"
+        );
+        return;
+      }
 
-    if (!lazy.ExperimentAPI.studiesEnabled) {
-      lazy.log.debug(
-        "Not enabling RemoteSettingsExperimentLoader: studies disabled"
+      if (
+        Services.startup.isInOrBeyondShutdownPhase(
+          Ci.nsIAppStartup.SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED
+        )
+      ) {
+        lazy.log.debug(
+          "Not enabling RemoteSettingsExperimentLoader: shutting down"
+        );
+        return;
+      }
+
+      this.#shutdownBlocker = async () => {
+        await this.finishedUpdating();
+        this.disable();
+      };
+
+      lazy.AsyncShutdown.appShutdownConfirmed.addBlocker(
+        "RemoteSettingsExperimentLoader: disabling",
+        this.#shutdownBlocker
       );
-      return;
+
+      this.setTimer();
+
+      this._enabled = true;
     }
-
-    if (
-      Services.startup.isInOrBeyondShutdownPhase(
-        Ci.nsIAppStartup.SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED
-      )
-    ) {
-      lazy.log.debug(
-        "Not enabling RemoteSettingsExperimentLoader: shutting down"
-      );
-      return;
-    }
-
-    this.#shutdownBlocker = async () => {
-      await this.finishedUpdating();
-      this.disable();
-    };
-
-    lazy.AsyncShutdown.appShutdownConfirmed.addBlocker(
-      "RemoteSettingsExperimentLoader: disabling",
-      this.#shutdownBlocker
-    );
-
-    this.setTimer();
-    this._enabled = true;
 
     await this.updateRecipes("enabled", { forceSync });
   }
@@ -431,6 +431,8 @@ export class RemoteSettingsExperimentLoader {
         recipeValidator,
         {
           validationEnabled,
+          labsEnabled: lazy.ExperimentAPI.labsEnabled,
+          studiesEnabled: lazy.ExperimentAPI.studiesEnabled,
           shouldCheckTargeting: true,
           unenrolledExperimentSlugs,
         }
@@ -768,19 +770,14 @@ export class RemoteSettingsExperimentLoader {
   }
 
   /**
-   * Handles feature status based on STUDIES_OPT_OUT_PREF.
-   *
-   * Changing this pref to false will turn off any recipe fetching and
-   * processing.
+   * Disable the RemoteSettingsExperimentLoader if Nimbus has become disabled
+   * and vice versa.
    */
   async onEnabledPrefChange() {
-    if (this._enabled && !lazy.ExperimentAPI.studiesEnabled) {
-      this.disable();
-    } else if (!this._enabled && lazy.ExperimentAPI.studiesEnabled) {
-      // If the feature pref is turned on then turn on recipe processing.
-      // If the opt in pref is turned on then turn on recipe processing only if
-      // the feature pref is also enabled.
+    if (lazy.ExperimentAPI.enabled) {
       await this.enable();
+    } else {
+      this.disable();
     }
   }
 
@@ -823,7 +820,7 @@ export class RemoteSettingsExperimentLoader {
    * immediately.
    */
   finishedUpdating() {
-    if (!lazy.ExperimentAPI.studiesEnabled || !this._enabled) {
+    if (!lazy.ExperimentAPI.enabled || !this._enabled) {
       return Promise.resolve();
     }
 
@@ -912,12 +909,17 @@ export class EnrollmentsContext {
       validationEnabled = true,
       shouldCheckTargeting = true,
       unenrolledExperimentSlugs,
+      studiesEnabled = true,
+      labsEnabled = true,
     } = {}
   ) {
     this.manager = manager;
     this.recipeValidator = recipeValidator;
 
     this.validationEnabled = validationEnabled;
+    this.studiesEnabled = studiesEnabled;
+    this.labsEnabled = labsEnabled;
+
     this.validatorCache = {};
     this.shouldCheckTargeting = shouldCheckTargeting;
     this.unenrolledExperimentSlugs = unenrolledExperimentSlugs;
@@ -949,6 +951,13 @@ export class EnrollmentsContext {
 
         return CheckRecipeResult.InvalidRecipe();
       }
+    }
+
+    if (
+      (recipe.isFirefoxLabsOptIn && !this.labsEnabled) ||
+      (!recipe.isFirefoxLabsOptIn && !this.studiesEnabled)
+    ) {
+      return CheckRecipeResult.Ok(MatchStatus.DISABLED);
     }
 
     // We don't include missing features here because if validation is enabled we report those errors later.
