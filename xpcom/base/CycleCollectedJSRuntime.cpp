@@ -400,9 +400,9 @@ struct TraversalTracer : public JS::CallbackTracer {
 };
 
 void TraversalTracer::onChild(JS::GCCellPtr aThing, const char* name) {
-  // Checking strings and symbols for being gray is rather slow, and we don't
-  // need either of them for the cycle collector.
-  if (aThing.is<JSString>() || aThing.is<JS::Symbol>()) {
+  // Checking strings for being gray is rather slow, and we don't need them for
+  // the cycle collector.
+  if (aThing.is<JSString>()) {
     return;
   }
 
