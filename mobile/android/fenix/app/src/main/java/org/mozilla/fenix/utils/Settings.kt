@@ -1458,7 +1458,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the user have enabled trending search in search suggestions.
      */
-    @VisibleForTesting
     internal var trendingSearchSuggestionsEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_trending_search_suggestions),
         default = true,
