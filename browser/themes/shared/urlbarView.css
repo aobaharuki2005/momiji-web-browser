@@ -1612,7 +1612,7 @@
         color: var(--red-status-color);
       }
 
-      > .urlbarView-realtime-description-separator-dot:has(+ .urlbarView-flightStatus-time-left-minutes:empty) {
+      > .urlbarView-realtime-description-separator-dot:has(+ .urlbarView-flightStatus-time-left:empty) {
         display: none;
       }
     }

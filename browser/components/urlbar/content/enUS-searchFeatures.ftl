@@ -317,15 +317,11 @@ urlbar-result-flight-status-status-cancelled = Cancelled
 urlbar-result-flight-status-status-delayed =
     Delayed until { $departureEstimatedTime }
 
-# This string is shown as the time left minutes.
+# This string is shown as the time remaining in an in-progress flight.
 # e.g. 30 min left
 # Variables:
-#   $timeLeftMinutes (number) - The time left minutes.
-urlbar-result-flight-status-time-left-minutes =
-    { $timeLeftMinutes ->
-        [one] { $timeLeftMinutes } min left
-        *[other] { $timeLeftMinutes } mins left
-    }
+#   $timeLeft (string) - Localized duration string, e.g., "1 hr, 30 min"
+urlbar-result-flight-status-time-left = { $timeLeft } left
 
 # This string is shown as the airport.
 # e.g. Los Angeles (LAX) to New York (JFK)

@@ -83,9 +83,9 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
         classList: ["urlbarView-realtime-description-separator-dot"],
       },
       {
-        name: `time_left_minutes_${index}`,
+        name: `time_left_${index}`,
         tag: "span",
-        classList: ["urlbarView-flightStatus-time-left-minutes"],
+        classList: ["urlbarView-flightStatus-time-left"],
       },
     ];
   }
@@ -172,6 +172,21 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
       };
     }
 
+    let timeLeft;
+    if (typeof v.time_left_minutes == "number") {
+      let hours = Math.floor(v.time_left_minutes / 60);
+      let minutes = v.time_left_minutes % 60;
+      // TODO Bug 1997547: TypeScript support for `Intl.DurationFormat`
+      // @ts-ignore
+      timeLeft = new Intl.DurationFormat(undefined, {
+        style: "short",
+      }).format({
+        // If hours is zero, pass `undefined` to not show it at all.
+        hours: hours || undefined,
+        minutes,
+      });
+    }
+
     return {
       [`item_${i}`]: {
         attributes: {
@@ -247,19 +262,18 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
           excludeArgsFromCacheKey: !!statusL10nArgs,
         },
       },
-      [`time_left_minutes_${i}`]:
-        v.time_left_minutes != undefined
-          ? {
-              l10n: {
-                id: "urlbar-result-flight-status-time-left-minutes",
-                args: {
-                  timeLeftMinutes: v.time_left_minutes,
-                },
-                cacheable: true,
-                excludeArgsFromCacheKey: !!statusL10nArgs,
+      [`time_left_${i}`]: timeLeft
+        ? {
+            l10n: {
+              id: "urlbar-result-flight-status-time-left",
+              args: {
+                timeLeft,
               },
-            }
-          : null,
+              cacheable: true,
+              excludeArgsFromCacheKey: !!statusL10nArgs,
+            },
+          }
+        : null,
     };
   }
 }

@@ -194,7 +194,7 @@ add_task(async function ui_basic() {
       origin_airport: "Origin 2 (O2)",
       destination_airport: "Destination 2 (D2)",
       status: "In flight",
-      time_left_minutes: "1 min left",
+      time_left: "1 min left",
       url: "https://example.com/A2",
     },
     {
@@ -206,7 +206,6 @@ add_task(async function ui_basic() {
       origin_airport: "Origin 3 (O3)",
       destination_airport: "Destination 3 (D3)",
       status: "Arrived",
-      time_left_minutes: "0 mins left",
       url: "https://example.com/A3",
     },
     {
@@ -296,7 +295,7 @@ add_task(async function ui_delayed() {
               },
               status: "En Route",
               progress_percent: 18,
-              time_left_minutes: 10,
+              time_left_minutes: 583,
               delayed: true,
               url: "https://example.com/D2",
             },
@@ -355,7 +354,7 @@ add_task(async function ui_delayed() {
       origin_airport: "Origin D2 (OD2)",
       destination_airport: "Destination D2 (DD2)",
       status: "In flight",
-      time_left_minutes: "10 mins left",
+      time_left: "9 hr, 43 min left",
       url: "https://example.com/D2",
     },
     {
@@ -367,7 +366,6 @@ add_task(async function ui_delayed() {
       origin_airport: "Origin D3 (OD3)",
       destination_airport: "Destination D3 (DD3)",
       status: "Arrived",
-      time_left_minutes: "0 mins left",
       url: "https://example.com/D3",
     },
   ];
@@ -956,9 +954,9 @@ async function assertUI({ row, expectedList }) {
       expected.flight_number
     );
 
-    let timeLeftMinutes = item.querySelector(`[name=time_left_minutes_${i}]`);
-    if (typeof expected.time_left_minutes != "undefined") {
-      Assert.equal(timeLeftMinutes.textContent, expected.time_left_minutes);
+    let timeLeftMinutes = item.querySelector(`[name=time_left_${i}]`);
+    if (typeof expected.time_left != "undefined") {
+      Assert.equal(timeLeftMinutes.textContent, expected.time_left);
     } else {
       Assert.equal(timeLeftMinutes.textContent, "");
       let previousSeparator = timeLeftMinutes.previousElementSibling;
