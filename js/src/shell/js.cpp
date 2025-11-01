@@ -211,6 +211,7 @@
 #include "wasm/WasmFeatures.h"
 #include "wasm/WasmJS.h"
 
+#include "gc/WeakMap-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/ErrorObject-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -8749,7 +8750,7 @@ static MarkBitObservers* EnsureMarkBitObservers(JSContext* cx) {
   ShellContext* sc = GetShellContext(cx);
   if (!sc->markObservers) {
     auto* observers =
-        cx->new_<MarkBitObservers>(cx->runtime(), NonshrinkingGCObjectVector());
+        cx->new_<MarkBitObservers>(cx->runtime(), NonShrinkingValueVector());
     if (!observers) {
       return nullptr;
     }
@@ -8797,19 +8798,17 @@ static bool AddMarkObservers(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedValue value(cx);
-  RootedObject object(cx);
   for (uint32_t i = 0; i < length; i++) {
     if (!JS_GetElement(cx, observersArg, i, &value)) {
       return false;
     }
 
-    if (!value.isObject()) {
-      JS_ReportErrorASCII(cx, "argument must be an Array of objects");
+    if (!CanBeHeldWeakly(value)) {
+      JS_ReportErrorASCII(cx, "Can only observe objects and symbols");
       return false;
     }
 
-    object = &value.toObject();
-    if (gc::IsInsideNursery(object)) {
+    if (gc::IsInsideNursery(value.toGCThing())) {
       // WeakCaches are not swept during a minor GC. To prevent
       // nursery-allocated contents from having the mark bits be deceptively
       // black until the second GC, they would need to be marked weakly (cf
@@ -8818,7 +8817,7 @@ static bool AddMarkObservers(JSContext* cx, unsigned argc, Value* vp) {
       cx->runtime()->gc.evictNursery();
     }
 
-    if (!markObservers->get().append(object)) {
+    if (!markObservers->get().append(value)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -8826,6 +8825,30 @@ static bool AddMarkObservers(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setInt32(length);
   return true;
+}
+
+static const char* ObserveMarkColor(const Value& value) {
+  if (value.isUndefined()) {
+    return "dead";
+  }
+
+  gc::Cell* cell = value.toGCThing();
+  Zone* zone = cell->zone();
+  if (zone->isGCPreparing()) {
+    // The mark bits are not valid during unmarking.
+    return "unmarked";
+  }
+
+  gc::TenuredCell* tc = &cell->asTenured();
+  if (tc->isMarkedGray()) {
+    return "gray";
+  }
+
+  if (tc->isMarkedBlack()) {
+    return "black";
+  }
+
+  return "unmarked";
 }
 
 static bool GetMarks(JSContext* cx, unsigned argc, Value* vp) {
@@ -8844,27 +8867,10 @@ static bool GetMarks(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   for (uint32_t i = 0; i < length; i++) {
-    const char* color;
-    JSObject* obj = observers->get()[i];
-    if (!obj) {
-      color = "dead";
-    } else if (obj->zone()->isGCPreparing()) {
-      color = "unmarked";
-    } else {
-      gc::TenuredCell* cell = &obj->asTenured();
-      if (cell->isMarkedGray()) {
-        color = "gray";
-      } else if (cell->isMarkedBlack()) {
-        color = "black";
-      } else {
-        color = "unmarked";
-      }
-    }
+    Value value = observers->get()[i];
+    const char* color = ObserveMarkColor(value);
     JSString* s = JS_NewStringCopyZ(cx, color);
-    if (!s) {
-      return false;
-    }
-    if (!NewbornArrayPush(cx, ret, StringValue(s))) {
+    if (!s || !NewbornArrayPush(cx, ret, StringValue(s))) {
       return false;
     }
   }
