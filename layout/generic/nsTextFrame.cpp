@@ -5785,10 +5785,12 @@ static gfxFloat ComputeDecorationLineOffset(
 
 // Helper to determine decoration inset.
 // Returns false if the inset would cut off the decoration entirely.
+// If aOnlyExtend is true, this will only consider cases with negative inset
+// (i.e. the line will actually be extended beyond the normal length).
 static bool ComputeDecorationInset(
     nsTextFrame* aFrame, const nsPresContext* aPresCtx,
     const nsIFrame* aDecFrame, const gfxFont::Metrics& aMetrics,
-    nsCSSRendering::DecorationRectParams& aParams) {
+    nsCSSRendering::DecorationRectParams& aParams, bool aOnlyExtend = false) {
   const WritingMode wm = aDecFrame->GetWritingMode();
   bool verticalDec = wm.IsVertical();
 
@@ -5821,6 +5823,12 @@ static bool ComputeDecorationInset(
     }
     insetLeft = length.start.ToAppUnits();
     insetRight = length.end.ToAppUnits();
+  }
+
+  // If we only care about extended lines (for UnionAdditionalOverflow),
+  // we can bail out if neither inset value is negative.
+  if (aOnlyExtend && insetLeft >= 0 && insetRight >= 0) {
+    return true;
   }
 
   if (wm.IsInlineReversed()) {
@@ -6102,7 +6110,7 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                 swapUnderline);
 
             if (!ComputeDecorationInset(this, aPresContext, dec.mFrame, metrics,
-                                        params)) {
+                                        params, /* aOnlyExtend = */ true)) {
               return;
             }
 
