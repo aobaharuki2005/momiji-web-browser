@@ -237,6 +237,9 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     Dom,
     // We're about to remove this frame, but we will insert it later.
     ForReconstruction,
+    // We're about to remove this frame due to a style change but we know we
+    // are not going to create a frame later.
+    ForDisplayNoneChange,
   };
 
   /**

@@ -6334,9 +6334,6 @@ static bool ParentIsWrapperAnonBox(nsIFrame* aParent) {
 
 void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
                                             InsertionKind aInsertionKind) {
-  MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
-             !RestyleManager()->IsInStyleRefresh());
-
   AUTO_PROFILER_LABEL_HOT("nsCSSFrameConstructor::ContentAppended",
                           LAYOUT_FrameConstruction);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
@@ -6648,9 +6645,6 @@ void nsCSSFrameConstructor::ContentInserted(nsIContent* aChild,
 void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
                                                  nsIContent* aEndChild,
                                                  InsertionKind aInsertionKind) {
-  MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
-             !RestyleManager()->IsInStyleRefresh());
-
   AUTO_PROFILER_LABEL_HOT("nsCSSFrameConstructor::ContentRangeInserted",
                           LAYOUT_FrameConstruction);
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
@@ -7386,7 +7380,7 @@ bool nsCSSFrameConstructor::ContentWillBeRemoved(nsIContent* aChild,
   // complexity for the display: none -> other case, which right now
   // unnecessarily walks the content tree down.
   auto CouldHaveBeenDisplayContents = [aKind](nsIContent* aContent) -> bool {
-    return aContent->IsElement() && (aKind == RemovalKind::ForReconstruction ||
+    return aContent->IsElement() && (aKind != RemovalKind::Dom ||
                                      IsDisplayContents(aContent->AsElement()));
   };
 
@@ -7410,7 +7404,7 @@ bool nsCSSFrameConstructor::ContentWillBeRemoved(nsIContent* aChild,
     return false;
   }
 
-  if (aKind == RemovalKind::ForReconstruction) {
+  if (aKind != RemovalKind::Dom) {
     // Before removing the frames associated with the content object,
     // ask them to save their state onto our state object.
     CaptureStateForFramesOf(aChild, mFrameTreeState);
@@ -7555,7 +7549,7 @@ bool nsCSSFrameConstructor::ContentWillBeRemoved(nsIContent* aChild,
   // If we're just reconstructing frames for the element, then the
   // following ContentInserted notification on the element will
   // take care of fixing up any adjacent text nodes.
-  if (aKind == RemovalKind::Dom) {
+  if (aKind != RemovalKind::ForReconstruction) {
     MOZ_ASSERT(aChild->GetParentNode(),
                "How did we have a sibling without a parent?");
     // Adjacent whitespace-only text nodes might have been suppressed if
@@ -8455,28 +8449,38 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
   }
 
   MOZ_ASSERT(aContent->GetParentNode());
-  const bool didReconstruct =
-      ContentWillBeRemoved(aContent, RemovalKind::ForReconstruction);
-
-  if (!didReconstruct) {
-    if (aInsertionKind == InsertionKind::Async && aContent->IsElement()) {
-      // FIXME(emilio, bug 1397239): There's nothing removing the frame state
-      // for elements that go away before we come back to the frame
-      // constructor.
-      //
-      // Also, it'd be nice to just use the `ContentRangeInserted` path for
-      // both elements and non-elements, but we need to make lazy frame
-      // construction to apply to all elements first.
-      RestyleManager()->PostRestyleEvent(aContent->AsElement(), RestyleHint{0},
-                                         nsChangeHint_ReconstructFrame);
-    } else {
-      // Now, recreate the frames associated with this content object. If
-      // ContentWillBeRemoved triggered reconstruction, then we don't need to do
-      // this because the frames will already have been built.
-      ContentRangeInserted(aContent, aContent->GetNextSibling(),
-                           aInsertionKind);
+  const auto removalKind = [&] {
+    if (aInsertionKind == InsertionKind::Sync && aContent->IsElement() &&
+        Servo_Element_IsDisplayNone(aContent->AsElement())) {
+      // If we know we're not going to have frames after reconstructing, it's
+      // more efficient to do some of that work (a11y notifications, fixing-up
+      // text nodes) earlier.
+      return RemovalKind::ForDisplayNoneChange;
     }
+    return RemovalKind::ForReconstruction;
+  }();
+  const bool didReconstruct = ContentWillBeRemoved(aContent, removalKind);
+  if (didReconstruct || removalKind == RemovalKind::ForDisplayNoneChange) {
+    // If ContentWillBeRemoved triggered reconstruction, then we don't need to
+    // do anything else because the frames will already have been built.
+    return;
   }
+  if (aInsertionKind == InsertionKind::Async && aContent->IsElement()) {
+    // FIXME(emilio, bug 1397239): There's nothing removing the frame state
+    // for elements that go away before we come back to the frame constructor.
+    //
+    // Also, it'd be nice to just use the `ContentRangeInserted` path for
+    // both elements and non-elements, but we need to make lazy frame
+    // construction to apply to all elements first.
+    //
+    // TODO(emilio): I think lazy frame construction works everywhere now, so
+    // maybe we can remove this altogether?
+    RestyleManager()->PostRestyleEvent(aContent->AsElement(), RestyleHint{0},
+                                       nsChangeHint_ReconstructFrame);
+    return;
+  }
+  // Now, recreate the frames associated with this content object.
+  ContentRangeInserted(aContent, aContent->GetNextSibling(), aInsertionKind);
 }
 
 bool nsCSSFrameConstructor::DestroyFramesFor(nsIContent* aContent) {
