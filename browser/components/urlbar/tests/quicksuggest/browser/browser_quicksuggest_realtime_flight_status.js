@@ -183,6 +183,7 @@ add_task(async function ui_basic() {
       origin_airport: "Origin 1 (O1)",
       destination_airport: "Destination 1 (D1)",
       status: "On time",
+      url: "https://example.com/A1",
     },
     {
       flight_number: "A2",
@@ -194,6 +195,7 @@ add_task(async function ui_basic() {
       destination_airport: "Destination 2 (D2)",
       status: "In flight",
       time_left_minutes: "1 min left",
+      url: "https://example.com/A2",
     },
     {
       flight_number: "A3",
@@ -205,6 +207,7 @@ add_task(async function ui_basic() {
       destination_airport: "Destination 3 (D3)",
       status: "Arrived",
       time_left_minutes: "0 mins left",
+      url: "https://example.com/A3",
     },
     {
       flight_number: "A4",
@@ -215,6 +218,7 @@ add_task(async function ui_basic() {
       origin_airport: "Origin 4 (O4)",
       destination_airport: "Destination 4 (D4)",
       status: "Cancelled",
+      url: "https://example.com/A4",
     },
   ];
 
@@ -340,6 +344,7 @@ add_task(async function ui_delayed() {
       origin_airport: "Origin D1 (OD1)",
       destination_airport: "Destination D1 (DD1)",
       status: "Delayed until 3:05 PM",
+      url: "https://example.com/D1",
     },
     {
       flight_number: "D2",
@@ -351,6 +356,7 @@ add_task(async function ui_delayed() {
       destination_airport: "Destination D2 (DD2)",
       status: "In flight",
       time_left_minutes: "10 mins left",
+      url: "https://example.com/D2",
     },
     {
       flight_number: "D3",
@@ -362,6 +368,7 @@ add_task(async function ui_delayed() {
       destination_airport: "Destination D3 (DD3)",
       status: "Arrived",
       time_left_minutes: "0 mins left",
+      url: "https://example.com/D3",
     },
   ];
 
@@ -906,6 +913,10 @@ async function assertUI({ row, expectedList }) {
   let items = row.querySelectorAll(".urlbarView-realtime-item");
   Assert.equal(items.length, expectedList.length);
 
+  // Select the row, which will select the first item if there are multiple
+  // items.
+  UrlbarTestUtils.setSelectedRowIndex(window, 1);
+
   for (let i = 0; i < items.length; i++) {
     info(`Check the item[${i}]`);
     let item = items[i];
@@ -953,5 +964,17 @@ async function assertUI({ row, expectedList }) {
       let previousSeparator = timeLeftMinutes.previousElementSibling;
       Assert.ok(BrowserTestUtils.isHidden(previousSeparator));
     }
+
+    Assert.equal(
+      gURLBar.value,
+      expected.url,
+      "Input value should be the expected URL"
+    );
+
+    // Select the next item.
+    EventUtils.synthesizeKey("KEY_Tab");
   }
+
+  // Clear the selection.
+  UrlbarTestUtils.setSelectedRowIndex(window, -1);
 }

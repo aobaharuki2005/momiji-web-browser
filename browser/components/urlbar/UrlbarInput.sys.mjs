@@ -2817,6 +2817,7 @@ export class UrlbarInput {
       case lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC:
         return (
           element?.dataset.query ||
+          element?.dataset.url ||
           result.payload.input ||
           result.payload.query ||
           ""
