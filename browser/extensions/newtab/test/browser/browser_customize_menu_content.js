@@ -9,10 +9,17 @@ const { WeatherFeed } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  GeolocationTestUtils:
+    "resource://testing-common/GeolocationTestUtils.sys.mjs",
   MerinoTestUtils: "resource://testing-common/MerinoTestUtils.sys.mjs",
 });
 
 const { WEATHER_SUGGESTION } = MerinoTestUtils;
+
+add_setup(async function () {
+  GeolocationTestUtils.init(this);
+  GeolocationTestUtils.stubGeolocation(GeolocationTestUtils.SAN_FRANCISCO);
+});
 
 test_newtab({
   async before({ pushPrefs }) {

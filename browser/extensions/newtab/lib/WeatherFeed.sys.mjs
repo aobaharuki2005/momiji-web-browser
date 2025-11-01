@@ -25,6 +25,19 @@ ChromeUtils.defineLazyGetter(lazy, "MerinoClient", () => {
   }
 });
 
+ChromeUtils.defineLazyGetter(lazy, "GeolocationUtils", () => {
+  try {
+    return ChromeUtils.importESModule(
+      "moz-src:///browser/components/urlbar/private/GeolocationUtils.sys.mjs"
+    ).GeolocationUtils;
+  } catch {
+    // Fallback to URI format prior to FF 144.
+    return ChromeUtils.importESModule(
+      "resource:///modules/urlbar/private/GeolocationUtils.sys.mjs"
+    ).GeolocationUtils;
+  }
+});
+
 import {
   actionTypes as at,
   actionCreators as ac,
@@ -93,37 +106,6 @@ export class WeatherFeed {
     this.fetchTimer = 0;
   }
 
-  /**
-   * This thin wrapper around the fetch call makes it easier for us to write
-   * automated tests that simulate responses.
-   */
-  async fetchHelper(retries = 3, queryOverride = null) {
-    this.restartFetchTimer();
-    const weatherQuery = this.store.getState().Prefs.values[PREF_WEATHER_QUERY];
-    let suggestions = [];
-    let retry = 0;
-    const query = queryOverride ?? weatherQuery ?? "";
-    while (retry++ < retries && suggestions.length === 0) {
-      try {
-        suggestions = await this.merino.fetch({
-          query,
-          providers: MERINO_PROVIDER,
-          timeoutMs: 7000,
-          otherParams: {
-            request_type: "weather",
-            source: "newtab",
-          },
-        });
-      } catch (error) {
-        // We don't need to do anything with this right now.
-      }
-    }
-
-    // results from the API or empty array if null
-    this.suggestions = suggestions ?? [];
-    return this.suggestions;
-  }
-
   async fetch() {
     // Keep a handle on the `MerinoClient` instance that exists at the start of
     // this fetch. If fetching stops or this `Weather` instance is uninitialized
@@ -133,7 +115,7 @@ export class WeatherFeed {
       this.merino = await this.MerinoClient(MERINO_CLIENT_KEY);
     }
 
-    await this.fetchHelper();
+    this.suggestions = await this._fetchHelper();
 
     if (this.suggestions.length) {
       const hasLocationData =
@@ -227,41 +209,6 @@ export class WeatherFeed {
     }
   }
 
-  async fetchLocationByIP() {
-    if (!this.merino) {
-      this.merino = await this.MerinoClient(MERINO_CLIENT_KEY);
-    }
-
-    // First we fetch the forecast through user's IP Address
-    // which is done by not adding in a query parameter, but keeping the "weather" request_type.
-    // This method is mentioned in the AccuWeather docs:
-    // https://apidev.accuweather.com/developers/locationsAPIguide#IPAddress
-    try {
-      const ipLocation = await this.fetchHelper(3, "");
-
-      const ipData = ipLocation?.[0];
-
-      // Second, we use the city name that came from the IP look up to get the normalized merino response
-      // For context, the IP lookup response does not have the complete response data we need
-      const locationData = await this.merino.fetch({
-        query: ipData.city_name,
-        providers: MERINO_PROVIDER,
-        timeoutMs: 7000,
-        otherParams: {
-          request_type: "location",
-          source: "newtab",
-        },
-      });
-
-      const response = locationData?.[0]?.locations?.[0];
-      return response;
-      // return response
-    } catch (err) {
-      console.error("WeatherFeed failed to look up IP");
-      return null;
-    }
-  }
-
   async onPrefChangedAction(action) {
     switch (action.data.name) {
       case PREF_WEATHER_QUERY:
@@ -334,11 +281,10 @@ export class WeatherFeed {
         this.store.dispatch(ac.SetPref("weather.optInAccepted", true));
         this.store.dispatch(ac.SetPref("weather.optInDisplayed", false));
 
-        const detectedLocation = await this.fetchLocationByIP();
+        const detectedLocation = await this._fetchNormalizedLocation();
 
         if (detectedLocation) {
           // Build the payload exactly like manual search does
-
           this.store.dispatch(
             ac.BroadcastToContent({
               type: at.WEATHER_LOCATION_DATA_UPDATE,
@@ -361,6 +307,95 @@ export class WeatherFeed {
       }
     }
   }
+
+  /**
+   * This thin wrapper around the fetch call makes it easier for us to write
+   * automated tests that simulate responses.
+   */
+  async _fetchHelper(retries = 3, queryOverride = null) {
+    this.restartFetchTimer();
+
+    const weatherQuery = this.store.getState().Prefs.values[PREF_WEATHER_QUERY];
+    const query = queryOverride ?? weatherQuery ?? "";
+    const otherParams = {
+      request_type: "weather",
+      source: "newtab",
+    };
+
+    if (!query) {
+      let geolocation = await lazy.GeolocationUtils.geolocation();
+      if (!geolocation) {
+        return [];
+      }
+
+      if (geolocation.country_code) {
+        otherParams.country = geolocation.country_code;
+      }
+      let region = geolocation.region_code || geolocation.region;
+      if (region) {
+        otherParams.region = region;
+      }
+      let city = geolocation.city || geolocation.region;
+      if (city) {
+        otherParams.city = city;
+      }
+    }
+
+    let suggestions;
+    let retry = 0;
+
+    while (retry++ < retries && !suggestions?.length) {
+      try {
+        suggestions = await this.merino.fetch({
+          query,
+          providers: MERINO_PROVIDER,
+          timeoutMs: 7000,
+          otherParams,
+        });
+      } catch (error) {
+        // We don't need to do anything with this right now.
+      }
+    }
+
+    // results from the API or empty array if null
+    return suggestions ?? [];
+  }
+
+  async _fetchNormalizedLocation() {
+    const geolocation = await lazy.GeolocationUtils.geolocation();
+    if (!geolocation) {
+      return null;
+    }
+
+    // "region" might be able to be city if geolocation.city is null
+    const city = geolocation.city || geolocation.region;
+    if (!city) {
+      return null;
+    }
+
+    if (!this.merino) {
+      this.merino = await this.MerinoClient(MERINO_CLIENT_KEY);
+    }
+
+    try {
+      // We use the given city name look up to get the normalized merino response
+      const locationData = await this.merino.fetch({
+        query: city,
+        providers: MERINO_PROVIDER,
+        timeoutMs: 7000,
+        otherParams: {
+          request_type: "location",
+          source: "newtab",
+        },
+      });
+
+      const response = locationData?.[0]?.locations?.[0];
+      return response;
+    } catch (err) {
+      console.error("WeatherFeed failed to get normalized location");
+      return null;
+    }
+  }
 }
 
 /**
@@ -368,7 +403,10 @@ export class WeatherFeed {
  * This makes it easier for us to write automated tests that simulate responses.
  */
 WeatherFeed.prototype.MerinoClient = (...args) => {
-  return new lazy.MerinoClient(...args);
+  return new lazy.MerinoClient({
+    allowOhttp: true,
+    ...args,
+  });
 };
 WeatherFeed.prototype.PersistentCache = (...args) => {
   return new lazy.PersistentCache(...args);

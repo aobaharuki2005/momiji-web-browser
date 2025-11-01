@@ -71,7 +71,9 @@ add_task(async function disableAndEnable() {
 });
 
 async function doBasicDisableAndEnableTest(pref) {
-  let cleanup = GeolocationTestUtils.stubGeolocation();
+  let cleanup = GeolocationTestUtils.stubGeolocation(
+    GeolocationTestUtils.SAN_FRANCISCO
+  );
 
   // Disable the feature. It should be immediately uninitialized.
   UrlbarPrefs.set(pref, false);
@@ -126,7 +128,9 @@ add_task(async function noSuggestion() {
 // When the Merino response doesn't include a `region_code` for the geolocated
 // version of the suggestion, the suggestion title should only contain a city.
 add_task(async function geolocationSuggestionNoRegion() {
-  let cleanup = GeolocationTestUtils.stubGeolocation();
+  let cleanup = GeolocationTestUtils.stubGeolocation(
+    GeolocationTestUtils.SAN_FRANCISCO
+  );
 
   let { suggestions } = MerinoTestUtils.server.response.body;
   let s = { ...MerinoTestUtils.WEATHER_SUGGESTION };
@@ -159,7 +163,9 @@ add_task(async function geolocationSuggestionNoRegion() {
 // the suggestion's URL, the suggestion should be shown and the history visit
 // should not be shown.
 add_task(async function urlAlreadyInHistory() {
-  let cleanup = GeolocationTestUtils.stubGeolocation();
+  let cleanup = GeolocationTestUtils.stubGeolocation(
+    GeolocationTestUtils.SAN_FRANCISCO
+  );
 
   // A visit to the weather suggestion's exact URL.
   let suggestionVisit = {
@@ -313,7 +319,9 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
       // enabled rather than being set according to region/locale.
       skipSuggestReset: true,
       callback: async () => {
-        let cleanup = GeolocationTestUtils.stubGeolocation();
+        let cleanup = GeolocationTestUtils.stubGeolocation(
+          GeolocationTestUtils.SAN_FRANCISCO
+        );
 
         info("Checking locale: " + locale);
         await check_results({
@@ -489,7 +497,9 @@ async function doRegionTest({ homeRegion, locale, query, expectedTitleL10n }) {
 
 // Tests dismissal.
 add_task(async function dismissal() {
-  let cleanup = GeolocationTestUtils.stubGeolocation();
+  let cleanup = GeolocationTestUtils.stubGeolocation(
+    GeolocationTestUtils.SAN_FRANCISCO
+  );
 
   await doDismissAllTest({
     result: QuickSuggestTestUtils.weatherResult(),
@@ -509,7 +519,9 @@ add_task(async function dismissal() {
 // When a Nimbus experiment is installed, it should override the remote settings
 // weather record.
 add_task(async function nimbusOverride() {
-  let cleanup = GeolocationTestUtils.stubGeolocation();
+  let cleanup = GeolocationTestUtils.stubGeolocation(
+    GeolocationTestUtils.SAN_FRANCISCO
+  );
   let defaultResult = QuickSuggestTestUtils.weatherResult();
 
   // Verify a search works as expected with the default remote settings weather
@@ -828,7 +840,9 @@ add_task(async function cityRegionQueries() {
 
 // Tests weather queries that don't include a city.
 add_task(async function noCityQuery() {
-  let cleanup = GeolocationTestUtils.stubGeolocation();
+  let cleanup = GeolocationTestUtils.stubGeolocation(
+    GeolocationTestUtils.SAN_FRANCISCO
+  );
 
   await doCityTest({
     desc: "No city in query, so only one call to Merino should be made and Merino does the geolocation internally",
