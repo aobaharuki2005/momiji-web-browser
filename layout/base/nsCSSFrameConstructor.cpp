@@ -17,6 +17,7 @@
 #include "RubyUtils.h"
 #include "StickyScrollContainer.h"
 #include "mozilla/AbsoluteContainingBlock.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/DebugOnly.h"
@@ -1995,6 +1996,19 @@ static bool IsWrapperPseudo(nsIFrame* aFrame) {
     return false;
   }
   return PseudoStyle::IsWrapperAnonBox(pseudoType) || IsTablePseudo(aFrame);
+}
+
+static bool IsInAnonymousTable(nsIFrame* aFrame) {
+  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
+    if (!IsWrapperPseudo(f)) {
+      return false;
+    }
+    if (f->IsTableWrapperFrame()) {
+      return true;
+    }
+  }
+  MOZ_ASSERT_UNREACHABLE("Expected to be called inside tables");
+  return false;
 }
 
 /* static */
@@ -7526,6 +7540,48 @@ bool nsCSSFrameConstructor::ContentWillBeRemoved(nsIContent* aChild,
     parentFrame = childFrame->GetParent();
   }
 
+  const bool canSkipWhitespaceFixup = [&] {
+    if (aKind == RemovalKind::ForReconstruction) {
+      // If we're just reconstructing frames for the element, then the
+      // following ContentInserted notification on the element will
+      // take care of fixing up any adjacent white-space text nodes.
+      return true;
+    }
+    switch (parentFrame->Type()) {
+      case LayoutFrameType::Table:
+      case LayoutFrameType::TableRow:
+      case LayoutFrameType::TableRowGroup:
+      case LayoutFrameType::TableCol:
+      case LayoutFrameType::TableColGroup:
+      case LayoutFrameType::TableWrapper: {
+        // Tables ignore all whitespace within their wrappers, so we can avoid
+        // reconstructing adjacent whitespace if the table is not anonymous.
+        if (!IsInAnonymousTable(parentFrame)) {
+          return true;
+        }
+        // If the table is anonymous and the child is at the edges, we might
+        // need to create whitespace at the edges of the table that wasn't
+        // there before, so we can only skip the check if childFrame has frames
+        // around. Captions are extra-special here, because they're siblings
+        // with the main table frame, so we can't count that as a relevant
+        // sibling for our purposes.
+        auto* prevSibling = childFrame->GetPrevSibling();
+        return prevSibling && !prevSibling->IsTableFrame() &&
+               childFrame->GetNextSibling();
+      }
+      case LayoutFrameType::GridContainer:
+      case LayoutFrameType::FlexContainer:
+        // Flex and grid containers similarly skip whitespace and wrap
+        // non-whitespace in anonymous flex items, so any change to
+        // white-space that could matter would have triggered the
+        // reconstruction of the container itself due to merging anonymous
+        // grid / flex items.
+        return true;
+      default:
+        break;
+    }
+    return false;
+  }();
   DestroyContext context(mPresShell);
   RemoveFrame(context, nsLayoutUtils::GetChildListNameFor(childFrame),
               childFrame);
@@ -7546,10 +7602,7 @@ bool nsCSSFrameConstructor::ContentWillBeRemoved(nsIContent* aChild,
     RecoverLetterFrames(containingBlock);
   }
 
-  // If we're just reconstructing frames for the element, then the
-  // following ContentInserted notification on the element will
-  // take care of fixing up any adjacent text nodes.
-  if (aKind != RemovalKind::ForReconstruction) {
+  if (!canSkipWhitespaceFixup) {
     MOZ_ASSERT(aChild->GetParentNode(),
                "How did we have a sibling without a parent?");
     // Adjacent whitespace-only text nodes might have been suppressed if
