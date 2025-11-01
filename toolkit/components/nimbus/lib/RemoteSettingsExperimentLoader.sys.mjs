@@ -815,7 +815,7 @@ export class RemoteSettingsExperimentLoader {
    * Resolves when the RemoteSettingsExperimentLoader has updated at least once
    * and is not in the middle of an update.
    *
-   * If studies are disabled or the RemoteSettingsExperimentLoader has been
+   * If Nimbus is disabled or the RemoteSettingsExperimentLoader has been
    * disabled (i.e., during shutdown), then this will always resolve
    * immediately.
    */
