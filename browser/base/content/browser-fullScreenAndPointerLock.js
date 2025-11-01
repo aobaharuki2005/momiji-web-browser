@@ -100,9 +100,10 @@ var PointerlockFsWarning = {
     } else {
       textElem.removeAttribute("hidden");
       // Document's principal's URI has a host. Display a warning including it.
-      let displayHost = BrowserUtils.formatURIForDisplay(uri, {
-        onlyBaseDomain: true,
-      });
+      let { DownloadUtils } = ChromeUtils.importESModule(
+        "resource://gre/modules/DownloadUtils.sys.mjs"
+      );
+      let displayHost = DownloadUtils.getURIHost(uri.spec)[0];
       let l10nString = {
         "fullscreen-warning": "fullscreen-warning-domain",
         "pointerlock-warning": "pointerlock-warning-domain",

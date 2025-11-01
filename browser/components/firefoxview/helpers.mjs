@@ -24,9 +24,7 @@ export const LOGGING_PREF = "browser.tabs.firefox-view.logLevel";
 export const MAX_TABS_FOR_RECENT_BROWSING = 5;
 
 export function formatURIForDisplay(uriString) {
-  return lazy.BrowserUtils.formatURIStringForDisplay(uriString, {
-    showFilenameForLocalURIs: true,
-  });
+  return lazy.BrowserUtils.formatURIStringForDisplay(uriString);
 }
 
 export function convertTimestamp(
