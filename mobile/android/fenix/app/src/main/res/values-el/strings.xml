@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Αποθήκευση στη συλλογή</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Κοινή χρήση</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Αρχική σελίδα</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -576,7 +578,7 @@
   <!-- Terms of use (ToU) onboarding page continue button label. -->
   <string name="onboarding_redesign_tou_agree_and_continue_button_label">Συνέχεια</string>
   <!-- Onboarding header for the toolbar selection card. -->
-  <string name="onboarding_redesign_customize_toolbar_title">Πού θέλετε η γραμμή διευθύνσεων σας;</string>
+  <string name="onboarding_redesign_customize_toolbar_title">Πού θέλετε τη γραμμή διευθύνσεών σας;</string>
   <!-- Onboarding label for 'Continue' button. -->
   <string name="onboarding_redesign_continue_button">Συνέχεια</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
@@ -1246,6 +1248,18 @@
   <string name="preference_expanded_toolbar">Ανεπτυγμένη</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Η γραμμή διευθύνσεων πρέπει να βρίσκεται στο πάνω μέρος όταν εμφανίζεται η γραμμή καρτελών.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Άνοιγμα νέας καρτέλας</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Κοινή χρήση</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Προσθήκη σελιδοδείκτη</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Μετάφραση</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Αρχική σελίδα</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Πίσω</string>
   <!--
     App icon Preferences
 
@@ -1760,7 +1774,7 @@
 
     Title text displayed on the tab crash page. %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="tab_crash_title_2">Συγγνώμη. Το %1$s δεν μπορεί να φορτώσει αυτήν τη σελίδα.</string>
+  <string name="tab_crash_title_2">Δυστυχώς, το %1$s δεν μπορεί να φορτώσει αυτήν τη σελίδα.</string>
   <!-- Send crash report checkbox text on the tab crash page -->
   <string name="tab_crash_send_report">Αποστολή αναφοράς κατάρρευσης στη Mozilla</string>
   <!-- Close tab button text on the tab crash page -->
@@ -3094,7 +3108,7 @@
     Search suggestions title for trending search suggestions.
     %s is a placeholder for the name of the search engine providing the trending search suggestions.
   -->
-  <string name="trending_searches_header_2">Δημοφιλές στο %s</string>
+  <string name="trending_searches_header_2">Δημοφιλή στο %s</string>
   <!-- Title for search suggestions when Google is the default search suggestion engine. -->
   <string name="google_search_engine_suggestion_header">Αναζήτηση Google</string>
   <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. %s is default search engine name. -->

@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Lagre i samling</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Del</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Startside</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -279,7 +281,7 @@
   <!-- Browser menu label for editing a bookmark -->
   <string name="browser_menu_edit">Rediger</string>
   <!-- Button shown on the home page that opens the Customize home settings -->
-  <string name="browser_menu_customize_home_1">Tilpasse startsida</string>
+  <string name="browser_menu_customize_home_1">Tilpass startsida</string>
   <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
   <string name="browser_menu_sign_in">Logg inn</string>
   <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
@@ -807,7 +809,7 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">Vising av fanelinje</string>
   <!-- Preference for gestures based actions -->
-  <string name="preferences_toolbar_shortcut">Snarveg til verktøylinje</string>
+  <string name="preferences_toolbar_shortcut">Verktøylinje-snarveg</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_toolbar_select_shortcut">Vel ein snarveg</string>
   <!-- Preference for gestures based actions -->
@@ -1246,6 +1248,18 @@
   <string name="preference_expanded_toolbar">Utvida</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Adresselinja må vere øvst når fanelinja vert vist.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Opne ei ny fane</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Del</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Legg til bokmerke</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Omset</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Startside</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Tilbake</string>
   <!--
     App icon Preferences
 
@@ -1486,7 +1500,7 @@
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">Meny for valde faner</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
-  <string name="tab_tray_homepage_tab">Heimeside</string>
+  <string name="tab_tray_homepage_tab">Startside</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
   <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s startside</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->

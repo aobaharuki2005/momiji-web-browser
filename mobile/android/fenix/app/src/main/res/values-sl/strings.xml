@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Shrani v zbirko</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Deli</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Domača stran</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -585,6 +587,8 @@
   <string name="onboarding_marketing_redesign_positive_button">Potrdi</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">Z enim dotikom se uprite podjetjem, ki vohunijo za vašimi kliki.</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">Sinhronizirajte podatke povsod, kjer uporabljate Firefox</string>
   <!-- Sync onboarding redesign positive button text. -->
   <string name="onboarding_redesign_sync_positive_button">Začni s sinhronizacijo</string>
   <!-- Sync onboarding redesign negative button text. -->
@@ -794,6 +798,8 @@
   <string name="preferences_app_icon">Ikona aplikacije</string>
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">Prikaz vrstice z zavihki</string>
+  <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_shortcut">Bližnjica v orodni vrstici</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_toolbar_select_shortcut">Izberite bližnjico</string>
   <!-- Preference for gestures based actions -->
@@ -1232,6 +1238,18 @@
   <string name="preference_expanded_toolbar">Razširjeno</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Ko je prikazana vrstica z zavihki, mora biti naslovna vrstica na vrhu.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Odpri nov zavihek</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Deli</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Dodaj zaznamek</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Prevedi</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Domača stran</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Nazaj</string>
   <!--
     App icon Preferences
 
