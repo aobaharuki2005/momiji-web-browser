@@ -3740,6 +3740,11 @@ bool nsHttpTransaction::AllowedToConnectToIpAddressSpace(
     return true;
   }
 
+  if (mConnection) {
+    // update peer address required for LNA telemetry and console logging
+    MutexAutoLock lock(mLock);
+    mConnection->GetPeerAddr(&mPeerAddr);
+  }
   // Skip LNA checks if domain is in skip list
   if (mConnInfo && gIOService &&
       gIOService->ShouldSkipDomainForLNA(mConnInfo->GetOrigin())) {

@@ -2043,6 +2043,16 @@ void HttpChannelParent::DoSendSetPriority(int16_t aValue) {
   }
 }
 
+void HttpChannelParent::DoSendReportLNAToConsole(
+    const NetAddr& aPeerAddr, const nsACString& aMessageType,
+    const nsACString& aPromptAction, const nsACString& aTopLevelSite) {
+  if (!mIPCClosed) {
+    (void)SendReportLNAToConsole(aPeerAddr, nsCString(aMessageType),
+                                 nsCString(aPromptAction),
+                                 nsCString(aTopLevelSite));
+  }
+}
+
 nsresult HttpChannelParent::LogBlockedCORSRequest(const nsAString& aMessage,
                                                   const nsACString& aCategory,
                                                   bool aIsWarning) {

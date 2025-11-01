@@ -18,6 +18,7 @@
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/LinkStyle.h"
+#include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"
@@ -1485,6 +1486,137 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvReportSecurityMessage(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult HttpChannelChild::RecvReportLNAToConsole(
+    const NetAddr& aPeerAddr, const nsACString& aMessageType,
+    const nsACString& aPromptAction, const nsACString& aTopLevelSite) {
+  nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+
+  if (!loadInfo || !uri) {
+    return IPC_OK();
+  }
+
+  // Use top-level site passed from parent process via IPC.
+  // This is necessary because in cross-site scenarios with Fission,
+  // the content process cannot access the top-level document which
+  // exists in a different process.
+  nsAutoCString topLevelSite(aTopLevelSite);
+
+  // Get initiator (triggering principal)
+  nsAutoCString initiator;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+  loadInfo->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
+  if (triggeringPrincipal) {
+    nsCOMPtr<nsIURI> triggeringURI = triggeringPrincipal->GetURI();
+    if (triggeringURI) {
+      initiator = triggeringURI->GetSpecOrDefault();
+    }
+  }
+
+  // Get target URL (full spec shown to users for clarity)
+  nsAutoCString targetURL;
+  targetURL = uri->GetSpecOrDefault();
+
+  // Get target IP address from passed NetAddr
+  nsCString targetIp = aPeerAddr.ToString();
+
+  // Get port
+  uint16_t port = 0;
+  (void)aPeerAddr.GetPort(&port);
+
+  // Determine request mechanism from LoadInfo
+  nsAutoCString mechanism;
+  ExtContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
+  switch (contentType) {
+    case ExtContentPolicyType::TYPE_WEBSOCKET:
+      mechanism.AssignLiteral("websocket");
+      break;
+    case ExtContentPolicyType::TYPE_WEB_TRANSPORT:
+      mechanism.AssignLiteral("webtransport");
+      break;
+    case ExtContentPolicyType::TYPE_FETCH:
+      mechanism.AssignLiteral("fetch");
+      break;
+    case ExtContentPolicyType::TYPE_XMLHTTPREQUEST:
+      mechanism.AssignLiteral("xhr");
+      break;
+    default:
+      if (uri->SchemeIs("https")) {
+        mechanism.AssignLiteral("https");
+      } else {
+        mechanism.AssignLiteral("http");
+      }
+      break;
+  }
+
+  // Check if the originating context is secure (required by LNA spec)
+  bool isSecureContext = false;
+  if (triggeringPrincipal) {
+    isSecureContext = triggeringPrincipal->GetIsOriginPotentiallyTrustworthy();
+  }
+
+  // Build console parameters
+  AutoTArray<nsString, 8> consoleParams;
+  CopyUTF8toUTF16(
+      topLevelSite.IsEmpty() ? nsAutoCString("(empty)") : topLevelSite,
+      *consoleParams.AppendElement());
+  CopyUTF8toUTF16(initiator.IsEmpty() ? nsAutoCString("(empty)") : initiator,
+                  *consoleParams.AppendElement());
+  CopyUTF8toUTF16(targetURL.IsEmpty() ? nsAutoCString("(empty)") : targetURL,
+                  *consoleParams.AppendElement());
+  CopyUTF8toUTF16(targetIp, *consoleParams.AppendElement());
+  consoleParams.AppendElement()->AppendInt(port);
+  CopyUTF8toUTF16(mechanism, *consoleParams.AppendElement());
+  CopyUTF8toUTF16(
+      isSecureContext ? nsAutoCString("True") : nsAutoCString("False"),
+      *consoleParams.AppendElement());
+
+  // Add prompt action if provided (for LocalNetworkAccessDetected message)
+  if (!aPromptAction.IsEmpty()) {
+    CopyUTF8toUTF16(aPromptAction, *consoleParams.AppendElement());
+  }
+
+  // Build the formatted message with stack trace
+  nsAutoString formattedMsg;
+  nsContentUtils::FormatLocalizedString(nsContentUtils::eNECKO_PROPERTIES,
+                                        PromiseFlatCString(aMessageType).get(),
+                                        consoleParams, formattedMsg);
+
+  // Append stack trace to the message if available
+  const char* callStack = GetCallStack();
+  if (callStack && callStack[0] != '\0') {
+    formattedMsg.AppendLiteral("\n");
+    formattedMsg.Append(NS_ConvertUTF8toUTF16(callStack));
+  }
+
+  uint64_t innerWindowID = 0;
+  loadInfo->GetInnerWindowID(&innerWindowID);
+
+  nsCOMPtr<nsIURI> sourceURI = uri;  // fallback to target
+  if (triggeringPrincipal) {
+    nsCOMPtr<nsIURI> principalURI = triggeringPrincipal->GetURI();
+    if (principalURI) {
+      sourceURI = principalURI;
+    }
+  }
+
+  // Report to web console
+  if (innerWindowID) {
+    nsContentUtils::ReportToConsoleByWindowID(
+        formattedMsg, nsIScriptError::infoFlag, "Security"_ns, innerWindowID,
+        mozilla::SourceLocation(sourceURI.get()));
+  } else {
+    RefPtr<dom::Document> doc;
+    loadInfo->GetLoadingDocument(getter_AddRefs(doc));
+    nsContentUtils::ReportToConsoleNonLocalized(
+        formattedMsg, nsIScriptError::infoFlag, "Security"_ns, doc,
+        mozilla::SourceLocation(sourceURI.get()));
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
     const uint32_t& aRegistrarId, nsIURI* aNewUri,
     const uint32_t& aNewLoadFlags, const uint32_t& aRedirectFlags,
@@ -2140,6 +2272,25 @@ HttpChannelChild::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
 
 NS_IMETHODIMP
 HttpChannelChild::AsyncOpen(nsIStreamListener* aListener) {
+  // Capture JavaScript stack for LNA console logging only if:
+  // 1. LNA blocking is enabled
+  // 2. This is a cross-origin request (LNA only applies to cross-origin)
+  if (StaticPrefs::network_lna_blocking() &&
+      ReferrerInfo::IsCrossOriginRequest(this)) {
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
+    if (cx) {
+      JS::UniqueChars chars = xpc_PrintJSStack(cx,
+                                               /*showArgs=*/false,
+                                               /*showLocals=*/false,
+                                               /*showThisProps=*/false);
+      if (chars) {
+        size_t len = strlen(chars.get());
+        mCallStack = mozilla::MakeUnique<char[]>(len + 1);
+        memcpy(mCallStack.get(), chars.get(), len + 1);
+      }
+    }
+  }
+
   AUTO_PROFILER_LABEL("HttpChannelChild::AsyncOpen", NETWORK);
   LOG(("HttpChannelChild::AsyncOpen [this=%p uri=%s]\n", this, mSpec.get()));
 

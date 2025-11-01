@@ -137,6 +137,7 @@
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/dom/SecFetch.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/TRRService.h"
 #include "LNAPermissionRequest.h"
 #include "nsUnknownDecoder.h"
@@ -8616,6 +8617,48 @@ nsHttpChannel::GetEssentialDomainCategory(nsCString& domain) {
   return EssentialDomainCategory::Other;
 }
 
+// Helper function to send LNA access info to child process for console logging
+// The child process has access to CallingScriptLocationString() which requires
+// JS context
+static void ReportLNAAccessToConsole(nsHttpChannel* aChannel,
+                                     const char* aMessageName,
+                                     const nsACString& aPromptAction = ""_ns) {
+  // Send IPC to child process to log to console with script location
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(aChannel, parentChannel);
+  if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
+    NetAddr peerAddr = aChannel->GetPeerAddr();
+
+    // Fetch top-level site URI in parent process and pass via IPC.
+    // We need to fetch this here because with Fission (site isolation),
+    // cross-site iframes run in separate content processes and cannot
+    // access the top-level document in a different process.
+    nsAutoCString topLevelSite;
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    if (loadInfo) {
+      RefPtr<mozilla::dom::BrowsingContext> bc;
+      loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+      if (bc && bc->Top() && bc->Top()->Canonical()) {
+        RefPtr<mozilla::dom::WindowGlobalParent> topWindowGlobal =
+            bc->Top()->Canonical()->GetCurrentWindowGlobal();
+        if (topWindowGlobal) {
+          nsIPrincipal* topPrincipal = topWindowGlobal->DocumentPrincipal();
+          if (topPrincipal) {
+            nsCOMPtr<nsIURI> topURI = topPrincipal->GetURI();
+            if (topURI) {
+              (void)topURI->GetSpec(topLevelSite);
+            }
+          }
+        }
+      }
+    }
+
+    httpParent->DoSendReportLNAToConsole(peerAddr, nsCString(aMessageName),
+                                         nsCString(aPromptAction),
+                                         topLevelSite);
+  }
+}
+
 nsresult nsHttpChannel::ProcessLNAActions() {
   if (!mTransaction) {
     // this could happen with rcwn enabled.
@@ -8626,6 +8669,7 @@ nsresult nsHttpChannel::ProcessLNAActions() {
   // Suspend to block any notification to the channel.
   // This will get resumed in
   // nsHttpChannel::OnPermissionPromptResult
+  UpdateCurrentIpAddressSpace();
   mWaitingForLNAPermission = true;
   Suspend();
   auto permissionKey = mTransaction->GetTargetIPAddressSpace() ==
@@ -8656,12 +8700,54 @@ nsresult nsHttpChannel::ProcessLNAActions() {
   RefPtr<LNAPermissionRequest> request = new LNAPermissionRequest(
       std::move(permissionPromptCallback), mLoadInfo, permissionKey);
 
+  // Log to console before requesting permission
+  ReportLNAAccessToConsole(this, "LocalNetworkAccessPermissionRequired");
+
   // This invokes callback nsHttpChannel::OnPermissionPromptResult
   // synchronously if the permission is already granted or denied
   // if permission is not available we prompt the user and in that case
   // nsHttpChannel::OnPermissionPromptResult is invoked asynchronously once
   // the user responds to the prompt
   return request->RequestPermission();
+}
+
+void nsHttpChannel::UpdateCurrentIpAddressSpace() {
+  if (!mTransaction) {
+    return;
+  }
+
+  if (mPeerAddr.GetIpAddressSpace() == nsILoadInfo::IPAddressSpace::Unknown) {
+    // fetch peer address from transaction
+    bool isTrr;
+    bool echConfigUsed;
+    mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr, isTrr,
+                                      mEffectiveTRRMode, mTRRSkipReason,
+                                      echConfigUsed);
+  }
+
+  nsILoadInfo::IPAddressSpace docAddressSpace = mPeerAddr.GetIpAddressSpace();
+  mLoadInfo->SetIpAddressSpace(docAddressSpace);
+  ExtContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
+  if (type == ExtContentPolicy::TYPE_DOCUMENT ||
+      type == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    RefPtr<mozilla::dom::BrowsingContext> bc;
+    mLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc));
+    if (bc) {
+      bc->SetCurrentIPAddressSpace(docAddressSpace);
+    }
+
+    if (mCacheEntry) {
+      // store the ipaddr information into the cache metadata entry
+      if (mPeerAddr.GetIpAddressSpace() !=
+          nsILoadInfo::IPAddressSpace::Unknown) {
+        uint16_t port;
+        mPeerAddr.GetPort(&port);
+        mCacheEntry->SetMetaDataElement("peer-ip-address",
+                                        mPeerAddr.ToString().get());
+        mCacheEntry->SetMetaDataElement("peer-port", ToString(port).c_str());
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -8825,33 +8911,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     if (!mProxyInfo || xpc::IsInAutomation()) {
       // If this is main document load or iframe store the IP Address space in
       // the browsing context
-      nsAutoCString addrPort;
-      mPeerAddr.ToAddrPortString(addrPort);
-      nsILoadInfo::IPAddressSpace docAddressSpace =
-          mPeerAddr.GetIpAddressSpace();
-      mLoadInfo->SetIpAddressSpace(docAddressSpace);
-      ExtContentPolicyType type = mLoadInfo->GetExternalContentPolicyType();
-      if (type == ExtContentPolicy::TYPE_DOCUMENT ||
-          type == ExtContentPolicy::TYPE_SUBDOCUMENT) {
-        RefPtr<mozilla::dom::BrowsingContext> bc;
-        mLoadInfo->GetTargetBrowsingContext(getter_AddRefs(bc));
-        if (bc) {
-          bc->SetCurrentIPAddressSpace(docAddressSpace);
-        }
-
-        if (mCacheEntry) {
-          // store the ipaddr information into the cache metadata entry
-          if (mPeerAddr.GetIpAddressSpace() !=
-              nsILoadInfo::IPAddressSpace::Unknown) {
-            uint16_t port;
-            mPeerAddr.GetPort(&port);
-            mCacheEntry->SetMetaDataElement("peer-ip-address",
-                                            mPeerAddr.ToString().get());
-            mCacheEntry->SetMetaDataElement("peer-port",
-                                            ToString(port).c_str());
-          }
-        }
-      }
+      UpdateCurrentIpAddressSpace();
     }
 
     StoreResolvedByTRR(isTrr);

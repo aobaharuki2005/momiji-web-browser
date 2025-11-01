@@ -96,6 +96,12 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   // Calls SendSetPriority if mIPCClosed is false.
   void DoSendSetPriority(int16_t aValue);
 
+  // Calls SendReportLNAToConsole if mIPCClosed is false.
+  void DoSendReportLNAToConsole(const NetAddr& aPeerAddr,
+                                const nsACString& aMessageType,
+                                const nsACString& aPromptAction,
+                                const nsACString& aTopLevelSite);
+
   // Callback while background channel is ready.
   void OnBackgroundParentReady(HttpBackgroundChannelParent* aBgParent);
   // Callback while background channel is destroyed.
