@@ -2923,16 +2923,8 @@ export var Policies = {
           param.Locked
         );
       }
-      if ("FirefoxLabs" in param) {
-        if (!param.FirefoxLabs) {
-          manager.disallowFeature("FirefoxLabs");
-        }
-
-        PoliciesUtils.setDefaultPref(
-          "browser.preferences.experimental",
-          param.FirefoxLabs,
-          param.Locked
-        );
+      if ("FirefoxLabs" in param && !param.FirefoxLabs) {
+        manager.disallowFeature("FirefoxLabs");
       }
     },
   },

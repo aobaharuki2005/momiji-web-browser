@@ -81,6 +81,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.sys.mjs",
   ExtensionSettingsStore:
@@ -242,16 +243,17 @@ function init_all() {
   if (Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")) {
     register_module("paneTranslations", gTranslationsPane);
   }
-  if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
+  if (ExperimentAPI.labsEnabled) {
     // Set hidden based on previous load's hidden value or if Nimbus is
     // disabled.
     document.getElementById("category-experimental").hidden =
-      !ExperimentAPI.studiesEnabled ||
       Services.prefs.getBoolPref(
         "browser.preferences.experimental.hidden",
         false
       );
     register_module("paneExperimental", gExperimentalPane);
+  } else {
+    document.getElementById("category-experimental").hidden = true;
   }
 
   NimbusFeatures.moreFromMozilla.recordExposureEvent({ once: true });
