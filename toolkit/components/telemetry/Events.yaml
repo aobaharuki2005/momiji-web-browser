@@ -3864,6 +3864,13 @@ browser.backup:
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
+    extra_keys:
+      encrypted: Whether or not encryption is enabled for the backup.
+      location: >
+        The location of the backup. This can be either "onedrive",
+        "documents", or "other". "other" will be sent if the parent directory
+        of the backup doesn't match the default "documents" or "onedrive"
+        save paths.
   toggle_off:
     objects: ["BackupService"]
     description: >
@@ -3890,6 +3897,16 @@ browser.backup:
     record_in_processes: [main]
     release_channel_collection: opt-out
     expiry_version: never
+    extra_keys:
+      encrypted: Whether or not encryption is enabled for the backup.
+      location: >
+        The location of the backup. This can be either "onedrive",
+        "documents", or "other". "other" will be sent if the parent directory
+        of the backup doesn't match the default "documents" or "onedrive"
+        save paths.
+      size: >
+        The size-on-disk of the created backup. This is rounded to the
+        nearest mebibyte to reduce fingerprintability.
   change_location:
     objects: ["BackupService"]
     description: >

@@ -250,6 +250,7 @@ export default class BackupSettings extends MozLitElement {
     return html`<dialog
       id="turn-on-scheduled-backups-dialog"
       class="backup-dialog"
+      @close=${this.handleTurnOnScheduledBackupsDialogClose}
     >
       <turn-on-scheduled-backups
         defaultlabel=${fileName}
@@ -324,10 +325,19 @@ export default class BackupSettings extends MozLitElement {
     );
   }
 
+  handleTurnOnScheduledBackupsDialogClose() {
+    this.turnOnScheduledBackupsEl.reset();
+  }
+
+  handleEnableBackupEncryptionDialogClose() {
+    this.enableBackupEncryptionEl.reset();
+  }
+
   enableBackupEncryptionDialogTemplate() {
     return html`<dialog
       id="enable-backup-encryption-dialog"
       class="backup-dialog"
+      @close=${this.handleEnableBackupEncryptionDialogClose}
     >
       <enable-backup-encryption
         type=${this._enableEncryptionTypeAttr}

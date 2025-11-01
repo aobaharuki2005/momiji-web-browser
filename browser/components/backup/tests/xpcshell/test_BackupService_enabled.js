@@ -60,10 +60,17 @@ add_task(async function test_archive_killswitch_enrollment() {
     "`archiveEnabledStatus` should report that it is disabled by the archive killswitch."
   );
 
+  Services.fog.testResetFOG();
   let backup = await bs.createBackup();
   Assert.ok(
     !backup,
     "Creating a backup should fail when the archive killswitch is active."
+  );
+  let telemetry = Glean.browserBackup.backupDisabledReason.testGetValue();
+  Assert.equal(
+    telemetry,
+    "nimbus",
+    "Telemetry identifies the backup is disabled by Nimbus."
   );
 
   // End the experiment.
@@ -82,6 +89,13 @@ add_task(async function test_archive_killswitch_enrollment() {
   ok(
     await IOUtils.exists(backup.archivePath),
     "Archive file should exist on disk."
+  );
+
+  telemetry = Glean.browserBackup.backupDisabledReason.testGetValue();
+  Assert.equal(
+    telemetry,
+    "reenabled",
+    "Telemetry identifies the backup was re-enabled."
   );
 });
 

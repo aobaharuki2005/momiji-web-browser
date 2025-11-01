@@ -381,6 +381,10 @@ class SessionControlInteractor(
         pocketStoriesController.handleDiscoverMoreClicked()
     }
 
+    override fun onDiscoverMoreScreenViewed() {
+        pocketStoriesController.handleDiscoverMoreScreenViewed()
+    }
+
     override fun reportSessionMetrics(state: AppState) {
         controller.handleReportSessionMetrics(state)
     }

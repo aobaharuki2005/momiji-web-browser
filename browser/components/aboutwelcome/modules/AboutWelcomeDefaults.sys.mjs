@@ -710,6 +710,11 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           },
           has_arrow_icon: true,
           action: {
+            type: "SET_PREF",
+            data: {
+              pref: { name: "showRestoreFromBackup", value: false },
+            },
+            goBack: true,
             navigate: true,
           },
         },

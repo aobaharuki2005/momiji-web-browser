@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PageActions: "resource:///modules/PageActions.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchSERPTelemetry:
@@ -55,12 +56,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
     }
     BrowserUsageTelemetry.recordPinnedTabsCount(pinnedTabCount);
   }
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "openExternalLinkOverridePref",
-  "browser.link.open_newwindow.override.external",
-  -1
 );
 
 // The upper bound for the count of the visited unique domain names.
@@ -1241,8 +1236,11 @@ export let BrowserUsageTelemetry = {
    * @returns {boolean}
    */
   _isOpenNextToActiveTabSettingEnabled() {
+    /** @type {number} proxy for `browser.link.open_newwindow.override.external` */
+    const externalLinkOpeningBehavior =
+      lazy.NimbusFeatures.externalLinkHandling.getVariable("openBehavior");
     return (
-      lazy.openExternalLinkOverridePref ==
+      externalLinkOpeningBehavior ==
       Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT
     );
   },

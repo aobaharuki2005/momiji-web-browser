@@ -436,7 +436,7 @@
       if (this.isBeingDragged) {
         return false;
       }
-      if (this.collapsed && !tab.selected) {
+      if (this.collapsed && !tab.selected && !tab.multiselected) {
         return false;
       }
       return true;

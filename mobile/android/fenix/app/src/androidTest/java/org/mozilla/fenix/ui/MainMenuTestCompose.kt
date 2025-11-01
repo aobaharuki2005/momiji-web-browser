@@ -271,8 +271,7 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
-            recommendedExtensionTitle = getRecommendedExtensionTitle(composeTestRule)
-            installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
+            recommendedExtensionTitle = installRecommendedAddon(composeTestRule)
             verifyAddonPermissionPrompt(recommendedExtensionTitle)
             acceptPermissionToInstallAddon()
             verifyAddonInstallCompletedPrompt(
@@ -310,8 +309,7 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
-            recommendedExtensionTitle = getRecommendedExtensionTitle(composeTestRule)
-            installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
+            recommendedExtensionTitle = installRecommendedAddon(composeTestRule)
             verifyAddonPermissionPrompt(recommendedExtensionTitle)
             acceptPermissionToInstallAddon()
             verifyAddonInstallCompletedPrompt(
@@ -576,8 +574,7 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
-            recommendedExtensionTitle = getRecommendedExtensionTitle(composeTestRule)
-            installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
+            recommendedExtensionTitle = installRecommendedAddon(composeTestRule)
             acceptPermissionToInstallAddon()
             verifyAddonInstallCompletedPrompt(
                 recommendedExtensionTitle,
@@ -782,8 +779,7 @@ class MainMenuTestCompose : TestSetup() {
         }.openThreeDotMenu(composeTestRule) {
             verifyTryRecommendedExtensionButton()
         }.openExtensionsFromMainMenu {
-            recommendedExtensionTitle = getRecommendedExtensionTitle(composeTestRule)
-            installRecommendedAddon(recommendedExtensionTitle, composeTestRule)
+            recommendedExtensionTitle = installRecommendedAddon(composeTestRule)
             acceptPermissionToInstallAddon()
             verifyAddonInstallCompletedPrompt(
                 recommendedExtensionTitle,

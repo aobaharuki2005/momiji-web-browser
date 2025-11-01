@@ -118,6 +118,7 @@ internal object FakeHomepagePreview {
             ) { /* no op */ }
 
             override fun onDiscoverMoreClicked() { /* no op */ }
+            override fun onDiscoverMoreScreenViewed() { /* no op */ }
         }
 
     internal val privateBrowsingInteractor

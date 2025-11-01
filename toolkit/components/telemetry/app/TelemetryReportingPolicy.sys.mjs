@@ -141,7 +141,8 @@ export var TelemetryReportingPolicy = {
    *   2. The user is not eligible to see the ToU. Example local builds and temporarily Linux.
    */
   TELEMETRY_TOU_ACCEPTED_OR_INELIGIBLE: "telemetry-tou-accepted-or-ineligible",
-
+  // Make this value accessible on TelemetryReportingPolicy
+  OLDEST_ALLOWED_TOU_ACCEPTANCE_YEAR,
   /**
    * Setup the policy.
    */

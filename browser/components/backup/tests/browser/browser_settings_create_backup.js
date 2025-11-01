@@ -34,6 +34,8 @@ add_setup(async () => {
  */
 add_task(async function test_create_new_backup_trigger() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    Services.fog.testResetFOG();
+
     let settings = browser.contentDocument.querySelector("backup-settings");
 
     let bs = getAndMaybeInitBackupService();
@@ -86,6 +88,14 @@ add_task(async function test_create_new_backup_trigger() {
 
     // the file should show once it's created
     Assert.ok(fileName, "the archive was created");
+
+    let gleanEvents = Glean.browserBackup.backupStart.testGetValue();
+    Assert.equal(gleanEvents.length, 1, "backup_start event was recorded");
+    Assert.equal(
+      gleanEvents[0].extra.reason,
+      "manual",
+      "correct reason for the backup was recorded"
+    );
   });
 });
 
