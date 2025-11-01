@@ -51,6 +51,7 @@ const RemoteSettingsSyncErrorReason = Object.freeze({
   INVALID_DATA: "invalid-data",
   INVALID_LAST_MODIFIED: "invalid-last-modified",
   LAST_MODIFIED_EXCEPTION: "last-modified-exception",
+  NOT_YET_SYNCED: "not-yet-synced",
   NULL_LAST_MODIFIED: "null-last-modified",
 });
 

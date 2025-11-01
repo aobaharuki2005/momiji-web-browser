@@ -20,6 +20,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   NimbusTelemetry: "resource://nimbus/lib/Telemetry.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  RemoteSettingsClient:
+    "resource://services-settings/RemoteSettingsClient.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
   recordTargetingContext:
     "resource://nimbus/lib/TargetingContextRecorder.sys.mjs",
@@ -490,8 +492,6 @@ export class RemoteSettingsExperimentLoader {
    * @returns {Promise<object[]>} The recipes from Remote Settings.
    *
    * @throws {RemoteSettingsSyncError}
-   * @throws {BackwardsSyncError}
-   * @throws {InvalidLastModifiedError}
    */
   async getRecipesFromAllCollections({ forceSync = false, trigger } = {}) {
     try {
@@ -548,14 +548,28 @@ export class RemoteSettingsExperimentLoader {
 
       return recipes;
     } catch (e) {
-      lazy.log.error("Failed to retrieve recipes from Remote Settings", e);
+      let suppressLog = false;
 
       if (e instanceof RemoteSettingsSyncError) {
+        // Suppress console errors about the RS database not yet being synced.
+        // This spams logs in tests where the RS client does not have a valid
+        // URL to sync with.
+        if (
+          e.reason ===
+          lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.NOT_YET_SYNCED
+        ) {
+          suppressLog = true;
+        }
+
         lazy.NimbusTelemetry.recordRemoteSettingsSyncError(
           e.collectionName,
           e.reason,
           { forceSync, trigger }
         );
+      }
+
+      if (!suppressLog) {
+        lazy.log.error("Failed to retrieve recipes from Remote Settings", e);
       }
 
       throw e;
@@ -596,11 +610,14 @@ export class RemoteSettingsExperimentLoader {
         emptyListFallback: false, // Throw instead of returning an empty list.
       });
     } catch (e) {
-      throw new RemoteSettingsSyncError(
-        client.collectionName,
-        lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.GET_EXCEPTION,
-        { cause: e }
-      );
+      const reason =
+        e instanceof lazy.RemoteSettingsClient.EmptyDatabaseError
+          ? lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.NOT_YET_SYNCED
+          : lazy.NimbusTelemetry.RemoteSettingsSyncErrorReason.GET_EXCEPTION;
+
+      throw new RemoteSettingsSyncError(client.collectionName, reason, {
+        cause: e,
+      });
     }
 
     if (!Array.isArray(recipes)) {
