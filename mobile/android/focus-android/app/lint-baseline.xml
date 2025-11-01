@@ -51,28 +51,6 @@
         errorLine1="    android:width=&quot;640dp&quot;"
         errorLine2="                   ~~~~~">
         <location
-            file="src/main/res/drawable-land/dark_background.xml"
-            line="8"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="VectorRaster"
-        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
-        errorLine1="    android:width=&quot;360dp&quot;"
-        errorLine2="                   ~~~~~">
-        <location
-            file="src/main/res/drawable/dark_background.xml"
-            line="8"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="VectorRaster"
-        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
-        errorLine1="    android:width=&quot;640dp&quot;"
-        errorLine2="                   ~~~~~">
-        <location
             file="src/main/res/drawable-land-night/home_background.xml"
             line="8"
             column="20"/>
@@ -635,7 +613,7 @@
         errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/colors.xml"
-            line="125"
+            line="124"
             column="12"/>
     </issue>
 
@@ -646,7 +624,7 @@
         errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/colors.xml"
-            line="126"
+            line="125"
             column="12"/>
     </issue>
 
@@ -657,7 +635,7 @@
         errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/colors.xml"
-            line="132"
+            line="131"
             column="12"/>
     </issue>
 
@@ -1148,7 +1126,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/preference_keys.xml"
-            line="77"
+            line="71"
             column="13"/>
     </issue>
 
@@ -1159,7 +1137,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/preference_keys.xml"
-            line="117"
+            line="111"
             column="13"/>
     </issue>
 

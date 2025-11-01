@@ -1725,6 +1725,7 @@ mobile/android/android-components/components/lib/push-firebase/lint-baseline.xml
 mobile/android/android-components/components/lib/state/lint-baseline.xml
 mobile/android/android-components/components/service/digitalassetlinks/lint-baseline.xml
 mobile/android/android-components/components/service/firefox-accounts/lint-baseline.xml
+mobile/android/android-components/components/service/firefox-relay/lint-baseline.xml
 mobile/android/android-components/components/service/glean/lint-baseline.xml
 mobile/android/android-components/components/service/location/lint-baseline.xml
 mobile/android/android-components/components/service/mars/lint-baseline.xml
