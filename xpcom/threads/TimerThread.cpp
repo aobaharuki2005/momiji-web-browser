@@ -833,7 +833,7 @@ void TimerThread::Wait(TimeDuration aWaitFor) MOZ_REQUIRES(mMonitor) {
   mWaiting = true;
   mNotified = false;
   {
-    AUTO_PROFILER_TRACING_MARKER("TimerThread", "Wait", OTHER);
+    AUTO_PROFILER_MARKER("TimerThread::Wait", OTHER);
     mMonitor.Wait(aWaitFor);
   }
   mWaiting = false;

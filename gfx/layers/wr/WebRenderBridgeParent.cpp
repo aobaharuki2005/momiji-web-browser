@@ -1284,8 +1284,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   uint64_t innerWindowId = cbp ? cbp->GetInnerWindowId() : 0;
-  AUTO_PROFILER_TRACING_MARKER_INNERWINDOWID("Paint", "SetDisplayList",
-                                             GRAPHICS, innerWindowId);
+  AUTO_PROFILER_MARKER_INNERWINDOWID("SetDisplayList", GRAPHICS, innerWindowId);
   UpdateFwdTransactionId(aFwdTransactionId);
 
   // This ensures that destroy operations are always processed. It is not safe
@@ -1424,7 +1423,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
                                              aTxnURL);
   }
 
-  AUTO_PROFILER_TRACING_MARKER("Paint", "EmptyTransaction", GRAPHICS);
+  AUTO_PROFILER_MARKER("EmptyTransaction", GRAPHICS);
   UpdateFwdTransactionId(aFwdTransactionId);
 
   // This ensures that destroy operations are always processed. It is not safe
@@ -2349,8 +2348,8 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
 
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   uint64_t innerWindowId = cbp ? cbp->GetInnerWindowId() : 0;
-  AUTO_PROFILER_TRACING_MARKER_INNERWINDOWID("Paint", "CompositeToTarget",
-                                             GRAPHICS, innerWindowId);
+  AUTO_PROFILER_MARKER_INNERWINDOWID("CompositeToTarget", GRAPHICS,
+                                     innerWindowId);
 
   bool paused = true;
   if (cbp) {

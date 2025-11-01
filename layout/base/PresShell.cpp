@@ -6099,9 +6099,8 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
     // input block. Same for the APZ response field.
     InputAPZContext apzContext(aPointerInfo.mLastTargetGuid, 0,
                                nsEventStatus_eIgnore);
-    AUTO_PROFILER_TRACING_MARKER_DOCSHELL(
-        "Paint", "DispatchSynthMouseOrPointerMove", GRAPHICS,
-        pointShell->GetPresContext()->GetDocShell());
+    AUTO_PROFILER_MARKER_DOCSHELL("DispatchSynthMouseOrPointerMove", GRAPHICS,
+                                  pointShell->GetPresContext()->GetDocShell());
     nsEventStatus status = nsEventStatus_eIgnore;
     if (popupFrame) {
       pointShell->HandleEvent(popupFrame, &event, false, &status);
@@ -10657,7 +10656,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     innerWindowID = Some(window->WindowID());
   }
   AutoProfilerTracing tracingLayoutFlush(
-      "Paint", aInterruptible ? "Reflow (interruptible)" : "Reflow (sync)",
+      aInterruptible ? "Reflow (interruptible)" : "Reflow (sync)",
       geckoprofiler::category::LAYOUT, std::move(mReflowCause), innerWindowID);
   mReflowCause = nullptr;
 

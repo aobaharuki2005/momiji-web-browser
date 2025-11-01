@@ -2084,8 +2084,8 @@ void nsRefreshDriver::RunVideoFrameCallbacks(
       // else window is partially torn down already
     }
 
-    AUTO_PROFILER_TRACING_MARKER_INNERWINDOWID(
-        "Paint", "requestVideoFrame callbacks", GRAPHICS, doc->InnerWindowID());
+    AUTO_PROFILER_MARKER_INNERWINDOWID("requestVideoFrame callbacks", GRAPHICS,
+                                       doc->InnerWindowID());
     for (const auto& videoElm : videoElms) {
       VideoFrameCallbackMetadata metadata;
 
@@ -2145,9 +2145,8 @@ void nsRefreshDriver::RunFrameRequestCallbacks(
       // else window is partially torn down already
     }
 
-    AUTO_PROFILER_TRACING_MARKER_INNERWINDOWID(
-        "Paint", "requestAnimationFrame callbacks", GRAPHICS,
-        doc->InnerWindowID());
+    AUTO_PROFILER_MARKER_INNERWINDOWID("requestAnimationFrame callbacks",
+                                       GRAPHICS, doc->InnerWindowID());
     for (auto& callback : callbacks.mList) {
       if (callback.mCancelled) {
         continue;
