@@ -2304,7 +2304,7 @@ TEST(GeckoProfiler, Markers)
                   MarkerStack::TakeBacktrace(std::move(bt)), Tracing, "B");
 
   {
-    AUTO_PROFILER_TRACING_MARKER("C", "auto tracing", OTHER);
+    AUTO_PROFILER_MARKER("auto tracing", OTHER);
   }
 
   {

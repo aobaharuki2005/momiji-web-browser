@@ -1479,7 +1479,7 @@ void UnmigrateFromPrefixedCertDBs() {
 nsresult nsNSSComponent::InitializeNSS() {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::InitializeNSS\n"));
   AUTO_PROFILER_LABEL("nsNSSComponent::InitializeNSS", OTHER);
-  AUTO_PROFILER_TRACING_MARKER("NSS", "nsNSSComponent::InitializeNSS", OTHER);
+  AUTO_PROFILER_MARKER("nsNSSComponent::InitializeNSS", OTHER);
 
   static_assert(
       nsINSSErrorsService::NSS_SEC_ERROR_BASE == SEC_ERROR_BASE &&
