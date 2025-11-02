@@ -1170,13 +1170,8 @@ nsPresContext* nsPresContext::GetInProcessRootContentDocumentPresContext() {
   }
 }
 
-nsIWidget* nsPresContext::GetNearestWidget(nsPoint* aOffset) {
-  NS_ENSURE_TRUE(mPresShell, nullptr);
-  nsViewManager* vm = mPresShell->GetViewManager();
-  NS_ENSURE_TRUE(vm, nullptr);
-  nsView* rootView = vm->GetRootView();
-  NS_ENSURE_TRUE(rootView, nullptr);
-  return rootView->GetNearestWidget(aOffset);
+nsIWidget* nsPresContext::GetNearestWidget() const {
+  return mPresShell ? mPresShell->GetNearestWidget() : nullptr;
 }
 
 nsIWidget* nsPresContext::GetRootWidget() const {

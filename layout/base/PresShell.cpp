@@ -12129,11 +12129,9 @@ Maybe<MobileViewportManager::ManagerType> UseMobileViewportManager(
     PresShell* aPresShell, Document* aDocument) {
   // If we're not using APZ, we won't be able to zoom, so there is no
   // point in having an MVM.
-  if (nsPresContext* presContext = aPresShell->GetPresContext()) {
-    if (nsIWidget* widget = presContext->GetNearestWidget()) {
-      if (!widget->AsyncPanZoomEnabled()) {
-        return Nothing();
-      }
+  if (nsIWidget* widget = aPresShell->GetNearestWidget()) {
+    if (!widget->AsyncPanZoomEnabled()) {
+      return Nothing();
     }
   }
   if (nsLayoutUtils::ShouldHandleMetaViewport(aDocument)) {
