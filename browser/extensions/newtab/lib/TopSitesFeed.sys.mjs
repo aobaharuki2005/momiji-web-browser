@@ -2095,7 +2095,6 @@ export class TopSitesFeed {
         this.updateCustomSearchShortcuts(true /* isStartup */);
         break;
       case at.DISCOVERY_STREAM_DEV_SYSTEM_TICK:
-      case at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE:
       case at.SYSTEM_TICK:
         this.refresh({ broadcast: false });
         this._contile.periodicUpdate();
@@ -2178,6 +2177,10 @@ export class TopSitesFeed {
         break;
       case at.ADS_UPDATE_TILES:
         this._contile.refresh();
+        break;
+      case at.DISCOVERY_STREAM_SPOCS_UPDATE:
+        // Refresh to update sponsored topsites.
+        this.refresh({ broadcast: true, isStartup: action.meta.isStartup });
         break;
       case at.UNINIT:
         this.uninit();
