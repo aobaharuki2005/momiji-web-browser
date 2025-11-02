@@ -3506,20 +3506,15 @@ class PresShell final : public nsStubDocumentObserver,
   dom::SelectionNodeCache* mSelectionNodeCache{nullptr};
 
   struct CapturingContentInfo final {
-    CapturingContentInfo()
-        : mRemoteTarget(nullptr),
-          mAllowed(false),
-          mPointerLock(false),
-          mRetargetToElement(false),
-          mPreventDrag(false) {}
+    constexpr CapturingContentInfo() = default;
 
     // capture should only be allowed during a mousedown event
     StaticRefPtr<nsIContent> mContent;
-    dom::BrowserParent* mRemoteTarget;
-    bool mAllowed;
-    bool mPointerLock;
-    bool mRetargetToElement;
-    bool mPreventDrag;
+    dom::BrowserParent* mRemoteTarget = nullptr;
+    bool mAllowed = false;
+    bool mPointerLock = false;
+    bool mRetargetToElement = false;
+    bool mPreventDrag = false;
   };
   static CapturingContentInfo sCapturingContentInfo;
 
