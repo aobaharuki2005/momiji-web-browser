@@ -525,6 +525,7 @@ JSObject* ModuleLoader::loadAndParse(JSContext* cx, HandleString pathArg,
 
   switch (moduleType) {
     case JS::ModuleType::Unknown:
+    case JS::ModuleType::Bytes:
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_BAD_MODULE_TYPE);
       return nullptr;

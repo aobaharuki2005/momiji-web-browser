@@ -378,6 +378,9 @@ bool ModuleTypeToString(JSContext* cx, JS::Handle<JSObject*> owner,
     case JS::ModuleType::CSS:
       MOZ_ASSERT_UNREACHABLE("CSS modules are not supported in the shell");
       break;
+    case JS::ModuleType::Bytes:
+      to.setString(cx->names().bytes);
+      break;
   }
 
   MOZ_ASSERT(!to.isUndefined());
