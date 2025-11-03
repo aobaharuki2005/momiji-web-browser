@@ -41,7 +41,7 @@ Source{{ loop.index + 2 }}:        {{ codename }}.langpack.xpi
 Summary:       {{ description }}
 BuildArch:     noarch
 Requires:      %{name} = %{version}-%{release}
-Supplements:   (%{name} = %{version}-%{release} and %{name}-langpacks-{{ codename }})
+Supplements:   (%{name} = %{version}-%{release} and langpacks-{{ codename }})
 
 %description l10n-{{ codename }}
 {{ description }}
