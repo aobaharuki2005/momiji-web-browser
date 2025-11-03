@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -141,11 +142,15 @@ internal fun MenuItem(
                 color = MaterialTheme.colorScheme.surfaceDimVariant,
             ),
         labelModifier = labelModifier,
-        labelTextColor = labelTextColor,
+        colors = ListItemDefaults.colors(
+            headlineColor = labelTextColor,
+            supportingColor = descriptionTextColor,
+            leadingIconColor = iconTint,
+            trailingIconColor = iconTint,
+            ),
         maxLabelLines = 2,
         description = description,
         maxDescriptionLines = maxDescriptionLines,
-        descriptionTextColor = descriptionTextColor,
         enabled = enabled,
         minHeight = if (description != null) {
             MENU_ITEM_HEIGHT_WITH_DESC
@@ -155,12 +160,10 @@ internal fun MenuItem(
         onClick = onClick,
         beforeIconPainter = beforeIconPainter,
         beforeIconDescription = beforeIconDescription,
-        beforeIconTint = iconTint,
         isBeforeIconHighlighted = isBeforeIconHighlighted,
         showDivider = showDivider,
         afterIconPainter = afterIconPainter,
         afterIconDescription = afterIconDescription,
-        afterIconTint = iconTint,
         onAfterIconClick = onAfterIconClick,
         afterListAction = afterContent,
     )
@@ -229,7 +232,7 @@ internal fun WebExtensionMenuItem(
     IconListItem(
         label = label,
         enabled = enabled == true,
-        beforeIconTint = iconTint,
+        colors = ListItemDefaults.colors(leadingIconColor = iconTint),
         beforeIconPainter = iconPainter,
         onClick = onClick,
         modifier = Modifier

@@ -27,6 +27,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -243,10 +244,8 @@ fun FaviconListItem(
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
  * @param labelModifier [Modifier] to be applied to the label.
- * @param labelTextColor [Color] to be applied to the label.
+ * @param colors [ListItemColors] to be applied to the list item.
  * @param overline An optional text shown above the label.
- * @param overlineTextColor [Color] to be applied to the overline text.
- * @param descriptionTextColor [Color] to be applied to the description.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
@@ -257,13 +256,11 @@ fun FaviconListItem(
  * @param onLongClick Called when the user long clicks on the item.
  * @param beforeIconPainter [Painter] used to display an [Icon] before the list item.
  * @param beforeIconDescription Content description of the icon.
- * @param beforeIconTint Tint applied to [beforeIconPainter].
  * @param isBeforeIconHighlighted Whether or not the item should be highlighted with a notification icon.
  * @param showDivider Whether or not to display a vertical divider line before the [IconButton]
  * at the end.
  * @param afterIconPainter [Painter] used to display an icon after the list item.
  * @param afterIconDescription Content description of the icon.
- * @param afterIconTint Tint applied to [afterIconPainter].
  * @param onAfterIconClick Called when the user clicks on the icon. An [IconButton] will be
  * displayed if this is provided. Otherwise, an [Icon] will be displayed.
  * @param afterListAction Optional Composable for adding UI to the end of the list item.
@@ -273,10 +270,8 @@ fun IconListItem(
     label: String,
     modifier: Modifier = Modifier,
     labelModifier: Modifier = Modifier,
-    labelTextColor: Color = ListItemDefaults.colors().headlineColor,
+    colors: ListItemColors = ListItemDefaults.colors(),
     overline: String? = null,
-    overlineTextColor: Color = ListItemDefaults.colors().overlineColor,
-    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
     maxLabelLines: Int = 1,
     description: String? = null,
     maxDescriptionLines: Int = 1,
@@ -286,12 +281,10 @@ fun IconListItem(
     onLongClick: (() -> Unit)? = null,
     beforeIconPainter: Painter,
     beforeIconDescription: String? = null,
-    beforeIconTint: Color = ListItemDefaults.colors().leadingIconColor,
     isBeforeIconHighlighted: Boolean = false,
     showDivider: Boolean = false,
     afterIconPainter: Painter? = null,
     afterIconDescription: String? = null,
-    afterIconTint: Color = ListItemDefaults.colors().trailingIconColor,
     onAfterIconClick: (() -> Unit)? = null,
     afterListAction: (@Composable () -> Unit)? = null,
 ) {
@@ -299,10 +292,8 @@ fun IconListItem(
         label = label,
         modifier = modifier,
         labelModifier = labelModifier,
-        labelTextColor = labelTextColor,
+        colors = colors,
         overline = overline,
-        overlineTextColor = overlineTextColor,
-        descriptionTextColor = descriptionTextColor,
         maxLabelLines = maxLabelLines,
         description = description,
         maxDescriptionLines = maxDescriptionLines,
@@ -315,7 +306,7 @@ fun IconListItem(
                 isHighlighted = isBeforeIconHighlighted,
                 painter = beforeIconPainter,
                 description = beforeIconDescription,
-                tint = if (enabled) beforeIconTint else ListItemDefaults.colors().disabledLeadingIconColor,
+                tint = if (enabled) colors.leadingIconColor else colors.disabledLeadingIconColor,
             )
         },
         afterListItemAction = {
@@ -323,7 +314,7 @@ fun IconListItem(
                 enabled = enabled,
                 painter = afterIconPainter,
                 description = afterIconDescription,
-                tint = if (enabled) afterIconTint else ListItemDefaults.colors().disabledTrailingIconColor,
+                tint = if (enabled) colors.trailingIconColor else colors.disabledTrailingIconColor,
                 onClick = onAfterIconClick,
                 listAction = afterListAction,
                 showDivider = showDivider,
@@ -612,10 +603,8 @@ fun SelectableFaviconListItem(
  * @param isSelected The selected state of the item.
  * @param modifier [Modifier] to be applied to the layout.
  * @param labelModifier [Modifier] to be applied to the label layout.
- * @param labelTextColor [Color] to be applied to the label.
+ * @param colors [ListItemColors] to be applied to the list item.
  * @param overline An optional text shown above the label.
- * @param overlineTextColor [Color] to be applied to the overline text.
- * @param descriptionTextColor [Color] to be applied to the description.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
  * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
@@ -625,12 +614,10 @@ fun SelectableFaviconListItem(
  * @param onLongClick Called when the user long clicks on the item.
  * @param beforeIconPainter [Painter] used to display an [Icon] before the list item.
  * @param beforeIconDescription Content description of the icon.
- * @param beforeIconTint Tint applied to [beforeIconPainter].
  * @param showDivider Whether or not to display a vertical divider line before the [IconButton]
  * at the end.
  * @param afterIconPainter [Painter] used to display an icon after the list item.
  * @param afterIconDescription Content description of the icon.
- * @param afterIconTint Tint applied to [afterIconPainter].
  * @param onAfterIconClick Called when the user clicks on the icon. An [IconButton] will be
  * displayed if this is provided. Otherwise, an [Icon] will be displayed.
  * @param iconSlot Optional Composable slot to be displayed after the list item if [afterIconPainter] is
@@ -642,10 +629,8 @@ fun SelectableIconListItem(
     isSelected: Boolean,
     modifier: Modifier = Modifier,
     labelModifier: Modifier = modifier,
-    labelTextColor: Color = ListItemDefaults.colors().headlineColor,
+    colors: ListItemColors = ListItemDefaults.colors(),
     overline: String? = null,
-    overlineTextColor: Color = ListItemDefaults.colors().overlineColor,
-    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
     maxLabelLines: Int = 1,
     description: String? = null,
     enabled: Boolean = true,
@@ -654,11 +639,9 @@ fun SelectableIconListItem(
     onLongClick: (() -> Unit)? = null,
     beforeIconPainter: Painter,
     beforeIconDescription: String? = null,
-    beforeIconTint: Color = ListItemDefaults.colors().leadingIconColor,
     showDivider: Boolean = false,
     afterIconPainter: Painter? = null,
     afterIconDescription: String? = null,
-    afterIconTint: Color = ListItemDefaults.colors().trailingIconColor,
     onAfterIconClick: (() -> Unit)? = null,
     iconSlot: (@Composable () -> Unit)? = null,
 ) {
@@ -666,10 +649,8 @@ fun SelectableIconListItem(
         label = label,
         modifier = modifier,
         labelModifier = labelModifier,
-        labelTextColor = labelTextColor,
+        colors = colors,
         overline = overline,
-        overlineTextColor = overlineTextColor,
-        descriptionTextColor = descriptionTextColor,
         maxLabelLines = maxLabelLines,
         description = description,
         enabled = enabled,
@@ -683,7 +664,7 @@ fun SelectableIconListItem(
                     Icon(
                         painter = beforeIconPainter,
                         contentDescription = beforeIconDescription,
-                        tint = if (enabled) beforeIconTint else ListItemDefaults.colors().disabledLeadingIconColor,
+                        tint = if (enabled) colors.leadingIconColor else colors.disabledLeadingIconColor,
                     )
                 },
             )
@@ -693,7 +674,7 @@ fun SelectableIconListItem(
                 return@ListItem
             }
 
-            val tint = if (enabled) afterIconTint else ListItemDefaults.colors().disabledTrailingIconColor
+            val tint = if (enabled) colors.trailingIconColor else colors.disabledTrailingIconColor
 
             if (showDivider) {
                 VerticalDivider()
@@ -776,7 +757,7 @@ fun SelectableListItem(
         description = description,
         modifier = modifier,
         overline = overline,
-        descriptionTextColor = descriptionTextColor,
+        colors = ListItemDefaults.colors(supportingColor = descriptionTextColor),
         belowListItemContent = belowListItemContent,
         labelOverflow = labelOverflow,
         beforeListItemAction = {
@@ -822,10 +803,8 @@ private fun SelectableItemIcon(
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
  * @param overline An optional text shown above the label.
- * @param overlineTextColor [Color] to be applied to the overline text.
+ * @param colors [ListItemColors] to be applied ot the list item.
  * @param labelModifier [Modifier] to be applied to the label.
- * @param labelTextColor [Color] to be applied to the label.
- * @param descriptionTextColor [Color] to be applied to the description.
  * @param labelOverflow How visual overflow should be handled for the label.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
@@ -844,10 +823,8 @@ private fun ListItem(
     label: String,
     modifier: Modifier = Modifier,
     overline: String? = null,
-    overlineTextColor: Color = ListItemDefaults.colors().overlineColor,
+    colors: ListItemColors = ListItemDefaults.colors(),
     labelModifier: Modifier = Modifier,
-    labelTextColor: Color = ListItemDefaults.colors().headlineColor,
-    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
     labelOverflow: TextOverflow = TextOverflow.Ellipsis,
     maxLabelLines: Int = 1,
     description: String? = null,
@@ -897,10 +874,8 @@ private fun ListItem(
                 label = label,
                 modifier = Modifier.weight(1f),
                 labelModifier = labelModifier,
-                labelTextColor = labelTextColor,
+                colors = colors,
                 overline = overline,
-                overlineTextColor = overlineTextColor,
-                descriptionTextColor = descriptionTextColor,
                 labelOverflow = labelOverflow,
                 maxLabelLines = maxLabelLines,
                 description = description,
@@ -919,10 +894,8 @@ private fun ListItemContent(
     label: String,
     modifier: Modifier = Modifier,
     labelModifier: Modifier = Modifier,
-    labelTextColor: Color = ListItemDefaults.colors().headlineColor,
+    colors: ListItemColors = ListItemDefaults.colors(),
     overline: String? = null,
-    overlineTextColor: Color = ListItemDefaults.colors().overlineColor,
-    descriptionTextColor: Color = ListItemDefaults.colors().supportingTextColor,
     labelOverflow: TextOverflow = TextOverflow.Ellipsis,
     maxLabelLines: Int = 1,
     description: String? = null,
@@ -936,7 +909,7 @@ private fun ListItemContent(
         overline?.let {
             Text(
                 text = it.uppercase(Locale.getDefault()),
-                color = overlineTextColor,
+                color = colors.overlineColor,
                 style = FirefoxTheme.typography.overline.copy(hyphens = Hyphens.Auto),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -946,7 +919,7 @@ private fun ListItemContent(
         Text(
             text = label,
             modifier = labelModifier,
-            color = if (enabled) labelTextColor else ListItemDefaults.colors().disabledHeadlineColor,
+            color = if (enabled) colors.headlineColor else colors.disabledHeadlineColor,
             overflow = labelOverflow,
             style = FirefoxTheme.typography.subtitle1.copy(hyphens = Hyphens.Auto),
             maxLines = maxLabelLines,
@@ -955,7 +928,7 @@ private fun ListItemContent(
         description?.let {
             Text(
                 text = description,
-                color = descriptionTextColor,
+                color = colors.supportingTextColor,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = maxDescriptionLines,
                 style = FirefoxTheme.typography.body2,
@@ -1049,7 +1022,7 @@ private fun IconListItemPreview() {
 
             IconListItem(
                 label = "Left icon list item",
-                labelTextColor = MaterialTheme.colorScheme.tertiary,
+                colors = ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.tertiary),
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
@@ -1305,7 +1278,7 @@ private fun SelectableIconListItemPreview() {
             SelectableIconListItem(
                 label = "Left icon list item",
                 isSelected = false,
-                labelTextColor = MaterialTheme.colorScheme.tertiary,
+                colors = ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.tertiary),
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
@@ -1314,7 +1287,7 @@ private fun SelectableIconListItemPreview() {
             SelectableIconListItem(
                 label = "Selected left icon list item",
                 isSelected = true,
-                labelTextColor = MaterialTheme.colorScheme.tertiary,
+                colors = ListItemDefaults.colors(headlineColor = MaterialTheme.colorScheme.tertiary),
                 onClick = {},
                 beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",

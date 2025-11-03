@@ -40,6 +40,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -987,9 +988,11 @@ private fun NewFolderListItem(onClick: () -> Unit) {
     IconListItem(
         label = stringResource(R.string.bookmark_select_folder_new_folder_button_title),
         modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
-        labelTextColor = MaterialTheme.colorScheme.tertiary,
+        colors = ListItemDefaults.colors(
+            headlineColor = MaterialTheme.colorScheme.tertiary,
+            leadingIconColor = MaterialTheme.colorScheme.tertiary,
+            ),
         beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
-        beforeIconTint = MaterialTheme.colorScheme.tertiary,
         onClick = onClick,
     )
 }
