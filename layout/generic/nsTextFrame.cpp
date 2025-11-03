@@ -5893,6 +5893,14 @@ static bool ComputeDecorationInset(
         decRect.Deflate(indentMargin);
       }
     }
+
+    // We can't allow a block frame to retain a line iterator if we're
+    // currently in reflow, as it will become invalid as the line list is
+    // reflowed.
+    if (lineContainer->HasAnyStateBits(NS_FRAME_IN_REFLOW) &&
+        lineContainer->IsBlockFrameOrSubclass()) {
+      static_cast<nsBlockFrame*>(lineContainer)->ClearLineIterator();
+    }
   }
 
   // The rect of the current frame, mapped to the same coordinate space as
