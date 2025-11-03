@@ -242,6 +242,10 @@ void ServiceWorkerRegistrationDescriptor::SetUpdateViaCache(
   mData->updateViaCache() = aUpdateViaCache;
 }
 
+void ServiceWorkerRegistrationDescriptor::SetWorkerType(WorkerType aType) {
+  mData->type() = aType;
+}
+
 void ServiceWorkerRegistrationDescriptor::SetWorkers(
     ServiceWorkerInfo* aInstalling, ServiceWorkerInfo* aWaiting,
     ServiceWorkerInfo* aActive) {
