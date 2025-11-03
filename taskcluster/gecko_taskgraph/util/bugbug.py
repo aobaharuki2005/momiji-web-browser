@@ -122,31 +122,39 @@ def push_schedules(branch, rev):
 
     attempts = timeout / RETRY_INTERVAL
     i = 0
-    did_fallback = 0
+    success = False
     while i < attempts:
         r = session.get(url)
         r.raise_for_status()
 
         if r.status_code != 202:
+            success = True
             break
 
+        # Trigger the fallback deployment, but ignore it for now.
         r = session.get(fallback_url)
         r.raise_for_status()
-
-        if r.status_code != 202:
-            did_fallback = 1
-            print("bugbug fallback answered quicker")
-            break
 
         time.sleep(RETRY_INTERVAL)
         i += 1
     end = monotonic()
 
+    if not success:
+        i = 0
+        while i < attempts:
+            r = session.get(fallback_url)
+            r.raise_for_status()
+
+            if r.status_code != 202:
+                break
+
+            time.sleep(RETRY_INTERVAL)
+            i += 1
+
     _write_perfherder_data(
         lower_is_better={
             "bugbug_push_schedules_time": end - start,
             "bugbug_push_schedules_retries": i,
-            "bugbug_push_schedules_fallback": did_fallback,
         }
     )
 
