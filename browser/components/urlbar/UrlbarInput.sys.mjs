@@ -1990,9 +1990,9 @@ export class UrlbarInput {
       };
     }
 
-    let mode =
-      this.isAddressbar &&
-      lazy.UrlbarUtils.LOCAL_SEARCH_MODES.find(m => m.restrict == token);
+    let mode = lazy.UrlbarUtils.LOCAL_SEARCH_MODES.find(
+      m => m.restrict == token
+    );
     if (mode) {
       // Return a copy so callers don't modify the object in LOCAL_SEARCH_MODES.
       return { ...mode };

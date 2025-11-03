@@ -437,7 +437,7 @@ export class ProvidersManager {
     // can be used for searching. Otherwise sources are extracted from prefs and
     // restriction tokens, then restriction tokens must be filtered out of the
     // search string.
-    let restrictToken = updateSourcesIfEmpty(queryContext, controller);
+    let restrictToken = updateSourcesIfEmpty(queryContext);
     if (restrictToken) {
       queryContext.restrictToken = restrictToken;
       // If the restriction token has an equivalent source, then set it as
@@ -983,31 +983,27 @@ export class Query {
  * Updates in place the sources for a given UrlbarQueryContext.
  *
  * @param {UrlbarQueryContext} context The query context to examine
- * @param {?UrlbarController} [controller] A UrlbarController instance
  * @returns {UrlbarSearchStringTokenData|undefined} The restriction token that
  *   was used to set sources, or undefined if there's no restriction token.
  */
-function updateSourcesIfEmpty(context, controller) {
+function updateSourcesIfEmpty(context) {
   if (context.sources && context.sources.length) {
     return undefined;
   }
   let acceptedSources = [];
   // There can be only one restrict token per query.
-  let restrictToken =
-    controller && !controller.input.isAddressbar
-      ? undefined
-      : context.tokens.find(t =>
-          [
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_URL,
-            lazy.UrlbarTokenizer.TYPE.RESTRICT_ACTION,
-          ].includes(t.type)
-        );
+  let restrictToken = context.tokens.find(t =>
+    [
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_URL,
+      lazy.UrlbarTokenizer.TYPE.RESTRICT_ACTION,
+    ].includes(t.type)
+  );
 
   // RESTRICT_TITLE and RESTRICT_URL do not affect query sources.
   let restrictTokenType =
@@ -1018,6 +1014,10 @@ function updateSourcesIfEmpty(context, controller) {
       : undefined;
 
   for (let source of Object.values(lazy.UrlbarUtils.RESULT_SOURCE)) {
+    // Skip sources that the context doesn't care about.
+    if (context.sources && !context.sources.includes(source)) {
+      continue;
+    }
     // Check prefs and restriction tokens.
     switch (source) {
       case lazy.UrlbarUtils.RESULT_SOURCE.BOOKMARKS:

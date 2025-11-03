@@ -231,10 +231,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
   }
 
   async _searchModeKeywordResult(queryContext) {
-    if (
-      !queryContext.tokens.length ||
-      !this.queryInstance.controller.input.isAddressbar
-    ) {
+    if (!queryContext.tokens.length) {
       return null;
     }
 
