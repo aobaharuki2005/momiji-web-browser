@@ -152,7 +152,16 @@ add_task(async function test_restore_selectable_profiles() {
 });
 
 async function archiveTemplate({ internalReason, disable, enable }) {
+  Services.telemetry.clearScalars();
+  Services.fog.testResetFOG();
+
   const bs = BackupService.get();
+
+  Assert.equal(
+    bs.archiveEnabledStatus.enabled,
+    true,
+    "BackupService is enabled at the start"
+  );
 
   let calledCount = 0;
   let callback = () => calledCount++;
@@ -160,38 +169,17 @@ async function archiveTemplate({ internalReason, disable, enable }) {
 
   await disable();
   Assert.equal(calledCount, 1, "Observers were notified on disable");
+  assertStatus("archive", bs.archiveEnabledStatus, false, internalReason);
 
-  Assert.ok(
-    !bs.archiveEnabledStatus.enabled,
-    "The backup service should report that archiving is now disabled."
-  );
-
-  Assert.equal(
-    bs.archiveEnabledStatus.internalReason,
-    internalReason,
-    "`archiveEnabledStatus` should report that it is disabled."
-  );
-
-  Services.fog.testResetFOG();
   let backup = await bs.createBackup();
   Assert.ok(
     !backup,
     "Creating a backup should fail when archiving is disabled."
   );
-  let telemetry = Glean.browserBackup.backupDisabledReason.testGetValue();
-  Assert.equal(
-    telemetry,
-    internalReason,
-    `Telemetry identifies the backup is disabled by ${internalReason}.`
-  );
 
   await enable();
   Assert.equal(calledCount, 2, "Observers were notified on re-enable");
-
-  Assert.ok(
-    bs.archiveEnabledStatus.enabled,
-    "The backup service should report that archiving is enabled once the archive killswitch experiment ends."
-  );
+  assertStatus("archive", bs.archiveEnabledStatus, true, "reenabled");
 
   backup = await bs.createBackup();
   ok(
@@ -203,18 +191,14 @@ async function archiveTemplate({ internalReason, disable, enable }) {
     "Archive file should exist on disk."
   );
 
-  telemetry = Glean.browserBackup.backupDisabledReason.testGetValue();
-  Assert.equal(
-    telemetry,
-    "reenabled",
-    "Telemetry identifies the backup was re-enabled."
-  );
-
   await IOUtils.remove(backup.archivePath);
   Services.obs.removeObserver(callback, "backup-service-status-updated");
 }
 
 async function restoreTemplate({ internalReason, disable, enable }) {
+  Services.telemetry.clearScalars();
+  Services.fog.testResetFOG();
+
   const bs = BackupService.get();
   const backup = await bs.createBackup();
 
@@ -229,20 +213,11 @@ async function restoreTemplate({ internalReason, disable, enable }) {
 
   await disable();
   Assert.equal(calledCount, 1, "Observers were notified on disable");
+  assertStatus("restore", bs.restoreEnabledStatus, false, internalReason);
 
   const recoveryDir = await IOUtils.createUniqueDirectory(
     PathUtils.profileDir,
     "recovered-profiles"
-  );
-
-  Assert.ok(
-    !bs.restoreEnabledStatus.enabled,
-    "The backup service should report that restoring is now disabled."
-  );
-  Assert.equal(
-    bs.restoreEnabledStatus.internalReason,
-    internalReason,
-    "`archiveEnabledStatus` should report that it is disabled."
   );
 
   await Assert.rejects(
@@ -259,11 +234,7 @@ async function restoreTemplate({ internalReason, disable, enable }) {
 
   await enable();
   Assert.equal(calledCount, 2, "Observers were notified on re-enable");
-
-  Assert.ok(
-    bs.restoreEnabledStatus.enabled,
-    "The backup service should now report that restoring is enabled."
-  );
+  assertStatus("restore", bs.restoreEnabledStatus, true, "reenabled");
 
   let recoveredProfile = await bs.recoverFromBackupArchive(
     backup.archivePath,
@@ -282,4 +253,49 @@ async function restoreTemplate({ internalReason, disable, enable }) {
   );
 
   Services.obs.removeObserver(callback, "backup-service-status-updated");
+}
+
+/**
+ * Checks that the status object matches the expected values, and that the
+ * telemetry matches the object.
+ *
+ * @param {string} kind
+ *   The kind of status object.
+ * @param {string} status
+ *   The status object given.
+ * @param {boolean} enabled
+ *   Whether the feature should be enabled or disabled.
+ * @param {string?} internalReason
+ *   The internal reason that should be given.
+ */
+function assertStatus(kind, status, enabled, internalReason) {
+  Assert.equal(
+    status.enabled,
+    enabled,
+    `${kind} status is ${enabled ? "" : "not "}enabled.`
+  );
+  Assert.equal(
+    status.internalReason ?? null,
+    // 'reenabled' is only for telemetry, the status is null
+    internalReason == "reenabled" ? null : internalReason,
+    `${kind} status has the expected internal reason.`
+  );
+
+  Assert.equal(
+    Glean.browserBackup[kind + "Enabled"].testGetValue(),
+    enabled,
+    `Glean ${kind}_enabled metric should be ${enabled}.`
+  );
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent", false, true),
+    `browser.backup.${kind}_enabled`,
+    enabled,
+    `Legacy ${kind}_enabled metric should be ${enabled}.`
+  );
+
+  Assert.equal(
+    Glean.browserBackup[kind + "DisabledReason"].testGetValue(),
+    internalReason,
+    `Glean ${kind}_disabled_reason metric is ${internalReason}.`
+  );
 }

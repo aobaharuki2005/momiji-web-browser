@@ -377,11 +377,44 @@ browser.backup:
     bug_numbers:
       - 1908727
     description: >
-      True if the BackupService is enabled by default.
+      True if the BackupService has initialized and reached idle. You may want
+      to use archive_enabled/restore_enabled to determine whether those
+      features are available, or use scheduler_enabled for whether automatic
+      backups are enabled.
     expires: never
     kind: boolean
     notification_emails:
       - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  archive_enabled:
+    bug_numbers:
+      - 1908727
+    description: >
+      True if the user can create backups, i.e. it has not been disabled by a
+      pref or otherwise deemed incompatible.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - drubino@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  restore_enabled:
+    bug_numbers:
+      - 1908727
+    description: >
+      True if the user can restore backups, i.e. it has not been disabled by a
+      pref or otherwise deemed incompatible.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - drubino@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

@@ -835,12 +835,21 @@ export class BackupService extends EventTarget {
 
   /**
    * Stores whether backing up has been disabled at some point during this
-   * session. If it has been, the backupDisabledReason telemetry metric is set
+   * session. If it has been, the archiveDisabledReason telemetry metric is set
    * on each backup. (It cannot be unset due to Glean limitations.)
    *
    * @type {boolean}
    */
   #wasArchivePreviouslyDisabled = false;
+
+  /**
+   * Stores whether restoring up has been disabled at some point during this
+   * session. If it has been, the restoreDisabledReason telemetry metric is set
+   * on each backup. (It cannot be unset due to Glean limitations.)
+   *
+   * @type {boolean}
+   */
+  #wasRestorePreviouslyDisabled = false;
 
   /**
    * Monitors prefs that are relevant to the status of the backup service.
@@ -1170,12 +1179,7 @@ export class BackupService extends EventTarget {
       }
     }, BackupService.REGENERATION_DEBOUNCE_RATE_MS);
 
-    let backupStatus = this.archiveEnabledStatus;
-    if (!backupStatus.enabled) {
-      let internalReason = backupStatus.internalReason;
-      this.#wasArchivePreviouslyDisabled = true;
-      Glean.browserBackup.backupDisabledReason.set(internalReason);
-    }
+    this.#notifyStatusObservers();
   }
 
   /**
@@ -1467,11 +1471,7 @@ export class BackupService extends EventTarget {
     let status = this.archiveEnabledStatus;
     if (!status.enabled) {
       lazy.logConsole.debug(status.reason);
-      this.#wasArchivePreviouslyDisabled = true;
-      Glean.browserBackup.backupDisabledReason.set(status.internalReason);
       return null;
-    } else if (this.#wasArchivePreviouslyDisabled) {
-      Glean.browserBackup.backupDisabledReason.set("reenabled");
     }
 
     // createBackup does not allow re-entry or concurrent backups.
@@ -3919,11 +3919,30 @@ export class BackupService extends EventTarget {
   }
 
   /**
-   * Notify any listeners about the availability of the backup service.
+   * Notify any listeners about the availability of the backup service, then
+   * update relevant telemetry metrics.
    */
-  #notifyStatusObservers = () => {
+  #notifyStatusObservers() {
     Services.obs.notifyObservers(null, "backup-service-status-updated");
-  };
+
+    let status = this.archiveEnabledStatus;
+    Glean.browserBackup.archiveEnabled.set(status.enabled);
+    if (!status.enabled) {
+      this.#wasArchivePreviouslyDisabled = true;
+      Glean.browserBackup.archiveDisabledReason.set(status.internalReason);
+    } else if (this.#wasArchivePreviouslyDisabled) {
+      Glean.browserBackup.archiveDisabledReason.set("reenabled");
+    }
+
+    status = this.restoreEnabledStatus;
+    Glean.browserBackup.restoreEnabled.set(status.enabled);
+    if (!status.enabled) {
+      this.#wasRestorePreviouslyDisabled = true;
+      Glean.browserBackup.restoreDisabledReason.set(status.internalReason);
+    } else if (this.#wasRestorePreviouslyDisabled) {
+      Glean.browserBackup.restoreDisabledReason.set("reenabled");
+    }
+  }
 
   /**
    * Called when the last known backup should be deleted and a new one
