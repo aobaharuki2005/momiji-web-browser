@@ -438,6 +438,7 @@ nsContentPolicyType ScriptLoadRequestToContentPolicyType(
           return nsIContentPolicy::TYPE_INTERNAL_JSON_PRELOAD;
         case JS::ModuleType::CSS:
           return nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD;
+        case JS::ModuleType::Bytes:
         case JS::ModuleType::Unknown:
           MOZ_ASSERT_UNREACHABLE("Unknown module type");
       }
@@ -449,6 +450,7 @@ nsContentPolicyType ScriptLoadRequestToContentPolicyType(
   if (aRequest->IsModuleRequest()) {
     switch (aRequest->AsModuleRequest()->mModuleType) {
       case JS::ModuleType::Unknown:
+      case JS::ModuleType::Bytes:
         MOZ_CRASH("Unexpected module type");
       case JS::ModuleType::JavaScript:
         return nsIContentPolicy::TYPE_INTERNAL_MODULE;
@@ -4509,6 +4511,7 @@ static bool MimeTypeMatchesExpectedModuleType(
     case JS::ModuleType::CSS:
       return nsContentUtils::IsCssMimeType(typeString);
     case JS::ModuleType::Unknown:
+    case JS::ModuleType::Bytes:
       break;
   }
 

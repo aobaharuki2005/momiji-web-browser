@@ -226,6 +226,8 @@ nsresult ModuleLoader::CompileFetchedModule(
       return CompileJsonModule(aCx, aOptions, aRequest, aModuleOut);
     case JS::ModuleType::CSS:
       return CompileCssModule(aCx, aOptions, aRequest, aModuleOut);
+    case JS::ModuleType::Bytes:
+      MOZ_CRASH("Unexpected module type");
   }
 
   MOZ_CRASH("Unhandled module type");

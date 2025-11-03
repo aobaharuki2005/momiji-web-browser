@@ -107,6 +107,7 @@ nsresult WorkletModuleLoader::CompileFetchedModule(
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleScript) {
   switch (aRequest->mModuleType) {
     case JS::ModuleType::Unknown:
+    case JS::ModuleType::Bytes:
       MOZ_CRASH("Unexpected module type");
     case JS::ModuleType::JavaScript:
       return CompileJavaScriptModule(aCx, aOptions, aRequest, aModuleScript);
