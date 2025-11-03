@@ -231,7 +231,7 @@
 
 .urlbarView-dynamic-weather-temperature {
   margin-inline-end: 0.3em;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: 1.385em;
   vertical-align: middle;
 }

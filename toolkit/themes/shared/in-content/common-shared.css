@@ -182,7 +182,7 @@ xul|menulist {
   border: var(--button-border);
   border-radius: var(--button-border-radius);
   background-color: var(--button-background-color);
-  font-weight: 400;
+  font-weight: normal;
   padding: 0.45em 1em;
   text-decoration: none;
   margin: 4px 8px;
@@ -248,7 +248,7 @@ html|select:not([size], [multiple]) {
   -moz-context-properties: fill;
   fill: currentColor;
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 
   /* See above for some explanation about these values. */
   padding-inline-start: var(--start-padding);

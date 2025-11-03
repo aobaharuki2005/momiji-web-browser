@@ -240,7 +240,7 @@ th > button.clickable {
 }
 
 tr.process > td.type {
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
   user-select: text;
 }
 tr.thread {

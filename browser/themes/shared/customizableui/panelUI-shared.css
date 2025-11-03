@@ -394,7 +394,6 @@ menupopup[emptyplacesresult] > .hide-if-empty-places-result {
   --arrowpanel-border-color: #0060df;
   --arrowpanel-color: #fff;
   --arrowpanel-padding: 6px 10px;
-  font-weight: 400;
   font-size: 1.1rem;
 
   &::part(content) {
@@ -472,7 +471,7 @@ menupopup[emptyplacesresult] > .hide-if-empty-places-result {
 
   #confirmation-hint.with-description & {
     font-size: 1.2em;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
   }
 }
 
@@ -568,7 +567,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
     color: var(--panel-banner-item-color);
     background-color: var(--panel-banner-item-background-color);
     margin-bottom: 4px;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
   }
 
   .panel-banner-item,
@@ -702,7 +701,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
       color: var(--button-text-color);
       background-color: var(--button-background-color);
       font-size: 0.8em;
-      font-weight: 600;
+      font-weight: var(--font-weight-semibold);
 
       &:hover {
         color: var(--button-text-color-hover);
@@ -725,7 +724,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 
 #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 > vbox > #appMenu-header-description,
 #appMenu-fxa-text {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 :root[fxadisabled="true"] #appMenu-fxa-status2,
@@ -796,7 +795,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 
 .sync-setup-title {
   font-size: 1.1em;
-  font-weight: 400;
+  font-weight: normal;
   margin-block: auto;
 }
 
@@ -1752,7 +1751,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   margin: 5px 15px 11px;
   border: 1px solid var(--button-border-color-destructive);
   border-radius: var(--button-border-radius);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   padding: 10px;
 
   &:hover {
@@ -1785,7 +1784,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   border: 1px solid transparent;
   border-radius: var(--button-border-radius);
   padding: 10px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   appearance: none;
 
   &:hover {
@@ -1910,7 +1909,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   .protections-popup-message-title {
     display: grid;
     font-size: 1.3em;
-    font-weight: 600;
+    font-weight: var(--heading-font-weight);
     line-height: 1.4em;
     margin: 14px 0 0;
     grid-column-start: 1;
@@ -1925,7 +1924,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
 
   .text-link {
     color: inherit;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
   }
 }
 
@@ -1993,7 +1992,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
 
 .PanelUI-profiler-description-title {
   font-size: 1.3em;
-  font-weight: 600;
+  font-weight: var(--heading-font-weight);
   margin-block: 2px;
 }
 
@@ -2024,7 +2023,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
 }
 
 .PanelUI-profiler-content-label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 #PanelUI-profiler-content-description {

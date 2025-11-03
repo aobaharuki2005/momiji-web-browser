@@ -1055,7 +1055,7 @@
 }
 
 .tab-label[attention]:not([selected]) {
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
 }
 
 #pinned-tabs-container[orient="horizontal"] {

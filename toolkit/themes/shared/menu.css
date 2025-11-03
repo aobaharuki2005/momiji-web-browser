@@ -242,7 +242,7 @@ menuitem {
 
 menuitem:is([default="true"], .spell-suggestion),
 menucaption {
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
 }
 
 .menu-icon,
@@ -411,7 +411,7 @@ menupopup[needsgutter] {
         line-height: 0;
         visibility: hidden;
         padding-inline: 4px;
-        font-weight: bold;
+        font-weight: var(--font-weight-bold);
       }
     }
 

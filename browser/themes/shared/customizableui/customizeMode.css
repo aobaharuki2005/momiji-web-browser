@@ -464,7 +464,7 @@ toolbarpaletteitem {
 
 #customization-panelHeader {
   font-size: 1.3em;
-  font-weight: 600;
+  font-weight: var(--heading-font-weight);
   padding: 2px 12px;
   margin: 0;
 }

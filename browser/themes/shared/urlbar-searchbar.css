@@ -920,7 +920,7 @@
 
 @media (prefers-contrast) and (-moz-platform: windows) {
   #translations-button-locale {
-    font-weight: bold;
+    font-weight: var(--font-weight-bold);
   }
 
   #translations-button[translationsactive]:is(:hover, [open]) > #translations-button-icon {

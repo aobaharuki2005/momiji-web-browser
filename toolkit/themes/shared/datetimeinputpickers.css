@@ -270,7 +270,7 @@ button.month-year.active {
   background-color: var(--today-background);
   color: var(--today-color);
   border-color: transparent;
-  font-weight: bold;
+  font-weight: var(--font-weight-bold);
 }
 
 .days-view > tr > td.today:hover {
