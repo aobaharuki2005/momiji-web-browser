@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Tallenna kokoelmaan</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Jaa</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Etusivu</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -1242,6 +1244,18 @@
   <string name="preference_expanded_toolbar">Laajennuttu</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Osoitepalkin on oltava ylhäällä, kun välilehtipalkki on näkyvissä.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Avaa uusi välilehti</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Jaa</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Lisää kirjanmerkki</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Käännä</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Etusivu</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Takaisin</string>
   <!--
     App icon Preferences
 
@@ -2823,6 +2837,8 @@
   <string name="addresses_village_township" tools:ignore="UnusedResources">Kylä tai kaupunki</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
   <string name="addresses_island" tools:ignore="UnusedResources">Saari</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Townland field, specific to Ireland is a specific type of land division used in rural areas. -->
+  <string name="addresses_townland" tools:ignore="UnusedResources">Alue</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
   <string name="addresses_district" tools:ignore="UnusedResources">Alue</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in the United Kingdom, Norway and Sweden -->

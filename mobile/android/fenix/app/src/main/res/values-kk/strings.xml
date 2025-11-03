@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Жинаққа сақтау</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Бөлісу</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Үй парағы</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -807,6 +809,8 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">Беттер жолағының түрі</string>
   <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_select_shortcut">Жарлықты таңдау</string>
+  <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Ым қимылдар</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Баптау</string>
@@ -1242,6 +1246,18 @@
   <string name="preference_expanded_toolbar">Кеңейтілген</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Беттер жолағы көрсетілген кезде адрес жолағы жоғарғы жағында болуы керек.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Жаңа бетті ашу</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Бөлісу</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Бетбелгіні қосу</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Аудару</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Үй парағы</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Артқа</string>
   <!--
     App icon Preferences
 
@@ -2799,6 +2815,8 @@
   <string name="addresses_manage_addresses">Адрестерді басқару</string>
   <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
   <string name="addresses_name">Аты</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The organization's name related to the address helps in distinguishing addresses used for business or personal purposes. -->
+  <string name="addresses_organization" tools:ignore="UnusedResources">Ұйым</string>
   <!-- The header for the street address of an address -->
   <string name="addresses_street_address">Көше адресі</string>
   <!-- The header for the city of an address -->
@@ -2815,6 +2833,22 @@
   <string name="addresses_phone">Телефон</string>
   <!-- The header for the email of an address -->
   <string name="addresses_email">Эл. пошта</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used for addresses in Iran, Mexico. -->
+  <string name="addresses_neighborhood" tools:ignore="UnusedResources">Ықшам ауданы</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Village or Township field, specific to Malaysia is crucial for addresses in rural areas. -->
+  <string name="addresses_village_township" tools:ignore="UnusedResources">Ауыл</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
+  <string name="addresses_island" tools:ignore="UnusedResources">Арал</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Townland field, specific to Ireland is a specific type of land division used in rural areas. -->
+  <string name="addresses_townland" tools:ignore="UnusedResources">Қала жері</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
+  <string name="addresses_district" tools:ignore="UnusedResources">Аудан</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in the United Kingdom, Norway and Sweden -->
+  <string name="addresses_post_town" tools:ignore="UnusedResources">Пошта қаласы</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as a tertiary address information (below the state level, e.g. Tasmania in Australia -->
+  <string name="addresses_suburb" tools:ignore="UnusedResources">Қала маңы</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is crucial for addressing in regions where county lines play a key role in postal services. -->
+  <string name="addresses_county" tools:ignore="UnusedResources">Округ</string>
   <!-- The text for the "Save" button for saving an address -->
   <string name="addresses_save_button">Сақтау</string>
   <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->

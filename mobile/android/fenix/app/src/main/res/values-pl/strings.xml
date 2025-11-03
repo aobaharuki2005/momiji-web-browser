@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Zachowaj w kolekcji</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Udostępnij</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Strona startowa</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -807,6 +809,10 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">Pasek kart</string>
   <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_shortcut">Skrót na pasku narzędzi</string>
+  <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_select_shortcut">Wybierz skrót</string>
+  <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Gesty</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Dostosuj</string>
@@ -1242,6 +1248,18 @@
   <string name="preference_expanded_toolbar">Rozwinięty</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Pasek adresu musi być na górze, gdy wyświetlany jest pasek kart.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Otwórz nową kartę</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Udostępnij</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Dodaj zakładkę</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Przetłumacz</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Strona startowa</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Wstecz</string>
   <!--
     App icon Preferences
 
@@ -1483,6 +1501,8 @@
   <string name="tab_tray_multiselect_menu_content_description">Menu zaznaczonych kart</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Strona startowa</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Strona startowa przeglądarki %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Usuń kartę z kolekcji</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1723,6 +1743,10 @@
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Zamknij</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">Co się stało? Co powinno się było stać?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">Wyślij adresy zablokowane przez ochronę przed śledzeniem</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">Wzmocniona ochrona przed śledzeniem może blokować elementy śledzące i\u00a0skrypty, których niektóre strony potrzebują do poprawnego działania.</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2793,6 +2817,8 @@
   <string name="addresses_manage_addresses">Zarządzaj adresami</string>
   <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
   <string name="addresses_name">Imię i nazwisko</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The organization's name related to the address helps in distinguishing addresses used for business or personal purposes. -->
+  <string name="addresses_organization" tools:ignore="UnusedResources">Organizacja</string>
   <!-- The header for the street address of an address -->
   <string name="addresses_street_address">Adres</string>
   <!-- The header for the city of an address -->
@@ -2809,6 +2835,44 @@
   <string name="addresses_phone">Telefon</string>
   <!-- The header for the email of an address -->
   <string name="addresses_email">E-mail</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used for addresses in Iran, Mexico. -->
+  <string name="addresses_neighborhood" tools:ignore="UnusedResources">Neighborhood</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Village or Township field, specific to Malaysia is crucial for addresses in rural areas. -->
+  <string name="addresses_village_township" tools:ignore="UnusedResources">Wioska lub township</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
+  <string name="addresses_island" tools:ignore="UnusedResources">Wyspa</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Townland field, specific to Ireland is a specific type of land division used in rural areas. -->
+  <string name="addresses_townland" tools:ignore="UnusedResources">Townland</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
+  <string name="addresses_district" tools:ignore="UnusedResources">Dystrykt</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in the United Kingdom, Norway and Sweden -->
+  <string name="addresses_post_town" tools:ignore="UnusedResources">Post town</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as a tertiary address information (below the state level, e.g. Tasmania in Australia -->
+  <string name="addresses_suburb" tools:ignore="UnusedResources">Suburb</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is crucial for addressing in regions where county lines play a key role in postal services. -->
+  <string name="addresses_county" tools:ignore="UnusedResources">Hrabstwo</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Significant in places where parishes are used for local administration and addressing. Ensures users can specify parish details for better autofill accuracy. Used in Barbados and Jamaica. -->
+  <string name="addresses_parish" tools:ignore="UnusedResources">Parish</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in countries like Japan where prefectures are a major administrative division. -->
+  <string name="addresses_prefecture" tools:ignore="UnusedResources">Prefektura</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Allowing users to specify a particular area within a city or region. Used in Hong Kong -->
+  <string name="addresses_area" tools:ignore="UnusedResources">Obszar</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The header for the Do/Si of the address. Do/Si refers to provincial level divisions, pertinent to addresses in South Korea. -->
+  <string name="addresses_do_si" tools:ignore="UnusedResources">Do/Si</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in countries like Nicaragua and Colombia where departments are a key administrative division. -->
+  <string name="addresses_department" tools:ignore="UnusedResources">Departament</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in the United Arab Emirates. -->
+  <string name="addresses_emirate" tools:ignore="UnusedResources">Emirat</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Relevant for addresses in countries like Russia and Ukraine. -->
+  <string name="addresses_oblast" tools:ignore="UnusedResources">Obwód</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The PIN (Postal Index Number) field, used in India is a code representing a specific area. -->
+  <string name="addresses_pin" tools:ignore="UnusedResources">Pin</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The postal code field is universally used in address forms to specify the area code for mail sorting. -->
+  <string name="addresses_postal_code" tools:ignore="UnusedResources">Kod pocztowy</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. the Eircode field, specific to Ireland is a unique postal code system that helps in precise location identification. -->
+  <string name="addresses_eircode" tools:ignore="UnusedResources">Eircode</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in cases we want to only display the word "Country" over "Country or Region". -->
+  <string name="addresses_country_only" tools:ignore="UnusedResources">Państwo</string>
   <!-- The text for the "Save" button for saving an address -->
   <string name="addresses_save_button">Zachowaj</string>
   <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
