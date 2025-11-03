@@ -339,8 +339,8 @@ class DictionaryCache final {
 
   // Remove a dictionary if it exists for the key given
   void RemoveDictionary(const nsACString& aKey);
-  // Remove an origin for the key given
-  void RemoveOrigin(const nsACString& aKey);
+  // Remove an origin for the origin given
+  void RemoveOrigin(const nsACString& aOrigin);
 
   nsresult RemoveEntry(nsIURI* aURI, const nsACString& aKey);
 
@@ -362,6 +362,8 @@ class DictionaryCache final {
   }
 
  private:
+  void RemoveOriginForInternal(const nsACString& aKey);
+
   static StaticRefPtr<nsICacheStorage> sCacheStorage;
 
   // In-memory cache of dictionary entries.  HashMap, keyed by origin, of

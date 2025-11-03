@@ -946,12 +946,12 @@ void DictionaryCache::RemoveOriginFor(const nsACString& aKey) {
   DICTIONARY_LOG(
       ("Removing dictionary origin %s", PromiseFlatCString(aKey).get()));
   NS_DispatchToMainThread(NewRunnableMethod<const nsCString>(
-      "DictionaryCache::RemoveOriginFor", cache, &DictionaryCache::RemoveOrigin,
-      aKey));
+      "DictionaryCache::RemoveOriginFor", cache,
+      &DictionaryCache::RemoveOriginForInternal, aKey));
 }
 
 // Remove a dictionary if it exists for the key given, if it's empty
-void DictionaryCache::RemoveOrigin(const nsACString& aKey) {
+void DictionaryCache::RemoveOriginForInternal(const nsACString& aKey) {
   nsCOMPtr<nsIURI> uri;
   if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aKey))) {
     return;
@@ -962,7 +962,8 @@ void DictionaryCache::RemoveOrigin(const nsACString& aKey) {
       if (MOZ_UNLIKELY(origin.Data()->IsEmpty())) {
         DICTIONARY_LOG(
             ("Removing origin for %s", PromiseFlatCString(aKey).get()));
-        mDictionaryCache.Remove(prepath);
+        // This removes it from the global list and also dooms the entry
+        origin.Data()->Clear();
       } else {
         DICTIONARY_LOG(
             ("Origin not empty: %s", PromiseFlatCString(aKey).get()));
@@ -971,8 +972,13 @@ void DictionaryCache::RemoveOrigin(const nsACString& aKey) {
   }
 }
 
+// Remove a dictionary if it exists for the key given (key should be prepath)
+void DictionaryCache::RemoveOrigin(const nsACString& aOrigin) {
+  mDictionaryCache.Remove(aOrigin);
+}
+
 // Remove a dictionary if it exists for the key given.  Mainthread only.
-// Note: due to cookie samesite rules, we need to clean for all ports
+// Note: due to cookie samesite rules, we need to clean for all ports!
 // static
 void DictionaryCache::RemoveDictionariesForOrigin(nsIURI* aURI) {
   // There's no PrePathNoPort()
@@ -988,9 +994,12 @@ void DictionaryCache::RemoveDictionariesForOrigin(nsIURI* aURI) {
                   PromiseFlatCString(origin).get(), origin.Length()));
   RefPtr<DictionaryCache> cache = GetInstance();
   // We can't just use Remove here; the ClearSiteData service strips the
-  // port.  In that case, We need to clear all that match the host with any
-  // port or none.
-  cache->mDictionaryCache.RemoveIf([&origin](auto& entry) {
+  // port.  We need to clear all that match the host with any port or none.
+
+  // Keep an array of origins to clear since tht will want to modify the
+  // hash table we're iterating
+  AutoTArray<RefPtr<DictionaryOrigin>, 1> toClear;
+  for (auto& entry : cache->mDictionaryCache) {
     // We need to drop any port from entry (and origin).  Assuming they're
     // the same up to the / or : in mOrigin, we want to limit the host
     // there.  We also know that entry is https://.
@@ -1001,27 +1010,29 @@ void DictionaryCache::RemoveDictionariesForOrigin(nsIURI* aURI) {
     //    https://foo.barsoom.com:666/
     DICTIONARY_LOG(
         ("Possibly removing dictionary origin for %s (vs %s), %zu vs %zu",
-         entry.Data()->mOrigin.get(), PromiseFlatCString(origin).get(),
-         entry.Data()->mOrigin.Length(), origin.Length()));
-    if (entry.Data()->mOrigin.Length() > origin.Length() &&
-        (entry.Data()->mOrigin[origin.Length()] == '/' ||   // no port
-         entry.Data()->mOrigin[origin.Length()] == ':')) {  // port
+         entry.GetData()->mOrigin.get(), PromiseFlatCString(origin).get(),
+         entry.GetData()->mOrigin.Length(), origin.Length()));
+    if (entry.GetData()->mOrigin.Length() > origin.Length() &&
+        (entry.GetData()->mOrigin[origin.Length()] == '/' ||   // no port
+         entry.GetData()->mOrigin[origin.Length()] == ':')) {  // port
       // no strncmp() for nsCStrings...
       nsDependentCSubstring host =
-          Substring(entry.Data()->mOrigin, 0,
+          Substring(entry.GetData()->mOrigin, 0,
                     origin.Length());  // not including '/' or ':'
-      DICTIONARY_LOG(("Compare %s vs %s", entry.Data()->mOrigin.get(),
+      DICTIONARY_LOG(("Compare %s vs %s", entry.GetData()->mOrigin.get(),
                       PromiseFlatCString(host).get()));
       if (origin.Equals(host)) {
         DICTIONARY_LOG(
             ("RemoveDictionaries: Removing dictionary origin %p for %s",
-             entry.Data().get(), entry.Data()->mOrigin.get()));
-        entry.Data()->Clear();
-        return true;
+             entry.GetData().get(), entry.GetData()->mOrigin.get()));
+        toClear.AppendElement(entry.GetData());
       }
     }
-    return false;
-  });
+  }
+  // Now clear and doom all the entries
+  for (auto& entry : toClear) {
+    entry->Clear();
+  }
 }
 
 // Remove a dictionary if it exists for the key given.  Mainthread only
@@ -1294,10 +1305,7 @@ nsresult DictionaryOrigin::RemoveEntry(const nsACString& aKey) {
   }
   // If this origin has no entries, remove it and doom the entry
   if (IsEmpty()) {
-    if (mEntry) {
-      mEntry->AsyncDoom(nullptr);
-    }
-    gDictionaryCache->RemoveOrigin(mOrigin);
+    Clear();
   }
   return hold ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -1351,6 +1359,7 @@ void DictionaryOrigin::DumpEntries() {
 }
 
 void DictionaryOrigin::Clear() {
+  DICTIONARY_LOG(("*** Clearing origin %s", mOrigin.get()));
   mEntries.Clear();
   mPendingEntries.Clear();
   mPendingRemove.Clear();
@@ -1359,9 +1368,12 @@ void DictionaryOrigin::Clear() {
     // This will attempt to delete the DictionaryOrigin, but we'll do
     // that more directly
     NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-        "DictionaryOrigin::Clear",
-        [entry = mEntry]() { entry->AsyncDoom(nullptr); }));
+        "DictionaryOrigin::Clear", [entry = mEntry, origin(mOrigin)]() {
+          DICTIONARY_LOG(("*** Dooming origin %s", origin.get()));
+          entry->AsyncDoom(nullptr);
+        }));
   }
+  gDictionaryCache->RemoveOrigin(mOrigin);
 }
 
 // caller will throw this into a RefPtr
