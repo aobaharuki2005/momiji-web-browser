@@ -38,6 +38,7 @@ const DISABLED_ON_IDLE_RETRY_PREF_NAME =
 const BACKUP_DEBUG_INFO_PREF_NAME = "browser.backup.backup-debug-info";
 const MAXIMUM_NUMBER_OF_UNREMOVABLE_STAGING_ITEMS_PREF_NAME =
   "browser.backup.max-num-unremovable-staging-items";
+const CREATED_MANAGED_PROFILES_PREF_NAME = "browser.profiles.created";
 
 const SCHEMAS = Object.freeze({
   BACKUP_MANIFEST: 1,
@@ -842,6 +843,12 @@ export class BackupService extends EventTarget {
   #wasArchivePreviouslyDisabled = false;
 
   /**
+   * Monitors prefs that are relevant to the status of the backup service.
+   * Unlike #observer, this does not wait for an idle tick.
+   */
+  #statusPrefObserver = null;
+
+  /**
    * The path of the default parent directory for saving backups.
    * The current default is the Documents directory.
    *
@@ -985,6 +992,20 @@ export class BackupService extends EventTarget {
    */
   static get RECOVERY_ZIP_FILE_NAME() {
     return "recovery.zip";
+  }
+
+  /**
+   * Prefs that should be monitored. When one of these prefs changes, the
+   * 'backup-service-status-changed' observers are notified and telemetry
+   * updates.
+   */
+  static get #STATUS_OBSERVER_PREFS() {
+    return [
+      BACKUP_ARCHIVE_ENABLED_PREF_NAME,
+      BACKUP_RESTORE_ENABLED_PREF_NAME,
+      "privacy.sanitize.sanitizeOnShutdown",
+      CREATED_MANAGED_PROFILES_PREF_NAME,
+    ];
   }
 
   /**
@@ -3873,35 +3894,28 @@ export class BackupService extends EventTarget {
 
   #registerStatusObservers() {
     // We don't use this.#observer since any changes to the prefs or nimbus should
-    // immediately reflect across any observers, instead of waiting on idle
-    Services.prefs.addObserver(
-      BACKUP_ARCHIVE_ENABLED_PREF_NAME,
-      this.#notifyStatusObservers
-    );
-    Services.prefs.addObserver(
-      BACKUP_RESTORE_ENABLED_PREF_NAME,
-      this.#notifyStatusObservers
-    );
-    Services.prefs.addObserver(
-      "privacy.sanitize.sanitizeOnShutdown",
-      this.#notifyStatusObservers
-    );
-    lazy.NimbusFeatures.backupService.onUpdate(this.#notifyStatusObservers);
+    // immediately reflect across any observers, instead of waiting on idle.
+    this.#statusPrefObserver = () => {
+      // Wrap in an arrow function so 'this' is preserved.
+      this.#notifyStatusObservers();
+    };
+
+    for (let pref of BackupService.#STATUS_OBSERVER_PREFS) {
+      Services.prefs.addObserver(pref, this.#statusPrefObserver);
+    }
+    lazy.NimbusFeatures.backupService.onUpdate(this.#statusPrefObserver);
   }
 
   #unregisterStatusObservers() {
-    Services.prefs.removeObserver(
-      BACKUP_ARCHIVE_ENABLED_PREF_NAME,
-      this.#notifyStatusObservers
-    );
-    Services.prefs.removeObserver(
-      BACKUP_RESTORE_ENABLED_PREF_NAME,
-      this.#notifyStatusObservers
-    );
-    Services.prefs.removeObserver(
-      "privacy.sanitize.sanitizeOnShutdown",
-      this.#notifyStatusObservers
-    );
+    if (this.#statusPrefObserver == null) {
+      return;
+    }
+
+    for (let pref of BackupService.#STATUS_OBSERVER_PREFS) {
+      Services.prefs.removeObserver(pref, this.#statusPrefObserver);
+    }
+    lazy.NimbusFeatures.backupService.offUpdate(this.#statusPrefObserver);
+    this.#statusPrefObserver = null;
   }
 
   /**

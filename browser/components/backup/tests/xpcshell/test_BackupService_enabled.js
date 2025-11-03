@@ -154,7 +154,12 @@ add_task(async function test_restore_selectable_profiles() {
 async function archiveTemplate({ internalReason, disable, enable }) {
   const bs = BackupService.get();
 
+  let calledCount = 0;
+  let callback = () => calledCount++;
+  Services.obs.addObserver(callback, "backup-service-status-updated");
+
   await disable();
+  Assert.equal(calledCount, 1, "Observers were notified on disable");
 
   Assert.ok(
     !bs.archiveEnabledStatus.enabled,
@@ -181,6 +186,7 @@ async function archiveTemplate({ internalReason, disable, enable }) {
   );
 
   await enable();
+  Assert.equal(calledCount, 2, "Observers were notified on re-enable");
 
   Assert.ok(
     bs.archiveEnabledStatus.enabled,
@@ -205,6 +211,7 @@ async function archiveTemplate({ internalReason, disable, enable }) {
   );
 
   await IOUtils.remove(backup.archivePath);
+  Services.obs.removeObserver(callback, "backup-service-status-updated");
 }
 
 async function restoreTemplate({ internalReason, disable, enable }) {
@@ -216,7 +223,12 @@ async function restoreTemplate({ internalReason, disable, enable }) {
     "Archive should have been created on disk."
   );
 
+  let calledCount = 0;
+  let callback = () => calledCount++;
+  Services.obs.addObserver(callback, "backup-service-status-updated");
+
   await disable();
+  Assert.equal(calledCount, 1, "Observers were notified on disable");
 
   const recoveryDir = await IOUtils.createUniqueDirectory(
     PathUtils.profileDir,
@@ -246,6 +258,7 @@ async function restoreTemplate({ internalReason, disable, enable }) {
   );
 
   await enable();
+  Assert.equal(calledCount, 2, "Observers were notified on re-enable");
 
   Assert.ok(
     bs.restoreEnabledStatus.enabled,
@@ -267,4 +280,6 @@ async function restoreTemplate({ internalReason, disable, enable }) {
     await IOUtils.exists(recoveredProfile.rootDir.path),
     "Recovered profile directory should exist on disk."
   );
+
+  Services.obs.removeObserver(callback, "backup-service-status-updated");
 }
