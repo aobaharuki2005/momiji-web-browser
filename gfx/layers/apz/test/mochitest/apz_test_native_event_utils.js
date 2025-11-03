@@ -240,8 +240,10 @@ function _getTargetRect(aTarget) {
   // Iterate up the window hierarchy until we reach the root
   // content window, adding the offsets of any iframe windows
   // relative to their parent window.
-  while (aTarget.ownerDocument.defaultView.frameElement) {
-    const iframe = aTarget.ownerDocument.defaultView.frameElement;
+  aTarget = SpecialPowers.wrap(aTarget);
+  while (aTarget.ownerDocument.defaultView.browsingContext.embedderElement) {
+    const iframe =
+      aTarget.ownerDocument.defaultView.browsingContext.embedderElement;
     // The offset of the iframe window relative to the parent window
     // includes the iframe's border, and the iframe's origin in its
     // containing document.
@@ -283,9 +285,9 @@ function _getTargetRect(aTarget) {
 
 // Returns the in-process root window for the given |aWindow|.
 function getInProcessRootWindow(aWindow) {
-  let window = aWindow;
-  while (window.frameElement) {
-    window = window.frameElement.ownerDocument.defaultView;
+  let window = SpecialPowers.wrap(aWindow);
+  while (window.browsingContext.embedderElement) {
+    window = window.browsingContext.embedderElement.ownerDocument.defaultView;
   }
   return window;
 }
