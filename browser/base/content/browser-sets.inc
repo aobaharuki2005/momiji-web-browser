@@ -214,10 +214,10 @@
     <key id="goForwardKb2" data-l10n-id="nav-fwd-shortcut-alt" command="Browser:Forward" modifiers="accel"/>
 #endif
     <key id="goHome" keycode="VK_HOME" modifiers="alt"/>
-    <key keycode="VK_F5" command="Browser:Reload"/>
+    <key id="key_reload2" keycode="VK_F5" command="Browser:Reload"/>
 #ifndef XP_MACOSX
     <key id="showAllHistoryKb" data-l10n-id="history-show-all-shortcut" command="Browser:ShowAllHistory" modifiers="accel,shift"/>
-    <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
+    <key id="key_reload_skip_cache2" keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
     <key id="key_enterFullScreen" keycode="VK_F11" command="View:FullScreen"/>
     <key id="key_exitFullScreen" keycode="VK_F11" command="View:FullScreen" reserved="true" disabled="true"/>
 #else
