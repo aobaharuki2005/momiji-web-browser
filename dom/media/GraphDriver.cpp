@@ -245,10 +245,10 @@ TimeDuration SystemClockDriver::NextIterationWaitDuration() {
     mTargetIterationTimeStamp += IterationDuration();
   }
   TimeDuration timeout = mTargetIterationTimeStamp - now;
-  if (timeout < TimeDuration::FromMilliseconds(-MEDIA_GRAPH_TARGET_PERIOD_MS)) {
-    // Rendering has fallen so far behind that the entire next rendering
-    // period has already passed.  Don't try to catch up again, but instead
-    // try to render at consistent time intervals from now.
+  if (timeout <
+      TimeDuration::FromMilliseconds(-SYSTEM_CLOCK_BANKRUPTCY_THRESHOLD_MS)) {
+    // Don't try to catch up because rendering has fallen so far behind.
+    // Instead try to render at consistent time intervals from now.
     LOG(LogLevel::Warning, ("%p: Global underrun detected", Graph()));
     mTargetIterationTimeStamp = now;
   }
