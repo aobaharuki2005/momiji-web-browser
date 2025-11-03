@@ -3464,6 +3464,9 @@ pref("browser.backup.disabled-on-idle-backup-retry", false);
 // removing for any reason.
 pref("browser.backup.max-num-unremovable-staging-items", 5);
 pref("browser.backup.scheduled.user-disabled", false);
+// How many milliseconds to wait for tab state to flush before continuing the
+// backup process.
+pref("browser.backup.tab-flush-timeout", 5000)
 
 #ifdef NIGHTLY_BUILD
   // Pref to enable the new profiles
