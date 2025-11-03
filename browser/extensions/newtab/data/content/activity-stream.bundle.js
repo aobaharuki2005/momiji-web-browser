@@ -12958,27 +12958,6 @@ const formatTime = seconds => {
 };
 
 /**
- * Validates that input is a numeric digit (0-9)
- *
- * @param input - The character being input
- * @returns boolean - true if valid numeric input, false otherwise
- */
-const isNumericValue = input => {
-  // Check for null/undefined input or non-numeric characters
-  return input && /^\d+$/.test(input);
-};
-
-/**
- * Validates if adding a new digit would exceed the 2-character limit
- *
- * @param currentValue - The current value in the field
- * @returns boolean - true if at 2-character limit, false otherwise
- */
-const isAtMaxLength = currentValue => {
-  return currentValue.length >= 2;
-};
-
-/**
  * Converts a polar coordinate (angle on circle) into a percentage-based [x,y] position for clip-path
  *
  * @param cx
@@ -13285,9 +13264,13 @@ const FocusTimer = ({
     const values = e.target.innerText.trim();
 
     // only allow numerical digits 0–9 for time input
-    if (!isNumericValue(input)) {
+    if (!/^\d+$/.test(input)) {
       e.preventDefault();
-      return;
+    }
+
+    // only allow 2 values each for minutes and seconds
+    if (values.length >= 2) {
+      e.preventDefault();
     }
     const selection = window.getSelection();
     const selectedText = selection.toString();
@@ -13305,12 +13288,6 @@ const FocusTimer = ({
       const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
-      return;
-    }
-
-    // only allow 2 values each for minutes and seconds
-    if (isAtMaxLength(values)) {
-      e.preventDefault();
     }
   };
   const handleFocus = e => {
