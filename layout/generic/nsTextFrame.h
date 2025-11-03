@@ -161,7 +161,7 @@ class nsTextFrame : public nsIFrame {
     void InitializeForMeasure();
 
     bool GetSpacing(Range aRange, Spacing* aSpacing) const final;
-    nscoord GetHyphenWidth() const final;
+    gfxFloat GetHyphenWidth() const final;
     void GetHyphenationBreaks(Range aRange,
                               HyphenType* aBreakBefore) const final;
     mozilla::StyleHyphens GetHyphensOption() const final {
@@ -270,8 +270,8 @@ class nsTextFrame : public nsIFrame {
     // min advance for <tab> char
     mutable gfxFloat mMinTabAdvance;
 
-    mutable nscoord mHyphenWidth;
-    mutable nscoord mOffsetFromBlockOriginForTabs;
+    mutable gfxFloat mHyphenWidth;
+    mutable gfxFloat mOffsetFromBlockOriginForTabs;
 
     // The values in mJustificationSpacings corresponds to unskipped
     // characters start from mJustificationArrayStart.
@@ -937,7 +937,7 @@ class nsTextFrame : public nsIFrame {
 
   void PaintOneShadow(const PaintShadowParams& aParams,
                       const mozilla::StyleSimpleShadow& aShadowDetails,
-                      const gfxRect& aBoundingBox, uint32_t aBlurFlags);
+                      gfxRect& aBoundingBox, uint32_t aBlurFlags);
 
   void PaintShadows(mozilla::Span<const mozilla::StyleSimpleShadow>,
                     const PaintShadowParams& aParams);

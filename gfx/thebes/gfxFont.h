@@ -1657,22 +1657,23 @@ class gfxFont {
     nscoord mBefore;
     nscoord mAfter;
   };
-
   /**
-   * Metrics for a particular string. These are in appUnits.
+   * Metrics for a particular string
    */
   struct RunMetrics {
+    RunMetrics() { mAdvanceWidth = mAscent = mDescent = 0.0; }
+
     void CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft);
 
     // can be negative (partly due to negative spacing).
     // Advance widths should be additive: the advance width of the
     // (offset1, length1) plus the advance width of (offset1 + length1,
     // length2) should be the advance width of (offset1, length1 + length2)
-    nscoord mAdvanceWidth = 0;
+    gfxFloat mAdvanceWidth;
 
     // For zero-width substrings, these must be zero!
-    nscoord mAscent = 0;   // always non-negative
-    nscoord mDescent = 0;  // always non-negative
+    gfxFloat mAscent;   // always non-negative
+    gfxFloat mDescent;  // always non-negative
 
     // Bounding box that is guaranteed to include everything drawn.
     // If a tight boundingBox was requested when these metrics were
@@ -1680,7 +1681,7 @@ class gfxFont {
     // "loose" and may be larger than the true bounding box.
     // Coordinates are relative to the baseline left origin, so typically
     // mBoundingBox.y == -mAscent
-    nsRect mBoundingBox;
+    gfxRect mBoundingBox;
   };
 
   /**
@@ -1956,7 +1957,7 @@ class gfxFont {
                      DrawTarget* aRefDrawTarget, Spacing* aSpacing,
                      gfxGlyphExtents* aExtents, bool aIsRTL,
                      bool aNeedsGlyphExtents, RunMetrics& aMetrics,
-                     nscoord* aAdvanceMin, nscoord* aAdvanceMax);
+                     gfxFloat* aAdvanceMin, gfxFloat* aAdvanceMax);
 
   bool MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
                      BoundingBoxType aBoundingBoxType,
