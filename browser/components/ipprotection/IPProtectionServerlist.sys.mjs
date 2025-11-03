@@ -162,6 +162,8 @@ class IPProtectionServerlistSingleton {
       this.#list = IPProtectionServerlistSingleton.#dataToList(
         await bucket.get()
       );
+
+      lazy.IPPStartupCache.storeLocationList(this.#list);
     };
 
     this.#runningPromise = fetchList().finally(
