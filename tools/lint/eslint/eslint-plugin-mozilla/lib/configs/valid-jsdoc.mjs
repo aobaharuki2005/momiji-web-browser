@@ -18,6 +18,7 @@ export default {
     "jsdoc/multiline-blocks": "error",
     "jsdoc/no-bad-blocks": "error",
     "jsdoc/no-multi-asterisks": ["error", { allowWhitespace: true }],
+    // "jsdoc/reject-function-type": "error",
     "jsdoc/require-param-type": "error",
     "jsdoc/require-returns-type": "error",
     "jsdoc/tag-lines": ["error", "any", { startLines: 1 }],

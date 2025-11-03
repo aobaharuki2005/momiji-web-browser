@@ -16,6 +16,7 @@ export default {
         },
       },
     ],
+    "jsdoc/require-next-type": "error",
     "jsdoc/require-param": "error",
     "jsdoc/require-param-name": "error",
     "jsdoc/require-param-type": "error",
@@ -24,7 +25,9 @@ export default {
     "jsdoc/require-property-name": "error",
     "jsdoc/require-property-type": "error",
     "jsdoc/require-returns-check": "error",
+    // "jsdoc/require-throws-type": "error",
     "jsdoc/require-yields": "error",
     "jsdoc/require-yields-check": "error",
+    "jsdoc/require-yields-type": "error",
   },
 };
