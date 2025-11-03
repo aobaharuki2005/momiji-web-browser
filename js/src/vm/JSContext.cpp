@@ -1203,10 +1203,8 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       activation_(this, nullptr),
       profilingActivation_(nullptr),
       noExecuteDebuggerTop(this, nullptr),
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
       inUnsafeCallWithABI(this, false),
       hasAutoUnsafeCallWithABI(this, false),
-#endif
 #ifdef DEBUG
       liveArraySortDataInstances(this, 0),
 #endif
@@ -1683,8 +1681,6 @@ void JSContext::suspendExecutionTracing() {
 
 #endif
 
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
-
 AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
     : cx_(TlsContext.get()),
       nested_(cx_ ? cx_->hasAutoUnsafeCallWithABI : false),
@@ -1693,6 +1689,7 @@ AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
     // This is a helper thread doing Ion or Wasm compilation - nothing to do.
     return;
   }
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   switch (strictness) {
     case UnsafeABIStrictness::NoExceptions:
       MOZ_ASSERT(!JS_IsExceptionPending(cx_));
@@ -1705,6 +1702,7 @@ AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
       checkForPendingException_ = false;
       break;
   }
+#endif
 
   cx_->hasAutoUnsafeCallWithABI = true;
 }
@@ -1713,15 +1711,15 @@ AutoUnsafeCallWithABI::~AutoUnsafeCallWithABI() {
   if (!cx_) {
     return;
   }
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   MOZ_ASSERT(cx_->hasAutoUnsafeCallWithABI);
+  MOZ_ASSERT_IF(checkForPendingException_, !JS_IsExceptionPending(cx_));
+#endif
   if (!nested_) {
     cx_->hasAutoUnsafeCallWithABI = false;
     cx_->inUnsafeCallWithABI = false;
   }
-  MOZ_ASSERT_IF(checkForPendingException_, !JS_IsExceptionPending(cx_));
 }
-
-#endif  // JS_CHECK_UNSAFE_CALL_WITH_ABI
 
 #ifdef __wasi__
 JS_PUBLIC_API void js::IncWasiRecursionDepth(JSContext* cx) {
