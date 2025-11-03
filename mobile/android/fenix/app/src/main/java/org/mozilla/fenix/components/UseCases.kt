@@ -137,6 +137,7 @@ class UseCases(
             searchUseCases = searchUseCases,
             homepageTitle = context.getString(R.string.tab_tray_homepage_tab),
             profiler = engine.value.profiler,
+            appStore = appStore.value,
         )
     }
 
