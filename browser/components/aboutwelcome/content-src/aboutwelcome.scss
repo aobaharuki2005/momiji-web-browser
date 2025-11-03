@@ -269,7 +269,7 @@ html {
     border: var(--button-border);
     line-height: 12px;
     font-size: 0.72em;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     padding: 8px 16px;
     text-decoration: none;
     cursor: default;
@@ -503,13 +503,13 @@ html {
           .addon-title {
             margin: 10px 0 3px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: var(--heading-font-weight);
           }
 
           .addon-description {
             margin: 2px 0 10px;
             font-size: 13px;
-            font-weight: 400;
+            font-weight: normal;
           }
 
           .install-button-wrapper {
@@ -1135,7 +1135,7 @@ html {
             max-width: 450px;
 
             h1 {
-              font-weight: 510;
+              font-weight: var(--heading-font-weight);
               font-size: 80px;
               margin: 0;
               width: 100%;
@@ -1146,7 +1146,7 @@ html {
               font-size: 20px;
               margin: 0;
               margin-block-start: 24px;
-              font-weight: 510;
+              font-weight: var(--heading-font-weight);
               width: 100%;
             }
           }
@@ -1217,7 +1217,7 @@ html {
 
                   .addon-title {
                     font-size: 16px;
-                    font-weight: 600;
+                    font-weight: var(--heading-font-weight);
                   }
 
                   .addon-author {
@@ -1679,7 +1679,7 @@ html {
 
     h1 {
       font-size: 24px;
-      font-weight: 600;
+      font-weight: var(--heading-font-weight);
       margin: 0 6px;
       letter-spacing: -0.02em;
       outline: none;
@@ -2063,7 +2063,7 @@ html {
     gap: 16px;
     margin-block: -1em 2em;
     margin-inline: 1em;
-    font-weight: 400;
+    font-weight: normal;
     font-size: 14px;
     text-align: initial;
     transition: var(--transition);
@@ -2137,7 +2137,7 @@ html {
 
       .confirmation-checklist-text {
         margin-inline-start: 8px;
-        font-weight: 500;
+        font-weight: var(--font-weight-semibold);
       }
 
       .confirmation-checklist-subtext {
@@ -2159,7 +2159,7 @@ html {
       @include text-link-styles;
 
       font-size: 16px;
-      font-weight: 400;
+      font-weight: normal;
 
       &:hover {
         background: none;
@@ -2245,7 +2245,7 @@ html {
   button.content-tiles-header {
     margin: 0.5em 0 0;
     font-size: 11px;
-    font-weight: 400;
+    font-weight: normal;
     justify-content: center;
     border-width: 1px 0;
 
@@ -2322,7 +2322,7 @@ html {
           }
 
           .header-subtitle {
-            font-weight: 400;
+            font-weight: normal;
             line-height: 1.5;
           }
         }
@@ -2428,7 +2428,7 @@ html {
 
   .tile-title {
     font-size: 24px;
-    font-weight: 600;
+    font-weight: var(--heading-font-weight);
     margin-block: 0;
 
     &:not(:last-child) {

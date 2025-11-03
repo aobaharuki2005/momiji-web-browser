@@ -120,7 +120,7 @@
 }
 .asrouter-admin h1 {
   font-size: 2rem;
-  font-weight: 200;
+  font-weight: normal;
 }
 .asrouter-admin h2 button,
 .asrouter-admin p button {
