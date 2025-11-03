@@ -26,6 +26,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
@@ -2747,6 +2748,140 @@ class BrowserToolbarMiddlewareTest {
         mainLooperRule.idle()
         val updatedMenuButton = toolbarStore.state.displayState.browserActionsEnd[2] as ActionButtonRes
         assertEquals(expectedMenuButton(), updatedMenuButton)
+    }
+
+    @Test
+    fun `GIVEN site permissions different than default WHEN observing THEN SiteInfo button is highlighted`() = runTest {
+        val currentTab = createTab("example.com", private = false)
+        val browserStore = BrowserStore(
+            BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),
+        )
+        val middleware = buildMiddleware(browserStore = browserStore)
+        val toolbarStore = buildStore(middleware).also {
+            it.dispatch(BrowserToolbarAction.Init())
+        }
+        mainLooperRule.idle()
+
+        var siteInfo = toolbarStore.state.displayState.pageActionsStart.first() as ActionButtonRes
+        assertTrue(!siteInfo.highlighted)
+
+        browserStore.dispatch(
+            ContentAction.UpdatePermissionHighlightsStateAction.NotificationChangedAction(
+                tabId = currentTab.id,
+                value = true,
+            ),
+        ).joinBlocking()
+        mainLooperRule.idle()
+
+        siteInfo = toolbarStore.state.displayState.pageActionsStart.first() as ActionButtonRes
+        assertTrue(siteInfo.highlighted)
+    }
+
+    @Test
+    fun `GIVEN no custom site permissions WHEN observing THEN SiteInfo button is NOT highlighted`() = runTest {
+        val currentTab = createTab("example.com", private = false)
+        val browserStore = BrowserStore(
+            BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),
+        )
+        val middleware = buildMiddleware(browserStore = browserStore)
+        val toolbarStore = buildStore(middleware).also {
+            it.dispatch(BrowserToolbarAction.Init())
+        }
+        mainLooperRule.idle()
+
+        val siteInfo = toolbarStore.state.displayState.pageActionsStart.first() as ActionButtonRes
+        assertTrue(!siteInfo.highlighted)
+    }
+
+    @Test
+    fun `GIVEN tracking protection ignored WHEN observing THEN SiteInfo button is highlighted`() = runTest {
+        val currentTab = createTab(
+            url = "https://example.com",
+            private = false,
+            trackingProtection = TrackingProtectionState(
+                enabled = true,
+                ignoredOnTrackingProtection = true,
+            ),
+        )
+        val browserStore = BrowserStore(
+            BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),
+        )
+        val middleware = buildMiddleware(browserStore = browserStore)
+        val toolbarStore = buildStore(middleware).also {
+            it.dispatch(BrowserToolbarAction.Init())
+        }
+        mainLooperRule.idle()
+
+        val siteInfo = toolbarStore.state.displayState.pageActionsStart.first() as ActionButtonRes
+        assertTrue(siteInfo.highlighted)
+    }
+
+    @Test
+    fun `GIVEN tracking protection not ignored WHEN it becomes ignored THEN SiteInfo button becomes highlighted`() = runTest {
+        val currentTab = createTab(
+            url = "https://example.com",
+            private = false,
+            trackingProtection = TrackingProtectionState(
+                enabled = true,
+                ignoredOnTrackingProtection = false,
+            ),
+        )
+        val browserStore = BrowserStore(
+            BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),
+        )
+        val middleware = buildMiddleware(browserStore = browserStore)
+        val toolbarStore = buildStore(middleware).also {
+            it.dispatch(BrowserToolbarAction.Init())
+        }
+        mainLooperRule.idle()
+
+        var siteInfo = toolbarStore.state.displayState.pageActionsStart.first() as ActionButtonRes
+        assertTrue(!siteInfo.highlighted)
+
+        browserStore.dispatch(
+            TrackingProtectionAction.ToggleExclusionListAction(
+                tabId = currentTab.id,
+                excluded = true,
+            ),
+        ).joinBlocking()
+        mainLooperRule.idle()
+
+        siteInfo = toolbarStore.state.displayState.pageActionsStart.first() as ActionButtonRes
+        assertTrue(siteInfo.highlighted)
+    }
+
+    @Test
+    fun `GIVEN tracking protection ignored WHEN it is no longer ignored THEN SiteInfo button is NOT highlighted`() = runTest {
+        val currentTab = createTab(
+            url = "https://example.com",
+            private = false,
+            trackingProtection = TrackingProtectionState(
+                enabled = true,
+                ignoredOnTrackingProtection = true,
+            ),
+        )
+        val browserStore = BrowserStore(
+            BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),
+        )
+        val middleware = buildMiddleware(browserStore = browserStore)
+        val toolbarStore = buildStore(middleware).also {
+            it.dispatch(BrowserToolbarAction.Init())
+        }
+        mainLooperRule.idle()
+
+        var siteInfo = toolbarStore.state.displayState.pageActionsStart.first() as ActionButtonRes
+        assertTrue(siteInfo.highlighted)
+
+        browserStore.dispatch(
+            TrackingProtectionAction.ToggleExclusionListAction(
+                tabId = currentTab.id,
+                excluded = false,
+            ),
+        ).joinBlocking()
+        mainLooperRule.idle()
+
+        siteInfo = toolbarStore.state.displayState.pageActionsStart.first() as ActionButtonRes
+        assertTrue(!siteInfo.highlighted)
     }
 
     @Test

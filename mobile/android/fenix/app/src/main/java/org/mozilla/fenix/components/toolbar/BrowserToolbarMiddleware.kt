@@ -239,6 +239,7 @@ class BrowserToolbarMiddleware(
                 environment = action.environment as? BrowserToolbarEnvironment
 
                 updateStartBrowserActions(context)
+                updateStartPageActions(context)
                 updateCurrentPageOrigin(context)
                 environment?.fragment?.viewLifecycleOwner?.lifecycleScope?.launch {
                     updateEndBrowserActions(context)
@@ -261,6 +262,7 @@ class BrowserToolbarMiddleware(
                 observePageRefreshUpdates(context)
                 observePageTrackingProtectionUpdates(context)
                 observePageSecurityUpdates(context)
+                observePermissionHighlightsUpdates(context)
             }
 
             is EnvironmentCleared -> {
@@ -1071,6 +1073,17 @@ class BrowserToolbarMiddleware(
         }
     }
 
+    private fun observePermissionHighlightsUpdates(
+        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+    ) {
+        browserStore.observeWhileActive {
+            distinctUntilChangedBy { it.selectedTab?.content?.permissionHighlights }
+                .collect {
+                    updateStartPageActions(context)
+                }
+        }
+    }
+
     private inline fun <S : State, A : MVIAction> Store<S, A>.observeWhileActive(
         crossinline observe: suspend (Flow<S>.() -> Unit),
     ): Job? = environment?.fragment?.viewLifecycleOwner?.run {
@@ -1226,11 +1239,22 @@ class BrowserToolbarMiddleware(
         }
 
         ToolbarAction.SiteInfo -> {
+            val highlight = (
+                    browserStore.state.selectedTab
+                        ?.content
+                        ?.permissionHighlights
+                        ?.permissionsChanged == true
+                    ) || (
+                    browserStore.state.selectedTab
+                        ?.trackingProtection
+                        ?.ignoredOnTrackingProtection == true
+                    )
             val selectedTab = browserStore.state.selectedTab
             if (selectedTab?.content?.url?.isContentUrl() == true) {
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_page_portrait_24,
                     contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
+                    highlighted = highlight,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
             } else if (
@@ -1241,12 +1265,14 @@ class BrowserToolbarMiddleware(
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_shield_checkmark_24,
                     contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
+                    highlighted = highlight,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
             } else {
                 ActionButtonRes(
                     drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
                     contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
+                    highlighted = highlight,
                     onClick = StartPageActions.SiteInfoClicked,
                 )
             }
