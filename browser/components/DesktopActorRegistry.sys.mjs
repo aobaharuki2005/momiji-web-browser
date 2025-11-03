@@ -343,6 +343,20 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  CustomKeys: {
+    parent: {
+      esModuleURI: "resource:///actors/CustomKeysParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource:///actors/CustomKeysChild.sys.mjs",
+      events: {
+        DOMDocElementInserted: { wantUntrusted: true },
+      },
+    },
+    matches: ["about:keyboard"],
+    remoteTypes: ["privilegedabout"],
+  },
+
   DecoderDoctor: {
     parent: {
       esModuleURI: "resource:///actors/DecoderDoctorParent.sys.mjs",
