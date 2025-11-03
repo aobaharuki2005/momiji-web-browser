@@ -13514,6 +13514,34 @@ const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
 const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
 const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
 const PREF_FEEDS_SECTION_TOPSTORIES = "feeds.section.topstories";
+
+// resets timer to default values (exported for testing)
+// In practice, this logic runs inside a useEffect when
+// the timer widget is disabled (after the pref flips from true to false).
+// Because Enzyme tests cannot reliably simulate that pref update or trigger
+// the related useEffect, we expose this helper to at least just test the reset behavior instead
+
+function resetTimerToDefaults(dispatch, timerType) {
+  const originalTime = timerType === "focus" ? 1500 : 300;
+
+  // Reset both focus and break timers to their initial durations
+  dispatch(actionCreators.AlsoToMain({
+    type: actionTypes.WIDGETS_TIMER_RESET,
+    data: {
+      timerType,
+      duration: originalTime,
+      initialDuration: originalTime
+    }
+  }));
+
+  // Set the timer type back to "focus"
+  dispatch(actionCreators.AlsoToMain({
+    type: actionTypes.WIDGETS_TIMER_SET_TYPE,
+    data: {
+      timerType: "focus"
+    }
+  }));
+}
 function Widgets() {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const {
@@ -13537,27 +13565,10 @@ function Widgets() {
   (0,external_React_namespaceObject.useEffect)(() => {
     const wasTimerEnabled = prevTimerEnabledRef.current;
     const isTimerEnabled = timerEnabled;
-    const originalTime = timerType === "focus" ? 1500 : 300;
 
     // Only reset if timer was enabled and is now disabled
     if (wasTimerEnabled && !isTimerEnabled && timerData) {
-      // Reset both focus and break timers to their initial durations
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_TIMER_RESET,
-        data: {
-          timerType,
-          duration: originalTime,
-          initialDuration: originalTime
-        }
-      }));
-
-      // Set the timer type back to "focus"
-      dispatch(actionCreators.AlsoToMain({
-        type: actionTypes.WIDGETS_TIMER_SET_TYPE,
-        data: {
-          timerType: "focus"
-        }
-      }));
+      resetTimerToDefaults(dispatch, timerType);
     }
 
     // Update the ref to track current state
