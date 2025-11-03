@@ -344,12 +344,7 @@ export const isValidLocalProperty = (value, cssCustomProperties, tokenCSS) => {
   });
 
   if (customProperty && cssCustomProperties[customProperty]) {
-    return isValidTokenUsage(
-      cssCustomProperties[customProperty],
-      tokenCSS,
-      cssCustomProperties,
-      ALLOW_LIST
-    );
+    return isToken(cssCustomProperties[customProperty].trim(), tokenCSS);
   }
   return false;
 };
