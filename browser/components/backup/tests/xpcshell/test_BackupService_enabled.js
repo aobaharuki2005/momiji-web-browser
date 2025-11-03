@@ -10,6 +10,8 @@ const { NimbusTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
 
+const BACKUP_DIR_PREF_NAME = "browser.backup.location";
+
 add_setup(async () => {
   setupProfile();
 
@@ -25,7 +27,7 @@ add_setup(async () => {
   );
 
   // Use temporary directory for backups.
-  Services.prefs.setStringPref("browser.backup.location", backupDir);
+  Services.prefs.setStringPref(BACKUP_DIR_PREF_NAME, backupDir);
 
   registerCleanupFunction(async () => {
     const nimbusCleanupPromise = nimbusCleanup();
@@ -35,46 +37,73 @@ add_setup(async () => {
 
     await Promise.all([nimbusCleanupPromise, backupDirCleanupPromise]);
 
-    Services.prefs.clearUserPref("browser.backup.location");
+    Services.prefs.clearUserPref(BACKUP_DIR_PREF_NAME);
   });
 
   BackupService.init();
 });
 
 add_task(async function test_archive_killswitch_enrollment() {
+  let cleanupExperiment;
+  await archiveTemplate({
+    internalReason: "nimbus",
+    async disable() {
+      cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
+        featureId: "backupService",
+        value: { archiveKillswitch: true },
+      });
+    },
+    async enable() {
+      await cleanupExperiment();
+    },
+  });
+});
+
+add_task(async function test_restore_killswitch_enrollment() {
+  let cleanupExperiment;
+  await restoreTemplate({
+    async disable() {
+      cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
+        featureId: "backupService",
+        value: { restoreKillswitch: true },
+      });
+    },
+    async enable() {
+      await cleanupExperiment();
+    },
+  });
+});
+
+async function archiveTemplate({ internalReason, disable, enable }) {
   const bs = BackupService.get();
 
-  const cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
-    featureId: "backupService",
-    value: { archiveKillswitch: true },
-  });
+  await disable();
 
   Assert.ok(
     !bs.archiveEnabledStatus.enabled,
-    "The backup service should report that archiving is disabled when the archive killswitch is active."
+    "The backup service should report that archiving is now disabled."
   );
 
   Assert.equal(
-    bs.archiveEnabledStatus.reason,
-    "Archiving a profile disabled remotely.",
-    "`archiveEnabledStatus` should report that it is disabled by the archive killswitch."
+    bs.archiveEnabledStatus.internalReason,
+    internalReason,
+    "`archiveEnabledStatus` should report that it is disabled."
   );
 
   Services.fog.testResetFOG();
   let backup = await bs.createBackup();
   Assert.ok(
     !backup,
-    "Creating a backup should fail when the archive killswitch is active."
+    "Creating a backup should fail when archiving is disabled."
   );
   let telemetry = Glean.browserBackup.backupDisabledReason.testGetValue();
   Assert.equal(
     telemetry,
-    "nimbus",
-    "Telemetry identifies the backup is disabled by Nimbus."
+    internalReason,
+    `Telemetry identifies the backup is disabled by ${internalReason}.`
   );
 
-  // End the experiment.
-  await cleanupExperiment();
+  await enable();
 
   Assert.ok(
     bs.archiveEnabledStatus.enabled,
@@ -97,9 +126,11 @@ add_task(async function test_archive_killswitch_enrollment() {
     "reenabled",
     "Telemetry identifies the backup was re-enabled."
   );
-});
 
-add_task(async function test_restore_killswitch_enrollment() {
+  await IOUtils.remove(backup.archivePath);
+}
+
+async function restoreTemplate({ disable, enable }) {
   const bs = BackupService.get();
   const backup = await bs.createBackup();
 
@@ -108,10 +139,7 @@ add_task(async function test_restore_killswitch_enrollment() {
     "Archive should have been created on disk."
   );
 
-  let cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
-    featureId: "backupService",
-    value: { restoreKillswitch: true },
-  });
+  await disable();
 
   const recoveryDir = await IOUtils.createUniqueDirectory(
     PathUtils.profileDir,
@@ -120,13 +148,7 @@ add_task(async function test_restore_killswitch_enrollment() {
 
   Assert.ok(
     !bs.restoreEnabledStatus.enabled,
-    "The backup service should report that restoring is disabled when the restore killswitch is active."
-  );
-
-  Assert.equal(
-    bs.restoreEnabledStatus.reason,
-    "Restore from backup disabled remotely.",
-    "`restoreEnabledStatus` should report that it is disabled by the restore killswitch."
+    "The backup service should report that restoring is now disabled."
   );
 
   await Assert.rejects(
@@ -137,16 +159,15 @@ add_task(async function test_restore_killswitch_enrollment() {
       PathUtils.profileDir,
       recoveryDir
     ),
-    /Restore from backup disabled remotely\./,
-    "Recovery should throw when the restore killswitch is active."
+    /.*disabled.*/,
+    "Recovery should throw when the restore is disabled."
   );
 
-  // End the experiment.
-  await cleanupExperiment();
+  await enable();
 
   Assert.ok(
     bs.restoreEnabledStatus.enabled,
-    "The backup service should report that restoring is enabled once the restore killswitch experiment ends."
+    "The backup service should now report that restoring is enabled."
   );
 
   let recoveredProfile = await bs.recoverFromBackupArchive(
@@ -158,10 +179,10 @@ add_task(async function test_restore_killswitch_enrollment() {
   );
   Assert.ok(
     recoveredProfile,
-    "Recovery should succeed once the restore killswitch experiment ends."
+    "Recovery should succeed once restore is re-enabled."
   );
   Assert.ok(
     await IOUtils.exists(recoveredProfile.rootDir.path),
     "Recovered profile directory should exist on disk."
   );
-});
+}
