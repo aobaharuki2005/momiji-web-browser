@@ -469,6 +469,12 @@ class Http3Session final : public Http3SessionBase,
   // are exchanged.
   void FinishNegotiation(ExtendedConnectKind aKind, bool aSuccess);
 
+  inline bool HasNoActiveStreams() const {
+    return mStreamTransactionHash.Count() == 0 &&
+           mWebTransportSessions.IsEmpty() && mWebTransportStreams.IsEmpty() &&
+           mTunnelStreams.IsEmpty();
+  }
+
   nsTArray<RefPtr<Http3StreamBase>> mWebTransportSessions;
   nsTArray<RefPtr<Http3StreamBase>> mWebTransportStreams;
   nsTArray<RefPtr<Http3StreamBase>> mTunnelStreams;

@@ -1310,13 +1310,16 @@ impl HttpServer for Http3ConnectProxyServer {
                             // TODO: extend() effectively breaks backpressure.
                             stream.recv_buffer.extend(&buf[0..n]);
                             while !stream.recv_buffer.is_empty() {
-                                let sent = stream
-                                    .session
-                                    .send_data(
-                                        &stream.recv_buffer.make_contiguous(),
-                                        Instant::now(),
-                                    )
-                                    .unwrap();
+                                let sent = match stream.session.send_data(
+                                    &stream.recv_buffer.make_contiguous(),
+                                    Instant::now(),
+                                ) {
+                                    Ok(n) => n,
+                                    Err(e) => {
+                                        qdebug!("TCP: send_data failed: {}", e);
+                                        break;
+                                    }
+                                };
                                 qdebug!("TCP: stream send to client sent={}", sent);
                                 if sent == 0 {
                                     break;
