@@ -81,6 +81,11 @@ addAboutKbTask(async function testInit(tab) {
       0,
       "No keys are being edited"
     );
+    // Make sure that lazy DevTools items have been added.
+    ok(
+      content.document.querySelector('.key[data-id="key_browserConsole"]'),
+      "key_browserConsole is present"
+    );
   });
 });
 
