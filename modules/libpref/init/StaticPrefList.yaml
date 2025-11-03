@@ -15550,6 +15550,12 @@
   value: false
   mirror: always
 
+# Disable cache purging temporarily to support cache tests
+- name: network.cache.purge_disable
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # The number of milliseconds after which a suspended channel writing
 # to a cache entry will notify all readers waiting for a callback to
 # continue without a cache entry.

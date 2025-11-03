@@ -1378,6 +1378,9 @@ void CacheStorageService::PurgeExpiredOrOverMemoryLimit() {
 }
 
 void CacheStorageService::MemoryPool::PurgeExpiredOrOverMemoryLimit() {
+  if (StaticPrefs::network_cache_purge_disable()) {
+    return;
+  }
   TimeStamp start(TimeStamp::Now());
 
   uint32_t const memoryLimit = Limit();
