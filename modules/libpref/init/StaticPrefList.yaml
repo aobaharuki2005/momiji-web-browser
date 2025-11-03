@@ -8990,6 +8990,13 @@
   mirror: always
   set_spidermonkey_pref: startup
 
+ # Experimental support for Iterator Chunking in JavaScript.
+- name: javascript.options.experimental.iterator_chunking
+  type: bool
+  value: false
+  mirror: always
+  set_spidermonkey_pref: startup
+
 #endif  // NIGHTLY_BUILD
 
 # Whether to Baseline-compile self-hosted functions the first time they are

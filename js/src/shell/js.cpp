@@ -13209,7 +13209,9 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "enable-upsert", "Enable Upsert proposal") ||
       !op.addBoolOption('\0', "enable-import-bytes", "Enable import bytes") ||
       !op.addBoolOption('\0', "enable-arraybuffer-immutable",
-                        "Enable immutable ArrayBuffers")) {
+                        "Enable immutable ArrayBuffers") ||
+      !op.addBoolOption('\0', "enable-iterator-chunking",
+                        "Enable Iterator Chunking")) {
     return false;
   }
 
@@ -13287,6 +13289,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   }
   if (op.getBoolOption("enable-import-bytes")) {
     JS::Prefs::setAtStartup_experimental_import_bytes(true);
+  }
+  if (op.getBoolOption("enable-iterator-chunking")) {
+    JS::Prefs::setAtStartup_experimental_iterator_chunking(true);
   }
 #endif
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
