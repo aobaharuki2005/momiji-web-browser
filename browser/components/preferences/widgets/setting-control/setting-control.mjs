@@ -48,12 +48,19 @@ const ITEM_SLOT_BY_PARENT = new Map([
   ["moz-toggle", "nested"],
 ]);
 
-export class SettingControl extends SettingElement {
-  /**
-   * @type {Setting | undefined}
-   */
-  #lastSetting;
+export class SettingNotDefinedError extends Error {
+  /** @param {string} settingId */
+  constructor(settingId) {
+    super(
+      `No Setting with id "${settingId}". Did you register it with Preferences.addSetting()?`
+    );
+    this.name = "SettingNotDefinedError";
+    this.settingId = settingId;
+  }
+}
 
+export class SettingControl extends SettingElement {
+  static SettingNotDefinedError = SettingNotDefinedError;
   static properties = {
     setting: { type: Object },
     config: { type: Object },
@@ -61,6 +68,11 @@ export class SettingControl extends SettingElement {
     parentDisabled: { type: Boolean },
     showEnableExtensionMessage: { type: Boolean },
   };
+
+  /**
+   * @type {Setting | undefined}
+   */
+  #lastSetting;
 
   constructor() {
     super();
@@ -126,6 +138,9 @@ export class SettingControl extends SettingElement {
       this.#lastSetting = this.setting;
       this.setValue();
       this.setting.on("change", this.onSettingChange);
+    }
+    if (!this.setting) {
+      throw new SettingNotDefinedError(this.config.id);
     }
     let prevHidden = this.hidden;
     this.hidden = !this.setting.visible;

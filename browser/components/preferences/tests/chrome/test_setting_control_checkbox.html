@@ -408,6 +408,35 @@
 
         ok(control.controlEl.disabled, "Setting is disabled after change");
       });
+
+      add_task(async function testSettingNotDefined() {
+        const SETTING = "setting-control-not-defined";
+        let itemConfig = { l10nId: LABEL_L10N_ID, id: SETTING };
+        let setting = Preferences.getSetting(SETTING);
+        try {
+          await renderTemplate(itemConfig, setting);
+          ok(false, "Should throw when setting isn't defined");
+        } catch (e) {
+          let control =
+            testHelpers.renderTarget.querySelector("setting-control");
+          ok(control, "setting-control is rendered");
+          is(control.children.length, 0, "setting-control has no children");
+          let SettingControl = customElements.get("setting-control");
+          is(
+            e.constructor,
+            SettingControl.SettingNotDefinedError,
+            "We got an exception"
+          );
+        }
+
+        Preferences.addSetting({ id: SETTING });
+        let control = await renderTemplate(itemConfig, setting);
+        is(
+          control.firstElementChild.localName,
+          "moz-checkbox",
+          "Rendered with a setting"
+        );
+      });
     </script>
   </head>
   <body>
