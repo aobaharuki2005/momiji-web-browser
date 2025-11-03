@@ -130,13 +130,17 @@ class ProcessCrashMonitor final {
     return sCrashMonitor.get();
   }
 
-  static inline StaticMutex sMutex;
-  static inline MOZ_RUNINIT UniquePtr<ProcessCrashMonitor> sCrashMonitor;
-  static inline Atomic<bool> sIsShutdown{false};
+  static StaticMutex sMutex;
+  static UniquePtr<ProcessCrashMonitor> sCrashMonitor;
+  static Atomic<bool> sIsShutdown;
 
   uint32_t mCrashNums;
   uint32_t mMaxCrashes;
 };
+
+StaticMutex ProcessCrashMonitor::sMutex;
+MOZ_CONSTINIT UniquePtr<ProcessCrashMonitor> ProcessCrashMonitor::sCrashMonitor;
+Atomic<bool> ProcessCrashMonitor::sIsShutdown{false};
 
 /* static */
 const char* ExternalEngineStateMachine::StateToStr(State aNextState) {

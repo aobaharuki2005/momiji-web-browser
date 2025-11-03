@@ -45,8 +45,8 @@ class PropertyTest : public ::testing::TestWithParam<ParamType> {
 };
 MOZ_RUNINIT RefPtr<PDMFactory> PropertyTest::sFactory;
 MOZ_RUNINIT RefPtr<TaskQueue> PropertyTest::sTaskQueue;
-MOZ_RUNINIT UniquePtr<VideoInfo> PropertyTest::sAVCInfo;
-MOZ_RUNINIT UniquePtr<VideoInfo> PropertyTest::sVP9Info;
+MOZ_CONSTINIT UniquePtr<VideoInfo> PropertyTest::sAVCInfo;
+MOZ_CONSTINIT UniquePtr<VideoInfo> PropertyTest::sVP9Info;
 
 void CheckEquals(VideoInfo& aVideoInfo, MDD::PropertyName aPropertyName,
                  const Maybe<MDD::PropertyValue>&& aExpectedValue,
