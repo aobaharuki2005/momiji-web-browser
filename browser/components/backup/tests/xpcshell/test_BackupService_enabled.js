@@ -43,8 +43,6 @@ add_setup(async () => {
 
     Services.prefs.clearUserPref(BACKUP_DIR_PREF_NAME);
   });
-
-  BackupService.init();
 });
 
 add_task(async function test_archive_killswitch_enrollment() {
@@ -60,6 +58,9 @@ add_task(async function test_archive_killswitch_enrollment() {
     async enable() {
       await cleanupExperiment();
     },
+    // Nimbus calls onUpdate if any experiments are running, meaning that the
+    // observer service will be notified twice, i.e. one spurious call.
+    startup: 1,
   });
 });
 
@@ -112,6 +113,9 @@ add_task(async function test_restore_killswitch_enrollment() {
     async enable() {
       await cleanupExperiment();
     },
+    // Nimbus calls onUpdate if any experiments are running, meaning that the
+    // observer service will be notified twice, i.e. one spurious call.
+    startup: 1,
   });
 });
 
@@ -151,24 +155,20 @@ add_task(async function test_restore_selectable_profiles() {
   });
 });
 
-async function archiveTemplate({ internalReason, disable, enable }) {
+async function archiveTemplate({ internalReason, disable, enable, startup }) {
   Services.telemetry.clearScalars();
   Services.fog.testResetFOG();
 
-  const bs = BackupService.get();
-
-  Assert.equal(
-    bs.archiveEnabledStatus.enabled,
-    true,
-    "BackupService is enabled at the start"
-  );
+  let bs = new BackupService();
+  bs.initStatusObservers();
+  assertStatus("archive", bs.archiveEnabledStatus, true, null);
 
   let calledCount = 0;
   let callback = () => calledCount++;
   Services.obs.addObserver(callback, "backup-service-status-updated");
 
-  await disable();
-  Assert.equal(calledCount, 1, "Observers were notified on disable");
+  let spurious = (await disable()) ?? 0;
+  Assert.equal(calledCount, 1 + spurious, "Observers were notified on disable");
   assertStatus("archive", bs.archiveEnabledStatus, false, internalReason);
 
   let backup = await bs.createBackup();
@@ -177,8 +177,12 @@ async function archiveTemplate({ internalReason, disable, enable }) {
     "Creating a backup should fail when archiving is disabled."
   );
 
-  await enable();
-  Assert.equal(calledCount, 2, "Observers were notified on re-enable");
+  spurious += (await enable()) ?? 0;
+  Assert.equal(
+    calledCount,
+    2 + spurious,
+    "Observers were notified on re-enable"
+  );
   assertStatus("archive", bs.archiveEnabledStatus, true, "reenabled");
 
   backup = await bs.createBackup();
@@ -192,16 +196,29 @@ async function archiveTemplate({ internalReason, disable, enable }) {
   );
 
   await IOUtils.remove(backup.archivePath);
+  bs.uninitStatusObservers();
+
+  // Also check that it works at startup.
+  spurious += (startup ?? 0) + ((await disable()) ?? 0);
+  bs = new BackupService();
+  bs.initStatusObservers();
+  Assert.equal(calledCount, 3 + spurious, "Observers were notified at startup");
+  assertStatus("archive", bs.archiveEnabledStatus, false, internalReason);
+  await enable();
+  bs.uninitStatusObservers();
+
   Services.obs.removeObserver(callback, "backup-service-status-updated");
 }
 
-async function restoreTemplate({ internalReason, disable, enable }) {
+async function restoreTemplate({ internalReason, disable, enable, startup }) {
   Services.telemetry.clearScalars();
   Services.fog.testResetFOG();
 
-  const bs = BackupService.get();
-  const backup = await bs.createBackup();
+  let bs = new BackupService();
+  bs.initStatusObservers();
+  assertStatus("restore", bs.restoreEnabledStatus, true, null);
 
+  const backup = await bs.createBackup();
   Assert.ok(
     backup && backup.archivePath,
     "Archive should have been created on disk."
@@ -211,8 +228,8 @@ async function restoreTemplate({ internalReason, disable, enable }) {
   let callback = () => calledCount++;
   Services.obs.addObserver(callback, "backup-service-status-updated");
 
-  await disable();
-  Assert.equal(calledCount, 1, "Observers were notified on disable");
+  let spurious = (await disable()) ?? 0;
+  Assert.equal(calledCount, 1 + spurious, "Observers were notified on disable");
   assertStatus("restore", bs.restoreEnabledStatus, false, internalReason);
 
   const recoveryDir = await IOUtils.createUniqueDirectory(
@@ -232,8 +249,12 @@ async function restoreTemplate({ internalReason, disable, enable }) {
     "Recovery should throw when the restore is disabled."
   );
 
-  await enable();
-  Assert.equal(calledCount, 2, "Observers were notified on re-enable");
+  spurious += (await enable()) ?? 0;
+  Assert.equal(
+    calledCount,
+    2 + spurious,
+    "Observers were notified on re-enable"
+  );
   assertStatus("restore", bs.restoreEnabledStatus, true, "reenabled");
 
   let recoveredProfile = await bs.recoverFromBackupArchive(
@@ -251,6 +272,17 @@ async function restoreTemplate({ internalReason, disable, enable }) {
     await IOUtils.exists(recoveredProfile.rootDir.path),
     "Recovered profile directory should exist on disk."
   );
+
+  bs.uninitStatusObservers();
+
+  // Also check that it works at startup.
+  spurious += (startup ?? 0) + ((await disable()) ?? 0);
+  bs = new BackupService();
+  bs.initStatusObservers();
+  Assert.equal(calledCount, 3 + spurious, "Observers were notified at startup");
+  assertStatus("restore", bs.restoreEnabledStatus, false, internalReason);
+  await enable();
+  bs.uninitStatusObservers();
 
   Services.obs.removeObserver(callback, "backup-service-status-updated");
 }

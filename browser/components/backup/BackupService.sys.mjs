@@ -1128,6 +1128,7 @@ export class BackupService extends EventTarget {
 
     this.#instance.checkForPostRecovery();
     this.#instance.initBackupScheduler();
+    this.#instance.initStatusObservers();
     return this.#instance;
   }
 
@@ -1157,7 +1158,6 @@ export class BackupService extends EventTarget {
   constructor(backupResources = DefaultBackupResources) {
     super();
     lazy.logConsole.debug("Instantiated");
-    this.#registerStatusObservers();
 
     for (const resourceName in backupResources) {
       let resource = backupResources[resourceName];
@@ -1178,8 +1178,6 @@ export class BackupService extends EventTarget {
         }
       }
     }, BackupService.REGENERATION_DEBOUNCE_RATE_MS);
-
-    this.#notifyStatusObservers();
   }
 
   /**
@@ -3841,7 +3839,7 @@ export class BackupService extends EventTarget {
       }
       case "quit-application-granted": {
         this.uninitBackupScheduler();
-        this.#unregisterStatusObservers();
+        this.uninitStatusObservers();
         break;
       }
       case "passwordmgr-storage-changed": {
@@ -3892,7 +3890,11 @@ export class BackupService extends EventTarget {
     }
   }
 
-  #registerStatusObservers() {
+  initStatusObservers() {
+    if (this.#statusPrefObserver != null) {
+      return;
+    }
+
     // We don't use this.#observer since any changes to the prefs or nimbus should
     // immediately reflect across any observers, instead of waiting on idle.
     this.#statusPrefObserver = () => {
@@ -3904,9 +3906,10 @@ export class BackupService extends EventTarget {
       Services.prefs.addObserver(pref, this.#statusPrefObserver);
     }
     lazy.NimbusFeatures.backupService.onUpdate(this.#statusPrefObserver);
+    this.#notifyStatusObservers();
   }
 
-  #unregisterStatusObservers() {
+  uninitStatusObservers() {
     if (this.#statusPrefObserver == null) {
       return;
     }
