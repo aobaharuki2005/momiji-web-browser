@@ -148,6 +148,17 @@ fun Context.tabClosedUndoMessage(private: Boolean): String =
     }
 
 /**
+ * Returns the message to be shown when multiple tabs are closed based on whether the tabs were all private or not.
+ * @param private true if the tab was private, false otherwise.
+ */
+fun Context.tabsClosedUndoMessage(private: Boolean): String =
+    if (private) {
+        getString(R.string.snackbar_private_data_deleted)
+    } else {
+        getString(R.string.snackbar_tabs_closed)
+    }
+
+/**
  * Helper function used to determine whether the app's total *window* size is at least that of a tablet.
  * This relies on the window size check from [AcornWindowSize]. To determine whether the device's
  * *physical* size is at least the size of a tablet, use [Context.isLargeScreenSize] instead.
