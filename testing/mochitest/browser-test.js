@@ -788,6 +788,41 @@ Tester.prototype = {
     }
   },
 
+  /**
+   * In the event that a test module left any traces in Session Restore state,
+   * clean those up so that each test module starts execution with the same
+   * fresh Session Restore state.
+   */
+  resetSessionState() {
+    // Forget all closed windows.
+    while (window.SessionStore.getClosedWindowCount() > 0) {
+      window.SessionStore.forgetClosedWindow(0);
+    }
+
+    // Forget all closed tabs for the test window.
+    const closedTabCount =
+      window.SessionStore.getClosedTabCountForWindow(window);
+    for (let i = 0; i < closedTabCount; i++) {
+      try {
+        window.SessionStore.forgetClosedTab(window, 0);
+      } catch (err) {
+        // This will fail if there are tab groups in here
+      }
+    }
+
+    // Forget saved tab groups.
+    const savedTabGroups = window.SessionStore.getSavedTabGroups();
+    savedTabGroups.forEach(tabGroup =>
+      window.SessionStore.forgetSavedTabGroup(tabGroup.id)
+    );
+
+    // Forget closed tab groups in the test window.
+    const closedTabGroups = window.SessionStore.getClosedTabGroups(window);
+    closedTabGroups.forEach(tabGroup =>
+      window.SessionStore.forgetClosedTabGroup(window, tabGroup.id)
+    );
+  },
+
   async notifyProfilerOfTestEnd() {
     // Note the test run time
     let name = this.currentTest.path;
@@ -949,6 +984,8 @@ Tester.prototype = {
       await this.checkPreferencesAfterTest();
 
       window.SpecialPowers.cleanupAllClipboard();
+
+      this.resetSessionState();
 
       if (gConfig.cleanupCrashes) {
         let gdir = Services.dirsvc.get("UAppData", Ci.nsIFile);
