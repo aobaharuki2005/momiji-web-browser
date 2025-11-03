@@ -9,7 +9,7 @@
   --margin-inline-start-checkbox-content: calc(var(--checkbox-margin-inline) + var(--checkbox-size));
   --font-size-heading: 17px;
   --font-size-sub-heading: 15px;
-  --font-weight-label: var(--font-weight, normal);
+  --font-weight-label: normal;
   --font-size-label: 14px;
   --padding-block-wrapper: 20px;
   --margin-block-start-file-picker: 18px;

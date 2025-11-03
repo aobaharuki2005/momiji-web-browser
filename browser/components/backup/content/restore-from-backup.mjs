@@ -280,7 +280,10 @@ export default class RestoreFromBackup extends MozLitElement {
 
   applyContentCustomizations() {
     if (this.aboutWelcomeEmbedded) {
-      this.style.setProperty("--label-font-weight", "600");
+      this.style.setProperty(
+        "--label-font-weight",
+        "var(--font-weight-semibold)"
+      );
     }
   }
 
