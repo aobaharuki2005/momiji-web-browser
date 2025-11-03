@@ -11,6 +11,10 @@ const { NimbusTestUtils } = ChromeUtils.importESModule(
 );
 
 const BACKUP_DIR_PREF_NAME = "browser.backup.location";
+const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
+const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
+const SANITIZE_ON_SHUTDOWN_PREF_NAME = "privacy.sanitize.sanitizeOnShutdown";
+const SELECTABLE_PROFILES_CREATED_PREF_NAME = "browser.profiles.created";
 
 add_setup(async () => {
   setupProfile();
@@ -59,9 +63,46 @@ add_task(async function test_archive_killswitch_enrollment() {
   });
 });
 
+add_task(async function test_archive_enabled_pref() {
+  await archiveTemplate({
+    internalReason: "pref",
+    async disable() {
+      Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, false);
+    },
+    async enable() {
+      Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true);
+    },
+  });
+});
+
+add_task(async function test_archive_sanitize_on_shutdown() {
+  await archiveTemplate({
+    internalReason: "sanitizeOnShutdown",
+    async disable() {
+      Services.prefs.setBoolPref(SANITIZE_ON_SHUTDOWN_PREF_NAME, true);
+    },
+    async enable() {
+      Services.prefs.setBoolPref(SANITIZE_ON_SHUTDOWN_PREF_NAME, false);
+    },
+  });
+});
+
+add_task(async function test_archive_selectable_profiles() {
+  await archiveTemplate({
+    internalReason: "selectable profiles",
+    async disable() {
+      Services.prefs.setBoolPref(SELECTABLE_PROFILES_CREATED_PREF_NAME, true);
+    },
+    async enable() {
+      Services.prefs.setBoolPref(SELECTABLE_PROFILES_CREATED_PREF_NAME, false);
+    },
+  });
+});
+
 add_task(async function test_restore_killswitch_enrollment() {
   let cleanupExperiment;
   await restoreTemplate({
+    internalReason: "nimbus",
     async disable() {
       cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
         featureId: "backupService",
@@ -70,6 +111,42 @@ add_task(async function test_restore_killswitch_enrollment() {
     },
     async enable() {
       await cleanupExperiment();
+    },
+  });
+});
+
+add_task(async function test_restore_enabled_pref() {
+  await restoreTemplate({
+    internalReason: "pref",
+    async disable() {
+      Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, false);
+    },
+    async enable() {
+      Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, true);
+    },
+  });
+});
+
+add_task(async function test_restore_sanitize_on_shutdown() {
+  await restoreTemplate({
+    internalReason: "sanitizeOnShutdown",
+    async disable() {
+      Services.prefs.setBoolPref(SANITIZE_ON_SHUTDOWN_PREF_NAME, true);
+    },
+    async enable() {
+      Services.prefs.setBoolPref(SANITIZE_ON_SHUTDOWN_PREF_NAME, false);
+    },
+  });
+});
+
+add_task(async function test_restore_selectable_profiles() {
+  await restoreTemplate({
+    internalReason: "selectable profiles",
+    async disable() {
+      Services.prefs.setBoolPref(SELECTABLE_PROFILES_CREATED_PREF_NAME, true);
+    },
+    async enable() {
+      Services.prefs.setBoolPref(SELECTABLE_PROFILES_CREATED_PREF_NAME, false);
     },
   });
 });
@@ -130,7 +207,7 @@ async function archiveTemplate({ internalReason, disable, enable }) {
   await IOUtils.remove(backup.archivePath);
 }
 
-async function restoreTemplate({ disable, enable }) {
+async function restoreTemplate({ internalReason, disable, enable }) {
   const bs = BackupService.get();
   const backup = await bs.createBackup();
 
@@ -149,6 +226,11 @@ async function restoreTemplate({ disable, enable }) {
   Assert.ok(
     !bs.restoreEnabledStatus.enabled,
     "The backup service should report that restoring is now disabled."
+  );
+  Assert.equal(
+    bs.restoreEnabledStatus.internalReason,
+    internalReason,
+    "`archiveEnabledStatus` should report that it is disabled."
   );
 
   await Assert.rejects(

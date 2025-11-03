@@ -628,6 +628,7 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Archiving a profile disabled by user pref.",
+        internalReason: "pref",
       };
     }
 
@@ -635,6 +636,7 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Backup is disabled for users with sanitizeOnShutdown enabled.",
+        internalReason: "sanitizeOnShutdown",
       };
     }
 
@@ -643,6 +645,7 @@ export class BackupService extends EventTarget {
         enabled: false,
         reason:
           "Archiving a profile is disabled because the user has created selectable profiles.",
+        internalReason: "selectable profiles",
       };
     }
 
@@ -662,6 +665,7 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Restore from backup disabled remotely.",
+        internalReason: "nimbus",
       };
     }
 
@@ -669,6 +673,7 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Restoring a profile disabled by user pref.",
+        internalReason: "pref",
       };
     }
 
@@ -676,6 +681,7 @@ export class BackupService extends EventTarget {
       return {
         enabled: false,
         reason: "Backup is disabled for users with sanitizeOnShutdown enabled.",
+        internalReason: "sanitizeOnShutdown",
       };
     }
 
@@ -684,6 +690,7 @@ export class BackupService extends EventTarget {
         enabled: false,
         reason:
           "Restoring a profile is disabled because the user has created selectable profiles.",
+        internalReason: "selectable profiles",
       };
     }
 
