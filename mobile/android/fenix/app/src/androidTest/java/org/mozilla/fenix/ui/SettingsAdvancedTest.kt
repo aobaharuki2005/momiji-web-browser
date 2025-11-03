@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -13,6 +14,7 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
+import org.mozilla.fenix.helpers.OpenLinksInApp
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
@@ -39,6 +41,14 @@ class SettingsAdvancedTest : TestSetup() {
 
     @get:Rule
     val memoryLeaksRule = DetectMemoryLeaksRule()
+
+    lateinit var externalLinksPage: TestAssetHelper.TestAsset
+
+    @Before
+    override fun setUp() {
+        super.setUp()
+        externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+    }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2092699
     // Walks through settings menu and sub-menus to ensure all items are present
@@ -68,15 +78,8 @@ class SettingsAdvancedTest : TestSetup() {
     @SmokeTest
     @Test
     fun askBeforeOpeningOpenLinkInAppTest() {
-        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyOpenLinksInAppsView("Ask before opening")
+        activityIntentTestRule.applySettingsExceptions {
+            it.openLinksInExternalApp = OpenLinksInApp.ASK
         }
 
         exitMenu()
@@ -92,21 +95,9 @@ class SettingsAdvancedTest : TestSetup() {
     // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingAskBeforeOpeningOpenLinkInAppTest() {
-        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
-
-        homeScreen {
-        }.togglePrivateBrowsingMode()
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyPrivateOpenLinksInAppsView("Ask before opening")
+        activityIntentTestRule.applySettingsExceptions {
+            it.openLinksInExternalApp = OpenLinksInApp.ASK
         }
-
-        exitMenu()
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
@@ -120,21 +111,9 @@ class SettingsAdvancedTest : TestSetup() {
     @SmokeTest
     @Test
     fun askBeforeOpeningLinkInAppCancelTest() {
-        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyOpenLinksInAppsView("Ask before opening")
-            verifySelectedOpenLinksInAppOption("Ask before opening")
-        }.goBack {
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
+        activityIntentTestRule.applySettingsExceptions {
+            it.openLinksInExternalApp = OpenLinksInApp.ASK
         }
-
-        exitMenu()
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
@@ -150,21 +129,9 @@ class SettingsAdvancedTest : TestSetup() {
     @SmokeTest
     @Test
     fun askBeforeOpeningLinkInAppOpenTest() {
-        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyOpenLinksInAppsView("Ask before opening")
-            verifySelectedOpenLinksInAppOption("Ask before opening")
-        }.goBack {
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
+        activityIntentTestRule.applySettingsExceptions {
+            it.openLinksInExternalApp = OpenLinksInApp.ASK
         }
-
-        exitMenu()
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
@@ -182,24 +149,12 @@ class SettingsAdvancedTest : TestSetup() {
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppCancelTest() {
         TestHelper.appContext.settings().shouldShowCookieBannersCFR = false
-        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        activityIntentTestRule.applySettingsExceptions {
+            it.openLinksInExternalApp = OpenLinksInApp.ASK
+        }
 
         homeScreen {
         }.togglePrivateBrowsingMode()
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyPrivateOpenLinksInAppsView("Ask before opening")
-            verifySelectedOpenLinksInAppOption("Ask before opening")
-        }.goBack {
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }
-
-        exitMenu()
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
@@ -218,22 +173,12 @@ class SettingsAdvancedTest : TestSetup() {
     // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppOpenTest() {
-        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        activityIntentTestRule.applySettingsExceptions {
+            it.openLinksInExternalApp = OpenLinksInApp.ASK
+        }
 
         homeScreen {
         }.togglePrivateBrowsingMode()
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyPrivateOpenLinksInAppsView("Ask before opening")
-            verifySelectedOpenLinksInAppOption("Ask before opening")
-        }.goBack {
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }
 
         exitMenu()
 
@@ -256,22 +201,9 @@ class SettingsAdvancedTest : TestSetup() {
     // Assumes Youtube is installed and enabled
     @Test
     fun alwaysOpenLinkInAppTest() {
-        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyOpenLinksInAppsView("Ask before opening")
-            clickOpenLinkInAppOption("Always")
-            verifySelectedOpenLinksInAppOption("Always")
-        }.goBack {
-            verifySettingsOptionSummary("Open links in apps", "Always")
+        activityIntentTestRule.applySettingsExceptions {
+            it.openLinksInExternalApp = OpenLinksInApp.ALWAYS
         }
-
-        exitMenu()
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
@@ -286,22 +218,9 @@ class SettingsAdvancedTest : TestSetup() {
     fun dismissOpenLinksInAppCFRTest() {
         activityIntentTestRule.applySettingsExceptions {
             it.isOpenInAppBannerEnabled = true
+            it.openLinksInExternalApp = OpenLinksInApp.NEVER
         }
 
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyOpenLinksInAppsView("Ask before opening")
-            clickOpenLinkInAppOption("Never")
-            verifySelectedOpenLinksInAppOption("Never")
-        }.goBack {
-            verifySettingsOptionSummary("Open links in apps", "Never")
-        }
-
-        exitMenu()
         navigationToolbar {
         }.enterURLAndEnterToBrowser("https://m.youtube.com/".toUri()) {
             verifyPageContent("youtube")
@@ -316,22 +235,8 @@ class SettingsAdvancedTest : TestSetup() {
     fun goToSettingsFromOpenLinksInAppCFRTest() {
         activityIntentTestRule.applySettingsExceptions {
             it.isOpenInAppBannerEnabled = true
+            it.openLinksInExternalApp = OpenLinksInApp.NEVER
         }
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyOpenLinksInAppsButton()
-            verifySettingsOptionSummary("Open links in apps", "Ask before opening")
-        }.openOpenLinksInAppsMenu {
-            verifyOpenLinksInAppsView("Ask before opening")
-            clickOpenLinkInAppOption("Never")
-            verifySelectedOpenLinksInAppOption("Never")
-        }.goBack {
-            verifySettingsOptionSummary("Open links in apps", "Never")
-        }
-
-        exitMenu()
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser("https://m.youtube.com/".toUri()) {
