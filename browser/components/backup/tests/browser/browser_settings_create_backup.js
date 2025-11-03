@@ -18,8 +18,8 @@ add_setup(async () => {
   );
   await SpecialPowers.pushPrefEnv({
     set: [
-      [BACKUP_DEFAULT_LOCATION_PREF, TEST_PROFILE_PATH],
-      [SCHEDULED_BACKUPS_ENABLED_PREF, true],
+      [BACKUP_DEFAULT_LOCATION_PREF, ""],
+      [SCHEDULED_BACKUPS_ENABLED_PREF, false],
     ],
   });
 
@@ -30,9 +30,107 @@ add_setup(async () => {
 });
 
 /**
+ * Tests the case where there is no DEFAULT_PARENT_DIR_PATH
+ */
+add_task(async function test_no_default_folder() {
+  const sandbox = sinon.createSandbox();
+
+  let bs = getAndMaybeInitBackupService();
+  bs.resetDefaultParentInternalState();
+
+  let callCount = 0;
+  let getterStub = sandbox
+    .stub(BackupService, "DEFAULT_PARENT_DIR_PATH")
+    .get(() => {
+      callCount++;
+      return "";
+    });
+
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let settings = browser.contentDocument.querySelector("backup-settings");
+    let turnOnButton = settings.scheduledBackupsButtonEl;
+
+    await settings.updateComplete;
+
+    console.log(
+      "DO WE HAVE A DEFAULT PARENT ALREADY???",
+      settings.backupServiceState.defaultParent
+    );
+
+    Assert.ok(bs.archiveEnabledStatus, "Archive is enabled for backups");
+
+    Assert.ok(
+      turnOnButton,
+      "Button to turn on scheduled backups should be found"
+    );
+
+    turnOnButton.click();
+
+    await settings.updateComplete;
+
+    let turnOnScheduledBackups = settings.turnOnScheduledBackupsEl;
+
+    Assert.ok(
+      turnOnScheduledBackups,
+      "turn-on-scheduled-backups should be found"
+    );
+
+    // woops looks like getting the default dir threw an error, lets make sure we handled that
+    Assert.greaterOrEqual(
+      callCount,
+      1,
+      "The default dir getter was called atleast once"
+    );
+
+    let filePathInputDefault = turnOnScheduledBackups.filePathInputDefaultEl;
+
+    Assert.equal(
+      filePathInputDefault.value,
+      "",
+      "Default input displays the expected text"
+    );
+
+    let dialog = settings.turnOnScheduledBackupsDialogEl;
+    let dialogClosePromise = BrowserTestUtils.waitForEvent(dialog, "close");
+    dialog.close();
+
+    await dialogClosePromise;
+
+    getterStub.restore();
+  });
+
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let settings = browser.contentDocument.querySelector("backup-settings");
+
+    Assert.ok(
+      settings.turnOnScheduledBackupsEl,
+      "turn-on-scheduled-backups should be found"
+    );
+    settings.scheduledBackupsButtonEl.click();
+
+    const documentsPath = BackupService.DEFAULT_PARENT_DIR_PATH;
+
+    Assert.equal(
+      settings.turnOnScheduledBackupsEl.filePathInputDefaultEl.value,
+      `${PathUtils.filename(documentsPath)} (recommended)`,
+      "Default input displays the expected text"
+    );
+  });
+
+  sandbox.restore();
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
  * Test creating a new backup using the "Backup now" button
  */
 add_task(async function test_create_new_backup_trigger() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [BACKUP_DEFAULT_LOCATION_PREF, TEST_PROFILE_PATH],
+      [SCHEDULED_BACKUPS_ENABLED_PREF, true],
+    ],
+  });
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     Services.fog.testResetFOG();
 

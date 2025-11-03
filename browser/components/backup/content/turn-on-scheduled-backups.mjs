@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html, nothing } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
@@ -255,17 +255,22 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     let filename = this.defaultLabel;
     let iconURL = this.defaultIconURL || this.#placeholderIconURL;
 
+    const hasFilename = !!filename;
+    const l10nArgs = hasFilename
+      ? JSON.stringify({ recommendedFolder: filename })
+      : null;
+
     return html`
       <input
         id="backup-location-filepicker-input-default"
         class="backup-location-filepicker-input"
         type="text"
         readonly
-        data-l10n-id="turn-on-scheduled-backups-location-default-folder"
-        data-l10n-args=${JSON.stringify({
-          recommendedFolder: filename,
-        })}
-        data-l10n-attrs="value"
+        data-l10n-id=${hasFilename
+          ? "turn-on-scheduled-backups-location-default-folder"
+          : nothing}
+        data-l10n-args=${hasFilename ? l10nArgs : nothing}
+        data-l10n-attrs=${hasFilename ? "value" : "placeholder"}
         style=${`background-image: url(${iconURL})`}
       />
     `;

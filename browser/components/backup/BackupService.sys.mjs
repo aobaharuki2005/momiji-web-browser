@@ -841,10 +841,20 @@ export class BackupService extends EventTarget {
    * @returns {string} The path of the default parent directory
    */
   static get DEFAULT_PARENT_DIR_PATH() {
-    return (
-      BackupService.oneDriveFolderPath?.path ||
-      Services.dirsvc.get("Docs", Ci.nsIFile).path
-    );
+    let path = "";
+    try {
+      path =
+        BackupService.oneDriveFolderPath?.path ||
+        Services.dirsvc.get("Docs", Ci.nsIFile).path;
+    } catch (e) {
+      // If this errors, we can safely return an empty string
+      lazy.logConsole.error(
+        "There was an error when getting the Default Parent Directory: ",
+        e
+      );
+    }
+
+    return path;
   }
 
   /**
@@ -1162,11 +1172,13 @@ export class BackupService extends EventTarget {
   get state() {
     if (!Object.keys(this.#_state.defaultParent).length) {
       let defaultPath = BackupService.DEFAULT_PARENT_DIR_PATH;
-      this.#_state.defaultParent = {
-        path: defaultPath,
-        fileName: PathUtils.filename(defaultPath),
-        iconURL: this.getIconFromFilePath(defaultPath),
-      };
+      if (defaultPath) {
+        this.#_state.defaultParent = {
+          path: defaultPath,
+          fileName: PathUtils.filename(defaultPath),
+          iconURL: this.getIconFromFilePath(defaultPath),
+        };
+      }
     }
 
     return Object.freeze(structuredClone(this.#_state));
@@ -4115,6 +4127,14 @@ export class BackupService extends EventTarget {
     this.#_state.backupFileToRestore = null;
     this.#_state.lastBackupFileName = "";
     this.#_state.lastBackupDate = null;
+    this.stateUpdate();
+  }
+
+  /**
+   * TEST ONLY: reset's the defaultParent state for testing purposes
+   */
+  resetDefaultParentInternalState() {
+    this.#_state.defaultParent = {};
     this.stateUpdate();
   }
 
