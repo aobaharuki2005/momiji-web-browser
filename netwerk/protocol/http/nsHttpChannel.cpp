@@ -634,16 +634,14 @@ nsresult nsHttpChannel::PrepareToConnect() {
   // This may be async; the dictionary headers may need to fetch an origin
   // dictionary cache entry from disk before adding the headers.  We can
   // continue with channel creation, and just block on this being done later
-  bool async = false;
   AUTO_PROFILER_FLOW_MARKER("nsHttpHandler::AddAcceptAndDictionaryHeaders",
                             NETWORK, Flow::FromPointer(this));
   // AddAcceptAndDictionaryHeaders must call this->Suspend before kicking
   // off the async operation that can result in calling the lambda (which
   // will Resume), to avoid a race condition.
-  bool aAsync;
   nsresult rv = gHttpHandler->AddAcceptAndDictionaryHeaders(
       mURI, mLoadInfo->GetExternalContentPolicyType(), &mRequestHead, IsHTTPS(),
-      aAsync, this, nsHttpChannel::StaticSuspend,
+      this, nsHttpChannel::StaticSuspend,
       [self = RefPtr(this)](bool aNeedsResume, DictionaryCacheEntry* aDict) {
         self->mDictDecompress = aDict;
         if (aNeedsResume) {
@@ -690,11 +688,6 @@ nsresult nsHttpChannel::PrepareToConnect() {
         return true;
       });
   if (NS_FAILED(rv)) return rv;
-  if (async) {
-    // we'll continue later if GetDictionaryFor is still reading
-    LOG_DICTIONARIES(("Suspending to get Dictionary headers"));
-    Suspend();
-  }
 
   // notify "http-on-modify-request-before-cookies" observers
   gHttpHandler->OnModifyRequestBeforeCookies(this);
