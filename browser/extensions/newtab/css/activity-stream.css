@@ -7151,8 +7151,7 @@ dialog::after {
   width: var(--rightPanelIconWidth);
 }
 
-.ds-card .context-menu-button,
-.ds-signup .context-menu-button {
+.ds-card .context-menu-button {
   background-clip: padding-box;
   background-color: var(--newtab-button-background);
   background-image: url("chrome://global/skin/icons/more.svg");
@@ -7174,50 +7173,40 @@ dialog::after {
   transition-property: transform, opacity;
   width: 27px;
 }
-.ds-card .context-menu-button:is(:active, :focus-visible, :hover),
-.ds-signup .context-menu-button:is(:active, :focus-visible, :hover) {
+.ds-card .context-menu-button:is(:active, :focus-visible, :hover) {
   opacity: 1;
   transform: scale(1);
 }
-.ds-card .context-menu-button:is(:hover),
-.ds-signup .context-menu-button:is(:hover) {
+.ds-card .context-menu-button:is(:hover) {
   background-color: var(--newtab-button-hover-background);
 }
-.ds-card .context-menu-button:is(:focus-visible),
-.ds-signup .context-menu-button:is(:focus-visible) {
+.ds-card .context-menu-button:is(:focus-visible) {
   outline-color: var(--newtab-button-focus-border);
   background-color: var(--newtab-button-focus-background);
   outline-width: 4px;
 }
-.ds-card .context-menu-button:is(:active),
-.ds-signup .context-menu-button:is(:active) {
+.ds-card .context-menu-button:is(:active) {
   background-color: var(--newtab-button-active-background);
 }
-.ds-card .context-menu,
-.ds-signup .context-menu {
+.ds-card .context-menu {
   opacity: 0;
 }
-.ds-card.active .context-menu,
-.ds-signup.active .context-menu {
+.ds-card.active .context-menu {
   opacity: 1;
 }
-.ds-card.last-item .context-menu,
-.ds-signup.last-item .context-menu {
+.ds-card.last-item .context-menu {
   margin-inline-end: var(--space-xsmall);
   margin-inline-start: auto;
   inset-inline-end: 0;
   inset-inline-start: auto;
 }
-.ds-card.last-item .context-menu,
-.ds-signup.last-item .context-menu {
+.ds-card.last-item .context-menu {
   opacity: 1;
 }
-.ds-card:is(:hover, :focus, .active),
-.ds-signup:is(:hover, :focus, .active) {
+.ds-card:is(:hover, :focus, .active) {
   outline: none;
 }
-.ds-card:is(:hover, :focus, .active) .context-menu-button,
-.ds-signup:is(:hover, :focus, .active) .context-menu-button {
+.ds-card:is(:hover, :focus, .active) .context-menu-button {
   opacity: 1;
   transform: scale(1);
   transition-delay: 333ms;
@@ -7918,47 +7907,6 @@ dialog::after {
   background-size: var(--placeholderBackgroundScale);
 }
 
-.ds-dismiss {
-  position: relative;
-  border-radius: var(--border-radius-medium);
-  transition-duration: 250ms;
-  transition-property: background;
-}
-.ds-dismiss:hover .ds-dismiss-button {
-  opacity: 1;
-}
-.ds-dismiss .ds-dismiss-button {
-  cursor: pointer;
-  height: 32px;
-  width: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  inset-inline-end: 0;
-  inset-block-start: 0;
-  border-radius: var(--border-radius-circle);
-  background-color: transparent;
-}
-.ds-dismiss .ds-dismiss-button .icon {
-  fill: var(--newtab-text-primary-color);
-}
-@media (forced-colors: active) {
-  .ds-dismiss .ds-dismiss-button .icon {
-    fill: CurrentColor;
-  }
-}
-.ds-dismiss .ds-dismiss-button:hover {
-  background: var(--newtab-element-hover-color);
-}
-.ds-dismiss .ds-dismiss-button:active {
-  background: var(--newtab-element-active-color);
-}
-.ds-dismiss .ds-dismiss-button:focus {
-  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
-}
-
 .ds-message {
   margin: var(--space-small) 0 0;
 }
@@ -8084,87 +8032,6 @@ dialog::after {
     transform: rotate(360deg);
   }
 }
-.ds-dismiss-ds-text-promo {
-  max-width: 744px;
-  margin: auto;
-  overflow: hidden;
-}
-.ds-dismiss-ds-text-promo.hovering {
-  background: var(--newtab-element-hover-color);
-}
-.ds-dismiss-ds-text-promo .ds-dismiss-button {
-  margin-inline: 0 var(--space-large);
-  margin-block: var(--space-large) 0;
-}
-
-.ds-text-promo {
-  max-width: 640px;
-  margin: 0;
-  padding: var(--space-large);
-}
-@media (min-width: 610px) {
-  .ds-text-promo {
-    display: flex;
-    margin: var(--space-large) var(--space-xlarge);
-    padding: 0;
-    padding-inline-end: var(--space-xxlarge);
-  }
-}
-.ds-text-promo .ds-image {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  margin: 0 0 var(--space-large);
-}
-@media (min-width: 610px) {
-  .ds-text-promo .ds-image {
-    margin: var(--space-xsmall) var(--space-medium) 0 0;
-  }
-}
-.ds-text-promo .ds-image img {
-  border-radius: var(--border-radius-small);
-}
-.ds-text-promo h3 {
-  color: var(--newtab-text-primary-color);
-  margin: 0;
-  font-weight: var(--heading-font-weight);
-  font-size: inherit;
-}
-.ds-text-promo .subtitle {
-  font-size: var(--font-size-small);
-  margin: 0;
-  color: var(--newtab-text-primary-color);
-}
-
-.ds-chevron-link {
-  color: var(--newtab-primary-action-background);
-  display: inline-block;
-  outline: 0;
-}
-.ds-chevron-link:hover {
-  text-decoration: underline;
-}
-.ds-chevron-link:active {
-  color: var(--newtab-primary-element-active-color);
-}
-.ds-chevron-link:active::after {
-  background-color: var(--newtab-primary-element-active-color);
-}
-.ds-chevron-link:focus {
-  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
-  border-radius: var(--border-radius-small);
-}
-.ds-chevron-link::after {
-  background-color: var(--newtab-primary-action-background);
-  content: " ";
-  mask: url("chrome://global/skin/icons/arrow-right-12.svg") 0 -8px no-repeat;
-  margin: 0 0 0 var(--space-xsmall);
-  width: 5px;
-  height: 8px;
-  text-decoration: none;
-  display: inline-block;
-}
-
 .card-stp-thumbs-buttons-wrapper {
   margin-block-start: var(--space-medium);
   visibility: hidden;
@@ -8273,59 +8140,6 @@ dialog::after {
 }
 .shortcuts-refresh .thumbs-ui-compact .top-site-outer {
   margin-block-end: 0;
-}
-
-.ds-signup {
-  max-width: 300px;
-  margin: 0 auto;
-  padding: var(--space-small);
-  position: relative;
-  text-align: center;
-  font-size: var(--font-size-large);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
-}
-.ds-signup:hover {
-  background: var(--newtab-element-hover-color);
-  border-radius: var(--border-radius-small);
-}
-.ds-signup .icon-mail {
-  height: 40px;
-  width: 40px;
-  margin-inline-end: var(--space-small);
-  fill: var(--newtab-text-secondary-color);
-  background-size: 30px;
-  flex-shrink: 0;
-}
-.ds-signup .ds-signup-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-.ds-signup .ds-signup-content .ds-chevron-link {
-  margin-block-start: var(--space-xsmall);
-  box-shadow: none;
-  display: block;
-  white-space: nowrap;
-}
-@media (min-width: 866px) {
-  .ds-signup {
-    min-width: 756px;
-    width: max-content;
-    text-align: start;
-  }
-  .ds-signup .ds-signup-content {
-    flex-direction: row;
-  }
-  .ds-signup .ds-signup-content .ds-chevron-link {
-    margin-block-start: 0;
-    display: inline;
-  }
 }
 
 .ds-privacy-link {
