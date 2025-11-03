@@ -116,8 +116,12 @@ function basicElements() {
     <moz-box-button data-l10n-id="moz-box-button-2"></moz-box-button>`;
 }
 
-const Template = ({ type, hasHeader, hasFooter }) => html`
+const Template = ({ type, hasHeader, hasFooter, scrollable }) => html`
   <style>
+    moz-box-group {
+      --box-group-max-height: ${scrollable ? "200px" : "unset"};
+    }
+
     .delete {
       margin-top: var(--space-medium);
     }
@@ -166,6 +170,7 @@ Default.args = {
   type: "default",
   hasHeader: false,
   hasFooter: false,
+  scrollable: false,
 };
 
 export const List = Template.bind({});
@@ -185,4 +190,10 @@ ListWithHeaderAndFooter.args = {
   ...List.args,
   hasHeader: true,
   hasFooter: true,
+};
+
+export const Scrollable = Template.bind({});
+Scrollable.args = {
+  ...ListWithHeaderAndFooter.args,
+  scrollable: true,
 };
