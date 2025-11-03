@@ -9,6 +9,7 @@ package org.mozilla.fenix.ui.robots
 import android.util.Log
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -380,10 +381,10 @@ class SearchRobot {
         composeTestRule: ComposeTestRule, searchHint: String,
     ) {
         Log.i(TAG, "verifySearchBarPlaceholderWithComposableToolbar: Verify hint is $searchHint")
-        composeTestRule.onNode(
-            hasTestTag(ADDRESSBAR_SEARCH_BOX) and hasText(searchHint),
-            useUnmergedTree = true,
-        )
+        composeTestRule
+            .onNodeWithTag(ADDRESSBAR_SEARCH_BOX)
+            .assert(hasText(searchHint))
+            .assertIsDisplayed()
         Log.i(TAG, "verifySearchBarPlaceholderWithComposableToolbar: Verification successful")
     }
 
