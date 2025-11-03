@@ -1984,9 +1984,14 @@ void nsHttpConnectionMgr::DispatchSpdyPendingQ(
     nsresult rv =
         DispatchTransaction(ent, pendingTransInfo->Transaction(), conn);
     if (NS_FAILED(rv)) {
-      // this cannot happen, but if due to some bug it does then
-      // close the transaction
-      MOZ_ASSERT(false, "Dispatch SPDY Transaction");
+      // Dispatching a transaction to an existing HTTP/2 session should not
+      // fail. The only expected failure here is
+      // NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED (e.g., when a
+      // speculative/preconnected HTTP/2 session was created before). Any other
+      // rv indicates a bug.
+      MOZ_ASSERT(rv == NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED,
+                 "Dispatch H2 transaction should only fail with Local Network "
+                 "Access denied");
       LOG(("ProcessSpdyPendingQ Dispatch Transaction failed trans=%p\n",
            pendingTransInfo->Transaction()));
       pendingTransInfo->Transaction()->Close(rv);
