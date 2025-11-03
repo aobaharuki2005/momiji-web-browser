@@ -491,15 +491,20 @@ nsAboutCacheEntry::Channel::OnMetaDataElement(char const* key,
       ":</th>\n"
       "    <td>");
   if (mEnhanceId.EqualsLiteral("dict:")) {
-    RefPtr<DictionaryCacheEntry> dict = new DictionaryCacheEntry("temp");
-    dict->ParseMetadata(value);
-    nsAppendEscapedHTML(
-        nsPrintfCString(
-            "Hash: %s\nPattern: %s\nId: %s\nMatch-Id: ", dict->GetHash().get(),
-            dict->GetPattern().get(), dict->GetId().get()),
-        *mBuffer);
-    dict->AppendMatchDest(*mBuffer);
-    mBuffer->AppendLiteral("\n");
+    // We set the content ID to CONTENT_TYPE_DICTIONARY, ensure that's correct
+    if (strcmp(key, "ctid") == 0) {
+      MOZ_ASSERT(strcmp(value, "7") == 0);
+    } else {
+      RefPtr<DictionaryCacheEntry> dict = new DictionaryCacheEntry("temp");
+      dict->ParseMetadata(value);
+      nsAppendEscapedHTML(
+          nsPrintfCString("Hash: %s\nPattern: %s\nId: %s\nMatch-Id: ",
+                          dict->GetHash().get(), dict->GetPattern().get(),
+                          dict->GetId().get()),
+          *mBuffer);
+      dict->AppendMatchDest(*mBuffer);
+      mBuffer->AppendLiteral("\n");
+    }
   }
   nsAppendEscapedHTML(nsDependentCString(value), *mBuffer);
   mBuffer->AppendLiteral(

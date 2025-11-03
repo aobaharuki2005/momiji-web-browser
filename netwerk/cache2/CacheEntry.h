@@ -90,6 +90,7 @@ class CacheEntry final : public nsIRunnable,
   nsresult AsyncDoom(nsICacheEntryDoomCallback* aCallback);
   nsresult GetMetaDataElement(const char* key, char** aRetval);
   nsresult SetMetaDataElement(const char* key, const char* value);
+  nsresult GetIsEmpty(bool* aEmpty);
   nsresult VisitMetaData(nsICacheEntryMetaDataVisitor* visitor);
   nsresult MetaDataReady(void);
   nsresult SetValid(void);
@@ -524,6 +525,9 @@ class CacheEntryHandle final : public nsICacheEntry {
   }
   NS_IMETHOD SetMetaDataElement(const char* key, const char* value) override {
     return mEntry->SetMetaDataElement(key, value);
+  }
+  NS_IMETHOD GetIsEmpty(bool* empty) override {
+    return mEntry->GetIsEmpty(empty);
   }
   NS_IMETHOD VisitMetaData(nsICacheEntryMetaDataVisitor* visitor) override {
     return mEntry->VisitMetaData(visitor);

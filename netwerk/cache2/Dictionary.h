@@ -279,8 +279,9 @@ class DictionaryOrigin : public nsICacheEntryMetaDataVisitor {
   void FinishAddEntry(DictionaryCacheEntry* aEntry);
   void DumpEntries();
   void Clear();
-  void AssertEmpty() const {
-    MOZ_DIAGNOSTIC_ASSERT(mEntries.IsEmpty() && mPendingEntries.IsEmpty());
+  bool IsEmpty() const {
+    return mEntries.IsEmpty() && mPendingEntries.IsEmpty() &&
+           mPendingRemove.IsEmpty() && mWaitingCacheRead.IsEmpty();
   }
 
  private:

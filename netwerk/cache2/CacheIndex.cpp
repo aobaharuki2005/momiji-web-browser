@@ -1349,8 +1349,14 @@ nsresult CacheIndex::GetEntryForEviction(EvictionSortedSnapshot& aSnapshot,
 
     ++skipped;
 
-    if (evictMedia && CacheIndexEntry::GetContentType(rec) !=
-                          nsICacheEntry::CONTENT_TYPE_MEDIA) {
+    uint32_t type = CacheIndexEntry::GetContentType(rec);
+
+    if (evictMedia && type != nsICacheEntry::CONTENT_TYPE_MEDIA) {
+      continue;
+    }
+
+    if (type == nsICacheEntry::CONTENT_TYPE_DICTIONARY) {
+      // Let them be removed by becoming empty and removing themselves
       continue;
     }
 
@@ -3871,7 +3877,7 @@ void CacheIndex::DoTelemetryReport() {
   static const nsLiteralCString
       contentTypeNames[nsICacheEntry::CONTENT_TYPE_LAST] = {
           "UNKNOWN"_ns, "OTHER"_ns,      "JAVASCRIPT"_ns, "IMAGE"_ns,
-          "MEDIA"_ns,   "STYLESHEET"_ns, "WASM"_ns};
+          "MEDIA"_ns,   "STYLESHEET"_ns, "WASM"_ns,       "DICTIONARY"_ns};
 
   for (uint32_t i = 0; i < nsICacheEntry::CONTENT_TYPE_LAST; ++i) {
     if (mIndexStats.Size() > 0) {
