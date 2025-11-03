@@ -13,12 +13,13 @@
 namespace mozilla::dom {
 
 ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(
-    nsIPrincipal* aPrincipal, const nsACString& aScope,
+    nsIPrincipal* aPrincipal, const nsACString& aScope, const WorkerType& aType,
     const nsACString& aScriptSpec, ServiceWorkerUpdateViaCache aUpdateViaCache,
     const ServiceWorkerLifetimeExtension& aLifetimeExtension)
     : ServiceWorkerUpdateJob(Type::Register, aPrincipal, aScope,
                              nsCString(aScriptSpec), aUpdateViaCache,
-                             aLifetimeExtension) {}
+                             aLifetimeExtension),
+      mType(aType) {}
 
 void ServiceWorkerRegisterJob::AsyncExecute() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -45,8 +46,8 @@ void ServiceWorkerRegisterJob::AsyncExecute() {
       return;
     }
   } else {
-    registration =
-        swm->CreateNewRegistration(mScope, mPrincipal, GetUpdateViaCache());
+    registration = swm->CreateNewRegistration(mScope, mType, mPrincipal,
+                                              GetUpdateViaCache());
     if (!registration) {
       FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
       return;
