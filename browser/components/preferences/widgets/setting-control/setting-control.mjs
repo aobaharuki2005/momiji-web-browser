@@ -67,6 +67,7 @@ export class SettingControl extends SettingElement {
     value: {},
     parentDisabled: { type: Boolean },
     showEnableExtensionMessage: { type: Boolean },
+    tabIndex: { type: Number, reflect: true },
   };
 
   /**
@@ -349,6 +350,7 @@ export class SettingControl extends SettingElement {
     <${tag}
       ${spread(controlProps)}
       ${ref(this.controlRef)}
+      tabindex=${ifDefined(this.tabIndex)}
     >${controlChildren}${nestedSettings}</${tag}>`;
   }
 }

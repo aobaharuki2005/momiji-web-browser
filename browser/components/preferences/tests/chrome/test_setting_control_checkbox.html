@@ -437,6 +437,73 @@
           "Rendered with a setting"
         );
       });
+
+      add_task(async function testTabIndex() {
+        const PREF = "test.setting-control.tabindex";
+        const SETTING = "setting-control-tabindex";
+        await SpecialPowers.pushPrefEnv({
+          set: [[PREF, true]],
+        });
+        Preferences.addAll([{ id: PREF, type: "bool" }]);
+        Preferences.addSetting({
+          id: SETTING,
+          pref: PREF,
+        });
+        let itemConfig = { l10nId: LABEL_L10N_ID, id: SETTING };
+        let control = await renderTemplate(itemConfig);
+
+        // Create an element to help with testing keyboard interactions.
+        let focusTrap = document.createElement("button");
+        focusTrap.textContent = "before";
+        control.prepend(focusTrap);
+
+        ok(
+          !control.getAttribute("tabindex"),
+          "tabindex is not set on the setting-control initially."
+        );
+        ok(
+          !control.controlEl.getAttribute("tabindex"),
+          "tabindex is not set on the inner control element initially."
+        );
+        isnot(
+          document.activeElement,
+          control.controlEl,
+          "The control is not focused initially."
+        );
+
+        focusTrap.focus();
+        synthesizeKey("KEY_Tab", {});
+
+        is(
+          document.activeElement,
+          control.controlEl,
+          "The control element receives focus via keyboard interaction."
+        );
+
+        // Restore focus to the button.
+        focusTrap.focus();
+
+        control.setAttribute("tabindex", "-1");
+        await control.updateComplete;
+
+        is(
+          control.tabIndex,
+          -1,
+          "tabIndex property gets set on the setting-control."
+        );
+        is(
+          control.controlEl.getAttribute("tabindex"),
+          "-1",
+          "tabindex gets propagated to the control el."
+        );
+
+        synthesizeKey("KEY_Tab", {});
+        isnot(
+          document.activeElement,
+          control.controlEl,
+          "The control element no longer receives focus via keyboard interaction."
+        );
+      });
     </script>
   </head>
   <body>
