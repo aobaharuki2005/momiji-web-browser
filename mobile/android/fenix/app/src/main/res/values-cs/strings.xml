@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Uložit do sbírky</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Sdílet</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Domovská stránka</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -681,7 +683,7 @@
   <!-- Preference category for settings related to changing the default search engine -->
   <string name="preferences_category_select_default_search_engine">Zvolte nějaký</string>
   <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-  <string name="preferences_manage_search_shortcuts_2">Spravovat alternativní vyhledávací moduly</string>
+  <string name="preferences_manage_search_shortcuts_2">Spravovat alternativní vyhledávače</string>
   <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
   <string name="preferences_manage_search_shortcuts_summary">Upravit vyhledávače viditelné v nabídce vyhledávání</string>
   <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -1056,7 +1058,7 @@
   <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
   <string name="alternative_app_icon_option_cool">Senzační</string>
   <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
-  <string name="alternative_app_icon_group_solid_colors">Plné barvy</string>
+  <string name="alternative_app_icon_group_solid_colors">Jednobarevné</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Přechody barev</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
@@ -1246,6 +1248,18 @@
   <string name="preference_expanded_toolbar">Rozvinuté</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Když je zobrazen řádek panelů, musí být adresní řádek nahoře.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Otevře nový panel</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Sdílet</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Přidat záložku</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Přeložit</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Domovská stránka</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Zpět</string>
   <!--
     App icon Preferences
 
@@ -2192,7 +2206,7 @@
   <!-- Text shown in snackbar when user closes a private tab -->
   <string name="snackbar_private_tab_closed">Anonymní panel byl zavřen</string>
   <!-- Text shown in snackbar when user erases their private browsing data -->
-  <string name="snackbar_private_data_deleted">Údaje anonymního prohlížení byla vymazána</string>
+  <string name="snackbar_private_data_deleted">Údaje anonymního prohlížení byly vymazány</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
   <string name="snackbar_deleted_undo">ZPĚT</string>
   <!-- Text shown in snackbar when user removes a top site -->

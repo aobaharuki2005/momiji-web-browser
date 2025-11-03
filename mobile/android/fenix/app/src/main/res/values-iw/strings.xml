@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">שמירה לאוסף</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">שיתוף</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">דף הבית</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -805,7 +807,7 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">תצוגת סרגל הלשוניות</string>
   <!-- Preference for gestures based actions -->
-  <string name="preferences_toolbar_shortcut">קיצור דרך של סרגל הכלים</string>
+  <string name="preferences_toolbar_shortcut">קיצור דרך בסרגל הכלים</string>
   <!-- Preference for gestures based actions -->
   <string name="preferences_toolbar_select_shortcut">בחירת קיצור דרך</string>
   <!-- Preference for gestures based actions -->
@@ -1244,6 +1246,18 @@
   <string name="preference_expanded_toolbar">מורחב</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">שורת הכתובת חייבת להופיע למעלה כאשר סרגל הלשוניות מוצג.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">פתיחת לשונית חדשה</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">שיתוף</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">הוספת סימנייה</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">תרגום</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">דף הבית</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">חזרה</string>
   <!--
     App icon Preferences
 

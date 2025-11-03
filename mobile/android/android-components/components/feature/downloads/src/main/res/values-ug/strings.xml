@@ -56,13 +56,13 @@
   <!-- Message that appears when the downloaded file is a specific type (%1$s) that Android doesn't support opening. -->
   <string name="mozac_feature_downloads_open_not_supported1">%1$sھۆججىتىنى ئاچىدىغان ئەپ تېپىلمىدى</string>
   <!-- Button that pauses the download when pressed. -->
-  <string name="mozac_feature_downloads_button_pause">توختىتىش</string>
+  <string name="mozac_feature_downloads_button_pause">ۋاقىتلىق توختا</string>
   <!-- Button that resumes the download when pressed. -->
-  <string name="mozac_feature_downloads_button_resume">داۋاملاشتۇرۇش</string>
+  <string name="mozac_feature_downloads_button_resume">داۋاملاشتۇر</string>
   <!-- Button that cancels the download when pressed. -->
   <string name="mozac_feature_downloads_button_cancel">ۋاز كەچ</string>
   <!-- Button that opens the downloaded file when pressed. -->
-  <string name="mozac_feature_downloads_button_open">ئېچىش</string>
+  <string name="mozac_feature_downloads_button_open">ئاچ</string>
   <!-- Button that restarts the download after a failed attempt. -->
   <string name="mozac_feature_downloads_button_try_again">قايتا سىناڭ</string>
   <!-- Content description for close button -->

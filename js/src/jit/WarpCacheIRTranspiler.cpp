@@ -2548,10 +2548,10 @@ bool WarpCacheIRTranspiler::emitTypedArraySubarrayResult(
 
   auto* ins = MTypedArraySubarray::New(alloc(), obj, actualStart, length,
                                        templateObj, heap);
-  add(ins);
+  addEffectful(ins);
 
   pushResult(ins);
-  return true;
+  return resumeAfter(ins);
 }
 
 bool WarpCacheIRTranspiler::emitLinearizeForCharAccess(

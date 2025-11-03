@@ -32,7 +32,7 @@ function test(timeZone) {
   // Call getTimeZoneOffset to fill the local date-time slots in |d|.
   assertEq(
     d.getTimezoneOffset() * nsPerMinute,
-    -d.toTemporalInstant().toZonedDateTimeISO(initialTimeZone).offsetNanoseconds
+    -d.toTemporalInstant().toZonedDateTimeISO(initialTimeZone).offsetNanoseconds + 0
   );
 
   // Change the time zone of the new global.
@@ -47,7 +47,7 @@ function test(timeZone) {
   // Ensure the local date-time slots in |d| don't return stale values.
   assertEq(
     d.getTimezoneOffset() * nsPerMinute,
-    -d.toTemporalInstant().toZonedDateTimeISO("Asia/Tokyo").offsetNanoseconds
+    -d.toTemporalInstant().toZonedDateTimeISO("Asia/Tokyo").offsetNanoseconds + 0
   );
 
   // Change the time zone of the new global to use the default time zone.
@@ -59,7 +59,7 @@ function test(timeZone) {
   // Ensure the local date-time slots in |d| don't return stale values.
   assertEq(
     d.getTimezoneOffset() * nsPerMinute,
-    -d.toTemporalInstant().toZonedDateTimeISO(defaultTimeZone).offsetNanoseconds
+    -d.toTemporalInstant().toZonedDateTimeISO(defaultTimeZone).offsetNanoseconds + 0
   );
 }
 

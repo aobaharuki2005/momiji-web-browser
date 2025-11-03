@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Gardar na colección</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Compartir</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Páxina de inicio</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -1246,6 +1248,18 @@
   <string name="preference_expanded_toolbar">Expandida</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">A barra de enderezos debe estar na parte superior cando se mostra a barra de pestanas.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Abre unha nova pestana</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Compartir</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Engadir marcador</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Traducir</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Páxina de inicio</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Atrás</string>
   <!--
     App icon Preferences
 
