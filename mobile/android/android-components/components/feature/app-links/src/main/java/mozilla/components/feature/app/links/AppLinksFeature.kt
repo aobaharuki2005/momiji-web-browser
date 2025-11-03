@@ -270,7 +270,8 @@ class AppLinksFeature(
         return fragmentManager?.findFragmentByTag(FRAGMENT_TAG) as? RedirectDialogFragment
     }
 
-    private fun isWalletLink(url: String, appIntent: Intent?): Boolean {
+    @VisibleForTesting
+    internal fun isWalletLink(url: String, appIntent: Intent?): Boolean {
         val urlScheme = url.toUri().scheme?.lowercase()
         val intentScheme = appIntent?.data?.scheme?.lowercase()
         return (urlScheme != null && WALLET_SCHEMES.contains(urlScheme)) ||
