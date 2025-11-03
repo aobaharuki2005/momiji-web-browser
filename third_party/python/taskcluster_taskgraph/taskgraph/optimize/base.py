@@ -437,6 +437,7 @@ def get_subgraph(
         )
         deps = task.task.setdefault("dependencies", [])
         deps.extend(sorted(named_task_dependencies.values()))
+        task.dependencies.update(named_task_dependencies)
         tasks_by_taskid[task.task_id] = task
 
     # resolve edges to taskIds

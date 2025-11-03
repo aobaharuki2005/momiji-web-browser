@@ -16,12 +16,10 @@ current time to improve log usefulness.
 import argparse
 import datetime
 import errno
-import grp
 import io
 import json
 import os
 import platform
-import pwd
 import re
 import shutil
 import socket
@@ -33,7 +31,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 SECRET_BASEURL_TPL = "{}/secrets/v1/secret/{{}}".format(
     os.environ.get("TASKCLUSTER_PROXY_URL", "http://taskcluster").rstrip("/")
@@ -311,6 +309,9 @@ def run_command(prefix, args, *, extra_env=None, cwd=None):
 
 
 def get_posix_user_group(user, group):
+    import grp  # noqa: PLC0415
+    import pwd  # noqa: PLC0415
+
     try:
         user_record = pwd.getpwnam(user)
     except KeyError:
@@ -572,7 +573,7 @@ def git_fetch(
     remote: str = "origin",
     tags: bool = False,
     shallow: bool = False,
-    env: Optional[dict[str, str]] = None,
+    env: Optional[Dict[str, str]] = None,
 ):
     args = ["git", "fetch"]
     if tags:
