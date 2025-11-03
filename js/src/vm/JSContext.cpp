@@ -57,7 +57,9 @@
 #include "util/NativeStack.h"
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
-#include "vm/BytecodeUtil.h"  // JSDVG_IGNORE_STACK
+#include "js/friend/DumpFunctions.h"  // for stack trace utilities
+#include "js/Printer.h"               // for FixedBufferPrinter
+#include "vm/BytecodeUtil.h"          // JSDVG_IGNORE_STACK
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/FrameIter.h"
@@ -278,6 +280,13 @@ static void MaybeReportOutOfMemoryForDifferentialTesting() {
 void JSContext::onOutOfMemory() {
   runtime()->hadOutOfMemory = true;
   gc::AutoSuppressGC suppressGC(this);
+
+  // Capture stack trace before doing anything else that might use memory.
+  // If we're in an unsafe ABI context, we don't need to capture a stack trace
+  // because the function will explicitly recover from OOM.
+  if (!inUnsafeCallWithABI) {
+    captureOOMStackTrace();
+  }
 
   /* Report the oom. */
   if (JS::OutOfMemoryCallback oomCallback = runtime()->oomCallback) {
@@ -1266,10 +1275,18 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       canSkipEnqueuingJobs(this, false),
       promiseRejectionTrackerCallback(this, nullptr),
       promiseRejectionTrackerCallbackData(this, nullptr),
+      oomStackTraceBuffer_(this, nullptr),
+      oomStackTraceBufferValid_(this, false),
       insideExclusiveDebuggerOnEval(this, nullptr),
       microTaskQueues(this) {
   MOZ_ASSERT(static_cast<JS::RootingContext*>(this) ==
              JS::RootingContext::get(this));
+
+  if (JS::Prefs::experimental_capture_oom_stack_trace()) {
+    // Allocate pre-allocated buffer for OOM stack traces
+    oomStackTraceBuffer_ =
+        static_cast<char*>(js_calloc(OOMStackTraceBufferSize));
+  }
 }
 
 #ifdef ENABLE_WASM_JSPI
@@ -1309,7 +1326,39 @@ JSContext::~JSContext() {
     irregexp::DestroyIsolate(isolate.ref());
   }
 
+  // Free the pre-allocated OOM stack trace buffer
+  if (oomStackTraceBuffer_) {
+    js_free(oomStackTraceBuffer_);
+  }
+
   TlsContext.set(nullptr);
+}
+
+void JSContext::unsetOOMStackTrace() { oomStackTraceBufferValid_ = false; }
+
+const char* JSContext::getOOMStackTrace() const {
+  if (!oomStackTraceBufferValid_ || !oomStackTraceBuffer_) {
+    return nullptr;
+  }
+  return oomStackTraceBuffer_;
+}
+
+bool JSContext::hasOOMStackTrace() const { return oomStackTraceBufferValid_; }
+
+void JSContext::captureOOMStackTrace() {
+  // Clear any existing stack trace
+  oomStackTraceBufferValid_ = false;
+
+  if (!oomStackTraceBuffer_) {
+    return;  // Buffer not available
+  }
+
+  // Write directly to pre-allocated buffer to avoid any memory allocation
+  FixedBufferPrinter fbp(oomStackTraceBuffer_, OOMStackTraceBufferSize);
+  js::DumpBacktrace(this, fbp);
+  MOZ_ASSERT(strlen(oomStackTraceBuffer_) < OOMStackTraceBufferSize);
+
+  oomStackTraceBufferValid_ = true;
 }
 
 void JSContext::setRuntime(JSRuntime* rt) {
