@@ -663,3 +663,80 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+addAccessibleTask(
+  `
+<style>
+.anchor {
+  width: 50px;
+  height: 50px;
+  background: pink;
+}
+
+.positioned {
+  width: 50px;
+  height: 50px;
+  background: purple;
+  position: absolute;
+  position-anchor: --a;
+  left: anchor(right);
+  bottom: anchor(bottom);
+  position-try-fallbacks: --fb;
+}
+
+@position-try --fb {
+  position-anchor: --b;
+}
+
+.abs-cb {
+  width: 200px;
+  height: 200px;
+  border: 1px solid;
+  position: relative;
+}
+
+.scroller {
+  overflow: scroll;
+  width: 100%;
+  height: 100%;
+  border: 1px solid;
+  box-sizing: border-box;
+}
+
+.filler {
+  height: 125px;
+  width: 1px;
+}
+
+.dn {
+  display: none;
+}
+</style>
+<div class="abs-cb">
+  <div class="scroller">
+    <div class="filler"></div>
+    <div class="anchor" id="anchor1" style="anchor-name: --a;" role="group"></div>
+    <div class="filler"></div>
+    <div class="anchor" id="anchor2" style="anchor-name: --b; background: aqua;" role="group"></div>
+    <div class="filler"></div>
+  </div>
+  <div id="target" class="positioned" role="group"></div>
+</div>`,
+  async function testScrollWithFallback(browser, docAcc) {
+    const anchor1 = findAccessibleChildByID(docAcc, "anchor1");
+    const anchor2 = findAccessibleChildByID(docAcc, "anchor2");
+    const target = findAccessibleChildByID(docAcc, "target");
+
+    info("Correct details relation before scroll");
+    await testDetailsRelations(anchor1, target);
+
+    await invokeContentTaskAndTick(browser, [], () => {
+      let scroller = content.document.querySelector(".scroller");
+      scroller.scrollTo(0, scroller.scrollTopMax);
+    });
+
+    info("Correct details relation after scroll");
+    await testDetailsRelations(anchor2, target);
+  },
+  { chrome: true, topLevel: true }
+);

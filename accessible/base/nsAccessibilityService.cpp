@@ -715,6 +715,26 @@ void nsAccessibilityService::NotifyAnchorRemoved(mozilla::PresShell* aPresShell,
   }
 }
 
+void nsAccessibilityService::NotifyAnchorPositionedScrollUpdate(
+    mozilla::PresShell* aPresShell, nsIFrame* aFrame) {
+  DocAccessible* document = aPresShell->GetDocAccessible();
+  if (!document) {
+    return;
+  }
+
+  if (LocalAccessible* positionedAcc =
+          document->GetAccessible(aFrame->GetContent())) {
+    // Refresh relations before reflow to notify current anchor.
+    document->RefreshAnchorRelationCacheForTarget(positionedAcc);
+
+    // Refresh relations after next tick when reflow updated to the
+    // new anchor state.
+    document->Controller()->ScheduleNotification<DocAccessible>(
+        document, &DocAccessible::RefreshAnchorRelationCacheForTarget,
+        positionedAcc);
+  }
+}
+
 void nsAccessibilityService::NotifyAttrElementWillChange(
     mozilla::dom::Element* aElement, nsAtom* aAttr) {
   mozilla::dom::Document* doc = aElement->OwnerDoc();

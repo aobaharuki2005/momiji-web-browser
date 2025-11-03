@@ -11967,6 +11967,11 @@ void PresShell::UpdateAnchorPosForScroll(
       positioned->GetParent()->UpdateOverflow();
       referenceData.mDefaultScrollShift = offset;
       if (CheckOverflow(positioned, offset, referenceData)) {
+#ifdef ACCESSIBILITY
+        if (nsAccessibilityService* accService = GetAccService()) {
+          accService->NotifyAnchorPositionedScrollUpdate(this, positioned);
+        }
+#endif
         FrameNeedsReflow(positioned, IntrinsicDirty::None,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
       }
