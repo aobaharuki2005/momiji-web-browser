@@ -171,7 +171,7 @@
       "channel": "release",
       "userFacingName": "No sponsored tiles for 14 days V2",
       "userFacingDescription": "Do not show sponsored tiles to new users for 14 days.",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
@@ -234,7 +234,7 @@
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('143.3.0') >= 0)))",
       "startDate": "2025-10-07",
-      "enrollmentEndDate": null,
+      "enrollmentEndDate": "2025-10-30",
       "endDate": null,
       "proposedDuration": 14,
       "proposedEnrollment": 14,
