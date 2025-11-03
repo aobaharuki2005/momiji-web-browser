@@ -725,7 +725,7 @@ workers:
             implementation: generic-worker
             os: linux-lambda
             worker-type: 'gecko-{alias}'
-        t-linux-docker(|-noscratch|-noscratch-amd|-amd):
+        t-linux-docker(|-noscratch|-noscratch-amd|-16c32gb-amd|-amd):
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux

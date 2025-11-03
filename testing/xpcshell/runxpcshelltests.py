@@ -57,19 +57,18 @@ except ImportError:
 HARNESS_TIMEOUT = 30
 TBPL_RETRY = 4  # defined in mozharness
 
-# benchmarking on tbpl revealed that this works best for now
-# TODO: This has been evaluated/set many years ago and we might want to
-# benchmark this again.
-# These days with e10s/fission the number of real processes/threads running
-# can be significantly higher, with both consequences on runtime and memory
-# consumption. So be aware that NUM_THREADS is just saying how many tests will
-# be started maximum in parallel and that depending on the tests there is
-# only a weak correlation to the effective number of processes or threads.
-# Be also aware that we can override this value with the threadCount option
-# on the command line to tweak it for a concrete CPU/memory combination.
-NUM_THREADS = int(cpu_count() * 4)
-if sys.platform == "win32":
-    NUM_THREADS = int(cpu_count() * 2)
+# Based on recent benchmarking on highcpu pools, this value gives the best
+# balance between runtime and memory usage
+#
+# Note:
+# - NUM_THREADS defines the maximum number of tests that can run in parallel
+# - With e10s/fission enabled, the actual number of underlying processes/threads
+#   can be much higher, so memory pressure may vary accordingly
+# - For ASan/TSan variants, the thread count is reduced by half to avoid OOM
+#
+# This value can be overridden via the --threadCount CLI option if adjustments
+# are needed for custom CPU/memory configurations
+NUM_THREADS = int(cpu_count() * 2.5)
 
 EXPECTED_LOG_ACTIONS = set(
     [

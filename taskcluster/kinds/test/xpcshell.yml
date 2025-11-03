@@ -57,7 +57,7 @@ xpcshell:
                 by-test-platform:
                     linux.*: large-legacy
                     default: large
-            default: large-noscratch
+            default: highcpu
     run-on-projects:
         by-variant:
             conditioned_profile:

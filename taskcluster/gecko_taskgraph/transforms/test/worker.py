@@ -11,6 +11,7 @@ LINUX_WORKER_TYPES = {
     "large-noscratch": "t-linux-docker-noscratch-amd",
     "xlarge": "t-linux-docker-amd",
     "xlarge-noscratch": "t-linux-docker-noscratch-amd",
+    "highcpu": "t-linux-docker-16c32gb-amd",
     "default": "t-linux-docker-noscratch-amd",
 }
 
