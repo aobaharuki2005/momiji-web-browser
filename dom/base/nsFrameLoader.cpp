@@ -1913,22 +1913,16 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
   }
 
   // Let the tree owner know we're gone.
-  if (mIsTopLevelContent) {
-    if (GetDocShell()) {
+  if (nsCOMPtr<nsIDocShell> ds = GetDocShell()) {
+    if (mIsTopLevelContent) {
       nsCOMPtr<nsIDocShellTreeItem> parentItem;
-      GetDocShell()->GetInProcessParent(getter_AddRefs(parentItem));
-      nsCOMPtr<nsIDocShellTreeOwner> owner = do_GetInterface(parentItem);
-      if (owner) {
-        owner->ContentShellRemoved(GetDocShell());
+      ds->GetInProcessParent(getter_AddRefs(parentItem));
+      if (nsCOMPtr<nsIDocShellTreeOwner> owner = do_GetInterface(parentItem)) {
+        owner->ContentShellRemoved(ds);
       }
     }
-  }
-
-  // Let our window know that we are gone
-  if (GetDocShell()) {
-    nsCOMPtr<nsPIDOMWindowOuter> win_private(GetDocShell()->GetWindow());
-    if (win_private) {
-      win_private->SetFrameElementInternal(nullptr);
+    if (nsCOMPtr<nsPIDOMWindowOuter> win = ds->GetWindow()) {
+      win->SetFrameElementInternal(nullptr);
     }
   }
 

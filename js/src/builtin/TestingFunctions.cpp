@@ -1026,13 +1026,7 @@ static bool WasmCompilersPresent(JSContext* cx, unsigned argc, Value* vp) {
     strcat(buf, "ion");
   }
 
-  JSString* result = JS_NewStringCopyZ(cx, buf);
-  if (!result) {
-    return false;
-  }
-
-  args.rval().setString(result);
-  return true;
+  return ReturnStringCopy(cx, args, buf);
 }
 
 static bool WasmCompileMode(JSContext* cx, unsigned argc, Value* vp) {
@@ -1595,8 +1589,7 @@ static bool WasmGlobalToString(JSContext* cx, unsigned argc, Value* vp) {
       MOZ_ASSERT_UNREACHABLE();
   }
 
-  args.rval().setString(JS_NewStringCopyZ(cx, result.get()));
-  return true;
+  return ReturnStringCopy(cx, args, result.get());
 }
 
 static bool WasmLosslessInvoke(JSContext* cx, unsigned argc, Value* vp) {
@@ -2173,13 +2166,7 @@ static bool WasmFunctionTier(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     wasm::Tier tier = instance.code().funcTier(funcIndex);
-    RootedString tierString(cx, JS_NewStringCopyZ(cx, wasm::ToString(tier)));
-    if (!tierString) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    args.rval().set(StringValue(tierString));
-    return true;
+    return ReturnStringCopy(cx, args, wasm::ToString(tier));
   }
   JS_ReportErrorASCII(cx, "argument is not an exported wasm function");
   return false;
@@ -9072,18 +9059,14 @@ static bool GetEnvironmentObjectType(JSContext* cx, unsigned argc, Value* vp) {
 
   if (envObj->is<EnvironmentObject>()) {
     EnvironmentObject* env = &envObj->as<EnvironmentObject>();
-    JSString* str = JS_NewStringCopyZ(cx, env->typeString());
-    args.rval().setString(str);
-    return true;
+    return ReturnStringCopy(cx, args, env->typeString());
   }
   if (envObj->is<DebugEnvironmentProxy>()) {
     DebugEnvironmentProxy* envProxy = &envObj->as<DebugEnvironmentProxy>();
     EnvironmentObject* env = &envProxy->environment();
     char buf[256] = {'\0'};
     SprintfLiteral(buf, "[DebugProxy] %s", env->typeString());
-    JSString* str = JS_NewStringCopyZ(cx, buf);
-    args.rval().setString(str);
-    return true;
+    return ReturnStringCopy(cx, args, buf);
   }
 
   args.rval().setUndefined();

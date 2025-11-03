@@ -78,6 +78,8 @@ public class ContentBlocking {
   public static final SafeBrowsingProvider GOOGLE_SAFE_BROWSING_V5_PROVIDER =
       SafeBrowsingProvider.withName("google5")
           .lists(
+              "goog-badbinurl-proto",
+              "goog-downloadwhite-proto",
               "goog-phish-proto",
               "googpub-phish-proto",
               "goog-malware-proto",

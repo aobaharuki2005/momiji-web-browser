@@ -392,17 +392,22 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
 #endif
 }
 
+void nsDocShell::DestroyDocumentViewer() {
+  if (!mDocumentViewer) {
+    return;
+  }
+  mDocumentViewer->Close(nullptr);
+  mDocumentViewer->Destroy();
+  mDocumentViewer = nullptr;
+}
+
 nsDocShell::~nsDocShell() {
   // Avoid notifying observers while we're in the dtor.
   mIsBeingDestroyed = true;
 
   Destroy();
 
-  if (mDocumentViewer) {
-    mDocumentViewer->Close(nullptr);
-    mDocumentViewer->Destroy();
-    mDocumentViewer = nullptr;
-  }
+  DestroyDocumentViewer();
 
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p destroyed\n", this));
 
@@ -4564,11 +4569,7 @@ nsDocShell::Destroy() {
     docShellParentAsItem->RemoveChild(this);
   }
 
-  if (mDocumentViewer) {
-    mDocumentViewer->Close(nullptr);
-    mDocumentViewer->Destroy();
-    mDocumentViewer = nullptr;
-  }
+  DestroyDocumentViewer();
 
   nsDocLoader::Destroy();
 

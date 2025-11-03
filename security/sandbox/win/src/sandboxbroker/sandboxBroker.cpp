@@ -9,6 +9,7 @@
 #include "sandboxBroker.h"
 
 #include <aclapi.h>
+#include <sddl.h>
 #include <shlobj.h>
 #include <string>
 
@@ -717,6 +718,30 @@ static sandbox::MitigationFlags DynamicCodeFlagForSystemMediaLibraries() {
   return dynamicCodeFlag;
 }
 
+static auto GetProcessUserSidString() {
+  std::unique_ptr<wchar_t, LocalFreeDeleter> userSidString;
+  std::unique_ptr<HANDLE, CloseHandleDeleter> tokenHandle;
+  if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY,
+                          getter_Transfers(tokenHandle))) {
+    return userSidString;
+  }
+
+  BYTE tokenUserBuffer[sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE];
+  DWORD len = sizeof(tokenUserBuffer);
+  if (!::GetTokenInformation(tokenHandle.get(), TokenUser, &tokenUserBuffer,
+                             len, &len)) {
+    return userSidString;
+  }
+
+  auto* tokenUser = reinterpret_cast<TOKEN_USER*>(tokenUserBuffer);
+  if (!::ConvertSidToStringSidW(tokenUser->User.Sid,
+                                getter_Transfers(userSidString))) {
+    userSidString.reset();
+  }
+
+  return userSidString;
+}
+
 // Process fails to start in LPAC with ASan build
 #if !defined(MOZ_ASAN)
 static void HexEncode(const Span<const uint8_t>& aBytes, nsACString& aEncoded) {
@@ -976,6 +1001,11 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     accessTokenLevel = sandbox::USER_LOCKDOWN;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_UNTRUSTED;
+  } else if (aSandboxLevel >= 9) {
+    jobLevel = sandbox::JobLevel::kLockdown;
+    accessTokenLevel = sandbox::USER_LOCKDOWN_WITH_TRAVERSE;
+    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+    delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_UNTRUSTED;
   } else if (aSandboxLevel >= 8) {
     jobLevel = sandbox::JobLevel::kLockdown;
     accessTokenLevel = sandbox::USER_RESTRICTED;
@@ -1168,6 +1198,9 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     // that path to fall-back to the normal loading path.
     config->SetForceKnownDllLoadingFallback();
 
+    // We should be able to remove access to these media registry keys below
+    // once encoding has moved out of the content process (bug 1972552).
+
     // Read access for MF Media Source Activate and subkeys/values.
     result = config->AllowRegistryRead(
         L"HKEY_LOCAL_MACHINE\\Software\\Classes\\CLSID"
@@ -1220,6 +1253,28 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       }
     }
 #endif
+  }
+
+  if (aSandboxLevel >= 9) {
+    // Before reading the media registry keys (specified for aSandboxLevel >= 8)
+    // the user's Classes key is read. We lose access to this at
+    // USER_LOCKDOWN_WITH_TRAVERSE because we no longer have the Restricted SID.
+    // We should be able to remove this once encoding has moved out of the
+    // content process (bug 1972552).
+    auto userSidString = GetProcessUserSidString();
+    if (userSidString) {
+      std::wstring userClassKeyName(L"HKEY_USERS\\");
+      userClassKeyName += userSidString.get();
+      userClassKeyName += L"_Classes";
+      result = config->AllowRegistryRead(userClassKeyName.c_str());
+      if (sandbox::SBOX_ALL_OK != result) {
+        NS_ERROR("Failed to add rule for user's Classes.");
+        LOG_E("Failed (ResultCode %d) to add rule for user's Classes.", result);
+      }
+    } else {
+      NS_ERROR("Failed to get user's SID.");
+      LOG_E("Failed to get user's SID. %lx", ::GetLastError());
+    }
   }
 }
 
