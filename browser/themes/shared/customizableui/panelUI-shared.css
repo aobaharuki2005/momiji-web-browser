@@ -813,7 +813,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   padding: 6px 12px;
   background-color: var(--button-background-color);
   font-size: 0.9em;
-  font-weight: 500;
+  font-weight: var(--font-weight-semibold);
   max-width: fit-content;
   border-radius: var(--button-border-radius);
 
@@ -942,18 +942,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 #fxa-avatar-label {
   margin: 0;
   margin-inline-start: var(--space-small);
-}
-
-.PanelUI-fxa-service-description-label,
-.PanelUI-remotetabs-instruction-label {
-  /* Use 'lighter' font for this to de-emphasize it compared to the title. */
-  font-weight: lighter;
-
-  @media (-moz-platform: linux) {
-    /* Use 300 on Linux because 100 is too light (lacks contrast with
-     * the background) for some fonts in combination with anti-aliasing. */
-    font-weight: 300;
-  }
 }
 
 #fxa-menu-header-title {
