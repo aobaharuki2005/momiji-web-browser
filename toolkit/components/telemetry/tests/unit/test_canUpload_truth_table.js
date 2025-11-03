@@ -189,10 +189,7 @@ const Mutators = {
     );
   },
   B_legacyNotified() {
-    const min = Services.prefs.getIntPref(
-      TelemetryUtils.Preferences.MinimumPolicyVersion,
-      1
-    );
+    const min = TelemetryReportingPolicy.minimumPolicyVersion;
     Services.prefs.setIntPref(
       TelemetryUtils.Preferences.AcceptedPolicyVersion,
       min
