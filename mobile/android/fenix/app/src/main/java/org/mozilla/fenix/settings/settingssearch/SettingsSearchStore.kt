@@ -67,6 +67,7 @@ private fun reduce(state: SettingsSearchState, action: SettingsSearchAction): Se
         is SettingsSearchAction.RecentSearchesUpdated -> {
             state.copyWith(recentSearches = action.recentSearches)
         }
+        is SettingsSearchAction.ClearRecentSearchesClicked,
         is SettingsSearchAction.Init,
         is SettingsSearchAction.ResultItemClicked,
         is SettingsSearchAction.EnvironmentCleared,

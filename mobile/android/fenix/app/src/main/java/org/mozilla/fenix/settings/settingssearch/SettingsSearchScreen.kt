@@ -4,9 +4,13 @@
 
 package org.mozilla.fenix.settings.settingssearch
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.HorizontalDivider
@@ -20,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.button.TextButton
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -54,9 +60,9 @@ fun SettingsSearchScreen(
         when (state) {
             is SettingsSearchState.Default -> {
                 if (state.recentSearches.isNotEmpty()) {
-                    SearchResults(
+                    RecentSearchesContent(
                         store = store,
-                        searchItems = state.recentSearches,
+                        recentSearches = state.recentSearches,
                         modifier = Modifier
                             .padding(top = topPadding)
                             .fillMaxSize(),
@@ -144,6 +150,38 @@ private fun SearchResults(
                 },
             )
         }
+    }
+}
+
+@Composable
+private fun RecentSearchesContent(
+    store: SettingsSearchStore,
+    recentSearches: List<SettingsSearchItem>,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(34.dp)
+                .padding(start = 16.dp, end = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.settings_search_recent_searches_section_header),
+                style = FirefoxTheme.typography.headline8,
+            )
+            TextButton(
+                text = stringResource(R.string.settings_search_clear_recent_searches_message),
+                onClick = {
+                    store.dispatch(SettingsSearchAction.ClearRecentSearchesClicked)
+                },
+            )
+        }
+        SearchResults(store, recentSearches, Modifier)
     }
 }
 

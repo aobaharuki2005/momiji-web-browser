@@ -66,4 +66,9 @@ sealed interface SettingsSearchAction : Action {
      * @property recentSearches List of [SettingsSearchItem]s that represent the recent searches.
      */
     data class RecentSearchesUpdated(val recentSearches: List<SettingsSearchItem>) : SettingsSearchAction
+
+    /**
+     * User has clicked on the clear recent searches button.
+     */
+    data object ClearRecentSearchesClicked : SettingsSearchAction
 }
