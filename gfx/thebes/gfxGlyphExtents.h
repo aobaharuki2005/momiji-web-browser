@@ -77,10 +77,10 @@ class gfxGlyphExtents {
   // and extents were not (successfully) prefetched.
   bool GetTightGlyphExtentsAppUnitsLocked(gfxFont* aFont,
                                           DrawTarget* aDrawTarget,
-                                          uint32_t aGlyphID, nsRect* aExtents)
+                                          uint32_t aGlyphID, gfxRect* aExtents)
       MOZ_REQUIRES_SHARED(mLock);
   bool GetTightGlyphExtentsAppUnits(gfxFont* aFont, DrawTarget* aDrawTarget,
-                                    uint32_t aGlyphID, nsRect* aExtents) {
+                                    uint32_t aGlyphID, gfxRect* aExtents) {
     mozilla::AutoReadLock lock(mLock);
     return GetTightGlyphExtentsAppUnitsLocked(aFont, aDrawTarget, aGlyphID,
                                               aExtents);
@@ -90,7 +90,7 @@ class gfxGlyphExtents {
     mozilla::AutoWriteLock lock(mLock);
     mContainedGlyphWidths.Set(aGlyphID, aWidth);
   }
-  void SetTightGlyphExtents(uint32_t aGlyphID, const nsRect& aExtentsAppUnits);
+  void SetTightGlyphExtents(uint32_t aGlyphID, const gfxRect& aExtentsAppUnits);
 
   int32_t GetAppUnitsPerDevUnit() { return mAppUnitsPerDevUnit; }
 
@@ -103,7 +103,7 @@ class gfxGlyphExtents {
     // When constructing a new entry in the hashtable, we'll leave this
     // blank. The caller of Put() will fill this in.
     explicit HashEntry(KeyTypePointer aPtr)
-        : nsUint32HashKey(aPtr), x(0), y(0), width(0), height(0) {}
+        : nsUint32HashKey(aPtr), x(0.0), y(0.0), width(0.0), height(0.0) {}
     HashEntry(HashEntry&& aOther)
         : nsUint32HashKey(std::move(aOther)),
           x(aOther.x),
@@ -111,7 +111,7 @@ class gfxGlyphExtents {
           width(aOther.width),
           height(aOther.height) {}
 
-    nscoord x, y, width, height;
+    float x, y, width, height;
   };
 
   enum {
