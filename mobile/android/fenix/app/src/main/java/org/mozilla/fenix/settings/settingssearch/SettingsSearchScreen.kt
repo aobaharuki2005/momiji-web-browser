@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.settingssearch
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,24 +38,31 @@ fun SettingsSearchScreen(
     val state by store.observeAsComposableState { it }
     Scaffold(
         topBar = {
-            SettingsSearchBar(
-                store = store,
-                onBackClick = onBackClick,
-            )
+            Column {
+                SettingsSearchBar(
+                    store = store,
+                    onBackClick = onBackClick,
+                )
+                HorizontalDivider()
+            }
         },
     ) { paddingValues ->
+        val topPadding = remember(paddingValues) {
+            paddingValues.calculateTopPadding()
+        }
+
         when (state) {
             is SettingsSearchState.Default -> {
                 SettingsSearchMessageContent(
                     modifier = Modifier
-                        .padding(paddingValues)
+                        .padding(top = topPadding)
                         .fillMaxSize(),
                 )
             }
             is SettingsSearchState.NoSearchResults -> {
                 SettingsSearchMessageContent(
                     modifier = Modifier
-                        .padding(paddingValues)
+                        .padding(top = topPadding)
                         .fillMaxSize(),
                     currentUserQuery = state.searchQuery,
                     )
@@ -61,7 +70,7 @@ fun SettingsSearchScreen(
             is SettingsSearchState.SearchInProgress -> {
                 LazyColumn(
                     modifier = Modifier
-                        .padding(paddingValues)
+                        .padding(top = topPadding)
                         .fillMaxSize(),
                 ) {
                     items(state.searchResults.size) { index ->
@@ -96,7 +105,7 @@ private fun SettingsSearchMessageContent(
         stringResource(R.string.settings_search_empty_query_placeholder)
     } else {
         stringResource(
-            R.string.setttings_search_no_results_found_message,
+            R.string.settings_search_no_results_found_message,
             currentUserQuery,
         )
     }
