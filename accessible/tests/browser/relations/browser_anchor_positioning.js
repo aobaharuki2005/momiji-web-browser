@@ -616,3 +616,50 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test details relations when content does not have accessibles.
+ */
+addAccessibleTask(
+  `
+  <style>
+  #btn1 {
+    anchor-name: --btn1;
+  }
+
+  #target1 {
+    position: absolute;
+    position-anchor: --btn1;
+    left: anchor(right);
+    bottom: anchor(top);
+  }
+
+  #btn2 {
+    anchor-name: --btn2;
+  }
+
+  #target2 {
+    position: absolute;
+    position-anchor: --btn2;
+    left: anchor(right);
+    bottom: anchor(top);
+  }
+  </style>
+
+  <div id="target1">World</div>
+  <button id="btn1" aria-hidden="true">Hello</button>
+
+  <div id="target2" aria-hidden="true">World</div>
+  <button id="btn2">Hello</button>
+  `,
+  async function testARIAHiddenAnchorsAndPosition(browser, docAcc) {
+    info("ARIA hidden anchor");
+    const target1 = findAccessibleChildByID(docAcc, "target1");
+    await testCachedRelation(target1, RELATION_DETAILS_FOR, []);
+
+    info("ARIA hidden target");
+    const btn2 = findAccessibleChildByID(docAcc, "btn2");
+    await testCachedRelation(btn2, RELATION_DETAILS, []);
+  },
+  { chrome: true, topLevel: true }
+);

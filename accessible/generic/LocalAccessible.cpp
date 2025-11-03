@@ -2432,7 +2432,8 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
                                                          GetFrame())) {
           LocalAccessible* anchorAcc =
               mDoc->GetAccessible(anchorFrame->GetContent());
-          if (anchorAcc->GetAnchorPositionTargetDetailsRelation() == this &&
+          if (anchorAcc &&
+              anchorAcc->GetAnchorPositionTargetDetailsRelation() == this &&
               nsAccUtils::IsValidDetailsTargetForAnchor(this, anchorAcc)) {
             rel.AppendTarget(anchorAcc);
           }
