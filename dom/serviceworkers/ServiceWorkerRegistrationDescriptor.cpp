@@ -30,8 +30,7 @@ ServiceWorkerRegistrationDescriptor::NewestInternal() const {
 
 ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
     uint64_t aId, uint64_t aVersion, nsIPrincipal* aPrincipal,
-    const nsACString& aScope, WorkerType aType,
-    ServiceWorkerUpdateViaCache aUpdateViaCache)
+    const nsACString& aScope, ServiceWorkerUpdateViaCache aUpdateViaCache)
     : mData(MakeUnique<IPCServiceWorkerRegistrationDescriptor>()) {
   MOZ_ALWAYS_SUCCEEDS(
       PrincipalToPrincipalInfo(aPrincipal, &mData->principalInfo()));
@@ -39,7 +38,6 @@ ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
   mData->id() = aId;
   mData->version() = aVersion;
   mData->scope() = aScope;
-  mData->type() = aType;
   mData->updateViaCache() = aUpdateViaCache;
   mData->installing() = Nothing();
   mData->waiting() = Nothing();
@@ -49,10 +47,10 @@ ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
 ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
     uint64_t aId, uint64_t aVersion,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo, const nsACString& aScope,
-    WorkerType aType, ServiceWorkerUpdateViaCache aUpdateViaCache)
+    ServiceWorkerUpdateViaCache aUpdateViaCache)
     : mData(MakeUnique<IPCServiceWorkerRegistrationDescriptor>(
-          aId, aVersion, aPrincipalInfo, nsCString(aScope), aType,
-          aUpdateViaCache, Nothing(), Nothing(), Nothing())) {}
+          aId, aVersion, aPrincipalInfo, nsCString(aScope), aUpdateViaCache,
+          Nothing(), Nothing(), Nothing())) {}
 
 ServiceWorkerRegistrationDescriptor::ServiceWorkerRegistrationDescriptor(
     const IPCServiceWorkerRegistrationDescriptor& aDescriptor)
@@ -130,10 +128,6 @@ ServiceWorkerRegistrationDescriptor::GetPrincipal() const {
 
 const nsCString& ServiceWorkerRegistrationDescriptor::Scope() const {
   return mData->scope();
-}
-
-WorkerType ServiceWorkerRegistrationDescriptor::Type() const {
-  return mData->type();
 }
 
 Maybe<ServiceWorkerDescriptor>
@@ -240,10 +234,6 @@ bool ServiceWorkerRegistrationDescriptor::IsValid() const {
 void ServiceWorkerRegistrationDescriptor::SetUpdateViaCache(
     ServiceWorkerUpdateViaCache aUpdateViaCache) {
   mData->updateViaCache() = aUpdateViaCache;
-}
-
-void ServiceWorkerRegistrationDescriptor::SetWorkerType(WorkerType aType) {
-  mData->type() = aType;
 }
 
 void ServiceWorkerRegistrationDescriptor::SetWorkers(
