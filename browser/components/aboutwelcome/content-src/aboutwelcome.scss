@@ -1583,8 +1583,10 @@ html {
         // overlap the dismiss button. We may change the alignment so they don't
         // overlap in a future revision.
         @media (800px <= width <= 990px) {
-          .section-main .secondary-cta.top {
-            display: none;
+          &:where(:not([fullscreen])) {
+            .section-main .secondary-cta.top {
+              display: none;
+            }
           }
         }
 

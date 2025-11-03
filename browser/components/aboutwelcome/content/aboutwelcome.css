@@ -2506,7 +2506,7 @@ html {
   margin-inline-start: 0;
 }
 @media only screen and (height <= 650px) and (800px <= width <= 990px) {
-  .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
+  .onboardingContainer .screen[pos=split]:where(:not([fullscreen])) .section-main .secondary-cta.top {
     display: none;
   }
 }
