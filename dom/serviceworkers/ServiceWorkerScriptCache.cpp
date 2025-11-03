@@ -1080,13 +1080,14 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
     return rv;
   }
 
-  if (mimeType.IsEmpty() ||
-      !nsContentUtils::IsJavascriptMIMEType(NS_ConvertUTF8toUTF16(mimeType))) {
+  auto mimeTypeUTF16 = NS_ConvertUTF8toUTF16(mimeType);
+  if (mimeTypeUTF16.IsEmpty() ||
+      !(nsContentUtils::IsJavascriptMIMEType(mimeTypeUTF16) ||
+        nsContentUtils::IsJsonMimeType(mimeTypeUTF16))) {
     ServiceWorkerManager::LocalizeAndReportToAllClients(
         mRegistration->Scope(), "ServiceWorkerRegisterMimeTypeError2",
         nsTArray<nsString>{NS_ConvertUTF8toUTF16(mRegistration->Scope()),
-                           NS_ConvertUTF8toUTF16(mimeType),
-                           NS_ConvertUTF8toUTF16(mURL)});
+                           mimeTypeUTF16, NS_ConvertUTF8toUTF16(mURL)});
     rv = NS_ERROR_DOM_SECURITY_ERR;
     return rv;
   }
