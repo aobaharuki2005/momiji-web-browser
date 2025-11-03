@@ -9,10 +9,7 @@ let tempFile = new FileUtils.File(PathUtils.tempDir);
 const TEST_LOCAL_FILE_NAME = "hello.txt";
 tempFile.append(TEST_LOCAL_FILE_NAME);
 
-const gL10n = new Localization(
-  ["toolkit/global/browser-utils.ftl", "toolkit/downloads/downloadUtils.ftl"],
-  true
-);
+const gL10n = new Localization(["toolkit/global/browser-utils.ftl"], true);
 const DATA_URL_EXPECTED_STRING = gL10n.formatValueSync(
   "browser-utils-url-data"
 );
@@ -23,7 +20,7 @@ const EXTENSION_URL_EXPECTED_STRING = gL10n.formatValueSync(
 );
 
 const FILE_URL_EXPECTED_STRING = gL10n.formatValueSync(
-  "download-utils-done-file-scheme"
+  "browser-utils-file-scheme"
 );
 
 const { AddonTestUtils } = ChromeUtils.importESModule(

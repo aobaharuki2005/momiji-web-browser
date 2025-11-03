@@ -91,10 +91,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 ChromeUtils.defineLazyGetter(lazy, "gLocalization", () => {
-  return new Localization(
-    ["toolkit/global/browser-utils.ftl", "toolkit/downloads/downloadUtils.ftl"],
-    true
-  );
+  return new Localization(["toolkit/global/browser-utils.ftl"], true);
 });
 
 function stringPrefToSet(prefVal) {
@@ -335,11 +332,11 @@ export var BrowserUtils = {
         if (!showFilenameForLocalURIs) {
           if (uri.scheme == "file") {
             return lazy.gLocalization.formatValueSync(
-              "download-utils-done-file-scheme"
+              "browser-utils-file-scheme"
             );
           }
           return lazy.gLocalization.formatValueSync(
-            "download-utils-done-scheme",
+            "browser-utils-url-scheme",
             { scheme: uri.scheme }
           );
         }
