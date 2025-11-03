@@ -89,7 +89,7 @@ class StubPropertyProvider final : public gfxTextRun::PropertyProvider {
         "This shouldn't be called because we never call BreakAndMeasureText");
     return mozilla::StyleHyphens::None;
   }
-  gfxFloat GetHyphenWidth() const override {
+  nscoord GetHyphenWidth() const override {
     NS_ERROR("This shouldn't be called because we never enable hyphens");
     return 0;
   }
@@ -312,8 +312,7 @@ nscoord nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
   StubPropertyProvider provider;
   AutoTextRun textRun(this, aDrawTarget, aString, aLength);
   if (textRun.get()) {
-    return NSToCoordRound(
-        textRun->GetAdvanceWidth(gfxTextRun::Range(0, aLength), &provider));
+    return textRun->GetAdvanceWidth(gfxTextRun::Range(0, aLength), &provider);
   }
   return 0;
 }
@@ -329,8 +328,7 @@ nscoord nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
   StubPropertyProvider provider;
   AutoTextRun textRun(this, aDrawTarget, aString, aLength);
   if (textRun.get()) {
-    return NSToCoordRound(
-        textRun->GetAdvanceWidth(gfxTextRun::Range(0, aLength), &provider));
+    return textRun->GetAdvanceWidth(gfxTextRun::Range(0, aLength), &provider);
   }
   return 0;
 }
@@ -401,11 +399,11 @@ static nsBoundingMetrics GetTextBoundingMetrics(
     gfxTextRun::Metrics theMetrics = textRun->MeasureText(
         gfxTextRun::Range(0, aLength), aType, aDrawTarget, &provider);
 
-    m.leftBearing = NSToCoordFloor(theMetrics.mBoundingBox.X());
-    m.rightBearing = NSToCoordCeil(theMetrics.mBoundingBox.XMost());
-    m.ascent = NSToCoordCeil(-theMetrics.mBoundingBox.Y());
-    m.descent = NSToCoordCeil(theMetrics.mBoundingBox.YMost());
-    m.width = NSToCoordRound(theMetrics.mAdvanceWidth);
+    m.leftBearing = theMetrics.mBoundingBox.X();
+    m.rightBearing = theMetrics.mBoundingBox.XMost();
+    m.ascent = -theMetrics.mBoundingBox.Y();
+    m.descent = theMetrics.mBoundingBox.YMost();
+    m.width = theMetrics.mAdvanceWidth;
   }
   return m;
 }

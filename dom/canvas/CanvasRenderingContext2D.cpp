@@ -4665,7 +4665,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
         }
         aSpacing++;
       }
-      return mProcessor.mLetterSpacing != 0.0 || mProcessor.mWordSpacing != 0.0;
+      return mProcessor.mLetterSpacing != 0 || mProcessor.mWordSpacing != 0;
     }
 
     mozilla::StyleHyphens GetHyphensOption() const {
@@ -4677,9 +4677,9 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
                               gfxTextRun::HyphenType* aBreakBefore) const {
       MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
     }
-    gfxFloat GetHyphenWidth() const {
+    nscoord GetHyphenWidth() const {
       MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
-      return 0.0;
+      return 0;
     }
     already_AddRefed<DrawTarget> GetDrawTarget() const {
       MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
@@ -4736,11 +4736,13 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     // this only measures the height; the total width is gotten from the
     // the return value of ProcessText.
     if (mDoMeasureBoundingBox) {
-      textRunMetrics.mBoundingBox.Scale(1.0 / mAppUnitsPerDevPixel);
-      mBoundingBox = mBoundingBox.Union(textRunMetrics.mBoundingBox);
+      // The bounding box is tracked in device pixels.
+      gfxRect bbox = nsLayoutUtils::RectToGfxRect(textRunMetrics.mBoundingBox,
+                                                  mAppUnitsPerDevPixel);
+      mBoundingBox = mBoundingBox.Union(bbox);
     }
 
-    return NSToCoordRound(textRunMetrics.mAdvanceWidth);
+    return textRunMetrics.mAdvanceWidth;
   }
 
   already_AddRefed<gfxPattern> GetGradientFor(Style aStyle) {
@@ -4936,8 +4938,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
   mozilla::gfx::PaletteCache& mPaletteCache;
 
   // spacing adjustments to be applied
-  gfx::Float mLetterSpacing = 0.0f;
-  gfx::Float mWordSpacing = 0.0f;
+  nscoord mLetterSpacing = 0;
+  nscoord mWordSpacing = 0;
 
   // to record any unsupported characters found in the text,
   // and notify front-end if it is interested
@@ -5104,8 +5106,9 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
 
   if (state.letterSpacing != 0.0 || state.wordSpacing != 0.0) {
     processor.mLetterSpacing =
-        state.letterSpacing * processor.mAppUnitsPerDevPixel;
-    processor.mWordSpacing = state.wordSpacing * processor.mAppUnitsPerDevPixel;
+        NSToCoordRound(state.letterSpacing * processor.mAppUnitsPerDevPixel);
+    processor.mWordSpacing =
+        NSToCoordRound(state.wordSpacing * processor.mAppUnitsPerDevPixel);
     processor.mTextRunFlags |= gfx::ShapedTextFlags::TEXT_ENABLE_SPACING;
     if (state.letterSpacing != 0.0) {
       processor.mTextRunFlags |=
@@ -5232,7 +5235,7 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
   // based on the text position and advance.
   if (!doCalculateBounds) {
     processor.mBoundingBox.width = totalWidth;
-    processor.mBoundingBox.MoveBy(gfxPoint(processor.mPt.x, processor.mPt.y));
+    processor.mBoundingBox.MoveBy(processor.mPt.x, processor.mPt.y);
   }
 
   processor.mPt.x *= processor.mAppUnitsPerDevPixel;
@@ -5285,7 +5288,8 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
 
   if (aOp == CanvasRenderingContext2D::TextDrawOperation::FILL &&
       !doCalculateBounds) {
-    RedrawUser(boundingBox);
+    RedrawUser(gfxRect(boundingBox.x, boundingBox.y, boundingBox.width,
+                       boundingBox.height));
   } else {
     Redraw();
   }
