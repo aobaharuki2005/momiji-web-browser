@@ -194,6 +194,16 @@ var gProfiles = {
     });
   },
 
+  async openTabsInProfile(aEvent, tabsToOpen) {
+    let profile = await SelectableProfileService.getProfile(
+      aEvent.target.getAttribute("profileid")
+    );
+    SelectableProfileService.launchInstance(
+      profile,
+      tabsToOpen.map(tab => tab.linkedBrowser.currentURI.spec)
+    );
+  },
+
   async handleCommand(aEvent) {
     switch (aEvent.target.id) {
       /* App menu button events */
@@ -245,6 +255,16 @@ var gProfiles = {
       }
       case "Profiles:LaunchProfile": {
         this.launchProfile(aEvent.sourceEvent);
+        break;
+      }
+      case "Profiles:MoveTabsToProfile": {
+        let tabs;
+        if (TabContextMenu.contextTab.multiselected) {
+          tabs = gBrowser.selectedTabs;
+        } else {
+          tabs = [TabContextMenu.contextTab];
+        }
+        this.openTabsInProfile(aEvent.sourceEvent, tabs);
         break;
       }
     }
@@ -425,6 +445,52 @@ var gProfiles = {
       button.setAttribute("image", await profile.getAvatarURL(16));
 
       profilesList.appendChild(button);
+    }
+  },
+
+  async populateMoveTabMenu(menuPopup) {
+    if (!SelectableProfileService.initialized) {
+      return;
+    }
+
+    const profiles = await SelectableProfileService.getAllProfiles();
+    const currentProfile = SelectableProfileService.currentProfile;
+
+    const separator = document.getElementById("moveTabSeparator");
+    separator.hidden = profiles.length < 2;
+
+    let existingItems = [
+      ...menuPopup.querySelectorAll(":scope > menuitem[profileid]"),
+    ];
+
+    for (let profile of profiles) {
+      if (profile.id === currentProfile.id) {
+        continue;
+      }
+
+      let menuitem = existingItems.shift();
+      let isNewItem = !menuitem;
+      if (isNewItem) {
+        menuitem = document.createXULElement("menuitem");
+        menuitem.setAttribute("tbattr", "tabbrowser-multiple-visible");
+        menuitem.setAttribute("data-l10n-id", "move-to-new-profile");
+        menuitem.setAttribute("command", "Profiles:MoveTabsToProfile");
+      }
+
+      menuitem.disabled = false;
+      menuitem.setAttribute("profileid", profile.id);
+      menuitem.setAttribute(
+        "data-l10n-args",
+        JSON.stringify({ profileName: profile.name })
+      );
+
+      if (isNewItem) {
+        menuPopup.appendChild(menuitem);
+      }
+    }
+    // If there's any old item to remove, do so now.
+    for (let remaining of existingItems) {
+      remaining.remove();
     }
   },
 };
