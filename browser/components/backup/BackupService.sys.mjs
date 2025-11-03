@@ -626,6 +626,15 @@ export class BackupService extends EventTarget {
     }
 
     if (!Services.prefs.getBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME)) {
+      if (Services.prefs.prefIsLocked(BACKUP_ARCHIVE_ENABLED_PREF_NAME)) {
+        // If it's locked, assume it was set by an enterprise policy.
+        return {
+          enabled: false,
+          reason: "Archiving a profile disabled by policy.",
+          internalReason: "policy",
+        };
+      }
+
       return {
         enabled: false,
         reason: "Archiving a profile disabled by user pref.",
@@ -671,6 +680,15 @@ export class BackupService extends EventTarget {
     }
 
     if (!Services.prefs.getBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME)) {
+      if (Services.prefs.prefIsLocked(BACKUP_RESTORE_ENABLED_PREF_NAME)) {
+        // If it's locked, assume it was set by an enterprise policy.
+        return {
+          enabled: false,
+          reason: "Restoring a profile disabled by policy.",
+          internalReason: "policy",
+        };
+      }
+
       return {
         enabled: false,
         reason: "Restoring a profile disabled by user pref.",

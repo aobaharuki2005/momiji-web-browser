@@ -76,6 +76,24 @@ add_task(async function test_archive_enabled_pref() {
   });
 });
 
+add_task(async function test_archive_policy() {
+  await archiveTemplate({
+    internalReason: "policy",
+    async disable() {
+      Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, false);
+      Services.prefs.lockPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
+      return 1;
+    },
+    async enable() {
+      Services.prefs.unlockPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
+      Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true);
+      return 1;
+    },
+    // At startup, there wouldn't have been a spurious call.
+    startup: -1,
+  });
+});
+
 add_task(async function test_archive_sanitize_on_shutdown() {
   await archiveTemplate({
     internalReason: "sanitizeOnShutdown",
@@ -128,6 +146,24 @@ add_task(async function test_restore_enabled_pref() {
     async enable() {
       Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, true);
     },
+  });
+});
+
+add_task(async function test_restore_policy() {
+  await restoreTemplate({
+    internalReason: "policy",
+    async disable() {
+      Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, false);
+      Services.prefs.lockPref(BACKUP_RESTORE_ENABLED_PREF_NAME);
+      return 1;
+    },
+    async enable() {
+      Services.prefs.unlockPref(BACKUP_RESTORE_ENABLED_PREF_NAME);
+      Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, true);
+      return 1;
+    },
+    // At startup, there wouldn't have been a spurious call.
+    startup: -1,
   });
 });
 
