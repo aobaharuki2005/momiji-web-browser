@@ -995,7 +995,7 @@ requires-dist = [
     { name = "six", specifier = "~=1.16" },
     { name = "slugid", specifier = "~=2.0" },
     { name = "taskcluster", specifier = "~=91.0" },
-    { name = "taskcluster-taskgraph", specifier = "~=17.2.0" },
+    { name = "taskcluster-taskgraph", specifier = "~=17.2.1" },
     { name = "taskcluster-urls", specifier = "==13.0.1" },
     { name = "toml", specifier = "~=0.10" },
     { name = "tomlkit", specifier = "~=0.12" },
@@ -1633,7 +1633,7 @@ wheels = [
 
 [[package]]
 name = "taskcluster-taskgraph"
-version = "17.2.0"
+version = "17.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "appdirs" },
@@ -1648,9 +1648,9 @@ dependencies = [
     { name = "taskcluster-urls" },
     { name = "voluptuous" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c5/e0/83aada64eb15b4da8fce1424beaf8974bab63bc705064d41de2e79ed18a7/taskcluster_taskgraph-17.2.0.tar.gz", hash = "sha256:55218bfe651eaa935a2b8a63aa45532b058051cdbcdeba93cd2c4bcec18453f2", size = 509446, upload-time = "2025-10-30T13:37:45.552Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b1/0f/0d3d3bac2dd6a8f3b1c995f061e18991b967af268174b80f57ed509c0212/taskcluster_taskgraph-17.2.1.tar.gz", hash = "sha256:bfb3d3757c9f1345ec6148cfd88b3c2ee3e0791b4411dd3d7e33195583e00660", size = 509684, upload-time = "2025-10-31T20:19:17.721Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/12/60e2e9f7160ae79e3dc7b6b5b0037454e30581c280370252f2c5f40d5f17/taskcluster_taskgraph-17.2.0-py3-none-any.whl", hash = "sha256:87fa392f3716e24daaf9f95b7fc5c8b55c962863e62039b394f0a4269dc008c5", size = 205053, upload-time = "2025-10-30T13:37:43.798Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/78/2092d271017649caad13350ffbdf482e324b81a3a0d96f6fb89e86715327/taskcluster_taskgraph-17.2.1-py3-none-any.whl", hash = "sha256:8b3b252d5b23e5244c648e10659ba3306826a0b6c2e573b951558c6183fea54a", size = 205020, upload-time = "2025-10-31T20:19:15.987Z" },
 ]
 
 [[package]]

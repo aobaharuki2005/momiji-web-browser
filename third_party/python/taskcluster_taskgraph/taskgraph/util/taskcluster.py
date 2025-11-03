@@ -467,15 +467,11 @@ def get_ancestors(task_ids: Union[list[str], str]) -> dict[str, str]:
     for task_id in task_ids:
         try:
             task_def = get_task_definition(task_id)
-        except (requests.HTTPError, taskcluster.TaskclusterRestFailure) as e:
+        except taskcluster.TaskclusterRestFailure as e:
             # Task has most likely expired, which means it's no longer a
             # dependency for the purposes of this function.
-            if isinstance(e, requests.HTTPError):
-                if e.response and e.response.status_code == 404:
-                    continue
-            elif isinstance(e, taskcluster.TaskclusterRestFailure):
-                if e.status_code == 404:
-                    continue
+            if e.status_code == 404:
+                continue
             raise e
 
         dependencies = task_def.get("dependencies", [])
