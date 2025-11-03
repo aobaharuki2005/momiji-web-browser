@@ -7,6 +7,8 @@ import logging
 import os
 from concurrent import futures
 
+import requests
+
 from taskcluster import TaskclusterRestFailure
 from taskgraph.util.taskcluster import (
     CONCURRENCY,
@@ -35,8 +37,14 @@ def cancel_all_action(parameters, graph_config, input, task_group_id, task_id):
         logger.info(f"Cancelling task {task_id}")
         try:
             cancel_task(task_id)
-        except TaskclusterRestFailure as e:
-            if e.status_code == 409:
+        except (requests.HTTPError, TaskclusterRestFailure) as e:
+            status_code = None
+            if isinstance(e, requests.HTTPError):
+                status_code = e.response.status_code if e.response else None
+            elif isinstance(e, TaskclusterRestFailure):
+                status_code = e.status_code
+
+            if status_code == 409:
                 # A 409 response indicates that this task is past its deadline.  It
                 # cannot be cancelled at this time, but it's also not running
                 # anymore, so we can ignore this error.
