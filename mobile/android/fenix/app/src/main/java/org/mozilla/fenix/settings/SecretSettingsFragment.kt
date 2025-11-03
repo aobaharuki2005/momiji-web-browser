@@ -372,4 +372,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
         return super.onPreferenceTreeClick(preference)
     }
+
+    override fun onDisplayPreferenceDialog(preference: Preference) {
+        val handled = showCustomEditTextPreferenceDialog(preference)
+
+        if (!handled) {
+            super.onDisplayPreferenceDialog(preference)
+        }
+    }
 }

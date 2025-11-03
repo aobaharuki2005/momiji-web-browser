@@ -60,4 +60,12 @@ class SponsoredStoriesSettingsFragment : PreferenceFragmentCompat() {
             scrollToPreference(it)
         }
     }
+
+    override fun onDisplayPreferenceDialog(preference: Preference) {
+        val handled = showCustomEditTextPreferenceDialog(preference)
+
+        if (!handled) {
+            super.onDisplayPreferenceDialog(preference)
+        }
+    }
 }
