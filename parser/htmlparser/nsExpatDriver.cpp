@@ -296,8 +296,6 @@ static const nsCatalogData kCatalogTable[] = {
      "htmlmathml-f.ent", nullptr},
     {"-//W3C//DTD MathML 2.0//EN", "htmlmathml-f.ent", nullptr},
     {"-//WAPFORUM//DTD XHTML Mobile 1.0//EN", "htmlmathml-f.ent", nullptr},
-    {"-//WAPFORUM//DTD XHTML Mobile 1.1//EN", "htmlmathml-f.ent", nullptr},
-    {"-//WAPFORUM//DTD XHTML Mobile 1.2//EN", "htmlmathml-f.ent", nullptr},
     {nullptr, nullptr, nullptr}};
 
 static const nsCatalogData* LookupCatalogData(const char16_t* aPublicID) {
