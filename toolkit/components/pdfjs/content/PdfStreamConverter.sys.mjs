@@ -501,6 +501,11 @@ class ChromeActions {
     actor?.sendAsyncMessage("PDFJS:Parent:reportTelemetry", data);
   }
 
+  reportText(data) {
+    const actor = getActor(this.domWindow);
+    actor?.sendAsyncMessage("PDFJS:Parent:reportText", data);
+  }
+
   updateFindControlState(data) {
     if (!this.supportsIntegratedFind()) {
       return;

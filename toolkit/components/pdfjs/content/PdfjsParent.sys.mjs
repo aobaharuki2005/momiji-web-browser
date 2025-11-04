@@ -73,6 +73,15 @@ export class PdfjsParent extends JSWindowActorParent {
     "enableNewAltTextWhenAddingImage",
   ]);
 
+  #nextTextRequestId = 0;
+
+  /**
+   * Holds the Promise resolves for getTextContent requests.
+   *
+   * @type {Map<number, (text: string) => void>}
+   */
+  #textRequests = new Map();
+
   constructor() {
     super();
     this._boundToFindbar = null;
@@ -104,6 +113,8 @@ export class PdfjsParent extends JSWindowActorParent {
         return this._addEventListener();
       case "PDFJS:Parent:saveURL":
         return this._saveURL(aMsg);
+      case "PDFJS:Parent:reportText":
+        return this._reportText(aMsg);
       case "PDFJS:Parent:recordExposure":
         return this._recordExposure();
       case "PDFJS:Parent:reportTelemetry":
@@ -130,6 +141,22 @@ export class PdfjsParent extends JSWindowActorParent {
 
   get browser() {
     return this.browsingContext.top.embedderElement;
+  }
+
+  /**
+   * Extracts the text content from a PDF.
+   *
+   * @returns {Promise<string>}
+   */
+  getTextContent() {
+    const { promise, resolve } = Promise.withResolvers();
+    const requestId = this.#nextTextRequestId++;
+    this.#textRequests.set(requestId, resolve);
+    this.sendAsyncMessage("PDFJS:Child:handleEvent", {
+      type: "requestTextContent",
+      detail: { requestId },
+    });
+    return promise;
   }
 
   async #openDatabase() {
@@ -582,6 +609,25 @@ export class PdfjsParent extends JSWindowActorParent {
       const matchesCount = this._requestMatchesCount(data.matchesCount);
       fb.onMatchesCountResult(matchesCount);
     });
+  }
+
+  /**
+   * Handle the response for extracting text.
+   *
+   * @param {{ data: { text: string, requestId: number } }}
+   */
+  _reportText({ data }) {
+    const resolve = this.#textRequests.get(data.requestId);
+    this.#textRequests.delete(data.requestId);
+    if (!resolve) {
+      console.error(
+        "Unable to find the text content request",
+        data.requestId,
+        this.#textRequests
+      );
+      return;
+    }
+    resolve(data.text);
   }
 
   _updateMatchesCount(aMsg) {
