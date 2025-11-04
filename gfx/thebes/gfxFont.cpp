@@ -3234,6 +3234,7 @@ bool gfxFont::AgeCachedWords() {
         it.remove();
       }
     }
+    mWordCache->compact();
     return mWordCache->empty();
   }
   return true;
