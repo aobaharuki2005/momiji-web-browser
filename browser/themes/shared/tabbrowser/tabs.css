@@ -131,6 +131,7 @@
     min-height: var(--tabstrip-min-height);
 
     --tab-min-width: 76px;
+    --tab-max-width: 225px;
     :root[uidensity="touch"] & .tabbrowser-tab[fadein]:not([pinned]) {
       /* Touch mode needs additional space for the close button. */
       min-width: max(var(--tab-min-width-pref, var(--tab-min-width)), 86px);
@@ -141,6 +142,8 @@
       padding-bottom: 15px;
       margin-bottom: -15px;
     }
+
+    --tab-width-transition: min-width 100ms ease-out, max-width 100ms ease-out;
   }
 
   &[noshadowfortests] {
@@ -204,10 +207,8 @@
 
   &:not([pinned]) {
     flex: 100 100;
-    max-width: 225px;
-    transition:
-      min-width 100ms ease-out,
-      max-width 100ms ease-out;
+    max-width: var(--tab-max-width);
+    transition: var(--tab-width-transition);
 
     #tabbrowser-tabs[orient="horizontal"] &[fadein] {
       min-width: var(--tab-min-width-pref, var(--tab-min-width));
@@ -1157,9 +1158,6 @@
 /* Split View */
 
 tab-group > tab-split-view-wrapper {
-  &[aria-hidden="true"] {
-    display: none;
-  }
   #tabbrowser-tabs[orient="vertical"] & {
     margin-inline-end: var(--space-medium);
 
@@ -1187,10 +1185,6 @@ tab-group > tab-split-view-wrapper {
       .tab-group-line {
         inset-inline-start: calc(var(--space-medium) * -1) !important;
         inset-block: calc(var(--space-xsmall) * -1);
-
-        @container vertical-tabs-container (max-width: 210px) {
-          inset-inline-start: calc(var(--space-large) * -1) !important;
-        }
       }
 
       &:last-child {
@@ -1210,10 +1204,23 @@ tab-group > tab-split-view-wrapper {
   margin-block: var(--tab-block-margin);
   margin-inline: 0;
   align-items: flex-end;
+  flex: 100 100;
   padding: 2px 0;
+  min-width: calc(var(--tab-min-width-pref, var(--tab-min-width)) * 2 + 6px);
+  max-width: var(--tab-max-width);
+  transition: var(--tab-width-transition);
 
   &[last-tab-or-split-view] .tabbrowser-tab:last-child .tab-group-line {
     inset-inline-end: calc(var(--tab-border-radius) / 2);
+  }
+
+  tab-group[collapsed] &:not([hasactivetab]) {
+    min-width: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
   }
 
   .tabbrowser-tab {

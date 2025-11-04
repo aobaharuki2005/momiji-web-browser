@@ -191,13 +191,21 @@
           }
           for (const mutation of mutations) {
             for (const addedNode of mutation.addedNodes) {
-              if (addedNode.tagName == "tab") {
+              if (gBrowser.isTab(addedNode)) {
                 this.#updateTabAriaHidden(addedNode);
+              } else if (gBrowser.isSplitViewWrapper(addedNode)) {
+                for (const splitViewTab of addedNode.tabs) {
+                  this.#updateTabAriaHidden(splitViewTab);
+                }
               }
             }
             for (const removedNode of mutation.removedNodes) {
-              if (removedNode.tagName == "tab") {
+              if (gBrowser.isTab(removedNode)) {
                 this.#updateTabAriaHidden(removedNode);
+              } else if (gBrowser.isSplitViewWrapper(removedNode)) {
+                for (const splitViewTab of removedNode.tabs) {
+                  this.#updateTabAriaHidden(splitViewTab);
+                }
               }
             }
           }
@@ -309,6 +317,7 @@
       this.toggleAttribute("collapsed", val);
       this.#updateLabelAriaAttributes();
       this.#updateTooltip();
+      this.#updateOverflowLabel();
       for (const tab of this.tabs) {
         this.#updateTabAriaHidden(tab);
       }
@@ -390,7 +399,16 @@
      * @param {MozTabbrowserTab} tab
      */
     #updateTabAriaHidden(tab) {
-      if (tab.group?.collapsed && !tab.selected) {
+      if (tab.splitview) {
+        if (
+          tab.group?.collapsed &&
+          !tab.splitview.tabs.some(splitViewTab => splitViewTab.selected)
+        ) {
+          tab.splitview.setAttribute("aria-hidden", "true");
+        } else {
+          tab.splitview.removeAttribute("aria-hidden");
+        }
+      } else if (tab.group?.collapsed && !tab.selected) {
         tab.setAttribute("aria-hidden", "true");
       } else {
         tab.removeAttribute("aria-hidden");
@@ -401,34 +419,31 @@
       // When a group containing the active tab is collapsed,
       // the overflow count displays the number of additional tabs
       // in the group adjacent to the active tab.
-      let overflowCountLabel = this.overflowContainer.querySelector(
-        ".tab-group-overflow-count"
-      );
-      let tabs = this.tabs;
-      let tabCount = tabs.length;
-      const overflowOffset =
-        this.hasActiveTab && gBrowser.selectedTab.splitview ? 2 : 1;
+      if (this.overflowContainer) {
+        let overflowCountLabel = this.overflowContainer.querySelector(
+          ".tab-group-overflow-count"
+        );
+        let tabs = this.tabs;
+        let tabCount = tabs.length;
+        const overflowOffset =
+          this.hasActiveTab && gBrowser.selectedTab.splitview ? 2 : 1;
 
-      if (tabCount > 1) {
-        this.toggleAttribute("hasmultipletabs", true);
-      } else {
-        overflowCountLabel.textContent = "";
-        this.toggleAttribute("hasmultipletabs", false);
+        this.toggleAttribute("hasmultipletabs", tabCount > overflowOffset);
+
+        gBrowser.tabLocalization
+          .formatValue("tab-group-overflow-count", {
+            tabCount: tabCount - overflowOffset,
+          })
+          .then(result => (overflowCountLabel.textContent = result));
+        gBrowser.tabLocalization
+          .formatValue("tab-group-overflow-count-tooltip", {
+            tabCount: tabCount - overflowOffset,
+          })
+          .then(result => {
+            overflowCountLabel.setAttribute("tooltiptext", result);
+            overflowCountLabel.setAttribute("aria-description", result);
+          });
       }
-
-      gBrowser.tabLocalization
-        .formatValue("tab-group-overflow-count", {
-          tabCount: tabCount - overflowOffset,
-        })
-        .then(result => (overflowCountLabel.textContent = result));
-      gBrowser.tabLocalization
-        .formatValue("tab-group-overflow-count-tooltip", {
-          tabCount: tabCount - overflowOffset,
-        })
-        .then(result => {
-          overflowCountLabel.setAttribute("tooltiptext", result);
-          overflowCountLabel.setAttribute("aria-description", result);
-        });
     }
 
     #updateLastTabOrSplitViewAttr() {
