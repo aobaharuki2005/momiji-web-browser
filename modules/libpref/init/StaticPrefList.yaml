@@ -8997,13 +8997,6 @@
   mirror: always
   set_spidermonkey_pref: startup
 
-  # Capture stack traces for OOM
--   name: javascript.options.experimental.capture_oom_stack_trace
-    type: bool
-    value: true
-    mirror: always
-    set_spidermonkey_pref: startup
-
 #endif  // NIGHTLY_BUILD
 
 # Whether to Baseline-compile self-hosted functions the first time they are

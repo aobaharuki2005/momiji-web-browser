@@ -442,9 +442,11 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return offsetof(JSContext, jitActivation);
   }
 
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   static size_t offsetOfInUnsafeCallWithABI() {
     return offsetof(JSContext, inUnsafeCallWithABI);
   }
+#endif
 
  public:
   js::InterpreterStack& interpreterStack() {
@@ -483,8 +485,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   js::ContextData<js::EnterDebuggeeNoExecute*> noExecuteDebuggerTop;
 
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   js::ContextData<uint32_t> inUnsafeCallWithABI;
   js::ContextData<bool> hasAutoUnsafeCallWithABI;
+#endif
 
 #ifdef DEBUG
   js::ContextData<uint32_t> liveArraySortDataInstances;
@@ -683,12 +687,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     hadUncatchableException_ = true;
 #endif
   }
-
-  // OOM stack trace buffer management
-  void unsetOOMStackTrace();
-  const char* getOOMStackTrace() const;
-  bool hasOOMStackTrace() const;
-  void captureOOMStackTrace();
 
   js::ContextData<int32_t> reportGranularity; /* see vm/Probes.h */
 
@@ -962,14 +960,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
       promiseRejectionTrackerCallback;
   js::ContextData<void*> promiseRejectionTrackerCallbackData;
 
-  // Pre-allocated buffer for storing out-of-memory stack traces.
-  // This buffer is allocated during context initialization to avoid
-  // allocation during OOM conditions. The buffer stores a formatted
-  // stack trace string that can be retrieved by privileged JavaScript.
-  static constexpr size_t OOMStackTraceBufferSize = 4096;
-  js::ContextData<char*> oomStackTraceBuffer_;
-  js::ContextData<bool> oomStackTraceBufferValid_;
-
   JSObject* getIncumbentGlobal(JSContext* cx);
   bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job,
                          js::HandleObject promise,
@@ -1194,7 +1184,11 @@ class MOZ_RAII AutoNoteExclusiveDebuggerOnEval {
   }
 };
 
-enum UnsafeABIStrictness { NoExceptions, AllowPendingExceptions };
+enum UnsafeABIStrictness {
+  NoExceptions,
+  AllowPendingExceptions,
+  AllowThrownExceptions
+};
 
 // Should be used in functions called directly from JIT code (with
 // masm.callWithABI). This assert invariants in debug builds. Resets
@@ -1212,17 +1206,22 @@ enum UnsafeABIStrictness { NoExceptions, AllowPendingExceptions };
 // the function is not called with a pending exception, and that it does not
 // throw an exception itself.
 class MOZ_RAII AutoUnsafeCallWithABI {
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   JSContext* cx_;
   bool nested_;
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   bool checkForPendingException_;
 #endif
   JS::AutoCheckCannotGC nogc;
 
  public:
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   explicit AutoUnsafeCallWithABI(
       UnsafeABIStrictness strictness = UnsafeABIStrictness::NoExceptions);
   ~AutoUnsafeCallWithABI();
+#else
+  explicit AutoUnsafeCallWithABI(
+      UnsafeABIStrictness unused_ = UnsafeABIStrictness::NoExceptions) {}
+#endif
 };
 
 template <typename T>
