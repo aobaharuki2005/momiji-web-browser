@@ -260,6 +260,8 @@ class SettingsSearchTest : TestSetup() {
                 "Firefox Suggest",
                 website.title,
             )
+        }.dismissSearchBar {
+            verifyHomeComponent(activityTestRule)
         }
     }
 
