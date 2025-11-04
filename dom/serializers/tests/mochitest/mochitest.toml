@@ -123,3 +123,5 @@ skip-if = [
 ["test_htmlcopyencoder.html"]
 
 ["test_htmlcopyencoder.xhtml"]
+
+["test_plaintext_linebreak.html"]
