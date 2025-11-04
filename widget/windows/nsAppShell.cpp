@@ -600,11 +600,10 @@ nsresult nsAppShell::InitEventWindow() {
 }
 
 nsresult nsAppShell::Init() {
-  LSPAnnotate();
-
   hal::Init();
 
   if (XRE_IsParentProcess()) {
+    LSPAnnotate();
     sTaskbarButtonCreatedMsg = ::RegisterWindowMessageW(kTaskbarButtonEventId);
     NS_ASSERTION(sTaskbarButtonCreatedMsg,
                  "Could not register taskbar button creation message");

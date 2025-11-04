@@ -119,6 +119,7 @@ LSPAnnotationGatherer::Run() {
 }
 
 void LSPAnnotate() {
+  MOZ_ASSERT(XRE_IsParentProcess());
   nsCOMPtr<nsIRunnable> runnable(new LSPAnnotationGatherer());
   NS_DispatchBackgroundTask(runnable.forget());
 }
