@@ -4749,11 +4749,6 @@
   value: true
   mirror: always
 
-- name: dom.workers.importScripts.enforceStrictMimeType
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: dom.workers.throttling.enabled
   type: bool
   value: @IS_EARLY_BETA_OR_EARLIER@
