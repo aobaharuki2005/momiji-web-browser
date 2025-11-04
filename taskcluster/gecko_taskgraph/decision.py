@@ -8,6 +8,7 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+from pathlib import Path
 
 import yaml
 from redo import retry
@@ -235,27 +236,20 @@ def taskgraph_decision(options, parameters=None):
     if len(push_schedules) > 0:
         write_artifact("bugbug-push-schedules.json", push_schedules.popitem()[1])
 
-    # cache run-task, misc/fetch-content & robustcheckout.py
-    scripts_root_dir = os.path.join(GECKO, "taskcluster/scripts")
-    run_task_file_path = os.path.join(scripts_root_dir, "run-task")
-    test_linux_file_path = os.path.join(scripts_root_dir, "tester", "test-linux.sh")
-    fetch_content_file_path = os.path.join(
-        GECKO,
-        "third_party",
-        "python",
-        "taskcluster_taskgraph",
-        "taskgraph",
-        "run-task",
-        "fetch-content",
+    # upload run-task, fetch-content, robustcheckout.py and more as artifacts
+    mozharness_dir = Path(GECKO, "testing", "mozharness")
+    scripts_dir = Path(GECKO, "taskcluster", "scripts")
+    taskgraph_dir = Path(
+        GECKO, "third_party", "python", "taskcluster_taskgraph", "taskgraph"
     )
-    robustcheckout_path = os.path.join(
-        GECKO,
-        "testing/mozharness/external_tools/robustcheckout.py",
-    )
-    shutil.copy2(run_task_file_path, ARTIFACTS_DIR)
-    shutil.copy2(test_linux_file_path, ARTIFACTS_DIR)
-    shutil.copy2(fetch_content_file_path, ARTIFACTS_DIR)
-    shutil.copy2(robustcheckout_path, ARTIFACTS_DIR)
+    to_copy = {
+        scripts_dir / "run-task": ARTIFACTS_DIR,
+        scripts_dir / "tester" / "test-linux.sh": ARTIFACTS_DIR,
+        taskgraph_dir / "run-task" / "fetch-content": ARTIFACTS_DIR,
+        mozharness_dir / "external_tools" / "robustcheckout.py": ARTIFACTS_DIR,
+    }
+    for target, dest in to_copy.items():
+        shutil.copy2(target, dest)
 
     # actually create the graph
     create_tasks(
