@@ -265,6 +265,7 @@ export default class RestoreFromBackup extends MozLitElement {
         href=${this.getSupportURLWithUTM(supportPage)}
         data-l10n-id=${ifDefined(l10nId)}
         data-l10n-name=${ifDefined(l10nName)}
+        rel="noopener noreferrer"
       ></a>`;
     }
 
@@ -557,9 +558,11 @@ export default class RestoreFromBackup extends MozLitElement {
       >
         <a
           id="backup-generic-error-link"
+          target="_blank"
           slot="support-link"
           data-l10n-name="restore-problems"
           href=${this.getSupportURLWithUTM("firefox-backup")}
+          rel="noopener noreferrer"
         ></a>
       </span>
     `;
