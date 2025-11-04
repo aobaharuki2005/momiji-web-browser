@@ -1392,9 +1392,13 @@ function getSmallIncrementKey() {
  *        Pseudo-elements, …), the text of said header.
  */
 function checkRuleViewContent(view, expectedElements) {
-  const rulesInView = Array.from(view.element.children);
+  const elementsInView = Array.from(view.element.children).filter(
+    // We don't check @property content for now
+    el => !el.classList.contains("registered-properties")
+  );
+
   is(
-    rulesInView.length,
+    elementsInView.length,
     expectedElements.length,
     "All expected elements are displayed"
   );
@@ -1403,7 +1407,7 @@ function checkRuleViewContent(view, expectedElements) {
     const expectedElement = expectedElements[i];
     info(`Checking element #${i}: ${expectedElement.selector}`);
 
-    const elementInView = rulesInView[i];
+    const elementInView = elementsInView[i];
 
     if (expectedElement.header) {
       is(
@@ -1447,7 +1451,7 @@ function checkRuleViewContent(view, expectedElements) {
     is(
       isInherited,
       expectedElement.inherited ?? false,
-      `Element #${i} (${selector}) is ${expectedElement.inherited ? "inherited" : "not inherited"}`
+      `Element #${i} ("${selector}") is ${expectedElement.inherited ? "inherited" : "not inherited"}`
     );
 
     const declarations = elementInView.querySelectorAll(".ruleview-property");
@@ -1483,24 +1487,24 @@ function checkRuleViewContent(view, expectedElements) {
       is(
         ruleViewPropertyElement.classList.contains("ruleview-overridden"),
         !!expectedDeclaration?.overridden,
-        `"${selector}" ${propName.innerText} is ${expectedDeclaration?.overridden ? "overridden" : "not overridden"} `
+        `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.overridden ? "overridden" : "not overridden"} `
       );
       is(
         !!ruleViewPropertyElement.querySelector(
           ".ruleview-warning:not([hidden])"
         ),
         !!expectedDeclaration?.valid,
-        `"${selector}" ${propName.innerText} is ${expectedDeclaration?.valid === false ? "not valid" : "valid"}`
+        `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.valid === false ? "not valid" : "valid"}`
       );
       is(
         !!ruleViewPropertyElement.hasAttribute("dirty"),
         !!expectedDeclaration?.dirty,
-        `"${selector}" ${propName.innerText} is ${expectedDeclaration?.dirty ? "dirty" : "not dirty"}`
+        `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.dirty ? "dirty" : "not dirty"}`
       );
       is(
         ruleViewPropertyElement.querySelector(".ruleview-highlight") !== null,
         !!expectedDeclaration?.highlighted,
-        `"${selector}" ${propName.innerText} is ${expectedDeclaration?.highlighted ? "highlighted" : "not highlighted"} `
+        `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.highlighted ? "highlighted" : "not highlighted"} `
       );
     }
   }
