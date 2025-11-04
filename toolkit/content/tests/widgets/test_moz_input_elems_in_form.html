@@ -36,6 +36,14 @@
                 value="checkbox_val"
                 checked=""
               ></moz-checkbox>
+              <moz-radio-group name="moz-radio-group" value="radio_val_1">
+                <moz-radio value="radio_val_1"></moz-radio>
+                <moz-radio value="radio_val_2"></moz-radio>
+              </moz-radio-group>
+              <moz-select name="moz-select" value="select_val_1">
+                <moz-option value="select_val_1"></moz-option>
+                <moz-option value="select_val_2"></moz-option>
+              </moz-select>
               <moz-toggle
                 name="moz-toggle"
                 value="toggle_val"
@@ -61,6 +69,22 @@
               checked=""
               form="form-attribute-id"
             ></moz-checkbox>
+            <moz-radio-group
+              name="moz-radio-group"
+              value="radio_val_1"
+              form="form-attribute-id"
+            >
+              <moz-radio value="radio_val_1"></moz-radio>
+              <moz-radio value="radio_val_2"></moz-radio>
+            </moz-radio-group>
+            <moz-select
+              name="moz-select"
+              value="select_val_1"
+              form="form-attribute-id"
+            >
+              <moz-option value="select_val_1"></moz-option>
+              <moz-option value="select_val_2"></moz-option>
+            </moz-select>
             <moz-toggle
               name="moz-toggle"
               value="toggle_val"
@@ -93,6 +117,16 @@
             "moz-checkbox, when checked, should have a submitted value"
           );
           is(
+            formData.get("moz-radio-group"),
+            "radio_val_1",
+            "moz-radio-group should have a submitted value"
+          );
+          is(
+            formData.get("moz-select"),
+            "select_val_1",
+            "moz-select should have a submitted value"
+          );
+          is(
             formData.get("moz-toggle"),
             "toggle_val",
             "moz-toggle should have a submitted value"
@@ -121,11 +155,19 @@
           event.preventDefault();
           const formData = new FormData(form);
           for (let [key, value] of formData) {
-            is(
-              value,
-              "non-default value",
-              `${key} should have a non-default submitted value`
-            );
+            if (key === "moz-radio-group") {
+              is(
+                value,
+                "radio_val_2",
+                `${key} should have a non-default value`
+              );
+            } else {
+              is(
+                value,
+                "non-default value",
+                `${key} should have a non-default submitted value`
+              );
+            }
           }
         };
         form.addEventListener(
@@ -135,7 +177,11 @@
         );
         let fieldset = form.querySelector("moz-fieldset");
         for (let c of fieldset.children) {
-          c.value = "non-default value";
+          if (c.name === "moz-radio-group") {
+            c.value = "radio_val_2";
+          } else {
+            c.value = "non-default value";
+          }
         }
 
         // Wait for the input elements to update before clicking the
@@ -196,6 +242,16 @@
           formData.get("moz-checkbox"),
           document.querySelector("moz-checkbox").getAttribute("value"),
           "moz-checkbox should reset to default value"
+        );
+        is(
+          formData.get("moz-radio-group"),
+          document.querySelector("moz-radio-group").getAttribute("value"),
+          "moz-radio-group should reset to default value"
+        );
+        is(
+          formData.get("moz-select"),
+          document.querySelector("moz-select").getAttribute("value"),
+          "moz-select should reset to default value"
         );
         is(
           formData.get("moz-toggle"),
@@ -268,6 +324,16 @@
             "moz-checkbox, when checked, should have a submitted value"
           );
           is(
+            formData.get("moz-radio-group"),
+            "radio_val_1",
+            "moz-radio-group should have a submitted value"
+          );
+          is(
+            formData.get("moz-select"),
+            "select_val_1",
+            "moz-select should have a submitted value"
+          );
+          is(
             formData.get("moz-toggle"),
             "toggle_val",
             "moz-toggle should have a submitted value"
@@ -296,11 +362,19 @@
           event.preventDefault();
           const formData = new FormData(form);
           for (let [key, value] of formData) {
-            is(
-              value,
-              "non-default value",
-              `${key} should have a non-default submitted value`
-            );
+            if (key === "moz-radio-group") {
+              is(
+                value,
+                "radio_val_2",
+                `${key} should have a non-default value`
+              );
+            } else {
+              is(
+                value,
+                "non-default value",
+                `${key} should have a non-default submitted value`
+              );
+            }
           }
         };
         form.addEventListener(
@@ -310,7 +384,11 @@
         );
         let fieldset = document.querySelector("div moz-fieldset");
         for (let c of fieldset.children) {
-          c.value = "non-default value";
+          if (c.name === "moz-radio-group") {
+            c.value = "radio_val_2";
+          } else {
+            c.value = "non-default value";
+          }
         }
 
         // Wait for the input elements to update before clicking the
@@ -378,6 +456,16 @@
           formData.get("moz-checkbox"),
           document.querySelector("moz-checkbox").getAttribute("value"),
           "moz-checkbox should reset to default value"
+        );
+        is(
+          formData.get("moz-radio-group"),
+          document.querySelector("moz-radio-group").getAttribute("value"),
+          "moz-radio-group should reset to default value"
+        );
+        is(
+          formData.get("moz-select"),
+          document.querySelector("moz-select").getAttribute("value"),
+          "moz-select should reset to default value"
         );
         is(
           formData.get("moz-toggle"),

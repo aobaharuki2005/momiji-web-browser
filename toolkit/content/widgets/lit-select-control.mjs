@@ -39,10 +39,12 @@ const NAVIGATION_DIRECTIONS = {
  * expected.
  */
 export class SelectControlBaseElement extends MozLitElement {
+  static formAssociated = true;
   #childElements;
   #value;
   #checkedIndex;
   #focusedIndex;
+  #internals;
 
   static properties = {
     type: { type: String },
@@ -61,6 +63,7 @@ export class SelectControlBaseElement extends MozLitElement {
 
   set value(newValue) {
     this.#value = newValue;
+    this.#internals.setFormValue(newValue);
     this.childElements.forEach((item, index) => {
       let isChecked = this.value === item.value;
       item.checked = isChecked;
@@ -136,11 +139,19 @@ export class SelectControlBaseElement extends MozLitElement {
     }
     return this.#childElements;
   }
+  get form() {
+    return this.#internals.form;
+  }
+
+  formResetCallback() {
+    this.value = this.getAttribute("value");
+  }
 
   constructor() {
     super();
     this.type = "radio";
     this.disabled = false;
+    this.#internals = this.attachInternals();
     this.addEventListener("blur", e => this.handleBlur(e), true);
     this.addEventListener("keydown", e => this.handleKeydown(e));
   }
@@ -263,6 +274,9 @@ export class SelectControlBaseElement extends MozLitElement {
       this.childElements.forEach(item => {
         item.role = childRole;
       });
+    }
+    if (changedProperties.has("value")) {
+      this.#internals.setFormValue(this.value);
     }
   }
 
