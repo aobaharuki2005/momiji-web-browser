@@ -261,15 +261,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "66.0.0"
-when = "2025-10-21"
+version = "66.1.0"
+when = "2025-11-03"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "66.0.0"
-when = "2025-10-21"
+version = "66.1.0"
+when = "2025-11-03"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -993,12 +993,6 @@ The Bytecode Alliance uses the `wasmtime-publish` crates.io account to automate
 publication of this crate from CI. This repository requires all PRs are reviewed
 by a Bytecode Alliance maintainer and it owned by the Bytecode Alliance itself.
 """
-
-[[audits.bytecode-alliance.audits.adler]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-version = "1.0.2"
-notes = "This is a small crate which forbids unsafe code and is a straightforward implementation of the adler hashing algorithm."
 
 [[audits.bytecode-alliance.audits.adler2]]
 who = "Alex Crichton <alex@alexcrichton.com>"
