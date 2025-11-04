@@ -9533,6 +9533,14 @@
 #endif
   mirror: once
 
+# If true, when the process is in the background, we refuse to launch the GPU
+# process and instead fail with a temporary error that we can recover from when
+# we enter the foreground and the GPU process launches.
+- name: layers.gpu-process.launch-in-background
+  type: bool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
 # On Mac, enables using the `<Brand> GPU Helper` executable as the
 # GPU child process instead of the plugin-container executable. This does
 # not control if a GPU process is used. It controls which executable the GPU
@@ -9563,11 +9571,7 @@
 # during process launch, before any configuration is attempted.
 - name: layers.gpu-process.max_launch_attempts
   type: RelaxedAtomicInt32
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
   value: 2
-#else
-  value: 0
-#endif
   mirror: always
 
 # How many unstable GPU process restarts we allow for a given configuration.

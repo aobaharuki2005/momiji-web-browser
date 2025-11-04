@@ -107,6 +107,8 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // process, even if in shutdown.
   // - NS_ERROR_ILLEGAL_DURING_SHUTDOWN if compositing is not ready, and we are
   // in shutdown.
+  // - NS_ERROR_ABORT if on Android and we are in the background. This is a
+  // temporary error that we should recover from when in the foreground.
   nsresult EnsureGPUReady();
 
   bool IsGPUReady() const;
@@ -395,7 +397,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   nsTArray<RefPtr<RemoteCompositorSession>> mRemoteSessions;
   nsTArray<RefPtr<InProcessCompositorSession>> mInProcessSessions;
-  nsTArray<GPUProcessListener*> mListeners;
+  nsTArray<RefPtr<GPUProcessListener>> mListeners;
 
   uint32_t mDeviceResetCount;
   TimeStamp mDeviceResetLastTime;

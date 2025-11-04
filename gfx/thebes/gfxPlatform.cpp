@@ -4102,12 +4102,6 @@ void gfxPlatform::BuildContentDeviceData(
     mozilla::gfx::ContentDeviceData* aOut) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  if (auto* gpm = GPUProcessManager::Get()) {
-    MOZ_DIAGNOSTIC_ASSERT(gpm->IsGPUReady());
-  }
-#endif
-
   aOut->prefs().hwCompositing() = gfxConfig::GetValue(Feature::HW_COMPOSITING);
   aOut->prefs().oglCompositing() =
       gfxConfig::GetValue(Feature::OPENGL_COMPOSITING);

@@ -1911,6 +1911,13 @@ class nsIWidget : public nsSupportsWeakReference {
   WindowRenderer* CreateFallbackRenderer();
 
   /**
+   * Returns a FallbackRenderer which is intended to be temporary while
+   * backgrounded without a GPU process. It listens to GPUProcessManager events
+   * in order to destroy itself when the GPU process becomes available.
+   */
+  WindowRenderer* CreateBackgroundedFallbackRenderer();
+
+  /**
    * Setter/Getter of the system font setting for testing.
    */
   virtual nsresult SetSystemFont(const nsCString& aFontName) {

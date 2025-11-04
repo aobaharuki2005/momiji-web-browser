@@ -1483,7 +1483,7 @@ already_AddRefed<WebRenderLayerManager> nsIWidget::CreateCompositorSession(
     // If it failed to connect to GPU process, GPU process usage is disabled in
     // EnsureGPUReady(). It could update gfxVars and gfxConfigs.
     gfx::GPUProcessManager* gpm = gfx::GPUProcessManager::Get();
-    if (NS_WARN_IF(!gpm || NS_FAILED(gpm->EnsureGPUReady()))) {
+    if (NS_WARN_IF(!gpm) || NS_WARN_IF(NS_FAILED(gpm->EnsureGPUReady()))) {
       return nullptr;
     }
 
@@ -1671,7 +1671,15 @@ WindowRenderer* nsIWidget::GetWindowRenderer() {
 }
 
 WindowRenderer* nsIWidget::CreateFallbackRenderer() {
-  return new FallbackRenderer;
+  // We don't provide a reference to ourself because we want to stay with the
+  // fallback renderer regardless of changes in compositing.
+  return new DefaultFallbackRenderer();
+}
+
+WindowRenderer* nsIWidget::CreateBackgroundedFallbackRenderer() {
+  // Provide a reference back to ourself so that when the GPU process and
+  // hardware compositing is once again available, we can return to it.
+  return new BackgroundedFallbackRenderer(this);
 }
 
 CompositorBridgeChild* nsIWidget::GetRemoteRenderer() {

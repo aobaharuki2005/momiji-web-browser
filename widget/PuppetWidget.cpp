@@ -531,7 +531,7 @@ WindowRenderer* PuppetWidget::GetWindowRenderer() {
     if (XRE_IsParentProcess()) {
       // On the parent process there is no CompositorBridgeChild which confuses
       // some layers code, so we use basic layers instead. Note that we create
-      mWindowRenderer = new FallbackRenderer;
+      mWindowRenderer = CreateFallbackRenderer();
       return mWindowRenderer;
     }
 
