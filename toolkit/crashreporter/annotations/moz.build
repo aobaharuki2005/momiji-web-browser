@@ -18,5 +18,4 @@ FINAL_LIBRARY = "xul"
 GeneratedFile(
     "CrashAnnotations.h",
     script="generate.py",
-    entry_point="emit_header",
 )

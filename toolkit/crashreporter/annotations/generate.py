@@ -31,31 +31,27 @@ def validate_annotations(annotations):
 
     for name, data in annotations:
         if "description" not in data:
-            print("Annotation " + name + " does not have a description\n")
-            sys.exit(1)
+            sys.exit("Annotation " + name + " does not have a description\n")
         if "type" not in data:
-            print("Annotation " + name + " does not have a type\n")
-            sys.exit(1)
+            sys.exit("Annotation " + name + " does not have a type\n")
 
         annotation_type = data.get("type")
         valid_types = ["string", "boolean", "u32", "u64", "usize", "object"]
         if annotation_type not in valid_types:
-            print(
+            sys.exit(
                 "Annotation " + name + " has an unknown type: " + annotation_type + "\n"
             )
-            sys.exit(1)
 
         annotation_scope = data.get("scope", "client")
         valid_scopes = ["client", "report", "ping"]
         if annotation_scope not in valid_scopes:
-            print(
+            sys.exit(
                 "Annotation "
                 + name
                 + " has an unknown scope: "
                 + annotation_scope
                 + "\n"
             )
-            sys.exit(1)
 
 
 def read_annotations():
@@ -66,8 +62,7 @@ def read_annotations():
         with open(annotations_filename) as annotations_file:
             annotations = sort_annotations(yaml.safe_load(annotations_file))
     except (OSError, ValueError) as e:
-        print("Error parsing " + annotations_filename + ":\n" + str(e) + "\n")
-        sys.exit(1)
+        sys.exit("Error parsing " + annotations_filename + ":\n" + str(e) + "\n")
 
     validate_annotations(annotations)
 
@@ -82,8 +77,7 @@ def read_template(template_filename):
         with open(template_filename) as template_file:
             template = template_file.read()
     except OSError as ex:
-        print("Error when reading " + template_filename + ":\n" + str(ex) + "\n")
-        sys.exit(1)
+        sys.exit("Error when reading " + template_filename + ":\n" + str(ex) + "\n")
 
     return template
 
@@ -140,11 +134,22 @@ def extract_types(annotations):
     return [type_to_enum(data.get("type")) for (_, data) in annotations]
 
 
+generators = {}
+
+
+def content_generator(*extensions):
+    """Create a function that generates the content for a file extension."""
+
+    def f(func):
+        for e in extensions:
+            generators[e] = func
+
+    return f
+
+
 ###############################################################################
 # C++ code generation                                                         #
 ###############################################################################
-
-header_template_filename = path.join(path.dirname(__file__), "CrashAnnotations.h.in")
 
 
 def generate_strings(annotations):
@@ -195,51 +200,26 @@ def generate_types_initializer(contents):
     return ",\n".join(initializer)
 
 
-def generate_header(template, annotations):
-    """Generate a header by filling the template with the the list of
-    annotations and return it as a string."""
-
+@content_generator("h")
+def emit_header(annotations, _output_name):
     pingallowedlist = extract_crash_ping_allowedlist(annotations)
     reportallowedlist = extract_crash_report_allowedlist(annotations)
     skiplist = extract_skiplist(annotations)
     typelist = extract_types(annotations)
 
-    return template_header + string.Template(template).substitute(
-        {
-            "enum": generate_enum(annotations),
-            "strings": generate_strings(annotations),
-            "pingallowedlist": generate_annotations_array_initializer(pingallowedlist),
-            "reportallowedlist": generate_annotations_array_initializer(
-                reportallowedlist
-            ),
-            "skiplist": generate_skiplist_initializer(skiplist),
-            "types": generate_types_initializer(typelist),
-        }
-    )
-
-
-def emit_header(output):
-    """Generate the C++ header from the template and write it out."""
-
-    annotations = read_annotations()
-    template = read_template(header_template_filename)
-    generated_header = generate_header(template, annotations)
-
-    try:
-        output.write(generated_header)
-    except OSError as ex:
-        print("Error while writing out the generated file:\n" + str(ex) + "\n")
-        sys.exit(1)
-
-    return {annotations_filename, header_template_filename}
+    return {
+        "enum": generate_enum(annotations),
+        "strings": generate_strings(annotations),
+        "pingallowedlist": generate_annotations_array_initializer(pingallowedlist),
+        "reportallowedlist": generate_annotations_array_initializer(reportallowedlist),
+        "skiplist": generate_skiplist_initializer(skiplist),
+        "types": generate_types_initializer(typelist),
+    }
 
 
 ###############################################################################
 # Java/Kotlin code generation                                                 #
 ###############################################################################
-
-java_template_filename = path.join(path.dirname(__file__), "CrashAnnotations.java.in")
-kotlin_template_filename = path.join(path.dirname(__file__), "CrashAnnotations.kt.in")
 
 
 def javadoc_sanitize(s):
@@ -249,22 +229,6 @@ def javadoc_sanitize(s):
         .replace("@", "&#064;")
         # Kotlin supports nested comments, so change anything that looks like the start of a block comment.
         .replace("/*", "/&#042;")
-    )
-
-
-def generate_class(template, package, klass, annotations):
-    """Fill the class template from the list of annotations."""
-
-    enum = ",\n".join(
-        f"/** {javadoc_sanitize(data['description'])} */\n{name}(\"{name}\", \"{data.get('scope', 'client')}\")"
-        for (name, data) in annotations
-    )
-    return template_header + string.Template(template).substitute(
-        {
-            "package": package,
-            "enum": enum,
-            "class": klass,
-        }
     )
 
 
@@ -281,22 +245,42 @@ def derive_package_and_class(file_path):
     return package, klass, is_kotlin
 
 
-def emit_java(output):
-    """Generate the CrashReporter Java/Kotlin file."""
+@content_generator("java", "kt")
+def emit_java(annotations, output_name):
+    package, klass, is_kotlin = derive_package_and_class(output_name)
 
-    package, klass, is_kotlin = derive_package_and_class(output.name)
-    template_filename = (
-        kotlin_template_filename if is_kotlin else java_template_filename
+    enum = ",\n".join(
+        f"/** {javadoc_sanitize(data['description'])} */\n{name}(\"{name}\", \"{data.get('scope', 'client')}\")"
+        for (name, data) in annotations
     )
-    template = read_template(template_filename)
 
+    return {
+        "package": package,
+        "enum": enum,
+        "class": klass,
+    }
+
+
+# Main script entrypoint for GeneratedFile
+def main(output):
     annotations = read_annotations()
-    generated_class = generate_class(template, package, klass, annotations)
+
+    suffix = output.name.rpartition(".")[2]
+    generator = generators.get(suffix)
+    if generator is None:
+        sys.exit(f"No generator for .{suffix} files")
+
+    template_file = f"CrashAnnotations.{suffix}.in"
+    template_path = path.join(path.dirname(__file__), template_file)
+    template_args = generator(annotations, output.name)
+
+    content = template_header + string.Template(
+        read_template(template_path)
+    ).substitute(template_args)
 
     try:
-        output.write(generated_class)
+        output.write(content)
     except OSError as ex:
-        print("Error while writing out the generated file:\n" + str(ex) + "\n")
-        sys.exit(1)
+        sys.exit("Error while writing out the generated file:\n" + str(ex) + "\n")
 
-    return {annotations_filename, template_filename}
+    return {annotations_filename, template_path}
