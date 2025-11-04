@@ -18,6 +18,9 @@ task-defaults:
             - type: file
               name: public/code-review/mozlint.json
               path: /builds/worker/mozlint.json
+            - type: file
+              name: public/profile_resource-usage.json
+              path: /builds/worker/profile_resource-usage.json
     run:
         using: mach
         use-caches: [checkout, pip, uv]
