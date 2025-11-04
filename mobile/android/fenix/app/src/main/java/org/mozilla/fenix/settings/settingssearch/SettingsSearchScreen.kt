@@ -53,11 +53,21 @@ fun SettingsSearchScreen(
 
         when (state) {
             is SettingsSearchState.Default -> {
-                SettingsSearchMessageContent(
-                    modifier = Modifier
-                        .padding(top = topPadding)
-                        .fillMaxSize(),
-                )
+                if (state.recentSearches.isNotEmpty()) {
+                    SearchResults(
+                        store = store,
+                        searchItems = state.recentSearches,
+                        modifier = Modifier
+                            .padding(top = topPadding)
+                            .fillMaxSize(),
+                        )
+                } else {
+                    SettingsSearchMessageContent(
+                        modifier = Modifier
+                            .padding(top = topPadding)
+                            .fillMaxSize(),
+                    )
+                }
             }
             is SettingsSearchState.NoSearchResults -> {
                 SettingsSearchMessageContent(
@@ -68,29 +78,13 @@ fun SettingsSearchScreen(
                     )
             }
             is SettingsSearchState.SearchInProgress -> {
-                LazyColumn(
+                SearchResults(
+                    store = store,
+                    searchItems = state.searchResults,
                     modifier = Modifier
                         .padding(top = topPadding)
                         .fillMaxSize(),
-                ) {
-                    items(state.searchResults.size) { index ->
-                        val settingsSearchItem = state.searchResults[index]
-                        if (index != 0) {
-                            HorizontalDivider()
-                        }
-                        SettingsSearchResultItem(
-                            item = settingsSearchItem,
-                            query = state.searchQuery,
-                            onClick = {
-                                store.dispatch(
-                                    SettingsSearchAction.ResultItemClicked(
-                                        settingsSearchItem,
-                                    ),
-                                )
-                            },
-                        )
-                    }
-                }
+                )
             }
         }
     }
@@ -122,6 +116,37 @@ private fun SettingsSearchMessageContent(
     }
 }
 
+@Composable
+private fun SearchResults(
+    store: SettingsSearchStore,
+    searchItems: List<SettingsSearchItem>,
+    modifier: Modifier = Modifier,
+) {
+    val state by store.observeAsComposableState { it }
+
+    LazyColumn(
+        modifier = modifier,
+    ) {
+        items(searchItems.size) { index ->
+            val searchItem = searchItems[index]
+            if (index > 0) {
+                HorizontalDivider()
+            }
+            SettingsSearchResultItem(
+                item = searchItem,
+                query = state.searchQuery,
+                onClick = {
+                    store.dispatch(
+                        SettingsSearchAction.ResultItemClicked(
+                            searchItem,
+                        ),
+                    )
+                },
+            )
+        }
+    }
+}
+
 /**
  * Preview for the settings search screen initial state.
  */
@@ -131,6 +156,103 @@ private fun SettingsSearchScreenInitialStatePreview() {
     FirefoxTheme {
         SettingsSearchScreen(
             store = SettingsSearchStore(),
+            onBackClick = {},
+        )
+    }
+}
+
+/**
+ * Preview for the settings search screen displaying a list of recent searches.
+ */
+@PreviewLightDark
+@Composable
+private fun SettingsSearchScreenWithRecentsPreview() {
+    val storeWithRecents = SettingsSearchStore(
+        initialState = SettingsSearchState.Default(
+            recentSearches = listOf(
+                SettingsSearchItem(
+                    "Search engine",
+                    "Choose your default",
+                    "search_engine",
+                    listOf("General"),
+                    PreferenceFileInformation.SearchSettingsPreferences,
+                ),
+                SettingsSearchItem(
+                    "Delete browsing data",
+                    "Clear history, cookies, and more",
+                    "delete_browsing_data",
+                    listOf("Privacy"),
+                    PreferenceFileInformation.PrivateBrowsingPreferences,
+                ),
+            ),
+        ),
+    )
+    FirefoxTheme {
+        SettingsSearchScreen(
+            store = storeWithRecents,
+            onBackClick = {},
+        )
+    }
+}
+
+/**
+ * Preview for the settings search screen displaying search results.
+ */
+@PreviewLightDark
+@Composable
+private fun SettingsSearchScreenWithResultsPreview() {
+    val storeWithResults = SettingsSearchStore(
+        initialState = SettingsSearchState.SearchInProgress(
+            searchQuery = "privacy",
+            searchResults = listOf(
+                SettingsSearchItem(
+                    "Tracking Protection",
+                    "Strict, Standard, or Custom",
+                    "tracking_protection",
+                    listOf("Privacy"),
+                    PreferenceFileInformation.GeneralPreferences,
+                ),
+                SettingsSearchItem(
+                    "Delete browsing data",
+                    "Clear history, cookies, and more",
+                    "delete_browsing_data",
+                    listOf("Privacy"),
+                    PreferenceFileInformation.GeneralPreferences,
+                ),
+                SettingsSearchItem(
+                    "HTTPS-Only Mode",
+                    "Enable in all tabs",
+                    "https_only_mode",
+                    listOf("Privacy", "Advanced"),
+                    PreferenceFileInformation.GeneralPreferences,
+                ),
+            ),
+            recentSearches = emptyList(),
+        ),
+    )
+    FirefoxTheme {
+        SettingsSearchScreen(
+            store = storeWithResults,
+            onBackClick = {},
+        )
+    }
+}
+
+/**
+ * Preview for the settings search screen when no results are found.
+ */
+@PreviewLightDark
+@Composable
+private fun SettingsSearchScreenNoResultsPreview() {
+    val storeWithNoResults = SettingsSearchStore(
+        initialState = SettingsSearchState.NoSearchResults(
+            searchQuery = "nonexistent query",
+            recentSearches = emptyList(),
+        ),
+    )
+    FirefoxTheme {
+        SettingsSearchScreen(
+            store = storeWithNoResults,
             onBackClick = {},
         )
     }
