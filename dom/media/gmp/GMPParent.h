@@ -66,10 +66,6 @@ class GMPParent final : public PGMPParent,
 
   GMPParent();
 
-#ifdef MOZ_WIDGET_ANDROID
-  void InitForClearkey(GeckoMediaPluginServiceParent* aService);
-#endif
-
   RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService,
                               nsIFile* aPluginDir);
   void CloneFrom(const GMPParent* aOther);
