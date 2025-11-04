@@ -576,9 +576,7 @@ void LIRGeneratorARM::lowerUDiv(MDiv* div) {
   MDefinition* rhs = div->getOperand(1);
 
   if (ARMFlags::HasIDIV()) {
-    LUDiv* lir = new (alloc()) LUDiv;
-    lir->setOperand(0, useRegister(lhs));
-    lir->setOperand(1, useRegister(rhs));
+    auto* lir = new (alloc()) LUDiv(useRegister(lhs), useRegister(rhs));
     if (div->fallible()) {
       assignSnapshot(lir, div->bailoutKind());
     }
@@ -586,7 +584,7 @@ void LIRGeneratorARM::lowerUDiv(MDiv* div) {
     return;
   }
 
-  LSoftUDivOrMod* lir = new (alloc())
+  auto* lir = new (alloc())
       LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1));
 
   if (div->fallible()) {
@@ -601,9 +599,7 @@ void LIRGeneratorARM::lowerUMod(MMod* mod) {
   MDefinition* rhs = mod->getOperand(1);
 
   if (ARMFlags::HasIDIV()) {
-    LUMod* lir = new (alloc()) LUMod;
-    lir->setOperand(0, useRegister(lhs));
-    lir->setOperand(1, useRegister(rhs));
+    auto* lir = new (alloc()) LUMod(useRegister(lhs), useRegister(rhs));
     if (mod->fallible()) {
       assignSnapshot(lir, mod->bailoutKind());
     }
@@ -611,7 +607,7 @@ void LIRGeneratorARM::lowerUMod(MMod* mod) {
     return;
   }
 
-  LSoftUDivOrMod* lir = new (alloc())
+  auto* lir = new (alloc())
       LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1));
 
   if (mod->fallible()) {

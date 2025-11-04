@@ -4325,7 +4325,6 @@
     lhs: WordSized
     rhs: WordSized
   mir_op: Div
-  defer_init: true
 
 - name: UMod
   result_type: WordSized
@@ -4333,7 +4332,6 @@
     lhs: WordSized
     rhs: WordSized
   mir_op: Mod
-  defer_init: true
 
 - name: SoftUDivOrMod
   result_type: WordSized
