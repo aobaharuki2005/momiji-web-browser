@@ -10356,34 +10356,7 @@ void PresShell::DidPaintWindow() {
 }
 
 bool PresShell::IsVisible() const {
-  if (!mIsActive || !mViewManager) {
-    return false;
-  }
-
-  nsView* view = mViewManager->GetRootView();
-  if (!view) {
-    return true;
-  }
-
-  // inner view of subdoc frame
-  view = view->GetParent();
-  if (!view) {
-    return true;
-  }
-
-  // subdoc view
-  view = view->GetParent();
-  if (!view) {
-    return true;
-  }
-
-  nsIFrame* frame = view->GetFrame();
-  if (!frame) {
-    return true;
-  }
-
-  return frame->IsVisibleConsideringAncestors(
-      nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY);
+  return mIsActive && !IsUnderHiddenEmbedderElement();
 }
 
 void PresShell::SuppressDisplayport(bool aEnabled) {
