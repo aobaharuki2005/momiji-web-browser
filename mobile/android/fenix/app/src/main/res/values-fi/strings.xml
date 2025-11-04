@@ -809,6 +809,10 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">Välilehtipalkin näyttö</string>
   <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_shortcut">Työkalupalkin pikavalinta</string>
+  <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_select_shortcut">Valitse pikavalinta</string>
+  <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Eleet</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Mukauta</string>
