@@ -356,6 +356,7 @@ add_task(async function checkClearSearch() {
     },
     {
       selector: ":root",
+      inherited: true,
       declarations: [{ name: "--my-color-1", value: "tomato" }],
     },
   ]);
