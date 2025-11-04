@@ -29,6 +29,7 @@ module.exports = {
   plugins: [
     "./tools/lint/stylelint/stylelint-plugin-mozilla/index.mjs",
     "@stylistic/stylelint-plugin",
+    "stylelint-use-logical",
   ],
   ignoreFiles,
   rules: {
@@ -269,6 +270,9 @@ module.exports = {
         ignorePseudoElements: ["slider-track", "slider-fill", "slider-thumb"],
       },
     ],
+    // stylelint fixes for the use-logical rule will be addressed in Bug 1996168
+    // Remove this line setting `csscontrols/use-logical` to null after implementing fixes
+    "csstools/use-logical": null,
     "stylelint-plugin-mozilla/no-base-design-tokens": true,
     "stylelint-plugin-mozilla/use-background-color-tokens": true,
     "stylelint-plugin-mozilla/use-border-color-tokens": true,
@@ -448,6 +452,14 @@ module.exports = {
       files: ["toolkit/**/*.css", "toolkit/**/*.scss"],
       rules: {
         "stylelint-plugin-mozilla/no-browser-refs-in-toolkit": true,
+      },
+    },
+    {
+      // non-logical properties make sense in devtools/ where physical positioning always makes sense
+      name: "logical-properties-rule-off",
+      files: ["devtools/**"],
+      rules: {
+        "csstools/use-logical": null,
       },
     },
     // Rollouts should always be applied last in the overrides section

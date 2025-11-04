@@ -30,6 +30,7 @@
     "stylelint": "16.14.1",
     "stylelint-config-recommended": "14.0.1",
     "stylelint-config-standard-scss": "14.0.0",
+    "stylelint-use-logical": "2.1.2",
     "ts-patch": "3.3.0",
     "typescript": "5.9.3",
     "yarn": "1.22.22"
