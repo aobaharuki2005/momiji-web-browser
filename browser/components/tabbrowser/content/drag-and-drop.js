@@ -2227,7 +2227,7 @@
         gBrowser._tabGroupsEnabled &&
         isTab(draggedTab) &&
         !isPinned &&
-        (!numPinned || newDropElementIndex > numPinned)
+        (!numPinned || newDropElementIndex >= numPinned)
       ) {
         let dragOverGroupingThreshold = 1 - moveOverThreshold;
         let groupingDelay = Services.prefs.getIntPref(
