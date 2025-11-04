@@ -1270,6 +1270,14 @@ impl HttpServer for Http3ConnectProxyServer {
                     // TODO: effectively breaks backpressure.
                     udp_socket.send_buffer.push_back(datagram);
                 }
+                Http3ServerEvent::ConnectUdp(ConnectUdpServerEvent::SessionClosed {
+                    session,
+                    reason,
+                    headers: _,
+                }) => {
+                    qdebug!("ConnectUdp session closed: {:?} reason: {:?}", session, reason);
+                    self.udp_sockets.remove(&session.stream_id());
+                }
                 Http3ServerEvent::StateChange { .. } | Http3ServerEvent::PriorityUpdate { .. } => {}
                 Http3ServerEvent::StreamReset { stream, error } => {
                     qtrace!("Http3ServerEvent::StreamReset {:?} {:?}", stream, error);
@@ -1282,7 +1290,6 @@ impl HttpServer for Http3ConnectProxyServer {
                     );
                 }
                 Http3ServerEvent::WebTransport(_) => {}
-                Http3ServerEvent::ConnectUdp(_) => {}
             }
         }
     }
