@@ -129,8 +129,7 @@ class DocAccessible : public HyperTextAccessible,
    * We call this when we observe an ID mutation or when an acc is bound
    * to its document.
    */
-  void QueueCacheUpdateForDependentRelations(
-      LocalAccessible* aAcc, const nsAttrValue* aOldId = nullptr);
+  void QueueCacheUpdateForDependentRelations(LocalAccessible* aAcc);
 
   /**
    * Returns true if the instance has shutdown.
