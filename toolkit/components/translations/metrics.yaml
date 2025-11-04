@@ -176,7 +176,6 @@ translations:
     description: >
       Metrics related to the performance of the TranslationsEngine.
     extra_keys:
-      flow_id: *flow_id
       from_language: *from_language
       to_language: *to_language
       average_words_per_request:
