@@ -50,8 +50,6 @@ skip-if = ["os == 'mac' && os_version == '14.70' && processor == 'x86_64'"] # Bu
 
 ["test_moz_input_color.html"]
 
-["test_moz_input_elems_in_form.html"]
-
 ["test_moz_input_folder.html"]
 
 ["test_moz_input_password.html"]
