@@ -16,7 +16,7 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.DataGenerationHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.enhancedTrackingProtectionAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.appContext
@@ -86,8 +86,8 @@ class UnifiedTrustPanelTest : TestSetup() {
     @Test
     fun verifyInsecurePageConnectionFromQuickSettingsWithTrackersTest() {
         appContext.settings().setStrictETP()
-        val genericPage = getGenericAsset(mockWebServer, 1)
-        val trackingProtectionPage = getEnhancedTrackingProtectionAsset(mockWebServer).url
+        val genericPage = mockWebServer.getGenericAsset(1)
+        val trackingProtectionPage = mockWebServer.enhancedTrackingProtectionAsset.url
 
         // browsing a generic page to allow GV to load on a fresh run
         navigationToolbar {
@@ -150,7 +150,7 @@ class UnifiedTrustPanelTest : TestSetup() {
     @Test
     fun verifySecurePageConnectionFromQuickSettingsWithTrackersTest() {
         appContext.settings().setStrictETP()
-        val genericPage = getGenericAsset(mockWebServer, 1)
+        val genericPage = mockWebServer.getGenericAsset(1)
         val trackingProtectionPage = "https://senglehardt.com/test/trackingprotection/test_pages/tracking_protection"
 
         // browsing a generic page to allow GV to load on a fresh run
@@ -189,7 +189,7 @@ class UnifiedTrustPanelTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3186720
     @Test
     fun verifyInsecurePageConnectionFromQuickSettingsWithNoTrackersTest() {
-        val genericPage = getGenericAsset(mockWebServer, 1)
+        val genericPage = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
@@ -263,7 +263,7 @@ class UnifiedTrustPanelTest : TestSetup() {
     @Test
     fun verifySecurePageConnectionFromQuickSettingsWithTrackersInCustomTabsTest() {
         appContext.settings().setStrictETP()
-        val genericPage = getGenericAsset(mockWebServer, 1)
+        val genericPage = mockWebServer.getGenericAsset(1)
         val customTabPage = "https://senglehardt.com/test/trackingprotection/test_pages/tracking_protection"
 
         intentReceiverActivityTestRule.launchActivity(
@@ -313,7 +313,7 @@ class UnifiedTrustPanelTest : TestSetup() {
     @SmokeTest
     @Test
     fun verifyInsecurePageConnectionFromQuickSettingsWithNoTrackersInCustomTabsTest() {
-        val customTabPage = getGenericAsset(mockWebServer, 1)
+        val customTabPage = mockWebServer.getGenericAsset(1)
 
         intentReceiverActivityTestRule.launchActivity(
             createCustomTabIntent(
@@ -375,7 +375,7 @@ class UnifiedTrustPanelTest : TestSetup() {
     fun verifyInsecurePageConnectionFromQuickSettingsWithTrackersInCustomTabsTest() {
         appContext.settings().setStrictETP()
 
-        val customTabPage = getEnhancedTrackingProtectionAsset(mockWebServer).url
+        val customTabPage = mockWebServer.enhancedTrackingProtectionAsset.url
 
         intentReceiverActivityTestRule.launchActivity(
             createCustomTabIntent(

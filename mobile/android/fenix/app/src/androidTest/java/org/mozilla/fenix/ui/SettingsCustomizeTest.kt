@@ -12,7 +12,7 @@ import org.mozilla.fenix.customannotations.SkipLeaks
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AppAndSystemHelper.enableOrDisableBackGestureNavigationOnDevice
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.verifyDarkThemeApplied
@@ -89,8 +89,8 @@ class SettingsCustomizeTest : TestSetup() {
     @Test
     @SkipLeaks
     fun turnOffSwipeToSwitchTabsPreferenceTest() {
-        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+        val firstWebPage = mockWebServer.getGenericAsset(1)
+        val secondWebPage = mockWebServer.getGenericAsset(2)
 
         // Disable the back gesture from the edge of the screen on the device.
         enableOrDisableBackGestureNavigationOnDevice(backGestureNavigationEnabled = false)

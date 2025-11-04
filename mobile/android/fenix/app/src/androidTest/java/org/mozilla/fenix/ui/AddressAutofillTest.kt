@@ -11,7 +11,7 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
-import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.addressFormAsset
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestSetup
@@ -61,8 +61,7 @@ class AddressAutofillTest : TestSetup() {
     @SmokeTest
     @Test
     fun verifyAddressAutofillTest() {
-        val addressFormPage =
-            TestAssetHelper.getAddressFormAsset(mockWebServer)
+        val addressFormPage = mockWebServer.addressFormAsset
 
         autofillScreen(composeTestRule) {
             fillAndSaveAddress(
@@ -164,8 +163,7 @@ class AddressAutofillTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1836839
     @Test
     fun verifyAddressAutofillToggleTest() {
-        val addressFormPage =
-            TestAssetHelper.getAddressFormAsset(mockWebServer)
+        val addressFormPage = mockWebServer.addressFormAsset
 
         autofillScreen(composeTestRule) {
             fillAndSaveAddress(
@@ -208,8 +206,7 @@ class AddressAutofillTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1836847
     @Test
     fun verifyManageAddressesPromptOptionTest() {
-        val addressFormPage =
-            TestAssetHelper.getAddressFormAsset(mockWebServer)
+        val addressFormPage = mockWebServer.addressFormAsset
 
         autofillScreen(composeTestRule) {
             fillAndSaveAddress(
@@ -243,8 +240,7 @@ class AddressAutofillTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1836849
     @Test
     fun verifyMultipleAddressesSelectionTest() {
-        val addressFormPage =
-            TestAssetHelper.getAddressFormAsset(mockWebServer)
+        val addressFormPage = mockWebServer.addressFormAsset
 
         autofillScreen(composeTestRule) {
             fillAndSaveAddress(
@@ -358,8 +354,7 @@ class AddressAutofillTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1836858
     @Test
     fun verifyFormFieldCanBeFilledManuallyTest() {
-        val addressFormPage =
-            TestAssetHelper.getAddressFormAsset(mockWebServer)
+        val addressFormPage = mockWebServer.addressFormAsset
 
         autofillScreen(composeTestRule) {
             fillAndSaveAddress(

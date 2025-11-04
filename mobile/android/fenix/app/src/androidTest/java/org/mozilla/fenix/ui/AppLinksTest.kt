@@ -15,6 +15,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.OpenLinksInApp
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.appLinksRedirectAsset
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
@@ -44,7 +45,7 @@ class AppLinksTest : TestSetup() {
     @Before
     override fun setUp() {
         super.setUp()
-        externalLinksPage = TestAssetHelper.getAppLinksRedirectAsset(mockWebServer)
+        externalLinksPage = mockWebServer.appLinksRedirectAsset
     }
 
     @Test

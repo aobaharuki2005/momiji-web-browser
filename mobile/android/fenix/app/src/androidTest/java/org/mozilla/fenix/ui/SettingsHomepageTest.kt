@@ -58,7 +58,7 @@ class SettingsHomepageTest : TestSetup() {
             "Wikipedia",
             "Google",
         )
-        val genericURL = getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         homeScreen {
             defaultTopSites.forEach { item ->
@@ -87,7 +87,7 @@ class SettingsHomepageTest : TestSetup() {
         composeTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
         }
-        val genericURL = getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -105,7 +105,7 @@ class SettingsHomepageTest : TestSetup() {
     @SmokeTest
     @Test
     fun jumpBackInOptionTest() {
-        val genericURL = getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -123,7 +123,7 @@ class SettingsHomepageTest : TestSetup() {
     @SmokeTest
     @Test
     fun recentBookmarksOptionTest() {
-        val genericURL = getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -143,7 +143,7 @@ class SettingsHomepageTest : TestSetup() {
     @SmokeTest
     @Test
     fun verifyOpeningScreenOptionsTest() {
-        val genericURL = getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -180,7 +180,7 @@ class SettingsHomepageTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1569843
     @Test
     fun verifyOpeningScreenAfterLaunchingExternalLinkTest() {
-        val genericPage = getGenericAsset(mockWebServer, 1)
+        val genericPage = mockWebServer.getGenericAsset(1)
 
         homeScreen {
         }.openThreeDotMenu {

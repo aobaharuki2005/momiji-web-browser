@@ -16,6 +16,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.OpenLinksInApp
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.externalLinksAsset
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -47,7 +48,7 @@ class SettingsAdvancedTest : TestSetup() {
     @Before
     override fun setUp() {
         super.setUp()
-        externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
+        externalLinksPage = mockWebServer.externalLinksAsset
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2092699

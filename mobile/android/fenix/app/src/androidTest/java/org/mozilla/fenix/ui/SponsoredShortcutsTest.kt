@@ -16,7 +16,8 @@ import org.mozilla.fenix.helpers.Constants.defaultTopSitesList
 import org.mozilla.fenix.helpers.DataGenerationHelper.getSponsoredShortcutTitle
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MockBrowserDataHelper
-import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.loremIpsumAsset
 import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
@@ -147,10 +148,10 @@ class SponsoredShortcutsTest : TestSetup() {
     // 1 sponsored shortcut should be displayed if there are 7 pinned top sites
     @Test
     fun verifySponsoredShortcutsListWithSevenPinnedSitesTest() {
-        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-        val thirdWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 3)
-        val fourthWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 4)
+        val firstWebPage = mockWebServer.getGenericAsset(1)
+        val secondWebPage = mockWebServer.getGenericAsset(2)
+        val thirdWebPage = mockWebServer.getGenericAsset(3)
+        val fourthWebPage = mockWebServer.getGenericAsset(4)
 
         homeScreen {
             verifyExistingTopSitesList(activityIntentTestRule)
@@ -200,11 +201,11 @@ class SponsoredShortcutsTest : TestSetup() {
     @Test
     fun verifySponsoredShortcutsListWithEightPinnedSitesTest() {
         val pagesList = listOf(
-            TestAssetHelper.getGenericAsset(mockWebServer, 1),
-            TestAssetHelper.getGenericAsset(mockWebServer, 2),
-            TestAssetHelper.getGenericAsset(mockWebServer, 3),
-            TestAssetHelper.getGenericAsset(mockWebServer, 4),
-            TestAssetHelper.getLoremIpsumAsset(mockWebServer),
+            mockWebServer.getGenericAsset(1),
+            mockWebServer.getGenericAsset(2),
+            mockWebServer.getGenericAsset(3),
+            mockWebServer.getGenericAsset(4),
+              mockWebServer.loremIpsumAsset,
         )
 
         homeScreen {

@@ -16,7 +16,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
-import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
@@ -54,7 +54,7 @@ class TextSelectionTest : TestSetup() {
     @SmokeTest
     @Test
     fun verifySelectAllTextOptionTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -78,7 +78,7 @@ class TextSelectionTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326828
     @Test
     fun verifyCopyTextOptionTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -98,7 +98,7 @@ class TextSelectionTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326829
     @Test
     fun verifyShareSelectedTextOptionTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -111,7 +111,7 @@ class TextSelectionTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326830
     @Test
     fun verifySearchTextOptionTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -127,7 +127,7 @@ class TextSelectionTest : TestSetup() {
     @SmokeTest
     @Test
     fun verifyPrivateSearchTextTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         homeScreen {
         }.togglePrivateBrowsingMode()
@@ -147,7 +147,7 @@ class TextSelectionTest : TestSetup() {
     @Test
     fun verifySelectAllPDFTextOptionTest() {
         val genericURL =
-            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+            mockWebServer.getGenericAsset(3)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -177,7 +177,7 @@ class TextSelectionTest : TestSetup() {
     @Test
     fun verifyCopyPDFTextOptionTest() {
         val genericURL =
-            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+            mockWebServer.getGenericAsset(3)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -200,7 +200,7 @@ class TextSelectionTest : TestSetup() {
     @Test
     fun verifyShareSelectedPDFTextOptionTest() {
         val genericURL =
-            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+            mockWebServer.getGenericAsset(3)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -217,7 +217,7 @@ class TextSelectionTest : TestSetup() {
     @Test
     fun verifySearchPDFTextOptionTest() {
         val genericURL =
-            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+            mockWebServer.getGenericAsset(3)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -234,7 +234,7 @@ class TextSelectionTest : TestSetup() {
     @Test
     fun verifyPrivateSearchPDFTextOptionTest() {
         val genericURL =
-            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+            mockWebServer.getGenericAsset(3)
 
         homeScreen {
         }.togglePrivateBrowsingMode()
@@ -253,7 +253,7 @@ class TextSelectionTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326813
     @Test
     fun verifyUrlBarTextSelectionOptionsTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -266,7 +266,7 @@ class TextSelectionTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326814
     @Test
     fun verifyCopyUrlBarTextSelectionOptionTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -284,7 +284,7 @@ class TextSelectionTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326815
     @Test
     fun verifyCutUrlBarTextSelectionOptionTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -302,7 +302,7 @@ class TextSelectionTest : TestSetup() {
     @SmokeTest
     @Test
     fun verifyShareUrlBarTextSelectionOptionTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val genericURL = mockWebServer.getGenericAsset(1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
@@ -318,8 +318,8 @@ class TextSelectionTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/414316
     @Test
     fun urlBarQuickActionsTest() {
-        val firstWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val secondWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+        val firstWebsite = mockWebServer.getGenericAsset(1)
+        val secondWebsite = mockWebServer.getGenericAsset(2)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebsite.url) {
