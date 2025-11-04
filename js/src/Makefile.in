@@ -4,26 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DASH_R		= -r
-
-# Define keyword generator before rules.mk, see bug 323979 comment 50
-
-USE_HOST_CXX = 1
-
 include $(topsrcdir)/config/rules.mk
-
-CFLAGS += $(MOZ_ZLIB_CFLAGS)
-
-ifeq ($(OS_ARCH),SunOS)
-ifeq ($(TARGET_CPU),sparc)
-
-ifneq ($(CC_TYPE),clang-cl)
-CFLAGS   += -mcpu=v9
-CXXFLAGS += -mcpu=v9
-endif # !clang-cl
-
-endif
-endif
 
 install::
 	$(MAKE) -C build install

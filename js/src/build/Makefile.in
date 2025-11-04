@@ -6,9 +6,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-$(LIBRARY_NAME).pc: js.pc
-	cp $^ $@
-
 # Install versioned file, for parallel installability in Linux distributions
 install:: $(LIBRARY_NAME).pc
 	cp $^ $(JS_LIBRARY_NAME).pc

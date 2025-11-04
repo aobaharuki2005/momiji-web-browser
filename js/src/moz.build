@@ -574,6 +574,8 @@ if CONFIG["JS_HAS_INTL_API"]:
 if CONFIG["CC_TYPE"] == "clang":
     CXXFLAGS += ["-fstandalone-debug"]
 
+CXXFLAGS += CONFIG["MOZ_ZLIB_CFLAGS"]
+
 # Bug 1722102 - This should never be enabled in Release without explicit
 # security and SpiderMonkey review.
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1722102#c16
