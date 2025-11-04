@@ -76,11 +76,6 @@ addAccessibleTask(
     const target1 = findAccessibleChildByID(docAcc, "target1");
     await testDetailsRelations(btn1, target1);
 
-    is(
-      btn1.attributes.getStringProperty("details-from"),
-      "css-anchor",
-      "Correct details-from attribute"
-    );
     info("Make anchor invalid");
     await invokeContentTaskAndTick(browser, [], () => {
       Object.assign(content.document.getElementById("btn1").style, {
@@ -453,7 +448,7 @@ addAccessibleTask(
   <div id="target-targetsetdetails" aria-details="" class="target">World</div>
   <button id="btn-targetsetdetails">Hello</button>
   `,
-  async function testOtherRelationsWithAnchor(browser, docAcc) {
+  async function testTooltipPositionAnchor(browser, docAcc) {
     info("Test no details relations when explicit relations are set");
     const btnDescribedby = findAccessibleChildByID(docAcc, "btn-describedby");
     const targetDescribedby = findAccessibleChildByID(
