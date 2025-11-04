@@ -4,14 +4,9 @@
 
 package org.mozilla.fenix.settings.settingssearch
 
-import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import mozilla.components.support.test.mock
-import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
