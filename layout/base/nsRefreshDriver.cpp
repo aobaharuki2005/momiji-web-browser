@@ -2996,19 +2996,21 @@ TimeStamp nsRefreshDriver::GetIdleDeadlineHint(TimeStamp aDefault,
 /* static */
 Maybe<TimeStamp> nsRefreshDriver::GetNextTickHint() {
   MOZ_ASSERT(NS_IsMainThread());
-
+  Maybe<TimeStamp> hint;
+  auto UpdateHint = [&hint](const Maybe<TimeStamp>& aNewHint) {
+    if (!aNewHint) {
+      return;
+    }
+    if (!hint || *aNewHint < *hint) {
+      hint = aNewHint;
+    }
+  };
   if (sRegularRateTimer) {
-    return sRegularRateTimer->GetNextTickHint();
+    UpdateHint(sRegularRateTimer->GetNextTickHint());
   }
-
-  Maybe<TimeStamp> hint = Nothing();
   if (sRegularRateTimerList) {
     for (RefreshDriverTimer* timer : *sRegularRateTimerList) {
-      if (Maybe<TimeStamp> newHint = timer->GetNextTickHint()) {
-        if (!hint || newHint.value() < hint.value()) {
-          hint = newHint;
-        }
-      }
+      UpdateHint(timer->GetNextTickHint());
     }
   }
   return hint;
