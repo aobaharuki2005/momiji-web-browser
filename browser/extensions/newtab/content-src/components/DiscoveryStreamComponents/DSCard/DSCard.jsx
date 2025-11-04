@@ -331,39 +331,67 @@ export class _DSCard extends React.PureComponent {
   onLinkClick() {
     const matchesSelectedTopic = this.doesLinkTopicMatchSelectedTopic();
     if (this.props.dispatch) {
-      if (this.props.isFakespot) {
-        this.props.dispatch(
-          ac.DiscoveryStreamUserEvent({
-            event: "FAKESPOT_CLICK",
-            value: {
-              product_id: this.props.id,
-              category: this.props.category || "",
-            },
-          })
-        );
-      } else {
-        this.props.dispatch(
-          ac.DiscoveryStreamUserEvent({
-            event: "CLICK",
-            source: this.props.type.toUpperCase(),
-            action_position: this.props.pos,
-            value: {
-              event_source: "card",
-              card_type: this.props.flightId ? "spoc" : "organic",
-              recommendation_id: this.props.recommendation_id,
-              tile_id: this.props.id,
+      this.props.dispatch(
+        ac.DiscoveryStreamUserEvent({
+          event: "CLICK",
+          source: this.props.type.toUpperCase(),
+          action_position: this.props.pos,
+          value: {
+            event_source: "card",
+            card_type: this.props.flightId ? "spoc" : "organic",
+            recommendation_id: this.props.recommendation_id,
+            tile_id: this.props.id,
+            ...(this.props.shim && this.props.shim.click
+              ? { shim: this.props.shim.click }
+              : {}),
+            fetchTimestamp: this.props.fetchTimestamp,
+            firstVisibleTimestamp: this.props.firstVisibleTimestamp,
+            corpus_item_id: this.props.corpus_item_id,
+            scheduled_corpus_item_id: this.props.scheduled_corpus_item_id,
+            recommended_at: this.props.recommended_at,
+            received_rank: this.props.received_rank,
+            topic: this.props.topic,
+            features: this.props.features,
+            matches_selected_topic: matchesSelectedTopic,
+            selected_topics: this.props.selectedTopics,
+            ...(this.props.format
+              ? { format: this.props.format }
+              : {
+                  format: getActiveCardSize(
+                    window.innerWidth,
+                    this.props.sectionsClassNames,
+                    this.props.section,
+                    this.props.flightId
+                  ),
+                }),
+            ...(this.props.section
+              ? {
+                  section: this.props.section,
+                  section_position: this.props.sectionPosition,
+                  is_section_followed: this.props.sectionFollowed,
+                  layout_name: this.props.sectionLayoutName,
+                }
+              : {}),
+          },
+        })
+      );
+
+      this.props.dispatch(
+        ac.ImpressionStats({
+          source: this.props.type.toUpperCase(),
+          click: 0,
+          window_inner_width: this.props.windowObj.innerWidth,
+          window_inner_height: this.props.windowObj.innerHeight,
+          tiles: [
+            {
+              id: this.props.id,
+              pos: this.props.pos,
               ...(this.props.shim && this.props.shim.click
                 ? { shim: this.props.shim.click }
                 : {}),
-              fetchTimestamp: this.props.fetchTimestamp,
-              firstVisibleTimestamp: this.props.firstVisibleTimestamp,
-              corpus_item_id: this.props.corpus_item_id,
-              scheduled_corpus_item_id: this.props.scheduled_corpus_item_id,
-              recommended_at: this.props.recommended_at,
-              received_rank: this.props.received_rank,
+              type: this.props.flightId ? "spoc" : "organic",
+              recommendation_id: this.props.recommendation_id,
               topic: this.props.topic,
-              features: this.props.features,
-              matches_selected_topic: matchesSelectedTopic,
               selected_topics: this.props.selectedTopics,
               ...(this.props.format
                 ? { format: this.props.format }
@@ -380,52 +408,12 @@ export class _DSCard extends React.PureComponent {
                     section: this.props.section,
                     section_position: this.props.sectionPosition,
                     is_section_followed: this.props.sectionFollowed,
-                    layout_name: this.props.sectionLayoutName,
                   }
                 : {}),
             },
-          })
-        );
-
-        this.props.dispatch(
-          ac.ImpressionStats({
-            source: this.props.type.toUpperCase(),
-            click: 0,
-            window_inner_width: this.props.windowObj.innerWidth,
-            window_inner_height: this.props.windowObj.innerHeight,
-            tiles: [
-              {
-                id: this.props.id,
-                pos: this.props.pos,
-                ...(this.props.shim && this.props.shim.click
-                  ? { shim: this.props.shim.click }
-                  : {}),
-                type: this.props.flightId ? "spoc" : "organic",
-                recommendation_id: this.props.recommendation_id,
-                topic: this.props.topic,
-                selected_topics: this.props.selectedTopics,
-                ...(this.props.format
-                  ? { format: this.props.format }
-                  : {
-                      format: getActiveCardSize(
-                        window.innerWidth,
-                        this.props.sectionsClassNames,
-                        this.props.section,
-                        this.props.flightId
-                      ),
-                    }),
-                ...(this.props.section
-                  ? {
-                      section: this.props.section,
-                      section_position: this.props.sectionPosition,
-                      is_section_followed: this.props.sectionFollowed,
-                    }
-                  : {}),
-              },
-            ],
-          })
-        );
-      }
+          ],
+        })
+      );
     }
   }
 
@@ -769,7 +757,6 @@ export class _DSCard extends React.PureComponent {
       isRecentSave,
       DiscoveryStream,
       Prefs,
-      isFakespot,
       mayHaveSectionsCards,
       format,
     } = this.props;
@@ -934,7 +921,6 @@ export class _DSCard extends React.PureComponent {
               },
             ]}
             dispatch={this.props.dispatch}
-            isFakespot={isFakespot}
             source={this.props.type}
             firstVisibleTimestamp={this.props.firstVisibleTimestamp}
           />
@@ -942,90 +928,78 @@ export class _DSCard extends React.PureComponent {
           {ctaButtonVariant === "variant-b" && (
             <div className="cta-header">Shop Now</div>
           )}
-          {isFakespot ? (
-            <div className="meta">
-              <div className="info-wrap">
-                <h3 className="title clamp">{this.props.title}</h3>
-              </div>
-            </div>
-          ) : (
-            <DefaultMeta
-              source={source}
-              title={this.props.title}
-              excerpt={excerpt}
-              newSponsoredLabel={newSponsoredLabel}
-              timeToRead={timeToRead}
-              context={this.props.context}
-              context_type={this.props.context_type}
-              sponsor={this.props.sponsor}
-              sponsored_by_override={this.props.sponsored_by_override}
-              ctaButtonVariant={ctaButtonVariant}
-              dispatch={this.props.dispatch}
-              mayHaveThumbsUpDown={this.props.mayHaveThumbsUpDown}
-              mayHaveSectionsCards={this.props.mayHaveSectionsCards}
-              onThumbsUpClick={this.onThumbsUpClick}
-              onThumbsDownClick={this.onThumbsDownClick}
-              state={this.state}
-              showTopics={!refinedCardsLayout && this.props.showTopics}
-              isSectionsCard={
-                this.props.mayHaveSectionsCards && this.props.topic
-              }
-              format={format}
-              topic={this.props.topic}
-              icon_src={faviconSrc}
-              refinedCardsLayout={refinedCardsLayout}
-              tabIndex={this.props.tabIndex}
-            />
-          )}
+          <DefaultMeta
+            source={source}
+            title={this.props.title}
+            excerpt={excerpt}
+            newSponsoredLabel={newSponsoredLabel}
+            timeToRead={timeToRead}
+            context={this.props.context}
+            context_type={this.props.context_type}
+            sponsor={this.props.sponsor}
+            sponsored_by_override={this.props.sponsored_by_override}
+            ctaButtonVariant={ctaButtonVariant}
+            dispatch={this.props.dispatch}
+            mayHaveThumbsUpDown={this.props.mayHaveThumbsUpDown}
+            mayHaveSectionsCards={this.props.mayHaveSectionsCards}
+            onThumbsUpClick={this.onThumbsUpClick}
+            onThumbsDownClick={this.onThumbsDownClick}
+            state={this.state}
+            showTopics={!refinedCardsLayout && this.props.showTopics}
+            isSectionsCard={this.props.mayHaveSectionsCards && this.props.topic}
+            format={format}
+            topic={this.props.topic}
+            icon_src={faviconSrc}
+            refinedCardsLayout={refinedCardsLayout}
+            tabIndex={this.props.tabIndex}
+          />
         </SafeAnchor>
         <div className="card-stp-button-hover-background">
           <div className="card-stp-button-position-wrapper">
-            {!isFakespot && (
-              <DSLinkMenu
-                id={this.props.id}
-                index={this.props.pos}
-                dispatch={this.props.dispatch}
-                url={this.props.url}
-                title={this.props.title}
-                source={source}
-                type={this.props.type}
-                card_type={this.props.flightId ? "spoc" : "organic"}
-                pocket_id={this.props.pocket_id}
-                shim={this.props.shim}
-                bookmarkGuid={this.props.bookmarkGuid}
-                flightId={this.props.flightId}
-                showPrivacyInfo={!!this.props.flightId}
-                onMenuUpdate={this.onMenuUpdate}
-                onMenuShow={this.onMenuShow}
-                isRecentSave={isRecentSave}
-                recommendation_id={this.props.recommendation_id}
-                tile_id={this.props.id}
-                block_key={this.props.id}
-                corpus_item_id={this.props.corpus_item_id}
-                scheduled_corpus_item_id={this.props.scheduled_corpus_item_id}
-                recommended_at={this.props.recommended_at}
-                received_rank={this.props.received_rank}
-                section={this.props.section}
-                section_position={this.props.sectionPosition}
-                is_section_followed={this.props.sectionFollowed}
-                fetchTimestamp={this.props.fetchTimestamp}
-                firstVisibleTimestamp={this.props.firstVisibleTimestamp}
-                format={
-                  format
-                    ? format
-                    : getActiveCardSize(
-                        window.innerWidth,
-                        this.props.sectionsClassNames,
-                        this.props.section,
-                        this.props.flightId
-                      )
-                }
-                isSectionsCard={this.props.mayHaveSectionsCards}
-                topic={this.props.topic}
-                selected_topics={this.props.selected_topics}
-                tabIndex={this.props.tabIndex}
-              />
-            )}
+            <DSLinkMenu
+              id={this.props.id}
+              index={this.props.pos}
+              dispatch={this.props.dispatch}
+              url={this.props.url}
+              title={this.props.title}
+              source={source}
+              type={this.props.type}
+              card_type={this.props.flightId ? "spoc" : "organic"}
+              pocket_id={this.props.pocket_id}
+              shim={this.props.shim}
+              bookmarkGuid={this.props.bookmarkGuid}
+              flightId={this.props.flightId}
+              showPrivacyInfo={!!this.props.flightId}
+              onMenuUpdate={this.onMenuUpdate}
+              onMenuShow={this.onMenuShow}
+              isRecentSave={isRecentSave}
+              recommendation_id={this.props.recommendation_id}
+              tile_id={this.props.id}
+              block_key={this.props.id}
+              corpus_item_id={this.props.corpus_item_id}
+              scheduled_corpus_item_id={this.props.scheduled_corpus_item_id}
+              recommended_at={this.props.recommended_at}
+              received_rank={this.props.received_rank}
+              section={this.props.section}
+              section_position={this.props.sectionPosition}
+              is_section_followed={this.props.sectionFollowed}
+              fetchTimestamp={this.props.fetchTimestamp}
+              firstVisibleTimestamp={this.props.firstVisibleTimestamp}
+              format={
+                format
+                  ? format
+                  : getActiveCardSize(
+                      window.innerWidth,
+                      this.props.sectionsClassNames,
+                      this.props.section,
+                      this.props.flightId
+                    )
+              }
+              isSectionsCard={this.props.mayHaveSectionsCards}
+              topic={this.props.topic}
+              selected_topics={this.props.selected_topics}
+              tabIndex={this.props.tabIndex}
+            />
           </div>
         </div>
       </article>

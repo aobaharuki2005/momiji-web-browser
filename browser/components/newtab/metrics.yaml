@@ -3324,34 +3324,6 @@ activity_stream:
     extra_keys: *activity_stream_event_extra
     telemetry_mirror: Activity_stream_Event_PocketThumbsUp
 
-  event_fakespot_click:
-    type: event
-    description: >
-      This is recorded with every user interaction on Activity Stream
-      elements.
-      This event was generated to correspond to the Legacy Telemetry event
-      activity_stream.event#FAKESPOT_CLICK.
-    bugs: *activity_stream_event_bugs
-    data_reviews: *activity_stream_event_data_reviews
-    notification_emails: *activity_stream_event_emails
-    expires: never
-    extra_keys: *activity_stream_event_extra
-    telemetry_mirror: Activity_stream_Event_FakespotClick
-
-  event_fakespot_category:
-    type: event
-    description: >
-      This is recorded with every user interaction on Activity Stream
-      elements.
-      This event was generated to correspond to the Legacy Telemetry event
-      activity_stream.event#FAKESPOT_CATEGORY.
-    bugs: *activity_stream_event_bugs
-    data_reviews: *activity_stream_event_data_reviews
-    notification_emails: *activity_stream_event_emails
-    expires: never
-    extra_keys: *activity_stream_event_extra
-    telemetry_mirror: Activity_stream_Event_FakespotCategory
-
   event_pref_changed:
     type: event
     description: >
