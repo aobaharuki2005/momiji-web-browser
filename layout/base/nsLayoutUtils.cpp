@@ -1019,32 +1019,14 @@ nsIFrame* nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
 // static
 nsIFrame* nsLayoutUtils::GetCrossDocParentFrameInProcess(
     const nsIFrame* aFrame, nsPoint* aCrossDocOffset) {
-  nsIFrame* p = aFrame->GetParent();
-  if (p) {
+  if (nsIFrame* p = aFrame->GetParent()) {
     return p;
   }
-
-  nsView* v = aFrame->GetView();
-  if (!v) {
-    return nullptr;
+  auto* embedder = aFrame->PresShell()->GetInProcessEmbedderFrame();
+  if (embedder && aCrossDocOffset) {
+    *aCrossDocOffset += embedder->GetExtraOffset();
   }
-  v = v->GetParent();  // anonymous inner view
-  if (!v) {
-    return nullptr;
-  }
-  v = v->GetParent();  // subdocumentframe's view
-  if (!v) {
-    return nullptr;
-  }
-
-  p = v->GetFrame();
-  if (p && aCrossDocOffset) {
-    nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(p);
-    MOZ_ASSERT(subdocumentFrame);
-    *aCrossDocOffset += subdocumentFrame->GetExtraOffset();
-  }
-
-  return p;
+  return embedder;
 }
 
 // static

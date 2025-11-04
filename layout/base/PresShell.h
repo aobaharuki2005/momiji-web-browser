@@ -76,6 +76,7 @@ class nsRange;
 class nsRefreshDriver;
 class nsRegion;
 class nsTextFrame;
+class nsSubDocumentFrame;
 class nsView;
 class nsViewManager;
 class nsWindowSizes;
@@ -459,6 +460,9 @@ class PresShell final : public nsStubDocumentObserver,
   // Return the closest widget (including popups, if our document is inside a
   // popup).
   nsIWidget* GetNearestWidget() const;
+
+  // Get the current frame of our embedder, if it's in our same process.
+  nsSubDocumentFrame* GetInProcessEmbedderFrame() const;
 
   /**
    * Get root scroll container frame from the frame constructor.

@@ -91,6 +91,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsRefreshDriver.h"
+#include "nsSubDocumentFrame.h"
 #include "nsThreadUtils.h"
 #include "nsTransitionManager.h"
 #include "nsViewManager.h"
@@ -1134,26 +1135,12 @@ void nsPresContext::UpdateCharSet(NotNull<const Encoding*> aCharSet) {
 }
 
 nsPresContext* nsPresContext::GetParentPresContext() const {
-  mozilla::PresShell* presShell = GetPresShell();
-  if (presShell) {
-    nsViewManager* viewManager = presShell->GetViewManager();
-    if (viewManager) {
-      nsView* view = viewManager->GetRootView();
-      if (view) {
-        view = view->GetParent();  // anonymous inner view
-        if (view) {
-          view = view->GetParent();  // subdocumentframe's view
-          if (view) {
-            nsIFrame* f = view->GetFrame();
-            if (f) {
-              return f->PresContext();
-            }
-          }
-        }
-      }
-    }
+  mozilla::PresShell* ps = GetPresShell();
+  if (!ps) {
+    return nullptr;
   }
-  return nullptr;
+  auto* embedder = ps->GetInProcessEmbedderFrame();
+  return embedder ? embedder->PresContext() : nullptr;
 }
 
 nsPresContext* nsPresContext::GetInProcessRootContentDocumentPresContext() {
@@ -2656,22 +2643,8 @@ bool nsPresContext::IsRootContentDocumentInProcess() const {
   if (IsChrome()) {
     return false;
   }
-  // We may not have a root frame, so use views.
-  nsView* view = PresShell()->GetViewManager()->GetRootView();
-  if (!view) {
-    return false;
-  }
-  view = view->GetParent();  // anonymous inner view
-  if (!view) {
-    return true;
-  }
-  view = view->GetParent();  // subdocumentframe's view
-  if (!view) {
-    return true;
-  }
-
-  nsIFrame* f = view->GetFrame();
-  return (f && f->PresContext()->IsChrome());
+  auto* embedder = PresShell()->GetInProcessEmbedderFrame();
+  return !embedder || embedder->PresContext()->IsChrome();
 }
 
 bool nsPresContext::IsRootContentDocumentCrossProcess() const {

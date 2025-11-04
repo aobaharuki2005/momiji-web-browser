@@ -1213,13 +1213,6 @@ void PresShell::Destroy() {
   mPendingScrollAnchorAdjustment.Clear();
   mPendingScrollResnap.Clear();
 
-  if (mViewManager) {
-    // Clear the view manager's weak pointer back to |this| in case it
-    // was leaked.
-    mViewManager->SetPresShell(nullptr);
-    mViewManager = nullptr;
-  }
-
   // This shell must be removed from the document before the frame
   // hierarchy is torn down to avoid finding deleted frames through
   // this presshell while the frames are being torn down
@@ -1259,6 +1252,13 @@ void PresShell::Destroy() {
   if (mAccessibleCaretEventHub) {
     mAccessibleCaretEventHub->Terminate();
     mAccessibleCaretEventHub = nullptr;
+  }
+
+  if (mViewManager) {
+    // Clear the view manager's weak pointer back to |this| in case it
+    // was leaked.
+    mViewManager->SetPresShell(nullptr);
+    mViewManager = nullptr;
   }
 
   if (mPresContext) {
@@ -5645,10 +5645,8 @@ nsIWidget* PresShell::GetNearestWidget() const {
       }
     }
   }
-  if (auto* el = mDocument->GetEmbedderElement()) {
-    if (auto* f = el->GetPrimaryFrame()) {
-      return f->GetNearestWidget();
-    }
+  if (auto* embedder = GetInProcessEmbedderFrame()) {
+    return embedder->GetNearestWidget();
   }
   return GetRootWidget();
 }
@@ -10353,6 +10351,29 @@ void PresShell::DidPaintWindow() {
       }
     }
   }
+}
+
+nsSubDocumentFrame* PresShell::GetInProcessEmbedderFrame() const {
+  if (!mViewManager) {
+    return nullptr;
+  }
+  // We may not have a root frame yet, so use views.
+  nsView* view = mViewManager->GetRootView();
+  if (!view) {
+    return nullptr;
+  }
+  view = view->GetParent();  // anonymous inner view
+  if (!view) {
+    return nullptr;
+  }
+  view = view->GetParent();  // subdocumentframe's view
+  if (!view) {
+    return nullptr;
+  }
+
+  nsIFrame* f = view->GetFrame();
+  MOZ_ASSERT_IF(f, f->IsSubDocumentFrame());
+  return do_QueryFrame(f);
 }
 
 bool PresShell::IsVisible() const {
