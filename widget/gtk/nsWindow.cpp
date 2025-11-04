@@ -436,7 +436,7 @@ nsWindow::nsWindow()
       mUndecorated(false),
       mPopupTrackInHierarchy(false),
       mPopupTrackInHierarchyConfigured(false),
-      mHiddenPopupPositioned(false),
+      mX11HiddenPopupPositioned(false),
       mHasAlphaVisual(false),
       mPopupAnchored(false),
       mPopupContextMenu(false),
@@ -6863,7 +6863,7 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
   // and move it when it's shown.
   if (aMoved && GdkIsX11Display() && IsPopup() &&
       !gtk_widget_get_visible(GTK_WIDGET(mShell))) {
-    mHiddenPopupPositioned = true;
+    mX11HiddenPopupPositioned = true;
     mPopupPosition = {moveResizeRect.x, moveResizeRect.y};
     mClientArea.MoveTo(mLastMoveRequest);
     LOG("  store position of hidden popup window [%d, %d]", mPopupPosition.x,
@@ -7013,11 +7013,11 @@ void nsWindow::NativeShow(bool aAction) {
       }
 #endif
     }
-    if (mHiddenPopupPositioned && IsPopup()) {
+    if (mX11HiddenPopupPositioned) {
       LOG("  re-position hidden popup window [%d, %d]", mPopupPosition.x,
           mPopupPosition.y);
       gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
-      mHiddenPopupPositioned = false;
+      mX11HiddenPopupPositioned = false;
     }
   } else {
     LOG("nsWindow::NativeShow hide\n");

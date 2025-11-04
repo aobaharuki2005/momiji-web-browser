@@ -793,7 +793,7 @@ class nsWindow final : public nsIWidget {
    * is hidden. Save the position requests at mPopupPosition and apply
    * when the widget is shown.
    */
-  bool mHiddenPopupPositioned : 1;
+  bool mX11HiddenPopupPositioned : 1;
 
   // True when we're on compositing window manager and this
   // window is using visual with alpha channel.
