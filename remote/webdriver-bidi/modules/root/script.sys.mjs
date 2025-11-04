@@ -208,7 +208,7 @@ class ScriptModule extends RootBiDiModule {
       navigables = new Set();
 
       for (const contextId of contextIds) {
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -644,7 +644,7 @@ class ScriptModule extends RootBiDiModule {
         contextId,
         lazy.pprint`Expected "context" to be a string, got ${contextId}`
       );
-      destination.id = this.#getBrowsingContext(contextId).id;
+      destination.id = this._getNavigable(contextId).id;
     } else {
       destination.contextDescriptor = {
         type: lazy.ContextDescriptorType.All,
@@ -855,26 +855,9 @@ class ScriptModule extends RootBiDiModule {
     return rv;
   }
 
-  #getBrowsingContext(contextId) {
-    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
-    if (context === null) {
-      throw new lazy.error.NoSuchFrameError(
-        `Browsing Context with id ${contextId} not found`
-      );
-    }
-
-    if (!context.currentWindowGlobal) {
-      throw new lazy.error.NoSuchFrameError(
-        `No window found for BrowsingContext with id ${contextId}`
-      );
-    }
-
-    return context;
-  }
-
   async #getContextFromTarget({ contextId, realmId }) {
     if (contextId !== null) {
-      return this.#getBrowsingContext(contextId);
+      return this._getNavigable(contextId);
     }
 
     const destination = {
@@ -886,7 +869,7 @@ class ScriptModule extends RootBiDiModule {
     const realm = realms.find(el => el.realm == realmId);
 
     if (realm && realm.context !== null) {
-      return this.#getBrowsingContext(realm.context);
+      return this._getNavigable(realm.context);
     }
 
     throw new lazy.error.NoSuchFrameError(`Realm with id ${realmId} not found`);

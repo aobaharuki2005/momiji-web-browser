@@ -71,8 +71,9 @@ export const NavigationState = {
 /**
  * @typedef {object} NavigationInfo
  * @property {boolean} committed - Whether the navigation was ever committed.
- * @property {string} navigationId - The UUID for the navigation.
+ * @property {string} contextId - ID of the browsing context.
  * @property {string} navigable - The UUID for the navigable.
+ * @property {string} navigationId - The UUID for the navigation.
  * @property {NavigationState} state - The navigation state.
  * @property {string} url - The target url for the navigation.
  */
@@ -216,6 +217,7 @@ class NavigationRegistry extends EventEmitter {
 
     const navigationId = this.#getOrCreateNavigationId(navigableId);
     const navigation = this.#createNavigationObject({
+      contextId: context.id,
       state: NavigationState.Finished,
       navigationId,
       url,
@@ -265,7 +267,11 @@ class NavigationRegistry extends EventEmitter {
     const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
 
     // History updates are immediately done, fire a single event.
-    this.emit(NAVIGATION_EVENTS.HistoryUpdated, { navigableId, url });
+    this.emit(NAVIGATION_EVENTS.HistoryUpdated, {
+      contextId: context.id,
+      navigableId,
+      url,
+    });
   }
 
   /**
@@ -543,6 +549,7 @@ class NavigationRegistry extends EventEmitter {
     );
 
     this.emit(NAVIGATION_EVENTS.NavigationStarted, {
+      contextId: context.id,
       navigationId,
       navigableId,
       url,
@@ -781,6 +788,7 @@ class NavigationRegistry extends EventEmitter {
     // via the DownloadManager for consistency and also to enforce having a
     // singleton and consistent navigation ids across sessions.
     this.emit(NAVIGATION_EVENTS.DownloadStarted, {
+      contextId: browsingContext.id,
       navigationId,
       navigableId,
       suggestedFilename: PathUtils.filename(download.target.path),
@@ -811,6 +819,7 @@ class NavigationRegistry extends EventEmitter {
     const canceled = download.canceled || download.error;
     this.emit(NAVIGATION_EVENTS.DownloadEnd, {
       canceled,
+      contextId: browsingContext.id,
       filepath: download.target.path,
       navigableId,
       navigationId,

@@ -508,6 +508,7 @@ class SessionModule extends RootBiDiModule {
     // Do nothing if traversable is already closed or still has another subscription.
     const traversable =
       lazy.NavigableManager.getBrowsingContextById(traversableId);
+
     if (
       traversable === null ||
       this.#hasSubscriptionByAssociatedUserContext(eventName, traversable) ||
@@ -549,34 +550,6 @@ class SessionModule extends RootBiDiModule {
     }
 
     return listeners;
-  }
-
-  /**
-   * Retrieves a navigable based on its id.
-   *
-   * @see https://w3c.github.io/webdriver-bidi/#get-a-navigable
-   *
-   * @param {number} navigableId
-   *     Id of the navigable.
-   *
-   * @returns {BrowsingContext=}
-   *     The navigable or null if <var>navigableId</var> is null.
-   * @throws {NoSuchFrameError}
-   *     If the navigable cannot be found.
-   */
-  #getNavigable(navigableId) {
-    if (navigableId === null) {
-      return null;
-    }
-
-    const navigable = lazy.NavigableManager.getBrowsingContextById(navigableId);
-    if (!navigable) {
-      throw new lazy.error.NoSuchFrameError(
-        `Browsing context with id ${navigableId} not found`
-      );
-    }
-
-    return navigable;
   }
 
   /**
@@ -685,7 +658,7 @@ class SessionModule extends RootBiDiModule {
     const result = new Set();
 
     for (const navigableId of navigableIds) {
-      result.add(this.#getNavigable(navigableId));
+      result.add(this._getNavigable(navigableId));
     }
 
     return result;

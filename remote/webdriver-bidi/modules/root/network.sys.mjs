@@ -576,7 +576,7 @@ class NetworkModule extends RootBiDiModule {
           contextId,
           lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
         );
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -676,7 +676,7 @@ class NetworkModule extends RootBiDiModule {
           contextId,
           `Expected elements of "contexts" to be a string, got ${contextId}`
         );
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -1624,7 +1624,7 @@ class NetworkModule extends RootBiDiModule {
         contextId,
         lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
       );
-      const context = this.#getBrowsingContext(contextId);
+      const context = this._getNavigable(contextId);
 
       lazy.assert.topLevel(
         context,
@@ -1712,7 +1712,7 @@ class NetworkModule extends RootBiDiModule {
           contextId,
           lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
         );
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -1732,7 +1732,7 @@ class NetworkModule extends RootBiDiModule {
       }
     } else if (contextIds !== NULL) {
       for (const contextId of navigables) {
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
         this.#extraHeaders.navigableHeaders.set(
           context.webProgress,
           deserializedHeaders
@@ -2018,23 +2018,6 @@ class NetworkModule extends RootBiDiModule {
     }
 
     return challenges;
-  }
-
-  #getBrowsingContext(contextId) {
-    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
-    if (context === null) {
-      throw new lazy.error.NoSuchFrameError(
-        `Browsing Context with id ${contextId} not found`
-      );
-    }
-
-    if (!context.currentWindowGlobal) {
-      throw new lazy.error.NoSuchFrameError(
-        `No window found for BrowsingContext with id ${contextId}`
-      );
-    }
-
-    return context;
   }
 
   #getCollectedData(requestId, dataType) {

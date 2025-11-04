@@ -233,7 +233,7 @@ class EmulationModule extends RootBiDiModule {
           lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
         );
 
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -407,7 +407,7 @@ class EmulationModule extends RootBiDiModule {
           lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
         );
 
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -619,7 +619,7 @@ class EmulationModule extends RootBiDiModule {
           lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
         );
 
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -783,7 +783,7 @@ class EmulationModule extends RootBiDiModule {
           lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
         );
 
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -960,7 +960,7 @@ class EmulationModule extends RootBiDiModule {
           lazy.pprint`Expected elements of "contexts" to be a string, got ${contextId}`
         );
 
-        const context = this.#getBrowsingContext(contextId);
+        const context = this._getNavigable(contextId);
 
         lazy.assert.topLevel(
           context,
@@ -1267,17 +1267,6 @@ class EmulationModule extends RootBiDiModule {
     });
 
     return [overridePerContext, overridePerUserContext, overrideGlobal];
-  }
-
-  #getBrowsingContext(contextId) {
-    const context = lazy.NavigableManager.getBrowsingContextById(contextId);
-    if (context === null) {
-      throw new lazy.error.NoSuchFrameError(
-        `Browsing Context with id ${contextId} not found`
-      );
-    }
-
-    return context;
   }
 
   /**
