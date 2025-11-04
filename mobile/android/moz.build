@@ -59,13 +59,13 @@ GeneratedFile(
 
 GeneratedFile(
     "geckoview/src/main/java/org/mozilla/geckoview/CrashReport.java",
-    script="/toolkit/crashreporter/generate_crash_reporter_sources.py",
+    script="/toolkit/crashreporter/annotations/generate.py",
     entry_point="emit_java",
 )
 
 GeneratedFile(
     "android-components/components/lib/crash/src/main/java/mozilla/components/lib/crash/service/CrashReport.kt",
-    script="/toolkit/crashreporter/generate_crash_reporter_sources.py",
+    script="/toolkit/crashreporter/annotations/generate.py",
     entry_point="emit_java",
 )
 
