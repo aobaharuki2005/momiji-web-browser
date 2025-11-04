@@ -653,6 +653,12 @@ nsCString getKeaGroupName(uint32_t aKeaGroup) {
     case ssl_grp_kem_mlkem768x25519:
       groupName = "mlkem768x25519"_ns;
       break;
+    case ssl_grp_kem_secp256r1mlkem768:
+      groupName = "secp256r1mlkem768"_ns;
+      break;
+    case ssl_grp_kem_secp384r1mlkem1024:
+      groupName = "secp384r1mlkem1024"_ns;
+      break;
     case ssl_grp_ffdhe_2048:
       groupName = "FF 2048"_ns;
       break;
