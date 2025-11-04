@@ -282,8 +282,8 @@ class UnifiedTrustPanelTest : TestSetup() {
             ),
         )
 
-        browserScreen {
-            verifyPageContent("Tracker Blocking")
+        customTabScreen {
+            verifyCustomTabUrl(customTabPage.toUri().host.toString())
         }
         customTabScreen {
         }.openUnifiedTrustPanel {
