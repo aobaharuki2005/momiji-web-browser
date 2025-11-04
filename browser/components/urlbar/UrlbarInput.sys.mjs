@@ -326,6 +326,14 @@ export class UrlbarInput {
   }
 
   /**
+   * The search access point name of the UrlbarInput for use with telemetry or
+   * logging, e.g. `urlbar`, `searchbar`.
+   */
+  get sapName() {
+    return this.#sapName;
+  }
+
+  /**
    * @type {typeof HTMLDivElement.prototype.getAttribute}
    */
   getAttribute;
@@ -1990,9 +1998,9 @@ export class UrlbarInput {
       };
     }
 
-    let mode = lazy.UrlbarUtils.LOCAL_SEARCH_MODES.find(
-      m => m.restrict == token
-    );
+    let mode =
+      this.isAddressbar &&
+      lazy.UrlbarUtils.LOCAL_SEARCH_MODES.find(m => m.restrict == token);
     if (mode) {
       // Return a copy so callers don't modify the object in LOCAL_SEARCH_MODES.
       return { ...mode };
@@ -4934,6 +4942,7 @@ export class UrlbarInput {
     let options = {
       allowAutofill,
       isPrivate: this.isPrivate,
+      sapName: this.sapName,
       maxResults,
       searchString,
       userContextId: parseInt(

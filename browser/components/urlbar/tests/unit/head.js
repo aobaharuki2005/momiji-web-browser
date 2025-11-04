@@ -129,6 +129,7 @@ function createContext(searchString = "foo", properties = {}) {
         allowAutofill: UrlbarPrefs.get("autoFill"),
         isPrivate: true,
         maxResults: UrlbarPrefs.get("maxRichResults"),
+        sapName: "urlbar",
         searchString,
       },
       properties
