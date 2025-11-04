@@ -1752,8 +1752,8 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
                                CacheDomain::State |      // State
                                CacheDomain::Viewport |   // State
                                CacheDomain::Table |  // TableIsProbablyForLayout
-                               CacheDomain::DOMNodeIDAndClass  // DOMNodeID
-                               )) {
+                               CacheDomain::DOMNodeIDAndClass |  // DOMNodeID
+                               CacheDomain::Relations)) {
     return attributes.forget();
   }
 
@@ -1876,6 +1876,21 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
     if (auto hasActions =
             mCachedFields->GetAttribute<bool>(CacheKey::HasActions)) {
       attributes->SetAttribute(nsGkAtoms::hasActions, *hasActions);
+    }
+
+    nsString detailsFrom;
+    if (mCachedFields->HasAttribute(nsGkAtoms::aria_details)) {
+      detailsFrom.AssignLiteral("aria-details");
+    } else if (mCachedFields->HasAttribute(nsGkAtoms::commandfor)) {
+      detailsFrom.AssignLiteral("command-for");
+    } else if (mCachedFields->HasAttribute(nsGkAtoms::popovertarget)) {
+      detailsFrom.AssignLiteral("popover-target");
+    } else if (mCachedFields->HasAttribute(nsGkAtoms::target)) {
+      detailsFrom.AssignLiteral("css-anchor");
+    }
+
+    if (!detailsFrom.IsEmpty()) {
+      attributes->SetAttribute(nsGkAtoms::details_from, std::move(detailsFrom));
     }
   }
 
