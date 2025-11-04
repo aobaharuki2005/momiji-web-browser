@@ -3038,7 +3038,8 @@ nsresult EnsureMIMEOfScript(HttpBaseChannel* aChannel, nsIURI* aURI,
   }
 
   const auto internalPolicyType = aLoadInfo->InternalContentPolicyType();
-  if (internalPolicyType == nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE &&
+  if (internalPolicyType ==
+          nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE &&
       nsContentUtils::IsJsonMimeType(typeString)) {
     // script and json are both allowed
     glean::http::script_block_incorrect_mime
