@@ -1392,11 +1392,7 @@ function getSmallIncrementKey() {
  *        Pseudo-elements, …), the text of said header.
  */
 function checkRuleViewContent(view, expectedElements) {
-  const elementsInView = Array.from(view.element.children).filter(
-    // We don't check @property content for now
-    el => !el.classList.contains("registered-properties")
-  );
-
+  const elementsInView = _getRuleViewElements(view);
   is(
     elementsInView.length,
     expectedElements.length,
@@ -1508,6 +1504,29 @@ function checkRuleViewContent(view, expectedElements) {
       );
     }
   }
+}
+
+/**
+ * Get the rule view elements for checkRuleViewContent
+ *
+ * @param {RuleView} view
+ * @returns {Element[]}
+ */
+function _getRuleViewElements(view) {
+  const elementsInView = [];
+  for (const el of view.element.children) {
+    if (el.classList.contains("registered-properties")) {
+      // We don't check @property content for now
+      continue;
+    }
+    // Gather all the children of expandable containers (e.g. Pseudo-element, @keyframe, …)
+    if (el.classList.contains("ruleview-expandable-container")) {
+      elementsInView.push(...el.children);
+    } else {
+      elementsInView.push(el);
+    }
+  }
+  return elementsInView;
 }
 
 function getUnusedVariableButton(view, elementIndexInView) {
