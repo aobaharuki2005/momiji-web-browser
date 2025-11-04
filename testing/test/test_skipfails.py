@@ -8,9 +8,36 @@ from pathlib import Path
 
 import pytest
 from mozunit import main
-from skipfails import Kind, Skipfails, read_json
+from skipfails import Kind, Skipfails, SkipfailsMode, read_json
 
 DATA_PATH = Path(__file__).with_name("data")
+
+
+def test_from_flags():
+    carryover_mode: bool = True
+    known_intermittents_mode: bool = True
+    new_failures_mode: bool = True
+    replace_tbd_mode: bool = True
+    mode: int = 10
+    with pytest.raises(Exception) as e:
+        mode = SkipfailsMode.from_flags(
+            carryover_mode,
+            known_intermittents_mode,
+            new_failures_mode,
+            replace_tbd_mode,
+        )
+    assert (
+        str(e.value)
+        == "may not specifiy more than one mode: --carryover --known-intermittents --new-failures --replace-tbd"
+    )
+
+    carryover_mode = False
+    known_intermittents_mode = False
+    new_failures_mode = False
+    mode = SkipfailsMode.from_flags(
+        carryover_mode, known_intermittents_mode, new_failures_mode, replace_tbd_mode
+    )
+    assert mode == SkipfailsMode.REPLACE_TBD
 
 
 def test_get_revision():
