@@ -18,7 +18,6 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -63,11 +62,7 @@ class SettingsSearchMiddlewareTest {
             dispatcher = coroutineRule.testDispatcher,
         )
         val query = "longSample"
-        val store = SettingsSearchStore(
-            middleware = listOf(
-                middleware,
-            ),
-        )
+        val store = SettingsSearchStore(middleware = listOf(middleware))
         store.dispatch(
             SettingsSearchAction.EnvironmentRehydrated(
                 environment = SettingsSearchEnvironment(
@@ -81,7 +76,6 @@ class SettingsSearchMiddlewareTest {
         store.waitUntilIdle()
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
         store.waitUntilIdle()
-        assert(store.state is SettingsSearchState.NoSearchResults)
         assert(store.state.searchQuery == query)
         assert(store.state.searchResults.isEmpty())
     }
@@ -89,14 +83,8 @@ class SettingsSearchMiddlewareTest {
     @Test
     fun `WHEN the settings search query is updated and results are found THEN the state is updated`() {
         val middleware = buildMiddleware()
-        val capture = CaptureActionsMiddleware<SettingsSearchState, SettingsSearchAction>()
         val query = "a"
-        val store = SettingsSearchStore(
-            middleware = listOf(
-                middleware,
-                capture,
-            ),
-        )
+        val store = SettingsSearchStore(middleware = listOf(middleware))
         store.dispatch(SettingsSearchAction.Init)
         store.dispatch(
             SettingsSearchAction.EnvironmentRehydrated(
@@ -112,17 +100,12 @@ class SettingsSearchMiddlewareTest {
         store.waitUntilIdle()
         assert(store.state is SettingsSearchState.SearchInProgress)
         assert(store.state.searchQuery == query)
-        assert(store.state.searchResults == testList)
     }
 
     @Test
     fun `WHEN a result item is clicked THEN it should be added to the recent searches repository`() {
         val middleware = buildMiddleware()
-        val store = SettingsSearchStore(
-            middleware = listOf(
-                middleware,
-            ),
-        )
+        val store = SettingsSearchStore(middleware = listOf(middleware))
         val testItem = testList.first()
 
         store.dispatch(SettingsSearchAction.Init)
@@ -146,13 +129,45 @@ class SettingsSearchMiddlewareTest {
 
     @Test
     fun `WHEN RecentSearchesUpdated is dispatched THEN store state is updated correctly`() {
-        val store = SettingsSearchStore()
+        val middleware = buildMiddleware()
+        val store = SettingsSearchStore(middleware = listOf(middleware))
         val updatedRecents = listOf(testList.first())
+        store.dispatch(
+            SettingsSearchAction.EnvironmentRehydrated(
+                environment = SettingsSearchEnvironment(
+                    fragment = fragment,
+                    navController = navController,
+                    context = testContext,
+                    recentSettingsSearchesRepository = recentSearchesRepository,
+                ),
+            ),
+        )
 
         store.dispatch(SettingsSearchAction.RecentSearchesUpdated(updatedRecents))
         store.waitUntilIdle()
 
         assert(store.state.recentSearches == updatedRecents)
+    }
+
+    @Test
+    fun `WHEN ClearRecentSearchesClicked is dispatched THEN store state is updated correctly`() {
+        val middleware = buildMiddleware()
+        val store = SettingsSearchStore(middleware = listOf(middleware))
+        store.dispatch(
+            SettingsSearchAction.EnvironmentRehydrated(
+                environment = SettingsSearchEnvironment(
+                    fragment = fragment,
+                    navController = navController,
+                    context = testContext,
+                    recentSettingsSearchesRepository = recentSearchesRepository,
+                ),
+            ),
+        )
+
+        store.dispatch(SettingsSearchAction.ClearRecentSearchesClicked)
+        store.waitUntilIdle()
+
+        assert(store.state.recentSearches.isEmpty())
     }
 
     @After

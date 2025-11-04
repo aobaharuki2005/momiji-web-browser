@@ -80,7 +80,12 @@ class SettingsSearchMiddleware(
                 }
                 next(action)
             }
-
+            is SettingsSearchAction.ClearRecentSearchesClicked -> {
+                next(action)
+                CoroutineScope(Dispatchers.IO).launch {
+                    environment?.recentSettingsSearchesRepository?.clearRecentSearches()
+                }
+            }
             else -> {
                 next(action)
                 // no op in middleware layer
