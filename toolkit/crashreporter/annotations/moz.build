@@ -14,8 +14,11 @@ UNIFIED_SOURCES = [
 
 FINAL_LIBRARY = "xul"
 
+GeneratedFile("validated.yaml", script="load.py")
+
 # Generate CrashAnnotations.h
 GeneratedFile(
     "CrashAnnotations.h",
     script="generate.py",
+    inputs=["!validated.yaml"],
 )
