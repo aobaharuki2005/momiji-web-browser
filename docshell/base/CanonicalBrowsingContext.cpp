@@ -161,7 +161,7 @@ CanonicalBrowsingContext::~CanonicalBrowsingContext() {
     mSessionHistory->SetBrowsingContext(nullptr);
   }
 
-  mActiveEntryList.clear();
+  mActiveEntryList = nullptr;
 }
 
 /* static */
@@ -359,7 +359,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   MOZ_ASSERT(!aNewContext->mActiveEntry);
   mActiveEntry.swap(aNewContext->mActiveEntry);
   if (Navigation::IsAPIEnabled()) {
-    MOZ_ASSERT(aNewContext->mActiveEntryList.isEmpty());
+    MOZ_ASSERT(!aNewContext->mActiveEntryList);
     aNewContext->mActiveEntryList = std::move(mActiveEntryList);
   }
 
@@ -486,13 +486,14 @@ SessionHistoryEntry* CanonicalBrowsingContext::GetActiveSessionHistoryEntry() {
 void CanonicalBrowsingContext::SetActiveSessionHistoryEntryFromBFCache(
     SessionHistoryEntry* aEntry) {
   mActiveEntry = aEntry;
-  if (Navigation::IsAPIEnabled()) {
+  auto* activeEntries = GetActiveEntries();
+  if (Navigation::IsAPIEnabled() && activeEntries) {
     if (StaticPrefs::dom_navigation_api_strict_enabled()) {
-      MOZ_DIAGNOSTIC_ASSERT(!aEntry || mActiveEntryList.contains(aEntry));
-      MOZ_DIAGNOSTIC_ASSERT(aEntry || mActiveEntryList.isEmpty());
+      MOZ_DIAGNOSTIC_ASSERT(!aEntry || activeEntries->contains(aEntry));
+      MOZ_DIAGNOSTIC_ASSERT(aEntry || activeEntries->isEmpty());
     } else {
-      MOZ_ASSERT(!aEntry || mActiveEntryList.contains(aEntry));
-      MOZ_ASSERT(aEntry || mActiveEntryList.isEmpty());
+      MOZ_ASSERT(!aEntry || activeEntries->contains(aEntry));
+      MOZ_ASSERT(aEntry || activeEntries->isEmpty());
     }
   }
 }
@@ -510,6 +511,7 @@ void CanonicalBrowsingContext::SwapHistoryEntries(nsISHEntry* aOldEntry,
   }
 
   nsCOMPtr<SessionHistoryEntry> newEntry = do_QueryInterface(aNewEntry);
+  auto* activeEntries = GetActiveEntries();
   MOZ_LOG(gSHLog, LogLevel::Verbose,
           ("Swapping History Entries: mActiveEntry=%p, aNewEntry=%p. "
            "Is in list? mActiveEntry %s, aNewEntry %s. "
@@ -517,9 +519,9 @@ void CanonicalBrowsingContext::SwapHistoryEntries(nsISHEntry* aOldEntry,
            mActiveEntry.get(), aNewEntry,
            mActiveEntry && mActiveEntry->isInList() ? "yes" : "no",
            newEntry && newEntry->isInList() ? "yes" : "no",
-           mActiveEntryList.contains(newEntry) ? "yes" : "no"));
+           activeEntries->contains(newEntry) ? "yes" : "no"));
   if (!newEntry) {
-    mActiveEntryList.clear();
+    activeEntries->clear();
     mActiveEntry = nullptr;
     return;
   }
@@ -534,7 +536,7 @@ void CanonicalBrowsingContext::SwapHistoryEntries(nsISHEntry* aOldEntry,
       if (beforeOldEntry) {
         beforeOldEntry->setNext(newEntry);
       } else {
-        mActiveEntryList.insertFront(newEntry);
+        activeEntries->insertFront(newEntry);
       }
     } else {
       newEntry->setPrevious(mActiveEntry);
@@ -646,9 +648,12 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
     bool sessionHistoryLoad =
         existingLoadingInfo && existingLoadingInfo->mLoadIsFromSessionHistory;
 
-    if (sessionHistoryLoad && !mActiveEntry && mActiveEntryList.isEmpty()) {
-      nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
-      mActiveEntryList = shistory->ConstructContiguousEntryListFrom(entry);
+    if (sessionHistoryLoad && !mActiveEntry) {
+      auto* activeEntries = GetActiveEntries();
+      if (activeEntries->isEmpty()) {
+        nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
+        shistory->ReconstructContiguousEntryListFrom(entry);
+      }
     }
 
     MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
@@ -1172,12 +1177,13 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
             [](nsISHEntry* aEntry) { aEntry->SetName(EmptyString()); });
       }
 
+      auto* activeEntries = GetActiveEntries();
       MOZ_LOG(gSHLog, LogLevel::Verbose,
               ("SessionHistoryCommit called with mActiveEntry=%p, "
                "newActiveEntry=%p, "
                "active entry list does%s contain the active entry.",
                mActiveEntry.get(), newActiveEntry.get(),
-               mActiveEntryList.contains(mActiveEntry) ? "" : "n't"));
+               activeEntries->contains(mActiveEntry) ? "" : "n't"));
 
       bool addEntry = ShouldUpdateSessionHistory(aLoadType);
       if (IsTop()) {
@@ -1211,7 +1217,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
             }
           }
           if (Navigation::IsAPIEnabled() && !newActiveEntry->isInList()) {
-            mActiveEntryList.insertBack(newActiveEntry);
+            activeEntries->insertBack(newActiveEntry);
           }
           mActiveEntry = newActiveEntry;
         } else if (LOAD_TYPE_HAS_FLAGS(
@@ -1231,7 +1237,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
             }
             // TODO(avandolder): Can this check ever actually be false?
             if (!newActiveEntry->isInList()) {
-              mActiveEntryList.insertBack(newActiveEntry);
+              activeEntries->insertBack(newActiveEntry);
             }
           }
           mActiveEntry = newActiveEntry;
@@ -1239,7 +1245,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
           MOZ_LOG_FMT(gSHLog, LogLevel::Verbose,
                       "IsTop: No active entry, adding new entry");
           if (Navigation::IsAPIEnabled() && !newActiveEntry->isInList()) {
-            mActiveEntryList.insertBack(newActiveEntry);
+            activeEntries->insertBack(newActiveEntry);
           }
           mActiveEntry = newActiveEntry;
         } else {
@@ -1247,7 +1253,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
                       "IsTop: Loading from session history");
           mActiveEntry = newActiveEntry;
           if (Navigation::IsAPIEnabled() && !mActiveEntry->isInList()) {
-            mActiveEntryList.insertBack(mActiveEntry);
+            activeEntries->insertBack(mActiveEntry);
           }
         }
 
@@ -1279,11 +1285,8 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
                       "NotTop: Loading from session history");
           mActiveEntry = newActiveEntry;
           if (Navigation::IsAPIEnabled() && !mActiveEntry->isInList()) {
-            mActiveEntryList.clear();
-            mActiveEntryList =
-                shistory->ConstructContiguousEntryListFrom(mActiveEntry);
+            shistory->ReconstructContiguousEntryListFrom(mActiveEntry);
           }
-
           shistory->InternalSetRequestedIndex(indexOfHistoryLoad);
           // FIXME UpdateIndex() here may update index too early (but even the
           //       old implementation seems to have similar issues).
@@ -1309,7 +1312,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
                                          aCloneEntryChildren);
               if (Navigation::IsAPIEnabled()) {
                 if (!mActiveEntry->isInList()) {
-                  mActiveEntryList.insertBack(mActiveEntry);
+                  activeEntries->insertBack(mActiveEntry);
                 }
                 mActiveEntry->setNext(newActiveEntry);
               }
@@ -1324,7 +1327,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
                           "NotTop: Adding entry without an active entry");
               mActiveEntry = newActiveEntry;
               if (Navigation::IsAPIEnabled() && !mActiveEntry->isInList()) {
-                mActiveEntryList.insertBack(mActiveEntry);
+                activeEntries->insertBack(mActiveEntry);
               }
               // FIXME Using IsInProcess for aUseRemoteSubframes isn't quite
               //       right, but aUseRemoteSubframes should be going away.
@@ -1448,21 +1451,22 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
     }
   }
 
+  auto* activeEntries = GetActiveEntries();
   MOZ_LOG(
       gSHLog, LogLevel::Verbose,
       ("SetActiveSessionHistoryEntry called with oldActiveEntry=%p, "
        "mActiveEntry=%p, active entry list does%s contain the active entry. ",
        oldActiveEntry.get(), mActiveEntry.get(),
-       mActiveEntryList.contains(mActiveEntry) ? "" : "n't"));
+       activeEntries->contains(mActiveEntry) ? "" : "n't"));
 
   if (Navigation::IsAPIEnabled() &&
       (!oldActiveEntry || oldActiveEntry->isInList())) {
-    RefPtr toRemove = oldActiveEntry ? oldActiveEntry->getNext()
-                                     : mActiveEntryList.getFirst();
+    RefPtr toRemove =
+        oldActiveEntry ? oldActiveEntry->getNext() : activeEntries->getFirst();
     while (toRemove) {
       toRemove = toRemove->removeAndGetNext();
     }
-    mActiveEntryList.insertBack(mActiveEntry);
+    activeEntries->insertBack(mActiveEntry);
   }
 
   ResetSHEntryHasUserInteractionCache();
@@ -3714,15 +3718,25 @@ void CanonicalBrowsingContext::MaybeReconstructActiveEntryList() {
 
   auto* shistory = static_cast<nsSHistory*>(GetSessionHistory());
   if (mActiveEntry && !shistory->ContainsEntry(mActiveEntry)) {
-    mActiveEntryList.clear();
-    mActiveEntryList = shistory->ConstructContiguousEntryList();
+    shistory->ReconstructContiguousEntryList();
   }
+}
+
+EntryList* CanonicalBrowsingContext::GetActiveEntries() {
+  if (!mActiveEntryList) {
+    auto* shistory = static_cast<nsSHistory*>(GetSessionHistory());
+    if (shistory) {
+      mActiveEntryList = shistory->EntryListFor(GetHistoryID());
+    }
+  }
+  return mActiveEntryList;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CanonicalBrowsingContext,
                                                 BrowsingContext)
+  tmp->mActiveEntryList = nullptr;
   tmp->mPermanentKey.setNull();
   if (tmp->mSessionHistory) {
     tmp->mSessionHistory->SetBrowsingContext(nullptr);

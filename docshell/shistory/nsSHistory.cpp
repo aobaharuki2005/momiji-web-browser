@@ -37,6 +37,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/EntryList.h"
 #include "mozilla/dom/Navigation.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
 #include "mozilla/dom/WindowGlobalParent.h"
@@ -2500,35 +2501,25 @@ mozilla::dom::SessionHistoryEntry* nsSHistory::FindAdjacentContiguousEntryFor(
   return nullptr;
 }
 
-LinkedList<SessionHistoryEntry> nsSHistory::ConstructContiguousEntryListFrom(
+void nsSHistory::ReconstructContiguousEntryListFrom(
     SessionHistoryEntry* aEntry) {
-  if (aEntry->isInList()) {
-    aEntry->remove();
-  }
-
-  LinkedList<SessionHistoryEntry> entryList;
-  entryList.insertBack(aEntry);
+  RefPtr entryList = EntryListFor(aEntry->DocshellID());
+  entryList->clear();
+  entryList->insertBack(aEntry);
   for (auto* entry = aEntry;
        (entry = FindAdjacentContiguousEntryFor(entry, -1));) {
-    if (entry->isInList()) {
-      entry->remove();
-    }
-    entryList.insertFront(entry);
+    entryList->insertFront(entry);
   }
   for (auto* entry = aEntry;
        (entry = FindAdjacentContiguousEntryFor(entry, 1));) {
-    if (entry->isInList()) {
-      entry->remove();
-    }
-    entryList.insertBack(entry);
+    entryList->insertBack(entry);
   }
-  return entryList;
 }
 
-LinkedList<SessionHistoryEntry> nsSHistory::ConstructContiguousEntryList() {
+void nsSHistory::ReconstructContiguousEntryList() {
   MOZ_ASSERT(mIndex >= 0 && mIndex < Length());
   nsCOMPtr currentEntry = mEntries[mIndex];
-  return ConstructContiguousEntryListFrom(
+  ReconstructContiguousEntryListFrom(
       static_cast<SessionHistoryEntry*>(currentEntry.get()));
 }
 
@@ -2747,3 +2738,17 @@ bool nsSHistory::ContainsEntry(nsISHEntry* aEntry) {
   nsCOMPtr rootEntry = GetRootSHEntry(aEntry);
   return GetIndexOfEntry(rootEntry) != -1;
 }
+
+already_AddRefed<EntryList> nsSHistory::EntryListFor(const nsID& aID) {
+  return mEntryLists.WithEntryHandle(
+      aID, [self = RefPtr{this}, aID](auto&& entry) {
+        if (entry && *entry) {
+          return do_AddRef(entry->get());
+        }
+        RefPtr entryList = MakeRefPtr<EntryList>(self, aID);
+        entry.InsertOrUpdate(entryList);
+        return entryList.forget();
+      });
+}
+
+void nsSHistory::RemoveEntryList(const nsID& aID) { mEntryLists.Remove(aID); }
