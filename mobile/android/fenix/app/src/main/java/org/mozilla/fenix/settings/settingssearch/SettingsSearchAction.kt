@@ -10,24 +10,6 @@ import mozilla.components.lib.state.Action
  * Actions for the settings search screen.
  */
 sealed interface SettingsSearchAction : Action {
-
-    /**
-     * User has started a search.
-     */
-    data object Init : SettingsSearchAction
-
-    /**
-     * Signals a new valid [SettingsSearchEnvironment] has been set.
-     *
-     * @property environment New [SettingsSearchEnvironment].
-     */
-    data class EnvironmentRehydrated(val environment: SettingsSearchEnvironment) : SettingsSearchAction
-
-    /**
-     * Signals that the current [SettingsSearchEnvironment] has been cleared.
-     */
-    data object EnvironmentCleared : SettingsSearchAction
-
     /**
      * User has updated the search query in the search bar.
      *
@@ -59,16 +41,4 @@ sealed interface SettingsSearchAction : Action {
      * @property item [SettingsSearchItem] that was clicked.
      */
     data class ResultItemClicked(val item: SettingsSearchItem) : SettingsSearchAction
-
-    /**
-     * Recent Searches have been updated.
-     *
-     * @property recentSearches List of [SettingsSearchItem]s that represent the recent searches.
-     */
-    data class RecentSearchesUpdated(val recentSearches: List<SettingsSearchItem>) : SettingsSearchAction
-
-    /**
-     * User has clicked on the clear recent searches button.
-     */
-    data object ClearRecentSearchesClicked : SettingsSearchAction
 }

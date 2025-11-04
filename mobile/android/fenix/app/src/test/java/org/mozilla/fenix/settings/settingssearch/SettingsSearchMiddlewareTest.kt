@@ -4,26 +4,21 @@
 
 package org.mozilla.fenix.settings.settingssearch
 
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
+import android.content.Context
 import androidx.navigation.NavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.middleware.CaptureActionsMiddleware
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class SettingsSearchMiddlewareTest {
 
@@ -31,137 +26,58 @@ class SettingsSearchMiddlewareTest {
     val coroutineRule = MainCoroutineRule()
 
     private val navController: NavController = mockk(relaxed = true)
-    private val lifecycleOwner = FakeLifecycleOwner(Lifecycle.State.RESUMED)
-    private lateinit var fragment: Fragment
-    private val recentSearchesRepository: FenixRecentSettingsSearchesRepository = mockk(relaxed = true)
-    private val recentSearchesFlow = MutableStateFlow<List<SettingsSearchItem>>(emptyList())
-
-    @Before
-    fun setUp() {
-        every { recentSearchesRepository.recentSearches } returns recentSearchesFlow
-        fragment = spyk(Fragment()).apply {
-            every { context } returns testContext
-        }
-        every { fragment.viewLifecycleOwner } returns lifecycleOwner
-    }
 
     private fun buildMiddleware(): SettingsSearchMiddleware {
         return SettingsSearchMiddleware(
+            initialDependencies = SettingsSearchMiddleware.Companion.Dependencies(
+                navController = navController,
+            ),
             fenixSettingsIndexer = TestSettingsIndexer(),
         )
     }
 
     @Test
     fun `WHEN the settings search query is updated and results are not found THEN the state is updated`() {
-        val query = "test"
         val middleware = SettingsSearchMiddleware(
+            initialDependencies = SettingsSearchMiddleware.Companion.Dependencies(
+                navController = navController,
+            ),
             fenixSettingsIndexer = EmptyTestSettingsIndexer(),
         )
-        val store = SettingsSearchStore(middleware = listOf(middleware))
-        store.dispatch(
-            SettingsSearchAction.EnvironmentRehydrated(
-                environment = SettingsSearchEnvironment(
-                    fragment = fragment,
-                    navController = navController,
-                    context = testContext,
-                    recentSettingsSearchesRepository = recentSearchesRepository,
-                ),
+        val capture = CaptureActionsMiddleware<SettingsSearchState, SettingsSearchAction>()
+        val query = "test"
+        val store = SettingsSearchStore(
+            middleware = listOf(
+                middleware,
+                capture,
             ),
         )
 
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
         store.waitUntilIdle()
+        capture.assertLastAction(SettingsSearchAction.NoResultsFound::class)
+        assert(store.state is SettingsSearchState.NoSearchResults)
         assert(store.state.searchQuery == query)
     }
 
     @Test
     fun `WHEN the settings search query is updated and results are found THEN the state is updated`() {
-        val query = "a"
         val middleware = buildMiddleware()
-        val store = SettingsSearchStore(middleware = listOf(middleware))
-        store.dispatch(
-            SettingsSearchAction.EnvironmentRehydrated(
-                environment = SettingsSearchEnvironment(
-                    fragment = fragment,
-                    navController = navController,
-                    context = testContext,
-                    recentSettingsSearchesRepository = recentSearchesRepository,
-                ),
+        val capture = CaptureActionsMiddleware<SettingsSearchState, SettingsSearchAction>()
+        val query = "test"
+        val store = SettingsSearchStore(
+            middleware = listOf(
+                middleware,
+                capture,
             ),
         )
 
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
         store.waitUntilIdle()
+        capture.assertLastAction(SettingsSearchAction.SearchResultsLoaded::class)
         assert(store.state is SettingsSearchState.SearchInProgress)
         assert(store.state.searchQuery == query)
-    }
-
-    @Test
-    fun `WHEN a result item is clicked THEN it should be added to the recent searches repository`() {
-        val middleware = buildMiddleware()
-        val store = SettingsSearchStore(middleware = listOf(middleware))
-        val testItem = testList.first()
-
-        store.dispatch(SettingsSearchAction.Init)
-        store.dispatch(
-            SettingsSearchAction.EnvironmentRehydrated(
-                environment = SettingsSearchEnvironment(
-                    fragment = fragment,
-                    navController = navController,
-                    context = testContext,
-                    recentSettingsSearchesRepository = recentSearchesRepository,
-                ),
-            ),
-        )
-
-        store.dispatch(SettingsSearchAction.ResultItemClicked(testItem))
-        store.waitUntilIdle()
-
-        coVerify { recentSearchesRepository.addRecentSearchItem(testItem) }
-        verify { navController.navigate(testItem.preferenceFileInformation.fragmentId, any()) }
-    }
-
-    @Test
-    fun `WHEN RecentSearchesUpdated is dispatched THEN store state is updated correctly`() {
-        val middleware = buildMiddleware()
-        val store = SettingsSearchStore(middleware = listOf(middleware))
-        val updatedRecents = listOf(testList.first())
-        store.dispatch(
-            SettingsSearchAction.EnvironmentRehydrated(
-                environment = SettingsSearchEnvironment(
-                    fragment = fragment,
-                    navController = navController,
-                    context = testContext,
-                    recentSettingsSearchesRepository = recentSearchesRepository,
-                ),
-            ),
-        )
-
-        store.dispatch(SettingsSearchAction.RecentSearchesUpdated(updatedRecents))
-        store.waitUntilIdle()
-
-        assert(store.state.recentSearches == updatedRecents)
-    }
-
-    @Test
-    fun `WHEN ClearRecentSearchesClicked is dispatched THEN store state is updated correctly`() {
-        val middleware = buildMiddleware()
-        val store = SettingsSearchStore(middleware = listOf(middleware))
-        store.dispatch(
-            SettingsSearchAction.EnvironmentRehydrated(
-                environment = SettingsSearchEnvironment(
-                    fragment = fragment,
-                    navController = navController,
-                    context = testContext,
-                    recentSettingsSearchesRepository = recentSearchesRepository,
-                ),
-            ),
-        )
-
-        store.dispatch(SettingsSearchAction.ClearRecentSearchesClicked)
-        store.waitUntilIdle()
-
-        assert(store.state.recentSearches.isEmpty())
+        assert(store.state.searchResults == testList)
     }
 }
 
@@ -207,11 +123,5 @@ class EmptyTestSettingsIndexer : SettingsIndexer {
 
     override suspend fun getSettingsWithQuery(query: String): List<SettingsSearchItem> {
         return emptyList()
-    }
-}
-
-private class FakeLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
-    override val lifecycle: Lifecycle = LifecycleRegistry(this).apply {
-        currentState = initialState
     }
 }

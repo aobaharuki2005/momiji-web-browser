@@ -4,11 +4,18 @@
 
 package org.mozilla.fenix.settings.settingssearch
 
+import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class SettingsSearchStoreTest {
 
@@ -17,7 +24,7 @@ class SettingsSearchStoreTest {
         val query = "theme"
         val store = SettingsSearchStore()
 
-        val initialState = SettingsSearchState.Default(recentSearches = emptyList())
+        val initialState = SettingsSearchState.Default
         assert(store.state == initialState)
 
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
@@ -30,17 +37,13 @@ class SettingsSearchStoreTest {
     @Test
     fun `GIVEN search in progress state WHEN SearchQueryUpdated action is dispatched with empty query THEN default state is dispatched`() {
         val store = SettingsSearchStore(
-            initialState = SettingsSearchState.SearchInProgress(
-                "theme",
-                emptyList(),
-                emptyList(),
-                ),
+            initialState = SettingsSearchState.SearchInProgress("theme", emptyList()),
         )
         assert(store.state is SettingsSearchState.SearchInProgress)
 
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(""))
         store.waitUntilIdle()
 
-        assert(store.state == SettingsSearchState.Default(emptyList()))
+        assert(store.state == SettingsSearchState.Default)
     }
 }
