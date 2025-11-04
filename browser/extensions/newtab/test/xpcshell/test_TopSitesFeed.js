@@ -16,10 +16,8 @@ ChromeUtils.defineESModuleGetters(this, {
   Screenshots: "resource://newtab/lib/Screenshots.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
   SearchService: "resource://gre/modules/SearchService.sys.mjs",
-  TOP_SITES_DEFAULT_ROWS:
-    "moz-src:///browser/components/topsites/constants.mjs",
-  TOP_SITES_MAX_SITES_PER_ROW:
-    "moz-src:///browser/components/topsites/constants.mjs",
+  TOP_SITES_DEFAULT_ROWS: "resource:///modules/topsites/constants.mjs",
+  TOP_SITES_MAX_SITES_PER_ROW: "resource:///modules/topsites/constants.mjs",
   TopSitesFeed: "resource://newtab/lib/TopSitesFeed.sys.mjs",
 });
 

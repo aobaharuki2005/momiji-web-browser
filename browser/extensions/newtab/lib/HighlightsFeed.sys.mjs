@@ -4,18 +4,10 @@
 
 import { actionTypes as at } from "resource://newtab/common/Actions.mjs";
 
-import { ImportHelper } from "resource://newtab/lib/ImportHelper.sys.mjs";
-
-/**
- * @backward-compat { version 146 }
- *
- * Switch back to a normal import once 146 hits release.
- */
-const { TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW } =
-  ImportHelper.import(
-    "moz-src:///browser/components/topsites/constants.mjs",
-    "resource:///modules/topsites/"
-  );
+import {
+  TOP_SITES_DEFAULT_ROWS,
+  TOP_SITES_MAX_SITES_PER_ROW,
+} from "resource:///modules/topsites/constants.mjs";
 import { Dedupe } from "resource:///modules/Dedupe.sys.mjs";
 
 const lazy = {};
