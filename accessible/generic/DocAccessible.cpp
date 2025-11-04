@@ -444,7 +444,7 @@ void DocAccessible::QueueCacheUpdate(LocalAccessible* aAcc, uint64_t aNewDomain,
 }
 
 void DocAccessible::QueueCacheUpdateForDependentRelations(
-    LocalAccessible* aAcc) {
+    LocalAccessible* aAcc, const nsAttrValue* aOldId) {
   if (!mIPCDoc || !aAcc || !aAcc->IsInDocument() || aAcc->IsDefunct()) {
     return;
   }
@@ -464,6 +464,24 @@ void DocAccessible::QueueCacheUpdateForDependentRelations(
       continue;
     }
     QueueCacheUpdate(relatedAcc, CacheDomain::Relations);
+  }
+
+  if (aOldId) {
+    // If we have an old ID, we need to update any accessibles that depended on
+    // that ID as well.
+    nsAutoString id;
+    aOldId->ToString(id);
+    if (!id.IsEmpty()) {
+      auto* providers = GetRelProviders(el, id);
+      if (providers) {
+        for (auto& provider : *providers) {
+          if (LocalAccessible* oldRelatedAcc =
+                  GetAccessible(provider->mContent)) {
+            QueueCacheUpdate(oldRelatedAcc, CacheDomain::Relations);
+          }
+        }
+      }
+    }
   }
 
   if (const nsIFrame* anchorFrame = nsCoreUtils::GetAnchorForPositionedFrame(
@@ -945,7 +963,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
     RelocateARIAOwnedIfNeeded(elm);
     ARIAActiveDescendantIDMaybeMoved(accessible);
     QueueCacheUpdate(accessible, CacheDomain::DOMNodeIDAndClass);
-    QueueCacheUpdateForDependentRelations(accessible);
+    QueueCacheUpdateForDependentRelations(accessible, aOldValue);
   }
 
   // The activedescendant universal property redirects accessible focus events
