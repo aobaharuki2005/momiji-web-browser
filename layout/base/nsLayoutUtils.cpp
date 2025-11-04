@@ -2396,6 +2396,9 @@ nsRect nsLayoutUtils::TransformFrameRectToAncestor(
 
 LayoutDeviceIntPoint nsLayoutUtils::WidgetToWidgetOffset(nsIWidget* aFrom,
                                                          nsIWidget* aTo) {
+  if (aFrom == aTo) {
+    return {};
+  }
   auto fromOffset = aFrom->WidgetToScreenOffset();
   auto toOffset = aTo->WidgetToScreenOffset();
   return fromOffset - toOffset;
