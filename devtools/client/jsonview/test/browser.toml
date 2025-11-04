@@ -27,6 +27,8 @@ support-files = [
 
 ["browser_jsonview_access_data.js"]
 
+["browser_jsonview_array_buckets.js"]
+
 ["browser_jsonview_bug_1380828.js"]
 
 ["browser_jsonview_chunked_json.js"]
