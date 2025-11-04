@@ -6,9 +6,26 @@ import {
   actionCreators as ac,
   actionTypes as at,
 } from "resource://newtab/common/Actions.mjs";
-import { TippyTopProvider } from "resource:///modules/topsites/TippyTopProvider.sys.mjs";
-import { insertPinned } from "resource:///modules/topsites/TopSites.sys.mjs";
-import { TOP_SITES_MAX_SITES_PER_ROW } from "resource:///modules/topsites/constants.mjs";
+
+import { ImportHelper } from "resource://newtab/lib/ImportHelper.sys.mjs";
+
+/**
+ * @backward-compat { version 146 }
+ *
+ * Switch back to normal imports once 146 hits release.
+ */
+const { TippyTopProvider } = ImportHelper.import(
+  "moz-src:///browser/components/topsites/TippyTopProvider.sys.mjs",
+  "resource:///modules/topsites/"
+);
+const { insertPinned } = ImportHelper.import(
+  "moz-src:///browser/components/topsites/TopSites.sys.mjs",
+  "resource:///modules/topsites/"
+);
+const { TOP_SITES_MAX_SITES_PER_ROW } = ImportHelper.import(
+  "moz-src:///browser/components/topsites/constants.mjs",
+  "resource:///modules/topsites/"
+);
 import { Dedupe } from "resource:///modules/Dedupe.sys.mjs";
 
 import {

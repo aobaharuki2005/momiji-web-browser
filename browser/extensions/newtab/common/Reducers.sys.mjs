@@ -4,11 +4,19 @@
 
 import { actionTypes as at } from "resource://newtab/common/Actions.mjs";
 import { Dedupe } from "resource:///modules/Dedupe.sys.mjs";
+import { ImportHelper } from "resource://newtab/lib/ImportHelper.sys.mjs";
 
-export {
-  TOP_SITES_DEFAULT_ROWS,
-  TOP_SITES_MAX_SITES_PER_ROW,
-} from "resource:///modules/topsites/constants.mjs";
+/**
+ * @backward-compat { version 146 }
+ *
+ * Switch back to aggregate export for these constants once 146 hits release.
+ */
+const { TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW } =
+  ImportHelper.import(
+    "moz-src:///browser/components/topsites/constants.mjs",
+    "resource:///modules/topsites/"
+  );
+export { TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW };
 
 const dedupe = new Dedupe(site => site && site.url);
 
