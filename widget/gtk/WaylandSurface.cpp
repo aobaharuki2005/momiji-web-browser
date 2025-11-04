@@ -281,17 +281,6 @@ void WaylandSurface::FrameCallbackHandler(struct wl_callback* aCallback,
   }
 }
 
-static void FrameCallbackHandler(void* aWaylandSurface,
-                                 struct wl_callback* aCallback,
-                                 uint32_t aTime) {
-  RefPtr waylandSurface = static_cast<WaylandSurface*>(aWaylandSurface);
-  waylandSurface->FrameCallbackHandler(aCallback, aTime,
-                                       /* aRoutedFromChildSurface */ false);
-}
-
-static const struct wl_callback_listener sWaylandSurfaceFrameListener = {
-    ::FrameCallbackHandler};
-
 void WaylandSurface::RequestFrameCallbackLocked(
     const WaylandSurfaceLock& aProofOfLock) {
   LOGVERBOSE(
@@ -317,6 +306,7 @@ void WaylandSurface::RequestFrameCallbackLocked(
         }};
     mOpaqueRegionFrameCallback = wl_surface_frame(mSurface);
     wl_callback_add_listener(mOpaqueRegionFrameCallback, &listener, this);
+    mSurfaceNeedsCommit = true;
   }
 
   if (!mFrameCallbackEnabled || !mFrameCallbackHandler.IsSet()) {
@@ -326,9 +316,15 @@ void WaylandSurface::RequestFrameCallbackLocked(
   MOZ_DIAGNOSTIC_ASSERT(mSurface, "Missing mapped surface!");
 
   if (!mFrameCallback) {
+    static const struct wl_callback_listener listener{
+        [](void* aData, struct wl_callback* callback, uint32_t time) {
+          RefPtr waylandSurface = static_cast<WaylandSurface*>(aData);
+          waylandSurface->FrameCallbackHandler(
+              callback, time,
+              /* aRoutedFromChildSurface */ false);
+        }};
     mFrameCallback = wl_surface_frame(mSurface);
-    wl_callback_add_listener(mFrameCallback, &sWaylandSurfaceFrameListener,
-                             this);
+    wl_callback_add_listener(mFrameCallback, &listener, this);
     mSurfaceNeedsCommit = true;
   }
 
