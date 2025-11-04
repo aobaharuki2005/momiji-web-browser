@@ -4,9 +4,14 @@
 
 package mozilla.components.compose.browser.toolbar.ui
 
+import android.content.ClipData
+import android.content.Context
+import android.text.Spanned
 import android.view.inputmethod.EditorInfo
 import androidx.annotation.DoNotInline
 import androidx.annotation.VisibleForTesting
+import androidx.compose.foundation.ComposeFoundationFlags
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -22,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -33,12 +39,18 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.InterceptPlatformTextInput
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalTextToolbar
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.PlatformTextInputMethodRequest
+import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -55,9 +67,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_SEARCH_BOX
 import mozilla.components.concept.toolbar.AutocompleteResult
+import mozilla.components.support.utils.SafeUrl
 
 private const val TEXT_SIZE = 15f
 private const val TEXT_HIGHLIGHT_COLOR = "#5C592ACB"
@@ -135,8 +150,19 @@ internal fun InlineAutocompleteTextField(
     var suggestionBounds by remember { mutableStateOf<Rect?>(null) }
     val deviceLayoutDirection = LocalLayoutDirection.current
 
+    val context = LocalContext.current
+    val defaultTextToolbar = LocalTextToolbar.current
+    val clipboard = LocalClipboard.current
+    val coroutineScope = rememberCoroutineScope()
+    val pasteInterceptorToolbar = remember(defaultTextToolbar, clipboard) {
+        PasteSanitizerTextToolbar(context, defaultTextToolbar, clipboard, coroutineScope)
+    }
+
     // Always want the text to be entered left to right.
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+    CompositionLocalProvider(
+        LocalLayoutDirection provides LayoutDirection.Ltr,
+        LocalTextToolbar provides pasteInterceptorToolbar,
+    ) {
         // Set incognito mode for the keyboard when needed.
         InterceptPlatformTextInput(
             interceptor = { request, nextHandler ->
@@ -340,6 +366,89 @@ internal object NoPersonalizedLearningHelper {
     @DoNotInline
     fun addNoPersonalizedLearning(info: EditorInfo) {
         info.imeOptions = info.imeOptions or EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
+    }
+}
+
+/**
+ * Helper for sanitizing what gets pasted through the contextual menu.
+ */
+@OptIn(ExperimentalFoundationApi::class) // for ComposeFoundationFlags
+private class PasteSanitizerTextToolbar(
+    private val context: Context,
+    private val delegate: TextToolbar,
+    private val clipboard: Clipboard,
+    private val scope: CoroutineScope,
+) : TextToolbar {
+    init {
+        // Temporary workaround for https://issuetracker.google.com/issues/447192728
+        ComposeFoundationFlags.isNewContextMenuEnabled = false
+    }
+
+    override val status = delegate.status
+
+    override fun hide() = delegate.hide()
+
+    override fun showMenu(
+        rect: Rect,
+        onCopyRequested: (() -> Unit)?,
+        onPasteRequested: (() -> Unit)?,
+        onCutRequested: (() -> Unit)?,
+        onSelectAllRequested: (() -> Unit)?,
+        onAutofillRequested: (() -> Unit)?,
+    ) {
+        delegate.showMenu(
+            rect = rect,
+            onCopyRequested = onCopyRequested,
+            onPasteRequested = {
+                sanitizeAvailableTextClip { onPasteRequested?.invoke() }
+            },
+            onCutRequested = onCutRequested,
+            onSelectAllRequested = onSelectAllRequested,
+            onAutofillRequested = onAutofillRequested,
+        )
+    }
+
+    override fun showMenu(
+        rect: Rect,
+        onCopyRequested: (() -> Unit)?,
+        onPasteRequested: (() -> Unit)?,
+        onCutRequested: (() -> Unit)?,
+        onSelectAllRequested: (() -> Unit)?,
+    ) {
+        delegate.showMenu(
+            rect = rect,
+            onCopyRequested = onCopyRequested,
+            onPasteRequested = {
+                sanitizeAvailableTextClip { onPasteRequested?.invoke() }
+            },
+            onCutRequested = onCutRequested,
+            onSelectAllRequested = onSelectAllRequested,
+        )
+    }
+
+    private fun sanitizeAvailableTextClip(
+        pasteDelegate: () -> Unit,
+    ) = scope.launch {
+        val originalClip = clipboard.getClipEntry() ?: return@launch
+
+        val sb = StringBuilder()
+        for (i in 0 until originalClip.clipData.itemCount) {
+            val text = originalClip.clipData.getItemAt(i).coerceToText(context)
+            val textToBePasted = (text as? Spanned)?.toString() ?: text
+
+            val safeTextToBePasted = SafeUrl.stripUnsafeUrlSchemes(context, textToBePasted)
+
+            if (i >= 1) { sb.append("\n") }
+            sb.append(safeTextToBePasted)
+        }
+
+        // Setup a temporary clip with the sanitized text to allow the framework pasting it
+        // then restore the original clip.
+        SafeUrl.stripUnsafeUrlSchemes(context, sb.toString())?.let { safeText ->
+            clipboard.setClipEntry(ClipData.newPlainText("", safeText).toClipEntry())
+            pasteDelegate.invoke()
+            clipboard.setClipEntry(originalClip)
+        }
     }
 }
 
