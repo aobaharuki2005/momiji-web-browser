@@ -28,8 +28,6 @@ taskgraph_morph.registered_morphs = []
 # Default rootUrl to use if none is given in the environment; this should point
 # to the production Taskcluster deployment used for CI.
 tc_util.PRODUCTION_TASKCLUSTER_ROOT_URL = "https://firefox-ci-tc.services.mozilla.com"
-# Workaround for https://github.com/taskcluster/taskgraph/pull/835
-os.environ.setdefault("TASKCLUSTER_ROOT_URL", tc_util.PRODUCTION_TASKCLUSTER_ROOT_URL)
 
 # Schemas for YAML files should use dashed identifiers by default. If there are
 # components of the schema for which there is a good reason to use another format,
