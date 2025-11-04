@@ -340,6 +340,7 @@ STATIC_ATOMS = [
     Atom("description", "description"),
     Atom("destructor", "destructor"),
     Atom("details", "details"),
+    Atom("details_from", "details-from"),
     Atom("deviceAspectRatio", "device-aspect-ratio"),
     Atom("deviceHeight", "device-height"),
     Atom("devicePixelRatio", "device-pixel-ratio"),

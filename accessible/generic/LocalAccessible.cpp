@@ -1169,6 +1169,22 @@ already_AddRefed<AccAttributes> LocalAccessible::Attributes() {
     }
   }
 
+  nsString detailsFrom;
+  AssociatedElementsIterator iter(mDoc, Elm(), nsGkAtoms::aria_details);
+  if (iter.Next()) {
+    detailsFrom.AssignLiteral("aria-details");
+  } else if (GetCommandForDetailsRelation()) {
+    detailsFrom.AssignLiteral("command-for");
+  } else if (GetPopoverTargetDetailsRelation()) {
+    detailsFrom.AssignLiteral("popover-target");
+  } else if (GetAnchorPositionTargetDetailsRelation()) {
+    detailsFrom.AssignLiteral("css-anchor");
+  }
+
+  if (!detailsFrom.IsEmpty()) {
+    attributes->SetAttribute(nsGkAtoms::details_from, std::move(detailsFrom));
+  }
+
   return attributes.forget();
 }
 
