@@ -1227,7 +1227,9 @@ already_AddRefed<DictionaryCacheEntry> DictionaryOrigin::AddEntry(
           // This stops new requests from trying to use the old data we're in
           // the process of replacing Remove the entry from the Origin and
           // Write().
-          mEntries[i]->RemoveEntry(mEntry);
+          if (mEntry) {
+            mEntries[i]->RemoveEntry(mEntry);
+          }
           mEntries.RemoveElementAt(i);
         }
       } else {
