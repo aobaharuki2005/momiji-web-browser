@@ -47,11 +47,6 @@ export const ALLOW_LIST = [
 ];
 
 /**
- * Regex capturing numeric values, em values, ch values, and percentage values
- */
-export const FIXED_UNITS = /^\d*\.?\d*(em|ch|%)?$/;
-
-/**
  * Extends our base ALLOW_LIST with additional allowed values.
  *
  * @param {string[]} additionalAllows to be appended to our list
@@ -171,9 +166,6 @@ export const isFunction = node => node.type === "function";
 export const isVariableFunction = node =>
   isFunction(node) && node.value === "var";
 
-// checks if a node is a `calc()` function
-export const isCalcFunction = node => isFunction(node) && node.value === "calc";
-
 // checks if a node is a url() function
 export const isUrlFunction = node => isFunction(node) && node.value === "url";
 
@@ -234,19 +226,6 @@ export const containsColorFunction = value => {
 };
 
 /**
- * Checks if a node contains a value using vw/vh units
- * e.g., `100vh`.
- *
- * @param {string} value some CSS declaration to match
- * @returns {boolean}
- */
-export const containsViewportUnit = value => {
-  return valueParser(String(value)).nodes.some(
-    node => node.type === "word" && /^(0|[\d.]+)(vh|vw)$/.test(node.value)
-  );
-};
-
-/**
  * Returns only the properties in the declaration that are colors, or at least likely to be colors.
  * This allows for ignoring properties in shorthand that are not relevant to color rules.
  *
@@ -283,20 +262,15 @@ export const getColorProperties = value => {
 export const isToken = (value, tokenCSS) => tokenCSS.includes(value);
 
 /**
- * Checks if a CSS value is allowed, given exact strings or a
- * regex pattern in an allowList.
+ * Checks if a CSS value is allowed.
  *
  * @param {string} value some CSS declaration to match
  * @param {string[]} allowList
  * @returns {boolean}
  */
 export const isAllowed = (value, allowList) => {
-  const allowListPattern = pattern => {
-    pattern instanceof RegExp ? pattern.test(value) : pattern === value;
-  };
-
   // If the value is in the allowList
-  if (allowList.some(allowListPattern)) {
+  if (allowList.includes(value)) {
     return true;
   }
 
@@ -307,13 +281,7 @@ export const isAllowed = (value, allowList) => {
 
   // If the value is in the allowList but the string is CSS shorthand, e.g. `border` properties
   return valueParser(value).nodes.some(
-    node =>
-      isWord(node) &&
-      allowList.some(pattern =>
-        pattern instanceof RegExp
-          ? pattern.test(node.value)
-          : pattern === node.value
-      )
+    node => isWord(node) && allowList.includes(node.value)
   );
 };
 
@@ -461,63 +429,6 @@ export const isValidTokenUsage = (
   });
 
   return isValid;
-};
-
-/**
- * Checks if a calc() function contains valid token usage.
- *
- * @param {string} value - CSS declaration to match
- * @param {string[]} tokenCSS
- * @param {object} cssCustomProperties
- * @param {string[]} allowList
- * @returns {boolean}
- */
-export const isValidTokenUsageInCalc = (
-  value,
-  tokenCSS,
-  cssCustomProperties,
-  allowList = ALLOW_LIST
-) => {
-  const parsed = valueParser(String(value));
-  let isEveryChildValid = true;
-
-  parsed.walk(node => {
-    if (!isEveryChildValid || !isCalcFunction(node)) {
-      return;
-    }
-
-    isEveryChildValid = node.nodes.every(child => {
-      if (
-        child.type === "space" ||
-        (child.type === "word" && /^[+\-*/]$/.test(child.value))
-      ) {
-        return true;
-      }
-
-      if (child.type === "word") {
-        if (
-          isAllowed(child.value, allowList) ||
-          /^\d*\.?\d*(vh|vw|em|%)?$/.test(child.value)
-        ) {
-          return true;
-        }
-      }
-
-      if (isVariableFunction(child)) {
-        const variableNode = `var(${child.nodes[0].value})`;
-        if (
-          isToken(variableNode, tokenCSS) ||
-          isValidLocalProperty(variableNode, cssCustomProperties, tokenCSS)
-        ) {
-          return true;
-        }
-      }
-
-      return false;
-    });
-  });
-
-  return isEveryChildValid;
 };
 
 /**
