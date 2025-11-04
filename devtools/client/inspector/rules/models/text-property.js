@@ -315,16 +315,6 @@ class TextProperty {
       return undefined;
     }
 
-    // @backward-compat { version 144 } When 144 reaches release, we can remove this
-    // whole if block.
-    if (!this.elementStyle.pageStyle.traits.newInactiveCssDataShape) {
-      if (!declaration.isUsed || declaration.isUsed?.used) {
-        return undefined;
-      }
-
-      return declaration.isUsed;
-    }
-
     return declaration.inactiveCssData;
   }
 
