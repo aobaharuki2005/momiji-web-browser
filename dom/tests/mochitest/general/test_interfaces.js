@@ -272,7 +272,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CSSRuleList", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CSSScopeRule", insecureContext: true, nightly: true },
+  { name: "CSSScopeRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CSSStartingStyleRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
