@@ -1973,7 +1973,6 @@ bool PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
 
     // Kick off a top-down reflow
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-    nsViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
 
     mDirtyRoots.Remove(rootFrame);
     DoReflow(rootFrame, true, nullptr);
@@ -10858,7 +10857,6 @@ bool PresShell::ProcessReflowCommands(bool aInterruptible) {
     nsAutoScriptBlocker scriptBlocker;
     WillDoReflow();
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-    nsViewManager::AutoDisableRefresh refreshBlocker(mViewManager);
 
     OverflowChangedTracker overflowTracker;
 

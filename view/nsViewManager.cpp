@@ -56,7 +56,6 @@ nsViewManager::nsViewManager(nsDeviceContext* aContext)
       mPresShell(nullptr),
       mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
       mRootView(nullptr),
-      mRefreshDisableCount(0),
       mPainting(false),
       mRecursiveRefreshPending(false),
       mHasPendingWidgetGeometryChanges(false) {
@@ -531,10 +530,6 @@ bool nsViewManager::PaintWindow(nsIWidget* aWidget,
     return false;
   }
 
-  NS_ASSERTION(
-      IsPaintingAllowed(),
-      "shouldn't be receiving paint events while painting is disallowed!");
-
   // Get the view pointer here since NS_WILL_PAINT might have
   // destroyed it during CallWillPaintOnObservers (bug 378273).
   nsView* view = nsView::GetViewFor(aWidget);
@@ -709,22 +704,6 @@ bool nsViewManager::IsViewInserted(nsView* aView) {
     view = view->GetNextSibling();
   }
   return false;
-}
-
-nsViewManager* nsViewManager::IncrementDisableRefreshCount() {
-  if (!IsRootVM()) {
-    return RootViewManager()->IncrementDisableRefreshCount();
-  }
-
-  ++mRefreshDisableCount;
-
-  return this;
-}
-
-void nsViewManager::DecrementDisableRefreshCount() {
-  NS_ASSERTION(IsRootVM(), "Should only be called on root");
-  --mRefreshDisableCount;
-  NS_ASSERTION(mRefreshDisableCount >= 0, "Invalid refresh disable count!");
 }
 
 nsIWidget* nsViewManager::GetRootWidget() const {
