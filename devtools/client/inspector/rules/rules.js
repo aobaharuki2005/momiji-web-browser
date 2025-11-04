@@ -1558,10 +1558,7 @@ CssRuleView.prototype = {
           inheritedSectionLabel !== lastinheritedSectionLabel)
       ) {
         const div = this.styleDocument.createElementNS(HTML_NS, "div");
-        div.classList.add(
-          RULE_VIEW_HEADER_CLASSNAME,
-          "ruleview-header-inherited"
-        );
+        div.classList.add(RULE_VIEW_HEADER_CLASSNAME);
         div.setAttribute("role", "heading");
         div.setAttribute("aria-level", "3");
         div.textContent = rule.inheritedSectionLabel;

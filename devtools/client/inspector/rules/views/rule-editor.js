@@ -153,7 +153,9 @@ RuleEditor.prototype = {
 
   _create() {
     this.element = this.doc.createElement("div");
-    this.element.className = "ruleview-rule devtools-monospace";
+    this.element.className =
+      "ruleview-rule devtools-monospace" +
+      (this.rule.inherited ? " ruleview-rule-inherited" : "");
     this.element.dataset.ruleId = this.rule.domRule.actorID;
     this.element.setAttribute("uneditable", !this.isEditable);
     this.element.setAttribute("unmatched", this.rule.isUnmatched);

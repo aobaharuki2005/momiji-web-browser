@@ -1441,9 +1441,7 @@ function checkRuleViewContent(view, expectedElements) {
       );
     }
 
-    const isInherited = elementInView.matches(
-      ".ruleview-header-inherited ~ .ruleview-rule"
-    );
+    const isInherited = elementInView.matches(".ruleview-rule-inherited");
     is(
       isInherited,
       expectedElement.inherited ?? false,
