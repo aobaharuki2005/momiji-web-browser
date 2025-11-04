@@ -19277,7 +19277,7 @@
 
 # How frequently updates the value of tiltX, tiltY and/or twist value of pen
 # input which can be enabled by the above prefs.
-- name: widget.widnows.pen.override.number_of_preserver_value
+- name: widget.windows.pen.override.number_of_preserver_value
   type: RelaxedAtomicUint32
   value: 75
   mirror: always
