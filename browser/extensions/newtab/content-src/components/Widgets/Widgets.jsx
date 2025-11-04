@@ -14,7 +14,6 @@ const PREF_WIDGETS_LISTS_ENABLED = "widgets.lists.enabled";
 const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
 const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
 const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
-const PREF_FEEDS_SECTION_TOPSTORIES = "feeds.section.topstories";
 
 // resets timer to default values (exported for testing)
 // In practice, this logic runs inside a useEffect when
@@ -74,8 +73,6 @@ function Widgets() {
       prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED]) &&
     prefs[PREF_WIDGETS_TIMER_ENABLED];
 
-  const recommendedStoriesEnabled = prefs[PREF_FEEDS_SECTION_TOPSTORIES];
-
   // track previous timerEnabled state to detect when it becomes disabled
   const prevTimerEnabledRef = useRef(timerEnabled);
 
@@ -122,11 +119,6 @@ function Widgets() {
           />
         )}
       </div>
-      {recommendedStoriesEnabled && (
-        <div className="widgets-scroll-message fade-in" aria-live="polite">
-          <p data-l10n-id="newtab-widget-keep-scrolling"></p>
-        </div>
-      )}
       {messageData?.content?.messageType === "WidgetMessage" && (
         <MessageWrapper dispatch={dispatch}>
           <WidgetsFeatureHighlight dispatch={dispatch} />

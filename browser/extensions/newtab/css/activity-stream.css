@@ -4361,16 +4361,6 @@ dialog::after {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 .discovery-stream.ds-layout.ds-layout-widgets {
   margin-inline: 0;
 }
@@ -4381,34 +4371,7 @@ dialog::after {
   align-items: center;
   justify-content: center;
   position: relative;
-  padding-block-end: calc(var(--space-xlarge) * 2);
-}
-.widgets-wrapper .widgets-scroll-message {
-  color: var(--newtab-contextual-text-primary-color);
-  position: absolute;
-  bottom: 0;
-  border-radius: var(--button-border-radius);
-  padding: var(--space-small) var(--space-large);
-}
-.lightWallpaper .widgets-wrapper .widgets-scroll-message {
-  color-scheme: light;
-}
-.darkWallpaper .widgets-wrapper .widgets-scroll-message {
-  color-scheme: dark;
-}
-.widgets-wrapper .widgets-scroll-message p {
-  margin: 0;
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .widgets-wrapper .widgets-scroll-message {
-    animation: fade-in 0.25s ease-out 0.7s both;
-  }
+  padding-block-end: var(--space-large);
 }
 
 .widgets-container:has(.lists), .widgets-container:has(.focus-timer) {
