@@ -12935,6 +12935,8 @@ nimbus_system:
           type: array
           items:
             type: string
+        tou_points:
+          type: number
     description: |
       The Nimbus context object that is recorded to Glean
     bugs:
@@ -12945,6 +12947,7 @@ nimbus_system:
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1984639'
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1991528'
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1993034'
+      - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1992306'
     data_reviews:
       - 'https://bugzilla.mozilla.org/show_bug.cgi?id=1898552#c3'
       - 'https://phabricator.services.mozilla.com/D258942'
@@ -12953,6 +12956,7 @@ nimbus_system:
       - 'https://phabricator.services.mozilla.com/D262139'
       - 'https://phabricator.services.mozilla.com/D268391'
       - 'https://phabricator.services.mozilla.com/D268931'
+      - 'https://phabricator.services.mozilla.com/D270859'
     data_sensitivity:
       - interaction
     notification_emails:

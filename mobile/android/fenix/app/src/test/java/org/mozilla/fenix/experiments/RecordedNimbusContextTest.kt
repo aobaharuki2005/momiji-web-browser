@@ -74,6 +74,7 @@ class RecordedNimbusContextTest {
                 put("user_accepted_tou", true)
                 put("no_shortcuts_or_stories_opt_outs", true)
                 putJsonArray("addon_ids") {}
+                put("tou_points", 3)
             },
             contextAsJson,
         )
@@ -118,6 +119,7 @@ class RecordedNimbusContextTest {
                 put("region", "US")
                 put("user_accepted_tou", true)
                 put("no_shortcuts_or_stories_opt_outs", true)
+                put("tou_points", 3)
             },
             recordedValue?.jsonObject,
         )
