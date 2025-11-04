@@ -19,9 +19,6 @@ namespace mozilla {
 StaticAutoPtr<MediaDrmRemoteCDMParent::DrmCallbackMap>
     MediaDrmRemoteCDMParent::sCbMap;
 
-AMediaCodecCryptoInfoFnPtr_setPattern
-    MediaDrmRemoteCDMParent::sAMediaCodecCryptoInfo_setPattern;
-
 /* static */
 void MediaDrmRemoteCDMParent::InitializeStatics() {
   if (sCbMap) {
@@ -29,8 +26,6 @@ void MediaDrmRemoteCDMParent::InitializeStatics() {
   }
 
   sCbMap = new DrmCallbackMap();
-
-  MOZ_ASSERT(sAMediaCodecCryptoInfo_setPattern);
 }
 
 /* static */
@@ -848,12 +843,6 @@ already_AddRefed<MediaDrmCryptoInfo> MediaDrmRemoteCDMParent::CreateCryptoInfo(
       break;
     case CryptoScheme::Cbcs:
     case CryptoScheme::Cbcs_1_9:
-      if (NS_WARN_IF(
-              !MediaDrmRemoteCDMParent::sAMediaCodecCryptoInfo_setPattern)) {
-        MOZ_ASSERT_UNREACHABLE(
-            "AMediaCodecCryptoInfo_setPattern not available, but using CBCS");
-        return nullptr;
-      }
       mode = AMEDIACODECRYPTOINFO_MODE_AES_CBC;
       break;
     default:
@@ -873,8 +862,7 @@ already_AddRefed<MediaDrmCryptoInfo> MediaDrmRemoteCDMParent::CreateCryptoInfo(
     cryptoinfo_pattern_t pattern = {};
     pattern.encryptBlocks = cryptoObj.mCryptByteBlock;
     pattern.skipBlocks = cryptoObj.mSkipByteBlock;
-    MediaDrmRemoteCDMParent::sAMediaCodecCryptoInfo_setPattern(cryptoInfo,
-                                                               &pattern);
+    AMediaCodecCryptoInfo_setPattern(cryptoInfo, &pattern);
   }
 
   return MakeAndAddRef<MediaDrmCryptoInfo>(cryptoInfo);

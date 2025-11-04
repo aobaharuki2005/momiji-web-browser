@@ -19,9 +19,6 @@
 
 namespace mozilla {
 
-using AMediaCodecCryptoInfoFnPtr_setPattern = void (*)(AMediaCodecCryptoInfo*,
-                                                       cryptoinfo_pattern_t*);
-
 class MediaDrmCrypto final {
   template <typename T, typename... Args>
   friend RefPtr<T> MakeRefPtr(Args&&...);
@@ -149,8 +146,6 @@ class MediaDrmRemoteCDMParent final : public RemoteCDMParent {
 
   using DrmCallbackMap = std::map<AMediaDrm*, MediaDrmRemoteCDMParent*>;
   static StaticAutoPtr<DrmCallbackMap> sCbMap;
-  static AMediaCodecCryptoInfoFnPtr_setPattern
-      sAMediaCodecCryptoInfo_setPattern;
 
   struct SessionEntry {
     AMediaDrmSessionId id;
