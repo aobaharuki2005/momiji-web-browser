@@ -16,7 +16,6 @@
 #include "JavaBuiltins.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsViewManager.h"
 
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/BrowserParent.h"

@@ -397,8 +397,6 @@
 #include "nsURLHelper.h"
 #include "nsUnicodeProperties.h"
 #include "nsVariant.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCID.h"

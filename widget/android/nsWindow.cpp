@@ -53,7 +53,6 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsUserIdleService.h"
-#include "nsViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsWindow.h"
 

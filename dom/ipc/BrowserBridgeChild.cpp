@@ -20,7 +20,6 @@
 #include "nsObjectLoadingContent.h"
 #include "nsQueryObject.h"
 #include "nsSubDocumentFrame.h"
-#include "nsView.h"
 
 using namespace mozilla::ipc;
 

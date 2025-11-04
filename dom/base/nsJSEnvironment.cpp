@@ -87,7 +87,6 @@
 #include "nsIArray.h"
 #include "nsJSPrincipals.h"
 #include "nsRefreshDriver.h"
-#include "nsViewManager.h"
 #include "prthread.h"
 #include "xpcpublic.h"
 #if defined(MOZ_MEMORY)

@@ -17,7 +17,6 @@
 #include "nsIArray.h"
 #include "nsITransferable.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsViewManager.h"
 #include "nsWindow.h"
 
 using namespace mozilla;

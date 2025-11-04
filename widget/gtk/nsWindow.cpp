@@ -96,7 +96,6 @@
 #include "nsShmImage.h"
 #include "nsString.h"
 #include "nsWidgetsCID.h"
-#include "nsViewManager.h"
 #include "nsXPLookAndFeel.h"
 #include "prlink.h"
 #include "Screen.h"
@@ -126,7 +125,6 @@
 #  include <gdk/gdkwayland.h>
 #  include <gdk/gdkkeysyms-compat.h>
 #  include "nsIClipboard.h"
-#  include "nsView.h"
 #  include "WaylandVsyncSource.h"
 #endif
 

@@ -86,7 +86,6 @@
 #include "nsLayoutUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsPIDOMWindow.h"
-#include "nsView.h"
 #include "nsWindowSizes.h"
 #include "nsWrapperCacheInlines.h"
 #include "xpcpublic.h"

@@ -23,7 +23,6 @@
 #include "nsProxyRelease.h"
 #include "nsRect.h"
 #include "nsServiceManagerUtils.h"
-#include "nsViewManager.h"
 
 namespace mozilla::dom {
 

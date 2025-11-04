@@ -45,7 +45,6 @@
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
-#include "nsViewManager.h"
 #include "nsIFrame.h"
 #include "nsGtkUtils.h"
 #include "nsGtkKeyUtils.h"

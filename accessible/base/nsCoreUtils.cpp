@@ -26,7 +26,6 @@
 #include "mozilla/ScrollContainerFrame.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TouchEvents.h"
-#include "nsView.h"
 #include "nsGkAtoms.h"
 
 #include "AnchorPositioningUtils.h"

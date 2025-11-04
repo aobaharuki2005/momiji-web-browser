@@ -111,8 +111,6 @@
 #include "nsStyleConsts.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 #include "nsWindowSizes.h"
 #include "nsWrapperCacheInlines.h"
 #include "xpcprivate.h"

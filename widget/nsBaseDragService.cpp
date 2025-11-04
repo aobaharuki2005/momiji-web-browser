@@ -15,7 +15,6 @@
 #include "nsIFrame.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsIContent.h"
-#include "nsViewManager.h"
 #include "nsINode.h"
 #include "nsPresContext.h"
 #include "nsIImageLoadingContent.h"

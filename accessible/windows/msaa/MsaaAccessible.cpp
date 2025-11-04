@@ -19,7 +19,6 @@
 #include "MsaaRootAccessible.h"
 #include "MsaaXULMenuAccessible.h"
 #include "nsEventMap.h"
-#include "nsViewManager.h"
 #include "nsWinUtils.h"
 #include "Relation.h"
 #include "sdnAccessible.h"

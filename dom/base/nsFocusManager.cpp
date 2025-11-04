@@ -75,7 +75,6 @@
 #include "nsRange.h"
 #include "nsTextControlFrame.h"
 #include "nsThreadUtils.h"
-#include "nsViewManager.h"
 #include "nsXULPopupManager.h"
 
 #ifdef ACCESSIBILITY

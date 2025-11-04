@@ -21,7 +21,6 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsView.h"
 
 using namespace mozilla::dom;
 

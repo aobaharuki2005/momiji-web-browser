@@ -41,8 +41,6 @@
 #include "nsRect.h"
 #include "nsIContent.h"
 #include "nsServiceManagerUtils.h"
-#include "nsViewManager.h"
-#include "nsView.h"
 #include "nsXULTooltipListener.h"
 #include "nsIConstraintValidation.h"
 #include "mozilla/EventListenerManager.h"

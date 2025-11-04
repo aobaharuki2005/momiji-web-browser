@@ -22,7 +22,6 @@
 #include "mozilla/layers/RepaintRequest.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsView.h"
 
 static mozilla::LazyLogModule sApzChromeLog("apz.cc.chrome");
 

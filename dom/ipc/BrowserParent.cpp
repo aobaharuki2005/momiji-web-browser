@@ -97,7 +97,6 @@
 #include "nsQueryActor.h"
 #include "nsSHistory.h"
 #include "nsVariant.h"
-#include "nsViewManager.h"
 #ifndef XP_WIN
 #  include "nsJARProtocolHandler.h"
 #endif
