@@ -61,6 +61,8 @@ skip-if = [
 
 ["test_pluralForm-irish.js"]
 
+["test_pluralForm-japanese.js"]
+
 ["test_prettifyCSS.js"]
 skip-if = [
   "os == 'android' && os_version == '14' && processor == 'x86_64'",
