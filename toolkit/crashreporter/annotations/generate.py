@@ -43,7 +43,7 @@ def validate_annotations(annotations):
             )
 
         annotation_scope = data.get("scope", "client")
-        valid_scopes = ["client", "report", "ping"]
+        valid_scopes = ["client", "report", "ping", "ping-only"]
         if annotation_scope not in valid_scopes:
             sys.exit(
                 "Annotation "
@@ -82,21 +82,12 @@ def read_template(template_filename):
     return template
 
 
-def extract_crash_ping_allowedlist(annotations):
+def extract_crash_scope_list(annotations, scope):
     """Extract an array holding the names of the annotations allowed for
-    inclusion in a crash ping."""
+    inclusion in a crash scope."""
 
     return [
-        name for (name, data) in annotations if data.get("scope", "client") == "ping"
-    ]
-
-
-def extract_crash_report_allowedlist(annotations):
-    """Extract an array holding the names of the annotations allowed for
-    inclusion in a crash report (excluding those allowed for pings)."""
-
-    return [
-        name for (name, data) in annotations if data.get("scope", "client") == "report"
+        name for (name, data) in annotations if data.get("scope", "client") == scope
     ]
 
 
@@ -202,8 +193,9 @@ def generate_types_initializer(contents):
 
 @content_generator("h")
 def emit_header(annotations, _output_name):
-    pingallowedlist = extract_crash_ping_allowedlist(annotations)
-    reportallowedlist = extract_crash_report_allowedlist(annotations)
+    pingallowedlist = extract_crash_scope_list(annotations, "ping")
+    pingonlyallowedlist = extract_crash_scope_list(annotations, "ping-only")
+    reportallowedlist = extract_crash_scope_list(annotations, "report")
     skiplist = extract_skiplist(annotations)
     typelist = extract_types(annotations)
 
@@ -211,6 +203,9 @@ def emit_header(annotations, _output_name):
         "enum": generate_enum(annotations),
         "strings": generate_strings(annotations),
         "pingallowedlist": generate_annotations_array_initializer(pingallowedlist),
+        "pingonlyallowedlist": generate_annotations_array_initializer(
+            pingonlyallowedlist
+        ),
         "reportallowedlist": generate_annotations_array_initializer(reportallowedlist),
         "skiplist": generate_skiplist_initializer(skiplist),
         "types": generate_types_initializer(typelist),

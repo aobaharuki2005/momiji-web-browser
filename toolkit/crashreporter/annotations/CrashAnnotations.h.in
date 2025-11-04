@@ -45,6 +45,11 @@ const Annotation kCrashPingAllowedList[] = {
 ${pingallowedlist}
 };
 
+// Allowlist of crash annotations that can be only included in a crash ping
+const Annotation kCrashPingOnlyAllowedList[] = {
+${pingonlyallowedlist}
+};
+
 // Allowlist of crash annotations that can be included in a crash report
 // (excludes those in kCrashPingAllowedList).
 const Annotation kCrashReportAllowedList[] = {

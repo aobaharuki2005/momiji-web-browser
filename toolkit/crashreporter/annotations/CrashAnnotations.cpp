@@ -42,7 +42,8 @@ static bool AnnotationInList(Annotation aAnnotation,
 }
 
 bool IsAnnotationAllowedForPing(Annotation aAnnotation) {
-  return AnnotationInList(aAnnotation, kCrashPingAllowedList);
+  return AnnotationInList(aAnnotation, kCrashPingAllowedList) ||
+         AnnotationInList(aAnnotation, kCrashPingOnlyAllowedList);
 }
 
 bool IsAnnotationAllowedForReport(Annotation aAnnotation) {

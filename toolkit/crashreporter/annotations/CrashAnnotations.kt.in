@@ -15,9 +15,9 @@ internal class ${class} {
         public override fun toString() = s
 
         /** @return Whether the annotation should be included in crash pings. */
-        public fun allowedInPing() = scope.equals("ping")
+        public fun allowedInPing() = scope.equals("ping") || scope.equals("ping-only")
 
         /** @return Whether the annotation should be included in crash reports. */
-        public fun allowedInReport() = allowedInPing() || scope.equals("report")
+        public fun allowedInReport() = scope.equals("ping") || scope.equals("report")
     }
 }
