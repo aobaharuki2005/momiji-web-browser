@@ -15,6 +15,7 @@
 #include "mozilla/dom/Navigation.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "nsDocShell.h"
+#include "nsFocusManager.h"
 #include "nsGlobalWindowInner.h"
 
 extern mozilla::LazyLogModule gNavigationAPILog;
@@ -409,8 +410,25 @@ void NavigateEvent::PotentiallyResetFocus() {
 
   // Step 11, step 12
   FocusOptions options;
-  LOG_FMT("Set focus for {}", *focusTarget->AsNode());
-  focusTarget->Focus(options, CallerType::NonSystem, IgnoredErrorResult());
+  options.mPreventScroll = true;
+  focusTarget = nsFocusManager::GetTheFocusableArea(
+      focusTarget, nsFocusManager::ProgrammaticFocusFlags(options));
+
+  if (focusTarget) {
+    LOG_FMT("Reset focus to {}", *focusTarget->AsNode());
+    focusTarget->Focus(options, CallerType::NonSystem, IgnoredErrorResult());
+  } else if (RefPtr<nsIFocusManager> focusManager =
+                 nsFocusManager::GetFocusManager()) {
+    if (nsPIDOMWindowOuter* window = document->GetWindow()) {
+      // Now focus the document itself if focus is on an element within it.
+      nsCOMPtr<mozIDOMWindowProxy> focusedWindow;
+      focusManager->GetFocusedWindow(getter_AddRefs(focusedWindow));
+      if (SameCOMIdentity(window, focusedWindow)) {
+        LOG_FMT("Reset focus to document viewport");
+        focusManager->ClearFocus(focusedWindow);
+      }
+    }
+  }
 }
 
 // https://html.spec.whatwg.org/#potentially-process-scroll-behavior
