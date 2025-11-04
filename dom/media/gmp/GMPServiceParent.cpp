@@ -532,6 +532,19 @@ RefPtr<GenericPromise> GeckoMediaPluginServiceParent::LoadFromEnvironment() {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  if (RefPtr<GMPParent> clearkeyGmp = CreateGMPParent()) {
+    clearkeyGmp->InitForClearkey(this);
+
+    {
+      MutexAutoLock lock(mMutex);
+      mPlugins.AppendElement(std::move(clearkeyGmp));
+    }
+
+    UpdateContentProcessGMPCapabilities();
+  }
+#endif
+
   const char* env = PR_GetEnv("MOZ_GMP_PATH");
   if (!env || !*env) {
     return GenericPromise::CreateAndResolve(true, __func__);
@@ -642,8 +655,11 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities(
       }
 #ifdef MOZ_WMF_CDM
       if (name.Equals("gmp-widevinecdm-l1")) {
-        nsCOMPtr<nsIFile> pluginFile = gmp->GetDirectory();
-        MFCDMService::UpdateWidevineL1Path(pluginFile);
+        if (nsCOMPtr<nsIFile> pluginFile = gmp->GetDirectory()) {
+          MFCDMService::UpdateWidevineL1Path(pluginFile);
+        } else {
+          MOZ_ASSERT_UNREACHABLE("Missing directory for Widevine L1 plugin!");
+        }
       }
 #endif
       caps.AppendElement(std::move(x));
@@ -916,8 +932,12 @@ GeckoMediaPluginServiceParent::FindPluginDirectoryForAPI(
     size_t index = 0;
     RefPtr<GMPParent> gmp = FindPluginForAPIFrom(index, api, aTags, &index);
     if (gmp) {
-      nsCOMPtr<nsIFile> dir = gmp->GetDirectory();
-      dir.forget(aDirectory);
+      if (nsCOMPtr<nsIFile> dir = gmp->GetDirectory()) {
+        dir.forget(aDirectory);
+      } else {
+        NS_WARNING("Found plugin but missing directory.");
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 
@@ -1015,7 +1035,7 @@ already_AddRefed<GMPParent> GeckoMediaPluginServiceParent::SelectPluginForAPI(
   return nullptr;
 }
 
-static already_AddRefed<GMPParent> CreateGMPParent() {
+already_AddRefed<GMPParent> GeckoMediaPluginServiceParent::CreateGMPParent() {
   // Should run on the GMP thread.
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (!SandboxInfo::Get().CanSandboxMedia()) {
@@ -1122,7 +1142,8 @@ void GeckoMediaPluginServiceParent::RemoveOnGMPThread(
   for (size_t i = mPlugins.Length(); i-- > 0;) {
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
     bool equals;
-    if (NS_FAILED(directory->Equals(pluginpath, &equals)) || !equals) {
+    if (!pluginpath || NS_FAILED(directory->Equals(pluginpath, &equals)) ||
+        !equals) {
       continue;
     }
 
@@ -1181,11 +1202,14 @@ void GeckoMediaPluginServiceParent::PluginTerminated(
 
   if (aPlugin->IsMarkedForDeletion()) {
     nsString path;
-    RefPtr<nsIFile> dir = aPlugin->GetDirectory();
-    nsresult rv = dir->GetPath(path);
-    NS_ENSURE_SUCCESS_VOID(rv);
-    if (mPluginsWaitingForDeletion.Contains(path)) {
-      RemoveOnGMPThread(path, true /* delete */, true /* can defer */);
+    if (RefPtr<nsIFile> dir = aPlugin->GetDirectory()) {
+      nsresult rv = dir->GetPath(path);
+      NS_ENSURE_SUCCESS_VOID(rv);
+      if (mPluginsWaitingForDeletion.Contains(path)) {
+        RemoveOnGMPThread(path, true /* delete */, true /* can defer */);
+      }
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Plugin without directory marked for deletion?");
     }
   }
 }
