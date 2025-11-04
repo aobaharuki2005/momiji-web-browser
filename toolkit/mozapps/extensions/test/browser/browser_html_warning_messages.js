@@ -169,7 +169,7 @@ add_task(async function testSoftBlocked() {
 
   // Verify soft-block message on a softdisabled extension and theme.
   await testSoftBlockedAddon({
-    expectedFluentId: "details-notification-soft-blocked-extension-disabled2",
+    expectedFluentId: "details-notification-soft-blocked-extension-disabled",
     mockAddon: {
       id: "softblocked-extension@mochi.test",
       name: "Soft-Blocked Extension",
@@ -179,7 +179,7 @@ add_task(async function testSoftBlocked() {
     },
   });
   await testSoftBlockedAddon({
-    expectedFluentId: "details-notification-soft-blocked-other-disabled2",
+    expectedFluentId: "details-notification-soft-blocked-other-disabled",
     mockAddon: {
       id: "softblocked-theme@mochi.test",
       name: "Soft-Blocked Theme",
@@ -191,7 +191,7 @@ add_task(async function testSoftBlocked() {
 
   // Verify soft-block message on a re-enabled extension and theme.
   await testSoftBlockedAddon({
-    expectedFluentId: "details-notification-soft-blocked-extension-enabled2",
+    expectedFluentId: "details-notification-soft-blocked-extension-enabled",
     mockAddon: {
       id: "softblocked-extension@mochi.test",
       name: "Soft-Blocked Extension",
@@ -201,7 +201,7 @@ add_task(async function testSoftBlocked() {
     },
   });
   await testSoftBlockedAddon({
-    expectedFluentId: "details-notification-soft-blocked-other-enabled2",
+    expectedFluentId: "details-notification-soft-blocked-other-enabled",
     mockAddon: {
       id: "softblocked-theme@mochi.test",
       name: "Soft-Blocked Theme",
@@ -490,7 +490,7 @@ add_task(async function testCardRefreshedOnBlocklistStateChanges() {
   await checkAddonCard(doc, id, {
     linkUrl,
     text: {
-      id: `details-notification-soft-blocked-extension-disabled2`,
+      id: `details-notification-soft-blocked-extension-disabled`,
       linkId: "details-notification-softblocked-link2",
     },
     type: "warning",
@@ -507,7 +507,7 @@ add_task(async function testCardRefreshedOnBlocklistStateChanges() {
   await checkAddonCard(doc, id, {
     linkUrl,
     text: {
-      id: `details-notification-soft-blocked-extension-enabled2`,
+      id: `details-notification-soft-blocked-extension-enabled`,
       linkId: "details-notification-softblocked-link2",
     },
     type: "warning",

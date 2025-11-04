@@ -309,16 +309,7 @@ async function getAddonMessageInfo(
       type: "warning",
     };
   } else if (addon.blocklistState === STATE_SOFTBLOCKED) {
-    const softBlockFluentIdsMap = {
-      extension: {
-        enabled: "details-notification-soft-blocked-extension-enabled2",
-        disabled: "details-notification-soft-blocked-extension-disabled2",
-      },
-      other: {
-        enabled: "details-notification-soft-blocked-other-enabled2",
-        disabled: "details-notification-soft-blocked-other-disabled2",
-      },
-    };
+    const fluentBaseId = "details-notification-soft-blocked";
     let typeSuffix = addon.type === "extension" ? "extension" : "other";
     let stateSuffix;
     // If the Addon Card is not expanded, delay changing the messagebar
@@ -329,7 +320,7 @@ async function getAddonMessageInfo(
     } else {
       stateSuffix = !isInDisabledSection ? "enabled" : "disabled";
     }
-    let messageId = softBlockFluentIdsMap[typeSuffix][stateSuffix];
+    let messageId = `${fluentBaseId}-${typeSuffix}-${stateSuffix}`;
 
     return {
       linkUrl: await addon.getBlocklistURL(),
