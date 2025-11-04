@@ -571,7 +571,7 @@ async function do_test_empty_state_with_blocklisted_addon(isSoftBlock) {
     window.document.l10n.getAttributes(messages[0]),
     {
       id: isSoftBlock
-        ? "unified-extensions-mb-blocklist-warning-single"
+        ? "unified-extensions-mb-blocklist-warning-single2"
         : "unified-extensions-mb-blocklist-error-single",
       args: {
         extensionName: "Name of the blocked ext",
