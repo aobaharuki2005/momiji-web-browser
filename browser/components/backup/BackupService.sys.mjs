@@ -3182,7 +3182,6 @@ export class BackupService extends EventTarget {
         }
 
         // let's rename the old profile with a prefix old-[profile_name]
-        profile.name = profileSvc.currentProfile.name;
         profileSvc.currentProfile.name = `old-${profileSvc.currentProfile.name}`;
       }
 
