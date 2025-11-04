@@ -741,11 +741,12 @@ bool WaylandSurface::DisableUserInputLocked(
 void WaylandSurface::OpaqueCallbackHandler() {
   WaylandSurfaceLock lock(this);
   if (mPendingOpaqueRegion) {
-    LOGVERBOSE("WaylandSurface::OpaqueCallbackHandler()");
+    LOGVERBOSE("WaylandSurface::SetOpaqueRegionCallbackHandler()");
     wl_surface_set_opaque_region(mSurface, mPendingOpaqueRegion);
     MozClearPointer(mPendingOpaqueRegion, wl_region_destroy);
     mSurfaceNeedsCommit = true;
   }
+  MozClearPointer(mOpaqueRegionFrameCallback, wl_callback_destroy);
 }
 
 void WaylandSurface::SetOpaqueLocked(const WaylandSurfaceLock& aProofOfLock) {
@@ -768,8 +769,6 @@ void WaylandSurface::SetOpaqueRegionLocked(
     return;
   }
 
-  LOGVERBOSE("WaylandSurface::SetOpaqueRegionLocked()");
-
   // Region should be in surface-logical coordinates, so we need to divide by
   // the buffer scale. We use round-in in order to be safe with subpixels.
   UnknownScaleFactor scale(GetScale());
@@ -781,8 +780,9 @@ void WaylandSurface::SetOpaqueRegionLocked(
     const auto& rect = gfx::RoundedIn(iter.Get().ToUnknownRect() / scale);
     wl_region_add(mPendingOpaqueRegion, rect.x, rect.y, rect.Width(),
                   rect.Height());
-    LOGVERBOSE("  region [%d, %d] -> [%d x %d]", rect.x, rect.y, rect.Width(),
-               rect.Height());
+    LOGVERBOSE(
+        "WaylandSurface::SetOpaqueRegionLocked() region [%d, %d] -> [%d x %d]",
+        rect.x, rect.y, rect.Width(), rect.Height());
   }
   RequestFrameCallbackLocked(aProofOfLock);
 }
