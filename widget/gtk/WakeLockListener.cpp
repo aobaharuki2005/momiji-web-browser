@@ -1063,6 +1063,24 @@ WakeLockListener::~WakeLockListener() {
   }
 }
 
+void WakeLockListener::SetState(const nsAString& topic, bool aBackground,
+                                bool aInhibit) {
+  WAKE_LOCK_LOG(
+      "WakeLockListener::SetState() topic %s background %d inhibit %d",
+      NS_ConvertUTF16toUTF8(topic).get(), aBackground, aInhibit);
+
+  nsRefPtrHashtable<nsStringHashKey, WakeLockTopic>* topicTable =
+      aBackground ? &mBackgroundTopics : &mForegroundTopics;
+  RefPtr<WakeLockTopic> topicLock = topicTable->LookupOrInsertWith(
+      topic, [&] { return MakeRefPtr<WakeLockTopic>(topic, aBackground); });
+
+  if (aInhibit) {
+    topicLock->InhibitScreensaver();
+  } else {
+    topicLock->UninhibitScreensaver();
+  }
+}
+
 nsresult WakeLockListener::Callback(const nsAString& topic,
                                     const nsAString& state) {
   WAKE_LOCK_LOG("WakeLockListener::Callback() topic %s state %s",
@@ -1073,18 +1091,17 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
     return NS_OK;
   }
 
-  bool backgroundLock = !(topic.Equals(u"video-playing"_ns) &&
-                          state.EqualsLiteral("locked-foreground"));
+  bool backgroundLock = state.EqualsLiteral("locked-background");
   bool shouldLock = state.EqualsLiteral("locked-background") ||
                     state.EqualsLiteral("locked-foreground");
 
-  nsRefPtrHashtable<nsStringHashKey, WakeLockTopic>* topicTable =
-      backgroundLock ? &mBackgroundTopics : &mForegroundTopics;
-  RefPtr<WakeLockTopic> topicLock = topicTable->LookupOrInsertWith(
-      topic, [&] { return MakeRefPtr<WakeLockTopic>(topic, backgroundLock); });
-  WAKE_LOCK_LOG("Adding WakeLockListener lock %d background %d", shouldLock,
-                backgroundLock);
+  // If there's a switch between lock types (background / foreground) we need to
+  // un-inhibit a complementary one.
+  SetState(topic, !backgroundLock, /* aInhibited */ false);
 
-  return shouldLock ? topicLock->InhibitScreensaver()
-                    : topicLock->UninhibitScreensaver();
+  // And set requested one accordingly. Uninhibit state doesn't hold
+  // foreground/background state so release both.
+  SetState(topic, backgroundLock, /* aInhibited */ shouldLock);
+
+  return NS_OK;
 }
