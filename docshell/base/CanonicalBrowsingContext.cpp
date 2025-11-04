@@ -323,7 +323,10 @@ void CanonicalBrowsingContext::ReplacedBy(
   }
 
   aNewContext->mRestoreState = mRestoreState.forget();
-  MOZ_ALWAYS_SUCCEEDS(SetHasRestoreData(false));
+  Transaction selfTxn;
+  selfTxn.SetHasRestoreData(false);
+  selfTxn.SetExplicitActive(ExplicitActiveStatus::Inactive);
+  MOZ_ALWAYS_SUCCEEDS(selfTxn.Commit(this));
 
   // XXXBFCache name handling is still a bit broken in Fission in general,
   // at least in case name should be cleared.
