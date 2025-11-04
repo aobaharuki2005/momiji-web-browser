@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.385
- * pdfjsBuild = 7fc5706e1
+ * pdfjsVersion = 5.4.396
+ * pdfjsBuild = 0a2680bca
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -37587,7 +37587,7 @@ class StructElementNode {
       if (!isName(fileStream.dict.get("Subtype"), "application/mathml+xml")) {
         continue;
       }
-      return fileStream.getString();
+      return stringToUTF8String(fileStream.getString());
     }
     const A = this.dict.get("A");
     if (A instanceof Dict) {
@@ -56626,40 +56626,6 @@ class PDFDocument {
       return isSignature && isInvisible;
     });
   }
-  #collectSignatureCertificates(fields, collectedSignatureCertificates, visited = new RefSet()) {
-    if (!Array.isArray(fields)) {
-      return;
-    }
-    for (let field of fields) {
-      if (field instanceof Ref) {
-        if (visited.has(field)) {
-          continue;
-        }
-        visited.put(field);
-      }
-      field = this.xref.fetchIfRef(field);
-      if (!(field instanceof Dict)) {
-        continue;
-      }
-      if (field.has("Kids")) {
-        this.#collectSignatureCertificates(field.get("Kids"), collectedSignatureCertificates, visited);
-        continue;
-      }
-      const isSignature = isName(field.get("FT"), "Sig");
-      if (!isSignature) {
-        continue;
-      }
-      const value = field.get("V");
-      if (!(value instanceof Dict)) {
-        continue;
-      }
-      const subFilter = value.get("SubFilter");
-      if (!(subFilter instanceof Name)) {
-        continue;
-      }
-      collectedSignatureCertificates.add(subFilter.name);
-    }
-  }
   get _xfaStreams() {
     const {
       acroForm
@@ -56906,13 +56872,6 @@ class PDFDocument {
       formInfo.hasXfa = Array.isArray(xfa) && xfa.length > 0 || xfa instanceof BaseStream && !xfa.isEmpty;
       const sigFlags = acroForm.get("SigFlags");
       const hasSignatures = !!(sigFlags & 0x1);
-      if (hasSignatures) {
-        const collectedSignatureCertificates = new Set();
-        this.#collectSignatureCertificates(fields, collectedSignatureCertificates);
-        if (collectedSignatureCertificates.size > 0) {
-          formInfo.collectedSignatureCertificates = Array.from(collectedSignatureCertificates);
-        }
-      }
       const hasOnlyDocumentSignatures = hasSignatures && this.#hasOnlyDocumentSignatures(fields);
       formInfo.hasAcroForm = hasFields && !hasOnlyDocumentSignatures;
       formInfo.hasSignatures = hasSignatures;
@@ -56940,7 +56899,6 @@ class PDFDocument {
       IsCollectionPresent: !!catalog.collection,
       IsSignaturesPresent: formInfo.hasSignatures
     };
-    docInfo.collectedSignatureCertificates = formInfo.collectedSignatureCertificates ?? null;
     let infoDict;
     try {
       infoDict = xref.trailer.get("Info");
@@ -58449,7 +58407,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "5.4.385";
+    const workerVersion = "5.4.396";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }

@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.385
- * pdfjsBuild = 7fc5706e1
+ * pdfjsVersion = 5.4.396
+ * pdfjsBuild = 0a2680bca
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -2156,6 +2156,54 @@ class FloatingToolbar {
 function bindEvents(obj, element, names) {
   for (const name of names) {
     element.addEventListener(name, obj[name].bind(obj));
+  }
+}
+class CurrentPointers {
+  static #pointerId = NaN;
+  static #pointerIds = null;
+  static #moveTimestamp = NaN;
+  static #pointerType = null;
+  static initializeAndAddPointerId(pointerId) {
+    (CurrentPointers.#pointerIds ||= new Set()).add(pointerId);
+  }
+  static setPointer(pointerType, pointerId) {
+    CurrentPointers.#pointerId ||= pointerId;
+    CurrentPointers.#pointerType ??= pointerType;
+  }
+  static setTimeStamp(timeStamp) {
+    CurrentPointers.#moveTimestamp = timeStamp;
+  }
+  static isSamePointerId(pointerId) {
+    return CurrentPointers.#pointerId === pointerId;
+  }
+  static isSamePointerIdOrRemove(pointerId) {
+    if (CurrentPointers.#pointerId === pointerId) {
+      return true;
+    }
+    CurrentPointers.#pointerIds?.delete(pointerId);
+    return false;
+  }
+  static isSamePointerType(pointerType) {
+    return CurrentPointers.#pointerType === pointerType;
+  }
+  static isInitializedAndDifferentPointerType(pointerType) {
+    return CurrentPointers.#pointerType !== null && !CurrentPointers.isSamePointerType(pointerType);
+  }
+  static isSameTimeStamp(timeStamp) {
+    return CurrentPointers.#moveTimestamp === timeStamp;
+  }
+  static isUsingMultiplePointers() {
+    return CurrentPointers.#pointerIds?.size >= 1;
+  }
+  static clearPointerType() {
+    CurrentPointers.#pointerType = null;
+  }
+  static clearPointerIds() {
+    CurrentPointers.#pointerId = NaN;
+    CurrentPointers.#pointerIds = null;
+  }
+  static clearTimeStamp() {
+    CurrentPointers.#moveTimestamp = NaN;
   }
 }
 class IdManager {
@@ -13035,7 +13083,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.385",
+    apiVersion: "5.4.396",
     data,
     password,
     disableAutoFetch,
@@ -14615,8 +14663,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.385";
-const build = "7fc5706e1";
+const version = "5.4.396";
+const build = "0a2680bca";
 
 ;// ./src/display/editor/color_picker.js
 
@@ -20603,6 +20651,7 @@ class HighlightEditor extends AnnotationEditor {
 
 
 
+
 class DrawingOptions {
   #svgProperties = Object.create(null);
   updateProperty(name, value) {
@@ -20649,10 +20698,6 @@ class DrawingEditor extends AnnotationEditor {
   static #currentDraw = null;
   static #currentDrawingAC = null;
   static #currentDrawingOptions = null;
-  static #currentPointerId = NaN;
-  static #currentPointerType = null;
-  static #currentPointerIds = null;
-  static #currentMoveTimestamp = NaN;
   static _INNER_MARGIN = 3;
   constructor(params) {
     super(params);
@@ -21031,7 +21076,7 @@ class DrawingEditor extends AnnotationEditor {
       pointerId,
       pointerType
     } = event;
-    if (DrawingEditor.#currentPointerType && DrawingEditor.#currentPointerType !== pointerType) {
+    if (CurrentPointers.isInitializedAndDifferentPointerType(pointerType)) {
       return;
     }
     const {
@@ -21045,31 +21090,26 @@ class DrawingEditor extends AnnotationEditor {
     } = target.getBoundingClientRect();
     const ac = DrawingEditor.#currentDrawingAC = new AbortController();
     const signal = parent.combinedSignal(ac);
-    DrawingEditor.#currentPointerId ||= pointerId;
-    DrawingEditor.#currentPointerType ??= pointerType;
+    CurrentPointers.setPointer(pointerType, pointerId);
     window.addEventListener("pointerup", e => {
-      if (DrawingEditor.#currentPointerId === e.pointerId) {
+      if (CurrentPointers.isSamePointerIdOrRemove(e.pointerId)) {
         this._endDraw(e);
-      } else {
-        DrawingEditor.#currentPointerIds?.delete(e.pointerId);
       }
     }, {
       signal
     });
     window.addEventListener("pointercancel", e => {
-      if (DrawingEditor.#currentPointerId === e.pointerId) {
+      if (CurrentPointers.isSamePointerIdOrRemove(e.pointerId)) {
         this._currentParent.endDrawingSession();
-      } else {
-        DrawingEditor.#currentPointerIds?.delete(e.pointerId);
       }
     }, {
       signal
     });
     window.addEventListener("pointerdown", e => {
-      if (DrawingEditor.#currentPointerType !== e.pointerType) {
+      if (!CurrentPointers.isSamePointerType(e.pointerType)) {
         return;
       }
-      (DrawingEditor.#currentPointerIds ||= new Set()).add(e.pointerId);
+      CurrentPointers.initializeAndAddPointerId(e.pointerId);
       if (DrawingEditor.#currentDraw.isCancellable()) {
         DrawingEditor.#currentDraw.removeLastElement();
         if (DrawingEditor.#currentDraw.isEmpty()) {
@@ -21090,7 +21130,7 @@ class DrawingEditor extends AnnotationEditor {
       signal
     });
     target.addEventListener("touchmove", e => {
-      if (e.timeStamp === DrawingEditor.#currentMoveTimestamp) {
+      if (CurrentPointers.isSameTimeStamp(e.timeStamp)) {
         stopEvent(e);
       }
     }, {
@@ -21111,7 +21151,7 @@ class DrawingEditor extends AnnotationEditor {
     } = parent.drawLayer.draw(this._mergeSVGProperties(DrawingEditor.#currentDrawingOptions.toSVGProperties(), DrawingEditor.#currentDraw.defaultSVGProperties), true, false));
   }
   static _drawMove(event) {
-    DrawingEditor.#currentMoveTimestamp = -1;
+    CurrentPointers.isSameTimeStamp(event.timeStamp);
     if (!DrawingEditor.#currentDraw) {
       return;
     }
@@ -21120,15 +21160,15 @@ class DrawingEditor extends AnnotationEditor {
       offsetY,
       pointerId
     } = event;
-    if (DrawingEditor.#currentPointerId !== pointerId) {
+    if (!CurrentPointers.isSamePointerId(pointerId)) {
       return;
     }
-    if (DrawingEditor.#currentPointerIds?.size >= 1) {
+    if (CurrentPointers.isUsingMultiplePointers()) {
       this._endDraw(event);
       return;
     }
     this._currentParent.drawLayer.updateProperties(this._currentDrawId, DrawingEditor.#currentDraw.add(offsetX, offsetY));
-    DrawingEditor.#currentMoveTimestamp = event.timeStamp;
+    CurrentPointers.setTimeStamp(event.timeStamp);
     stopEvent(event);
   }
   static _cleanup(all) {
@@ -21137,14 +21177,13 @@ class DrawingEditor extends AnnotationEditor {
       this._currentParent = null;
       DrawingEditor.#currentDraw = null;
       DrawingEditor.#currentDrawingOptions = null;
-      DrawingEditor.#currentPointerType = null;
-      DrawingEditor.#currentMoveTimestamp = NaN;
+      CurrentPointers.clearPointerType();
+      CurrentPointers.clearTimeStamp();
     }
     if (DrawingEditor.#currentDrawingAC) {
       DrawingEditor.#currentDrawingAC.abort();
       DrawingEditor.#currentDrawingAC = null;
-      DrawingEditor.#currentPointerId = NaN;
-      DrawingEditor.#currentPointerIds = null;
+      CurrentPointers.clearPointerIds();
     }
   }
   static _endDraw(event) {

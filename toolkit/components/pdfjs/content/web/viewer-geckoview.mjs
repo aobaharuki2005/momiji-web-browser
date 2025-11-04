@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.385
- * pdfjsBuild = 7fc5706e1
+ * pdfjsVersion = 5.4.396
+ * pdfjsBuild = 0a2680bca
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -1462,6 +1462,7 @@ class BaseExternalServices {
   updateFindMatchesCount(data) {}
   initPassiveLoading() {}
   reportTelemetry(data) {}
+  reportText(data) {}
   async createL10n() {
     throw new Error("Not implemented: createL10n");
   }
@@ -2208,6 +2209,9 @@ class ExternalServices extends BaseExternalServices {
   }
   reportTelemetry(data) {
     FirefoxCom.request("reportTelemetry", data);
+  }
+  reportText(data) {
+    FirefoxCom.request("reportText", data);
   }
   updateEditorStates(data) {
     FirefoxCom.request("updateEditorStates", data);
@@ -5718,6 +5722,51 @@ class PDFScriptingManager {
   }
 }
 
+;// ./web/pdf_text_extractor.js
+class PdfTextExtractor {
+  #pdfViewer;
+  #externalServices;
+  #textPromise;
+  #pendingRequests = new Set();
+  constructor(externalServices) {
+    this.#externalServices = externalServices;
+    window.addEventListener("requestTextContent", ({
+      detail
+    }) => {
+      this.extractTextContent(detail.requestId);
+    });
+  }
+  setViewer(pdfViewer) {
+    this.#pdfViewer = pdfViewer;
+    if (this.#pdfViewer && this.#pendingRequests.size) {
+      for (const pendingRequest of this.#pendingRequests) {
+        this.extractTextContent(pendingRequest);
+      }
+      this.#pendingRequests.clear();
+    }
+  }
+  async extractTextContent(requestId) {
+    if (!this.#pdfViewer) {
+      this.#pendingRequests.add(requestId);
+      return;
+    }
+    if (!this.#textPromise) {
+      const textPromise = this.#textPromise = this.#pdfViewer.getAllText();
+      textPromise.then(() => {
+        setTimeout(() => {
+          if (this.#textPromise === textPromise) {
+            this.#textPromise = null;
+          }
+        }, 5000);
+      });
+    }
+    this.#externalServices.reportText({
+      text: await this.#textPromise,
+      requestId
+    });
+  }
+}
+
 ;// ./web/annotation_editor_layer_builder.js
 
 
@@ -6671,10 +6720,7 @@ class MathMLSanitizer {
         name: "maction",
         namespace: MathMLNamespace
       }],
-      attributes: ["dir", "displaystyle", "mathbackground", "mathcolor", "mathsize", "scriptlevel", "encoding", "display", "linethickness", "intent", "arg", "form", "fence", "separator", "lspace", "rspace", "stretchy", "symmetric", "maxsize", "minsize", "largeop", "movablelimits", "width", "height", "depth", "voffset", "accent", "accentunder", "columnspan", "rowspan"].map(name => ({
-        name,
-        namespace: MathMLNamespace
-      })),
+      attributes: ["dir", "displaystyle", "mathbackground", "mathcolor", "mathsize", "scriptlevel", "encoding", "display", "linethickness", "intent", "arg", "form", "fence", "separator", "lspace", "rspace", "stretchy", "symmetric", "maxsize", "minsize", "largeop", "movablelimits", "width", "height", "depth", "voffset", "accent", "accentunder", "columnspan", "rowspan"],
       comments: false
     }) : null);
   }
@@ -8254,7 +8300,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.385";
+    const viewerVersion = "5.4.396";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9972,6 +10018,7 @@ class ViewHistory {
 
 
 
+
 const FORCE_PAGES_LOADED_TIMEOUT = 10000;
 const ViewOnLoad = {
   UNKNOWN: -1,
@@ -9994,6 +10041,7 @@ const PDFViewerApplication = {
   pdfPresentationMode: null,
   pdfDocumentProperties: null,
   pdfLinkService: null,
+  pdfTextExtractor: null,
   pdfHistory: null,
   pdfSidebar: null,
   pdfOutlineViewer: null,
@@ -10074,6 +10122,7 @@ const PDFViewerApplication = {
       AppOptions.set("externalLinkTarget", LinkTarget.TOP);
     }
     await this._initializeViewerComponents();
+    this.pdfTextExtractor = new PdfTextExtractor(this.externalServices);
     this.bindEvents();
     this.bindWindowEvents();
     this._initializedCapability.settled = true;
@@ -10571,6 +10620,7 @@ const PDFViewerApplication = {
       this.pdfViewer.setDocument(null);
       this.pdfLinkService.setDocument(null);
       this.pdfDocumentProperties?.setDocument(null);
+      this.pdfTextExtractor?.setViewer(null);
     }
     this.pdfLinkService.externalLinkEnabled = true;
     this.store = null;
@@ -10761,6 +10811,7 @@ const PDFViewerApplication = {
     this.pdfDocumentProperties?.setDocument(pdfDocument);
     const pdfViewer = this.pdfViewer;
     pdfViewer.setDocument(pdfDocument);
+    this.pdfTextExtractor.setViewer(pdfViewer);
     const {
       firstPagePromise,
       onePageRendered,
@@ -10958,12 +11009,6 @@ const PDFViewerApplication = {
     } = await pdfDocument.getMetadata();
     if (pdfDocument !== this.pdfDocument) {
       return;
-    }
-    if (info.collectedSignatureCertificates) {
-      this.externalServices.reportTelemetry({
-        type: "signatureCertificates",
-        data: info.collectedSignatureCertificates
-      });
     }
     this.documentInfo = info;
     this.metadata = metadata;
