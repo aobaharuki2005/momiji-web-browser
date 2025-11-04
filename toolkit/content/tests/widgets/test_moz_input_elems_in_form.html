@@ -31,6 +31,11 @@
         let templateFn = () =>
           html` <form id="main-form">
             <moz-fieldset>
+              <moz-checkbox
+                name="moz-checkbox"
+                value="checkbox_val"
+                checked=""
+              ></moz-checkbox>
               <moz-toggle
                 name="moz-toggle"
                 value="toggle_val"
@@ -50,6 +55,12 @@
         testHelpers.setupTests({ templateFn });
         formAttributeTemplateFn = html`<form id="form-attribute-id"></form>
           <moz-fieldset>
+            <moz-checkbox
+              name="moz-checkbox"
+              value="checkbox_val"
+              checked=""
+              form="form-attribute-id"
+            ></moz-checkbox>
             <moz-toggle
               name="moz-toggle"
               value="toggle_val"
@@ -76,6 +87,11 @@
         let assertDefaultValue = (event, form) => {
           event.preventDefault();
           const formData = new FormData(form);
+          is(
+            formData.get("moz-checkbox"),
+            "checkbox_val",
+            "moz-checkbox, when checked, should have a submitted value"
+          );
           is(
             formData.get("moz-toggle"),
             "toggle_val",
@@ -129,6 +145,26 @@
         let childArray = Array.from(fieldset.children);
         await Promise.all(childArray.map(item => item.updateComplete));
         await synthesizeMouseAtCenter(submit, {});
+
+        await synthesizeMouseAtCenter(
+          document.querySelector("moz-checkbox"),
+          {}
+        );
+        let assertCheckboxValue = (event, form) => {
+          event.preventDefault();
+          const formData = new FormData(form);
+          ok(
+            !formData.get("moz-checkbox"),
+            "moz-checkbox that is not checked should not submit a value"
+          );
+        };
+        form.addEventListener(
+          "submit",
+          event => assertCheckboxValue(event, form),
+          { once: true }
+        );
+
+        await synthesizeMouseAtCenter(submit, {});
       });
 
       add_task(async function test_form_reset() {
@@ -138,6 +174,10 @@
         for (let c of fieldset.children) {
           c.value = "non-default value";
         }
+        let checkbox = document.querySelector("moz-checkbox");
+        // Change the checked state so that we can assert later that
+        // it is restored to the defaultChecked value.
+        checkbox.checked = !checkbox.defaultChecked;
         // Assert that the value property of the input elements has
         // changed before we reset the form
         for (let c of fieldset.children) {
@@ -148,9 +188,15 @@
           );
         }
         form.reset();
+
         let formData = new FormData(form);
         // Each tested element's value property should reset to its
         // value attribute.
+        is(
+          formData.get("moz-checkbox"),
+          document.querySelector("moz-checkbox").getAttribute("value"),
+          "moz-checkbox should reset to default value"
+        );
         is(
           formData.get("moz-toggle"),
           document.querySelector("moz-toggle").getAttribute("value"),
@@ -166,6 +212,43 @@
           document.querySelector("moz-input-text").getAttribute("value"),
           "moz-input-text should reset to default value"
         );
+
+        // Assert that the checkbox checked is restored to the
+        // defaultChecked property
+        is(
+          checkbox.checked,
+          checkbox.defaultChecked,
+          "moz-checkbox should reset its checked state to the defaultChecked value"
+        );
+      });
+
+      // Assert that moz-checkbox contributes its value to the form
+      // when it is checked, does not contribute its value when unchecked,
+      // and contributes its value when switching from unchecked to
+      // checked.
+      add_task(async function test_moz_checkbox() {
+        let renderTarget = await testHelpers.renderTemplate();
+        let form = renderTarget.firstElementChild;
+        let formData = new FormData(form);
+        is(
+          formData.get("moz-checkbox"),
+          "checkbox_val",
+          "There should be a value for a checked moz-checkbox in the form data"
+        );
+        let checkbox = document.querySelector("moz-checkbox");
+        await synthesizeMouseAtCenter(checkbox, {});
+        formData = new FormData(form);
+        ok(
+          !formData.get("moz-checkbox"),
+          "There should be no value for an unchecked moz-checkbox in the form data"
+        );
+        await synthesizeMouseAtCenter(checkbox, {});
+        formData = new FormData(form);
+        is(
+          formData.get("moz-checkbox"),
+          "checkbox_val",
+          "There should be a value for a checked moz-checkbox in the form data"
+        );
       });
 
       // Assert that the input elements submit their values as expected
@@ -179,6 +262,11 @@
         let assertDefaultValue = (event, form) => {
           event.preventDefault();
           const formData = new FormData(form);
+          is(
+            formData.get("moz-checkbox"),
+            "checkbox_val",
+            "moz-checkbox, when checked, should have a submitted value"
+          );
           is(
             formData.get("moz-toggle"),
             "toggle_val",
@@ -232,6 +320,28 @@
         let childArray = Array.from(fieldset.children);
         await Promise.all(childArray.map(item => item.updateComplete));
         await synthesizeMouseAtCenter(submit, {});
+
+        // Assert that an unchecked moz-checkbox does not submit a value
+        // when a form is submitted.
+        await synthesizeMouseAtCenter(
+          document.querySelector("moz-checkbox"),
+          {}
+        );
+        let assertCheckboxValue = (event, form) => {
+          event.preventDefault();
+          const formData = new FormData(form);
+          ok(
+            !formData.get("moz-checkbox"),
+            "moz-checkbox that is not checked should not submit a value"
+          );
+        };
+        form.addEventListener(
+          "submit",
+          event => assertCheckboxValue(event, form),
+          { once: true }
+        );
+
+        await synthesizeMouseAtCenter(submit, {});
       });
 
       // Assert that the input elements reset their values as expected
@@ -245,6 +355,10 @@
         for (let c of fieldset.children) {
           c.value = "non-default value";
         }
+        let checkbox = document.querySelector("moz-checkbox");
+        // Change the checked state so that we can assert later that
+        // it is restored to the defaultChecked value.
+        checkbox.checked = !checkbox.defaultChecked;
 
         // Assert that the value property of the input elements has
         // changed before we reset the form
@@ -261,6 +375,11 @@
         // Each tested element's value property should reset to its
         // value attribute.
         is(
+          formData.get("moz-checkbox"),
+          document.querySelector("moz-checkbox").getAttribute("value"),
+          "moz-checkbox should reset to default value"
+        );
+        is(
           formData.get("moz-toggle"),
           document.querySelector("moz-toggle").getAttribute("value"),
           "moz-toggle should reset to default value"
@@ -274,6 +393,13 @@
           formData.get("moz-input-text"),
           document.querySelector("moz-input-text").getAttribute("value"),
           "moz-input-text should reset to default value"
+        );
+        // Assert that the checkbox checked is restored to the
+        // defaultChecked property
+        is(
+          checkbox.checked,
+          checkbox.defaultChecked,
+          "moz-checkbox should reset its checked state to the defaultChecked value"
         );
       });
     </script>
