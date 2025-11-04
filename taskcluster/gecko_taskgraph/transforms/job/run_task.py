@@ -181,10 +181,13 @@ def generic_worker_run_task(config, job, taskdesc):
     common_setup(config, job, taskdesc, command)
 
     worker.setdefault("mounts", [])
+    run_task_bin = (
+        "run-task-git" if config.params["repository_type"] == "git" else "run-task-hg"
+    )
     worker["mounts"].append(
         {
             "content": {
-                "url": script_url(config, "run-task"),
+                "url": script_url(config, run_task_bin),
             },
             "file": "./run-task",
         }

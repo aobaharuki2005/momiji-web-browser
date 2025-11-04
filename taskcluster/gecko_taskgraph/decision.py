@@ -243,9 +243,10 @@ def taskgraph_decision(options, parameters=None):
         GECKO, "third_party", "python", "taskcluster_taskgraph", "taskgraph"
     )
     to_copy = {
-        scripts_dir / "run-task": ARTIFACTS_DIR,
+        scripts_dir / "run-task": f"{ARTIFACTS_DIR}/run-task-hg",
         scripts_dir / "tester" / "test-linux.sh": ARTIFACTS_DIR,
         taskgraph_dir / "run-task" / "fetch-content": ARTIFACTS_DIR,
+        taskgraph_dir / "run-task" / "run-task": f"{ARTIFACTS_DIR}/run-task-git",
         mozharness_dir / "external_tools" / "robustcheckout.py": ARTIFACTS_DIR,
     }
     for target, dest in to_copy.items():
