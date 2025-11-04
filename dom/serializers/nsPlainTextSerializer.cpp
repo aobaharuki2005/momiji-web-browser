@@ -1496,60 +1496,53 @@ static void ReplaceVisiblyTrailingNbsps(nsAString& aString) {
 }
 
 void nsPlainTextSerializer::ConvertToLinesAndOutput(const nsAString& aString) {
-  const int32_t totLen = aString.Length();
-  int32_t newline{0};
+  nsAString::const_iterator iter;
+  aString.BeginReading(iter);
+  nsAString::const_iterator done_searching;
+  aString.EndReading(done_searching);
 
   // Put the mail quote "> " chars in, if appropriate.
   // Have to put it in before every line.
-  int32_t bol = 0;
-  while (bol < totLen) {
-    bool outputLineBreak = false;
-    bool spacesOnly = true;
+  while (iter != done_searching) {
+    nsAString::const_iterator bol = iter;
+    nsAString::const_iterator newline = done_searching;
 
     // Find one of '\n' or '\r' using iterators since nsAString
     // doesn't have the old FindCharInSet function.
-    nsAString::const_iterator iter;
-    aString.BeginReading(iter);
-    nsAString::const_iterator done_searching;
-    aString.EndReading(done_searching);
-    iter.advance(bol);
-    int32_t new_newline = bol;
-    newline = kNotFound;
+    bool spacesOnly = true;
     while (iter != done_searching) {
       if ('\n' == *iter || '\r' == *iter) {
-        newline = new_newline;
+        newline = iter;
         break;
       }
       if (' ' != *iter) {
         spacesOnly = false;
       }
-      ++new_newline;
       ++iter;
     }
 
     // Done searching
     nsAutoString stringpart;
-    if (newline == kNotFound) {
+    bool outputLineBreak = false;
+    if (newline == done_searching) {
       // No new lines.
-      stringpart.Assign(Substring(aString, bol, totLen - bol));
+      stringpart.Assign(Substring(bol, newline));
       if (!stringpart.IsEmpty()) {
         char16_t lastchar = stringpart.Last();
         mInWhitespace = IsLineFeedCarriageReturnBlankOrTab(lastchar);
       }
       mEmptyLines = -1;
-      bol = totLen;
     } else {
       // There is a newline
-      stringpart.Assign(Substring(aString, bol, newline - bol));
+      stringpart.Assign(Substring(bol, newline));
       mInWhitespace = true;
       outputLineBreak = true;
       mEmptyLines = 0;
-      bol = newline + 1;
-      if ('\r' == *iter && bol < totLen && '\n' == *++iter) {
+      if ('\r' == *iter++ && '\n' == *iter) {
         // There was a CRLF in the input. This used to be illegal and
         // stripped by the parser. Apparently not anymore. Let's skip
         // over the LF.
-        bol++;
+        ++iter;
       }
     }
 
@@ -1573,10 +1566,6 @@ void nsPlainTextSerializer::ConvertToLinesAndOutput(const nsAString& aString) {
 
     mCurrentLine.ResetContentAndIndentationHeader();
   }
-
-#ifdef DEBUG_wrapping
-  printf("No wrapping: newline is %d, totLen is %d\n", newline, totLen);
-#endif
 }
 
 /**
