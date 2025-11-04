@@ -1196,7 +1196,7 @@
   <!-- Text for sumo link to learn more about crash reports in data collection screen -->
   <string name="preferences_crashes_learn_more">Saiba mais sobre relatórios de falhas</string>
   <!-- Title Headers for data collection settings screen -->
-  <string name="crash_reports_data_category">Relatórios de falha</string>
+  <string name="crash_reports_data_category">Relatórios de falhas</string>
   <string name="usage_data_category">Dados de uso</string>
   <string name="studies_data_category">Estudos</string>
   <string name="technical_data_category">Dados técnicos</string>
@@ -1786,7 +1786,7 @@
   <!-- Single unsubmitted crash matching remote settings. %1$s is the name of the app (for example "Firefox"). -->
   <string name="unsubmitted_crash_requested_by_devs_dialog_title">Você tem um relatório de falha não enviado, relacionado a falhas sendo investigadas. Ao enviar, nos ajuda a melhorar o %1$s. Se fechar esta notificação, o relatório será desconsiderado.</string>
   <!-- Multiple unsubmitted crashes matching remote settings. %1$d is the number of unsent crash reports, %2$s is the name of the app (for example "Firefox"). -->
-  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Você tem relatórios de falha não enviados (%1$d), relacionados a falhas sendo investigadas. Ao enviar, nos ajuda a melhorar o %2$s. Se fechar esta notificação, esses relatórios serão desconsiderados.</string>
+  <string name="unsubmitted_crashes_requested_by_devs_dialog_title">Você tem relatórios de falhas não enviados (%1$d), relacionados a falhas sendo investigadas. Ao enviar, nos ajuda a melhorar o %2$s. Se fechar esta notificação, esses relatórios serão desconsiderados.</string>
   <!-- Unsubmitted crash dialog checkbox label for automatically sending reports in the future -->
   <string name="unsubmitted_crash_dialog_checkbox_label">Enviar relatórios de falhas automaticamente</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
