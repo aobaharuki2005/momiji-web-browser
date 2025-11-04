@@ -193,6 +193,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_rules_custom.js"]
 
+["browser_rules_custom-states.js"]
+
 ["browser_rules_cycle-angle.js"]
 
 ["browser_rules_cycle-color.js"]
