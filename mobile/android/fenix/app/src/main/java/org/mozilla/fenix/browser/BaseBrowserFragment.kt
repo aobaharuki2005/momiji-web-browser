@@ -2609,12 +2609,19 @@ abstract class BaseBrowserFragment :
     }
 
     private fun setupIMEInsetsHandling(view: View) {
+        // Ensure that navigating to new webpages which triggers this handling being set again
+        // would not leave the engine view with half set values from the previous animation.
+        (view.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = 0
+
         when (context?.settings()?.toolbarPosition) {
             ToolbarPosition.BOTTOM -> {
                 val toolbar = listOf(
                     _bottomToolbarContainerView?.toolbarContainerView,
                     _browserToolbarView?.layout,
                 ).firstOrNull { it != null } ?: return
+
+                // Ensure the toolbar is anchored to the bottom of the screen.
+                (toolbar.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = 0
 
                 ImeInsetsSynchronizer.setup(
                     targetView = toolbar,
