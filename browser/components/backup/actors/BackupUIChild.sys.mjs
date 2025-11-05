@@ -153,20 +153,22 @@ export class BackupUIChild extends JSWindowActorChild {
         this.#inittedWidgets
       );
       for (let widget of widgets) {
-        if (widget.isConnected) {
-          const state = Cu.cloneInto(message.data.state, widget.ownerGlobal);
-
-          const waivedWidget = Cu.waiveXrays(widget);
-          waivedWidget.backupServiceState = state;
-          //dispatch the event for the React listeners
-          widget.dispatchEvent(
-            new this.contentWindow.CustomEvent("BackupUI:StateWasUpdated", {
-              bubbles: true,
-              composed: true,
-              detail: { state },
-            })
-          );
+        if (!widget.isConnected || !widget.ownerGlobal) {
+          continue;
         }
+
+        const state = Cu.cloneInto(message.data.state, widget.ownerGlobal);
+
+        const waivedWidget = Cu.waiveXrays(widget);
+        waivedWidget.backupServiceState = state;
+        //dispatch the event for the React listeners
+        widget.dispatchEvent(
+          new this.contentWindow.CustomEvent("BackupUI:StateWasUpdated", {
+            bubbles: true,
+            composed: true,
+            detail: { state },
+          })
+        );
       }
     }
   }
