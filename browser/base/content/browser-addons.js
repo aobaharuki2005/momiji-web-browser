@@ -97,7 +97,7 @@ const ERROR_L10N_IDS = new Map([
   ],
   [
     -14,
-    ["addon-install-error-soft-blocked", "addon-install-error-soft-blocked"],
+    ["addon-install-error-soft-blocked2", "addon-install-error-soft-blocked2"],
   ],
 ]);
 
@@ -715,7 +715,7 @@ customElements.define(
       const { messagebar } = this;
       if (this.isSoftBlocked) {
         const SOFTBLOCK_FLUENTID =
-          "unified-extensions-item-messagebar-softblocked";
+          "unified-extensions-item-messagebar-softblocked2";
         if (
           messagebar.messageL10nId === SOFTBLOCK_FLUENTID &&
           messagebar.messageL10nArgs?.extensionName === this.extensionName
@@ -3092,11 +3092,11 @@ var gUnifiedExtensions = {
       extensionName = addons[0].name;
       messageBarFluentId = hasHardBlocked
         ? "unified-extensions-mb-blocklist-error-single"
-        : "unified-extensions-mb-blocklist-warning-single";
+        : "unified-extensions-mb-blocklist-warning-single2";
     } else {
       messageBarFluentId = hasHardBlocked
         ? "unified-extensions-mb-blocklist-error-multiple"
-        : "unified-extensions-mb-blocklist-warning-multiple";
+        : "unified-extensions-mb-blocklist-warning-multiple2";
     }
 
     const messageBarBlocklist = this._makeMessageBar({

@@ -350,7 +350,7 @@ async function runBlockedExtensionsTestCase({ testSoftBlocks = false }) {
       type: testSoftBlocks ? "warning" : "error",
       fluentAttributes: {
         id: testSoftBlocks
-          ? "unified-extensions-mb-blocklist-warning-single"
+          ? "unified-extensions-mb-blocklist-warning-single2"
           : "unified-extensions-mb-blocklist-error-single",
         args: {
           extensionName: addon1.name,
@@ -432,7 +432,7 @@ async function runBlockedExtensionsTestCase({ testSoftBlocks = false }) {
       type: testSoftBlocks ? "warning" : "error",
       fluentAttributes: {
         id: testSoftBlocks
-          ? "unified-extensions-mb-blocklist-warning-multiple"
+          ? "unified-extensions-mb-blocklist-warning-multiple2"
           : "unified-extensions-mb-blocklist-error-multiple",
         args: {
           extensionsCount: 2,
