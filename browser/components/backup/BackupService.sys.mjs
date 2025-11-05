@@ -3369,17 +3369,20 @@ export class BackupService extends EventTarget {
    */
   setParentDirPath(parentDirPath) {
     try {
-      if (!parentDirPath || !PathUtils.filename(parentDirPath)) {
+      let filename = parentDirPath ? PathUtils.filename(parentDirPath) : null;
+      if (!filename) {
         throw new BackupError(
           "Parent directory path is invalid.",
           ERRORS.FILE_SYSTEM_ERROR
         );
       }
-      // Recreate the backups path with the new parent directory.
-      let fullPath = PathUtils.join(
-        parentDirPath,
-        BackupService.BACKUP_DIR_NAME
-      );
+
+      let fullPath = parentDirPath;
+      if (filename != BackupService.BACKUP_DIR_NAME) {
+        // Recreate the backups path with the new parent directory.
+        fullPath = PathUtils.join(parentDirPath, BackupService.BACKUP_DIR_NAME);
+      }
+
       Services.prefs.setStringPref(BACKUP_DIR_PREF_NAME, fullPath);
     } catch (e) {
       lazy.logConsole.error(
