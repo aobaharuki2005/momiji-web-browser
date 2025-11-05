@@ -110,7 +110,7 @@ aa-stroke = { git = "https://github.com/FirefoxGraphics/aa-stroke", rev = "a821f
 etagere = { version = "0.2.13", features = ["ffi"] }
 
 url = "2.5.7"
-urlpattern = "0.4.0"
+urlpattern = "0.4.1"
 urlpattern_glue = { path = "../../../../netwerk/base/urlpattern_glue" }
 uritemplate_glue = { path = "../../../../netwerk/base/uritemplate_glue" }
 
