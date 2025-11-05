@@ -476,7 +476,7 @@ class Search {
 
     // Use the original string here, not the stripped one, so the tokenizer can
     // properly recognize token types.
-    let { tokens } = lazy.UrlbarTokenizer.tokenize({
+    let tokens = lazy.UrlbarTokenizer.tokenize({
       searchString: unescapedSearchString,
       trimmedSearchString: unescapedSearchString.trim(),
     });

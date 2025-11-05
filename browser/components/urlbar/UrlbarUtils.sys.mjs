@@ -9,6 +9,7 @@
 
 /**
  * @import {Query} from "UrlbarProvidersManager.sys.mjs"
+ * @import {UrlbarSearchStringTokenData} from "UrlbarTokenizer.sys.mjs"
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -2308,16 +2309,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
  *   The source from which search mode was entered.
  * @property {string} [engineName]
  *   The search engine name associated with the search mode.
- */
-
-/**
- * @typedef UrlbarSearchStringTokenData
- * @property {Values<typeof lazy.UrlbarTokenizer.TYPE>} type
- *   The type of the token.
- * @property {string} value
- *   The value of the token.
- * @property {string} lowerCaseValue
- *   The lower case version of the value.
  */
 
 /**

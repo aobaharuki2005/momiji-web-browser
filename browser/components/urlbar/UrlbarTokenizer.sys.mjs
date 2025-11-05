@@ -25,6 +25,16 @@ ChromeUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
 });
 
 /**
+ * @typedef UrlbarSearchStringTokenData
+ * @property {Values<typeof lazy.UrlbarTokenizer.TYPE>} type
+ *   The type of the token.
+ * @property {string} value
+ *   The value of the token.
+ * @property {string} lowerCaseValue
+ *   The lower case version of the value.
+ */
+
+/**
  * This Map stores key-value pairs where each key is a restrict token
  * and each value is an array containing the localized keyword and the
  * english keyword.
@@ -132,23 +142,22 @@ export var UrlbarTokenizer = {
   /**
    * Tokenizes the searchString from a UrlbarQueryContext.
    *
-   * @param {UrlbarQueryContext} queryContext
-   *        The query context object to tokenize
-   * @returns {UrlbarQueryContext} the same query context object with a new
-   *          tokens property.
+   * @param {object} context
+   * @param {string} context.searchString
+   * @param {string} [context.searchMode]
+   * @param {string} context.trimmedSearchString
+   * @returns {UrlbarSearchStringTokenData[]}
+   *  The tokens associated with the query.
    */
-  tokenize(queryContext) {
+  tokenize(context) {
     lazy.logger.debug("Tokenizing search string", {
-      searchString: queryContext.searchString,
+      searchString: context.searchString,
     });
-    if (!queryContext.trimmedSearchString) {
-      queryContext.tokens = [];
-      return queryContext;
+    if (!context.trimmedSearchString) {
+      return [];
     }
-    let unfiltered = splitString(queryContext);
-    let tokens = filterTokens(unfiltered);
-    queryContext.tokens = tokens;
-    return queryContext;
+    let unfiltered = splitString(context);
+    return filterTokens(unfiltered);
   },
 
   /**
@@ -177,8 +186,9 @@ const CHAR_TO_TYPE_MAP = new Map(
 /**
  * Given a queryContext object, splits its searchString into string tokens.
  *
- * @param {UrlbarQueryContext} queryContext
- *        The query context object to tokenize.
+ * @param {object} context
+ * @param {string} context.searchString
+ * @param {string} [context.searchMode]
  * @returns {string[]} An array of string tokens.
  */
 function splitString({ searchString, searchMode }) {

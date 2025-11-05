@@ -135,7 +135,8 @@ function createContext(searchString = "foo", properties = {}) {
       properties
     )
   );
-  UrlbarTokenizer.tokenize(context);
+  let tokens = UrlbarTokenizer.tokenize(context);
+  context.tokens = tokens;
   return context;
 }
 

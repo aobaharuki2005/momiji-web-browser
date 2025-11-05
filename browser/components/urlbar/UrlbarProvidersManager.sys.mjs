@@ -8,8 +8,9 @@
  */
 
 /**
- * @import { UrlbarProvider, UrlbarSearchStringTokenData } from "UrlbarUtils.sys.mjs"
+ * @import { UrlbarProvider } from "UrlbarUtils.sys.mjs"
  * @import { UrlbarMuxer } from "UrlbarUtils.sys.mjs"
+ * @import { UrlbarSearchStringTokenData } from "UrlbarTokenizer.sys.mjs"
  */
 
 const lazy = {};
@@ -425,7 +426,8 @@ export class ProvidersManager {
     }
 
     // Apply tokenization.
-    lazy.UrlbarTokenizer.tokenize(queryContext);
+    let tokens = lazy.UrlbarTokenizer.tokenize(queryContext);
+    queryContext.tokens = tokens;
 
     // If there's a single source, we are in restriction mode.
     if (queryContext.sources && queryContext.sources.length == 1) {

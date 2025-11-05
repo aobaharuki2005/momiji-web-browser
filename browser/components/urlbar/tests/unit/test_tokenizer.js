@@ -511,14 +511,9 @@ add_task(async function test_tokenizer() {
       );
     }
 
-    let newQueryContext = UrlbarTokenizer.tokenize(queryContext);
-    Assert.equal(
-      queryContext,
-      newQueryContext,
-      "The queryContext object is the same"
-    );
+    let tokens = UrlbarTokenizer.tokenize(queryContext);
     Assert.deepEqual(
-      queryContext.tokens,
+      tokens,
       queryContext.expectedTokens,
       "Check the expected tokens"
     );
