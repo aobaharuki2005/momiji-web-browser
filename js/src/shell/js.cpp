@@ -1162,9 +1162,9 @@ static bool ShellInterruptCallback(JSContext* cx) {
 
       JS::RealmOptions options;
       SetStandardRealmOptions(options);
-      RootedObject glob(
-          cx, NewGlobalObject(cx, options, nullptr, ShellGlobalKind::WindowProxy,
-                              /* immutablePrototype = */ true));
+      RootedObject glob(cx, NewGlobalObject(cx, options, nullptr,
+                                            ShellGlobalKind::WindowProxy,
+                                            /* immutablePrototype = */ true));
       if (!glob) {
         return false;
       }
@@ -3117,9 +3117,8 @@ static bool EvaluateInner(JSContext* cx, HandleString code,
     }
 
     if (execute) {
-      if (!(envChain.empty()
-                ? JS_ExecuteScript(cx, script, rval)
-                : JS_ExecuteScript(cx, envChain, script, rval))) {
+      if (!(envChain.empty() ? JS_ExecuteScript(cx, script, rval)
+                             : JS_ExecuteScript(cx, envChain, script, rval))) {
         if (catchTermination && !JS_IsExceptionPending(cx)) {
           ShellContext* sc = GetShellContext(cx);
           if (sc->quitting) {
