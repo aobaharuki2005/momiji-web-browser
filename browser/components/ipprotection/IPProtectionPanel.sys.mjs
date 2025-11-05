@@ -208,6 +208,16 @@ export class IPProtectionPanel {
     } else {
       this.#createPanel(panelView);
     }
+
+    // TODO: Stop counting after all onboarding messages have been shown - Bug 1997332
+    let currentCount = Services.prefs.getIntPref(
+      "browser.ipProtection.panelOpenCount"
+    );
+    let updatedCount = currentCount + 1;
+    Services.prefs.setIntPref(
+      "browser.ipProtection.panelOpenCount",
+      updatedCount
+    );
   }
 
   /**

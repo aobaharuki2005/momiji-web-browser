@@ -3508,6 +3508,8 @@ pref("browser.ipProtection.autoStartPrivateEnabled", false);
 pref("browser.ipProtection.userEnabled", false);
 // Pref to track which experiment version the user is enrolled in
 pref("browser.ipProtection.variant", "");
+// Pref to track number of times the VPN panel is opened
+pref("browser.ipProtection.panelOpenCount", 0);
 pref("browser.ipProtection.exceptionsMode", "all");
 pref("browser.ipProtection.domainExclusions", "");
 pref("browser.ipProtection.domainInclusions", "");
