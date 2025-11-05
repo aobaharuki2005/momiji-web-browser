@@ -417,12 +417,12 @@ function makeUrlbarResult(tokens, info) {
   });
 }
 
-const MATCH_TYPE = {
+const MATCH_TYPE = Object.freeze({
   HEURISTIC: "heuristic",
   GENERAL: "general",
   SUGGESTION: "suggestion",
   EXTENSION: "extension",
-};
+});
 
 /**
  * Manages a single instance of a Places search.
@@ -439,10 +439,10 @@ class Search {
    */
   constructor(queryContext, listener, provider) {
     // We want to store the original string for case sensitive searches.
-    this._originalSearchString = queryContext.searchString;
-    this._trimmedOriginalSearchString = queryContext.trimmedSearchString;
+    this.#originalSearchString = queryContext.searchString;
+    this.#trimmedOriginalSearchString = queryContext.trimmedSearchString;
     let unescapedSearchString = UrlbarUtils.unEscapeURIForUI(
-      this._trimmedOriginalSearchString
+      this.#trimmedOriginalSearchString
     );
     // We want to make sure "about:" is not stripped as a prefix so that the
     // about pages provider will run and ultimately only suggest about pages when
@@ -454,28 +454,24 @@ class Search {
     } else {
       [prefix, suffix] = UrlbarUtils.stripURLPrefix(unescapedSearchString);
     }
-    this._searchString = suffix;
-    this._strippedPrefix = prefix.toLowerCase();
+    this.#searchString = suffix;
 
-    this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY;
     // Set the default behavior for this search.
-    this._behavior = this._searchString
+    this.#behavior = this.#searchString
       ? lazy.UrlbarPrefs.get("defaultBehavior")
-      : this._emptySearchDefaultBehavior;
+      : this.#emptySearchDefaultBehavior;
 
-    this._inPrivateWindow = queryContext.isPrivate;
-    this._prohibitAutoFill = !queryContext.allowAutofill;
+    this.#inPrivateWindow = queryContext.isPrivate;
     // Increase the limit for the query because some results might
     // get deduplicated if their URLs only differ by their refs.
-    this._maxResults = Math.round(queryContext.maxResults * 1.5);
-    this._userContextId = queryContext.userContextId;
-    this._currentPage = queryContext.currentPage;
-    this._searchModeEngine = queryContext.searchMode?.engineName;
-    this._searchMode = queryContext.searchMode;
-    if (this._searchModeEngine) {
+    this.#maxResults = Math.round(queryContext.maxResults * 1.5);
+    this.#userContextId = queryContext.userContextId;
+    this.#currentPage = queryContext.currentPage;
+    this.#searchModeEngine = queryContext.searchMode?.engineName;
+    if (this.#searchModeEngine) {
       // Filter Places results on host.
-      let engine = Services.search.getEngineByName(this._searchModeEngine);
-      this._filterOnHost = engine.searchUrlDomain;
+      let engine = Services.search.getEngineByName(this.#searchModeEngine);
+      this.#filterOnHost = engine.searchUrlDomain;
     }
 
     // Use the original string here, not the stripped one, so the tokenizer can
@@ -486,14 +482,14 @@ class Search {
     });
 
     // This allows to handle leading or trailing restriction characters specially.
-    this._leadingRestrictionToken = null;
+    this.#leadingRestrictionToken = null;
     if (tokens.length) {
       if (
         lazy.UrlbarTokenizer.isRestrictionToken(tokens[0]) &&
         (tokens.length > 1 ||
           tokens[0].type == lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
       ) {
-        this._leadingRestrictionToken = tokens[0].value;
+        this.#leadingRestrictionToken = tokens[0].value;
       }
 
       // Check if the first token has a strippable prefix other than "about:"
@@ -512,7 +508,7 @@ class Search {
     // Eventually filter restriction tokens. In general it's a good idea, but if
     // the consumer requested search mode, we should use the full string to avoid
     // ignoring valid tokens.
-    this._searchTokens =
+    this.#searchTokens =
       !queryContext || queryContext.restrictToken
         ? this.filterTokens(tokens)
         : tokens;
@@ -525,23 +521,23 @@ class Search {
       queryContext.restrictSource &&
       lazy.sourceToBehaviorMap.has(queryContext.restrictSource)
     ) {
-      this._behavior = 0;
+      this.#behavior = 0;
       this.setBehavior("restrict");
       let behavior = lazy.sourceToBehaviorMap.get(queryContext.restrictSource);
       this.setBehavior(behavior);
 
       // When we are in restrict mode, all the tokens are valid for searching, so
-      // there is no _heuristicToken.
-      this._heuristicToken = null;
+      // there is no #heuristicToken.
+      this.#heuristicToken = null;
     } else {
       // The heuristic token is the first filtered search token, but only when it's
       // actually the first thing in the search string.  If a prefix or restriction
       // character occurs first, then the heurstic token is null.  We use the
       // heuristic token to help determine the heuristic result.
       let firstToken =
-        !!this._searchTokens.length && this._searchTokens[0].value;
-      this._heuristicToken =
-        firstToken && this._trimmedOriginalSearchString.startsWith(firstToken)
+        !!this.#searchTokens.length && this.#searchTokens[0].value;
+      this.#heuristicToken =
+        firstToken && this.#trimmedOriginalSearchString.startsWith(firstToken)
           ? firstToken
           : null;
     }
@@ -553,19 +549,8 @@ class Search {
       this.setBehavior("javascript");
     }
 
-    this._listener = listener;
-    this._provider = provider;
-    this._matches = [];
-
-    // These are used to avoid adding duplicate entries to the results.
-    this._usedURLs = [];
-    this._usedPlaceIds = new Set();
-
-    // Counters for the number of results per MATCH_TYPE.
-    this._counts = Object.values(MATCH_TYPE).reduce((o, p) => {
-      o[p] = 0;
-      return o;
-    }, {});
+    this.#listener = listener;
+    this.#provider = provider;
   }
 
   /**
@@ -576,7 +561,7 @@ class Search {
    */
   setBehavior(type) {
     type = type.toUpperCase();
-    this._behavior |= Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type];
+    this.#behavior |= Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type];
   }
 
   /**
@@ -588,7 +573,7 @@ class Search {
    */
   hasBehavior(type) {
     let behavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()];
-    return this._behavior & behavior;
+    return this.#behavior & behavior;
   }
 
   /**
@@ -617,7 +602,7 @@ class Search {
       if (!foundToken) {
         foundToken = true;
         // Do not take into account previous behavior (e.g.: history, bookmark)
-        this._behavior = 0;
+        this.#behavior = 0;
         this.setBehavior("restrict");
       }
       this.setBehavior(behavior);
@@ -640,12 +625,12 @@ class Search {
     if (!this.pending) {
       return;
     }
-    if (this._notifyTimer) {
-      this._notifyTimer.cancel();
+    if (this.#notifyTimer) {
+      this.#notifyTimer.cancel();
     }
-    this._notifyDelaysCount = 0;
-    if (typeof this.interrupt == "function") {
-      this.interrupt();
+    this.#notifyDelaysCount = 0;
+    if (typeof this.#interrupt == "function") {
+      this.#interrupt();
     }
     this.pending = false;
   }
@@ -668,7 +653,7 @@ class Search {
     }
 
     // Used by stop() to interrupt an eventual running statement.
-    this.interrupt = () => {
+    this.#interrupt = () => {
       // Interrupt any ongoing statement to run the search sooner.
       if (!lazy.ProvidersManager.interruptLevel) {
         conn.interrupt();
@@ -676,40 +661,40 @@ class Search {
     };
 
     // For any given search, we run these queries:
-    // 1) open pages not supported by history (this._switchToTabQuery)
+    // 1) open pages not supported by history (this.#switchToTabQuery)
     // 2) query based on match behavior
 
     // If the query is simply "@" and we have tokenAliasEngines then return
     // early. UrlbarProviderTokenAliasEngines will add engine results.
     let tokenAliasEngines = await lazy.UrlbarSearchUtils.tokenAliasEngines();
-    if (this._trimmedOriginalSearchString == "@" && tokenAliasEngines.length) {
-      this._provider.finishSearch(true);
+    if (this.#trimmedOriginalSearchString == "@" && tokenAliasEngines.length) {
+      this.#provider.finishSearch(true);
       return;
     }
 
     // Check if the first token is an action. If it is, we should set a flag
     // so we don't include it in our searches.
-    this._firstTokenIsKeyword =
-      this._firstTokenIsKeyword || (await this._checkIfFirstTokenIsKeyword());
+    this.#firstTokenIsKeyword =
+      this.#firstTokenIsKeyword || (await this.#checkIfFirstTokenIsKeyword());
     if (!this.pending) {
       return;
     }
 
-    if (this._trimmedOriginalSearchString) {
+    if (this.#trimmedOriginalSearchString) {
       // If the user typed the search restriction char or we're in
       // search-restriction mode, then we're done.
       // UrlbarProviderSearchSuggestions will handle suggestions, if any.
       let emptySearchRestriction =
-        this._trimmedOriginalSearchString.length <= 3 &&
-        this._leadingRestrictionToken == lazy.UrlbarTokenizer.RESTRICT.SEARCH &&
-        /\s*\S?$/.test(this._trimmedOriginalSearchString);
+        this.#trimmedOriginalSearchString.length <= 3 &&
+        this.#leadingRestrictionToken == lazy.UrlbarTokenizer.RESTRICT.SEARCH &&
+        /\s*\S?$/.test(this.#trimmedOriginalSearchString);
       if (
         emptySearchRestriction ||
         (tokenAliasEngines.length &&
-          this._trimmedOriginalSearchString.startsWith("@")) ||
+          this.#trimmedOriginalSearchString.startsWith("@")) ||
         (this.hasBehavior("search") && this.hasBehavior("restrict"))
       ) {
-        this._provider.finishSearch(true);
+        this.#provider.finishSearch(true);
         return;
       }
     }
@@ -717,13 +702,13 @@ class Search {
     // Run our standard Places query.
     let queries = [];
     // "openpage" behavior is supported by the default query.
-    // _switchToTabQuery instead returns only pages not supported by history.
+    // #switchToTabQuery instead returns only pages not supported by history.
     if (this.hasBehavior("openpage")) {
-      queries.push(this._switchToTabQuery);
+      queries.push(this.#switchToTabQuery);
     }
-    queries.push(this._searchQuery);
+    queries.push(this.#searchQuery);
     for (let [query, params] of queries) {
-      await conn.executeCached(query, params, this._onResultRow.bind(this));
+      await conn.executeCached(query, params, this.#onResultRow.bind(this));
       if (!this.pending) {
         return;
       }
@@ -731,15 +716,15 @@ class Search {
 
     // If we do not have enough matches search again with MATCH_ANYWHERE, to
     // get more matches.
-    let count = this._counts[MATCH_TYPE.GENERAL];
-    if (count < this._maxResults) {
-      this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
-      queries = [this._searchQuery];
+    let count = this.#counts[MATCH_TYPE.GENERAL];
+    if (count < this.#maxResults) {
+      this.#matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
+      queries = [this.#searchQuery];
       if (this.hasBehavior("openpage")) {
-        queries.unshift(this._switchToTabQuery);
+        queries.unshift(this.#switchToTabQuery);
       }
       for (let [query, params] of queries) {
-        await conn.executeCached(query, params, this._onResultRow.bind(this));
+        await conn.executeCached(query, params, this.#onResultRow.bind(this));
         if (!this.pending) {
           return;
         }
@@ -747,14 +732,67 @@ class Search {
     }
   }
 
-  async _checkIfFirstTokenIsKeyword() {
-    if (!this._heuristicToken) {
+  /**
+   * Counters for the number of results per MATCH_TYPE.
+   */
+  #counts = Object.values(MATCH_TYPE).reduce((o, p) => {
+    o[p] = 0;
+    return o;
+  }, /** @type {Record<Values<typeof MATCH_TYPE>, number>} */ ({}));
+
+  /**
+   * The default behaviour for this search.
+   */
+  #behavior;
+  #matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY;
+
+  #maxResults;
+
+  /**
+   * The original search string, used for case sensitive searches.
+   */
+  #originalSearchString;
+  #searchString;
+  #trimmedOriginalSearchString;
+
+  #currentPage;
+  #filterOnHost;
+  /** @type {boolean} */
+  #firstTokenIsKeyword;
+  #groups;
+  #heuristicToken;
+  #inPrivateWindow;
+  /**
+   * @type {?() => void}
+   *   Used to interrupt running queries.
+   */
+  #interrupt;
+  #leadingRestrictionToken;
+  #listener;
+  #matches = [];
+  #provider;
+  #searchModeEngine;
+  #searchTokens;
+  #userContextId;
+
+  /**
+   * Used to avoid adding duplicate entries to the results.
+   */
+  #usedURLs = [];
+
+  /**
+   * Used to avoid adding duplicate entries to the results.
+   */
+  #usedPlaceIds = new Set();
+
+  async #checkIfFirstTokenIsKeyword() {
+    if (!this.#heuristicToken) {
       return false;
     }
 
     let aliasEngine = await lazy.UrlbarSearchUtils.engineForAlias(
-      this._heuristicToken,
-      this._originalSearchString
+      this.#heuristicToken,
+      this.#originalSearchString
     );
 
     if (aliasEngine) {
@@ -762,24 +800,24 @@ class Search {
     }
 
     let { entry } = await lazy.KeywordUtils.getBindableKeyword(
-      this._heuristicToken,
-      this._originalSearchString
+      this.#heuristicToken,
+      this.#originalSearchString
     );
     if (entry) {
-      this._filterOnHost = entry.url.host;
+      this.#filterOnHost = entry.url.host;
       return true;
     }
 
     return false;
   }
 
-  _onResultRow(row, cancel) {
-    this._addFilteredQueryMatch(row);
+  #onResultRow(row, cancel) {
+    this.#addFilteredQueryMatch(row);
 
-    // If the search has been canceled by the user or by _addMatch, or we
+    // If the search has been canceled by the user or by #addMatch, or we
     // fetched enough results, we can stop the underlying Sqlite query.
-    let count = this._counts[MATCH_TYPE.GENERAL];
-    if (!this.pending || count >= this._maxResults) {
+    let count = this.#counts[MATCH_TYPE.GENERAL];
+    if (!this.pending || count >= this.#maxResults) {
       cancel();
     }
   }
@@ -805,7 +843,7 @@ class Search {
    *   The match to maybe restyle.
    * @returns {boolean} True if the match can be restyled, false otherwise.
    */
-  _maybeRestyleSearchMatch(match) {
+  #maybeRestyleSearchMatch(match) {
     // Return if the URL does not represent a search result.
     let historyUrl = match.value;
     let parseResult = Services.search.parseSubmissionURL(historyUrl);
@@ -817,8 +855,8 @@ class Search {
     // search history result.
     let terms = parseResult.terms.toLowerCase();
     if (
-      this._searchTokens.length &&
-      this._searchTokens.every(token => !terms.includes(token.value))
+      this.#searchTokens.length &&
+      this.#searchTokens.every(token => !terms.includes(token.value))
     ) {
       return false;
     }
@@ -826,12 +864,12 @@ class Search {
     // The URL for the search suggestion formed by the user's typed query.
     let [generatedSuggestionUrl] = UrlbarUtils.getSearchQueryUrl(
       parseResult.engine,
-      this._searchTokens.map(t => t.value).join(" ")
+      this.#searchTokens.map(t => t.value).join(" ")
     );
 
     // We ignore termsParameterName when checking for a subset because we
     // already checked that the typed query is a subset of the search history
-    // query above with this._searchTokens.every(...).
+    // query above with this.#searchTokens.every(...).
     if (
       !lazy.UrlbarSearchUtils.serpsAreEquivalent(
         historyUrl,
@@ -856,7 +894,7 @@ class Search {
     return true;
   }
 
-  _addMatch(match) {
+  #addMatch(match) {
     if (typeof match.frecency != "number") {
       throw new Error("Frecency not provided");
     }
@@ -876,9 +914,9 @@ class Search {
     // Restyle past searches, unless they are bookmarks or special results.
     if (
       match.style == "favicon" &&
-      (lazy.UrlbarPrefs.get("restyleSearches") || this._searchModeEngine)
+      (lazy.UrlbarPrefs.get("restyleSearches") || this.#searchModeEngine)
     ) {
-      let restyled = this._maybeRestyleSearchMatch(match);
+      let restyled = this.#maybeRestyleSearchMatch(match);
       if (
         restyled &&
         lazy.UrlbarPrefs.get("maxHistoricalSearchSuggestions") == 0
@@ -891,16 +929,16 @@ class Search {
     match.icon = match.icon || "";
     match.finalCompleteValue = match.finalCompleteValue || "";
 
-    let { index, replace } = this._getInsertIndexForMatch(match);
+    let { index, replace } = this.#getInsertIndexForMatch(match);
     if (index == -1) {
       return;
     }
     if (replace) {
       // Replacing an existing match from the previous search.
-      this._matches.splice(index, 1);
+      this.#matches.splice(index, 1);
     }
-    this._matches.splice(index, 0, match);
-    this._counts[match.type]++;
+    this.#matches.splice(index, 0, match);
+    this.#counts[match.type]++;
 
     this.notifyResult(true);
   }
@@ -926,23 +964,23 @@ class Search {
    *   The match to insert.
    * @returns {MatchPositionInformation}
    */
-  _getInsertIndexForMatch(match) {
+  #getInsertIndexForMatch(match) {
     let [urlMapKey, prefix, action] = makeKeyForMatch(match);
     if (
       (match.placeId &&
-        this._usedPlaceIds.has(makeMapKeyForResult(match.placeId, match))) ||
-      this._usedURLs.some(e => lazy.ObjectUtils.deepEqual(e.key, urlMapKey))
+        this.#usedPlaceIds.has(makeMapKeyForResult(match.placeId, match))) ||
+      this.#usedURLs.some(e => lazy.ObjectUtils.deepEqual(e.key, urlMapKey))
     ) {
       let isDupe = true;
       if (action && ["switchtab", "remotetab"].includes(action.type)) {
         // The new entry is a switch/remote tab entry, look for the duplicate
         // among current matches.
-        for (let i = 0; i < this._usedURLs.length; ++i) {
-          let { key: matchKey, action: matchAction } = this._usedURLs[i];
+        for (let i = 0; i < this.#usedURLs.length; ++i) {
+          let { key: matchKey, action: matchAction } = this.#usedURLs[i];
           if (lazy.ObjectUtils.deepEqual(matchKey, urlMapKey)) {
             isDupe = true;
             if (!matchAction || action.type == "switchtab") {
-              this._usedURLs[i] = {
+              this.#usedURLs[i] = {
                 key: urlMapKey,
                 action,
                 type: match.type,
@@ -961,13 +999,13 @@ class Search {
         // 3. If they differ by www., send both results to the Muxer and allow
         //    it to decide based on results from other providers.
         let prefixRank = UrlbarUtils.getPrefixRank(prefix);
-        for (let i = 0; i < this._usedURLs.length; ++i) {
-          if (!this._usedURLs[i]) {
+        for (let i = 0; i < this.#usedURLs.length; ++i) {
+          if (!this.#usedURLs[i]) {
             // This is true when the result at [i] is a searchengine result.
             continue;
           }
 
-          let { key: existingKey, prefix: existingPrefix } = this._usedURLs[i];
+          let { key: existingKey, prefix: existingPrefix } = this.#usedURLs[i];
 
           let existingPrefixRank = UrlbarUtils.getPrefixRank(existingPrefix);
           if (lazy.ObjectUtils.deepEqual(existingKey, urlMapKey)) {
@@ -983,7 +1021,7 @@ class Search {
               if (prefixRank <= existingPrefixRank) {
                 break; // Replace match.
               } else {
-                this._usedURLs[i] = {
+                this.#usedURLs[i] = {
                   key: urlMapKey,
                   action,
                   type: match.type,
@@ -1017,17 +1055,17 @@ class Search {
     // include the search string, and would be returned multiple times.  Ids
     // are faster too.
     if (match.placeId) {
-      this._usedPlaceIds.add(makeMapKeyForResult(match.placeId, match));
+      this.#usedPlaceIds.add(makeMapKeyForResult(match.placeId, match));
     }
 
     let index = 0;
-    if (!this._groups) {
-      this._groups = [];
-      this._makeGroups(lazy.UrlbarPrefs.resultGroups, this._maxResults);
+    if (!this.#groups) {
+      this.#groups = [];
+      this.#makeGroups(lazy.UrlbarPrefs.resultGroups, this.#maxResults);
     }
 
     let replace = 0;
-    for (let group of this._groups) {
+    for (let group of this.#groups) {
       // Move to the next group if the match type is incompatible, or if there
       // is no available space or if the frecency is below the threshold.
       if (match.type != group.type || !group.available) {
@@ -1045,7 +1083,7 @@ class Search {
       group.insertIndex++;
       break;
     }
-    this._usedURLs[index] = {
+    this.#usedURLs[index] = {
       key: urlMapKey,
       action,
       type: match.type,
@@ -1055,7 +1093,7 @@ class Search {
     return { index, replace };
   }
 
-  _makeGroups(resultGroup, maxResultCount) {
+  #makeGroups(resultGroup, maxResultCount) {
     if (!resultGroup.children) {
       let type;
       switch (resultGroup.group) {
@@ -1080,8 +1118,8 @@ class Search {
           type = MATCH_TYPE.GENERAL;
           break;
       }
-      if (this._groups.length) {
-        let last = this._groups[this._groups.length - 1];
+      if (this.#groups.length) {
+        let last = this.#groups[this.#groups.length - 1];
         if (last.type == type) {
           return;
         }
@@ -1091,7 +1129,7 @@ class Search {
       // - `count` is the number of matches in the group, note that it also
       //   accounts for matches from the previous search, while `available` and
       //   `insertIndex` don't.
-      this._groups.push({
+      this.#groups.push({
         type,
         available: maxResultCount,
         insertIndex: 0,
@@ -1106,15 +1144,15 @@ class Search {
     } else if (typeof resultGroup.availableSpan == "number") {
       initialMaxResultCount = resultGroup.availableSpan;
     } else {
-      initialMaxResultCount = this._maxResults;
+      initialMaxResultCount = this.#maxResults;
     }
     let childMaxResultCount = Math.min(initialMaxResultCount, maxResultCount);
     for (let child of resultGroup.children) {
-      this._makeGroups(child, childMaxResultCount);
+      this.#makeGroups(child, childMaxResultCount);
     }
   }
 
-  _addFilteredQueryMatch(row) {
+  #addFilteredQueryMatch(row) {
     let placeId = row.getResultByName("id");
     let url = row.getResultByName("url");
     let openPageCount = row.getResultByName("open_count") || 0;
@@ -1142,9 +1180,9 @@ class Search {
     };
     if (openPageCount > 0 && this.hasBehavior("openpage")) {
       if (
-        this._currentPage == match.value &&
+        this.#currentPage == match.value &&
         (!lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") ||
-          this._userContextId == match.userContextId)
+          this.#userContextId == match.userContextId)
       ) {
         // Don't suggest switching to the current tab.
         return;
@@ -1169,7 +1207,7 @@ class Search {
       match.style = "bookmark";
     }
 
-    this._addMatch(match);
+    this.#addMatch(match);
   }
 
   /**
@@ -1177,16 +1215,16 @@ class Search {
    * A string consisting of the search query to be used based on the previously
    * set urlbar suggestion preferences.
    */
-  get _suggestionPrefQuery() {
+  get #suggestionPrefQuery() {
     let conditions = [];
-    if (this._filterOnHost) {
+    if (this.#filterOnHost) {
       conditions.push("h.rev_host = get_unreversed_host(:host || '.') || '.'");
       // When filtering on a host we are in some sort of site specific search,
       // thus we want a cleaner set of results, compared to a general search.
       // This means removing less interesting urls, like redirects or
       // non-bookmarked title-less pages.
 
-      if (lazy.UrlbarPrefs.get("restyleSearches") || this._searchModeEngine) {
+      if (lazy.UrlbarPrefs.get("restyleSearches") || this.#searchModeEngine) {
         // If restyle is enabled, we want to filter out redirect targets,
         // because sources are urls built using search engines definitions that
         // we can reverse-parse.
@@ -1249,7 +1287,7 @@ class Search {
     return defaultQuery(conditions.join(" AND "));
   }
 
-  get _emptySearchDefaultBehavior() {
+  get #emptySearchDefaultBehavior() {
     // Further restrictions to apply for "empty searches" (searching for
     // "").  The empty behavior is typed history, if history is enabled.
     // Otherwise, it is bookmarks, if they are enabled. If both history and
@@ -1271,9 +1309,9 @@ class Search {
    *
    * @returns {string} The filtered search string.
    */
-  get _keywordFilteredSearchString() {
-    let tokens = this._searchTokens.map(t => t.value);
-    if (this._firstTokenIsKeyword) {
+  get #keywordFilteredSearchString() {
+    let tokens = this.#searchTokens.map(t => t.value);
+    if (this.#firstTokenIsKeyword) {
       tokens = tokens.slice(1);
     }
     return tokens.join(" ");
@@ -1287,17 +1325,17 @@ class Search {
    *   An array consisting of the correctly optimized query to search the
    *   database with and an object containing the params to bound.
    */
-  get _searchQuery() {
+  get #searchQuery() {
     let params = {
       parent: lazy.PlacesUtils.tagsFolderId,
-      matchBehavior: this._matchBehavior,
-      searchBehavior: this._behavior,
+      matchBehavior: this.#matchBehavior,
+      searchBehavior: this.#behavior,
       // We only want to search the tokens that we are left with - not the
       // original search string.
-      searchString: this._keywordFilteredSearchString,
+      searchString: this.#keywordFilteredSearchString,
       // Limit the query to the the maximum number of desired results.
       // This way we can avoid doing more work than needed.
-      maxResults: this._maxResults,
+      maxResults: this.#maxResults,
       switchTabsEnabled: this.hasBehavior("openpage"),
     };
     params.userContextId = lazy.UrlbarPrefs.get(
@@ -1305,14 +1343,14 @@ class Search {
     )
       ? lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
           null,
-          this._inPrivateWindow
+          this.#inPrivateWindow
         )
-      : this._userContextId;
+      : this.#userContextId;
 
-    if (this._filterOnHost) {
-      params.host = this._filterOnHost;
+    if (this.#filterOnHost) {
+      params.host = this.#filterOnHost;
     }
-    return [this._suggestionPrefQuery, params];
+    return [this.#suggestionPrefQuery, params];
   }
 
   /**
@@ -1322,22 +1360,22 @@ class Search {
    *   An array consisting of the correctly optimized query to search the
    *   database with and an object containing the params to bound.
    */
-  get _switchToTabQuery() {
+  get #switchToTabQuery() {
     return [
       SQL_SWITCHTAB_QUERY,
       {
-        matchBehavior: this._matchBehavior,
-        searchBehavior: this._behavior,
+        matchBehavior: this.#matchBehavior,
+        searchBehavior: this.#behavior,
         // We only want to search the tokens that we are left with - not the
         // original search string.
-        searchString: this._keywordFilteredSearchString,
+        searchString: this.#keywordFilteredSearchString,
         userContextId: lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")
           ? lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
               null,
-              this._inPrivateWindow
+              this.#inPrivateWindow
             )
-          : this._userContextId,
-        maxResults: this._maxResults,
+          : this.#userContextId,
+        maxResults: this.#maxResults,
       },
     ];
   }
@@ -1348,40 +1386,41 @@ class Search {
    *
    * @type {?nsITimer}
    */
-  _notifyTimer = null;
+  #notifyTimer = null;
+
+  #notifyDelaysCount = 0;
 
   /**
    * Notifies the current result to the listener.
    *
-   * @param searchOngoing
-   *        Indicates whether the search result should be marked as ongoing.
+   * @param {boolean} searchOngoing
+   *   Indicates whether the search result should be marked as ongoing.
    */
-  _notifyDelaysCount = 0;
   notifyResult(searchOngoing) {
     let notify = () => {
       if (!this.pending) {
         return;
       }
-      this._notifyDelaysCount = 0;
-      this._listener(this._matches, searchOngoing);
+      this.#notifyDelaysCount = 0;
+      this.#listener(this.#matches, searchOngoing);
       if (!searchOngoing) {
         // Break possible cycles.
-        this._listener = null;
-        this._provider = null;
+        this.#listener = null;
+        this.#provider = null;
         this.stop();
       }
     };
-    if (this._notifyTimer) {
-      this._notifyTimer.cancel();
+    if (this.#notifyTimer) {
+      this.#notifyTimer.cancel();
     }
     // In the worst case, we may get evenly spaced matches that would end up
-    // delaying the UI by N_MATCHES * NOTIFYRESULT_DELAY_MS. Thus, we clamp the
+    // delaying the UI by N#MATCHES * NOTIFYRESULT_DELAY_MS. Thus, we clamp the
     // number of times we may delay matches.
-    if (this._notifyDelaysCount > 3) {
+    if (this.#notifyDelaysCount > 3) {
       notify();
     } else {
-      this._notifyDelaysCount++;
-      this._notifyTimer = setTimeout(notify, NOTIFYRESULT_DELAY_MS);
+      this.#notifyDelaysCount++;
+      this.#notifyTimer = setTimeout(notify, NOTIFYRESULT_DELAY_MS);
     }
   }
 }
@@ -1467,7 +1506,7 @@ export class UrlbarProviderPlaces extends UrlbarProvider {
   startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
     let urls = new Set();
-    this._startLegacyQuery(queryContext, matches => {
+    this.#startLegacyQuery(queryContext, matches => {
       if (instance != this.queryInstance) {
         return;
       }
@@ -1547,7 +1586,7 @@ export class UrlbarProviderPlaces extends UrlbarProvider {
     }
   }
 
-  _startLegacyQuery(queryContext, callback) {
+  #startLegacyQuery(queryContext, callback) {
     let deferred = Promise.withResolvers();
     let listener = (matches, searchOngoing) => {
       callback(matches);
@@ -1555,11 +1594,11 @@ export class UrlbarProviderPlaces extends UrlbarProvider {
         deferred.resolve();
       }
     };
-    this._startSearch(queryContext.searchString, listener, queryContext);
+    this.#startSearch(queryContext.searchString, listener, queryContext);
     this.#deferred = deferred;
   }
 
-  _startSearch(searchString, listener, queryContext) {
+  #startSearch(searchString, listener, queryContext) {
     // Stop the search in case the controller has not taken care of it.
     if (this.#currentSearch) {
       this.cancelQuery();
