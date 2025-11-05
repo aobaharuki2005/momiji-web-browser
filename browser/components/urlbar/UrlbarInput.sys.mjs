@@ -82,10 +82,6 @@ let px = number => number.toFixed(2) + "px";
 export class UrlbarInput {
   #allowBreakout = false;
   #breakoutBlockerCount = 0;
-  /**
-   * The search access point name of the UrlbarInput for use with telemetry or
-   * logging, e.g. `urlbar`, `searchbar`.
-   */
   #sapName;
   #userTypedValue;
 
