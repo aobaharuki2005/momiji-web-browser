@@ -757,15 +757,23 @@ export class Query {
     }
 
     // Start querying active providers.
+    /**
+     * @type {(provider: UrlbarProvider) => Promise<void>}
+     */
     let startQuery = async provider => {
       provider.logger.debug(
         `Starting query for "${this.context.searchString}"`
       );
       let addedResult = false;
-      await provider.tryMethod("startQuery", this.context, (...args) => {
-        addedResult = true;
-        this.add(...args);
-      });
+      await provider.tryMethod(
+        "startQuery",
+        this.context,
+        /** @type {Parameters<UrlbarProvider['startQuery']>[1]} */
+        (innerProvider, result) => {
+          addedResult = true;
+          this.add(innerProvider, result);
+        }
+      );
       if (!addedResult) {
         this.context.deferUserSelectionProviders.delete(provider.name);
       }

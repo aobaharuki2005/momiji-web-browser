@@ -2465,6 +2465,12 @@ export class UrlbarQueryContext {
   maxResults;
 
   /**
+   * @type {string}
+   *   The name of the muxer to use for this query.
+   */
+  muxer;
+
+  /**
    * @type {boolean}
    *   Whether or not to prohibit remote results.
    */
