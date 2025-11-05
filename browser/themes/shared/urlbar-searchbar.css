@@ -1212,7 +1212,7 @@
   .urlbar[searchmode] & {
     display: none;
   }
-  .urlbar-searchmode-switcher[open] & {
+  .searchmode-switcher[open] > & {
     transform: rotate(180deg);
   }
 }
