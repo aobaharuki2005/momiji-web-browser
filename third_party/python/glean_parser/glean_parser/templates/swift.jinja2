@@ -44,21 +44,22 @@ struct {{ obj.name|Camelize }}{{ suffix }}: EventExtras {
     }
 {% endmacro %}
 
-{%- macro generate_structure(name, struct) %}
+{%- macro generate_structure(name, struct, toplevel) %}
 {%- if struct.type == "oneof" -%}
-    enum {{ name }}: Codable, Equatable, ObjectSerialize {
+    enum {{ name }}: Codable, Equatable {
         {% for ty in struct.subtypes %}
           case {{ty}}({{ty|structure_type_name}})
         {% endfor %}
 
-          func intoSerializedObject() -> String {
-              switch self {
-              {% for ty in struct.subtypes %}
-                case .{{ty}}(let val):
-                    return val.intoSerializedObject()
-              {% endfor %}
-              }
-          }
+        func encode(to __encoder: Encoder) throws {
+            var __container = __encoder.singleValueContainer()
+            switch self {
+            {% for ty in struct.subtypes %}
+              case .{{ty}}(let __val):
+                try __container.encode(__val)
+            {% endfor %}
+            }
+        }
     }
 
 {%- elif struct.type == "array" -%}
@@ -67,7 +68,7 @@ struct {{ obj.name|Camelize }}{{ suffix }}: EventExtras {
     {{ generate_structure(name ~ "Item", struct["items"]) }}
 
 {%- elif struct.type == "object" -%}
-    struct {{ name }}: Codable, Equatable, ObjectSerialize {
+    struct {{ name }}: Codable, Equatable {% if toplevel %}, ObjectSerialize{% endif %} {
         {% for itemname, val in struct.properties.items() %}
           {%- set varname = itemname|camelize|variable_name -%}
           {% if val.type == "array" %}
@@ -81,26 +82,36 @@ struct {{ obj.name|Camelize }}{{ suffix }}: EventExtras {
           {% endif %}
         {% endfor %}
 
-        func intoSerializedObject() -> String {
-            var __obj = [String]()
-            {% for itemname, val in struct.properties.items() %}
-                {%- set varname = itemname|camelize|variable_name -%}
-                {% if val.type == "array" %}
-                if {{varname}}.count > 0 {
-                    let {{varname}} = self.{{varname}}
-                {% else %}
-                if let {{varname}} = self.{{varname}} {
-                {% endif %}
-                    var __elem = "\"{{itemname}}\":"
-                    __elem.append({{varname}}.intoSerializedObject())
-                    __obj.append(__elem)
-                }
-            {% endfor %}
-            var __json = "{"
-            __json.append(__obj.joined(separator: ","))
-            __json.append("}")
-            return __json
+        enum CodingKeys: String, CodingKey {
+        {% for itemname, val in struct.properties.items() %}
+          {%- set varname = itemname|camelize|variable_name -%}
+          case {{varname}} = "{{ itemname }}"
+        {% endfor %}
         }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            {% for itemname, val in struct.properties.items() %}
+              {%- set varname = itemname|camelize|variable_name -%}
+              {% if val.type == "array" %}
+              if {{varname}}.count > 0 {
+                let {{varname}} = self.{{varname}}
+              {% else %}
+              if let {{varname}} = self.{{varname}} {
+              {% endif %}
+              try container.encode({{varname}}, forKey: .{{varname}})
+              }
+            {% endfor %}
+    }
+
+        {% if toplevel %}
+        func intoSerializedObject() -> String {
+            let jsonEncoder = JSONEncoder()
+            let jsonData = try! jsonEncoder.encode(self)
+            let json = String(data: jsonData, encoding: String.Encoding.utf8)!
+            return json
+        }
+        {% endif %}
     }
 
     {% for itemname, val in struct.properties.items() %}
@@ -191,7 +202,7 @@ extension {{ namespace }} {
     enum {{ category.name|Camelize }} {
     {% for obj in category.objs.values() %}
         {% if obj|attr("_generate_structure") %}
-        {{ generate_structure(obj.name|Camelize ~ "Object", obj._generate_structure) }}
+        {{ generate_structure(obj.name|Camelize ~ "Object", obj._generate_structure, true) }}
         {%- endif %}
         {% if obj|attr("_generate_enums") %}
         {% for name, suffix in obj["_generate_enums"] %}

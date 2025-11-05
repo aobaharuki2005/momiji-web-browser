@@ -434,9 +434,9 @@ giturlparse==0.12.0 \
     --hash=sha256:412b74f2855f1da2fefa89fd8dde62df48476077a72fc19b62039554d27360eb \
     --hash=sha256:c0fff7c21acc435491b1779566e038757a205c1ffdcb47e4f81ea52ad8c3859a
     # via mozilla-repo-urls
-glean-parser==18.0.3 \
-    --hash=sha256:9a7c0554a42b6eabe97fa880eeb00b70abb963f6e9e457dd530218ea84fcf31f \
-    --hash=sha256:b338833409f82d5d11356a10bc2cd054d948d407c82cd2b9fc29a44f10a818ef
+glean-parser==18.1.0 \
+    --hash=sha256:65a82a00846801927ad06521420cd147b909fd531ece9b513ec7f81d9a916312 \
+    --hash=sha256:a3959b8e3b55e43eed6912bdc9895e3d11cb26217776111b4f48ebf425a4915a
     # via mozilla-third-party-python-vendor-dir
 idna==3.10 \
     --hash=sha256:12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9 \

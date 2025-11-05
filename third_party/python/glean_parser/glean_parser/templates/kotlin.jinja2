@@ -56,9 +56,13 @@ data class {{ obj.name|Camelize }}{{ suffix }}(
     override fun toExtraRecord(): Map<String, String> {
         val map = mutableMapOf<String, String>()
 
-        {% for item in obj|attr(name) %}
-        this.{{ item[0]|camelize }}?.let {
-            map.put("{{item[0]}}", it.toString())
+        {% for item, typ in obj|attr(name) %}
+        this.{{ item|camelize }}?.let {
+            {% if typ != "string" %}
+            map.put("{{item}}", it.toString())
+            {% else %}
+            map.put("{{item}}", it)
+            {% endif %}
         }
         {% endfor %}
         return map
@@ -68,11 +72,76 @@ data class {{ obj.name|Camelize }}{{ suffix }}(
 
 {%- macro generate_structure(name, struct) %}
 {%- if struct.type == "oneof" -%}
+    @Serializable(with = {{name}}.Serializer::class)
     sealed class {{ name }}(): ObjectSerialize {
+        internal object Serializer : KSerializer<{{name}}> {
+            @OptIn(kotlinx.serialization.InternalSerializationApi::class)
+            override val descriptor = buildSerialDescriptor("inner", SerialKind.CONTEXTUAL)
+
+            override fun deserialize(decoder: Decoder): {{name}} {
+                throw NullPointerException()
+                {{ struct.subtypes[0]|Camelize }}()
+            }
+
+            override fun serialize(encoder: Encoder, value: {{name}}) {
+                when (value) {
+                {% for ty in struct.subtypes %}
+                    is {{ty|Camelize}} -> {{ty|Camelize}}.Serializer.serialize(encoder, value)
+                {% endfor %}
+                }
+            }
+        }
+
     {% for ty in struct.subtypes %}
-        class {{ty|Camelize}}(val inner: kotlin.{{ty|structure_type_name}}? = null) : {{ name }}() {
+        {% set inner_ty = ty|Camelize %}
+        @Serializable(with = {{inner_ty}}.Serializer::class)
+        class {{inner_ty}}(val inner: kotlin.{{ty|structure_type_name}}? = null) : {{ name }}() {
             override fun intoSerializedObject(): kotlin.String {
                 return this.inner?.intoSerializedObject() ?: "null"
+            }
+
+            internal object Serializer : KSerializer<{{inner_ty}}> {
+                @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+                {% if ty == "string" %}
+                override val descriptor = kotlin.String.Companion.serializer().descriptor
+
+                override fun deserialize(decoder: Decoder): {{inner_ty}} {
+                    val inner = decoder.decodeInline(descriptor).decodeString()
+                    return {{inner_ty}}(inner = inner)
+                }
+
+                override fun serialize(encoder: Encoder, value: {{inner_ty}}) {
+                    value.inner?.let {
+                        encoder.encodeInline(descriptor).encodeString(it)
+                    }
+                }
+                {% elif ty == "number" %}
+                override val descriptor = kotlin.Int.Companion.serializer().descriptor
+
+                override fun deserialize(decoder: Decoder): {{inner_ty}} {
+                    val inner = decoder.decodeInline(descriptor).decodeInt()
+                    return {{inner_ty}}(inner = inner)
+                }
+
+                override fun serialize(encoder: Encoder, value: {{inner_ty}}) {
+                    value.inner?.let {
+                        encoder.encodeInline(descriptor).encodeInt(it)
+                    }
+                }
+                {% elif ty == "boolean" %}
+                override val descriptor = kotlin.Boolean.Companion.serializer().descriptor
+
+                override fun deserialize(decoder: Decoder): {{inner_ty}} {
+                    val inner = decoder.decodeInline(descriptor).decodeBoolean()
+                    return {{inner_ty}}(inner = inner)
+                }
+
+                override fun serialize(encoder: Encoder, value: {{inner_ty}}) {
+                    value.inner?.let {
+                        encoder.encodeInline(descriptor).encodeBoolean(it)
+                    }
+                }
+                {% endif %}
             }
         }
     {% endfor %}
@@ -226,7 +295,10 @@ import {{ glean_namespace }}.private.intoSerializedObject
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.descriptors.listSerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
