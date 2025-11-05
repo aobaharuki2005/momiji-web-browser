@@ -1480,16 +1480,24 @@ nsPoint GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  if (nsView* view = frame->GetView()) {
-    nsIWidget* frameWidget = view->GetWidget();
+  nsView* view = frame->GetView();
+  if (view || frame->IsMenuPopupFrame()) {
+    nsIWidget* frameWidget =
+        view ? view->GetWidget()
+             : static_cast<const nsMenuPopupFrame*>(frame)->GetWidget();
     if (frameWidget == aWidget) {
+      MOZ_ASSERT_IF(!view, frameWidget->GetPopupFrame() ==
+                               static_cast<const nsMenuPopupFrame*>(frame));
       // Special case this cause it happens a lot.
       // This also fixes bug 664707, events in the extra-special case of select
       // dropdown popups that are transformed.
       nsPresContext* presContext = frame->PresContext();
       nsPoint pt(presContext->DevPixelsToAppUnits(aPoint.x),
                  presContext->DevPixelsToAppUnits(aPoint.y));
-      return pt - view->ViewToWidgetOffset();
+      if (view) {
+        pt -= view->ViewToWidgetOffset();
+      }
+      return pt;
     }
   }
 
