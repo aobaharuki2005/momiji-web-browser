@@ -905,6 +905,10 @@ pref("browser.dataFeatureRecommendations.enabled", false);
 // sets darkTheme data.
 pref("browser.theme.dark-private-windows", true);
 
+// Whether to override themes in forced-colors mode and just use the
+// system theme and forced-colors palette to style the chrome.
+pref("browser.theme.forced-colors-override.enabled", true);
+
 // Pref to control whether or not Private Browsing windows show up
 // as separate icons in the Windows taskbar.
 pref("browser.privateWindowSeparation.enabled", true);

@@ -63,5 +63,17 @@ add_task(async function test_aboutaddons_forced_colors_notice() {
   });
   await assertForcedColorsNotice(win, { expectVisible: false });
 
+  info("Test that forced-colors override is disabled when the pref is false");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.theme.forced-colors-override.enabled", false],
+      ["ui.useAccessibilityTheme", 1],
+    ],
+  });
+  await closeView(win);
+  win = await loadInitialView("theme");
+  await assertForcedColorsNotice(win, { expectVisible: false });
+  await SpecialPowers.popPrefEnv();
+
   await closeView(win);
 });

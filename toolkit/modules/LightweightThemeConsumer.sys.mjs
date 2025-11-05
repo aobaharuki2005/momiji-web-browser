@@ -222,6 +222,14 @@ export function LightweightThemeConsumer(aDocument) {
   this._win = aDocument.defaultView;
   this._winId = this._win.docShell.outerWindowID;
 
+  XPCOMUtils.defineLazyPreferenceGetter(
+    this,
+    "FORCED_COLORS_OVERRIDE_ENABLED",
+    "browser.theme.forced-colors-override.enabled",
+    true,
+    () => this._update(this._lastData)
+  );
+
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
   this.darkThemeMediaQuery = this._win.matchMedia("(-moz-system-dark-theme)");
@@ -309,7 +317,10 @@ LightweightThemeConsumer.prototype = {
     })();
 
     let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
-    if (!theme || this.forcedColorsMediaQuery?.matches) {
+    let forcedColorsThemeOverride =
+      this.FORCED_COLORS_OVERRIDE_ENABLED &&
+      this.forcedColorsMediaQuery?.matches;
+    if (!theme || forcedColorsThemeOverride) {
       theme = { id: DEFAULT_THEME_ID };
     }
     let builtinThemeConfig = lazy.BuiltInThemeConfig.get(theme.id);

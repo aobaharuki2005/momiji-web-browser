@@ -46,5 +46,18 @@ add_task(async function test_forced_colors_themes() {
     "should be in forced-colors mode"
   );
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.theme.forced-colors-override.enabled", false]],
+  });
+
+  Assert.ok(
+    docEl.hasAttribute("lwtheme"),
+    "when forced-colors override is disabled, LWT attribute should be set"
+  );
+  Assert.ok(
+    window.matchMedia("(forced-colors)").matches,
+    "when forced-colors override is disabled, window should still be in forced-colors mode"
+  );
+
   await theme.unload();
 });

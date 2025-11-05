@@ -57,6 +57,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "extensions.dataCollectionPermissions.enabled",
   false
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "FORCED_COLORS_OVERRIDE_ENABLED",
+  "browser.theme.forced-colors-override.enabled",
+  true
+);
 
 const PLUGIN_ICON_URL = "chrome://global/skin/icons/plugin.svg";
 const EXTENSION_ICON_URL =
@@ -4172,8 +4178,10 @@ class ForcedColorsNotice extends HTMLElement {
   }
 
   render() {
-    this.hidden = !this.forcedColorsMediaQuery.matches;
-    if (!this.hidden && this.childElementCount == 0) {
+    let shouldShowNotice =
+      FORCED_COLORS_OVERRIDE_ENABLED && this.forcedColorsMediaQuery.matches;
+    this.hidden = !shouldShowNotice;
+    if (shouldShowNotice && this.childElementCount == 0) {
       this.appendChild(importTemplate("forced-colors-notice"));
     }
   }
