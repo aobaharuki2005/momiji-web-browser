@@ -650,7 +650,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
 
     if (sessionHistoryLoad && !mActiveEntry) {
       auto* activeEntries = GetActiveEntries();
-      if (activeEntries->isEmpty()) {
+      if (activeEntries && activeEntries->isEmpty()) {
         nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
         shistory->ReconstructContiguousEntryListFrom(entry);
       }
