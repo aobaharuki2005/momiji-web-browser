@@ -27,6 +27,9 @@ class BackupTest(MarionetteTestCase):
                 "browser.backup.log": True,
                 "browser.backup.archive.enabled": True,
                 "browser.backup.restore.enabled": True,
+                # Necessary to test Session Restore from backup, which relies on
+                # the crash restore mechanism.
+                "browser.sessionstore.resume_from_crash": True,
             }
         )
 
@@ -93,6 +96,11 @@ class BackupTest(MarionetteTestCase):
         # Restart the browser to force all of the test data we just added
         # to be flushed to disk and to be made ready for backup
         self.marionette.restart()
+
+        # We want to validate that TabState is flushed before serializing the
+        # backup, so run this test in the same browser instance we invoke the
+        # backup in.
+        self.add_test_sessionstore()
 
         # Put the OSKeyStore label back, since it would have been cleared
         # from memory during the restart.
@@ -254,6 +262,7 @@ class BackupTest(MarionetteTestCase):
         self.verify_recovered_preferences()
         self.verify_recovered_permissions()
         self.verify_recovered_payment_methods(osKeyStoreLabel)
+        self.verify_recovered_sessionstore()
 
         # Clean up the temporary OSKeyStore label
         self.marionette.execute_async_script(
@@ -859,3 +868,26 @@ class BackupTest(MarionetteTestCase):
             script_args=[osKeyStoreLabel],
         )
         self.assertTrue(cardExists)
+
+    def add_test_sessionstore(self):
+        with self.marionette.using_context("content"):
+            self.marionette.navigate("about:mozilla")
+
+    def verify_recovered_sessionstore(self):
+        [tabCount, url] = self.marionette.execute_script(
+            """
+          const { SessionStore } = ChromeUtils.importESModule(
+            "resource:///modules/sessionstore/SessionStore.sys.mjs"
+          );
+          const session = SessionStore.getCurrentState(true);
+          const win = session.windows[0];
+          const tabLen = win.tabs.length;
+          const tab = win.tabs[0];
+          const entry = tab.entries[0];
+          const url = entry.url;
+          return [tabLen, url];
+        """
+        )
+
+        self.assertEqual(tabCount, 1)
+        self.assertEqual(url, "about:mozilla")
