@@ -1869,6 +1869,7 @@ interface LoadURIOptions {
     forceMediaDocument?: ForceMediaDocument;
     hasValidUserGestureActivation?: boolean;
     headers?: InputStream | null;
+    isCaptivePortalTab?: boolean;
     loadFlags?: number;
     policyContainer?: PolicyContainer | null;
     postData?: InputStream | null;
@@ -2427,6 +2428,7 @@ interface NavigationCurrentEntryChangeEventInit extends EventInit {
 interface NavigationInterceptOptions {
     focusReset?: NavigationFocusReset;
     handler?: NavigationInterceptHandler;
+    precommitHandler?: NavigationPrecommitHandler;
     scroll?: NavigationScrollBehavior;
 }
 
@@ -3014,6 +3016,7 @@ interface PublicKeyCredentialCreationOptions {
     challenge: BufferSource;
     excludeCredentials?: PublicKeyCredentialDescriptor[];
     extensions?: AuthenticationExtensionsClientInputs;
+    hints?: string[];
     pubKeyCredParams: PublicKeyCredentialParameters[];
     rp: PublicKeyCredentialRpEntity;
     timeout?: number;
@@ -3059,6 +3062,7 @@ interface PublicKeyCredentialRequestOptions {
     allowCredentials?: PublicKeyCredentialDescriptor[];
     challenge: BufferSource;
     extensions?: AuthenticationExtensionsClientInputs;
+    hints?: string[];
     rpId?: string;
     timeout?: number;
     userVerification?: string;
@@ -3066,8 +3070,6 @@ interface PublicKeyCredentialRequestOptions {
 
 interface PublicKeyCredentialRequestOptionsJSON {
     allowCredentials?: PublicKeyCredentialDescriptorJSON[];
-    attestation?: string;
-    attestationFormats?: string[];
     challenge: Base64URLString;
     extensions?: AuthenticationExtensionsClientInputsJSON;
     hints?: string[];
@@ -3655,6 +3657,7 @@ interface RedirectBlockedEventInit extends EventInit {
 
 interface RegistrationOptions {
     scope?: string;
+    type?: WorkerType;
     updateViaCache?: ServiceWorkerUpdateViaCache;
 }
 
@@ -5720,6 +5723,17 @@ declare var CSSCounterStyleRule: {
     isInstance: IsInstance<CSSCounterStyleRule>;
 };
 
+interface CSSCustomMediaRule extends CSSRule {
+    readonly name: string;
+    readonly query: CustomMediaQuery;
+}
+
+declare var CSSCustomMediaRule: {
+    prototype: CSSCustomMediaRule;
+    new(): CSSCustomMediaRule;
+    isInstance: IsInstance<CSSCustomMediaRule>;
+};
+
 interface CSSCustomPropertyRegisteredEvent extends Event {
     readonly propertyDefinition: InspectorCSSPropertyDefinition;
 }
@@ -6824,11 +6838,11 @@ interface CSSStyleProperties extends CSSStyleDeclaration {
     textCombineUpright: string;
     textDecoration: string;
     textDecorationColor: string;
+    textDecorationInset: string;
     textDecorationLine: string;
     textDecorationSkipInk: string;
     textDecorationStyle: string;
     textDecorationThickness: string;
-    textDecorationTrim: string;
     textEmphasis: string;
     textEmphasisColor: string;
     textEmphasisPosition: string;
@@ -15616,6 +15630,16 @@ declare var NavigationHistoryEntry: {
     isInstance: IsInstance<NavigationHistoryEntry>;
 };
 
+interface NavigationPrecommitController {
+    redirect(url: string | URL, options?: NavigationNavigateOptions): void;
+}
+
+declare var NavigationPrecommitController: {
+    prototype: NavigationPrecommitController;
+    new(): NavigationPrecommitController;
+    isInstance: IsInstance<NavigationPrecommitController>;
+};
+
 /** Available only in secure contexts. */
 interface NavigationPreloadManager {
     disable(): Promise<void>;
@@ -15631,6 +15655,7 @@ declare var NavigationPreloadManager: {
 };
 
 interface NavigationTransition {
+    readonly committed: Promise<void>;
     readonly finished: Promise<void>;
     readonly from: NavigationHistoryEntry;
     readonly navigationType: NavigationType;
@@ -25935,6 +25960,7 @@ declare namespace FuzzingFunctions {
     function enableAccessibility(): void;
     function garbageCollect(): void;
     function garbageCollectCompacting(): void;
+    function killGPUProcess(): void;
     function memoryPressure(): void;
     function signalIPCReady(): void;
     function spinEventLoopFor(aMilliseconds: number): void;
@@ -26294,6 +26320,10 @@ interface MutationCallback {
 
 interface NavigationInterceptHandler {
     (): void | PromiseLike<void>;
+}
+
+interface NavigationPrecommitHandler {
+    (controller: NavigationPrecommitController): void | PromiseLike<void>;
 }
 
 interface NavigatorUserMediaErrorCallback {
@@ -26947,6 +26977,7 @@ type ConstrainLong = number | ConstrainLongRange;
 type ContentSecurityPolicy = nsIContentSecurityPolicy;
 type Cookie = nsICookie;
 type CookieList = CookieListItem[];
+type CustomMediaQuery = MediaList | boolean;
 type DOMHighResTimeStamp = number;
 type DOMTimeStamp = number;
 type EpochTimeStamp = number;
