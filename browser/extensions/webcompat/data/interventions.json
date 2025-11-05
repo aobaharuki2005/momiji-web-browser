@@ -5813,6 +5813,23 @@
       }
     ]
   },
+  "1993517": {
+    "label": "onlinebank.resursbank.se",
+    "bugs": {
+      "1993517": {
+        "issue": "page-fails-to-load",
+        "matches": ["*://onlinebank.resursbank.se/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "js": ["bug1993517-onlinebank.resursbank.se-autoclose-bankid-tabs.js"]
+        }
+      }
+    ]
+  },
   "1994062": {
     "label": "managetrips.jetblue.com",
     "bugs": {
