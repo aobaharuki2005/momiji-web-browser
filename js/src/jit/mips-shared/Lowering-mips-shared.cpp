@@ -138,6 +138,11 @@ void LIRGeneratorMIPSShared::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
 }
 
 void LIRGeneratorMIPSShared::lowerDivI(MDiv* div) {
+  if (div->isUnsigned()) {
+    lowerUDiv(div);
+    return;
+  }
+
   // Division instructions are slow. Division by constant denominators can be
   // rewritten to use other instructions.
   if (div->rhs()->isConstant()) {
@@ -187,6 +192,11 @@ void LIRGeneratorMIPSShared::lowerMulI(MMul* mul, MDefinition* lhs,
 }
 
 void LIRGeneratorMIPSShared::lowerModI(MMod* mod) {
+  if (mod->isUnsigned()) {
+    lowerUMod(mod);
+    return;
+  }
+
   if (mod->rhs()->isConstant()) {
     int32_t rhs = mod->rhs()->toConstant()->toInt32();
     int32_t shift = FloorLog2(rhs);

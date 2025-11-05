@@ -41,6 +41,11 @@ class CodeGeneratorARM : public CodeGeneratorShared {
     masm.cmpPtr(lhs, rhs);
     bailoutIf(c, snapshot);
   }
+  void bailoutTestPtr(Assembler::Condition c, Register lhs, Register rhs,
+                      LSnapshot* snapshot) {
+    masm.testPtr(lhs, rhs);
+    bailoutIf(c, snapshot);
+  }
   template <typename T1, typename T2>
   void bailoutCmp32(Assembler::Condition c, T1 lhs, T2 rhs,
                     LSnapshot* snapshot) {

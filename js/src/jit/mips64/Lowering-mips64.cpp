@@ -36,6 +36,11 @@ LBoxAllocation LIRGeneratorMIPS64::useBoxFixed(MDefinition* mir, Register reg1,
 LDefinition LIRGeneratorMIPS64::tempToUnbox() { return temp(); }
 
 void LIRGeneratorMIPS64::lowerDivI64(MDiv* div) {
+  if (div->isUnsigned()) {
+    lowerUDivI64(div);
+    return;
+  }
+
   auto* lir = new (alloc())
       LDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()));
   defineInt64(lir, div);
@@ -46,6 +51,11 @@ void LIRGeneratorMIPS64::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
 }
 
 void LIRGeneratorMIPS64::lowerModI64(MMod* mod) {
+  if (mod->isUnsigned()) {
+    lowerUModI64(mod);
+    return;
+  }
+
   auto* lir = new (alloc())
       LDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()));
   defineInt64(lir, mod);
