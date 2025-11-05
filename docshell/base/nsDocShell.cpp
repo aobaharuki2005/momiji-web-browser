@@ -13552,6 +13552,7 @@ nsresult nsDocShell::OnLinkClick(
   loadState->SetUserNavigationInvolvement(aUserInvolvement);
   loadState->SetTriggeringClassificationFlags(
       ownerDoc->GetScriptTrackingFlags());
+  loadState->SetHistoryBehavior(NavigationHistoryBehavior::Auto);
 
   nsCOMPtr<nsIRunnable> ev = new OnLinkClickEvent(
       this, aContent, loadState, noOpenerImplied, aTriggeringPrincipal);
