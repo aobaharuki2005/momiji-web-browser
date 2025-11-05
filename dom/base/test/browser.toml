@@ -160,6 +160,10 @@ support-files = [
   "file_js_cache_small.js",
   "file_js_cache_large.js",
   "file_js_cache_large_syntax_error.js",
+  "file_js_cache_importer.mjs",
+  "file_js_cache_imported1.mjs",
+  "file_js_cache_imported2.mjs",
+  "file_js_cache_imported3.mjs",
 ]
 
 ["browser_set_focus_after_reuse_bcg.js"]
