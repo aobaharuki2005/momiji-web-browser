@@ -880,6 +880,7 @@ enum class ShellGlobalKind {
   WindowProxy,
 };
 
+static void SetStandardRealmOptions(JS::RealmOptions& options);
 static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
                                  JSPrincipals* principals, ShellGlobalKind kind,
                                  bool immutablePrototype);
@@ -1131,25 +1132,49 @@ static bool ShellInterruptCallback(JSContext* cx) {
 
   bool result;
   if (sc->haveInterruptFunc) {
+    RootedValue rval(cx);
     bool wasAlreadyThrowing = cx->isExceptionPending();
     JS::AutoSaveExceptionState savedExc(cx);
-    JSAutoRealm ar(cx, &sc->interruptFunc.toObject());
-    RootedValue rval(cx);
 
-    // Report any exceptions thrown by the JS interrupt callback, but do
-    // *not* keep it on the cx. The interrupt handler is invoked at points
-    // that are not expected to throw catchable exceptions, like at
-    // JSOp::RetRval.
-    //
-    // If the interrupted JS code was already throwing, any exceptions
-    // thrown by the interrupt handler are silently swallowed.
-    {
+    if (sc->interruptFunc.isObject()) {
+      JSAutoRealm ar(cx, &sc->interruptFunc.toObject());
+
+      // Report any exceptions thrown by the JS interrupt callback, but do
+      // *not* keep it on the cx. The interrupt handler is invoked at points
+      // that are not expected to throw catchable exceptions, like at
+      // JSOp::RetRval.
+      //
+      // If the interrupted JS code was already throwing, any exceptions
+      // thrown by the interrupt handler are silently swallowed.
       Maybe<AutoReportException> are;
       if (!wasAlreadyThrowing) {
         are.emplace(cx);
       }
       result = JS_CallFunctionValue(cx, nullptr, sc->interruptFunc,
                                     JS::HandleValueArray::empty(), &rval);
+    } else {
+      RootedString str(cx, sc->interruptFunc.toString());
+
+      Maybe<AutoReportException> are;
+      if (!wasAlreadyThrowing) {
+        are.emplace(cx);
+      }
+
+      JS::RealmOptions options;
+      SetStandardRealmOptions(options);
+      RootedObject glob(
+          cx, NewGlobalObject(cx, options, nullptr, ShellGlobalKind::WindowProxy,
+                              /* immutablePrototype = */ true));
+      if (!glob) {
+        return false;
+      }
+
+      RootedObject opts(cx, nullptr);
+      RootedObject cacheEntry(cx, nullptr);
+      JSAutoRealm ar(cx, glob);
+      if (!EvaluateInner(cx, str, &glob, opts, cacheEntry, &rval)) {
+        return false;
+      }
     }
     savedExc.restore();
 
