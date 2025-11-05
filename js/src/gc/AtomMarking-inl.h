@@ -93,7 +93,7 @@ inline void AtomMarkingRuntime::maybeUnmarkGrayAtomically(Zone* zone,
   MOZ_ASSERT(zone);
   MOZ_ASSERT(!zone->isAtomsZone());
   MOZ_ASSERT(symbol);
-  MOZ_ASSERT(symbol->zone()->isAtomsZone());
+  MOZ_ASSERT(symbol->zoneFromAnyThread()->isAtomsZone());
 
   if (symbol->isPermanentAndMayBeShared()) {
     return;
