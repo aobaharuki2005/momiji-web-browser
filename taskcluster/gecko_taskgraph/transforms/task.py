@@ -8,7 +8,6 @@ transformations is generic to any kind of task, but abstracts away some of the
 complexities of worker implementations, scopes, and treeherder annotations.
 """
 
-
 import datetime
 import hashlib
 import os
@@ -44,15 +43,26 @@ from gecko_taskgraph.util.partners import get_partners_to_be_published
 from gecko_taskgraph.util.scriptworker import BALROG_ACTIONS, get_release_config
 from gecko_taskgraph.util.workertypes import get_worker_type, worker_type_implementation
 
-RUN_TASK = os.path.join(GECKO, "taskcluster", "scripts", "run-task")
+RUN_TASK_HG = os.path.join(GECKO, "taskcluster", "scripts", "run-task")
+RUN_TASK_GIT = os.path.join(
+    GECKO,
+    "third_party",
+    "python",
+    "taskcluster_taskgraph",
+    "taskgraph",
+    "run-task",
+    "run-task",
+)
 
 SCCACHE_GCS_PROJECT = "sccache-3"
 
 
 @memoize
-def _run_task_suffix():
+def _run_task_suffix(repo_type):
     """String to append to cache names under control of run-task."""
-    return hash_path(RUN_TASK)[0:20]
+    if repo_type == "hg":
+        return hash_path(RUN_TASK_HG)[0:20]
+    return hash_path(RUN_TASK_GIT)[0:20]
 
 
 def _compute_geckoview_version(app_version, moz_build_date):
@@ -574,7 +584,9 @@ def build_docker_worker_payload(config, task, task_def):
         cache_version = "v3"
 
         if run_task:
-            suffix = f"{cache_version}-{_run_task_suffix()}"
+            suffix = (
+                f"{cache_version}-{_run_task_suffix(config.params['repository_type'])}"
+            )
 
             if out_of_tree_image:
                 name_hash = hashlib.sha256(
@@ -2554,7 +2566,7 @@ def check_run_task_caches(config, tasks):
         level=config.params["level"],
     )
 
-    suffix = _run_task_suffix()
+    suffix = _run_task_suffix(config.params["repository_type"])
 
     for task in tasks:
         payload = task["task"].get("payload", {})
