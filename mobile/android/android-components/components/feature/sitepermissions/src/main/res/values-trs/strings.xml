@@ -35,6 +35,11 @@
     access to this permission
   -->
   <string name="mozac_feature_sitepermissions_not_allow">Sī ga\'nïnjt</string>
+  <!--
+    Alternate variant of the text for a negative button in a permission request dialog,
+    this button will not give access to this permission
+  -->
+  <string name="mozac_feature_sitepermissions_block">Garûn\'</string>
   <!-- Button label in a notification permission request dialog to dismiss the dialog. -->
   <string name="mozac_feature_sitepermissions_notification_permission_rationale_dialog_dismiss_label">Dūyichin\'</string>
   <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt -->

@@ -224,6 +224,8 @@
   <string name="mozac_feature_addons_remove">Nādure\'</string>
   <!-- This is a button to report an add-on. -->
   <string name="mozac_feature_addons_report">Gānātà\'</string>
+  <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+  <string name="mozac_feature_addons_permissions_dialog_title_2">Nutà\' %1$s</string>
   <!-- This is a button to add (install) an add-on . -->
   <string name="mozac_feature_addons_permissions_dialog_add">Nūtà\'</string>
   <!-- This is a button to allow the optional permissions requested by an add-on . -->
@@ -292,4 +294,10 @@
   <string name="mozac_feature_addons_updater_dialog_last_attempt">Sa rūkù ginûn huin:</string>
   <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
   <string name="mozac_feature_addons_updater_dialog_status">Dàj hua riñaj:</string>
+  <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+  <string name="mozac_feature_addons_installed_dialog_okay_button_2">GĀ\'HUE</string>
+  <!-- "Learn more" link displayed below an add-on status message. -->
+  <string name="mozac_feature_addons_status_learn_more">Gāhuin chrūn doj</string>
+  <!-- "See details" link displayed below an add-on status message. -->
+  <string name="mozac_feature_addons_status_see_details">Ni\'hio\' dàj huaj</string>
 </resources>
