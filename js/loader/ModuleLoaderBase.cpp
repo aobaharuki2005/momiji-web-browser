@@ -1465,6 +1465,10 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
 
   LOG(("ScriptLoadRequest (%p): ProcessDynamicImport", aRequest));
   FinishLoadingImportedModule(cx, aRequest);
+
+  (void)mLoader->MaybePrepareModuleForDiskCacheAfterExecute(aRequest, NS_OK);
+
+  mLoader->MaybeUpdateDiskCache();
 }
 
 nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {

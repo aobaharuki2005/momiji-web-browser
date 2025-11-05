@@ -3408,7 +3408,7 @@ nsresult ScriptLoader::MaybePrepareForDiskCacheAfterExecute(
 
 nsresult ScriptLoader::MaybePrepareModuleForDiskCacheAfterExecute(
     ModuleLoadRequest* aRequest, nsresult aRv) {
-  MOZ_ASSERT(aRequest->IsTopLevel());
+  MOZ_ASSERT(aRequest->IsTopLevel() || aRequest->IsDynamicImport());
 
   if (mCache) {
     // Disk cache is handled by SharedScriptCache.
