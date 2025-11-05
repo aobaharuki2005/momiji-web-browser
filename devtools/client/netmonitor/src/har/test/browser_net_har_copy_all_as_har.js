@@ -18,11 +18,31 @@ add_task(async function () {
 
   info("Starting test... ");
 
+  await testWithEnabledCache();
   await testSimpleReload();
   await testResponseBodyLimits();
   await testManyReloads();
   await testClearedRequests();
 });
+
+// Test covers a fix (see Bug 1995694) where reloading pages with js sources when the cache is enabled
+// throws an error which then causes copy all as har to break (see Bug 1995746).
+async function testWithEnabledCache() {
+  info("Tests multiple reloads of html which contains a JS bundle");
+  const { monitor } = await initNetMonitor(SOURCEMAP_URL, {
+    enableCache: true,
+  });
+
+  // Reload the browser at least 4 times to trigger the error
+  let runs = 4;
+  while (runs > 0) {
+    await reloadBrowser();
+    --runs;
+  }
+  const har = await copyAllAsHARWithContextMenu(monitor);
+  isnot(har.log, null, "The HAR log must exist");
+  await teardown(monitor);
+}
 
 async function testSimpleReload() {
   info("Test with a simple page reload");
