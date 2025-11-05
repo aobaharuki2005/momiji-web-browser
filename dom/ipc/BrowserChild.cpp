@@ -3063,9 +3063,12 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(const bool& aEnabled) {
   presShell->SuppressDisplayport(true);
   if (nsContentUtils::IsSafeToRunScript()) {
     WebWidget()->PaintNowIfNeeded();
-  } else if (nsIFrame* root = presShell->GetRootFrame()) {
-    presShell->PaintAndRequestComposite(
-        root, mPuppetWidget->GetWindowRenderer(), PaintFlags::None);
+  } else {
+    // NOTE: We want to call in even without a root frame (we might paint the
+    // canvas background in that case).
+    presShell->PaintAndRequestComposite(presShell->GetRootFrame(),
+                                        mPuppetWidget->GetWindowRenderer(),
+                                        PaintFlags::None);
   }
   presShell->SuppressDisplayport(false);
   return IPC_OK();
