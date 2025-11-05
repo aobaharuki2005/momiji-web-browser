@@ -518,6 +518,13 @@ features:
           set to false.
         type: Boolean
         default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: true
+      - channel: developer
+        value:
+          enabled: true
 
   suggest-shipped-domains:
     description: Feature that suggests domains from the shipped domain list.
