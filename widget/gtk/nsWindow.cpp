@@ -9978,7 +9978,7 @@ bool nsWindow::SetEGLNativeWindowSize(
     }
   }
 #  endif
-  return mSurface->SetEGLWindowSize(aEGLWindowSize.ToUnknownSize());
+  return mSurface->SetEGLWindowSize(aEGLWindowSize);
 }
 #endif
 

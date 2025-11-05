@@ -1049,7 +1049,7 @@ bool WaylandSurface::RemoveOpaqueSurfaceHandlerLocked(
   return true;
 }
 
-wl_egl_window* WaylandSurface::GetEGLWindow(nsIntSize aUnscaledSize) {
+wl_egl_window* WaylandSurface::GetEGLWindow(DesktopIntSize aSize) {
   LOGWAYLAND("WaylandSurface::GetEGLWindow() eglwindow %p", (void*)mEGLWindow);
 
   WaylandSurfaceLock lock(this);
@@ -1059,10 +1059,9 @@ wl_egl_window* WaylandSurface::GetEGLWindow(nsIntSize aUnscaledSize) {
     return nullptr;
   }
 
-  auto scale = GetScale();
-  // TODO: Correct size rounding
-  nsIntSize scaledSize((int)floor(aUnscaledSize.width * scale),
-                       (int)floor(aUnscaledSize.height * scale));
+  auto scaledSize = LayoutDeviceIntSize::Round(
+      aSize * DesktopToLayoutDeviceScale(GetScale()));
+
   if (!mEGLWindow) {
     mEGLWindow =
         wl_egl_window_create(mSurface, scaledSize.width, scaledSize.height);
@@ -1076,7 +1075,7 @@ wl_egl_window* WaylandSurface::GetEGLWindow(nsIntSize aUnscaledSize) {
   }
 
   if (mEGLWindow) {
-    SetSizeLocked(lock, scaledSize, aUnscaledSize);
+    SetSizeLocked(lock, scaledSize.ToUnknownSize(), aSize.ToUnknownSize());
   }
 
   return mEGLWindow;
@@ -1084,7 +1083,7 @@ wl_egl_window* WaylandSurface::GetEGLWindow(nsIntSize aUnscaledSize) {
 
 // Return false if scale factor doesn't match buffer size.
 // We need to skip painting in such case do avoid Wayland compositor freaking.
-bool WaylandSurface::SetEGLWindowSize(nsIntSize aScaledSize) {
+bool WaylandSurface::SetEGLWindowSize(LayoutDeviceIntSize aSize) {
   WaylandSurfaceLock lock(this);
 
   // We may be called after unmap so we're missing egl window completelly.
@@ -1095,19 +1094,17 @@ bool WaylandSurface::SetEGLWindowSize(nsIntSize aScaledSize) {
     return true;
   }
 
-  auto scale = GetScale();
-  // TODO: Avoid precision lost here? Load coordinates from window?
-  nsIntSize unscaledSize((int)round(aScaledSize.width / scale),
-                         (int)round(aScaledSize.height / scale));
+  auto unscaledSize =
+      DesktopIntSize::Round(aSize / DesktopToLayoutDeviceScale(GetScale()));
 
   LOGVERBOSE(
       "WaylandSurface::SetEGLWindowSize() scaled [%d x %d] unscaled [%d x %d] "
       "scale %f",
-      aScaledSize.width, aScaledSize.height, unscaledSize.width,
-      unscaledSize.height, scale);
+      aSize.width, aSize.height, unscaledSize.width, unscaledSize.height,
+      GetScale());
 
-  wl_egl_window_resize(mEGLWindow, aScaledSize.width, aScaledSize.height, 0, 0);
-  SetSizeLocked(lock, aScaledSize, unscaledSize);
+  wl_egl_window_resize(mEGLWindow, aSize.width, aSize.height, 0, 0);
+  SetSizeLocked(lock, aSize.ToUnknownSize(), unscaledSize.ToUnknownSize());
   return true;
 }
 
