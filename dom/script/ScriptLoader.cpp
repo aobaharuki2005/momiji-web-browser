@@ -4510,7 +4510,7 @@ static bool MimeTypeMatchesExpectedModuleType(
     case JS::ModuleType::JSON:
       return nsContentUtils::IsJsonMimeType(typeString);
     case JS::ModuleType::CSS:
-      return nsContentUtils::IsCssMimeType(typeString);
+      return nsContentUtils::HasCssMimeTypeEssence(typeString);
     case JS::ModuleType::Unknown:
     case JS::ModuleType::Bytes:
       break;

@@ -8657,9 +8657,13 @@ bool nsContentUtils::IsJsonMimeType(const nsAString& aMimeType) {
   return StringEndsWith(subtype, u"+json"_ns);
 }
 
-// https://html.spec.whatwg.org/#fetch-a-single-module-script, 7.3
-bool nsContentUtils::IsCssMimeType(const nsAString& aMimeType) {
-  return aMimeType.LowerCaseEqualsLiteral("text/css");
+// https://html.spec.whatwg.org/#fetch-a-single-module-script, 13.7.3
+bool nsContentUtils::HasCssMimeTypeEssence(const nsAString& aMimeType) {
+  nsString contentType, contentCharset;
+  if (MimeType::Parse(aMimeType, contentType, contentCharset)) {
+    return contentType.LowerCaseEqualsLiteral("text/css");
+  }
+  return false;
 }
 
 bool nsContentUtils::PrefetchPreloadEnabled(nsIDocShell* aDocShell) {
