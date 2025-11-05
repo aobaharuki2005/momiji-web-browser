@@ -14248,7 +14248,7 @@
 # Max time to shutdown the resolver threads
 - name: network.dns.resolver_shutdown_timeout_ms
   type: uint32_t
-  value: 2000
+  value: 5000
   mirror: always
 
 # When true on Windows DNS resolutions for single label domains
