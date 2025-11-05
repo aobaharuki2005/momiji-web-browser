@@ -8,6 +8,15 @@
 #include "mozilla/Attributes.h"
 
 namespace mozilla::htmlaccel {
+// True iff the buffer contains less-than, ampersand, carriage return,
+// or U+0000.
+//
+// This one could probably be inline without LLVM issues when SIMD
+// acceleration is statically enabled, but it's probably not worth
+// the complexity to do that.
+MOZ_NEVER_INLINE bool ContainsMarkup(const char16_t* aPtr,
+                                     const char16_t* aEnd);
+
 // Logically these should be MOZ_ALWAYS_INLINE_EVEN_DEBUG if LLVM was working
 // as expected. However, these are MOZ_NEVER_INLINE to work around
 // https://github.com/llvm/llvm-project/issues/160886 . This way, we get

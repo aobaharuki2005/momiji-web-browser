@@ -313,6 +313,35 @@ MOZ_ALWAYS_INLINE_EVEN_DEBUG int32_t AccelerateTextNode(const char16_t* aInput,
   return int32_t(current - aInput);
 }
 
+MOZ_ALWAYS_INLINE_EVEN_DEBUG bool ContainsMarkup(const char16_t* aInput,
+                                                 const char16_t* aEnd) {
+  const char16_t* current = aInput;
+  while (aEnd - current >= 16) {
+    uint8x16_t mask = StrideToMask(current, ZERO_LT_AMP_CR, true);
+#if defined(__aarch64__)
+    uint8_t max = vmaxvq_u8(mask);
+    if (max != 0) {
+      return true;
+    }
+#else  // x86/x86_64
+    int int_mask = _mm_movemask_epi8(mask);
+    if (int_mask != 0) {
+      return true;
+    }
+#endif
+    current += 16;
+  }
+  while (current != aEnd) {
+    char16_t c = *current;
+    if (c == char16_t('<') || c == char16_t('&') || c == char16_t('\r') ||
+        c == char16_t('\0')) {
+      return true;
+    }
+    ++current;
+  }
+  return false;
+}
+
 }  // namespace detail
 
 // Public entry points are in htmlaccelNotInline.h for now.

@@ -7,6 +7,15 @@
 
 namespace mozilla::htmlaccel {
 
+// TODO: Perhaps inlining this one on aarch64 wouldn't run into the
+// LLVM LICM vs. regalloc bug. But then, inlining this would only
+// avoid the overhead of one function call and wouldn't reuse the
+// SIMD contants in a useful way.
+MOZ_NEVER_INLINE bool ContainsMarkup(const char16_t* aPtr,
+                                     const char16_t* aEnd) {
+  return detail::ContainsMarkup(aPtr, aEnd);
+}
+
 /// The innerHTML / DOMParser case for the data state in the HTML parser
 MOZ_NEVER_INLINE int32_t AccelerateDataFastest(const char16_t* aPtr,
                                                const char16_t* aEnd) {
