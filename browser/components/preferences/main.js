@@ -1123,16 +1123,24 @@ let SETTINGS_CONFIG = {
       },
       {
         id: "windowsLaunchOnLoginDisabledBox",
-        control: "moz-box-item",
-        l10nId: "windows-launch-on-login-disabled",
+        control: "moz-message-bar",
         options: [
           {
-            control: "a",
+            control: "span",
+            l10nId: "windows-launch-on-login-disabled",
             controlAttrs: {
-              "data-l10n-name": "startup-link",
-              href: "ms-settings:startupapps",
-              _target: "self",
+              slot: "message",
             },
+            options: [
+              {
+                control: "a",
+                controlAttrs: {
+                  "data-l10n-name": "startup-link",
+                  href: "ms-settings:startupapps",
+                  target: "_self",
+                },
+              },
+            ],
           },
         ],
       },
