@@ -37,6 +37,10 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
   return NS_ERROR_FAILURE;
 }
 
+nsresult GetCurrentProcessMemoryUsage(uint64_t* aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

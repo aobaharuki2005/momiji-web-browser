@@ -28,6 +28,10 @@
 
 namespace mozilla {
 
+nsresult GetCurrentProcessMemoryUsage(uint64_t* aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 int GetCycleTimeFrequencyMHz() { return 0; }
 
 nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {

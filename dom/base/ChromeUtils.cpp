@@ -2054,6 +2054,28 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
 }
 
 /* static */
+uint64_t ChromeUtils::GetCurrentProcessMemoryUsage(GlobalObject& aGlobal,
+                                                   ErrorResult& aRv) {
+  uint64_t retVal = 0;
+  nsresult rv = mozilla::GetCurrentProcessMemoryUsage(&retVal);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+  return retVal;
+}
+
+/* static */
+uint64_t ChromeUtils::GetCpuTimeSinceProcessStart(GlobalObject& aGlobal,
+                                                  ErrorResult& aRv) {
+  uint64_t retVal = 0;
+  nsresult rv = mozilla::GetCpuTimeSinceProcessStartInMs(&retVal);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+  return retVal;
+}
+
+/* static */
 bool ChromeUtils::VsyncEnabled(GlobalObject& aGlobal) {
   return mozilla::gfx::VsyncSource::GetFastestVsyncRate().isSome();
 }

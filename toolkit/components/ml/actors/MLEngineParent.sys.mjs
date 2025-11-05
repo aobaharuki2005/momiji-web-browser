@@ -1427,6 +1427,11 @@ export class MLEngine {
    * @returns {Promise<null | { cpuTime: null | number, memory: null | number}>}
    */
   async getInferenceResources() {
+    // TODO(Greg): ask that question directly to the inference process *or* move your metrics down into the child process
+    // so you don't have to do any IPC at all.
+    // you can get the memory with ChromeUtils.currentProcessMemoryUsage and the CPU since start with ChromeUtils.cpuTimeSinceProcessStart
+    // theses call can be done anywhere in the inference process including the workers, which means you can Glean metrics in any place with
+    // no IPC
     try {
       const { children } = await ChromeUtils.requestProcInfo();
       const [inference] = children.filter(child => child.type == "inference");
