@@ -1504,8 +1504,6 @@ export class UrlbarProviderPlaces extends UrlbarProvider {
     if (!search) {
       return;
     }
-    this._lastLowResultsSearchSuggestion =
-      search._lastLowResultsSearchSuggestion;
 
     if (!notify || !search.pending) {
       return;
