@@ -229,7 +229,6 @@ export class TranslationsTelemetry {
     const averageWordsPerSecond = totalTranslatedWords / totalInferenceSeconds;
 
     Glean.translations.enginePerformance.record({
-      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       from_language: sourceLanguage,
       to_language: targetLanguage,
       average_words_per_request: averageWordsPerRequest,
