@@ -341,14 +341,9 @@ void ChromeProcessController::NotifyAsyncAutoscrollRejected(
 
 void ChromeProcessController::CancelAutoscroll(
     const ScrollableLayerGuid& aGuid) {
-  if (!mUIThread->IsOnCurrentThread()) {
-    mUIThread->Dispatch(NewRunnableMethod<ScrollableLayerGuid>(
-        "layers::ChromeProcessController::CancelAutoscroll", this,
-        &ChromeProcessController::CancelAutoscroll, aGuid));
-    return;
-  }
-
-  APZCCallbackHelper::CancelAutoscroll(aGuid.mScrollId);
+  mUIThread->Dispatch(NewRunnableFunction("layers::CancelAutoscroll",
+                                          &APZCCallbackHelper::CancelAutoscroll,
+                                          aGuid.mScrollId));
 }
 
 void ChromeProcessController::NotifyScaleGestureComplete(

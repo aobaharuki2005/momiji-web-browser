@@ -83,9 +83,6 @@ fail-if = ["a11y_checks"] # Bug 1854538 clicked tabbrowser-tabpanels may not be 
 
 ["browser_click_event_during_autoscrolling.js"]
 fail-if = ["a11y_checks"] # Bug 1854538 clicked browser may not be accessible
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64'", # Bug 1775544
-]
 
 ["browser_contentTitle.js"]
 

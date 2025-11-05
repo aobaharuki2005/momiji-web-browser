@@ -455,15 +455,9 @@ void RemoteContentController::CancelAutoscroll(
 void RemoteContentController::CancelAutoscrollInProcess(
     const ScrollableLayerGuid& aGuid) {
   MOZ_ASSERT(XRE_IsParentProcess());
-
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NewRunnableMethod<ScrollableLayerGuid>(
-        "layers::RemoteContentController::CancelAutoscrollInProcess", this,
-        &RemoteContentController::CancelAutoscrollInProcess, aGuid));
-    return;
-  }
-
-  APZCCallbackHelper::CancelAutoscroll(aGuid.mScrollId);
+  NS_DispatchToMainThread(NewRunnableFunction(
+      "layers::CancelAutoScroll", &APZCCallbackHelper::CancelAutoscroll,
+      aGuid.mScrollId));
 }
 
 void RemoteContentController::CancelAutoscrollCrossProcess(
