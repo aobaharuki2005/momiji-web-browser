@@ -312,8 +312,8 @@ extern const char gToolkitBuildID[];
 
 static nsIProfileLock* gProfileLock;
 #if defined(MOZ_HAS_REMOTE)
-MOZ_RUNINIT static RefPtr<nsRemoteService> gRemoteService;
-MOZ_RUNINIT static RefPtr<nsStartupLock> gStartupLock;
+MOZ_CONSTINIT static RefPtr<nsRemoteService> gRemoteService;
+MOZ_CONSTINIT static RefPtr<nsStartupLock> gStartupLock;
 #endif
 
 int gRestartArgc;

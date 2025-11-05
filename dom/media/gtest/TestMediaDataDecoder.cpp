@@ -43,8 +43,8 @@ class PropertyTest : public ::testing::TestWithParam<ParamType> {
   static UniquePtr<VideoInfo> sAVCInfo;
   static UniquePtr<VideoInfo> sVP9Info;
 };
-MOZ_RUNINIT RefPtr<PDMFactory> PropertyTest::sFactory;
-MOZ_RUNINIT RefPtr<TaskQueue> PropertyTest::sTaskQueue;
+MOZ_CONSTINIT RefPtr<PDMFactory> PropertyTest::sFactory;
+MOZ_CONSTINIT RefPtr<TaskQueue> PropertyTest::sTaskQueue;
 MOZ_CONSTINIT UniquePtr<VideoInfo> PropertyTest::sAVCInfo;
 MOZ_CONSTINIT UniquePtr<VideoInfo> PropertyTest::sVP9Info;
 
