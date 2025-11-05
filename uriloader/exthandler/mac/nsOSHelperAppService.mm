@@ -24,11 +24,6 @@
 #import <CoreFoundation/CoreFoundation.h>
 #import <ApplicationServices/ApplicationServices.h>
 
-// chrome URL's
-#define HELPERAPPLAUNCHER_BUNDLE_URL \
-  "chrome://global/locale/helperAppLauncher.properties"
-#define BRAND_BUNDLE_URL "chrome://branding/locale/brand.properties"
-
 nsresult GetDefaultBundleURL(const nsACString& aScheme, CFURLRef* aBundleURL) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
@@ -210,46 +205,34 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(
     const char16_t* aPlatformAppPath, nsIFile** aFile) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  CFURLRef pathAsCFURL;
   CFStringRef pathAsCFString = ::CFStringCreateWithCharacters(
       NULL, reinterpret_cast<const UniChar*>(aPlatformAppPath),
       NS_strlen(aPlatformAppPath));
-  if (!pathAsCFString) return NS_ERROR_OUT_OF_MEMORY;
+  if (!pathAsCFString) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (::CFStringGetCharacterAtIndex(pathAsCFString, 0) == '/') {
-    // we have a Posix path
-    pathAsCFURL = ::CFURLCreateWithFileSystemPath(nullptr, pathAsCFString,
-                                                  kCFURLPOSIXPathStyle, false);
-    if (!pathAsCFURL) {
-      ::CFRelease(pathAsCFString);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  } else {
-    // if it doesn't start with a / it's not an absolute Posix path
-    // let's check if it's a HFS path left over from old preferences
+  // Require a posix path
+  if (::CFStringGetCharacterAtIndex(pathAsCFString, 0) != '/') {
+    ::CFRelease(pathAsCFString);
+    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+  }
 
-    // If it starts with a ':' char, it's not an absolute HFS path
-    // so bail for that, and also if it's empty
-    if (::CFStringGetLength(pathAsCFString) == 0 ||
-        ::CFStringGetCharacterAtIndex(pathAsCFString, 0) == ':') {
-      ::CFRelease(pathAsCFString);
-      return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-    }
-
-    pathAsCFURL = ::CFURLCreateWithFileSystemPath(nullptr, pathAsCFString,
-                                                  kCFURLHFSPathStyle, false);
-    if (!pathAsCFURL) {
-      ::CFRelease(pathAsCFString);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  CFURLRef pathAsCFURL = ::CFURLCreateWithFileSystemPath(
+      nullptr, pathAsCFString, kCFURLPOSIXPathStyle, false);
+  ::CFRelease(pathAsCFString);
+  if (!pathAsCFURL) {
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsILocalFileMac> localFile;
   nsresult rv =
       NS_NewLocalFileWithCFURL(pathAsCFURL, getter_AddRefs(localFile));
-  ::CFRelease(pathAsCFString);
   ::CFRelease(pathAsCFURL);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   *aFile = localFile;
   NS_IF_ADDREF(*aFile);
 
