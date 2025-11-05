@@ -224,6 +224,18 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
     return !!this.#entitlement;
   }
 
+  /**
+   * Checks if we're running the Alpha variant based on
+   * available features
+   */
+  get isAlpha() {
+    return (
+      !this.#entitlement?.autostart &&
+      !this.#entitlement?.website_inclusion &&
+      !this.#entitlement?.location_controls
+    );
+  }
+
   async refetchEntitlement() {
     this.#setEntitlement(null);
     await this.maybeEnrollAndEntitle();
