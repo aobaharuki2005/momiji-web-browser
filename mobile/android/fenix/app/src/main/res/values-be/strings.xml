@@ -1018,6 +1018,8 @@
   <string name="preferences_daily_usage_ping_title">Пінг штодзённага выкарыстання</string>
   <string name="preferences_daily_usage_ping_description">Гэта дапамагае Mozilla ацэньваць актыўных карыстальнікаў.</string>
   <string name="preferences_daily_usage_ping_learn_more">Падрабязней пра пінг штодзённага выкарыстання</string>
+  <!-- Section title for campaign measurement in data collections screen -->
+  <string name="preferences_marketing_data_title">Вымярэнне кампаніі</string>
   <!-- Title for studies preferences -->
   <string name="preference_experiments_2">Даследаванні</string>
   <!-- Summary for studies preferences -->
@@ -1052,6 +1054,16 @@
   <string name="preference_simple_toolbar">Просты</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Разгорнуты</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Падзяліцца</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Дадаць закладку</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Перакласці</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Хатняя старонка</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Назад</string>
   <!--
     Theme Preferences
 
@@ -1208,6 +1220,11 @@
   <string name="studies_active">Актыўнае</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Даведацца больш</string>
+  <!--
+    Title for the list of tabs in the current private session used by a11y services
+    The %1$s will be replaced by the number of opened private tabs
+  -->
+  <string name="tabs_header_private_tabs_counter_title">Адкрыта прыватных картак: %1$s. Націсніце, каб пераключыць карткі.</string>
   <!-- Text for the tabs header private tabs -->
   <string name="tabs_header_private_tabs_title">Прыватныя</string>
   <!-- Text for the tabs header normal tabs -->
@@ -1551,6 +1568,8 @@
   <string name="clear_permissions_on_all_sites">Ачысціць дазволы на ўсіх сайтах</string>
   <!-- Preference for altering video and audio autoplay for all websites -->
   <string name="preference_browser_feature_autoplay">Аўтапрайграванне</string>
+  <!-- Preference for local network access for all websites -->
+  <string name="preference_browser_feature_local_network_access">Прылады лакальнай сеткі</string>
   <!-- Preference for altering the camera access for all websites -->
   <string name="preference_phone_feature_camera">Камера</string>
   <!-- Preference for altering the microphone access for all websites -->
@@ -1651,8 +1670,12 @@
   <string name="create_collection_save_to_collection_tab_selected">Выбрана картка: %d</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">Калекцыя захаваная!</string>
+  <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+  <string name="create_collection_tabs_saved_new_collection_2">Калекцыя захаваная</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Картка захавана!</string>
+  <!-- Text shown in snackbar when one tab has been saved in a collection -->
+  <string name="create_collection_tab_saved_2">Картка захавана</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Закрыць</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -2049,6 +2072,10 @@
     Preference title for DNS over HTTPS settings
   -->
   <string name="preference_doh_title">DNS праз HTTPS</string>
+  <!-- Used as text for the link in `preference_doh_title`, points to documentation about "DNS over HTTPS" -->
+  <string name="preference_doh_learn_more">Падрабязней</string>
+  <!-- Content description for the "Exceptions" button -->
+  <string name="preference_doh_exceptions_description">Выключэнні</string>
   <!-- Content description for the "Info" button -->
   <string name="preference_doh_info_description">Інфармацыя</string>
   <!-- Content description for the "Add Site" button -->
@@ -2075,6 +2102,8 @@
   <string name="preference_doh_exceptions_add">Дадаць сайт</string>
   <!-- Text displayed above the input field when adding exceptions for "DNS over HTTPS". -->
   <string name="preference_doh_exceptions_add_site">Сайт</string>
+  <!-- Text displayed on the button within the input field for adding exceptions to "DNS over HTTPS" -->
+  <string name="preference_doh_exceptions_add_save">Захаваць</string>
   <!-- About page link text to open support link -->
   <string name="about_support">Падтрымка</string>
   <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -2151,6 +2180,8 @@
   <string name="preferences_passwords_exceptions_remove_all">Выдаліць усе выключэнні</string>
   <!-- Hint for search box in passwords list -->
   <string name="preferences_passwords_saved_logins_search_2">Пошук пароляў</string>
+  <!-- Content description for the logins navigation bar back button -->
+  <string name="logins_navigate_back_button_content_description">Назад</string>
   <!-- The header for the site that a login is for -->
   <string name="preferences_passwords_saved_logins_site">Сайт</string>
   <!-- The header for the username for a login -->
@@ -2171,8 +2202,14 @@
   <string name="saved_login_clear_username">Ачысціць імя карыстальніка</string>
   <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
   <string name="saved_login_clear_hostname">Ачысціць імя хоста</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the login detail view. -->
+  <string name="login_details_navigate_back_button_content_description">Перайсці назад</string>
   <!-- Edit text for the login detail menu edit button -->
   <string name="login_detail_menu_edit_button">Змяніць</string>
+  <!-- Delete text for the login detail menu delete button -->
+  <string name="login_detail_menu_delete_button">Выдаліць</string>
+  <!-- Content description, used by tools like screenreaders, to go back and exit the add login view. -->
+  <string name="add_login_navigate_back_button_content_description">Перайсці назад</string>
   <!-- Content description, used by tools like screenreaders, to go back and exit the edit login view. -->
   <string name="edit_login_navigate_back_button_content_description">Перайсці назад</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
@@ -2185,6 +2222,10 @@
   <string name="saved_login_hide_password">Схаваць пароль</string>
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
   <string name="logins_biometric_prompt_message_2">Разблакуйце, каб пабачыць захаваныя паролі</string>
+  <!-- Button for unlocking logins on the biometric lock screen -->
+  <string name="logins_biometric_unlock_button">Разблакаваць</string>
+  <!-- Button for leaving logins on the biometric lock screen -->
+  <string name="logins_biometric_leave_button">Выйсці</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_title_2">Абараніце захаваныя паролі</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
@@ -2287,6 +2328,8 @@
   <string name="addresses_manage_addresses">Кіраваць адрасамі</string>
   <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
   <string name="addresses_name">Назва</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The organization's name related to the address helps in distinguishing addresses used for business or personal purposes. -->
+  <string name="addresses_organization" tools:ignore="UnusedResources">Арганізацыя</string>
   <!-- The header for the street address of an address -->
   <string name="addresses_street_address">Вуліца</string>
   <!-- The header for the city of an address -->
@@ -2303,6 +2346,42 @@
   <string name="addresses_phone">Тэлефон</string>
   <!-- The header for the email of an address -->
   <string name="addresses_email">Электронная пошта</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used for addresses in Iran, Mexico. -->
+  <string name="addresses_neighborhood" tools:ignore="UnusedResources">Мікрараён</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Village or Township field, specific to Malaysia is crucial for addresses in rural areas. -->
+  <string name="addresses_village_township" tools:ignore="UnusedResources">Вёска ці гарадок</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
+  <string name="addresses_island" tools:ignore="UnusedResources">Востраў</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Townland field, specific to Ireland is a specific type of land division used in rural areas. -->
+  <string name="addresses_townland" tools:ignore="UnusedResources">Гарадская зямля</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
+  <string name="addresses_district" tools:ignore="UnusedResources">Раён</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in the United Kingdom, Norway and Sweden -->
+  <string name="addresses_post_town" tools:ignore="UnusedResources">Паштовае месца</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as a tertiary address information (below the state level, e.g. Tasmania in Australia -->
+  <string name="addresses_suburb" tools:ignore="UnusedResources">Прадмесце</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is crucial for addressing in regions where county lines play a key role in postal services. -->
+  <string name="addresses_county" tools:ignore="UnusedResources">Графства</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Significant in places where parishes are used for local administration and addressing. Ensures users can specify parish details for better autofill accuracy. Used in Barbados and Jamaica. -->
+  <string name="addresses_parish" tools:ignore="UnusedResources">Парафія</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in countries like Japan where prefectures are a major administrative division. -->
+  <string name="addresses_prefecture" tools:ignore="UnusedResources">Прэфектура</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Allowing users to specify a particular area within a city or region. Used in Hong Kong -->
+  <string name="addresses_area" tools:ignore="UnusedResources">Вобласць</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The header for the Do/Si of the address. Do/Si refers to provincial level divisions, pertinent to addresses in South Korea. -->
+  <string name="addresses_do_si" tools:ignore="UnusedResources">До/Сі</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in countries like Nicaragua and Colombia where departments are a key administrative division. -->
+  <string name="addresses_department" tools:ignore="UnusedResources">Дэпартамент</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in the United Arab Emirates. -->
+  <string name="addresses_emirate" tools:ignore="UnusedResources">Эмірат</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Relevant for addresses in countries like Russia and Ukraine. -->
+  <string name="addresses_oblast" tools:ignore="UnusedResources">Вобласць</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The postal code field is universally used in address forms to specify the area code for mail sorting. -->
+  <string name="addresses_postal_code" tools:ignore="UnusedResources">Паштовы індэкс</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. the Eircode field, specific to Ireland is a unique postal code system that helps in precise location identification. -->
+  <string name="addresses_eircode" tools:ignore="UnusedResources">Eircode</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in cases we want to only display the word "Country" over "Country or Region". -->
+  <string name="addresses_country_only" tools:ignore="UnusedResources">Краіна</string>
   <!-- The text for the "Save" button for saving an address -->
   <string name="addresses_save_button">Захаваць</string>
   <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
@@ -2367,6 +2446,8 @@
   <string name="quick_settings_sheet_secure_connection_2">Злучэнне абаронена</string>
   <!-- Label that indicates a site is using a insecure connection -->
   <string name="quick_settings_sheet_insecure_connection_2">Злучэнне не абаронена</string>
+  <!-- Label that indicates a site is displaying a local document -->
+  <string name="quick_settings_sheet_local_page">Гэтая старонка захоўваецца на вашай прыладзе.</string>
   <!-- Label to clear site data -->
   <string name="clear_site_data">Выдаліць кукі і дадзеныя сайтаў</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site. %s is the domain of the site. -->
@@ -2491,6 +2572,8 @@
   <string name="top_sites_edit_dialog_title">Рэдагаваць цэтлік</string>
   <!-- Button caption to confirm the edit of the top site. -->
   <string name="top_sites_edit_dialog_save">Захаваць</string>
+  <!-- Error message when the user entered an invalid URL -->
+  <string name="top_sites_edit_dialog_url_error">Увядзіце сапраўдны URL</string>
   <!-- Label for the URL edit field in the edit top site dialog. -->
   <string name="top_sites_edit_dialog_url_title">Адрас</string>
   <!--
@@ -2527,6 +2610,8 @@
   <string name="google_search_engine_suggestion_header">Пошук у Google</string>
   <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. %s is default search engine name. -->
   <string name="other_default_search_engine_suggestion_header">Пошук %s</string>
+  <!-- Title for recent search suggestions. -->
+  <string name="recent_searches_header">Нядаўнія пошукі</string>
   <!--
     Default browser experiment
 
@@ -2909,6 +2994,10 @@
   <string name="certificate_warning_push_notification_update_recommended_title" tools:ignore="UnusedResources">Рэкамендуецца абнавіць</string>
   <!-- TextField Design System Component -->
 
+  <!-- Negative button text for the contextual feature recommendation (CFR) dismissing the screen lock suggestion -->
+  <string name="private_tab_cfr_negative">Не, дзякуй</string>
+  <!-- Label for a button opening a feedback forum -->
+  <string name="review_prompt_feedback_button">Пакінуць водгук</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Умовы выкарыстання</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
