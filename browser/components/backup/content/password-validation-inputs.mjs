@@ -70,8 +70,8 @@ export default class PasswordValidationInputs extends MozLitElement {
     this._showRules = true;
   }
 
-  handleBlurNewPassword(event) {
-    this._showRules = !event.target.checkValidity();
+  handleBlurNewPassword() {
+    this._showRules = false;
   }
 
   handleChangeNewPassword() {

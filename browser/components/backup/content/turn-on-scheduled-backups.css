@@ -130,6 +130,7 @@
     width: 500px;
     margin-inline: auto;
     padding-block: var(--padding-block-wrapper);
+    overflow: hidden;
 
     #backup-location-controls #backup-location-filepicker {
       margin-block-start: var(--margin-block-start-file-picker);

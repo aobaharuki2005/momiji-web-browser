@@ -634,7 +634,7 @@ const BASE_MESSAGES = () => [
               fontSize: "13px",
             },
             screen_style: {
-              width: "764px",
+              width: "700px",
               height: "650px",
             },
             logo: {
