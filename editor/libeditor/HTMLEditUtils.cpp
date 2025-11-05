@@ -1340,6 +1340,12 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
                : !IsVisibleTextNode(*text);
   }
 
+  const bool treatCommentAsVisible =
+      aOptions.contains(EmptyCheckOption::TreatCommentAsVisible);
+  if (aNode.IsComment()) {
+    return !treatCommentAsVisible;
+  }
+
   if (!aNode.IsElement()) {
     return false;
   }
@@ -1412,16 +1418,21 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
     return false;
   }
 
+  const bool treatNonEditableContentAsInvisible =
+      aOptions.contains(EmptyCheckOption::TreatNonEditableContentAsInvisible);
   bool seenBR = aSeenBR && *aSeenBR;
   for (nsIContent* childContent = aNode.GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
-    // Is the child editable and non-empty?  if so, return false
-    if (aOptions.contains(
-            EmptyCheckOption::TreatNonEditableContentAsInvisible) &&
-        !EditorUtils::IsEditableContent(*childContent, EditorType::HTML)) {
+    if (childContent->IsComment()) {
+      if (treatCommentAsVisible) {
+        return false;
+      }
       continue;
     }
-
+    if (treatNonEditableContentAsInvisible &&
+        !HTMLEditUtils::IsSimplyEditableNode(*childContent)) {
+      continue;
+    }
     if (Text* text = Text::FromNode(childContent)) {
       // break out if we find we aren't empty
       if (aOptions.contains(EmptyCheckOption::SafeToAskLayout)
@@ -3241,6 +3252,60 @@ std::ostream& operator<<(std::ostream& aStream,
       aStream << ", ";
     }
     aStream << ToString(option).c_str();
+    first = false;
+  }
+  return aStream << "}";
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const HTMLEditUtils::EmptyCheckOption& aOption) {
+  constexpr static const char* names[] = {
+      "TreatSingleBRElementAsVisible",
+      "TreatBlockAsVisible",
+      "TreatListItemAsVisible",
+      "TreatTableCellAsVisible",
+      "TreatNonEditableContentAsInvisible",
+      "TreatCommentAsVisible",
+      "SafeToAskLayout",
+  };
+  return aStream << names[static_cast<uint32_t>(aOption)];
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const HTMLEditUtils::EmptyCheckOptions& aOptions) {
+  aStream << "{";
+  bool first = true;
+  for (const auto t : aOptions) {
+    if (!first) {
+      aStream << ", ";
+    }
+    aStream << ToString(t).c_str();
+    first = false;
+  }
+  return aStream << "}";
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const HTMLEditUtils::LeafNodeType& aLeafNodeType) {
+  constexpr static const char* names[] = {
+      "OnlyLeafNode",
+      "LeafNodeOrChildBlock",
+      "LeafNodeOrNonEditableNode",
+      "OnlyEditableLeafNode",
+      "TreatCommentAsLeafNode",
+  };
+  return aStream << names[static_cast<uint32_t>(aLeafNodeType)];
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const HTMLEditUtils::LeafNodeTypes& aLeafNodeTypes) {
+  aStream << "{";
+  bool first = true;
+  for (const auto t : aLeafNodeTypes) {
+    if (!first) {
+      aStream << ", ";
+    }
+    aStream << ToString(t).c_str();
     first = false;
   }
   return aStream << "}";

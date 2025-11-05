@@ -1694,12 +1694,15 @@ nsresult WhiteSpaceVisibilityKeeper::EnsureNoInvisibleWhiteSpacesAfter(
   AutoTArray<OwningNonNull<nsIContent>, 32> unnecessaryContents;
   for (nsIContent* nextContent =
            HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-               aPoint, {HTMLEditUtils::LeafNodeType::LeafNodeOrChildBlock},
+               aPoint,
+               {HTMLEditUtils::LeafNodeType::LeafNodeOrChildBlock,
+                HTMLEditUtils::LeafNodeType::TreatCommentAsLeafNode},
                BlockInlineCheck::UseComputedDisplayStyle, colsetBlockElement);
        nextContent;
        nextContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
            EditorRawDOMPoint::After(*nextContent),
-           {HTMLEditUtils::LeafNodeType::LeafNodeOrChildBlock},
+           {HTMLEditUtils::LeafNodeType::LeafNodeOrChildBlock,
+            HTMLEditUtils::LeafNodeType::TreatCommentAsLeafNode},
            BlockInlineCheck::UseComputedDisplayStyle, colsetBlockElement)) {
     if (!HTMLEditUtils::IsSimplyEditableNode(*nextContent)) {
       // XXX Assume non-editable nodes are visible.
@@ -1775,13 +1778,16 @@ nsresult WhiteSpaceVisibilityKeeper::EnsureNoInvisibleWhiteSpacesBefore(
   AutoTArray<OwningNonNull<nsIContent>, 32> unnecessaryContents;
   for (nsIContent* previousContent =
            HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-               aPoint, {HTMLEditUtils::LeafNodeType::LeafNodeOrChildBlock},
+               aPoint,
+               {HTMLEditUtils::LeafNodeType::LeafNodeOrChildBlock,
+                HTMLEditUtils::LeafNodeType::TreatCommentAsLeafNode},
                BlockInlineCheck::UseComputedDisplayStyle, colsetBlockElement);
        previousContent;
        previousContent =
            HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
                EditorRawDOMPoint(previousContent),
-               {HTMLEditUtils::LeafNodeType::LeafNodeOrChildBlock},
+               {HTMLEditUtils::LeafNodeType::LeafNodeOrChildBlock,
+                HTMLEditUtils::LeafNodeType::TreatCommentAsLeafNode},
                BlockInlineCheck::UseComputedDisplayStyle, colsetBlockElement)) {
     if (!HTMLEditUtils::IsSimplyEditableNode(*previousContent)) {
       // XXX Assume non-editable nodes are visible.

@@ -398,6 +398,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
     // If set, use the HTML default style to consider whether the found one is a
     // block or an inline.
     ReferHTMLDefaultStyle,
+    // If set, stop scanning the DOM when it reaches a `Comment` node.
+    StopAtComment,
   };
   using Options = EnumSet<Option>;
 
@@ -1086,11 +1088,13 @@ class MOZ_STACK_CLASS WSRunScanner final {
     /**
      * Return inclusive next point in inclusive next `Text` node from aPoint.
      * So, it may be in a collapsed white-space or invisible white-spaces.
+     * NOTE: Option::OnlyEditableNodes is ignored because it's treated as "stop
+     * at non-editable content" in the other places, but this "ignores" them.
      */
     template <typename EditorDOMPointType, typename PT, typename CT>
     [[nodiscard]] static EditorDOMPointType GetInclusiveNextCharPoint(
         const EditorDOMPointBase<PT, CT>& aPoint,
-        ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
+        Options aOptions,  // NOLINT(performance-unnecessary-value-param)
         IgnoreNonEditableNodes aIgnoreNonEditableNodes,
         const nsIContent* aFollowingLimiterContent = nullptr);
 
@@ -1099,18 +1103,19 @@ class MOZ_STACK_CLASS WSRunScanner final {
         const EditorDOMPointBase<PT, CT>& aPoint,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes) const {
       return GetInclusiveNextCharPoint<EditorDOMPointType>(
-          aPoint, ShouldReferHTMLDefaultStyle(mOptions),
-          aIgnoreNonEditableNodes, GetEndReasonContent());
+          aPoint, mOptions, aIgnoreNonEditableNodes, GetEndReasonContent());
     }
 
     /**
      * Return previous point in inclusive previous `Text` node from aPoint.
      * So, it may be in a collapsed white-space or invisible white-spaces.
+     * NOTE: Option::OnlyEditableNodes is ignored because it's treated as "stop
+     * at non-editable content" in the other places, but this "ignores" them.
      */
     template <typename EditorDOMPointType, typename PT, typename CT>
     [[nodiscard]] static EditorDOMPointType GetPreviousCharPoint(
         const EditorDOMPointBase<PT, CT>& aPoint,
-        ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
+        Options aOptions,  // NOLINT(performance-unnecessary-value-param)
         IgnoreNonEditableNodes aIgnoreNonEditableNodes,
         const nsIContent* aPrecedingLimiterContent = nullptr);
 
@@ -1119,12 +1124,13 @@ class MOZ_STACK_CLASS WSRunScanner final {
         const EditorDOMPointBase<PT, CT>& aPoint,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes) const {
       return GetPreviousCharPoint<EditorDOMPointType>(
-          aPoint, ShouldReferHTMLDefaultStyle(mOptions),
-          aIgnoreNonEditableNodes, GetStartReasonContent());
+          aPoint, mOptions, aIgnoreNonEditableNodes, GetStartReasonContent());
     }
 
     /**
      * Return end of current collapsible ASCII white-spaces.
+     * NOTE: Option::OnlyEditableNodes is ignored because it's treated as "stop
+     * at non-editable content" in the other places, but this "ignores" them.
      *
      * @param aPointAtASCIIWhiteSpace   Must be in a sequence of collapsible
      *                                  ASCII white-spaces.
@@ -1134,7 +1140,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     [[nodiscard]] static EditorDOMPointType GetEndOfCollapsibleASCIIWhiteSpaces(
         const EditorDOMPointInText& aPointAtASCIIWhiteSpace,
         nsIEditor::EDirection aDirectionToDelete,
-        ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
+        Options aOptions,  // NOLINT(performance-unnecessary-value-param)
         IgnoreNonEditableNodes aIgnoreNonEditableNodes,
         const nsIContent* aFollowingLimiterContent = nullptr);
 
@@ -1144,13 +1150,14 @@ class MOZ_STACK_CLASS WSRunScanner final {
         nsIEditor::EDirection aDirectionToDelete,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes) const {
       return GetEndOfCollapsibleASCIIWhiteSpaces<EditorDOMPointType>(
-          aPointAtASCIIWhiteSpace, aDirectionToDelete,
-          ShouldReferHTMLDefaultStyle(mOptions), aIgnoreNonEditableNodes,
-          GetEndReasonContent());
+          aPointAtASCIIWhiteSpace, aDirectionToDelete, mOptions,
+          aIgnoreNonEditableNodes, GetEndReasonContent());
     }
 
     /**
      * Return start of current collapsible ASCII white-spaces.
+     * NOTE: Option::OnlyEditableNodes is ignored because it's treated as "stop
+     * at non-editable content" in the other places, but this "ignores" them.
      *
      * @param aPointAtASCIIWhiteSpace   Must be in a sequence of collapsible
      *                                  ASCII white-spaces.
@@ -1161,7 +1168,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
     GetFirstASCIIWhiteSpacePointCollapsedTo(
         const EditorDOMPointInText& aPointAtASCIIWhiteSpace,
         nsIEditor::EDirection aDirectionToDelete,
-        ReferHTMLDefaultStyle aReferHTMLDefaultStyle,
+        Options aOptions,  // NOLINT(performance-unnecessary-value-param)
         IgnoreNonEditableNodes aIgnoreNonEditableNodes,
         const nsIContent* aPrecedingLimiterContent = nullptr);
 
@@ -1171,9 +1178,8 @@ class MOZ_STACK_CLASS WSRunScanner final {
         nsIEditor::EDirection aDirectionToDelete,
         IgnoreNonEditableNodes aIgnoreNonEditableNodes) const {
       return GetFirstASCIIWhiteSpacePointCollapsedTo<EditorDOMPointType>(
-          aPointAtASCIIWhiteSpace, aDirectionToDelete,
-          ShouldReferHTMLDefaultStyle(mOptions), aIgnoreNonEditableNodes,
-          GetStartReasonContent());
+          aPointAtASCIIWhiteSpace, aDirectionToDelete, mOptions,
+          aIgnoreNonEditableNodes, GetStartReasonContent());
     }
 
     /**

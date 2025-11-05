@@ -500,6 +500,8 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
 
   // but don't cross tables
   nsIContent* containerContent = nullptr;
+  // FIXME: GetChild() might be nullptr, but it's referred as non-null in the
+  // block!
   if (!aLastInsertedPoint.GetChild() ||
       !aLastInsertedPoint.GetChild()->IsHTMLElement(nsGkAtoms::table)) {
     containerContent = HTMLEditUtils::GetLastLeafContent(
@@ -540,9 +542,7 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
   // Otherwise, i.e., it's an atomic element, `<table>` element or data node,
   // put caret after it.
   else {
-    pointToPutCaret.Set(containerContent);
-    DebugOnly<bool> advanced = pointToPutCaret.AdvanceOffset();
-    NS_WARNING_ASSERTION(advanced, "Failed to advance offset from found node");
+    pointToPutCaret.SetAfter(containerContent);
   }
 
   // Make sure we don't end up with selection collapsed after an invisible
