@@ -7,7 +7,6 @@ import {
   html,
   ifDefined,
   literal,
-  nothing,
   ref,
   staticHtml,
   unsafeStatic,
@@ -19,6 +18,15 @@ import {
 
 /** @import MozCheckbox from "../../../../../toolkit/content/widgets/moz-checkbox/moz-checkbox.mjs"*/
 /** @import { Setting } from "chrome://global/content/preferences/Setting.mjs"; */
+/** @import { PreferencesSettingConfigNestedControlOption } from "chrome://global/content/preferences/Preferences.mjs"; */
+
+/**
+ * Properties that represent a nested HTML element that will be a direct descendant of this setting control element
+ * @typedef {object} SettingNestedElementOption
+ * @property {Array<SettingNestedElementOption>} [options]
+ * @property {string} control - The {@link HTMLElement#localName} of any HTML element
+ * @property {Record<string, string>} [controlAttrs] - Attributes for the element
+ */
 
 /**
  * Mapping of parent control tag names to the literal tag name for their
@@ -43,6 +51,7 @@ const ITEM_SLOT_BY_PARENT = new Map([
   ["moz-input-search", "nested"],
   ["moz-input-folder", "nested"],
   ["moz-input-password", "nested"],
+  ["moz-radio", "nested"],
   ["moz-radio-group", "nested"],
   // NOTE: moz-select does not support the nested slot.
   ["moz-toggle", "nested"],
@@ -190,6 +199,7 @@ export class SettingControl extends SettingElement {
 
   /**
    * The default properties for an option.
+   * @param {PreferencesSettingConfigNestedControlOption | SettingNestedElementOption} config
    */
   getOptionPropertyMapping(config) {
     const props = this.getCommonPropertyMapping(config);
@@ -273,40 +283,62 @@ export class SettingControl extends SettingElement {
     return this.setting.controllingExtensionInfo.l10nId;
   }
 
+  /**
+   * Prepare nested item config and settings.
+   * @param {PreferencesSettingConfigNestedControlOption} config
+   * @returns {Array<string>}
+   */
+  itemsTemplate(config) {
+    if (!config.items) {
+      return [];
+    }
+
+    const itemArgs = config.items.map(i => ({
+      config: i,
+      setting: this.getSetting(i.id),
+    }));
+    let control = config.control || "moz-checkbox";
+    return itemArgs.map(
+      item =>
+        html`<setting-control
+          .config=${item.config}
+          .setting=${item.setting}
+          .getSetting=${this.getSetting}
+          slot=${ifDefined(ITEM_SLOT_BY_PARENT.get(control))}
+        ></setting-control>`
+    );
+  }
+
+  /**
+   * Prepares any children (and any of its children's children) that this element may need.
+   * @param {PreferencesSettingConfigNestedControlOption | SettingNestedElementOption} config
+   * @returns {Array<string>}
+   */
+  optionsTemplate(config) {
+    if (!config.options) {
+      return [];
+    }
+    let control = config.control || "moz-checkbox";
+    return config.options.map(opt => {
+      let optionTag = opt.control
+        ? unsafeStatic(opt.control)
+        : KNOWN_OPTIONS.get(control);
+      return staticHtml`<${optionTag}
+          ${spread(this.getOptionPropertyMapping(opt))}
+        >${"items" in opt ? this.itemsTemplate(opt) : this.optionsTemplate(opt)}</${optionTag}>`;
+    });
+  }
+
   render() {
     // Allow the Setting to override the static config if necessary.
     this.config = this.setting.getControlConfig(this.config);
     let { config } = this;
     let control = config.control || "moz-checkbox";
-    let getItemArgs = items =>
-      items?.map(i => ({
-        config: i,
-        setting: this.getSetting(i.id),
-      })) || [];
 
-    // Prepare nested item config and settings.
-    let itemArgs = getItemArgs(config.items);
-    let itemTemplate = opts =>
-      html`<setting-control
-        .config=${opts.config}
-        .setting=${opts.setting}
-        .getSetting=${this.getSetting}
-        slot=${ifDefined(ITEM_SLOT_BY_PARENT.get(control))}
-      ></setting-control>`;
-    let nestedSettings = itemArgs.map(itemTemplate);
-
-    // Prepare any children that this element may need.
-    let controlChildren = nothing;
-    if (config.options) {
-      controlChildren = config.options.map(opt => {
-        let optionTag = opt.control
-          ? unsafeStatic(opt.control)
-          : KNOWN_OPTIONS.get(control);
-        return staticHtml`<${optionTag}
-          ${spread(this.getOptionPropertyMapping(opt))}
-        >${opt.items ? getItemArgs(opt.items).map(itemTemplate) : ""}</${optionTag}>`;
-      });
-    }
+    let nestedSettings =
+      "items" in config
+        ? this.itemsTemplate(config)
+        : this.optionsTemplate(config);
 
     // Get the properties for this element: id, fluent, disabled, etc.
     // These will be applied to the control using the spread directive.
@@ -351,7 +383,7 @@ export class SettingControl extends SettingElement {
       ${spread(controlProps)}
       ${ref(this.controlRef)}
       tabindex=${ifDefined(this.tabIndex)}
-    >${controlChildren}${nestedSettings}</${tag}>`;
+    >${nestedSettings}</${tag}>`;
   }
 }
 customElements.define("setting-control", SettingControl);
