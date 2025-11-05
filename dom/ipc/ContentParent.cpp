@@ -137,6 +137,7 @@
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/intl/L10nRegistry.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/ByteBuf.h"
@@ -2710,6 +2711,8 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   MOZ_ASSERT(spellChecker, "No spell checker?");
 
   spellChecker->GetDictionaryList(&xpcomInit.dictionaries());
+
+  OSPreferences::GetInstance()->GetSystemLocales(xpcomInit.sysLocales());
 
   LocaleService::GetInstance()->GetAppLocalesAsBCP47(xpcomInit.appLocales());
   LocaleService::GetInstance()->GetRequestedLocales(

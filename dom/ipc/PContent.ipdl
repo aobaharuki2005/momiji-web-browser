@@ -386,6 +386,7 @@ struct XPCOMInitData
     GfxVarUpdate[] gfxNonDefaultVarUpdates;
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
+    nsCString[] sysLocales;
     nsCString[] appLocales;
     nsCString[] requestedLocales;
     L10nFileSourceDescriptor[] l10nFileSources;

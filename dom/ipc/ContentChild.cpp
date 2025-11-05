@@ -96,6 +96,7 @@
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/intl/L10nRegistry.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
@@ -1384,6 +1385,8 @@ void ContentChild::InitXPCOM(
 
   RecvSetOffline(aXPCOMInit.isOffline());
   RecvSetConnectivity(aXPCOMInit.isConnected());
+
+  OSPreferences::GetInstance()->AssignSysLocales(aXPCOMInit.sysLocales());
 
   LocaleService::GetInstance()->AssignAppLocales(aXPCOMInit.appLocales());
   LocaleService::GetInstance()->AssignRequestedLocales(
