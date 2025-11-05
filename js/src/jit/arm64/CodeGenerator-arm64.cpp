@@ -641,39 +641,39 @@ void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
 }
 
 void CodeGenerator::visitModI(LModI* ins) {
-  ARMRegister lhs = toWRegister(ins->lhs());
-  ARMRegister rhs = toWRegister(ins->rhs());
-  ARMRegister output = toWRegister(ins->output());
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
+
+  ARMRegister lhs32 = toWRegister(ins->lhs());
+  ARMRegister rhs32 = toWRegister(ins->rhs());
+  ARMRegister output32 = toWRegister(ins->output());
   Label done;
 
   MMod* mir = ins->mir();
 
   // Prevent divide by zero.
   if (mir->canBeDivideByZero()) {
-    if (mir->isTruncated()) {
-      if (mir->trapOnError()) {
-        Label nonZero;
-        masm.Cbnz(rhs, &nonZero);
-        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-        masm.bind(&nonZero);
-      } else {
-        // Truncated division by zero yields integer zero.
-        masm.Mov(output, rhs);
-        masm.Cbz(rhs, &done);
-      }
+    if (mir->trapOnError()) {
+      Label nonZero;
+      masm.Cbnz(rhs32, &nonZero);
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+      masm.bind(&nonZero);
+    } else if (mir->isTruncated()) {
+      // Truncated division by zero yields integer zero.
+      masm.Mov(output32, wzr);
+      masm.Cbz(rhs32, &done);
     } else {
       // Non-truncated division by zero produces a non-integer.
-      MOZ_ASSERT(!gen->compilingWasm());
-      masm.Cmp(rhs, Operand(0));
-      bailoutIf(Assembler::Equal, ins->snapshot());
+      MOZ_ASSERT(mir->fallible());
+      bailoutTest32(Assembler::Zero, rhs, rhs, ins->snapshot());
     }
   }
 
   // Signed division.
-  masm.Sdiv(output, lhs, rhs);
+  masm.Sdiv(output32, lhs32, rhs32);
 
   // Compute the remainder: output = lhs - (output * rhs).
-  masm.Msub(output, output, rhs, lhs);
+  masm.Msub(output32, output32, rhs32, lhs32);
 
   if (mir->canBeNegativeDividend() && !mir->isTruncated()) {
     // If output == 0 and lhs < 0, then the result should be double -0.0.
@@ -681,7 +681,7 @@ void CodeGenerator::visitModI(LModI* ins) {
     //   output = INT_MIN - (INT_MIN / -1) * -1
     //          = INT_MIN - INT_MIN
     //          = 0
-    masm.Cbnz(output, &done);
+    masm.Cbnz(output32, &done);
     bailoutCmp32(Assembler::LessThan, lhs, Imm32(0), ins->snapshot());
   }
 
@@ -1711,36 +1711,37 @@ void CodeGenerator::visitUDiv(LUDiv* ins) {
 }
 
 void CodeGenerator::visitUMod(LUMod* ins) {
-  MMod* mir = ins->mir();
-  ARMRegister lhs = toWRegister(ins->lhs());
-  ARMRegister rhs = toWRegister(ins->rhs());
-  ARMRegister output = toWRegister(ins->output());
+  Register rhs = ToRegister(ins->rhs());
+  Register output = ToRegister(ins->output());
+
+  ARMRegister lhs32 = toWRegister(ins->lhs());
+  ARMRegister rhs32 = toWRegister(ins->rhs());
+  ARMRegister output32 = toWRegister(ins->output());
   Label done;
 
+  MMod* mir = ins->mir();
+
   if (mir->canBeDivideByZero()) {
-    if (mir->isTruncated()) {
-      if (mir->trapOnError()) {
-        Label nonZero;
-        masm.Cbnz(rhs, &nonZero);
-        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-        masm.bind(&nonZero);
-      } else {
-        // Truncated division by zero yields integer zero.
-        masm.Mov(output, rhs);
-        masm.Cbz(rhs, &done);
-      }
+    if (mir->trapOnError()) {
+      Label nonZero;
+      masm.Cbnz(rhs32, &nonZero);
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+      masm.bind(&nonZero);
+    } else if (mir->isTruncated()) {
+      // Truncated division by zero yields integer zero.
+      masm.Mov(output32, wzr);
+      masm.Cbz(rhs32, &done);
     } else {
       // Non-truncated division by zero produces a non-integer.
-      masm.Cmp(rhs, Operand(0));
-      bailoutIf(Assembler::Equal, ins->snapshot());
+      bailoutTest32(Assembler::Zero, rhs, rhs, ins->snapshot());
     }
   }
 
   // Unsigned division.
-  masm.Udiv(output, lhs, rhs);
+  masm.Udiv(output32, lhs32, rhs32);
 
   // Compute the remainder: output = lhs - (output * rhs).
-  masm.Msub(output, output, rhs, lhs);
+  masm.Msub(output32, output32, rhs32, lhs32);
 
   if (!mir->isTruncated()) {
     // Bail if the output would be negative.
