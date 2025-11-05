@@ -283,10 +283,11 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
         assignSnapshot(lir, mod->bailoutKind());
       }
       define(lir, mod);
+      return;
     }
   }
 
-  LModI* lir =
+  auto* lir =
       new (alloc()) LModI(useRegister(mod->lhs()), useRegister(mod->rhs()));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
@@ -536,8 +537,8 @@ void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
 }
 
 void LIRGeneratorARM64::lowerUMod(MMod* mod) {
-  LUMod* lir = new (alloc())
-      LUMod(useRegister(mod->getOperand(0)), useRegister(mod->getOperand(1)));
+  auto* lir =
+      new (alloc()) LUMod(useRegister(mod->lhs()), useRegister(mod->rhs()));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }
