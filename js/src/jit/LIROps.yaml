@@ -4415,17 +4415,31 @@
     numerator: WordSized
   arguments:
     denominator: int32_t
-  num_temps: 1
   mir_op: Div
 
-- name: UDivConstantI
+- name: UDivConstant
+  result_type: WordSized
+  operands:
+    numerator: WordSized
+  arguments:
+    denominator: uint32_t
+  mir_op: Div
+
+- name: ModConstantI
   result_type: WordSized
   operands:
     numerator: WordSized
   arguments:
     denominator: int32_t
-  num_temps: 1
-  mir_op: Div
+  mir_op: Mod
+
+- name: UModConstant
+  result_type: WordSized
+  operands:
+    numerator: WordSized
+  arguments:
+    denominator: uint32_t
+  mir_op: Mod
 
 - name: ModMaskI
   result_type: WordSized

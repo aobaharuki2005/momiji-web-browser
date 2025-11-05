@@ -477,35 +477,25 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
   }
 }
 
-void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
-  const ARMRegister lhs32 = toWRegister(ins->numerator());
-  const ARMRegister lhs64 = toXRegister(ins->numerator());
-  const ARMRegister const32 = toWRegister(ins->temp0());
-  const ARMRegister output32 = toWRegister(ins->output());
-  const ARMRegister output64 = toXRegister(ins->output());
+template <class LDivOrMod>
+static void DivideWithConstant(MacroAssembler& masm, LDivOrMod* ins) {
+  ARMRegister lhs32 = toWRegister(ins->numerator());
+  ARMRegister lhs64 = toXRegister(ins->numerator());
+  ARMRegister output32 = toWRegister(ins->output());
+  ARMRegister output64 = toXRegister(ins->output());
   int32_t d = ins->denominator();
 
-  MDiv* mir = ins->mir();
+  vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+  ARMRegister const32 = temps.AcquireW();
 
   // The absolute value of the denominator isn't a power of 2.
-  using mozilla::Abs;
-  MOZ_ASSERT(!mozilla::IsPowerOfTwo(Abs(d)));
+  MOZ_ASSERT(!mozilla::IsPowerOfTwo(mozilla::Abs(d)));
 
-  if (d == 0) {
-    if (mir->trapOnError()) {
-      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-    } else if (mir->canTruncateInfinities()) {
-      masm.Mov(output32, wzr);
-    } else {
-      MOZ_ASSERT(mir->fallible());
-      bailout(ins->snapshot());
-    }
-    return;
-  }
+  auto* mir = ins->mir();
 
   // We will first divide by Abs(d), and negate the answer if d is negative.
   // If desired, this can be avoided by generalizing computeDivisionConstants.
-  auto rmc = ReciprocalMulConstants::computeSignedDivisionConstants(Abs(d));
+  auto rmc = ReciprocalMulConstants::computeSignedDivisionConstants(d);
 
   // We first compute (M * n) >> 32, where M = rmc.multiplier.
   masm.Mov(const32, int32_t(rmc.multiplier));
@@ -542,21 +532,48 @@ void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
   if (d < 0) {
     masm.Neg(output32, output32);
   }
+}
+
+void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
+  ARMRegister lhs32 = toWRegister(ins->numerator());
+  ARMRegister output32 = toWRegister(ins->output());
+  int32_t d = ins->denominator();
+
+  MDiv* mir = ins->mir();
+
+  if (d == 0) {
+    if (mir->trapOnError()) {
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+    } else if (mir->canTruncateInfinities()) {
+      masm.Mov(output32, wzr);
+    } else {
+      MOZ_ASSERT(mir->fallible());
+      bailout(ins->snapshot());
+    }
+    return;
+  }
+
+  // Compute the truncated division result in output32.
+  DivideWithConstant(masm, ins);
 
   if (!mir->isTruncated()) {
+    vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+    ARMRegister temp32 = temps.AcquireW();
+    Register temp = temp32.asUnsized();
+
     // This is a division op. Multiply the obtained value by d to check if
     // the correct answer is an integer. This cannot overflow, since |d| > 1.
-    masm.Mov(const32, d);
-    masm.Msub(const32, output32, const32, lhs32);
+    masm.Mov(temp32, d);
+    masm.Msub(temp32, output32, temp32, lhs32);
 
     if (d > 0) {
       // bailout if (lhs - output * d != 0)
-      bailoutTest32(Assembler::NonZero, const32, const32, ins->snapshot());
+      bailoutTest32(Assembler::NonZero, temp, temp, ins->snapshot());
     } else {
       MOZ_ASSERT(d < 0);
 
       // bailout if (lhs - output * d != 0)
-      masm.Cmp(const32, wzr);
+      masm.Cmp(temp32, wzr);
 
       // If lhs is zero and the divisor is negative, the answer should have
       // been -0.
@@ -573,31 +590,18 @@ void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
   }
 }
 
-void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
-  const ARMRegister lhs32 = toWRegister(ins->numerator());
-  const ARMRegister lhs64 = toXRegister(ins->numerator());
-  const ARMRegister const32 = toWRegister(ins->temp0());
-  const ARMRegister output32 = toWRegister(ins->output());
-  const ARMRegister output64 = toXRegister(ins->output());
+template <class LUDivOrUMod>
+static void UnsignedDivideWithConstant(MacroAssembler& masm, LUDivOrUMod* ins) {
+  ARMRegister lhs32 = toWRegister(ins->numerator());
+  ARMRegister lhs64 = toXRegister(ins->numerator());
+  ARMRegister output64 = toXRegister(ins->output());
   uint32_t d = ins->denominator();
 
-  MDiv* mir = ins->mir();
+  vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+  ARMRegister const32 = temps.AcquireW();
 
   // The denominator isn't a power of 2 (see LDivPowTwoI).
   MOZ_ASSERT(!mozilla::IsPowerOfTwo(d));
-
-  if (d == 0) {
-    if (ins->mir()->trapOnError()) {
-      masm.wasmTrap(wasm::Trap::IntegerDivideByZero,
-                    ins->mir()->trapSiteDesc());
-    } else if (mir->canTruncateInfinities()) {
-      masm.Mov(output32, wzr);
-    } else {
-      MOZ_ASSERT(mir->fallible());
-      bailout(ins->snapshot());
-    }
-    return;
-  }
 
   auto rmc = ReciprocalMulConstants::computeUnsignedDivisionConstants(d);
 
@@ -627,16 +631,43 @@ void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
     // (M * n) >> (32 + shift) is the truncated division answer.
     masm.Lsr(output64, output64, 32 + rmc.shiftAmount);
   }
+}
+
+void CodeGenerator::visitUDivConstant(LUDivConstant* ins) {
+  ARMRegister lhs32 = toWRegister(ins->numerator());
+  ARMRegister output32 = toWRegister(ins->output());
+  uint32_t d = ins->denominator();
+
+  MDiv* mir = ins->mir();
+
+  if (d == 0) {
+    if (ins->mir()->trapOnError()) {
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+    } else if (mir->canTruncateInfinities()) {
+      masm.Mov(output32, wzr);
+    } else {
+      MOZ_ASSERT(mir->fallible());
+      bailout(ins->snapshot());
+    }
+    return;
+  }
+
+  // Compute the truncated division result in output32.
+  UnsignedDivideWithConstant(masm, ins);
 
   // We now have the truncated division value. We are checking whether the
   // division resulted in an integer, we multiply the obtained value by d and
   // check the remainder of the division.
   if (!mir->isTruncated()) {
-    masm.Mov(const32, d);
-    masm.Msub(const32, output32, const32, lhs32);
+    vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+    ARMRegister temp32 = temps.AcquireW();
+    Register temp = temp32.asUnsized();
+
+    masm.Mov(temp32, d);
+    masm.Msub(temp32, output32, temp32, lhs32);
+
     // bailout if (lhs - output * d != 0)
-    bailoutTest32(Assembler::NonZero, const32.asUnsized(), const32.asUnsized(),
-                  ins->snapshot());
+    bailoutTest32(Assembler::NonZero, temp, temp, ins->snapshot());
   }
 }
 
@@ -727,6 +758,85 @@ void CodeGenerator::visitModPowTwoI(LModPowTwoI* ins) {
     }
 
     masm.bind(&done);
+  }
+}
+
+void CodeGenerator::visitModConstantI(LModConstantI* ins) {
+  Register lhs = ToRegister(ins->numerator());
+  ARMRegister lhs32 = toWRegister(ins->numerator());
+  ARMRegister output32 = toWRegister(ins->output());
+
+  MMod* mir = ins->mir();
+
+  int32_t d = ins->denominator();
+  if (d == 0) {
+    if (mir->trapOnError()) {
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+    } else if (mir->isTruncated()) {
+      masm.Mov(output32, wzr);
+    } else {
+      MOZ_ASSERT(mir->fallible());
+      bailout(ins->snapshot());
+    }
+    return;
+  }
+
+  // Compute the truncated division result in output32.
+  DivideWithConstant(masm, ins);
+
+  // Compute the remainder: output = lhs - (output * rhs).
+  {
+    vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+    ARMRegister rhs32 = temps.AcquireW();
+
+    masm.Mov(rhs32, d);
+    masm.Msub(output32, output32, rhs32, lhs32);
+  }
+
+  if (mir->canBeNegativeDividend() && !mir->isTruncated()) {
+    // If output == 0 and lhs < 0, then the result should be double -0.0.
+    Label done;
+    masm.Cbnz(output32, &done);
+    bailoutCmp32(Assembler::LessThan, lhs, Imm32(0), ins->snapshot());
+    masm.bind(&done);
+  }
+}
+
+void CodeGenerator::visitUModConstant(LUModConstant* ins) {
+  Register output = ToRegister(ins->output());
+  ARMRegister lhs32 = toWRegister(ins->numerator());
+  ARMRegister output32 = toWRegister(ins->output());
+
+  MMod* mir = ins->mir();
+
+  uint32_t d = ins->denominator();
+  if (d == 0) {
+    if (ins->mir()->trapOnError()) {
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+    } else if (mir->isTruncated()) {
+      masm.Mov(output32, wzr);
+    } else {
+      MOZ_ASSERT(mir->fallible());
+      bailout(ins->snapshot());
+    }
+    return;
+  }
+
+  // Compute the truncated division result in output32.
+  UnsignedDivideWithConstant(masm, ins);
+
+  // Compute the remainder: output = lhs - (output * rhs).
+  {
+    vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+    ARMRegister rhs32 = temps.AcquireW();
+
+    masm.Mov(rhs32, d);
+    masm.Msub(output32, output32, rhs32, lhs32);
+  }
+
+  // Bail if not truncated and the remainder is in the range [2^31, 2^32).
+  if (!ins->mir()->isTruncated()) {
+    bailoutTest32(Assembler::Signed, output, output, ins->snapshot());
   }
 }
 

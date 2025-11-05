@@ -19,8 +19,6 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::FloorLog2;
-
 LBoxAllocation LIRGeneratorARM64::useBoxFixed(MDefinition* mir, Register reg1,
                                               Register, bool useAtStart) {
   MOZ_ASSERT(mir->type() == MIRType::Value);
@@ -219,7 +217,7 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
       return;
     }
 
-    auto* lir = new (alloc()) LDivConstantI(lhs, temp(), rhs);
+    auto* lir = new (alloc()) LDivConstantI(lhs, rhs);
     if (div->fallible()) {
       assignSnapshot(lir, div->bailoutKind());
     }
@@ -265,30 +263,39 @@ void LIRGeneratorARM64::lowerMulI(MMul* mul, MDefinition* lhs,
 }
 
 void LIRGeneratorARM64::lowerModI(MMod* mod) {
+  LAllocation lhs = useRegister(mod->lhs());
+
   if (mod->rhs()->isConstant()) {
     int32_t rhs = mod->rhs()->toConstant()->toInt32();
-    int32_t shift = FloorLog2(rhs);
-    if (rhs > 0 && 1 << shift == rhs) {
-      LModPowTwoI* lir =
-          new (alloc()) LModPowTwoI(useRegister(mod->lhs()), shift);
-      if (mod->fallible()) {
-        assignSnapshot(lir, mod->bailoutKind());
-      }
-      define(lir, mod);
-      return;
-    } else if (shift < 31 && (1 << (shift + 1)) - 1 == rhs) {
-      LModMaskI* lir = new (alloc())
-          LModMaskI(useRegister(mod->lhs()), temp(), temp(), shift + 1);
+    int32_t shift = mozilla::FloorLog2(mozilla::Abs(rhs));
+
+    if (rhs != 0 && uint32_t(1) << shift == mozilla::Abs(rhs)) {
+      auto* lir = new (alloc()) LModPowTwoI(lhs, shift);
       if (mod->fallible()) {
         assignSnapshot(lir, mod->bailoutKind());
       }
       define(lir, mod);
       return;
     }
+
+    if (shift < 31 && (1 << (shift + 1)) - 1 == rhs) {
+      auto* lir = new (alloc()) LModMaskI(lhs, temp(), temp(), shift + 1);
+      if (mod->fallible()) {
+        assignSnapshot(lir, mod->bailoutKind());
+      }
+      define(lir, mod);
+      return;
+    }
+
+    auto* lir = new (alloc()) LModConstantI(lhs, rhs);
+    if (mod->fallible()) {
+      assignSnapshot(lir, mod->bailoutKind());
+    }
+    define(lir, mod);
+    return;
   }
 
-  auto* lir =
-      new (alloc()) LModI(useRegister(mod->lhs()), useRegister(mod->rhs()));
+  auto* lir = new (alloc()) LModI(lhs, useRegister(mod->rhs()));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }
@@ -511,7 +518,7 @@ void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
       return;
     }
 
-    auto* lir = new (alloc()) LUDivConstantI(lhs, temp(), rhs);
+    auto* lir = new (alloc()) LUDivConstant(lhs, rhs);
     if (div->fallible()) {
       assignSnapshot(lir, div->bailoutKind());
     }
@@ -537,8 +544,31 @@ void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
 }
 
 void LIRGeneratorARM64::lowerUMod(MMod* mod) {
-  auto* lir =
-      new (alloc()) LUMod(useRegister(mod->lhs()), useRegister(mod->rhs()));
+  LAllocation lhs = useRegister(mod->lhs());
+
+  if (mod->rhs()->isConstant()) {
+    // NOTE: the result of toInt32 is coerced to uint32_t.
+    uint32_t rhs = mod->rhs()->toConstant()->toInt32();
+    int32_t shift = mozilla::FloorLog2(rhs);
+
+    if (rhs != 0 && uint32_t(1) << shift == rhs) {
+      auto* lir = new (alloc()) LModPowTwoI(lhs, shift);
+      if (mod->fallible()) {
+        assignSnapshot(lir, mod->bailoutKind());
+      }
+      define(lir, mod);
+      return;
+    }
+
+    auto* lir = new (alloc()) LUModConstant(lhs, rhs);
+    if (mod->fallible()) {
+      assignSnapshot(lir, mod->bailoutKind());
+    }
+    define(lir, mod);
+    return;
+  }
+
+  auto* lir = new (alloc()) LUMod(lhs, useRegister(mod->rhs()));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }
