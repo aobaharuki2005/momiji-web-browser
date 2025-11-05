@@ -497,3 +497,118 @@ add_task(async function test_detect_location_with_geolocation() {
     sandbox.restore();
   }
 });
+
+function setupFetchHelperHarness(
+  sandbox,
+  outcomes /* e.g. ['reject','resolve'] */
+) {
+  // Prevent the “next fetch” scheduling inside fetchHelper().
+  sandbox.stub(WeatherFeed.prototype, "restartFetchTimer").returns(undefined);
+
+  // Stub the timeout and capture the retry callback.
+  let timeoutCallback = null;
+  const setTimeoutStub = sandbox
+    .stub(WeatherFeed.prototype, "setTimeout")
+    .callsFake(cb => {
+      timeoutCallback = cb;
+      return 1;
+    });
+
+  const feed = new WeatherFeed();
+
+  // Minimal store so fetchHelper can read prefs.
+  feed.store = {
+    dispatch: sinon.spy(),
+    getState() {
+      return { Prefs: { values: {} } };
+    },
+  };
+
+  const fetchStub = sinon.stub();
+
+  // Fail or pass each fetch.
+  outcomes.forEach((outcome, index) => {
+    if (outcome === "reject") {
+      fetchStub.onCall(index).rejects(new Error(`fail${index}`));
+    } else if (outcome === "resolve") {
+      fetchStub.onCall(index).resolves([{ city_name: "RetryCity" }]);
+    }
+  });
+  feed.merino = { fetch: fetchStub };
+
+  return {
+    feed,
+    setTimeoutStub,
+    triggerRetry: () => timeoutCallback && timeoutCallback(),
+  };
+}
+
+add_task(async function test_fetchHelper_retry_resolve() {
+  const sandbox = sinon.createSandbox();
+
+  const { feed, setTimeoutStub, triggerRetry } = setupFetchHelperHarness(
+    sandbox,
+    ["reject", "resolve"]
+  );
+
+  // After retry success, fetchHelper should resolve to RetryCity.
+  const promise = feed._fetchHelper(1, "q");
+
+  // Let the first attempt run and schedule the retry.
+  await Promise.resolve();
+
+  Assert.equal(feed.merino.fetch.callCount, 1);
+  Assert.equal(setTimeoutStub.callCount, 1);
+  Assert.ok(
+    setTimeoutStub.calledWith(sinon.match.func, 60 * 1000),
+    "retry waits 60s (virtually)"
+  );
+
+  // Fire the retry.
+  triggerRetry();
+  const results = await promise;
+
+  Assert.equal(feed.merino.fetch.callCount, 2, "retried exactly once");
+  Assert.deepEqual(
+    results,
+    [{ city_name: "RetryCity" }],
+    "returned retry result"
+  );
+
+  sandbox.restore();
+});
+
+add_task(async function test_fetchHelper_retry_reject() {
+  const sandbox = sinon.createSandbox();
+
+  const { feed, setTimeoutStub, triggerRetry } = setupFetchHelperHarness(
+    sandbox,
+    ["reject", "reject"]
+  );
+
+  // After retry also fails, fetchHelper should resolve to [].
+  const promise = feed._fetchHelper(1, "q");
+
+  // Let the first attempt run and schedule the retry.
+  await Promise.resolve();
+
+  Assert.equal(feed.merino.fetch.callCount, 1);
+  Assert.equal(setTimeoutStub.callCount, 1);
+  Assert.ok(
+    setTimeoutStub.calledWith(sinon.match.func, 60 * 1000),
+    "retry waits 60s (virtually)"
+  );
+
+  // Fire the retry.
+  triggerRetry();
+  const results = await promise;
+
+  Assert.equal(
+    feed.merino.fetch.callCount,
+    2,
+    "retried exactly once then gave up"
+  );
+  Assert.deepEqual(results, [], "returns empty array after exhausting retries");
+
+  sandbox.restore();
+});

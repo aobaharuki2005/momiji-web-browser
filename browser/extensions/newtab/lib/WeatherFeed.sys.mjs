@@ -46,6 +46,7 @@ import {
 const CACHE_KEY = "weather_feed";
 const WEATHER_UPDATE_TIME = 10 * 60 * 1000; // 10 minutes
 const MERINO_PROVIDER = ["accuweather"];
+const RETRY_DELAY_MS = 60 * 1000; // 1 minute in ms.
 const MERINO_CLIENT_KEY = "HNT_WEATHER_FEED";
 
 const PREF_WEATHER_QUERY = "weather.query";
@@ -63,6 +64,7 @@ export class WeatherFeed {
     this.lastUpdated = null;
     this.locationData = {};
     this.fetchTimer = null;
+    this.retryTimer = null;
     this.fetchIntervalMs = 30 * 60 * 1000; // 30 minutes
     this.timeoutMS = 5000;
     this.lastFetchTimeMs = 0;
@@ -100,10 +102,12 @@ export class WeatherFeed {
       return;
     }
 
-    lazy.clearTimeout(this.fetchTimer);
+    this.clearTimeout(this.fetchTimer);
+    this.clearTimeout(this.retryTimer);
     this.merino = null;
     this.suggestions = null;
     this.fetchTimer = 0;
+    this.retryTimer = 0;
   }
 
   async fetch() {
@@ -177,10 +181,12 @@ export class WeatherFeed {
   }
 
   restartFetchTimer(ms = this.fetchIntervalMs) {
-    lazy.clearTimeout(this.fetchTimer);
-    this.fetchTimer = lazy.setTimeout(() => {
+    this.clearTimeout(this.fetchTimer);
+    this.clearTimeout(this.retryTimer);
+    this.fetchTimer = this.setTimeout(() => {
       this.fetch();
     }, ms);
+    this.retryTimer = null; // tidy
   }
 
   async fetchLocationAutocomplete() {
@@ -312,7 +318,7 @@ export class WeatherFeed {
    * This thin wrapper around the fetch call makes it easier for us to write
    * automated tests that simulate responses.
    */
-  async _fetchHelper(retries = 3, queryOverride = null) {
+  async _fetchHelper(maxRetries = 1, queryOverride = null) {
     this.restartFetchTimer();
 
     const weatherQuery = this.store.getState().Prefs.values[PREF_WEATHER_QUERY];
@@ -341,24 +347,39 @@ export class WeatherFeed {
       }
     }
 
-    let suggestions;
-    let retry = 0;
-
-    while (retry++ < retries && !suggestions?.length) {
+    const attempt = async (retry = 0) => {
       try {
-        suggestions = await this.merino.fetch({
+        // Because this can happen after a timeout,
+        // we want to ensure if it was called later after a teardown,
+        // we don't throw. If we throw, we end up in another retry.
+        if (!this.merino) {
+          return [];
+        }
+        return await this.merino.fetch({
           query,
           providers: MERINO_PROVIDER,
           timeoutMs: 7000,
           otherParams,
         });
-      } catch (error) {
-        // We don't need to do anything with this right now.
+      } catch (e) {
+        // If we get an error, we try again in 1 minute,
+        // and give up if we try more than maxRetries number of times.
+        if (retry >= maxRetries) {
+          return [];
+        }
+        await new Promise(res => {
+          // store the timeout so it can be cancelled elsewhere
+          this.retryTimer = this.setTimeout(() => {
+            this.retryTimer = null; // cleanup once it fires
+            res();
+          }, RETRY_DELAY_MS);
+        });
+        return attempt(retry + 1);
       }
-    }
+    };
 
-    // results from the API or empty array if null
-    return suggestions ?? [];
+    // results from the API or empty array
+    return await attempt();
   }
 
   async _fetchNormalizedLocation() {
@@ -399,7 +420,7 @@ export class WeatherFeed {
 }
 
 /**
- * Creating a thin wrapper around MerinoClient, PersistentCache, and Date.
+ * Creating a thin wrapper around external tools.
  * This makes it easier for us to write automated tests that simulate responses.
  */
 WeatherFeed.prototype.MerinoClient = (...args) => {
@@ -413,4 +434,10 @@ WeatherFeed.prototype.PersistentCache = (...args) => {
 };
 WeatherFeed.prototype.Date = () => {
   return Date;
+};
+WeatherFeed.prototype.setTimeout = (...args) => {
+  return lazy.setTimeout(...args);
+};
+WeatherFeed.prototype.clearTimeout = (...args) => {
+  return lazy.clearTimeout(...args);
 };
