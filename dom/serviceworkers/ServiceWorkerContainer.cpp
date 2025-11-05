@@ -318,7 +318,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
   }
 
   mActor->SendRegister(
-      clientInfo.ref().ToIPC(), nsCString(cleanedScopeURL), aOptions.mType,
+      clientInfo.ref().ToIPC(), nsCString(cleanedScopeURL),
       nsCString(cleanedScriptURL), aOptions.mUpdateViaCache,
       [self,
        outer](const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult&

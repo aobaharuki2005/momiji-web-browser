@@ -37,6 +37,5 @@ interface ServiceWorkerContainer : EventTarget {
 
 dictionary RegistrationOptions {
   USVString scope;
-  WorkerType type = "classic";
   ServiceWorkerUpdateViaCache updateViaCache = "imports";
 };

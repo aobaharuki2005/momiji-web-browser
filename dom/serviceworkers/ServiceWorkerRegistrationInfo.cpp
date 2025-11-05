@@ -70,11 +70,11 @@ void ServiceWorkerRegistrationInfo::ClearAsCorrupt() {
 bool ServiceWorkerRegistrationInfo::IsCorrupt() const { return mCorrupt; }
 
 ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
-    const nsACString& aScope, WorkerType aType, nsIPrincipal* aPrincipal,
+    const nsACString& aScope, nsIPrincipal* aPrincipal,
     ServiceWorkerUpdateViaCache aUpdateViaCache,
     IPCNavigationPreloadState&& aNavigationPreloadState)
     : mPrincipal(aPrincipal),
-      mDescriptor(GetNextId(), GetNextVersion(), aPrincipal, aScope, aType,
+      mDescriptor(GetNextId(), GetNextVersion(), aPrincipal, aScope,
                   aUpdateViaCache),
       mControlledClientsCounter(0),
       mDelayMultiplier(0),
@@ -128,10 +128,6 @@ void ServiceWorkerRegistrationInfo::RemoveInstance(
 
 const nsCString& ServiceWorkerRegistrationInfo::Scope() const {
   return mDescriptor.Scope();
-}
-
-WorkerType ServiceWorkerRegistrationInfo::Type() const {
-  return mDescriptor.Type();
 }
 
 nsIPrincipal* ServiceWorkerRegistrationInfo::Principal() const {
@@ -452,11 +448,11 @@ bool ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const {
 }
 
 void ServiceWorkerRegistrationInfo::UpdateRegistrationState() {
-  UpdateRegistrationState(mDescriptor.UpdateViaCache(), mDescriptor.Type());
+  UpdateRegistrationState(mDescriptor.UpdateViaCache());
 }
 
 void ServiceWorkerRegistrationInfo::UpdateRegistrationState(
-    ServiceWorkerUpdateViaCache aUpdateViaCache, WorkerType aType) {
+    ServiceWorkerUpdateViaCache aUpdateViaCache) {
   MOZ_ASSERT(NS_IsMainThread());
 
   TimeStamp oldest = TimeStamp::Now() - TimeDuration::FromSeconds(30);
@@ -478,7 +474,6 @@ void ServiceWorkerRegistrationInfo::UpdateRegistrationState(
   mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
 
   mDescriptor.SetUpdateViaCache(aUpdateViaCache);
-  mDescriptor.SetWorkerType(aType);
 
   for (RefPtr<ServiceWorkerRegistrationListener> pinnedTarget :
        mInstanceList.ForwardRange()) {
@@ -769,9 +764,9 @@ ServiceWorkerUpdateViaCache ServiceWorkerRegistrationInfo::GetUpdateViaCache()
   return mDescriptor.UpdateViaCache();
 }
 
-void ServiceWorkerRegistrationInfo::SetOptions(
-    ServiceWorkerUpdateViaCache aUpdateViaCache, WorkerType aType) {
-  UpdateRegistrationState(aUpdateViaCache, aType);
+void ServiceWorkerRegistrationInfo::SetUpdateViaCache(
+    ServiceWorkerUpdateViaCache aUpdateViaCache) {
+  UpdateRegistrationState(aUpdateViaCache);
 }
 
 int64_t ServiceWorkerRegistrationInfo::GetLastUpdateTime() const {

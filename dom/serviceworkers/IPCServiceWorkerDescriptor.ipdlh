@@ -5,10 +5,8 @@
 include PBackgroundSharedTypes;
 
 include "mozilla/dom/ServiceWorkerIPCUtils.h";
-include "mozilla/dom/WorkerIPCUtils.h";
 
 using mozilla::dom::ServiceWorkerState from "mozilla/dom/ServiceWorkerBinding.h";
-using mozilla::dom::WorkerType from "mozilla/dom/WorkerBinding.h";
 
 namespace mozilla {
 namespace dom {
@@ -23,7 +21,6 @@ namespace dom {
   uint64_t registrationVersion;
   PrincipalInfo principalInfo;
   nsCString scope;
-  WorkerType type;
   nsCString scriptURL;
   ServiceWorkerState state;
   bool handlesFetch;

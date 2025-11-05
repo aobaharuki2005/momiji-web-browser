@@ -27,7 +27,7 @@ class ServiceWorkerContainerProxy final {
 
   RefPtr<ServiceWorkerRegistrationPromise> Register(
       const ClientInfo& aClientInfo, const nsACString& aScopeURL,
-      const WorkerType& aType, const nsACString& aScriptURL,
+      const nsACString& aScriptURL,
       ServiceWorkerUpdateViaCache aUpdateViaCache);
 
   RefPtr<ServiceWorkerRegistrationPromise> GetRegistration(
