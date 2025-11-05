@@ -24,8 +24,6 @@ prefs = [
 
 ["browser_basic_endtoend.js"]
 
-["browser_bump_newtab_version.js"]
-
 ["browser_bump_version.js"]
 
 ["browser_clearCacheAndUninit.js"]
