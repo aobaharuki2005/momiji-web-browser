@@ -426,145 +426,148 @@ const MATCH_TYPE = {
 
 /**
  * Manages a single instance of a Places search.
- *
- * @param {UrlbarQueryContext} queryContext
- *   The query context.
- * @param {Function} listener
- *   Called as: `listener(matches, searchOngoing)`
- * @param {UrlbarProviderPlaces} provider
- *   The UrlbarProviderPlaces instance that started this search.
  */
-function Search(queryContext, listener, provider) {
-  // We want to store the original string for case sensitive searches.
-  this._originalSearchString = queryContext.searchString;
-  this._trimmedOriginalSearchString = queryContext.trimmedSearchString;
-  let unescapedSearchString = UrlbarUtils.unEscapeURIForUI(
-    this._trimmedOriginalSearchString
-  );
-  // We want to make sure "about:" is not stripped as a prefix so that the
-  // about pages provider will run and ultimately only suggest about pages when
-  // a user types "about:" into the address bar.
-  let prefix, suffix;
-  if (unescapedSearchString.startsWith("about:")) {
-    prefix = "";
-    suffix = unescapedSearchString;
-  } else {
-    [prefix, suffix] = UrlbarUtils.stripURLPrefix(unescapedSearchString);
-  }
-  this._searchString = suffix;
-  this._strippedPrefix = prefix.toLowerCase();
+class Search {
+  /**
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context.
+   * @param {Function} listener
+   *   Called as: `listener(matches, searchOngoing)`
+   * @param {UrlbarProviderPlaces} provider
+   *   The UrlbarProviderPlaces instance that started this search.
+   */
+  constructor(queryContext, listener, provider) {
+    // We want to store the original string for case sensitive searches.
+    this._originalSearchString = queryContext.searchString;
+    this._trimmedOriginalSearchString = queryContext.trimmedSearchString;
+    let unescapedSearchString = UrlbarUtils.unEscapeURIForUI(
+      this._trimmedOriginalSearchString
+    );
+    // We want to make sure "about:" is not stripped as a prefix so that the
+    // about pages provider will run and ultimately only suggest about pages when
+    // a user types "about:" into the address bar.
+    let prefix, suffix;
+    if (unescapedSearchString.startsWith("about:")) {
+      prefix = "";
+      suffix = unescapedSearchString;
+    } else {
+      [prefix, suffix] = UrlbarUtils.stripURLPrefix(unescapedSearchString);
+    }
+    this._searchString = suffix;
+    this._strippedPrefix = prefix.toLowerCase();
 
-  this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY;
-  // Set the default behavior for this search.
-  this._behavior = this._searchString
-    ? lazy.UrlbarPrefs.get("defaultBehavior")
-    : this._emptySearchDefaultBehavior;
+    this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY;
+    // Set the default behavior for this search.
+    this._behavior = this._searchString
+      ? lazy.UrlbarPrefs.get("defaultBehavior")
+      : this._emptySearchDefaultBehavior;
 
-  this._inPrivateWindow = queryContext.isPrivate;
-  this._prohibitAutoFill = !queryContext.allowAutofill;
-  // Increase the limit for the query because some results might
-  // get deduplicated if their URLs only differ by their refs.
-  this._maxResults = Math.round(queryContext.maxResults * 1.5);
-  this._userContextId = queryContext.userContextId;
-  this._currentPage = queryContext.currentPage;
-  this._searchModeEngine = queryContext.searchMode?.engineName;
-  this._searchMode = queryContext.searchMode;
-  if (this._searchModeEngine) {
-    // Filter Places results on host.
-    let engine = Services.search.getEngineByName(this._searchModeEngine);
-    this._filterOnHost = engine.searchUrlDomain;
-  }
-
-  // Use the original string here, not the stripped one, so the tokenizer can
-  // properly recognize token types.
-  let { tokens } = lazy.UrlbarTokenizer.tokenize({
-    searchString: unescapedSearchString,
-    trimmedSearchString: unescapedSearchString.trim(),
-  });
-
-  // This allows to handle leading or trailing restriction characters specially.
-  this._leadingRestrictionToken = null;
-  if (tokens.length) {
-    if (
-      lazy.UrlbarTokenizer.isRestrictionToken(tokens[0]) &&
-      (tokens.length > 1 ||
-        tokens[0].type == lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
-    ) {
-      this._leadingRestrictionToken = tokens[0].value;
+    this._inPrivateWindow = queryContext.isPrivate;
+    this._prohibitAutoFill = !queryContext.allowAutofill;
+    // Increase the limit for the query because some results might
+    // get deduplicated if their URLs only differ by their refs.
+    this._maxResults = Math.round(queryContext.maxResults * 1.5);
+    this._userContextId = queryContext.userContextId;
+    this._currentPage = queryContext.currentPage;
+    this._searchModeEngine = queryContext.searchMode?.engineName;
+    this._searchMode = queryContext.searchMode;
+    if (this._searchModeEngine) {
+      // Filter Places results on host.
+      let engine = Services.search.getEngineByName(this._searchModeEngine);
+      this._filterOnHost = engine.searchUrlDomain;
     }
 
-    // Check if the first token has a strippable prefix other than "about:"
-    // and remove it, but don't create an empty token. We preserve "about:"
-    // so that the about pages provider will run and ultimately only suggest
-    // about pages when a user types "about:" into the address bar.
-    if (
-      prefix &&
-      prefix != "about:" &&
-      tokens[0].value.length > prefix.length
-    ) {
-      tokens[0].value = tokens[0].value.substring(prefix.length);
+    // Use the original string here, not the stripped one, so the tokenizer can
+    // properly recognize token types.
+    let { tokens } = lazy.UrlbarTokenizer.tokenize({
+      searchString: unescapedSearchString,
+      trimmedSearchString: unescapedSearchString.trim(),
+    });
+
+    // This allows to handle leading or trailing restriction characters specially.
+    this._leadingRestrictionToken = null;
+    if (tokens.length) {
+      if (
+        lazy.UrlbarTokenizer.isRestrictionToken(tokens[0]) &&
+        (tokens.length > 1 ||
+          tokens[0].type == lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
+      ) {
+        this._leadingRestrictionToken = tokens[0].value;
+      }
+
+      // Check if the first token has a strippable prefix other than "about:"
+      // and remove it, but don't create an empty token. We preserve "about:"
+      // so that the about pages provider will run and ultimately only suggest
+      // about pages when a user types "about:" into the address bar.
+      if (
+        prefix &&
+        prefix != "about:" &&
+        tokens[0].value.length > prefix.length
+      ) {
+        tokens[0].value = tokens[0].value.substring(prefix.length);
+      }
     }
+
+    // Eventually filter restriction tokens. In general it's a good idea, but if
+    // the consumer requested search mode, we should use the full string to avoid
+    // ignoring valid tokens.
+    this._searchTokens =
+      !queryContext || queryContext.restrictToken
+        ? this.filterTokens(tokens)
+        : tokens;
+
+    // The behavior can be set through:
+    // 1. a specific restrictSource in the QueryContext
+    // 2. typed restriction tokens
+    if (
+      queryContext &&
+      queryContext.restrictSource &&
+      lazy.sourceToBehaviorMap.has(queryContext.restrictSource)
+    ) {
+      this._behavior = 0;
+      this.setBehavior("restrict");
+      let behavior = lazy.sourceToBehaviorMap.get(queryContext.restrictSource);
+      this.setBehavior(behavior);
+
+      // When we are in restrict mode, all the tokens are valid for searching, so
+      // there is no _heuristicToken.
+      this._heuristicToken = null;
+    } else {
+      // The heuristic token is the first filtered search token, but only when it's
+      // actually the first thing in the search string.  If a prefix or restriction
+      // character occurs first, then the heurstic token is null.  We use the
+      // heuristic token to help determine the heuristic result.
+      let firstToken =
+        !!this._searchTokens.length && this._searchTokens[0].value;
+      this._heuristicToken =
+        firstToken && this._trimmedOriginalSearchString.startsWith(firstToken)
+          ? firstToken
+          : null;
+    }
+
+    // Set the right JavaScript behavior based on our preference.  Note that the
+    // preference is whether or not we should filter JavaScript, and the
+    // behavior is if we should search it or not.
+    if (!lazy.UrlbarPrefs.get("filter.javascript")) {
+      this.setBehavior("javascript");
+    }
+
+    this._listener = listener;
+    this._provider = provider;
+    this._matches = [];
+
+    // These are used to avoid adding duplicate entries to the results.
+    this._usedURLs = [];
+    this._usedPlaceIds = new Set();
+
+    // Counters for the number of results per MATCH_TYPE.
+    this._counts = Object.values(MATCH_TYPE).reduce((o, p) => {
+      o[p] = 0;
+      return o;
+    }, {});
   }
 
-  // Eventually filter restriction tokens. In general it's a good idea, but if
-  // the consumer requested search mode, we should use the full string to avoid
-  // ignoring valid tokens.
-  this._searchTokens =
-    !queryContext || queryContext.restrictToken
-      ? this.filterTokens(tokens)
-      : tokens;
-
-  // The behavior can be set through:
-  // 1. a specific restrictSource in the QueryContext
-  // 2. typed restriction tokens
-  if (
-    queryContext &&
-    queryContext.restrictSource &&
-    lazy.sourceToBehaviorMap.has(queryContext.restrictSource)
-  ) {
-    this._behavior = 0;
-    this.setBehavior("restrict");
-    let behavior = lazy.sourceToBehaviorMap.get(queryContext.restrictSource);
-    this.setBehavior(behavior);
-
-    // When we are in restrict mode, all the tokens are valid for searching, so
-    // there is no _heuristicToken.
-    this._heuristicToken = null;
-  } else {
-    // The heuristic token is the first filtered search token, but only when it's
-    // actually the first thing in the search string.  If a prefix or restriction
-    // character occurs first, then the heurstic token is null.  We use the
-    // heuristic token to help determine the heuristic result.
-    let firstToken = !!this._searchTokens.length && this._searchTokens[0].value;
-    this._heuristicToken =
-      firstToken && this._trimmedOriginalSearchString.startsWith(firstToken)
-        ? firstToken
-        : null;
-  }
-
-  // Set the right JavaScript behavior based on our preference.  Note that the
-  // preference is whether or not we should filter JavaScript, and the
-  // behavior is if we should search it or not.
-  if (!lazy.UrlbarPrefs.get("filter.javascript")) {
-    this.setBehavior("javascript");
-  }
-
-  this._listener = listener;
-  this._provider = provider;
-  this._matches = [];
-
-  // These are used to avoid adding duplicate entries to the results.
-  this._usedURLs = [];
-  this._usedPlaceIds = new Set();
-
-  // Counters for the number of results per MATCH_TYPE.
-  this._counts = Object.values(MATCH_TYPE).reduce((o, p) => {
-    o[p] = 0;
-    return o;
-  }, {});
-}
-
-Search.prototype = {
   /**
    * Enables the desired AutoComplete behavior.
    *
@@ -574,7 +577,7 @@ Search.prototype = {
   setBehavior(type) {
     type = type.toUpperCase();
     this._behavior |= Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type];
-  },
+  }
 
   /**
    * Determines if the specified AutoComplete behavior is set.
@@ -586,7 +589,7 @@ Search.prototype = {
   hasBehavior(type) {
     let behavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()];
     return this._behavior & behavior;
-  },
+  }
 
   /**
    * Given an array of tokens, this function determines which query should be
@@ -625,7 +628,7 @@ Search.prototype = {
       }
     }
     return filtered;
-  },
+  }
 
   /**
    * Stop this search.
@@ -645,12 +648,12 @@ Search.prototype = {
       this.interrupt();
     }
     this.pending = false;
-  },
+  }
 
   /**
    * Whether this search is active.
    */
-  pending: true,
+  pending = true;
 
   /**
    * Execute the search and populate results.
@@ -742,7 +745,7 @@ Search.prototype = {
         }
       }
     }
-  },
+  }
 
   async _checkIfFirstTokenIsKeyword() {
     if (!this._heuristicToken) {
@@ -768,7 +771,7 @@ Search.prototype = {
     }
 
     return false;
-  },
+  }
 
   _onResultRow(row, cancel) {
     this._addFilteredQueryMatch(row);
@@ -779,7 +782,7 @@ Search.prototype = {
     if (!this.pending || count >= this._maxResults) {
       cancel();
     }
-  },
+  }
 
   /**
    * Maybe restyle a SERP in history as a search-type result. To do this,
@@ -851,7 +854,7 @@ Search.prototype = {
     match.icon = match.icon || match.iconUrl;
     match.style = "action searchengine favicon suggestion";
     return true;
-  },
+  }
 
   _addMatch(match) {
     if (typeof match.frecency != "number") {
@@ -900,7 +903,7 @@ Search.prototype = {
     this._counts[match.type]++;
 
     this.notifyResult(true);
-  },
+  }
 
   /**
    * @typedef {object} MatchPositionInformation
@@ -1050,7 +1053,7 @@ Search.prototype = {
       comment: match.comment || "",
     };
     return { index, replace };
-  },
+  }
 
   _makeGroups(resultGroup, maxResultCount) {
     if (!resultGroup.children) {
@@ -1109,7 +1112,7 @@ Search.prototype = {
     for (let child of resultGroup.children) {
       this._makeGroups(child, childMaxResultCount);
     }
-  },
+  }
 
   _addFilteredQueryMatch(row) {
     let placeId = row.getResultByName("id");
@@ -1167,7 +1170,7 @@ Search.prototype = {
     }
 
     this._addMatch(match);
-  },
+  }
 
   /**
    * @returns {string}
@@ -1244,7 +1247,7 @@ Search.prototype = {
     }
 
     return defaultQuery(conditions.join(" AND "));
-  },
+  }
 
   get _emptySearchDefaultBehavior() {
     // Further restrictions to apply for "empty searches" (searching for
@@ -1260,7 +1263,7 @@ Search.prototype = {
       val |= Ci.mozIPlacesAutoComplete.BEHAVIOR_OPENPAGE;
     }
     return val;
-  },
+  }
 
   /**
    * If the user-provided string starts with a keyword that gave a heuristic
@@ -1274,7 +1277,7 @@ Search.prototype = {
       tokens = tokens.slice(1);
     }
     return tokens.join(" ");
-  },
+  }
 
   /**
    * Obtains the search query to be used based on the previously set search
@@ -1310,7 +1313,7 @@ Search.prototype = {
       params.host = this._filterOnHost;
     }
     return [this._suggestionPrefQuery, params];
-  },
+  }
 
   /**
    * Obtains the query to search for switch-to-tab entries.
@@ -1337,7 +1340,7 @@ Search.prototype = {
         maxResults: this._maxResults,
       },
     ];
-  },
+  }
 
   /**
    * The result is notified to the search listener on a timer, to chunk multiple
@@ -1345,7 +1348,7 @@ Search.prototype = {
    *
    * @type {?nsITimer}
    */
-  _notifyTimer: null,
+  _notifyTimer = null;
 
   /**
    * Notifies the current result to the listener.
@@ -1353,7 +1356,7 @@ Search.prototype = {
    * @param searchOngoing
    *        Indicates whether the search result should be marked as ongoing.
    */
-  _notifyDelaysCount: 0,
+  _notifyDelaysCount = 0;
   notifyResult(searchOngoing) {
     let notify = () => {
       if (!this.pending) {
@@ -1380,8 +1383,8 @@ Search.prototype = {
       this._notifyDelaysCount++;
       this._notifyTimer = setTimeout(notify, NOTIFYRESULT_DELAY_MS);
     }
-  },
-};
+  }
+}
 
 /**
  * Promise resolved when the database initialization has completed, or null
