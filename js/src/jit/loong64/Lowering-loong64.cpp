@@ -170,11 +170,6 @@ void LIRGeneratorLOONG64::lowerMulI(MMul* mul, MDefinition* lhs,
 }
 
 void LIRGeneratorLOONG64::lowerDivI(MDiv* div) {
-  if (div->isUnsigned()) {
-    lowerUDiv(div);
-    return;
-  }
-
   // Division instructions are slow. Division by constant denominators can be
   // rewritten to use other instructions.
   if (div->rhs()->isConstant()) {
@@ -205,22 +200,12 @@ void LIRGeneratorLOONG64::lowerDivI(MDiv* div) {
 }
 
 void LIRGeneratorLOONG64::lowerDivI64(MDiv* div) {
-  if (div->isUnsigned()) {
-    lowerUDivI64(div);
-    return;
-  }
-
   auto* lir = new (alloc())
       LDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()));
   defineInt64(lir, div);
 }
 
 void LIRGeneratorLOONG64::lowerModI(MMod* mod) {
-  if (mod->isUnsigned()) {
-    lowerUMod(mod);
-    return;
-  }
-
   if (mod->rhs()->isConstant()) {
     int32_t rhs = mod->rhs()->toConstant()->toInt32();
     int32_t shift = FloorLog2(rhs);
@@ -252,11 +237,6 @@ void LIRGeneratorLOONG64::lowerModI(MMod* mod) {
 }
 
 void LIRGeneratorLOONG64::lowerModI64(MMod* mod) {
-  if (mod->isUnsigned()) {
-    lowerUModI64(mod);
-    return;
-  }
-
   auto* lir = new (alloc())
       LDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()));
   defineInt64(lir, mod);

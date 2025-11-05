@@ -169,11 +169,6 @@ void LIRGeneratorX86Shared::lowerMulI(MMul* mul, MDefinition* lhs,
 }
 
 void LIRGeneratorX86Shared::lowerDivI(MDiv* div) {
-  if (div->isUnsigned()) {
-    lowerUDiv(div);
-    return;
-  }
-
   // Division instructions are slow. Division by constant denominators can be
   // rewritten to use other instructions.
   if (div->rhs()->isConstant()) {
@@ -225,11 +220,6 @@ void LIRGeneratorX86Shared::lowerDivI(MDiv* div) {
 }
 
 void LIRGeneratorX86Shared::lowerModI(MMod* mod) {
-  if (mod->isUnsigned()) {
-    lowerUMod(mod);
-    return;
-  }
-
   if (mod->rhs()->isConstant()) {
     int32_t rhs = mod->rhs()->toConstant()->toInt32();
     int32_t shift = FloorLog2(Abs(rhs));

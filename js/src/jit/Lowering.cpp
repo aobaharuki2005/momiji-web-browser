@@ -2454,13 +2454,21 @@ void LIRGenerator::visitDiv(MDiv* ins) {
 
   if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(lhs->type() == MIRType::Int32);
-    lowerDivI(ins);
+    if (ins->isUnsigned()) {
+      lowerUDiv(ins);
+    } else {
+      lowerDivI(ins);
+    }
     return;
   }
 
   if (ins->type() == MIRType::Int64) {
     MOZ_ASSERT(lhs->type() == MIRType::Int64);
-    lowerDivI64(ins);
+    if (ins->isUnsigned()) {
+      lowerUDivI64(ins);
+    } else {
+      lowerDivI64(ins);
+    }
     return;
   }
 
@@ -2512,14 +2520,22 @@ void LIRGenerator::visitMod(MMod* ins) {
   if (ins->type() == MIRType::Int32) {
     MOZ_ASSERT(ins->type() == MIRType::Int32);
     MOZ_ASSERT(ins->lhs()->type() == MIRType::Int32);
-    lowerModI(ins);
+    if (ins->isUnsigned()) {
+      lowerUMod(ins);
+    } else {
+      lowerModI(ins);
+    }
     return;
   }
 
   if (ins->type() == MIRType::Int64) {
     MOZ_ASSERT(ins->type() == MIRType::Int64);
     MOZ_ASSERT(ins->lhs()->type() == MIRType::Int64);
-    lowerModI64(ins);
+    if (ins->isUnsigned()) {
+      lowerUModI64(ins);
+    } else {
+      lowerModI64(ins);
+    }
     return;
   }
 
