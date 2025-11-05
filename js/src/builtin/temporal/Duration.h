@@ -239,23 +239,21 @@ TimeDuration RoundTimeDuration(const TimeDuration& duration,
                                TemporalRoundingMode roundingMode);
 
 /**
- * RoundRelativeDuration ( duration, originEpochNs, destEpochNs, isoDateTime,
- * timeZone, calendar, largestUnit, increment, smallestUnit, roundingMode )
+ * RoundRelativeDuration ( duration, destEpochNs, isoDateTime, timeZone,
+ * calendar, largestUnit, increment, smallestUnit, roundingMode )
  */
 bool RoundRelativeDuration(
     JSContext* cx, const InternalDuration& duration,
-    const EpochNanoseconds& originEpochNs, const EpochNanoseconds& destEpochNs,
-    const ISODateTime& isoDateTime, JS::Handle<TimeZoneValue> timeZone,
-    JS::Handle<CalendarValue> calendar, TemporalUnit largestUnit,
-    Increment increment, TemporalUnit smallestUnit,
+    const EpochNanoseconds& destEpochNs, const ISODateTime& isoDateTime,
+    JS::Handle<TimeZoneValue> timeZone, JS::Handle<CalendarValue> calendar,
+    TemporalUnit largestUnit, Increment increment, TemporalUnit smallestUnit,
     TemporalRoundingMode roundingMode, InternalDuration* result);
 
 /**
- * TotalRelativeDuration ( duration, originEpochNs, destEpochNs, isoDateTime,
- * timeZone, calendar, unit )
+ * TotalRelativeDuration ( duration, destEpochNs, isoDateTime, timeZone,
+ * calendar, unit )
  */
 bool TotalRelativeDuration(JSContext* cx, const InternalDuration& duration,
-                           const EpochNanoseconds& originEpochNs,
                            const EpochNanoseconds& destEpochNs,
                            const ISODateTime& isoDateTime,
                            JS::Handle<TimeZoneValue> timeZone,
