@@ -5,7 +5,6 @@
 package org.mozilla.fenix.tabstray.ui
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -45,8 +44,7 @@ import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.ktx.android.view.setNavigationBarTheme
-import mozilla.components.support.ktx.android.view.setStatusBarTheme
+import mozilla.components.support.ktx.android.view.setSystemBarsBackground
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingLocked
@@ -248,9 +246,9 @@ class TabManagementFragment : DialogFragment() {
                 val statusBarColor = MaterialTheme.colorScheme.surface.toArgb()
 
                 LaunchedEffect(page) {
-                    updateSystemBarColors(
-                        navBarColor = navBarColor,
+                    dialog?.window?.setSystemBarsBackground(
                         statusBarColor = statusBarColor,
+                        navigationBarColor = navBarColor,
                     )
                 }
 
@@ -764,30 +762,6 @@ class TabManagementFragment : DialogFragment() {
         shouldShowBanner: Boolean,
     ): Boolean {
         return isPrivateMode && hasPrivateTabs && biometricAvailable && !privateLockEnabled && shouldShowBanner
-    }
-
-    /**
-     * Updates the NavBar and Status bar colors. If Android version >= Q/29, those colors
-     * are handled automatically, and we instead set the nav bar contrast to false.
-     *
-     * @param navBarColor The ARGB int value to set the NavBar (the bottom navigation area of the device.
-     * @param statusBarColor The ARGB int value to set the Status Bar.
-     */
-    private fun updateSystemBarColors(
-        navBarColor: Int,
-        statusBarColor: Int,
-    ) {
-        dialog?.window?.apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                setNavigationBarContrastEnforced(false)
-            } else {
-                setNavigationBarTheme(
-                    navBarColor = navBarColor,
-                    navBarDividerColor = navBarColor,
-                )
-                setStatusBarTheme(color = statusBarColor)
-            }
-        }
     }
 
     private companion object {
