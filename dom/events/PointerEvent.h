@@ -63,7 +63,7 @@ class PointerEvent : public MouseEvent {
  private:
   // This method returns the boolean to indicate whether spoofing pointer
   // event for fingerprinting resistance.
-  bool ShouldResistFingerprinting(bool aForPointerId = false) const;
+  bool ShouldResistFingerprinting() const;
 
   // When the instance is a trusted `pointermove` event but the widget event
   // does not have proper coalesced events (typically, the event is synthesized

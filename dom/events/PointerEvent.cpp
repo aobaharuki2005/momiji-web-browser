@@ -245,9 +245,12 @@ void PointerEvent::GetPointerType(nsAString& aPointerType) {
 }
 
 int32_t PointerEvent::PointerId() {
-  return (ShouldResistFingerprinting(true))
-             ? PointerEventHandler::GetSpoofedPointerIdForRFP()
-             : mEvent->AsPointerEvent()->pointerId;
+#ifdef MOZ_WIDGET_COCOA
+  if (ShouldResistFingerprinting()) {
+    return PointerEventHandler::GetSpoofedPointerIdForRFP();
+  }
+#endif
+  return mEvent->AsPointerEvent()->pointerId;
 }
 
 double PointerEvent::Width() const {
@@ -442,7 +445,7 @@ void PointerEvent::GetPredictedEvents(
   aPointerEvents.AppendElements(mPredictedEvents);
 }
 
-bool PointerEvent::ShouldResistFingerprinting(bool aForPointerId) const {
+bool PointerEvent::ShouldResistFingerprinting() const {
   // There are three simple situations we don't need to spoof this pointer
   // event.
   //   1. The pref privcy.resistFingerprinting' is false, we fast return here
@@ -451,13 +454,11 @@ bool PointerEvent::ShouldResistFingerprinting(bool aForPointerId) const {
   //   3. This event is a mouse pointer event.
   //  We don't need to check for the system group since pointer events won't be
   //  dispatched to the system group.
-  RFPTarget target =
-      aForPointerId ? RFPTarget::PointerId : RFPTarget::PointerEvents;
+  RFPTarget target = RFPTarget::PointerEvents;
   if (!nsContentUtils::ShouldResistFingerprinting("Efficiency Check", target) ||
       !mEvent->IsTrusted() ||
-      (mEvent->AsPointerEvent()->mInputSource ==
-           MouseEvent_Binding::MOZ_SOURCE_MOUSE &&
-       SPOOFED_MAX_TOUCH_POINTS == 0)) {
+      mEvent->AsPointerEvent()->mInputSource ==
+          MouseEvent_Binding::MOZ_SOURCE_MOUSE) {
     return false;
   }
 

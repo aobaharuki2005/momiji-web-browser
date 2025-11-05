@@ -310,13 +310,6 @@ Maybe<bool> nsRFPService::HandleExceptionalRFPTargets(
                 StaticPrefs::privacy_spoof_english_DoNotUseDirectly() == 2);
   }
 
-  // We don't spoof the pointerId on multi-touch devices.
-#if SPOOFED_MAX_TOUCH_POINTS > 0
-  if (aTarget == RFPTarget::PointerId) {
-    return Some(false);
-  }
-#endif
-
   return Nothing();
 }
 
