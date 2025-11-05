@@ -204,11 +204,6 @@ void LIRGeneratorARM64::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
 }
 
 void LIRGeneratorARM64::lowerDivI(MDiv* div) {
-  if (div->isUnsigned()) {
-    lowerUDiv(div);
-    return;
-  }
-
   if (div->rhs()->isConstant()) {
     LAllocation lhs = useRegister(div->lhs());
     int32_t rhs = div->rhs()->toConstant()->toInt32();
@@ -260,11 +255,6 @@ void LIRGeneratorARM64::lowerMulI(MMul* mul, MDefinition* lhs,
 }
 
 void LIRGeneratorARM64::lowerModI(MMod* mod) {
-  if (mod->isUnsigned()) {
-    lowerUMod(mod);
-    return;
-  }
-
   if (mod->rhs()->isConstant()) {
     int32_t rhs = mod->rhs()->toConstant()->toInt32();
     int32_t shift = FloorLog2(rhs);
@@ -295,11 +285,6 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
 }
 
 void LIRGeneratorARM64::lowerDivI64(MDiv* div) {
-  if (div->isUnsigned()) {
-    lowerUDivI64(div);
-    return;
-  }
-
   LDivOrModI64* lir = new (alloc())
       LDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()));
   defineInt64(lir, div);
@@ -322,11 +307,6 @@ void LIRGeneratorARM64::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
 }
 
 void LIRGeneratorARM64::lowerModI64(MMod* mod) {
-  if (mod->isUnsigned()) {
-    lowerUModI64(mod);
-    return;
-  }
-
   LDivOrModI64* lir = new (alloc())
       LDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()));
   defineInt64(lir, mod);
