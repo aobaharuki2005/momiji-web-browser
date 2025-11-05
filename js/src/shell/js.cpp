@@ -5055,6 +5055,21 @@ static bool SetTimeoutValue(JSContext* cx, double t) {
   return true;
 }
 
+static bool MaybeSetInterruptFunc(JSContext* cx, HandleValue func) {
+  ShellContext* sc = GetShellContext(cx);
+
+  bool isSupportedFunction =
+      func.isObject() && func.toObject().is<JSFunction>() && !fuzzingSafe;
+  if (!func.isString() && !isSupportedFunction) {
+    JS_ReportErrorASCII(cx, "Argument must be a function or string");
+    return false;
+  }
+  sc->interruptFunc = func;
+  sc->haveInterruptFunc = true;
+
+  return true;
+}
+
 static bool Timeout(JSContext* cx, unsigned argc, Value* vp) {
   ShellContext* sc = GetShellContext(cx);
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -5076,12 +5091,9 @@ static bool Timeout(JSContext* cx, unsigned argc, Value* vp) {
 
   if (args.length() > 1) {
     RootedValue value(cx, args[1]);
-    if (!value.isObject() || !value.toObject().is<JSFunction>()) {
-      JS_ReportErrorASCII(cx, "Second argument must be a timeout function");
+    if (!MaybeSetInterruptFunc(cx, value)) {
       return false;
     }
-    sc->interruptFunc = value;
-    sc->haveInterruptFunc = true;
   }
 
   args.rval().setUndefined();
@@ -5150,12 +5162,9 @@ static bool SetInterruptCallback(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedValue value(cx, args[0]);
-  if (!value.isObject() || !value.toObject().is<JSFunction>()) {
-    JS_ReportErrorASCII(cx, "Argument must be a function");
+  if (!MaybeSetInterruptFunc(cx, value)) {
     return false;
   }
-  GetShellContext(cx)->interruptFunc = value;
-  GetShellContext(cx)->haveInterruptFunc = true;
 
   args.rval().setUndefined();
   return true;
@@ -10287,6 +10296,8 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("setInterruptCallback", SetInterruptCallback, 1, 0,
 "setInterruptCallback(func)",
 "  Sets func as the interrupt callback function.\n"
+"  func must be a function or a string (which will be evaluated in a new\n"
+"  global). Only strings are supported in fuzzing builds.\n"
 "  Calling this function will replace any callback set by |timeout|.\n"
 "  If the callback returns a falsy value, the script is aborted.\n"),
 
