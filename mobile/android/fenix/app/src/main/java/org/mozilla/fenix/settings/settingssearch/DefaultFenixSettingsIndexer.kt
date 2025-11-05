@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.settingssearch
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.content.res.XmlResourceParser
@@ -277,6 +278,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
      *
      * @param resourceName The name of the resource.
      */
+    @SuppressLint("DiscouragedApi")
     private fun getStringResource(resourceName: String): String {
         return try {
             val resourceId = context.resources.getIdentifier(
