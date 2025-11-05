@@ -93,6 +93,8 @@ nsOSHelperAppService::~nsOSHelperAppService() {}
 
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(
     const char* aProtocolScheme, bool* aHandlerExists) {
+  *aHandlerExists = false;
+
   // CFStringCreateWithBytes() can fail even if we're not out of memory --
   // for example if the 'bytes' parameter is something very weird (like
   // "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
@@ -100,24 +102,27 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(
   CFStringRef schemeString = ::CFStringCreateWithBytes(
       kCFAllocatorDefault, (const UInt8*)aProtocolScheme,
       strlen(aProtocolScheme), kCFStringEncodingUTF8, false);
-  if (schemeString) {
-    // LSCopyDefaultHandlerForURLScheme() can fail to find the default handler
-    // for aProtocolScheme when it's never been explicitly set (using
-    // LSSetDefaultHandlerForURLScheme()).  For example, Safari is the default
-    // handler for the "http" scheme on a newly installed copy of OS X.  But
-    // this (presumably) wasn't done using LSSetDefaultHandlerForURLScheme(),
-    // so LSCopyDefaultHandlerForURLScheme() will fail to find Safari.  To get
-    // around this we use LSCopyAllHandlersForURLScheme() instead -- which seems
-    // never to fail.
-    // http://lists.apple.com/archives/Carbon-dev/2007/May/msg00349.html
-    // http://www.realsoftware.com/listarchives/realbasic-nug/2008-02/msg00119.html
-    CFArrayRef handlerArray = ::LSCopyAllHandlersForURLScheme(schemeString);
-    *aHandlerExists = !!handlerArray;
-    if (handlerArray) ::CFRelease(handlerArray);
-    ::CFRelease(schemeString);
-  } else {
-    *aHandlerExists = false;
+  if (!schemeString) {
+    return NS_ERROR_FAILURE;
   }
+
+  // LSCopyDefaultHandlerForURLScheme() can fail to find the default handler
+  // for aProtocolScheme when it's never been explicitly set (using
+  // LSSetDefaultHandlerForURLScheme()).  For example, Safari is the default
+  // handler for the "http" scheme on a newly installed copy of OS X.  But
+  // this (presumably) wasn't done using LSSetDefaultHandlerForURLScheme(),
+  // so LSCopyDefaultHandlerForURLScheme() will fail to find Safari.  To get
+  // around this we use LSCopyAllHandlersForURLScheme() instead -- which seems
+  // never to fail.
+  // http://lists.apple.com/archives/Carbon-dev/2007/May/msg00349.html
+  // http://www.realsoftware.com/listarchives/realbasic-nug/2008-02/msg00119.html
+  CFArrayRef handlerArray = ::LSCopyAllHandlersForURLScheme(schemeString);
+  ::CFRelease(schemeString);
+  if (handlerArray) {
+    *aHandlerExists = true;
+    ::CFRelease(handlerArray);
+  }
+
   return NS_OK;
 }
 
@@ -125,38 +130,51 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(
     const nsACString& aScheme, nsAString& _retval) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  nsresult rv = NS_ERROR_NOT_AVAILABLE;
-
   CFURLRef handlerBundleURL;
-  rv = GetDefaultBundleURL(aScheme, &handlerBundleURL);
-
-  if (NS_SUCCEEDED(rv) && handlerBundleURL) {
-    CFBundleRef handlerBundle = CFBundleCreate(NULL, handlerBundleURL);
-    if (!handlerBundle) {
+  nsresult rv = GetDefaultBundleURL(aScheme, &handlerBundleURL);
+  if (NS_FAILED(rv)) {
+    if (handlerBundleURL) {
       ::CFRelease(handlerBundleURL);
-      return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    // Get the human-readable name of the bundle
-    CFStringRef bundleName =
-        (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle,
-                                                            kCFBundleNameKey);
-
-    if (bundleName) {
-      AutoTArray<UniChar, 255> buffer;
-      CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
-      buffer.SetLength(bundleNameLength);
-      ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
-                              buffer.Elements());
-      _retval.Assign(reinterpret_cast<char16_t*>(buffer.Elements()),
-                     bundleNameLength);
-      rv = NS_OK;
-    }
-    ::CFRelease(handlerBundle);
-    ::CFRelease(handlerBundleURL);
+    return rv;
   }
 
-  return rv;
+  // Default to just using the application's name.
+  CFStringRef bundleName = ::CFURLCopyLastPathComponent(handlerBundleURL);
+  if (!bundleName) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // See if we can get the bundle display name from the plist.
+  CFBundleRef handlerBundle =
+      ::CFBundleCreate(kCFAllocatorDefault, handlerBundleURL);
+  ::CFRelease(handlerBundleURL);
+  if (handlerBundle) {
+    // Memory management for the value returned here is tricky. We don't have
+    // to release this value, but we can't retain it and we can't release the
+    // underlying bundle until we're done with this value. Just make a copy so
+    // we can ignore this and just assume release for all bundleName values.
+    CFStringRef tmpBundleName =
+        (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle,
+                                                            kCFBundleNameKey);
+    if (tmpBundleName && (::CFStringGetLength(tmpBundleName) > 0)) {
+      ::CFRelease(bundleName);
+      bundleName = ::CFStringCreateCopy(kCFAllocatorDefault, tmpBundleName);
+    }
+    ::CFRelease(handlerBundle);
+  }
+
+  AutoTArray<UniChar, 255> buffer;
+  CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
+  buffer.SetLength(bundleNameLength);
+  ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
+                          buffer.Elements());
+  _retval.Assign(reinterpret_cast<char16_t*>(buffer.Elements()),
+                 bundleNameLength);
+
+  ::CFRelease(bundleName);
+
+  return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
