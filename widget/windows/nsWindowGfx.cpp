@@ -45,9 +45,9 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "ImageRegion.h"
 
-#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "InProcessWinCompositorWidget.h"
 
 using namespace mozilla;
@@ -147,9 +147,8 @@ bool nsWindow::OnPaint() {
     gfxCriticalNote << "(nsWindow) Detected device reset: " << (int)resetReason;
 
     gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-
-    GPUProcessManager::GPUProcessManager::NotifyDeviceReset(
-        resetReason, gfx::DeviceResetDetectPlace::WIDGET);
+    wr::RenderThread::PostHandleDeviceReset(gfx::DeviceResetDetectPlace::WIDGET,
+                                            resetReason);
 
     gfxCriticalNote << "(nsWindow) Finished device reset.";
     return false;

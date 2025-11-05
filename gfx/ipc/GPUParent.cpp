@@ -233,23 +233,6 @@ bool GPUParent::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
 
 void GPUParent::NotifyDeviceReset(DeviceResetReason aReason,
                                   DeviceResetDetectPlace aPlace) {
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "gfx::GPUParent::NotifyDeviceReset", [aReason, aPlace]() -> void {
-          GPUParent::GetSingleton()->NotifyDeviceReset(aReason, aPlace);
-        }));
-    return;
-  }
-
-  // Reset and reinitialize the compositor devices
-#ifdef XP_WIN
-  if (!DeviceManagerDx::Get()->MaybeResetAndReacquireDevices()) {
-    // If the device doesn't need to be reset then the device
-    // has already been reset by a previous NotifyDeviceReset message.
-    return;
-  }
-#endif
-
   // Notify the main process that there's been a device reset
   // and that they should reset their compositors and repaint
   GPUDeviceData data;

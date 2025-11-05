@@ -71,6 +71,7 @@
 
 #if defined(XP_WIN)
 #  include "gfxWindowsPlatform.h"
+#  include "mozilla/gfx/DeviceManagerDx.h"
 #endif
 
 namespace mozilla {
@@ -826,29 +827,39 @@ void GPUProcessManager::RecordDeviceReset(DeviceResetReason aReason) {
 /* static */
 void GPUProcessManager::NotifyDeviceReset(DeviceResetReason aReason,
                                           DeviceResetDetectPlace aPlace) {
-  if (XRE_IsGPUProcess()) {
-    if (!GPUParent::GetSingleton()) {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-      return;
-    }
-    // End up to GPUProcessManager::OnRemoteProcessDeviceReset()
-    GPUParent::GetSingleton()->NotifyDeviceReset(aReason, aPlace);
-  } else {
-    if (!GPUProcessManager::Get()) {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-      return;
-    }
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "gfx::GPUProcessManager::NotifyDeviceReset",
+        [aReason, aPlace]() -> void {
+          gfx::GPUProcessManager::NotifyDeviceReset(aReason, aPlace);
+        }));
+    return;
+  }
 
-    if (NS_IsMainThread()) {
-      GPUProcessManager::Get()->OnInProcessDeviceReset(aReason, aPlace);
+#ifdef XP_WIN
+  // Reset and reinitialize the compositor devices
+  if (auto* deviceManager = DeviceManagerDx::Get()) {
+    deviceManager->MaybeResetAndReacquireDevices();
+  }
+#else
+  gfx::GPUProcessManager::RecordDeviceReset(aReason);
+#endif
+
+  if (XRE_IsGPUProcess()) {
+    if (auto* gpuParent = GPUParent::GetSingleton()) {
+      // End up to GPUProcessManager::OnRemoteProcessDeviceReset()
+      gpuParent->NotifyDeviceReset(aReason, aPlace);
     } else {
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "gfx::GPUProcessManager::OnInProcessDeviceReset",
-          [aReason, aPlace]() -> void {
-            gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(aReason,
-                                                                  aPlace);
-          }));
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     }
+    return;
+  }
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (auto* gpm = GPUProcessManager::Get()) {
+    gpm->OnInProcessDeviceReset(aReason, aPlace);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
   }
 }
 

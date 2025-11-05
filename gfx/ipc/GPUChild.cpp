@@ -26,9 +26,6 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
-#if defined(XP_WIN)
-#  include "mozilla/gfx/DeviceManagerDx.h"
-#endif
 #include "mozilla/HangDetails.h"
 #include "mozilla/RemoteMediaManagerChild.h"  // For RemoteMediaIn
 #include "mozilla/ipc/Endpoint.h"
