@@ -337,6 +337,20 @@ void CodeGenerator::visitMulI(LMulI* ins) {
   }
 }
 
+template <class LIR>
+static void TrapIfDivideByZero(MacroAssembler& masm, LIR* lir,
+                               ARMRegister rhs) {
+  auto* mir = lir->mir();
+  MOZ_ASSERT(mir->trapOnError());
+
+  if (mir->canBeDivideByZero()) {
+    Label nonZero;
+    masm.Cbnz(rhs, &nonZero);
+    masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+    masm.bind(&nonZero);
+  }
+}
+
 void CodeGenerator::visitDivI(LDivI* ins) {
   Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
@@ -350,10 +364,7 @@ void CodeGenerator::visitDivI(LDivI* ins) {
   // Handle division by zero.
   if (mir->canBeDivideByZero()) {
     if (mir->trapOnError()) {
-      Label nonZero;
-      masm.Cbnz(rhs32, &nonZero);
-      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-      masm.bind(&nonZero);
+      TrapIfDivideByZero(masm, ins, rhs32);
     } else if (mir->canTruncateInfinities()) {
       // SDIV returns zero for division by zero, exactly what we want for
       // truncated division. Remainder computation expects a non-zero divisor,
@@ -703,10 +714,7 @@ void CodeGenerator::visitModI(LModI* ins) {
   // Prevent divide by zero.
   if (mir->canBeDivideByZero()) {
     if (mir->trapOnError()) {
-      Label nonZero;
-      masm.Cbnz(rhs32, &nonZero);
-      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-      masm.bind(&nonZero);
+      TrapIfDivideByZero(masm, ins, rhs32);
     } else if (mir->isTruncated()) {
       // Truncated division by zero yields integer zero.
       masm.Mov(output32, wzr);
@@ -1706,10 +1714,7 @@ void CodeGenerator::visitUDiv(LUDiv* ins) {
   // Prevent divide by zero.
   if (mir->canBeDivideByZero()) {
     if (mir->trapOnError()) {
-      Label nonZero;
-      masm.Cbnz(rhs32, &nonZero);
-      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-      masm.bind(&nonZero);
+      TrapIfDivideByZero(masm, ins, rhs32);
     } else if (mir->canTruncateInfinities()) {
       // Udiv returns zero for division by zero, exactly what we want for
       // truncated division. Remainder computation expects a non-zero divisor,
@@ -1757,10 +1762,7 @@ void CodeGenerator::visitUMod(LUMod* ins) {
 
   if (mir->canBeDivideByZero()) {
     if (mir->trapOnError()) {
-      Label nonZero;
-      masm.Cbnz(rhs32, &nonZero);
-      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-      masm.bind(&nonZero);
+      TrapIfDivideByZero(masm, ins, rhs32);
     } else if (mir->isTruncated()) {
       // Truncated division by zero yields integer zero.
       masm.Mov(output32, wzr);
@@ -2651,66 +2653,68 @@ void CodeGenerator::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir) {
   }
 }
 
-void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
+void CodeGenerator::visitDivI64(LDivI64* lir) {
   Register lhs = ToRegister(lir->lhs());
   Register rhs = ToRegister(lir->rhs());
-  Register output = ToRegister(lir->output());
 
-  Label done;
+  ARMRegister lhs64 = toXRegister(lir->lhs());
+  ARMRegister rhs64 = toXRegister(lir->rhs());
+  ARMRegister output64 = toXRegister(lir->output());
+
+  MDiv* mir = lir->mir();
 
   // Handle divide by zero.
-  if (lir->canBeDivideByZero()) {
-    Label isNotDivByZero;
-    masm.Cbnz(ARMRegister(rhs, 64), &isNotDivByZero);
-    masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->trapSiteDesc());
-    masm.bind(&isNotDivByZero);
-  }
+  TrapIfDivideByZero(masm, lir, rhs64);
 
   // Handle an integer overflow exception from INT64_MIN / -1.
-  if (lir->canBeNegativeOverflow()) {
+  if (mir->canBeNegativeOverflow()) {
     Label noOverflow;
     masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &noOverflow);
     masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &noOverflow);
-    if (lir->mir()->isMod()) {
-      masm.movePtr(ImmWord(0), output);
-    } else {
-      masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->trapSiteDesc());
-    }
-    masm.jump(&done);
+    masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->trapSiteDesc());
     masm.bind(&noOverflow);
   }
 
-  masm.Sdiv(ARMRegister(output, 64), ARMRegister(lhs, 64),
-            ARMRegister(rhs, 64));
-  if (lir->mir()->isMod()) {
-    masm.Msub(ARMRegister(output, 64), ARMRegister(output, 64),
-              ARMRegister(rhs, 64), ARMRegister(lhs, 64));
-  }
-  masm.bind(&done);
+  masm.Sdiv(output64, lhs64, rhs64);
 }
 
-void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
-  Register lhs = ToRegister(lir->lhs());
-  Register rhs = ToRegister(lir->rhs());
-  Register output = ToRegister(lir->output());
-
-  Label done;
+void CodeGenerator::visitModI64(LModI64* lir) {
+  ARMRegister lhs64 = toXRegister(lir->lhs());
+  ARMRegister rhs64 = toXRegister(lir->rhs());
+  ARMRegister output64 = toXRegister(lir->output());
 
   // Handle divide by zero.
-  if (lir->canBeDivideByZero()) {
-    Label isNotDivByZero;
-    masm.Cbnz(ARMRegister(rhs, 64), &isNotDivByZero);
-    masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->trapSiteDesc());
-    masm.bind(&isNotDivByZero);
-  }
+  TrapIfDivideByZero(masm, lir, rhs64);
 
-  masm.Udiv(ARMRegister(output, 64), ARMRegister(lhs, 64),
-            ARMRegister(rhs, 64));
-  if (lir->mir()->isMod()) {
-    masm.Msub(ARMRegister(output, 64), ARMRegister(output, 64),
-              ARMRegister(rhs, 64), ARMRegister(lhs, 64));
-  }
-  masm.bind(&done);
+  masm.Sdiv(output64, lhs64, rhs64);
+
+  // Compute the remainder: output = lhs - (output * rhs).
+  masm.Msub(output64, output64, rhs64, lhs64);
+}
+
+void CodeGenerator::visitUDivI64(LUDivI64* lir) {
+  ARMRegister lhs64 = toXRegister(lir->lhs());
+  ARMRegister rhs64 = toXRegister(lir->rhs());
+  ARMRegister output64 = toXRegister(lir->output());
+
+  // Handle divide by zero.
+  TrapIfDivideByZero(masm, lir, rhs64);
+
+  masm.Udiv(output64, lhs64, rhs64);
+}
+
+void CodeGenerator::visitUModI64(LUModI64* lir) {
+  ARMRegister lhs64 = toXRegister(lir->lhs());
+  ARMRegister rhs64 = toXRegister(lir->rhs());
+  ARMRegister output64 = toXRegister(lir->output());
+
+  // Handle divide by zero.
+  TrapIfDivideByZero(masm, lir, rhs64);
+
+  masm.Udiv(output64, lhs64, rhs64);
+
+  // Compute the remainder: output = lhs - (output * rhs).
+  masm.Msub(output64, output64, rhs64, lhs64);
 }
 
 void CodeGenerator::visitSimd128(LSimd128* ins) {
