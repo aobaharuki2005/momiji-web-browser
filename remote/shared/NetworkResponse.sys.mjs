@@ -6,6 +6,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   NetworkUtils:
     "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
+
+  NetworkDataBytes: "chrome://remote/content/shared/NetworkDataBytes.sys.mjs",
 });
 
 /**
@@ -157,34 +159,37 @@ export class NetworkResponse {
     );
   }
 
-  async readResponseBody() {
-    return this.#responseBodyReady.promise;
-  }
+  /**
+   * Returns the NetworkDataBytes instance representing the response body for
+   * this response.
+   *
+   * @returns {NetworkDataBytes}
+   */
+  readAndProcessResponseBody = async () => {
+    const responseContent = await this.#responseBodyReady.promise;
+
+    return new lazy.NetworkDataBytes({
+      getBytesValue: async () => {
+        if (responseContent.isContentEncoded) {
+          return lazy.NetworkUtils.decodeResponseChunks(
+            responseContent.encodedData,
+            {
+              // Should always attempt to decode as UTF-8.
+              charset: "UTF-8",
+              compressionEncodings: responseContent.compressionEncodings,
+              encodedBodySize: responseContent.encodedBodySize,
+              encoding: responseContent.encoding,
+            }
+          );
+        }
+        return responseContent.text;
+      },
+      isBase64: responseContent.encoding === "base64",
+    });
+  };
 
   setResponseContent(responseContent) {
-    // Extract the properties necessary to decode the response body later on.
-    let encodedResponseBody;
-
-    if (responseContent.isContentEncoded) {
-      encodedResponseBody = {
-        encoding: responseContent.encoding,
-        getDecodedResponseBody: async () =>
-          lazy.NetworkUtils.decodeResponseChunks(responseContent.encodedData, {
-            // Should always attempt to decode as UTF-8.
-            charset: "UTF-8",
-            compressionEncodings: responseContent.compressionEncodings,
-            encodedBodySize: responseContent.encodedBodySize,
-            encoding: responseContent.encoding,
-          }),
-      };
-    } else {
-      encodedResponseBody = {
-        encoding: responseContent.encoding,
-        getDecodedResponseBody: () => responseContent.text,
-      };
-    }
-
-    this.#responseBodyReady.resolve(encodedResponseBody);
+    this.#responseBodyReady.resolve(responseContent);
   }
 
   /**

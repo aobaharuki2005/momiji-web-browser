@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   NavigationState: "chrome://remote/content/shared/NavigationManager.sys.mjs",
+  NetworkDataBytes: "chrome://remote/content/shared/NetworkDataBytes.sys.mjs",
   notifyNavigationStarted:
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
 });
@@ -29,6 +30,7 @@ export class NetworkRequest {
   #isDataURL;
   #navigationId;
   #navigationManager;
+  #postData;
   #postDataSize;
   #rawHeaders;
   #redirectCount;
@@ -97,9 +99,10 @@ export class NetworkRequest {
     this.#contextId = this.#getContextId();
     this.#navigationId = this.#getNavigationId();
 
-    // The postDataSize will no longer be available after the channel is closed.
-    // Compute and cache the value, to be updated when `setRequestBody` is used.
-    this.#postDataSize = this.#computePostDataSize();
+    // The postData will no longer be available after the channel is closed.
+    // Compute the postData and postDataSize properties, to be updated later if
+    // `setRequestBody` is used.
+    this.#updatePostData();
   }
 
   get alreadyCompleted() {
@@ -157,6 +160,10 @@ export class NetworkRequest {
 
   get navigationId() {
     return this.#navigationId;
+  }
+
+  get postData() {
+    return this.#postData;
   }
 
   get postDataSize() {
@@ -217,6 +224,19 @@ export class NetworkRequest {
   }
 
   /**
+   * Returns the NetworkDataBytes instance representing the request body for
+   * this request.
+   *
+   * @returns {NetworkDataBytes}
+   */
+  readAndProcessRequestBody = () => {
+    return new lazy.NetworkDataBytes({
+      getBytesValue: () => this.#postData.text,
+      isBase64: this.#postData.isBase64,
+    });
+  };
+
+  /**
    * Redirect the request to another provided URL.
    *
    * @param {string} url
@@ -253,7 +273,7 @@ export class NetworkRequest {
     } finally {
       // Make sure to reset the flag once the modification was attempted.
       this.#channel.requestObserversCalled = true;
-      this.#postDataSize = this.#computePostDataSize();
+      this.#updatePostData();
     }
   }
 
@@ -337,6 +357,7 @@ export class NetworkRequest {
       initiatorType: this.initiatorType,
       method: this.method,
       navigationId: this.navigationId,
+      postData: this.postData,
       postDataSize: this.postDataSize,
       redirectCount: this.redirectCount,
       requestId: this.requestId,
@@ -346,15 +367,6 @@ export class NetworkRequest {
       supportsInterception: false,
       timings: this.timings,
     };
-  }
-
-  #computePostDataSize() {
-    const charset = lazy.NetworkUtils.getCharset(this.#channel);
-    const sentBody = lazy.NetworkHelper.readPostTextFromRequest(
-      this.#channel,
-      charset
-    );
-    return sentBody ? sentBody.length : 0;
   }
 
   /**
@@ -516,5 +528,32 @@ export class NetworkRequest {
       this.#contextId
     );
     return !browsingContext.parent;
+  }
+
+  #readPostDataFromRequestAsUTF8() {
+    const postData = lazy.NetworkHelper.readPostDataFromRequest(
+      this.#channel,
+      "UTF-8"
+    );
+
+    if (postData === null || postData.data === null) {
+      return null;
+    }
+
+    return {
+      text: postData.isDecodedAsText ? postData.data : btoa(postData.data),
+      isBase64: !postData.isDecodedAsText,
+    };
+  }
+
+  #updatePostData() {
+    const sentBody = this.#readPostDataFromRequestAsUTF8();
+    if (sentBody) {
+      this.#postData = sentBody;
+      this.#postDataSize = sentBody.text.length;
+    } else {
+      this.#postData = null;
+      this.#postDataSize = 0;
+    }
   }
 }

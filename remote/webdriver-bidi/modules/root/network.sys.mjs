@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   matchURLPattern:
     "chrome://remote/content/shared/webdriver/URLPattern.sys.mjs",
   NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
+  NetworkDataBytes: "chrome://remote/content/shared/NetworkDataBytes.sys.mjs",
   NetworkDecodedBodySizeMap:
     "chrome://remote/content/shared/NetworkDecodedBodySizeMap.sys.mjs",
   NetworkListener:
@@ -161,6 +162,7 @@ const ContinueWithAuthAction = {
  * @enum {DataType}
  */
 const DataType = {
+  Request: "request",
   Response: "response",
 };
 
@@ -1283,11 +1285,10 @@ class NetworkModule extends RootBiDiModule {
       );
     }
 
-    const value = await collectedData.bytes.getDecodedResponseBody();
-    const type =
-      collectedData.bytes.encoding === "base64"
-        ? BytesValueType.Base64
-        : BytesValueType.String;
+    const value = await collectedData.bytes.getBytesValue();
+    const type = collectedData.bytes.isBase64
+      ? BytesValueType.Base64
+      : BytesValueType.String;
 
     if (disown) {
       this.#removeCollectorFromData(collectedData, collector);
@@ -1918,6 +1919,37 @@ class NetworkModule extends RootBiDiModule {
     }
   }
 
+  #cloneNetworkRequestBody(request) {
+    if (!this.#networkCollectors.size) {
+      return;
+    }
+
+    // If request body is missing or null, do not store any collected data.
+    if (!request.postData || request.postData === null) {
+      return;
+    }
+
+    const collectedData = {
+      bytes: null,
+      collectors: new Set(),
+      pending: true,
+      // This allows to implement the await/resume on "network data collected"
+      // described in the specification.
+      networkDataCollected: Promise.withResolvers(),
+      request: request.requestId,
+      size: null,
+      type: DataType.Request,
+    };
+
+    // The actual cloning is already handled by the DevTools
+    // NetworkResponseListener, here we just have to prepare the networkData and
+    // add it to the array.
+    this.#collectedNetworkData.set(
+      `${request.requestId}-${DataType.Request}`,
+      collectedData
+    );
+  }
+
   #cloneNetworkResponseBody(request) {
     if (!this.#networkCollectors.size) {
       return;
@@ -1925,7 +1957,6 @@ class NetworkModule extends RootBiDiModule {
 
     const collectedData = {
       bytes: null,
-      // Note: The specification expects a `clonedBody` property on
       // The cloned body is fully handled by DevTools' NetworkResponseListener
       // so it will not explicitly be stored here.
       collectors: new Set(),
@@ -2287,7 +2318,32 @@ class NetworkModule extends RootBiDiModule {
   }
 
   /**
-   * Implements https://w3c.github.io/webdriver-bidi/#maybe-collect-network-response-body
+   * Implements https://w3c.github.io/webdriver-bidi/#maybe-collect-network-request-body
+   *
+   * @param {NetworkRequest} request
+   *     The request object for which we want to collect the body.
+   */
+  async #maybeCollectNetworkRequestBody(request) {
+    const collectedData = this.#getCollectedData(
+      request.requestId,
+      DataType.Request
+    );
+
+    if (collectedData === null) {
+      return;
+    }
+
+    this.#maybeCollectNetworkData({
+      collectedData,
+      dataType: DataType.Request,
+      request,
+      readAndProcessBodyFn: request.readAndProcessRequestBody,
+      size: request.postDataSize,
+    });
+  }
+
+  /**
+   * Implements https://www.w3.org/TR/webdriver-bidi/#maybe-collect-network-response-body
    *
    * @param {NetworkRequest} request
    *     The request object for which we want to collect the body.
@@ -2322,12 +2378,69 @@ class NetworkModule extends RootBiDiModule {
       return;
     }
 
+    let readAndProcessBodyFn, size;
+    if (response.isDataURL) {
+      // Handle data URLs as a special case since the response is not provided
+      // by the DevTools ResponseListener in this case.
+      const url = request.serializedURL;
+      const body = url.substring(url.indexOf(",") + 1);
+      const isText =
+        response.mimeType &&
+        lazy.NetworkHelper.isTextMimeType(response.mimeType);
+
+      readAndProcessBodyFn = () =>
+        new lazy.NetworkDataBytes({
+          getBytesValue: () => body,
+          isBase64: !isText,
+        });
+      size = body.length;
+    } else {
+      readAndProcessBodyFn = response.readAndProcessResponseBody;
+      size = response.encodedBodySize;
+    }
+
+    this.#maybeCollectNetworkData({
+      collectedData,
+      dataType: DataType.Response,
+      request,
+      readAndProcessBodyFn,
+      size,
+    });
+  }
+
+  /**
+   * Implements https://www.w3.org/TR/webdriver-bidi/#maybe-collect-network-data
+   *
+   * @param {object} options
+   * @param {Data} options.collectedData
+   * @param {DataType} options.dataType
+   * @param {NetworkRequest} options.request
+   * @param {Function} options.readAndProcessBodyFn
+   * @param {number} options.size
+   */
+  async #maybeCollectNetworkData(options) {
+    const {
+      collectedData,
+      dataType,
+      request,
+      // Note: this parameter is not present in
+      // https://www.w3.org/TR/webdriver-bidi/#maybe-collect-network-data
+      // Each caller is responsible for providing a callable which will return
+      // a NetworkDataBytes instance corresponding to the collected data.
+      readAndProcessBodyFn,
+      // Note: the spec assumes that in some cases the size can be computed
+      // dynamically. But in practice we might be storing encoding data in a
+      // format which makes it hard to get the size. So here we always expect
+      // callers to provide a size.
+      size,
+    } = options;
+
     const browsingContext = lazy.NavigableManager.getBrowsingContextById(
       request.contextId
     );
     if (!browsingContext) {
       lazy.logger.trace(
-        `Network data not collected for request "${request.requestId}" and data type "${DataType.Response}"` +
+        `Network data not collected for request "${request.requestId}" and data type "${dataType}"` +
           `: navigable no longer available`
       );
       collectedData.pending = false;
@@ -2342,7 +2455,7 @@ class NetworkModule extends RootBiDiModule {
     let collectors = [];
     for (const [, collector] of this.#networkCollectors) {
       if (
-        collector.dataTypes.includes(DataType.Response) &&
+        collector.dataTypes.includes(dataType) &&
         this.#matchCollectorForNavigable(collector, topNavigable)
       ) {
         collectors.push(collector);
@@ -2351,7 +2464,7 @@ class NetworkModule extends RootBiDiModule {
 
     if (!collectors.length) {
       lazy.logger.trace(
-        `Network data not collected for request "${request.requestId}" and data type "${DataType.Response}"` +
+        `Network data not collected for request "${request.requestId}" and data type "${dataType}"` +
           `: no matching collector`
       );
       collectedData.pending = false;
@@ -2363,32 +2476,16 @@ class NetworkModule extends RootBiDiModule {
     }
 
     let bytes = null;
-    let size = null;
 
     // At this point, the specification expects to processBody for the cloned
-    // body. Since this is handled by the DevTools NetworkResponseListener, so
-    // here we wait until the response content is set.
+    // body. Here we do not explicitly clone the bodies.
+    // For responses, DevTools' NetworkResponseListener clones the stream.
+    // For requests, NetworkHelper.readPostTextFromRequest clones the stream on
+    // the fly to read it as text.
     try {
-      if (response.isDataURL) {
-        // Handle data URLs as a special case since the response is not provided
-        // by the DevTools ResponseListener in this case.
-        const url = request.serializedURL;
-        const body = url.substring(url.indexOf(",") + 1);
-        const isText =
-          response.mimeType &&
-          lazy.NetworkHelper.isTextMimeType(response.mimeType);
-        // TODO: Reuse a common interface being introduced in Bug 1988955.
-        bytes = {
-          getDecodedResponseBody: () => body,
-          encoding: isText ? null : "base64",
-        };
-        size = body.length;
-      } else {
-        const bytesOrNull = await response.readResponseBody();
-        if (bytesOrNull !== null) {
-          bytes = bytesOrNull;
-          size = response.encodedBodySize;
-        }
+      const bytesOrNull = await readAndProcessBodyFn();
+      if (bytesOrNull !== null) {
+        bytes = bytesOrNull;
       }
     } catch {
       // Let processBodyError be this step: Do nothing.
@@ -2515,6 +2612,11 @@ class NetworkModule extends RootBiDiModule {
       return;
     }
 
+    // Make sure a collected data is created for the request.
+    // Note: this is supposed to be triggered from fetch and doesn't depend on
+    // whether network events are used or not.
+    this.#cloneNetworkRequestBody(request);
+
     const relatedNavigables = [browsingContext];
     this.#updateRequestHeaders(request, relatedNavigables);
 
@@ -2528,6 +2630,8 @@ class NetworkModule extends RootBiDiModule {
       // bail out.
       return;
     }
+
+    this.#maybeCollectNetworkRequestBody(request);
 
     const baseParameters = this.#processNetworkEvent(
       protocolEventName,
