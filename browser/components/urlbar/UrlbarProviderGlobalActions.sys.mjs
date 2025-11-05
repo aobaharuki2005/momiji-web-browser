@@ -69,6 +69,13 @@ export class UrlbarProviderGlobalActions extends UrlbarProvider {
     return isActive;
   }
 
+  /**
+   * Starts querying.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} addCallback
+   *   Callback invoked by the provider to add a new result.
+   */
   async startQuery(queryContext, addCallback) {
     let actionsResults = [];
     let searchModeEngine = "";

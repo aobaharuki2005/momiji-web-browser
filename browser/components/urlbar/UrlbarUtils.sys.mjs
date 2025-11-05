@@ -2777,9 +2777,11 @@ export class UrlbarProvider {
    * Note: Extended classes should return a Promise resolved when the provider
    *       is done searching AND returning results.
    *
-   * @param {UrlbarQueryContext} _queryContext The query context object
-   * @param {Function} _addCallback Callback invoked by the provider to add a new
-   *        result. A UrlbarResult should be passed to it.
+   * @param {UrlbarQueryContext} _queryContext
+   *   The query context object
+   * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} _addCallback
+   *   Callback invoked by the provider to add a new result.
+   * @returns {void|Promise<void>}
    * @abstract
    */
   startQuery(_queryContext, _addCallback) {

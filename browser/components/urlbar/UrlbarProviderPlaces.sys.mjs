@@ -1507,12 +1507,9 @@ export class UrlbarProviderPlaces extends UrlbarProvider {
   /**
    * Starts querying.
    *
-   * @param {object} queryContext
-   *   The query context object
+   * @param {UrlbarQueryContext} queryContext
    * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} addCallback
    *   Callback invoked by the provider to add a new result.
-   * @returns {Promise<void>}
-   *   Resolved when the query stops.
    */
   startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
