@@ -19,7 +19,6 @@ prefs = ["dom.security.https_first=false"]
 ["test_maybeCapExpiry.js"]
 
 ["test_migrateCookieLifetimePref.js"]
-skip-if = ["socketprocess_networking"] # Fails due to Mochia (bug 1982446)
 
 ["test_parser_0001.js"]
 
