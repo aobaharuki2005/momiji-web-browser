@@ -265,6 +265,7 @@ export default class RestoreFromBackup extends MozLitElement {
         href=${this.getSupportURLWithUTM(supportPage)}
         data-l10n-id=${ifDefined(l10nId)}
         data-l10n-name=${ifDefined(l10nName)}
+        dir="auto"
         rel="noopener noreferrer"
       ></a>`;
     }
@@ -276,6 +277,7 @@ export default class RestoreFromBackup extends MozLitElement {
       support-page=${supportPage}
       data-l10n-id=${ifDefined(l10nId)}
       data-l10n-name=${ifDefined(l10nName)}
+      dir="auto"
     ></a>`;
   }
 
