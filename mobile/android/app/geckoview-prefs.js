@@ -392,6 +392,9 @@ pref("toolkit.telemetry.unified", false);
 pref("urlclassifier.downloadAllowTable", "");
 pref("urlclassifier.downloadBlockTable", "");
 
+// Delay the CRC32 check for URLClassifier to improve applink performance. (bug 1956920, bug 1971949)
+pref("urlclassifier.delay_prefixes_crc32_check", true);
+
 // The Potentially Harmful Apps list replaces the malware one on Android (bug 1394017)
 pref("urlclassifier.malwareTable", "goog-harmful-proto,goog-unwanted-proto,moztest-harmful-simple,moztest-malware-simple,moztest-unwanted-simple");
 
