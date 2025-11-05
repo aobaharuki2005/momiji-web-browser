@@ -1,6 +1,6 @@
 import pytest
 
-URL = "https://gts-pro.sdimedia.com/"
+URL = "https://gts-pro.iyuno.com/"
 UNSUPPORTED_CSS = "#invalid-browser"
 LOGIN_CSS = "button[data-qa='open-login-page']"
 

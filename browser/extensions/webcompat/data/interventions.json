@@ -1319,11 +1319,11 @@
     ]
   },
   "1836135": {
-    "label": "gts-pro.sdimedia.com",
+    "label": "gts-pro.iyuno.com",
     "bugs": {
       "1898978": {
         "issue": "firefox-blocked-completely",
-        "matches": ["*://gts-pro.sdimedia.com/*"]
+        "matches": ["*://gts-pro.iyuno.com/*"]
       }
     },
     "interventions": [
