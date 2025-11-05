@@ -2,23 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// @ts-check
-
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
-/**
- * @typedef {object} Lazy
- * @property {typeof console} console
- */
-
-/** @type {Lazy} */
-const lazy = /** @type {any} */ ({});
-
-/**
- * @typedef {{ flowId: string, randomRoll: number }} FlowContext
- * @typedef {"default" | "nightly" | "beta" | "esr" | "release" | "unofficial"} UpdateChannel
- * @typedef {Partial<Record<UpdateChannel, number>>} SampleRates
- */
+const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
   return console.createInstance({
@@ -32,67 +16,9 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
  */
 export class TranslationsTelemetry {
   /**
-   * The context of the current UI flow of events.
-   *
-   * This contains the flowId, which is a randomly generated UUID to
-   * link telemetry UI events to one another.
-   *
-   * This also contains a random number in the range [0, 1) that will
-   * be associated with the flowId. This allows us to skip all events
-   * in the same flow based on our rate limits.
-   *
-   * @type {FlowContext}
+   * A cached value to hold the current flowId.
    */
-  static #flowContext;
-
-  /**
-   * Page loads happen quite frequently, so we want to avoid firing a telemetry
-   * event for every page load that occurs. These rate limits will help keep our
-   * page-load telemetry to a reasonable size, without affecting significance.
-   *
-   * @type {SampleRates}
-   */
-  // prettier-ignore
-  static #PAGE_LOAD_RATE_LIMITS = {
-    nightly: 1 /   1_000,
-       beta: 1 /  10_000,
-        esr: 1 /  10_000,
-    release: 1 / 100_000,
-  };
-
-  /**
-   * TranslationsEngine performance metrics occur every time an active engine is
-   * destroyed, but this is aggregate performance data, and we don't need to have
-   * a sample for every single engine that is created.
-   *
-   * @type {SampleRates}
-   */
-  // prettier-ignore
-  static #ENGINE_PERFORMANCE_RATE_LIMITS = {
-       beta: 1 /   100,
-        esr: 1 /   100,
-    release: 1 / 1_000,
-  };
-
-  /**
-   * An array of a single unsigned 32-bit integer that we will use to generate random values.
-   *
-   * @type {Uint32Array}
-   */
-  static #RANDOM_VALUE = new Uint32Array(1);
-
-  /**
-   * Generates a random number in the range [0, 1).
-   *
-   * @returns {number}
-   */
-  static randomRoll() {
-    // Generate a uniformly-distributed, random u32 in #RANDOM_VALUE.
-    crypto.getRandomValues(TranslationsTelemetry.#RANDOM_VALUE);
-
-    // Scale the random u32 to the range [0, 1).
-    return TranslationsTelemetry.#RANDOM_VALUE[0] / Math.pow(2, 32);
-  }
+  static #flowId = null;
 
   /**
    * Logs the telemetry event to the console if enabled by toolkit.telemetry.translations.logLevel
@@ -101,104 +27,11 @@ export class TranslationsTelemetry {
    * @param {object} [data] - Optional data passed to telemetry.
    */
   static logEventToConsole(caller, data) {
-    const flowContext = TranslationsTelemetry.getOrCreateFlowContext();
-    const logId = flowContext.flowId.substring(0, 5);
-    lazy.console?.log(
-      `flowId[${logId}]: ${caller.name}`,
+    const id = TranslationsTelemetry.getOrCreateFlowId().substring(0, 5);
+    lazy.console?.debug(
+      `flowId[${id}]: ${caller.name}`,
       ...(data ? [data] : [])
     );
-  }
-
-  /**
-   * Determines whether the caller should skip telemetry based on the current update channel.
-   *
-   * Passing the optional FlowContext will use the randomRoll associated with that flowId,
-   * ensuring that each event for the entire flow adheres to the same rate-limit threshold.
-   *
-   * @param {SampleRates} sampleRates
-   *   - A mapping of update-channel names to sampling probabilities in the range [0, 1).
-   *     Channels omitted from the mapping are never skipped.
-   * @param {FlowContext} [flowContext]
-   *   - The context that contains the flow id and a random roll for the entire flow.
-   * @param {UpdateChannel} [channel]
-   *   - The update channel whose sampling policy should be applied. Defaults to the
-   *     application-wide update channel, but may be overridden for testing.
-   *
-   * @returns {boolean} True if the event should be skipped for this channel, otherwise false.
-   */
-  static shouldSkipSample(
-    sampleRates,
-    flowContext,
-    channel = AppConstants.MOZ_UPDATE_CHANNEL
-  ) {
-    if (channel !== AppConstants.MOZ_UPDATE_CHANNEL && !Cu.isInAutomation) {
-      throw new Error(
-        `Channel "${AppConstants.MOZ_UPDATE_CHANNEL}" was overridden as "${channel}" outside of testing.`
-      );
-    }
-
-    const sampleRate = sampleRates[channel];
-
-    let randomRoll;
-
-    if (lazy.console?.shouldLog("Debug")) {
-      randomRoll =
-        flowContext?.randomRoll ?? TranslationsTelemetry.randomRoll();
-
-      lazy.console.debug({
-        randomRoll: randomRoll.toFixed(8),
-        default: {
-          skip: randomRoll >= (sampleRates.default ?? 1),
-          threshold: sampleRates.default,
-        },
-        nightly: {
-          skip: randomRoll >= (sampleRates.nightly ?? 1),
-          threshold: sampleRates.nightly,
-        },
-        beta: {
-          skip: randomRoll >= (sampleRates.beta ?? 1),
-          threshold: sampleRates.beta,
-        },
-        esr: {
-          skip: randomRoll >= (sampleRates.esr ?? 1),
-          threshold: sampleRates.esr,
-        },
-        release: {
-          skip: randomRoll >= (sampleRates.release ?? 1),
-          threshold: sampleRates.release,
-        },
-      });
-    }
-
-    if (sampleRate === undefined) {
-      // Never skip when a rate limit is unspecified.
-      return false;
-    }
-
-    if (randomRoll === undefined) {
-      randomRoll =
-        flowContext?.randomRoll ?? TranslationsTelemetry.randomRoll();
-    }
-
-    return randomRoll >= sampleRate;
-  }
-
-  /**
-   * Invokes or skips the given callback function according to the provided rate limits.
-   *
-   * @param {SampleRates} sampleRates
-   *   - A mapping of update-channel names to sampling probabilities in the range [0, 1).
-   * @param {function(FlowContext): void} callback
-   *   - The function invoked when the event should be recorded.
-   */
-  static withRateLimits(sampleRates, callback) {
-    const flowContext = TranslationsTelemetry.getOrCreateFlowContext();
-
-    if (TranslationsTelemetry.shouldSkipSample(sampleRates, flowContext)) {
-      return;
-    }
-
-    callback(flowContext);
   }
 
   /**
@@ -231,33 +64,28 @@ export class TranslationsTelemetry {
   /**
    * Forces the creation of a new Translations telemetry flowId and returns it.
    *
-   * @returns {FlowContext}
+   * @returns {string}
    */
-  static createFlowContext() {
-    const flowContext = {
-      flowId: crypto.randomUUID(),
-      randomRoll: TranslationsTelemetry.randomRoll(),
-    };
-
-    TranslationsTelemetry.#flowContext = flowContext;
-
-    return flowContext;
+  static createFlowId() {
+    const flowId = crypto.randomUUID();
+    TranslationsTelemetry.#flowId = flowId;
+    return flowId;
   }
 
   /**
    * Returns a Translations telemetry flowId by retrieving the cached value
    * if available, or creating a new one otherwise.
    *
-   * @returns {FlowContext}
+   * @returns {string}
    */
-  static getOrCreateFlowContext() {
+  static getOrCreateFlowId() {
     // If we have the flowId cached, return it.
-    if (TranslationsTelemetry.#flowContext) {
-      return TranslationsTelemetry.#flowContext;
+    if (TranslationsTelemetry.#flowId) {
+      return TranslationsTelemetry.#flowId;
     }
 
     // If no flowId exists, create one.
-    return TranslationsTelemetry.createFlowContext();
+    return TranslationsTelemetry.createFlowId();
   }
 
   /**
@@ -275,37 +103,31 @@ export class TranslationsTelemetry {
    * @param {boolean} data.confident
    */
   static onIdentifyPageLanguage(data) {
-    TranslationsTelemetry.withRateLimits(
-      TranslationsTelemetry.#PAGE_LOAD_RATE_LIMITS,
-      () => {
-        const {
-          htmlLangAttribute,
-          identifiedLanguage,
-          langTagsMatch,
-          isLangAttributeValid,
-          extractedCodeUnits,
-          extractionTime,
-          identificationTime,
-          totalTime,
-          confident,
-        } = data;
-
-        Glean.translations.identifyPageLanguage.record({
-          html_lang_attribute: htmlLangAttribute,
-          identified_language: identifiedLanguage,
-          lang_tags_match: langTagsMatch,
-          is_lang_attribute_valid: isLangAttributeValid,
-          extracted_code_units: extractedCodeUnits,
-          extraction_time: extractionTime,
-          identification_time: identificationTime,
-          total_time: totalTime,
-          confident,
-        });
-        TranslationsTelemetry.logEventToConsole(
-          TranslationsTelemetry.onIdentifyPageLanguage,
-          data
-        );
-      }
+    const {
+      htmlLangAttribute,
+      identifiedLanguage,
+      langTagsMatch,
+      isLangAttributeValid,
+      extractedCodeUnits,
+      extractionTime,
+      identificationTime,
+      totalTime,
+      confident,
+    } = data;
+    Glean.translations.identifyPageLanguage.record({
+      html_lang_attribute: htmlLangAttribute,
+      identified_language: identifiedLanguage,
+      lang_tags_match: langTagsMatch,
+      is_lang_attribute_valid: isLangAttributeValid,
+      extracted_code_units: extractedCodeUnits,
+      extraction_time: extractionTime,
+      identification_time: identificationTime,
+      total_time: totalTime,
+      confident,
+    });
+    TranslationsTelemetry.logEventToConsole(
+      TranslationsTelemetry.onIdentifyPageLanguage,
+      data
     );
   }
 
@@ -316,7 +138,7 @@ export class TranslationsTelemetry {
    */
   static onError(errorMessage) {
     Glean.translations.error.record({
-      flow_id: TranslationsTelemetry.getOrCreateFlowContext().flowId,
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       reason: errorMessage,
     });
     TranslationsTelemetry.logEventToConsole(TranslationsTelemetry.onError, {
@@ -350,7 +172,7 @@ export class TranslationsTelemetry {
     } = data;
     Glean.translations.requestCount[requestTarget ?? "full_page"].add(1);
     Glean.translations.translationRequest.record({
-      flow_id: TranslationsTelemetry.getOrCreateFlowContext().flowId,
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
       from_language: sourceLanguage,
       to_language: targetLanguage,
       auto_translate: autoTranslate,
@@ -368,7 +190,7 @@ export class TranslationsTelemetry {
 
   static onRestorePage() {
     Glean.translations.restorePage.record({
-      flow_id: TranslationsTelemetry.getOrCreateFlowContext().flowId,
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
     TranslationsTelemetry.logEventToConsole(
       TranslationsTelemetry.onRestorePage
@@ -386,43 +208,38 @@ export class TranslationsTelemetry {
    * @param {number} data.totalTranslatedWords
    */
   static onReportEnginePerformance(data) {
-    TranslationsTelemetry.withRateLimits(
-      TranslationsTelemetry.#ENGINE_PERFORMANCE_RATE_LIMITS,
-      () => {
-        const {
-          sourceLanguage,
-          targetLanguage,
-          totalCompletedRequests,
-          totalInferenceSeconds,
-          totalTranslatedWords,
-        } = data;
+    const {
+      sourceLanguage,
+      targetLanguage,
+      totalCompletedRequests,
+      totalInferenceSeconds,
+      totalTranslatedWords,
+    } = data;
 
-        const averageWordsPerRequest =
-          totalTranslatedWords / totalCompletedRequests;
-        const averageWordsPerSecond =
-          totalTranslatedWords / totalInferenceSeconds;
+    const averageWordsPerRequest =
+      totalTranslatedWords / totalCompletedRequests;
+    const averageWordsPerSecond = totalTranslatedWords / totalInferenceSeconds;
 
-        Glean.translations.enginePerformance.record({
-          from_language: sourceLanguage,
-          to_language: targetLanguage,
-          average_words_per_request: averageWordsPerRequest,
-          average_words_per_second: averageWordsPerSecond,
-          total_completed_requests: totalCompletedRequests,
-          total_inference_seconds: totalInferenceSeconds,
-          total_translated_words: totalTranslatedWords,
-        });
-        TranslationsTelemetry.logEventToConsole(
-          TranslationsTelemetry.onReportEnginePerformance,
-          {
-            sourceLanguage,
-            targetLanguage,
-            averageWordsPerSecond,
-            averageWordsPerRequest,
-            totalCompletedRequests,
-            totalInferenceSeconds,
-            totalTranslatedWords,
-          }
-        );
+    Glean.translations.enginePerformance.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      from_language: sourceLanguage,
+      to_language: targetLanguage,
+      average_words_per_request: averageWordsPerRequest,
+      average_words_per_second: averageWordsPerSecond,
+      total_completed_requests: totalCompletedRequests,
+      total_inference_seconds: totalInferenceSeconds,
+      total_translated_words: totalTranslatedWords,
+    });
+    TranslationsTelemetry.logEventToConsole(
+      TranslationsTelemetry.onReportEnginePerformance,
+      {
+        sourceLanguage,
+        targetLanguage,
+        averageWordsPerSecond,
+        averageWordsPerRequest,
+        totalCompletedRequests,
+        totalInferenceSeconds,
+        totalTranslatedWords,
       }
     );
   }
@@ -432,30 +249,6 @@ export class TranslationsTelemetry {
  * Telemetry functions for the FullPageTranslationsPanel UI
  */
 class FullPageTranslationsPanelTelemetry {
-  /**
-   * The Full-Page panel events help us determine how users interact with the panel UI.
-   * The panel can be opened quite frequently, and we don't need to collect data every
-   * single time the panel opens in order to get a good idea of interaction behavior.
-   *
-   * @type {SampleRates}
-   */
-  // prettier-ignore
-  static #FULL_PAGE_PANEL_RATE_LIMITS = {
-    release: 1 / 100,
-  };
-
-  /**
-   * Invokes a callback function with #FULL_PAGE_PANEL_RATE_LIMITS.
-   *
-   * @param {function(FlowContext): void} callback
-   */
-  static #withRateLimits(callback) {
-    TranslationsTelemetry.withRateLimits(
-      FullPageTranslationsPanelTelemetry.#FULL_PAGE_PANEL_RATE_LIMITS,
-      callback
-    );
-  }
-
   /**
    * Records a telemetry event when the FullPageTranslationsPanel is opened.
    *
@@ -467,284 +260,236 @@ class FullPageTranslationsPanelTelemetry {
    * @param {boolean} data.openedFromAppMenu
    */
   static onOpen(data) {
-    if (!data.maintainFlow) {
-      // Create a new flow context when the panel opens,
-      // unless explicitly instructed to maintain the current flow.
-      TranslationsTelemetry.createFlowContext();
-    }
-
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.open.record({
-        flow_id: flowId,
-        auto_show: data.autoShow,
-        view_name: data.viewName,
-        document_language: data.docLangTag,
-        opened_from: data.openedFromAppMenu ? "appMenu" : "translationsButton",
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onOpen,
-        data
-      );
+    Glean.translationsPanel.open.record({
+      flow_id: data.maintainFlow
+        ? TranslationsTelemetry.getOrCreateFlowId()
+        : TranslationsTelemetry.createFlowId(),
+      auto_show: data.autoShow,
+      view_name: data.viewName,
+      document_language: data.docLangTag,
+      opened_from: data.openedFromAppMenu ? "appMenu" : "translationsButton",
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onOpen,
+      data
+    );
   }
 
   static onClose() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.close.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onClose
-      );
+    Glean.translationsPanel.close.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onClose
+    );
   }
 
   static onOpenFromLanguageMenu() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.openFromLanguageMenu.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onOpenFromLanguageMenu
-      );
+    Glean.translationsPanel.openFromLanguageMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onOpenFromLanguageMenu
+    );
   }
 
   static onChangeFromLanguage(langTag) {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.changeFromLanguage.record({
-        flow_id: flowId,
-        language: langTag,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onChangeFromLanguage,
-        {
-          langTag,
-        }
-      );
+    Glean.translationsPanel.changeFromLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      language: langTag,
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onChangeFromLanguage,
+      {
+        langTag,
+      }
+    );
   }
 
   static onCloseFromLanguageMenu() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.closeFromLanguageMenu.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onCloseFromLanguageMenu
-      );
+    Glean.translationsPanel.closeFromLanguageMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onCloseFromLanguageMenu
+    );
   }
 
   static onOpenToLanguageMenu() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.openToLanguageMenu.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onOpenToLanguageMenu
-      );
+    Glean.translationsPanel.openToLanguageMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onOpenToLanguageMenu
+    );
   }
 
   static onChangeToLanguage(langTag) {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.changeToLanguage.record({
-        flow_id: flowId,
-        language: langTag,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onChangeToLanguage,
-        {
-          langTag,
-        }
-      );
+    Glean.translationsPanel.changeToLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      language: langTag,
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onChangeToLanguage,
+      {
+        langTag,
+      }
+    );
   }
 
   static onCloseToLanguageMenu() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.closeToLanguageMenu.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onCloseToLanguageMenu
-      );
+    Glean.translationsPanel.closeToLanguageMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onChangeToLanguage
+    );
   }
 
   static onOpenSettingsMenu() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.openSettingsMenu.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onOpenSettingsMenu
-      );
+    Glean.translationsPanel.openSettingsMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onOpenSettingsMenu
+    );
   }
 
   static onCloseSettingsMenu() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.closeSettingsMenu.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onCloseSettingsMenu
-      );
+    Glean.translationsPanel.closeSettingsMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onCloseSettingsMenu
+    );
   }
 
   static onCancelButton() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.cancelButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onCancelButton
-      );
+    Glean.translationsPanel.cancelButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onCancelButton
+    );
   }
 
   static onChangeSourceLanguageButton() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.changeSourceLanguageButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onChangeSourceLanguageButton
-      );
+    Glean.translationsPanel.changeSourceLanguageButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onChangeSourceLanguageButton
+    );
   }
 
   static onDismissErrorButton() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.dismissErrorButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onDismissErrorButton
-      );
+    Glean.translationsPanel.dismissErrorButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onDismissErrorButton
+    );
   }
 
   static onRestorePageButton() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.restorePageButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onRestorePageButton
-      );
+    Glean.translationsPanel.restorePageButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onRestorePageButton
+    );
   }
 
   static onTranslateButton() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.translateButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onTranslateButton
-      );
+    Glean.translationsPanel.translateButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onTranslateButton
+    );
   }
 
   static onAlwaysOfferTranslations(toggledOn) {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.alwaysOfferTranslations.record({
-        flow_id: flowId,
-        toggled_on: toggledOn,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onAlwaysOfferTranslations,
-        {
-          toggledOn,
-        }
-      );
+    Glean.translationsPanel.alwaysOfferTranslations.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      toggled_on: toggledOn,
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onAlwaysOfferTranslations,
+      {
+        toggledOn,
+      }
+    );
   }
 
   static onAlwaysTranslateLanguage(langTag, toggledOn) {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.alwaysTranslateLanguage.record({
-        flow_id: flowId,
-        language: langTag,
-        toggled_on: toggledOn,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onAlwaysTranslateLanguage,
-        {
-          langTag,
-          toggledOn,
-        }
-      );
+    Glean.translationsPanel.alwaysTranslateLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      language: langTag,
+      toggled_on: toggledOn,
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onAlwaysTranslateLanguage,
+      {
+        langTag,
+        toggledOn,
+      }
+    );
   }
 
   static onNeverTranslateLanguage(langTag, toggledOn) {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.neverTranslateLanguage.record({
-        flow_id: flowId,
-        language: langTag,
-        toggled_on: toggledOn,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onNeverTranslateLanguage,
-        {
-          langTag,
-          toggledOn,
-        }
-      );
+    Glean.translationsPanel.neverTranslateLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      language: langTag,
+      toggled_on: toggledOn,
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onNeverTranslateLanguage,
+      {
+        langTag,
+        toggledOn,
+      }
+    );
   }
 
   static onNeverTranslateSite(toggledOn) {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.neverTranslateSite.record({
-        flow_id: flowId,
-        toggled_on: toggledOn,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onNeverTranslateSite,
-        {
-          toggledOn,
-        }
-      );
+    Glean.translationsPanel.neverTranslateSite.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      toggled_on: toggledOn,
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onNeverTranslateSite,
+      {
+        toggledOn,
+      }
+    );
   }
 
   static onManageLanguages() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.manageLanguages.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onManageLanguages
-      );
+    Glean.translationsPanel.manageLanguages.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onManageLanguages
+    );
   }
 
   static onAboutTranslations() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.aboutTranslations.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onAboutTranslations
-      );
+    Glean.translationsPanel.aboutTranslations.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onAboutTranslations
+    );
   }
 
   static onLearnMoreLink() {
-    FullPageTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsPanel.learnMore.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        FullPageTranslationsPanelTelemetry.onLearnMoreLink
-      );
+    Glean.translationsPanel.learnMore.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      FullPageTranslationsPanelTelemetry.onLearnMoreLink
+    );
   }
 }
 
@@ -752,25 +497,6 @@ class FullPageTranslationsPanelTelemetry {
  * Telemetry functions for the SelectTranslationsPanel UI
  */
 class SelectTranslationsPanelTelemetry {
-  /**
-   * These events do not yet occur frequently enough to benefit from rate limiting.
-   *
-   * @type {SampleRates}
-   */
-  static #SELECT_PANEL_RATE_LIMITS = {};
-
-  /**
-   * Invokes a callback function with #SELECT_PANEL_RATE_LIMITS.
-   *
-   * @param {function(FlowContext): void} callback
-   */
-  static #withRateLimits(callback) {
-    TranslationsTelemetry.withRateLimits(
-      SelectTranslationsPanelTelemetry.#SELECT_PANEL_RATE_LIMITS,
-      callback
-    );
-  }
-
   /**
    * Records a telemetry event when the SelectTranslationsPanel is opened.
    *
@@ -783,70 +509,56 @@ class SelectTranslationsPanelTelemetry {
    * @param {string} data.textSource
    */
   static onOpen(data) {
-    if (!data.maintainFlow) {
-      // Create a new flow context when the panel opens,
-      // unless explicitly instructed to maintain the current flow.
-      TranslationsTelemetry.createFlowContext();
-    }
-
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.open.record({
-        flow_id: flowId,
-        document_language: data.docLangTag,
-        from_language: data.sourceLanguage,
-        to_language: data.targetLanguage,
-        top_preferred_language: data.topPreferredLanguage,
-        text_source: data.textSource,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onOpen,
-        data
-      );
+    Glean.translationsSelectTranslationsPanel.open.record({
+      flow_id: data.maintainFlow
+        ? TranslationsTelemetry.getOrCreateFlowId()
+        : TranslationsTelemetry.createFlowId(),
+      document_language: data.docLangTag,
+      from_language: data.sourceLanguage,
+      to_language: data.targetLanguage,
+      top_preferred_language: data.topPreferredLanguage,
+      text_source: data.textSource,
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onOpen,
+      data
+    );
   }
 
   static onClose() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.close.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onClose
-      );
+    Glean.translationsSelectTranslationsPanel.close.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onClose
+    );
   }
 
   static onCancelButton() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.cancelButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onCancelButton
-      );
+    Glean.translationsSelectTranslationsPanel.cancelButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onCancelButton
+    );
   }
 
   static onCopyButton() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.copyButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onCopyButton
-      );
+    Glean.translationsSelectTranslationsPanel.copyButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onCopyButton
+    );
   }
 
   static onDoneButton() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.doneButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onDoneButton
-      );
+    Glean.translationsSelectTranslationsPanel.doneButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onDoneButton
+    );
   }
 
   static onTranslateButton({
@@ -854,118 +566,100 @@ class SelectTranslationsPanelTelemetry {
     sourceLanguage,
     targetLanguage,
   }) {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.translateButton.record({
-        flow_id: flowId,
-        detected_language: detectedLanguage,
-        from_language: sourceLanguage,
-        to_language: targetLanguage,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onTranslateButton,
-        {
-          detectedLanguage,
-          sourceLanguage,
-          targetLanguage,
-        }
-      );
+    Glean.translationsSelectTranslationsPanel.translateButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      detected_language: detectedLanguage,
+      from_language: sourceLanguage,
+      to_language: targetLanguage,
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTranslateButton,
+      {
+        detectedLanguage,
+        sourceLanguage,
+        targetLanguage,
+      }
+    );
   }
 
   static onTranslateFullPageButton() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.translateFullPageButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onTranslateFullPageButton
-      );
+    Glean.translationsSelectTranslationsPanel.translateFullPageButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTranslateFullPageButton
+    );
   }
 
   static onTryAgainButton() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.tryAgainButton.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onTryAgainButton
-      );
+    Glean.translationsSelectTranslationsPanel.tryAgainButton.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTryAgainButton
+    );
   }
 
   static onChangeFromLanguage({ previousLangTag, currentLangTag, docLangTag }) {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.changeFromLanguage.record({
-        flow_id: flowId,
-        document_language: docLangTag,
-        previous_language: previousLangTag,
-        language: currentLangTag,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onChangeFromLanguage,
-        { previousLangTag, currentLangTag, docLangTag }
-      );
+    Glean.translationsSelectTranslationsPanel.changeFromLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      document_language: docLangTag,
+      previous_language: previousLangTag,
+      language: currentLangTag,
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onChangeFromLanguage,
+      { previousLangTag, currentLangTag, docLangTag }
+    );
   }
 
   static onChangeToLanguage(langTag) {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.changeToLanguage.record({
-        flow_id: flowId,
-        language: langTag,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onChangeToLanguage,
-        { langTag }
-      );
+    Glean.translationsSelectTranslationsPanel.changeToLanguage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      language: langTag,
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onChangeToLanguage,
+      { langTag }
+    );
   }
 
   static onOpenSettingsMenu() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.openSettingsMenu.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onOpenSettingsMenu
-      );
+    Glean.translationsSelectTranslationsPanel.openSettingsMenu.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onOpenSettingsMenu
+    );
   }
 
   static onTranslationSettings() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.translationSettings.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onTranslationSettings
-      );
+    Glean.translationsSelectTranslationsPanel.translationSettings.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTranslationSettings
+    );
   }
 
   static onAboutTranslations() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.aboutTranslations.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onAboutTranslations
-      );
+    Glean.translationsSelectTranslationsPanel.aboutTranslations.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onAboutTranslations
+    );
   }
 
   static onInitializationFailureMessage() {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.initializationFailureMessage.record(
-        {
-          flow_id: flowId,
-        }
-      );
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onInitializationFailureMessage
-      );
-    });
+    Glean.translationsSelectTranslationsPanel.initializationFailureMessage.record(
+      {
+        flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      }
+    );
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onInitializationFailureMessage
+    );
   }
 
   /**
@@ -976,19 +670,15 @@ class SelectTranslationsPanelTelemetry {
    * @param {string} data.targetLanguage
    */
   static onTranslationFailureMessage(data) {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.translationFailureMessage.record(
-        {
-          flow_id: flowId,
-          from_language: data.sourceLanguage,
-          to_language: data.targetLanguage,
-        }
-      );
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onTranslationFailureMessage,
-        data
-      );
+    Glean.translationsSelectTranslationsPanel.translationFailureMessage.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      from_language: data.sourceLanguage,
+      to_language: data.targetLanguage,
     });
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onTranslationFailureMessage,
+      data
+    );
   }
 
   /**
@@ -999,19 +689,17 @@ class SelectTranslationsPanelTelemetry {
    * @param {string} data.detectedLanguage
    */
   static onUnsupportedLanguageMessage(data) {
-    SelectTranslationsPanelTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsSelectTranslationsPanel.unsupportedLanguageMessage.record(
-        {
-          flow_id: flowId,
-          document_language: data.docLangTag,
-          detected_language: data.detectedLanguage,
-        }
-      );
-      TranslationsTelemetry.logEventToConsole(
-        SelectTranslationsPanelTelemetry.onUnsupportedLanguageMessage,
-        data
-      );
-    });
+    Glean.translationsSelectTranslationsPanel.unsupportedLanguageMessage.record(
+      {
+        flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+        document_language: data.docLangTag,
+        detected_language: data.detectedLanguage,
+      }
+    );
+    TranslationsTelemetry.logEventToConsole(
+      SelectTranslationsPanelTelemetry.onUnsupportedLanguageMessage,
+      data
+    );
   }
 }
 
@@ -1020,45 +708,20 @@ class SelectTranslationsPanelTelemetry {
  */
 class AboutTranslationsPageTelemetry {
   /**
-   * These events do not yet occur frequently enough to benefit from rate limiting.
-   *
-   * @type {SampleRates}
-   */
-  static #ABOUT_TRANSLATIONS_RATE_LIMITS = {};
-
-  /**
-   * Invokes a callback function with #ABOUT_TRANSLATIONS_RATE_LIMITS.
-   *
-   * @param {function(FlowContext): void} callback
-   */
-  static #withRateLimits(callback) {
-    TranslationsTelemetry.withRateLimits(
-      AboutTranslationsPageTelemetry.#ABOUT_TRANSLATIONS_RATE_LIMITS,
-      callback
-    );
-  }
-
-  /**
    * Records when the about:translations page is opened.
    *
    * @param {object} data
    * @param {boolean} data.maintainFlow
    */
   static onOpen(data) {
-    if (!data.maintainFlow) {
-      // Create a new flow context when the panel opens, unless we
-      // are explicitly instructed to maintain the current flow.
-      TranslationsTelemetry.createFlowContext();
-    }
-
-    AboutTranslationsPageTelemetry.#withRateLimits(({ flowId }) => {
-      Glean.translationsAboutTranslationsPage.open.record({
-        flow_id: flowId,
-      });
-      TranslationsTelemetry.logEventToConsole(
-        AboutTranslationsPageTelemetry.onOpen,
-        data
-      );
+    Glean.translationsAboutTranslationsPage.open.record({
+      flow_id: data.maintainFlow
+        ? TranslationsTelemetry.getOrCreateFlowId()
+        : TranslationsTelemetry.createFlowId(),
     });
+    TranslationsTelemetry.logEventToConsole(
+      AboutTranslationsPageTelemetry.onOpen,
+      data
+    );
   }
 }
