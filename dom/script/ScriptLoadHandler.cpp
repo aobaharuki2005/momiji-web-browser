@@ -295,8 +295,8 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
 nsresult ScriptLoadHandler::MaybeDecodeSRI(uint32_t* sriLength) {
   *sriLength = 0;
 
-  if (!mSRIDataVerifier || mSRIDataVerifier->IsComplete() ||
-      NS_FAILED(mSRIStatus)) {
+  if (!mSRIDataVerifier || mSRIDataVerifier->IsInvalid() ||
+      mSRIDataVerifier->IsComplete() || NS_FAILED(mSRIStatus)) {
     return NS_OK;
   }
 
