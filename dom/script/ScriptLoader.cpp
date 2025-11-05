@@ -4126,6 +4126,7 @@ nsresult ScriptLoader::VerifySRI(ScriptLoadRequest* aRequest,
     }
     if (NS_FAILED(rv)) {
       rv = NS_ERROR_SRI_CORRUPT;
+      TRACE_FOR_TEST(aRequest, "sri:corrupt");
     }
   }
 
