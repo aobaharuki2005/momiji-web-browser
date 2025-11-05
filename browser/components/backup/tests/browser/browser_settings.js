@@ -109,9 +109,10 @@ add_task(async function test_preferences_visibility() {
     await SpecialPowers.popPrefEnv();
 
     Services.obs.removeObserver(
-      gBrowser.contentWindow.gSyncPane.updateBackupUIVisibility,
+      syncPane.updateBackupUIVisibility,
       "backup-service-status-updated"
     );
+    sandbox.restore();
   });
 });
 
