@@ -1,16 +1,10 @@
 package org.mozilla.fenix.settings.settingssearch
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
-@RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
 class TextHighlightingTest {
     private val highlightStyle = SpanStyle(color = Color.Red, fontWeight = FontWeight.Bold)
 
