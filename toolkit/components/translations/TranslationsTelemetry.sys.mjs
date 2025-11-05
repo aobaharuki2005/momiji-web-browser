@@ -2,7 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const lazy = {};
+// @ts-check
+
+/**
+ * @typedef {object} Lazy
+ * @property {typeof console} console
+ */
+
+/** @type {Lazy} */
+const lazy = /** @type {any} */ ({});
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
   return console.createInstance({
@@ -27,9 +35,9 @@ export class TranslationsTelemetry {
    * @param {object} [data] - Optional data passed to telemetry.
    */
   static logEventToConsole(caller, data) {
-    const id = TranslationsTelemetry.getOrCreateFlowId().substring(0, 5);
-    lazy.console?.debug(
-      `flowId[${id}]: ${caller.name}`,
+    const logId = TranslationsTelemetry.getOrCreateFlowId().substring(0, 5);
+    lazy.console?.log(
+      `flowId[${logId}]: ${caller.name}`,
       ...(data ? [data] : [])
     );
   }
