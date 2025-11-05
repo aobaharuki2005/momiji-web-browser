@@ -206,29 +206,39 @@ void LIRGeneratorARM64::lowerForShift(LInstructionHelper<1, 2, 0>* ins,
 void LIRGeneratorARM64::lowerDivI(MDiv* div) {
   if (div->rhs()->isConstant()) {
     LAllocation lhs = useRegister(div->lhs());
+
     int32_t rhs = div->rhs()->toConstant()->toInt32();
     int32_t shift = mozilla::FloorLog2(mozilla::Abs(rhs));
 
     if (rhs != 0 && uint32_t(1) << shift == mozilla::Abs(rhs)) {
-      LDivPowTwoI* lir = new (alloc()) LDivPowTwoI(lhs, shift, rhs < 0);
+      auto* lir = new (alloc()) LDivPowTwoI(lhs, shift, rhs < 0);
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
       }
       define(lir, div);
       return;
     }
-    if (rhs != 0) {
-      LDivConstantI* lir = new (alloc()) LDivConstantI(lhs, temp(), rhs);
-      if (div->fallible()) {
-        assignSnapshot(lir, div->bailoutKind());
-      }
-      define(lir, div);
-      return;
+
+    auto* lir = new (alloc()) LDivConstantI(lhs, temp(), rhs);
+    if (div->fallible()) {
+      assignSnapshot(lir, div->bailoutKind());
     }
+    define(lir, div);
+    return;
   }
 
-  LDivI* lir = new (alloc())
-      LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp());
+  LAllocation lhs, rhs;
+  if (div->canTruncateRemainder()) {
+    lhs = useRegisterAtStart(div->lhs());
+    rhs = useRegisterAtStart(div->rhs());
+  } else {
+    lhs = useRegister(div->lhs());
+    rhs = useRegister(div->rhs());
+  }
+
+  // ARM64 has plenty of scratch registers, so we don't need to request an
+  // additonal temp register from the register allocator.
+  auto* lir = new (alloc()) LDivI(lhs, rhs, LDefinition::BogusTemp());
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
@@ -484,14 +494,15 @@ bool LIRGeneratorARM64::canEmitWasmReduceSimd128AtUses(
 #endif
 
 void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
-  LAllocation lhs = useRegister(div->lhs());
   if (div->rhs()->isConstant()) {
+    LAllocation lhs = useRegister(div->lhs());
+
     // NOTE: the result of toInt32 is coerced to uint32_t.
     uint32_t rhs = div->rhs()->toConstant()->toInt32();
     int32_t shift = mozilla::FloorLog2(rhs);
 
     if (rhs != 0 && uint32_t(1) << shift == rhs) {
-      LDivPowTwoI* lir = new (alloc()) LDivPowTwoI(lhs, shift, false);
+      auto* lir = new (alloc()) LDivPowTwoI(lhs, shift, false);
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
       }
@@ -499,7 +510,7 @@ void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
       return;
     }
 
-    LUDivConstantI* lir = new (alloc()) LUDivConstantI(lhs, temp(), rhs);
+    auto* lir = new (alloc()) LUDivConstantI(lhs, temp(), rhs);
     if (div->fallible()) {
       assignSnapshot(lir, div->bailoutKind());
     }
@@ -508,13 +519,16 @@ void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
   }
 
   // Generate UDiv
-  LAllocation rhs = useRegister(div->rhs());
-  LDefinition remainder = LDefinition::BogusTemp();
-  if (!div->canTruncateRemainder()) {
-    remainder = temp();
+  LAllocation lhs, rhs;
+  if (div->canTruncateRemainder()) {
+    lhs = useRegisterAtStart(div->lhs());
+    rhs = useRegisterAtStart(div->rhs());
+  } else {
+    lhs = useRegister(div->lhs());
+    rhs = useRegister(div->rhs());
   }
 
-  LUDiv* lir = new (alloc()) LUDiv(lhs, rhs, remainder);
+  auto* lir = new (alloc()) LUDiv(lhs, rhs);
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
