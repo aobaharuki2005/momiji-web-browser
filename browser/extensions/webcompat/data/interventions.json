@@ -912,23 +912,6 @@
       }
     ]
   },
-  "1819476": {
-    "label": "axisbank.com",
-    "bugs": {
-      "1819476": {
-        "issue": "page-fails-to-load",
-        "matches": ["*://*.axisbank.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "js": ["bug1819476-axisbank.com-webkitSpeechRecognition-shim.js"]
-        }
-      }
-    ]
-  },
   "1823966": {
     "label": "elearning.dmv.ca.gov",
     "bugs": {
