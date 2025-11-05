@@ -117,6 +117,7 @@ class NavigateEvent final : public Event {
   void PerformSharedChecks(ErrorResult& aRv);
 
  private:
+  MOZ_CAN_RUN_SCRIPT
   void PotentiallyResetFocus();
 
   MOZ_CAN_RUN_SCRIPT

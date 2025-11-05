@@ -39,6 +39,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
+#include "mozilla/dom/Navigation.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/WindowGlobalChild.h"
@@ -913,6 +914,15 @@ void nsFocusManager::ContentAppended(nsIContent* aFirstNewContent,
 static void UpdateFocusWithinState(Element* aElement,
                                    nsIContent* aCommonAncestor,
                                    bool aGettingFocus) {
+  Element* focusedElement = nullptr;
+  Document* document = aElement->GetComposedDoc();
+  if (aElement && document) {
+    if (nsPIDOMWindowOuter* window = document->GetWindow()) {
+      focusedElement = window->GetFocusedElement();
+    }
+  }
+
+  bool focusChanged = false;
   for (nsIContent* content = aElement; content && content != aCommonAncestor;
        content = content->GetFlattenedTreeParent()) {
     Element* element = Element::FromNode(content);
@@ -924,9 +934,20 @@ static void UpdateFocusWithinState(Element* aElement,
       if (element->State().HasState(ElementState::FOCUS_WITHIN)) {
         break;
       }
+
       element->AddStates(ElementState::FOCUS_WITHIN);
     } else {
       element->RemoveStates(ElementState::FOCUS_WITHIN);
+    }
+
+    focusChanged = focusChanged || element == focusedElement;
+  }
+
+  if (focusChanged && document->GetInnerWindow()) {
+    if (RefPtr<Navigation> navigation =
+            document->GetInnerWindow()->Navigation()) {
+      navigation->SetFocusedChangedDuringOngoingNavigation(
+          /* aFocusChangedDuringOngoingNavigation */ true);
     }
   }
 }
