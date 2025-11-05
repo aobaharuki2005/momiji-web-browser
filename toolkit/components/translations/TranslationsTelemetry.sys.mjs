@@ -86,7 +86,7 @@ export class TranslationsTelemetry {
    *
    * @returns {number}
    */
-  static #randomRoll() {
+  static randomRoll() {
     // Generate a uniformly-distributed, random u32 in #RANDOM_VALUE.
     crypto.getRandomValues(TranslationsTelemetry.#RANDOM_VALUE);
 
@@ -120,22 +120,34 @@ export class TranslationsTelemetry {
    *     Channels omitted from the mapping are never skipped.
    * @param {FlowContext} [flowContext]
    *   - The context that contains the flow id and a random roll for the entire flow.
+   * @param {UpdateChannel} [channel]
+   *   - The update channel whose sampling policy should be applied. Defaults to the
+   *     application-wide update channel, but may be overridden for testing.
    *
    * @returns {boolean} True if the event should be skipped for this channel, otherwise false.
    */
-  static shouldSkipSample(sampleRates, flowContext) {
+  static shouldSkipSample(
+    sampleRates,
+    flowContext,
+    channel = AppConstants.MOZ_UPDATE_CHANNEL
+  ) {
     if (Cu.isInAutomation && !sampleRates.applyInAutomation) {
       // Do no skip any samples in automation, unless it is explicitly requested.
       return false;
     }
 
-    const channel = AppConstants.MOZ_UPDATE_CHANNEL;
+    if (channel !== AppConstants.MOZ_UPDATE_CHANNEL && !Cu.isInAutomation) {
+      throw new Error(
+        `Channel "${AppConstants.MOZ_UPDATE_CHANNEL}" was overridden as "${channel}" outside of testing.`
+      );
+    }
+
     const sampleRate = sampleRates[channel];
     let randomRoll;
 
     if (lazy.console?.shouldLog("Debug")) {
       randomRoll =
-        flowContext?.randomRoll ?? TranslationsTelemetry.#randomRoll();
+        flowContext?.randomRoll ?? TranslationsTelemetry.randomRoll();
 
       lazy.console.debug({
         randomRoll: randomRoll.toFixed(8),
@@ -169,7 +181,7 @@ export class TranslationsTelemetry {
 
     if (randomRoll === undefined) {
       randomRoll =
-        flowContext?.randomRoll ?? TranslationsTelemetry.#randomRoll();
+        flowContext?.randomRoll ?? TranslationsTelemetry.randomRoll();
     }
 
     return randomRoll >= sampleRate;
@@ -228,7 +240,7 @@ export class TranslationsTelemetry {
   static createFlowContext() {
     const flowContext = {
       flowId: crypto.randomUUID(),
-      randomRoll: TranslationsTelemetry.#randomRoll(),
+      randomRoll: TranslationsTelemetry.randomRoll(),
     };
 
     TranslationsTelemetry.#flowContext = flowContext;
