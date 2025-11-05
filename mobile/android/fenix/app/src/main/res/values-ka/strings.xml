@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">კრებულში შენახვა</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">გაზიარება</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">საწყისი გვერდი</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -1246,6 +1248,18 @@
   <string name="preference_expanded_toolbar">ჩამოშლილი</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">მისამართების ველი უნდა იყოს ზემოთ, როცა ჩანართის ზოლი გამოჩენილია.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">ახალი ჩანართის გახსნა</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">გაზიარება</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">სანიშნის დამატება</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">თარგმნა</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">საწყისი გვერდი</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">უკან</string>
   <!--
     App icon Preferences
 
@@ -3596,6 +3610,8 @@
   <string name="microsurvey_close_handle_content_description">გამოკითხვის დახურვა</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">დახურვა</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">თვითშევსების ხელსაწყოები</string>
   <!--
     Debug drawer logins
 

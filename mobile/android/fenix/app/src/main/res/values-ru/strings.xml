@@ -3478,13 +3478,13 @@
     Description text for a dialog confirming whether the user wants to delete all data for current site.
     %s is a placeholder for the base domain of website.
   -->
-  <string name="clear_site_data_dialog_description"><![CDATA[Удаление куков и данных сайтов для <b>%s</b> может привести к выходу из аккаунта на веб-сайтах и очищению корзины покупок.]]></string>
+  <string name="clear_site_data_dialog_description"><![CDATA[Удаление куков и данных для <b>%s</b> может привести к выходу из аккаунта на веб-сайтах и очищению корзины.]]></string>
   <!-- Button text on the clear site data dialog to allow users to confirm they wish to clear the site data. -->
-  <string name="clear_site_data_dialog_positive_button_text">Очистить</string>
+  <string name="clear_site_data_dialog_positive_button_text">Удалить</string>
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Отмена</string>
   <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Куки и данные сайтов удалены</string>
+  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Куки и данные сайта удалены</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Защищённое соединение</string>
   <!-- Text for the connection security panel when the site is not secure. -->
@@ -3610,6 +3610,8 @@
   <string name="microsurvey_close_handle_content_description">Закрыть опрос</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Закрыть</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Инструменты автозаполнения</string>
   <!--
     Debug drawer logins
 
