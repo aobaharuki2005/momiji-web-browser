@@ -1714,7 +1714,11 @@ static bool WasmPIPromisingFunction(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // During an exception the stack was unwound -- time to release resources.
-  CleanupActiveSuspender(cx);
+  // At this point, the suspender might be null, if that's the case
+  // don't try to clean up.
+  if (cx->wasm().promiseIntegration.activeSuspender() != nullptr) {
+    CleanupActiveSuspender(cx);
+  }
 
   if (cx->isThrowingOutOfMemory()) {
     return false;
