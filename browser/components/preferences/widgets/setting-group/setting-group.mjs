@@ -118,6 +118,7 @@ export class SettingGroup extends SettingElement {
     return html`<moz-fieldset
       .headingLevel=${this.config.headingLevel}
       @change=${this.onChange}
+      @toggle=${this.onChange}
       @click=${this.onClick}
       @visibility-change=${this.handleVisibilityChange}
       ${spread(this.getCommonPropertyMapping(this.config))}

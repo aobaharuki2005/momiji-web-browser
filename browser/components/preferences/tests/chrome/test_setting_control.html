@@ -132,6 +132,58 @@
         );
       });
 
+      add_task(async function testSimpleToggle() {
+        const PREF = "test.setting-control.toggle";
+        const SETTING = "setting-control-toggle";
+        await SpecialPowers.pushPrefEnv({
+          set: [[PREF, true]],
+        });
+        Preferences.addAll([{ id: PREF, type: "bool" }]);
+        Preferences.addSetting({
+          id: SETTING,
+          pref: PREF,
+        });
+        let itemConfig = {
+          l10nId: LABEL_L10N_ID,
+          id: SETTING,
+          control: "moz-toggle",
+        };
+        let setting = Preferences.getSetting(SETTING);
+        let control = await renderTemplate(itemConfig);
+
+        is(
+          control.controlEl.localName,
+          "moz-toggle",
+          "The control rendered a toggle"
+        );
+        is(control.controlEl.dataset.l10nId, LABEL_L10N_ID, "Label is set");
+        is(control.controlEl.pressed, true, "toggle is pressed");
+        is(control.controlEl.disabled, false, "toggle is enabled");
+        is(Services.prefs.getBoolPref(PREF), true, "pref is true");
+
+        let settingChanged = waitForSettingChange(setting);
+        synthesizeMouseAtCenter(control.controlEl, {});
+        await settingChanged;
+
+        is(
+          control.controlEl.pressed,
+          false,
+          "toggle becomes unchecked after click"
+        );
+        is(Services.prefs.getBoolPref(PREF), false, "pref is false");
+
+        settingChanged = waitForSettingChange(setting);
+        Services.prefs.setBoolPref(PREF, true);
+        await settingChanged;
+
+        is(
+          control.controlEl.pressed,
+          true,
+          "toggle becomes pressed after pref change"
+        );
+        is(Services.prefs.getBoolPref(PREF), true, "pref is true");
+      });
+
       add_task(async function testSettingSameControlValue() {
         const SETTING = "setting-control-same-value";
         Preferences.addSetting({

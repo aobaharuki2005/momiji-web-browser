@@ -6,7 +6,7 @@ support-files = [
 
 ["test_nav_notice.html"]
 
-["test_setting_control_checkbox.html"]
+["test_setting_control.html"]
 
 ["test_setting_control_controlAttrs.html"]
 
