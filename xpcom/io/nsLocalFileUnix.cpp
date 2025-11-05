@@ -2291,63 +2291,7 @@ nsLocalFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor) {
 
 NS_IMETHODIMP
 nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor) {
-#ifdef MOZ_WIDGET_COCOA
-  if (aPersistentDescriptor.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // Support pathnames as user-supplied descriptors if they begin with '/'
-  // or '~'.  These characters do not collide with the base64 set used for
-  // encoding alias records.
-  char first = aPersistentDescriptor.First();
-  if (first == '/' || first == '~') {
-    return InitWithNativePath(aPersistentDescriptor);
-  }
-
-  uint32_t dataSize = aPersistentDescriptor.Length();
-  nsAutoCString decodedData;
-  nsresult nr = mozilla::Base64Decode(aPersistentDescriptor, decodedData);
-  if (NS_FAILED(nr)) {
-    NS_ERROR("SetPersistentDescriptor was given bad data");
-    return NS_ERROR_FAILURE;
-  }
-
-  // Cast to an alias record and resolve.
-  AliasRecord aliasHeader = *(AliasPtr)decodedData.get();
-  int32_t aliasSize = ::GetAliasSizeFromPtr(&aliasHeader);
-  if (aliasSize >
-      ((int32_t)dataSize * 3) / 4) {  // be paranoid about having too few data
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = NS_OK;
-
-  // Move the now-decoded data into the Handle.
-  // The size of the decoded data is 3/4 the size of the encoded data. See
-  // plbase64.h
-  Handle newHandle = nullptr;
-  if (::PtrToHand(decodedData.get(), &newHandle, aliasSize) != noErr) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  Boolean changed;
-  FSRef resolvedFSRef;
-  OSErr err = ::FSResolveAlias(nullptr, (AliasHandle)newHandle, &resolvedFSRef,
-                               &changed);
-
-  rv = MacErrorMapper(err);
-  DisposeHandle(newHandle);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return InitWithFSRef(&resolvedFSRef);
-#else
   return InitWithNativePath(aPersistentDescriptor);
-#endif
 }
 
 NS_IMETHODIMP
