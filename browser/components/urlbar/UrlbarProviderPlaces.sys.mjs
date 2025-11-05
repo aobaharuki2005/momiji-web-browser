@@ -7,6 +7,7 @@
 
 /**
  * @import {OpenedConnection} from "resource://gre/modules/Sqlite.sys.mjs"
+ * @import {UrlbarSearchStringTokenData} from "UrlbarTokenizer.sys.mjs"
  */
 
 /**
@@ -93,10 +94,9 @@ import {
   UrlbarProvider,
   UrlbarUtils,
 } from "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
+const lazy = XPCOMUtils.declareLazy({
   KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -111,13 +111,35 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer:
     "moz-src:///browser/components/urlbar/UrlbarTokenizer.sys.mjs",
-});
-
-// Constants to support an alternative frecency algorithm.
-ChromeUtils.defineLazyGetter(lazy, "PAGES_FRECENCY_FIELD", () => {
-  return lazy.PlacesUtils.history.isAlternativeFrecencyEnabled
-    ? "alt_frecency"
-    : "frecency";
+  PAGES_FRECENCY_FIELD: () => {
+    return lazy.PlacesUtils.history.isAlternativeFrecencyEnabled
+      ? "alt_frecency"
+      : "frecency";
+  },
+  // Maps restriction character types to textual behaviors.
+  typeToBehaviorMap: () => {
+    return /** @type {Map<Values<typeof lazy.UrlbarTokenizer.TYPE>, string>} */ (
+      new Map([
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY, "history"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK, "bookmark"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG, "tag"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE, "openpage"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH, "search"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE, "title"],
+        [lazy.UrlbarTokenizer.TYPE.RESTRICT_URL, "url"],
+      ])
+    );
+  },
+  sourceToBehaviorMap: () => {
+    return /** @type {Map<Values<typeof UrlbarUtils.RESULT_SOURCE>, string>} */ (
+      new Map([
+        [UrlbarUtils.RESULT_SOURCE.HISTORY, "history"],
+        [UrlbarUtils.RESULT_SOURCE.BOOKMARKS, "bookmark"],
+        [UrlbarUtils.RESULT_SOURCE.TABS, "openpage"],
+        [UrlbarUtils.RESULT_SOURCE.SEARCH, "search"],
+      ])
+    );
+  },
 });
 
 function setTimeout(callback, ms) {
@@ -125,28 +147,6 @@ function setTimeout(callback, ms) {
   timer.initWithCallback(callback, ms, timer.TYPE_ONE_SHOT);
   return timer;
 }
-
-// Maps restriction character types to textual behaviors.
-ChromeUtils.defineLazyGetter(lazy, "typeToBehaviorMap", () => {
-  return new Map([
-    [lazy.UrlbarTokenizer.TYPE.RESTRICT_HISTORY, "history"],
-    [lazy.UrlbarTokenizer.TYPE.RESTRICT_BOOKMARK, "bookmark"],
-    [lazy.UrlbarTokenizer.TYPE.RESTRICT_TAG, "tag"],
-    [lazy.UrlbarTokenizer.TYPE.RESTRICT_OPENPAGE, "openpage"],
-    [lazy.UrlbarTokenizer.TYPE.RESTRICT_SEARCH, "search"],
-    [lazy.UrlbarTokenizer.TYPE.RESTRICT_TITLE, "title"],
-    [lazy.UrlbarTokenizer.TYPE.RESTRICT_URL, "url"],
-  ]);
-});
-
-ChromeUtils.defineLazyGetter(lazy, "sourceToBehaviorMap", () => {
-  return new Map([
-    [UrlbarUtils.RESULT_SOURCE.HISTORY, "history"],
-    [UrlbarUtils.RESULT_SOURCE.BOOKMARKS, "bookmark"],
-    [UrlbarUtils.RESULT_SOURCE.TABS, "openpage"],
-    [UrlbarUtils.RESULT_SOURCE.SEARCH, "search"],
-  ]);
-});
 
 // Helper functions
 
@@ -209,7 +209,7 @@ function makeKeyForMatch(match) {
         (
           action.params.searchSuggestion || action.params.searchQuery
         ).toLocaleLowerCase(),
-      ];
+      ].join(",");
       break;
     default:
       [key, prefix] = UrlbarUtils.stripPrefixAndTrim(
@@ -258,11 +258,11 @@ function makeActionUrl(type, params) {
  *
  * @param {UrlbarQueryContext} context the query context.
  * @param {Array} matches The match objects.
- * @param {Set} urls a Set containing all the found urls, userContextId tuple
+ * @param {Set<string>} urls a Set containing all the found urls, userContextId tuple
  *        strings used to discard already added results.
- * @returns {Array} converted results
  */
 function convertLegacyMatches(context, matches, urls) {
+  /** @type {UrlbarResult[]} */
   let results = [];
   for (let match of matches) {
     // First, let's check if we already added this result.
@@ -281,8 +281,7 @@ function convertLegacyMatches(context, matches, urls) {
       // all their payloads.
       icon: match.icon || undefined,
       style: match.style,
-      comment: match.comment,
-      firstToken: context.tokens[0],
+      title: match.comment,
       userContextId: match.userContextId,
       lastVisit: match.lastVisit,
       tabGroup: match.tabGroup,
@@ -301,9 +300,17 @@ function convertLegacyMatches(context, matches, urls) {
 /**
  * Creates a new UrlbarResult from the provided data.
  *
- * @param {Array} tokens the search tokens.
- * @param {object} info includes properties from the legacy result.
- * @returns {object} an UrlbarResult
+ * @param {UrlbarSearchStringTokenData[]} tokens
+ *   The search tokens.
+ * @param {object} info
+ * @param {string} info.url
+ * @param {string} info.title
+ * @param {string} info.icon
+ * @param {number} info.userContextId
+ * @param {number} info.lastVisit
+ * @param {number} info.tabGroup
+ * @param {number} info.frecency
+ * @param {string} info.style
  */
 function makeUrlbarResult(tokens, info) {
   let action = lazy.PlacesUtils.parseActionUrl(info.url);
@@ -334,7 +341,7 @@ function makeUrlbarResult(tokens, info) {
           tokens,
           {
             url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
-            title: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
+            title: [info.title, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: info.icon,
             userContextId: info.userContextId,
             lastVisit: info.lastVisit,
@@ -361,7 +368,7 @@ function makeUrlbarResult(tokens, info) {
   // This is a normal url/title tuple.
   let source;
   let tags = [];
-  let comment = info.comment;
+  let title = info.title;
   let isBlockable;
   let blockL10n;
   let helpUrl;
@@ -383,18 +390,19 @@ function makeUrlbarResult(tokens, info) {
   // If the style indicates that the result is tagged, then the tags are
   // included in the title, and we must extract them.
   if (info.style.includes("tag")) {
-    [comment, tags] = info.comment.split(UrlbarUtils.TITLE_TAGS_SEPARATOR);
+    let titleTags;
+    [title, titleTags] = info.title.split(UrlbarUtils.TITLE_TAGS_SEPARATOR);
 
     // However, as mentioned above, we don't want to show tags for non-
     // bookmarked items, so we include tags in the final result only if it's
     // bookmarked, and we drop the tags otherwise.
     if (source != UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
-      tags = "";
+      titleTags = "";
     }
 
     // Tags are separated by a comma.
     // We should also just include tags that match the searchString.
-    tags = tags.split(",").filter(tag => {
+    tags = titleTags.split(",").filter(tag => {
       let lowerCaseTag = tag.toLocaleLowerCase();
       return tokens.some(token => lowerCaseTag.includes(token.lowerCaseValue));
     });
@@ -406,7 +414,7 @@ function makeUrlbarResult(tokens, info) {
     ...lazy.UrlbarResult.payloadAndSimpleHighlights(tokens, {
       url: [info.url, UrlbarUtils.HIGHLIGHT.TYPED],
       icon: info.icon,
-      title: [comment, UrlbarUtils.HIGHLIGHT.TYPED],
+      title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
       tags: [tags, UrlbarUtils.HIGHLIGHT.TYPED],
       isBlockable,
       blockL10n,
@@ -573,7 +581,7 @@ class Search {
    */
   hasBehavior(type) {
     let behavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()];
-    return this.#behavior & behavior;
+    return !!(this.#behavior & behavior);
   }
 
   /**
@@ -741,7 +749,8 @@ class Search {
   }, /** @type {Record<Values<typeof MATCH_TYPE>, number>} */ ({}));
 
   /**
-   * The default behaviour for this search.
+   * @type {number}
+   *   The default behaviour for this search. This may be a mixture of behaviors.
    */
   #behavior;
   #matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_BOUNDARY;
@@ -1064,7 +1073,7 @@ class Search {
       this.#makeGroups(lazy.UrlbarPrefs.resultGroups, this.#maxResults);
     }
 
-    let replace = 0;
+    let replace = false;
     for (let group of this.#groups) {
       // Move to the next group if the match type is incompatible, or if there
       // is no available space or if the frecency is below the threshold.
@@ -1498,10 +1507,12 @@ export class UrlbarProviderPlaces extends UrlbarProvider {
   /**
    * Starts querying.
    *
-   * @param {object} queryContext The query context object
-   * @param {Function} addCallback Callback invoked by the provider to add a new
-   *        result.
-   * @returns {Promise} resolved when the query stops.
+   * @param {object} queryContext
+   *   The query context object
+   * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} addCallback
+   *   Callback invoked by the provider to add a new result.
+   * @returns {Promise<void>}
+   *   Resolved when the query stops.
    */
   startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
