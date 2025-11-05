@@ -513,3 +513,39 @@ add_task(async function test_turn_on_scheduled_backups_encryption_error() {
     );
   });
 });
+
+/**
+ * Tests that a backup will go into the default directory unless the user
+ * specifically selects a folder. (Before, the directory previously selected
+ * would be used.)
+ */
+add_task(async function test_default_location_selected() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.backup.location", "backup dir path"]],
+  });
+
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let settings = browser.contentDocument.querySelector("backup-settings");
+    await settings.updateComplete;
+
+    let turnOnButton = settings.scheduledBackupsButtonEl;
+    turnOnButton.click();
+    await settings.updateComplete;
+
+    let turnOnScheduledBackups = settings.turnOnScheduledBackupsEl;
+    let promise = BrowserTestUtils.waitForEvent(
+      turnOnScheduledBackups,
+      "BackupUI:EnableScheduledBackups"
+    );
+    turnOnScheduledBackups.confirmButtonEl.click();
+    let event = await promise;
+
+    is(
+      event.detail.parentDirPath,
+      settings.backupServiceState.defaultParent.path,
+      "Default path was used when nothing was explicitly selected"
+    );
+  });
+
+  await SpecialPowers.popPrefEnv();
+});

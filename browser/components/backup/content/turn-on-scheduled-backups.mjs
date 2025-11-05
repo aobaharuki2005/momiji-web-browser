@@ -186,20 +186,9 @@ export default class TurnOnScheduledBackups extends MozLitElement {
   }
 
   handleConfirm() {
-    let detail;
-    if (this._newPath) {
-      detail = {
-        parentDirPath: this._newPath,
-      };
-    } else if (this.backupServiceState?.backupDirPath) {
-      detail = {
-        parentDirPath: this.backupServiceState?.backupDirPath,
-      };
-    } else {
-      detail = {
-        parentDirPath: this.defaultPath,
-      };
-    }
+    let detail = {
+      parentDirPath: this._newPath || this.defaultPath,
+    };
 
     if (this._showPasswordOptions && this._passwordsMatch) {
       detail.password = this._inputPassValue;
