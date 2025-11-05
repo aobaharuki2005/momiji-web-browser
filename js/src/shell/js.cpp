@@ -1113,6 +1113,10 @@ static mozilla::UniqueFreePtr<char[]> GetLine(FILE* file, const char* prompt) {
   return buffer;
 }
 
+static bool EvaluateInner(JSContext* cx, HandleString code,
+                          MutableHandleObject global, HandleObject opts,
+                          HandleObject cacheEntry, MutableHandleValue rval);
+
 static bool ShellInterruptCallback(JSContext* cx) {
   ShellContext* sc = GetShellContext(cx);
   if (!sc->serviceInterrupt) {
@@ -2825,6 +2829,12 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
   MOZ_ASSERT(global);
 
+  return EvaluateInner(cx, code, &global, opts, cacheEntry, args.rval());
+}
+
+static bool EvaluateInner(JSContext* cx, HandleString code,
+                          MutableHandleObject global, HandleObject opts,
+                          HandleObject cacheEntry, MutableHandleValue rval) {
   // Check "global" property before everything to use the given global's
   // option as the default value.
   Maybe<CompileOptions> maybeOptions;
@@ -2835,8 +2845,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (!v.isUndefined()) {
       if (v.isObject()) {
-        global = js::CheckedUnwrapDynamic(&v.toObject(), cx,
-                                          /* stopAtWindowProxy = */ false);
+        global.set(js::CheckedUnwrapDynamic(&v.toObject(), cx,
+                                            /* stopAtWindowProxy = */ false));
         if (!global) {
           return false;
         }
@@ -3083,8 +3093,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
     if (execute) {
       if (!(envChain.empty()
-                ? JS_ExecuteScript(cx, script, args.rval())
-                : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
+                ? JS_ExecuteScript(cx, script, rval)
+                : JS_ExecuteScript(cx, envChain, script, rval))) {
         if (catchTermination && !JS_IsExceptionPending(cx)) {
           ShellContext* sc = GetShellContext(cx);
           if (sc->quitting) {
@@ -3096,7 +3106,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
           if (!str) {
             return false;
           }
-          args.rval().setString(str);
+          rval.setString(str);
           return true;
         }
         return false;
@@ -3155,7 +3165,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  return JS_WrapValue(cx, args.rval());
+  return JS_WrapValue(cx, rval);
 }
 
 JSString* js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr) {
