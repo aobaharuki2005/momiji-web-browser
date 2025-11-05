@@ -11,7 +11,7 @@ const { HttpServer } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  DAPTelemetrySender: "resource://gre/modules/DAPTelemetrySender.sys.mjs",
+  DAPSender: "resource://gre/modules/DAPSender.sys.mjs",
 });
 
 const BinaryInputStream = Components.Constructor(
@@ -22,7 +22,6 @@ const BinaryInputStream = Components.Constructor(
 
 const PREF_LEADER = "toolkit.telemetry.dap.leader.url";
 const PREF_HELPER = "toolkit.telemetry.dap.helper.url";
-
 const PREF_DATAUPLOAD = "datareporting.healthreport.uploadEnabled";
 
 let server;
@@ -109,7 +108,7 @@ add_setup(async function () {
 
 add_task(async function testVerificationTask() {
   server_requests = [];
-  await lazy.DAPTelemetrySender.sendTestReports(tasks, { timeout: 5000 });
+  await lazy.DAPSender.sendTestReports(tasks, { timeout: 5000 });
   Assert.deepEqual(
     server_requests,
     task_report_sizes,
@@ -125,7 +124,7 @@ add_task(async function testNetworkError() {
 
   let thrownErr;
   try {
-    await lazy.DAPTelemetrySender.sendTestReports(tasks, { timeout: 5000 });
+    await lazy.DAPSender.sendTestReports(tasks, { timeout: 5000 });
   } catch (e) {
     thrownErr = e;
   }
@@ -136,21 +135,14 @@ add_task(async function testNetworkError() {
   Services.prefs.setStringPref(PREF_LEADER, test_leader);
 });
 
-add_task(async function testTelemetryToggle() {
-  // Normal
-  server_requests = [];
-  await lazy.DAPTelemetrySender.sendTestReports(tasks, { timeout: 5000 });
-  Assert.deepEqual(server_requests, task_report_sizes);
-
-  // Telemetry off
+add_task(async function testTelemetryDisabled() {
   server_requests = [];
   Services.prefs.setBoolPref(PREF_DATAUPLOAD, false);
-  await lazy.DAPTelemetrySender.sendTestReports(tasks, { timeout: 5000 });
-  Assert.deepEqual(server_requests, []);
-
-  // Normal
-  server_requests = [];
+  await lazy.DAPSender.sendTestReports(tasks, { timeout: 5000 });
+  Assert.deepEqual(
+    server_requests,
+    task_report_sizes,
+    "Report upload successful even with telemetry disabled."
+  );
   Services.prefs.clearUserPref(PREF_DATAUPLOAD);
-  await lazy.DAPTelemetrySender.sendTestReports(tasks, { timeout: 5000 });
-  Assert.deepEqual(server_requests, task_report_sizes);
 });

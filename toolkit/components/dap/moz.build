@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
 EXTRA_JS_MODULES += [
     "DAPIncrementality.sys.mjs",
     "DAPReportController.sys.mjs",
+    "DAPSender.sys.mjs",
     "DAPTelemetrySender.sys.mjs",
     "DAPVisitCounter.sys.mjs",
 ]

@@ -10,5 +10,8 @@ skip-if = ["os == 'android'"] # DAP is not supported on Android
 ["test_dap_report_controller.js"]
 skip-if = ["os == 'android'"] # DAP is not supported on Android
 
+["test_dap_telemetry.js"]
+skip-if = ["os == 'android'"] # DAP is not supported on Android
+
 ["test_dap_visit_counter.js"]
 skip-if = ["os == 'android'"] # DAP is not supported on Android
