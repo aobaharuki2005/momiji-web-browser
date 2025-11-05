@@ -501,6 +501,61 @@ pub(crate) mod __glean_metric_maps {
             _ => panic!("No labeled_{{labeled_type}} for metric id {}", metric_id),
         }
     }
+
+    /// Gets the value from the specified labeled metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `ping_name` - The label identifying the {{labeled_type}} submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns a map of all values in the labeled metric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_{{labeled_type}} by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_{{labeled_type}}_test_get(metric_id: u32, ping_name: &str) -> Option<HashMap<String, {{labeled_type|test_get_type}}>> {
+        let ping_name = if ping_name.len() == 0 {
+            None
+        } else {
+            Some(ping_name.to_string())
+        };
+        let metric = match metric_id {
+{% for metric_id, (labeled, _) in labeleds_by_id.items() %}
+            {{metric_id}} => &*super::{{labeled}} as &dyn ::glean::TestGetValue<Output=HashMap<String, {{labeled_type|test_get_type}}>>,
+{% endfor %}
+            _ => panic!("No labeled_{{labeled_type}} for metric id {}", metric_id),
+        };
+
+        metric.test_get_value(ping_name)
+    }
+
+    /// Gets the number of reported errors from the specified labeled metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `error_type` - The error type for which to look
+    ///
+    /// # Returns
+    ///
+    /// Returns the number of recorded errors in the labeled metric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_{{labeled_type}} by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_{{labeled_type}}_test_get_num_recorded_errors(metric_id: u32, error_type: glean::ErrorType) -> i32 {
+        match metric_id {
+{% for metric_id, (labeled, _) in labeleds_by_id.items() %}
+            {{metric_id}} => super::{{labeled}}.test_get_num_recorded_errors(error_type),
+{% endfor %}
+            _ => panic!("No labeled_{{labeled_type}} for metric id {}", metric_id),
+        }
+    }
 {% endfor %}
 
     pub(crate) fn labeled_enum_to_str(metric_id: u32, label: u16) -> &'static str {

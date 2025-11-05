@@ -219,3 +219,35 @@ macro_rules! test_get_errors {
         error_str
     }};
 }
+
+/// Check the provided method on the metric map in the provided storage for errors.
+/// On finding one, return an error string.
+///
+/// # Arguments
+///
+/// * `$metric_map`  - The metric map to use.
+/// * `$method`      - The `labeled_<type>_test_get_num_recorded_errors` method to use.
+/// * `$metric_id`   - The metric id to find in the metric map.
+macro_rules! test_get_errors_with_method {
+    ($metric_map:ident, $method:ident, $metric_id:path) => {{
+        let error_types = [
+            glean::ErrorType::InvalidValue,
+            glean::ErrorType::InvalidLabel,
+            glean::ErrorType::InvalidState,
+            glean::ErrorType::InvalidOverflow,
+        ];
+        let mut error_str = None;
+        for &error_type in error_types.iter() {
+            let num_errors = $metric_map::$method($metric_id, error_type);
+            if num_errors > 0 {
+                error_str = Some(format!(
+                    "Metric had {} error(s) of type {}!",
+                    num_errors,
+                    error_type.as_str()
+                ));
+                break;
+            }
+        }
+        error_str
+    }};
+}
