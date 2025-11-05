@@ -32,6 +32,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
     apt-get update && \
     apt-get dist-upgrade && \
     apt-get install \
+      coreutils \
       git \
       less \
       make \

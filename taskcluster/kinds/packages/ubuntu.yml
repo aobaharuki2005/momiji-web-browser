@@ -114,6 +114,18 @@ ub18-mercurial:
                          -e "s/__DATE__/$(date --rfc-2822)/" \
                          -e "s/__CODENAME__/bionic/" debian/changelog
 
+ub18-coreutils:
+    description: "Modern coreutils for Ubuntu bionic"
+    treeherder:
+        symbol: Ub18(coreutils)
+    run:
+        dsc:
+            url: https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/coreutils/8.32-4.1ubuntu1/coreutils_8.32-4.1ubuntu1.dsc
+            sha256: ac8f500698cb87284f6f5c750647d8c599866c5e00ff883b7dec76af23c376af
+        pre-build-command: >-
+            sed -i 's/debhelper (>= 12)/debhelper (>= 11)/' debian/control &&
+            export FORCE_UNSAFE_CONFIGURE=1
+
 ub20-python-zstandard:
     description: "python-zstandard for Ubuntu focal"
     treeherder:
