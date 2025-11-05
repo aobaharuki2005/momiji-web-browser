@@ -91,6 +91,25 @@ void CodeGeneratorARM64::bailoutIf(Assembler::Condition condition,
   masm.B(ool->entry(), condition);
 }
 
+void CodeGeneratorARM64::bailoutIfZero(Assembler::Condition condition,
+                                       ARMRegister rt, LSnapshot* snapshot) {
+  MOZ_ASSERT(condition == Assembler::Zero || condition == Assembler::NonZero);
+
+  encode(snapshot);
+
+  InlineScriptTree* tree = snapshot->mir()->block()->trackedTree();
+  auto* ool = new (alloc()) LambdaOutOfLineCode(
+      [=](OutOfLineCode& ool) { emitBailoutOOL(snapshot); });
+  addOutOfLineCode(ool,
+                   new (alloc()) BytecodeSite(tree, tree->script()->code()));
+
+  if (condition == Assembler::Zero) {
+    masm.Cbz(rt, ool->entry());
+  } else {
+    masm.Cbnz(rt, ool->entry());
+  }
+}
+
 void CodeGeneratorARM64::bailoutFrom(Label* label, LSnapshot* snapshot) {
   MOZ_ASSERT_IF(!masm.oom(), label->used());
   MOZ_ASSERT_IF(!masm.oom(), !label->bound());
@@ -220,8 +239,7 @@ void CodeGenerator::visitMulI(LMulI* ins) {
     if (mul->canBeNegativeZero() && constant <= 0) {
       Assembler::Condition bailoutCond =
           (constant == 0) ? Assembler::LessThan : Assembler::Equal;
-      masm.Cmp(toWRegister(lhs), Operand(0));
-      bailoutIf(bailoutCond, ins->snapshot());
+      bailoutCmp32(bailoutCond, lhsreg, Imm32(0), ins->snapshot());
     }
 
     switch (constant) {
