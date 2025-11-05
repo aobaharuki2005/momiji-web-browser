@@ -4441,7 +4441,6 @@
   operands:
     lhs: WordSized
     rhs: WordSized
-  num_temps: 1
   mir_op: Div
 
 - name: UMod

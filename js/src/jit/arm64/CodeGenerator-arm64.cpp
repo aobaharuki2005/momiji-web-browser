@@ -320,59 +320,53 @@ void CodeGenerator::visitMulI(LMulI* ins) {
 }
 
 void CodeGenerator::visitDivI(LDivI* ins) {
-  const Register lhs = ToRegister(ins->lhs());
-  const Register rhs = ToRegister(ins->rhs());
-  const Register output = ToRegister(ins->output());
+  Register lhs = ToRegister(ins->lhs());
+  Register rhs = ToRegister(ins->rhs());
 
-  const ARMRegister lhs32 = toWRegister(ins->lhs());
-  const ARMRegister rhs32 = toWRegister(ins->rhs());
-  const ARMRegister temp32 = toWRegister(ins->temp0());
-  const ARMRegister output32 = toWRegister(ins->output());
+  ARMRegister lhs32 = toWRegister(ins->lhs());
+  ARMRegister rhs32 = toWRegister(ins->rhs());
+  ARMRegister output32 = toWRegister(ins->output());
 
   MDiv* mir = ins->mir();
 
-  Label done;
-
   // Handle division by zero.
   if (mir->canBeDivideByZero()) {
-    masm.test32(rhs, rhs);
     if (mir->trapOnError()) {
       Label nonZero;
-      masm.j(Assembler::NonZero, &nonZero);
+      masm.Cbnz(rhs32, &nonZero);
       masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
       masm.bind(&nonZero);
     } else if (mir->canTruncateInfinities()) {
-      // Truncated division by zero is zero: (Infinity|0 = 0).
-      Label nonZero;
-      masm.j(Assembler::NonZero, &nonZero);
-      masm.Mov(output32, wzr);
-      masm.jump(&done);
-      masm.bind(&nonZero);
+      // SDIV returns zero for division by zero, exactly what we want for
+      // truncated division. Remainder computation expects a non-zero divisor,
+      // so we must also be allowed to truncate the remainder.
+      MOZ_ASSERT(mir->canTruncateRemainder(),
+                 "remainder computation expects a non-zero divisor");
     } else {
       MOZ_ASSERT(mir->fallible());
-      bailoutIf(Assembler::Zero, ins->snapshot());
+      bailoutTest32(Assembler::Zero, rhs, rhs, ins->snapshot());
     }
   }
 
   // Handle an integer overflow from (INT32_MIN / -1).
   // The integer division gives INT32_MIN, but should be -(double)INT32_MIN.
-  if (mir->canBeNegativeOverflow()) {
+  //
+  // SDIV returns INT32_MIN for (INT32_MIN / -1), so no extra code needed when
+  // truncation is allowed.
+  if (mir->canBeNegativeOverflow() &&
+      (mir->trapOnError() || !mir->canTruncateOverflow())) {
     Label notOverflow;
 
     // Branch to handle the non-overflow cases.
     masm.branch32(Assembler::NotEqual, lhs, Imm32(INT32_MIN), &notOverflow);
-    masm.branch32(Assembler::NotEqual, rhs, Imm32(-1), &notOverflow);
 
     // Handle overflow.
     if (mir->trapOnError()) {
+      masm.branch32(Assembler::NotEqual, rhs, Imm32(-1), &notOverflow);
       masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->trapSiteDesc());
-    } else if (mir->canTruncateOverflow()) {
-      // (-INT32_MIN)|0 == INT32_MIN, which is already in lhs.
-      masm.move32(lhs, output);
-      masm.jump(&done);
     } else {
       MOZ_ASSERT(mir->fallible());
-      bailout(ins->snapshot());
+      bailoutCmp32(Assembler::Equal, rhs, Imm32(-1), ins->snapshot());
     }
     masm.bind(&notOverflow);
   }
@@ -381,28 +375,23 @@ void CodeGenerator::visitDivI(LDivI* ins) {
   if (!mir->canTruncateNegativeZero() && mir->canBeNegativeZero()) {
     Label nonZero;
     masm.branch32(Assembler::NotEqual, lhs, Imm32(0), &nonZero);
-    masm.cmp32(rhs, Imm32(0));
-    bailoutIf(Assembler::LessThan, ins->snapshot());
+    bailoutCmp32(Assembler::LessThan, rhs, Imm32(0), ins->snapshot());
     masm.bind(&nonZero);
   }
 
   // Perform integer division.
-  if (mir->canTruncateRemainder()) {
-    masm.Sdiv(output32, lhs32, rhs32);
-  } else {
+  masm.Sdiv(output32, lhs32, rhs32);
+
+  if (!mir->canTruncateRemainder()) {
     vixl::UseScratchRegisterScope temps(&masm.asVIXL());
-    ARMRegister scratch32 = temps.AcquireW();
+    ARMRegister remainder32 = temps.AcquireW();
+    Register remainder = remainder32.asUnsized();
 
-    // ARM does not automatically calculate the remainder.
-    // The ISR suggests multiplication to determine whether a remainder exists.
-    masm.Sdiv(scratch32, lhs32, rhs32);
-    masm.Mul(temp32, scratch32, rhs32);
-    masm.Cmp(lhs32, temp32);
-    bailoutIf(Assembler::NotEqual, ins->snapshot());
-    masm.Mov(output32, scratch32);
+    // Compute the remainder: remainder = lhs - (output * rhs).
+    masm.Msub(remainder32, output32, rhs32, lhs32);
+
+    bailoutTest32(Assembler::NonZero, remainder, remainder, ins->snapshot());
   }
-
-  masm.bind(&done);
 }
 
 void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
@@ -496,9 +485,23 @@ void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
   const ARMRegister output64 = toXRegister(ins->output());
   int32_t d = ins->denominator();
 
+  MDiv* mir = ins->mir();
+
   // The absolute value of the denominator isn't a power of 2.
   using mozilla::Abs;
-  MOZ_ASSERT((Abs(d) & (Abs(d) - 1)) != 0);
+  MOZ_ASSERT(!mozilla::IsPowerOfTwo(Abs(d)));
+
+  if (d == 0) {
+    if (mir->trapOnError()) {
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+    } else if (mir->canTruncateInfinities()) {
+      masm.Mov(output32, wzr);
+    } else {
+      MOZ_ASSERT(mir->fallible());
+      bailout(ins->snapshot());
+    }
+    return;
+  }
 
   // We will first divide by Abs(d), and negate the answer if d is negative.
   // If desired, this can be avoided by generalizing computeDivisionConstants.
@@ -530,7 +533,7 @@ void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
 
   // We'll subtract -1 instead of adding 1, because (n < 0 ? -1 : 0) can be
   // computed with just a sign-extending shift of 31 bits.
-  if (ins->mir()->canBeNegativeDividend()) {
+  if (mir->canBeNegativeDividend()) {
     masm.Asr(const32, lhs32, 31);
     masm.Sub(output32, output32, const32);
   }
@@ -540,28 +543,33 @@ void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
     masm.Neg(output32, output32);
   }
 
-  if (!ins->mir()->isTruncated()) {
+  if (!mir->isTruncated()) {
     // This is a division op. Multiply the obtained value by d to check if
     // the correct answer is an integer. This cannot overflow, since |d| > 1.
     masm.Mov(const32, d);
     masm.Msub(const32, output32, const32, lhs32);
-    // bailout if (lhs - output * d != 0)
-    masm.Cmp(const32, wzr);
-    auto bailoutCond = Assembler::NonZero;
 
-    // If lhs is zero and the divisor is negative, the answer should have
-    // been -0.
-    if (d < 0) {
+    if (d > 0) {
+      // bailout if (lhs - output * d != 0)
+      bailoutTest32(Assembler::NonZero, const32, const32, ins->snapshot());
+    } else {
+      MOZ_ASSERT(d < 0);
+
+      // bailout if (lhs - output * d != 0)
+      masm.Cmp(const32, wzr);
+
+      // If lhs is zero and the divisor is negative, the answer should have
+      // been -0.
+      //
       // or bailout if (lhs == 0).
       // ^                  ^
       // |                  '-- masm.Ccmp(lhs32, lhs32, .., ..)
-      // '-- masm.Ccmp(.., .., vixl::ZFlag, ! bailoutCond)
+      // '-- masm.Ccmp(.., .., vixl::ZFlag, Assembler::Zero)
       masm.Ccmp(lhs32, wzr, vixl::ZFlag, Assembler::Zero);
-      bailoutCond = Assembler::Zero;
-    }
 
-    // bailout if (lhs - output * d != 0) or (d < 0 && lhs == 0)
-    bailoutIf(bailoutCond, ins->snapshot());
+      // bailout if (lhs - output * d != 0) or (lhs == 0)
+      bailoutIf(Assembler::Zero, ins->snapshot());
+    }
   }
 }
 
@@ -573,22 +581,23 @@ void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
   const ARMRegister output64 = toXRegister(ins->output());
   uint32_t d = ins->denominator();
 
+  MDiv* mir = ins->mir();
+
+  // The denominator isn't a power of 2 (see LDivPowTwoI).
+  MOZ_ASSERT(!mozilla::IsPowerOfTwo(d));
+
   if (d == 0) {
-    if (ins->mir()->isTruncated()) {
-      if (ins->mir()->trapOnError()) {
-        masm.wasmTrap(wasm::Trap::IntegerDivideByZero,
-                      ins->mir()->trapSiteDesc());
-      } else {
-        masm.Mov(output32, wzr);
-      }
+    if (ins->mir()->trapOnError()) {
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero,
+                    ins->mir()->trapSiteDesc());
+    } else if (mir->canTruncateInfinities()) {
+      masm.Mov(output32, wzr);
     } else {
+      MOZ_ASSERT(mir->fallible());
       bailout(ins->snapshot());
     }
     return;
   }
-
-  // The denominator isn't a power of 2 (see LDivPowTwoI).
-  MOZ_ASSERT((d & (d - 1)) != 0);
 
   auto rmc = ReciprocalMulConstants::computeUnsignedDivisionConstants(d);
 
@@ -622,12 +631,12 @@ void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
   // We now have the truncated division value. We are checking whether the
   // division resulted in an integer, we multiply the obtained value by d and
   // check the remainder of the division.
-  if (!ins->mir()->isTruncated()) {
+  if (!mir->isTruncated()) {
     masm.Mov(const32, d);
     masm.Msub(const32, output32, const32, lhs32);
     // bailout if (lhs - output * d != 0)
-    masm.Cmp(const32, const32);
-    bailoutIf(Assembler::NonZero, ins->snapshot());
+    bailoutTest32(Assembler::NonZero, const32.asUnsized(), const32.asUnsized(),
+                  ins->snapshot());
   }
 }
 
@@ -1662,17 +1671,19 @@ void CodeGenerator::visitUDiv(LUDiv* ins) {
 
   // Prevent divide by zero.
   if (mir->canBeDivideByZero()) {
-    if (mir->isTruncated()) {
-      if (mir->trapOnError()) {
-        Label nonZero;
-        masm.branchTest32(Assembler::NonZero, rhs, rhs, &nonZero);
-        masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
-        masm.bind(&nonZero);
-      } else {
-        // ARM64 UDIV instruction will return 0 when divided by 0.
-        // No need for extra tests.
-      }
+    if (mir->trapOnError()) {
+      Label nonZero;
+      masm.Cbnz(rhs32, &nonZero);
+      masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+      masm.bind(&nonZero);
+    } else if (mir->canTruncateInfinities()) {
+      // Udiv returns zero for division by zero, exactly what we want for
+      // truncated division. Remainder computation expects a non-zero divisor,
+      // so we must also be allowed to truncate the remainder.
+      MOZ_ASSERT(mir->canTruncateRemainder(),
+                 "remainder computation expects a non-zero divisor");
     } else {
+      MOZ_ASSERT(mir->fallible());
       bailoutTest32(Assembler::Zero, rhs, rhs, ins->snapshot());
     }
   }
@@ -1682,8 +1693,9 @@ void CodeGenerator::visitUDiv(LUDiv* ins) {
 
   // If the remainder is > 0, bailout since this must be a double.
   if (!mir->canTruncateRemainder()) {
-    Register remainder = ToRegister(ins->temp0());
-    ARMRegister remainder32 = ARMRegister(remainder, 32);
+    vixl::UseScratchRegisterScope temps(&masm.asVIXL());
+    ARMRegister remainder32 = temps.AcquireW();
+    Register remainder = remainder32.asUnsized();
 
     // Compute the remainder: remainder = lhs - (output * rhs).
     masm.Msub(remainder32, output32, rhs32, lhs32);
