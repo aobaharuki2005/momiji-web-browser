@@ -278,15 +278,6 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
       return;
     }
 
-    if (shift < 31 && (1 << (shift + 1)) - 1 == rhs) {
-      auto* lir = new (alloc()) LModMaskI(lhs, temp(), temp(), shift + 1);
-      if (mod->fallible()) {
-        assignSnapshot(lir, mod->bailoutKind());
-      }
-      define(lir, mod);
-      return;
-    }
-
     auto* lir = new (alloc()) LModConstantI(lhs, rhs);
     if (mod->fallible()) {
       assignSnapshot(lir, mod->bailoutKind());
