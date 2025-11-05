@@ -3037,17 +3037,6 @@ nsresult EnsureMIMEOfScript(HttpBaseChannel* aChannel, nsIURI* aURI,
     return NS_OK;
   }
 
-  const auto internalPolicyType = aLoadInfo->InternalContentPolicyType();
-  if (internalPolicyType ==
-          nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE &&
-      nsContentUtils::IsJsonMimeType(typeString)) {
-    // script and json are both allowed
-    glean::http::script_block_incorrect_mime
-        .EnumGet(glean::http::ScriptBlockIncorrectMimeLabel::eTextJson)
-        .Add();
-    return NS_OK;
-  }
-
   switch (aLoadInfo->InternalContentPolicyType()) {
     case nsIContentPolicy::TYPE_SCRIPT:
     case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:

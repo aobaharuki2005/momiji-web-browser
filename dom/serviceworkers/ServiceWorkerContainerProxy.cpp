@@ -42,8 +42,7 @@ void ServiceWorkerContainerProxy::RevokeActor(
 
 RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerContainerProxy::Register(
     const ClientInfo& aClientInfo, const nsACString& aScopeURL,
-    const WorkerType& aType, const nsACString& aScriptURL,
-    ServiceWorkerUpdateViaCache aUpdateViaCache) {
+    const nsACString& aScriptURL, ServiceWorkerUpdateViaCache aUpdateViaCache) {
   AssertIsOnBackgroundThread();
 
   RefPtr<ServiceWorkerRegistrationPromise::Private> promise =
@@ -51,7 +50,7 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerContainerProxy::Register(
 
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       __func__,
-      [aClientInfo, aScopeURL = nsCString(aScopeURL), aType,
+      [aClientInfo, aScopeURL = nsCString(aScopeURL),
        aScriptURL = nsCString(aScriptURL), aUpdateViaCache, promise]() mutable {
         auto scopeExit = MakeScopeExit(
             [&] { promise->Reject(NS_ERROR_DOM_INVALID_STATE_ERR, __func__); });
@@ -59,8 +58,7 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerContainerProxy::Register(
         RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
         NS_ENSURE_TRUE_VOID(swm);
 
-        swm->Register(aClientInfo, aScopeURL, aType, aScriptURL,
-                      aUpdateViaCache)
+        swm->Register(aClientInfo, aScopeURL, aScriptURL, aUpdateViaCache)
             ->ChainTo(promise.forget(), __func__);
 
         scopeExit.release();

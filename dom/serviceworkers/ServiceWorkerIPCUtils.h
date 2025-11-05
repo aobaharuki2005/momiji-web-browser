@@ -14,7 +14,6 @@
 #include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
-#include "mozilla/dom/WorkerBinding.h"
 
 namespace IPC {
 
