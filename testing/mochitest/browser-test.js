@@ -985,7 +985,9 @@ Tester.prototype = {
 
       window.SpecialPowers.cleanupAllClipboard();
 
-      this.resetSessionState();
+      if (AppConstants.MOZ_APP_NAME != "thunderbird") {
+        this.resetSessionState();
+      }
 
       if (gConfig.cleanupCrashes) {
         let gdir = Services.dirsvc.get("UAppData", Ci.nsIFile);
