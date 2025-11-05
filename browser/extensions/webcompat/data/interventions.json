@@ -4510,21 +4510,6 @@
       }
     ]
   },
-  "1949152": {
-    "label": "gatufotogruppen.com",
-    "bugs": {
-      "1949152": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://www.gatufotogruppen.se/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "ua_string": ["Chrome_with_FxQuantum"]
-      }
-    ]
-  },
   "1949466": {
     "label": "lapalabradeldia.com",
     "bugs": {
