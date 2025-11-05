@@ -4403,11 +4403,33 @@
 #endif
 
 #ifdef JS_CODEGEN_ARM64
-- name: DivOrModI64
-  gen_boilerplate: false
+- name: DivI64
+  result_type: Int64
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Div
 
-- name: UDivOrModI64
-  gen_boilerplate: false
+- name: ModI64
+  result_type: Int64
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Mod
+
+- name: UDivI64
+  result_type: Int64
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Div
+
+- name: UModI64
+  result_type: Int64
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Mod
 
 - name: DivConstantI
   result_type: WordSized

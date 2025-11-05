@@ -294,31 +294,31 @@ void LIRGeneratorARM64::lowerModI(MMod* mod) {
 }
 
 void LIRGeneratorARM64::lowerDivI64(MDiv* div) {
-  LDivOrModI64* lir = new (alloc())
-      LDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()));
+  auto* lir = new (alloc())
+      LDivI64(useRegisterAtStart(div->lhs()), useRegisterAtStart(div->rhs()));
   defineInt64(lir, div);
 }
 
+void LIRGeneratorARM64::lowerModI64(MMod* mod) {
+  auto* lir =
+      new (alloc()) LModI64(useRegister(mod->lhs()), useRegister(mod->rhs()));
+  defineInt64(lir, mod);
+}
+
 void LIRGeneratorARM64::lowerUDivI64(MDiv* div) {
-  LUDivOrModI64* lir = new (alloc())
-      LUDivOrModI64(useRegister(div->lhs()), useRegister(div->rhs()));
+  auto* lir = new (alloc())
+      LUDivI64(useRegisterAtStart(div->lhs()), useRegisterAtStart(div->rhs()));
   defineInt64(lir, div);
 }
 
 void LIRGeneratorARM64::lowerUModI64(MMod* mod) {
-  LUDivOrModI64* lir = new (alloc())
-      LUDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()));
+  auto* lir =
+      new (alloc()) LUModI64(useRegister(mod->lhs()), useRegister(mod->rhs()));
   defineInt64(lir, mod);
 }
 
 void LIRGeneratorARM64::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
   MOZ_CRASH("We don't use runtime div for this architecture");
-}
-
-void LIRGeneratorARM64::lowerModI64(MMod* mod) {
-  LDivOrModI64* lir = new (alloc())
-      LDivOrModI64(useRegister(mod->lhs()), useRegister(mod->rhs()));
-  defineInt64(lir, mod);
 }
 
 void LIRGeneratorARM64::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
