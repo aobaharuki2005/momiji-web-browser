@@ -10,6 +10,13 @@ export default {
     "mozilla/xpcshell": true,
   },
 
+  globals: {
+    afterEach: false,
+    beforeEach: false,
+    describe: false,
+    it: false,
+  },
+
   name: "mozilla/xpcshell-test",
   plugins: ["mozilla", "@microsoft/sdl"],
 

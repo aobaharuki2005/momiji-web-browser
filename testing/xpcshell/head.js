@@ -2033,3 +2033,9 @@ Object.defineProperty(this, "mozinfo", {
     return _mozinfo;
   },
 });
+
+/* import-globals-from ../modules/Mochia.js */
+Services.scriptloader.loadSubScript(
+  "resource://testing-common/Mochia.js",
+  this
+);
