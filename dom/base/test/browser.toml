@@ -164,6 +164,10 @@ support-files = [
   "file_js_cache_imported1.mjs",
   "file_js_cache_imported2.mjs",
   "file_js_cache_imported3.mjs",
+  "file_js_cache_dyn_importer.mjs",
+  "file_js_cache_dyn_imported1.mjs",
+  "file_js_cache_dyn_imported2.mjs",
+  "file_js_cache_dyn_imported3.mjs",
 ]
 
 ["browser_set_focus_after_reuse_bcg.js"]
