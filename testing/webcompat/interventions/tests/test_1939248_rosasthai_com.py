@@ -10,6 +10,7 @@ FIRST_CARD_CSS = "#location-results [id^=card-]"
 
 async def does_clicking_work(client):
     await client.navigate(URL, wait="none")
+    client.await_css(COOKIES_CSS, is_displayed=True)
     client.hide_elements(COOKIES_CSS)
     # on failure, the location cards don't load. we also confirm that the
     # cards change after clicking "view all", just in case.
