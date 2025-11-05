@@ -5747,6 +5747,23 @@
       }
     ]
   },
+  "1992923": {
+    "label": "godotfest.com",
+    "bugs": {
+      "1992923": {
+        "issue": "broken-images",
+        "matches": ["*://godotfest.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "content_scripts": {
+          "css": ["1992923-godotfest.com-fix-blur-effects.css"]
+        }
+      }
+    ]
+  },
   "1993201": {
     "label": "portal.pilot.ly",
     "bugs": {
