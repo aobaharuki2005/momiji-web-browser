@@ -12,6 +12,13 @@
 
 namespace mozilla::htmlaccel {
 
+// MOZ_MAY_HAVE_HTMLACCEL gets defined iff `htmlaccelEnabled()` may return
+// `true`. The purpose is this define is to accommodate builds that don't
+// link `htmlaccelNotInline.cpp` and have even the most basic constant
+// propagation turned off so that `htmlaccelEnabled()` statically returning
+// false isn't enough to remove calls to functions whose definitions are
+// missing.
+
 /// This function is appropriate to call when the SIMD path is compiled
 /// with `HTML_ACCEL_FLAGS`.
 ///
@@ -22,8 +29,10 @@ inline bool htmlaccelEnabled() {
   // GCC 12 or newer is required for __builtin_shuffle.
   return false;
 #elif defined(__aarch64__) && defined(__LITTLE_ENDIAN__)
+#  define MOZ_MAY_HAVE_HTMLACCEL 1
   return true;
 #elif defined(__x86_64__)
+#  define MOZ_MAY_HAVE_HTMLACCEL 1
   bool ret = mozilla::supports_bmi();
   if (ret) {
     // As a micro optimization for the innerHTML getter, don't bother

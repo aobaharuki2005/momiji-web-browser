@@ -74,7 +74,9 @@
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/htmlaccel/htmlaccelEnabled.h"
-#include "mozilla/htmlaccel/htmlaccelNotInline.h"
+#ifdef MOZ_MAY_HAVE_HTMLACCEL
+#  include "mozilla/htmlaccel/htmlaccelNotInline.h"
+#endif
 #include "nsCCUncollectableMarker.h"
 #include "nsChildContentList.h"
 #include "nsContentCreatorFunctions.h"
@@ -1919,6 +1921,7 @@ static bool ContainsMarkup(const nsAString& aStr) {
   const char16_t* start = aStr.BeginReading();
   const char16_t* end = aStr.EndReading();
 
+#ifdef MOZ_MAY_HAVE_HTMLACCEL
   if (mozilla::htmlaccel::htmlaccelEnabled()) {
     // We need to check for the empty string in order to
     // dereference `start` for the '<' check. We might as well
@@ -1933,6 +1936,7 @@ static bool ContainsMarkup(const nsAString& aStr) {
       return mozilla::htmlaccel::ContainsMarkup(start, end);
     }
   }
+#endif
 
   while (start != end) {
     char16_t c = *start;

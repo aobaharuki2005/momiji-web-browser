@@ -225,7 +225,9 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/glean/GleanPings.h"
 #include "mozilla/htmlaccel/htmlaccelEnabled.h"
-#include "mozilla/htmlaccel/htmlaccelNotInline.h"
+#ifdef MOZ_MAY_HAVE_HTMLACCEL
+#  include "mozilla/htmlaccel/htmlaccelNotInline.h"
+#endif
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/UrlClassifierCommon.h"
@@ -10115,10 +10117,14 @@ class StringBuilder {
     // to inline the call without triggering
     // https://github.com/llvm/llvm-project/issues/160886 .
     if (S::SIMD && (end - ptr >= 16)) {
+      // Need to check ifdef inside here in order to make even non-opt
+      // build consider `S::SIMD` used.
+#ifdef MOZ_MAY_HAVE_HTMLACCEL
       size_t skipped =
           mozilla::htmlaccel::SkipNonEscapedInAttributeValue(ptr, end);
       ptr += skipped;
       currentPosition += skipped;
+#endif
     }
     while (ptr != end) {
       char16_t c = *ptr;
@@ -10194,9 +10200,13 @@ class StringBuilder {
     // to inline the call without triggering
     // https://github.com/llvm/llvm-project/issues/160886 .
     if (S::SIMD && (end - ptr >= 16)) {
+      // Need to check ifdef inside here in order to make even non-opt
+      // build consider `S::SIMD` used.
+#ifdef MOZ_MAY_HAVE_HTMLACCEL
       size_t skipped = mozilla::htmlaccel::SkipNonEscapedInTextNode(ptr, end);
       ptr += skipped;
       currentPosition += skipped;
+#endif
     }
     while (ptr != end) {
       T c = *ptr;
@@ -10256,10 +10266,13 @@ static void AppendEncodedCharacters(const CharacterDataBuffer* aText,
   uint32_t len = aText->GetLength();
   if (aText->Is2b()) {
     const char16_t* data = aText->Get2b();
+#ifdef MOZ_MAY_HAVE_HTMLACCEL
     if (mozilla::htmlaccel::htmlaccelEnabled()) {
       numEncodedChars =
           mozilla::htmlaccel::CountEscapedInTextNode(data, data + len);
-    } else {
+    } else
+#endif
+    {
       for (uint32_t i = 0; i < len; ++i) {
         const char16_t c = data[i];
         switch (c) {
@@ -10276,10 +10289,13 @@ static void AppendEncodedCharacters(const CharacterDataBuffer* aText,
     }
   } else {
     const char* data = aText->Get1b();
+#ifdef MOZ_MAY_HAVE_HTMLACCEL
     if (mozilla::htmlaccel::htmlaccelEnabled()) {
       numEncodedChars =
           mozilla::htmlaccel::CountEscapedInTextNode(data, data + len);
-    } else {
+    } else
+#endif
+    {
       for (uint32_t i = 0; i < len; ++i) {
         const unsigned char c = data[i];
         switch (c) {
@@ -10321,9 +10337,12 @@ static CheckedInt<uint32_t> ExtraSpaceNeededForAttrEncoding(
   const char16_t* end = aValue.EndReading();
 
   uint32_t numEncodedChars = 0;
+#ifdef MOZ_MAY_HAVE_HTMLACCEL
   if (mozilla::htmlaccel::htmlaccelEnabled()) {
     numEncodedChars = mozilla::htmlaccel::CountEscapedInAttributeValue(c, end);
-  } else {
+  } else
+#endif
+  {
     while (c < end) {
       switch (*c) {
         case '"':
