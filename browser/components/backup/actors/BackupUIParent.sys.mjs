@@ -113,7 +113,14 @@ export class BackupUIParent extends JSWindowActorParent {
         if (parentDirPath) {
           this.#bs.setParentDirPath(parentDirPath);
         }
+
         if (password) {
+          // If the user's previously created backups were already encrypted
+          // with a password, their encryption settings are now reset to
+          // accommodate the newly supplied password.
+          if (await this.#bs.loadEncryptionState()) {
+            await this.#bs.disableEncryption();
+          }
           await this.#bs.enableEncryption(password);
           Glean.browserBackup.passwordAdded.record();
         }
