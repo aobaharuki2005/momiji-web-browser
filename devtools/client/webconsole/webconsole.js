@@ -223,6 +223,7 @@ class WebConsole {
     this.gViewSourceUtils.viewSource({
       URL: sourceURL,
       lineNumber: sourceLine || -1,
+      browser: this.chromeUtilsWindow.gBrowser,
     });
   }
 
