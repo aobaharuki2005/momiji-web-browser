@@ -5,9 +5,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.test.filters.SdkSuppress
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest

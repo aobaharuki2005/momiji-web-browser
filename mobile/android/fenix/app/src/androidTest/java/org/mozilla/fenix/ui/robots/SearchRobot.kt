@@ -521,12 +521,31 @@ class SearchRobot {
     }
 
     fun clickPasteText() {
-        Log.i(TAG, "clickPasteText: Waiting for $waitingTimeShort ms for the \"Paste\" option to exist")
-        mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTimeShort)
-        Log.i(TAG, "clickPasteText: Waited for $waitingTimeShort ms for the \"Paste\" option to exist")
-        Log.i(TAG, "clickPasteText: Trying to click the \"Paste\" button")
-        mDevice.findObject(By.textContains("Paste")).click()
-        Log.i(TAG, "clickPasteText: Clicked the \"Paste\" button")
+        for (i in 1..RETRY_COUNT) {
+            Log.i(TAG, "clickPasteText: Started try #$i")
+            try {
+                Log.i(TAG, "clickPasteText: Waiting for $waitingTime ms for the \"Paste\" option to exist")
+                mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTime)
+                Log.i(TAG, "clickPasteText: Waited for $waitingTime ms for the \"Paste\" option to exist")
+                Log.i(TAG, "clickPasteText: Trying to click the \"Paste\" button")
+                mDevice.findObject(By.textContains("Paste")).click()
+                Log.i(TAG, "clickPasteText: Clicked the \"Paste\" button")
+
+                break
+            } catch (e: NullPointerException) {
+                Log.i(TAG, "clickPasteText: NullPointerException caught, executing fallback methods")
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    searchScreen {
+                    }.dismissSearchBar {
+                    }.openSearch {
+                        clickClearButton()
+                        longClickToolbar()
+                    }
+                }
+            }
+        }
     }
 
     fun verifyTranslatedFocusedNavigationToolbar(toolbarHintString: String) =
