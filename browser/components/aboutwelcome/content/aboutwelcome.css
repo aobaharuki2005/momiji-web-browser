@@ -1122,6 +1122,12 @@ html {
 .onboardingContainer:dir(rtl) {
   transform: rotateY(180deg);
 }
+.onboardingContainer:has([pos=split][fullscreen]) {
+  min-height: 100vh;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
 .onboardingContainer .section-main {
   display: flex;
   flex-direction: column;
@@ -1885,14 +1891,23 @@ html {
   margin: auto;
   margin-inline-start: 0;
 }
+.onboardingContainer .screen[pos=split][fullscreen] {
+  min-height: 100vh;
+}
 .onboardingContainer .screen[pos=split][fullscreen] .section-secondary,
 .onboardingContainer .screen[pos=split][fullscreen] .section-main {
   width: 50%;
-  height: 100%;
+  height: auto;
+}
+.onboardingContainer .screen[pos=split][fullscreen] .section-main {
+  margin: 0;
+  display: flex;
 }
 .onboardingContainer .screen[pos=split][fullscreen] .section-main .main-content {
   border-radius: 0;
   padding: 0;
+  flex: 1;
+  height: auto;
 }
 .onboardingContainer .screen[pos=split][fullscreen] .section-main .main-content h1 {
   width: auto;
@@ -1902,6 +1917,7 @@ html {
   flex-grow: 0;
   padding-inline: 110px;
   margin-block: auto;
+  padding-block: 40px;
 }
 @media only screen and (width <= 800px) {
   .onboardingContainer .screen[pos=split][fullscreen] .section-main .main-content .main-content-inner {
@@ -2072,12 +2088,18 @@ html {
   margin: auto;
 }
 @media only screen and (width <= 800px) {
+  .onboardingContainer .screen[pos=split][fullscreen] {
+    height: 100%;
+  }
   .onboardingContainer .screen[pos=split][fullscreen] .section-main,
   .onboardingContainer .screen[pos=split][fullscreen] .section-secondary {
     width: 100%;
   }
   .onboardingContainer .screen[pos=split][fullscreen] .section-main {
     height: 75%;
+    flex-grow: 1;
+    margin: 0;
+    display: flex;
   }
   .onboardingContainer .screen[pos=split][fullscreen] .section-main[hide-secondary-section=responsive] {
     height: 100%;
@@ -2085,6 +2107,7 @@ html {
   .onboardingContainer .screen[pos=split][fullscreen] .section-main[hide-secondary-section=responsive] .main-content {
     border-radius: 0;
     padding: 0;
+    height: auto;
   }
   .onboardingContainer .screen[pos=split][fullscreen] .section-main .main-content .action-buttons .secondary-cta {
     inset-block-end: 0;
@@ -2096,6 +2119,7 @@ html {
   }
   .onboardingContainer .screen[pos=split][fullscreen] .section-secondary {
     --mr-secondary-position: center var(--mr-secondary-background-position-y) / 50%;
+    height: 250px;
   }
   .onboardingContainer .screen[pos=split][fullscreen] .section-secondary .hero-image img {
     width: 25%;
@@ -2108,6 +2132,9 @@ html {
 }
 [narrow] .onboardingContainer .screen[pos=split][fullscreen] .section-main {
   height: 75%;
+  flex-grow: 1;
+  margin: 0;
+  display: flex;
 }
 [narrow] .onboardingContainer .screen[pos=split][fullscreen] .section-main[hide-secondary-section=responsive] {
   height: 100%;
@@ -2115,6 +2142,7 @@ html {
 [narrow] .onboardingContainer .screen[pos=split][fullscreen] .section-main[hide-secondary-section=responsive] .main-content {
   border-radius: 0;
   padding: 0;
+  height: auto;
 }
 [narrow] .onboardingContainer .screen[pos=split][fullscreen] .section-main .main-content .action-buttons .secondary-cta {
   inset-block-end: 0;
@@ -2126,6 +2154,7 @@ html {
 }
 [narrow] .onboardingContainer .screen[pos=split][fullscreen] .section-secondary {
   --mr-secondary-position: center var(--mr-secondary-background-position-y) / 50%;
+  height: 250px;
 }
 [narrow] .onboardingContainer .screen[pos=split][fullscreen] .section-secondary .hero-image img {
   width: 25%;
@@ -2511,7 +2540,7 @@ html {
   }
 }
 @media only screen and (height <= 650px) and (width <= 620px) {
-  .onboardingContainer .screen[pos=split] .section-main .secondary-buttons-top-container {
+  .onboardingContainer .screen[pos=split]:where(:not([fullscreen])) .section-main .secondary-buttons-top-container {
     position: absolute;
     padding: 0;
     top: 0;
@@ -2519,7 +2548,7 @@ html {
   }
 }
 @media only screen and (height <= 650px) and (width <= 620px) {
-  [narrow] .onboardingContainer .screen[pos=split] .section-main .secondary-buttons-top-container {
+  [narrow] .onboardingContainer .screen[pos=split]:where(:not([fullscreen])) .section-main .secondary-buttons-top-container {
     position: absolute;
     padding: 0;
     top: 0;
@@ -3282,6 +3311,7 @@ html {
   inset-inline-end: 10px;
   width: auto;
   height: auto;
+  z-index: 2;
 }
 .onboardingContainer .secondary-buttons-top-container .secondary-cta.top {
   position: relative;

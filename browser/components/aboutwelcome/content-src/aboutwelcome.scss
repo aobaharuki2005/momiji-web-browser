@@ -193,6 +193,13 @@ html {
     transform: rotateY(180deg);
   }
 
+  &:has([pos='split'][fullscreen]) {
+    min-height: 100vh;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
   .section-main {
     display: flex;
     flex-direction: column;
@@ -1069,15 +1076,24 @@ html {
         $split-section-width: 50%;
         $split-screen-height: 100%;
 
+        min-height:100vh;
+
         .section-secondary,
         .section-main {
           width: $split-section-width;
-          height: $split-screen-height;
+          height: auto;
+        }
+
+        .section-main {
+          margin: 0;
+          display: flex;
         }
 
         .section-main .main-content {
           border-radius: 0;
           padding: 0;
+          flex: 1;
+          height: auto;
 
           h1 {
             width: auto;
@@ -1088,6 +1104,7 @@ html {
             flex-grow: 0;
             padding-inline: 110px;
             margin-block: auto;
+            padding-block: 40px;
 
             @media only screen and (width <= 800px) {
               padding-block: 20px;
@@ -1285,6 +1302,9 @@ html {
 
           .section-main {
             height: 75%;
+            flex-grow: 1;
+            margin: 0;
+            display: flex;
 
             &[hide-secondary-section='responsive'] {
               height: 100%;
@@ -1292,6 +1312,7 @@ html {
               .main-content {
                 border-radius: 0;
                 padding: 0;
+                height: auto;
               }
             }
           }
@@ -1311,6 +1332,8 @@ html {
           .section-secondary {
             --mr-secondary-position: center var(--mr-secondary-background-position-y) / 50%;
 
+            height: 250px;
+
             .hero-image {
               img {
                 width: 25%;
@@ -1321,6 +1344,8 @@ html {
         }
 
         @media only screen and (width <= 800px) {
+          height: 100%;
+
           @include narrow-split-fullscreen;
         }
 
@@ -1577,37 +1602,37 @@ html {
         @include narrow-split;
       }
 
-      @media only screen and (height <= 650px) {
-        // Hide the "Sign in" button on the welcome screen when it would
-        // otherwise overlap the screen. We'd reposition it, but then it would
-        // overlap the dismiss button. We may change the alignment so they don't
-        // overlap in a future revision.
-        @media (800px <= width <= 990px) {
-          &:where(:not([fullscreen])) {
+      &:where(:not([fullscreen])) {
+        @media only screen and (height <= 650px) {
+          // Hide the "Sign in" button on the welcome screen when it would
+          // otherwise overlap the screen. We'd reposition it, but then it would
+          // overlap the dismiss button. We may change the alignment so they don't
+          // overlap in a future revision.
+          @media (800px <= width <= 990px) {
             .section-main .secondary-cta.top {
               display: none;
             }
           }
-        }
 
-        // Reposition the "Sign in" button on the welcome screen to move inside
-        // the screen when it would otherwise overlap the screen.
-        @mixin extra-narrow-secondary-cta {
-          .section-main .secondary-buttons-top-container {
-            position: absolute;
-            padding: 0;
-            top: 0;
-            inset-inline-end: 0;
+          // Reposition the "Sign in" button on the welcome screen to move inside
+          // the screen when it would otherwise overlap the screen.
+          @mixin extra-narrow-secondary-cta {
+            .section-main .secondary-buttons-top-container {
+              position: absolute;
+              padding: 0;
+              top: 0;
+              inset-inline-end: 0;
+            }
           }
-        }
 
-        @media (width <= 620px) {
-          @include extra-narrow-secondary-cta;
-        }
-
-        [narrow] & {
           @media (width <= 620px) {
             @include extra-narrow-secondary-cta;
+          }
+
+          [narrow] & {
+            @media (width <= 620px) {
+              @include extra-narrow-secondary-cta;
+            }
           }
         }
       }
@@ -2517,6 +2542,7 @@ html {
     inset-inline-end: 10px;
     width: auto;
     height: auto;
+    z-index: 2;
 
     .secondary-cta.top {
       position: relative;
