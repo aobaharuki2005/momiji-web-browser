@@ -91,6 +91,8 @@ test_description_schema = Schema(
             "variant",
             Any([str], "built-projects"),
         ),
+        # Whether tasks should run on only a specific type of repository.
+        Optional("run-on-repo-type"): job_description_schema["run-on-repo-type"],
         # When set only run on projects where the build would already be running.
         # This ensures tasks where this is True won't be the cause of the build
         # running on a project it otherwise wouldn't have.
@@ -545,6 +547,7 @@ def make_job_description(config, tasks):
             jobdesc["expires-after"] = task["expires-after"]
 
         jobdesc["routes"] = task.get("routes", [])
+        jobdesc["run-on-repo-type"] = sorted(task["run-on-repo-type"])
         jobdesc["run-on-projects"] = sorted(task["run-on-projects"])
         jobdesc["scopes"] = []
         jobdesc["tags"] = task.get("tags", {})
