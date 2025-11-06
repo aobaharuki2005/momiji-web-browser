@@ -9,6 +9,10 @@ run-if = [
 ] # This seems to mess up focus on Linux for some reason.
 
 ["browser_appmenu.js"]
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && processor == 'x86_64' && opt" , # Bug 1996375
+  "os == 'mac' && os_version == '10.15' && processor == 'x86_64' && opt" , # Bug 1996375
+]
 
 ["browser_appmenu_menuitem_updates.js"]
 head = "../unit/head.js head.js"
