@@ -427,7 +427,7 @@ export class SearchModeSwitcher {
    * @param {Element} separator
    */
   async #buildLocalSearchModeList(separator) {
-    if (!this.#input.isAddressbar) {
+    if (this.#input.sapName != "urlbar") {
       return;
     }
 

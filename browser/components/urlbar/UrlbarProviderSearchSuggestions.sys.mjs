@@ -84,9 +84,8 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
    * with this provider, to save on resources.
    *
    * @param {UrlbarQueryContext} queryContext The query context object.
-   * @param {UrlbarController} controller The current controller.
    */
-  async isActive(queryContext, controller) {
+  async isActive(queryContext) {
     // If the sources don't include search or the user used a restriction
     // character other than search, don't allow any suggestions.
     if (
@@ -107,7 +106,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       return false;
     }
 
-    if (!this._allowSuggestions(queryContext, controller)) {
+    if (!this._allowSuggestions(queryContext)) {
       return false;
     }
 
@@ -148,15 +147,14 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
    * history or remote suggestions.
    *
    * @param {UrlbarQueryContext} queryContext The query context object.
-   * @param {UrlbarController} controller The current controller.
    * @returns {boolean} True if suggestions in general are allowed and false if
    *   not.
    */
-  _allowSuggestions(queryContext, controller) {
+  _allowSuggestions(queryContext) {
     if (
       // If the user typed a restriction token or token alias, we ignore the
       // pref to disable suggestions in the Urlbar.
-      (controller.input.isAddressbar &&
+      (queryContext.sapName == "urlbar" &&
         !lazy.UrlbarPrefs.get("suggest.searches") &&
         !this._isTokenOrRestrictionPresent(queryContext)) ||
       !lazy.UrlbarPrefs.get("browser.search.suggest.enabled") ||

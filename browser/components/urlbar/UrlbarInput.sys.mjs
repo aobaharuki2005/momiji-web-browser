@@ -82,6 +82,7 @@ let px = number => number.toFixed(2) + "px";
 export class UrlbarInput {
   #allowBreakout = false;
   #breakoutBlockerCount = 0;
+  #isAddressbar;
   #sapName;
   #userTypedValue;
 
@@ -93,20 +94,17 @@ export class UrlbarInput {
    * @param {string} options.sapName
    *   The search access point name of the UrlbarInput for use with telemetry or
    *   logging, e.g. `urlbar`, `searchbar`.
-   * @param {boolean} [options.isAddressbar]
-   *   Whether this instance is meant to display the browser's current address,
-   *   as opposed to being just a search input.
    */
-  constructor({ textbox, sapName, isAddressbar = false }) {
+  constructor({ textbox, sapName }) {
     this.textbox = textbox;
-    this.isAddressbar = !!isAddressbar;
+    this.#isAddressbar = sapName == "urlbar";
     this.window = this.textbox.ownerGlobal;
     this.document = this.window.document;
     this.isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(this.window);
     this.panel = this.textbox.querySelector(".urlbarView");
     this.controller = new lazy.UrlbarController({
       input: this,
-      manager: isAddressbar ? null : lazy.SearchbarProvidersManager,
+      manager: this.#isAddressbar ? null : lazy.SearchbarProvidersManager,
     });
     this.view = new lazy.UrlbarView(this);
     this.valueIsTyped = false;
@@ -301,7 +299,7 @@ export class UrlbarInput {
     this.editor.newlineHandling =
       Ci.nsIEditor.eNewlinesStripSurroundingWhitespace;
 
-    if (isAddressbar) {
+    if (this.#isAddressbar) {
       let searchContainersPref = lazy.UrlbarPrefs.get(
         "switchTabs.searchAllContainers"
       );
@@ -416,7 +414,7 @@ export class UrlbarInput {
    */
   formatValue() {
     // The editor may not exist if the toolbar is not visible.
-    if (this.isAddressbar && this.editor) {
+    if (this.#isAddressbar && this.editor) {
       this.#lazy.valueFormatter.update();
     }
   }
@@ -523,7 +521,7 @@ export class UrlbarInput {
     hideSearchTerms = false,
     isSameDocument = false
   ) {
-    if (!this.isAddressbar) {
+    if (!this.#isAddressbar) {
       throw new Error(
         "Cannot set URI for UrlbarInput that is not an address bar"
       );
@@ -1059,7 +1057,7 @@ export class UrlbarInput {
     this.userTypedValue = null;
     // Nullify search mode before setURI so it won't try to restore it.
     this.searchMode = null;
-    if (this.isAddressbar) {
+    if (this.#isAddressbar) {
       this.setURI(null, true, false, true);
     } else {
       this.value = "";
@@ -1995,7 +1993,7 @@ export class UrlbarInput {
     }
 
     let mode =
-      this.isAddressbar &&
+      this.#isAddressbar &&
       lazy.UrlbarUtils.LOCAL_SEARCH_MODES.find(m => m.restrict == token);
     if (mode) {
       // Return a copy so callers don't modify the object in LOCAL_SEARCH_MODES.
@@ -2282,13 +2280,13 @@ export class UrlbarInput {
   }
 
   get userTypedValue() {
-    return this.isAddressbar
+    return this.#isAddressbar
       ? this.window.gBrowser.userTypedValue
       : this.#userTypedValue;
   }
 
   set userTypedValue(val) {
-    if (this.isAddressbar) {
+    if (this.#isAddressbar) {
       this.window.gBrowser.userTypedValue = val;
     } else {
       this.#userTypedValue = val;
@@ -2521,7 +2519,7 @@ export class UrlbarInput {
    *   The source name.
    */
   getSearchSource(event) {
-    if (this.isAddressbar) {
+    if (this.#isAddressbar) {
       if (this._isHandoffSession) {
         return "urlbar-handoff";
       }
@@ -3236,7 +3234,7 @@ export class UrlbarInput {
    *   The trimmed string
    */
   _trimValue(val) {
-    if (!this.isAddressbar) {
+    if (!this.#isAddressbar) {
       return val;
     }
     let trimmedValue = lazy.UrlbarPrefs.get("trimURLs")
@@ -3446,7 +3444,7 @@ export class UrlbarInput {
     resultDetails = null,
     browser
   ) {
-    if (!this.isAddressbar) {
+    if (!this.#isAddressbar) {
       throw new Error(
         "Can't prepare addressbar load when this isn't an addressbar input"
       );
@@ -3546,7 +3544,7 @@ export class UrlbarInput {
     resultDetails = null,
     browser = this.window.gBrowser.selectedBrowser
   ) {
-    if (this.isAddressbar) {
+    if (this.#isAddressbar) {
       this.#prepareAddressbarLoad(
         url,
         openUILinkWhere,
@@ -3944,7 +3942,7 @@ export class UrlbarInput {
    *   Details of the result that was selected, if any.
    */
   #notifyStartNavigation(result) {
-    if (this.isAddressbar) {
+    if (this.#isAddressbar) {
       Services.obs.notifyObservers({ result }, "urlbar-user-start-navigation");
     }
   }
@@ -4193,7 +4191,7 @@ export class UrlbarInput {
    *                        without an engine name ("Search or enter address").
    */
   initPlaceHolder(force = false) {
-    if (!this.isAddressbar) {
+    if (!this.#isAddressbar) {
       return;
     }
 
@@ -4305,7 +4303,7 @@ export class UrlbarInput {
       throw new Error("Expected an engineName to be specified");
     }
 
-    if (this.searchMode || !this.isAddressbar) {
+    if (this.searchMode || !this.#isAddressbar) {
       return;
     }
 
@@ -4327,7 +4325,7 @@ export class UrlbarInput {
    * The name of the engine or an empty string to use the default placeholder.
    */
   _setPlaceholder(name) {
-    if (!this.isAddressbar) {
+    if (!this.#isAddressbar) {
       return;
     }
 
@@ -5231,7 +5229,7 @@ export class UrlbarInput {
       this.controller.setLastQueryContextCache(queryContext);
       this.controller.engagementEvent.start(event, queryContext);
       this.handleNavigation({ triggeringPrincipal: principal });
-      if (this.isAddressbar) {
+      if (this.#isAddressbar) {
         // For safety reasons, in the drop case we don't want to immediately show
         // the dropped value, instead we want to keep showing the current page
         // url until an onLocationChange happens.

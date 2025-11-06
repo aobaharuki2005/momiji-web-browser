@@ -370,7 +370,6 @@ ChromeUtils.defineLazyGetter(this, "gNavToolbox", () => {
 ChromeUtils.defineLazyGetter(this, "gURLBar", () => {
   let urlbar = new UrlbarInput({
     textbox: document.getElementById("urlbar"),
-    isAddressbar: true,
     sapName: "urlbar",
   });
 

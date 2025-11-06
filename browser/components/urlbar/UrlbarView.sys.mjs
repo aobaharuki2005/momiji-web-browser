@@ -113,7 +113,7 @@ export class UrlbarView {
   }
 
   get oneOffSearchButtons() {
-    if (!this.input.isAddressbar) {
+    if (this.input.sapName != "urlbar") {
       return null;
     }
     if (!this.#oneOffSearchButtons) {
