@@ -13,6 +13,7 @@ export default class PasswordRulesTooltip extends MozLitElement {
   static properties = {
     hasEmail: { type: Boolean },
     tooShort: { type: Boolean },
+    open: { type: Boolean },
   };
 
   static get queries() {
@@ -25,6 +26,75 @@ export default class PasswordRulesTooltip extends MozLitElement {
     super();
     this.hasEmail = false;
     this.tooShort = false;
+    this._onResize = null;
+  }
+
+  _debounce(fn, delay) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn(...args), delay);
+    };
+  }
+
+  _handleResize() {
+    if (this.open) {
+      this.positionPopover();
+    }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._onResize = this._debounce(() => this._handleResize(), 200);
+    window.addEventListener("resize", this._onResize);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._onResize) {
+      window.removeEventListener("resize", this._onResize);
+    }
+  }
+
+  show() {
+    this.passwordRulesEl.showPopover();
+    this.positionPopover();
+  }
+
+  hide() {
+    this.passwordRulesEl.hidePopover();
+  }
+
+  positionPopover() {
+    const host = this.getRootNode().host;
+    const anchor = host.shadowRoot.querySelector("#new-password-input");
+
+    if (!anchor) {
+      return;
+    }
+
+    const anchorRect = anchor.getBoundingClientRect();
+    const isWideViewport = window.innerWidth >= 1200;
+
+    if (isWideViewport) {
+      // Position to the right of the input
+      const leftPos = anchorRect.right + 16;
+      const topPos = anchorRect.top - (anchorRect.bottom - anchorRect.top) / 2;
+
+      this.passwordRulesEl.style.left = `${leftPos}px`;
+      this.passwordRulesEl.style.top = `${topPos}px`;
+    } else {
+      // Position below the input
+      const leftPos = anchorRect.left;
+      const topPos = anchorRect.bottom; // offset for arrow and spacing
+
+      this.passwordRulesEl.style.left = `${leftPos}px`;
+      this.passwordRulesEl.style.top = `${topPos}px`;
+    }
+  }
+
+  _onBeforeToggle(e) {
+    this.open = e.newState == "open";
   }
 
   render() {
@@ -33,7 +103,13 @@ export default class PasswordRulesTooltip extends MozLitElement {
         rel="stylesheet"
         href="chrome://browser/content/backup/password-rules-tooltip.css"
       />
-      <div id="password-rules-wrapper" aria-live="polite">
+      <div
+        id="password-rules-wrapper"
+        role="tooltip"
+        aria-describedby="password-rules-header"
+        popover="manual"
+        @beforetoggle=${this._onBeforeToggle}
+      >
         <h2
           id="password-rules-header"
           data-l10n-id="password-rules-header"
@@ -43,12 +119,14 @@ export default class PasswordRulesTooltip extends MozLitElement {
             <span
               data-l10n-id="password-rules-length-description"
               class="rule-description"
+              aria-labelledby="password-rules-header"
             ></span>
           </li>
           <li class=${this.hasEmail && "warning"}>
             <span
               data-l10n-id="password-rules-email-description"
               class="rule-description"
+              aria-labelledby="password-rules-header"
             ></span>
           </li>
         </ul>
