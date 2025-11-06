@@ -245,6 +245,7 @@ static already_AddRefed<Path> BuildPathInternal(
 
   for (const auto& cmd : aPath) {
     seg = &cmd;
+    bool isRelative = false;
     switch (cmd.tag) {
       case Command::Tag::Close:
         // set this early to allow drawing of square caps for "M{x},{y} Z":
@@ -271,15 +272,13 @@ static already_AddRefed<Path> BuildPathInternal(
         break;
       }
       case Command::Tag::CubicCurve:
-        cp1 = cmd.cubic_curve.control1.ToGfxPoint(aPercentageBasis);
-        cp2 = cmd.cubic_curve.control2.ToGfxPoint(aPercentageBasis);
+        isRelative = cmd.cubic_curve.point.IsByCoordinate();
         segEnd = cmd.cubic_curve.point.ToGfxPoint(aPercentageBasis);
-
-        if (cmd.cubic_curve.point.IsByCoordinate()) {
-          cp1 += segStart;
-          cp2 += segStart;
-          segEnd += segStart;
-        }
+        segEnd = isRelative ? segEnd + segStart : segEnd;
+        cp1 = cmd.cubic_curve.control1.ToGfxPoint(segStart, segEnd, isRelative,
+                                                  aPercentageBasis);
+        cp2 = cmd.cubic_curve.control2.ToGfxPoint(segStart, segEnd, isRelative,
+                                                  aPercentageBasis);
 
         if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
           subpathHasLength = true;
@@ -288,13 +287,12 @@ static already_AddRefed<Path> BuildPathInternal(
         break;
 
       case Command::Tag::QuadCurve:
-        cp1 = cmd.quad_curve.control1.ToGfxPoint(aPercentageBasis);
+        isRelative = cmd.quad_curve.point.IsByCoordinate();
         segEnd = cmd.quad_curve.point.ToGfxPoint(aPercentageBasis);
-
-        if (cmd.quad_curve.point.IsByCoordinate()) {
-          cp1 += segStart;
-          segEnd += segStart;  // set before setting tcp2!
-        }
+        segEnd = isRelative ? segEnd + segStart
+                            : segEnd;  // set before setting tcp2!
+        cp1 = cmd.quad_curve.control1.ToGfxPoint(segStart, segEnd, isRelative,
+                                                 aPercentageBasis);
 
         // Convert quadratic curve to cubic curve:
         tcp1 = segStart + (cp1 - segStart) * 2 / 3;
@@ -359,14 +357,12 @@ static already_AddRefed<Path> BuildPathInternal(
         break;
       }
       case Command::Tag::SmoothCubic:
-        cp1 = prevSeg && prevSeg->IsCubicType() ? segStart * 2 - cp2 : segStart;
-        cp2 = cmd.smooth_cubic.control2.ToGfxPoint(aPercentageBasis);
+        isRelative = cmd.smooth_cubic.point.IsByCoordinate();
         segEnd = cmd.smooth_cubic.point.ToGfxPoint(aPercentageBasis);
-
-        if (cmd.smooth_cubic.point.IsByCoordinate()) {
-          cp2 += segStart;
-          segEnd += segStart;
-        }
+        segEnd = isRelative ? segEnd + segStart : segEnd;
+        cp1 = prevSeg && prevSeg->IsCubicType() ? segStart * 2 - cp2 : segStart;
+        cp2 = cmd.smooth_cubic.control2.ToGfxPoint(segStart, segEnd, isRelative,
+                                                   aPercentageBasis);
 
         if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
           subpathHasLength = true;
@@ -546,6 +542,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
     Point& segStart = prevSegEnd;
     Point segEnd;
     float segStartAngle, segEndAngle;
+    bool isRelative = false;
 
     switch (cmd.tag)  // to find segStartAngle, segEnd and segEndAngle
     {
@@ -570,15 +567,15 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         break;
       }
       case StylePathCommand::Tag::CubicCurve: {
-        Point cp1 = cmd.cubic_curve.control1.ToGfxPoint() * aZoom;
-        Point cp2 = cmd.cubic_curve.control2.ToGfxPoint() * aZoom;
+        isRelative = cmd.cubic_curve.point.IsByCoordinate();
         segEnd = cmd.cubic_curve.point.ToGfxPoint() * aZoom;
-
-        if (cmd.cubic_curve.point.IsByCoordinate()) {
-          cp1 += segStart;
-          cp2 += segStart;
-          segEnd += segStart;
-        }
+        segEnd = isRelative ? segEnd + segStart : segEnd;
+        Point cp1 =
+            cmd.cubic_curve.control1.ToGfxPoint(segStart, segEnd, isRelative) *
+            aZoom;
+        Point cp2 =
+            cmd.cubic_curve.control2.ToGfxPoint(segStart, segEnd, isRelative) *
+            aZoom;
 
         prevCP = cp2;
         segStartAngle = AngleOfVector(
@@ -588,13 +585,13 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         break;
       }
       case StylePathCommand::Tag::QuadCurve: {
-        Point cp1 = cmd.quad_curve.control1.ToGfxPoint() * aZoom;
+        isRelative = cmd.quad_curve.point.IsByCoordinate();
         segEnd = cmd.quad_curve.point.ToGfxPoint() * aZoom;
-
-        if (cmd.quad_curve.point.IsByCoordinate()) {
-          cp1 += segStart;
-          segEnd += segStart;  // set before setting tcp2!
-        }
+        segEnd = isRelative ? segEnd + segStart
+                            : segEnd;  // set before setting tcp2!
+        Point cp1 =
+            cmd.quad_curve.control1.ToGfxPoint(segStart, segEnd, isRelative) *
+            aZoom;
 
         prevCP = cp1;
         segStartAngle = AngleOfVector(cp1 == segStart ? segEnd : cp1, segStart);
@@ -665,13 +662,12 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         const Point& cp1 = prevSeg && prevSeg->IsCubicType()
                                ? segStart * 2 - prevCP
                                : segStart;
-        Point cp2 = cmd.smooth_cubic.control2.ToGfxPoint() * aZoom;
+        isRelative = cmd.smooth_cubic.point.IsByCoordinate();
         segEnd = cmd.smooth_cubic.point.ToGfxPoint() * aZoom;
-
-        if (cmd.smooth_cubic.point.IsByCoordinate()) {
-          cp2 += segStart;
-          segEnd += segStart;
-        }
+        segEnd = isRelative ? segEnd + segStart : segEnd;
+        Point cp2 =
+            cmd.smooth_cubic.control2.ToGfxPoint(segStart, segEnd, isRelative) *
+            aZoom;
 
         prevCP = cp2;
         segStartAngle = AngleOfVector(

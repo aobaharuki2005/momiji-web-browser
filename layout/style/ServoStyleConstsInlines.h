@@ -1314,6 +1314,57 @@ inline gfx::Point StyleCommandEndPoint<LengthPercentage>::ToGfxPoint(
   }
 }
 
+template <>
+inline gfx::Point StyleControlPoint<StyleCSSFloat>::ToGfxPoint(
+    const gfx::Point aStatePos, const gfx::Point aEndPoint,
+    const bool isRelativeEndPoint, const CSSSize* aBasis) const {
+  if (IsPosition()) {
+    auto& pos = AsPosition();
+    return pos.ToGfxPoint();
+  }
+
+  // Else
+  auto& point = AsRelative();
+  auto cp = point.coord.ToGfxPoint();
+  bool isRelativeDefaultCase =
+      point.reference == StyleControlReference::None && isRelativeEndPoint;
+
+  if (point.reference == StyleControlReference::Start ||
+      isRelativeDefaultCase) {
+    return cp + aStatePos;
+  } else if (point.reference == StyleControlReference::End) {
+    return cp + aEndPoint;
+  } else {
+    return cp;
+  }
+}
+
+template <>
+inline gfx::Point StyleControlPoint<LengthPercentage>::ToGfxPoint(
+    const gfx::Point aStatePos, const gfx::Point aEndPoint,
+    const bool isRelativeEndPoint, const CSSSize* aBasis) const {
+  MOZ_ASSERT(aBasis);
+  if (IsPosition()) {
+    auto& pos = AsPosition();
+    return pos.ToGfxPoint(aBasis);
+  }
+
+  // Else
+  auto& point = AsRelative();
+  auto cp = point.coord.ToGfxPoint(aBasis);
+  bool isRelativeDefaultCase =
+      point.reference == StyleControlReference::None && isRelativeEndPoint;
+
+  if (point.reference == StyleControlReference::Start ||
+      isRelativeDefaultCase) {
+    return cp + aStatePos;
+  } else if (point.reference == StyleControlReference::End) {
+    return cp + aEndPoint;
+  } else {
+    return cp;
+  }
+}
+
 inline StylePhysicalSide ToStylePhysicalSide(mozilla::Side aSide) {
   // TODO(dshin): Should look into merging these two types...
   static_assert(static_cast<uint8_t>(mozilla::Side::eSideLeft) ==
