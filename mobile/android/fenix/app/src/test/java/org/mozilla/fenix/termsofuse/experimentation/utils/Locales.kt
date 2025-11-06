@@ -4,120 +4,54 @@
 
 package org.mozilla.fenix.termsofuse.experimentation.utils
 
+import org.mozilla.fenix.utils.Locale
+
 /**
  * Test duplicate of [supportedSponsoredShortcutsLocales], these should be the same locales.
  */
 internal val supportedSponsoredShortcutsLocales = listOf(
-    // Austria
-    "de-AT",
-
-    // Belgium
-    "de-BE",
-    "fr-BE",
-
-    // Bulgaria
-    "bg-BG",
-
-    // Canada
-    "en-CA",
-
-    // Croatia
-    "hr-HR",
-
-    // Cyprus
-    "el-CY",
-    "tr-CY",
-
-    // Czechia
-    "cs-CZ",
-
-    // Denmark
-    "da-DK",
-
-    // Estonia
-    "et-EE",
-
-    // Finland
-    "fi-FI",
-    "sv-FI",
-
-    // France
-    "fr-FR",
-
-    // Germany
-    "de-DE",
-
-    // Greece
-    "el-GR",
-
-    // Hungary
-    "hu-HU",
-
-    // Iceland
-    "is-IS",
-
-    // Ireland
-    "en-IE",
-
-    // Latvia
-    "lv-LV",
-
-    // Lithuania
-    "lt-LT",
-
-    // Japan
-    "ja-JP",
-
-    // Malta
-    "mt-MT",
-
-    // Netherlands
-    "nl-NL",
-
-    // New Zealand
-    "en-NZ",
-
-    // Norway
-    "nb-NO",
-
-    // Poland
-    "pl-PL",
-
-    // Portugal
-    "pt-PT",
-
-    // Romania
-    "ro-RO",
-
-    // Singapore
-    "en-SG",
-
-    // Slovakia
-    "sk-SK",
-
-    // Spain
-    "es-ES",
-
-    // Sweden
-    "sv-SE",
-
-    // Switzerland
-    "de-CH",
-
-    // UK
-    "en-GB",
-
-    // US
-    "en-US",
-)
+    Locale.Austria,
+    Locale.BelgiumGerman,
+    Locale.BelgiumFrench,
+    Locale.Bulgaria,
+    Locale.Canada,
+    Locale.Croatia,
+    Locale.CyprusGreek,
+    Locale.CyprusTurkish,
+    Locale.Czechia,
+    Locale.Denmark,
+    Locale.Estonia,
+    Locale.FinlandFinnish,
+    Locale.FinlandSwedish,
+    Locale.France,
+    Locale.Germany,
+    Locale.Greece,
+    Locale.Hungary,
+    Locale.Iceland,
+    Locale.Ireland,
+    Locale.Latvia,
+    Locale.Lithuania,
+    Locale.Japan,
+    Locale.Malta,
+    Locale.Netherlands,
+    Locale.NewZealand,
+    Locale.Norway,
+    Locale.Poland,
+    Locale.Portugal,
+    Locale.Romania,
+    Locale.Singapore,
+    Locale.Slovakia,
+    Locale.Spain,
+    Locale.Sweden,
+    Locale.Switzerland,
+    Locale.UnitedKingdom,
+    Locale.UnitedStates,
+).map { it.localeCode }
 
 /**
  * Test duplicate of [supportedSponsoredStoriesLocales], these should be the same locales.
  */
 internal val supportedSponsoredStoriesLocales = listOf(
-    // US
-    "en-US",
-
-    // Canada
-    "en-CA",
-)
+    Locale.UnitedStates,
+    Locale.Canada,
+).map { it.localeCode }
