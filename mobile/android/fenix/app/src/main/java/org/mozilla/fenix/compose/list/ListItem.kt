@@ -52,6 +52,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -428,6 +430,10 @@ fun RadioButtonListItem(
             selected = selected,
             modifier = Modifier
                 .size(ICON_SIZE)
+                .semantics {
+                    testTag = "$label.radio.button"
+                    testTagsAsResourceId = true
+                }
                 .clearAndSetSemantics {},
             enabled = enabled,
             onClick = onClick,

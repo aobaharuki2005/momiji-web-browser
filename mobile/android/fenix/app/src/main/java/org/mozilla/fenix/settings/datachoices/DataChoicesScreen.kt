@@ -199,7 +199,7 @@ private fun CrashReportsSection(
                     selected = selectedOption == crashReportOption,
                     modifier = Modifier
                         .semantics {
-                            testTag = "data.collection.$crashReportOption.radio.button"
+                            testTag = "data.collection.$crashReportOption.option"
                             testTagsAsResourceId = true
                         },
                     maxLabelLines = 1,

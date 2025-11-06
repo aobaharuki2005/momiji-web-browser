@@ -123,4 +123,42 @@ class SettingsPrivacyTest : TestSetup() {
             verifyDailyUsagePingToggle(composeTestRule, isChecked = false)
         }
     }
+
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3215044
+    @Test
+    fun verifyTheCrashReportsOptionsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSettingsSubMenuDataCollection {
+            verifyTheCrashReportsSection(composeTestRule)
+            verifyTheCrashReportOptionStates(
+                composeTestRule,
+                isAskBeforeSendingCrashReportsEnabled = true,
+                isAutomaticallySendCrashReportsEnabled = false,
+                isNeverSendCrashReportsEnabled = false,
+            )
+            clickTheCrashReportsRadioButton(composeTestRule, "Send automatically")
+            verifyTheCrashReportOptionStates(
+                composeTestRule,
+                isAskBeforeSendingCrashReportsEnabled = false,
+                isAutomaticallySendCrashReportsEnabled = true,
+                isNeverSendCrashReportsEnabled = false,
+            )
+            clickTheCrashReportsRadioButton(composeTestRule, "Never send")
+            verifyTheCrashReportOptionStates(
+                composeTestRule,
+                isAskBeforeSendingCrashReportsEnabled = false,
+                isAutomaticallySendCrashReportsEnabled = false,
+                isNeverSendCrashReportsEnabled = true,
+            )
+            clickTheCrashReportsRadioButton(composeTestRule, "Ask before sending")
+            verifyTheCrashReportOptionStates(
+                composeTestRule,
+                isAskBeforeSendingCrashReportsEnabled = true,
+                isAutomaticallySendCrashReportsEnabled = false,
+                isNeverSendCrashReportsEnabled = false,
+            )
+        }
+    }
 }
