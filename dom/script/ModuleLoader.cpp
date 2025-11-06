@@ -432,7 +432,7 @@ nsresult ModuleLoader::CompileCssModule(
     }
 
     // Steps. 1 - 4 (re-ordered), 7, 8
-    cssModule.set(JS::CreateCssModule(aCx, aOptions, val));
+    cssModule.set(JS::CreateDefaultExportSyntheticModule(aCx, val));
   };
 
   maybeSource.mapNonEmpty(compile);

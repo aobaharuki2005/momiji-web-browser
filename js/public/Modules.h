@@ -197,13 +197,15 @@ extern JS_PUBLIC_API JSObject* CompileJsonModule(
     SourceText<mozilla::Utf8Unit>& srcBuf);
 
 /**
- * Create a synthetic module record for a CSS module from the provided
- * CSSStyleSheet in cssValue. There's no capability to parse CSS in
- * the engine, so this must occur prior to calling this function.
+ * Create a synthetic module record that exports a single value as its default
+ * export. The caller is responsible for providing the already-constructed
+ * value to export.
+ *
+ * This matches the ECMAScript specification's definition:
+ * https://tc39.es/ecma262/#sec-create-default-export-synthetic-module
  */
-extern JS_PUBLIC_API JSObject* CreateCssModule(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    const Value& cssValue);
+extern JS_PUBLIC_API JSObject* CreateDefaultExportSyntheticModule(
+    JSContext* cx, const Value& defaultExport);
 
 /**
  * Set a private value associated with a source text module record.
