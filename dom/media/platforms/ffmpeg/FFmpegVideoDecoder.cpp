@@ -123,7 +123,7 @@ typedef mozilla::layers::BufferRecycleBin BufferRecycleBin;
 namespace mozilla {
 
 #if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
-MOZ_RUNINIT nsTArray<AVCodecID>
+MOZ_CONSTINIT nsTArray<AVCodecID>
     FFmpegVideoDecoder<LIBAV_VER>::mAcceleratedFormats;
 #endif
 

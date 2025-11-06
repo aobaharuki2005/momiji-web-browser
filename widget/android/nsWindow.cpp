@@ -129,7 +129,7 @@ static mozilla::LazyLogModule sGVSupportLog("GeckoViewSupport");
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
 // one.
-MOZ_RUNINIT static nsTArray<nsWindow*> gTopLevelWindows;
+MOZ_CONSTINIT static nsTArray<nsWindow*> gTopLevelWindows;
 
 static const double kTouchResampleVsyncAdjustMs = 5.0;
 
