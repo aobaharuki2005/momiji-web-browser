@@ -48,8 +48,8 @@ AVD_HOME_PATH = Path(
 )
 
 JAVA_VERSION_MAJOR = "17"
-JAVA_VERSION_MINOR = "0.16"
-JAVA_VERSION_PATCH = "8"
+JAVA_VERSION_MINOR = "0.17"
+JAVA_VERSION_PATCH = "10"
 
 ANDROID_NDK_EXISTS = """
 Looks like you have the correct version of the Android NDK installed at:
@@ -891,7 +891,7 @@ def ensure_java(os_name: str, os_arch: str):
         ext = "zip" if os_name == "windows" else "tar.gz"
 
         # e.g. https://github.com/adoptium/temurin17-binaries/releases/
-        #      download/jdk-17.0.16%2B8/OpenJDK17U-jdk_x64_linux_hotspot_17.0.16_8.tar.gz
+        #      download/jdk-17.0.17%2B10/OpenJDK17U-jdk_x64_linux_hotspot_17.0.17_10.tar.gz
         java_url = (
             f"https://github.com/adoptium/temurin{JAVA_VERSION_MAJOR}-binaries/releases/"
             f"download/jdk-{JAVA_VERSION_MAJOR}.{JAVA_VERSION_MINOR}%2B{JAVA_VERSION_PATCH}/"
@@ -901,7 +901,7 @@ def ensure_java(os_name: str, os_arch: str):
 
 
 def get_java_bin_path(os_name: str, toolchain_path: Path):
-    # Like jdk-17.0.16+8
+    # Like jdk-17.0.17+10
     jdk_folder = f"jdk-{JAVA_VERSION_MAJOR}.{JAVA_VERSION_MINOR}+{JAVA_VERSION_PATCH}"
 
     java_path = toolchain_path / "jdk" / jdk_folder
