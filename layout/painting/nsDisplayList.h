@@ -619,11 +619,12 @@ class nsDisplayListBuilder {
     mAllowMergingAndFlattening = aAllow;
   }
 
-  void SetCompositorHitTestInfo(const gfx::CompositorHitTestInfo& aInfo) {
+  void SetInheritedCompositorHitTestInfo(
+      const gfx::CompositorHitTestInfo& aInfo) {
     mCompositorHitTestInfo = aInfo;
   }
 
-  const gfx::CompositorHitTestInfo& GetCompositorHitTestInfo() const {
+  const gfx::CompositorHitTestInfo& GetInheritedCompositorHitTestInfo() const {
     return mCompositorHitTestInfo;
   }
 

@@ -2910,8 +2910,9 @@ static void UpdateCurrentHitTestInfo(nsDisplayListBuilder* aBuilder,
 
   CheckForApzAwareEventHandlers(aBuilder, aFrame);
 
-  const CompositorHitTestInfo info = aFrame->GetCompositorHitTestInfo(aBuilder);
-  aBuilder->SetCompositorHitTestInfo(info);
+  const CompositorHitTestInfo info =
+      aFrame->GetCompositorHitTestInfoWithoutPointerEvents(aBuilder);
+  aBuilder->SetInheritedCompositorHitTestInfo(info);
 }
 
 /**
@@ -12022,6 +12023,16 @@ nsRect nsIFrame::GetCompositorHitTestArea(nsDisplayListBuilder* aBuilder) {
 CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     nsDisplayListBuilder* aBuilder) {
   CompositorHitTestInfo result = CompositorHitTestInvisibleToHit;
+  if (Style()->PointerEvents() == StylePointerEvents::None) {
+    return result;
+  }
+  return GetCompositorHitTestInfoWithoutPointerEvents(aBuilder);
+}
+
+CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfoWithoutPointerEvents(
+    nsDisplayListBuilder* aBuilder) {
+  CompositorHitTestInfo result = CompositorHitTestInvisibleToHit;
+
   if (aBuilder->IsInsidePointerEventsNoneDoc() ||
       aBuilder->IsInViewTransitionCapture()) {
     // Somewhere up the parent document chain is a subdocument with pointer-
@@ -12032,9 +12043,6 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     MOZ_ASSERT(IsViewportFrame());
     // Viewport frames are never event targets, other frames, like canvas
     // frames, are the event targets for any regions viewport frames may cover.
-    return result;
-  }
-  if (Style()->PointerEvents() == StylePointerEvents::None) {
     return result;
   }
   if (!StyleVisibility()->IsVisible()) {
@@ -12076,7 +12084,8 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     // that code, but woven into the top-down recursive display list building
     // process.
     CompositorHitTestInfo inheritedTouchAction =
-        aBuilder->GetCompositorHitTestInfo() & CompositorHitTestTouchActionMask;
+        aBuilder->GetInheritedCompositorHitTestInfo() &
+        CompositorHitTestTouchActionMask;
 
     nsIFrame* touchActionFrame = this;
     if (ScrollContainerFrame* scrollContainerFrame =

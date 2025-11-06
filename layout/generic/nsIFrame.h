@@ -5199,6 +5199,15 @@ class nsIFrame : public nsQueryFrame {
       nsDisplayListBuilder* aBuilder);
 
   /**
+   * Similar to GetCompositorHitTestInfo but this function doesn't consider
+   * pointer-events style.
+   * This function should be used only for
+   * nsDisplayBuilder::SetInheritedCompositorHitTestInfo.
+   */
+  mozilla::gfx::CompositorHitTestInfo
+  GetCompositorHitTestInfoWithoutPointerEvents(nsDisplayListBuilder* aBuilder);
+
+  /**
    * Copies aWM to mWritingMode on 'this' and all its ancestors.
    */
   inline void PropagateWritingModeToSelfAndAncestors(mozilla::WritingMode aWM);
