@@ -30,7 +30,7 @@
   --tab-pinned-min-width-expanded: calc(var(--tab-pinned-expanded-background-width) + 2 * var(--tab-pinned-margin-inline-expanded));
   --tab-pinned-container-margin-inline-expanded: var(--space-small);
   --tab-border-radius: var(--toolbarbutton-border-radius);
-  --tab-overflow-clip-margin: 4px;
+  --tab-overflow-clip-margin: 2px;
   --tab-close-button-padding: 6px;
   --tab-block-margin: 4px;
   --tab-icon-end-margin: 5.5px;
@@ -216,6 +216,8 @@
   }
 
   &[dragtarget] {
+    /* Margin needs to be at least 4px to not clip multiselect stacking effect */
+    overflow-clip-margin: 4px;
     z-index: 3 !important;
     position: absolute !important;
     pointer-events: none; /* avoid blocking dragover events on scroll buttons */
