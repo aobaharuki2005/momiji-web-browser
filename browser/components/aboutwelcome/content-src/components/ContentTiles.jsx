@@ -59,18 +59,11 @@ export const ContentTiles = props => {
     return null;
   }
 
-  const { tile_items, container } =
-    AboutWelcomeUtils.normalizeContentTiles(content);
-
-  if (!tile_items.length) {
-    return null;
-  }
-
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     // Run once when ContentTiles mounts to prefill activeMultiSelect
     if (!props.activeMultiSelect) {
-      const tilesArray = Array.isArray(tile_items) ? tile_items : [tile_items];
+      const tilesArray = Array.isArray(tiles) ? tiles : [tiles];
 
       tilesArray.forEach((tile, index) => {
         if (tile.type !== "multiselect" || !tile.data) {
@@ -91,7 +84,7 @@ export const ContentTiles = props => {
         }
       });
     }
-  }, [tile_items]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tiles]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     /**
@@ -341,36 +334,24 @@ export const ContentTiles = props => {
   };
 
   const renderContentTiles = () => {
-    const hasHeader = !!container?.header;
-    const hasContainerStyle = !!Object.keys(container?.style || {}).length;
-
-    // Legacy rule: tiles as a single object renders without a container.
-    // Arrays (even length 1) render inside a container.
-    // Normalize helper will detect original input shape (object vs array) before normalizing to preserve intent.
-    const isArrayInput = Array.isArray(content.tiles);
-    if (
-      !isArrayInput &&
-      tile_items.length === 1 &&
-      !hasHeader &&
-      !hasContainerStyle
-    ) {
-      return renderContentTile(tile_items[0], 0);
+    if (Array.isArray(tiles)) {
+      return (
+        <div
+          id="content-tiles-container"
+          style={AboutWelcomeUtils.getValidStyle(
+            content?.contentTilesContainer?.style,
+            CONTAINER_STYLES
+          )}
+        >
+          {tiles.map((tile, index) => renderContentTile(tile, index))}
+        </div>
+      );
     }
-
-    return (
-      <div
-        id="content-tiles-container"
-        style={AboutWelcomeUtils.getValidStyle(
-          container?.style,
-          CONTAINER_STYLES
-        )}
-      >
-        {tile_items.map((tile, index) => renderContentTile(tile, index))}
-      </div>
-    );
+    // If tiles is not an array render the tile alone without a container
+    return renderContentTile(tiles, 0);
   };
 
-  if (container?.header) {
+  if (content.tiles_header) {
     return (
       <React.Fragment>
         <button
@@ -379,7 +360,7 @@ export const ContentTiles = props => {
           aria-expanded={tilesHeaderExpanded}
           aria-controls={`content-tiles-container`}
         >
-          <Localized text={container.header?.title}>
+          <Localized text={content.tiles_header.title}>
             <span className="header-title" />
           </Localized>
           <div className="arrow-icon"></div>
@@ -388,5 +369,5 @@ export const ContentTiles = props => {
       </React.Fragment>
     );
   }
-  return renderContentTiles(tile_items);
+  return renderContentTiles(tiles);
 };
