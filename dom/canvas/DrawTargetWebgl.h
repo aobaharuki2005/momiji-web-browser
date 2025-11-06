@@ -755,6 +755,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     return mSharedContext->SupportsPattern(aPattern);
   }
 
+  bool SupportsDrawOptions(const DrawOptions& aOptions,
+                           const Rect& aRect = Rect());
+
   bool SetSimpleClipRect();
   bool GenerateComplexClipMask();
   bool PrepareContext(bool aClipped = true,
@@ -784,7 +787,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   Maybe<Rect> RectClippedToViewport(const RectDouble& aRect) const;
 
   bool ShouldAccelPath(const DrawOptions& aOptions,
-                       const StrokeOptions* aStrokeOptions);
+                       const StrokeOptions* aStrokeOptions,
+                       const Rect& aRect = Rect());
   void DrawPath(const Path* aPath, const Pattern& aPattern,
                 const DrawOptions& aOptions,
                 const StrokeOptions* aStrokeOptions = nullptr,

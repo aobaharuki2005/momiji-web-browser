@@ -159,6 +159,7 @@ class DrawTargetSkia : public DrawTarget {
   }
 
   Maybe<IntRect> GetDeviceClipRect(bool aAllowComplex = false) const;
+  bool IsClipEmpty() const;
 
   Maybe<Rect> GetGlyphLocalBounds(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                                   const Pattern& aPattern,

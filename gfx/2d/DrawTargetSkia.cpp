@@ -2033,6 +2033,8 @@ Maybe<IntRect> DrawTargetSkia::GetDeviceClipRect(bool aAllowComplex) const {
   return Nothing();
 }
 
+bool DrawTargetSkia::IsClipEmpty() const { return mCanvas->isClipEmpty(); }
+
 void DrawTargetSkia::PushLayer(bool aOpaque, Float aOpacity,
                                SourceSurface* aMask,
                                const Matrix& aMaskTransform,

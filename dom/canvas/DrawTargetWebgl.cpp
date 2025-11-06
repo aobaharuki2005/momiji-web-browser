@@ -600,8 +600,14 @@ void SharedContextWebgl::SetBlendState(CompositionOp aOp,
         BlendFunc(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
       }
       break;
+    case CompositionOp::OP_DEST_OVER:
+      BlendFunc(LOCAL_GL_ONE_MINUS_DST_ALPHA, LOCAL_GL_ONE);
+      break;
     case CompositionOp::OP_ADD:
       BlendFunc(LOCAL_GL_ONE, LOCAL_GL_ONE);
+      break;
+    case CompositionOp::OP_DEST_OUT:
+      BlendFunc(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
       break;
     case CompositionOp::OP_ATOP:
       BlendFunc(LOCAL_GL_DST_ALPHA, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
@@ -644,6 +650,18 @@ void SharedContextWebgl::SetBlendState(CompositionOp aOp,
       break;
     case CompositionOp::OP_SCREEN:
       BlendFunc(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_COLOR);
+      break;
+    case CompositionOp::OP_IN:  // unbounded
+      BlendFunc(LOCAL_GL_DST_ALPHA, LOCAL_GL_ZERO);
+      break;
+    case CompositionOp::OP_OUT:  // unbounded
+      BlendFunc(LOCAL_GL_ONE_MINUS_DST_ALPHA, LOCAL_GL_ZERO);
+      break;
+    case CompositionOp::OP_DEST_IN:  // unbounded
+      BlendFunc(LOCAL_GL_ZERO, LOCAL_GL_SRC_ALPHA);
+      break;
+    case CompositionOp::OP_DEST_ATOP:  // unbounded
+      BlendFunc(LOCAL_GL_ONE_MINUS_DST_ALPHA, LOCAL_GL_SRC_ALPHA);
       break;
     default:
       enabled = false;
@@ -2120,17 +2138,52 @@ bool DrawTargetWebgl::CopyToFallback(DrawTarget* aDT) {
   return false;
 }
 
+enum class SupportsDrawOptionsStatus { No, UnboundedBlend, Yes };
+
 // Whether a given composition operator can be mapped to a WebGL blend mode.
-static inline bool SupportsDrawOptions(const DrawOptions& aOptions) {
+static inline SupportsDrawOptionsStatus SupportsDrawOptions(
+    const DrawOptions& aOptions) {
   switch (aOptions.mCompositionOp) {
     case CompositionOp::OP_OVER:
+    case CompositionOp::OP_DEST_OVER:
     case CompositionOp::OP_ADD:
+    case CompositionOp::OP_DEST_OUT:
     case CompositionOp::OP_ATOP:
     case CompositionOp::OP_SOURCE:
     case CompositionOp::OP_CLEAR:
     case CompositionOp::OP_MULTIPLY:
     case CompositionOp::OP_SCREEN:
+      return SupportsDrawOptionsStatus::Yes;
+    case CompositionOp::OP_IN:
+    case CompositionOp::OP_OUT:
+    case CompositionOp::OP_DEST_IN:
+    case CompositionOp::OP_DEST_ATOP:
+      return SupportsDrawOptionsStatus::UnboundedBlend;
+    default:
+      return SupportsDrawOptionsStatus::No;
+  }
+}
+
+bool DrawTargetWebgl::SupportsDrawOptions(const DrawOptions& aOptions,
+                                          const Rect& aRect) {
+  switch (mozilla::gfx::SupportsDrawOptions(aOptions)) {
+    case SupportsDrawOptionsStatus::Yes:
       return true;
+    case SupportsDrawOptionsStatus::UnboundedBlend:
+      if (aRect.IsEmpty()) {
+        return false;
+      }
+      if (Maybe<IntRect> clip = mSkia->GetDeviceClipRect(false)) {
+        if (!clip->IsEmpty() && clip->Contains(GetRect())) {
+          clip = Some(GetRect());
+        }
+        Rect clipF(*clip);
+        if (aRect.Contains(clipF) || aRect.WithinEpsilonOf(clipF, 1e-3f)) {
+          return true;
+        }
+        return false;
+      }
+      return false;
     default:
       return false;
   }
@@ -2218,7 +2271,7 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
                                bool aAccelOnly, bool aForceUpdate,
                                const StrokeOptions* aStrokeOptions) {
   // If there is nothing to draw, then don't draw...
-  if (aRect.IsEmpty()) {
+  if (aRect.IsEmpty() || mSkia->IsClipEmpty()) {
     return true;
   }
 
@@ -2236,7 +2289,7 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
     // or we are going to flush the Skia layer to it before doing so. The shared
     // context still needs to be claimed and prepared for drawing. If this
     // fails, we just fall back to drawing with Skia below.
-    if (PrepareContext(aClipped)) {
+    if (SupportsDrawOptions(aOptions, aRect) && PrepareContext(aClipped)) {
       // The shared context is claimed and the framebuffer is now valid, so try
       // accelerated drawing.
       return mSharedContext->DrawRectAccel(
@@ -2737,7 +2790,7 @@ bool SharedContextWebgl::DrawRectAccel(
   // the Skia target. When we need to forcefully update a texture, we must be
   // careful to override any pattern limits, as the caller ensures the pattern
   // is otherwise a supported type.
-  if (!SupportsDrawOptions(aOptions) ||
+  if (SupportsDrawOptions(aOptions) == SupportsDrawOptionsStatus::No ||
       (!aForceUpdate && !SupportsPattern(aPattern)) || aStrokeOptions ||
       (!mTargetHandle && !mCurrentTarget->MarkChanged())) {
     // If only accelerated drawing was requested, bail out without software
@@ -3444,9 +3497,10 @@ bool DrawTargetWebgl::FilterSurface(const Matrix5x4& aColorMatrix,
                                     const IntRect& aSourceRect,
                                     const Point& aDest,
                                     const DrawOptions& aOptions) {
-  if (ShouldAccelPath(aOptions, nullptr)) {
-    IntRect sourceRect =
-        aSourceRect.IsEmpty() ? aSurface->GetRect() : aSourceRect;
+  IntRect sourceRect =
+      aSourceRect.IsEmpty() ? aSurface->GetRect() : aSourceRect;
+  if (ShouldAccelPath(aOptions, nullptr,
+                      Rect(aDest, Size(sourceRect.Size())))) {
     if (mTransform.IsTranslation() &&
         !mSharedContext->RequiresMultiStageBlend(aOptions, this)) {
       // If the transform doesn't require resampling and the blend op is simple,
@@ -3797,12 +3851,13 @@ bool DrawTargetWebgl::BlurSurface(float aSigma, SourceSurface* aSurface,
                                   const Point& aDest,
                                   const DrawOptions& aOptions,
                                   const DeviceColor& aColor) {
-  Maybe<DeviceColor> maskColor =
-      aSurface->GetFormat() == SurfaceFormat::A8 ? Some(aColor) : Nothing();
+  IntRect sourceRect =
+      aSourceRect.IsEmpty() ? aSurface->GetRect() : aSourceRect;
   if (aSigma >= 0.0f && aSigma <= BLUR_ACCEL_SIGMA_MAX &&
-      ShouldAccelPath(aOptions, nullptr)) {
-    IntRect sourceRect =
-        aSourceRect.IsEmpty() ? aSurface->GetRect() : aSourceRect;
+      ShouldAccelPath(aOptions, nullptr,
+                      Rect(aDest, Size(sourceRect.Size())))) {
+    Maybe<DeviceColor> maskColor =
+        aSurface->GetFormat() == SurfaceFormat::A8 ? Some(aColor) : Nothing();
     if (aSigma < BLUR_ACCEL_SIGMA_MIN) {
       SurfacePattern maskPattern(aSurface, ExtendMode::CLAMP,
                                  Matrix::Translation(aDest));
@@ -3886,7 +3941,7 @@ already_AddRefed<TextureHandle> SharedContextWebgl::ResolveFilterInputAccel(
     const IntRect& aSourceRect, const Matrix& aDestTransform,
     const DrawOptions& aOptions, const StrokeOptions* aStrokeOptions,
     SurfaceFormat aFormat) {
-  if (!SupportsDrawOptions(aOptions)) {
+  if (SupportsDrawOptions(aOptions) != SupportsDrawOptionsStatus::Yes) {
     return nullptr;
   }
   if (IsContextLost()) {
@@ -4644,8 +4699,10 @@ void PathCache::ClearVertexRanges() {
 }
 
 inline bool DrawTargetWebgl::ShouldAccelPath(
-    const DrawOptions& aOptions, const StrokeOptions* aStrokeOptions) {
-  return mWebglValid && SupportsDrawOptions(aOptions) && PrepareContext();
+    const DrawOptions& aOptions, const StrokeOptions* aStrokeOptions,
+    const Rect& aRect) {
+  return mWebglValid && SupportsDrawOptions(aOptions, aRect) &&
+         PrepareContext();
 }
 
 // For now, we only directly support stroking solid color patterns to limit
