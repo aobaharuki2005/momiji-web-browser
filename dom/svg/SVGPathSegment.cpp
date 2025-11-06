@@ -20,7 +20,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SVGPathSegment, mSVGPathElement)
 
 //----------------------------------------------------------------------
 // Implementation
-void SVGPathSegment::AppendEndPoint(
+void SVGPathSegment::AppendPoint(
     const StyleCommandEndPoint<StyleCSSFloat>& point) {
   if (point.IsToPosition()) {
     const auto& pos = point.AsToPosition();
@@ -33,19 +33,6 @@ void SVGPathSegment::AppendEndPoint(
   }
 }
 
-void SVGPathSegment::AppendControlPoint(
-    const StyleControlPoint<StyleCSSFloat>& point) {
-  if (point.IsPosition()) {
-    const auto& pos = point.AsPosition();
-    mValues.AppendElement(pos.horizontal);
-    mValues.AppendElement(pos.vertical);
-  } else if (point.IsRelative()) {
-    const auto& rel_point = point.AsRelative();
-    mValues.AppendElement(rel_point.coord.x);
-    mValues.AppendElement(rel_point.coord.y);
-  }
-}
-
 SVGPathSegment::SVGPathSegment(SVGPathElement* aSVGPathElement,
                                const StylePathCommand& aCommand)
     : mSVGPathElement(aSVGPathElement) {
@@ -55,24 +42,27 @@ SVGPathSegment::SVGPathSegment(SVGPathElement* aSVGPathElement,
       break;
     case StylePathCommand::Tag::Move:
       mCommand.AssignLiteral(aCommand.move.point.IsToPosition() ? "M" : "m");
-      AppendEndPoint(aCommand.move.point);
+      AppendPoint(aCommand.move.point);
       break;
     case StylePathCommand::Tag::Line:
       mCommand.AssignLiteral(aCommand.line.point.IsToPosition() ? "L" : "l");
-      AppendEndPoint(aCommand.line.point);
+      AppendPoint(aCommand.line.point);
       break;
     case StylePathCommand::Tag::CubicCurve:
       mCommand.AssignLiteral(aCommand.cubic_curve.point.IsToPosition() ? "C"
                                                                        : "c");
-      AppendControlPoint(aCommand.cubic_curve.control1);
-      AppendControlPoint(aCommand.cubic_curve.control2);
-      AppendEndPoint(aCommand.cubic_curve.point);
+      mValues.AppendElement(aCommand.cubic_curve.control1.x);
+      mValues.AppendElement(aCommand.cubic_curve.control1.y);
+      mValues.AppendElement(aCommand.cubic_curve.control2.x);
+      mValues.AppendElement(aCommand.cubic_curve.control2.y);
+      AppendPoint(aCommand.cubic_curve.point);
       break;
     case StylePathCommand::Tag::QuadCurve:
       mCommand.AssignLiteral(aCommand.quad_curve.point.IsToPosition() ? "Q"
                                                                       : "q");
-      AppendControlPoint(aCommand.quad_curve.control1);
-      AppendEndPoint(aCommand.quad_curve.point);
+      mValues.AppendElement(aCommand.quad_curve.control1.x);
+      mValues.AppendElement(aCommand.quad_curve.control1.y);
+      AppendPoint(aCommand.quad_curve.point);
       break;
     case StylePathCommand::Tag::Arc:
       mCommand.AssignLiteral(aCommand.arc.point.IsToPosition() ? "A" : "a");
@@ -81,7 +71,7 @@ SVGPathSegment::SVGPathSegment(SVGPathElement* aSVGPathElement,
       mValues.AppendElement(aCommand.arc.rotate);
       mValues.AppendElement(aCommand.arc.arc_size == StyleArcSize::Large);
       mValues.AppendElement(aCommand.arc.arc_sweep == StyleArcSweep::Cw);
-      AppendEndPoint(aCommand.arc.point);
+      AppendPoint(aCommand.arc.point);
       break;
     case StylePathCommand::Tag::HLine:
       mCommand.AssignLiteral(aCommand.h_line.by_to == StyleByTo::To ? "H"
@@ -96,13 +86,14 @@ SVGPathSegment::SVGPathSegment(SVGPathElement* aSVGPathElement,
     case StylePathCommand::Tag::SmoothCubic:
       mCommand.AssignLiteral(aCommand.smooth_cubic.point.IsToPosition() ? "S"
                                                                         : "s");
-      AppendControlPoint(aCommand.smooth_cubic.control2);
-      AppendEndPoint(aCommand.smooth_cubic.point);
+      mValues.AppendElement(aCommand.smooth_cubic.control2.x);
+      mValues.AppendElement(aCommand.smooth_cubic.control2.y);
+      AppendPoint(aCommand.smooth_cubic.point);
       break;
     case StylePathCommand::Tag::SmoothQuad:
       mCommand.AssignLiteral(aCommand.smooth_quad.point.IsToPosition() ? "T"
                                                                        : "t");
-      AppendEndPoint(aCommand.smooth_quad.point);
+      AppendPoint(aCommand.smooth_quad.point);
       break;
   }
 }

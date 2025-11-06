@@ -39,16 +39,6 @@ static StyleCommandEndPoint<float> MakeEndPoint(PositionType type, float x,
   }
 }
 
-static StyleControlPoint<float> MakeControlPoint(PositionType type, float x,
-                                                 float y) {
-  if (type == PositionType::Absolute) {
-    return StyleControlPoint<float>::Position({x, y});
-  } else {
-    return StyleControlPoint<float>::Relative(
-        StyleRelativeControlPoint<float>{{x, y}, StyleControlReference::None});
-  }
-}
-
 class MOZ_STACK_CLASS SVGPathSegmentInitWrapper final {
  public:
   explicit SVGPathSegmentInitWrapper(const SVGPathSegmentInit& aSVGPathSegment)
@@ -97,30 +87,24 @@ class MOZ_STACK_CLASS SVGPathSegmentInitWrapper final {
         return StylePathCommand::CubicCurve(
             MakeEndPoint(PositionType::Absolute, mInit.mValues[4],
                          mInit.mValues[5]),
-            MakeControlPoint(PositionType::Absolute, mInit.mValues[0],
-                             mInit.mValues[1]),
-            MakeControlPoint(PositionType::Absolute, mInit.mValues[2],
-                             mInit.mValues[3]));
+            {mInit.mValues[0], mInit.mValues[1]},
+            {mInit.mValues[2], mInit.mValues[3]});
       case 'c':
         return StylePathCommand::CubicCurve(
             MakeEndPoint(PositionType::Relative, mInit.mValues[4],
                          mInit.mValues[5]),
-            MakeControlPoint(PositionType::Relative, mInit.mValues[0],
-                             mInit.mValues[1]),
-            MakeControlPoint(PositionType::Relative, mInit.mValues[2],
-                             mInit.mValues[3]));
+            {mInit.mValues[0], mInit.mValues[1]},
+            {mInit.mValues[2], mInit.mValues[3]});
       case 'Q':
         return StylePathCommand::QuadCurve(
             MakeEndPoint(PositionType::Absolute, mInit.mValues[2],
                          mInit.mValues[3]),
-            MakeControlPoint(PositionType::Absolute, mInit.mValues[0],
-                             mInit.mValues[1]));
+            {mInit.mValues[0], mInit.mValues[1]});
       case 'q':
         return StylePathCommand::QuadCurve(
             MakeEndPoint(PositionType::Relative, mInit.mValues[2],
                          mInit.mValues[3]),
-            MakeControlPoint(PositionType::Relative, mInit.mValues[0],
-                             mInit.mValues[1]));
+            {mInit.mValues[0], mInit.mValues[1]});
       case 'A':
         return StylePathCommand::Arc(
             MakeEndPoint(PositionType::Absolute, mInit.mValues[5],
@@ -149,14 +133,12 @@ class MOZ_STACK_CLASS SVGPathSegmentInitWrapper final {
         return StylePathCommand::SmoothCubic(
             MakeEndPoint(PositionType::Absolute, mInit.mValues[2],
                          mInit.mValues[3]),
-            MakeControlPoint(PositionType::Absolute, mInit.mValues[0],
-                             mInit.mValues[1]));
+            {mInit.mValues[0], mInit.mValues[1]});
       case 's':
         return StylePathCommand::SmoothCubic(
             MakeEndPoint(PositionType::Relative, mInit.mValues[2],
                          mInit.mValues[3]),
-            MakeControlPoint(PositionType::Relative, mInit.mValues[0],
-                             mInit.mValues[1]));
+            {mInit.mValues[0], mInit.mValues[1]});
       case 'T':
         return StylePathCommand::SmoothQuad(MakeEndPoint(
             PositionType::Absolute, mInit.mValues[0], mInit.mValues[1]));
