@@ -84,6 +84,11 @@
   -->
   <string name="felt_privacy_info_card_subtitle_2">%1$s ᱟᱢᱟᱜ ᱠᱩᱠᱤ, ᱱᱟᱜᱟᱢ, ᱟᱨ ᱥᱟᱭᱤᱴ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱟ, ᱡᱟᱦᱟᱸ ᱛᱤᱱ ᱨᱮ ᱟᱢ ᱟᱢᱟᱜ ᱡᱷᱚᱛᱚ ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱟ ᱾ %2$s</string>
   <!--
+    Description of private browsing mode displayed to users on the homepage when they enable private mode.
+    %1$s is the name of the app (for example "Firefox").
+  -->
+  <string name="felt_privacy_info_card_subtitle_3">%1$s ᱟᱢᱟᱜ ᱠᱩᱠᱤ, ᱱᱟᱜᱟᱢ, ᱟᱨ ᱥᱟᱭᱤᱴ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱟ, ᱡᱟᱦᱟᱸ ᱛᱤᱱ ᱨᱮ ᱟᱢ ᱟᱢᱟᱜ ᱡᱷᱚᱛᱚ ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱟ ᱾</string>
+  <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
     This string is used in felt_privacy_info_card_subtitle as the text for the link.
@@ -244,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">ᱦᱟᱹᱴᱤᱧ</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -586,6 +593,14 @@
   <string name="onboarding_redesign_set_default_browser_title">ᱢᱩᱞ ᱞᱮᱠᱟᱛᱮ ᱟᱡ ᱛᱮ ᱪᱟᱞᱟᱜ ᱴᱨᱮᱠᱤᱝ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱧᱟᱢ ᱢᱮ</string>
   <!-- Set to default browser onboarding redesign body. -->
   <string name="onboarding_redesign_set_default_browser_body">ᱢᱤᱫ ᱴᱮᱯ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱟᱢᱟᱜ ᱚᱛᱟ ᱨᱮ ᱡᱟᱹᱥᱩᱲᱤ ᱠᱚ ᱵᱚᱱᱫᱚ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢᱟᱭᱟ ᱾</string>
+  <!-- Sync onboarding redesign title. 'Firefox' is intentionally hardcoded. -->
+  <string name="onboarding_redesign_sync_title" tools:ignore="BrandUsage">ᱟᱢ ᱡᱟᱸᱦᱟ ᱨᱮᱜᱮ Firefox ᱮᱢ ᱵᱮᱵᱷᱟᱨ ᱮᱫᱟ ᱚᱱᱰᱮ ᱥᱤᱱᱠ ᱢᱮ</string>
+  <!-- Sync onboarding redesign body. -->
+  <string name="onboarding_redesign_sync_body">ᱡᱟᱦᱟᱱ ᱰᱤᱵᱷᱟᱭᱤᱥ ᱨᱮ ᱵᱩᱠᱢᱟᱨᱠ, ᱴᱮᱵᱽ ᱟᱨ ᱯᱟᱥᱣᱟᱨᱰ ᱧᱟᱢ ᱢᱮ᱾ ᱮᱱᱠᱨᱤᱯᱥᱚᱱ ᱛᱮ ᱥᱟᱱᱟᱢ ᱠᱚ ᱨᱟᱠᱷᱟ ᱢᱮᱱᱟᱜᱼᱟ ᱾</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">ᱥᱤᱱᱠᱤᱝ ᱮᱦᱚᱵ ᱢᱮ</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Firefox ᱵᱟᱵᱚᱛ ᱵᱟᱹᱲᱛᱤ ᱵᱟᱰᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢᱟ ᱞᱮᱢ</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->
@@ -716,6 +731,8 @@
   <string name="preferences_https_only_title">ᱠᱷᱟᱹᱞᱤᱼHTTPS ᱢᱳᱰ</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱨᱮ ᱴᱮᱵᱽ ᱩᱠᱩ ᱞᱟᱹᱜᱤᱫ ᱥᱠᱨᱤᱱ ᱞᱚᱠ ᱵᱮᱵᱷᱟᱨ ᱢᱮ</string>
+  <!-- Informs the user how to access the tabs when "Use screen lock to hide tabs in private browsing" is enabled -->
+  <string name="preferences_pbm_lock_screen_summary_3">ᱟᱢᱟᱜ ᱠᱟᱹᱴᱩᱵ ᱪᱤᱛᱟᱹᱨ, ᱯᱤᱱ, ᱵᱟᱝᱠᱷᱟᱱ ᱪᱮᱦᱨᱟ ᱚᱱᱞᱚᱠ ᱥᱟᱶ ᱴᱮᱵᱽ ᱧᱮᱞ ᱢᱮ ᱾ ᱱᱚᱣᱟ ᱪᱟᱹᱞᱩ ᱠᱷᱟᱱ ᱥᱠᱨᱤᱱ ᱠᱮᱯᱪᱚᱨ ᱟᱨ ᱦᱟᱹᱴᱤᱧ ᱦᱚᱸ ᱵᱟᱝ ᱦᱩᱭᱩᱜᱼᱟ ᱾</string>
   <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">ᱟᱢᱟᱜ ᱠᱟᱹᱴᱩᱵ ᱪᱤᱛᱟᱹᱨ, ᱯᱤᱱ, ᱵᱟᱝᱠᱷᱟᱱ ᱪᱮᱦᱨᱟ ᱚᱱᱞᱚᱠ ᱥᱟᱶ ᱴᱮᱵᱽ ᱧᱮᱞ ᱢᱮ ᱾</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱟᱠᱚᱴᱤᱭᱟᱹ</string>
@@ -792,11 +809,17 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">ᱴᱮᱵᱽ ᱵᱟᱨ ᱫᱮᱠᱷᱟᱣ</string>
   <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_shortcut">ᱴᱩᱞᱵᱟᱨ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ</string>
+  <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_select_shortcut">ᱢᱤᱫ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+  <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">ᱪᱤᱱᱦᱟᱹ ᱠᱚ</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">ᱠᱩᱥᱤᱭᱟᱜ ᱛᱮᱭᱟᱨ</string>
   <!-- Preference description for banner about signing in -->
   <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">ᱟᱢᱟᱜ ᱴᱮᱵᱽ ᱠᱚ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ, ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱛᱚᱞ ᱡᱚᱠᱷᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱥᱩᱦᱤ ᱮᱢ ᱢᱮ ᱾</string>
+  <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
+  <string name="preferences_sign_in_description">ᱴᱮᱵ ᱠᱚ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ, ᱫᱟᱱᱟᱲ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱟᱨ ᱵᱚᱲᱛᱤ ᱠᱚ ᱛᱚᱞ ᱡᱚᱠᱷᱟᱭ ᱢᱮ ᱾</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Mozilla ᱠᱷᱟᱛᱟ</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1028,6 +1051,12 @@
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo_subtitle">\u0040heyheymomodraws ᱦᱚᱛᱮᱛᱮ ᱵᱮᱱᱟᱣ ᱟᱠᱟᱱᱟ</string>
+  <!-- Title for the "Cuddling" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
+  <string name="alternative_app_icon_option_cuddling">ᱠᱚᱰᱞᱤᱝ</string>
+  <!-- Title for the "Flaming" themed alternative app icon variant in the icon picker screen. The app icon features a fiery design, with the Firefox logo surrounded by flames for a bold, energetic look. -->
+  <string name="alternative_app_icon_option_flaming">ᱯᱷᱞᱮᱢᱤᱝ</string>
+  <!-- Title for the "Cool" themed alternative app icon variant in the icon picker screen. The app icon uses a warm orange-to-yellow gradient background with a sleek, modern twist on the Firefox logo, giving it a fresh and stylish appearance. -->
+  <string name="alternative_app_icon_option_cool">ᱠᱩᱞ</string>
   <!-- Title for the "Solid colors" group of alternative app icon variants in the icon picker screen. This group contains icons with flat, uniform color backgrounds. -->
   <string name="alternative_app_icon_group_solid_colors">ᱠᱮᱴᱮᱡ ᱨᱚᱝ</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
@@ -1038,8 +1067,12 @@
   <string name="restart_warning_dialog_title">ᱮᱯ ᱪᱤᱱᱦᱟᱹ ᱵᱚᱫᱚᱞ ᱢᱮ?</string>
   <!-- Message to warn users that applying an alternative app icon requires an app restart -->
   <string name="restart_warning_dialog_body" tools:ignore="UnusedResources" moz:removedIn="144">ᱟᱭᱠᱚᱱ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱮᱯ ᱫᱚᱦᱲᱟ ᱪᱟᱹᱞᱩ ᱞᱟᱹᱠᱛᱤᱜ ᱠᱟᱱᱟ ᱾</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_warning_dialog_body_2">ᱮᱯ ᱫᱚ ᱵᱚᱱᱫᱚ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾ %1$s ᱫᱚᱦᱲᱟ ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱡᱷᱟᱞᱠᱟᱣᱜ ᱱᱟᱶᱟ ᱟᱭᱠᱚᱱ ᱨᱮ ᱞᱤᱱ ᱢᱮ ᱾</string>
   <!-- Dialog button text for confirming the app restart to apply the selected icon -->
   <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">ᱱᱤᱛ ᱫᱚᱦᱲᱟ ᱮᱦᱚᱵ ᱢᱮ</string>
+  <!-- Dialog button text for confirming the possible app restart and new icon selection -->
+  <string name="restart_warning_dialog_button_positive_2">ᱟᱭᱠᱚᱱ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">ᱵᱟᱹᱰᱨᱟᱹ</string>
   <!--
@@ -1189,6 +1222,8 @@
     Header of the Sync and save your data preference view
   -->
   <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">ᱥᱭᱝᱠᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱥᱟᱺᱪᱟᱣ ᱛᱟᱢ</string>
+  <!-- Header of the Sign in preference view -->
+  <string name="preferences_sign_in">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">ᱫᱩᱲᱟᱹ ᱡᱚᱲᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
   <!-- Preference for removing FxA account -->
@@ -1213,6 +1248,18 @@
   <string name="preference_expanded_toolbar">ᱯᱟᱥᱱᱟᱣ ᱟᱠᱟᱱᱟ</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">ᱴᱮᱵᱽ ᱵᱟᱨ ᱩᱫᱩᱜᱚᱜ ᱡᱷᱚᱜ ᱴᱷᱤᱠᱟᱹᱱᱟ ᱵᱟᱨ ᱪᱮᱛᱟᱱ ᱨᱮ ᱛᱟᱦᱮᱱ ᱞᱟᱹᱠᱛᱤᱭᱟ ᱾</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">ᱢᱤᱫᱴᱟᱹᱝ ᱱᱟᱶᱟ ᱴᱮᱵᱽ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">ᱵᱩᱠᱢᱟᱨᱠ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">ᱛᱚᱨᱡᱚᱢᱟ</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">ᱛᱟᱭᱚᱢ</string>
   <!--
     App icon Preferences
 
@@ -1337,6 +1384,8 @@
   <string name="close_tabs_after_one_month">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ</string>
   <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
   <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">ᱠᱦᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱟᱡᱛᱮ ᱵᱚᱸᱫ ᱢᱮ</string>
+  <!-- Content description (not visible, for screen readers etc.): Close tab button -->
+  <string name="tab_manager_close_tabs">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
   <!--
     Opening screen
 
@@ -1436,14 +1485,24 @@
   <string name="tab_tray_menu_item_close">ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">ᱵᱩᱻᱠᱢᱟᱨᱠ</string>
+  <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_bookmark_content_description">ᱵᱟᱪᱷᱟᱣ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱵᱩᱠᱢᱟᱨᱠ ᱢᱮ</string>
   <!-- Text shown in the multiselect menu for closing selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_close">ᱵᱚᱸᱫᱽ</string>
+  <!-- Content description (not visible, for screen readers etc.): Closes selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_close_content_description">ᱵᱟᱪᱷᱟᱣᱟᱠ ᱴᱮᱵᱽ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+  <!-- Text shown in the multiselect menu for sharing selected tabs. -->
+  <string name="tab_manager_multiselect_menu_item_share">ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
+  <!-- Text shown in the multiselect menu for adding selected tabs to collections. -->
+  <string name="tab_manager_multiselect_menu_item_add_to_collection">ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
   <!-- Content description for tabs tray multiselect share button -->
   <string name="tab_tray_multiselect_share_content_description">ᱵᱟᱪᱷᱟᱣ ᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱦᱟᱹᱴᱤᱧ ᱢᱮ</string>
   <!-- Content description for tabs tray multiselect menu -->
   <string name="tab_tray_multiselect_menu_content_description">ᱵᱟᱪᱷᱟᱣ ᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱢᱮᱱᱭᱩ ᱠᱚ</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">ᱴᱮᱵᱽ ᱛᱩᱢᱟᱹᱞ ᱠᱷᱚᱱ ᱚᱪᱚᱜ ᱢᱮ</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1670,16 +1729,24 @@
   <string name="webcompat_reporter_label_description">ᱮᱴᱠᱮᱴᱚᱬᱮ ᱵᱟᱛᱟᱣ ᱢᱮ (ᱩᱱᱟᱹᱜ ᱵᱟᱝ ᱞᱟᱹᱠᱛᱤ)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">ᱵᱟᱹᱲᱛᱤ ᱵᱟᱰᱟᱭ ᱵᱷᱮᱡᱟᱭ ᱢᱮ</string>
+  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
+  <string name="webcompat_reporter_add_more_info">ᱵᱟᱹᱲᱛᱤ ᱵᱟᱰᱟᱭ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">ᱠᱩᱞ ᱢᱮ</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱨᱤᱯᱚᱨᱴ ᱠᱩᱞ ᱮᱱᱟ</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">ᱨᱤᱯᱚᱨᱴ ᱵᱷᱮᱡᱟ ᱦᱩᱭ ᱮᱱᱟ</string>
   <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
   <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">ᱪᱮᱫ ᱦᱩᱭ ᱟᱠᱟᱱᱟ? ᱪᱮᱫ ᱦᱩᱭ ᱞᱟᱹᱠᱛᱤ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟ?</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">ᱴᱨᱮᱠᱤᱝ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱦᱚᱛᱮᱛᱮ ᱵᱞᱚᱠ ᱟᱠᱟᱱ URL ᱠᱚ ᱵᱷᱮᱡᱟᱭ ᱢᱮ</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">ᱵᱟᱹᱲᱛᱤ ᱴᱨᱮᱠᱤᱝ ᱨᱚᱠᱷᱟ ᱴᱨᱮᱠᱟᱨ ᱠᱚ ᱟᱨ ᱥᱠᱨᱤᱯᱴ ᱠᱚ ᱵᱞᱚᱠ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱡᱟᱦᱟᱸ ᱫᱚ ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱠᱚ ᱵᱮᱥ ᱞᱮᱠᱟ ᱠᱟᱹᱢᱤ ᱞᱟᱹᱠᱛᱤᱭᱟ᱾</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
