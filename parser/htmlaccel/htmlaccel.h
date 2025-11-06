@@ -203,6 +203,7 @@ namespace detail {
 // 16 indicates the index of the leftmost match.
 const uint8x16_t INVERTED_ADVANCES = {16, 15, 14, 13, 12, 11, 10, 9,
                                       8,  7,  6,  5,  4,  3,  2,  1};
+const uint8x16_t ALL_ONES = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
 MOZ_ALWAYS_INLINE_EVEN_DEBUG uint8x16_t TableLookup(uint8x16_t aTable,
                                                     uint8x16_t aNibbles) {
@@ -254,6 +255,13 @@ const uint8x16_t ZERO_LT_AMP_CR = {0, 2, 1, 1, 1,   1,    '&', 1,
 /// Disallow U+0000, less-than, ampersand, carriage return, and line feed.
 const uint8x16_t ZERO_LT_AMP_CR_LF = {0, 2, 1,    1, 1,   1,    '&', 1,
                                       1, 1, '\n', 1, '<', '\r', 1,   1};
+/// Disallow less-than, greater-than, ampersand, and no-break space.
+const uint8x16_t LT_GT_AMP_NBSP = {0xA0, 2, 1, 1, 1,   1, '&', 1,
+                                   1,    1, 1, 1, '<', 1, '>', 1};
+/// Disallow less-than, greater-than, ampersand, no-break space, and double
+/// quote.
+const uint8x16_t LT_GT_AMP_NBSP_QUOT = {0xA0, 2, '"', 1, 1,   1, '&', 1,
+                                        1,    1, 1,   1, '<', 1, '>', 1};
 
 /// Compute a 16-lane mask for for 16 UTF-16 code units, where a lane
 /// is 0x00 if OK to skip and 0xFF in not OK to skip.
@@ -286,17 +294,31 @@ StrideToMask(const char16_t* aArr /* len = 16 */, uint8x16_t aTable,
   return ret;
 }
 
-MOZ_ALWAYS_INLINE_EVEN_DEBUG int32_t AccelerateTextNode(const char16_t* aInput,
-                                                        const char16_t* aEnd,
-                                                        uint8x16_t aTable,
-                                                        bool aAllowSurrogates) {
-  const char16_t* current = aInput;
+/// Compute a 16-lane mask for for 16 Latin1 code units, where a lane
+/// is 0x00 if OK to skip and 0xFF in not OK to skip.
+/// `aAllowSurrogates` exist for signature compatibility with the UTF-16
+/// case and is unused.
+MOZ_ALWAYS_INLINE_EVEN_DEBUG uint8x16_t StrideToMask(
+    const char* aArr /* len = 16 */, uint8x16_t aTable, bool aAllowSurrogates) {
+  uint8x16_t stride;
+  // memcpy generates a single unaligned load instruction with both ISAs.
+  memcpy(&stride, aArr, 16);
+  // == compares lane-wise and returns a mask vector.
+  return stride == TableLookup(aTable, stride & NIBBLE_MASK);
+}
+
+template <typename CharT>
+MOZ_ALWAYS_INLINE_EVEN_DEBUG size_t AccelerateTextNode(const CharT* aInput,
+                                                       const CharT* aEnd,
+                                                       uint8x16_t aTable,
+                                                       bool aAllowSurrogates) {
+  const CharT* current = aInput;
   while (aEnd - current >= 16) {
     uint8x16_t mask = StrideToMask(current, aTable, aAllowSurrogates);
 #if defined(__aarch64__)
     uint8_t max = vmaxvq_u8(mask & INVERTED_ADVANCES);
     if (max != 0) {
-      return int32_t((current - aInput) + 16 - max);
+      return size_t((current - aInput) + 16 - max);
     }
 #else  // x86/x86_64
     int int_mask = _mm_movemask_epi8(mask);
@@ -305,12 +327,42 @@ MOZ_ALWAYS_INLINE_EVEN_DEBUG int32_t AccelerateTextNode(const char16_t* aInput,
       // the first SIMD lane in text order. Hence, we need to count
       // trailing zeros. We already checked that the bits are not
       // all zeros, so __builtin_ctz isn't UB.
-      return int32_t((current - aInput) + __builtin_ctz(int_mask));
+      return size_t((current - aInput) + __builtin_ctz(int_mask));
     }
 #endif
     current += 16;
   }
-  return int32_t(current - aInput);
+  return size_t(current - aInput);
+}
+
+template <typename CharT>
+MOZ_ALWAYS_INLINE_EVEN_DEBUG uint32_t CountEscaped(const CharT* aInput,
+                                                   const CharT* aEnd,
+                                                   bool aCountDoubleQuote) {
+  uint32_t numEncodedChars = 0;
+  const CharT* current = aInput;
+  while (aEnd - current >= 16) {
+    uint8x16_t mask = StrideToMask(
+        current, aCountDoubleQuote ? LT_GT_AMP_NBSP_QUOT : LT_GT_AMP_NBSP,
+        true);
+#if defined(__aarch64__)
+    // Reduce on each iteration to avoid branching for overflow avoidance
+    // on each iteration.
+    numEncodedChars += vaddvq_u8(mask & ALL_ONES);
+#else  // x86_64
+    numEncodedChars += __builtin_popcount(_mm_movemask_epi8(mask));
+#endif
+    current += 16;
+  }
+  while (current != aEnd) {
+    CharT c = *current;
+    if ((aCountDoubleQuote && c == CharT('"')) || c == CharT('&') ||
+        c == CharT('<') || c == CharT('>') || c == CharT(0xA0)) {
+      ++numEncodedChars;
+    }
+    ++current;
+  }
+  return numEncodedChars;
 }
 
 MOZ_ALWAYS_INLINE_EVEN_DEBUG bool ContainsMarkup(const char16_t* aInput,

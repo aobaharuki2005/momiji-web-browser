@@ -16,6 +16,47 @@ MOZ_NEVER_INLINE bool ContainsMarkup(const char16_t* aPtr,
   return detail::ContainsMarkup(aPtr, aEnd);
 }
 
+/// Skip over SIMD strides not containing less-than, greater-than, ampersand,
+/// and no-break space.
+MOZ_NEVER_INLINE size_t SkipNonEscapedInTextNode(const char16_t* aPtr,
+                                                 const char16_t* aEnd) {
+  return detail::AccelerateTextNode(aPtr, aEnd, detail::LT_GT_AMP_NBSP, true);
+}
+
+/// Skip over SIMD strides not containing less-than, greater-than, ampersand,
+/// and no-break space.
+MOZ_NEVER_INLINE size_t SkipNonEscapedInTextNode(const char* aPtr,
+                                                 const char* aEnd) {
+  return detail::AccelerateTextNode(aPtr, aEnd, detail::LT_GT_AMP_NBSP, true);
+}
+
+/// Skip over SIMD strides not containing less-than, greater-than, ampersand,
+/// no-break space, and double quote.
+MOZ_NEVER_INLINE size_t SkipNonEscapedInAttributeValue(const char16_t* aPtr,
+                                                       const char16_t* aEnd) {
+  return detail::AccelerateTextNode(aPtr, aEnd, detail::LT_GT_AMP_NBSP_QUOT,
+                                    true);
+}
+
+/// Count occurrences of less-than, greater-than, ampersand, and no-break space.
+MOZ_NEVER_INLINE uint32_t CountEscapedInTextNode(const char16_t* aPtr,
+                                                 const char16_t* aEnd) {
+  return detail::CountEscaped(aPtr, aEnd, false);
+}
+
+/// Count occurrences of less-than, greater-than, ampersand, and no-break space.
+MOZ_NEVER_INLINE uint32_t CountEscapedInTextNode(const char* aPtr,
+                                                 const char* aEnd) {
+  return detail::CountEscaped(aPtr, aEnd, false);
+}
+
+/// Count occurrences of less-than, greater-than, ampersand, no-break space, and
+/// double quote.
+MOZ_NEVER_INLINE uint32_t CountEscapedInAttributeValue(const char16_t* aPtr,
+                                                       const char16_t* aEnd) {
+  return detail::CountEscaped(aPtr, aEnd, true);
+}
+
 /// The innerHTML / DOMParser case for the data state in the HTML parser
 MOZ_NEVER_INLINE int32_t AccelerateDataFastest(const char16_t* aPtr,
                                                const char16_t* aEnd) {
