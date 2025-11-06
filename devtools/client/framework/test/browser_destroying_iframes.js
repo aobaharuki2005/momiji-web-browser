@@ -6,7 +6,7 @@
 // an iframe early after its creation.
 
 add_task(async function () {
-  const { tab } = await openInspectorForURL("about:blank");
+  const { tab, toolbox } = await openInspectorForURL("about:blank");
   const browser = tab.linkedBrowser;
 
   // Create/remove an extra one now, after the load event.
@@ -18,4 +18,7 @@ add_task(async function () {
       iframe.remove();
     });
   }
+
+  // Wait for requests to settle to avoid unhandled promise rejections
+  await toolbox.commands.waitForRequestsToSettle();
 });
