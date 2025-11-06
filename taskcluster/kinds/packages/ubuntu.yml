@@ -166,7 +166,7 @@ ub22-python-zstandard:
         pre-build-command: debchange -v 0.24.0-1.ub22moz --distribution jammy "Mozilla backport for jammy"
 
 ub22-arm64-python-zstandard:
-    worker-type: b-linux-gcp-aarch64
+    worker-type: b-linux-aarch64
     description: "python-zstandard for Ubuntu jammy on ARM64"
     treeherder:
         symbol: Ub22a64(python-zstandard)
@@ -195,7 +195,7 @@ ub22-mercurial:
                          -e "s/__CODENAME__/jammy/" debian/changelog
 
 ub22-arm64-mercurial:
-    worker-type: b-linux-gcp-aarch64
+    worker-type: b-linux-aarch64
     description: "Modern Mercurial for Ubuntu jammy on ARM64"
     treeherder:
         symbol: Ub22a64(hg)
@@ -224,7 +224,7 @@ ub24-python-zstandard:
         pre-build-command: debchange -v 0.24.0-1.ub24moz --distribution noble "Mozilla backport for noble"
 
 ub24-arm64-python-zstandard:
-    worker-type: b-linux-gcp-aarch64
+    worker-type: b-linux-aarch64
     description: "python-zstandard for Ubuntu noble on ARM64"
     treeherder:
         symbol: Ub24a64(python-zstandard)
@@ -253,7 +253,7 @@ ub24-mercurial:
                          -e "s/__CODENAME__/noble/" debian/changelog
 
 ub24-arm64-mercurial:
-    worker-type: b-linux-gcp-aarch64
+    worker-type: b-linux-aarch64
     description: "Modern Mercurial for Ubuntu noble on ARM64"
     treeherder:
         symbol: Ub24a64(hg)

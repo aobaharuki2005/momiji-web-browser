@@ -551,22 +551,7 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: 'win11-a64-24h2-builder'
-        image:
-            provisioner: '{trust-domain}-{level}'
-            implementation: docker-worker
-            os: linux
-            worker-type: '{alias}'
-        images:
-            provisioner: '{trust-domain}-{level}'
-            implementation: docker-worker
-            os: linux
-            worker-type: '{alias}'
-        images-gcp:
-            provisioner: '{trust-domain}-{level}'
-            implementation: docker-worker
-            os: linux
-            worker-type: '{alias}'
-        images-gcp-aarch64:
+        images.*:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux

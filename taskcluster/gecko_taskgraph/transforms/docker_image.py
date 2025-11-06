@@ -118,7 +118,7 @@ def fill_template(config, tasks):
         zstd_level = "3" if int(config.params["level"]) == 1 else "10"
 
         if task.get("arch", "") == "arm64":
-            worker_type = "images-gcp-aarch64"
+            worker_type = "images-aarch64"
         else:
             worker_type = "images-gcp"
 
