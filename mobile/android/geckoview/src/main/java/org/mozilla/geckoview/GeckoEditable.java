@@ -47,7 +47,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
-import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.MozLog;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -1984,7 +1983,7 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
     }
 
     if ((flags & SessionTextInput.EditableListener.IME_FLAG_PRIVATE_BROWSING) != 0) {
-      outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
+      outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING;
     }
 
     if (typeHint.length() == 0) {

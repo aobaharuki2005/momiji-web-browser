@@ -607,7 +607,7 @@ import org.mozilla.gecko.util.ThreadUtils;
     }
 
     mIsPrivateBrowsing =
-        ((outAttrs.imeOptions & InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0);
+        ((outAttrs.imeOptions & EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0);
 
     if (DEBUG) {
       Log.d(
