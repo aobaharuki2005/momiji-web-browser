@@ -193,7 +193,7 @@ void NavigateEvent::Intercept(const NavigationInterceptOptions& aOptions,
     // Step 8.1
     if (mFocusResetBehavior &&
         *mFocusResetBehavior != aOptions.mFocusReset.Value()) {
-      RefPtr<Document> document = GetDocument();
+      RefPtr<Document> document = GetAssociatedDocument();
       MaybeReportWarningToConsole(document, u"focusReset"_ns,
                                   *mFocusResetBehavior,
                                   aOptions.mFocusReset.Value());
@@ -207,7 +207,7 @@ void NavigateEvent::Intercept(const NavigationInterceptOptions& aOptions,
   if (aOptions.mScroll.WasPassed()) {
     // Step 9.1
     if (mScrollBehavior && *mScrollBehavior != aOptions.mScroll.Value()) {
-      RefPtr<Document> document = GetDocument();
+      RefPtr<Document> document = GetAssociatedDocument();
       MaybeReportWarningToConsole(document, u"scroll"_ns, *mScrollBehavior,
                                   aOptions.mScroll.Value());
     }
@@ -255,7 +255,7 @@ void NavigateEvent::InitNavigateEvent(const NavigateEventInit& aEventInitDict) {
   mInfo = aEventInitDict.mInfo;
   mHasUAVisualTransition = aEventInitDict.mHasUAVisualTransition;
   mSourceElement = aEventInitDict.mSourceElement;
-  if (RefPtr document = GetDocument()) {
+  if (RefPtr document = GetAssociatedDocument()) {
     mLastScrollGeneration = document->LastScrollGeneration();
   }
 }
@@ -330,7 +330,7 @@ void NavigateEvent::Finish(bool aDidFulfill) {
 // https://html.spec.whatwg.org/#navigateevent-perform-shared-checks
 void NavigateEvent::PerformSharedChecks(ErrorResult& aRv) {
   // Step 1
-  if (RefPtr document = GetDocument();
+  if (RefPtr document = GetAssociatedDocument();
       !document || !document->IsFullyActive()) {
     aRv.ThrowInvalidStateError("Document isn't fully active");
     return;
@@ -499,13 +499,13 @@ void NavigateEvent::ProcessScrollBehavior() {
   // Step 3
   if (mNavigationType == NavigationType::Traverse ||
       mNavigationType == NavigationType::Reload) {
-    RefPtr<Document> document = GetDocument();
+    RefPtr<Document> document = GetAssociatedDocument();
     RestoreScrollPositionData(document, mLastScrollGeneration);
     return;
   }
 
   // Step 4.1
-  RefPtr<Document> document = GetDocument();
+  RefPtr<Document> document = GetAssociatedDocument();
   // If there is no document there's not much to do.
   if (!document) {
     return;
@@ -523,6 +523,15 @@ void NavigateEvent::ProcessScrollBehavior() {
   // Step 4.3
   document->ScrollToRef();
 }
+
+Document* NavigateEvent::GetAssociatedDocument() const {
+  if (nsCOMPtr<nsPIDOMWindowInner> globalWindow =
+          do_QueryInterface(GetParentObject())) {
+    return globalWindow->GetExtantDoc();
+  }
+  return nullptr;
+}
+
 }  // namespace mozilla::dom
 
 #undef LOG_FMTI

@@ -126,6 +126,8 @@ class NavigateEvent final : public Event {
   MOZ_CAN_RUN_SCRIPT
   void ProcessScrollBehavior();
 
+  Document* GetAssociatedDocument() const;
+
   explicit NavigateEvent(EventTarget* aOwner);
   ~NavigateEvent();
 
@@ -140,7 +142,7 @@ class NavigateEvent final : public Event {
   JS::Heap<JS::Value> mInfo;
   bool mHasUAVisualTransition = false;
   RefPtr<Element> mSourceElement;
-  uint32_t mLastScrollGeneration;
+  uint32_t mLastScrollGeneration = 0;
 
   nsTArray<RefPtr<NavigationPrecommitHandler>> mNavigationPrecommitHandlerList;
 
