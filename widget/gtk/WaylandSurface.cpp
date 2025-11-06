@@ -951,7 +951,7 @@ wl_surface* WaylandSurface::Lock(WaylandSurfaceLock* aWaylandSurfaceLock)
   mMutex.Lock();
   MOZ_DIAGNOSTIC_ASSERT(!mSurfaceLock);
   mSurfaceLock = aWaylandSurfaceLock;
-  return mIsReadyToDraw ? mSurface : nullptr;
+  return mSurface;
 }
 
 void WaylandSurface::Unlock(struct wl_surface** aSurface,
