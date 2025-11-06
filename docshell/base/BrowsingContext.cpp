@@ -1115,7 +1115,7 @@ void BrowsingContext::Detach(bool aFromIPC) {
     // content process, but may be "replace" if it's known the context being
     // replaced in the parent process.
     const char16_t* why = u"discard";
-    if (XRE_IsParentProcess() && IsTop() && !Canonical()->GetWebProgress()) {
+    if (XRE_IsParentProcess() && Canonical()->IsReplaced()) {
       why = u"replace";
     }
     obs->NotifyObservers(ToSupports(this), "browsing-context-discarded", why);
