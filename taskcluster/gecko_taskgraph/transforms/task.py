@@ -173,7 +173,7 @@ task_description_schema = Schema(
         # The `run_on_repo_type` attribute, defaulting to "hg".  This dictates
         # the types of repositories on which this task should be included in
         # the target task set. See the attributes documentation for details.
-        Optional("run-on-repo-type"): [str],
+        Optional("run-on-repo-type"): [Any("git", "hg")],
         # The `run_on_projects` attribute, defaulting to "all".  This dictates the
         # projects on which this task should be included in the target task set.
         # See the attributes documentation for details.
@@ -2355,7 +2355,7 @@ def build_task(config, tasks):
             item_name=task["label"],
             **{"build-platform": build_platform},
         )
-        attributes["run_on_repo_type"] = task.get("run-on-repo-type", ["hg"])
+        attributes["run_on_repo_type"] = task.get("run-on-repo-type", ["git", "hg"])
         attributes["run_on_projects"] = task.get("run-on-projects", ["all"])
         attributes["always_target"] = task["always-target"]
         # This logic is here since downstream tasks don't always match their

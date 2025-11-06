@@ -37,6 +37,7 @@ tasks-from:
     - xpcshell.yml
 
 task-defaults:
+    run-on-repo-type: [hg]
     attributes:
         retrigger: true
     use-python: default

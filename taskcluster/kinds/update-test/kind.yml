@@ -19,6 +19,7 @@ transforms:
     - gecko_taskgraph.transforms.task:transforms
 
 task-defaults:
+    run-on-repo-type: [hg]
     shipping-phase: promote
     shipping-product: firefox
     run-on-releases: [release, release-rc, beta, esr140]
