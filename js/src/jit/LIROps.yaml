@@ -4119,7 +4119,7 @@
     # Negative divisor case not implemented for all targets.
     negativeDivisor: bool
 #endif
-#if defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
+#if defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_LOONG64)
   num_temps: 1
 #endif
   mir_op: Div
@@ -4639,14 +4639,47 @@
 #endif
 
 #ifdef JS_CODEGEN_RISCV64
-- name: DivOrModI64
-  gen_boilerplate: false
+- name: UDiv
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Div
 
-- name: UDivOrMod
-  gen_boilerplate: false
+- name: UMod
+  result_type: WordSized
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Mod
 
-- name: UDivOrModI64
-  gen_boilerplate: false
+- name: DivI64
+  result_type: Int64
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Div
+
+- name: ModI64
+  result_type: Int64
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Mod
+
+- name: UDivI64
+  result_type: Int64
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Div
+
+- name: UModI64
+  result_type: Int64
+  operands:
+    lhs: WordSized
+    rhs: WordSized
+  mir_op: Mod
 
 - name: ModMaskI
   result_type: WordSized

@@ -18,8 +18,6 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::FloorLog2;
-
 LTableSwitch* LIRGeneratorRiscv64::newLTableSwitch(
     const LAllocation& in, const LDefinition& inputCopy) {
   return new (alloc()) LTableSwitch(in, inputCopy, temp());
@@ -179,10 +177,10 @@ void LIRGeneratorRiscv64::lowerDivI(MDiv* div) {
     // possible; division by negative powers of two can be optimized in a
     // similar manner as positive powers of two, and division by other
     // constants can be optimized by a reciprocal multiplication technique.
-    int32_t shift = FloorLog2(rhs);
-    if (rhs > 0 && 1 << shift == rhs) {
-      auto* lir = new (alloc())
-          LDivPowTwoI(useRegisterAtStart(div->lhs()), temp(), shift);
+    if (rhs > 0 && mozilla::IsPowerOfTwo(mozilla::Abs(rhs))) {
+      int32_t shift = mozilla::FloorLog2(rhs);
+      auto* lir =
+          new (alloc()) LDivPowTwoI(useRegisterAtStart(div->lhs()), shift);
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
       }
@@ -200,7 +198,9 @@ void LIRGeneratorRiscv64::lowerDivI(MDiv* div) {
     rhs = useRegisterAtStart(div->rhs());
   }
 
-  auto* lir = new (alloc()) LDivI(lhs, rhs, temp());
+  // RISCV64 has plenty of scratch registers, so we don't need to request an
+  // additonal temp register from the register allocator.
+  auto* lir = new (alloc()) LDivI(lhs, rhs, LDefinition::BogusTemp());
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
@@ -208,15 +208,15 @@ void LIRGeneratorRiscv64::lowerDivI(MDiv* div) {
 }
 
 void LIRGeneratorRiscv64::lowerDivI64(MDiv* div) {
-  auto* lir = new (alloc()) LDivOrModI64(useRegisterAtStart(div->lhs()),
-                                         useRegisterAtStart(div->rhs()));
+  auto* lir = new (alloc())
+      LDivI64(useRegisterAtStart(div->lhs()), useRegisterAtStart(div->rhs()));
   defineInt64(lir, div);
 }
 
 void LIRGeneratorRiscv64::lowerModI(MMod* mod) {
   if (mod->rhs()->isConstant()) {
     int32_t rhs = mod->rhs()->toConstant()->toInt32();
-    int32_t shift = FloorLog2(rhs);
+    int32_t shift = mozilla::FloorLog2(rhs);
     if (rhs > 0 && 1 << shift == rhs) {
       LModPowTwoI* lir =
           new (alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
@@ -225,7 +225,8 @@ void LIRGeneratorRiscv64::lowerModI(MMod* mod) {
       }
       define(lir, mod);
       return;
-    } else if (shift < 31 && (1 << (shift + 1)) - 1 == rhs) {
+    }
+    if (shift < 31 && (1 << (shift + 1)) - 1 == rhs) {
       LModMaskI* lir = new (alloc())
           LModMaskI(useRegister(mod->lhs()), temp(), temp(), shift + 1);
       if (mod->fallible()) {
@@ -253,8 +254,8 @@ void LIRGeneratorRiscv64::lowerModI(MMod* mod) {
 }
 
 void LIRGeneratorRiscv64::lowerModI64(MMod* mod) {
-  auto* lir = new (alloc()) LDivOrModI64(useRegisterAtStart(mod->lhs()),
-                                         useRegisterAtStart(mod->rhs()));
+  auto* lir = new (alloc())
+      LModI64(useRegisterAtStart(mod->lhs()), useRegisterAtStart(mod->rhs()));
   defineInt64(lir, mod);
 }
 
@@ -268,36 +269,31 @@ void LIRGeneratorRiscv64::lowerUDiv(MDiv* div) {
     rhs = useRegisterAtStart(div->rhs());
   }
 
-  auto* lir = new (alloc()) LUDivOrMod;
-  lir->setOperand(0, lhs);
-  lir->setOperand(1, rhs);
+  auto* lir = new (alloc()) LUDiv(lhs, rhs);
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
-
   define(lir, div);
 }
 
 void LIRGeneratorRiscv64::lowerUDivI64(MDiv* div) {
-  auto* lir = new (alloc()) LUDivOrModI64(useRegisterAtStart(div->lhs()),
-                                          useRegisterAtStart(div->rhs()));
+  auto* lir = new (alloc())
+      LUDivI64(useRegisterAtStart(div->lhs()), useRegisterAtStart(div->rhs()));
   defineInt64(lir, div);
 }
 
 void LIRGeneratorRiscv64::lowerUMod(MMod* mod) {
-  auto* lir = new (alloc()) LUDivOrMod;
-  lir->setOperand(0, useRegisterAtStart(mod->lhs()));
-  lir->setOperand(1, useRegisterAtStart(mod->rhs()));
+  auto* lir = new (alloc())
+      LUMod(useRegisterAtStart(mod->lhs()), useRegisterAtStart(mod->rhs()));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }
-
   define(lir, mod);
 }
 
 void LIRGeneratorRiscv64::lowerUModI64(MMod* mod) {
-  auto* lir = new (alloc()) LUDivOrModI64(useRegisterAtStart(mod->lhs()),
-                                          useRegisterAtStart(mod->rhs()));
+  auto* lir = new (alloc())
+      LUModI64(useRegisterAtStart(mod->lhs()), useRegisterAtStart(mod->rhs()));
   defineInt64(lir, mod);
 }
 
