@@ -87,3 +87,6 @@ assertEq(grayBitsValid(), true);
 abortgc();
 assertEq(grayBitsValid(), false);
 checkMarks("black", "black", "gray");
+
+gc();
+checkMarks("gray", "gray", "gray");

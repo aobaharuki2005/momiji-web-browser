@@ -1160,9 +1160,11 @@ template <uint32_t opts, typename S, typename T>
 void js::GCMarker::markAndTraverseEdge(S* source, T* target) {
   if constexpr (std::is_same_v<T, JS::Symbol>) {
     // Unmark gray symbols in incremental GC.
-    GCRuntime* gc = &runtime()->gc;
-    MOZ_ASSERT(gc->atomMarking.atomIsMarked(source->zone(), target));
-    gc->atomMarking.maybeUnmarkGrayAtomically(source->zone(), target);
+    if (markColor() == MarkColor::Black) {
+      GCRuntime* gc = &runtime()->gc;
+      MOZ_ASSERT(gc->atomMarking.atomIsMarked(source->zone(), target));
+      gc->atomMarking.maybeUnmarkGrayAtomically(source->zone(), target);
+    }
   }
   checkTraversedEdge(source, target);
   markAndTraverse<opts>(target);
