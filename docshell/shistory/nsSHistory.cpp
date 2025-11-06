@@ -2506,13 +2506,25 @@ void nsSHistory::ReconstructContiguousEntryListFrom(
     SessionHistoryEntry* aEntry) {
   RefPtr entryList = EntryListFor(aEntry->DocshellID());
   entryList->clear();
+
+  if (aEntry->isInList()) {
+    aEntry->remove();
+  }
   entryList->insertBack(aEntry);
+
   for (auto* entry = aEntry;
        (entry = FindAdjacentContiguousEntryFor(entry, -1));) {
+    if (entry->isInList()) {
+      entry->remove();
+    }
     entryList->insertFront(entry);
   }
+
   for (auto* entry = aEntry;
        (entry = FindAdjacentContiguousEntryFor(entry, 1));) {
+    if (entry->isInList()) {
+      entry->remove();
+    }
     entryList->insertBack(entry);
   }
 }
