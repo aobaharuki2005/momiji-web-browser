@@ -3481,6 +3481,12 @@
   value: true
   mirror: always
 
+# Whether to enable showPicker() support for datalist.
+- name: dom.input.showPicker_datalist.enabled
+  type: bool
+  value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
 # Does mousewheel-scrolling over a focused <input type="number"> or
 # <input type="range"> field cause the value to increase/decrease (rather
 # than scrolling the page)?

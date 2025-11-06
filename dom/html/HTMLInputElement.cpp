@@ -5949,7 +5949,8 @@ void HTMLInputElement::ShowPicker(ErrorResult& aRv) {
   // Step 6 for input elements with a suggestions source element.
   // I.e. show the autocomplete dropdown based on the list attribute.
   // XXX Form-fill support on android is bug 1535985.
-  if (IsSingleLineTextControl(true) && GetList()) {
+  if (StaticPrefs::dom_input_showPicker_datalist_enabled() &&
+      IsSingleLineTextControl(true) && GetList()) {
     if (nsCOMPtr<nsIFormFillController> controller =
             do_GetService("@mozilla.org/satchel/form-fill-controller;1")) {
       controller->SetControlledElement(this);

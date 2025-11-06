@@ -45,6 +45,10 @@
 
     SimpleTest.waitForExplicitFinish();
     window.onload = async function() {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.input.showPicker_datalist.enabled", true]],
+      });
+
       for (const type of ["text", "search", "email", "url", "tel", "number"]) {
         await testWithInputType(type);
       }
