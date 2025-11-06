@@ -1041,13 +1041,25 @@ async function processDateData(targetDate, forceRefetch = false) {
     return;
   }
 
+  // Fetch jobs list first (needed for verification)
+  let jobs;
+  try {
+    jobs = await fetchXpcshellData(targetDate);
+    if (jobs.length === 0) {
+      console.log(`No jobs found for ${targetDate}.`);
+      return;
+    }
+  } catch (error) {
+    console.error(`Error fetching jobs for ${targetDate}:`, error);
+    return;
+  }
+
   // Try to fetch from previous run if available and not forcing refetch
   if (
     !forceRefetch &&
     previousRunData &&
     previousRunData.dates.has(targetDate)
   ) {
-    console.log(`Fetching ${targetDate} from previous run...`);
     try {
       const [timings, resources] = await Promise.all([
         fetchJson(`${previousRunData.artifactsUrl}/${timingsFilename}`),
@@ -1055,14 +1067,28 @@ async function processDateData(targetDate, forceRefetch = false) {
       ]);
 
       if (timings && resources) {
-        saveJsonFile(timings, timingsPath);
-        saveJsonFile(resources, resourcesPath);
-        return;
+        const expectedJobCount = jobs.length;
+        const actualProcessedCount = timings.metadata?.processedJobCount;
+
+        if (actualProcessedCount < expectedJobCount) {
+          const missingJobs = expectedJobCount - actualProcessedCount;
+          console.log(
+            `Ignoring artifact from previous run: missing ${missingJobs} jobs (expected ${expectedJobCount}, got ${actualProcessedCount})`
+          );
+        } else {
+          console.log(`Fetched valid artifact from previous run.`);
+          saveJsonFile(timings, timingsPath);
+          saveJsonFile(resources, resourcesPath);
+          return;
+        }
+      } else {
+        console.log(
+          `Error fetching artifact from previous run: artifact not found`
+        );
       }
-      console.log(`  Failed to fetch from previous run, will regenerate`);
     } catch (error) {
       console.log(
-        `  Error fetching from previous run: ${error.message}, will regenerate`
+        `Error fetching artifact from previous run: ${error.message}`
       );
     }
   }
@@ -1072,12 +1098,6 @@ async function processDateData(targetDate, forceRefetch = false) {
   }
 
   try {
-    const jobs = await fetchXpcshellData(targetDate);
-    if (jobs.length === 0) {
-      console.log(`No jobs found for ${targetDate}.`);
-      return;
-    }
-
     // Calculate start of day timestamp for relative time calculation
     const startOfDay = new Date(targetDate + "T00:00:00.000Z");
     const startTime = Math.floor(startOfDay.getTime() / 1000); // Convert to seconds
