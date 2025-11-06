@@ -5,10 +5,9 @@
 package org.mozilla.fenix.termsofuse.experimentation
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.support.locale.LocaleManager.getSystemDefault
 import org.mozilla.fenix.termsofuse.experimentation.utils.TermsOfUseDataProvider
-import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredShortcutsRegions
-import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredStoriesRegions
+import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredShortcutsLocales
+import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredStoriesLocales
 
 /**
  * Helper class for Terms of Use advanced targeting options.
@@ -18,7 +17,7 @@ import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredStor
  */
 class TermsOfUseAdvancedTargetingHelper(
     private val termsOfUseDataProvider: TermsOfUseDataProvider,
-    private val systemLanguageTag: String = getSystemDefault().toLanguageTag(),
+    private val systemLanguageTag: String,
 ) {
     /**
      * Gets the users 'points' for Advanced Targeting.
@@ -65,9 +64,9 @@ class TermsOfUseAdvancedTargetingHelper(
 
     @VisibleForTesting
     internal fun regionSupportsSponsoredShortcuts() =
-        supportedSponsoredShortcutsRegions.contains(systemLanguageTag)
+        supportedSponsoredShortcutsLocales.contains(systemLanguageTag)
 
     @VisibleForTesting
     internal fun regionSupportsSponsoredStories() =
-        supportedSponsoredStoriesRegions.contains(systemLanguageTag)
+        supportedSponsoredStoriesLocales.contains(systemLanguageTag)
 }

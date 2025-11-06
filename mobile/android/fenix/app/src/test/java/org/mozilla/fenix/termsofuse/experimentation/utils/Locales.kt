@@ -1,33 +1,32 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.  */
 
 package org.mozilla.fenix.termsofuse.experimentation.utils
 
 /**
- * List of supported regions for sponsored shortcuts (Top Sites).
+ * Test duplicate of [supportedSponsoredShortcutsLocales], these should be the same locales.
  */
-internal val supportedSponsoredShortcutsRegions = listOf(
-    // Australia
-    "en-AU",
-
+internal val supportedSponsoredShortcutsLocales = listOf(
     // Austria
     "de-AT",
-    "fr-AT",
-    "it-AT",
-    "rm-AT",
 
     // Belgium
     "de-BE",
     "fr-BE",
-    "it-BE",
-    "rm-BE",
 
-    // Brazil
-    "pt-BR",
+    // Bulgaria
+    "bg-BG",
 
     // Canada
     "en-CA",
+
+    // Croatia
+    "hr-HR",
+
+    // Cyprus
+    "el-CY",
+    "tr-CY",
 
     // Czechia
     "cs-CZ",
@@ -35,28 +34,42 @@ internal val supportedSponsoredShortcutsRegions = listOf(
     // Denmark
     "da-DK",
 
+    // Estonia
+    "et-EE",
+
     // Finland
     "fi-FI",
+    "sv-FI",
 
     // France
-    "fr",
     "fr-FR",
 
     // Germany
-    "de",
     "de-DE",
+
+    // Greece
+    "el-GR",
 
     // Hungary
     "hu-HU",
 
-    // India
-    "en-IN",
+    // Iceland
+    "is-IS",
 
     // Ireland
     "en-IE",
 
+    // Latvia
+    "lv-LV",
+
+    // Lithuania
+    "lt-LT",
+
     // Japan
     "ja-JP",
+
+    // Malta
+    "mt-MT",
 
     // Netherlands
     "nl-NL",
@@ -73,6 +86,9 @@ internal val supportedSponsoredShortcutsRegions = listOf(
     // Portugal
     "pt-PT",
 
+    // Romania
+    "ro-RO",
+
     // Singapore
     "en-SG",
 
@@ -80,11 +96,13 @@ internal val supportedSponsoredShortcutsRegions = listOf(
     "sk-SK",
 
     // Spain
-    "es",
     "es-ES",
 
     // Sweden
     "sv-SE",
+
+    // Switzerland
+    "de-CH",
 
     // UK
     "en-GB",
@@ -94,9 +112,9 @@ internal val supportedSponsoredShortcutsRegions = listOf(
 )
 
 /**
- * List of supported regions for sponsored stories.
+ * Test duplicate of [supportedSponsoredStoriesLocales], these should be the same locales.
  */
-internal val supportedSponsoredStoriesRegions = listOf(
+internal val supportedSponsoredStoriesLocales = listOf(
     // US
     "en-US",
 

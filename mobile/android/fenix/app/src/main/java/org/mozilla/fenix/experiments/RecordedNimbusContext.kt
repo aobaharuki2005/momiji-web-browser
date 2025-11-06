@@ -7,6 +7,8 @@ package org.mozilla.fenix.experiments
 import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
+import mozilla.components.support.locale.LocaleManager
+import mozilla.components.support.locale.LocaleManager.getSystemDefault
 import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.json.JSONArray
 import org.json.JSONObject
@@ -177,8 +179,11 @@ class RecordedNimbusContext(
             isFirstRun: Boolean,
         ): RecordedNimbusContext {
             val settings = context.settings()
+            val langTag = LocaleManager.getCurrentLocale(context)
+                ?.toLanguageTag() ?: getSystemDefault().toLanguageTag()
             val termsOfUseAdvancedTargetingHelper = TermsOfUseAdvancedTargetingHelper(
                 DefaultTermsOfUseDataProvider(settings),
+                langTag,
             )
 
             val packageInfo = context.packageManager.getPackageInfoCompat(context.packageName, 0)

@@ -7,11 +7,11 @@ package org.mozilla.fenix.termsofuse.experimentation
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.termsofuse.experimentation.utils.FakeTermsOfUseDataProvider
-import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredShortcutsRegions
+import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredShortcutsLocales
 
 class TermsOfUseAdvancedTargetingHelperTest {
 
-    private val shortcutsLocale = supportedSponsoredShortcutsRegions.first()
+    private val shortcutsLocale = supportedSponsoredShortcutsLocales.first()
 
     @Test
     fun `WHEN privacySettingsPoints and sponsoredContentPoints each return 1 THEN getTouPoints returns 2`() {

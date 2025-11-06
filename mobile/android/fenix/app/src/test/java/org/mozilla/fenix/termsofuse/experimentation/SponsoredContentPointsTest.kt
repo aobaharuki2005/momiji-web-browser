@@ -9,16 +9,16 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.termsofuse.experimentation.utils.FakeTermsOfUseDataProvider
-import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredShortcutsRegions
-import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredStoriesRegions
+import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredShortcutsLocales
+import org.mozilla.fenix.termsofuse.experimentation.utils.supportedSponsoredStoriesLocales
 
 /**
  * Test for the [TermsOfUseAdvancedTargetingHelper.sponsoredContentPoints] function and dependencies.
  */
 class SponsoredContentPointsTest {
 
-    private val shortcutsLocale = supportedSponsoredShortcutsRegions.first()
-    private val storiesLocale = supportedSponsoredStoriesRegions.first()
+    private val shortcutsLocale = supportedSponsoredShortcutsLocales.first()
+    private val storiesLocale = supportedSponsoredStoriesLocales.first()
 
     @Test
     fun `WHEN eligible user opted out of shortcuts THEN sponsoredContentPoints returns 1`() {
@@ -185,7 +185,7 @@ class SponsoredContentPointsTest {
 
     @Test
     fun `WHEN region is supported THEN regionSupportsSponsoredShortcuts returns true`() {
-        supportedSponsoredShortcutsRegions.forEach {
+        supportedSponsoredShortcutsLocales.forEach {
             val helper = TermsOfUseAdvancedTargetingHelper(FakeTermsOfUseDataProvider(), it)
 
             assertTrue(helper.regionSupportsSponsoredShortcuts())
@@ -194,7 +194,7 @@ class SponsoredContentPointsTest {
 
     @Test
     fun `WHEN region is supported THEN regionSupportsSponsoredStories returns true`() {
-        supportedSponsoredStoriesRegions.forEach {
+        supportedSponsoredStoriesLocales.forEach {
             val helper = TermsOfUseAdvancedTargetingHelper(FakeTermsOfUseDataProvider(), it)
 
             assertTrue(helper.regionSupportsSponsoredStories())
