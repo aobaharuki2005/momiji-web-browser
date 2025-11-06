@@ -46,7 +46,6 @@ tasks-from:
     - wpt-unittest.yml
 
 task-defaults:
-    run-on-repo-type: [hg]
     use-python: default
     use-uv: true
     attributes:
