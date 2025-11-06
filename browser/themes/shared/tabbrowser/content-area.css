@@ -293,6 +293,11 @@ split-view-footer,
   @media -moz-pref("browser.tabs.hideStatusPanel") {
     visibility: hidden;
   }
+
+  /* Ensure that this appears on top of the split view footer. */
+  .split-view-panel & {
+    z-index: 1;
+  }
 }
 
 #statuspanel-label,

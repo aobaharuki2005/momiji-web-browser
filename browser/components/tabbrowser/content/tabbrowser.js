@@ -628,7 +628,7 @@
 
       this._tabForBrowser.set(browser, tab);
 
-      this._appendStatusPanel();
+      this.appendStatusPanel();
 
       // This is the initial browser, so it's usually active; the default is false
       // so we have to update it:
@@ -851,8 +851,8 @@
       return findBar;
     }
 
-    _appendStatusPanel() {
-      this.selectedBrowser.insertAdjacentElement("afterend", StatusPanel.panel);
+    appendStatusPanel(browser = this.selectedBrowser) {
+      browser.insertAdjacentElement("afterend", StatusPanel.panel);
     }
 
     _updateTabBarForPinnedTabs() {
@@ -1401,7 +1401,7 @@
       this._selectedTab = newTab;
       this.showTab(newTab);
 
-      this._appendStatusPanel();
+      this.appendStatusPanel();
 
       this._updateVisibleNotificationBox(newBrowser);
 
