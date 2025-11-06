@@ -158,7 +158,8 @@ enum class ShouldCaptureStack { Maybe, Always };
 // MG:XXX: It would be nice to explore the typical depth of the queue
 //         to see if we can get it all inline in the common case.
 // MG:XXX: This appears to be broken for non-zero values of inline!
-using MicroTaskQueue = js::TraceableFifo<JS::Value, 0, TempAllocPolicy>;
+using MicroTaskQueue =
+    js::TraceableFifo<js::HeapPtr<JS::Value>, 0, TempAllocPolicy>;
 
 // A pair of microtask queues; one debug and one 'regular' (non-debug).
 struct MicroTaskQueueSet {
@@ -1053,7 +1054,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   bool hasExecutionTracer() { return false; }
 #endif
 
-  JS::PersistentRooted<js::UniquePtr<js::MicroTaskQueueSet>> microTaskQueues;
+  js::UniquePtr<js::MicroTaskQueueSet> microTaskQueues;
 }; /* struct JSContext */
 
 inline JSContext* JSRuntime::mainContextFromOwnThread() {
