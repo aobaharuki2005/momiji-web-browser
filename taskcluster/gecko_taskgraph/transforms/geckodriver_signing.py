@@ -22,7 +22,6 @@ repackage_signing_description_schema = Schema(
         Optional("treeherder"): task_description_schema["treeherder"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("task-from"): task_description_schema["task-from"],
-        Optional("run-on-repo-type"): task_description_schema["run-on-repo-type"],
     }
 )
 
@@ -95,7 +94,6 @@ def make_signing_description(config, jobs):
             "attributes": attributes,
             "treeherder": treeherder,
             "run-on-projects": ["mozilla-central"],
-            "run-on-repo-type": job.get("run-on-repo-type", ["git", "hg"]),
             "index": {"product": "geckodriver", "job-name": platform},
         }
 

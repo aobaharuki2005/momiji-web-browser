@@ -31,7 +31,6 @@ beetmover_checksums_description_schema = Schema(
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("task-from"): task_description_schema["task-from"],
-        Optional("run-on-repo-type"): task_description_schema["run-on-repo-type"],
     }
 )
 
@@ -109,7 +108,6 @@ def make_beetmover_checksums_description(config, jobs):
             "dependencies": job["dependencies"],
             "attributes": attributes,
             "run-on-projects": dep_job.attributes.get("run_on_projects"),
-            "run-on-repo-type": job.get("run-on-repo-type", ["git", "hg"]),
             "treeherder": treeherder,
             "extra": extra,
         }

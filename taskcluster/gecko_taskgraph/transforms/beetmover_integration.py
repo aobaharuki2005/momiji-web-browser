@@ -32,7 +32,6 @@ beetmover_description_schema = Schema(
         Optional("task-from"): task_description_schema["task-from"],
         Required("worker-type"): task_description_schema["worker-type"],
         Required("scopes"): optionally_keyed_by("project", [str]),
-        Optional("run-on-repo-type"): task_description_schema["run-on-repo-type"],
     }
 )
 

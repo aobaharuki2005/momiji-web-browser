@@ -16,7 +16,6 @@ kind-dependencies:
     - instrumented-build-macrobenchmark-apk
 
 task-defaults:
-    run-on-repo-type: [hg]
     attributes:
         build_platform: android
         build-type: debug

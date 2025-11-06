@@ -108,7 +108,7 @@ def filter_for_repo_type(task, parameters):
 
     This filter is temporarily in-place to facilitate the hg.mozilla.org ->
     Github migration."""
-    run_on_repo_types = set(task.attributes.get("run_on_repo_type", ["git", "hg"]))
+    run_on_repo_types = set(task.attributes.get("run_on_repo_type", ["hg"]))
     return match_run_on_repo_type(parameters["repository_type"], run_on_repo_types)
 
 

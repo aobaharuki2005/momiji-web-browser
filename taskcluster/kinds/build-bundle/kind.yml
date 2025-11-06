@@ -16,7 +16,6 @@ kind-dependencies:
     - generate-baseline-profile-firebase
 
 task-defaults:
-    run-on-repo-type: [hg]
     aab-artifact-template:
         type: file
         name: 'public/build/target.aab'

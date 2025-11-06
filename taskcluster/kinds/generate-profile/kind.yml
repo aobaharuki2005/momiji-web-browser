@@ -18,7 +18,6 @@ transforms:
 
 
 task-defaults:
-    run-on-repo-type: [hg]
     treeherder:
         symbol: Bpgo(run)
         kind: build

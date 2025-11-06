@@ -23,7 +23,6 @@ repackage_signing_description_schema = Schema(
         Optional("dependencies"): task_description_schema["dependencies"],
         Optional("task-from"): task_description_schema["task-from"],
         Optional("treeherder"): task_description_schema["treeherder"],
-        Optional("run-on-repo-type"): task_description_schema["run-on-repo-type"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
     }
@@ -144,7 +143,6 @@ def make_repackage_signing_description(config, jobs):
             },
             "dependencies": dependencies,
             "attributes": attributes,
-            "run-on-repo-type": job.get("run-on-repo-type", ["git", "hg"]),
             "run-on-projects": dep_job.attributes.get("run_on_projects"),
             "optimization": dep_job.optimization,
             "treeherder": treeherder,

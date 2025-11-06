@@ -16,7 +16,6 @@ transforms:
 
 
 task-defaults:
-    run-on-repo-type: [hg]
     shipping-phase: promote
     treeherder:
         symbol: Src

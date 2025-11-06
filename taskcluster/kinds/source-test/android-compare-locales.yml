@@ -4,7 +4,6 @@
 ---
 task-defaults:
     description: 'Validate android strings.xml with compare-locales'
-    run-on-repo-type: [hg]
     run:
         using: run-task
         cwd: '{checkout}'

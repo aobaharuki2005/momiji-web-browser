@@ -15,9 +15,6 @@ kind-dependencies:
     - signing-apk
     - signing-bundle
 
-task-defaults:
-    run-on-repo-type: [hg]
-
 tasks:
     beetmover:
         from-deps:

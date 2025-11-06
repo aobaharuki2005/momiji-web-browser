@@ -14,7 +14,6 @@ kind-dependencies:
     - build-fat-aar
 
 task-defaults:
-    run-on-repo-type: [hg]
     attributes:
         retrigger: true
     fetches:

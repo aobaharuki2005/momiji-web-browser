@@ -30,7 +30,6 @@ diff:
             base_rev: base_rev
         substitution-fields:
             - run.command
-    run-on-repo-type: [hg]
     run:
         using: run-task
         cwd: '{checkout}'

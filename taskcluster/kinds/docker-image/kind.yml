@@ -17,9 +17,6 @@ transforms:
 # (to use subdirectory clones of the proper directory), at which point we can
 # generate tasks for every docker image in the directory, secure in the
 # knowledge that unnecessary images will be omitted from the target task graph
-task-defaults:
-    run-on-repo-type: [hg]
-
 tasks:
     image_builder:
         symbol: I(ib)

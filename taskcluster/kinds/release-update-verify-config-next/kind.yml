@@ -11,7 +11,6 @@ transforms:
     - gecko_taskgraph.transforms.task:transforms
 
 task-defaults:
-    run-on-repo-type: [hg]
     name: update-verify-config-next
     run-on-projects: []  # to make sure this never runs as part of CI
     run-on-releases: [esr140]

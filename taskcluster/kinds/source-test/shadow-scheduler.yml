@@ -21,7 +21,6 @@ task-defaults:
     treeherder:
         kind: other
         tier: 3
-    run-on-repo-type: [hg]
     run-on-projects: ['autoland-only']
     run:
         using: mach

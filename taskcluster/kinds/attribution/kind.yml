@@ -20,7 +20,6 @@ kind-dependencies:
     - repackage
 
 task-defaults:
-    run-on-repo-type: [hg]
     description: Attribute release builds
     shipping-phase: promote
     # never run as part of CI

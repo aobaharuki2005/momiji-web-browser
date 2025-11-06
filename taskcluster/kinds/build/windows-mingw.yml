@@ -6,7 +6,6 @@ task-defaults:
     worker-type: b-linux-amd
     worker:
         max-run-time: 7200
-    run-on-repo-type: [hg]
     run:
         using: mozharness
         actions: [build]

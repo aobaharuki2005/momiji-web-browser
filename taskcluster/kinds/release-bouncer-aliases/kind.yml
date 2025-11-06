@@ -13,7 +13,6 @@ kind-dependencies:
     - release-bouncer-check
 
 task-defaults:
-    run-on-repo-type: [hg]
     description: Update bouncer aliases job
     worker-type: bouncer
     worker:

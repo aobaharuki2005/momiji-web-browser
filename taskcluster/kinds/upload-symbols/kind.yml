@@ -27,9 +27,6 @@ not-for-build-platforms:
     - win64-geckodriver/opt
     - win64-aarch64-geckodriver/opt
 
-task-defaults:
-    run-on-repo-type: [hg]
-
 tasks:
     upload-symbols:
         description: Upload Symbols
