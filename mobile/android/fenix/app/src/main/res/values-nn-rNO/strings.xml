@@ -3610,6 +3610,8 @@
   <string name="microsurvey_close_handle_content_description">Lat att undersøking</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Lat att</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Autofyllverktøy</string>
   <!--
     Debug drawer logins
 
