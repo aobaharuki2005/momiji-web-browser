@@ -66,27 +66,19 @@ export default class PasswordRulesTooltip extends MozLitElement {
   }
 
   positionPopover() {
-    const host = this.getRootNode().host;
-    const anchor = host.shadowRoot.querySelector("#new-password-input");
-
-    if (!anchor) {
-      return;
-    }
-
-    const anchorRect = anchor.getBoundingClientRect();
+    const anchorRect = this.getBoundingClientRect();
     const isWideViewport = window.innerWidth >= 1200;
 
+    const leftPos = anchorRect.left;
     if (isWideViewport) {
       // Position to the right of the input
-      const leftPos = anchorRect.right + 16;
-      const topPos = anchorRect.top - (anchorRect.bottom - anchorRect.top) / 2;
+      const topPos = anchorRect.top;
 
       this.passwordRulesEl.style.left = `${leftPos}px`;
       this.passwordRulesEl.style.top = `${topPos}px`;
     } else {
       // Position below the input
-      const leftPos = anchorRect.left;
-      const topPos = anchorRect.bottom; // offset for arrow and spacing
+      const topPos = anchorRect.bottom;
 
       this.passwordRulesEl.style.left = `${leftPos}px`;
       this.passwordRulesEl.style.top = `${topPos}px`;
