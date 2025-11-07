@@ -5921,10 +5921,11 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     Maybe<CSSPoint> relativeDelta;
     if (scrollUpdate.GetType() == ScrollUpdateType::Relative) {
       APZC_LOG(
-          "%p relative updating scroll offset from %s by %s\n", this,
-          ToString(Metrics().GetVisualScrollOffset()).c_str(),
+          "%p relative updating scroll offset from %s by %s, isDefault(%d)\n",
+          this, ToString(Metrics().GetVisualScrollOffset()).c_str(),
           ToString(scrollUpdate.GetDestination() - scrollUpdate.GetSource())
-              .c_str());
+              .c_str(),
+          isDefault);
 
       scrollOffsetUpdated = true;
 
@@ -5938,8 +5939,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         contentRepaintType = RepaintUpdateType::eUserAction;
       }
 
-      relativeDelta =
-          Some(Metrics().ApplyRelativeScrollUpdateFrom(scrollUpdate));
+      relativeDelta = Some(Metrics().ApplyRelativeScrollUpdateFrom(
+          scrollUpdate, FrameMetrics::IsDefaultApzc{isDefault}));
       Metrics().RecalculateLayoutViewportOffset();
     } else if (scrollUpdate.GetType() == ScrollUpdateType::PureRelative) {
       APZC_LOG("%p pure-relative updating scroll offset from %s by %s\n", this,
