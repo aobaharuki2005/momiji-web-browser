@@ -1327,6 +1327,8 @@
   --green-status-color: light-dark(var(--color-green-60), var(--color-green-20));
   --red-status-color: light-dark(var(--color-red-70), var(--color-red-40));
 
+  align-items: center;
+
   /* Realtime suggestions can contain many items, which should always wrap. */
   flex-wrap: wrap;
   /* Remove the usual inner padding. Each item in the row will have its own. */
