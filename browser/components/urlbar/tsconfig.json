@@ -4,7 +4,6 @@
     "UrlbarInput.sys.mjs",
     "UrlbarProviderGlobalActions.sys.mjs",
     "UrlbarView.sys.mjs",
-    "private/MLSuggest.sys.mjs",
     "private/SuggestBackendRust.sys.mjs",
     "tests/UrlbarTestUtils.sys.mjs"
   ],
