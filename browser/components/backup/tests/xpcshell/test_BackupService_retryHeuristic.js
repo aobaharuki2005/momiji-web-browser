@@ -81,7 +81,7 @@ add_task(async function test_retry_limit() {
     // ensure that there is no error code set
     Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
 
-    bs.createBackupOnIdleDispatch();
+    bs.createBackupOnIdleDispatch({});
 
     // #backupInProgress is set to true
     await bsInProgressStateUpdate(bs, true);
@@ -121,7 +121,7 @@ add_task(async function test_retry_limit() {
   // check if it switched to no longer creating backups on idle
   const previousCalls = bs.createBackup.callCount;
 
-  bs.createBackupOnIdleDispatch();
+  bs.createBackupOnIdleDispatch({});
 
   // wait a tick for the pref to update
   await new Promise(executeSoon);
@@ -148,7 +148,7 @@ add_task(async function test_retry_limit() {
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 10));
 
-  bs.createBackupOnIdleDispatch();
+  bs.createBackupOnIdleDispatch({});
 
   // #backupInProgress is set to true
   await bsInProgressStateUpdate(bs, true);
