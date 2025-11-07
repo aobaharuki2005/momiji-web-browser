@@ -1649,15 +1649,41 @@
 /* Realtime sports suggestions */
 
 .urlbarView-row[dynamicType="realtime-sports"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
-  > .urlbarView-realtime-image-container[is-date-chiclet] {
+  > .urlbarView-realtime-image-container[is-fallback] {
     flex-direction: column;
 
     background-color: var(--violet-bg-color);
-    color: var(--violet-fg-color);
+    background-position: center;
+    background-repeat: no-repeat;
     border-color: color-mix(in srgb, currentColor 10%, transparent);
+    color: var(--violet-fg-color);
+    fill: var(--violet-fg-color);
+    -moz-context-properties: fill;
 
     > .urlbarView-sports-scheduled-date-chiclet-day {
       font-size: 1.25em;
+    }
+
+    /* Fallback icons per sport but only for games not in the future */
+    .urlbarView-realtime-item:not([status="scheduled"]) > & {
+      .urlbarView-realtime-item[sport="NBA"] > &,
+      .urlbarView-realtime-item[sport="NHL"] > &,
+      .urlbarView-realtime-item[sport="NFL"] > & {
+        /* stylelint-disable-next-line max-nesting-depth */
+        > .urlbarView-sports-scheduled-date-chiclet-day,
+        > .urlbarView-sports-scheduled-date-chiclet-month {
+          display: none;
+        }
+      }
+      .urlbarView-realtime-item[sport="NBA"] > & {
+        background-image: url("chrome://browser/skin/urlbar/sports-basketball.svg");
+      }
+      .urlbarView-realtime-item[sport="NHL"] > & {
+        background-image: url("chrome://browser/skin/urlbar/sports-hockey.svg");
+      }
+      .urlbarView-realtime-item[sport="NFL"] > & {
+        background-image: url("chrome://browser/skin/urlbar/sports-american-football.svg");
+      }
     }
   }
 

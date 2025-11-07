@@ -119,6 +119,12 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
     return {
       ...topUpdate,
       ...this.#viewUpdateImageAndBottom(item, index),
+      [`item_${index}`]: {
+        attributes: {
+          sport: item.sport,
+          status: item.status_type,
+        },
+      },
     };
   }
 
@@ -168,8 +174,8 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
       imageUpdate = {
         [`image_container_${i}`]: {
           attributes: {
-            // Remove the date-chiclet attribute by setting it to null.
-            "is-date-chiclet": null,
+            // Remove the fallback attribute by setting it to null.
+            "is-fallback": null,
           },
         },
         [`image_${i}`]: {
@@ -193,7 +199,7 @@ export class SportsSuggestions extends RealtimeSuggestProvider {
         imageUpdate = {
           [`image_container_${i}`]: {
             attributes: {
-              "is-date-chiclet": "",
+              "is-fallback": "",
             },
           },
           [`scheduled-date-chiclet-day-${i}`]: {

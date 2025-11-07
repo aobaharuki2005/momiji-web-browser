@@ -114,6 +114,42 @@ const SUGGESTION_VALUE_SCHEDULED_ICONS_IN_TEAMS = {
   },
 };
 
+// NBA game (basketball), live
+const SUGGESTION_VALUE_NBA_LIVE = {
+  ...SUGGESTION_VALUE_LIVE,
+  sport: "NBA",
+};
+
+// NBA game (basketball), scheduled
+const SUGGESTION_VALUE_NBA_SCHEDULED = {
+  ...SUGGESTION_VALUE_SCHEDULED,
+  sport: "NBA",
+};
+
+// NFL game (American football), live
+const SUGGESTION_VALUE_NFL_LIVE = {
+  ...SUGGESTION_VALUE_LIVE,
+  sport: "NFL",
+};
+
+// NFL game (American football), scheduled
+const SUGGESTION_VALUE_NFL_SCHEDULED = {
+  ...SUGGESTION_VALUE_SCHEDULED,
+  sport: "NFL",
+};
+
+// NHL game (hockey), live
+const SUGGESTION_VALUE_NHL_LIVE = {
+  ...SUGGESTION_VALUE_LIVE,
+  sport: "NHL",
+};
+
+// NHL game (hockey), scheduled
+const SUGGESTION_VALUE_NHL_SCHEDULED = {
+  ...SUGGESTION_VALUE_SCHEDULED,
+  sport: "NHL",
+};
+
 add_setup(async function () {
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
   registerCleanupFunction(async () => {
@@ -138,16 +174,32 @@ add_task(async function manyItems() {
   await doTest({
     now: "2025-10-31T14:00:00-04:00[-04:00]",
     suggestions: merinoSuggestions([
+      // games with unknown sports -- should use date chiclet
       SUGGESTION_VALUE_PAST,
       SUGGESTION_VALUE_LIVE,
       SUGGESTION_VALUE_SCHEDULED,
+      // live games with known sports -- should use generic sports icons
+      SUGGESTION_VALUE_NBA_LIVE,
+      SUGGESTION_VALUE_NFL_LIVE,
+      SUGGESTION_VALUE_NHL_LIVE,
+      // scheduled games with known sports -- should use date chiclet
+      SUGGESTION_VALUE_NBA_SCHEDULED,
+      SUGGESTION_VALUE_NFL_SCHEDULED,
+      SUGGESTION_VALUE_NHL_SCHEDULED,
     ]),
     expectedItems: [
+      // games with unknown sports -- should use date chiclet
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "30",
@@ -161,10 +213,16 @@ add_task(async function manyItems() {
         status: "",
       },
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "31",
@@ -182,15 +240,232 @@ add_task(async function manyItems() {
         },
       },
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "1",
         "scheduled-date-chiclet-month": "Nov",
         "sport-name": "Sport 3",
+        "team-names": {
+          l10n: {
+            id: "urlbar-result-sports-team-names",
+            args: {
+              homeTeam: "Team 3 Home",
+              awayTeam: "Team 3 Away",
+            },
+          },
+        },
+        date: {
+          l10n: {
+            id: "urlbar-result-sports-game-date-with-time",
+            args: {
+              date: "Tomorrow",
+              time: "1:00 PM GMT-4",
+            },
+          },
+        },
+        status: "",
+      },
+
+      // live games with known sports -- should use generic sports icons
+      {
+        item: {
+          attributes: {
+            sport: "NBA",
+            status: "live",
+          },
+        },
+        image: null,
+        image_container: {
+          attributes: {
+            "is-fallback": "",
+          },
+          backgroundImage:
+            'url("chrome://browser/skin/urlbar/sports-basketball.svg")',
+        },
+        "scheduled-date-chiclet-day": {
+          isHidden: true,
+        },
+        "scheduled-date-chiclet-month": {
+          isHidden: true,
+        },
+        "sport-name": "NBA",
+        "home-team-name": "Team 2 Home",
+        "home-team-score": "1",
+        "away-team-name": "Team 2 Away",
+        "away-team-score": "0",
+        date: "Today",
+        status: {
+          l10n: {
+            id: "urlbar-result-sports-status-live",
+          },
+        },
+      },
+      {
+        item: {
+          attributes: {
+            sport: "NFL",
+            status: "live",
+          },
+        },
+        image: null,
+        image_container: {
+          attributes: {
+            "is-fallback": "",
+          },
+          backgroundImage:
+            'url("chrome://browser/skin/urlbar/sports-american-football.svg")',
+        },
+        "scheduled-date-chiclet-day": {
+          isHidden: true,
+        },
+        "scheduled-date-chiclet-month": {
+          isHidden: true,
+        },
+        "sport-name": "NFL",
+        "home-team-name": "Team 2 Home",
+        "home-team-score": "1",
+        "away-team-name": "Team 2 Away",
+        "away-team-score": "0",
+        date: "Today",
+        status: {
+          l10n: {
+            id: "urlbar-result-sports-status-live",
+          },
+        },
+      },
+      {
+        item: {
+          attributes: {
+            sport: "NHL",
+            status: "live",
+          },
+        },
+        image: null,
+        image_container: {
+          attributes: {
+            "is-fallback": "",
+          },
+          backgroundImage:
+            'url("chrome://browser/skin/urlbar/sports-hockey.svg")',
+        },
+        "scheduled-date-chiclet-day": {
+          isHidden: true,
+        },
+        "scheduled-date-chiclet-month": {
+          isHidden: true,
+        },
+        "sport-name": "NHL",
+        "home-team-name": "Team 2 Home",
+        "home-team-score": "1",
+        "away-team-name": "Team 2 Away",
+        "away-team-score": "0",
+        date: "Today",
+        status: {
+          l10n: {
+            id: "urlbar-result-sports-status-live",
+          },
+        },
+      },
+
+      // scheduled games with known sports -- should use date chiclet
+      {
+        item: {
+          attributes: {
+            sport: "NBA",
+            status: "scheduled",
+          },
+        },
+        image: null,
+        image_container: {
+          attributes: {
+            "is-fallback": "",
+          },
+        },
+        "scheduled-date-chiclet-day": "1",
+        "scheduled-date-chiclet-month": "Nov",
+        "sport-name": "NBA",
+        "team-names": {
+          l10n: {
+            id: "urlbar-result-sports-team-names",
+            args: {
+              homeTeam: "Team 3 Home",
+              awayTeam: "Team 3 Away",
+            },
+          },
+        },
+        date: {
+          l10n: {
+            id: "urlbar-result-sports-game-date-with-time",
+            args: {
+              date: "Tomorrow",
+              time: "1:00 PM GMT-4",
+            },
+          },
+        },
+        status: "",
+      },
+      {
+        item: {
+          attributes: {
+            sport: "NFL",
+            status: "scheduled",
+          },
+        },
+        image: null,
+        image_container: {
+          attributes: {
+            "is-fallback": "",
+          },
+        },
+        "scheduled-date-chiclet-day": "1",
+        "scheduled-date-chiclet-month": "Nov",
+        "sport-name": "NFL",
+        "team-names": {
+          l10n: {
+            id: "urlbar-result-sports-team-names",
+            args: {
+              homeTeam: "Team 3 Home",
+              awayTeam: "Team 3 Away",
+            },
+          },
+        },
+        date: {
+          l10n: {
+            id: "urlbar-result-sports-game-date-with-time",
+            args: {
+              date: "Tomorrow",
+              time: "1:00 PM GMT-4",
+            },
+          },
+        },
+        status: "",
+      },
+      {
+        item: {
+          attributes: {
+            sport: "NHL",
+            status: "scheduled",
+          },
+        },
+        image: null,
+        image_container: {
+          attributes: {
+            "is-fallback": "",
+          },
+        },
+        "scheduled-date-chiclet-day": "1",
+        "scheduled-date-chiclet-month": "Nov",
+        "sport-name": "NHL",
         "team-names": {
           l10n: {
             id: "urlbar-result-sports-team-names",
@@ -221,10 +496,16 @@ add_task(async function past_noScores() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST_NO_SCORES]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "30",
@@ -253,10 +534,16 @@ add_task(async function live_noScores() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE_NO_SCORES]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "31",
@@ -289,9 +576,15 @@ add_task(async function scheduled_iconsInTeams() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICONS_IN_TEAMS]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -337,10 +630,16 @@ add_task(async function past_lastYear_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "30",
@@ -363,9 +662,15 @@ add_task(async function past_lastYear_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -393,10 +698,16 @@ add_task(async function past_beforeYesterday_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "30",
@@ -419,9 +730,15 @@ add_task(async function past_beforeYesterday_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -449,10 +766,16 @@ add_task(async function past_yesterday_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "30",
@@ -475,9 +798,15 @@ add_task(async function past_yesterday_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -505,10 +834,16 @@ add_task(async function past_todayPast_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "30",
@@ -535,9 +870,15 @@ add_task(async function past_todayPast_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -570,10 +911,16 @@ add_task(async function past_todayFuture_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "30",
@@ -601,9 +948,15 @@ add_task(async function past_todayFuture_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_PAST_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 1",
+            status: "past",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -641,10 +994,16 @@ add_task(async function live_lastYear_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "31",
@@ -673,9 +1032,15 @@ add_task(async function live_lastYear_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -708,10 +1073,16 @@ add_task(async function live_beforeYesterday_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "31",
@@ -739,9 +1110,15 @@ add_task(async function live_beforeYesterday_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -775,10 +1152,16 @@ add_task(async function live_yesterday_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "31",
@@ -807,9 +1190,15 @@ add_task(async function live_yesterday_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -841,10 +1230,16 @@ add_task(async function live_todayPast_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "31",
@@ -871,9 +1266,15 @@ add_task(async function live_todayPast_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -906,10 +1307,16 @@ add_task(async function live_todayFuture_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "31",
@@ -937,9 +1344,15 @@ add_task(async function live_todayFuture_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -972,10 +1385,16 @@ add_task(async function live_tomorrow_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "31",
@@ -1003,9 +1422,15 @@ add_task(async function live_tomorrow_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_LIVE_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 2",
+            status: "live",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1042,10 +1467,16 @@ add_task(async function scheduled_lastYear_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "1",
@@ -1074,9 +1505,15 @@ add_task(async function scheduled_lastYear_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1110,10 +1547,16 @@ add_task(async function scheduled_beforeYesterday_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "1",
@@ -1142,9 +1585,15 @@ add_task(async function scheduled_beforeYesterday_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1178,10 +1627,16 @@ add_task(async function scheduled_yesterday_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "1",
@@ -1210,9 +1665,15 @@ add_task(async function scheduled_yesterday_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1246,10 +1707,16 @@ add_task(async function scheduled_todayPast_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "1",
@@ -1286,9 +1753,15 @@ add_task(async function scheduled_todayPast_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1329,10 +1802,16 @@ add_task(async function scheduled_todayFuture_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "1",
@@ -1368,9 +1847,15 @@ add_task(async function scheduled_todayFuture_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1411,10 +1896,16 @@ add_task(async function scheduled_tomorrow_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "1",
@@ -1450,9 +1941,15 @@ add_task(async function scheduled_tomorrow_icon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1498,10 +1995,16 @@ add_task(async function scheduled_afterTomorrow_noIcon() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image: null,
         image_container: {
           attributes: {
-            "is-date-chiclet": "",
+            "is-fallback": "",
           },
         },
         "scheduled-date-chiclet-day": "1",
@@ -1530,9 +2033,15 @@ add_task(async function scheduled_afterTomorrow_icon_thisYear() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1567,9 +2076,15 @@ add_task(async function scheduled_afterTomorrow_icon_nextYear() {
     suggestions: merinoSuggestions([SUGGESTION_VALUE_SCHEDULED_ICON]),
     expectedItems: [
       {
+        item: {
+          attributes: {
+            sport: "Sport 3",
+            status: "scheduled",
+          },
+        },
         image_container: {
           attributes: {
-            "is-date-chiclet": null,
+            "is-fallback": null,
           },
         },
         "scheduled-date-chiclet-day": null,
@@ -1638,7 +2153,7 @@ async function doOneTest({ expectedItems }) {
 
     // Check each expected child element in the item.
     for (let [childNamePrefix, expectedValue] of Object.entries(expectedItem)) {
-      let sep = ["image", "image_container"].includes(childNamePrefix)
+      let sep = ["item", "image", "image_container"].includes(childNamePrefix)
         ? "_"
         : "-";
       let childName = `${childNamePrefix}${sep}${i}`;
@@ -1651,18 +2166,60 @@ async function doOneTest({ expectedItems }) {
 
       Assert.ok(child, "Expected child element should exist: " + childName);
 
-      // textContent
+      let backgroundImage = "none";
+      let isHidden = false;
+      let attributes = {};
+      if (typeof expectedValue == "object") {
+        backgroundImage = expectedValue.backgroundImage || backgroundImage;
+        isHidden = !!expectedValue.isHidden || isHidden;
+        attributes = expectedValue.attributes || attributes;
+      }
+
+      // background image
+      Assert.equal(
+        window.getComputedStyle(child).backgroundImage,
+        backgroundImage,
+        "Child element should have expected background-image: " + childName
+      );
+
+      // is hidden
+      Assert.equal(
+        BrowserTestUtils.isVisible(child),
+        !isHidden,
+        "Child element should be visible as expected: " + childName
+      );
+
+      // attributes
+      for (let [attr, value] of Object.entries(attributes)) {
+        if (value === null) {
+          Assert.ok(
+            !child.hasAttribute(attr),
+            "Child element should not have attribute: " +
+              JSON.stringify({ childName, attr })
+          );
+        } else {
+          Assert.ok(
+            child.hasAttribute(attr),
+            "Child element should have expected attribute: " +
+              JSON.stringify({ childName, attr })
+          );
+          Assert.equal(
+            child.getAttribute(attr),
+            value,
+            "Child element attribute should have expected value: " +
+              JSON.stringify({ childName, attr })
+          );
+        }
+      }
+
+      // textContent or l10n
       if (typeof expectedValue == "string") {
         Assert.equal(
           child.textContent,
           expectedValue,
           "Child element should have expected textContent: " + childName
         );
-        continue;
-      }
-
-      // l10n
-      if (expectedValue.l10n) {
+      } else if (expectedValue.l10n) {
         Assert.equal(
           child.dataset.l10nId,
           expectedValue.l10n.id,
@@ -1679,31 +2236,6 @@ async function doOneTest({ expectedItems }) {
             !child.dataset.l10nArgs,
             "Child element shouldn't have any l10nArgs: " + childName
           );
-        }
-      }
-
-      // attributes
-      if (expectedValue.attributes) {
-        for (let [attr, value] of Object.entries(expectedValue.attributes)) {
-          if (value === null) {
-            Assert.ok(
-              !child.hasAttribute(attr),
-              "Child element should not have attribute: " +
-                JSON.stringify({ childName, attr })
-            );
-          } else {
-            Assert.ok(
-              child.hasAttribute(attr),
-              "Child element should have expected attribute: " +
-                JSON.stringify({ childName, attr })
-            );
-            Assert.equal(
-              child.getAttribute(attr),
-              value,
-              "Child element attribute should have expected value: " +
-                JSON.stringify({ childName, attr })
-            );
-          }
         }
       }
     }
