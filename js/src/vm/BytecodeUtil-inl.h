@@ -108,6 +108,8 @@ class BytecodeRange {
   jsbytecode* end;
 };
 
+enum class SkipPrologueOps { No, Yes };
+
 class BytecodeRangeWithPosition : private BytecodeRange {
  public:
   using BytecodeRange::empty;
@@ -115,7 +117,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
   using BytecodeRange::frontOpcode;
   using BytecodeRange::frontPC;
 
-  BytecodeRangeWithPosition(JSContext* cx, JSScript* script)
+  BytecodeRangeWithPosition(JSContext* cx, JSScript* script,
+                            SkipPrologueOps skipPrologueOps)
       : BytecodeRange(cx, script),
         initialLine(script->lineno()),
         lineno(script->lineno()),
@@ -130,10 +133,12 @@ class BytecodeRangeWithPosition : private BytecodeRange {
       snpc += sn->delta();
     }
     updatePosition();
-    while (frontPC() != mainPC) {
-      popFront();
+    if (skipPrologueOps == SkipPrologueOps::Yes) {
+      while (frontPC() != mainPC) {
+        popFront();
+      }
+      MOZ_ASSERT(entryPointState != EntryPointState::NotEntryPoint);
     }
-    MOZ_ASSERT(entryPointState != EntryPointState::NotEntryPoint);
   }
 
   void popFront() {
