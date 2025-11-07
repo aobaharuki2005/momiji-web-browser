@@ -822,12 +822,40 @@ const nsIFrame* AnchorPositioningUtils::GetAnchorPosImplicitAnchor(
              : pseudoRootFrame->GetParent();
 }
 
+AnchorPositioningUtils::ContainingBlockInfo
+AnchorPositioningUtils::ContainingBlockInfo::ExplicitCBFrameSize(
+    const nsRect& aContainingBlockRect) {
+  // TODO(dshin, bug 1989292): Ideally, this takes both local containing rect +
+  // scrollable containing rect, and one is picked here.
+  return ContainingBlockInfo{aContainingBlockRect};
+}
+
+AnchorPositioningUtils::ContainingBlockInfo
+AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(
+    const nsIFrame* aPositioned) {
+  // TODO(dshin, bug 1989292): This just gets local containing block.
+  const auto* cb = aPositioned->GetParent();
+  MOZ_ASSERT(cb);
+  if (cb->Style()->GetPseudoType() == PseudoStyleType::scrolledContent) {
+    cb = aPositioned->GetParent();
+  }
+  return ContainingBlockInfo{cb->GetPaddingRectRelativeToSelf()};
+}
+
 bool AnchorPositioningUtils::FitsInContainingBlock(
-    const nsRect& aOverflowCheckRect,
-    const nsRect& aOriginalContainingBlockSize, const nsRect& aRect) {
-  return aOverflowCheckRect.Intersect(aOriginalContainingBlockSize)
-      .Union(aOriginalContainingBlockSize)
-      .Contains(aRect);
+    const ContainingBlockInfo& aContainingBlockInfo,
+    const nsIFrame* aPositioned, const AnchorPosReferenceData* aReferenceData) {
+  MOZ_ASSERT(aPositioned->GetProperty(nsIFrame::AnchorPosReferences()) ==
+             aReferenceData);
+  const auto originalContainingBlockRect =
+      aContainingBlockInfo.GetContainingBlockRect();
+  const auto overflowCheckRect = aReferenceData->mContainingBlockRect -
+                                 aReferenceData->mDefaultScrollShift;
+  const auto rect = aPositioned->GetMarginRect();
+
+  return overflowCheckRect.Intersect(originalContainingBlockRect)
+      .Union(originalContainingBlockRect)
+      .Contains(rect);
 }
 
 }  // namespace mozilla

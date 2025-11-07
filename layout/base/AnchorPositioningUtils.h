@@ -291,9 +291,25 @@ struct AnchorPositioningUtils {
       PhysicalAxes aAxes, const nsIFrame* aPositioned,
       const AnchorPosDefaultAnchorCache& aDefaultAnchorCache);
 
-  static bool FitsInContainingBlock(const nsRect& aOverflowCheckRect,
-                                    const nsRect& aOriginalContainingBlockSize,
-                                    const nsRect& aRect);
+  struct ContainingBlockInfo {
+    // Provide an explicit containing block size, for during reflow when
+    // its `mRect` has not yet been set.
+    static ContainingBlockInfo ExplicitCBFrameSize(
+        const nsRect& aContainingBlockRect);
+    // Provide the positioned frame, to query  its containing block rect.
+    static ContainingBlockInfo UseCBFrameSize(const nsIFrame* aPositioned);
+
+    nsRect GetContainingBlockRect() const { return mRect; }
+
+   private:
+    explicit ContainingBlockInfo(const nsRect& aRect) : mRect{aRect} {}
+    nsRect mRect;
+  };
+
+  static bool FitsInContainingBlock(
+      const ContainingBlockInfo& aContainingBlockInfo,
+      const nsIFrame* aPositioned,
+      const AnchorPosReferenceData* aReferenceData);
 };
 
 }  // namespace mozilla

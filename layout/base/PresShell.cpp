@@ -11901,7 +11901,7 @@ static Maybe<FindScrollCompensatedAnchorResult> FindScrollCompensatedAnchor(
   return Nothing{};
 }
 
-static bool CheckOverflow(nsIFrame* aPositioned, const nsPoint& aOffset,
+static bool CheckOverflow(nsIFrame* aPositioned,
                           const AnchorPosReferenceData& aData) {
   const auto* stylePos = aPositioned->StylePosition();
   const auto hasFallbacks = !stylePos->mPositionTryFallbacks._0.IsEmpty();
@@ -11910,11 +11910,10 @@ static bool CheckOverflow(nsIFrame* aPositioned, const nsPoint& aOffset,
   if (!hasFallbacks && !visibilityDependsOnOverflow) {
     return false;
   }
-  const auto* cb = aPositioned->GetParent();
-  MOZ_ASSERT(cb);
   const auto overflows = !AnchorPositioningUtils::FitsInContainingBlock(
-      aData.mContainingBlockRect - aOffset, cb->GetPaddingRect(),
-      aPositioned->GetRect());
+      AnchorPositioningUtils::ContainingBlockInfo{
+          static_cast<const nsIFrame*>(aPositioned->GetParent())},
+      aPositioned, &aData);
   aPositioned->AddOrRemoveStateBits(NS_FRAME_POSITION_VISIBILITY_HIDDEN,
                                     visibilityDependsOnOverflow && overflows);
   return hasFallbacks && overflows;
@@ -11958,7 +11957,7 @@ void PresShell::UpdateAnchorPosForScroll(
       nsContainerFrame::PlaceFrameView(positioned);
       positioned->GetParent()->UpdateOverflow();
       referenceData.mDefaultScrollShift = offset;
-      if (CheckOverflow(positioned, offset, referenceData)) {
+      if (CheckOverflow(positioned, referenceData)) {
 #ifdef ACCESSIBILITY
         if (nsAccessibilityService* accService = GetAccService()) {
           accService->NotifyAnchorPositionedScrollUpdate(this, positioned);

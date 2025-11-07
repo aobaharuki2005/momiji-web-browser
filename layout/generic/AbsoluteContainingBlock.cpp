@@ -1439,8 +1439,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
         aAnchorPosResolutionCache->mReferenceData->mContainingBlockRect =
             overflowCheckRect;
         return AnchorPositioningUtils::FitsInContainingBlock(
-            overflowCheckRect, aOriginalContainingBlockRect,
-            aKidFrame->GetRect());
+            AnchorPositioningUtils::ContainingBlockInfo::ExplicitCBFrameSize(
+                aOriginalContainingBlockRect),
+            aKidFrame, aAnchorPosResolutionCache->mReferenceData);
       }
       return overflowCheckRect.Contains(aKidFrame->GetRect());
     }();
