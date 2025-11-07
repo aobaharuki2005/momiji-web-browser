@@ -53,6 +53,13 @@ add_task(async function test_create_shortcut() {
         await editProfileCard.updateComplete;
 
         let shortcutToggle = editProfileCard.shortcutToggle;
+
+        Assert.equal(
+          shortcutToggle.buttonEl.getAttribute("aria-label"),
+          "Create desktop shortcut",
+          "The desktop shortcut toggle should have the expected aria-label"
+        );
+
         Assert.ok(
           !shortcutToggle.pressed,
           "The desktop shortcut toggle should initially be in the off position"

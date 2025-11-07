@@ -452,6 +452,7 @@ export class EditProfileCard extends MozLitElement {
       ></label>
       <moz-toggle
         id="desktop-shortcut-toggle"
+        data-l10n-id="edit-profile-page-desktop-shortcut-toggle"
         ?pressed=${this.hasDesktopShortcut}
         @click=${this.handleDesktopShortcutToggle}
       ></moz-toggle>
