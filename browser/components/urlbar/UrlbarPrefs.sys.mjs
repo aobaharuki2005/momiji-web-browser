@@ -452,6 +452,18 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // If true, top sites may include sponsored ones.
   ["sponsoredTopSites", false],
 
+  // Feature gate pref for realtime sports suggestions in the urlbar.
+  ["sports.featureGate", false],
+
+  // The minimum prefix length of sports keyword the user must type to trigger
+  // the suggestion. 0 means the min length should be taken from Nimbus or
+  // remote settings.
+  ["sports.minKeywordLength", 0],
+
+  // The number of times the user has clicked the "Show less frequently" command
+  // for sports suggestions.
+  ["sports.showLessFrequentlyCount", 0],
+
   // If `browser.urlbar.addons.featureGate` is true, this controls whether
   // addon suggestions are turned on.
   ["suggest.addons", true],
@@ -516,6 +528,9 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
 
   // Whether results will include search suggestions.
   ["suggest.searches", false],
+
+  // Whether results will include realtime sports suggestions.
+  ["suggest.sports", true],
 
   // Whether results will include top sites and the view will open on focus.
   ["suggest.topsites", true],

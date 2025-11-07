@@ -46,6 +46,8 @@ tags = "search-telemetry"
 
 ["browser_quicksuggest_realtime_yelp.js"]
 
+["browser_quicksuggest_sports.js"]
+
 ["browser_quicksuggest_yelp.js"]
 
 ["browser_telemetry_environment.js"]

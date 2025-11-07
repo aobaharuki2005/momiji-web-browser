@@ -75,6 +75,7 @@ MOZ_SRC_FILES += [
     "private/MDNSuggestions.sys.mjs",
     "private/MLSuggest.sys.mjs",
     "private/RealtimeSuggestProvider.sys.mjs",
+    "private/SportsSuggestions.sys.mjs",
     "private/SuggestBackendMerino.sys.mjs",
     "private/SuggestBackendMl.sys.mjs",
     "private/SuggestBackendRust.sys.mjs",

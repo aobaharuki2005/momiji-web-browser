@@ -24,7 +24,7 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
     return "flights";
   }
 
-  getViewTemplateForDescriptionTop(index) {
+  getViewTemplateForDescriptionTop(_item, index) {
     return [
       {
         name: `departure_time_${index}`,
@@ -53,7 +53,7 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewTemplateForDescriptionBottom(index) {
+  getViewTemplateForDescriptionBottom(_item, index) {
     return [
       {
         name: `departure_date_${index}`,
@@ -90,9 +90,9 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewUpdateForValue(i, v) {
+  getViewUpdateForPayloadItem(item, index) {
     let status;
-    switch (v.status) {
+    switch (item.status) {
       case "Scheduled": {
         status = "ontime";
         break;
@@ -119,16 +119,16 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
     let departureTimeZone;
     let arrivalTime;
     let arrivalTimeZone;
-    if (status == "delayed" || !v.delayed) {
-      departureTime = new Date(v.departure.scheduled_time);
-      departureTimeZone = getTimeZone(v.departure.scheduled_time);
-      arrivalTime = new Date(v.arrival.scheduled_time);
-      arrivalTimeZone = getTimeZone(v.arrival.scheduled_time);
+    if (status == "delayed" || !item.delayed) {
+      departureTime = new Date(item.departure.scheduled_time);
+      departureTimeZone = getTimeZone(item.departure.scheduled_time);
+      arrivalTime = new Date(item.arrival.scheduled_time);
+      arrivalTimeZone = getTimeZone(item.arrival.scheduled_time);
     } else {
-      departureTime = new Date(v.departure.estimated_time);
-      departureTimeZone = getTimeZone(v.departure.estimated_time);
-      arrivalTime = new Date(v.arrival.estimated_time);
-      arrivalTimeZone = getTimeZone(v.arrival.estimated_time);
+      departureTime = new Date(item.departure.estimated_time);
+      departureTimeZone = getTimeZone(item.departure.estimated_time);
+      arrivalTime = new Date(item.arrival.estimated_time);
+      arrivalTimeZone = getTimeZone(item.arrival.estimated_time);
     }
 
     let statusL10nId = `urlbar-result-flight-status-status-${status}`;
@@ -138,8 +138,8 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
         departureEstimatedTime: new Intl.DateTimeFormat(undefined, {
           hour: "numeric",
           minute: "numeric",
-          timeZone: getTimeZone(v.departure.estimated_time),
-        }).format(new Date(v.departure.estimated_time)),
+          timeZone: getTimeZone(item.departure.estimated_time),
+        }).format(new Date(item.departure.estimated_time)),
       };
     }
 
@@ -147,35 +147,38 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
     let backgroundImage;
     if (status == "inflight") {
       let backgroundImageId =
-        v.progress_percent == 100 ? 4 : Math.floor(v.progress_percent / 20);
+        item.progress_percent == 100
+          ? 4
+          : Math.floor(item.progress_percent / 20);
       backgroundImage = {
         style: {
-          "--airline-color": v.airline.color,
+          "--airline-color": item.airline.color,
         },
         attributes: {
           backgroundImageId,
-          hasForegroundImage: !!v.airline.icon,
+          hasForegroundImage: !!item.airline.icon,
         },
       };
       foregroundImage = {
         attributes: {
-          src: v.airline.icon,
+          src: item.airline.icon,
         },
       };
     } else {
       foregroundImage = {
         attributes: {
           src:
-            v.airline.icon ?? "chrome://browser/skin/urlbar/flight-airline.svg",
-          fallback: !v.airline.icon,
+            item.airline.icon ??
+            "chrome://browser/skin/urlbar/flight-airline.svg",
+          fallback: !item.airline.icon,
         },
       };
     }
 
     let timeLeft;
-    if (typeof v.time_left_minutes == "number") {
-      let hours = Math.floor(v.time_left_minutes / 60);
-      let minutes = v.time_left_minutes % 60;
+    if (typeof item.time_left_minutes == "number") {
+      let hours = Math.floor(item.time_left_minutes / 60);
+      let minutes = item.time_left_minutes % 60;
       // TODO Bug 1997547: TypeScript support for `Intl.DurationFormat`
       // @ts-ignore
       timeLeft = new Intl.DurationFormat(undefined, {
@@ -188,21 +191,21 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
     }
 
     return {
-      [`item_${i}`]: {
+      [`item_${index}`]: {
         attributes: {
           status,
         },
       },
-      [`image_container_${i}`]: backgroundImage,
-      [`image_${i}`]: foregroundImage,
-      [`departure_time_${i}`]: {
+      [`image_container_${index}`]: backgroundImage,
+      [`image_${index}`]: foregroundImage,
+      [`departure_time_${index}`]: {
         textContent: new Intl.DateTimeFormat(undefined, {
           hour: "numeric",
           minute: "numeric",
           timeZone: departureTimeZone,
         }).format(departureTime),
       },
-      [`departure_date_${i}`]: {
+      [`departure_date_${index}`]: {
         textContent: new Intl.DateTimeFormat(undefined, {
           month: "long",
           day: "numeric",
@@ -210,51 +213,51 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
           timeZone: departureTimeZone,
         }).format(departureTime),
       },
-      [`arrival_time_${i}`]: {
+      [`arrival_time_${index}`]: {
         textContent: new Intl.DateTimeFormat(undefined, {
           hour: "numeric",
           minute: "numeric",
           timeZone: arrivalTimeZone,
         }).format(arrivalTime),
       },
-      [`origin_airport_${i}`]: {
+      [`origin_airport_${index}`]: {
         l10n: {
           id: "urlbar-result-flight-status-airport",
           args: {
-            city: v.origin.city,
-            code: v.origin.code,
+            city: item.origin.city,
+            code: item.origin.code,
           },
           cacheable: true,
           excludeArgsFromCacheKey: true,
         },
       },
-      [`destination_airport_${i}`]: {
+      [`destination_airport_${index}`]: {
         l10n: {
           id: "urlbar-result-flight-status-airport",
           args: {
-            city: v.destination.city,
-            code: v.destination.code,
+            city: item.destination.city,
+            code: item.destination.code,
           },
           cacheable: true,
           excludeArgsFromCacheKey: true,
         },
       },
-      [`flight_number_${i}`]: v.airline.name
+      [`flight_number_${index}`]: item.airline.name
         ? {
             l10n: {
               id: "urlbar-result-flight-status-flight-number-with-airline",
               args: {
-                flightNumber: v.flight_number,
-                airlineName: v.airline.name,
+                flightNumber: item.flight_number,
+                airlineName: item.airline.name,
               },
               cacheable: true,
               excludeArgsFromCacheKey: !!statusL10nArgs,
             },
           }
         : {
-            textContent: v.flight_number,
+            textContent: item.flight_number,
           },
-      [`status_${i}`]: {
+      [`status_${index}`]: {
         l10n: {
           id: statusL10nId,
           args: statusL10nArgs,
@@ -262,7 +265,7 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
           excludeArgsFromCacheKey: !!statusL10nArgs,
         },
       },
-      [`time_left_${i}`]: timeLeft
+      [`time_left_${index}`]: timeLeft
         ? {
             l10n: {
               id: "urlbar-result-flight-status-time-left",

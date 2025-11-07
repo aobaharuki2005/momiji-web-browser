@@ -4,13 +4,6 @@
 
 import { RealtimeSuggestProvider } from "moz-src:///browser/components/urlbar/private/RealtimeSuggestProvider.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  UrlbarSearchUtils:
-    "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
-});
-
 /**
  * A feature that supports Market suggestions like stocks, indexes, and funds.
  */
@@ -27,29 +20,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
     return "polygon";
   }
 
-  makeMerinoResult(queryContext, suggestion, searchString) {
-    if (!suggestion.custom_details?.polygon?.values?.length) {
-      return null;
-    }
-
-    let engine = lazy.UrlbarSearchUtils.getDefaultEngine(
-      queryContext.isPrivate
-    );
-    if (!engine) {
-      return null;
-    }
-
-    let result = super.makeMerinoResult(queryContext, suggestion, searchString);
-    if (!result) {
-      return null;
-    }
-
-    result.payload.engine = engine.name;
-
-    return result;
-  }
-
-  getViewTemplateForDescriptionTop(index) {
+  getViewTemplateForDescriptionTop(_item, index) {
     return [
       {
         name: `name_${index}`,
@@ -67,7 +38,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewTemplateForDescriptionBottom(index) {
+  getViewTemplateForDescriptionBottom(_item, index) {
     return [
       {
         name: `todays_change_perc_${index}`,
@@ -95,10 +66,10 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewUpdateForValue(i, v) {
+  getViewUpdateForPayloadItem(item, index) {
     let arrowImageUri;
     let changeDescription;
-    let changePercent = parseFloat(v.todays_change_perc);
+    let changePercent = parseFloat(item.todays_change_perc);
     if (changePercent < 0) {
       changeDescription = "down";
       arrowImageUri = "chrome://browser/skin/urlbar/market-down.svg";
@@ -110,7 +81,7 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
       arrowImageUri = "chrome://browser/skin/urlbar/market-unchanged.svg";
     }
 
-    let imageUri = v.image_url;
+    let imageUri = item.image_url;
     let isImageAnArrow = false;
     if (!imageUri) {
       isImageAnArrow = true;
@@ -118,35 +89,35 @@ export class MarketSuggestions extends RealtimeSuggestProvider {
     }
 
     return {
-      [`item_${i}`]: {
+      [`item_${index}`]: {
         attributes: {
           change: changeDescription,
         },
       },
-      [`image_container_${i}`]: {
+      [`image_container_${index}`]: {
         attributes: {
           "is-arrow": isImageAnArrow ? "" : null,
         },
       },
-      [`image_${i}`]: {
+      [`image_${index}`]: {
         attributes: {
           src: imageUri,
         },
       },
-      [`name_${i}`]: {
-        textContent: v.name,
+      [`name_${index}`]: {
+        textContent: item.name,
       },
-      [`ticker_${i}`]: {
-        textContent: v.ticker,
+      [`ticker_${index}`]: {
+        textContent: item.ticker,
       },
-      [`todays_change_perc_${i}`]: {
-        textContent: `${v.todays_change_perc}%`,
+      [`todays_change_perc_${index}`]: {
+        textContent: `${item.todays_change_perc}%`,
       },
-      [`last_price_${i}`]: {
-        textContent: v.last_price,
+      [`last_price_${index}`]: {
+        textContent: item.last_price,
       },
-      [`exchange_${i}`]: {
-        textContent: v.exchange,
+      [`exchange_${index}`]: {
+        textContent: item.exchange,
       },
     };
   }

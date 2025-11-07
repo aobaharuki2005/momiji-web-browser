@@ -170,6 +170,8 @@ const FEATURES = {
     "moz-src:///browser/components/urlbar/private/MarketSuggestions.sys.mjs",
   MDNSuggestions:
     "moz-src:///browser/components/urlbar/private/MDNSuggestions.sys.mjs",
+  SportsSuggestions:
+    "moz-src:///browser/components/urlbar/private/SportsSuggestions.sys.mjs",
   SuggestBackendMerino:
     "moz-src:///browser/components/urlbar/private/SuggestBackendMerino.sys.mjs",
   SuggestBackendMl:

@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarResult: "moz-src:///browser/components/urlbar/UrlbarResult.sys.mjs",
+  UrlbarSearchUtils:
+    "moz-src:///browser/components/urlbar/UrlbarSearchUtils.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
 });
 
@@ -35,15 +37,15 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
-  getViewTemplateForDescriptionTop(_index) {
+  getViewTemplateForDescriptionTop(_item, _index) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
-  getViewTemplateForDescriptionBottom(_index) {
+  getViewTemplateForDescriptionBottom(_item, _index) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
-  getViewUpdateForValue(_index, _value) {
+  getViewUpdateForPayloadItem(_item, _index) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 
@@ -125,6 +127,20 @@ export class RealtimeSuggestProvider extends SuggestProvider {
 
   get isSponsored() {
     return false;
+  }
+
+  /**
+   * @returns {string}
+   *   The dynamic result type that will be set in the Merino result's payload
+   *   as `result.payload.dynamicType`. Note that "dynamic" here refers to the
+   *   concept of dynamic result types as used in the view and
+   *   `UrlbarUtils.RESULT_TYPE.DYNAMIC`, not Rust dynamic suggestions.
+   *
+   *   If you override this, make sure the value starts with "realtime-" because
+   *   there are CSS rules that depend on that.
+   */
+  get dynamicResultType() {
+    return "realtime-" + this.realtimeType;
   }
 
   // The following methods can be overridden but hopefully it's not necessary.
@@ -307,17 +323,54 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       return null;
     }
 
-    return new lazy.UrlbarResult({
+    let values = suggestion.custom_details?.[this.merinoProvider]?.values;
+    if (!values?.length) {
+      return null;
+    }
+
+    let engine;
+    if (values.some(v => v.query)) {
+      engine = lazy.UrlbarSearchUtils.getDefaultEngine(queryContext.isPrivate);
+      if (!engine) {
+        return null;
+      }
+    }
+
+    let result = new lazy.UrlbarResult({
       type: lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       isBestMatch: true,
       hideRowLabel: true,
       ...additionalOptions,
       payload: {
-        ...suggestion.custom_details,
-        dynamicType: this.realtimeType,
+        items: values.map((v, i) => this.makePayloadItem(v, i)),
+        dynamicType: this.dynamicResultType,
+        engine: engine?.name,
       },
     });
+
+    return result;
+  }
+
+  /**
+   * Returns the object that should be stored as `result.payload.items[i]` for
+   * the Merino result. The default implementation here returns the
+   * corresponding value in the suggestion.
+   *
+   * It's useful to override this if there's a significant amount of logic
+   * that's used by the different code paths of the view update. In that case,
+   * you can override this method, perform the logic, store the results in the
+   * item, and then your different view update paths can all use it.
+   *
+   * @param {object} value
+   *   The value in the suggestion's `values` array.
+   * @param {number} _index
+   *   The index of the value in the array.
+   * @returns {object}
+   *   The object that should be stored in `result.payload.items[_index]`.
+   */
+  makePayloadItem(value, _index) {
+    return value;
   }
 
   makeOptInResult(queryContext, _suggestion) {
@@ -381,25 +434,21 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   }
 
   getViewTemplate(result) {
-    let values = result.payload[this.merinoProvider]?.values;
-    if (!values) {
-      return null;
-    }
-
-    let hasMultipleValues = values.length > 1;
+    let { items } = result.payload;
+    let hasMultipleItems = items.length > 1;
     return {
       name: "root",
       overflowable: true,
       attributes: {
-        selectable: hasMultipleValues ? null : "",
+        selectable: hasMultipleItems ? null : "",
       },
       classList: ["urlbarView-realtime-root"],
-      children: values.map((_v, i) => ({
+      children: items.map((item, i) => ({
         name: `item_${i}`,
         tag: "span",
         classList: ["urlbarView-realtime-item"],
         attributes: {
-          selectable: !hasMultipleValues ? null : "",
+          selectable: !hasMultipleItems ? null : "",
         },
         children: [
           // Create an image inside a container so that the image appears inset
@@ -412,14 +461,9 @@ export class RealtimeSuggestProvider extends SuggestProvider {
             name: `image_container_${i}`,
             tag: "span",
             classList: ["urlbarView-realtime-image-container"],
-            children: [
-              {
-                name: `image_${i}`,
-                tag: "img",
-                classList: ["urlbarView-realtime-image"],
-              },
-            ],
+            children: this.getViewTemplateForImage(item, i),
           },
+
           {
             tag: "span",
             classList: ["urlbarView-realtime-description"],
@@ -427,12 +471,12 @@ export class RealtimeSuggestProvider extends SuggestProvider {
               {
                 tag: "div",
                 classList: ["urlbarView-realtime-description-top"],
-                children: this.getViewTemplateForDescriptionTop(i),
+                children: this.getViewTemplateForDescriptionTop(item, i),
               },
               {
                 tag: "div",
                 classList: ["urlbarView-realtime-description-bottom"],
-                children: this.getViewTemplateForDescriptionBottom(i),
+                children: this.getViewTemplateForDescriptionBottom(item, i),
               },
             ],
           },
@@ -441,32 +485,51 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     };
   }
 
+  /**
+   * Returns the view template inside the `image_container`. This default
+   * implementation creates an `img` element. Override it if you need something
+   * else.
+   *
+   * @param {object} _item
+   *   An item from the `result.payload.items` array.
+   * @param {number} index
+   *   The index of the item in the array.
+   * @returns {Array}
+   *   View template for the image, an array of objects.
+   */
+  getViewTemplateForImage(_item, index) {
+    return [
+      {
+        name: `image_${index}`,
+        tag: "img",
+        classList: ["urlbarView-realtime-image"],
+      },
+    ];
+  }
+
   getViewUpdate(result) {
-    let values = result.payload[this.merinoProvider]?.values;
-    if (!values) {
-      return null;
-    }
+    let { items } = result.payload;
 
     let update = {
       root: {
         dataset: {
-          // This `url` or `query` will be used when there's only one value.
-          url: values[0].url,
-          query: values[0].query,
+          // This `url` or `query` will be used when there's only one item.
+          url: items[0].url,
+          query: items[0].query,
         },
       },
     };
 
-    for (let i = 0; i < values.length; i++) {
-      let value = values[i];
-      Object.assign(update, this.getViewUpdateForValue(i, value));
+    for (let i = 0; i < items.length; i++) {
+      let item = items[i];
+      Object.assign(update, this.getViewUpdateForPayloadItem(item, i));
 
-      // These `url` or `query`s will be used when there are multiple values.
+      // These `url` or `query`s will be used when there are multiple items.
       let itemName = `item_${i}`;
       update[itemName] ??= {};
       update[itemName].dataset ??= {};
-      update[itemName].dataset.url ??= value.url;
-      update[itemName].dataset.query ??= value.query;
+      update[itemName].dataset.url ??= item.url;
+      update[itemName].dataset.query ??= item.query;
     }
 
     return update;

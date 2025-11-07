@@ -2340,7 +2340,7 @@ export class UrlbarView {
       }
       if (update.l10n) {
         this.#l10nCache.setElementL10n(node, update.l10n);
-      } else if (update.textContent) {
+      } else if (update.hasOwnProperty("textContent")) {
         lazy.UrlbarUtils.addTextContentWithHighlights(
           node,
           update.textContent,

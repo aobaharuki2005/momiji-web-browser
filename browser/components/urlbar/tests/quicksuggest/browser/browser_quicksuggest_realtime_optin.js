@@ -165,7 +165,7 @@ async function doOptInTest(useKeyboard) {
   Assert.ok(UrlbarPrefs.get("quicksuggest.online.enabled"));
   Assert.equal(merinoResult.payload.source, "merino");
   Assert.equal(merinoResult.payload.provider, "polygon");
-  Assert.equal(merinoResult.payload.dynamicType, "market");
+  Assert.equal(merinoResult.payload.dynamicType, "realtime-market");
   info("Allow button works");
 
   await UrlbarTestUtils.promisePopupClose(window);

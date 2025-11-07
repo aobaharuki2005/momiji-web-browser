@@ -221,25 +221,23 @@ function merinoResult() {
     payload: {
       source: "merino",
       provider: "flightaware",
-      dynamicType: "flightStatus",
+      dynamicType: "realtime-flightStatus",
       telemetryType: "flights",
       isSponsored: false,
-      flightaware: {
-        values: [
-          {
-            flight_number: "flight",
-            origin: {
-              city: "Origin",
-              code: "O",
-            },
-            destination: { city: "Destination", code: "D" },
-            departure_scheduled_time: "2025-09-17T14:05:00Z",
-            arrival_scheduled_time: "2025-09-17T18:30:00Z",
-            status: "Scheduled",
-            url: "https://example.com/A1",
+      items: [
+        {
+          flight_number: "flight",
+          origin: {
+            city: "Origin",
+            code: "O",
           },
-        ],
-      },
+          destination: { city: "Destination", code: "D" },
+          departure_scheduled_time: "2025-09-17T14:05:00Z",
+          arrival_scheduled_time: "2025-09-17T18:30:00Z",
+          status: "Scheduled",
+          url: "https://example.com/A1",
+        },
+      ],
     },
   };
 }

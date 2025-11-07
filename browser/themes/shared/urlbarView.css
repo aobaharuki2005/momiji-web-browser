@@ -453,7 +453,7 @@
     /* The realtime suggestions' style will be broken if the width will be
        changed by hover. Thus we use the visibility instead of display to keep
        the element size */
-    .urlbarView-row:is([dynamicType="flightStatus"], [dynamicType="market"], [dynamicType="yelpRealtime"]) & {
+    .urlbarView-row[dynamicType^="realtime-"] > .urlbarView-row-buttons > & {
       display: unset;
       visibility: hidden;
     }
@@ -1326,11 +1326,19 @@
 .urlbarView-realtime-root {
   --green-status-color: light-dark(var(--color-green-60), var(--color-green-20));
   --red-status-color: light-dark(var(--color-red-70), var(--color-red-40));
+  --violet-bg-color: light-dark(var(--color-violet-0), var(--color-violet-80));
+  --violet-fg-color: light-dark(var(--color-violet-60), var(--color-violet-10));
+
+  @media (prefers-contrast) {
+    --violet-bg-color: var(--urlbar-box-focus-bgcolor);
+    --violet-fg-color: currentColor;
+  }
 
   align-items: center;
 
   /* Realtime suggestions can contain many items, which should always wrap. */
   flex-wrap: wrap;
+
   /* Remove the usual inner padding. Each item in the row will have its own. */
   padding: 0;
 
@@ -1367,7 +1375,6 @@
       width: var(--urlbarView-top-pick-large-icon-box-size);
       height: var(--urlbarView-top-pick-large-icon-box-size);
       margin-inline-end: var(--space-medium);
-      background-color: var(--market-image-bg-color);
       border: 1px solid transparent;
       border-radius: var(--border-radius-small);
 
@@ -1395,18 +1402,36 @@
         color: var(--urlbarView-secondary-text-color);
       }
 
-      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator-dot::before,
-      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator-dot::before {
-        margin-inline: var(--space-xsmall);
-        content: "·";
-        display: inline;
+      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator-dot,
+      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator-dash,
+      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator-dot,
+      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator-dash {
+        /* stylelint-disable-next-line max-nesting-depth */
+        &::before {
+          margin-inline: var(--space-xsmall);
+          display: inline;
+        }
+
+        /* stylelint-disable-next-line max-nesting-depth */
+        &:has(+ span:empty) {
+          display: none;
+        }
       }
 
-      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator-dash::before,
-      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator-dash::before {
-        margin-inline: var(--space-xsmall);
-        content: "–";
-        display: inline;
+      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator-dot,
+      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator-dot {
+        /* stylelint-disable-next-line max-nesting-depth */
+        &::before {
+          content: "·";
+        }
+      }
+
+      > .urlbarView-realtime-description-top > .urlbarView-realtime-description-separator-dash,
+      > .urlbarView-realtime-description-bottom > .urlbarView-realtime-description-separator-dash {
+        /* stylelint-disable-next-line max-nesting-depth */
+        &::before {
+          content: "–";
+        }
       }
     }
   }
@@ -1414,28 +1439,32 @@
 
 /* Market suggestions specific */
 
-.urlbarView-row[dynamicType="market"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
+.urlbarView-row[dynamicType="realtime-market"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
   --market-image-bg-color: var(--urlbar-box-focus-bgcolor);
   --market-image-down-bg-color: light-dark(var(--color-red-0), var(--color-red-90));
   --market-image-up-bg-color: light-dark(var(--color-green-0), var(--color-green-90));
 
-  > .urlbarView-realtime-image-container[is-arrow] {
-    border-color: color-mix(in srgb, currentColor 10%, transparent);
+  > .urlbarView-realtime-image-container {
+    background-color: var(--market-image-bg-color);
 
-    .urlbarView-realtime-item[change="down"] > & {
-      fill: var(--red-status-color);
-      border-color: color-mix(in srgb, var(--red-status-color) 10%, transparent);
-      background-color: var(--market-image-down-bg-color);
-    }
-    .urlbarView-realtime-item[change="up"] > & {
-      fill: var(--green-status-color);
-      border-color: color-mix(in srgb, var(--green-status-color) 10%, transparent);
-      background-color: var(--market-image-up-bg-color);
-    }
+    &[is-arrow] {
+      border-color: color-mix(in srgb, currentColor 10%, transparent);
 
-    > .urlbarView-realtime-image {
-      width: 20px;
-      height: 20px;
+      .urlbarView-realtime-item[change="down"] > & {
+        fill: var(--red-status-color);
+        border-color: color-mix(in srgb, var(--red-status-color) 10%, transparent);
+        background-color: var(--market-image-down-bg-color);
+      }
+      .urlbarView-realtime-item[change="up"] > & {
+        fill: var(--green-status-color);
+        border-color: color-mix(in srgb, var(--green-status-color) 10%, transparent);
+        background-color: var(--market-image-up-bg-color);
+      }
+
+      > .urlbarView-realtime-image {
+        width: 20px;
+        height: 20px;
+      }
     }
   }
 
@@ -1481,7 +1510,7 @@
 
 /* Yelp realtime suggestions specific */
 
-.urlbarView-row[dynamicType="yelpRealtime"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
+.urlbarView-row[dynamicType="realtime-yelpRealtime"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
   --star-size: 12px;
 
   > .urlbarView-realtime-image-container > .urlbarView-realtime-image {
@@ -1534,7 +1563,7 @@
 
 /* Flight status suggestions specific */
 
-.urlbarView-row[dynamicType="flightStatus"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
+.urlbarView-row[dynamicType="realtime-flightStatus"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
   > .urlbarView-realtime-image-container {
     --airline-fallback-icon-color: #bac2ca;
 
@@ -1613,9 +1642,41 @@
         > .urlbarView-flightStatus-status {
         color: var(--red-status-color);
       }
+    }
+  }
+}
 
-      > .urlbarView-realtime-description-separator-dot:has(+ .urlbarView-flightStatus-time-left:empty) {
-        display: none;
+/* Realtime sports suggestions */
+
+.urlbarView-row[dynamicType="realtime-sports"] > .urlbarView-realtime-root > .urlbarView-realtime-item {
+  > .urlbarView-realtime-image-container[is-date-chiclet] {
+    flex-direction: column;
+
+    background-color: var(--violet-bg-color);
+    color: var(--violet-fg-color);
+    border-color: color-mix(in srgb, currentColor 10%, transparent);
+
+    > .urlbarView-sports-scheduled-date-chiclet-day {
+      font-size: 1.25em;
+    }
+  }
+
+  > .urlbarView-realtime-description {
+    > .urlbarView-realtime-description-top {
+      > .urlbarView-sports-team-names {
+        font-weight: var(--font-weight-bold);
+      }
+
+      > .urlbarView-sports-score {
+        font-weight: var(--font-weight-bold);
+        margin-inline-start: var(--space-xsmall);
+      }
+    }
+
+    > .urlbarView-realtime-description-bottom {
+      > .urlbarView-sports-status {
+        color: var(--green-status-color);
+        font-weight: var(--font-weight-bold);
       }
     }
   }

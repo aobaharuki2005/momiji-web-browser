@@ -1596,7 +1596,7 @@ class _QuickSuggestTestUtils {
             lazy.SearchUtils.TOPIC_SEARCH_SERVICE,
             (subject, data) => {
               this.#log(
-                "setLocales",
+                "#waitForAllLocaleChanges",
                 "Observed TOPIC_SEARCH_SERVICE with data: " + data
               );
               return data == "engines-reloaded";
@@ -1605,7 +1605,7 @@ class _QuickSuggestTestUtils {
           new Promise(resolve => {
             lazy.setTimeout(() => {
               this.#log(
-                "setLocales",
+                "#waitForAllLocaleChanges",
                 "Timed out waiting for TOPIC_SEARCH_SERVICE (not an error)"
               );
               resolve();

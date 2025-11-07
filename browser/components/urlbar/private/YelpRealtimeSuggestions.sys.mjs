@@ -32,7 +32,7 @@ export class YelpRealtimeSuggestions extends RealtimeSuggestProvider {
     });
   }
 
-  getViewTemplateForDescriptionTop(index) {
+  getViewTemplateForDescriptionTop(_item, index) {
     return [
       {
         name: `title_${index}`,
@@ -42,7 +42,7 @@ export class YelpRealtimeSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewTemplateForDescriptionBottom(index) {
+  getViewTemplateForDescriptionBottom(_item, index) {
     return [
       {
         name: `address_${index}`,
@@ -83,30 +83,30 @@ export class YelpRealtimeSuggestions extends RealtimeSuggestProvider {
     ];
   }
 
-  getViewUpdateForValue(i, v) {
+  getViewUpdateForPayloadItem(item, index) {
     return {
-      [`item_${i}`]: {
+      [`item_${index}`]: {
         attributes: {
-          state: v.business_hours[0].is_open_now ? "open" : "closed",
+          state: item.business_hours[0].is_open_now ? "open" : "closed",
         },
       },
-      [`image_${i}`]: {
+      [`image_${index}`]: {
         attributes: {
-          src: v.image_url,
+          src: item.image_url,
         },
       },
-      [`title_${i}`]: {
-        textContent: v.name,
+      [`title_${index}`]: {
+        textContent: item.name,
       },
-      [`address_${i}`]: {
-        textContent: v.address,
+      [`address_${index}`]: {
+        textContent: item.address,
       },
-      [`pricing_${i}`]: {
-        textContent: v.pricing,
+      [`pricing_${index}`]: {
+        textContent: item.pricing,
       },
-      [`business_hours_${i}`]: {
+      [`business_hours_${index}`]: {
         l10n: {
-          id: v.business_hours[0].is_open_now
+          id: item.business_hours[0].is_open_now
             ? "urlbar-result-yelp-realtime-business-hours-open"
             : "urlbar-result-yelp-realtime-business-hours-closed",
           args: {
@@ -121,12 +121,12 @@ export class YelpRealtimeSuggestions extends RealtimeSuggestProvider {
           excludeArgsFromCacheKey: true,
         },
       },
-      [`popularity_${i}`]: {
+      [`popularity_${index}`]: {
         l10n: {
           id: "urlbar-result-yelp-realtime-popularity",
           args: {
-            rating: v.rating,
-            review_count: v.review_count,
+            rating: item.rating,
+            review_count: item.review_count,
           },
           cacheable: true,
           excludeArgsFromCacheKey: true,

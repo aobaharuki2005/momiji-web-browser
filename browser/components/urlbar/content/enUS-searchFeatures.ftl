@@ -336,3 +336,32 @@ urlbar-result-flight-status-airport = { $city } ({ $code })
 #   $flightNumber (string) - The flight number.
 #   $airlineName (string) - The airline name.
 urlbar-result-flight-status-flight-number-with-airline = { $flightNumber }, { $airlineName }
+
+## These strings are used for sports suggestions in the urlbar. Sports
+## suggestions show team names, scores, game times, etc.
+
+# This string is shown for a scheduled future game. In English, "Team 1 at Team
+# 2" means the game is taking place at Team 2's home venue, and we say Team 1 is
+# the "away" team and Team 2 is the "home" team. If your language doesn't have a
+# similar phrase, use your equivalent of "vs." or even just "and".
+# Variables:
+#   $awayTeam (string) - Name of the visting team.
+#   $homeTeam (string) - Name of the home team.
+urlbar-result-sports-team-names = { $awayTeam } at { $homeTeam }
+
+# This string is shown when the game is today, in the near future, or in the
+# recent past.
+# Variables:
+#   $date (string) - Localized date string, e.g., "Today", "Oct 31"
+#   $time (string) - Localized time
+urlbar-result-sports-game-date-with-time = { $date } at { $time }
+
+# This status is shown when the game is in progress.
+urlbar-result-sports-status-live = Live
+
+# This status is shown when the game is over.
+urlbar-result-sports-status-final = Final
+
+# This string is shown in the result menu.
+urlbar-result-menu-dont-show-sports =
+  .label = Don’t show sports suggestions

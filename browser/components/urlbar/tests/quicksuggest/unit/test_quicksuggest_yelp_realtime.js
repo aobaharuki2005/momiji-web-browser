@@ -22,6 +22,15 @@ const YELP_MERINO_SINGLE = [
   {
     provider: "yelp",
     is_sponsored: true,
+    custom_details: {
+      yelp: {
+        values: [
+          {
+            some_value: "foo",
+          },
+        ],
+      },
+    },
   },
 ];
 
@@ -476,9 +485,14 @@ function yelpMerinoResult() {
     payload: {
       source: "merino",
       provider: "yelp",
-      dynamicType: "yelpRealtime",
+      dynamicType: "realtime-yelpRealtime",
       telemetryType: "yelpRealtime",
       isSponsored: true,
+      items: [
+        {
+          some_value: "foo",
+        },
+      ],
     },
   };
 }

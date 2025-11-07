@@ -244,19 +244,17 @@ function marketResult() {
       telemetryType: "market",
       isSponsored: false,
       engine: Services.search.defaultEngine.name,
-      polygon: {
-        values: [
-          {
-            image_url: "https://example.com/aapl.svg",
-            query: "AAPL stock",
-            name: "Apple Inc",
-            ticker: "AAPL",
-            todays_change_perc: "-0.54",
-            last_price: "$181.98 USD",
-          },
-        ],
-      },
-      dynamicType: "market",
+      items: [
+        {
+          image_url: "https://example.com/aapl.svg",
+          query: "AAPL stock",
+          name: "Apple Inc",
+          ticker: "AAPL",
+          todays_change_perc: "-0.54",
+          last_price: "$181.98 USD",
+        },
+      ],
+      dynamicType: "realtime-market",
     },
   };
 }
