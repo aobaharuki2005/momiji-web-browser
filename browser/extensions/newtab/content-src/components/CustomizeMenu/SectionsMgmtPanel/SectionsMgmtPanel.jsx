@@ -8,7 +8,11 @@ import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 // eslint-disable-next-line no-shadow
 import { CSSTransition } from "react-transition-group";
 
-function SectionsMgmtPanel({ exitEventFired, pocketEnabled }) {
+function SectionsMgmtPanel({
+  exitEventFired,
+  pocketEnabled,
+  onSubpanelToggle,
+}) {
   const [showPanel, setShowPanel] = useState(false); // State management with useState
   const { sectionPersonalization } = useSelector(
     state => state.DiscoveryStream
@@ -173,6 +177,13 @@ function SectionsMgmtPanel({ exitEventFired, pocketEnabled }) {
       setShowPanel(false);
     }
   }, [exitEventFired]);
+
+  // Notify parent menu when subpanel opens/closes
+  useEffect(() => {
+    if (onSubpanelToggle) {
+      onSubpanelToggle(showPanel);
+    }
+  }, [showPanel, onSubpanelToggle]);
 
   const togglePanel = () => {
     setShowPanel(prevShowPanel => !prevShowPanel);

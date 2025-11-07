@@ -13947,7 +13947,8 @@ function SectionsMgmtPanel_extends() { return SectionsMgmtPanel_extends = Object
 
 function SectionsMgmtPanel({
   exitEventFired,
-  pocketEnabled
+  pocketEnabled,
+  onSubpanelToggle
 }) {
   const [showPanel, setShowPanel] = (0,external_React_namespaceObject.useState)(false); // State management with useState
   const {
@@ -14066,6 +14067,13 @@ function SectionsMgmtPanel({
       setShowPanel(false);
     }
   }, [exitEventFired]);
+
+  // Notify parent menu when subpanel opens/closes
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (onSubpanelToggle) {
+      onSubpanelToggle(showPanel);
+    }
+  }, [showPanel, onSubpanelToggle]);
   const togglePanel = () => {
     setShowPanel(prevShowPanel => !prevShowPanel);
 
@@ -14385,6 +14393,11 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
       activeCategory: event.target.id
     });
     this.handleUserEvent(actionTypes.WALLPAPER_CATEGORY_CLICK, event.target.id);
+
+    // Notify parent menu when subpanel opens
+    if (this.props.onSubpanelToggle) {
+      this.props.onSubpanelToggle(true);
+    }
     let fluent_id;
     switch (event.target.id) {
       case "abstracts":
@@ -14482,6 +14495,11 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     this.setState({
       activeCategory: null
     }, () => {
+      // Notify parent menu when subpanel closes
+      if (this.props.onSubpanelToggle) {
+        this.props.onSubpanelToggle(false);
+      }
+
       // Wait for the category grid to be back in the DOM
       requestAnimationFrame(() => {
         this.focusCategory(this.state.focusedCategoryIndex);
@@ -14862,7 +14880,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       activeWallpaper,
       setPref,
       mayHaveTopicSections,
-      exitEventFired
+      exitEventFired,
+      onSubpanelToggle
     } = this.props;
     const {
       topSitesEnabled,
@@ -14883,7 +14902,8 @@ class ContentSection extends (external_React_default()).PureComponent {
     }, /*#__PURE__*/external_React_default().createElement(WallpaperCategories, {
       setPref: setPref,
       activeWallpaper: activeWallpaper,
-      exitEventFired: exitEventFired
+      exitEventFired: exitEventFired,
+      onSubpanelToggle: onSubpanelToggle
     })), !mayHaveWidgets && /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
@@ -15041,7 +15061,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       "data-l10n-id": "newtab-custom-stories-personalized-checkbox-label"
     })), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
       exitEventFired: exitEventFired,
-      pocketEnabled: pocketEnabled
+      pocketEnabled: pocketEnabled,
+      onSubpanelToggle: onSubpanelToggle
     }))))))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
@@ -15068,9 +15089,16 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
     super(props);
     this.onEntered = this.onEntered.bind(this);
     this.onExited = this.onExited.bind(this);
+    this.onSubpanelToggle = this.onSubpanelToggle.bind(this);
     this.state = {
-      exitEventFired: false
+      exitEventFired: false,
+      subpanelOpen: false
     };
+  }
+  onSubpanelToggle(isOpen) {
+    this.setState({
+      subpanelOpen: isOpen
+    });
   }
   onEntered() {
     this.setState({
@@ -15117,7 +15145,9 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       onExited: this.onExited,
       appear: true
     }, /*#__PURE__*/external_React_default().createElement("div", {
-      className: "customize-menu",
+      className: "customize-menu-animate-wrapper"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: `customize-menu ${this.state.subpanelOpen ? "subpanel-open" : ""}`,
       role: "dialog",
       "data-l10n-id": "newtab-settings-dialog-label"
     }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -15145,8 +15175,9 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       mayHaveTimerWidget: this.props.mayHaveTimerWidget,
       mayHaveListsWidget: this.props.mayHaveListsWidget,
       dispatch: this.props.dispatch,
-      exitEventFired: this.state.exitEventFired
-    }))));
+      exitEventFired: this.state.exitEventFired,
+      onSubpanelToggle: this.onSubpanelToggle
+    })))));
   }
 }
 const CustomizeMenu = (0,external_ReactRedux_namespaceObject.connect)(state => ({

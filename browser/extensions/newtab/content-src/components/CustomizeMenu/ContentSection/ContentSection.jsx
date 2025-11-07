@@ -108,6 +108,7 @@ export class ContentSection extends React.PureComponent {
       setPref,
       mayHaveTopicSections,
       exitEventFired,
+      onSubpanelToggle,
     } = this.props;
     const {
       topSitesEnabled,
@@ -128,6 +129,7 @@ export class ContentSection extends React.PureComponent {
                 setPref={setPref}
                 activeWallpaper={activeWallpaper}
                 exitEventFired={exitEventFired}
+                onSubpanelToggle={onSubpanelToggle}
               />
             </div>
             {/* If widgets section is visible, hide this divider */}
@@ -330,6 +332,7 @@ export class ContentSection extends React.PureComponent {
                           <SectionsMgmtPanel
                             exitEventFired={exitEventFired}
                             pocketEnabled={pocketEnabled}
+                            onSubpanelToggle={onSubpanelToggle}
                           />
                         )}
                       </div>

@@ -93,7 +93,7 @@
   }
 }
 
-.customize-menu {
+.customize-menu-animate-wrapper {
   color: var(--newtab-text-primary-color);
   background-color: var(--newtab-background-color-secondary);
   width: 432px;
@@ -106,7 +106,6 @@
   z-index: 1001;
   padding-block: 0 var(--space-large);
   padding-inline: var(--space-large);
-  overflow: auto;
   transform: translateX(435px);
   visibility: hidden;
   cursor: default;
@@ -150,6 +149,15 @@
 
   &.customize-animate-exit-active {
     box-shadow: $shadow-large;
+  }
+}
+
+.customize-menu {
+  overflow: auto;
+  height: 100%;
+
+  &.subpanel-open {
+    overflow: clip;
   }
 
   .close-button-wrapper {
@@ -427,10 +435,7 @@
 }
 
 .sections-mgmt-panel {
-  /* XXXdholbert The 32px subtraction here is to account for our 16px of
-  * margin on top and bottom. Ideally this should change to use
-  * 'height: stretch' when bug 1789477 lands. */
-  height: calc(100% - var(--space-xxlarge));
+  height: 100%;
   // Width of panel minus the margins
   inset-inline-start: var(--space-xlarge);
   position: absolute;
@@ -441,6 +446,7 @@
   margin-block: var(--space-large) 0;
   padding: 0;
   background-color: var(--newtab-background-color-secondary);
+  overflow-y: auto;
 
   &:dir(rtl) {
     transform: translateX(-100%);

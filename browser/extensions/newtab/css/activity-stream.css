@@ -2064,7 +2064,7 @@ main section {
   max-width: 30ch;
 }
 
-.customize-menu {
+.customize-menu-animate-wrapper {
   color: var(--newtab-text-primary-color);
   background-color: var(--newtab-background-color-secondary);
   width: 432px;
@@ -2076,34 +2076,41 @@ main section {
   z-index: 1001;
   padding-block: 0 var(--space-large);
   padding-inline: var(--space-large);
-  overflow: auto;
   transform: translateX(435px);
   visibility: hidden;
   cursor: default;
 }
-.customize-menu.customize-animate-enter, .customize-menu.customize-animate-exit, .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-exit-done {
+.customize-menu-animate-wrapper.customize-animate-enter, .customize-menu-animate-wrapper.customize-animate-exit, .customize-menu-animate-wrapper.customize-animate-enter-done, .customize-menu-animate-wrapper.customize-animate-exit-done {
   display: block;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .customize-menu.customize-animate-enter, .customize-menu.customize-animate-exit, .customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-exit-done {
+  .customize-menu-animate-wrapper.customize-animate-enter, .customize-menu-animate-wrapper.customize-animate-exit, .customize-menu-animate-wrapper.customize-animate-enter-done, .customize-menu-animate-wrapper.customize-animate-exit-done {
     transition: transform 250ms cubic-bezier(0.46, 0.03, 0.52, 0.96), visibility 250ms;
   }
 }
 @media (forced-colors: active) {
-  .customize-menu {
+  .customize-menu-animate-wrapper {
     border-inline-start: solid 1px;
   }
 }
-.customize-menu:dir(rtl) {
+.customize-menu-animate-wrapper:dir(rtl) {
   transform: translateX(-435px);
 }
-.customize-menu.customize-animate-enter-done, .customize-menu.customize-animate-enter-active {
+.customize-menu-animate-wrapper.customize-animate-enter-done, .customize-menu-animate-wrapper.customize-animate-enter-active {
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   visibility: visible;
   transform: translateX(0);
 }
-.customize-menu.customize-animate-exit-active {
+.customize-menu-animate-wrapper.customize-animate-exit-active {
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+}
+
+.customize-menu {
+  overflow: auto;
+  height: 100%;
+}
+.customize-menu.subpanel-open {
+  overflow: clip;
 }
 .customize-menu .close-button-wrapper {
   position: sticky;
@@ -2325,10 +2332,7 @@ main section {
 }
 
 .sections-mgmt-panel {
-  /* XXXdholbert The 32px subtraction here is to account for our 16px of
-  * margin on top and bottom. Ideally this should change to use
-  * 'height: stretch' when bug 1789477 lands. */
-  height: calc(100% - var(--space-xxlarge));
+  height: 100%;
   inset-inline-start: var(--space-xlarge);
   position: absolute;
   inset-block-start: 0;
@@ -2338,6 +2342,7 @@ main section {
   margin-block: var(--space-large) 0;
   padding: 0;
   background-color: var(--newtab-background-color-secondary);
+  overflow-y: auto;
 }
 .sections-mgmt-panel:dir(rtl) {
   transform: translateX(-100%);
@@ -2643,16 +2648,15 @@ main section {
   gap: unset;
   grid-auto-rows: unset;
   grid-template-columns: unset;
-  /* XXXdholbert The 32px subtraction here is to account for our 16px of
-   * margin on top and bottom. Ideally this should change to use
-   * 'height: stretch' when bug 1789477 lands. */
-  height: calc(100% - var(--space-xlarge));
+  height: 100%;
+  padding-block-end: var(--space-xxlarge);
   inset-inline-start: var(--space-xlarge);
   position: absolute;
   inset-block-start: 0;
   width: 380px;
   z-index: 2;
   transform: translateX(100%);
+  overflow-y: auto;
 }
 .wallpaper-list.category:dir(rtl) {
   transform: translateX(-100%);

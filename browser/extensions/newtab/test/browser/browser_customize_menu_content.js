@@ -57,7 +57,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
+          content.document.querySelector(".customize-menu-animate-wrapper")
         ).transform === defaultPos,
       "Customize Menu should be visible on screen"
     );
@@ -150,7 +150,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
+          content.document.querySelector(".customize-menu-animate-wrapper")
         ).transform === defaultPos,
       "Customize Menu should be visible on screen"
     );
@@ -201,7 +201,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
+          content.document.querySelector(".customize-menu-animate-wrapper")
         ).transform === defaultPos,
       "Customize Menu should be visible on screen"
     );
@@ -225,7 +225,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
+          content.document.querySelector(".customize-menu-animate-wrapper")
         ).transform !== defaultPos,
       "Customize Menu should not be visible anymore"
     );
@@ -249,7 +249,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
+          content.document.querySelector(".customize-menu-animate-wrapper")
         ).transform === defaultPos,
       "Customize Menu should be visible on screen now"
     );
@@ -259,7 +259,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
+          content.document.querySelector(".customize-menu-animate-wrapper")
         ).transform !== defaultPos,
       "Customize Menu should not be visible anymore"
     );
@@ -269,7 +269,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
+          content.document.querySelector(".customize-menu-animate-wrapper")
         ).transform === defaultPos,
       "Customize Menu should be visible on screen now"
     );
@@ -280,7 +280,7 @@ test_newtab({
     await ContentTaskUtils.waitForCondition(
       () =>
         content.getComputedStyle(
-          content.document.querySelector(".customize-menu")
+          content.document.querySelector(".customize-menu-animate-wrapper")
         ).transform !== defaultPos,
       "Customize Menu should not be visible anymore"
     );
