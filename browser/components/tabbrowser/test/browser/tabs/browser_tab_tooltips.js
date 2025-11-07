@@ -12,12 +12,12 @@ function openTooltip(node) {
     event => event.originalTarget.nodeName == "tooltip"
   );
   window.windowUtils.disableNonTestMouseEvents(true);
-  EventUtils.synthesizeMouse(node, 10, 10, { type: "mouseover" });
-  EventUtils.synthesizeMouse(node, 10, 10, { type: "mousemove" });
+  EventUtils.synthesizeMouse(node, 2, 2, { type: "mouseover" });
+  EventUtils.synthesizeMouse(node, 4, 4, { type: "mousemove" });
   EventUtils.synthesizeMouse(node, MOUSE_OFFSET, MOUSE_OFFSET, {
     type: "mousemove",
   });
-  EventUtils.synthesizeMouse(node, 10, 10, { type: "mouseout" });
+  EventUtils.synthesizeMouse(node, 2, 2, { type: "mouseout" });
   window.windowUtils.disableNonTestMouseEvents(false);
   return tooltipShownPromise;
 }
