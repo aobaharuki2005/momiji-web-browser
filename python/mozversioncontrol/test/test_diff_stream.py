@@ -70,11 +70,11 @@ STEPS = {
         """
         echo foo > file1.txt
         jj desc -m "FIRST PATCH"
-        jj new 'description("BASE PATCH")'
+        jj new "description('BASE PATCH')"
         echo notfoo > file1.txt
         echo bar > anotherfile.txt
         jj desc -m "OTHER PATCH"
-        jj new 'description("FIRST PATCH")' @ -m "SECOND PATCH"
+        jj new "description('FIRST PATCH')" @ -m "SECOND PATCH"
         jj new -m "resolve conflict"
         echo merged > file1.txt
        """,
