@@ -11831,31 +11831,23 @@ static nsTArray<AffectedAnchorGroup> FindAnchorsAffectedByScroll(
   return affectedAnchors;
 }
 
-struct FindScrollCompensatedAnchorResult {
-  const AffectedAnchor& mAnchorInfo;
-  AnchorPosReferenceData& mReferenceData;
-};
-
 // Given a list of anchors affected by scrolling, find one that the given
 // positioned frame need to compensate scroll for.
-static Maybe<FindScrollCompensatedAnchorResult> FindScrollCompensatedAnchor(
+static Maybe<const AffectedAnchor&> FindScrollCompensatedAnchor(
     const PresShell* aPresShell,
     const nsTArray<AffectedAnchorGroup>& aAffectedAnchors,
-    const nsIFrame* aPositioned) {
+    const nsIFrame* aPositioned, const AnchorPosReferenceData& aReferenceData) {
   MOZ_ASSERT(aPositioned->IsAbsolutelyPositioned(),
              "Anchor positioned frame is not absolutely positioned?");
-  auto* referencedAnchors =
-      aPositioned->GetProperty(nsIFrame::AnchorPosReferences());
-  if (!referencedAnchors || referencedAnchors->IsEmpty()) {
+  if (aReferenceData.IsEmpty()) {
     return Nothing{};
   }
 
-  if (!referencedAnchors->mDefaultAnchorName) {
+  if (!aReferenceData.mDefaultAnchorName) {
     return Nothing{};
   }
 
-  const auto compensatingForScroll =
-      referencedAnchors->CompensatingForScrollAxes();
+  const auto compensatingForScroll = aReferenceData.CompensatingForScrollAxes();
   if (compensatingForScroll.isEmpty()) {
     return Nothing{};
   }
@@ -11895,7 +11887,7 @@ static Maybe<FindScrollCompensatedAnchorResult> FindScrollCompensatedAnchor(
       break;
     }
     const auto& info = anchors.ElementAt(idx);
-    return Some(FindScrollCompensatedAnchorResult{info, *referencedAnchors});
+    return SomeRef(info);
   }
 
   return Nothing{};
@@ -11911,8 +11903,7 @@ static bool CheckOverflow(nsIFrame* aPositioned,
     return false;
   }
   const auto overflows = !AnchorPositioningUtils::FitsInContainingBlock(
-      AnchorPositioningUtils::ContainingBlockInfo{
-          static_cast<const nsIFrame*>(aPositioned->GetParent())},
+      AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(aPositioned),
       aPositioned, &aData);
   aPositioned->AddOrRemoveStateBits(NS_FRAME_POSITION_VISIBILITY_HIDDEN,
                                     visibilityDependsOnOverflow && overflows);
@@ -11940,24 +11931,36 @@ void PresShell::UpdateAnchorPosForScroll(
 
   // Now, update all affected positioned elements' scroll offsets.
   for (auto* positioned : mAnchorPosPositioned) {
-    const auto scrollDependency =
-        FindScrollCompensatedAnchor(this, affectedAnchors, positioned);
-    if (!scrollDependency) {
+    auto* referenceData =
+        positioned->GetProperty(nsIFrame::AnchorPosReferences());
+    if (!referenceData) {
       continue;
     }
-    const auto& info = scrollDependency->mAnchorInfo;
-    auto& referenceData = scrollDependency->mReferenceData;
-    const auto offset = AnchorPositioningUtils::GetScrollOffsetFor(
-        referenceData.CompensatingForScrollAxes(), positioned, info);
-    if (referenceData.mDefaultScrollShift != offset) {
+    const auto scrollDependency = FindScrollCompensatedAnchor(
+        this, affectedAnchors, positioned, *referenceData);
+    const bool offsetChanged = [&]() {
+      if (!scrollDependency) {
+        return false;
+      }
+      const auto offset = AnchorPositioningUtils::GetScrollOffsetFor(
+          referenceData->CompensatingForScrollAxes(), positioned,
+          *scrollDependency);
+      if (referenceData->mDefaultScrollShift == offset) {
+        return false;
+      }
       positioned->SetPosition(positioned->GetNormalPosition() - offset);
       // Update positioned frame's overflow, then the absolute containing
       // block's.
       positioned->UpdateOverflow();
       nsContainerFrame::PlaceFrameView(positioned);
       positioned->GetParent()->UpdateOverflow();
-      referenceData.mDefaultScrollShift = offset;
-      if (CheckOverflow(positioned, referenceData)) {
+      referenceData->mDefaultScrollShift = offset;
+      return true;
+    }();
+    const bool cbScrolls =
+        positioned->GetParent() == aScrollContainer->GetScrolledFrame();
+    if (offsetChanged || cbScrolls) {
+      if (CheckOverflow(positioned, *referenceData)) {
 #ifdef ACCESSIBILITY
         if (nsAccessibilityService* accService = GetAccService()) {
           accService->NotifyAnchorPositionedScrollUpdate(this, positioned);

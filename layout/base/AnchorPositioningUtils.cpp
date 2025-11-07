@@ -851,7 +851,16 @@ bool AnchorPositioningUtils::FitsInContainingBlock(
       aContainingBlockInfo.GetContainingBlockRect();
   const auto overflowCheckRect = aReferenceData->mContainingBlockRect -
                                  aReferenceData->mDefaultScrollShift;
-  const auto rect = aPositioned->GetMarginRect();
+  const auto rect = [&]() {
+    auto rect = aPositioned->GetMarginRect();
+    const auto* cb = aPositioned->GetParent();
+    if (cb->Style()->GetPseudoType() != PseudoStyleType::scrolledContent) {
+      return rect;
+    }
+    const ScrollContainerFrame* scrollContainer =
+        do_QueryFrame(cb->GetParent());
+    return rect - scrollContainer->GetScrollPosition();
+  }();
 
   return overflowCheckRect.Intersect(originalContainingBlockRect)
       .Union(originalContainingBlockRect)
