@@ -381,7 +381,9 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
         return;
       }
       disposedEntries.AppendElement(oldCurrentEntry);
-      aDestinationSHE->NavigationKey() = oldCurrentEntry->Key();
+      MOZ_DIAGNOSTIC_ASSERT(
+          aDestinationSHE->NavigationKey() ==
+          oldCurrentEntry->SessionHistoryInfo()->NavigationKey());
       mEntries[*mCurrentEntryIndex] = MakeRefPtr<NavigationHistoryEntry>(
           GetOwnerGlobal(), aDestinationSHE, *mCurrentEntryIndex);
       break;
