@@ -795,7 +795,8 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                         "safari-jetstream3" in try_name
                         and "macosx1500-aarch64" in platform
                     ):
-                        return True
+                        return False
+                    return True
         # Android selection
         elif accept_raptor_android_build(platform):
             if "hw-s24" in platform and "speedometer3" not in try_name:
