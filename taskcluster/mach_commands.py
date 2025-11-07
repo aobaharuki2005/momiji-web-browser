@@ -258,10 +258,22 @@ def taskgraph_decision(command_context, **options):
         if in_automation and moz_upload_dir:
             monitor = SystemResourceMonitor(poll_interval=0.1)
             monitor.start()
+        else:
+            monitor = None
 
-        start = time.monotonic()
-        ret = taskgraph_commands["decision"].func(options)
-        end = time.monotonic()
+        try:
+            start = time.monotonic()
+            ret = taskgraph_commands["decision"].func(options)
+            end = time.monotonic()
+        finally:
+            if monitor is not None:
+                monitor.stop()
+                upload_dir = pathlib.Path(moz_upload_dir)
+                profile_path = upload_dir / "profile_build_resources.json"
+                with open(profile_path, "w", encoding="utf-8", newline="\n") as f:
+                    to_write = json.dumps(monitor.as_profile(), separators=(",", ":"))
+                    f.write(to_write)
+
         if in_automation:
             perfherder_data = {
                 "framework": {"name": "build_metrics"},
@@ -285,12 +297,6 @@ def taskgraph_decision(command_context, **options):
                 out_path = upload_dir / "perfherder-data-decision.json"
                 with out_path.open("w", encoding="utf-8") as f:
                     json.dump(perfherder_data, f)
-
-                monitor.stop()
-                profile_path = upload_dir / "profile_build_resources.json"
-                with open(profile_path, "w", encoding="utf-8", newline="\n") as f:
-                    to_write = json.dumps(monitor.as_profile(), separators=(",", ":"))
-                    f.write(to_write)
 
         return ret
     except Exception:
