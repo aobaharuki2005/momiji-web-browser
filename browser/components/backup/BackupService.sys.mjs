@@ -1195,10 +1195,16 @@ export class BackupService extends EventTarget {
     this.#postRecoveryResolver = resolve;
     this.#backupWriteAbortController = new AbortController();
     this.#regenerationDebouncer = new lazy.DeferredTask(async () => {
-      if (!this.#backupWriteAbortController.signal.aborted) {
-        await this.createBackupOnIdleDispatch({
-          reason: "user deleted some data",
-        });
+      if (
+        !this.#backupWriteAbortController.signal.aborted &&
+        this.archiveEnabledStatus.enabled
+      ) {
+        await this.deleteLastBackup();
+        if (lazy.scheduledBackupsPref) {
+          await this.createBackupOnIdleDispatch({
+            reason: "user deleted some data",
+          });
+        }
       }
     }, BackupService.REGENERATION_DEBOUNCE_RATE_MS);
   }
@@ -4040,7 +4046,7 @@ export class BackupService extends EventTarget {
    * not been sent to the application for at least
    * IDLE_THRESHOLD_SECONDS_PREF_NAME seconds.
    */
-  async onIdle() {
+  onIdle() {
     lazy.logConsole.debug("Saw idle callback");
     if (!this.#takenMeasurements) {
       this.takeMeasurements();
@@ -4086,19 +4092,12 @@ export class BackupService extends EventTarget {
         // loop in the parent process isn't so busy with higher priority things.
         let expectedBackupTime =
           lastBackupDate + lazy.minimumTimeBetweenBackupsSeconds;
-        try {
-          await this.createBackupOnIdleDispatch({
-            reason:
-              expectedBackupTime < this._startupTimeUnixSeconds
-                ? "missed"
-                : "idle",
-          });
-        } catch (e) {
-          lazy.logConsole.error(
-            "createBackupOnIdleDispatch promise rejected",
-            e
-          );
-        }
+        this.createBackupOnIdleDispatch({
+          reason:
+            expectedBackupTime < this._startupTimeUnixSeconds
+              ? "missed"
+              : "idle",
+        });
       } else {
         lazy.logConsole.debug(
           "Last backup was too recent. Not creating one for now."
@@ -4122,11 +4121,10 @@ export class BackupService extends EventTarget {
    * is not busy with higher priority events. This is intentionally broken out
    * into its own method to make it easier to stub out in tests.
    *
-   * @param {object} [options]
-   * @param {boolean} [options.deletePreviousBackup]
-   * @param {string} [options.reason]
+   * @param {...*} args
+   *   Arguments to pass through to createBackup.
    */
-  createBackupOnIdleDispatch({ deletePreviousBackup = true, reason }) {
+  createBackupOnIdleDispatch(...args) {
     let now = Math.floor(Date.now() / 1000);
     let errorStateDebugInfo = Services.prefs.getStringPref(
       BACKUP_DEBUG_INFO_PREF_NAME,
@@ -4145,27 +4143,15 @@ export class BackupService extends EventTarget {
       lazy.logConsole.debug(
         `We've already retried in the last ${lazy.minimumTimeBetweenBackupsSeconds}s. Waiting for next valid idleDispatch to try again.`
       );
-      return Promise.resolve();
+      return;
     }
-    // Determine path to old backup file
-    const oldBackupFile = this.#_state.lastBackupFileName;
-    const isScheduledBackupsEnabled = lazy.scheduledBackupsPref;
 
-    let { backupPromise, resolve } = Promise.withResolvers();
-    ChromeUtils.idleDispatch(async () => {
+    ChromeUtils.idleDispatch(() => {
       lazy.logConsole.debug(
         "idleDispatch fired. Attempting to create a backup."
       );
-      let oldBackupFilePath;
-      if (await this.#infalliblePathExists(lazy.backupDirPref)) {
-        oldBackupFilePath = PathUtils.join(lazy.backupDirPref, oldBackupFile);
-      }
 
-      try {
-        if (isScheduledBackupsEnabled) {
-          await this.createBackup({ reason });
-        }
-      } catch (e) {
+      this.createBackup(...args).catch(e => {
         lazy.logConsole.debug(
           `There was an error creating backup on idle dispatch: ${e}`
         );
@@ -4176,22 +4162,8 @@ export class BackupService extends EventTarget {
           Services.prefs.setBoolPref(DISABLED_ON_IDLE_RETRY_PREF_NAME, true);
           Glean.browserBackup.backupThrottled.record();
         }
-      } finally {
-        // Now delete the old backup file, if it exists
-        if (deletePreviousBackup && oldBackupFilePath) {
-          lazy.logConsole.log(
-            "Attempting to delete last backup file at ",
-            oldBackupFilePath
-          );
-          await IOUtils.remove(oldBackupFilePath, {
-            ignoreAbsent: true,
-            retryReadonly: true,
-          });
-          resolve();
-        }
-      }
+      });
     });
-    return backupPromise;
   }
 
   /**
