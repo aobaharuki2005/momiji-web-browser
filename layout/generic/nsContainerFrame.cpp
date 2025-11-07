@@ -981,11 +981,8 @@ void nsContainerFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
 
     // The containing block for the abs pos kids is formed by our padding edge.
     nsMargin usedBorder = GetUsedBorder();
-    nscoord containingBlockWidth =
-        std::max(0, aDesiredSize.Width() - usedBorder.LeftRight());
-    nscoord containingBlockHeight =
-        std::max(0, aDesiredSize.Height() - usedBorder.TopBottom());
-    nsRect containingBlock(0, 0, containingBlockWidth, containingBlockHeight);
+    nsRect containingBlock(nsPoint{}, aDesiredSize.PhysicalSize());
+    containingBlock.Deflate(usedBorder);
     // XXX: To optimize the performance, set the flags only when the CB width or
     // height actually changes.
     AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation,

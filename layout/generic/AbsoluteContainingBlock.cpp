@@ -1122,7 +1122,11 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     const auto cb = [&]() {
       if (isGrid) {
         // TODO(emilio): how does position-area interact with grid?
-        return ContainingBlockRect{nsGridContainerFrame::GridItemCB(aKidFrame)};
+        const auto border = aDelegatingFrame->GetUsedBorder();
+        const nsPoint borderShift{border.left, border.top};
+        // Shift in by border of the overall grid container.
+        return ContainingBlockRect{nsGridContainerFrame::GridItemCB(aKidFrame) +
+                                   borderShift};
       }
 
       auto positionArea = aKidFrame->StylePosition()->mPositionArea;
@@ -1153,8 +1157,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
           StylePositionArea resolvedPositionArea{};
           const auto scrolledAnchorCb = AnchorPositioningUtils::
               AdjustAbsoluteContainingBlockRectForPositionArea(
-                  scrolledAnchorRect, aOriginalContainingBlockRect,
-                  aKidFrame->GetWritingMode(),
+                  scrolledAnchorRect + aOriginalContainingBlockRect.TopLeft(),
+                  aOriginalContainingBlockRect, aKidFrame->GetWritingMode(),
                   aDelegatingFrame->GetWritingMode(), positionArea,
                   &resolvedPositionArea);
           return ContainingBlockRect{offset, resolvedPositionArea,
@@ -1360,16 +1364,14 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
             (offsets.BStart(outerWM) + kidMarginBox.BSize(outerWM));
       }
 
-      LogicalRect rect(outerWM,
-                       border.StartOffset(outerWM) +
-                           offsets.StartOffset(outerWM) +
-                           margin.StartOffset(outerWM),
-                       kidSize);
-      nsRect r = rect.GetPhysicalRect(
-          outerWM, cbSize.GetPhysicalSize(outerWM) +
-                       border.Size(outerWM).GetPhysicalSize(outerWM));
+      LogicalRect rect(
+          outerWM, offsets.StartOffset(outerWM) + margin.StartOffset(outerWM),
+          kidSize);
+      nsRect r = rect.GetPhysicalRect(outerWM, cbSize.GetPhysicalSize(outerWM));
 
-      // Offset the frame rect by the given origin of the absolute CB.
+      // So far, we've positioned against the padding edge of the containing
+      // block, which is necessary for inset computation. However, the position
+      // of a frame originates against the border box.
       r += cb.mRect.TopLeft();
       if (cb.mAnchorShiftInfo) {
         // Push the frame out to where the anchor is.
@@ -1429,23 +1431,15 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     }();
 
     const auto fits = aStatus.IsComplete() && [&]() {
-      // TODO(dshin, bug 1996832): This should probably be done at call sites of
-      // `AbsoluteContainingBlock::Reflow`.
-      const auto paddingEdgeShift = [&]() {
-        const auto border = aDelegatingFrame->GetUsedBorder();
-        return nsPoint{border.left, border.top};
-      }();
-      auto overflowCheckRect = cb.mRect + paddingEdgeShift;
+      auto overflowCheckRect = cb.mRect;
       if (aAnchorPosResolutionCache && cb.mAnchorShiftInfo) {
         overflowCheckRect =
             GrowOverflowCheckRect(overflowCheckRect, aKidFrame->GetNormalRect(),
                                   cb.mAnchorShiftInfo->mResolvedArea);
         aAnchorPosResolutionCache->mReferenceData->mContainingBlockRect =
             overflowCheckRect;
-        const auto originalContainingBlockRect =
-            aOriginalContainingBlockRect + paddingEdgeShift;
         return AnchorPositioningUtils::FitsInContainingBlock(
-            overflowCheckRect, originalContainingBlockRect,
+            overflowCheckRect, aOriginalContainingBlockRect,
             aKidFrame->GetRect());
       }
       return overflowCheckRect.Contains(aKidFrame->GetRect());

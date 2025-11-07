@@ -1720,11 +1720,12 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
           !(isRoot && NS_UNCONSTRAINEDSIZE == aReflowInput.ComputedHeight()) &&
           aMetrics.Height() != oldSize.height;
 
-      const LogicalSize containingBlockSize =
-          aMetrics.Size(parentWM) -
-          aReflowInput.ComputedLogicalBorder(parentWM).Size(parentWM);
-      nsRect containingBlock(nsPoint(0, 0),
-                             containingBlockSize.GetPhysicalSize(parentWM));
+      const LogicalRect containingBlock = [&]() {
+        LogicalRect rect{parentWM, LogicalPoint{parentWM},
+                         aMetrics.Size(parentWM)};
+        rect.Deflate(parentWM, aReflowInput.ComputedLogicalBorder(parentWM));
+        return rect;
+      }();
       AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation};
       if (cbWidthChanged) {
         flags += AbsPosReflowFlag::CBWidthChanged;
@@ -1736,9 +1737,10 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       // calculating hypothetical position of absolutely-positioned
       // frames.
       SetupLineCursorForQuery();
-      absoluteContainer->Reflow(this, aPresContext, aReflowInput, reflowStatus,
-                                containingBlock, flags,
-                                &aMetrics.mOverflowAreas);
+      absoluteContainer->Reflow(
+          this, aPresContext, aReflowInput, reflowStatus,
+          containingBlock.GetPhysicalRect(parentWM, aMetrics.PhysicalSize()),
+          flags, &aMetrics.mOverflowAreas);
     }
   }
 

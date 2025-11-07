@@ -75,10 +75,12 @@ class AbsoluteContainingBlock {
    * @param aOverflowAreas, if non-null, is unioned with (in the local
    * coordinate space) the overflow areas of the absolutely positioned
    * children.
-   *
    * @param aReflowStatus This function merges in the statuses of the absolutely
    * positioned children's reflows.
-   *
+   * @param aContainingBlock Rect representing the area where absolute
+   * positioned children can be positioned. Generally, this is the padding rect
+   * of `aDelegatingFrame` (Which would not have a valid mRect set during
+   * reflow), offset against the `aDelegatingFrame`'s border rect.
    * @param aFlags zero or more AbsPosReflowFlags
    */
   void Reflow(nsContainerFrame* aDelegatingFrame, nsPresContext* aPresContext,
