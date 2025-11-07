@@ -515,7 +515,7 @@
   <!-- Title for the startup crash page. %s is the name of the app (for example "Firefox") -->
   <string name="startup_crash_title">%s må starte på nytt</string>
   <!-- Body text for the startup crash page. %s is the name of the app (for example "Firefox") -->
-  <string name="startup_crash_body">Det oppsto et problem med å åpne %s.\n\nÅ sende en krasjrapport hjelper oss med å diagnostisere og fikse problemer med nettleseren. Rapporter kan inneholde personlige eller sensitive data.</string>
+  <string name="startup_crash_body">Det oppstod et problem med å åpne %s.\n\nÅ sende en krasjrapport hjelper oss med å diagnostisere og fikse problemer med nettleseren. Rapporter kan inneholde personlige eller sensitive data.</string>
   <!-- Button text to submit a startup crash report -->
   <string name="startup_crash_positive">Send krasjrapport</string>
   <!-- Button text to continue and not send a startup crash report -->
