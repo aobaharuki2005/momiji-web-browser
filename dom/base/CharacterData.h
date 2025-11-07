@@ -147,6 +147,16 @@ class CharacterData : public nsIContent {
   bool ThreadSafeTextIsOnlyWhitespace() const final;
 
   /**
+   * Check if all text before the given offset is whitespace.
+   */
+  bool TextStartsWithOnlyWhitespace(uint32_t aOffset) const;
+
+  /**
+   * Check if all text at or after the given offset is whitespace.
+   */
+  bool TextEndsWithOnlyWhitespace(uint32_t aOffset) const;
+
+  /**
    * Append the text content to aResult.
    */
   void AppendTextTo(nsAString& aResult) const { mBuffer.AppendTo(aResult); }
@@ -260,6 +270,9 @@ class CharacterData : public nsIContent {
 
  private:
   already_AddRefed<nsAtom> GetCurrentValueAtom();
+
+  bool CheckTextIsOnlyWhitespace(uint32_t aStartOffset,
+                                 uint32_t aEndOffset) const;
 };
 
 }  // namespace mozilla::dom
