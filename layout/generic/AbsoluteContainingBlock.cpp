@@ -816,7 +816,7 @@ void AbsoluteContainingBlock::ResolveSizeDependentOffsets(
 void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
     ReflowInput& aKidReflowInput, const LogicalSize& aCBSize,
     const LogicalSize& aKidSize, LogicalMargin& aMargin,
-    LogicalMargin& aOffsets) {
+    const LogicalMargin& aOffsets) {
   MOZ_ASSERT(aKidReflowInput.mFlags.mDeferAutoMarginComputation);
 
   WritingMode wm = aKidReflowInput.GetWritingMode();
@@ -849,7 +849,7 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
         styleMargin
             ->GetMargin(LogicalSide::IEnd, outerWM, anchorResolutionParams)
             ->IsAuto(),
-        aMargin, aOffsets);
+        aMargin);
   } else {
     ReflowInput::ComputeAbsPosBlockAutoMargin(
         availMarginSpace, outerWM,
@@ -859,7 +859,7 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
         styleMargin
             ->GetMargin(LogicalSide::BEnd, outerWM, anchorResolutionParams)
             ->IsAuto(),
-        aMargin, aOffsets);
+        aMargin);
   }
 
   aKidReflowInput.SetComputedLogicalMargin(outerWM, aMargin);

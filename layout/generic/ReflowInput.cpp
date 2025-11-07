@@ -1123,8 +1123,7 @@ void ReflowInput::ComputeAbsPosInlineAutoMargin(nscoord aAvailMarginSpace,
                                                 WritingMode aContainingBlockWM,
                                                 bool aIsMarginIStartAuto,
                                                 bool aIsMarginIEndAuto,
-                                                LogicalMargin& aMargin,
-                                                LogicalMargin& aOffsets) {
+                                                LogicalMargin& aMargin) {
   if (aIsMarginIStartAuto) {
     if (aIsMarginIEndAuto) {
       if (aAvailMarginSpace < 0) {
@@ -1158,8 +1157,7 @@ void ReflowInput::ComputeAbsPosBlockAutoMargin(nscoord aAvailMarginSpace,
                                                WritingMode aContainingBlockWM,
                                                bool aIsMarginBStartAuto,
                                                bool aIsMarginBEndAuto,
-                                               LogicalMargin& aMargin,
-                                               LogicalMargin& aOffsets) {
+                                               LogicalMargin& aMargin) {
   if (aIsMarginBStartAuto) {
     if (aIsMarginBEndAuto) {
       // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
@@ -1925,7 +1923,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
                                        anchorResolutionParams.mBaseParams)
                            ->IsAuto();
     ComputeAbsPosInlineAutoMargin(availMarginSpace, cbwm, marginIStartIsAuto,
-                                  marginIEndIsAuto, margin, offsets);
+                                  marginIEndIsAuto, margin);
   }
 
   bool bSizeIsAuto =
@@ -1976,7 +1974,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
                            ->IsAuto();
 
     ComputeAbsPosBlockAutoMargin(availMarginSpace, cbwm, marginBStartIsAuto,
-                                 marginBEndIsAuto, margin, offsets);
+                                 marginBEndIsAuto, margin);
   }
 
   SetComputedLogicalOffsets(cbwm, offsets);
