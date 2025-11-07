@@ -1195,7 +1195,10 @@ export class BackupService extends EventTarget {
     this.#postRecoveryResolver = resolve;
     this.#backupWriteAbortController = new AbortController();
     this.#regenerationDebouncer = new lazy.DeferredTask(async () => {
-      if (!this.#backupWriteAbortController.signal.aborted) {
+      if (
+        !this.#backupWriteAbortController.signal.aborted &&
+        this.archiveEnabledStatus.enabled
+      ) {
         await this.deleteLastBackup();
         if (lazy.scheduledBackupsPref) {
           await this.createBackupOnIdleDispatch({
@@ -3938,14 +3941,14 @@ export class BackupService extends EventTarget {
     // immediately reflect across any observers, instead of waiting on idle.
     this.#statusPrefObserver = () => {
       // Wrap in an arrow function so 'this' is preserved.
-      this.#notifyStatusObservers();
+      this.#handleStatusChange();
     };
 
     for (let pref of BackupService.STATUS_OBSERVER_PREFS) {
       Services.prefs.addObserver(pref, this.#statusPrefObserver);
     }
     lazy.NimbusFeatures.backupService.onUpdate(this.#statusPrefObserver);
-    this.#notifyStatusObservers();
+    this.#handleStatusChange();
   }
 
   /**
@@ -3967,10 +3970,30 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * Performs tasks required whenever archive or restore change their status
+   *
+   * 1. Notifies any observers that a change has taken place
+   * 2. If archive is disabled, clean up any backup files
+   */
+  #handleStatusChange() {
+    this.#notifyStatusObservers();
+
+    if (!this.archiveEnabledStatus.enabled) {
+      // We won't wait for this promise to accept/reject since rejections are
+      // ignored anyways
+      this.cleanupBackupFiles();
+    }
+  }
+
+  /**
    * Notify any listeners about the availability of the backup service, then
    * update relevant telemetry metrics.
    */
   #notifyStatusObservers() {
+    lazy.logConsole.log(
+      "Notifying observers about a BackupService state change"
+    );
+
     Services.obs.notifyObservers(null, "backup-service-status-updated");
 
     let status = this.archiveEnabledStatus;
@@ -3989,6 +4012,22 @@ export class BackupService extends EventTarget {
       Glean.browserBackup.restoreDisabledReason.set(status.internalReason);
     } else if (this.#wasRestorePreviouslyDisabled) {
       Glean.browserBackup.restoreDisabledReason.set("reenabled");
+    }
+  }
+
+  async cleanupBackupFiles() {
+    lazy.logConsole.debug("Cleaning up backup data");
+    try {
+      if (this.state.encryptionEnabled) {
+        await this.disableEncryption();
+      }
+      this.deleteLastBackup();
+    } catch (e) {
+      // Ignore any exceptions
+      lazy.logConsole.error(
+        "There was an error when cleaning up backup files: ",
+        e
+      );
     }
   }
 
@@ -4014,7 +4053,7 @@ export class BackupService extends EventTarget {
       this.#takenMeasurements = true;
     }
 
-    if (lazy.scheduledBackupsPref) {
+    if (lazy.scheduledBackupsPref && this.archiveEnabledStatus.enabled) {
       lazy.logConsole.debug("Scheduled backups enabled.");
       let now = Math.floor(Date.now() / 1000);
       let lastBackupDate = this.#_state.lastBackupDate;

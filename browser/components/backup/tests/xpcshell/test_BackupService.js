@@ -19,10 +19,16 @@ const { ERRORS } = ChromeUtils.importESModule(
   "chrome://browser/content/backup/backup-constants.mjs"
 );
 
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
+
 const LAST_BACKUP_TIMESTAMP_PREF_NAME =
   "browser.backup.scheduled.last-backup-timestamp";
 const LAST_BACKUP_FILE_NAME_PREF_NAME =
   "browser.backup.scheduled.last-backup-file";
+const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
+const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
 
 /** @type {nsIToolkitProfile} */
 let currentProfile;
@@ -877,9 +883,6 @@ async function testSelectableProfilesPreventBackup(
 
   const SELECTABLE_PROFILES_CREATED_PREF = "browser.profiles.created";
 
-  // Make sure backup and restore are enabled.
-  const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
-  const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
   Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true);
   Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, true);
 
@@ -1198,4 +1201,37 @@ add_task(async function test_getBackupFileInfo_error_handling() {
 
     sandbox.restore();
   }
+});
+
+/**
+ * Tests changing the status prefs to ensure that backup is cleaned up if being disabled.
+ */
+add_task(async function test_changing_prefs_cleanup() {
+  let sandbox = sinon.createSandbox();
+  let bs = BackupService.init();
+
+  let cleanupStub = sandbox.stub(bs, "cleanupBackupFiles");
+  let statusUpdatePromise = TestUtils.topicObserved(
+    "backup-service-status-updated"
+  );
+
+  Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, false);
+
+  await statusUpdatePromise;
+
+  Assert.equal(
+    cleanupStub.callCount,
+    1,
+    "Cleanup backup files was called on pref change"
+  );
+
+  Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true);
+
+  Assert.equal(
+    cleanupStub.callCount,
+    1,
+    "Cleanup backup files should not have been called when enabling backups"
+  );
+
+  Services.prefs.clearUserPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
 });

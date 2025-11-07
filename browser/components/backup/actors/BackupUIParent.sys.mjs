@@ -137,14 +137,7 @@ export class BackupUIParent extends JSWindowActorParent {
        */
       return { success: true };
     } else if (message.name == "DisableScheduledBackups") {
-      try {
-        if (this.#bs.state.encryptionEnabled) {
-          await this.#bs.disableEncryption();
-        }
-        await this.#bs.deleteLastBackup();
-      } catch (e) {
-        // no-op so that scheduled backups can still be turned off
-      }
+      await this.#bs.cleanupBackupFiles();
       this.#bs.setScheduledBackups(false);
     } else if (message.name == "ShowFilepicker") {
       let { win, filter, existingBackupPath } = message.data;

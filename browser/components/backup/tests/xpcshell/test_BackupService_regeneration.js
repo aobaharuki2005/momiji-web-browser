@@ -637,3 +637,23 @@ add_task(async function test_newtab_link_blocked() {
     NewTabUtils.activityStreamLinks.blockURL("https://example.com");
   }, "Saw regeneration on the blocking of a newtab link");
 });
+
+/**
+ * Tests that setting up a regeneration without archiveEnabledStatus being true
+ * leads to NO regeneration upon data mutation
+ */
+add_task(async function test_enabledStatus_no_regeneration() {
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "data:text/plain,Content",
+    title: "Regeneration Test Bookmark",
+  });
+
+  Services.prefs.setBoolPref("browser.backup.archive.enabled", false);
+
+  await expectNoRegeneration(async () => {
+    await PlacesUtils.bookmarks.remove(bookmark);
+  }, "Saw no regeneration on bookmark removed.");
+
+  Services.prefs.clearUserPref("browser.backup.archive.enabled");
+});
