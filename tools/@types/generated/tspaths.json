@@ -377,9 +377,6 @@
       "chrome://global/content/vendor/Redux.sys.mjs": [
         "toolkit/content/vendor/react/Redux.sys.mjs"
       ],
-      "chrome://global/content/vendor/lit.all.mjs": [
-        "toolkit/content/widgets/vendor/lit.all.mjs"
-      ],
       "chrome://mochikit/content/ShutdownLeaksCollector.sys.mjs": [
         "testing/mochitest/ShutdownLeaksCollector.sys.mjs"
       ],
@@ -7438,6 +7435,18 @@
       ],
       "resource://testing-common/services/sync/utils.sys.mjs": [
         "services/sync/modules-testing/utils.sys.mjs"
+      ],
+      "chrome://global/content/vendor/lit.all.mjs": [
+        "toolkit/content/widgets/vendor/lit.all.d.ts"
+      ],
+      "@lit/reactive-element": [
+        "node_modules/@lit/reactive-element/reactive-element"
+      ],
+      "lit/*": [
+        "node_modules/lit/*"
+      ],
+      "lit-html": [
+        "node_modules/lit-html/lit-html"
       ],
       "moz-src:///*": [
         "./*"
