@@ -199,6 +199,7 @@ class SelectableProfileServiceClass extends EventEmitter {
     "datareporting.policy.minimumPolicyVersion.channel-beta",
     "datareporting.usage.uploadEnabled",
     "termsofuse.acceptedDate",
+    "termsofuse.firstAcceptedDate",
     "termsofuse.acceptedVersion",
     "termsofuse.bypassNotification",
     "termsofuse.currentVersion",
