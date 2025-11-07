@@ -242,6 +242,10 @@ export const NimbusTelemetry = {
       case UnenrollReason.CHANGED_PREF:
         legacyEvent.changedPref = cause.changedPref.name;
         gleanEvent.changed_pref = cause.changedPref.name;
+
+        // We've hit the limit of extra keys that can go on the legacy
+        // unenrollment event, so this key does not get mirrored.
+        gleanEvent.about_config_change = cause.isAboutConfigChange;
         break;
 
       case UnenrollReason.PREF_FLIPS_CONFLICT:

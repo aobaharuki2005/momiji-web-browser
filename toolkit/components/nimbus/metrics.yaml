@@ -849,6 +849,11 @@ nimbus_events:
         description: >
           If reason == "l10n-missing-entry" or "l10n-missing-locale" this is the
           locale we failed to find in the set of available translations.
+      about_config_change:
+        description: >
+          For nimbus_experiment, if reason = "changed-pref", whether or not the
+          change was triggerd via about:config.
+        type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
@@ -856,6 +861,7 @@ nimbus_events:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1896718
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1907649
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1976329
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1993057
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1773563
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
@@ -863,6 +869,7 @@ nimbus_events:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1896718
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1907649
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1976329
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1993057
     data_sensitivity:
       - technical
     notification_emails:

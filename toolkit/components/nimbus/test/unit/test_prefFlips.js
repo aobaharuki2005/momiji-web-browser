@@ -553,6 +553,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_FOO,
+        about_config_change: "false",
       },
     },
     {
@@ -587,6 +588,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_FOO,
+        about_config_change: "false",
       },
     },
     {
@@ -606,6 +608,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_FOO,
+        about_config_change: "false",
       },
     },
     // Single enrollment case, multiple prefs being reset
@@ -630,6 +633,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_BAR,
+        about_config_change: "false",
       },
     },
     {
@@ -675,6 +679,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_BAR,
+        about_config_change: "false",
       },
     },
     {
@@ -701,6 +706,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_BAR,
+        about_config_change: "false",
       },
     },
     // Multiple enrollment cases
@@ -734,6 +740,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_BAR,
+        about_config_change: "false",
       },
     },
     {
@@ -767,6 +774,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_BAR,
+        about_config_change: "false",
       },
     },
     // - test that we unenroll from all conflicting experiments
@@ -795,6 +803,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_FOO,
+        about_config_change: "false",
       },
     },
     {
@@ -822,6 +831,7 @@ add_task(async function test_prefFlips_unenrollment() {
       unenrollReason: UnenrollReason.CHANGED_PREF,
       unenrollTelemetry: {
         changed_pref: PREF_FOO,
+        about_config_change: "false",
       },
     },
     // - test we unenroll when the experiments conflict with eachother.
