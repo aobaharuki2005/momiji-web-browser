@@ -241,29 +241,6 @@ void nsHtml5Tokenizer::emitOrAppendCharRefBuf(int32_t returnState) {
   }
 }
 
-void nsHtml5Tokenizer::appendStrBuf(char16_t c) {
-  MOZ_ASSERT(strBufLen < strBuf.length, "Previous buffer length insufficient.");
-  if (MOZ_UNLIKELY(strBufLen == strBuf.length)) {
-    if (MOZ_UNLIKELY(!EnsureBufferSpace(1))) {
-      MOZ_CRASH("Unable to recover from buffer reallocation failure");
-    }
-  }
-  strBuf[strBufLen++] = c;
-}
-
-void nsHtml5Tokenizer::appendStrBuf(char16_t* buffer, int32_t offset,
-                                    int32_t length) {
-  int32_t newLen = nsHtml5Portability::checkedAdd(strBufLen, length);
-  MOZ_ASSERT(newLen <= strBuf.length, "Previous buffer length insufficient.");
-  if (MOZ_UNLIKELY(strBuf.length < newLen)) {
-    if (MOZ_UNLIKELY(!EnsureBufferSpace(length))) {
-      MOZ_CRASH("Unable to recover from buffer reallocation failure");
-    }
-  }
-  nsHtml5ArrayCopy::arraycopy(buffer, offset, strBuf, strBufLen, length);
-  strBufLen = newLen;
-}
-
 void nsHtml5Tokenizer::emitComment(int32_t provisionalHyphens, int32_t pos) {
   RememberGt(pos);
   tokenHandler->comment(strBuf, 0, strBufLen - provisionalHyphens);

@@ -67,6 +67,9 @@ inline nsHtml5HtmlAttributes* GetAttributes() { return attributes; }
  */
 bool EnsureBufferSpace(int32_t aLength);
 
+MOZ_COLD MOZ_NEVER_INLINE void EnsureBufferSpaceShouldNeverHappen(
+    int32_t aLength);
+
 bool TemplatePushedOrHeadPopped();
 
 void RememberGt(int32_t aPos);
