@@ -6080,14 +6080,17 @@
 # whether fission is enabled by default.
 - name: fission.autostart
   type: bool
-  value: @IS_NOT_MOBILE@
+#if defined(MOZ_WIDGET_ANDROID) && !defined(IS_EARLY_BETA_OR_EARLIER)
+  value: false
+#else
+  value: true
   mirror: never
 
 # Disable storing the session history in the parent process, and accessing it
 # over IPC from the child processes.
 - name: fission.disableSessionHistoryInParent
   type: bool
-#if defined(MOZ_WIDGET_ANDROID) && !defined(NIGHTLY_BUILD)
+#if defined(MOZ_WIDGET_ANDROID) && !defined(IS_EARLY_BETA_OR_EARLIER)
   value: true
 #else
   value: false

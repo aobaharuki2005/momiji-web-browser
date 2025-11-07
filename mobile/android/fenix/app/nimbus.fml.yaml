@@ -501,30 +501,22 @@ features:
           set to true.
         type: Boolean
         default: true
-    defaults:
-      - channel: nightly
-        value:
-          disabled: false
-      - channel: developer
-        value:
-          disabled: false
 
   fission:
     description: The feature that controls whether fission is enabled or not in Gecko.
     variables:
+      shouldUseNimbus:
+        description: >
+            If true, the values for both SHIP and Fission set in this file apply.
+            Otherwise, the values from modules/libpref/init/StaticPrefList.yaml apply.
+        type: Boolean
+        default: false
       enabled:
         description: >
           Whether or not to enable fission. Fission is enabled when set to true. Fission is disabled when
           set to false.
         type: Boolean
         default: false
-    defaults:
-      - channel: nightly
-        value:
-          enabled: true
-      - channel: developer
-        value:
-          enabled: true
 
   suggest-shipped-domains:
     description: Feature that suggests domains from the shipped domain list.
