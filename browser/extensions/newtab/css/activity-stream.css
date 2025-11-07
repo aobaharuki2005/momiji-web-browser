@@ -1995,9 +1995,6 @@ main section {
 }
 
 .personalize-button {
-  --button-collapsed-width: calc(var(--size-item-small) + var(--size-item-medium));
-  --button-full-width: calc(2 * var(--button-collapsed-width));
-  --label-shift-by-value: calc(-1 * var(--space-small));
   border: 0;
   border-radius: var(--border-radius-small);
   background-color: var(--button-background-color, rgba(21, 20, 26, 0.07));
@@ -2009,9 +2006,7 @@ main section {
   display: flex;
   align-items: center;
   overflow: hidden;
-  width: var(--button-collapsed-width);
-  min-width: var(--button-collapsed-width);
-  transition: all 0.5s ease-in-out;
+  transition: background-color 0.3s ease;
 }
 .lightWallpaper .personalize-button, .darkWallpaper .personalize-button {
   background-color: var(--newtab-weather-background-color);
@@ -2054,24 +2049,19 @@ main section {
   width: 100%;
 }
 .personalize-button > label {
-  margin-inline-start: 0;
+  margin-inline-end: 0;
   opacity: 0;
-  transform: translateX(var(--label-shift-by-value));
   white-space: nowrap;
-  transition: opacity 0.5s ease-in-out, margin 0.5s ease-in-out, transform 0.5s ease-in-out;
+  overflow: hidden;
+  max-width: 0;
+  transition: opacity 0.3s ease, margin 0.3s ease, max-width 0.3s ease;
 }
 
-.personalize-button:hover,
-.personalize-button:focus {
-  width: fit-content;
-  min-width: var(--button-full-width);
-}
 .personalize-button:hover > label,
-.personalize-button:focus > label {
+.personalize-button:focus-visible > label {
   opacity: 1;
-  transform: translateX(0);
-  margin-inline-start: var(--space-small);
-  transition-duration: 0.2s;
+  margin-inline-end: var(--space-medium);
+  max-width: 30ch;
 }
 
 .customize-menu {
