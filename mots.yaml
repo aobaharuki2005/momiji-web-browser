@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-10-29T10:01:22.323522+00:00'
+updated_at: '2025-11-06T19:13:23.782316+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -781,6 +781,10 @@ people:
     bmo_id: 547538
     name: Miko Mynttinen
     nick: mikokm
+  - &mixedpuppy
+    bmo_id: 443354
+    name: Shane Caraveo
+    nick: mixedpuppy
   - &mkaply
     bmo_id: 7313
     name: Mike Kaply
@@ -957,10 +961,6 @@ people:
     bmo_id: 704132
     name: Alexandra Borovova
     nick: Sasha
-  - &scaraveo
-    bmo_id: 443354
-    name: ''
-    nick: scaraveo
   - &sclements
     bmo_id: 603840
     name: Sarah Clements
@@ -3431,13 +3431,12 @@ modules:
             - Kris Maglione
           review_group: extension-reviewers
         owners:
-          - *scaraveo
           - *rpl
         peers:
-          - *rpl
           - *zombie
           - *robwu
           - *willdurand
+          - *mixedpuppy
         machine_name: addons_manager
 
       - name: Add-ons Manager UI
@@ -3448,15 +3447,15 @@ modules:
           owners_emeritus:
             - Robert Strong
             - Andrew Swan
+            - *mstriemer
           review_group: extension-reviewers
         owners:
-          - *scaraveo
-          - *mstriemer
-        peers:
           - *rpl
+        peers:
           - *zombie
           - *robwu
           - *willdurand
+          - *mixedpuppy
         machine_name: addons_manager_ui
 
       - machine_name: address_bar
@@ -4037,6 +4036,7 @@ modules:
           components:
             - 'Firefox for Android :: WebExtensions'
             - 'WebExtensions :: Android'
+          review_group: android-addons-reviewers
         owners:
           - *willdurand
         peers:
@@ -4555,12 +4555,12 @@ modules:
             - Kris Maglione
           review_group: extension-reviewers
         owners:
-          - *scaraveo
           - *zombie
+          - *robwu
         peers:
           - *rpl
-          - *robwu
           - *willdurand
+          - *mixedpuppy
         machine_name: webextensions
     machine_name: toolkit
   - machine_name: translation
@@ -4633,5 +4633,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: a0581a86ca96a865882c4ec12af547e71a1c0336
-  export: a0ea5a6f2573d15c1f39b19ec0529a734dded5b4
+  config: e27b32239a127b334a155bb8abffb2b429236d5b
+  export: 1d6764c9e1e0c2e0500f5b50903f9c68a098a0ad
