@@ -129,16 +129,8 @@ async function expectRegeneration(taskFn, msg) {
 
   let bs = new BackupService();
 
-  // Now we set up some stubs on the BackupService to detect calls to
-  // deleteLastBackup and createbackupOnIdleDispatch, which are both called
-  // on regeneration.
-  let deleteDeferred = Promise.withResolvers();
-  sandbox.stub(bs, "deleteLastBackup").callsFake(() => {
-    Assert.ok(true, "Saw deleteLastBackup call");
-    deleteDeferred.resolve();
-    return Promise.resolve();
-  });
-
+  // Now we set up a stub on the BackupService to detect calls to
+  // createbackupOnIdleDispatch
   let createBackupDeferred = Promise.withResolvers();
   sandbox.stub(bs, "createBackupOnIdleDispatch").callsFake(options => {
     Assert.ok(true, "Saw createBackupOnIdleDispatch call");
@@ -162,11 +154,6 @@ async function expectRegeneration(taskFn, msg) {
 
   await taskFn();
 
-  let regenerationPromises = [
-    deleteDeferred.promise,
-    createBackupDeferred.promise,
-  ];
-
   // We'll wait for 1 second before considering the regeneration a bust.
   let timeoutPromise = new Promise((resolve, reject) =>
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
@@ -176,7 +163,7 @@ async function expectRegeneration(taskFn, msg) {
   );
 
   try {
-    await Promise.race([Promise.all(regenerationPromises), timeoutPromise]);
+    await Promise.race([createBackupDeferred.promise, timeoutPromise]);
     Assert.ok(true, msg);
   } catch (e) {
     Assert.ok(false, "Timed out waiting for regeneration.");
