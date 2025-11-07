@@ -40,19 +40,17 @@
   }
 
   &:hover {
-    background-color: var(--newtab-element-hover-color);
-  }
-
-  &:focus {
-    background-color: var(--newtab-element-active-color);
+    background-color: var(--newtab-button-static-hover-background);
   }
 
   &:active {
-    background-color: var(--newtab-element-active-color);
+    background-color: var(--newtab-button-static-active-background);
   }
 
   &:focus-visible {
     @include ds-focus;
+
+    background-color: var(--newtab-button-static-active-background);
   }
 
   &.personalize-animate-exit-done {

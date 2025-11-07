@@ -2022,17 +2022,15 @@ main section {
   }
 }
 .personalize-button:hover {
-  background-color: var(--newtab-element-hover-color);
-}
-.personalize-button:focus {
-  background-color: var(--newtab-element-active-color);
+  background-color: var(--newtab-button-static-hover-background);
 }
 .personalize-button:active {
-  background-color: var(--newtab-element-active-color);
+  background-color: var(--newtab-button-static-active-background);
 }
 .personalize-button:focus-visible {
   border: 0;
   outline: var(--focus-outline);
+  background-color: var(--newtab-button-static-active-background);
 }
 .personalize-button.personalize-animate-exit-done {
   visibility: hidden;
