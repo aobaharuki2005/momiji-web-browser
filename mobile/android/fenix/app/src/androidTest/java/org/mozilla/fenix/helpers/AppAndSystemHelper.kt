@@ -160,7 +160,7 @@ object AppAndSystemHelper {
                         "clearDownloadsFolder: Before cleanup: Downloads storage contains: ${files.size} file(s).",
                     )
                     // Delete all files in the folder
-                    for (file in files!!) {
+                    for (file in files) {
                         Log.i(
                             TAG,
                             "clearDownloadsFolder: Trying to delete $file from \"DOWNLOADS\" folder.",

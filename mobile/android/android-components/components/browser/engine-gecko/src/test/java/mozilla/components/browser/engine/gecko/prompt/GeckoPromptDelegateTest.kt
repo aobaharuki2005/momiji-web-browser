@@ -1515,11 +1515,11 @@ class GeckoPromptDelegateTest {
         geckoPrompt = geckoPopupPrompt()
         promptDelegate.onPopupPrompt(mock(), geckoPrompt)
 
-        request!!.onDeny()
+        request.onDeny()
         verify(geckoPrompt, times(1)).confirm(eq(AllowOrDeny.DENY))
         whenever(geckoPrompt.isComplete).thenReturn(true)
 
-        request!!.onDeny()
+        request.onDeny()
         verify(geckoPrompt, times(1)).confirm(eq(AllowOrDeny.DENY))
     }
 
@@ -1555,11 +1555,11 @@ class GeckoPromptDelegateTest {
         geckoPrompt = geckoRedirectPrompt()
         promptDelegate.onRedirectPrompt(mock(), geckoPrompt)
 
-        request!!.onDeny()
+        request.onDeny()
         verify(geckoPrompt, times(1)).confirm(eq(AllowOrDeny.DENY))
         whenever(geckoPrompt.isComplete).thenReturn(true)
 
-        request!!.onDeny()
+        request.onDeny()
         verify(geckoPrompt, times(1)).confirm(eq(AllowOrDeny.DENY))
     }
 
@@ -1581,21 +1581,21 @@ class GeckoPromptDelegateTest {
         promptDelegate.onBeforeUnloadPrompt(mock(), geckoPrompt)
         assertEquals(request!!.title, "")
 
-        request!!.onLeave()
+        request.onLeave()
         verify(geckoPrompt, times(1)).confirm(eq(AllowOrDeny.ALLOW))
         whenever(geckoPrompt.isComplete).thenReturn(true)
 
-        request!!.onLeave()
+        request.onLeave()
         verify(geckoPrompt, times(1)).confirm(eq(AllowOrDeny.ALLOW))
 
         geckoPrompt = geckoBeforeUnloadPrompt()
         promptDelegate.onBeforeUnloadPrompt(mock(), geckoPrompt)
 
-        request!!.onStay()
+        request.onStay()
         verify(geckoPrompt, times(1)).confirm(eq(AllowOrDeny.DENY))
         whenever(geckoPrompt.isComplete).thenReturn(true)
 
-        request!!.onStay()
+        request.onStay()
         verify(geckoPrompt, times(1)).confirm(eq(AllowOrDeny.DENY))
     }
 
@@ -1671,13 +1671,13 @@ class GeckoPromptDelegateTest {
             onFailureWasCalled = true
         }
 
-        request!!.onFailure()
+        request.onFailure()
         shadowOf(getMainLooper()).idle()
         assertTrue(onFailureWasCalled)
         whenever(geckoPrompt.isComplete).thenReturn(true)
 
         onFailureWasCalled = false
-        request!!.onFailure()
+        request.onFailure()
         shadowOf(getMainLooper()).idle()
 
         assertFalse(onFailureWasCalled)
@@ -1688,7 +1688,7 @@ class GeckoPromptDelegateTest {
             onDismissWasCalled = true
         }
 
-        request!!.onDismiss()
+        request.onDismiss()
         shadowOf(getMainLooper()).idle()
         assertTrue(onDismissWasCalled)
     }

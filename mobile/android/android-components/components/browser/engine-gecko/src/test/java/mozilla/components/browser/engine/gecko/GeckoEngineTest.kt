@@ -2774,7 +2774,7 @@ class GeckoEngineTest {
         assertEquals("www.tracker.com", trackerLog.url)
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
 
-        var trackerLog2 = trackersLog!![1]
+        var trackerLog2 = trackersLog[1]
         assertFalse(trackerLog2.cookiesHasBeenBlocked)
         assertEquals("www.tracker2.com", trackerLog2.url)
         assertTrue(trackerLog2.loadedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
@@ -2787,12 +2787,12 @@ class GeckoEngineTest {
         engine.getTrackersLog(mockSession, onSuccess = { trackersLog = it })
         logEntriesResult.complete(createSocialTrackersLogEntryList())
 
-        trackerLog = trackersLog!!.first()
+        trackerLog = trackersLog.first()
         assertTrue(trackerLog.cookiesHasBeenBlocked)
         assertEquals("www.tracker.com", trackerLog.url)
         assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
 
-        trackerLog2 = trackersLog!![1]
+        trackerLog2 = trackersLog[1]
         assertFalse(trackerLog2.cookiesHasBeenBlocked)
         assertEquals("www.tracker2.com", trackerLog2.url)
         assertTrue(trackerLog2.loadedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
