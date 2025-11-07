@@ -565,7 +565,6 @@ export class PrefFlipsFeature {
     this.#prefs.delete(pref);
     Services.prefs.removeObserver(pref, entry.observer);
 
-    // Compute how the pref changed so we can report it in telemetry.
     const cause = lazy.UnenrollmentCause.ChangedPref({
       name: pref,
       branch: PrefFlipsFeature.determinePrefChangeBranch(

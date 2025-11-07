@@ -79,10 +79,20 @@ export const UnenrollmentCause = {
     return { reason };
   },
 
-  ChangedPref(pref) {
+  /**
+   * An unenrollment caused by a pref change.
+   *
+   * @param {object} changedPref
+   * @param {string} changedPref.name The pref that changed.
+   * @param {string | undefined} changedPref.branch The branch on which the pref
+   * was changed.
+   *
+   * @returns {object} The unenrollment cause.
+   */
+  ChangedPref(changedPref) {
     return {
       reason: lazy.NimbusTelemetry.UnenrollReason.CHANGED_PREF,
-      changedPref: pref,
+      changedPref,
     };
   },
 

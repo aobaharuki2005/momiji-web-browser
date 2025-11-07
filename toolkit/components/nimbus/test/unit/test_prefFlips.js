@@ -8,6 +8,10 @@ const { JsonSchema } = ChromeUtils.importESModule(
   "resource://gre/modules/JsonSchema.sys.mjs"
 );
 
+const {
+  NimbusTelemetry: { UnenrollReason },
+} = ChromeUtils.importESModule("resource://nimbus/lib/Telemetry.sys.mjs");
+
 const { ProfilesDatastoreService } = ChromeUtils.importESModule(
   "moz-src:///toolkit/profile/ProfilesDatastoreService.sys.mjs"
 );
@@ -126,6 +130,19 @@ function checkExpectedPrefBranches(prefs) {
     }
   }
 }
+
+/**
+ * Generate a comparison function for `Array.prototype.sort`.
+ *
+ * @param {string} property
+ *
+ * @returns {(a: object, b: object) => number} The comparison function.
+ */
+function compareBy(property) {
+  return (a, b) => a[property].localeCompare(b[property]);
+}
+
+const compareByExperiment = compareBy("experiment");
 
 add_setup(function setup() {
   Services.fog.initializeFOG();
@@ -533,6 +550,10 @@ add_task(async function test_prefFlips_unenrollment() {
       setPrefsAfter: { [PREF_FOO]: { userBranchValue: USER_VALUE } },
       expectedUnenrollments: [SLUG_1],
       expectedPrefs: { [PREF_FOO]: USER_VALUE },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_FOO,
+      },
     },
     {
       name: "set pref on the user branch with a prefFlips experiment and change that pref on the default branch",
@@ -563,6 +584,10 @@ add_task(async function test_prefFlips_unenrollment() {
       setPrefsAfter: { [PREF_FOO]: { userBranchValue: USER_VALUE } },
       expectedUnenrollments: [SLUG_1],
       expectedPrefs: { [PREF_FOO]: USER_VALUE },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_FOO,
+      },
     },
     {
       name: "set pref on the default branch with a prefFlips experiment and change that pref on the default branch",
@@ -578,6 +603,10 @@ add_task(async function test_prefFlips_unenrollment() {
       setPrefsAfter: { [PREF_FOO]: { defaultBranchValue: DEFAULT_VALUE } },
       expectedUnenrollments: [SLUG_1],
       expectedPrefs: { [PREF_FOO]: DEFAULT_VALUE },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_FOO,
+      },
     },
     // Single enrollment case, multiple prefs being reset
     {
@@ -598,6 +627,10 @@ add_task(async function test_prefFlips_unenrollment() {
       setPrefsAfter: { [PREF_BAR]: { userBranchValue: USER_VALUE } },
       expectedUnenrollments: [SLUG_1],
       expectedPrefs: { [PREF_FOO]: SET_BEFORE_VALUE, [PREF_BAR]: USER_VALUE },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_BAR,
+      },
     },
     {
       name: "set prefs on the user branch with a prefFlips experiment and change one pref on the default branch",
@@ -639,6 +672,10 @@ add_task(async function test_prefFlips_unenrollment() {
       setPrefsAfter: { [PREF_BAR]: { userBranchValue: USER_VALUE } },
       expectedUnenrollments: [SLUG_1],
       expectedPrefs: { [PREF_FOO]: SET_BEFORE_VALUE, [PREF_BAR]: USER_VALUE },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_BAR,
+      },
     },
     {
       name: "set prefs on the default branch with a prefFlips experiment and change one pref on the default branch",
@@ -660,6 +697,10 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
         [PREF_BAR]: DEFAULT_VALUE,
+      },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_BAR,
       },
     },
     // Multiple enrollment cases
@@ -690,6 +731,10 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_1],
       expectedUnenrollments: [SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE, [PREF_BAR]: USER_VALUE },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_BAR,
+      },
     },
     {
       name: "set pref on the user branch two prefFlips experiments and then change a pref controlled by only one experiment on the default branch",
@@ -719,6 +764,10 @@ add_task(async function test_prefFlips_unenrollment() {
         [PREF_FOO]: EXPERIMENT_VALUE,
         [PREF_BAR]: EXPERIMENT_VALUE,
       },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_BAR,
+      },
     },
     // - test that we unenroll from all conflicting experiments
     {
@@ -743,6 +792,10 @@ add_task(async function test_prefFlips_unenrollment() {
       setPrefsAfter: { [PREF_FOO]: { userBranchValue: USER_VALUE } },
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: USER_VALUE },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_FOO,
+      },
     },
     {
       name: "set pref on the default branch with two prefFlips experiments and then change that pref on the default branch",
@@ -766,6 +819,10 @@ add_task(async function test_prefFlips_unenrollment() {
       setPrefsAfter: { [PREF_FOO]: { defaultBranchValue: DEFAULT_VALUE } },
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: DEFAULT_VALUE },
+      unenrollReason: UnenrollReason.CHANGED_PREF,
+      unenrollTelemetry: {
+        changed_pref: PREF_FOO,
+      },
     },
     // - test we unenroll when the experiments conflict with eachother.
     {
@@ -789,6 +846,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_1],
       expectedUnenrollments: [SLUG_2],
       expectedPrefs: { [PREF_FOO]: SLUG_1 },
+      unenrollReason: UnenrollReason.PREF_FLIPS_FAILED,
+      unenrollTelemetry: { pref_name: PREF_FOO, pref_type: "string" },
     },
     {
       name: "set pref on the default branch with two experiments with conflicting values",
@@ -811,6 +870,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_1],
       expectedUnenrollments: [SLUG_2],
       expectedPrefs: { [PREF_FOO]: SLUG_1 },
+      unenrollReason: UnenrollReason.PREF_FLIPS_FAILED,
+      unenrollTelemetry: { pref_name: PREF_FOO, pref_type: "string" },
     },
     {
       name: "set pref on the user branch with an experiment and set it on the default branch with another",
@@ -833,6 +894,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_1],
       expectedUnenrollments: [SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_FAILED,
+      unenrollTelemetry: { pref_name: PREF_FOO, pref_type: "string" },
     },
     {
       name: "set pref on the default branch with an experiment and set it on the user branch with another",
@@ -855,6 +918,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_1],
       expectedUnenrollments: [SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_FAILED,
+      unenrollTelemetry: { pref_name: PREF_FOO, pref_type: "string" },
     },
 
     // Multiple enrollment cases (prefFlips -> setPref)
@@ -892,6 +957,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_3],
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_3 },
     },
     {
       name: "enroll in prefFlips experiments on the default branch and then a setPref experiment on the user branch",
@@ -921,6 +988,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_3],
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_3 },
     },
     {
       name: "enroll in prefFlips experiments on the user branch and then a setPref experiment on the default branch",
@@ -950,6 +1019,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_3],
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_3 },
     },
     {
       name: "enroll in prefFlips experiments on the default branch and then a setPref experiment on the default branch",
@@ -979,6 +1050,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_3],
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_3 },
     },
     {
       name: "enroll in prefFlip experiment on the user branch and then a setPref experiment on the user branch and unenroll to check if original values are restored (no original value)",
@@ -1006,6 +1079,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: null,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in prefFlip experiment on the user branch and then a setPref experiment on the default branch and unenroll to check if original values are restored (no original value)",
@@ -1033,6 +1108,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SLUG_2, // we can't clear the default branch
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in prefFlip experiment on the default branch and then a setPref experiment on the user branch and unenroll to check if original values are restored (no original value)",
@@ -1060,6 +1137,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: null,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in prefFlip experiment on the default branch and then a setPref experiment on the default branch and unenroll to check if original values are restored (no original value)",
@@ -1087,6 +1166,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SLUG_2,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in prefFlip experiment on the user branch and then a setPref experiment on the user branch and unenroll to check if original values are restored",
@@ -1115,6 +1196,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in prefFlip experiment on the user branch and then a setPref experiment on the default branch and unenroll to check if original values are restored",
@@ -1143,6 +1226,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in prefFlip experiment on the default branch and then a setPref experiment on the user branch and unenroll to check if original values are restored",
@@ -1171,6 +1256,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in prefFlip experiment on the default branch and then a setPref experiment on the default branch and unenroll to check if original values are restored",
@@ -1199,6 +1286,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     // * setPref experiment, rollout -> prefFlips experiment
     {
@@ -1230,6 +1319,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_3],
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_3 },
     },
     {
       name: "enroll in a setPref experiment and rollout on the user branch then a prefFlips experiment on the default branch",
@@ -1260,6 +1351,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_3],
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_3 },
     },
     {
       name: "enroll in a setPref experiment and rollout on the default branch then a prefFlips experiment on the user branch",
@@ -1290,6 +1383,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_3],
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_3 },
     },
     {
       name: "enroll in a setPref experiment and rollout on the default branch then a prefFlips experiment on the default branch",
@@ -1320,6 +1415,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedEnrollments: [SLUG_3],
       expectedUnenrollments: [SLUG_1, SLUG_2],
       expectedPrefs: { [PREF_FOO]: EXPERIMENT_VALUE },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_3 },
     },
     {
       name: "enroll in a setPref experiment on the user branch and a prefFlips experiment on the user branch and unenroll to check if original values are restored (no original value)",
@@ -1347,6 +1444,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: null, // we can't clear the default branch
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in a setPref experiment on the user branch and a prefFlips experiment on the default branch and unenroll to check if original values are restored (no original value)",
@@ -1374,6 +1473,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SLUG_2, // Cannot clear the default branch
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in a setPref experiment on the default branch and a prefFlips experiment on the user branch and unenroll to check if original values are restored (no original value)",
@@ -1401,6 +1502,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SLUG_1, // cannot clear the default branch
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in a setPref experiment on the default branch and a prefFlips experiment on the default branch and unenroll to check if original values are restored (no original value)",
@@ -1428,6 +1531,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SLUG_2, // cannot clear the default branch
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in a setPref experiment on the user branch and a prefFlips experiment on the user branch and unenroll to check if original values are restored",
@@ -1458,6 +1563,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in a setPref experiment on the user branch and a prefFlips experiment on the default branch and unenroll to check if original values are restored",
@@ -1488,6 +1595,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in a setPref experiment on the default branch and a prefFlips experiment on the user branch and unenroll to check if original values are restored",
@@ -1518,6 +1627,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
     {
       name: "enroll in a setPref experiment on the default branch and a prefFlips experiment on the default branch and unenroll to check if original values are restored",
@@ -1548,6 +1659,8 @@ add_task(async function test_prefFlips_unenrollment() {
       expectedPrefs: {
         [PREF_FOO]: SET_BEFORE_VALUE,
       },
+      unenrollReason: UnenrollReason.PREF_FLIPS_CONFLICT,
+      unenrollTelemetry: { conflicting_slug: SLUG_2 },
     },
   ];
 
@@ -1574,6 +1687,10 @@ add_task(async function test_prefFlips_unenrollment() {
       // Prefs to check after enrollment. They will be checked on the user
       // branch.
       expectedPrefs,
+      // The reason for unenrollment.
+      unenrollReason,
+      // Extra keys in the unenrollment telemetry.
+      unenrollTelemetry = {},
     } = testCase;
 
     info("Setting prefs before enrollment...");
@@ -1616,7 +1733,29 @@ add_task(async function test_prefFlips_unenrollment() {
 
       Assert.ok(!!enrollment, `An enrollment for ${slug} should exist`);
       Assert.ok(!enrollment.active, "It should no longer be active");
+      Assert.equal(
+        enrollment.unenrollReason,
+        unenrollReason,
+        "It should have unenrolled for the correct reason"
+      );
     }
+
+    Assert.deepEqual(
+      (Glean.nimbusEvents.unenrollment.testGetValue("events") ?? [])
+        .map(event => event.extra)
+        .sort(compareByExperiment),
+
+      expectedUnenrollments
+        .map(slug => ({
+          experiment: slug,
+          reason: unenrollReason,
+          branch: "control",
+          ...unenrollTelemetry,
+        }))
+        .sort(compareByExperiment),
+
+      "Saw expected unenrollment telemetry"
+    );
 
     let expectedCurrentEnrollments = new Set(expectedEnrollments).difference(
       new Set(expectedUnenrollments)
