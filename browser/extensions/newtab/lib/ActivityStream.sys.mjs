@@ -1341,15 +1341,6 @@ export const PREFS_CONFIG = new Map([
       },
     },
   ],
-  // Sponsored checkboxes placement experiment
-  [
-    "system.showSponsoredCheckboxes",
-    {
-      title:
-        "Switches on grouping of sponsored checkboxes on 'about:settings#home' page",
-      value: true,
-    },
-  ],
   [
     "showSponsoredCheckboxes",
     {

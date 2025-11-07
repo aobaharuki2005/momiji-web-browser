@@ -66,18 +66,6 @@ const PREFS_FOR_SETTINGS = () => [
       feed: "feeds.topsites",
       titleString: "home-prefs-shortcuts-header",
       descString: "home-prefs-shortcuts-description",
-      nestedPrefs: [
-        {
-          name: "showSponsoredTopSites",
-          titleString: "home-prefs-shortcuts-by-option-sponsored",
-          eventSource: "SPONSORED_TOP_SITES",
-          // Hide this nested pref if "Support Firefox" checkbox is enabled
-          shouldHidePref: Services.prefs.getBoolPref(
-            "browser.newtabpage.activity-stream.system.showSponsoredCheckboxes",
-            false
-          ),
-        },
-      ],
     },
     maxRows: 4,
     rowsPref: "topSitesRows",
@@ -93,26 +81,6 @@ const PREFS_FOR_SETTINGS = () => [
       descString: {
         id: "home-prefs-recommended-by-description-generic",
       },
-      nestedPrefs: [
-        ...(Services.prefs.getBoolPref(
-          "browser.newtabpage.activity-stream.system.showSponsored",
-          true
-        ) && // Hide this nested pref if "Support Firefox" checkbox is enabled
-        !Services.prefs.getBoolPref(
-          "browser.newtabpage.activity-stream.system.showSponsoredCheckboxes",
-          false
-        )
-          ? [
-              {
-                name: "showSponsored",
-                titleString:
-                  "home-prefs-recommended-by-option-sponsored-stories",
-                icon: "icon-info",
-                eventSource: "POCKET_SPOCS",
-              },
-            ]
-          : []),
-      ],
     },
     shouldHidePref: !Services.prefs.getBoolPref(
       "browser.newtabpage.activity-stream.feeds.system.topstories",
@@ -146,10 +114,6 @@ const PREFS_FOR_SETTINGS = () => [
         },
       ],
     },
-    shouldHidePref: !Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.system.showSponsoredCheckboxes",
-      false
-    ),
   },
 ];
 
