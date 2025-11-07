@@ -16,6 +16,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/Saturate.h"
 #include "mozilla/Types.h"
+#include "mozilla/interceptor/Trampoline.h"
 
 namespace mozilla {
 namespace interceptor {
