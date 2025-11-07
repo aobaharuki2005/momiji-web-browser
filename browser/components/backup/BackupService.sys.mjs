@@ -4316,9 +4316,19 @@ export class BackupService extends EventTarget {
     }
 
     try {
-      let files = await IOUtils.getChildren(this.#_state.backupDirPath, {
-        ignoreAbsent: true,
-      });
+      // During the first startup, the browser's backup location is often left
+      // unconfigured; therefore, it defaults to predefined locations to look
+      // for existing backup files.
+      let defaultPath = PathUtils.join(
+        BackupService.DEFAULT_PARENT_DIR_PATH,
+        BackupService.BACKUP_DIR_NAME
+      );
+      let files = await IOUtils.getChildren(
+        this.#_state.backupDirPath ? this.#_state.backupDirPath : defaultPath,
+        {
+          ignoreAbsent: true,
+        }
+      );
       // filtering is an O(N) operation, we can return early if there's too many files
       // in this folder to filter to avoid a performance bottleneck
       if (speedUpHeuristic && files && files.length > 1000) {
