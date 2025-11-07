@@ -1598,8 +1598,14 @@ void SelectionRangeState::SelectNodesExceptInSubtree(const Position& aStart,
   if (auto* text = Text::FromNode(aStart.mNode)) {
     if (start.mNode != text && aStart.mOffset &&
         aStart.mOffset < text->Length()) {
-      text->InsertData(aStart.mOffset, kEllipsis, IgnoreErrors());
-      ellipsizedStart = true;
+      // Only insert ellipsis if there is any non-whitespace prior to selection.
+      nsAutoString leadingText;
+      text->SubstringData(0, aStart.mOffset, leadingText, IgnoreErrors());
+      leadingText.CompressWhitespace();
+      if (!leadingText.IsEmpty()) {
+        text->InsertData(aStart.mOffset, kEllipsis, IgnoreErrors());
+        ellipsizedStart = true;
+      }
     }
   }
 
@@ -1621,8 +1627,15 @@ void SelectionRangeState::SelectNodesExceptInSubtree(const Position& aStart,
   // If the end is mid text then add an ellipsis.
   if (auto* text = Text::FromNode(start.mNode)) {
     if (start.mOffset && start.mOffset < text->Length()) {
-      text->InsertData(start.mOffset, kEllipsis, IgnoreErrors());
-      start.mOffset += kEllipsis.Length();
+      // Only insert ellipsis if there is any non-whitespace after selection.
+      nsAutoString trailingText;
+      text->SubstringData(start.mOffset, text->Length() - start.mOffset,
+                          trailingText, IgnoreErrors());
+      trailingText.CompressWhitespace();
+      if (!trailingText.IsEmpty()) {
+        text->InsertData(start.mOffset, kEllipsis, IgnoreErrors());
+        start.mOffset += kEllipsis.Length();
+      }
     }
   }
 }
