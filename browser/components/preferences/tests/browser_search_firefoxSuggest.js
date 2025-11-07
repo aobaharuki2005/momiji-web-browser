@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 const CONTAINER_ID = "firefoxSuggestContainer";
 const ONLINE_ENABLED_TOGGLE_ID = "firefoxSuggestOnlineEnabledToggle";
+const ONLINE_ENABLED_LEARN_MORE_ID = "firefoxSuggestOnlineEnabledLearnMore";
 const LEARN_MORE_ID = "firefoxSuggestLearnMore";
 const BUTTON_RESTORE_DISMISSED_ID = "restoreDismissedSuggestions";
 
@@ -21,6 +22,7 @@ const EXPECTED = {
     [LEARN_MORE_ID]: { isVisible: true },
     [CONTAINER_ID]: { isVisible: true },
     [ONLINE_ENABLED_TOGGLE_ID]: { isVisible: true },
+    [ONLINE_ENABLED_LEARN_MORE_ID]: { isVisible: true },
     locationBarGroupHeader: {
       isVisible: true,
       l10nId: "addressbar-header-firefox-suggest-1",
@@ -43,6 +45,7 @@ const EXPECTED = {
     [LEARN_MORE_ID]: { isVisible: true },
     [CONTAINER_ID]: { isVisible: true },
     [ONLINE_ENABLED_TOGGLE_ID]: { isVisible: false },
+    [ONLINE_ENABLED_LEARN_MORE_ID]: { isVisible: false },
     locationBarGroupHeader: {
       isVisible: true,
       l10nId: "addressbar-header-firefox-suggest-1",

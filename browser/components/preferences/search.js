@@ -381,7 +381,7 @@ var gSearchPane = {
         .classList.add("tail-with-learn-more");
       document.getElementById("firefoxSuggestLearnMore").hidden = false;
 
-      document.getElementById("firefoxSuggestOnlineEnabledToggle").hidden =
+      document.getElementById("firefoxSuggestOnlineBox").hidden =
         UrlbarPrefs.get("quickSuggestSettingsUi") !=
         QuickSuggest.SETTINGS_UI.FULL;
 
