@@ -52,13 +52,13 @@ export class _CustomizeMenu extends React.PureComponent {
             }}
             ref={c => (this.openButton = c)}
           >
-            <label data-l10n-id="newtab-customize-panel-icon-button-label" />
             <div>
               <img
                 role="presentation"
                 src="chrome://global/skin/icons/edit-outline.svg"
               />
             </div>
+            <label data-l10n-id="newtab-customize-panel-icon-button-label" />
           </button>
         </CSSTransition>
         <CSSTransition
