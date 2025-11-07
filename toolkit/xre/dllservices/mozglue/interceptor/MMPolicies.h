@@ -15,6 +15,7 @@
 #include "mozilla/Span.h"
 #include "mozilla/WindowsMapRemoteView.h"
 #include "mozilla/WindowsUnwindInfo.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 
 #include <windows.h>
 

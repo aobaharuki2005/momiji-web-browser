@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/WindowsUnwindInfo.h"
+#include "mozilla/interceptor/TargetFunction.h"
 
 namespace mozilla {
 namespace interceptor {
