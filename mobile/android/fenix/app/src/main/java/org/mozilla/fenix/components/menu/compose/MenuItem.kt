@@ -145,8 +145,6 @@ internal fun MenuItem(
         colors = ListItemDefaults.colors(
             headlineColor = labelTextColor,
             supportingColor = descriptionTextColor,
-            leadingIconColor = iconTint,
-            trailingIconColor = iconTint,
             ),
         maxLabelLines = 2,
         description = description,
@@ -160,10 +158,12 @@ internal fun MenuItem(
         onClick = onClick,
         beforeIconPainter = beforeIconPainter,
         beforeIconDescription = beforeIconDescription,
+        beforeIconTint = iconTint,
         isBeforeIconHighlighted = isBeforeIconHighlighted,
         showDivider = showDivider,
         afterIconPainter = afterIconPainter,
         afterIconDescription = afterIconDescription,
+        afterIconTint = iconTint,
         onAfterIconClick = onAfterIconClick,
         afterListAction = afterContent,
     )
@@ -232,7 +232,7 @@ internal fun WebExtensionMenuItem(
     IconListItem(
         label = label,
         enabled = enabled == true,
-        colors = ListItemDefaults.colors(leadingIconColor = iconTint),
+        beforeIconTint = iconTint,
         beforeIconPainter = iconPainter,
         onClick = onClick,
         modifier = Modifier
@@ -444,6 +444,16 @@ private fun WebExtensionMenuItemPreview() {
                 label = "label",
                 iconPainter = painterResource(iconsR.drawable.mozac_ic_web_extension_default_icon),
                 iconTint = MaterialTheme.colorScheme.onSurface,
+                enabled = true,
+                badgeText = "17",
+                onClick = {},
+                onSettingsClick = {},
+            )
+            // Web extensions may have multi-colored assets with no tint.
+            WebExtensionMenuItem(
+                label = "colorful icon",
+                iconPainter = painterResource(iconsR.drawable.mozac_ic_shield_slash_critical_24),
+                iconTint = Color.Unspecified,
                 enabled = true,
                 badgeText = "17",
                 onClick = {},

@@ -990,9 +990,9 @@ private fun NewFolderListItem(onClick: () -> Unit) {
         modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
         colors = ListItemDefaults.colors(
             headlineColor = MaterialTheme.colorScheme.tertiary,
-            leadingIconColor = MaterialTheme.colorScheme.tertiary,
             ),
         beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
+        beforeIconTint = MaterialTheme.colorScheme.tertiary,
         onClick = onClick,
     )
 }
