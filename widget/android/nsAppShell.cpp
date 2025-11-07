@@ -112,7 +112,7 @@ class WakeLockListener final : public nsIDOMMozWakeLockListener {
 };
 
 NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
-MOZ_RUNINIT nsCOMPtr<nsIPowerManagerService> sPowerManagerService = nullptr;
+MOZ_CONSTINIT nsCOMPtr<nsIPowerManagerService> sPowerManagerService{};
 StaticRefPtr<WakeLockListener> sWakeLockListener;
 
 class GeckoThreadSupport final

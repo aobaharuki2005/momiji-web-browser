@@ -96,8 +96,8 @@
 nsXREDirProvider* gDirServiceProvider = nullptr;
 nsIFile* gDataDirHomeLocal = nullptr;
 nsIFile* gDataDirHome = nullptr;
-MOZ_RUNINIT nsCOMPtr<nsIFile> gDataDirProfileLocal = nullptr;
-MOZ_RUNINIT nsCOMPtr<nsIFile> gDataDirProfile = nullptr;
+MOZ_CONSTINIT nsCOMPtr<nsIFile> gDataDirProfileLocal{};
+MOZ_CONSTINIT nsCOMPtr<nsIFile> gDataDirProfile{};
 
 // These are required to allow nsXREDirProvider to be usable in xpcshell tests.
 // where gAppData is null.

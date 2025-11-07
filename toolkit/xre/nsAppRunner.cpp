@@ -3028,7 +3028,7 @@ static ReturnAbortOnError ShowProfileSelector(
 
 static bool gDoMigration = false;
 static bool gDoProfileReset = false;
-MOZ_RUNINIT static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
+MOZ_CONSTINIT static nsCOMPtr<nsIToolkitProfile> gResetOldProfile;
 
 static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
                             nsIFile* aLocalDir, nsIToolkitProfile* aProfile,
