@@ -77,6 +77,16 @@ export default class BackupSettings extends MozLitElement {
     };
   }
 
+  get dialogs() {
+    return [
+      this.disableBackupEncryptionDialogEl,
+      this.enableBackupEncryptionDialogEl,
+      this.turnOnScheduledBackupsDialogEl,
+      this.turnOffScheduledBackupsDialogEl,
+      this.restoreFromBackupDialogEl,
+    ];
+  }
+
   /**
    * Creates a BackupPreferences instance and sets the initial default
    * state.
@@ -154,16 +164,8 @@ export default class BackupSettings extends MozLitElement {
   handleEvent(event) {
     switch (event.type) {
       case "dialogCancel":
-        if (this.turnOnScheduledBackupsDialogEl.open) {
-          this.turnOnScheduledBackupsDialogEl.close();
-        } else if (this.turnOffScheduledBackupsDialogEl.open) {
-          this.turnOffScheduledBackupsDialogEl.close();
-        } else if (this.restoreFromBackupDialogEl.open) {
-          this.restoreFromBackupDialogEl.close();
-        } else if (this.disableBackupEncryptionDialogEl.open) {
-          this.disableBackupEncryptionDialogEl.close();
-        } else if (this.enableBackupEncryptionDialogEl.open) {
-          this.enableBackupEncryptionDialogEl.close();
+        for (let dialog of this.dialogs) {
+          dialog?.close();
         }
         break;
       case "restoreFromBackupConfirm":
