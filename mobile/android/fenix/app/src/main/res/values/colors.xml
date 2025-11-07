@@ -218,13 +218,13 @@
     <color name="fx_mobile_private_on_tertiary">@color/photonDarkGrey90</color>
     <color name="fx_mobile_private_tertiary_container">@color/photonPink80</color>
     <color name="fx_mobile_private_on_tertiary_container">@color/photonLightGrey05</color>
-    <color name="fx_mobile_private_background">@color/photonLightGrey10</color>
-    <color name="fx_mobile_private_on_background">@color/photonDarkGrey90</color>
+    <color name="fx_mobile_private_background">#FF342B4A</color>
+    <color name="fx_mobile_private_on_background">@color/photonLightGrey05</color>
     <color name="fx_mobile_private_surface">#FF342B4A</color>
     <color name="fx_mobile_private_on_surface">@color/photonLightGrey05</color>
     <color name="fx_mobile_private_surface_variant">#FF413857</color>
     <color name="fx_mobile_private_on_surface_variant">@color/photonLightGrey40</color>
-    <color name="fx_mobile_private_surface_inverse">@color/photonLightGrey10</color>
+    <color name="fx_mobile_private_surface_inverse">@color/photonLightGrey40</color>
     <color name="fx_mobile_private_on_surface_inverse">@color/photonDarkGrey90</color>
     <color name="fx_mobile_private_error">@color/photonRed20</color>
     <color name="fx_mobile_private_on_error">@color/photonDarkGrey90</color>
