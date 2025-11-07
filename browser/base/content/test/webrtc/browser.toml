@@ -32,6 +32,7 @@ skip-if = [
   "os == 'mac' && os_version == '14.70' && processor == 'x86_64'", # Bug 1869787
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1707735
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64'", # Bug 1981050
+  "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1981050
 ]
 
 ["browser_devices_get_user_media.js"]
