@@ -392,7 +392,14 @@ class JSContextWrapper {
     JSContext* cx = JS_NewContext(JS::DefaultHeapMaxBytes + aExtraHeapSize);
     if (NS_WARN_IF(!cx)) return nullptr;
 
-    JS::ContextOptionsRef(cx).setDisableIon().setDisableEvalSecurityChecks();
+    // PAC scripts are user-provided scripts that run in the parent process.
+    // Disable Ion because we don't require it and it reduces attack surface.
+    // Disable security checks because we cannot enforce restrictions on these
+    // scripts.
+    JS::ContextOptionsRef(cx)
+        .setDisableIon()
+        .setDisableEvalSecurityChecks()
+        .setDisableFilenameSecurityChecks();
 
     JSContextWrapper* entry = new JSContextWrapper(cx);
     if (NS_FAILED(entry->Init())) {

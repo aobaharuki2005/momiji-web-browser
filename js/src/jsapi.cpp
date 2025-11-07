@@ -2637,6 +2637,10 @@ JS::CompileOptions::CompileOptions(JSContext* cx) {
     alwaysUseFdlibm_ = realm->creationOptions().alwaysUseFdlibm();
     discardSource = realm->behaviors().discardSource();
   }
+
+  if (cx->options().disableFilenameSecurityChecks()) {
+    skipFilenameValidation_ = true;
+  }
 }
 
 JS::InstantiateOptions::InstantiateOptions() {
