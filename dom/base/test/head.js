@@ -30,6 +30,12 @@ function unordered(list) {
   };
 }
 
+function optional_ev(...args) {
+  const event = ev(...args);
+  event.optional = true;
+  return event;
+}
+
 async function jsCacheContentTask(test, item) {
   function match(param, event) {
     if (event.event !== param.event) {
@@ -54,6 +60,15 @@ async function jsCacheContentTask(test, item) {
   }
 
   function consumeIfMatched(param, events) {
+    while ("optional" in events[0]) {
+      if (match(param, events[0])) {
+        events.shift();
+        return true;
+      }
+      dump("@@@ Skip optional event: " + events[0].event + "\n");
+      events.shift();
+    }
+
     if ("unordered" in events[0]) {
       const unordered = events[0].unordered;
       for (let i = 0; i < unordered.length; i++) {

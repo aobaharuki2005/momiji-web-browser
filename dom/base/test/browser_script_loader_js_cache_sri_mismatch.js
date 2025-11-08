@@ -58,6 +58,8 @@ add_task(async function testDiskCache_SRIMismatchAfterSave() {
           sri: "sha384-fxijQE3W3lWbCjRZx0MCS6pJpCz+dGnNujsFYBzzag9G/fz/6ZiWdM/GAsMzGlAI",
           events: [
             ev("load:diskcache", "file_js_cache_large.js"),
+            optional_ev("load:fallback", "file_js_cache_large.js"),
+            optional_ev("load:source", "file_js_cache_large.js"),
             ev("sri:corrupt", "file_js_cache_large.js"),
           ],
         },
@@ -109,6 +111,8 @@ add_task(async function testDiskCache_SRIMismatchAfterSave() {
           sri: "sha512-8fAu+4y0SKpriy0fz4IuLgiXLyTCGVInfJHvIl8JOdxm+xKJVHVhX7RTfEUpExZYoOJqzpVRkK/6nfglpK7Dow==",
           events: [
             ev("load:diskcache", "file_js_cache_large.js"),
+            optional_ev("load:fallback", "file_js_cache_large.js"),
+            optional_ev("load:source", "file_js_cache_large.js"),
             ev("sri:corrupt", "file_js_cache_large.js"),
           ],
         },
@@ -161,6 +165,8 @@ add_task(async function testDiskCache_SRIMismatchAfterSave() {
           sri: "sha384-fxijQE3W3lWbCjRZx0MCS6pJpCz+dGnNujsFYBzzag9G/fz/6ZiWdM/GAsMzGlAI",
           events: [
             ev("load:diskcache", "file_js_cache_large.js"),
+            optional_ev("load:fallback", "file_js_cache_large.js"),
+            optional_ev("load:source", "file_js_cache_large.js"),
             ev("sri:corrupt", "file_js_cache_large.js"),
           ],
         },
@@ -288,6 +294,8 @@ add_task(async function testMemoryCache_SRIMismatchAfterSave() {
           sri: "sha384-fxijQE3W3lWbCjRZx0MCS6pJpCz+dGnNujsFYBzzag9G/fz/6ZiWdM/GAsMzGlAI",
           events: [
             ev("load:diskcache", "file_js_cache_large.js"),
+            optional_ev("load:fallback", "file_js_cache_large.js"),
+            optional_ev("load:source", "file_js_cache_large.js"),
             ev("sri:corrupt", "file_js_cache_large.js"),
           ],
         },
@@ -339,6 +347,8 @@ add_task(async function testMemoryCache_SRIMismatchAfterSave() {
           sri: "sha512-8fAu+4y0SKpriy0fz4IuLgiXLyTCGVInfJHvIl8JOdxm+xKJVHVhX7RTfEUpExZYoOJqzpVRkK/6nfglpK7Dow==",
           events: [
             ev("load:diskcache", "file_js_cache_large.js"),
+            optional_ev("load:fallback", "file_js_cache_large.js"),
+            optional_ev("load:source", "file_js_cache_large.js"),
             ev("sri:corrupt", "file_js_cache_large.js"),
           ],
         },
@@ -391,6 +401,8 @@ add_task(async function testMemoryCache_SRIMismatchAfterSave() {
           sri: "sha384-fxijQE3W3lWbCjRZx0MCS6pJpCz+dGnNujsFYBzzag9G/fz/6ZiWdM/GAsMzGlAI",
           events: [
             ev("load:diskcache", "file_js_cache_large.js"),
+            optional_ev("load:fallback", "file_js_cache_large.js"),
+            optional_ev("load:source", "file_js_cache_large.js"),
             ev("sri:corrupt", "file_js_cache_large.js"),
           ],
         },
