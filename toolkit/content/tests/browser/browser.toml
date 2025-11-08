@@ -141,6 +141,11 @@ tags = "audiochannel"
 ["browser_findbar_disabled_manual.js"]
 
 ["browser_findbar_hidden_beforematch.js"]
+skip-if = [
+  "os == 'mac' && os_version == '10.15' && processor == 'x86_64' && debug", # Bug 1995211
+  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && debug", # Bug 1995211
+  "os == 'win' && os_version == '11.26100' && processor == 'x86' && debug", # Bug 1995211
+]
 
 ["browser_findbar_hiddenframes.js"]
 
