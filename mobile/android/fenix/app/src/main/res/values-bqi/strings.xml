@@ -1574,7 +1574,7 @@
   <!-- Text for the snackbar to confirm that downloads are in progress. -->
   <string name="download_in_progress_snackbar">دانلود من جریان…</string>
   <!-- Text for the snackbar action button to view in progress download details. -->
-  <string name="download_in_progress_snackbar_action_details">جۊزیات</string>
+  <string name="download_in_progress_snackbar_action_details">جۊزعیات</string>
   <!-- Text for the snackbar to confirm that a download has completed. -->
   <string name="download_completed_snackbar">دانلود کامل وابی</string>
   <!-- Text for the snackbar action button to open a completed download. -->
@@ -1684,7 +1684,7 @@
   <!-- Text to indicate that a download has failed to download. -->
   <string name="download_item_status_failed">دانلود شکست خرد</string>
   <!-- Text for the snackbar action button to view failed download details. -->
-  <string name="download_failed_snackbar_action_details">جۊزیات</string>
+  <string name="download_failed_snackbar_action_details">جۊزعیات</string>
   <!-- Placeholder text to indicate that users can use the search bar to search for a download. -->
   <string name="download_search_placeholder">پیتینیڌن دانلودا</string>
   <!-- Text to indicate that no downloads match the search query. -->
@@ -2422,7 +2422,7 @@
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">جا کلکا اشناخته وابیڌه</string>
   <!-- Button label for navigating to the Enhanced Tracking Protection details -->
-  <string name="enhanced_tracking_protection_details">جۊزیات</string>
+  <string name="enhanced_tracking_protection_details">جۊزعیات</string>
   <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
   <string name="enhanced_tracking_protection_blocked">مسدۊد وابیڌه</string>
   <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -2910,7 +2910,7 @@
   <!-- Description text for the Search String TextField. The %s is part of the string -->
   <string name="search_add_custom_engine_search_string_example" formatted="false">درخاست ن وا “%s” جایونی کۊنین. جۊر: \nhttps://www.google.com/search?q=%s</string>
   <!-- Accessibility description for the form in which details about the custom search engine are entered -->
-  <string name="search_add_custom_engine_form_description">جۊزیات موتور پیتینیڌن سفارشی</string>
+  <string name="search_add_custom_engine_form_description">جۊزعیات موتور پیتینیڌن سفارشی</string>
   <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
   <string name="search_add_custom_engine_suggest_url_label">API پؽشنهاڌ پیتینیڌن (دل ب خایی)</string>
   <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
@@ -3126,7 +3126,7 @@
   <!-- Content description for close button in collection placeholder. -->
   <string name="remove_home_collection_placeholder_content_description">پاک کردن</string>
   <!-- Content description radio buttons with a link to more information -->
-  <string name="radio_preference_info_content_description">سی جۊزیات قلوه بزنین ریس</string>
+  <string name="radio_preference_info_content_description">سی جۊزعیات قلوه بزنین ریس</string>
   <!-- Content description for the action bar "up" button -->
   <string name="action_bar_up_description">رئڌن و روء</string>
   <!--

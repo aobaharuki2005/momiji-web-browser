@@ -1747,6 +1747,8 @@
   <string name="webcompat_reporter_etp_checkbox_text">Send URL-ar blokkerte av sporingsvern</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Utvida sporingsvern kan blokkere sporarar og skript som enkelte nettstadar treng for å fungere ordentleg.</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Send</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -3884,6 +3886,16 @@
   <string name="review_prompt_feedback_header">Vi beklagar at du har problem. Fortel oss korleis vi kan gjere %1$s betre.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Gje tilbakemelding</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">Søkjeinnstillingar</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
+  <string name="content_description_settings_search_clear_search">Tøm søk</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">Det oppstod ein feil</string>
   <!--
     Terms of use pop up prompt
 
