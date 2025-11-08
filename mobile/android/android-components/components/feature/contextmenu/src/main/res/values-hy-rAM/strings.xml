@@ -49,5 +49,5 @@
   <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
   <string name="mozac_selection_context_menu_email">Էլ. փոստ</string>
   <!-- Action shown in a text selection context menu. This will prompt a new call from the selected text. -->
-  <string name="mozac_selection_context_menu_call">Զանգ</string>
+  <string name="mozac_selection_context_menu_call">Զանգահարել</string>
 </resources>

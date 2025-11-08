@@ -69,11 +69,11 @@
   <!-- February month of the year (short description), used on the month chooser dialog. -->
   <string name="mozac_feature_prompts_feb">Փետ</string>
   <!-- March month of the year (short description), used on the month chooser dialog. -->
-  <string name="mozac_feature_prompts_mar">Մարտ</string>
+  <string name="mozac_feature_prompts_mar">Մար</string>
   <!-- April month of the year (short description), used on the month chooser dialog. -->
   <string name="mozac_feature_prompts_apr">Ապր</string>
   <!-- May month of the year (short description), used on the month chooser dialog. -->
-  <string name="mozac_feature_prompts_may">Մայիս</string>
+  <string name="mozac_feature_prompts_may">Մայ</string>
   <!-- June month of the year (short description), used on the month chooser dialog. -->
   <string name="mozac_feature_prompts_jun">Հուն</string>
   <!-- July month of the year (short description), used on the month chooser dialog. -->

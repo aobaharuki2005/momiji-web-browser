@@ -1439,6 +1439,8 @@
   <string name="tab_tray_multiselect_menu_content_description">Umuɣ n waccaren i yettwafernen</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Asebter agejdan</string>
+  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
+  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s asebter agejdan</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Kkes iccer seg tegrumma</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1727,6 +1729,8 @@
   <string name="bookmark_add_folder">Rnu akaram</string>
   <!-- Snackbar title that confirms a bookmark was saved into a folder. %s is the name of the folder the bookmark was saved into. -->
   <string name="bookmark_saved_in_folder_snackbar">Yettwasekles deg “%s”</string>
+  <!-- Snackbar title describing failure to add a new folder -->
+  <string name="bookmark_error_add_folder">Yegguma ad yernu ukaram</string>
   <!-- Snackbar title describing failure to edit an existing folder -->
   <string name="bookmark_error_edit_folder">Yegguma ad yeẓreg ukaram</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1957,8 +1961,12 @@
   <string name="create_collection_save_to_collection_tab_selected">%d n yiccer yettwafren</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">Tagrumma tettwasekles!</string>
+  <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+  <string name="create_collection_tabs_saved_new_collection_2">Tagrumma tettwasekles</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Iccer yettwaselkes!</string>
+  <!-- Text shown in snackbar when one tab has been saved in a collection -->
+  <string name="create_collection_tab_saved_2">Iccer yettwaselkes</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
   <string name="create_collection_close">Mdel</string>
   <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator -->
@@ -2210,8 +2218,12 @@
     Text shown in snackbar when multiple tabs have been sent to device
   -->
   <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ttwaznen iccaren!</string>
+  <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+  <string name="sync_sent_tabs_snackbar_2">Ttwaznen iccaren</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ittwazen iccer!</string>
+  <!-- Text shown in snackbar when one tab has been sent to device -->
+  <string name="sync_sent_tab_snackbar_2">Ittwazen iccer</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
   <string name="sync_sent_tab_error_snackbar">Ur yizmir ara ad yazen</string>
   <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
@@ -2692,6 +2704,8 @@
   <string name="addresses_phone">Uṭṭun n tiliɣri</string>
   <!-- The header for the email of an address -->
   <string name="addresses_email">Imayl</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used for addresses in Iran, Mexico. -->
+  <string name="addresses_neighborhood" tools:ignore="UnusedResources">Taddart</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Village or Township field, specific to Malaysia is crucial for addresses in rural areas. -->
   <string name="addresses_village_township" tools:ignore="UnusedResources">Taddart neɣ adrum</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
@@ -2700,6 +2714,20 @@
   <string name="addresses_townland" tools:ignore="UnusedResources">Tamurt</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
   <string name="addresses_district" tools:ignore="UnusedResources">Tamnaḍt</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is crucial for addressing in regions where county lines play a key role in postal services. -->
+  <string name="addresses_county" tools:ignore="UnusedResources">Tamurt</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Significant in places where parishes are used for local administration and addressing. Ensures users can specify parish details for better autofill accuracy. Used in Barbados and Jamaica. -->
+  <string name="addresses_parish" tools:ignore="UnusedResources">Taparicit</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in countries like Japan where prefectures are a major administrative division. -->
+  <string name="addresses_prefecture" tools:ignore="UnusedResources">Azegdu</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Allowing users to specify a particular area within a city or region. Used in Hong Kong -->
+  <string name="addresses_area" tools:ignore="UnusedResources">Tamnaḍt</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The header for the Do/Si of the address. Do/Si refers to provincial level divisions, pertinent to addresses in South Korea. -->
+  <string name="addresses_do_si" tools:ignore="UnusedResources">Do/Si</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in countries like Nicaragua and Colombia where departments are a key administrative division. -->
+  <string name="addresses_department" tools:ignore="UnusedResources">Agezdu</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in the United Arab Emirates. -->
+  <string name="addresses_emirate" tools:ignore="UnusedResources">Tageldit</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The postal code field is universally used in address forms to specify the area code for mail sorting. -->
   <string name="addresses_postal_code" tools:ignore="UnusedResources">Tangalt n lbuṣṭa</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in cases we want to only display the word "Country" over "Country or Region". -->
