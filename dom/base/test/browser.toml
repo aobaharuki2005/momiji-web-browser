@@ -154,20 +154,74 @@ support-files = [
 
 ["browser_screen_orientation_override.js"]
 
-["browser_script_loader_js_cache.js"]
+["browser_script_loader_js_cache_basic.js"]
 support-files = [
   "empty.html",
   "file_js_cache_small.js",
   "file_js_cache_large.js",
   "file_js_cache_large_syntax_error.js",
-  "file_js_cache_importer.mjs",
-  "file_js_cache_imported1.mjs",
-  "file_js_cache_imported2.mjs",
-  "file_js_cache_imported3.mjs",
+]
+
+["browser_script_loader_js_cache_classic_vs_module.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_large.js",
+]
+
+["browser_script_loader_js_cache_compression.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_large.js",
+]
+
+["browser_script_loader_js_cache_dyn_import.js"]
+support-files = [
+  "empty.html",
   "file_js_cache_dyn_importer.mjs",
   "file_js_cache_dyn_imported1.mjs",
   "file_js_cache_dyn_imported2.mjs",
   "file_js_cache_dyn_imported3.mjs",
+]
+
+["browser_script_loader_js_cache_module.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_small.js",
+  "file_js_cache_large.js",
+  "file_js_cache_importer.mjs",
+  "file_js_cache_imported1.mjs",
+  "file_js_cache_imported2.mjs",
+  "file_js_cache_imported3.mjs",
+]
+
+["browser_script_loader_js_cache_sri_after_save.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_large.js",
+]
+
+["browser_script_loader_js_cache_sri_basic.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_large.js",
+]
+
+["browser_script_loader_js_cache_sri_different.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_large.js",
+]
+
+["browser_script_loader_js_cache_sri_invalid.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_large.js",
+]
+
+["browser_script_loader_js_cache_sri_mismatch.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_large.js",
 ]
 
 ["browser_set_focus_after_reuse_bcg.js"]
