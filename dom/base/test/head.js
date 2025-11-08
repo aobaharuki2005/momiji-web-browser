@@ -92,6 +92,8 @@ async function jsCacheContentTask(test, item) {
     return false;
   }
 
+  let result = true;
+
   const { promise, resolve, reject } = Promise.withResolvers();
   const observer = function (subject, topic, data) {
     const param = {};
@@ -119,6 +121,7 @@ async function jsCacheContentTask(test, item) {
     } else {
       dump("@@@ Got unexpected event: " + data + "\n");
       dump("@@@ Expected: " + JSON.stringify(item.events[0]) + "\n");
+      result = false;
     }
   };
   Services.obs.addObserver(observer, "ScriptLoaderTest");
@@ -137,6 +140,8 @@ async function jsCacheContentTask(test, item) {
   await promise;
 
   Services.obs.removeObserver(observer, "ScriptLoaderTest");
+
+  return result;
 }
 
 async function runJSCacheTests(tests) {
@@ -164,7 +169,12 @@ async function runJSCacheTests(tests) {
             info("clear disk cache");
             Services.cache2.clear();
           }
-          await SpecialPowers.spawn(browser, [test, item], jsCacheContentTask);
+          const result = await SpecialPowers.spawn(
+            browser,
+            [test, item],
+            jsCacheContentTask
+          );
+          ok(result, "Received expected events");
         }
 
         ok(true, "end: " + test.title);
