@@ -6728,6 +6728,11 @@
   value: 512 * 1024 * 1024
   mirror: always
 
+- name: gfx.canvas.accelerated.max-snapshot-pbo-memory
+  type: RelaxedAtomicUint32
+  value: 64 * 1024 * 1024
+  mirror: always
+
 - name: gfx.canvas.accelerated.max-surface-size
   type: RelaxedAtomicUint32
   value: 5280
