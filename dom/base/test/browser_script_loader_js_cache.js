@@ -1,138 +1,4 @@
-const BASE_URL = "http://mochi.test:8888/browser/dom/base/test/";
-
-function ev(event, file, hasElement = !!file) {
-  return {
-    event,
-    url: file ? BASE_URL + file : undefined,
-    hasElement,
-  };
-}
-
-function unordered(list) {
-  return {
-    unordered: list,
-  };
-}
-
-async function contentTask(test, item) {
-  function match(param, event) {
-    if (event.event !== param.event) {
-      return false;
-    }
-
-    if (param.url && event.url !== param.url) {
-      return false;
-    }
-
-    if (event.hasElement) {
-      if (param.id !== "watchme") {
-        return false;
-      }
-    } else {
-      if (param.id) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  function consumeIfMatched(param, events) {
-    if ("unordered" in events[0]) {
-      const unordered = events[0].unordered;
-      for (let i = 0; i < unordered.length; i++) {
-        if (match(param, unordered[i])) {
-          unordered.splice(i, 1);
-          if (!unordered.length) {
-            events.shift();
-          }
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    if (match(param, events[0])) {
-      events.shift();
-      return true;
-    }
-
-    return false;
-  }
-
-  const { promise, resolve, reject } = Promise.withResolvers();
-  const observer = function (subject, topic, data) {
-    const param = {};
-    for (const line of data.split("\n")) {
-      const m = line.match(/^([^:]+):(.*)/);
-      param[m[1]] = m[2];
-    }
-
-    if (param.event === "compile:main thread") {
-      return;
-    }
-
-    if (consumeIfMatched(param, item.events)) {
-      dump("@@@ Got expected event: " + data + "\n");
-      if (item.events.length === 0) {
-        resolve();
-      }
-    } else {
-      dump("@@@ Got unexpected event: " + data + "\n");
-      dump("@@@ Expected: " + JSON.stringify(item.events[0]) + "\n");
-    }
-  };
-  Services.obs.addObserver(observer, "ScriptLoaderTest");
-
-  const script = content.document.createElement("script");
-  script.id = "watchme";
-  if (test.module || item.module) {
-    script.type = "module";
-  }
-  if (item.sri) {
-    script.integrity = item.sri;
-  }
-  script.src = item.file;
-  content.document.body.appendChild(script);
-
-  await promise;
-
-  Services.obs.removeObserver(observer, "ScriptLoaderTest");
-}
-
-async function runTests(tests) {
-  await BrowserTestUtils.withNewTab(BASE_URL + "empty.html", async browser => {
-    const tab = gBrowser.getTabForBrowser(browser);
-
-    for (const test of tests) {
-      ChromeUtils.clearResourceCache();
-      Services.cache2.clear();
-
-      for (let i = 0; i < test.items.length; i++) {
-        const item = test.items[i];
-        info(`start: ${test.title} (item ${i})`);
-
-        // Make sure the test starts in clean document.
-        await BrowserTestUtils.reloadTab(tab);
-
-        if (item.clearMemory) {
-          info("clear memory cache");
-          ChromeUtils.clearResourceCache();
-        }
-        if (item.clearDisk) {
-          info("clear disk cache");
-          Services.cache2.clear();
-        }
-        await SpecialPowers.spawn(browser, [test, item], contentTask);
-      }
-
-      ok(true, "end: " + test.title);
-    }
-  });
-
-  ok(true, "Finished all tests");
-}
+// ev, unordered, and runJSCacheTests are defined in head.js
 
 add_task(async function testDiskCache() {
   await SpecialPowers.pushPrefEnv({
@@ -144,7 +10,7 @@ add_task(async function testDiskCache() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     // A small file shouldn't be saved to the disk.
     {
       title: "small file",
@@ -302,7 +168,7 @@ add_task(async function testMemoryCache() {
   //  * diskcache:noschedule is notified without associated script
   //    if there's no script to be saved
 
-  await runTests([
+  await runJSCacheTests([
     // A small file should be saved to the memory on the 1st load, and used on
     // the 2nd load.  But it shouldn't be saved to the disk cache.
     {
@@ -472,7 +338,7 @@ add_task(async function testDiskCache_modules() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     // A small module shouldn't be saved to the disk.
     {
       title: "small module",
@@ -645,7 +511,7 @@ add_task(async function testMemoryCache_modules() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     // A small module shouldn't be saved to the disk.
     {
       title: "small module",
@@ -824,7 +690,7 @@ add_task(async function testDiskCache_classicVsModules() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     // A classic script's disk cache shouldn't be used by module.
     // A large module file should be saved to the disk.
     {
@@ -949,7 +815,7 @@ add_task(async function testMemoryCache_classicVsModules() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     // A classic script's disk cache shouldn't be used by module.
     // A large module file should be saved to the disk.
     {
@@ -1070,7 +936,7 @@ add_task(async function testDiskCache_InvalidSRI() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     // Invalid integrity attribute should be ignored.
     {
       title: "invalid SRI on classic",
@@ -1293,7 +1159,7 @@ add_task(async function testMemoryCache_InvalidSRI() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     // Invalid integrity attribute should be ignored.
     {
       title: "invalid SRI on classic",
@@ -1515,7 +1381,7 @@ add_task(async function testDiskCache_SRI() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     {
       title: "SRI on classic",
       items: [
@@ -1640,7 +1506,7 @@ add_task(async function testMemoryCache_SRI() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     {
       title: "SRI on classic",
       items: [
@@ -1762,7 +1628,7 @@ add_task(async function testDiskCache_SRIAfterSave() {
 
   // If SRI is specified after the disk cache is created, it should
   // fallback to the source, and then save again with the SRI.
-  await runTests([
+  await runJSCacheTests([
     {
       title: "SRI on classic after save",
       items: [
@@ -1905,7 +1771,7 @@ add_task(async function testMemoryCache_SRIAfterSave() {
 
   // If SRI is specified after the disk cache is created, it should
   // fallback to the source, and then save again with the SRI.
-  await runTests([
+  await runJSCacheTests([
     {
       title: "SRI on classic after save",
       items: [
@@ -2041,7 +1907,7 @@ add_task(async function testDiskCache_DifferentSRI() {
 
   // If different SRI is specified after the disk cache is created, it should
   // fallback to the source, and then save again with the SRI.
-  await runTests([
+  await runJSCacheTests([
     {
       title: "different SRI on classic after save",
       items: [
@@ -2192,7 +2058,7 @@ add_task(async function testMemoryCache_DifferentSRI() {
 
   // If different SRI is specified after the disk cache is created, it should
   // fallback to the source, and then save again with the SRI.
-  await runTests([
+  await runJSCacheTests([
     {
       title: "different SRI on classic after save",
       items: [
@@ -2340,7 +2206,7 @@ add_task(async function testDiskCache_SRIMismatchAfterSave() {
 
   // If different SRI is specified after the disk cache is created, it should
   // fallback to the source, and then save again with the SRI.
-  await runTests([
+  await runJSCacheTests([
     {
       title: "wrong SRI with same algorithm on classic after save",
       items: [
@@ -2570,7 +2436,7 @@ add_task(async function testMemoryCache_SRIMismatchAfterSave() {
 
   // If different SRI is specified after the disk cache is created, it should
   // fallback to the source, and then save again with the SRI.
-  await runTests([
+  await runJSCacheTests([
     {
       title: "wrong SRI with same algorithm on classic after save",
       items: [
@@ -2794,7 +2660,7 @@ add_task(async function testDiskCache_compression() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     {
       title: "large file with compression",
       items: [
@@ -2870,7 +2736,7 @@ add_task(async function testMemoryCache_compression() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     {
       title: "large file with compression",
       items: [
@@ -2940,7 +2806,7 @@ add_task(async function testDiskCache_dynamicImport() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     {
       title: "dynamically imported modules",
       module: true,
@@ -3041,7 +2907,7 @@ add_task(async function testMemoryCache_dynamicImport() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     {
       title: "dynamically imported modules",
       module: true,
@@ -3127,7 +2993,7 @@ add_task(async function testDiskCache_dynamicImport() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     {
       title: "dynamically imported modules",
       module: true,
@@ -3228,7 +3094,7 @@ add_task(async function testMemoryCache_dynamicImport() {
     ],
   });
 
-  await runTests([
+  await runJSCacheTests([
     {
       title: "dynamically imported modules",
       module: true,
