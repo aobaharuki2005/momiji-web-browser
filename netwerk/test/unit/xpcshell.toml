@@ -713,6 +713,8 @@ skip-if = [
   "os == 'win' && os_version == '10.2009' && processor == 'x86_64'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86'", # Bug 1807931
   "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && msix", # Bug 1807931
+  "os == 'mac' && os_version == '10.15' && processor == 'x86_64'", # Bug 1998062
+  "os == 'mac' && os_version == '14.70' && processor == 'x86_64'", # Bug 1998062
 ]
 
 ["test_http2_with_proxy.js"]
