@@ -91,7 +91,7 @@
   }
 
   .keypoints-header:has(+ .keypoints-content:not(.hidden)) .chevron-icon {
-    transform: rotateZ(-180deg);
+    transform: rotateZ(180deg);
   }
 
   img.icon {
