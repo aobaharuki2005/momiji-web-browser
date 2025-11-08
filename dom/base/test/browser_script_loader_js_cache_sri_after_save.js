@@ -196,9 +196,9 @@ add_task(async function testMemoryCache_SRIAfterSave() {
           file: "file_js_cache_large.js",
           sri: "sha384-vJ7r8qsSxGVQwKbj+5A1avW8CEb6bODkGULlUVOmqN81D6XQzaTFhspcWmO+PVSQ",
           events: [
-            // Memory cache doesn't support different SRI, but
-            // disk cache does.
             ev("load:diskcache", "file_js_cache_large.js"),
+            ev("load:fallback", "file_js_cache_large.js"),
+            ev("load:source", "file_js_cache_large.js"),
             ev("memorycache:saved", "file_js_cache_large.js"),
             ev("evaluate:classic", "file_js_cache_large.js"),
             ev("diskcache:noschedule"),
@@ -258,6 +258,8 @@ add_task(async function testMemoryCache_SRIAfterSave() {
           sri: "sha384-vJ7r8qsSxGVQwKbj+5A1avW8CEb6bODkGULlUVOmqN81D6XQzaTFhspcWmO+PVSQ",
           events: [
             ev("load:diskcache", "file_js_cache_large.js"),
+            ev("load:fallback", "file_js_cache_large.js"),
+            ev("load:source", "file_js_cache_large.js"),
             ev("memorycache:saved", "file_js_cache_large.js"),
             ev("evaluate:module", "file_js_cache_large.js"),
             ev("diskcache:noschedule"),
