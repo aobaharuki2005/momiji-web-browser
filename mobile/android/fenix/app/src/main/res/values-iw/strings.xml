@@ -193,7 +193,7 @@
   <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
   <string name="browser_menu_forward">קדימה</string>
   <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
-  <string name="browser_menu_refresh">רענון</string>
+  <string name="browser_menu_refresh">ריענון</string>
   <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
   <string name="browser_menu_stop">עצירה</string>
   <!-- Browser menu button that opens the extensions manager -->
@@ -1287,7 +1287,7 @@
 
     Preferences for using pull to refresh in a webpage
   -->
-  <string name="preference_gestures_website_pull_to_refresh">משיכה לרענון הדף</string>
+  <string name="preference_gestures_website_pull_to_refresh">משיכה לריענון הדף</string>
   <!-- Preference for using the dynamic toolbar -->
   <string name="preference_gestures_dynamic_toolbar">גלילה להסתרת סרגל הכלים</string>
   <!-- Preference for showing the opened tabs by swiping up on the toolbar -->

@@ -267,6 +267,8 @@
   <string name="browser_menu_customize_home_1">Уладкаваць хатнюю старонку</string>
   <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
   <string name="browser_menu_sign_in">Увайсці</string>
+  <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
+  <string name="browser_menu_sign_in_caption_3">Сінхранізуйце паролі, закладкі і іншае</string>
   <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
   <string name="browser_menu_sign_back_in_to_sync">Увайдзіце зноў, каб сінхранізаваць</string>
   <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
