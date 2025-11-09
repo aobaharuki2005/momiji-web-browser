@@ -1745,6 +1745,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">שליחת כתובות האתרים הנחסמים על־ידי הגנת המעקב</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">הגנת מעקב מתקדמת עשויה לחסום רכיבי מעקב ותסריטים המשמשים חלק מהאתרים כדי לעבוד כראוי.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">תצוגה מקדימה של הדיווח</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">תצוגה מקדימה של הדיווח</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">שליחה</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -3876,6 +3882,26 @@
   <string name="review_prompt_feedback_header">מצטערים שנתקלת בבעיות. נשמע לשמוע כיצד נוכל לשפר את %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">השארת משוב</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">חיפוש הגדרות</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
+  <string name="content_description_settings_search_clear_search">ניקוי חיפוש</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">ניווט אחורה</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">אין חיפושים אחרונים</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">אירעה שגיאה</string>
+  <!-- Message title displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_found_message">לא נמצאו תוצאות</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">ניקוי הכול</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">תוצאות חיפושים אחרונים</string>
   <!--
     Terms of use pop up prompt
 

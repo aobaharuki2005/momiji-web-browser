@@ -1747,6 +1747,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">ᱴᱨᱮᱠᱤᱝ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱦᱚᱛᱮᱛᱮ ᱵᱞᱚᱠ ᱟᱠᱟᱱ URL ᱠᱚ ᱵᱷᱮᱡᱟᱭ ᱢᱮ</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">ᱵᱟᱹᱲᱛᱤ ᱴᱨᱮᱠᱤᱝ ᱨᱚᱠᱷᱟ ᱴᱨᱮᱠᱟᱨ ᱠᱚ ᱟᱨ ᱥᱠᱨᱤᱯᱴ ᱠᱚ ᱵᱞᱚᱠ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱡᱟᱦᱟᱸ ᱫᱚ ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱠᱚ ᱵᱮᱥ ᱞᱮᱠᱟ ᱠᱟᱹᱢᱤ ᱞᱟᱹᱠᱛᱤᱭᱟ᱾</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">ᱠᱷᱚᱵᱚᱨ ᱧᱮᱞ ᱫᱩᱦᱲᱟᱹ</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱠᱷᱚᱵᱚᱨ ᱢᱮ</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">ᱠᱩᱞ ᱢᱮ</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -1816,6 +1822,14 @@
   <string name="bookmark_add_folder">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
   <!-- Snackbar title that confirms a bookmark was saved into a folder. %s is the name of the folder the bookmark was saved into. -->
   <string name="bookmark_saved_in_folder_snackbar">“%s” ᱨᱮ ᱥᱟᱧᱪᱟᱣ ᱮᱱᱟ</string>
+  <!-- Snackbar title describing failure to add a new folder -->
+  <string name="bookmark_error_add_folder">ᱯᱚᱴᱚᱢ ᱥᱮᱞᱮᱫ ᱵᱟᱭ ᱜᱟᱱᱚᱜ ᱠᱟᱱᱟ ᱾</string>
+  <!-- Snackbar title describing failure to edit an existing folder -->
+  <string name="bookmark_error_edit_folder">ᱯᱚᱴᱚᱢ ᱥᱟᱯᱲᱟᱣ ᱵᱟᱭ ᱜᱟᱱᱚᱜ ᱠᱟᱱᱟ</string>
+  <!-- Snackbar title describing failure to select a new parent folder for a bookmark or folder -->
+  <string name="bookmark_error_select_folder">ᱦᱩᱰᱤᱧ ᱯᱚᱴᱚᱢ ᱵᱚᱫᱚᱞ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ</string>
+  <!-- Snackbar title describing failure to edit a bookmark -->
+  <string name="bookmark_error_edit_bookmark">ᱯᱩᱛᱷᱤᱪᱤᱱᱦᱟᱹ ᱥᱟᱯᱲᱟᱣ ᱵᱟᱭ ᱜᱟᱱᱚᱜ ᱠᱟᱱᱟ</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">ᱥᱟᱯᱲᱣ ᱢᱮ</string>
   <!-- Bookmark menu move button -->
@@ -1838,6 +1852,8 @@
   <string name="bookmark_menu_open_all_in_private_tabs_button">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱨᱮ ᱡᱷᱚᱛᱚ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
+  <!-- Accessibility label for sorting options -->
+  <string name="bookmark_sort_menu_content_desc">ᱵᱟᱪᱷᱟᱣ ᱢᱚᱱᱮ ᱛᱮᱭᱟᱜ</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_custom">ᱠᱟᱥᱴᱚᱢ ᱚᱰᱟᱨ ᱞᱮᱠᱟᱛᱮ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
@@ -1894,6 +1910,8 @@
   <string name="bookmark_search_button_content_description">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">%s ᱞᱟᱹᱜᱤᱫ ᱡᱤᱱᱤᱥ ᱢᱮᱱᱩ</string>
+  <!-- Content description for the "close" button in bookmarks screen. -->
+  <string name="bookmark_close_button_content_description">ᱵᱩᱩᱠᱢᱟᱨᱠᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
   <!-- Title for the bookmark list empty state -->
   <string name="bookmark_empty_list_title">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱱᱚᱰᱮ ᱵᱚᱱᱩᱜ-ᱟ</string>
   <!-- Description for the bookmark list empty state when you're not signed into sync. -->
