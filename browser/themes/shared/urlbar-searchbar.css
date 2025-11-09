@@ -1209,6 +1209,10 @@
 }
 
 .searchmode-switcher-dropmarker {
+  @media (prefers-reduced-motion: no-preference) {
+    transition: 120ms transform ease-out;
+  }
+
   .urlbar[searchmode] & {
     display: none;
   }
