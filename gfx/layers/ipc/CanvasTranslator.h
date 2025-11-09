@@ -411,6 +411,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    */
   bool SetDataSurfaceBuffer(ipc::MutableSharedMemoryHandle&& aBufferHandle);
 
+  void DataSurfaceBufferWillChange();
+
   bool ReadNextEvent(EventType& aEventType);
 
   bool HasPendingEvent();
@@ -526,6 +528,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   CanvasShmem mCurrentShmem;
   gfx::MemReader mCurrentMemReader{0, 0};
   ipc::SharedMemoryMapping mDataSurfaceShmem;
+  ThreadSafeWeakPtr<gfx::DataSourceSurface> mDataSurfaceShmemOwner;
   UniquePtr<CrossProcessSemaphore> mWriterSemaphore;
   UniquePtr<CrossProcessSemaphore> mReaderSemaphore;
   TextureType mTextureType = TextureType::Unknown;
