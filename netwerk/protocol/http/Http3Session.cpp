@@ -1428,7 +1428,7 @@ void Http3Session::RemoveStreamFromQueues(Http3StreamBase* aStream) {
 // calls Http3Stream::OnReadSegment.
 nsresult Http3Session::TryActivating(
     const nsACString& aMethod, const nsACString& aScheme,
-    const nsACString& aAuthorityHeader, const nsACString& aPath,
+    const nsACString& aAuthorityHeader, const nsACString& aPathQuery,
     const nsACString& aHeaders, uint64_t* aStreamId, Http3StreamBase* aStream) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(*aStreamId == UINT64_MAX);
@@ -1466,15 +1466,15 @@ nsresult Http3Session::TryActivating(
                                    false);
   } else if (RefPtr<Http3Stream> httpStream = aStream->GetHttp3Stream()) {
     rv = mHttp3Connection->Fetch(
-        aMethod, aScheme, aAuthorityHeader, aPath, aHeaders, aStreamId,
+        aMethod, aScheme, aAuthorityHeader, aPathQuery, aHeaders, aStreamId,
         httpStream->PriorityUrgency(), httpStream->PriorityIncremental());
   } else if (RefPtr<Http3ConnectUDPStream> udpStream =
                  aStream->GetHttp3ConnectUDPStream()) {
     if (DeferIfNegotiating(ExtendedConnectKind::ConnectUDP, aStream)) {
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
-    rv = mHttp3Connection->CreateConnectUdp(aAuthorityHeader, aPath, aHeaders,
-                                            aStreamId);
+    rv = mHttp3Connection->CreateConnectUdp(aAuthorityHeader, aPathQuery,
+                                            aHeaders, aStreamId);
   } else {
     MOZ_RELEASE_ASSERT(aStream->GetHttp3WebTransportSession(),
                        "It must be a WebTransport session");
@@ -1483,8 +1483,8 @@ nsresult Http3Session::TryActivating(
     if (DeferIfNegotiating(ExtendedConnectKind::WebTransport, aStream)) {
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
-    rv = mHttp3Connection->CreateWebTransport(aAuthorityHeader, aPath, aHeaders,
-                                              aStreamId);
+    rv = mHttp3Connection->CreateWebTransport(aAuthorityHeader, aPathQuery,
+                                              aHeaders, aStreamId);
   }
 
   if (NS_FAILED(rv)) {

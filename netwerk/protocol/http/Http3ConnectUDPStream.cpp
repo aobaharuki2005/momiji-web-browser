@@ -96,7 +96,7 @@ nsresult Http3ConnectUDPStream::TryActivating() {
   }
 
   RefPtr<UriTemplateWrapper> builder;
-  UriTemplateWrapper::Init(info->PathTemplate(), getter_AddRefs(builder));
+  UriTemplateWrapper::Init(info->MasqueTemplate(), getter_AddRefs(builder));
   if (!builder) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -118,11 +118,11 @@ nsresult Http3ConnectUDPStream::TryActivating() {
     return rv;
   }
 
-  nsCString path;
-  builder->Build(&path);
-  LOG(("Http3ConnectUDPStream::TryActivating [host=%s path=%s]",
-       info->Host().get(), path.get()));
-  return mSession->TryActivating(""_ns, ""_ns, info->Host(), path,
+  nsCString pathQuery;
+  builder->Build(&pathQuery);
+  LOG(("Http3ConnectUDPStream::TryActivating [host=%s pathQuery=%s]",
+       info->Host().get(), pathQuery.get()));
+  return mSession->TryActivating(""_ns, ""_ns, info->Host(), pathQuery,
                                  mFlatHttpRequestHeaders, &mStreamId, this);
 }
 

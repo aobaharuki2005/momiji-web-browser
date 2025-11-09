@@ -1707,12 +1707,12 @@ nsProtocolProxyService::NewProxyInfoWithAuth(
 
 NS_IMETHODIMP
 nsProtocolProxyService::NewMASQUEProxyInfo(
-    const nsACString& aHost, int32_t aPort, const nsACString& aPathTemplate,
+    const nsACString& aHost, int32_t aPort, const nsACString& aMasqueTemplate,
     const nsACString& aProxyAuthorizationHeader,
     const nsACString& aConnectionIsolationKey, uint32_t aFlags,
     uint32_t aFailoverTimeout, nsIProxyInfo* aFailoverProxy,
     nsIProxyInfo** aResult) {
-  return NewProxyInfo_Internal(kProxyType_MASQUE, aHost, aPort, aPathTemplate,
+  return NewProxyInfo_Internal(kProxyType_MASQUE, aHost, aPort, aMasqueTemplate,
                                ""_ns, ""_ns, aProxyAuthorizationHeader,
                                aConnectionIsolationKey, aFlags,
                                aFailoverTimeout, aFailoverProxy, 0, aResult);
@@ -2085,7 +2085,7 @@ nsresult nsProtocolProxyService::GetProtocolInfo(nsIURI* uri,
 
 nsresult nsProtocolProxyService::NewProxyInfo_Internal(
     const char* aType, const nsACString& aHost, int32_t aPort,
-    const nsACString& aPathTemplate, const nsACString& aUsername,
+    const nsACString& aMasqueTemplate, const nsACString& aUsername,
     const nsACString& aPassword, const nsACString& aProxyAuthorizationHeader,
     const nsACString& aConnectionIsolationKey, uint32_t aFlags,
     uint32_t aFailoverTimeout, nsIProxyInfo* aFailoverProxy,
@@ -2103,7 +2103,7 @@ nsresult nsProtocolProxyService::NewProxyInfo_Internal(
   proxyInfo->mType = aType;
   proxyInfo->mHost = aHost;
   proxyInfo->mPort = aPort;
-  proxyInfo->mPathTemplate = aPathTemplate;
+  proxyInfo->mMasqueTemplate = aMasqueTemplate;
   proxyInfo->mUsername = aUsername;
   proxyInfo->mPassword = aPassword;
   proxyInfo->mFlags = aFlags;
