@@ -75,16 +75,11 @@ async function runTest(aTestFile) {
   await promiseApzFlushedRepaints();
   await waitUntilApzStable();
 
+  let loaded = BrowserTestUtils.browserLoaded(browser);
   const url_of_test_file = getRootDirectory(gTestPath) + aTestFile;
-  await SpecialPowers.spawn(
-    browser,
-    [url_of_test_file],
-    async function (_url_of_test_file) {
-      content.location = _url_of_test_file;
-    }
-  );
+  BrowserTestUtils.startLoadingURIString(browser, url_of_test_file);
 
-  await BrowserTestUtils.browserLoaded(browser);
+  await loaded;
 
   // Make sure the document gets loaded in the parent process and is a top
   // level content document.
