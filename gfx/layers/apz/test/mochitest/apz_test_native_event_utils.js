@@ -219,12 +219,12 @@ function _getTargetRect(aTarget) {
   // If the target is the root content window, its origin relative
   // to the visual viewport is (0, 0).
   if (aTarget instanceof Window) {
-    return rect;
+    return { rect, window: aTarget };
   }
   if (aTarget.Window && aTarget instanceof aTarget.Window) {
     // iframe window
     // FIXME: Compute proper rect against the root content window
-    return rect;
+    return { rect, window: aTarget };
   }
 
   // Otherwise, we have an element. Start with the origin of
@@ -280,7 +280,7 @@ function _getTargetRect(aTarget) {
     aTarget = iframe;
   }
 
-  return rect;
+  return { rect, window: aTarget.ownerDocument.defaultView };
 }
 
 // Returns the in-process root window for the given |aWindow|.
@@ -338,14 +338,34 @@ async function coordinatesRelativeToScreen(aParams) {
     };
   }
 
-  const rect = _getTargetRect(target);
+  const rectAndWindow = _getTargetRect(target);
+
+  const inProcessRootWindow = getInProcessRootWindow(window);
+
+  if (
+    !(inProcessRootWindow.location.href === rectAndWindow.window.location.href)
+  ) {
+    info(
+      "warning: coordinatesRelativeToScreen using coords based on one window in another, this will likely produce incorrect results"
+    );
+    info(
+      "inProcessRootWindow.location.href " + inProcessRootWindow.location.href
+    );
+    info(
+      "rectAndWindow.window.location.href " + rectAndWindow.window.location.href
+    );
+  }
+  // This doesn't hold yet.
+  //ok(inProcessRootWindow.location.href === rectAndWindow.window.location.href, "same root window");
 
   const utils = SpecialPowers.wrap(
-    SpecialPowers.getDOMWindowUtils(getInProcessRootWindow(window))
+    SpecialPowers.getDOMWindowUtils(inProcessRootWindow)
   );
   const positionInScreenCoords = utils.toScreenRect(
-    rect.left + (atCenter ? rect.width / 2 : offsetX),
-    rect.top + (atCenter ? rect.height / 2 : offsetY),
+    rectAndWindow.rect.left +
+      (atCenter ? rectAndWindow.rect.width / 2 : offsetX),
+    rectAndWindow.rect.top +
+      (atCenter ? rectAndWindow.rect.height / 2 : offsetY),
     0,
     0
   );
