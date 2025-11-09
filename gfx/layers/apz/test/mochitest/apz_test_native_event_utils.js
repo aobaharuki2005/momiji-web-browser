@@ -213,37 +213,44 @@ function parseNativeModifiers(aModifiers, aWindow = window) {
 // |aTarget| may be an element (contained in the root content document or
 // a subdocument) or, as a special case, the root content window.
 // FIXME: Support iframe windows as targets.
-function _getTargetRect(aTarget) {
+function _getTargetRect(aTarget, atCenter) {
   let rect = { left: 0, top: 0, width: 0, height: 0 };
 
-  // If the target is the root content window, its origin relative
-  // to the visual viewport is (0, 0).
-  if (aTarget instanceof Window) {
-    return { rect, window: aTarget };
-  }
-  if (aTarget.Window && aTarget instanceof aTarget.Window) {
-    // iframe window
-    // FIXME: Compute proper rect against the root content window
-    return { rect, window: aTarget };
-  }
+  aTarget = SpecialPowers.wrap(aTarget);
+  let containingWindow = null;
+  if (
+    aTarget instanceof Window ||
+    (aTarget.Window && aTarget instanceof aTarget.Window)
+  ) {
+    // If the target is the root content window, its origin relative
+    // to the visual viewport is (0, 0).
 
-  // Otherwise, we have an element. Start with the origin of
-  // its bounding client rect which is relative to the enclosing
-  // document's layout viewport. Note that for iframes, the
-  // layout viewport is also the visual viewport.
-  const boundingClientRect = aTarget.getBoundingClientRect();
-  rect.left = boundingClientRect.left;
-  rect.top = boundingClientRect.top;
-  rect.width = boundingClientRect.width;
-  rect.height = boundingClientRect.height;
+    // FIXME: Compute proper rect against the root content window
+
+    // leave rect as all 0's. The top/left is correct, but the width/height is
+    // not necessarily correct, just assert that we are not sending event to the
+    // center of the target so that we are not using the width/height.
+    ok(!atCenter, "atCenter not supported with window targets, todo");
+    containingWindow = aTarget;
+  } else {
+    // Otherwise, we have an element. Start with the origin of
+    // its bounding client rect which is relative to the enclosing
+    // document's layout viewport. Note that for iframes, the
+    // layout viewport is also the visual viewport.
+
+    const boundingClientRect = aTarget.getBoundingClientRect();
+    rect.left = boundingClientRect.left;
+    rect.top = boundingClientRect.top;
+    rect.width = boundingClientRect.width;
+    rect.height = boundingClientRect.height;
+    containingWindow = aTarget.ownerDocument.defaultView;
+  }
 
   // Iterate up the window hierarchy until we reach the root
   // content window, adding the offsets of any iframe windows
   // relative to their parent window.
-  aTarget = SpecialPowers.wrap(aTarget);
-  while (aTarget.ownerDocument.defaultView.browsingContext.embedderElement) {
-    const iframe =
-      aTarget.ownerDocument.defaultView.browsingContext.embedderElement;
+  while (containingWindow.browsingContext.embedderElement) {
+    const iframe = containingWindow.browsingContext.embedderElement;
     // The offset of the iframe window relative to the parent window
     // includes the iframe's border, and the iframe's origin in its
     // containing document.
@@ -278,9 +285,10 @@ function _getTargetRect(aTarget) {
       );
     }
     aTarget = iframe;
+    containingWindow = aTarget.ownerDocument.defaultView;
   }
 
-  return { rect, window: aTarget.ownerDocument.defaultView };
+  return { rect, window: containingWindow };
 }
 
 // Returns the in-process root window for the given |aWindow|.
@@ -338,7 +346,7 @@ async function coordinatesRelativeToScreen(aParams) {
     };
   }
 
-  const rectAndWindow = _getTargetRect(target);
+  const rectAndWindow = _getTargetRect(target, atCenter);
 
   const inProcessRootWindow = getInProcessRootWindow(window);
 
