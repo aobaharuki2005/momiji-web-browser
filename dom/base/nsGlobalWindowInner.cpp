@@ -5316,7 +5316,7 @@ nsresult nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
     return rv.StealNSResult();
   }
 
-  NS_WARNING("unrecognized topic in nsGlobalWindowInner::Observe");
+  NS_WARNING(nsPrintfCString("unrecognized topic %s", aTopic).get());
   return NS_ERROR_FAILURE;
 }
 
