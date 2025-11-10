@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Test High and Professional profile AV1 video files</title>
+<title>Test 10/12-bit video files</title>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 <script type="application/javascript">
 
-/** This test checks if 10- and 12-bit AV1 video plays. */
-const av1Files = ["av1-yuv444p10.webm", "av1-yuv422p10.webm", "av1-yuv444p12.webm"];
+/** This test checks if 10- and 12-bit video plays. */
+const videos = ["av1-yuv444p10.webm", "av1-yuv422p10.webm", "av1-yuv444p12.webm",
+                "vp9-yuv420p10.webm", "vp9-yuv420p12.webm"];
 add_task(async function testPlayAll() {
-  await Promise.all(av1Files.map(
+  await Promise.all(videos.map(
     (f) => {
       let v = document.createElement("video");
       document.body.appendChild(v);
@@ -17,8 +18,8 @@ add_task(async function testPlayAll() {
       return v;
     }).map(
       (v) => v.play())).then(
-        () => ok(true, "All AV1 video played."),
-        (e) => ok(false, "Play AV1 video error: " + e));
+        () => ok(true, "All video played."),
+        (e) => ok(false, "Play video error: " + e));
 });
 
 </script>
