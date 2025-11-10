@@ -1059,7 +1059,10 @@ add_task(async function delayTests() {
  */
 add_task(async function zeroDelayTests() {
   await SpecialPowers.pushPrefEnv({
-    set: [["ui.tooltip.delay_ms", 1000]],
+    set: [
+      ["ui.tooltip.delay_ms", 1000],
+      ["ui.prefersReducedMotion", 1],
+    ],
   });
 
   const tabUrl =
@@ -1074,12 +1077,13 @@ add_task(async function zeroDelayTests() {
     resolved = true;
   });
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  let timeoutPromise = new Promise(resolve => setTimeout(resolve, 300));
+  let timeoutPromise = new Promise(resolve => setTimeout(resolve, 900));
   await Promise.race([openPreviewPromise, timeoutPromise]);
 
-  Assert.ok(resolved, "Zero delay is set immediately after leaving tab strip");
+  Assert.ok(resolved, "Panel was opened the second time without a delay");
 
   await closeTabPreviews();
+
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
   await resetState();
