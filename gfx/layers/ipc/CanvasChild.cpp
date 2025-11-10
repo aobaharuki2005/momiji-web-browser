@@ -625,7 +625,7 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     }
   }
 
-  RecordEvent(RecordedCacheDataSurface(aSurface, true));
+  RecordEvent(RecordedCacheDataSurface(aSurface));
 
   if (!EnsureDataSurfaceShmem(ssSize, ssFormat)) {
     return nullptr;
