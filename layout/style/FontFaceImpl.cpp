@@ -609,6 +609,11 @@ static already_AddRefed<gfxCharacterMap> ComputeCharacterMap(
   if (ranges.IsEmpty()) {
     return nullptr;
   }
+  // A single range covering the entire Unicode code space is equivalent to
+  // having no range at all.
+  if (ranges.Length() == 1 && ranges[0] == StyleUnicodeRange{0, 0x10ffff}) {
+    return nullptr;
+  }
   auto charMap = MakeRefPtr<gfxCharacterMap>(256);
   for (auto& range : ranges) {
     charMap->SetRange(range.start, range.end);
