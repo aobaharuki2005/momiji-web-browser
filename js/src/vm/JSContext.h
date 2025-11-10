@@ -9,6 +9,7 @@
 #ifndef vm_JSContext_h
 #define vm_JSContext_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/BaseProfilerUtils.h"  // BaseProfilerThreadId
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -154,12 +155,26 @@ enum class InterruptReason : uint32_t {
 
 enum class ShouldCaptureStack { Maybe, Always };
 
+// A wrapper type to allow customization of tracing of
+// MicroTaskElements.
+struct MicroTaskQueueElement {
+  MOZ_IMPLICIT
+  MicroTaskQueueElement(const JS::Value& val) : value(val) {}
+
+  operator JS::Value() const { return value; }
+
+  void trace(JSTracer* trc) { TraceEdge(trc, &value, "MicroTaskQueueElement"); }
+
+ private:
+  js::HeapPtr<JS::Value> value;
+};
+
 // Use TempAllocPolicy to report OOM
 // MG:XXX: It would be nice to explore the typical depth of the queue
 //         to see if we can get it all inline in the common case.
 // MG:XXX: This appears to be broken for non-zero values of inline!
 using MicroTaskQueue =
-    js::TraceableFifo<js::HeapPtr<JS::Value>, 0, TempAllocPolicy>;
+    js::TraceableFifo<MicroTaskQueueElement, 0, TempAllocPolicy>;
 
 // A pair of microtask queues; one debug and one 'regular' (non-debug).
 struct MicroTaskQueueSet {
