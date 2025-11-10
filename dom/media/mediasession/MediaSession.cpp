@@ -87,7 +87,6 @@ void MediaSession::Shutdown() {
   if (mParent) {
     SetMediaSessionDocStatus(SessionDocStatus::eInactive);
   }
-  mMetadataRequest.DisconnectIfExists();
 }
 
 void MediaSession::NotifyOwnerDocumentActivityChanged() {
@@ -316,30 +315,13 @@ void MediaSession::NotifyMetadataUpdated() {
   RefPtr<BrowsingContext> currentBC = GetParentObject()->GetBrowsingContext();
   MOZ_ASSERT(currentBC, "Update session metadata after context destroyed!");
 
-  if (!mMediaMetadata) {
-    if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(currentBC)) {
-      updater->UpdateMetadata(currentBC->Id(), Nothing());
-    }
-    return;
+  Maybe<MediaMetadataBase> metadata;
+  if (GetMetadata()) {
+    metadata.emplace(*(GetMetadata()->AsMetadataBase()));
   }
-
-  mMetadataRequest.DisconnectIfExists();
-
-  mMediaMetadata->LoadMetadataArtwork()
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, currentBC](MediaMetadataBase&& aMetadata) {
-            if (RefPtr<IMediaInfoUpdater> updater =
-                    ContentMediaAgent::Get(currentBC)) {
-              updater->UpdateMetadata(currentBC->Id(), Some(aMetadata));
-            }
-
-            self->mMetadataRequest.Complete();
-          },
-          [](nsresult rv) {
-            MOZ_ASSERT_UNREACHABLE("LoadMetadataArtwork should always resolve");
-          })
-      ->Track(mMetadataRequest);
+  if (RefPtr<IMediaInfoUpdater> updater = ContentMediaAgent::Get(currentBC)) {
+    updater->UpdateMetadata(currentBC->Id(), metadata);
+  }
 }
 
 void MediaSession::NotifyEnableSupportedAction(MediaSessionAction aAction) {

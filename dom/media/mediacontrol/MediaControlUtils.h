@@ -7,9 +7,7 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 
-#include "ImageOps.h"
 #include "MediaController.h"
-#include "gfxDrawable.h"
 #include "imgIEncoder.h"
 #include "imgITools.h"
 #include "mozilla/Logging.h"
@@ -96,23 +94,19 @@ inline bool IsImageIn(const nsTArray<MediaImage>& aArtwork,
 
 // The image buffer would be allocated in aStream whose size is aSize and the
 // buffer head is aBuffer
-inline nsresult GetEncodedImageBuffer(gfx::DataSourceSurface* aSurface,
+inline nsresult GetEncodedImageBuffer(imgIContainer* aImage,
                                       const nsACString& aMimeType,
                                       nsIInputStream** aStream, uint32_t* aSize,
                                       char** aBuffer) {
-  MOZ_ASSERT(aSurface);
+  MOZ_ASSERT(aImage);
 
   nsCOMPtr<imgITools> imgTools = do_GetService("@mozilla.org/image/tools;1");
   if (!imgTools) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<gfxDrawable> drawable =
-      new gfxSurfaceDrawable(aSurface, aSurface->GetSize());
-  nsCOMPtr<imgIContainer> image = image::ImageOps::CreateFromDrawable(drawable);
-
   nsCOMPtr<nsIInputStream> inputStream;
-  nsresult rv = imgTools->EncodeImage(image, aMimeType, u""_ns,
+  nsresult rv = imgTools->EncodeImage(aImage, aMimeType, u""_ns,
                                       getter_AddRefs(inputStream));
   if (NS_FAILED(rv)) {
     return rv;

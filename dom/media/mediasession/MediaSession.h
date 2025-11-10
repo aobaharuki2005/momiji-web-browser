@@ -131,9 +131,6 @@ class MediaSession final : public nsIDocumentActivity, public nsWrapperCache {
   Maybe<PositionState> mPositionState;
   RefPtr<Document> mDoc;
   SessionDocStatus mSessionDocState = SessionDocStatus::eInactive;
-
-  MozPromiseRequestHolder<mozilla::dom::MediaMetadataBasePromise>
-      mMetadataRequest;
 };
 
 }  // namespace dom
