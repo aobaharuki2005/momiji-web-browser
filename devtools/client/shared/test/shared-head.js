@@ -894,6 +894,8 @@ function _watchForPanelReload(toolbox, toolId) {
 
       info("Waiting for inspector updates after page reload");
       await onReloaded;
+
+      info("Received 'reloaded' event for inspector");
     };
   } else if (
     ["netmonitor", "accessibility", "webconsole", "jsdebugger"].includes(toolId)
@@ -902,6 +904,8 @@ function _watchForPanelReload(toolbox, toolId) {
     return async function () {
       info(`Waiting for ${toolId} updates after page reload`);
       await onReloaded;
+
+      info(`Received 'reloaded' event for ${toolId}`);
     };
   }
   return null;
