@@ -33,10 +33,9 @@ function codegenTestARM64_adhoc(module_text, export_name, expected, options = {}
         expected = arm64_prefix + '\n' + expected;
     if (!options.no_suffix)
         expected = expected + '\n' + arm64_suffix;
-    expected = fixlines(expected);
+    expected = fixlines(expected, `${HEX}{8}`);
 
-    const output_simple = stripencoding(output, `${HEX}{8}`);
-    const output_matches_expected = output_simple.match(new RegExp(expected)) != null;
+    const output_matches_expected = output.match(new RegExp(expected)) != null;
     if (!output_matches_expected) {
         print("---- codegen-arm64-test.js: TEST FAILED ----");
     }

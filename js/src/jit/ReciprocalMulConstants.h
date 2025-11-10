@@ -14,40 +14,20 @@
 namespace js::jit {
 
 struct ReciprocalMulConstants {
-  template <typename Multiplier, typename ShiftAmount>
-  struct DivConstants {
-    Multiplier multiplier;
-    ShiftAmount shiftAmount;
-  };
+  int64_t multiplier;
+  int32_t shiftAmount;
 
-  using Div32Constants = DivConstants<int64_t, int32_t>;
-
-  static auto computeSignedDivisionConstants(int32_t d) {
+  static ReciprocalMulConstants computeSignedDivisionConstants(int32_t d) {
     return computeDivisionConstants(mozilla::Abs(d), 31);
   }
 
-  static auto computeUnsignedDivisionConstants(uint32_t d) {
+  static ReciprocalMulConstants computeUnsignedDivisionConstants(uint32_t d) {
     return computeDivisionConstants(d, 32);
   }
 
-#if defined(__SIZEOF_INT128__)
-  using Div64Constants = DivConstants<__int128_t, int32_t>;
-
-  static auto computeSignedDivisionConstants(int64_t d) {
-    return computeDivisionConstants(mozilla::Abs(d), 63);
-  }
-
-  static auto computeUnsignedDivisionConstants(uint64_t d) {
-    return computeDivisionConstants(d, 64);
-  }
-#endif
-
  private:
-  static Div32Constants computeDivisionConstants(uint32_t d, int maxLog);
-
-#if defined(__SIZEOF_INT128__)
-  static Div64Constants computeDivisionConstants(uint64_t d, int maxLog);
-#endif
+  static ReciprocalMulConstants computeDivisionConstants(uint32_t d,
+                                                         int maxLog);
 };
 
 }  // namespace js::jit
