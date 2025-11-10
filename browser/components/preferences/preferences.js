@@ -442,6 +442,14 @@ async function gotoPref(
     spotlight(subcategory, category);
   }
 
+  // Handle any visibility changes that are controlled by pref logic.
+  //
+  // Take caution when trying to flip the hidden state to true since the
+  // element might show up unexpectedly on different pages in about:preferences.
+  //
+  // See Bug 1999032 to remove this in favor of config-based prefs.
+  categoryModule.handlePrefControlledSection?.();
+
   // Record which category is shown
   Glean.aboutpreferences["show" + aShowReason].record({ value: category });
 
