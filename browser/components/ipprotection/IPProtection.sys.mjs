@@ -15,8 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
-  IPProtectionStates:
-    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+  IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
+  IPPProxyStates: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   requestIdleCallback: "resource://gre/modules/Timer.sys.mjs",
   cancelIdleCallback: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -272,11 +272,10 @@ class IPProtectionWidget {
    * @param {XULElement} toolbaritem - the widget toolbaritem.
    */
   #onCreated(toolbaritem) {
-    let state = lazy.IPProtectionService.state;
-    let isActive = state === lazy.IPProtectionStates.ACTIVE;
+    let isActive = lazy.IPPProxyManager.state === lazy.IPPProxyStates.ACTIVE;
     let isError =
-      state === lazy.IPProtectionStates.ERROR &&
-      lazy.IPProtectionService.errors.includes(ERRORS.GENERIC);
+      lazy.IPPProxyManager.state === lazy.IPPProxyStates.ERROR &&
+      lazy.IPPProxyManager.errors.includes(ERRORS.GENERIC);
     this.updateIconStatus(toolbaritem, {
       isActive,
       isError,
@@ -290,9 +289,17 @@ class IPProtectionWidget {
       "IPProtectionService:StateChanged",
       this.handleEvent
     );
+    lazy.IPPProxyManager.addEventListener(
+      "IPPProxyManager:StateChanged",
+      this.handleEvent
+    );
   }
 
   #onDestroyed() {
+    lazy.IPPProxyManager.removeEventListener(
+      "IPPProxyManager:StateChanged",
+      this.handleEvent
+    );
     lazy.IPProtectionService.removeEventListener(
       "IPProtectionService:StateChanged",
       this.handleEvent
@@ -309,7 +316,7 @@ class IPProtectionWidget {
     await Promise.resolve();
     let moved = !!lazy.CustomizableUI.getPlacementOfWidget(widgetId);
     if (!moved) {
-      lazy.IPProtectionService.stop();
+      lazy.IPPProxyManager.stop();
     }
   }
 
@@ -324,13 +331,15 @@ class IPProtectionWidget {
   }
 
   #handleEvent(event) {
-    if (event.type == "IPProtectionService:StateChanged") {
-      let state = lazy.IPProtectionService.state;
+    if (
+      event.type == "IPProtectionService:StateChanged" ||
+      event.type == "IPPProxyManager:StateChanged"
+    ) {
       let status = {
-        isActive: state === lazy.IPProtectionStates.ACTIVE,
+        isActive: lazy.IPPProxyManager.state === lazy.IPPProxyStates.ACTIVE,
         isError:
-          state === lazy.IPProtectionStates.ERROR &&
-          lazy.IPProtectionService.errors.includes(ERRORS.GENERIC),
+          lazy.IPPProxyManager.state === lazy.IPPProxyStates.ERROR &&
+          lazy.IPPProxyManager.errors.includes(ERRORS.GENERIC),
       };
 
       let widget = lazy.CustomizableUI.getWidget(IPProtectionWidget.WIDGET_ID);

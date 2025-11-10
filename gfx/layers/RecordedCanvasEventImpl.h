@@ -259,7 +259,8 @@ inline bool RecordedCacheDataSurface::PlayCanvasEvent(
   if (RefPtr<gfx::DataSourceSurface> dataSurface =
           aTranslator->LookupDataSurface(mSurface)) {
     if (mForceData) {
-      (void)dataSurface->GetData();
+      gfx::DataSourceSurface::ScopedMap map(
+          dataSurface, gfx::DataSourceSurface::MapType::READ);
     }
     return true;
   }
@@ -270,7 +271,8 @@ inline bool RecordedCacheDataSurface::PlayCanvasEvent(
   }
   if (RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface()) {
     if (mForceData) {
-      (void)dataSurface->GetData();
+      gfx::DataSourceSurface::ScopedMap map(
+          dataSurface, gfx::DataSourceSurface::MapType::READ);
     }
     aTranslator->AddDataSurface(mSurface, std::move(dataSurface));
   }

@@ -24,7 +24,7 @@ task-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-    worker-type: b-linux-medium-gcp
+    worker-type: b-linux-medium
     worker:
         docker-image: {in-tree: android-ui-tests}
         max-run-time: 7200

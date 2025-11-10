@@ -1,7 +1,7 @@
 "use strict";
 
 const FAVICON =
-  "data:image/gif;base64,R0lGODlhCwALAIAAAAAA3pn/ZiH5BAEAAAEALAAAAAALAAsAAAIUhA+hkcuO4lmNVindo7qyrIXiGBYAOw==";
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAARElEQVQYV2NkYLj3nwEnUGKEMxkYGBghilEFIQBTHKqYOIDFZHQ+DNz7j0MxdoDDGThNRgfoNsEATsXYARbFuAHtFAMAuvMbOrNomdAAAAAASUVORK5CYII=";
 const PAGE_URL = `data:text/html,
 <html>
   <head>

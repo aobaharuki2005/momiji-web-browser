@@ -80,39 +80,19 @@ class UrlInputFragment :
         private const val ANIMATION_DURATION = 200
 
         /**
-         * Creates a new [UrlInputFragment] that does not yet have an associated session.
+         * Creates a [Bundle] containing the provided [tabId].
+         * This is used to create a new [UrlInputFragment] for an existing tab session.
          *
-         * @return A new [UrlInputFragment] instance.
+         * @param tabId The unique identifier of the tab.
+         * @return A [Bundle] with the tab ID and animation arguments.
          */
-        @JvmStatic
-        fun createWithoutSession(): UrlInputFragment {
-            val arguments = Bundle()
-
-            val fragment = UrlInputFragment()
-            fragment.arguments = arguments
-
-            return fragment
-        }
-
-        /**
-         * Creates a new [UrlInputFragment] that has a session associated with it.
-         *
-         * @param tabId The id of the tab that should be displayed.
-         * @return A new [UrlInputFragment] instance.
-         */
-        @JvmStatic
-        fun createWithTab(
+        fun bundleForTab(
             tabId: String,
-        ): UrlInputFragment {
-            val arguments = Bundle()
-
-            arguments.putString(ARGUMENT_SESSION_UUID, tabId)
-            arguments.putString(ARGUMENT_ANIMATION, ANIMATION_BROWSER_SCREEN)
-
-            val fragment = UrlInputFragment()
-            fragment.arguments = arguments
-
-            return fragment
+        ): Bundle {
+            return Bundle().apply {
+                putString(ARGUMENT_ANIMATION, ANIMATION_BROWSER_SCREEN)
+                putString(ARGUMENT_SESSION_UUID, tabId)
+            }
         }
     }
 

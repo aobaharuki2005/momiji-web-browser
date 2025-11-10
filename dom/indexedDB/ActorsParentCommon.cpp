@@ -66,7 +66,7 @@ class nsIFile;
 
 namespace mozilla::dom::indexedDB {
 
-static_assert(SNAPPY_VERSION == 0x010200);
+static_assert(SNAPPY_VERSION == 0x010202);
 
 using mozilla::ipc::IsOnBackgroundThread;
 

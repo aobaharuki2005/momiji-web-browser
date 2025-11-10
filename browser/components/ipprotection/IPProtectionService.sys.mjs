@@ -12,30 +12,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs",
   IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
   IPPNimbusHelper: "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs",
-  IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
-  IPProtectionServerlist:
-    "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
   IPPSignInWatcher: "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs",
   IPPStartupCache: "resource:///modules/ipprotection/IPPStartupCache.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
 
-import {
-  SIGNIN_DATA,
-  ERRORS,
-} from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+import { SIGNIN_DATA } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 const ENABLED_PREF = "browser.ipProtection.enabled";
-const LOG_PREF = "browser.ipProtection.log";
-const MAX_ERROR_HISTORY = 50;
-
-ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
-  return console.createInstance({
-    prefix: "IPProtectionService",
-    maxLogLevel: Services.prefs.getBoolPref(LOG_PREF, false) ? "Debug" : "Warn",
-  });
-});
 
 /**
  * @typedef {object} IPProtectionStates
@@ -48,10 +33,6 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
  *  The user is signed out but eligible (via nimbus). The panel should show the login view.
  * @property {string} READY
  *  Ready to be activated.
- * @property {string} ACTIVE
- *  Proxy is active.
- * @property {string} ERROR
- *  Error
  *
  * Note: If you update this list of states, make sure to update the
  * corresponding documentation in the `docs` folder as well.
@@ -61,8 +42,6 @@ export const IPProtectionStates = Object.freeze({
   UNAVAILABLE: "unavailable",
   UNAUTHENTICATED: "unauthenticated",
   READY: "ready",
-  ACTIVE: "active",
-  ERROR: "error",
 });
 
 /**
@@ -75,10 +54,7 @@ export const IPProtectionStates = Object.freeze({
 class IPProtectionServiceSingleton extends EventTarget {
   #state = IPProtectionStates.UNINITIALIZED;
 
-  errors = [];
-
   guardian = null;
-  proxyManager = null;
 
   #helpers = null;
 
@@ -92,15 +68,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     return this.#state;
   }
 
-  /**
-   * Checks if the proxy is active and was activated.
-   *
-   * @returns {Date}
-   */
-  get activatedAt() {
-    return this.proxyManager?.active && this.proxyManager?.activatedAt;
-  }
-
   constructor() {
     super();
 
@@ -108,7 +75,6 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.updateState = this.#updateState.bind(this);
     this.setState = this.#setState.bind(this);
-    this.setErrorState = this.#setErrorState.bind(this);
 
     this.#helpers = lazy.IPPHelpers;
   }
@@ -137,8 +103,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    this.proxyManager = new lazy.IPPProxyManager(this.guardian);
-
     this.#helpers.forEach(helper => helper.init());
 
     this.#updateState();
@@ -156,13 +120,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    if (this.#state === IPProtectionStates.ACTIVE) {
-      this.stop(false);
-    }
-    this.proxyManager?.destroy();
-
-    this.errors = [];
-
     this.#helpers.forEach(helper => helper.uninit());
 
     this.#setState(IPProtectionStates.UNINITIALIZED);
@@ -174,104 +131,16 @@ class IPProtectionServiceSingleton extends EventTarget {
     );
   }
 
-  /**
-   * Start the proxy if the user is eligible.
-   *
-   * @param {boolean} userAction
-   * True if started by user action, false if system action
-   */
-  async start(userAction = true) {
-    await lazy.IPProtectionServerlist.maybeFetchList();
-
-    const enrollAndEntitleData =
-      await lazy.IPPEnrollAndEntitleManager.maybeEnrollAndEntitle();
-    if (!enrollAndEntitleData || !enrollAndEntitleData.isEnrolledAndEntitled) {
-      this.setErrorState(enrollAndEntitleData.error || ERRORS.GENERIC);
-      return;
-    }
-
-    // Retry getting state if the previous attempt failed.
-    if (this.#state === IPProtectionStates.ERROR) {
-      this.#updateState();
-    }
-
-    if (this.#state !== IPProtectionStates.READY) {
-      this.#setErrorState(ERRORS.GENERIC);
-      return;
-    }
-    this.errors = [];
-
-    let started;
-    try {
-      started = await this.proxyManager.start();
-    } catch (error) {
-      this.#setErrorState(ERRORS.GENERIC, error);
-    }
-
-    // Proxy failed to start but no error was given.
-    if (!started) {
-      return;
-    }
-
-    this.#setState(IPProtectionStates.ACTIVE);
-
-    Glean.ipprotection.toggled.record({
-      userAction,
-      enabled: true,
-    });
-
-    if (userAction) {
-      this.reloadCurrentTab();
-    }
-  }
-
-  /**
-   * Stops the proxy.
-   *
-   * @param {boolean} userAction
-   * True if started by user action, false if system action
-   */
-  async stop(userAction = true) {
-    if (!this.proxyManager?.active) {
-      return;
-    }
-
-    const sessionLength = this.proxyManager.stop();
-
-    Glean.ipprotection.toggled.record({
-      userAction,
-      duration: sessionLength,
-      enabled: false,
-    });
-
-    this.#setState(IPProtectionStates.READY);
-
-    if (userAction) {
-      this.reloadCurrentTab();
-    }
-  }
-
-  /**
-   * Gets the current window and reloads the selected tab.
-   */
-  reloadCurrentTab() {
-    let win = Services.wm.getMostRecentBrowserWindow();
-    if (win) {
-      win.gBrowser.reloadTab(win.gBrowser.selectedTab);
-    }
-  }
-
   async startLoginFlow(browser) {
     return lazy.SpecialMessageActions.fxaSignInFlow(SIGNIN_DATA, browser);
   }
 
   /**
-   * Request to update the current state.
-   *
-   * Updates will be queued if another update is in progress.
+   * Recomputes the current state synchronously using the latest helper data.
+   * Callers should update their own inputs before invoking this.
    */
   #updateState() {
-    this.#setState(this.#checkState());
+    this.#setState(this.#computeState());
   }
 
   /**
@@ -279,7 +148,7 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * @returns {Promise<IPProtectionStates>}
    */
-  #checkState() {
+  #computeState() {
     // The IPP feature is disabled.
     if (!this.featureEnabled) {
       return IPProtectionStates.UNINITIALIZED;
@@ -298,11 +167,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       return !eligible
         ? IPProtectionStates.UNAVAILABLE
         : IPProtectionStates.UNAUTHENTICATED;
-    }
-
-    // The connection is already active.
-    if (this.proxyManager?.active) {
-      return IPProtectionStates.ACTIVE;
     }
 
     // Check if the current account is enrolled and has an entitlement.
@@ -347,23 +211,6 @@ class IPProtectionServiceSingleton extends EventTarget {
         },
       })
     );
-  }
-
-  /**
-   * Helper to dispatch error messages.
-   *
-   * @param {string} error - the error message to send.
-   * @param {string} [errorContext] - the error message to log.
-   */
-  #setErrorState(error, errorContext) {
-    this.errors.push(error);
-
-    if (this.errors.length > MAX_ERROR_HISTORY) {
-      this.errors.splice(0, this.errors.length - MAX_ERROR_HISTORY);
-    }
-
-    this.#setState(IPProtectionStates.ERROR);
-    lazy.logConsole.error(errorContext || error);
   }
 }
 

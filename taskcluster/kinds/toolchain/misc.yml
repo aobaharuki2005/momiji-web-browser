@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 task-defaults:
-    worker-type: b-linux-amd
+    worker-type: b-linux-docker-amd
     worker:
         max-run-time: 1800
     use-python: default
@@ -217,7 +217,7 @@ macosx64-xz:
         toolchain-artifact: public/build/xz.tar.zst
     fetches:
         fetch:
-            - xz-5.4.4
+            - xz-5.8.1
         toolchain:
             - macosx64-clang-toolchain
             - macosx64-sdk-toolchain

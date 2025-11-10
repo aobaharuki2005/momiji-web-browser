@@ -283,8 +283,8 @@ add_task(async function test_IPProtectionService_pass_errors() {
   await messageBarLoadedPromise;
 
   Assert.equal(
-    IPProtectionService.state,
-    IPProtectionStates.ERROR,
+    IPPProxyManager.state,
+    IPPProxyStates.ERROR,
     "Proxy is not active"
   );
 
@@ -309,8 +309,7 @@ add_task(async function test_IPProtectionService_pass_errors() {
   Assert.equal(content.state.error, "", "Should have no error");
 
   // Reset the errors
-  IPProtectionService.hasError = false;
-  IPProtectionService.errors = [];
+  IPPProxyManager.errors = [];
 
   await cleanupAlpha();
   cleanupService();
@@ -327,31 +326,27 @@ add_task(async function test_IPProtectionService_retry_errors() {
   });
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
 
-  IPProtectionService.updateState();
+  IPPProxyManager.updateState();
 
   let content = await openPanel();
 
   // Mock a failure
   IPPEnrollAndEntitleManager.resetEntitlement();
-  await IPProtectionService.setErrorState();
+  IPPProxyManager.setErrorState();
 
   let startedEventPromise = BrowserTestUtils.waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
     false,
-    () => !!IPProtectionService.activatedAt
+    () => !!IPPProxyManager.activatedAt
   );
   content.connectionToggleEl.click();
 
   await startedEventPromise;
 
-  Assert.equal(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
-    "Proxy is active"
-  );
+  Assert.equal(IPPProxyManager.state, IPPProxyStates.ACTIVE, "Proxy is active");
 
-  IPProtectionService.stop();
+  await IPPProxyManager.stop();
 
   await closePanel();
   await cleanupAlpha();
@@ -382,26 +377,22 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
   );
 
   let startedEventPromise = BrowserTestUtils.waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
     false,
-    () => !!IPProtectionService.activatedAt
+    () => !!IPPProxyManager.activatedAt
   );
   content.connectionToggleEl.click();
 
   await startedEventPromise;
 
-  Assert.equal(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
-    "Proxy is active"
-  );
+  Assert.equal(IPPProxyManager.state, IPPProxyStates.ACTIVE, "Proxy is active");
 
   let vpnOffPromise = BrowserTestUtils.waitForEvent(
     IPProtectionService,
     "IPProtectionService:StateChanged",
     false,
-    () => !IPProtectionService.activatedAt
+    () => !IPPProxyManager.activatedAt
   );
 
   setupService({
@@ -411,8 +402,8 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
   await vpnOffPromise;
 
   Assert.notStrictEqual(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
+    IPPProxyManager.state,
+    IPPProxyStates.ACTIVE,
     "Proxy has stopped"
   );
 
@@ -470,19 +461,15 @@ add_task(async function test_IPProtectionService_reload() {
   content.connectionToggleEl.click();
   await tabReloaded;
 
-  Assert.equal(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
-    "Proxy is active"
-  );
+  Assert.equal(IPPProxyManager.state, IPPProxyStates.ACTIVE, "Proxy is active");
 
   tabReloaded = waitForTabReloaded(gBrowser.selectedTab);
   content.connectionToggleEl.click();
   await tabReloaded;
 
   Assert.notStrictEqual(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
+    IPPProxyManager.state,
+    IPPProxyStates.ACTIVE,
     "Proxy is not active"
   );
 
