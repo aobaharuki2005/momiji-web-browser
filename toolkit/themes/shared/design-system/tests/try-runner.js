@@ -18,7 +18,7 @@ const chalk = require("chalk");
 const path = require("path");
 const prettier = require("prettier");
 const StyleDictionary = require("style-dictionary");
-const config = require("../tokens-config.js");
+const config = require("../config/tokens-config.js");
 
 const TEST_BUILD_PATH = "tests/build/css/";
 const PROJECT_ROOT = path.resolve(__dirname, "../../../../../");

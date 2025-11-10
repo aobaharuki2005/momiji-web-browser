@@ -471,7 +471,7 @@ export default [
       "toolkit/profile/content/profileSelection.js",
       "toolkit/profile/test/xpcshell/head.js",
       "toolkit/profile/test/chrome/test_create_profile.xhtml",
-      "toolkit/themes/shared/design-system/tokens-config.js",
+      "toolkit/themes/shared/design-system/config/tokens-config.js",
       "tools/code-coverage/tests/mochitest/test_coverage_specialpowers.html",
       "tools/profiler/tests/**",
       "uriloader/**",
