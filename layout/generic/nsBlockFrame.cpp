@@ -18,12 +18,14 @@
 #include "BlockReflowState.h"
 #include "CounterStyleManager.h"
 #include "TextOverflow.h"
+#include "fmt/format.h"
 #include "gfxContext.h"
 #include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/Baseline.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/DefineEnum.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
@@ -375,24 +377,9 @@ const char* nsBlockFrame::kReflowCommandType[] = {
     "ContentChanged", "StyleChanged", "ReflowDirty", "Timeout", "UserDefined",
 };
 
-const char* nsBlockFrame::LineReflowStatusToString(
-    LineReflowStatus aLineReflowStatus) const {
-  switch (aLineReflowStatus) {
-    case LineReflowStatus::OK:
-      return "LINE_REFLOW_OK";
-    case LineReflowStatus::Stop:
-      return "LINE_REFLOW_STOP";
-    case LineReflowStatus::RedoNoPull:
-      return "LINE_REFLOW_REDO_NO_PULL";
-    case LineReflowStatus::RedoMoreFloats:
-      return "LINE_REFLOW_REDO_MORE_FLOATS";
-    case LineReflowStatus::RedoNextBand:
-      return "LINE_REFLOW_REDO_NEXT_BAND";
-    case LineReflowStatus::Truncated:
-      return "LINE_REFLOW_TRUNCATED";
-  }
-  return "unknown";
-}
+MOZ_DEFINE_ENUM_TOSTRING_FUNC(LineReflowStatus,
+                              (OK, Stop, RedoNoPull, RedoMoreFloats,
+                               RedoNextBand, Truncated));
 
 #endif
 
@@ -1326,10 +1313,9 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 #ifdef DEBUG
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
-    ListTag(stdout);
-    printf(": begin reflow availSize=%d,%d computedSize=%d,%d\n",
-           aReflowInput.AvailableISize(), aReflowInput.AvailableBSize(),
-           aReflowInput.ComputedISize(), aReflowInput.ComputedBSize());
+    fmt::println(FMT_STRING("{}: begin reflow: availSize={} computedSize={}"),
+                 ListTag().get(), ToString(aReflowInput.AvailableSize()),
+                 ToString(aReflowInput.ComputedSize()));
   }
   AutoNoisyIndenter indent(gNoisy);
   PRTime start = 0;  // Initialize these variablies to silence the compiler.
@@ -1759,18 +1745,13 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
-    ListTag(stdout);
-    printf(": status=%s metrics=%d,%d carriedMargin=%d",
-           ToString(aStatus).c_str(), aMetrics.ISize(parentWM),
-           aMetrics.BSize(parentWM), aMetrics.mCarriedOutBEndMargin.Get());
+    fmt::print(FMT_STRING("{}: status={} metrics={} carriedMargin={}"),
+               ListTag().get(), ToString(aStatus), ToString(aMetrics.Size(wm)),
+               aMetrics.mCarriedOutBEndMargin.Get());
     if (HasOverflowAreas()) {
-      printf(" overflow-vis={%d,%d,%d,%d}", aMetrics.InkOverflow().x,
-             aMetrics.InkOverflow().y, aMetrics.InkOverflow().width,
-             aMetrics.InkOverflow().height);
-      printf(" overflow-scr={%d,%d,%d,%d}", aMetrics.ScrollableOverflow().x,
-             aMetrics.ScrollableOverflow().y,
-             aMetrics.ScrollableOverflow().width,
-             aMetrics.ScrollableOverflow().height);
+      fmt::print(FMT_STRING(" overflow-ink={} overflow-scr={}"),
+                 ToString(aMetrics.InkOverflow()),
+                 ToString(aMetrics.ScrollableOverflow()));
     }
     printf("\n");
   }
@@ -2953,17 +2934,14 @@ static void DumpLine(const BlockReflowState& aState, nsLineBox* aLine,
                      nscoord aDeltaBCoord, int32_t aDeltaIndent) {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
-    nsRect ovis(aLine->InkOverflowRect());
-    nsRect oscr(aLine->ScrollableOverflowRect());
     nsBlockFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent + aDeltaIndent);
-    printf(
-        "line=%p mBCoord=%d dirty=%s oldBounds={%d,%d,%d,%d} "
-        "oldoverflow-vis={%d,%d,%d,%d} oldoverflow-scr={%d,%d,%d,%d} "
-        "deltaBCoord=%d mPrevBEndMargin=%d childCount=%d\n",
-        static_cast<void*>(aLine), aState.mBCoord,
-        aLine->IsDirty() ? "yes" : "no", aLine->IStart(), aLine->BStart(),
-        aLine->ISize(), aLine->BSize(), ovis.x, ovis.y, ovis.width, ovis.height,
-        oscr.x, oscr.y, oscr.width, oscr.height, aDeltaBCoord,
+    fmt::println(
+        FMT_STRING("line={} mBCoord={} dirty={} bounds={} overflow-ink={} "
+                   "overflow-scr={} deltaBCoord={} mPrevBEndMargin={} "
+                   "childCount={}"),
+        static_cast<void*>(aLine), aState.mBCoord, YesOrNo(aLine->IsDirty()),
+        ToString(aLine->GetBounds()), ToString(aLine->InkOverflowRect()),
+        ToString(aLine->ScrollableOverflowRect()), aDeltaBCoord,
         aState.mPrevBEndMargin.Get(), aLine->GetChildCount());
   }
 #endif
@@ -5136,8 +5114,8 @@ void nsBlockFrame::DoReflowInlineFrames(
   }
 #ifdef DEBUG
   if (gNoisyReflow) {
-    printf("Line reflow status = %s\n",
-           LineReflowStatusToString(lineReflowStatus));
+    IndentBy(stdout, gNoiseIndent);
+    fmt::println(FMT_STRING("LineReflowStatus={}"), ToString(lineReflowStatus));
   }
 #endif
 

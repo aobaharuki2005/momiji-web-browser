@@ -12,10 +12,10 @@
 #include "mozilla/AbsoluteContainingBlock.h"
 
 #include "AnchorPositioningUtils.h"
+#include "fmt/format.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ReflowInput.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/dom/ViewTransition.h"
 #include "nsAtomicContainerFrame.h"
@@ -30,18 +30,6 @@
 
 #ifdef DEBUG
 #  include "nsBlockFrame.h"
-
-static void PrettyUC(nscoord aSize, char* aBuf, int aBufSize) {
-  if (NS_UNCONSTRAINEDSIZE == aSize) {
-    strcpy(aBuf, "UC");
-  } else {
-    if ((int32_t)0xdeadbeef == aSize) {
-      strcpy(aBuf, "deadbeef");
-    } else {
-      snprintf(aBuf, aBufSize, "%d", aSize);
-    }
-  }
-}
 #endif
 
 using namespace mozilla;
@@ -1031,19 +1019,10 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    printf("abs pos ");
-    nsAutoString name;
-    aKidFrame->GetFrameName(name);
-    printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
-
-    char width[16];
-    char height[16];
-    PrettyUC(aReflowInput.AvailableWidth(), width, 16);
-    PrettyUC(aReflowInput.AvailableHeight(), height, 16);
-    printf(" a=%s,%s ", width, height);
-    PrettyUC(aReflowInput.ComputedWidth(), width, 16);
-    PrettyUC(aReflowInput.ComputedHeight(), height, 16);
-    printf("c=%s,%s \n", width, height);
+    fmt::println(
+        FMT_STRING("abspos {}: begin reflow: availSize={}, orig cbRect={}"),
+        aKidFrame->ListTag(), ToString(aReflowInput.AvailableSize()),
+        ToString(aOriginalContainingBlockRect));
   }
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
 #endif  // DEBUG
@@ -1518,14 +1497,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
-    const nsRect r = aKidFrame->GetRect();
     nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent - 1);
-    printf("abs pos ");
-    nsAutoString name;
-    aKidFrame->GetFrameName(name);
-    printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
-    printf("%p rect=%d,%d,%d,%d\n", static_cast<void*>(aKidFrame), r.x, r.y,
-           r.width, r.height);
+    fmt::println(FMT_STRING("abspos {}: rect {}"), aKidFrame->ListTag().get(),
+                 ToString(aKidFrame->GetRect()));
   }
 #endif
 
