@@ -387,6 +387,7 @@ tasks:
 
                       routes:
                           - checks
+                          - "tc-treeherder.v2.${project}.${head_sha}"
                       scopes:
                           - 'assume:repo:${repoUrl[8:]}:branch:${short_head_ref}'
                       dependencies: []
