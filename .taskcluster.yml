@@ -414,7 +414,7 @@ tasks:
                               PYTHONDONTWRITEBYTECODE: '1'
                               MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: 'system'
                           cache:
-                              "${trustDomain}-level-${level}-checkouts-git-v1": /builds/worker/checkouts
+                              "${trustDomain}-level-${level}-${project}-checkouts-git-shallow-v1": /builds/worker/checkouts
 
                           features:
                               taskclusterProxy: true
