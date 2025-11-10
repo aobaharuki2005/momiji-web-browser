@@ -2789,9 +2789,7 @@ HttpChannelChild::HasCacheEntry(bool* value) {
 
 NS_IMETHODIMP
 HttpChannelChild::GetCacheEntryId(uint64_t* aCacheEntryId) {
-  bool fromCache = false;
-  if (NS_FAILED(IsFromCache(&fromCache)) || !fromCache ||
-      !mCacheEntryAvailable) {
+  if (!mCacheEntryAvailable) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
