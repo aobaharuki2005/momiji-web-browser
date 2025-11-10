@@ -1475,7 +1475,18 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
 
   private void commitLocales() {
     final GeckoBundle data = new GeckoBundle(1);
-    data.putStringArray("requestedLocales", mRequestedLocales);
+    if (mRequestedLocales != null) {
+      // Requested locales should be in language or language-region format
+      final String[] normalizedRequestedLocales =
+          Arrays.stream(mRequestedLocales)
+              .map(Locale::forLanguageTag)
+              .map(LocaleUtils::getLanguageRegionLocale)
+              .toArray(String[]::new);
+      data.putStringArray("requestedLocales", normalizedRequestedLocales);
+    } else {
+      data.putStringArray("requestedLocales", (String[]) null);
+    }
+
     data.putString("acceptLanguages", computeAcceptLanguages());
     EventDispatcher.getInstance().dispatch("GeckoView:SetLocale", data);
   }
@@ -1486,7 +1497,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     // Explicitly-set app prefs come first:
     if (mRequestedLocales != null) {
       for (final String locale : mRequestedLocales) {
-        locales.put(locale.toLowerCase(Locale.ROOT), locale);
+        // Requested locales should be in language or language-region format
+        final String normalizedLocale =
+            LocaleUtils.getLanguageRegionLocale(Locale.forLanguageTag(locale));
+        locales.put(normalizedLocale.toLowerCase(Locale.ROOT), normalizedLocale);
       }
     }
     // OS prefs come second:
@@ -1505,7 +1519,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     final String[] locales = new String[localeList.size()];
     for (int i = 0; i < localeList.size(); i++) {
       // accept-language should be language or language-region format.
-      locales[i] = LocaleUtils.getLanguageTagForAcceptLanguage(localeList.get(i));
+      locales[i] = LocaleUtils.getLanguageRegionLocale(localeList.get(i));
     }
     return locales;
   }
