@@ -79,7 +79,6 @@ class IPPAutoStartSingleton {
       case lazy.IPProtectionStates.UNINITIALIZED:
       case lazy.IPProtectionStates.UNAVAILABLE:
       case lazy.IPProtectionStates.UNAUTHENTICATED:
-      case lazy.IPProtectionStates.ERROR:
         this.#shouldStartWhenReady = true;
         break;
 
@@ -143,7 +142,6 @@ class IPPEarlyStartupFilter {
     switch (lazy.IPProtectionService.state) {
       case lazy.IPProtectionStates.UNAVAILABLE:
       case lazy.IPProtectionStates.UNAUTHENTICATED:
-      case lazy.IPProtectionStates.ERROR:
         // These states block the auto-start at startup.
         this.#cancelChannelFilter();
         this.uninit();

@@ -13,29 +13,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
   IPPNimbusHelper: "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
-  IPProtectionServerlist:
-    "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
   IPPSignInWatcher: "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs",
   IPPStartupCache: "resource:///modules/ipprotection/IPPStartupCache.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
 
-import {
-  SIGNIN_DATA,
-  ERRORS,
-} from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+import { SIGNIN_DATA } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 const ENABLED_PREF = "browser.ipProtection.enabled";
-const LOG_PREF = "browser.ipProtection.log";
-const MAX_ERROR_HISTORY = 50;
-
-ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
-  return console.createInstance({
-    prefix: "IPProtectionService",
-    maxLogLevel: Services.prefs.getBoolPref(LOG_PREF, false) ? "Debug" : "Warn",
-  });
-});
 
 /**
  * @typedef {object} IPProtectionStates
@@ -50,8 +36,6 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
  *  Ready to be activated.
  * @property {string} ACTIVE
  *  Proxy is active.
- * @property {string} ERROR
- *  Error
  *
  * Note: If you update this list of states, make sure to update the
  * corresponding documentation in the `docs` folder as well.
@@ -62,7 +46,6 @@ export const IPProtectionStates = Object.freeze({
   UNAUTHENTICATED: "unauthenticated",
   READY: "ready",
   ACTIVE: "active",
-  ERROR: "error",
 });
 
 /**
@@ -74,8 +57,6 @@ export const IPProtectionStates = Object.freeze({
  */
 class IPProtectionServiceSingleton extends EventTarget {
   #state = IPProtectionStates.UNINITIALIZED;
-
-  errors = [];
 
   guardian = null;
 
@@ -98,7 +79,6 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     this.updateState = this.#updateState.bind(this);
     this.setState = this.#setState.bind(this);
-    this.setErrorState = this.#setErrorState.bind(this);
 
     this.#helpers = lazy.IPPHelpers;
   }
@@ -148,8 +128,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       this.stop(false);
     }
 
-    this.errors = [];
-
     this.#helpers.forEach(helper => helper.uninit());
 
     this.#setState(IPProtectionStates.UNINITIALIZED);
@@ -168,32 +146,7 @@ class IPProtectionServiceSingleton extends EventTarget {
    * True if started by user action, false if system action
    */
   async start(userAction = true) {
-    await lazy.IPProtectionServerlist.maybeFetchList();
-
-    const enrollAndEntitleData =
-      await lazy.IPPEnrollAndEntitleManager.maybeEnrollAndEntitle();
-    if (!enrollAndEntitleData || !enrollAndEntitleData.isEnrolledAndEntitled) {
-      this.setErrorState(enrollAndEntitleData.error || ERRORS.GENERIC);
-      return;
-    }
-
-    // Retry getting state if the previous attempt failed.
-    if (this.#state === IPProtectionStates.ERROR) {
-      this.#updateState();
-    }
-
-    if (this.#state !== IPProtectionStates.READY) {
-      this.#setErrorState(ERRORS.GENERIC);
-      return;
-    }
-    this.errors = [];
-
-    let started;
-    try {
-      started = await lazy.IPPProxyManager.start();
-    } catch (error) {
-      this.#setErrorState(ERRORS.GENERIC, error);
-    }
+    const started = await lazy.IPPProxyManager.start();
 
     // Proxy failed to start but no error was given.
     if (!started) {
@@ -334,23 +287,6 @@ class IPProtectionServiceSingleton extends EventTarget {
         },
       })
     );
-  }
-
-  /**
-   * Helper to dispatch error messages.
-   *
-   * @param {string} error - the error message to send.
-   * @param {string} [errorContext] - the error message to log.
-   */
-  #setErrorState(error, errorContext) {
-    this.errors.push(error);
-
-    if (this.errors.length > MAX_ERROR_HISTORY) {
-      this.errors.splice(0, this.errors.length - MAX_ERROR_HISTORY);
-    }
-
-    this.#setState(IPProtectionStates.ERROR);
-    lazy.logConsole.error(errorContext || error);
   }
 }
 

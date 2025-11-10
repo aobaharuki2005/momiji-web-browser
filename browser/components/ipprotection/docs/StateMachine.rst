@@ -14,7 +14,6 @@ The service transitions across the following states:
 - ``UNAUTHENTICATED``: User signed out but eligible; UI shows login.
 - ``READY``: Ready to activate the proxy.
 - ``ACTIVE``: Proxy is active.
-- ``ERROR``: An error occurred (see ``IPProtectionService.errors``).
 
 High‑level transitions
 ----------------------

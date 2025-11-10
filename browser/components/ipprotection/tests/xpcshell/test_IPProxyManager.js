@@ -4,14 +4,11 @@
 
 "use strict";
 
-const { IPPProxyManager } = ChromeUtils.importESModule(
+const { IPPProxyManager, IPPProxyStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPProxyManager.sys.mjs"
 );
-const { IPProtectionService } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
-);
-const { IPProtectionServerlist } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs"
+const { IPPEnrollAndEntitleManager } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
 );
 
 add_setup(async function () {
@@ -23,17 +20,16 @@ add_setup(async function () {
  * and removes the connection after after stop.
  */
 add_task(async function test_IPPProxyManager_start_stop_reset() {
-  let sandbox = sinon.createSandbox();
-  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").returns({
-    status: 200,
-    error: undefined,
-    pass: {
-      isValid: () => true,
-      asBearerToken: () => "Bearer hello world",
-    },
-  });
+  const sandbox = sinon.createSandbox();
+  setupStubs(sandbox);
 
-  await IPProtectionServerlist.maybeFetchList();
+  IPProtectionService.init();
+
+  await waitForEvent(
+    IPProtectionService,
+    "IPProtectionService:StateChanged",
+    () => IPProtectionService.state === IPProtectionStates.READY
+  );
 
   await IPPProxyManager.start();
 
@@ -104,5 +100,43 @@ add_task(async function test_IPPProxyManager_reset() {
     "Should not have a proxy pass after stopping"
   );
 
+  sandbox.restore();
+});
+
+/**
+ * Tests the error state.
+ */
+add_task(async function test_IPPProxyStates_error() {
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
+  sandbox
+    .stub(IPProtectionService.guardian, "isLinkedToGuardian")
+    .resolves(true);
+  sandbox.stub(IPProtectionService.guardian, "fetchUserInfo").resolves({
+    status: 200,
+    error: undefined,
+    entitlement: { uid: 42 },
+  });
+  sandbox
+    .stub(IPPEnrollAndEntitleManager, "maybeEnrollAndEntitle")
+    .resolves({ isEnrolledAndEntitled: false });
+
+  await IPProtectionService.init();
+
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.READY,
+    "IP Protection service should be ready"
+  );
+
+  await IPProtectionService.start(false);
+
+  Assert.equal(
+    IPPProxyManager.state,
+    IPPProxyStates.ERROR,
+    "IP Protection service should be active"
+  );
+
+  IPProtectionService.uninit();
   sandbox.restore();
 });

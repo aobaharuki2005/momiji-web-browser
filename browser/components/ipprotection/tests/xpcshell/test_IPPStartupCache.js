@@ -8,10 +8,6 @@ const { IPPStartupCacheSingleton } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPStartupCache.sys.mjs"
 );
 
-const { IPProtectionStates } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
-);
-
 /**
  * Test the disabled cache
  */

@@ -6,12 +6,6 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 const { IPProtectionPanel } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs"
 );
-const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
-);
-const { IPPSignInWatcher } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
-);
 const { IPPEnrollAndEntitleManager } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
 );

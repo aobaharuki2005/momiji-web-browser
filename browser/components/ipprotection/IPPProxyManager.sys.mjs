@@ -5,6 +5,8 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  IPPEnrollAndEntitleManager:
+    "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs",
   IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
   IPProtectionUsage:
     "resource:///modules/ipprotection/IPProtectionUsage.sys.mjs",
@@ -18,7 +20,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
 
+import { ERRORS } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
+
 const LOG_PREF = "browser.ipProtection.log";
+const MAX_ERROR_HISTORY = 50;
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
@@ -28,9 +33,29 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
 });
 
 /**
+ * @typedef {object} IPPProxyStates
+ *  List of the possible states of the IPPProxyManager.
+ * @property {string} READY
+ *  The proxy is ready to be activated.
+ * @property {string} ERROR
+ *  Error
+ *
+ * TODO: eventually this will be a proper state machine.
+ *
+ * Note: If you update this list of states, make sure to update the
+ * corresponding documentation in the `docs` folder as well.
+ */
+export const IPPProxyStates = Object.freeze({
+  READY: "ready",
+  ERROR: "error",
+});
+
+/**
  * Manages the proxy connection for the IPProtectionService.
  */
-class IPPProxyManagerSingleton {
+class IPPProxyManagerSingleton extends EventTarget {
+  #state = IPPProxyStates.READY;
+
   #pass = null;
   /**@type {import("./IPPChannelFilter.sys.mjs").IPPChannelFilter | null} */
   #connection = null;
@@ -40,7 +65,12 @@ class IPPProxyManagerSingleton {
   #rotateProxyPassPromise = null;
   #activatedAt = false;
 
+  errors = [];
+
   constructor() {
+    super();
+
+    this.setErrorState = this.#setErrorState.bind(this);
     this.handleProxyErrorEvent = this.#handleProxyErrorEvent.bind(this);
     this.handleEvent = this.#handleEvent.bind(this);
   }
@@ -59,6 +89,8 @@ class IPPProxyManagerSingleton {
       "IPProtectionService:StateChanged",
       this.handleEvent
     );
+
+    this.errors = [];
 
     this.reset();
     this.#connection = null;
@@ -118,15 +150,50 @@ class IPPProxyManagerSingleton {
     }
   }
 
+  get state() {
+    return this.#state;
+  }
+
   /**
    * Starts the proxy connection:
    * - Gets a new proxy pass if needed.
    * - Find the server to use.
    * - Adds usage and network-error observers.
    *
-   * @returns {Promise<boolean|Error>}
+   * @returns {Promise<boolean>}
    */
   async start() {
+    await lazy.IPProtectionServerlist.maybeFetchList();
+
+    const enrollAndEntitleData =
+      await lazy.IPPEnrollAndEntitleManager.maybeEnrollAndEntitle();
+    if (!enrollAndEntitleData || !enrollAndEntitleData.isEnrolledAndEntitled) {
+      this.#setErrorState(enrollAndEntitleData.error || ERRORS.GENERIC);
+      return false;
+    }
+
+    if (lazy.IPProtectionService.state !== lazy.IPProtectionStates.READY) {
+      this.#setErrorState(ERRORS.GENERIC);
+      return false;
+    }
+
+    // Retry getting state if the previous attempt failed.
+    if (this.#state === IPPProxyStates.ERROR) {
+      this.updateState();
+    }
+
+    this.errors = [];
+
+    try {
+      const started = await this.#startInternal();
+      return started;
+    } catch (error) {
+      this.#setErrorState(ERRORS.GENERIC, error);
+      return false;
+    }
+  }
+
+  async #startInternal() {
     this.createChannelFilter();
 
     // If the current proxy pass is valid, no need to re-authenticate.
@@ -274,6 +341,46 @@ class IPPProxyManagerSingleton {
       return this.#rotateProxyPass();
     }
     return null;
+  }
+
+  updateState() {
+    // TODO: something better here.
+    this.#setState(IPPProxyStates.READY);
+  }
+
+  /**
+   * Helper to dispatch error messages.
+   *
+   * @param {string} error - the error message to send.
+   * @param {string} [errorContext] - the error message to log.
+   */
+  #setErrorState(error, errorContext) {
+    this.errors.push(error);
+
+    if (this.errors.length > MAX_ERROR_HISTORY) {
+      this.errors.splice(0, this.errors.length - MAX_ERROR_HISTORY);
+    }
+
+    this.#setState(IPPProxyStates.ERROR);
+    lazy.logConsole.error(errorContext || error);
+  }
+
+  #setState(state) {
+    if (state === this.#state) {
+      return;
+    }
+
+    this.#state = state;
+
+    this.dispatchEvent(
+      new CustomEvent("IPPProxyManager:StateChanged", {
+        bubbles: true,
+        composed: true,
+        detail: {
+          state,
+        },
+      })
+    );
   }
 }
 
