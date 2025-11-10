@@ -498,12 +498,12 @@ fix-stacks:
         revision: 1fb1bcc8cb4dd65fbe342853954651563a0a88e7
 
 7zz:
-    description: 7-zip 24.09 source code
+    description: 7-zip 25.01 source code
     fetch:
         type: static-url
-        url: https://downloads.sourceforge.net/sevenzip/7-Zip/24.09/7z2409-src.tar.xz
-        sha256: 49c05169f49572c1128453579af1632a952409ced028259381dac30726b6133a
-        size: 1511288
+        url: https://downloads.sourceforge.net/sevenzip/7-Zip/25.01/7z2501-src.tar.xz
+        sha256: ed087f83ee789c1ea5f39c464c55a5c9d4008deb0efe900814f2df262b82c36e
+        size: 1533240
         artifact-name: 7z-src.tar.zst
         add-prefix: 7zz/
 
