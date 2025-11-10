@@ -349,8 +349,7 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
                 const IntRect& aBounds, TextureHandle* aHandle = nullptr,
                 const RefPtr<WebGLBuffer>& aBuffer = nullptr);
   already_AddRefed<DataSourceSurface> ReadSnapshot(
-      TextureHandle* aHandle = nullptr, uint8_t* aData = nullptr,
-      int32_t aStride = 0);
+      TextureHandle* aHandle = nullptr);
   already_AddRefed<TextureHandle> WrapSnapshot(const IntSize& aSize,
                                                SurfaceFormat aFormat,
                                                RefPtr<WebGLTexture> aTex);
@@ -361,7 +360,7 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
       SourceSurfaceWebgl* aOwner, TextureHandle* aHandle = nullptr);
   already_AddRefed<DataSourceSurface> ReadSnapshotFromPBO(
       const RefPtr<WebGLBuffer>& aBuffer, SurfaceFormat aFormat,
-      const IntSize& aSize, uint8_t* aData = nullptr, int32_t aStride = 0);
+      const IntSize& aSize);
   void RemoveSnapshotPBO(SourceSurfaceWebgl* aOwner,
                          already_AddRefed<WebGLBuffer> aBuffer);
   void ClearSnapshotPBOs(size_t aMaxMemory = 0);
@@ -836,8 +835,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   bool ShouldUseSubpixelAA(ScaledFont* aFont, const DrawOptions& aOptions);
 
   bool ReadInto(uint8_t* aDstData, int32_t aDstStride);
-  already_AddRefed<DataSourceSurface> ReadSnapshot(uint8_t* aData = nullptr,
-                                                   int32_t aStride = 0);
+  already_AddRefed<DataSourceSurface> ReadSnapshot();
   already_AddRefed<WebGLBuffer> ReadSnapshotIntoPBO(SourceSurfaceWebgl* aOwner);
   already_AddRefed<TextureHandle> CopySnapshot(const IntRect& aRect);
   already_AddRefed<TextureHandle> CopySnapshot() {

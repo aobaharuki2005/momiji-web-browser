@@ -8,7 +8,6 @@
 
 #include "DrawTargetWebglInternal.h"
 #include "WebGLBuffer.h"
-#include "mozilla/gfx/Swizzle.h"
 
 namespace mozilla::gfx {
 
@@ -38,26 +37,15 @@ SourceSurfaceWebgl::~SourceSurfaceWebgl() {
 // Read back the contents of the target or texture handle for data use. This
 // may attempt a readback into a PBO for performance, unless forced to
 // immediately read into data.
-inline bool SourceSurfaceWebgl::EnsureData(bool aForce, uint8_t* aData,
-                                           int32_t aStride) {
+inline bool SourceSurfaceWebgl::EnsureData(bool aForce) {
   if (mData) {
-    if (aData) {
-      DataSourceSurface::ScopedMap map(mData, MapType::READ);
-      if (!map.IsMapped()) {
-        return false;
-      }
-      SwizzleData(map.GetData(), map.GetStride(), mFormat, aData, aStride,
-                  mFormat, mSize);
-    }
     return true;
   }
 
   if (mReadBuffer) {
     // If there is a pending PBO readback, then copy the contents of the PBO.
     if (RefPtr<SharedContextWebgl> sharedContext = {mSharedContext}) {
-      mData = sharedContext->ReadSnapshotFromPBO(mReadBuffer, mFormat, mSize,
-                                                 aData, aStride);
-      mOwnsData = !mData || !aData;
+      mData = sharedContext->ReadSnapshotFromPBO(mReadBuffer, mFormat, mSize);
       sharedContext->RemoveSnapshotPBO(this, mReadBuffer.forget());
     }
     mReadBuffer = nullptr;
@@ -69,8 +57,7 @@ inline bool SourceSurfaceWebgl::EnsureData(bool aForce, uint8_t* aData,
       mReadBuffer = dt->ReadSnapshotIntoPBO(this);
     }
     if (!mReadBuffer) {
-      mData = dt->ReadSnapshot(aData, aStride);
-      mOwnsData = !mData || !aData;
+      mData = dt->ReadSnapshot();
     }
   } else if (mHandle) {
     // Assume that the target changed, so there should be a texture handle
@@ -81,16 +68,11 @@ inline bool SourceSurfaceWebgl::EnsureData(bool aForce, uint8_t* aData,
         mReadBuffer = sharedContext->ReadSnapshotIntoPBO(this, mHandle);
       }
       if (!mReadBuffer) {
-        mData = sharedContext->ReadSnapshot(mHandle, aData, aStride);
-        mOwnsData = !mData || !aData;
+        mData = sharedContext->ReadSnapshot(mHandle);
       }
     }
   }
   return mData || mReadBuffer;
-}
-
-bool SourceSurfaceWebgl::ReadDataInto(uint8_t* aData, int32_t aStride) {
-  return EnsureData(true, aData, aStride);
 }
 
 bool SourceSurfaceWebgl::ForceReadFromPBO() {
@@ -105,11 +87,7 @@ uint8_t* SourceSurfaceWebgl::GetData() {
   if (!EnsureData()) {
     return nullptr;
   }
-  if (!mOwnsData) {
-    mData = Factory::CopyDataSourceSurface(mData);
-    mOwnsData = true;
-  }
-  return mData ? mData->GetData() : nullptr;
+  return mData->GetData();
 }
 
 int32_t SourceSurfaceWebgl::Stride() {
@@ -123,11 +101,7 @@ bool SourceSurfaceWebgl::Map(MapType aType, MappedSurface* aMappedSurface) {
   if (!EnsureData()) {
     return false;
   }
-  if (!mOwnsData && aType != MapType::READ) {
-    mData = Factory::CopyDataSourceSurface(mData);
-    mOwnsData = true;
-  }
-  return mData && mData->Map(aType, aMappedSurface);
+  return mData->Map(aType, aMappedSurface);
 }
 
 void SourceSurfaceWebgl::Unmap() {
@@ -204,7 +178,6 @@ void SourceSurfaceWebgl::OnUnlinkTexture(SharedContextWebgl* aContext,
     }
     if (!mReadBuffer) {
       mData = aContext->ReadSnapshot(mHandle);
-      mOwnsData = true;
     }
   }
   mHandle = nullptr;
