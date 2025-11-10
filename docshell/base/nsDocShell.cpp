@@ -13440,6 +13440,7 @@ class OnLinkClickEvent : public Runnable {
     // concerned. (Bug 1930445)
     AutoJSAPI jsapi;
     if (jsapi.Init(mContent->OwnerDoc()->GetScopeObject())) {
+      mLoadState->SetSourceElement(mContent->AsElement());
       mHandler->OnLinkClickSync(mContent, mLoadState, mNoOpenerImplied,
                                 mTriggeringPrincipal);
     }
@@ -13790,7 +13791,6 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   aLoadState->SetInternalLoadFlags(flags);
   aLoadState->SetLoadType(loadType);
   aLoadState->SetSourceBrowsingContext(mBrowsingContext);
-  aLoadState->SetSourceElement(aContent->AsElement());
 
   nsresult rv = InternalLoad(aLoadState);
 

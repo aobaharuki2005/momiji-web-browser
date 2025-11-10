@@ -884,6 +884,16 @@ nsresult HTMLFormElement::SubmitSubmission(
         doc->ConsumeTextDirectiveUserActivation() ||
         hasValidUserGestureActivation);
     loadState->SetFormDataEntryList(aFormSubmission->GetFormData());
+    if (aFormSubmission->IsInitiatedFromUserInput()) {
+      loadState->SetUserNavigationInvolvement(
+          UserNavigationInvolvement::Activation);
+    }
+    if (FormData* formData = aFormSubmission->GetFormData();
+        formData && formData->GetSubmitterElement()) {
+      loadState->SetSourceElement(formData->GetSubmitterElement());
+    } else {
+      loadState->SetSourceElement(this);
+    }
 
     nsCOMPtr<nsIPrincipal> nodePrincipal = NodePrincipal();
     rv = container->OnLinkClickSync(this, loadState, false, nodePrincipal);
