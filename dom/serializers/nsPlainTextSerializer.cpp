@@ -219,8 +219,8 @@ void nsPlainTextSerializer::OutputManager::Append(const nsAString& aString) {
   }
 }
 
-void nsPlainTextSerializer::OutputManager::AppendLineBreak() {
-  mOutput.Append(mLineBreak);
+void nsPlainTextSerializer::OutputManager::AppendLineBreak(bool aForceCRLF) {
+  mOutput.Append(aForceCRLF ? u"\r\n"_ns : mLineBreak);
   mAtFirstColumn = true;
 }
 
@@ -480,6 +480,13 @@ nsPlainTextSerializer::AppendText(Text* aText, int32_t aStartOffset,
   // Mask the text if the text node is in a password field.
   if (aText->HasFlag(NS_MAYBE_MASKED)) {
     TextEditor::MaskString(textstr, *aText, 0, aStartOffset);
+  }
+
+  if (mSettings.HasFlag(nsIDocumentEncoder::OutputForPlainTextClipboardCopy)) {
+    // XXX it would be nice if we could just use the Write() to handle the line
+    // breaks for all cases (bug 1993406).
+    Write(textstr);
+    return rv;
   }
 
   // We have to split the string across newlines
@@ -1524,6 +1531,7 @@ void nsPlainTextSerializer::ConvertToLinesAndOutput(const nsAString& aString) {
     // Done searching
     nsAutoString stringpart;
     bool outputLineBreak = false;
+    bool isNewLineCRLF = false;
     if (newline == done_searching) {
       // No new lines.
       stringpart.Assign(Substring(bol, newline));
@@ -1537,12 +1545,12 @@ void nsPlainTextSerializer::ConvertToLinesAndOutput(const nsAString& aString) {
       stringpart.Assign(Substring(bol, newline));
       mInWhitespace = true;
       outputLineBreak = true;
-      mEmptyLines = 0;
       if ('\r' == *iter++ && '\n' == *iter) {
         // There was a CRLF in the input. This used to be illegal and
         // stripped by the parser. Apparently not anymore. Let's skip
         // over the LF.
-        ++iter;
+        newline = iter++;
+        isNewLineCRLF = true;
       }
     }
 
@@ -1561,7 +1569,26 @@ void nsPlainTextSerializer::ConvertToLinesAndOutput(const nsAString& aString) {
     mOutputManager->Append(mCurrentLine,
                            OutputManager::StripTrailingWhitespaces::kNo);
     if (outputLineBreak) {
-      mOutputManager->AppendLineBreak();
+      if (mSettings.HasFlag(
+              nsIDocumentEncoder::OutputForPlainTextClipboardCopy)) {
+        // This is aligned with other browsers that they don't convert CRLF to
+        // the platform line break.
+        if ('\n' == *newline) {
+          mOutputManager->AppendLineBreak(isNewLineCRLF);
+          // If there is preceding text, we are starting a new line, so reset
+          // mEmptyLines. If there is no preceding text, we are outputting
+          // multiple line breaks, so we count them toward mEmptyLines.
+          mEmptyLines = stringpart.IsEmpty() ? mEmptyLines + 1 : 0;
+        } else {
+          mOutputManager->Append(u"\r"_ns);
+          // `\r` isn’t treated as a line break here, so we’re now in the middle
+          // of the line.
+          mEmptyLines = -1;
+        }
+      } else {
+        mOutputManager->AppendLineBreak();
+        mEmptyLines = 0;
+      }
     }
 
     mCurrentLine.ResetContentAndIndentationHeader();
@@ -1664,10 +1691,14 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
         continue;
       }
 
-      if (nextpos == bol) {
+      if (nextpos == bol &&
+          !mSettings.HasFlag(
+              nsIDocumentEncoder::OutputForPlainTextClipboardCopy)) {
         // Note that we are in whitespace.
         mInWhitespace = true;
         offsetIntoBuffer = str.get() + nextpos;
+        // XXX Why do we need to keep the very first character when compressing
+        // the reset?
         AddToLine(offsetIntoBuffer, 1);
         bol++;
         continue;

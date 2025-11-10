@@ -132,6 +132,7 @@ static nsresult EncodeForTextUnicode(nsIDocumentEncoder& aEncoder,
   } else {
     // Redo the encoding, but this time use pretty printing.
     flags = nsIDocumentEncoder::OutputSelectionOnly |
+            nsIDocumentEncoder::OutputForPlainTextClipboardCopy |
             nsIDocumentEncoder::OutputAbsoluteLinks |
             nsIDocumentEncoder::SkipInvisibleContent |
             nsIDocumentEncoder::OutputDropInvisibleBreak |

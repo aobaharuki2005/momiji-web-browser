@@ -40,14 +40,18 @@ function convertLineBreaksForTestResult(aText) {
   return aText.replace(/\r?\n|\r(?!\n)/g, platformLineBreak);
 }
 
-function selectAndEncode(aElement) {
+function convertLineBreaksForClipboardTestResult(aText) {
+  return aText.replace(/(?<!\r)\n/g, platformLineBreak);
+}
+
+function selectAndEncode(aElement, aEncoderFlags = 0) {
   // Select the element.
   const selection = window.getSelection();
   selection.removeAllRanges();
   selection.selectAllChildren(aElement);
 
   const encoder = SpecialPowers.Cu.createHTMLCopyEncoder();
-  encoder.init(document, "text/plain", de.OutputSelectionOnly);
+  encoder.init(document, "text/plain", de.OutputSelectionOnly | aEncoderFlags);
   encoder.setSelection(selection);
   return encoder.encodeToString();
 }
@@ -63,6 +67,8 @@ CASES.forEach((lineBreaks) => {
 
     is(selectAndEncode(pre), text.replace(/\r|\n/g, platformLineBreak),
        `Encoded data for line breaks: ${JSON.stringify(lineBreaks)}`);
+    is(selectAndEncode(pre, de.OutputForPlainTextClipboardCopy), convertLineBreaksForClipboardTestResult(text),
+       `Encoded data for line breaks: ${JSON.stringify(lineBreaks)} (OutputForPlainTextClipboardCopy)`);
   });
 
   add_task(async function test_pre_img_alt() {
@@ -75,6 +81,8 @@ CASES.forEach((lineBreaks) => {
 
     is(selectAndEncode(pre), convertLineBreaksForTestResult(text),
        `Encoded data for line breaks: ${JSON.stringify(lineBreaks)}`);
+    is(selectAndEncode(pre, de.OutputForPlainTextClipboardCopy), convertLineBreaksForClipboardTestResult(text),
+       `Encoded data for line breaks: ${JSON.stringify(lineBreaks)} (OutputForPlainTextClipboardCopy)`);
   });
 
   add_task(async function test_pre_img_title() {
@@ -87,6 +95,8 @@ CASES.forEach((lineBreaks) => {
 
     is(selectAndEncode(pre), ` [${convertLineBreaksForTestResult(text)}] `,
        `Encoded data for line breaks: ${JSON.stringify(lineBreaks)}`);
+    is(selectAndEncode(pre, de.OutputForPlainTextClipboardCopy), ` [${convertLineBreaksForClipboardTestResult(text)}] `,
+       `Encoded data for line breaks: ${JSON.stringify(lineBreaks)} (OutputForPlainTextClipboardCopy)`);
   });
 
   add_task(async function test_div_text() {
@@ -97,6 +107,8 @@ CASES.forEach((lineBreaks) => {
 
     is(selectAndEncode(div), ` First Second `,
        `Encoded data for line breaks: ${JSON.stringify(lineBreaks)}`);
+    is(selectAndEncode(div, de.OutputForPlainTextClipboardCopy), ` First Second `,
+       `Encoded data for line breaks: ${JSON.stringify(lineBreaks)} (OutputForPlainTextClipboardCopy)`);
   });
 
   add_task(async function test_div_img_alt() {
@@ -110,6 +122,8 @@ CASES.forEach((lineBreaks) => {
     // Our plain text serializer keep the first CR/LF.
     is(selectAndEncode(div), `${lineBreaks[0]}First Second `,
        `Encoded data for line breaks: ${JSON.stringify(lineBreaks)}`);
+    is(selectAndEncode(div, de.OutputForPlainTextClipboardCopy), ` First Second `,
+       `Encoded data for line breaks: ${JSON.stringify(lineBreaks)} (OutputForPlainTextClipboardCopy)`);
   });
 
   add_task(async function test_div_img_title() {
@@ -122,6 +136,8 @@ CASES.forEach((lineBreaks) => {
 
     is(selectAndEncode(div), ` [ First Second ] `,
        `Encoded data for line breaks: ${JSON.stringify(lineBreaks)}`);
+    is(selectAndEncode(div, de.OutputForPlainTextClipboardCopy), ` [ First Second ] `,
+       `Encoded data for line breaks: ${JSON.stringify(lineBreaks)} (OutputForPlainTextClipboardCopy)`);
   });
 });
 
