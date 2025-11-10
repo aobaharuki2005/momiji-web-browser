@@ -184,6 +184,7 @@ class AccessibilityProxy {
   /**
    * Look up accessibility fronts (get an existing one or create a new one) for
    * all existing target fronts and run a task with each one of them.
+   *
    * @param {Function} task
    *        Function to execute with each accessiblity front.
    */
@@ -210,6 +211,7 @@ class AccessibilityProxy {
    * Look up accessibility walker fronts (get an existing one or create a new
    * one using accessibility front) for all existing target fronts and run a
    * task with each one of them.
+   *
    * @param {Function} task
    *        Function to execute with each accessiblity walker front.
    */
@@ -242,6 +244,7 @@ class AccessibilityProxy {
 
   /**
    * Start picking and add walker listeners.
+   *
    * @param  {Boolean} doFocus
    *         If true, move keyboard focus into content.
    */

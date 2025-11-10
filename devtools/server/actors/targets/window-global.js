@@ -479,6 +479,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
 
   /**
    * Getter for the list of all `docShell`s in the window global.
+   *
    * @return {Array}
    */
   get docShells() {
@@ -535,6 +536,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
 
   /**
    * Getter for the list of all content DOM windows in the window global.
+   *
    * @return {Array}
    */
   get windows() {

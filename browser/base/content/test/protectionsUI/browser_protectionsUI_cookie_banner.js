@@ -32,6 +32,7 @@ const exampleRules = JSON.stringify([
 /**
  * Determines whether the cookie banner section in the protections panel should
  * be visible with the given configuration.
+ *
  * @param {*} options - Configuration to test.
  * @param {Number} options.featureMode - nsICookieBannerService::Modes value for
  * normal browsing.
@@ -66,6 +67,7 @@ function cookieBannerSectionIsVisible({
 
 /**
  * Runs a visibility test of the cookie banner section in the protections panel.
+ *
  * @param {*} options - Test options.
  * @param {Window} options.win - Browser window to use for testing. It's
  * browsing mode should match the testPBM variable.
@@ -220,6 +222,7 @@ add_task(async function test_section_visibility_pref() {
 /**
  * Test the state of the per-site exception switch in the cookie banner section
  * and whether a matching per-site exception is set.
+ *
  * @param {*} options
  * @param {Window} options.win - Chrome window to test exception for (selected
  * tab).
@@ -318,6 +321,7 @@ function assertSwitchAndPrefState({ win, isPBM, expectedSwitchState }) {
 /**
  * Test the telemetry associated with the cookie banner toggle. To be called
  * after interacting with the toggle.
+ *
  * @param {*} options
  * @param {boolean|null} - Expected telemetry state matching the button state.
  * button on = true = cookieb_toggle_on event. Pass null to expect no event

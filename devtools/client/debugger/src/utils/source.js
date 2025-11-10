@@ -4,6 +4,7 @@
 
 /**
  * Utils for working with Source URLs
+ *
  * @module utils/source
  */
 
@@ -118,6 +119,7 @@ export function findBlackBoxRange(source, blackboxedRanges, lineRange) {
 
 /**
  * Checks if a source line is blackboxed
+ *
  * @param {Array} ranges - Line ranges that are blackboxed
  * @param {Number} line
  * @param {Boolean} isSourceOnIgnoreList - is the line in a source that is on

@@ -142,6 +142,7 @@ function onSelect(state, { accessible, response: ancestry, error }) {
 
 /**
  * Handle "canBeDisabled" flag update for accessibility service
+ *
  * @param  {Object}  state   Current ui state
  * @param  {Object}  action  Redux action object
  * @return {Object}  updated state
@@ -152,6 +153,7 @@ function onCanBeDisabledChange(state, { canBeDisabled }) {
 
 /**
  * Handle "canBeEnabled" flag update for accessibility service
+ *
  * @param  {Object}  state   Current ui state.
  * @param  {Object}  action  Redux action object
  * @return {Object}  updated state
@@ -162,6 +164,7 @@ function onCanBeEnabledChange(state, { canBeEnabled }) {
 
 /**
  * Handle pref update for accessibility panel.
+ *
  * @param  {Object}  state   Current ui state.
  * @param  {Object}  action  Redux action object
  * @return {Object}  updated state
@@ -175,6 +178,7 @@ function onPrefChange(state, { name, value }) {
 
 /**
  * Handle reset action for the accessibility panel UI.
+ *
  * @param  {Object}  state   Current ui state.
  * @param  {Object}  action  Redux action object
  * @return {Object}  updated state
@@ -193,6 +197,7 @@ function onReset(state, { enabled, canBeDisabled, canBeEnabled, supports }) {
 
 /**
  * Handle accessibilty service enabling/disabling.
+ *
  * @param {Object}  state   Current accessibility services enabled state.
  * @param {Object}  action  Redux action object
  * @param {Boolean} enabled New enabled state.

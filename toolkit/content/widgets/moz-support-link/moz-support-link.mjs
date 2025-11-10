@@ -24,6 +24,11 @@ export default class MozSupportLink extends HTMLAnchorElement {
    * Handles setting up the SUPPORT_URL preference getter.
    * Without this, the tests for this component may not behave
    * as expected.
+<<<<<<< HEAD
+=======
+   *
+   * @private
+>>>>>>> b0875b52eeb8 (Bug 1998787 - Automatic fixes for enabling ESLint jsdoc/tag-line rule everywhere. r?#frontend-codestlye-reviewers)
    * @memberof MozSupportLink
    */
   #register() {

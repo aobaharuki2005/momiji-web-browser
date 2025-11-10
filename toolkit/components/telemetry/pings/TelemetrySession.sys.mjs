@@ -71,6 +71,7 @@ export var Policy = {
 
 /**
  * Get the ping type based on the payload.
+ *
  * @param {Object} aPayload The ping payload.
  * @return {String} A string representing the ping type.
  */
@@ -161,6 +162,7 @@ export var TelemetrySession = Object.freeze({
   },
   /**
    * Returns the current telemetry payload.
+   *
    * @param reason Optional, the reason to trigger the payload.
    * @param clearSubsession Optional, whether to clear subsession specific data.
    * @returns Object
@@ -254,6 +256,7 @@ export var TelemetrySession = Object.freeze({
   /**
    * Does the "heavy" Telemetry initialization later on, so we
    * don't impact startup performance.
+   *
    * @return {Promise} Resolved when the initialization completes.
    */
   delayedInit() {
@@ -267,6 +270,7 @@ export var TelemetrySession = Object.freeze({
   },
   /**
    * Marks the "new-profile" ping as sent in the telemetry state file.
+   *
    * @return {Promise} A promise resolved when the new telemetry state is saved to disk.
    */
   markNewProfilePingSent() {
@@ -366,6 +370,7 @@ var Impl = {
   /**
    * Gets a series of simple measurements (counters). At the moment, this
    * only returns startup data from nsIAppStartup.getStartupInfo().
+   *
    * @param {Boolean} isSubsession True if this is a subsession, false otherwise.
    * @param {Boolean} clearSubsession True if a new subsession is being started, false otherwise.
    *
@@ -475,6 +480,7 @@ var Impl = {
 
   /**
    * Get a snapshot of the scalars and clear them.
+   *
    * @param {subsession} If true, then we collect the data for a subsession.
    * @param {clearSubsession} If true, we  need to clear the subsession.
    * @param {keyed} Take a snapshot of keyed or non keyed scalars.
@@ -877,6 +883,7 @@ var Impl = {
   /**
    * Does the "heavy" Telemetry initialization later on, so we
    * don't impact startup performance.
+   *
    * @return {Promise} Resolved when the initialization completes.
    */
   delayedInit() {
@@ -1260,6 +1267,7 @@ var Impl = {
 
   /**
    * Gather and send a daily ping.
+   *
    * @return {Promise} Resolved when the ping is sent.
    */
   _sendDailyPing() {
@@ -1293,6 +1301,7 @@ var Impl = {
 
   /**
    * Loads session data from the session data file.
+   *
    * @return {Promise<object>} A promise which is resolved with an object when
    *                            loading has completed, with null otherwise.
    */
@@ -1391,6 +1400,7 @@ var Impl = {
 
   /**
    * Saves the aborted session ping to disk.
+   *
    * @param {Object} [aProvidedPayload=null] A payload object to be used as an aborted
    *                 session ping. The reason of this payload is changed to aborted-session.
    *                 If not provided, a new payload is gathered.

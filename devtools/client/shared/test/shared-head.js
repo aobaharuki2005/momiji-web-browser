@@ -543,6 +543,7 @@ function waitForAllTargetsToBeAttached(targetCommand) {
 
 /**
  * Add a new test tab in the browser and load the given url.
+ *
  * @param {String} url The url to be loaded in the new tab
  * @param {Object} options Object with various optional fields:
  *   - {Boolean} background If true, open the tab in background
@@ -589,6 +590,7 @@ async function addTab(url, options = {}) {
 
 /**
  * Remove the given tab.
+ *
  * @param {Object} tab The tab to be removed.
  * @return Promise<undefined> resolved when the tab is successfully removed.
  */
@@ -1025,6 +1027,7 @@ async function createAndAttachTargetForTab(tab) {
 
 /**
  * Open the inspector in a tab with given URL.
+ *
  * @param {string} url  The URL to open.
  * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
  * @return A promise that is resolved once the tab and inspector have loaded
@@ -1070,6 +1073,7 @@ var waitForTime = DevToolsUtils.waitForTime;
 
 /**
  * Wait for a tick.
+ *
  * @return {Promise}
  */
 function waitForTick() {
@@ -1278,6 +1282,7 @@ function once(target, eventName, useCapture = false) {
  * is either not common-enough to be in head.js, or that is located in a
  * separate directory.
  * The script will be loaded synchronously and in the test's scope.
+ *
  * @param {String} filePath The file path, relative to the current directory.
  *                 Examples:
  *                 - "helper_attributes_test_runner.js"
@@ -1289,6 +1294,7 @@ function loadHelperScript(filePath) {
 
 /**
  * Open the toolbox in a given tab.
+ *
  * @param {XULNode} tab The tab the toolbox should be opened in.
  * @param {String} toolId Optional. The ID of the tool to be selected.
  * @param {String} hostType Optional. The type of toolbox host to be used.
@@ -1319,6 +1325,7 @@ async function openToolboxForTab(tab, toolId, hostType) {
 
 /**
  * Add a new tab and open the toolbox in it.
+ *
  * @param {String} url The URL for the tab to be opened.
  * @param {String} toolId Optional. The ID of the tool to be selected.
  * @param {String} hostType Optional. The type of toolbox host to be used.
@@ -1332,6 +1339,7 @@ async function openNewTabAndToolbox(url, toolId, hostType) {
 
 /**
  * Close a tab and if necessary, the toolbox that belongs to it
+ *
  * @param {Tab} tab The tab to close.
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
@@ -1348,6 +1356,7 @@ async function closeTabAndToolbox(tab = gBrowser.selectedTab) {
 
 /**
  * Close a toolbox and the current tab.
+ *
  * @param {Toolbox} toolbox The toolbox to close.
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
@@ -1790,6 +1799,7 @@ function checkImageColorAt({ image, x = 0, y, expectedColor, label }) {
 
 /**
  * Wait until the store has reached a state that matches the predicate.
+ *
  * @param Store store
  *        The Redux store being used.
  * @param function predicate
@@ -2526,6 +2536,7 @@ async function toggleJsTracer(toolbox) {
 /**
  * Retrieve the context menu element corresponding to the provided id, for the
  * provided netmonitor instance.
+ *
  * @param {Object} monitor
  *        The network monitor object
  * @param {String} id
@@ -2539,6 +2550,7 @@ function getNetmonitorContextMenuItem(monitor, id) {
 /**
  * Selects and clicks the context menu item of the netmonitor, it should
  * also wait for the popup to close.
+ *
  * @param {Object} monitor
  *        The network monitor object
  * @param {String} id

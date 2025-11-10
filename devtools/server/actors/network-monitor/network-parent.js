@@ -19,7 +19,6 @@ const {
  * in the parent process.
  *
  * @constructor
- *
  */
 class NetworkParentActor extends Actor {
   constructor(watcherActor) {
@@ -127,6 +126,7 @@ class NetworkParentActor extends Actor {
 
   /**
    * Blocks the requests based on the filters
+   *
    * @param {Object} filters
    */
   blockRequest(filters) {
@@ -138,6 +138,7 @@ class NetworkParentActor extends Actor {
 
   /**
    * Unblocks requests based on the filters
+   *
    * @param {Object} filters
    */
   unblockRequest(filters) {

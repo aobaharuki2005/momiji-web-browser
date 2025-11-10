@@ -430,6 +430,7 @@ class ContrastRatio extends AuditReport {
 
   /**
    * Update contrast ratio score infobar markup.
+   *
    * @param  {Object}
    *         Audit report for a given highlighted accessible.
    * @return {Boolean}
@@ -545,6 +546,7 @@ class Keyboard extends AuditReport {
 
   /**
    * Update keyboard audit infobar markup.
+   *
    * @param  {Object}
    *         Audit report for a given highlighted accessible.
    * @return {Boolean}
@@ -623,6 +625,7 @@ class TextLabel extends AuditReport {
 
   /**
    * Update text label audit infobar markup.
+   *
    * @param  {Object}
    *         Audit report for a given highlighted accessible.
    * @return {Boolean}

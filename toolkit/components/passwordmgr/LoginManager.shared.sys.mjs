@@ -257,6 +257,7 @@ class Logic {
   /**
    * Transforms the parsed rules returned from PasswordRulesParser into a Map for easier access.
    * The returned Map could have the following keys: "allowed", "required", "maxlength", "minlength", and "max-consecutive"
+   *
    * @example
    * // Returns a Map with a key-value pair of "allowed": "ascii-printable"
    * transformRulesToMap([{ _name: "allowed", value: [{ _name: "ascii-printable" }] }])

@@ -321,6 +321,7 @@ function Spinner(props, context) {
 
     /**
      * Handle events
+     *
      * @param  {DOMEvent} event
      */
     handleEvent(event) {
@@ -471,6 +472,7 @@ function Spinner(props, context) {
 
     /**
      * Find the index by offset
+     *
      * @param {Number} offset: Offset value in pixel.
      * @return {Number}  Index number
      */

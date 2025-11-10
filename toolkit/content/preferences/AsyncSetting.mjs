@@ -34,12 +34,14 @@ export class AsyncSetting extends EventEmitter {
   /**
    * Setup any external listeners that are required for managing this
    * setting's state. When the state needs to update the Setting.emitChange method should be called.
+   *
    * @returns {Function | void} Teardown function to clean up external listeners.
    */
   setup() {}
 
   /**
    * Get the value of this setting.
+   *
    * @abstract
    * @returns {Promise<boolean | number | string | void>}
    */
@@ -47,6 +49,7 @@ export class AsyncSetting extends EventEmitter {
 
   /**
    * Set the value of this setting.
+   *
    * @abstract
    * @param value {any} The value from the input that triggered the update.
    * @returns {Promise<void>}
@@ -55,6 +58,7 @@ export class AsyncSetting extends EventEmitter {
 
   /**
    * Whether the control should be disabled.
+   *
    * @returns {Promise<boolean>}
    */
   async disabled() {
@@ -63,6 +67,7 @@ export class AsyncSetting extends EventEmitter {
 
   /**
    * Whether the control should be visible.
+   *
    * @returns {Promise<boolean>}
    */
   async visible() {
@@ -72,6 +77,7 @@ export class AsyncSetting extends EventEmitter {
   /**
    * Override the initial control config. This will be spread into the
    * initial config, with this object taking precedence.
+   *
    * @returns {Promise<Object>}
    */
   async getControlConfig() {
@@ -81,6 +87,7 @@ export class AsyncSetting extends EventEmitter {
   /**
    * Callback fired after a user has changed the setting's value. Useful for
    * recording telemetry.
+   *
    * @param value {any}
    * @returns {Promise<void>}
    */

@@ -206,6 +206,7 @@ export class NetworkObserver {
   #throttleData = null;
   /**
    * NetworkThrottleManager instance, created when a valid throttleData is set.
+   *
    * @type {NetworkThrottleManager}
    */
   #throttler = null;

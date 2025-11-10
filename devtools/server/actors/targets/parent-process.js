@@ -126,6 +126,7 @@ class ParentProcessTargetActor extends WindowGlobalTargetActor {
 
   /**
    * Getter for the list of all docshells in this targetActor
+   *
    * @return {Array}
    */
   get docShells() {

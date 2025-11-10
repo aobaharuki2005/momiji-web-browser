@@ -890,7 +890,6 @@ class Editor extends EventEmitter {
    * @returns {Object} The object contains an extension and effects which used to trigger updates to the extension
    *          {Object} - lineContentMarkerExtension - The line content marker extension
    *          {Object} - lineContentMarkerEffect - The effects to add and remove markers
-   *
    */
   #createlineContentMarkersExtension() {
     const {
@@ -1127,6 +1126,7 @@ class Editor extends EventEmitter {
 
   /**
    * Adds the DOM event handlers for the editor.
+   *
    * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
    *                                    the handlers are getting called with the following arguments
    *                                     - {Object} `event`: The DOM event
@@ -1170,6 +1170,7 @@ class Editor extends EventEmitter {
 
   /**
    * Remove specified DOM event handlers for the editor.
+   *
    * @param {Object} domEventHandlers - A dictionary of handlers for the DOM events
    */
   removeEditorDOMEventListeners(domEventHandlers) {
@@ -1217,6 +1218,7 @@ class Editor extends EventEmitter {
 
   /**
    * This adds a marker used to add classes to editor line based on a condition.
+   *
    *   @property {object}             marker
    *                                  The rule rendering a marker or class.
    *   @property {object}             marker.id
@@ -1246,6 +1248,7 @@ class Editor extends EventEmitter {
 
   /**
    * This removes the marker which has the specified className
+   *
    * @param {string} markerId - The unique identifier for this marker
    */
   removeLineContentMarker(markerId) {
@@ -1537,6 +1540,7 @@ class Editor extends EventEmitter {
 
   /**
    * This adds a marker used to decorate token / content at a specific position .
+   *
    * @param {Object} marker
    * @param {String} marker.id
    * @param {Array<Object>} marker.positions - This includes the line / column and any optional positionData which defines each position.
@@ -1560,6 +1564,7 @@ class Editor extends EventEmitter {
 
   /**
    * This removes the marker which has the specified id
+   *
    * @param {string} markerId - The unique identifier for this marker
    */
   removePositionContentMarker(markerId) {
@@ -1573,6 +1578,7 @@ class Editor extends EventEmitter {
 
   /**
    * Set event listeners for the line gutter
+   *
    * @param {Object} domEventHandlers
    *
    * example usage:
@@ -1728,6 +1734,7 @@ class Editor extends EventEmitter {
   /**
    * This creates the extension used to manage the rendering of markers for
    * results for any search pattern
+   *
    * @param {RegExp}      pattern - The search pattern
    * @param {String}      className - The class used to decorate each result
    * @returns {Array<ViewPlugin>} An extension which is an array containing the view
@@ -1891,6 +1898,7 @@ class Editor extends EventEmitter {
 
   /**
    * Gets the position information for the current selection
+   *
    * @returns {Object} cursor      - The location information for the  current selection
    *                   cursor.from - An object with the starting line / column of the selection
    *                   cursor.to   - An object with the end line / column of the selection
@@ -1920,6 +1928,7 @@ class Editor extends EventEmitter {
 
   /**
    * Gets the text content for the current selection
+   *
    * @returns {String}
    */
   getSelectedText() {
@@ -1935,6 +1944,7 @@ class Editor extends EventEmitter {
    * Given screen coordinates this should return the line and column
    * related. This used currently to determine the line and columns
    * for the tokens that are hovered over.
+   *
    * @param {Number} left - Horizontal position from the left
    * @param {Number} top - Vertical position from the top
    * @returns {Object} position - The line and column related to the screen coordinates.
@@ -1968,6 +1978,7 @@ class Editor extends EventEmitter {
 
   /**
    * Check that text is selected
+   *
    * @returns {Boolean}
    */
   isTextSelected() {
@@ -3429,6 +3440,7 @@ class Editor extends EventEmitter {
 
   /**
    * Gets the element at the specified codemirror offset
+   *
    * @param {Number} offset
    * @return {Element|null}
    */
@@ -3449,6 +3461,7 @@ class Editor extends EventEmitter {
   /**
    * This checks if the specified position (line/column) is within the current viewport
    * bounds. it helps determine if scrolling should happen.
+   *
    * @param {Number} line - The line in the source
    * @param {Number} column - The column in the source
    * @returns {Boolean}
@@ -3507,6 +3520,7 @@ class Editor extends EventEmitter {
 
   /**
    * Converts  line/col to CM6 offset position
+   *
    * @param {Number} line - The line in the source
    * @param {Number} col - The column in the source
    * @returns {Number}
@@ -3561,6 +3575,7 @@ class Editor extends EventEmitter {
 
   /**
    * Scrolls the editor to the specified line and column
+   *
    * @param {Number} line - The line in the source
    * @param {Number} column - The column in the source
    * @param {String|null} yAlign - Optional value for position of the line after the line is scrolled.
@@ -3631,6 +3646,7 @@ class Editor extends EventEmitter {
    * Move CodeMirror cursor to a given location.
    * This will also scroll the editor to the specified position.
    * Used only for CM6
+   *
    * @param {Number} line
    * @param {Number} column
    */

@@ -68,6 +68,7 @@ export var SiteDataManager = {
 
   /**
    * Get the base domain of a host on a best-effort basis.
+   *
    * @param {string} host - Host to convert.
    * @returns {string} Computed base domain. If the base domain cannot be
    * determined, because the host is an IP address or does not have enough

@@ -355,7 +355,6 @@ export const NimbusMigrations = {
    * application of further migrations in the phase.
    *
    * @param {Phase} phase The phase of migrations to apply.
-   *
    */
   async applyMigrations(phase) {
     const phasePref = NIMBUS_MIGRATION_PREFS[phase];

@@ -856,6 +856,7 @@ export class _ASRouter {
 
   /**
    * Check all provided groups are enabled.
+   *
    * @param groups Set of groups to verify
    * @returns bool
    */
@@ -867,6 +868,7 @@ export class _ASRouter {
 
   /**
    * Verify that the provider block the message through the `exclude` field
+   *
    * @param message Message to verify
    * @returns bool
    */
@@ -2114,6 +2116,7 @@ export class _ASRouter {
   /**
    * Edit the ASRouter state directly. For use by the ASRouter devtools.
    * Requires browser.newtabpage.activity-stream.asrouter.devtoolsEnabled
+   *
    * @param {string} key Key of the property to edit, one of:
    *   | "groupImpressions"
    *   | "messageImpressions"
@@ -2196,6 +2199,7 @@ export class _ASRouter {
    * It forces the browser attribution to be set to something specified in asrouter admin
    * tools, and reloads the providers in order to get messages that are dependant on this
    * attribution data (see Return to AMO flow in bug 1475354 for example). Note - OSX and Windows only
+   *
    * @param {data} Object an object containing the attribtion data that came from asrouter admin page
    */
   async forceAttribution(data) {
@@ -2307,6 +2311,7 @@ export class _ASRouter {
   /**
    * Fire a trigger, look for a matching message, and route it to the
    * appropriate message handler/messaging surface.
+   *
    * @param {object} trigger
    * @param {string} trigger.id the name of the trigger, e.g. "openURL"
    * @param {object} [trigger.param] an object with host, url, type, etc. keys

@@ -35,6 +35,7 @@ const {
 
 /**
  * Check if the accessible is visible to the assistive technology.
+ *
  * @param {nsIAccessible} accessible
  *        Accessible object to be tested for visibility.
  *
@@ -50,6 +51,7 @@ function isVisible(accessible) {
 /**
  * Get related accessible objects that are targets of labelled by relation e.g.
  * labels.
+ *
  * @param {nsIAccessible} accessible
  *        Accessible objects to get labels for.
  *
@@ -422,6 +424,7 @@ const RULES = {
 /**
  * Perform audit for WCAG 1.1 criteria related to providing alternative text
  * depending on the type of content.
+ *
  * @param {nsIAccessible} accessible
  *        Accessible object to be tested to determine if it requires and has
  *        an appropriate text alternative.

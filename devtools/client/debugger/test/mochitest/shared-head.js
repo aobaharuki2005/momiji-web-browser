@@ -1619,6 +1619,7 @@ async function scrollAndGetEditorLineGutterElement(dbg, line) {
 
 /**
  * Gets node at a specific line in the editor
+ *
  * @param {*} dbg
  * @param {Number} line
  * @returns {Element} DOM Element
@@ -1630,6 +1631,7 @@ async function getNodeAtEditorLine(dbg, line) {
 
 /**
  * Gets node at a specific line in the gutter
+ *
  * @param {*} dbg
  * @param {Number} line
  * @returns {Element} DOM Element
@@ -1655,6 +1657,7 @@ async function waitForConditionalPanelFocus(dbg) {
 /**
  * Opens the debugger editor context menu in either codemirror or the
  * the debugger gutter.
+ *
  * @param {Object} dbg
  * @param {String} elementName
  *                  The element to select
@@ -1670,6 +1673,7 @@ async function openContextMenuInDebugger(dbg, elementName, line) {
 
 /**
  * Select a range of lines in the editor and open the contextmenu
+ *
  * @param {Object} dbg
  * @param {Object} lines
  * @param {String} elementName
@@ -1687,6 +1691,7 @@ async function selectEditorLinesAndOpenContextMenu(
 
 /**
  * Asserts that the styling for ignored lines are applied
+ *
  * @param {Object} dbg
  * @param {Object} options
  *                 lines {null | Number[]} [lines] Line(s) to assert.
@@ -2361,6 +2366,7 @@ async function waitForCursorPosition(dbg, expectedLine) {
 
 /**
  * Set the cursor  at a specific location in the editor
+ *
  * @param {*} dbg
  * @param {Number} line
  * @param {Number} column
@@ -2691,6 +2697,7 @@ async function getTokenElAtLine(dbg, expression, line, column = 0) {
 
 /**
  * Wait for a few ms and assert that a tooltip preview was not displayed.
+ *
  * @param {*} dbg
  */
 async function assertNoTooltip(dbg) {
@@ -2701,6 +2708,7 @@ async function assertNoTooltip(dbg) {
 
 /**
  * Hovers and asserts tooltip previews with simple text expressions (i.e numbers and strings)
+ *
  * @param {*} dbg
  * @param {Number} line
  * @param {Number} column
@@ -2741,6 +2749,7 @@ async function assertPreviewTextValue(
 
 /**
  * Asserts multiple previews
+ *
  * @param {*} dbg
  * @param {Array} previews
  */
@@ -2821,6 +2830,7 @@ async function assertPreviews(dbg, previews) {
 
 /**
  * Asserts the inline expression preview value
+ *
  * @param {*} dbg
  * @param {Number} line
  * @param {Number} column
@@ -2882,6 +2892,7 @@ async function assertInlineExceptionPreview(
 
 /**
  * Wait until a preview popup containing the given result is shown
+ *
  * @param {*} dbg
  * @param {String} result
  */
@@ -2895,6 +2906,7 @@ async function waitForPreviewWithResult(dbg, result) {
 
 /**
  * Expand or collapse a node in the preview popup
+ *
  * @param {*} dbg
  * @param {Number} index
  */
@@ -3045,6 +3057,7 @@ async function assertNodeIsFocused(dbg, index) {
 /**
  * Asserts that the debugger is paused and the debugger tab is
  * highlighted.
+ *
  * @param {*} toolbox
  * @returns
  */
@@ -3443,6 +3456,7 @@ if (protocolHandler.hasSubstitution("testing-common")) {
 
 /**
  * Selects the specific black box context menu item
+ *
  * @param {Object} dbg
  * @param {String} itemName
  *                  The name of the context menu item.

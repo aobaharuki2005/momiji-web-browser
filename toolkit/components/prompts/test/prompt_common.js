@@ -2,6 +2,7 @@ const { Cc, Ci, Cu: ChromeUtils } = SpecialPowers;
 
 /**
  * Converts a property bag to object.
+ *
  * @param {nsIPropertyBag} bag - The property bag to convert
  * @returns {Object} - The object representation of the nsIPropertyBag
  */
@@ -169,6 +170,7 @@ function onloadPromiseFor(id) {
  * This is useful when the action doesn't depend on which prompt is shown and you
  * are expecting multiple prompts at once in an indeterminate order.
  * If you know the state of the prompt you expect you should use `handlePrompt` instead.
+ *
  * @param {object} action defining how to handle the prompt
  * @returns {Promise} resolving with the prompt state.
  */

@@ -29,6 +29,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 class SpreadDirective extends Directive {
   /**
    * A record of previously applied properties to avoid redundant updates.
+   *
    * @type {Record<string, unknown>}
    */
   #prevProps = {};
@@ -36,6 +37,7 @@ class SpreadDirective extends Directive {
   /**
    * Render nothing by default as all changes are made in update using DOM APIs
    * on the element directly.
+   *
    * @returns {typeof nothing}
    */
   render() {
@@ -44,6 +46,7 @@ class SpreadDirective extends Directive {
 
   /**
    * Apply props to the element using DOM APIs, updating only changed values.
+   *
    * @param {AttributePart} part - The part of the template this directive is bound to.
    * @param {[Record<string, unknown>]} propsArray - An array with a single object containing props to apply.
    * @returns {typeof noChange} - Indicates to Lit that no re-render is needed.

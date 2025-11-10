@@ -76,6 +76,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
+ *
  * @param {object} target the object to wrap.
  * @returns {Proxy}
  */
@@ -104,6 +105,7 @@ class JexlFilter {
   /**
    * Default entry filtering function, in charge of excluding remote settings entries
    * where the JEXL expression evaluates into a falsy value.
+   *
    * @param {Object} entry The Remote Settings entry to be excluded or kept.
    * @returns {?Object} the entry or null if excluded.
    */
@@ -134,6 +136,7 @@ class JexlFilter {
 /**
  * Creates the default entry filter, in charge of excluding remote settings entries
  * where the JEXL expression evaluates into a falsy value.
+ *
  * @param {ClientEnvironment} environment Information about version, language, platform etc.
  * @param {string}            collectionName
  *    Which collection includes this entry. This is used for error reporting.
@@ -218,6 +221,7 @@ function remoteSettingsFunction() {
   /**
    * Helper to introspect the synchronization history and determine whether it is
    * consistently failing and thus, broken.
+   *
    * @returns {bool} true if broken.
    */
   async function isSynchronizationBroken() {
@@ -646,6 +650,7 @@ function remoteSettingsFunction() {
   /**
    * Returns an object with polling status information and the list of
    * known remote settings collections.
+   *
    * @param {Object} options
    * @param {boolean?} options.localOnly (optional) If set to `true`, do not contact the server.
    */

@@ -35,6 +35,7 @@ class WindowSpamProtection {
    * This map stores blocked spam downloads for the window, keyed by the
    * download's source URL. This is done so we can track the number of times a
    * given download has been blocked.
+   *
    * @type {Map<String, DownloadSpam>}
    */
   _downloadSpamForUrl = new Map();
@@ -43,6 +44,7 @@ class WindowSpamProtection {
    * This set stores views that are waiting to have download notification
    * listeners attached. They will be attached when the spamList is created
    * (i.e. when the first spam download is blocked).
+   *
    * @type {Set<Object>}
    */
   _pendingViews = new Set();
@@ -52,6 +54,7 @@ class WindowSpamProtection {
    * used to lazily load the spamList. Spam downloads are rare enough that many
    * sessions will have no blocked downloads. So we don't want to create a
    * DownloadList unless we actually need it.
+   *
    * @type {Boolean}
    */
   _blocking = false;
@@ -61,6 +64,7 @@ class WindowSpamProtection {
    * be sent notifications about downloads in this list, so that blocked spam
    * downloads can be represented in the UI. If spam downloads haven't been
    * blocked in the window, this will be undefined. See DownloadList.sys.mjs.
+   *
    * @type {DownloadList | undefined}
    */
   get spamList() {
@@ -77,6 +81,7 @@ class WindowSpamProtection {
    * A per-window downloads indicator whose state depends on notifications from
    * DownloadLists registered in the window (for example, the visual state of
    * the downloads toolbar button). See DownloadsCommon.sys.mjs for more details.
+   *
    * @type {DownloadsIndicatorData}
    */
   get indicator() {
@@ -89,6 +94,7 @@ class WindowSpamProtection {
   /**
    * Add a blocked download to the spamList or increment the count of an
    * existing blocked download, then notify listeners about this.
+   *
    * @param {String} url
    */
   addDownloadSpam(url) {
@@ -114,6 +120,7 @@ class WindowSpamProtection {
   /**
    * Notify the downloads panel that a new download has been added to the
    * spamList. This is invoked when a new DownloadSpam object is created.
+   *
    * @param {DownloadSpam} downloadSpam
    */
   _notifyDownloadSpamAdded(downloadSpam) {
@@ -135,6 +142,7 @@ class WindowSpamProtection {
 
   /**
    * Remove the download spam data for a given source URL.
+   *
    * @param {String} url
    */
   removeDownloadSpamForUrl(url) {
@@ -149,6 +157,7 @@ class WindowSpamProtection {
   /**
    * Set up a downloads view (e.g. the downloads panel) to receive notifications
    * about downloads in the spamList.
+   *
    * @param {Object} view An object that implements handlers for download
    *                      related notifications, like onDownloadAdded.
    */
@@ -197,6 +206,7 @@ class WindowSpamProtection {
 export class DownloadSpamProtection {
   /**
    * Stores spam protection data per-window.
+   *
    * @type {WeakMap<Window, WindowSpamProtection>}
    */
   _forWindowMap = new WeakMap();
@@ -205,6 +215,7 @@ export class DownloadSpamProtection {
    * Add download spam data for a given source URL in the window where the
    * download was blocked. This is invoked when a download is blocked by
    * nsExternalAppHandler::IsDownloadSpam
+   *
    * @param {String} url
    * @param {Window} window
    */
@@ -227,6 +238,7 @@ export class DownloadSpamProtection {
 
   /**
    * Get the spam list for a given window (provided it exists).
+   *
    * @param {Window} window
    * @returns {DownloadList}
    */
@@ -237,6 +249,7 @@ export class DownloadSpamProtection {
   /**
    * Remove the download spam data for a given source URL in the passed window,
    * if any exists.
+   *
    * @param {String} url
    * @param {Window} window
    */
@@ -250,6 +263,7 @@ export class DownloadSpamProtection {
    * created) and prepare to start listening for notifications on the passed
    * downloads view. The bulk of resources won't be expended until a download is
    * blocked. To add multiple views, call this method multiple times.
+   *
    * @param {Object} view An object that implements handlers for download
    *                      related notifications, like onDownloadAdded.
    * @param {Window} window
@@ -264,6 +278,7 @@ export class DownloadSpamProtection {
 
   /**
    * Remove the spam protection object for a window when it is closed.
+   *
    * @param {Window} window
    */
   unregister(window) {
@@ -278,6 +293,7 @@ export class DownloadSpamProtection {
 
 /**
  * Represents a special Download object for download spam.
+ *
  * @extends Download
  */
 class DownloadSpam extends Download {

@@ -40,6 +40,7 @@ export class ClientEnvironment extends ClientEnvironmentBase {
 
   /**
    * Test wrapper that mocks the server request for classifying the client.
+   *
    * @param  {Object}   data          Fake server data to use
    * @param  {Function} testFunction  Test function to execute while mock data is in effect.
    */

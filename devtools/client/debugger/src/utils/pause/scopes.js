@@ -221,6 +221,7 @@ function _getFrameExceptionOrReturnedValueVariables(why, path) {
 
 /**
  * Generates the scope items (for scopes related to selected frame) to be rendered in the scope panel
+ *
  * @param {*} why
  * @param {*} selectedFrame
  * @param {*} frameScopes

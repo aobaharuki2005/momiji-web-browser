@@ -156,6 +156,7 @@ export class ShowHeartbeatAction extends BaseAction {
 
   /**
    * Generate the appropriate post-answer URL for a recipe.
+   *
    * @param  recipe
    * @return {String} URL with post-answer query params
    */
@@ -208,6 +209,7 @@ export class ShowHeartbeatAction extends BaseAction {
 
   /**
    * Get last shown time in milliseconds since epoch for a recipe.
+   *
    * @param {string | null} recipeId
    *        ID of the recipe to look up, or null for the max across recipes.
    * @returns {Promise<number | null>} The last shown date, if any.
@@ -230,6 +232,7 @@ export class ShowHeartbeatAction extends BaseAction {
 
   /**
    * Get last interaction time in milliseconds since epoch for a recipe.
+   *
    * @param {string | null} recipeId
    *        ID of the recipe to look up, or null for the max across recipes.
    * @returns {Promise<number | null>} The last interaction date, if any.
@@ -252,6 +255,7 @@ export class ShowHeartbeatAction extends BaseAction {
 
   /**
    * Set a last shown for a recipe.
+   *
    * @param {string} recipeId
    *        ID of the recipe to update.
    * @param {number} lastShown
@@ -272,6 +276,7 @@ export class ShowHeartbeatAction extends BaseAction {
 
   /**
    * Set a last interaction for a recipe.
+   *
    * @param {string} recipeId
    *        ID of the recipe to update.
    * @param {number} lastInteraction

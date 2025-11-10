@@ -1372,6 +1372,7 @@ function getConfirmDialog(toolbox) {
 
 /**
  * Returns true if the Confirm Dialog is opened.
+ *
  * @param toolbox
  * @returns {Boolean}
  */
@@ -1401,6 +1402,7 @@ async function pauseDebugger(dbg, options) {
 
 /**
  * Check that the passed HTMLElement vertically overflows.
+ *
  * @param {HTMLElement} container
  * @returns {Boolean}
  */
@@ -1410,6 +1412,7 @@ function hasVerticalOverflow(container) {
 
 /**
  * Check that the passed HTMLElement is scrolled to the bottom.
+ *
  * @param {HTMLElement} container
  * @returns {Boolean}
  */
@@ -1547,6 +1550,7 @@ async function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
 /**
  * Check that there is a message with the specified text that has the specified
  * stack information.  Self-hosted frames are ignored.
+ *
  * @param {WebConsole} hud
  * @param {string} text
  *        message substring to look for
@@ -1600,6 +1604,7 @@ async function checkMessageStack(hud, text, expectedFrameLines) {
 
 /**
  * Reload the content page.
+ *
  * @returns {Promise} A promise that will return when the page is fully loaded (i.e., the
  *                    `load` event was fired).
  */
@@ -1777,6 +1782,7 @@ function selectTargetInContextSelector(hud, targetLabel) {
 /**
  * A helper that returns the size of the image that was just put into the clipboard by the
  * :screenshot command.
+ *
  * @return The {width, height} dimension object.
  */
 async function getImageSizeFromClipboard() {

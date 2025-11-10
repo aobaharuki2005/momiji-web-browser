@@ -60,6 +60,7 @@ export class LoginRelatedRealmsParent extends JSWindowActorParent {
 
   /**
    * Determine if there are any related realms of this `formOrigin` using the related realms collection
+   *
    * @param {string} formOrigin A form origin
    * @return {string[]} filteredRealms An array of domains related to the `formOrigin`
    * @async

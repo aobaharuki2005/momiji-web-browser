@@ -30,6 +30,7 @@ const STYLE_INSPECTOR_L10N = new LocalizationHelper(
  * setting the value of the corresponding css property in the rule-view.
  * Use this function to close the tooltip and make sure the test waits for the
  * ruleview-changed event.
+ *
  * @param {SwatchBasedEditorTooltip} editorTooltip
  * @param {CSSRuleView} view
  */
@@ -523,6 +524,7 @@ async function sendKeysAndWaitForFocus(view, element, keys) {
 
 /**
  * Wait for a markupmutation event on the inspector that is for a style modification.
+ *
  * @param {InspectorPanel} inspector
  * @return {Promise}
  */
@@ -603,6 +605,7 @@ async function clickSelectorIcon(view, selectorText, index = 0) {
 /**
  * Toggle one of the checkboxes inside the class-panel. Resolved after the DOM mutation
  * has been recorded.
+ *
  * @param {CssRuleView} view The rule-view instance.
  * @param {String} name The class name to find the checkbox.
  */
@@ -622,6 +625,7 @@ async function toggleClassPanelCheckBox(view, name) {
 
 /**
  * Verify the content of the class-panel.
+ *
  * @param {CssRuleView} view The rule-view instance
  * @param {Array} classes The list of expected classes. Each item in this array is an
  * object with the following properties: {name: {String}, state: {Boolean}}
@@ -651,6 +655,7 @@ function checkClassPanelContent(view, classes) {
 /**
  * Opens the eyedropper from the colorpicker tooltip
  * by selecting the colorpicker and then selecting the eyedropper icon
+ *
  * @param {view} ruleView
  * @param {swatch} color swatch of a particular property
  */

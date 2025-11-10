@@ -828,6 +828,7 @@ CssRuleView.prototype = {
 
   /**
    * Set the filter style search value.
+   *
    * @param {String} value
    *        The search value.
    */

@@ -13,6 +13,7 @@ export let PromptTestUtils = {
   /**
    * Wait for a prompt from nsIPrompt or nsIPromptsService, interact with it and
    * click the specified button to close it.
+   *
    * @param {Browser|Window} [parent] - Parent of the prompt. This can be
    * either the parent window or the browser. For tab prompts, if given a
    * window, the currently selected browser in that window will be used.
@@ -28,6 +29,7 @@ export let PromptTestUtils = {
 
   /**
    * Interact with an existing prompt and close it.
+   *
    * @param {Dialog} dialog - The dialog instance associated with the prompt.
    * @param {Object} [actions] - Options on how to interact with the
    * prompt and how to close it.
@@ -89,6 +91,7 @@ export let PromptTestUtils = {
 
   /**
    * Wait for a prompt from nsIPrompt or nsIPromptsService to open.
+   *
    * @param {Browser|Window} [parent] - Parent of the prompt. This can be either
    * the parent window or the browser. For tab prompts, if given a window, the
    * currently selected browser in that window will be used.

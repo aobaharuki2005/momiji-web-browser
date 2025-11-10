@@ -19,6 +19,7 @@ ChromeUtils.defineLazyGetter(this, "gPingsArchivePath", function () {
 
 /**
  * Fakes the archive storage quota.
+ *
  * @param {Integer} aArchiveQuota The new quota, in bytes.
  */
 function fakeStorageQuota(aArchiveQuota) {

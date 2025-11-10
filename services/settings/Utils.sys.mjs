@@ -155,6 +155,7 @@ export var Utils = {
 
   /**
    * Internal method to enable pulling data from preview buckets.
+   *
    * @param enabled
    */
   enablePreviewMode(enabled) {

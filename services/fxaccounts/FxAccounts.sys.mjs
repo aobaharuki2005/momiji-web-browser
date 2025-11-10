@@ -453,6 +453,7 @@ export class FxAccounts {
   /**
    * This private method actually fetches the clients from the server.
    * It should not be called directly by consumers of this API.
+   *
    * @returns {Array.<AttachedClient>}
    * @private
    */

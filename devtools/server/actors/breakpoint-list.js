@@ -24,7 +24,6 @@ const { BREAKPOINTS, XHR_BREAKPOINTS, EVENT_BREAKPOINTS } = SUPPORTED_DATA;
  * all DevTools targets.
  *
  * @constructor
- *
  */
 class BreakpointListActor extends Actor {
   constructor(watcherActor) {

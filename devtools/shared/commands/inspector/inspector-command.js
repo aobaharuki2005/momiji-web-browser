@@ -414,6 +414,7 @@ class InspectorCommand {
 
   /**
    * Get compatibility issues for all queued domRules declarations
+   *
    * @returns {Promise<Array<Array<Object>>>}
    */
   #batchedGetCSSDeclarationBlockIssues = async () => {

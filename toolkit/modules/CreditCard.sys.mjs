@@ -217,6 +217,7 @@ export class CreditCard {
 
   /**
    * Normalizes a credit card number.
+   *
    * @param {string} number
    * @return {string | null}
    * @memberof CreditCard

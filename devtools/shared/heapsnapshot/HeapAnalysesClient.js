@@ -152,7 +152,6 @@ HeapAnalysesClient.prototype.takeCensus = function (
  *            with their shortest paths attached, and without any dominator tree
  *            child/parent information attached. The results are sorted by
  *            retained size.
- *
  */
 HeapAnalysesClient.prototype.getCensusIndividuals = function (opts) {
   return this._worker.performTask("getCensusIndividuals", opts);

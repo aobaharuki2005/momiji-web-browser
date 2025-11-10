@@ -224,6 +224,7 @@ var _attemptTransport = async function (settings) {
  * Typically, this will only fail if the host / port is unreachable.  Other
  * problems, such as security errors, will allow this stage to succeed, but then
  * fail later when the streams are actually used.
+ *
  * @return s nsISocketTransport
  *         Underlying socket transport, in case more details are needed.
  * @return input nsIAsyncInputStream

@@ -340,6 +340,7 @@ exports.getNodeBounds = getNodeBounds;
  * elements that act like frames (e.g. <embed>), where 'contentWindow' isn't a
  * property that can be accessed.
  * This uses the inIDeepTreeWalker instead.
+ *
  * @param {DOMNode} frame
  * @return {Window}
  */
@@ -537,6 +538,7 @@ exports.isAfterPseudoElement = isAfterPseudoElement;
 
 /**
  * Get the current zoom factor applied to the container window of a given node.
+ *
  * @param {DOMNode|DOMWindow}
  *        The node for which the zoom factor should be calculated, or its
  *        owner window.
@@ -622,6 +624,7 @@ exports.getViewportDimensions = getViewportDimensions;
  * - a DOM node
  * - the document node
  * - the window itself
+ *
  * @param {DOMNode|DOMWindow|DOMDocument} node The node to get the window for.
  * @return {DOMWindow}
  */

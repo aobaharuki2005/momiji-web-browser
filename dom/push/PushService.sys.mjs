@@ -1240,6 +1240,7 @@ export var PushService = {
    * Clear subscriptions matching either a principal or a domain and
    * OriginAttributesPattern. If domain="*" is passed all records will be
    * deleted.
+   *
    * @param {*} options
    * @param {nsIPrincipal} [options.principal] - The principal to clear
    * subscriptions for. This does an exact origin match.

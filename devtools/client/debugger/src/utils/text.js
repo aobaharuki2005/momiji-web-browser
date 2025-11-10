@@ -4,6 +4,7 @@
 
 /**
  * Utils for keyboard command strings
+ *
  * @module utils/text
  */
 
@@ -11,6 +12,7 @@
  * Truncates the received text to the maxLength in the format:
  * Original: 'this is a very long text and ends here'
  * Truncated: 'this is a ver...and ends here'
+ *
  * @param {String} sourceText - Source text
  * @param {Number} maxLength - Max allowed length
  * @memberof utils/text

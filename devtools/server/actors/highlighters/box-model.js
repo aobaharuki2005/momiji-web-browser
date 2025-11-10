@@ -318,6 +318,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
   /**
    * Override the AutoRefreshHighlighter's _isNodeValid method to also return true for
    * text nodes since these can also be highlighted.
+   *
    * @param {DOMNode} node
    * @return {Boolean}
    */
@@ -464,6 +465,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
    * This is useful to position the guides and infobar.
    * This may happen if the BoxModelHighlighter is used to highlight an inline
    * element that spans line breaks.
+   *
    * @param {String} region The box-model region to get the outer quad for.
    * @return {Object} A quad-like object {p1,p2,p3,p4,bounds}
    */
@@ -662,6 +664,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
   /**
    * Can the current node be highlighted? Does it have quads.
+   *
    * @return {Boolean}
    */
   _nodeNeedsHighlighting() {
@@ -704,6 +707,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
   /**
    * We only want to show guides for horizontal and vertical edges as this helps
    * to line them up. This method finds these edges and displays a guide there.
+   *
    * @param {String} region The region around which the guides should be shown.
    */
   _showGuides(region) {

@@ -463,6 +463,7 @@ export class NetworkResponseListener {
 
   /**
    * Fetches cache information from CacheEntry
+   *
    * @private
    */
   async #getCacheInformation() {
@@ -654,6 +655,7 @@ export class NetworkResponseListener {
 
   /**
    * Loads the content from the cache
+   *
    * @returns Promise
    */
   #getContentFromCache() {

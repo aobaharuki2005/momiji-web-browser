@@ -81,7 +81,6 @@ const SUPPORTED_OPTIONS = {
  * in the content process.
  *
  * @constructor
- *
  */
 class TargetConfigurationActor extends Actor {
   constructor(watcherActor) {

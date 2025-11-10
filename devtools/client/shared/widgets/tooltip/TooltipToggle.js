@@ -151,6 +151,7 @@ TooltipToggle.prototype = {
   /**
    * Is the given target DOMNode a valid node for toggling the tooltip on hover.
    * This delegates to the user-defined _targetNodeCb callback.
+   *
    * @return {Promise} a promise that will resolve the anchor to use for the
    *         tooltip or null if no valid target was found.
    */

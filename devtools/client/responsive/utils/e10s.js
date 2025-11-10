@@ -12,6 +12,7 @@ const REQUEST_DONE_SUFFIX = ":Done";
 /**
  * Registers a message `listener` that is called every time messages of
  * specified `message` is emitted on the given message manager.
+ *
  * @param {nsIMessageListenerManager} mm
  *    The Message Manager
  * @param {String} message
@@ -27,6 +28,7 @@ exports.on = on;
 /**
  * Removes a message `listener` for the specified `message` on the given
  * message manager.
+ *
  * @param {nsIMessageListenerManager} mm
  *    The Message Manager
  * @param {String} message
@@ -42,6 +44,7 @@ exports.off = off;
 /**
  * Resolves a promise the next time the specified `message` is sent over the
  * given message manager.
+ *
  * @param {nsIMessageListenerManager} mm
  *    The Message Manager
  * @param {String} message

@@ -1954,6 +1954,7 @@ export var BrowserTestUtils = {
 
   /**
    * Create enough tabs to cause a tab overflow in the given window.
+   *
    * @param {Function|null} registerCleanupFunction
    *    The test framework doesn't keep its cleanup stuff anywhere accessible,
    *    so the first argument is a reference to your cleanup registration
@@ -2256,6 +2257,7 @@ export var BrowserTestUtils = {
   /**
    * Returns a promise that is resolved when element gains attribute (or,
    * optionally, when it is set to value).
+   *
    * @param {String} attr
    *        The attribute to wait for
    * @param {Element} element
@@ -2284,6 +2286,7 @@ export var BrowserTestUtils = {
 
   /**
    * Returns a promise that is resolved when element loses an attribute.
+   *
    * @param {String} attr
    *        The attribute to wait for
    * @param {Element} element
@@ -2809,6 +2812,7 @@ export var BrowserTestUtils = {
 
   /**
    * Sends a message to a specific BrowserTestUtils window actor.
+   *
    * @param {BrowsingContext} aBrowsingContext
    *        The browsing context where the actor lives.
    * @param {string} aMessageName
@@ -2828,6 +2832,7 @@ export var BrowserTestUtils = {
 
   /**
    * Sends a query to a specific BrowserTestUtils window actor.
+   *
    * @param {BrowsingContext} aBrowsingContext
    *        The browsing context where the actor lives.
    * @param {string} aMessageName

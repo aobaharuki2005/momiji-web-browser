@@ -273,6 +273,7 @@ async function promiseCallProvider(aProvider, aMethod, ...aArgs) {
 
 /**
  * Gets the currently selected locale for display.
+ *
  * @return  the selected locale or "en-US" if none is selected
  */
 function getLocale() {
@@ -510,6 +511,7 @@ export var AMBrowserExtensionsImport;
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
  * contents hidden from API users.
+ *
  * @class
  * @lends AddonManager
  */
@@ -985,6 +987,7 @@ var AddonManagerInternal = {
   /**
    * Shuts down the addon manager and all registered providers, this must clean
    * up everything in order for automated tests to fake restarts.
+   *
    * @return Promise{null} that resolves when all providers and dependent modules
    *                       have finished shutting down
    */
@@ -1325,6 +1328,7 @@ var AddonManagerInternal = {
   /**
    * Performs a background update check by starting an update for all add-ons
    * that can be updated.
+   *
    * @return Promise{null} Resolves when the background update check is complete
    *                       (the resulting addon installations may still be in progress).
    */
@@ -4043,6 +4047,7 @@ export var AddonManagerPrivate = {
 /**
  * This is the public API that UI and developers should be calling. All methods
  * just forward to AddonManagerInternal.
+ *
  * @class
  */
 export var AddonManager = {
@@ -4863,6 +4868,7 @@ export class EnvironmentAddonBuilder {
 
   /**
    * Enforces the parameter to a boolean value.
+   *
    * @param aValue The input value.
    * @return {Boolean|Object} If aValue is a boolean or a number, returns its truthfulness
    *         value. Otherwise, return null.
@@ -4876,6 +4882,7 @@ export class EnvironmentAddonBuilder {
 
   /**
    * Get the initial set of addons.
+   *
    * @returns Promise<void> when the initial load is complete.
    */
   async init() {
@@ -5117,6 +5124,7 @@ export class EnvironmentAddonBuilder {
 
   /**
    * Get the addon data in object form.
+   *
    * @return Promise<object> containing the addon data.
    */
   async _getActiveAddons() {
@@ -5214,6 +5222,7 @@ export class EnvironmentAddonBuilder {
 
   /**
    * Get the currently active theme data in object form.
+   *
    * @return Promise<object> containing the active theme data.
    */
   async _getActiveTheme() {

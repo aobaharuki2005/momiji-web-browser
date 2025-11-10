@@ -46,6 +46,7 @@ export class ChannelMap {
     /**
      * WeakMap from nsIChannel instances to objects which encapsulate ChannelMap
      * values with the following structure:
+     *
      * @property {Object} value
      *     The actual value stored in this ChannelMap entry, which should relate
      *     to this channel.

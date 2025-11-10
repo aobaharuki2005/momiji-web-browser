@@ -943,6 +943,7 @@ export const CFRPageActions = {
 
   /**
    * Fetch the URL to the latest add-on xpi so the recommendation can download it.
+   *
    * @param id          The add-on ID
    * @return            A string for the URL that was fetched
    */
@@ -966,6 +967,7 @@ export const CFRPageActions = {
 
   /**
    * Force a recommendation to be shown. Should only happen via the Admin page.
+   *
    * @param browser                 The browser for the recommendation
    * @param recommendation  The recommendation to show
    * @param dispatchCFRAction      A function to dispatch resulting actions to
@@ -1003,6 +1005,7 @@ export const CFRPageActions = {
 
   /**
    * Add a recommendation specific to the given browser and host.
+   *
    * @param browser                 The browser for the recommendation
    * @param host                    The host for the recommendation
    * @param recommendation          The recommendation to show

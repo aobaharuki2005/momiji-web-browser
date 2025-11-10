@@ -44,6 +44,7 @@ function getActorID(accessible) {
 /**
  * If accessible is cached recursively remove all its children and remove itself
  * from cache.
+ *
  * @param {Map}    cache      Previous state maintaining a cache of previously
  *                            fetched accessibles.
  * @param {Object} accessible Accessible object to remove from cache.
@@ -66,6 +67,7 @@ function cleanupChild(cache, accessible) {
  * Determine if accessible in cache is stale. Accessible object is stale if its
  * cached children array has the size other than the value of its childCount
  * property that updates on accessible actor event.
+ *
  * @param {Map}    cache      Previous state maintaining a cache of previously
  *                             fetched accessibles.
  * @param {Object} accessible Accessible object to test for staleness.
@@ -111,6 +113,7 @@ function updateAncestry(cache, ancestry) {
 
 /**
  * Handles fetching of accessible children.
+ *
  * @param {Map}     cache  Previous state maintaining a cache of previously
  *                         fetched accessibles.
  * @param {Object}  action Redux action object.

@@ -61,6 +61,7 @@ const TemporaryPermissions = {
   /**
    * Generate keys to store temporary permissions under. The strict key is
    * origin, non-strict is baseDomain.
+   *
    * @param {nsIPrincipal} principal - principal to derive keys from.
    * @returns {Object} keys - Object containing the generated permission keys.
    * @returns {string} keys.strict - Key to be used for strict matching.
@@ -74,6 +75,7 @@ const TemporaryPermissions = {
 
   /**
    * Sets a new permission for the specified browser.
+   *
    * @returns {boolean} whether the permission changed, effectively.
    */
   set(
@@ -159,6 +161,7 @@ const TemporaryPermissions = {
 
   /**
    * Removes a permission with the specified id for the specified browser.
+   *
    * @returns {boolean} whether the permission was removed.
    */
   remove(browser, id) {
@@ -264,6 +267,7 @@ const TemporaryPermissions = {
    * Clear temporary permissions for the specified browser. Unlike other
    * methods, this does NOT clear only for the currentURI but the whole browser
    * state.
+   *
    * @param {Browser} browser - Browser to clear permissions for.
    * @param {Number} [filterState] - Only clear permissions with the given state
    * value. Defaults to all permissions.
@@ -592,6 +596,7 @@ export var SitePermissions = {
 
   /**
    * Checks whether we support managing permissions for a specific scheme.
+   *
    * @param {string} scheme - Scheme to test.
    * @returns {boolean} Whether the scheme is supported.
    */
@@ -613,6 +618,7 @@ export var SitePermissions = {
 
   /**
    * Test whether a permission is managed by SitePermissions.
+   *
    * @param {string} type - Permission type.
    * @returns {boolean}
    */

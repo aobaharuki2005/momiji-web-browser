@@ -178,6 +178,7 @@ exports.getRuleText = getRuleText;
 /**
  * Return the offset and substring of |text| that starts at the given
  * line and column.
+ *
  * @param {String} text
  * @param {Number} line (1-indexed)
  * @param {Number} column (1-indexed)

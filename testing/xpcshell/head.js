@@ -335,6 +335,7 @@ var _fakeIdleService = {
 
 /**
  * Restores the idle service factory if needed and returns the service's handle.
+ *
  * @return A handle to the idle service.
  */
 function do_get_idle() {
@@ -1613,6 +1614,7 @@ function do_send_remote_message(name, data) {
 
 /**
  * Schedules and awaits a precise GC, and forces CC, `maxCount` number of times.
+ *
  * @param maxCount
  *        How many times GC and CC should be scheduled.
  */

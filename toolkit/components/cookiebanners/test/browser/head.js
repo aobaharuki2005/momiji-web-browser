@@ -373,6 +373,7 @@ function insertTestCookieRules() {
 
 /**
  * Triggers a cookie banner handling feature and tests the events dispatched.
+ *
  * @param {*} options - Test options.
  * @param {nsICookieBannerService::Modes} options.mode - The cookie banner
  * service mode to test with.

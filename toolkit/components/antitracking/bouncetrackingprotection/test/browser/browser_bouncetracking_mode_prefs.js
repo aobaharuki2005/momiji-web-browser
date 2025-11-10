@@ -14,6 +14,7 @@ const BTP_MODE_PREF = "privacy.bounceTrackingProtection.mode";
 
 /**
  * Run a bounce test with a custom bounce tracking protection mode.
+ *
  * @param {Number} mode - Mode to set for BTP. Any of
  * Ci.nsIBounceTrackingProtection.MODE_*
  * @param {boolean} shouldBeEnabled - Whether BTP should classify + purge in

@@ -106,6 +106,7 @@ export class nsContextMenu {
    * A promise to retrieve the translations language pair
    * if the context menu was opened in a context relevant to
    * open the SelectTranslationsPanel.
+   *
    * @type {Promise<{sourceLanguage: string, targetLanguage: string}>}
    */
   #translationsLangPairPromise;
@@ -113,6 +114,7 @@ export class nsContextMenu {
   /**
    * The value of the `main-context-menu-new-feature-badge` l10n string. Fetched
    * lazily.
+   *
    * @type {string}
    */
   #newFeatureBadgeL10nString;
@@ -2399,9 +2401,9 @@ export class nsContextMenu {
 
   /**
    * Strips any known query params from the link URI.
+   *
    * @returns {nsIURI|null} - the stripped version of the URI,
    * or the original URI if we could not strip any query parameter.
-   *
    */
   getStrippedLink(uri = this.linkURI) {
     if (!uri) {

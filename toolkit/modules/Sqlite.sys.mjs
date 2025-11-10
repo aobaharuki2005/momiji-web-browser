@@ -310,6 +310,7 @@ function unregisterVacuumParticipant(connectionData) {
 
 /**
  * Create a ConsoleInstance logger with a given prefix.
+ *
  * @param {string} prefix The prefix to use when logging.
  * @returns {ConsoleInstance} a console logger.
  */
@@ -471,6 +472,7 @@ ConnectionData.prototype = Object.freeze({
 
   /**
    * This should only be used by the VacuumManager component.
+   *
    * @see unsafeRawConnection for an official (but still unsafe) API.
    */
   get databaseConnection() {

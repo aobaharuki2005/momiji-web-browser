@@ -70,6 +70,7 @@ const EventsLogger = {
 
 /**
  * Describe an event in string format.
+ *
  * @param  {nsIAccessibleEvent}  event  event to strigify
  */
 function eventToString(event) {
@@ -135,6 +136,7 @@ function matchEvent(event, matchCriteria) {
  * A helper function that returns a promise that resolves when an accessible
  * event of the given type with the given target (defined by its id or
  * accessible) is observed.
+ *
  * @param  {Number}                eventType        expected accessible event
  *                                                  type
  * @param  {String|nsIAccessible|Function}  matchCriteria  expected content
@@ -218,6 +220,7 @@ class UnexpectedEvents {
 /**
  * A helper function that waits for a sequence of accessible events in
  * specified order.
+ *
  * @param {Array}   events          a list of events to wait (same format as
  *                                   waitForEvent arguments)
  * @param {String}  message         Message to prepend to logging.
@@ -322,6 +325,7 @@ function waitForStateChange(id, state, isEnabled, isExtra = false) {
  * before setting focus to it. This simulates behavio with the keyboard when
  * tabbing to the element. This does explicitly what synthFocus did implicitly.
  * This should be called only if you really want this behavior.
+ *
  * @param  {string}  id  The element ID to focus
  */
 function selectAllTextAndFocus(id) {

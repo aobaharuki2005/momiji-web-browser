@@ -27,6 +27,7 @@ var gViewSourceUtils = {
 
   /**
    * Get the ViewSourcePage actor.
+   *
    * @param object An object with `browsingContext` field
    */
   getPageActor({ browsingContext }) {

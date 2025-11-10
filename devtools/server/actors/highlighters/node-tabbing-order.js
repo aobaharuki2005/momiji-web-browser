@@ -229,6 +229,7 @@ class NodeTabbingOrderHighlighter extends AutoRefreshHighlighter {
 
   /**
    * Calculate border bounds based on the quads returned by getAdjustedQuads.
+   *
    * @return {Object} A bounds object {bottom,height,left,right,top,width,x,y}
    */
   _getBorderBounds() {
@@ -290,6 +291,7 @@ class NodeTabbingOrderHighlighter extends AutoRefreshHighlighter {
 
   /**
    * Can the current node be highlighted? Does it have quads.
+   *
    * @return {Boolean}
    */
   _nodeNeedsHighlighting() {

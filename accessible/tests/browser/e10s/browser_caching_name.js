@@ -371,6 +371,7 @@ const markupTests = [
  * results in a reorder or text inserted event - wait for it. If accessible
  * becomes defunct, update its reference using the one that is attached to one
  * of the above events.
+ *
  * @param {Object} browser      current "tabbrowser" element
  * @param {Object} target       { acc, id } structure that contains an
  *                               accessible and its content element
@@ -399,6 +400,7 @@ async function testAttrRule(browser, target, rule, expected) {
  * element before proceeding to the next name test. If element removal results
  * in a reorder event - wait for it. If accessible becomes defunct, update its
  * reference using the one that is attached to a possible reorder event.
+ *
  * @param {Object} browser      current "tabbrowser" element
  * @param {Object} target       { acc, id } structure that contains an
  *                               accessible and its content element
@@ -427,6 +429,7 @@ async function testElmRule(browser, target, rule, expected) {
  * and wait for a reorder event before proceeding to the next name test. If
  * accessible becomes defunct, update its reference using the one that is
  * attached to a reorder event.
+ *
  * @param {Object} browser      current "tabbrowser" element
  * @param {Object} target       { acc, id } structure that contains an
  *                               accessible and its content element
@@ -455,6 +458,7 @@ async function testSubtreeRule(browser, target, rule, expected) {
 /**
  * Iterate over a list of rules and test accessible names for each one of the
  * rules.
+ *
  * @param {Object} browser      current "tabbrowser" element
  * @param {Object} target       { acc, id } structure that contains an
  *                               accessible and its content element

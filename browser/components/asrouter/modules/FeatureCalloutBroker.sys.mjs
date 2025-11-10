@@ -42,6 +42,7 @@ export class _FeatureCalloutBroker {
    * Make a new FeatureCallout instance and store it in the callout map. Also
    * add an unload listener to the window to clean up the callout when the
    * window is unloaded.
+   *
    * @param {FeatureCalloutOptions} config
    */
   makeFeatureCallout(config) {
@@ -73,6 +74,7 @@ export class _FeatureCalloutBroker {
   /**
    * Show a feature callout message. For use by ASRouter, to be invoked when a
    * trigger has matched to a feature_callout message.
+   *
    * @param {MozBrowser} browser <browser> element associated with the trigger.
    * @param {Object} message feature_callout message from ASRouter.
    *   @see {@link FeatureCalloutMessages.sys.mjs}
@@ -150,6 +152,7 @@ export class _FeatureCalloutBroker {
    * callout is already in progress. This allows the PDF.js feature tour, which
    * simulates content, to be shown in the chrome window without interfering
    * with chrome feature callouts.
+   *
    * @param {FeatureCalloutOptions} config
    * @param {Object} message feature_callout message from ASRouter.
    *   @see {@link FeatureCalloutMessages.sys.mjs}

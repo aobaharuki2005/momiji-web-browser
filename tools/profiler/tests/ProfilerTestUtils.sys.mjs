@@ -287,6 +287,7 @@ export var ProfilerTestUtils = {
   /**
    * This function pauses the profiler before getting the profile. Then after
    * getting the data, the profiler is stopped, and all profiler data is removed.
+   *
    * @returns {Promise<Profile>}
    */
   async stopNowAndGetProfile() {
@@ -310,6 +311,7 @@ export var ProfilerTestUtils = {
    * This function ensures there's at least one sample, then pauses the profiler
    * before getting the profile. Then after getting the data, the profiler is
    * stopped, and all profiler data is removed.
+   *
    * @returns {Promise<Profile>}
    */
   async waitSamplingAndStopAndGetProfile() {

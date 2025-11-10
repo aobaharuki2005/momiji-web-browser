@@ -432,6 +432,7 @@ export function setRecordingSettings(pageContext, prefs) {
 
 /**
  * Revert the recording prefs for both local and remote profiling.
+ *
  * @return {void}
  */
 export function revertRecordingSettings() {
@@ -449,6 +450,7 @@ export function revertRecordingSettings() {
 
 /**
  * Add an observer for the profiler-related preferences.
+ *
  * @param {PrefObserver} observer
  * @return {void}
  */
@@ -458,6 +460,7 @@ export function addPrefObserver(observer) {
 
 /**
  * Removes an observer for the profiler-related preferences.
+ *
  * @param {PrefObserver} observer
  * @return {void}
  */
@@ -468,6 +471,7 @@ export function removePrefObserver(observer) {
  * Return the proper view mode for the Firefox Profiler front-end timeline by
  * looking at the proper preset that is selected.
  * Return value can be undefined when the preset is unknown or custom.
+ *
  * @param {PageContext} pageContext
  * @return {ProfilerViewMode | undefined}
  */
@@ -544,6 +548,7 @@ export function getRecordingSettings(pageContext, supportedFeatures) {
 /**
  * Change the prefs based on a preset. This mechanism is used by the popup to
  * easily switch between different settings.
+ *
  * @param {string} presetName
  * @param {PageContext} pageContext
  * @param {string[]} supportedFeatures

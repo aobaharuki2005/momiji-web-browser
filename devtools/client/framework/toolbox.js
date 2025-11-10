@@ -639,6 +639,7 @@ Toolbox.prototype = {
 
   /**
    * Get the enabled split console setting, and if it's not set, set it with updateIsSplitConsoleEnabled
+   *
    * @returns {boolean} devtools.toolbox.splitconsole.enabled option
    */
   isSplitConsoleEnabled() {
@@ -1890,6 +1891,7 @@ Toolbox.prototype = {
   /**
    * Handle any custom key events.  Returns true if there was a custom key
    * binding run.
+   *
    * @param {string} toolId Which tool to run the command on (skip if not
    * current)
    */
@@ -2093,6 +2095,7 @@ Toolbox.prototype = {
    * Reset tabindex attributes across all focusable elements inside the toolbar.
    * Only have one element with tabindex=0 at a time to make sure that tabbing
    * results in navigating away from the toolbar container.
+   *
    * @param  {FocusEvent} event
    */
   _onToolbarFocus(id) {
@@ -2105,6 +2108,7 @@ Toolbox.prototype = {
    * as it is difficult to coordinate between different component elements.
    * The components are responsible for setting the correct tabindex value
    * for if they are the focused element.
+   *
    * @param  {KeyboardEvent} event
    */
   _onToolbarArrowKeypress(event) {
@@ -2659,7 +2663,6 @@ Toolbox.prototype = {
    *        the id of the tool to test for existence.
    *
    * @return {boolean}
-   *
    */
   hasAdditionalTool(toolId) {
     return this.additionalToolDefinitions.has(toolId);
@@ -2935,6 +2938,7 @@ Toolbox.prototype = {
 
   /**
    * Mark all in collection as unselected; and id as selected
+   *
    * @param {string} collection
    *        DOM collection of items
    * @param {string} id
@@ -3158,6 +3162,7 @@ Toolbox.prototype = {
 
   /**
    * Focus a tool's panel by id
+   *
    * @param  {string} id
    *         The id of tool to focus
    */
@@ -4038,6 +4043,7 @@ Toolbox.prototype = {
 
   /**
    * Handler for the tool-registered event.
+   *
    * @param  {string} toolId
    *         Id of the tool that was registered
    */
@@ -4068,6 +4074,7 @@ Toolbox.prototype = {
 
   /**
    * Handler for the tool-unregistered event.
+   *
    * @param  {string} toolId
    *         id of the tool that was unregistered
    */
@@ -4098,7 +4105,6 @@ Toolbox.prototype = {
    *   - {AsyncFunction} waitForHighlighterHidden: Returns a promise which resolves with
    *                     the "highlighter-hidden" event data once the highlighter is
    *                     hidden.
-   *
    */
   getHighlighter() {
     let pendingHighlight;
@@ -4548,6 +4554,7 @@ Toolbox.prototype = {
    * Open the textbox context menu at given coordinates.
    * Panels in the toolbox can call this on contextmenu events with event.screenX/Y
    * instead of having to implement their own copy/paste/selectAll menu.
+   *
    * @param {Number} x
    * @param {Number} y
    */
@@ -4754,6 +4761,7 @@ Toolbox.prototype = {
 
   /**
    * Opens source in plain "view-source:".
+   *
    * @see devtools/client/shared/source-utils.js
    */
   viewSource(sourceURL, sourceLine, sourceColumn) {
@@ -4850,6 +4858,7 @@ Toolbox.prototype = {
    * List the subset of the active WebExtensions which have a devtools_page (used by
    * toolbox-options.js to create the list of the tools provided by the enabled
    * WebExtensions).
+   *
    * @see devtools/client/framework/toolbox-options.js
    */
   listWebExtensions() {
@@ -4866,6 +4875,7 @@ Toolbox.prototype = {
    * a unique id assigned to an extension when it is installed, and its name),
    * and emit a "webextension-registered" event to allow toolbox-options.js
    * to refresh the listed tools accordingly.
+   *
    * @see browser/components/extensions/ext-devtools.js
    */
   registerWebExtension(extensionUUID, { name, pref }) {
@@ -4881,6 +4891,7 @@ Toolbox.prototype = {
    * extension UUID, a unique id assigned to an extension when it is installed, and its
    * name), and emit a "webextension-unregistered" event to allow toolbox-options.js
    * to refresh the listed tools accordingly.
+   *
    * @see browser/components/extensions/ext-devtools.js
    */
   unregisterWebExtension(extensionUUID) {
@@ -4894,6 +4905,7 @@ Toolbox.prototype = {
    * A helper function which returns true if the extension with the given UUID is listed
    * as active for the toolbox and has its related devtools about:config preference set
    * to true.
+   *
    * @see browser/components/extensions/ext-devtools.js
    */
   isWebExtensionEnabled(extensionUUID) {

@@ -221,6 +221,7 @@ FxAccountsProfileClient.prototype = {
 
 /**
  * Normalized profile client errors
+ *
  * @param {Object} [details]
  *        Error details object
  *   @param {number} [details.code]

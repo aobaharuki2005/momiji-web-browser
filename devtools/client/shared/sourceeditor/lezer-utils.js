@@ -494,6 +494,7 @@ async function walkTree(view, language, options) {
 /**
  * This enables walking a specific part of the syntax tree using the cursor
  * provided by the node (which is the parent)
+ *
  * @param {Object} cursor - https://lezer.codemirror.net/docs/ref/#common.TreeCursor
  * @param {Object} options
  *        {Function} options.enterVisitor - A function that is called when a node is entered

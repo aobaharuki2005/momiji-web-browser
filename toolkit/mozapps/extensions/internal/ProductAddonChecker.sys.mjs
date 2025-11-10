@@ -623,6 +623,7 @@ export const ProductAddonChecker = {
 export const ProductAddonCheckerTestUtils = {
   /**
    * Used to override ServiceRequest calls with a mock request.
+   *
    * @param mockRequest The mocked ServiceRequest object.
    * @param callback Method called with the overridden ServiceRequest. The override
    *        is undone after the callback returns.

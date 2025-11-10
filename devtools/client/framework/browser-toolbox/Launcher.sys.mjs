@@ -69,6 +69,7 @@ export class BrowserToolboxLauncher extends EventEmitter {
 
   /**
    * Figure out if there are any open Browser Toolboxes that'll need to be restored.
+   *
    * @return {boolean}
    */
   static getBrowserToolboxSessionState() {
@@ -439,6 +440,7 @@ export class BrowserToolboxLauncher extends EventEmitter {
 
 /**
  * Helper method for debugging.
+ *
  * @param string
  */
 function dumpn(str) {

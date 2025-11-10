@@ -23,6 +23,7 @@ registerCleanupFunction(() => {
 
 /**
  * Add a new test tab in the browser and load the given url.
+ *
  * @param {String} url
  *   The url to be loaded in the new tab.
  *
@@ -217,6 +218,7 @@ function getElementAttr(selector, attr) {
 
 /**
  * Return the text of a row given its index, e.g. `key: "value"`
+ *
  * @param {Number} rowIndex
  * @returns {Promise<String>}
  */

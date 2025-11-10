@@ -90,7 +90,6 @@ class InactiveCssTooltipHelper {
    *
    * @param {DOMEvent} event
    *        The click event originating from the tooltip.
-   *
    */
   addTab(event) {
     // The XUL panel swallows click events so handlers can't be added directly

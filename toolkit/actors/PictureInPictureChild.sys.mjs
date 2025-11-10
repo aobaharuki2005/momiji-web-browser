@@ -109,6 +109,7 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
  *
  * The Picture-In-Picture add-on can use this to provide site-specific wrappers for
  * sites that require special massaging to control.
+ *
  * @param {Object} pipChild reference to PictureInPictureChild class calling this function
  * @param {Element} originatingVideo
  *   The <video> element to wrap.
@@ -699,6 +700,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
    * Changes from the first-time toggle to the icon toggle if the Nimbus variable `displayDuration`'s
    * end date is reached when hovering over a video. The end date is calculated according to the timestamp
    * indicating when the PiP toggle was first seen.
+   *
    * @param {Number} firstSeenStartSeconds the timestamp in seconds indicating when the PiP toggle was first seen
    */
   changeToIconIfDurationEnd(firstSeenStartSeconds) {
@@ -1629,6 +1631,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
   /**
    * Creates a link element with a reference to the css stylesheet needed
    * for text tracks responsive styling.
+   *
    * @returns {Element} the link element containing text tracks stylesheet.
    */
   createTextTracksStyleSheet() {
@@ -1725,6 +1728,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
    * If overlap is found, set attribute "overlap-video-controls" to move text tracks
    * and define a new relative bottom position according to pip window size and the
    * position of video controls.
+   *
    *  @param {Object} data args needed to determine if text tracks must be moved
    */
   moveTextTracks(data) {
@@ -1773,6 +1777,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
   /**
    * Updates the text content for the container that holds and displays text tracks
    * on the pip window.
+   *
    * @param textTrackCues {TextTrackCueList|null}
    *  Collection of TextTrackCue objects containing text displayed, or null if there is no cue to display.
    */
@@ -2204,6 +2209,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
 
   /**
    * Set the current time of the video based of the position of the scrubber
+   *
    * @param {Number} scrubberPosition A number between 0 and 1 representing the position of the scrubber
    */
   setVideoTime(scrubberPosition, wasPlaying) {
@@ -2236,6 +2242,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
   /**
    * Updates this._currentWebVTTTrack if an active track is found
    * for the originating video.
+   *
    * @param {TextTrackList} textTrackList list of text tracks
    */
   setActiveTextTrack(textTrackList) {
@@ -2905,6 +2912,7 @@ class PictureInPictureChildVideoWrapper {
 
   /**
    * Function to display the captions on the PiP window
+   *
    * @param {String} text - Raw text to be displayed
    * @param {String} type - Optional type of text track. If "vtt" or "html", the text
    * will be parsed and displayed as a WebVTT cue. If not provided, the text will
@@ -2945,6 +2953,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the play() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to handle video
    * behaviour when a video is played.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    */
@@ -2961,6 +2970,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the pause() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to handle video
    * behaviour when a video is paused.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    */
@@ -2977,6 +2987,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the getPaused() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to determine if
    * a video is paused or not.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @returns {Boolean} Boolean value true if paused, or false if video is still playing
@@ -2994,6 +3005,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the getEnded() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to determine if
    * video playback or streaming has stopped.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @returns {Boolean} Boolean value true if the video has ended, or false if still playing
@@ -3011,6 +3023,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the getDuration() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to get the current
    * duration of a video in seconds.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @returns {Number} Duration of the video in seconds
@@ -3028,6 +3041,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the getCurrentTime() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to get the current
    * time of a video in seconds.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @returns {Number} Current time of the video in seconds
@@ -3045,6 +3059,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the setCurrentTime() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to set the current
    * time of a video.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @param {Number} position
@@ -3065,6 +3080,7 @@ class PictureInPictureChildVideoWrapper {
 
   /**
    * Return hours, minutes, and seconds from seconds
+   *
    * @param {Number} aSeconds
    *  The time in seconds
    * @returns {String} Timestamp string
@@ -3084,6 +3100,7 @@ class PictureInPictureChildVideoWrapper {
   /**
    * Format a timestamp from current time and total duration,
    * output as a string in the form '0:00 / 0:00'
+   *
    * @param {Number} aCurrentTime
    *  The current time in seconds
    * @param {Number} aDuration
@@ -3105,6 +3122,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the getVolume() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to get the volume
    * value of a video.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @returns {Number} Volume of the video between 0 (muted) and 1 (loudest)
@@ -3122,6 +3140,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the setVolume() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to set the volume
    * value of a video.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @param {Number} volume
@@ -3142,6 +3161,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the isMuted() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to get the mute
    * state a video.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @param {Boolean} shouldMute
@@ -3160,6 +3180,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the setMuted() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to mute or unmute
    * a video.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @param {Boolean} shouldMute
@@ -3181,6 +3202,7 @@ class PictureInPictureChildVideoWrapper {
    * if the method does not exist or if an error is thrown while calling it. This method is meant to listen for any cue changes in a
    * video's caption container and execute a callback function responsible for updating the pip window's text tracks container whenever
    * a cue change is triggered {@see updatePiPTextTracks()}.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @param {Function} _callback
@@ -3204,6 +3226,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the removeCaptionContainerObserver() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to remove any caption observers that
    * may have been set in setCaptionContainerObserver().
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @param {Function} _callback
@@ -3222,6 +3245,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the shouldHideToggle() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to determine if the pip toggle
    * for a video should be hidden by the site wrapper.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    * @returns {Boolean} Boolean value true if the pip toggle should be hidden by the site wrapper, or false if it should not
@@ -3239,6 +3263,7 @@ class PictureInPictureChildVideoWrapper {
    * OVERRIDABLE - calls the isLive() method defined in the site wrapper script. Runs a fallback implementation
    * if the method does not exist or if an error is thrown while calling it. This method is meant to get if the
    * video is a live stream.
+   *
    * @param {HTMLVideoElement} video
    *  The originating video source element
    */

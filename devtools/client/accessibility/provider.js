@@ -10,6 +10,7 @@ const {
 /**
  * Data provider that is responsible for mapping of an accessibles cache to the
  * data format that is supported by the TreeView component.
+ *
  * @param {Map}      accessibles accessibles object cache
  * @param {Function} dispatch    react dispatch function that triggers a redux
  *                               action.
@@ -25,6 +26,7 @@ class Provider {
   /**
    * Get accessible's cached children if available, if not fetch them from
    * backend.
+   *
    * @param {Object}  accessible accessible object whose children to get.
    * @returns {Array} arraof of accessible children.
    */
@@ -43,6 +45,7 @@ class Provider {
 
   /**
    * Return a flag indicating if an accessible object has any children.
+   *
    * @param {Object}    accessible accessible object whose children to get.
    * @returns {Boolean} idicator of whether accessible object has children.
    */
@@ -54,6 +57,7 @@ class Provider {
    * Get a value for an accessible object. Used to render the second (value)
    * column of the accessible tree. Corresponds to an accesible object name, if
    * available.
+   *
    * @param {Object}   accessible accessible object
    * @returns {String} accessible object value.
    */
@@ -64,6 +68,7 @@ class Provider {
   /**
    * Get a label for an accessible object. Used to render the first column of
    * the accessible tree. Corresponds to an accessible object role.
+   *
    * @param {Object}   accessible accessible object
    * @returns {String} accessible object label.
    */
@@ -74,6 +79,7 @@ class Provider {
   /**
    * Get a unique key for an accessible object. Corresponds to an accessible
    * front's actorID.
+   *
    * @param {Object}   accessible accessible object
    * @returns {String} a key for an accessible object.
    */
@@ -84,6 +90,7 @@ class Provider {
   /**
    * Get a type of an accesible object. Corresponds to the type of an accessible
    * front.
+   *
    * @param {Object}   accessible accessible object
    * @returns {String} accessible object type
    */

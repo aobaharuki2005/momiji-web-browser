@@ -310,6 +310,7 @@ class RuleRewriter {
    * backward in |string|.  Return the index of the first
    * non-whitespace character, or -1 if the entire string was
    * whitespace.
+   *
    * @param {String} string the input string
    * @param {Number} index the index at which to start
    * @return {Number} index of the first non-whitespace character, or -1

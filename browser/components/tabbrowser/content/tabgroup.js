@@ -569,6 +569,7 @@
 
     /**
      * Remove all tabs from the group and delete the group.
+     *
      * @param {TabMetricsContext} [metricsContext]
      */
     ungroupTabs(

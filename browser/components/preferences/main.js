@@ -987,6 +987,7 @@ const DefaultBrowserHelper = {
 
   /**
    * Checks whether the browser is capable of being made default.
+   *
    * @type {boolean}
    */
   get canCheck() {
@@ -2609,6 +2610,7 @@ var gMainPane = {
 
       /**
        * Update the DownloadPhase for a single langTag.
+       *
        * @param {string} langTag
        * @param {DownloadPhase} downloadPhase
        */
@@ -2629,6 +2631,7 @@ var gMainPane = {
 
       /**
        * Set all the downloads.
+       *
        * @param {DownloadPhase} downloadPhase
        */
       markAllDownloadPhases(downloadPhase) {

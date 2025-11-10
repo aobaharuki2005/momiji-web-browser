@@ -219,6 +219,7 @@ async function assertPseudoRemovedFromView(
 
 /**
  * Check that an element currently has a pseudo-class lock.
+ *
  * @param {String} selector The node selector to get the pseudo-class from
  * @param {String} pseudo The pseudoclass to check for
  * @return {Promise<Boolean>}

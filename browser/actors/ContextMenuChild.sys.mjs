@@ -311,6 +311,7 @@ export class ContextMenuChild extends JSWindowActorChild {
    * Returns the event target of the context menu, using a locally stored
    * reference if possible. If not, and aMessage.objects is defined,
    * aMessage.objects[aKey] is returned. Otherwise null.
+   *
    * @param  {Object} aMessage Message with a objects property
    * @param  {String} aKey     Key for the target on aMessage.objects
    * @return {Object}          Context menu target

@@ -299,6 +299,7 @@ var parsers = {
 
 /**
  * Parse an attribute value.
+ *
  * @param {String} namespaceURI The namespaceURI of the node that has the
  * attribute.
  * @param {String} tagName The tagName of the node that has the attribute.
@@ -337,6 +338,7 @@ function parseAttribute(
 
 /**
  * Get the type for links in this attribute if any.
+ *
  * @param {String} namespaceURI The node's namespaceURI.
  * @param {String} tagName The node's tagName.
  * @param {Array} attributes The node's attributes, as a list of {name, value}
@@ -389,6 +391,7 @@ function getAttribute(attributes, attributeName) {
  * Split a string by a given character and return an array of objects parts.
  * The array will contain objects for the split character too, marked with
  * TYPE_STRING type.
+ *
  * @param {String} value The string to parse.
  * @param {String} splitChar A 1 length split character.
  * @return {Array}

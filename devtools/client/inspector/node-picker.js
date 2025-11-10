@@ -19,7 +19,6 @@ loader.lazyRequireGetter(
  * - invoke actions to start and stop picking nodes on all walkers
  * - listen to node picker events from all walkers and relay them to subscribers
  *
- *
  * @param {Commands} commands
  *        The commands object with all interfaces defined from devtools/shared/commands/
  */

@@ -28,6 +28,7 @@ export var ManifestObtainer = {
   /**
    * Public interface for obtaining a web manifest from a XUL browser, to use
    * on the parent process.
+   *
    * @param  {XULBrowser} The browser to check for the manifest.
    * @param {Object} aOptions
    * @param {Boolean} aOptions.checkConformance If spec conformance messages should be collected.
@@ -57,6 +58,7 @@ export var ManifestObtainer = {
   },
   /**
    * Public interface for obtaining a web manifest from a XUL browser.
+   *
    * @param {Window} aContent A content Window from which to extract the manifest.
    * @param {Object} aOptions
    * @param {Boolean} aOptions.checkConformance If spec conformance messages should be collected.
@@ -110,6 +112,7 @@ function isXULBrowser(aBrowser) {
 /**
  * Asynchronously processes the result of response after having fetched
  * a manifest.
+ *
  * @param {Response} aResp Response from fetch().
  * @param {Window} aContentWindow The content window.
  * @return {Promise<Object>} The processed manifest.
@@ -133,6 +136,7 @@ async function processResponse(aResp, aContentWindow, aOptions) {
 
 /**
  * Asynchronously fetches a web manifest.
+ *
  * @param {Window} a The content Window from where to extract the manifest.
  * @return {Promise<Object>}
  */

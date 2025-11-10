@@ -106,6 +106,7 @@ Calendar.prototype = {
 
   /**
    * Render the items onto the DOM nodes
+   *
    * @param  {Object}
    *         {
    *           {Array<DOMElement>} elements
@@ -251,6 +252,7 @@ Calendar.prototype = {
 
   /**
    * Handle events
+   *
    * @param  {DOMEvent} event
    */
   handleEvent(event) {
@@ -400,6 +402,7 @@ Calendar.prototype = {
 
   /**
    * Find Data-id of the next element to focus on the daysView grid
+   *
    * @param {Object} nextDate: Data object of the next element to focus
    */
   _calculateNextId(nextDate) {
@@ -413,6 +416,7 @@ Calendar.prototype = {
 
   /**
    * Comparing two date objects to ensure they produce the same date
+   *
    * @param  {Date} dateObj1: Date object from the updated state
    * @param  {Date} dateObj2: Date object from the previous state
    * @return {Boolean} If two date objects are the same day
@@ -428,6 +432,7 @@ Calendar.prototype = {
   /**
    * Comparing two date objects to ensure they produce the same day of the month,
    * while being on different months
+   *
    * @param  {Date} dateObj1: Date object from the updated state
    * @param  {Date} dateObj2: Date object from the previous state
    * @return {Boolean} If two date objects are the same day of the month
@@ -438,6 +443,7 @@ Calendar.prototype = {
 
   /**
    * Manage focus for the keyboard navigation for the daysView grid
+   *
    * @param  {Number} offsetDays: The direction and the number of days to move
    *                            the focus by, where a negative number (i.e. -1)
    *                            moves the focus to the previous day

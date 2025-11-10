@@ -1784,6 +1784,7 @@ class ThreadActor extends Actor {
   /**
    * Create and return an environment actor that corresponds to the provided
    * Debugger.Environment.
+   *
    * @param Debugger.Environment environment
    *        The lexical environment we want to extract.
    * @param object pool

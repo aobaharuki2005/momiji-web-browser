@@ -277,6 +277,7 @@ var TelemetryReportingPolicyImpl = {
 
   /**
    * Get the date the policy was notified.
+   *
    * @return {Object} A date object or null on errors.
    */
   get dataSubmissionPolicyNotifiedDate() {
@@ -316,6 +317,7 @@ var TelemetryReportingPolicyImpl = {
 
   /**
    * Set the date the policy was notified.
+   *
    * @param {Object} aDate A valid date object.
    */
   set dataSubmissionPolicyNotifiedDate(aDate) {
@@ -339,6 +341,7 @@ var TelemetryReportingPolicyImpl = {
 
   /**
    * Get the date the terms of use were accepted.
+   *
    * @return {Object} A date object or null on errors.
    */
   get termsOfUseAcceptedDate() {
@@ -373,6 +376,7 @@ var TelemetryReportingPolicyImpl = {
 
   /**
    * Set the date the policy was notified.
+   *
    * @param {Object} aDate A valid date object.
    */
   set termsOfUseAcceptedDate(aDate) {
@@ -494,6 +498,7 @@ var TelemetryReportingPolicyImpl = {
 
   /**
    * Checks to see if the user has been notified about data submission
+   *
    * @return {Bool} True if user has been notified and the notification is still valid,
    *         false otherwise.
    */
@@ -517,6 +522,7 @@ var TelemetryReportingPolicyImpl = {
 
   /**
    * Checks to see if the user has accepted the current terms of use
+   *
    * @return {Bool} True if user has accepted and the acceptance is still valid,
    *         false otherwise.
    */
@@ -778,6 +784,7 @@ var TelemetryReportingPolicyImpl = {
    * Otherwise, for upload to be allowed from a data reporting standpoint, the
    * user should not qualify to see the legacy policy notification flow and also
    * not qualify to see the Terms of Use acceptance flow.
+   *
    * @return {Boolean} True if we are allowed to upload data, false otherwise.
    */
   canUpload() {

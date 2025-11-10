@@ -516,7 +516,6 @@ function promiseSanitizationComplete() {
  *          "browser" by default
  *        checkingDataSizes: boolean check if we should wait for the data sizes
  *          to load
- *
  */
 function ClearHistoryDialogHelper({
   mode = "browser",

@@ -5,6 +5,7 @@
 
 /**
  * Prevent event default behaviour and stop its propagation.
+ *
  * @param  {Object} event
  *         Event or react synthetic event.
  */

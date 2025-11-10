@@ -1612,6 +1612,7 @@ class Inspector extends EventEmitter {
 
   /**
    * Can a new HTML element be inserted into the currently selected element?
+   *
    * @return {Boolean}
    */
   canAddHTMLChild() {
@@ -1907,6 +1908,7 @@ class Inspector extends EventEmitter {
 
   /**
    * Show the eyedropper on the page.
+   *
    * @return {Promise} resolves when the eyedropper is visible.
    */
   showEyeDropper() {
@@ -1926,6 +1928,7 @@ class Inspector extends EventEmitter {
 
   /**
    * Hide the eyedropper.
+   *
    * @return {Promise} resolves when the eyedropper is hidden.
    */
   hideEyeDropper() {

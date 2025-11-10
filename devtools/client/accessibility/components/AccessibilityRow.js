@@ -201,6 +201,7 @@ class AccessibilityRow extends Component {
 
   /**
    * Scroll the node that corresponds to a current accessible object into view.
+   *
    * @param   {Object}
    *          Accessible front that is rendered for this node.
    *
@@ -288,6 +289,7 @@ class AccessibilityRow extends Component {
 
   /**
    * Render accessible row component.
+   *
    * @returns acecssible-row React component.
    */
   render() {

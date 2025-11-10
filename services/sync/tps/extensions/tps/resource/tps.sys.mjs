@@ -1359,7 +1359,6 @@ export var TPS = {
    *
    * @param {String} [wipeAction]
    *        Type of wipe to perform (resetClient, wipeClient, wipeRemote)
-   *
    */
   async Sync(wipeAction) {
     if (this._syncActive) {

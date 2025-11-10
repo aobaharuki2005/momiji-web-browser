@@ -115,6 +115,7 @@ function isV4PingFormat(aPing) {
 
 /**
  * Check if the provided ping is a deletion-request ping.
+ *
  * @param {Object} aPing The ping to check.
  * @return {Boolean} True if the ping is a deletion-request ping, false otherwise.
  */
@@ -124,6 +125,7 @@ function isDeletionRequestPing(aPing) {
 
 /**
  * Generate a string suitable for including in a profiler marker as a ping description.
+ *
  * @param {Object} aPing The ping to describe.
  */
 function getPingMarkerString(aPing) {
@@ -137,6 +139,7 @@ function getPingMarkerString(aPing) {
 
 /**
  * Save the provided ping as a pending ping.
+ *
  * @param {Object} aPing The ping to save.
  * @return {Promise} A promise resolved when the ping is saved.
  */
@@ -879,6 +882,7 @@ export var TelemetrySendImpl = {
 
   /**
    * Discard old pings from the pending pings and detect overdue ones.
+   *
    * @return {Boolean} True if we have overdue pings, false otherwise.
    */
   async _checkPendingPings() {
@@ -1575,6 +1579,7 @@ export var TelemetrySendImpl = {
 
   /**
    * Check if sending is temporarily disabled.
+   *
    * @return {Boolean} True if we can send pings to the server right now, false if
    *         sending is temporarily disabled.
    */
@@ -1635,6 +1640,7 @@ export var TelemetrySendImpl = {
 
   /**
    * Return a promise that allows to wait on pending pings.
+   *
    * @return {Object<Promise>} A promise resolved when all the pending pings promises
    *         are resolved.
    */

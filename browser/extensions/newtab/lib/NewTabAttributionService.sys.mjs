@@ -217,6 +217,7 @@ export class NewTabAttributionService {
 
   /**
    * findImpression queries the local events to find an attributable event.
+   *
    * @param {string} partnerId - Partner the event must be associated with.
    * @param {number} lookbackDays - Maximum number of days ago that the event occurred for it to
    *  be eligible.
@@ -256,6 +257,7 @@ export class NewTabAttributionService {
    * getImpression searches existing events for the partner and retuns the event
    * if it is found, defaulting to the passed in impression if there are none. This
    * enables timestamp fields of the stored event to be updated or carried forward.
+   *
    * @param {ObjectStore} impressionStore - Promise-based wrapped IDBObjectStore.
    * @param {string} partnerId - partner this event is associated with.
    * @param {impression} defaultImpression - event to use if it has not been seen previously.
@@ -276,6 +278,7 @@ export class NewTabAttributionService {
   /**
    * updateImpression stores the passed event, either updating the record
    * if this event was already seen, or appending to the list of events if it is new.
+   *
    * @param {ObjectStore} impressionStore - Promise-based wrapped IDBObjectStore.
    * @param {string} partnerId - partner this event is associated with.
    * @param {impression} impression - event to update.
@@ -333,6 +336,7 @@ export class NewTabAttributionService {
 
   /**
    * updateBudget updates the stored budget to indicate some has been used.
+   *
    * @param {budget} budget - current budget to be modified.
    * @param {number} value - amount of budget that has been used.
    * @param {string} partnerId - partner this budget is for.

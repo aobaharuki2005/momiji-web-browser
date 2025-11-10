@@ -311,6 +311,7 @@ function addPopupEventHandlers(state, elements, view) {
 
 /**
  * Initialize everything needed for the popup to work fine.
+ *
  * @param {State} panelState
  * @param {XULElement} panelview
  */

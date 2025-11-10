@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class PageEventManager {
   /**
    * A set of parameters defining a page event listener.
+   *
    * @typedef {Object} PageEventListenerParams
    * @property {String} type Event type string e.g. `click`
    * @property {String} [selectors] Target selector, e.g. `tag.class, #id[attr]`
@@ -37,6 +38,7 @@ export class PageEventManager {
   /**
    * Maps event listener params to their PageEventListeners, so they can be
    * called and cancelled.
+   *
    * @type {Map<PageEventListenerParams, PageEventListener>}
    */
   _listeners = new Map();
@@ -51,6 +53,7 @@ export class PageEventManager {
 
   /**
    * Adds a page event listener.
+   *
    * @param {PageEventListenerParams} params
    * @param {Function} callback Function to call when event is triggered
    */
@@ -109,6 +112,7 @@ export class PageEventManager {
 
   /**
    * Removes a page event listener.
+   *
    * @param {PageEventListenerParams} params
    */
   off(params) {
@@ -123,6 +127,7 @@ export class PageEventManager {
 
   /**
    * Adds a page event listener that is removed after the first event.
+   *
    * @param {PageEventListenerParams} params
    * @param {Function} callback Function to call when event is triggered
    */
@@ -147,6 +152,7 @@ export class PageEventManager {
 
   /**
    * Calls matching page event listeners. A way to dispatch a "fake" event.
+   *
    * @param {PageEvent} event
    */
   emit(event) {

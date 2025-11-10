@@ -312,7 +312,6 @@ function getShapePoint(node) {
  *        CSS property value (e.g. "1px solid var(--color, blue)")
  * @return {Array}
  *         List of variable names (e.g. ["--color"])
- *
  */
 function getCSSVariables(propertyValue = "") {
   const variables = [];

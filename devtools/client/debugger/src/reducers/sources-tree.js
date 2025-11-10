@@ -501,6 +501,7 @@ function addSource(threadItems, source, sourceActor) {
 }
 /**
  * Find all the source items in tree
+ *
  * @param {Object} item - Current item node in the tree
  * @param {Function} callback
  */

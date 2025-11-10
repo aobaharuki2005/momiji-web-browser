@@ -109,6 +109,7 @@ class WebConsole {
    * most cases, this will be |this.browserWindow|, but in some uses (such as
    * the Browser Toolbox), there is no browser window, so an alternative window
    * hosts the utilities there.
+   *
    * @type nsIDOMWindow
    */
   get chromeUtilsWindow() {
@@ -147,6 +148,7 @@ class WebConsole {
 
   /**
    * The JSTerm object that manages the console's input.
+   *
    * @see webconsole.js::JSTerm
    * @type object
    */
@@ -156,6 +158,7 @@ class WebConsole {
 
   /**
    * Get the value from the input field.
+   *
    * @returns {String|null} returns null if there's no input.
    */
   getInputValue() {

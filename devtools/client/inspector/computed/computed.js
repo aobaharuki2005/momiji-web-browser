@@ -759,6 +759,7 @@ class CssComputedView {
 
   /**
    * Set the filter style search value.
+   *
    * @param {String} value
    *        The search value.
    */
@@ -1635,6 +1636,7 @@ class SelectorView {
 
   /**
    * Decode for cssInfo.rule.status
+   *
    * @see SelectorView.prototype.#cacheStatusNames
    * @see CssLogic.STATUS
    */
@@ -1649,6 +1651,7 @@ class SelectorView {
    *
    * These statuses are localized inside the styleinspector.properties string
    * bundle.
+   *
    * @see css-logic.js - the CssLogic.STATUS array.
    */
   #cacheStatusNames() {

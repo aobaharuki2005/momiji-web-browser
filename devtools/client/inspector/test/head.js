@@ -41,6 +41,7 @@ registerCleanupFunction(function () {
 
 /**
  * Start the element picker and focus the content window.
+ *
  * @param {Toolbox} toolbox
  * @param {Boolean} skipFocus - Allow tests to bypass the focus event.
  */
@@ -59,6 +60,7 @@ var startPicker = async function (toolbox, skipFocus) {
 
 /**
  * Stop the element picker using the Escape keyboard shortcut
+ *
  * @param {Toolbox} toolbox
  */
 var stopPickerWithEscapeKey = async function (toolbox) {
@@ -69,6 +71,7 @@ var stopPickerWithEscapeKey = async function (toolbox) {
 
 /**
  * Start the eye dropper tool.
+ *
  * @param {Toolbox} toolbox
  */
 var startEyeDropper = async function (toolbox) {
@@ -213,6 +216,7 @@ async function getBrowsingContextForNestedFrame(selectorArray = []) {
 /**
  * Highlight a node and set the inspector's current selection to the node or
  * the first match of the given css selector.
+ *
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector
  *        The instance of InspectorPanel currently loaded in the toolbox
@@ -233,6 +237,7 @@ async function selectAndHighlightNode(selector, inspector) {
 /**
  * Select node for a given selector, make it focusable and set focus in its
  * container element.
+ *
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The current inspector-panel instance.
  * @return {MarkupContainer}
@@ -262,6 +267,7 @@ function clearCurrentNodeSelection(inspector) {
 
 /**
  * Right click on a node in the test page and click on the inspect menu item.
+ *
  * @param {String} selector The selector for the node to click on in the page.
  * @return {Promise} Resolves to the inspector when it has opened and is updated
  */
@@ -372,6 +378,7 @@ var focusSearchBoxUsingShortcut = async function (panelWin, callback) {
 /**
  * Get the MarkupContainer object instance that corresponds to the given
  * NodeFront
+ *
  * @param {NodeFront} nodeFront
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
@@ -384,6 +391,7 @@ function getContainerForNodeFront(nodeFront, { markup }) {
 /**
  * Get the MarkupContainer object instance that corresponds to the given
  * selector
+ *
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
@@ -411,6 +419,7 @@ var getContainerForSelector = async function (
 /**
  * Simulate a mouse-over on the markup-container (a line in the markup-view)
  * that corresponds to the selector passed.
+ *
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
@@ -438,6 +447,7 @@ var hoverContainer = async function (selector, inspector) {
 /**
  * Simulate a click on the markup-container (a line in the markup-view)
  * that corresponds to the selector passed.
+ *
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
@@ -465,6 +475,7 @@ var clickContainer = async function (selector, inspector) {
 
 /**
  * Simulate the mouse leaving the markup-view area
+ *
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return a promise when done
@@ -498,6 +509,7 @@ function fireCopyEvent(element) {
 /**
  * Undo the last markup-view action and wait for the corresponding mutation to
  * occur
+ *
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return a promise that resolves when the markup-mutation has been treated or
@@ -518,6 +530,7 @@ function undoChange(inspector) {
 /**
  * Redo the last markup-view action and wait for the corresponding mutation to
  * occur
+ *
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return a promise that resolves when the markup-mutation has been treated or
@@ -552,6 +565,7 @@ async function getNodeFrontForSelector(selector, inspector) {
 
 /**
  * A simple polling helper that executes a given function until it returns true.
+ *
  * @param {Function} check A generator function that is expected to return true at some
  * stage.
  * @param {String} desc A text description to be displayed when the polling starts.
@@ -843,6 +857,7 @@ function waitForStyleEditor(toolbox, href) {
 
 /**
  * Checks if document's active element is within the given element.
+ *
  * @param  {HTMLDocument}  doc document with active element in question
  * @param  {DOMNode}       container element tested on focus containment
  * @return {Boolean}
@@ -1524,6 +1539,7 @@ function reflowContentPage() {
 
 /**
  * Get all box-model regions' adjusted boxquads for the given element
+ *
  * @param {String|Array} selector The node selector to target a given element
  * @return {Promise<Object>} A promise that resolves with an object with each property of
  *         a box-model region, each of them being an object with the p1/p2/p3/p4 properties.

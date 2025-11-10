@@ -19,6 +19,7 @@ function TimePicker(context) {
   TimePicker.prototype = {
     /**
      * Initializes the time picker. Set the default states and properties.
+     *
      * @param  {Object} props
      *         {
      *           {Number} hour [optional]: Hour in 24 hours format (0~23), default is current hour

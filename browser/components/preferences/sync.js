@@ -521,6 +521,7 @@ var gSyncPane = {
   /**
    * Attempts to take the user through the sign in flow by opening the web content
    * with the given entrypoint as a query parameter
+   *
    * @param entrypoint: An string appended to the query parameters, used in telemtry to differentiate
    * different entrypoints to accounts
    */

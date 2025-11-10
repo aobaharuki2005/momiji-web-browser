@@ -176,6 +176,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
 
   /**
    * Send a request to copy the screenshots
+   *
    * @param {Object} region The region dimensions of the screenshot to be copied
    */
   requestCopyScreenshot(region) {
@@ -186,6 +187,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
 
   /**
    * Send a request to download the screenshots
+   *
    * @param {Object} region The region dimensions of the screenshot to be downloaded
    */
   requestDownloadScreenshot(region) {

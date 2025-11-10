@@ -654,6 +654,7 @@
 
     /**
      * Sets the findbar diacritic-matching mode
+     *
      * @param {Number} diacriticMatching 0 - ignore diacritics,
      *                                   1 - match diacritics,
      *                                   2 - auto = match diacritics if the

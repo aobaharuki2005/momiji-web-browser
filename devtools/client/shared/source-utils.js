@@ -334,6 +334,7 @@ function isWASM(location, i = 0) {
  * A utility method to get the file name from a sourcemapped location
  * The sourcemap location can be in any form. This method returns a
  * formatted file name for different cases like Windows or OSX.
+ *
  * @param source
  * @returns String
  */

@@ -73,6 +73,7 @@ function getSourceActor(sources, url) {
 /**
  * Synthesize a keypress from a <key> element, taking into account
  * any modifiers.
+ *
  * @param {Element} el the <key> element to synthesize
  */
 function synthesizeKeyElement(el) {
@@ -88,6 +89,7 @@ function synthesizeKeyElement(el) {
 /**
  * Check the toolbox host type and prefs to make sure they match the
  * expected values
+ *
  * @param {Toolbox}
  * @param {HostType} hostType
  *        One of {SIDE, BOTTOM, WINDOW} from Toolbox.HostType
@@ -112,6 +114,7 @@ function checkHostType(toolbox, hostType, previousHostType) {
 /**
  * Create a new <script> referencing URL.  Return a promise that
  * resolves when this has happened
+ *
  * @param {String} url
  *        the url
  * @return {Promise} a promise that resolves when the element has been created
@@ -129,6 +132,7 @@ function createScript(url) {
 
 /**
  * Wait for the toolbox to notice that a given source is loaded
+ *
  * @param {Toolbox} toolbox
  * @param {String} url
  *        the url to wait for

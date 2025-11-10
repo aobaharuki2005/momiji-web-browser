@@ -70,36 +70,42 @@ export default class MozMessageBar extends MozLitElement {
 
     /**
      * The type of the displayed message.
+     *
      * @type {MozMessageBarType}
      */
     this.type = "info";
 
     /**
      * Whether or not the element is dismissable.
+     *
      * @type {boolean}
      */
     this.dismissable = false;
 
     /**
      * The message text.
+     *
      * @type {string | undefined}
      */
     this.message = undefined;
 
     /**
      * l10n ID for the message.
+     *
      * @type {string | undefined}
      */
     this.messageL10nId = undefined;
 
     /**
      * Any args needed for the message l10n ID.
+     *
      * @type {Record<string, string> | undefined}
      */
     this.messageL10nArgs = undefined;
 
     /**
      * The heading of the message.
+     *
      * @type {string | undefined}
      */
     this.heading = undefined;

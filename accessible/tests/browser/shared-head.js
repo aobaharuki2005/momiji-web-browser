@@ -143,6 +143,7 @@ let Logger = {
 /**
  * Asynchronously set or remove content element's attribute (in content process
  * if e10s is enabled).
+ *
  * @param  {Object}  browser  current "tabbrowser" element
  * @param  {String}  id       content element id
  * @param  {String}  attr     attribute name
@@ -175,6 +176,7 @@ function invokeSetAttribute(browser, id, attr, value = null) {
  * Asynchronously set or remove content element's style (in content process if
  * e10s is enabled, or in fission process if fission is enabled and a fission
  * frame is present).
+ *
  * @param  {Object}  browser  current "tabbrowser" element
  * @param  {String}  id       content element id
  * @param  {String}  aStyle   style property name
@@ -207,6 +209,7 @@ function invokeSetStyle(browser, id, style, value) {
  * Asynchronously set focus on a content element (in content process if e10s is
  * enabled, or in fission process if fission is enabled and a fission frame is
  * present).
+ *
  * @param  {Object}  browser  current "tabbrowser" element
  * @param  {String}  id       content element id
  * @return {Promise} promise  indicating that focus is set
@@ -226,13 +229,13 @@ function invokeFocus(browser, id) {
 
 /**
  * Get DPR for a specific content window.
+ *
  * @param  browser
  *         Browser for which we want its content window's DPR reported.
  *
  * @return {Promise}
  *         Promise with the value that resolves to the devicePixelRatio of the
  *         content window of a given browser.
- *
  */
 function getContentDPR(browser) {
   return invokeContentTask(browser, [], () => content.window.devicePixelRatio);
@@ -242,6 +245,7 @@ function getContentDPR(browser) {
  * Asynchronously perform a task in content (in content process if e10s is
  * enabled, or in fission process if fission is enabled and a fission frame is
  * present).
+ *
  * @param  {Object}    browser  current "tabbrowser" element
  * @param  {Array}     args     arguments for the content task
  * @param  {Function}  task     content task function
@@ -270,6 +274,7 @@ function invokeContentTask(browser, args, task) {
 /**
  * Compare process ID's between the top level content process and possible
  * remote/local iframe proccess.
+ *
  * @param {Object}  browser
  *        Top level browser object for a tab.
  * @param {Boolean} isRemote
@@ -293,6 +298,7 @@ async function comparePIDs(browser, isRemote) {
 
 /**
  * Load a list of scripts into the test
+ *
  * @param {Array} scripts  a list of scripts to load
  */
 function loadScripts(...scripts) {
@@ -307,6 +313,7 @@ function loadScripts(...scripts) {
 
 /**
  * Load a list of scripts into target's content.
+ *
  * @param {Object} target
  *        target for loading scripts into
  * @param {Array}  scripts
@@ -410,6 +417,7 @@ function wrapWithIFrame(doc, options = {}) {
 /**
  * Takes an HTML snippet or HTML doc url and returns an encoded URI for a full
  * document with the snippet or the URL as a source for the IFRAME.
+ *
  * @param {String} doc
  *        a markup snippet or url.
  * @param {Object} options (see options in addAccessibleTask).
@@ -676,6 +684,7 @@ function accessibleTask(doc, task, options = {}) {
 /**
  * A wrapper around browser test add_task that triggers an accessible test task
  * as a new browser test task with given document, data URL or markup snippet.
+ *
  * @param  {String} doc
  *         URL (relative to current directory) or data URL or markup snippet
  *         that is used to test content with
@@ -786,6 +795,7 @@ function addAccessibleTask(doc, task, options = {}) {
 
 /**
  * Check if an accessible object has a defunct test.
+ *
  * @param  {nsIAccessible}  accessible object to test defunct state for
  * @return {Boolean}        flag indicating defunct state
  */
@@ -807,6 +817,7 @@ function isDefunct(accessible) {
 
 /**
  * Get the DOM tag name for a given accessible.
+ *
  * @param  {nsIAccessible}  accessible accessible
  * @return {String?}                   tag name of associated DOM node, or null.
  */
@@ -821,6 +832,7 @@ function getAccessibleTagName(acc) {
 /**
  * Traverses the accessible tree starting from a given accessible as a root and
  * looks for an accessible that matches based on its DOMNode id.
+ *
  * @param  {nsIAccessible}  accessible root accessible
  * @param  {String}         id         id to look up accessible for
  * @param  {Array?}         interfaces the interface or an array interfaces

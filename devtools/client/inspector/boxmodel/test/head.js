@@ -12,6 +12,7 @@ Services.scriptloader.loadSubScript(
 
 /**
  * Is the given node visible in the page (rendered in the frame tree).
+ *
  * @param {DOMNode}
  * @return {Boolean}
  */

@@ -37,6 +37,7 @@ function MarkupContainer() {}
 
 /**
  * Unique identifier used to set markup container node id.
+ *
  * @type {Number}
  */
 let markupContainerID = 0;

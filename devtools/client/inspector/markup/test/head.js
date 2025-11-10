@@ -30,6 +30,7 @@ SimpleTest.requestCompleteLog();
  * is either not common-enough to be in head.js, or that is located in a
  * separate directory.
  * The script will be loaded synchronously and in the test's scope.
+ *
  * @param {String} filePath The file path, relative to the current directory.
  *                 Examples:
  *                 - "helper_attributes_test_runner.js"
@@ -42,6 +43,7 @@ function loadHelperScript(filePath) {
 /**
  * Get the MarkupContainer object instance that corresponds to the given
  * NodeFront
+ *
  * @param {NodeFront} nodeFront
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
@@ -54,6 +56,7 @@ function getContainerForNodeFront(nodeFront, { markup }) {
 /**
  * Get the MarkupContainer object instance that corresponds to the given
  * selector
+ *
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
@@ -97,6 +100,7 @@ function getFirstChildNodeValue(selector) {
 /**
  * Using the markupview's _waitForChildren function, wait for all queued
  * children updates to be handled.
+ *
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return a promise that resolves when all queued children updates have been
@@ -114,6 +118,7 @@ function waitForChildrenUpdated({ markup }) {
 /**
  * Simulate a click on the markup-container (a line in the markup-view)
  * that corresponds to the selector passed.
+ *
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
@@ -143,6 +148,7 @@ var clickContainer = async function (selector, inspector) {
 
 /**
  * Focus a given editable element, enter edit mode, set value, and commit
+ *
  * @param {DOMNode} field The element that gets editable after receiving focus
  * and <ENTER> keypress
  * @param {String} value The string value to be set into the edited field
@@ -162,6 +168,7 @@ function setEditableFieldValue(field, value, inspector) {
  * Focus the new-attribute inplace-editor field of a node's markup container
  * and enters the given text, then wait for it to be applied and the for the
  * node to mutates (when new attribute(s) is(are) created)
+ *
  * @param {String} selector The selector for the node to edit.
  * @param {String} text The new attribute text to be entered (e.g. "id='test'")
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
@@ -212,6 +219,7 @@ var assertAttributes = async function (selector, expected) {
 /**
  * Undo the last markup-view action and wait for the corresponding mutation to
  * occur
+ *
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return a promise that resolves when the markup-mutation has been treated or
@@ -232,6 +240,7 @@ function undoChange(inspector) {
 /**
  * Redo the last markup-view action and wait for the corresponding mutation to
  * occur
+ *
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return a promise that resolves when the markup-mutation has been treated or
@@ -252,6 +261,7 @@ function redoChange(inspector) {
 /**
  * Check to see if the inspector menu items for editing are disabled.
  * Things like Edit As HTML, Delete Node, etc.
+ *
  * @param {NodeFront} nodeFront
  * @param {InspectorPanel} inspector
  * @param {Boolean} assert Should this function run assertions inline.
@@ -293,6 +303,7 @@ var isEditingMenuDisabled = async function (
 /**
  * Check to see if the inspector menu items for editing are enabled.
  * Things like Edit As HTML, Delete Node, etc.
+ *
  * @param {NodeFront} nodeFront
  * @param {InspectorPanel} inspector
  * @param {Boolean} assert Should this function run assertions inline.
@@ -393,6 +404,7 @@ function collapseSelectionAndShiftTab(inspector) {
 /**
  * Check that the current focused element is an attribute element in the markup
  * view.
+ *
  * @param {String} attrName The attribute name expected to be found
  * @param {Boolean} editMode Whether or not the attribute should be in edit mode
  */
@@ -430,6 +442,7 @@ var getAttributesFromEditor = async function (selector, inspector) {
 /**
  * Simulate dragging a MarkupContainer by calling its mousedown and mousemove
  * handlers.
+ *
  * @param {InspectorPanel} inspector The current inspector-panel instance.
  * @param {String|MarkupContainer} selector The selector to identify the node or
  * the MarkupContainer for this node.
@@ -477,6 +490,7 @@ async function simulateNodeDrag(
 /**
  * Simulate dropping a MarkupContainer by calling its mouseup handler. This is
  * meant to be called after simulateNodeDrag has been called.
+ *
  * @param {InspectorPanel} inspector The current inspector-panel instance.
  * @param {String|MarkupContainer} selector The selector to identify the node or
  * the MarkupContainer for this node.
@@ -494,6 +508,7 @@ async function simulateNodeDrop(inspector, selector) {
 /**
  * Simulate drag'n'dropping a MarkupContainer by calling its mousedown,
  * mousemove and mouseup handlers.
+ *
  * @param {InspectorPanel} inspector The current inspector-panel instance.
  * @param {String|MarkupContainer} selector The selector to identify the node or
  * the MarkupContainer for this node.

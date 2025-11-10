@@ -420,7 +420,6 @@ class Telemetry {
  *
  * @param {String} id
  *        The ID of the tool that has been opened.
- *
  */
 // eslint-disable-next-line complexity
 function getChartsFromToolId(id) {

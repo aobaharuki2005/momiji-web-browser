@@ -94,6 +94,7 @@ class CompatibilityActor extends Actor {
   /**
    * Responsible for computing the compatibility issues in the
    * CSS declaration of the given node.
+   *
    * @param NodeActor node
    * @param targetBrowsers Array
    *   An Array of JSON object of target browser to check compatibility against in following form:

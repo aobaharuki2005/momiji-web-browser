@@ -98,6 +98,7 @@ function _invalidLeaveTarget(target) {
 
 /**
  * Wraps the codemirror mouse events  to generate token events
+ *
  * @param {Object} editor
  * @returns {Function}
  */

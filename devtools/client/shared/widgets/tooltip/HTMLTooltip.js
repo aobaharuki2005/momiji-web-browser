@@ -839,6 +839,7 @@ HTMLTooltip.prototype = {
 
   /**
    * Check if the tooltip is currently displayed.
+   *
    * @return {Boolean} true if the tooltip is visible
    */
   isVisible() {

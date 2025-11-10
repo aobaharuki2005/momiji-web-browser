@@ -473,6 +473,7 @@ class AccessibleWalkerActor extends Actor {
 
   /**
    * Get an accessible actor for a domnode actor.
+   *
    * @param  {Object} domNode
    *         domnode actor for which accessible actor is being created.
    * @return {Promse}
@@ -496,6 +497,7 @@ class AccessibleWalkerActor extends Actor {
 
   /**
    * Get a raw accessible object for a raw node.
+   *
    * @param  {DOMNode} rawNode
    *         Raw node for which accessible object is being retrieved.
    * @return {nsIAccessible}
@@ -746,6 +748,7 @@ class AccessibleWalkerActor extends Actor {
    * (CSS, overlays) by load accessibility highlighter style sheet used for
    * preventing transitions and applying transparency when calculating colour
    * contrast as well as temporarily hiding accessible highlighter overlay.
+   *
    * @param  {Object} win
    *         Window where highlighting happens.
    */
@@ -770,6 +773,7 @@ class AccessibleWalkerActor extends Actor {
    * accessible object by unloading accessibility highlighter style sheet used
    * for preventing transitions and applying transparency when calculating
    * colour contrast and potentially restoring accessible highlighter overlay.
+   *
    * @param  {Object} win
    *         Window where highlighting was happenning.
    */
@@ -886,6 +890,7 @@ class AccessibleWalkerActor extends Actor {
 
   /**
    * Check if the DOM event received when picking shold be ignored.
+   *
    * @param {Event} event
    */
   _ignoreEventWhenPicking(event) {

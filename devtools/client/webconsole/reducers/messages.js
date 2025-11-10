@@ -1110,6 +1110,7 @@ function getToplevelMessageCount(state) {
 /**
  * Check if a message should be visible in the console output, and if not, what
  * causes it to be hidden.
+ *
  * @param {Message} message: The message to check
  * @param {Object} option: An option object of the following shape:
  *                   - {MessageState} messagesState: The current messages state

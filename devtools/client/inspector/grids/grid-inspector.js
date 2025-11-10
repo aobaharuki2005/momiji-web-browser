@@ -429,7 +429,6 @@ class GridInspector {
   /**
    * Get all GridFront instances from the server(s).
    *
-   *
    * @return {Array} The list of GridFronts
    */
   async getGrids() {

@@ -600,6 +600,7 @@ class ResourceCommand {
 
   /**
    * Method called by the TargetCommand when a target has just been destroyed
+   *
    * @param {Object} arg
    * @param {Front} arg.targetFront
    *        The Front of the target that was destroyed

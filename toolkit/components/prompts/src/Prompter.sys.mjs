@@ -25,6 +25,7 @@ export function Prompter() {}
 
 /**
  * Implements nsIPromptService and nsIPromptFactory
+ *
  * @class Prompter
  */
 Prompter.prototype = {
@@ -65,6 +66,7 @@ Prompter.prototype = {
 
   /**
    * Puts up an alert dialog with an OK button.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -76,6 +78,7 @@ Prompter.prototype = {
 
   /**
    * Puts up an alert dialog with an OK button.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -106,6 +109,7 @@ Prompter.prototype = {
 
   /**
    * Puts up an alert dialog with an OK button and a labeled checkbox.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -121,6 +125,7 @@ Prompter.prototype = {
 
   /**
    * Puts up an alert dialog with an OK button and a labeled checkbox.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -139,6 +144,7 @@ Prompter.prototype = {
 
   /**
    * Puts up an alert dialog with an OK button and a labeled checkbox.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -157,6 +163,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with OK and Cancel buttons.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -169,6 +176,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with OK and Cancel buttons.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -184,6 +192,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with OK and Cancel buttons.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -200,6 +209,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with OK and Cancel buttons and a labeled checkbox.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -215,6 +225,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with OK and Cancel buttons and a labeled checkbox.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -234,6 +245,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with OK and Cancel buttons and a labeled checkbox.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -310,6 +322,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with up to 3 buttons and an optional, labeled checkbox.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -334,6 +347,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with up to 3 buttons and an optional, labeled checkbox.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -357,6 +371,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with an edit field and an optional, labeled checkbox.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -379,6 +394,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with an edit field and an optional, labeled checkbox.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -404,6 +420,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with an edit field and an optional, labeled checkbox.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -424,6 +441,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with an edit field and a password field.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -445,6 +463,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with an edit field and a password field.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -469,6 +488,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with an edit field and a password field.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -487,6 +507,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with a password field.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -508,6 +529,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with a password field.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -527,6 +549,7 @@ Prompter.prototype = {
 
   /**
    * Puts up a dialog with a password field.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -545,6 +568,7 @@ Prompter.prototype = {
   /**
    * Puts up a dialog box which has a list box of strings from which the user
    * may make a single selection.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {String} title - Text to appear in the title of the dialog.
    * @param {String} text - Text to appear in the body of the dialog.
@@ -561,6 +585,7 @@ Prompter.prototype = {
   /**
    * Puts up a dialog box which has a list box of strings from which the user
    * may make a single selection.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -580,6 +605,7 @@ Prompter.prototype = {
   /**
    * Puts up a dialog box which has a list box of strings from which the user
    * may make a single selection.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -598,6 +624,7 @@ Prompter.prototype = {
   /**
    * Requests a username and a password. Shows a dialog with username and
    * password field, depending on flags also a domain field.
+   *
    * @param {mozIDOMWindowProxy} domWin - The parent window or null.
    * @param {nsIChannel} channel - The channel that requires authentication.
    * @param {Number} level - Security level of the credential transmission.
@@ -617,6 +644,7 @@ Prompter.prototype = {
   /**
    * Requests a username and a password. Shows a dialog with username and
    * password field, depending on flags also a domain field.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -639,6 +667,7 @@ Prompter.prototype = {
   /**
    * Requests a username and a password. Shows a dialog with username and
    * password field, depending on flags also a domain field.
+   *
    * @param {BrowsingContext} browsingContext - The browsing context the
    *        prompt should be opened for.
    * @param {Number} modalType - The modal type of the prompt.
@@ -1049,6 +1078,7 @@ class ModalPrompter {
 
   /**
    * Synchronous wrapper around {@link ModalPrompter#openPrompt}
+   *
    * @param {Object} args Prompt arguments. When prompt has been closed, they are updated to reflect the result state.
    */
   openPromptSync(args) {
@@ -1247,6 +1277,7 @@ class ModalPrompter {
    * We try and find a window to use as the parent, but don't consider if that
    * is visible before showing the prompt. parentWindow may still be null if
    * there are _no_ windows open.
+   *
    * @param {Window} [parentWindow] - The parent window for the prompt, may be
    *        null.
    * @param {Object} args - Prompt options and return values.
@@ -1280,6 +1311,7 @@ class ModalPrompter {
   /**
    * Calls async prompt method and optionally runs promise chained task on
    * result data. Converts result data to nsIPropertyBag.
+   *
    * @param {Object} args - Prompt arguments.
    * @param {Function} [task] - Function which is called with the modified
    *  prompt args object once the prompt has been closed. Must return a

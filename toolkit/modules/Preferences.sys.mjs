@@ -212,6 +212,7 @@ Preferences.isSet = function (prefName) {
 /**
  * Whether or not the given pref has a user-set value. Use isSet instead,
  * which is equivalent.
+ *
  * @deprecated
  */
 Preferences.modified = function (prefName) {
@@ -355,6 +356,7 @@ Preferences.resetBranch = function (prefBranch = "") {
 /**
  * A string identifying the branch of the preferences tree to which this
  * instance provides access.
+ *
  * @private
  */
 Preferences._branchStr = "";
@@ -362,12 +364,14 @@ Preferences._branchStr = "";
 /**
  * The cached preferences branch object this instance encapsulates, or null.
  * Do not use!  Use _prefBranch below instead.
+ *
  * @private
  */
 Preferences._cachedPrefBranch = null;
 
 /**
  * The preferences branch object for this instance.
+ *
  * @private
  */
 Object.defineProperty(Preferences, "_prefBranch", {

@@ -19,6 +19,7 @@
 
 /**
  * Experiments store info about an active or expired preference experiment.
+ *
  * @typedef {Object} Experiment
  * @property {string} slug
  *   A string uniquely identifying the experiment. Used for telemetry, and other
@@ -54,6 +55,7 @@
 /**
  * Each Preference stores information about a preference that an
  * experiment sets.
+ *
  * @property {string|integer|boolean} preferenceValue
  *   Value to change the preference to during the experiment.
  * @property {string} preferenceType
@@ -103,6 +105,7 @@ const DefaultPreferences = Services.prefs.getDefaultBranch("");
 
 /**
  * Enum storing Preference modules for each type of preference branch.
+ *
  * @enum {Object}
  */
 const PreferenceBranchType = {
@@ -148,6 +151,7 @@ CleanupManager.addCleanupHandler(() =>
 export var PreferenceExperiments = {
   /**
    * Update the the experiment storage with changes that happened during early startup.
+   *
    * @param {object} studyPrefsChanged Map from pref name to previous pref value
    */
   async recordOriginalValues(studyPrefsChanged) {
@@ -318,6 +322,7 @@ export var PreferenceExperiments = {
 
   /**
    * Start a new preference experiment.
+   *
    * @param {Object} experiment
    * @param {string} experiment.slug
    * @param {string} experiment.actionName  The action who knows about this
@@ -529,6 +534,7 @@ export var PreferenceExperiments = {
   /**
    * Register a preference observer that stops an experiment when the user
    * modifies the preference.
+   *
    * @param {string} experimentSlug
    * @param {string} preferenceName
    * @param {string|integer|boolean} preferenceValue
@@ -576,6 +582,7 @@ export var PreferenceExperiments = {
 
   /**
    * Check if a preference observer is active for an experiment.
+   *
    * @param {string} experimentSlug
    * @return {Boolean}
    */
@@ -586,6 +593,7 @@ export var PreferenceExperiments = {
 
   /**
    * Disable a preference observer for an experiment.
+   *
    * @param {string} experimentSlug
    * @throws {Error}
    *   If there is no active observer for the experiment.
@@ -622,6 +630,7 @@ export var PreferenceExperiments = {
   /**
    * Update the timestamp storing when Normandy last sent a recipe for the
    * experiment.
+   *
    * @param {string} experimentSlug
    * @rejects {Error}
    *   If there is no stored experiment with the given slug.
@@ -688,6 +697,7 @@ export var PreferenceExperiments = {
   /**
    * Stop an active experiment, deactivate preference watchers, and optionally
    * reset the associated preference to its previous value.
+   *
    * @param {string} experimentSlug
    * @param {Object} options
    * @param {boolean} [options.resetValue = true]
@@ -832,6 +842,7 @@ export var PreferenceExperiments = {
 
   /**
    * Get the experiment object for the experiment.
+   *
    * @param {string} experimentSlug
    * @resolves {Experiment}
    * @rejects {Error}
@@ -851,6 +862,7 @@ export var PreferenceExperiments = {
 
   /**
    * Get a list of all stored experiment objects.
+   *
    * @resolves {Experiment[]}
    */
   async getAll() {
@@ -862,6 +874,7 @@ export var PreferenceExperiments = {
 
   /**
    * Get a list of experiment objects for all active experiments.
+   *
    * @resolves {Experiment[]}
    */
   async getAllActive() {
@@ -873,6 +886,7 @@ export var PreferenceExperiments = {
 
   /**
    * Check if an experiment exists with the given slug.
+   *
    * @param {string} experimentSlug
    * @resolves {boolean} True if the experiment exists, false if it doesn't.
    */

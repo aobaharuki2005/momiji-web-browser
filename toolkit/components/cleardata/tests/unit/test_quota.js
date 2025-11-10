@@ -20,6 +20,7 @@ const skipLocalStorageTests = Services.prefs.getBoolPref(
 
 /**
  * Create an origin with partitionKey.
+ *
  * @param {String} host - Host portion of origin to create.
  * @param {String} [topLevelBaseDomain] - Optional first party base domain to use for partitionKey.
  * @param {Object} [originAttributes] - Optional object of origin attributes to
@@ -124,6 +125,7 @@ async function setTestEntries(storageType) {
 
 /**
  * Run the base domain test with either localStorage or indexedDB.
+ *
  * @param {('localStorage'|'indexedDB')} storageType
  */
 async function runTestBaseDomain(storageType) {
@@ -191,6 +193,7 @@ async function runTestBaseDomain(storageType) {
 
 /**
  * Run the host test with either localStorage or indexedDB.
+ *
  * @param {('localStorage'|'indexedDB')} storageType
  */
 async function runTestHost(storageType) {
@@ -259,6 +262,7 @@ async function runTestHost(storageType) {
 
 /**
  * Run the principal test with either localStorage or indexedDB.
+ *
  * @param {('localStorage'|'indexedDB')} storageType
  */
 async function runTestPrincipal(storageType) {

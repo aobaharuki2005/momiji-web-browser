@@ -490,7 +490,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
    *        The chrome window containing about:devtools-toolbox. Will match
    *        toolbox.topWindow.
    * @return {Toolbox} The toolbox instance loaded in about:devtools-toolbox
-   *
    */
   _getAboutDevtoolsToolbox(win) {
     if (!gDevToolsBrowser._isAboutDevtoolsToolbox(win)) {

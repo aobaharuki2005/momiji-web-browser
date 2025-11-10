@@ -38,6 +38,7 @@ export class PopupAndRedirectBlockingChild extends JSWindowActorChild {
 
   /**
    * WeakMap keyed by `document`, holding per-document popup/redirect state.
+   *
    * @type {WeakMap<Document, DocState>}
    */
   #mWeakDocStates;

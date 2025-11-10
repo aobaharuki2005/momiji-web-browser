@@ -55,6 +55,7 @@ selectNode = async function (node, inspector, reason) {
 /**
  * Adds a new tab with the given URL, opens the inspector and selects the
  * font-inspector tab.
+ *
  * @return {Promise} resolves to a {tab, toolbox, inspector, view} object
  */
 var openFontInspectorForURL = async function (url) {

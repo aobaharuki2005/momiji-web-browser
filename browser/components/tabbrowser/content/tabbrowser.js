@@ -807,6 +807,7 @@
 
     /**
      * Get the findbar, and create it if it doesn't exist.
+     *
      * @return the find bar (or null if the window or tab is closed/closing in the interim).
      */
     async getFindBar(aTab = this.selectedTab) {
@@ -824,6 +825,7 @@
 
     /**
      * Create a findbar instance.
+     *
      * @param aTab the tab to create the find bar for.
      * @return the created findbar, or null if the window or tab is closed/closing.
      */
@@ -2850,6 +2852,7 @@
     /**
      * Must only be used sparingly for content that came from Chrome context
      * If in doubt use addWebTab
+     *
      * @param {string} aURI
      * @param {object} [options]
      * @see this.addTab options
@@ -3187,6 +3190,7 @@
 
     /**
      * Adds a new tab split view.
+     *
      * @param {object[]} tabs
      *   The set of tabs to include in the split view.
      * @param {object} [options]
@@ -4857,6 +4861,7 @@
        * of how many tabs in the tab group will be left after removing `tabs`.
        * For any tab group with 0 surviving tabs, we can know that that tab
        * group will be removed as a consequence of removing these `tabs`.
+       *
        * @type {Map<MozTabbrowserTabGroup, Set<MozTabbrowserTab>>}
        */
       let tabGroupSurvivingTabs = new Map();
@@ -5625,6 +5630,7 @@
 
     /**
      * Handles opening a new tab with mouse middleclick.
+     *
      * @param node
      * @param event
      *        The click event
@@ -5649,6 +5655,7 @@
 
     /**
      * Finds the tab that we will blur to if we blur aTab.
+     *
      * @param   {MozTabbrowserTab} aTab
      *          The tab we would blur
      * @param   {MozTabbrowserTab[]} [aExcludeTabs=[]]
@@ -9009,6 +9016,7 @@
      * Handles URIs when we want to deal with them in chrome code rather than pass
      * them down to a content browser. This can avoid unnecessary process switching
      * for the browser.
+     *
      * @param aBrowser the browser that is attempting to load the URI
      * @param aUri the nsIURI that is being loaded
      * @returns true if the URI is handled, otherwise false

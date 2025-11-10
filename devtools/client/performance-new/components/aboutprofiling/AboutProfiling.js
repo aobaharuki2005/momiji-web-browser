@@ -75,6 +75,7 @@ function encodeShellValue(value) {
 /**
  * This component implements the button that triggers the menu that makes it
  * possible to show more actions.
+ *
  * @extends {React.PureComponent<ButtonProps, ButtonState>}
  */
 class MoreActionsButtonImpl extends PureComponent {
@@ -114,6 +115,7 @@ class MoreActionsButtonImpl extends PureComponent {
    * https://searchfox.org/mozilla-central/rev/4bacdbc8ac088f2ee516daf42c535fab2bc24a04/toolkit/content/widgets/panel-list/README.stories.md
    * Strangely our React's type doesn't have the `detail` property for
    * MouseEvent, so we're defining it manually.
+   *
    * @param {React.MouseEvent & { detail: number }} e
    */
   handleClickOrMousedown = e => {

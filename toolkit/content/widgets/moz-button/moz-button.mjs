@@ -77,6 +77,7 @@ class MenuController {
 
   /**
    * Retrieves the panel-list element matching the host's menuId.
+   *
    * @returns {HTMLElement | null}
    */
   getPanelList() {
@@ -101,6 +102,7 @@ class MenuController {
 
   /**
    * Handles opening/closing the panel-list when the host is clicked or activated via keyboard.
+   *
    * @param {MouseEvent|KeyboardEvent} event
    */
   openPanelList = event => {

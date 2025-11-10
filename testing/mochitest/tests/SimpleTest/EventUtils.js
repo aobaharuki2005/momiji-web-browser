@@ -1762,7 +1762,6 @@ function synthesizeAndWaitNativeMouseMove(
  * the modifiers only during dispatching the key events.
  * Note that if some of these values are false, they are ignored (i.e.,
  * not inactivated with this function).
- *
  */
 function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback) {
   const event = aEvent === undefined || aEvent === null ? {} : aEvent;

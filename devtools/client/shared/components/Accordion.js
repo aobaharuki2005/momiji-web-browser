@@ -132,6 +132,7 @@ class Accordion extends Component {
 
   /**
    * Expand or collapse an accordion list item.
+   *
    * @param  {Object} item The item to be collapsed or expanded.
    */
   toggleItem(item) {

@@ -554,6 +554,7 @@ async function getToggleClientRect(
 /**
  * This function will hover over the middle of the video and then
  * hover over the toggle.
+ *
  * @param browser The current browser
  * @param videoID The video element id
  */
@@ -992,6 +993,7 @@ async function isVideoMuted(browser, videoID) {
  * First track is the default track to be loaded onto the video.
  * Once initialization is done, play then pause the requested video.
  * so that text tracks are loaded.
+ *
  * @param {Element} browser The <xul:browser> hosting the <video>
  * @param {String} videoID The ID of the video being checked
  * @param {Integer} defaultTrackIndex The index of the track to be loaded, or none if -1
@@ -1035,6 +1037,7 @@ async function prepareVideosAndWebVTTTracks(
 /**
  * Plays originating video until the next cue is loaded.
  * Once the next cue is loaded, pause the video.
+ *
  * @param {Element} browser The <xul:browser> hosting the <video>
  * @param {String} videoID The ID of the video being checked
  * @param {Integer} textTrackIndex The index of the track to be loaded, or none if -1
@@ -1090,6 +1093,7 @@ function overrideSavedPosition(left, top, width, height) {
 /**
  * Function used to filter events when waiting for the correct number
  * telemetry events.
+ *
  * @param {String} expected The expected string or undefined
  * @param {String} actual The actual string
  * @returns true if the expected is undefined or if expected matches actual
@@ -1103,6 +1107,7 @@ function matches(expected, actual) {
 
 /**
  * Function that waits for the expected number of events aftering filtering.
+ *
  * @param {Object} filter An object containing optional filters
  *  {
  *    category: (optional) The category of the event. Ex. "pictureinpicture"

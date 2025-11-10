@@ -218,6 +218,7 @@ registerFront(StyleRuleFront);
 class RuleModificationList {
   /**
    * Initialize a RuleModificationList.
+   *
    * @param {StyleRuleFront} rule the associated rule
    */
   constructor(rule) {

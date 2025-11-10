@@ -255,7 +255,6 @@ export var TelemetryController = Object.freeze({
    * should be included in the orderly shutdown process.
    *
    * @param {Function} aFnShutdown The function to call as telemetry shuts down.
-
    */
   registerSyncPingShutdown(afnShutdown) {
     Impl.registerSyncPingShutdown(afnShutdown);
@@ -264,6 +263,7 @@ export var TelemetryController = Object.freeze({
   /**
    * Allows waiting for TelemetryControllers delayed initialization to complete.
    * The returned promise is guaranteed to resolve before TelemetryController is shutting down.
+   *
    * @return {Promise} Resolved when delayed TelemetryController initialization completed.
    */
   promiseInitialized() {
@@ -273,6 +273,7 @@ export var TelemetryController = Object.freeze({
   /**
    * Allows to trigger TelemetryControllers delayed initialization now and waiting for its completion.
    * The returned promise is guaranteed to resolve before TelemetryController is shutting down.
+   *
    * @return {Promise} Resolved when delayed TelemetryController initialization completed.
    */
   ensureInitialized() {
@@ -1135,6 +1136,7 @@ var Impl = {
   /**
    * Allows waiting for TelemetryControllers delayed initialization to complete.
    * This will complete before TelemetryController is shutting down.
+   *
    * @return {Promise} Resolved when delayed TelemetryController initialization completed.
    */
   promiseInitialized() {
@@ -1144,6 +1146,7 @@ var Impl = {
   /**
    * Allows to trigger TelemetryControllers delayed initialization now and waiting for its completion.
    * This will complete before TelemetryController is shutting down.
+   *
    * @return {Promise} Resolved when delayed TelemetryController initialization completed.
    */
   ensureInitialized() {

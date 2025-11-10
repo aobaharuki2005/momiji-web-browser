@@ -157,6 +157,7 @@ var gSearchResultsPane = {
    * We pass in the nodeSizes to tell exactly where highlighting need be done.
    * When creating the range for highlighting, if the nodes are section is split
    * by an access key, it is important to have the size of each of the nodes summed.
+   *
    * @param Array textNodes
    *    List of DOM elements
    * @param Array nodeSizes

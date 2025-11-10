@@ -48,6 +48,7 @@ class Picker {
 
   /**
    * Select accessible object in the tree.
+   *
    * @param  {Object} accessible
    *         Accessiblle object to be selected in the inspector tree.
    */
@@ -57,6 +58,7 @@ class Picker {
 
   /**
    * Highlight accessible object in the tree.
+   *
    * @param  {Object} accessible
    *         Accessiblle object to be selected in the inspector tree.
    */
@@ -83,6 +85,7 @@ class Picker {
 
   /**
    * Handle an event when a new accessible object is hovered over.
+   *
    * @param  {Object} accessible
    *         newly hovered accessible object
    */
@@ -95,6 +98,7 @@ class Picker {
 
   /**
    * Handle an event when a new accessible is picked by the user.
+   *
    * @param  {Object} accessible
    *         newly picked accessible object
    */
@@ -107,6 +111,7 @@ class Picker {
 
   /**
    * Handle an event when a new accessible is previewed by the user.
+   *
    * @param  {Object} accessible
    *         newly previewed accessible object
    */
@@ -149,6 +154,7 @@ class Picker {
 
   /**
    * Start picking.
+   *
    * @param  {Boolean} doFocus
    *         If true, move keyboard focus into content.
    */
@@ -174,6 +180,7 @@ class Picker {
 
   /**
    * Toggle between starting and canceling the picker.
+   *
    * @param  {Boolean} doFocus
    *         If true, move keyboard focus into content.
    */

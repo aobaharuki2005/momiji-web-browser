@@ -6,6 +6,7 @@
 
 /**
  * Get the distance between two points on a plane.
+ *
  * @param {Number} x1 the x coord of the first point
  * @param {Number} y1 the y coord of the first point
  * @param {Number} x2 the x coord of the second point
@@ -19,6 +20,7 @@ const getDistance = (x1, y1, x2, y2) => {
 /**
  * Determine if the given x/y coords are along the edge of the given ellipse.
  * We allow for a small area around the edge that still counts as being on the edge.
+ *
  * @param {Number} x the x coordinate of the click
  * @param {Number} y the y coordinate of the click
  * @param {Number} cx the x coordinate of the center of the ellipse
@@ -57,6 +59,7 @@ const clickedOnEllipseEdge = (
 
 /**
  * Get the distance between a point and a line defined by two other points.
+ *
  * @param {Number} x1 the x coordinate of the first point in the line
  * @param {Number} y1 the y coordinate of the first point in the line
  * @param {Number} x2 the x coordinate of the second point in the line
@@ -75,6 +78,7 @@ const distanceToLine = (x1, y1, x2, y2, x3, y3) => {
 
 /**
  * Get the point on the line defined by points a,b that is closest to point c
+ *
  * @param {Number} ax the x coordinate of point a
  * @param {Number} ay the y coordinate of point a
  * @param {Number} bx the x coordinate of point b
@@ -93,6 +97,7 @@ const projection = (ax, ay, bx, by, cx, cy) => {
 
 /**
  * Get the dot product of two vectors, represented by arrays of numbers.
+ *
  * @param {Array} a the first vector
  * @param {Array} b the second vector
  * @returns {Number} the dot product of a and b
@@ -105,6 +110,7 @@ const dotProduct = (a, b) => {
 
 /**
  * Determine if the given x/y coords are above the given point.
+ *
  * @param {Number} x the x coordinate of the click
  * @param {Number} y the y coordinate of the click
  * @param {Number} pointX the x coordinate of the center of the point

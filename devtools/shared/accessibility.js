@@ -38,6 +38,7 @@ const LARGE_TEXT = {
 
 /**
  * Get contrast ratio score based on WCAG criteria.
+ *
  * @param  {Number} ratio
  *         Value of the contrast ratio for a given accessible object.
  * @param  {Boolean} isLargeText
@@ -60,6 +61,7 @@ function getContrastRatioScore(ratio, isLargeText) {
 
 /**
  * Get calculated text style properties from a node's computed style, if possible.
+ *
  * @param  {Object} computedStyle
  *         Computed style using which text styling information is to be calculated.
  *         - fontSize   {String}

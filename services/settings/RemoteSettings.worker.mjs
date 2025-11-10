@@ -59,6 +59,7 @@ const Agent = {
    * If present, import the JSON file into the Remote Settings IndexedDB
    * for the specified bucket and collection.
    * (eg. blocklists/certificates, main/onboarding)
+   *
    * @param {String} bucket
    * @param {String} collection
    * @returns {int} Number of records loaded from dump or -1 if no dump found.
@@ -81,6 +82,7 @@ const Agent = {
 
   /**
    * Check that the specified file matches the expected size and SHA-256 hash.
+   *
    * @param {String} fileUrl file URL to read from
    * @param {Number} size expected file size
    * @param {String} size expected file SHA-256 as hex string

@@ -1774,6 +1774,7 @@ var XPIStates = {
   /**
    * Find the highest priority location of an add-on by ID and return the
    * XPIState.
+   *
    * @param {string} aId
    *        The add-on IDa
    * @param {function} aFilter
@@ -1882,7 +1883,6 @@ var XPIStates = {
    *        The name of the add-on location.
    * @param {string} aId
    *        The ID of the add-on.
-   *
    */
   removeAddon(aLocation, aId) {
     logger.debug(`Removing XPIState for ${aLocation}: ${aId}`);

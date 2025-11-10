@@ -6,6 +6,7 @@ const TESTROOT = "https://example.com/browser/" + RELATIVE_DIR;
 
 /**
  * Get the number of red pixels in the canvas.
+ *
  * @param {Object} browser
  * @returns {Object}
  */

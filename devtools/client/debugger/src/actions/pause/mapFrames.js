@@ -169,6 +169,7 @@ export function updateAllFrameDisplayNames(thread) {
  * e.g.
  * 1. When the debuggee pauses
  * 2. When a source is pretty printed
+ *
  * @memberof actions/pause
  * @static
  */

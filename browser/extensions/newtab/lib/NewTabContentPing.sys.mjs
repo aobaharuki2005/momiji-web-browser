@@ -38,6 +38,7 @@ export class NewTabContentPing {
 
   /**
    * Set the maximum number of events to send in a 24 hour period
+   *
    * @param {int} maxEvents
    */
   setMaxEventsPerDay(maxEvents) {
@@ -106,6 +107,7 @@ export class NewTabContentPing {
 
   /**
    * Randomly shuffles the elements of an array in place using the Fisher–Yates algorithm.
+   *
    * @param {Array} array - The array to shuffle. This array will be modified.
    * @returns {Array} The same array instance, shuffled randomly.
    */
@@ -229,6 +231,7 @@ export class NewTabContentPing {
 
   /**
    * Returns a secure random number between 0 and range
+   *
    * @param {int} range Integer value range
    * @returns {int} Random value between 0 and range non-inclusive
    */
@@ -252,6 +255,7 @@ export class NewTabContentPing {
 
   /**
    * Returns true or false with a certain proability specified
+   *
    * @param {Number} prob Probability
    * @returns {boolean} Random boolean result of probability prob
    */

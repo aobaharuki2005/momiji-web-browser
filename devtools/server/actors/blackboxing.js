@@ -24,7 +24,6 @@ const { BLACKBOXING } = SUPPORTED_DATA;
  * all DevTools targets.
  *
  * @constructor
- *
  */
 class BlackboxingActor extends Actor {
   constructor(watcherActor) {

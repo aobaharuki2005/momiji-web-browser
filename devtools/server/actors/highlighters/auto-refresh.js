@@ -114,6 +114,7 @@ class AutoRefreshHighlighter extends EventEmitter {
 
   /**
    * Show the highlighter on a given node
+   *
    * @param {DOMNode} node
    * @param {Object} options
    *        Object used for passing options
@@ -169,6 +170,7 @@ class AutoRefreshHighlighter extends EventEmitter {
    * Whether the current node is valid for this highlighter type.
    * This is implemented by default to check if the node is an element node. Highlighter
    * sub-classes should override this method if they want to highlight other node types.
+   *
    * @param {DOMNode} node
    * @return {Boolean}
    */
@@ -228,6 +230,7 @@ class AutoRefreshHighlighter extends EventEmitter {
   /**
    * Update the knowledge we have of the current node's boxquads and return true
    * if any of the points x/y or bounds have change since.
+   *
    * @return {Boolean}
    */
   _hasMoved() {
@@ -240,6 +243,7 @@ class AutoRefreshHighlighter extends EventEmitter {
   /**
    * Update the knowledge we have of the current window's scrolling offset, both
    * horizontal and vertical, and return `true` if they have changed since.
+   *
    * @return {Boolean}
    */
   _hasWindowScrolled() {
@@ -259,6 +263,7 @@ class AutoRefreshHighlighter extends EventEmitter {
   /**
    * Update the knowledge we have of the current window's dimensions and return `true`
    * if they have changed since.
+   *
    * @return {Boolean}
    */
   _haveWindowDimensionsChanged() {

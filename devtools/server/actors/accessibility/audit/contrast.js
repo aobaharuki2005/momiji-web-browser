@@ -65,6 +65,7 @@ loader.lazyGetter(this, "worker", () => new lazy.DevToolsWorker(WORKER_URL));
 /**
  * Get canvas rendering context for the current target window bound by the bounds of the
  * accessible objects.
+ *
  * @param  {Object}  win
  *         Current target window.
  * @param  {Object}  bounds

@@ -101,6 +101,7 @@ class Actor extends Pool {
 
   /**
    * Override this method in subclasses to serialize the actor.
+   *
    * @returns A jsonable object.
    */
   form() {
@@ -153,6 +154,7 @@ class Actor extends Pool {
   /**
    * Throw an error with the passed message and attach an `error` property to the Error
    * object so it can be consumed by the writeError function.
+   *
    * @param {String} error: A string (usually a single word serving as an id) that will
    *                        be assign to error.error.
    * @param {String} message: The string that will be passed to the Error constructor.

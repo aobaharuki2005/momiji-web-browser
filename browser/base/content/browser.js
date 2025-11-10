@@ -1965,6 +1965,7 @@ var XULBrowserWindow = {
 
       /**
        * Encode bidirectional formatting characters.
+       *
        * @see https://url.spec.whatwg.org/#url-rendering-i18n
        * @see https://www.unicode.org/reports/tr9/#Directional_Formatting_Characters
        */
@@ -2381,6 +2382,7 @@ var XULBrowserWindow = {
    * Updates macOS platform code with the current URI and page title.
    * From there, we update the current NSUserActivity, enabling Handoff to other
    * Apple devices.
+   *
    * @param {Window} window
    *   The window in which the navigation occurred.
    * @param {nsIURI} uri
@@ -2412,6 +2414,7 @@ var XULBrowserWindow = {
    * identity panel. For browsers whose content does not have a principal,
    * this tries the precursor. If this is null, we should not override the
    * browser's currentURI.
+   *
    * @param {MozBrowser} browser
    *   The browser that we need a URI to show the user in the
    *   identity panel.
@@ -4292,6 +4295,7 @@ class TabDialogBox {
 
   /**
    * Open a dialog on tab or content level.
+   *
    * @param {String} aURL - URL of the dialog to load in the tab box.
    * @param {Object} [aOptions]
    * @param {String} [aOptions.features] - Comma separated list of window

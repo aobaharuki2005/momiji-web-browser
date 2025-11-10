@@ -169,6 +169,7 @@ class WebConsoleActor extends Actor {
 
   /**
    * This is used by the ObjectActor to keep track of the depth of grip() calls.
+   *
    * @private
    * @type number
    */
@@ -294,6 +295,7 @@ class WebConsoleActor extends Actor {
 
   /**
    * The ConsoleServiceListener instance.
+   *
    * @type object
    */
   consoleServiceListener = null;

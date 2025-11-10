@@ -83,6 +83,7 @@ const EXPANDABLE_PROPS = ["actions", "states", "attributes"];
 
 /**
  * Add a new test tab in the browser and load the given url.
+ *
  * @param {String} url
  *        The url to be loaded in the new tab
  * @param {Object} options
@@ -144,6 +145,7 @@ async function initAccessibilityPanel(tab = gBrowser.selectedTab) {
 /**
  * Compare text within the list of potential badges rendered for accessibility
  * tree row when its accessible object has accessibility failures.
+ *
  * @param {DOMNode} badges
  *        Container element that contains badge elements.
  * @param {Array|null} expected
@@ -200,6 +202,7 @@ function isVisible(element) {
 /**
  * Check selected styling and visibility for a given row in the accessibility
  * tree.
+ *
  * @param   {DOMNode} row
  *          DOMNode for a given accessibility row.
  * @param   {Boolean} expected
@@ -222,6 +225,7 @@ function checkSelected(row, expected) {
 
 /**
  * Check level for a given row in the accessibility tree.
+ *
  * @param   {DOMNode} row
  *          DOMNode for a given accessibility row.
  * @param   {Boolean} expected
@@ -240,6 +244,7 @@ function checkLevel(row, expected) {
 
 /**
  * Check the state of the accessibility tree.
+ *
  * @param  {document} doc       panel documnent.
  * @param  {Array}    expected  an array that represents an expected row list.
  */
@@ -269,6 +274,7 @@ async function checkTreeState(doc, expected) {
 /**
  * Check if relations object matches what is expected. Note: targets are matched by their
  * name and role.
+ *
  * @param  {Object} relations  Relations to test.
  * @param  {Object} expected   Expected relations.
  * @return {Boolean}           True if relation types and their targers match what is
@@ -301,6 +307,7 @@ function relationsMatch(relations, expected) {
 /**
  * When comparing numerical values (for example contrast), we only care about the 2
  * decimal points.
+ *
  * @param  {String} _
  *         Key of the property that is parsed.
  * @param  {Any} value
@@ -318,6 +325,7 @@ function parseNumReplacer(_, value) {
 
 /**
  * Check the state of the accessibility sidebar audit(checks).
+ *
  * @param  {Object} store         React store for the panel (includes store for
  *                                the audit).
  * @param  {Object} expectedState Expected state of the sidebar audit(checks).
@@ -348,6 +356,7 @@ async function checkAuditState(store, expectedState) {
 
 /**
  * Check the state of the accessibility sidebar.
+ *
  * @param  {Object} store         React store for the panel (includes store for
  *                                the sidebar).
  * @param  {Object} expectedState Expected state of the sidebar.
@@ -383,6 +392,7 @@ async function checkSidebarState(store, expectedState) {
 
 /**
  * Check the state of the accessibility related prefs.
+ *
  * @param  {Document} doc
  *         accessibility inspector panel document.
  * @param  {Object}   toolbarPrefValues
@@ -420,6 +430,7 @@ async function checkToolbarPrefsState(doc, toolbarPrefValues, store) {
 
 /**
  * Check the state of the accessibility checks toolbar.
+ *
  * @param  {Object} store
  *         React store for the panel (includes store for the sidebar).
  * @param  {Object} activeToolbarFilters
@@ -444,6 +455,7 @@ async function checkToolbarState(doc, activeToolbarFilters) {
 
 /**
  * Check the state of the simulation button and menu components.
+ *
  * @param  {Object} doc         Panel document.
  * @param  {Object} toolboxDoc  Toolbox document.
  * @param  {Object} expected    Expected states of the simulation components:
@@ -518,6 +530,7 @@ async function focusAccessibleProperties(doc) {
 
 /**
  * Select accessibility property in the sidebar.
+ *
  * @param  {Document} doc  accessibility inspector panel document.
  * @param  {String} id     id of the property to be selected.
  * @return {DOMNode}       Node that corresponds to the selected accessibility property.
@@ -556,6 +569,7 @@ async function selectProperty(doc, id) {
 
 /**
  * Select tree row.
+ *
  * @param  {document} doc       panel documnent.
  * @param  {Number}   rowNumber number of the row/tree node to be selected.
  */
@@ -575,6 +589,7 @@ function selectRow(doc, rowNumber) {
 
 /**
  * Toggle an expandable tree row.
+ *
  * @param  {document} doc       panel documnent.
  * @param  {Number}   rowNumber number of the row/tree node to be toggled.
  */
@@ -603,6 +618,7 @@ async function toggleRow(doc, rowNumber) {
 
 /**
  * Toggle a specific menu item based on its index in the menu.
+ *
  * @param  {document} toolboxDoc
  *         toolbox document.
  * @param  {document} doc
@@ -720,6 +736,7 @@ async function selectAccessibleForNode(env, selector) {
 /**
  * Iterate over setups/tests structure and test the state of the
  * accessibility panel.
+ *
  * @param  {JSON}   tests
  *         test data that has the format of:
  *         {
@@ -787,6 +804,7 @@ async function runA11yPanelTests(tests, env) {
 
 /**
  * Build a valid URL from an HTML snippet.
+ *
  * @param  {String}  uri      HTML snippet
  * @param  {Object}  options  options for the test
  * @return {String}     built URL
@@ -812,6 +830,7 @@ function buildURL(uri, options = {}) {
 
 /**
  * Add a test task based on the test structure and a test URL.
+ *
  * @param  {JSON}   tests    test data that has the format of:
  *                    {
  *                      desc     {String}    description for better logging
@@ -832,6 +851,7 @@ function addA11yPanelTestsTask(tests, uri, msg, options) {
 /**
  * Borrowed from framework's shared head. Close toolbox, completely disable
  * accessibility and remove the tab.
+ *
  * @param  {Tab}
  *         tab The tab to close.
  * @return {Promise}
@@ -850,6 +870,7 @@ async function closeTabToolboxAccessibility(tab = gBrowser.selectedTab) {
 /**
  * A wrapper function around add_task that sets up the test environment, runs
  * the test and then disables accessibility tools.
+ *
  * @param {String}   msg    a message that is printed for the test
  * @param {String}   uri    absolute test URL or HTML snippet
  * @param {Function} task   task function containing the tests.

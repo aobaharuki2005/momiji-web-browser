@@ -146,7 +146,6 @@ export class FxAccountsKeys {
    *          k: Derived key material
    *          kty: Always "oct" for scoped keys
    *        }
-   *
    */
   async getKeyForScope(scope) {
     const { scopedKeys } = await this._loadOrFetchKeys();
@@ -308,6 +307,7 @@ export class FxAccountsKeys {
 
   /**
    * Set externally derived scoped keys in internal storage
+   *
    * @param { Object } scopedKeys: The scoped keys object derived by the oauth flow
    *
    * @return { Promise }: A promise that resolves if the keys were successfully stored,

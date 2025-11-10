@@ -237,7 +237,6 @@ export var WinImpl = {
    *
    * copied from quoteString() in toolkit/modules/subproces/subprocess_worker_win.js
    *
-   *
    * @see https://msdn.microsoft.com/en-us/library/17w5ykft(v=vs.85).aspx
    *
    * @param {string} str

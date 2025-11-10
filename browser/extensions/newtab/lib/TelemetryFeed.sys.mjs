@@ -298,6 +298,7 @@ export class TelemetryFeed {
 
   /**
    * Retrieves most recently followed sections (maximum 2 sections)
+   *
    * @returns {String[]} comma separated string of section UUID's
    */
   getFollowedSections() {
@@ -385,6 +386,7 @@ export class TelemetryFeed {
   /**
    * Removes fields that link to any user content preference.
    * Redactions only occur if the appropriate pref is enabled.
+   *
    * @param {*} pingDict Input dictionary
    * @param {boolean} isSponsored Is this in ad, in which case there is nothing we can redact currently
    * @returns {*} Possibly redacted dictionary
@@ -801,6 +803,7 @@ export class TelemetryFeed {
 
   /**
    * Occasionally replaces a content item with another that is in the feed.
+   *
    * @param {*} item
    * @returns Same item, but another item occasionally based on probablility setting.
    * Sponsored items are unchanged
@@ -1965,7 +1968,6 @@ export class TelemetryFeed {
    *
    * @param {String} port  The session port with which this is associated
    * @param {Object} data  The impression data structured as {source: "SOURCE", tiles: [{id: 123}]}
-   *
    */
   handleDiscoveryStreamImpressionStats(port, data) {
     let session = this.sessions.get(port);

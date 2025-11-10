@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyServiceGetter(
 class ProtectionCategory {
   /**
    * Creates a protection category.
+   *
    * @param {string} id - Identifier of the category. Used to query the category
    * UI elements in the DOM.
    * @param {Object} options - Category options.
@@ -110,6 +111,7 @@ class ProtectionCategory {
   /**
    * Get the category item associated with this protection from the main
    * protections panel.
+   *
    * @returns {xul:toolbarbutton|undefined} - Item or undefined if the panel is
    * not yet initialized.
    */
@@ -126,6 +128,7 @@ class ProtectionCategory {
 
   /**
    * Defaults to enabled state. May be overridden by child classes.
+   *
    * @returns {boolean} - Whether the protection is set to block trackers.
    */
   get blockingEnabled() {
@@ -135,6 +138,7 @@ class ProtectionCategory {
   /**
    * Update the category item state in the main view of the protections panel.
    * Determines whether the category is set to block trackers.
+   *
    * @returns {boolean} - true if the state has been updated, false if the
    * protections popup has not been initialized yet.
    */
@@ -188,6 +192,7 @@ class ProtectionCategory {
 
   /**
    * Create a list of items, each representing a tracker.
+   *
    * @returns {Object} result - An object containing the results.
    * @returns {HTMLDivElement[]} result.items - Generated tracker items. May be
    * empty.
@@ -217,6 +222,7 @@ class ProtectionCategory {
 
   /**
    * Return the number items blocked by this blocker.
+   *
    * @returns {Integer} count - The number of items blocked.
    */
   async getBlockerCount() {
@@ -226,6 +232,7 @@ class ProtectionCategory {
 
   /**
    * Create a DOM item representing a tracker.
+   *
    * @param {string} origin - Origin of the tracker.
    * @param {Array} actions - Array of actions from the content blocking log
    * associated with the tracking origin.
@@ -277,6 +284,7 @@ class ProtectionCategory {
   /**
    * Create an indicator icon for marking origins that have been allowed by a
    * shim script.
+   *
    * @returns {HTMLImageElement} - Created element.
    */
   _getShimAllowIndicator() {

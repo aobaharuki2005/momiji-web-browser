@@ -193,6 +193,7 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
    * accessibility tree starting at the level of current accessible front. It
    * accumulates subtrees from possible out of process frames that are children
    * of the current accessible front.
+   *
    * @param  {JSON} snapshot
    *         Snapshot of the current accessible front or one of its in process
    *         children when recursing.
@@ -292,6 +293,7 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
   /**
    * Get the accessible object ancestry starting from the given accessible to
    * the top level document. The top level document is in the top level content process.
+   *
    * @param  {Object} accessible
    *         Accessible front to determine the ancestry for.
    *
@@ -345,6 +347,7 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
    * cases when the document is in the OOP frame), this method also updates
    * relative ancestries of audited accessible objects all the way up to the top
    * level document for the toolbox.
+   *
    * @param {Object} options
    *                 - {Array}    types
    *                   types of the accessibility issues to audit for

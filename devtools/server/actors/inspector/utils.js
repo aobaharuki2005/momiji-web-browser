@@ -189,6 +189,7 @@ function allAnonymousContentTreeWalkerFilter(node) {
 
 /**
  * Is the given node a text node composed of whitespace only?
+ *
  * @param {DOMNode} node
  * @return {Boolean}
  */
@@ -198,6 +199,7 @@ function isWhitespaceTextNode(node) {
 
 /**
  * Does the given node have non-0 width and height?
+ *
  * @param {DOMNode} node
  * @return {Boolean}
  */

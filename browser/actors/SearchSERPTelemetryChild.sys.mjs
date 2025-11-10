@@ -751,7 +751,6 @@ class SearchAdImpression {
    * count because the parent used `countChildren` completed the calculation in a
    * previous step.
    *
-   *
    * @param {HTMLAnchorElement} anchor
    *  The anchor to be inspected.
    * @returns {object | null}

@@ -131,6 +131,7 @@ export var NormandyApi = {
 
   /**
    * Fetch metadata about this client determined by the server.
+   *
    * @return {object} Metadata specified by the server
    */
   async classifyClient() {
@@ -143,6 +144,7 @@ export var NormandyApi = {
 
   /**
    * Fetch details for an extension from the server.
+   *
    * @param extensionId {integer} The ID of the extension to look up
    * @resolves {Object}
    */

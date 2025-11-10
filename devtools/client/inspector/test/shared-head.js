@@ -17,6 +17,7 @@ var {
 
 /**
  * Open the toolbox, with the inspector tool visible.
+ *
  * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
  * @return {Promise} A promise that resolves when the inspector is ready.The promise
  *         resolves with an object containing the following properties:
@@ -217,6 +218,7 @@ function selectLayoutView(inspector) {
 /**
  * Get the NodeFront for a node that matches a given css selector, via the
  * protocol.
+ *
  * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
@@ -269,6 +271,7 @@ var selectNode = async function (
 /**
  * Using the markupview's _waitForChildren function, wait for all queued
  * children updates to be handled.
+ *
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return a promise that resolves when all queued children updates have been
@@ -400,6 +403,7 @@ async function selectNodeInFrames(
  * Create a throttling function that can be manually "flushed". This is to replace the
  * use of the `debounce` function from `devtools/client/inspector/shared/utils.js`, which
  * has a setTimeout that can cause intermittents.
+ *
  * @return {Function} This function has the same function signature as debounce, but
  *                    the property `.flush()` has been added for flushing out any
  *                    debounced calls.
@@ -813,6 +817,7 @@ function buildContextMenuItems(menu) {
 
 /**
  * Open the style editor context menu and return all of it's items in a flat array
+ *
  * @param {CssRuleView} view
  *        The instance of the rule-view panel
  * @return An array of MenuItems
@@ -824,6 +829,7 @@ function openStyleContextMenuAndGetAllItems(view, target) {
 
 /**
  * Open the inspector menu and return all of it's items in a flat array
+ *
  * @param {InspectorPanel} inspector
  * @param {Object} options to pass into openMenu
  * @return An array of MenuItems

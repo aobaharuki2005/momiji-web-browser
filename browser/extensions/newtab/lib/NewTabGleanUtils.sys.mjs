@@ -120,6 +120,7 @@ export const NewTabGleanUtils = {
 
   /**
    * Registers a metric in Glean if it doesn't already exist.
+   *
    * @param {Object} options - The metric configuration options
    * @param {string} options.type - The type of metric (e.g., "text", "counter")
    * @param {string} options.category - The category the metric belongs to
@@ -181,6 +182,7 @@ export const NewTabGleanUtils = {
 
   /**
    * Registers a ping in Glean if it doesn't already exist.
+   *
    * @param {Object} options - The ping configuration options
    * @param {string} options.name - The name of the ping
    * @param {boolean} [options.includeClientId] - Whether to include client ID
@@ -245,6 +247,7 @@ export const NewTabGleanUtils = {
   /**
    * Converts a dotted snake case string to camel case.
    * Example: "foo.bar_baz" becomes "fooBarBaz"
+   *
    * @param {string} metricNameOrCategory - The string in dotted snake case format
    * @returns {string} The converted camel case string
    */
@@ -279,6 +282,7 @@ export const NewTabGleanUtils = {
   /**
    * Converts a kebab case string to camel case.
    * Example: "foo-bar-baz" becomes "fooBarBaz"
+   *
    * @param {string} pingName - The string in kebab case format
    * @returns {string} The converted camel case string
    */

@@ -293,6 +293,7 @@ let dialog = {
 
   /**
    * Update the handler info to reflect the user choice.
+   *
    * @param {boolean} skipAsk - Whether we should persist the application
    * choice and skip asking next time.
    */

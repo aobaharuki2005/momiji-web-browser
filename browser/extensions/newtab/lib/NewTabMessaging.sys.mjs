@@ -103,6 +103,7 @@ export class NewTabMessaging {
 
   /**
    * Send impression to ASRouter
+   *
    * @param {Object} message
    */
   handleImpression(message) {

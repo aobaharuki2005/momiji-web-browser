@@ -152,6 +152,7 @@ class ToolSidebar extends EventEmitter {
 
   /**
    * Remove an existing tab.
+   *
    * @param {String} tabId The ID of the tab that was used to register it, or
    * the tab id attribute value if the tab existed before the sidebar
    * got created.
@@ -164,6 +165,7 @@ class ToolSidebar extends EventEmitter {
 
   /**
    * Show or hide a specific tab.
+   *
    * @param {Boolean} isVisible True to show the tab/tabpanel, False to hide it.
    * @param {String} id The ID of the tab to be hidden.
    */
@@ -187,6 +189,7 @@ class ToolSidebar extends EventEmitter {
 
   /**
    * Returns the requested tab panel based on the id.
+   *
    * @param {String} id
    * @return {DOMNode}
    */

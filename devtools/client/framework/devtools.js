@@ -944,6 +944,7 @@ DevTools.prototype = {
 
   /**
    * Either the DevTools Loader has been destroyed or firefox is shutting down.
+   *
    * @param {boolean} shuttingDown
    *        True if firefox is currently shutting down. We may prevent doing
    *        some cleanups to speed it up. Otherwise everything need to be

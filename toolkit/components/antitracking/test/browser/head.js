@@ -159,6 +159,7 @@ function setCookieBehaviorPref(cookieBehavior, runInPrivateWindow) {
 
 /**
  * Wait for the exception list service to initialize.
+ *
  * @param {string} [urlPattern] - The URL pattern to wait for to be present.
  * Pass null to wait for all entries to be removed.
  */
@@ -182,6 +183,7 @@ async function waitForExceptionListServiceSynced(urlPattern) {
 
 /**
  * Wait for a content blocking event to occur.
+ *
  * @param {Window} win - The window to listen for the event on.
  * @returns {Promise} A promise that resolves when the event occurs.
  */
@@ -201,6 +203,7 @@ async function waitForContentBlockingEvent(win) {
 
 /**
  * Dispatch a RemoteSettings "sync" event.
+ *
  * @param {string} collectionName - The remote setting collection name
  * @param {Object} data - The event's data payload.
  * @param {Object} [data.created] - Records that were created.
@@ -225,6 +228,7 @@ async function remoteSettingsSync(
 
 /**
  * Set exceptions via RemoteSettings.
+ *
  * @param {Object[]} entries - The entries to set. If empty, the exceptions will be cleared.
  * @param {Object} db - The Remote Settings collections database.
  * @param {Object} collectionName The remote setting collection name

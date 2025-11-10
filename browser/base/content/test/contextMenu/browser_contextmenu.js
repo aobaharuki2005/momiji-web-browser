@@ -2616,6 +2616,7 @@ async function selectText(selector) {
 
 /**
  * Not all platforms support text recognition.
+ *
  * @returns {string[]}
  */
 function getTextRecognitionItems() {

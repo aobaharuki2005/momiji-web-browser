@@ -87,6 +87,7 @@ const CSS_TEXT_SELECTOR = "#text";
 
 /**
  * Get node inforamtion such as nodeType and the unique CSS selector for the node.
+ *
  * @param  {DOMNode} node
  *         Node for which to get the information.
  * @return {Object}
@@ -112,6 +113,7 @@ function getNodeDescription(node) {
 /**
  * Get a snapshot of the nsIAccessible object including its subtree. None of the subtree
  * queried here is cached via accessible walker's refMap.
+ *
  * @param  {nsIAccessible} acc
  *         Accessible object to take a snapshot of.
  * @param  {nsIAccessibilityService} a11yService
@@ -190,6 +192,7 @@ function getSnapshot(acc, a11yService, targetActor) {
  * An ARIA role token will be returned unless the role can't be mapped to an
  * ARIA role (e.g. <iframe>), in which case a Gecko role string will be
  * returned.
+ *
  * @param  {nsIAccessible} acc
  *         Accessible object to take a snapshot of.
  * @param  {nsIAccessibilityService} a11yService
@@ -552,6 +555,7 @@ class AccessibleActor extends Actor {
 
   /**
    * Run an accessibility audit for a given audit type.
+   *
    * @param {String} type
    *        Type of an audit (Check AUDIT_TYPE in devtools/shared/constants
    *        to see available audit types).

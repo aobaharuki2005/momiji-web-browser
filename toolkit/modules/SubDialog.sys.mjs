@@ -17,6 +17,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
  * The SubDialog resize callback.
+ *
  * @callback SubDialog~resizeCallback
  * @param {DOMNode} title - The title element of the dialog.
  * @param {xul:browser} frame - The browser frame of the dialog.
@@ -25,6 +26,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 /**
  * SubDialog constructor creates a new subdialog from a template and appends
  * it to the parentElement.
+ *
  * @param {DOMNode} template - The template is copied to create a new dialog.
  * @param {DOMNode} parentElement - New dialog is appended onto parentElement.
  * @param {String}  id - A unique identifier for the dialog.
@@ -785,6 +787,7 @@ SubDialog.prototype = {
 
   /**
    * Setup dialog event listeners.
+   *
    * @param {Boolean} [includeLoad] - Whether to register load/unload listeners.
    */
   _addDialogEventListeners(includeLoad = true) {
@@ -834,6 +837,7 @@ SubDialog.prototype = {
 
   /**
    * Remove dialog event listeners.
+   *
    * @param {Boolean} [includeLoad] - Whether to remove load/unload listeners.
    */
   _removeDialogEventListeners(includeLoad = true) {
@@ -876,6 +880,7 @@ SubDialog.prototype = {
    * Focus the dialog content.
    * If the embedded document defines a custom focus handler it will be called.
    * Otherwise we will focus the first focusable element in the content window.
+   *
    * @param {boolean} [isInitialFocus] - Whether the dialog is focused for the
    * first time after opening.
    */
@@ -954,6 +959,7 @@ export class SubDialogManager {
      * New dialogs are pushed to the end of the _dialogs array.
      * Depending on the orderType either the last element (stack) or the first
      * element (queue) in the array will be the top and visible.
+     *
      * @type {SubDialog[]}
      */
     this._dialogs = [];
@@ -1079,6 +1085,7 @@ export class SubDialogManager {
 
   /**
    * Abort open dialogs.
+   *
    * @param {function} [filterFn] - Function which should return true for
    * dialogs that should be aborted and false for dialogs that should remain
    * open. Defaults to aborting all dialogs.

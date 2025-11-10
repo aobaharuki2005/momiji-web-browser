@@ -213,6 +213,7 @@ const migrationsInfo = [
 /**
  * Make a mock `JsonFile` object with a no-op `saveSoon` method and a deep copy
  * of the data passed.
+ *
  * @param {Object} data the data in the store
  */
 function makeMockJsonFile(data = {}) {

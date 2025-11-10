@@ -161,6 +161,7 @@ async function onSourceTextContentAvailable(
 
 /**
  * Loads the source text for the generated source based of the source actor
+ *
  * @param {Object} sourceActor
  *                 There can be more than one source actor per source
  *                 so the source actor needs to be specified. This is
@@ -201,6 +202,7 @@ export const loadGeneratedSourceText = memoizeableAction(
 
 /**
  * Loads the source text for an original source and source actor
+ *
  * @param {Object} source
  *                 The original source to load the source text
  */

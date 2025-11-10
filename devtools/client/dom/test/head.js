@@ -18,6 +18,7 @@ const constants = require("resource://devtools/client/dom/content/constants.js")
 
 /**
  * Add a new test tab in the browser and load the given url.
+ *
  * @param {String} url
  *        The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when

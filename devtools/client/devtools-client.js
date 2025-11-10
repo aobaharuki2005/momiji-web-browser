@@ -401,6 +401,7 @@ DevToolsClient.prototype = {
 
   /**
    * Send a request.
+   *
    * @throws Error if there is already an active request in flight for the same
    *         actor.
    */
@@ -857,6 +858,7 @@ DevToolsClient.prototype = {
 
   /**
    * Creates an object front for this DevToolsClient and the grip in parameter,
+   *
    * @param {Object} grip: The grip to create the ObjectFront for.
    * @param {ThreadFront} threadFront
    * @param {Front} parentFront: Optional front that will manage the object front.

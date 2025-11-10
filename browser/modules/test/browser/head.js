@@ -43,6 +43,7 @@ function waitForCondition(condition, nextTest, errorMsg) {
 /**
  * An utility function to write some text in the search input box
  * in a content page.
+ *
  * @param {Object} browser
  *        The browser that contains the content.
  * @param {String} text

@@ -30,7 +30,6 @@ const percentFormatter = new Intl.NumberFormat("en", {
  * only handle points inside [0,0] [1,1] to represent most common use cases (even though
  * the line will properly link points outside of this range)
  *
- *
  * @emits "updated" events whenever the line is changed, with the updated property value.
  */
 class LinearEasingFunctionWidget extends EventEmitter {
@@ -533,6 +532,7 @@ class TimingFunctionPreviewWidget {
    * Preview a new timing function. The current preview will only be stopped if
    * the supplied function value is different from the previous one. If the
    * supplied function is invalid, the preview will stop.
+   *
    * @param {Array} value
    */
   preview(timingFunction) {
@@ -545,6 +545,7 @@ class TimingFunctionPreviewWidget {
 
   /**
    * Re-start the preview animation from the beginning.
+   *
    * @param {Array} points
    */
   #restartAnimation = throttle(timingFunction => {

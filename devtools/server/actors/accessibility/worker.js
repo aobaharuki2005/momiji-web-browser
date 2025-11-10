@@ -42,6 +42,7 @@ function calculateLuminance(rgba) {
  * Get RGBA or a range of RGBAs for the background pixels under the text. If luminance is
  * uniform, only return one value of RGBA, otherwise return values that correspond to the
  * min and max luminances.
+ *
  * @param  {ImageData} dataTextBuf
  *         pixel data for the accessible object with text visible.
  * @param  {ImageData} dataBackgroundBuf

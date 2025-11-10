@@ -4,6 +4,7 @@
 
 /**
  * Redux actions for breakpoints
+ *
  * @module actions/breakpoints
  */
 

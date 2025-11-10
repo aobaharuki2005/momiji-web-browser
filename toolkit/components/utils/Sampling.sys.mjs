@@ -9,6 +9,7 @@ const hashMultiplier = Math.pow(2, hashBits) - 1;
 export var Sampling = {
   /**
    * Map from the range [0, 1] to [0, 2^48].
+   *
    * @param  {number} frac A float from 0.0 to 1.0.
    * @return {string} A 48 bit number represented in hex, padded to 12 characters.
    */

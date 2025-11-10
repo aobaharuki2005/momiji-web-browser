@@ -304,6 +304,7 @@ class WalkerSearch {
 
   /**
    * Search the document
+   *
    * @param {String} query What to search for
    * @param {Object} options The following options are accepted:
    * - searchMethod {String} one of WalkerSearch.SEARCH_METHOD_*

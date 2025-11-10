@@ -33,6 +33,7 @@ class PropertiesViewContextMenu {
 
   /**
    * Handle the context menu opening.
+   *
    * @param {Object} event open event
    * @param {Object} selection object representing the current selection
    * @param {Object} data object containing information
@@ -64,6 +65,7 @@ class PropertiesViewContextMenu {
 
   /**
    * Copies all.
+   *
    * @param {Object} object the whole tree data
    * @param {Object} selection object representing the current selection
    */
@@ -88,6 +90,7 @@ class PropertiesViewContextMenu {
 
   /**
    * Copies the value of a single item.
+   *
    * @param {Object} member member of the right-clicked row
    * @param {Object} selection object representing the current selection
    */

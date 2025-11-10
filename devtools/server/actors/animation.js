@@ -218,6 +218,7 @@ class AnimationPlayerActor extends Actor {
    * Get the name of this animation. This can be either the animation.id
    * property if it was set, or the keyframe rule name or the transition
    * property.
+   *
    * @return {String}
    */
   getName() {
@@ -234,6 +235,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get the animation duration from this player, in milliseconds.
+   *
    * @return {Number}
    */
   getDuration() {
@@ -242,6 +244,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get the animation delay from this player, in milliseconds.
+   *
    * @return {Number}
    */
   getDelay() {
@@ -250,6 +253,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get the animation endDelay from this player, in milliseconds.
+   *
    * @return {Number}
    */
   getEndDelay() {
@@ -259,6 +263,7 @@ class AnimationPlayerActor extends Actor {
   /**
    * Get the animation iteration count for this player. That is, how many times
    * is the animation scheduled to run.
+   *
    * @return {Number} The number of iterations, or null if the animation repeats
    * infinitely.
    */
@@ -270,6 +275,7 @@ class AnimationPlayerActor extends Actor {
   /**
    * Get the animation iterationStart from this player, in ratio.
    * That is offset of starting position of the animation.
+   *
    * @return {Number}
    */
   getIterationStart() {
@@ -278,6 +284,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get the animation easing from this player.
+   *
    * @return {String}
    */
   getEasing() {
@@ -286,6 +293,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get the animation fill mode from this player.
+   *
    * @return {String}
    */
   getFill() {
@@ -294,6 +302,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get the animation direction from this player.
+   *
    * @return {String}
    */
   getDirection() {
@@ -302,6 +311,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get animation-timing-function from animated element if CSS Animations.
+   *
    * @return {String}
    */
   getAnimationTimingFunction() {
@@ -332,6 +342,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Return the current start of the Animation.
+   *
    * @return {Object}
    */
   getState() {
@@ -381,6 +392,7 @@ class AnimationPlayerActor extends Actor {
    * This protocol method only returns a trimed down version of this state in
    * case some properties haven't changed since last time (since the front can
    * reconstruct those). If you want the full state, use the getState method.
+   *
    * @return {Object}
    */
   getCurrentState() {
@@ -454,6 +466,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get data about the animated properties of this animation player.
+   *
    * @return {Array} Returns a list of animated properties.
    * Each property contains a list of values, their offsets and distances.
    */
@@ -552,6 +565,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Get the animation types for a given list of CSS property names.
+   *
    * @param {Array} propertyNames - CSS property names (e.g. background-color)
    * @return {Object} Returns animation types (e.g. {"background-color": "rgb(0, 0, 0)"}.
    */
@@ -565,6 +579,7 @@ class AnimationPlayerActor extends Actor {
 
   /**
    * Returns the distance of between value1, value2.
+   *
    * @param {Object} target - dom element
    * @param {String} propertyName - e.g. transform
    * @param {String} value1 - e.g. translate(0px)
@@ -626,6 +641,7 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
    * NodeActor IDs when the corresponding NodeActors do exist.
    * This, in turns, is helpful for clients to avoid having to go back once more
    * to the server to get a NodeActor for a particular animation.
+   *
    * @param {WalkerActor} walker
    */
   setWalkerActor(walker) {
@@ -639,6 +655,7 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
    * retrieved AnimationPlayerActors. Indeed, the lifecycle of these actors
    * is managed here on the server and tied to getAnimationPlayersForNode
    * being called.
+   *
    * @param {NodeActor} nodeActor The NodeActor as defined in
    * /devtools/server/actors/inspector
    */
@@ -803,6 +820,7 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
 
   /**
    * Set the current time of several animations at the same time.
+   *
    * @param {Array} players A list of AnimationPlayerActor.
    * @param {Number} time The new currentTime.
    * @param {Boolean} shouldPause Should the players be paused too.
@@ -827,6 +845,7 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
 
   /**
    * Set the playback rate of several animations at the same time.
+   *
    * @param {Array} actors A list of AnimationPlayerActor.
    * @param {Number} rate The new rate.
    */

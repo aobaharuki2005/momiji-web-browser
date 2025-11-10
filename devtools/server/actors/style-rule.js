@@ -1463,6 +1463,7 @@ exports.StyleRuleActor = StyleRuleActor;
 /**
  * Compute the start and end offsets of a rule's selector text, given
  * the CSS text and the line and column at which the rule begins.
+ *
  * @param {String} initialText
  * @param {Number} line (1-indexed)
  * @param {Number} column (1-indexed)

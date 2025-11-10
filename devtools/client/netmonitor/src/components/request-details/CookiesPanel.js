@@ -132,6 +132,7 @@ class CookiesPanel extends Component {
 
   /**
    * Get the selected cookies path
+   *
    * @param {Object} searchResult
    * @returns {string}
    */

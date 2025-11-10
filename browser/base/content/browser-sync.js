@@ -916,6 +916,7 @@ var gSync = {
 
   /**
    * Potential network call. Fetch the list of OAuth clients attached to the current Mozilla account.
+   *
    * @returns {Promise<boolean>} - Resolves to true if successful, false otherwise.
    */
   async fetchListOfOAuthClients() {
@@ -2421,6 +2422,7 @@ var gSync = {
   /**
    * Checks if the current list of attached clients to the Mozilla account
    * has a service associated with the passed in Id
+   *
    *  @param {string} clientId
    *   A known static Id from FxA that identifies the service it's associated with
    *  @returns {boolean}

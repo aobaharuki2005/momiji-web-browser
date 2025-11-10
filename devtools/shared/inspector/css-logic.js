@@ -13,6 +13,7 @@ const MAX_DATA_URL_LENGTH = 40;
  * that helps them understand:
  * - why their expectations may not have been fulfilled
  * - how browsers process CSS
+ *
  * @constructor
  */
 
@@ -49,6 +50,7 @@ exports.FILTER = {
  *
  * These statuses are localized inside the styleinspector.properties
  * string bundle.
+ *
  * @see csshtmltree.js RuleView._cacheStatusNames()
  */
 exports.STATUS = {
@@ -602,6 +604,7 @@ exports.hasVisitedState = hasVisitedState;
 
 /**
  * Find the position of [element] in [nodeList].
+ *
  * @returns an index of the match, or -1 if there is no match
  */
 function positionInNodeList(element, nodeList) {
@@ -643,6 +646,7 @@ function findNodeAndContainer(node) {
 
 /**
  * Find a unique CSS selector for a given element
+ *
  * @returns a string such that:
  *   - ele.containingDocOrShadow.querySelector(reply) === ele
  *   - ele.containingDocOrShadow.querySelectorAll(reply).length === 1

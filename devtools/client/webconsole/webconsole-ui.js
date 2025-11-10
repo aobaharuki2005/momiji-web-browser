@@ -91,6 +91,7 @@ class WebConsoleUI {
 
   /**
    * Initialize the WebConsoleUI instance.
+   *
    * @return {Object}
    *         A promise object that resolves once the frame is ready to use.
    */
@@ -730,6 +731,7 @@ class WebConsoleUI {
   /**
    * Sets the focus to JavaScript input field when the web console tab is
    * selected or when there is a split console present.
+   *
    * @private
    */
   _onPanelSelected() {

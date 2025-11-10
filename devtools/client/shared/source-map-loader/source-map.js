@@ -6,6 +6,7 @@
 
 /**
  * Source Map Worker
+ *
  * @module utils/source-map-worker
  */
 

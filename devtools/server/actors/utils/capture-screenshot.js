@@ -23,6 +23,7 @@ const MAX_IMAGE_HEIGHT = 10000;
 
 /**
  * This function is called to simulate camera effects
+ *
  * @param {BrowsingContext} browsingContext: The browsing context associated with the
  *                          browser element we want to animate.
  */

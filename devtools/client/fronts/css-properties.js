@@ -178,6 +178,7 @@ function normalizeCssData(db) {
 
 /**
  * Color values are omitted to save on space. Add them back here.
+ *
  * @param {Object} The CSS database.
  */
 function reattachCssColorValues(db) {

@@ -71,6 +71,7 @@ ArrowScrollBox.prototype = {
 
   /**
    * Scroll to the specified element using the current scroll behavior
+   *
    * @param {Element} element element to scroll
    * @param {String} block desired alignment of element after scrolling
    */
@@ -81,6 +82,7 @@ ArrowScrollBox.prototype = {
   /**
    * Call the given function once; then continuously
    * while the mouse button is held
+   *
    * @param {Function} repeatFn the function to repeat while the button is held
    */
   clickOrHold(repeatFn) {
@@ -208,6 +210,7 @@ ArrowScrollBox.prototype = {
   /**
    * Check whether the element is to the left of its container but does
    * not also span the entire container.
+   *
    * @param {Number} left the left scroll point of the container
    * @param {Number} right the right edge of the container
    * @param {Number} elementLeft the left edge of the element
@@ -222,6 +225,7 @@ ArrowScrollBox.prototype = {
   /**
    * Check whether the element is to the right of its container but does
    * not also span the entire container.
+   *
    * @param {Number} left the left scroll point of the container
    * @param {Number} right the right edge of the container
    * @param {Number} elementLeft the left edge of the element
@@ -256,6 +260,7 @@ ArrowScrollBox.prototype = {
   /**
    * Find the first element that matches the given predicate, called with bounds
    * information
+   *
    * @param {Array} elements an ordered list of elements
    * @param {Function} predicate a function to be called with bounds
    * information
@@ -315,6 +320,7 @@ ArrowScrollBox.prototype = {
   /**
    * Create an XHTML element with the given class name, and append it to the
    * parent.
+   *
    * @param {String} tagName name of the tag to create
    * @param {String} className class of the element
    * @param {DOMNode} parent the parent node to which it should be appended
@@ -428,6 +434,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Build a string that represents the node: tagName#id.class1.class2.
+   *
    * @param {NodeFront} node The node to pretty-print
    * @return {String}
    */
@@ -535,6 +542,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Generic event handler.
+   *
    * @param {DOMEvent} event.
    */
   handleEvent(event) {
@@ -553,6 +561,7 @@ HTMLBreadcrumbs.prototype = {
    * Focus event handler. When breadcrumbs container gets focus,
    * aria-activedescendant needs to be updated to currently selected
    * breadcrumb. Ensures that the focus stays on the container at all times.
+   *
    * @param {DOMEvent} event.
    */
   handleFocus(event) {
@@ -570,6 +579,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * On click navigate to the correct node.
+   *
    * @param {DOMEvent} event.
    */
   handleClick(event) {
@@ -581,6 +591,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * On mouse over, highlight the corresponding content DOM Node.
+   *
    * @param {DOMEvent} event.
    */
   handleMouseOver(event) {
@@ -675,6 +686,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Set which button represent the selected node.
+   *
    * @param {Number} index Index of the displayed-button to select.
    */
   setCursor(index) {
@@ -699,6 +711,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Get the index of the node in the cache.
+   *
    * @param {NodeFront} node.
    * @returns {Number} The index for this node or -1 if not found.
    */
@@ -714,6 +727,7 @@ HTMLBreadcrumbs.prototype = {
   /**
    * Remove all the buttons and their references in the cache after a given
    * index.
+   *
    * @param {Number} index.
    */
   cutAfter(index) {
@@ -725,6 +739,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Build a button representing the node.
+   *
    * @param {NodeFront} node The node from the page.
    * @return {DOMNode} The <button> for this node.
    */
@@ -757,6 +772,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Connecting the end of the breadcrumbs to a node.
+   *
    * @param {NodeFront} node The node to reach.
    */
   expand(node) {
@@ -785,6 +801,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Find the "youngest" ancestor of a node which is already in the breadcrumbs.
+   *
    * @param {NodeFront} node.
    * @return {Number} Index of the ancestor in the cache, or -1 if not found.
    */
@@ -840,6 +857,7 @@ HTMLBreadcrumbs.prototype = {
    * decide whether or not they are "interesting" to the current state of the
    * breadcrumbs widget, i.e. at least one of them should cause part of the
    * widget to be updated.
+   *
    * @param {Array} mutations The mutations array.
    * @return {Boolean}
    */
@@ -884,6 +902,7 @@ HTMLBreadcrumbs.prototype = {
   /**
    * Update the breadcrumbs display when a new node is selected and there are
    * mutations.
+   *
    * @param {Array} mutations An array of mutations in case this was called as
    * the "markupmutation" event listener.
    */
@@ -893,6 +912,7 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Update the breadcrumbs display when a new node is selected.
+   *
    * @param {String} reason The reason for the update, if any.
    * @param {Array} mutations An array of mutations in case this was called as
    * the "markupmutation" event listener.

@@ -132,6 +132,7 @@ class Mocks {
 
   /**
    * Creates a USB runtime for which a client conenction can be established.
+   *
    * @param {String} id
    *        The id of the runtime.
    * @param {Object} optional object used to create the fake runtime & device

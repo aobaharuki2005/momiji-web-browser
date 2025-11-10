@@ -1085,6 +1085,7 @@ export class EnrollmentsContext {
 
   /**
    * Checks targeting of a recipe if it is defined
+   *
    * @param {Recipe} recipe
    * @param {{[key: string]: any}} customContext A custom filter context
    * @returns {Promise<boolean>} Should we process the recipe?

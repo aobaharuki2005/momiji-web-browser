@@ -233,6 +233,7 @@ BrowserTabList.prototype.destroy = function () {
 
 /**
  * Get the selected browser for the given navigator:browser window.
+ *
  * @private
  * @param window nsIChromeWindow
  *        The navigator:browser window for which you want the selected browser.

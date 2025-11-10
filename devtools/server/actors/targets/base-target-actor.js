@@ -30,6 +30,7 @@ class BaseTargetActor extends Actor {
 
     /**
      * Type of target, a string of Targets.TYPES.
+     *
      * @return {string}
      */
     this.targetType = targetType;

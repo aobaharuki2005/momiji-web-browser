@@ -408,6 +408,7 @@ export var AddonRepository = {
 
   /**
    * Clear and delete the AddonRepository database
+   *
    * @return Promise{null} resolves when the database is deleted
    */
   _clearCache() {
@@ -418,6 +419,7 @@ export var AddonRepository = {
 
   /**
    * Create a ServiceRequest instance.
+   *
    * @return ServiceRequest returns a ServiceRequest instance.
    */
   _createServiceRequest() {
@@ -1026,6 +1028,7 @@ var AddonDatabase = {
 
   /**
    * Flush any pending I/O on the addons.json file
+   *
    * @return: Promise{null}
    *          Resolves when the pending I/O (writing out or deleting
    *          addons.json) completes

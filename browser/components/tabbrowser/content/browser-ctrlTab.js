@@ -20,6 +20,7 @@ var tabPreviews = {
    * to load. If the browser is discarded and there is no stored thumbnail, the
    * image URL will fail to load and this method will return null after 1s.
    * Callers should handle this case by doing nothing or using a fallback image.
+   *
    * @param {String} uri The page URL.
    * @returns {Promise<Image|null>}
    */
@@ -51,6 +52,7 @@ var tabPreviews = {
    * For a given tab, retrieve a preview thumbnail (a canvas or an image) from
    * storage or capture a new one. If the tab's URL has changed since the
    * previous call, the thumbnail will be regenerated.
+   *
    * @param {MozTabbrowserTab} aTab The tab to get a preview for.
    * @returns {Promise<HTMLCanvasElement|Image|null>} Resolves to...
    * @resolves {HTMLCanvasElement} If a thumbnail can NOT be captured and stored
@@ -93,6 +95,7 @@ var tabPreviews = {
   /**
    * For a given tab, capture a preview thumbnail (a canvas), optionally cache
    * it in aTab.__thumbnail, and possibly store it in thumbnail storage.
+   *
    * @param {MozTabbrowserTab} aTab The tab to capture a preview for.
    * @param {Boolean} aShouldCache Cache/store the captured thumbnail?
    * @returns {Promise<HTMLCanvasElement|null>} Resolves to...

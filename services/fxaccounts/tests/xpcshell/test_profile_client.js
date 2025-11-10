@@ -24,6 +24,7 @@ const STATUS_SUCCESS = 200;
 
 /**
  * Mock request responder
+ *
  * @param {String} response
  *        Mocked raw response from the server
  * @returns {Function}
@@ -66,6 +67,7 @@ const PROFILE_OPTIONS = {
 
 /**
  * Mock request error responder
+ *
  * @param {Error} error
  *        Error object
  * @returns {Function}

@@ -76,6 +76,7 @@ class DevToolsPresetSelection extends PureComponent {
 
     /**
      * Create an object map to easily look up feature description.
+     *
      * @type {{[key: string]: FeatureDescription}}
      */
     this.featureDescriptionMap = {};
@@ -86,6 +87,7 @@ class DevToolsPresetSelection extends PureComponent {
 
   /**
    * Handle the select change.
+   *
    * @param {React.ChangeEvent<HTMLSelectElement>} event
    */
   onPresetChange = event => {

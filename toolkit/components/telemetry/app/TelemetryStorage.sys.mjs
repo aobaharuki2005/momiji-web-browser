@@ -260,6 +260,7 @@ export var TelemetryStorage = {
 
   /**
    * Saves session data to disk.
+   *
    * @param {Object}  sessionData The session data.
    * @return {Promise} Resolved when the data was saved.
    */
@@ -269,6 +270,7 @@ export var TelemetryStorage = {
 
   /**
    * Loads session data from a session data file.
+   *
    * @return {Promise<object>} Resolved with the session data in object form.
    */
   loadSessionData() {
@@ -416,6 +418,7 @@ export var TelemetryStorage = {
 
   /**
    * Loads a ping file.
+   *
    * @param {String} aFilePath The path of the ping file.
    * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
    *                           ping contains invalid data.
@@ -427,6 +430,7 @@ export var TelemetryStorage = {
   /**
    * Remove FHR database files. This is temporary and will be dropped in
    * the future.
+   *
    * @return {Promise} Resolved when the database files are deleted.
    */
   removeFHRDatabase() {
@@ -435,6 +439,7 @@ export var TelemetryStorage = {
 
   /**
    * Only used in tests, builds an archived ping path from the ping metadata.
+   *
    * @param {String} aPingId The ping id.
    * @param {Object} aDate The ping creation date.
    * @param {String} aType The ping type.
@@ -503,6 +508,7 @@ SaveSerializer.prototype = {
 
   /**
    * Make sure to flush all the pending operations.
+   *
    * @return {Promise} A promise resolved when all the pending operations have completed.
    */
   flushTasks() {
@@ -800,6 +806,7 @@ var TelemetryStorageImpl = {
 
   /**
    * Loads session data from the session data file.
+   *
    * @return {Promise<Object>} A promise resolved with an object on success,
    *                           with null otherwise.
    */
@@ -879,6 +886,7 @@ var TelemetryStorageImpl = {
 
   /**
    * Removes pings which are too old from the pings archive.
+   *
    * @return {Promise} Resolved when the ping age check is complete.
    */
   async _purgeOldPings() {
@@ -983,6 +991,7 @@ var TelemetryStorageImpl = {
 
   /**
    * Enforce a disk quota for the pings archive.
+   *
    * @return {Promise} Resolved when the quota check is complete.
    */
   async _enforceArchiveQuota() {
@@ -1164,6 +1173,7 @@ var TelemetryStorageImpl = {
 
   /**
    * Enforce a disk quota for the pending pings.
+   *
    * @return {Promise} Resolved when the quota check is complete.
    */
   async _enforcePendingPingsQuota() {
@@ -1558,6 +1568,7 @@ var TelemetryStorageImpl = {
 
   /**
    * Return a promise that allows to wait on pending pings being saved.
+   *
    * @return {Object<Promise>} A promise resolved when all the pending pings save promises
    *         are resolved.
    */
@@ -1856,6 +1867,7 @@ var TelemetryStorageImpl = {
 
   /**
    * Loads a ping file.
+   *
    * @param {String} aFilePath The path of the ping file.
    * @param {Boolean} [aCompressed=false] If |true|, expects the file to be compressed using lz4.
    * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
@@ -2040,6 +2052,7 @@ var TelemetryStorageImpl = {
   /**
    * Remove FHR database files. This is temporary and will be dropped in
    * the future.
+   *
    * @return {Promise} Resolved when the database files are deleted.
    */
   async removeFHRDatabase() {
@@ -2107,6 +2120,7 @@ function getPingDirectory() {
 
 /**
  * Build the path to the archived ping.
+ *
  * @param {String} aPingId The ping id.
  * @param {Object} aDate The ping creation date.
  * @param {String} aType The ping type.
@@ -2127,6 +2141,7 @@ function getArchivedPingPath(aPingId, aDate, aType) {
 
 /**
  * Get the size of the ping file on the disk.
+ *
  * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
  */
 var getArchivedPingSize = async function (aPingId, aDate, aType) {
@@ -2145,6 +2160,7 @@ var getArchivedPingSize = async function (aPingId, aDate, aType) {
 
 /**
  * Get the size of the pending ping file on the disk.
+ *
  * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
  */
 var getPendingPingSize = async function (aPingId) {
@@ -2159,6 +2175,7 @@ var getPendingPingSize = async function (aPingId) {
 
 /**
  * Check if a directory name is in the "YYYY-MM" format.
+ *
  * @param {String} aDirName The name of the pings archive directory.
  * @return {Boolean} True if the directory name is in the right format, false otherwise.
  */
@@ -2169,6 +2186,7 @@ function isValidArchiveDir(aDirName) {
 
 /**
  * Gets a date object from an archive directory name.
+ *
  * @param {String} aDirName The name of the pings archive directory. Must be in the YYYY-MM
  *        format.
  * @return {Object} A Date object or null if the dir name is not valid.

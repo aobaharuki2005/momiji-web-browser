@@ -105,6 +105,7 @@ function setIsMutedState(isMuted) {
 
 /**
  * Function to resize and reposition the PiP window
+ *
  * @param {Object} rect
  *   An object containing `left`, `top`, `width`, and `height` for the PiP
  *   window
@@ -560,6 +561,7 @@ let Player = {
    * because if we get an input event from the keyboard, onKeyDown will set
    * this.preventNextInputEvent to true.
    * This function is called by input events on the scrubber
+   *
    * @param {Event} event The input event
    */
   handleScrubbing(event) {
@@ -585,6 +587,7 @@ let Player = {
   /**
    * This function handles setting the scrubbing state to false and playing
    * the video if we paused it before scrubbing.
+   *
    * @param {Event} event The change event
    */
   handleScrubbingDone(event) {
@@ -603,6 +606,7 @@ let Player = {
    * Set the volume on the video and unmute if the video was muted.
    * If the volume is changed via the keyboard, onKeyDown will set
    * this.preventNextInputEvent to true.
+   *
    * @param {Number} volume A number between 0 and 1 that represents the volume
    */
   handleAudioScrubbing(volume) {
@@ -770,6 +774,7 @@ let Player = {
 
   /**
    * Function to toggle the visibility of the subtitles settings panel
+   *
    * @param {Object} options [optional] Object containing options for the function
    *   - forceHide: true to force hide the subtitles settings panel
    *   - isKeyboard: true if the subtitles button was activated using the keyboard

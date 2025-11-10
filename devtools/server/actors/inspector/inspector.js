@@ -253,6 +253,7 @@ class InspectorActor extends Actor {
 
   /**
    * Resolve a URL to its absolute form, in the scope of a given content window.
+   *
    * @param {String} url.
    * @param {NodeActor} node If provided, the owner window of this node will be
    * used to resolve the URL. Otherwise, the top-level content window will be
@@ -301,6 +302,7 @@ class InspectorActor extends Actor {
    * Pick a color from the page using the eye-dropper. This method doesn't return anything
    * but will cause events to be sent to the front when a color is picked or when the user
    * cancels the picker.
+   *
    * @param {Object} options
    */
   async pickColorFromPage(options) {

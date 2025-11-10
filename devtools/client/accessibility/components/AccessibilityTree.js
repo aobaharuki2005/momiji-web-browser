@@ -127,6 +127,7 @@ class AccessibilityTree extends Component {
    * Handle accessible reorder event. If the accessible is cached and rendered
    * within the accessibility tree, re-fetch its children and re-render the
    * corresponding subtree.
+   *
    * @param {Object} accessibleFront
    *        accessible front that had its subtree reordered.
    */
@@ -159,6 +160,7 @@ class AccessibilityTree extends Component {
    * Handle accessible name change event. If the name of an accessible changes
    * and that accessible is cached and rendered within the accessibility tree,
    * re-fetch its parent's children and re-render the corresponding subtree.
+   *
    * @param {Object} accessibleFront
    *        accessible front that had its name changed.
    * @param {Object} parentFront
@@ -184,6 +186,7 @@ class AccessibilityTree extends Component {
    * an accessible changes and that accessible is cached and rendered within the
    * accessibility tree, re-fetch its children and re-render the corresponding
    * subtree.
+   *
    * @param  {Object} accessibleFront
    *         accessible front that had its child text changed.
    */

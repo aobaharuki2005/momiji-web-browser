@@ -35,7 +35,6 @@ ChromeUtils.defineLazyGetter(lazy, "log", () =>
  * @constructor
  * @param {String} [aOptions.defaults=null] the URI to load the recipes from.
  *                                          If it's null, nothing is loaded.
- *
  */
 export function LoginRecipesParent(aOptions = { defaults: null }) {
   if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {

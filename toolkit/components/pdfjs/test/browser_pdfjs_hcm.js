@@ -6,6 +6,7 @@ const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 
 /**
  * Get the first and last pixels on the drawn canvas.
+ *
  * @param {Object} browser
  * @returns {Object}
  */

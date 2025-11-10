@@ -89,6 +89,7 @@ export var AttributionCode = {
 
   /**
    * Write the given attribution code to the attribution file.
+   *
    * @param {String} code to write.
    */
   async writeAttributionFile(code) {
@@ -340,6 +341,7 @@ export var AttributionCode = {
   /**
    * Return the cached attribution data synchronously without hitting
    * the disk.
+   *
    * @returns A dictionary with the attribution data if it's available,
    *          null otherwise.
    */

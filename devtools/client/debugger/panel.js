@@ -234,6 +234,7 @@ class DebuggerPanel {
 
   /**
    * Return the source-mapped variables for the current scope.
+   *
    * @returns {{[String]: String} | null} A dictionary mapping original variable names to generated
    * variable names if map scopes is enabled, otherwise null.
    */

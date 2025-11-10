@@ -130,6 +130,7 @@ class Pool extends EventEmitter {
 
   /**
    * Search for an actor in this pool, given an actorID
+   *
    * @param {String} actorID
    * @returns {Actor/null} Returns null if the actor wasn't found
    */

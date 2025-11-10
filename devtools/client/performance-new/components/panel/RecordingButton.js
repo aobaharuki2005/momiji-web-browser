@@ -27,7 +27,6 @@
  * @property {typeof actions.startRecording} startRecording
  * @property {typeof actions.getProfileAndStopProfiler} getProfileAndStopProfiler
  * @property {typeof actions.stopProfilerAndDiscardProfile} stopProfilerAndDiscardProfile
-
  */
 
 /**

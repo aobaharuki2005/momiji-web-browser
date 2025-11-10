@@ -171,6 +171,7 @@ class JSTerm extends Component {
 
     /**
      * Last input value.
+     *
      * @type string
      */
     this.lastInputValue = "";
@@ -764,6 +765,7 @@ class JSTerm extends Component {
 
   /**
    * Gets the value from the input field
+   *
    * @returns string
    */
   _getValue() {
@@ -1216,6 +1218,7 @@ class JSTerm extends Component {
   /**
    * Clear the current completion information, cancel any pending autocompletion update
    * and close the autocomplete popup, if needed.
+   *
    * @fires autocomplete-updated
    */
   clearCompletion() {

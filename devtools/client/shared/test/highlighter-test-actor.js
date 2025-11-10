@@ -47,6 +47,7 @@ const dumpn = msg => {
  * highlighter actor.
  * The instance provides methods to get/set attributes/text/style on nodes of
  * the highlighter, inserted into the nsCanvasFrame.
+ *
  * @see /devtools/server/actors/highlighters.js
  * @param {String} actorID
  */
@@ -221,6 +222,7 @@ class HighlighterTestActor extends protocol.Actor {
 
   /**
    * Helper to retrieve a DOM element.
+   *
    * @param {string | array} selector Either a regular selector string
    *   or a selector array. If an array, each item, except the last one
    *   are considered matching an iframe, so that we can query element
@@ -269,6 +271,7 @@ class HighlighterTestActor extends protocol.Actor {
   /**
    * Get a value for a given attribute name, on one of the elements of the box
    * model highlighter, given its ID.
+   *
    * @param {String} nodeID The full ID of the element to get the attribute for
    * @param {String} name The name of the attribute to get
    * @param {String} actorID The highlighter actor ID
@@ -304,6 +307,7 @@ class HighlighterTestActor extends protocol.Actor {
   /**
    * Get the computed style for a given property, on one of the elements of the
    * box model highlighter, given its ID.
+   *
    * @param {String} nodeID The full ID of the element to get the attribute for
    * @param {String} property The name of the property
    * @param {String} actorID The highlighter actor ID
@@ -322,6 +326,7 @@ class HighlighterTestActor extends protocol.Actor {
   /**
    * Get the textcontent of one of the elements of the box model highlighter,
    * given its ID.
+   *
    * @param {String} nodeID The full ID of the element to get the attribute for
    * @param {String} actorID The highlighter actor ID
    * @return {String} The textcontent value
@@ -337,6 +342,7 @@ class HighlighterTestActor extends protocol.Actor {
 
   /**
    * Get the number of box-model highlighters created by the SelectorHighlighter
+   *
    * @param {String} actorID The highlighter actor ID
    * @return {Number} The number of box-model highlighters created, or null if the
    * SelectorHighlighter was not found.
@@ -354,6 +360,7 @@ class HighlighterTestActor extends protocol.Actor {
    * Subscribe to the box-model highlighter's update event, modify an attribute of
    * the currently highlighted node and send a message when the highlighter has
    * updated.
+   *
    * @param {String} the name of the attribute to be changed
    * @param {String} the new value for the attribute
    * @param {String} actorID The highlighter actor ID
@@ -590,6 +597,7 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
 
   /**
    * Get the value of an attribute on one of the highlighter's node.
+   *
    * @param {String} nodeID The Id of the node in the highlighter.
    * @param {String} name The name of the attribute.
    * @param {Object} highlighter Optional custom highlighter to target
@@ -612,6 +620,7 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
 
   /**
    * Get the computed style of a property on one of the highlighter's node.
+   *
    * @param {String} nodeID The Id of the node in the highlighter.
    * @param {String} property The name of the property.
    * @param {Object} highlighter Optional custom highlighter to target
@@ -692,6 +701,7 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
   /**
    * Check that the box-model highlighter is currently highlighting the node matching the
    * given selector.
+   *
    * @param {String} selector
    * @return {Boolean}
    */
@@ -704,6 +714,7 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
    * Check that the box-model highlighter is currently highlighting the text node that can
    * be found at a given index within the list of childNodes of a parent element matching
    * the given selector.
+   *
    * @param {String} parentSelector
    * @param {Number} childNodeIndex
    * @return {Boolean}
@@ -715,6 +726,7 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
 
   /**
    * Check that the box-model highlighter is currently highlighting the given rect.
+   *
    * @param {Object} rect
    * @return {Boolean}
    */
@@ -825,6 +837,7 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
   /**
    * Get the coordinates of the rectangle that is defined by the 4 guides displayed
    * in the toolbox box-model highlighter.
+   *
    * @return {Object} Null if at least one guide is hidden. Otherwise an object
    * with p1, p2, p3, p4 properties being {x, y} objects.
    */
@@ -854,6 +867,7 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
   /**
    * Get the "d" attribute value for one of the box-model highlighter's region
    * <path> elements, and parse it to a list of points.
+   *
    * @param {String} region The box model region name.
    * @param {Front} highlighter The front of the highlighter.
    * @return {Object} The object returned has the following form:
@@ -896,6 +910,7 @@ protocol.registerFront(HighlighterTestFront);
  * Check whether a point is included in a polygon.
  * Taken and tweaked from:
  * https://github.com/iominh/point-in-polygon-extended/blob/master/src/index.js#L30-L85
+ *
  * @param {Array} point [x,y] coordinates
  * @param {Array} polygon An array of [x,y] points
  * @return {Boolean}

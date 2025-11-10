@@ -17,6 +17,7 @@ const ActorRegistry = {
 
   /**
    * Register a CommonJS module with the devtools server.
+   *
    * @param id string
    *        The ID of a CommonJS module.
    *        The actor is going to be registered immediately, but loaded only

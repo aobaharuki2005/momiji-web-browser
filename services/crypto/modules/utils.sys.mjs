@@ -36,6 +36,7 @@ export var CryptoUtils = {
 
   /**
    * Generate a string of random bytes.
+   *
    * @returns {String} Octet string
    */
   generateRandomBytesLegacy(length) {

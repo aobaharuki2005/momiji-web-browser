@@ -30,6 +30,7 @@ function clearSourceMaps() {
 
 /**
  * For a given generated source, retrieve an object with many attributes:
+ *
  * @param {String} generatedSourceId
  *        The id of the generated source
  *

@@ -16,6 +16,7 @@ const Localized = React.createFactory(FluentReact.Localized);
 
 /**
  * Helper functional component to render an accessible text progressbar.
+ *
  * @param {Object} props
  *        - id for the progressbar element
  *        - fluentId: localized string id

@@ -1428,6 +1428,7 @@ Sync11Service.prototype = {
 
   /**
    * Upload a fresh meta/global record
+   *
    * @throws the response object if the upload request was not a success
    */
   async _uploadNewMetaGlobal() {
@@ -1443,6 +1444,7 @@ Sync11Service.prototype = {
 
   /**
    * Upload meta/global, throwing the response on failure
+   *
    * @param {WBORecord} meta meta/global record
    * @throws the response object if the request was not a success
    */
@@ -1462,6 +1464,7 @@ Sync11Service.prototype = {
 
   /**
    * Upload crypto/keys
+   *
    * @param {WBORecord} cryptoKeys crypto/keys record
    * @param {Number} lastModified known last modified timestamp (in decimal seconds),
    *                 will be used to set the X-If-Unmodified-Since header

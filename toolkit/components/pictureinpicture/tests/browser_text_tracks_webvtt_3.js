@@ -5,6 +5,7 @@
 
 /**
  * Verifies the value of a cue's .line property.
+ *
  * @param {Element} browser The <xul:browser> hosting the <video>
  * @param {String} videoID The ID of the video being checked
  * @param {Integer} trackIndex The index of the track to be loaded

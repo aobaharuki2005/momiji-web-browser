@@ -1860,6 +1860,7 @@ class TextPropertyEditor {
 
   /**
    * Validate the name of this property.
+   *
    * @return {Boolean} true if the property name is valid, false otherwise.
    */
   #isNameValid() {

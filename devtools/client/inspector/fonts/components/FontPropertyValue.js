@@ -173,6 +173,7 @@ class FontPropertyValue extends PureComponent {
    *
    * Number inputs in Firefox can't be trusted to filter out non-digit characters,
    * therefore we must implement our own validation.
+   *
    * @see https://bugzilla.mozilla.org/show_bug.cgi?id=1398528
    *
    * @param {Event} e

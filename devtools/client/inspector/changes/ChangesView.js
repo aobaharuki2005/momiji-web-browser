@@ -250,6 +250,7 @@ class ChangesView {
 
   /**
    * Event handler for the "contextmenu" event fired when the context menu is requested.
+   *
    * @param {Event} e
    */
   onContextMenu(e) {

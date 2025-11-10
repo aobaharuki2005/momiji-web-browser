@@ -33,6 +33,7 @@ class HeadersPanelContextMenu {
 
   /**
    * Handle the context menu opening.
+   *
    * @param {Object} event open event
    * @param {Object} selection object representing the current selection
    */
@@ -80,6 +81,7 @@ class HeadersPanelContextMenu {
 
   /**
    * Copies all.
+   *
    * @param {Object} object the whole tree data
    * @param {Object} selection object representing the current selection
    */
@@ -104,6 +106,7 @@ class HeadersPanelContextMenu {
 
   /**
    * Copies the value of a single item.
+   *
    * @param {Object} object data object for specific node
    * @param {Object} selection object representing the current selection
    */

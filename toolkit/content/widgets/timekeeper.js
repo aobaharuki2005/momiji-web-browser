@@ -35,6 +35,7 @@ function TimeKeeper(props) {
   TimeKeeper.prototype = {
     /**
      * Getters for different time units.
+     *
      * @return {Number}
      */
     get hour() {
@@ -58,6 +59,7 @@ function TimeKeeper(props) {
 
     /**
      * Get the ranges of different time units.
+     *
      * @return {Object}
      *         {
      *           {Array<Number>} dayPeriod
@@ -108,6 +110,7 @@ function TimeKeeper(props) {
 
     /**
      * Set day-period (AM/PM)
+     *
      * @param {Number} dayPeriod: 0 as AM, 12 as PM
      */
     setDayPeriod(dayPeriod) {
@@ -124,6 +127,7 @@ function TimeKeeper(props) {
 
     /**
      * Set hour in 24hr format (0 ~ 23)
+     *
      * @param {Number} hour
      */
     setHour(hour) {
@@ -132,6 +136,7 @@ function TimeKeeper(props) {
 
     /**
      * Set minute (0 ~ 59)
+     *
      * @param {Number} minute
      */
     setMinute(minute) {
@@ -140,6 +145,7 @@ function TimeKeeper(props) {
 
     /**
      * Set second (0 ~ 59)
+     *
      * @param {Number} second
      */
     setSecond(second) {
@@ -148,6 +154,7 @@ function TimeKeeper(props) {
 
     /**
      * Set millisecond (0 ~ 999)
+     *
      * @param {Number} millisecond
      */
     setMillisecond(millisecond) {
@@ -268,6 +275,7 @@ function TimeKeeper(props) {
 
     /**
      * Get the milliseconds range
+     *
      * @param  {Number} hour
      * @param  {Number} minute
      * @param  {Number} second

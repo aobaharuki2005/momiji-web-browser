@@ -247,6 +247,7 @@ async function runTestForCategoryAndState(category, action) {
 
 /**
  * Test mixed allow/block/replace states for the tracking protection category.
+ *
  * @param {Object} options - States to test.
  * @param {boolean} options.block - Test tracker block state.
  * @param {boolean} options.allow - Test tracker allow state.

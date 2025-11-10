@@ -201,6 +201,7 @@ NetMonitorAPI.prototype = {
 
   /**
    * Resends a given network request
+   *
    * @param {String} requestId
    *        Id of the network request
    */

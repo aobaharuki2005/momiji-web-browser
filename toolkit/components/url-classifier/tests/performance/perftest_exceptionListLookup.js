@@ -28,6 +28,7 @@ var perfMetadata = {
 
 /**
  * Convert a JS object from RemoteSettings to an nsIUrlClassifierExceptionListEntry.
+ *
  * @param {Object} rsObject - The JS object from RemoteSettings to convert.
  * @returns {nsIUrlClassifierExceptionListEntry} The converted nsIUrlClassifierExceptionListEntry.
  */

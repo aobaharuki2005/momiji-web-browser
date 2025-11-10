@@ -100,6 +100,7 @@ function unwrapDebuggeeValue(value) {
 /**
  * Create a grip for the given debuggee value. If the value is an object or a long string,
  * it will create an actor and add it to the pool
+ *
  * @param {ThreadActor} threadActor 
  *        The related Thread Actor.
  * @param {any} value

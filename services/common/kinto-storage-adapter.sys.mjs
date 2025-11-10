@@ -32,6 +32,7 @@ function reduceRecords(filters, order, list) {
  * Checks if a value is undefined.
  *
  * This is a copy of `_isUndefined` from kinto.js/src/utils.js.
+ *
  * @param  {Any}  value
  * @return {Boolean}
  */

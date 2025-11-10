@@ -755,7 +755,6 @@ export class LoginManagerStorage_json {
    * @param {Object} [aOptions] Additional options for matching
    *
    * @returns {boolean} - Returns true if the login item matches the match data,
-   *
    */
   #matchLogin(
     aLoginItem,

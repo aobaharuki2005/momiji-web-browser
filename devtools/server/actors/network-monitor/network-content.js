@@ -38,7 +38,6 @@ const {
  * in the content process.
  *
  * @constructor
- *
  */
 class NetworkContentActor extends Actor {
   constructor(conn, targetActor) {
@@ -139,6 +138,7 @@ class NetworkContentActor extends Actor {
 
   /**
    * Gets the stacktrace for the specified network resource.
+   *
    *  @param {Number} resourceId
    *         The id for the network resource
    * @return {Object}

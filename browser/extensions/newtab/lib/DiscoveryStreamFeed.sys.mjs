@@ -557,6 +557,7 @@ export class DiscoveryStreamFeed {
 
   /**
    * Returns true if data in the cache for a particular key has expired or is missing.
+   *
    * @param {object} cachedData data returned from cache.get()
    * @param {string} key a cache key
    * @param {string?} url for "feed" only, the URL of the feed.

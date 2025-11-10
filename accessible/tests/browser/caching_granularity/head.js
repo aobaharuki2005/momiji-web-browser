@@ -24,6 +24,7 @@ loadScripts(
 /**
  * Verifies that the given attribute is cached on the given acc. Retries until
  * a timeout via untilCacheOk.
+ *
  * @param {nsIAccessible} accessible the accessible where the attribute to query
  *                                   should be cached
  * @param {String}        attribute  the attribute to query in the cache
@@ -43,6 +44,7 @@ async function verifyAttributeCached(accessible, attribute) {
 /**
  * Verifies that the given attribute is cached on the given acc. Doesn't retry
  * until a timeout.
+ *
  * @param {nsIAccessible} accessible the accessible where the attribute to query
  *                                   should be cached
  * @param {String}        attribute  the attribute to query in the cache
@@ -66,6 +68,7 @@ function verifyAttributeCachedNoRetry(accessible, attribute) {
  * accessibility service to activate those cache domains by running the provided
  * query function, which queries the attribute. Finally, verifies that the
  * attribute is present in the cache.
+ *
  * @param  {nsIAccessible}  accessible the accessible where the attribute to
  *                                     query should be cached
  * @param  {String}         attribute  the attribute to query in the cache
@@ -95,6 +98,7 @@ async function testAttributeCachePresence(accessible, attribute, queryCb) {
  * Verify that the given attribute is properly cached, taking into account
  * platform considerations which may affect what is testable. Ideally, test
  * attribute absence and presence, but only presence may be possible.
+ *
  * @param  {nsIAccessible}  accessible the accessible where the attribute to
  *                                     query should be cached
  * @param  {String}         attribute  the attribute to query in the cache

@@ -1677,6 +1677,7 @@ CrashStore.prototype = Object.freeze({
 
   /**
    * Ensure the submission record is present in storage.
+   *
    * @returns [submission, crash]
    */
   _ensureSubmissionRecord(crashID, submissionID) {

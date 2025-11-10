@@ -1253,6 +1253,7 @@ export let BrowserUsageTelemetry = {
 
   /**
    * Adds listeners to a single chrome window.
+   *
    * @param {Window} win
    */
   _registerWindow(win) {
@@ -1307,6 +1308,7 @@ export let BrowserUsageTelemetry = {
 
   /**
    * Updates the tab counts.
+   *
    * @param {CustomEvent} [event]
    *   `TabOpen` event
    */
@@ -1712,6 +1714,7 @@ export let BrowserUsageTelemetry = {
 
   /**
    * Tracks the window count and registers the listeners for the tab count.
+   *
    * @param{Object} win The window object.
    */
   _onWindowOpen(win) {

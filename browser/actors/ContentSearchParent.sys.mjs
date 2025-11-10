@@ -168,6 +168,7 @@ export let ContentSearch = {
 
   /**
    * Observes changes in prefs tracked by UrlbarPrefs.
+   *
    * @param {string} pref
    *   The name of the pref, relative to `browser.urlbar.` if the pref is
    *   in that branch.

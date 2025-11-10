@@ -618,6 +618,7 @@ function hexToRGBA(name, highResolution) {
 
 /**
  * Blend background and foreground colors takign alpha into account.
+ *
  * @param  {Array} foregroundColor
  *         An array with [r,g,b,a] values containing the foreground color.
  * @param  {Array} backgroundColor

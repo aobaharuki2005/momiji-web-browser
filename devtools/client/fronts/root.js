@@ -48,6 +48,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   }
   /**
    * Retrieve all service worker registrations with their corresponding workers.
+   *
    * @param {Array} [workerTargets] (optional)
    *        Array containing the result of a call to `listAllWorkerTargets`.
    *        (this exists to avoid duplication of calls to that method)
@@ -320,6 +321,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   /**
    * This function returns true if the root actor has a registered global actor
    * with a given name.
+   *
    * @param {String} actorName
    *        The name of a global actor.
    *

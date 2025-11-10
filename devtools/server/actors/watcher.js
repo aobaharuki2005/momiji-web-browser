@@ -339,6 +339,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
   /**
    * Flush any early iframe targets relating to this top level
    * window target.
+   *
    * @param {number} topInnerWindowID
    */
   _flushIframeTargets(topInnerWindowID) {

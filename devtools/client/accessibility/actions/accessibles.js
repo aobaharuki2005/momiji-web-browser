@@ -12,6 +12,7 @@ const {
 
 /**
  * Fetch child accessibles for a given accessible object.
+ *
  * @param {Object} accessible front
  */
 exports.fetchChildren =

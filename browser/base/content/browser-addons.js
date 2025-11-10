@@ -1910,6 +1910,7 @@ var BrowserAddonUI = {
 
   /**
    * Open about:addons page by given view id.
+   *
    * @param {String} aView
    *                 View id of page that will open.
    *                 e.g. "addons://discover/"

@@ -193,6 +193,7 @@ exports.setValueSummaryLength = function (val) {
 class WalkerActor extends Actor {
   /**
    * Create the WalkerActor
+   *
    * @param {DevToolsServerConnection} conn
    *        The server connection.
    * @param {TargetActor} targetActor
@@ -314,6 +315,7 @@ class WalkerActor extends Actor {
 
   /**
    * Callback for eventListenerService.addListenerChangeListener
+   *
    * @param nsISimpleEnumerator changesEnum
    *    enumerator of nsIEventListenerChange
    */
@@ -468,6 +470,7 @@ class WalkerActor extends Actor {
 
   /**
    * Determine if the walker has come across this DOM node before.
+   *
    * @param {DOMNode} rawNode
    * @return {Boolean}
    */
@@ -478,6 +481,7 @@ class WalkerActor extends Actor {
   /**
    * If the walker has come across this DOM node before, then get the
    * corresponding node actor.
+   *
    * @param {DOMNode} rawNode
    * @return {NodeActor}
    */
@@ -682,6 +686,7 @@ class WalkerActor extends Actor {
   /**
    * Return the document node that contains the given node,
    * or the root node if no node is specified.
+   *
    * @param NodeActor node
    *        The node whose document is needed, or null to
    *        return the root.
@@ -694,6 +699,7 @@ class WalkerActor extends Actor {
   /**
    * Return the documentElement for the document containing the
    * given node.
+   *
    * @param NodeActor node
    *        The node whose documentElement is requested, or null
    *        to use the root document.
@@ -905,6 +911,7 @@ class WalkerActor extends Actor {
 
   /**
    * Returns the raw children of the DOM node, with anonymous content filtered as needed
+   *
    * @param Node rawNode.
    * @param boolean includeAssigned
    *   Whether <slot> assigned children should be returned. See
@@ -1103,6 +1110,7 @@ class WalkerActor extends Actor {
   /**
    * Get a list of nodes that match the given selector in all known frames of
    * the current content page.
+   *
    * @param {String} selector.
    * @return {Array}
    */
@@ -1123,6 +1131,7 @@ class WalkerActor extends Actor {
   /**
    * Get a list of nodes that match the given XPath in all known frames of
    * the current content page.
+   *
    * @param {String} xPath.
    * @return {Array}
    */
@@ -1154,6 +1163,7 @@ class WalkerActor extends Actor {
   /**
    * Return a NodeListActor with all nodes that match the given XPath in all
    * frames of the current content page.
+   *
    * @param {String} xPath
    */
   multiFrameXPath(xPath) {
@@ -1484,6 +1494,7 @@ class WalkerActor extends Actor {
 
   /**
    * Clear all the pseudo-classes on a given node or all nodes.
+   *
    * @param {NodeActor} node Optional node to clear pseudo-classes on
    */
   clearPseudoClassLocks(node) {
@@ -2528,6 +2539,7 @@ class WalkerActor extends Actor {
 
   /**
    * Check if a node is attached to the DOM tree of the current page.
+   *
    * @param {Node} rawNode
    * @return {Boolean} false if the node is removed from the tree or within a
    * document fragment

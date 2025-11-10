@@ -249,6 +249,7 @@ const Utils = {
   /**
    * Checks if a version is higher than or equal to the minVersion (if provided)
    * and lower than or equal to the maxVersion (if provided).
+   *
    * @param {string} version
    *        The version to test.
    * @param {string?} minVersion
@@ -273,6 +274,7 @@ const Utils = {
   /**
    * Tests if this versionRange matches the item specified, and has a matching
    * targetApplication id and version.
+   *
    * @param {Object} versionRange
    *        The versionRange to check against
    * @param {string} itemVersion
@@ -358,6 +360,7 @@ const Utils = {
 
   /**
    * Create a blocklist URL for the given blockID
+   *
    * @param {String} id the blockID to use
    * @returns {String} the blocklist URL.
    */
@@ -1493,6 +1496,7 @@ ChromeUtils.defineLazyGetter(lazy, "gAppOS", function () {
 
 /**
  * Logs a string to the error console.
+ *
  * @param {string} string
  *        The string to write to the error console..
  */

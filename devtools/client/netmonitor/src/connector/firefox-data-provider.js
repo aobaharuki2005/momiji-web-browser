@@ -376,6 +376,7 @@ class FirefoxDataProvider {
    * The handler for when the network event stacktrace resource is available.
    * The resource contains basic info, the actual stacktrace is fetched lazily
    * using requestData.
+   *
    * @param {object} resource The network event stacktrace resource
    */
   async onStackTraceAvailable(resource) {
@@ -764,6 +765,7 @@ class FirefoxDataProvider {
 
   /**
    * Handles additional information received for a "responseCache" packet.
+   *
    * @param {object} response the message received from the server.
    */
   async onResponseCache(response) {

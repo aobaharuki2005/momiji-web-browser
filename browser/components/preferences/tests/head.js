@@ -191,6 +191,7 @@ function waitForMutation(target, opts, cb) {
 
 /**
  * Creates observer that waits for and then compares all perm-changes with the observances in order.
+ *
  * @param {Array} observances permission changes to observe (order is important)
  * @returns {Promise} Promise object that resolves once all permission changes have been observed
  */
@@ -247,6 +248,7 @@ function createObserveAllPromise(observances) {
 
 /**
  * Waits for preference to be set and asserts the value.
+ *
  * @param {string} pref - Preference key.
  * @param {*} expectedValue - Expected value of the preference.
  * @param {string} message - Assertion message.
@@ -267,6 +269,7 @@ async function waitForAndAssertPrefState(pref, expectedValue, message) {
  * dummy address by the test harness, filling the prefs with a "user value."
  * This temporarily sets the default value equal to the dummy value, so that
  * Firefox thinks we've configured the correct FxA server.
+ *
  * @returns {Promise<MockFxAUtilityFunctions>} { mock, unmock }
  */
 async function mockDefaultFxAInstance() {
@@ -558,6 +561,7 @@ function enrollByClick(el, wantedActive) {
 
 /**
  * Clicks a checkbox and waits for the associated preference to change to the expected value.
+ *
  * @param {Document} doc - The content document.
  * @param {string} checkboxId - The checkbox element id.
  * @param {string} prefName - The preference name.
@@ -586,6 +590,7 @@ async function clickCheckboxAndWaitForPrefChange(
 
 /**
  * Clicks a checkbox that triggers a confirmation dialog and handles the dialog response.
+ *
  * @param {Document} doc - The document containing the checkbox.
  * @param {string} checkboxId - The ID of the checkbox to click.
  * @param {string} prefName - The name of the preference that should change.

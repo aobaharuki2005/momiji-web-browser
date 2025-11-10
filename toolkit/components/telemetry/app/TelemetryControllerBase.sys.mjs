@@ -113,6 +113,7 @@ export var TelemetryControllerBase = Object.freeze({
 
   /**
    * Perform telemetry initialization for either chrome or content process.
+   *
    * @return {Boolean} True if Telemetry is allowed to record at least base (FHR) data,
    *                   false otherwise.
    */

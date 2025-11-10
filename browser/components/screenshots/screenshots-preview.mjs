@@ -129,6 +129,7 @@ class ScreenshotsPreview extends MozLitElement {
   /**
    * If the image is complete and the height is greater than 0, we can resolve.
    * Otherwise wait for a load event on the image and resolve then.
+   *
    * @returns {Promise<String>} Resolves that resolves to the preview image src
    *                            once the image is loaded.
    */
@@ -208,6 +209,7 @@ class ScreenshotsPreview extends MozLitElement {
   /**
    * Set the focus to the most recent saved method.
    * This will default to the download button.
+   *
    * @param {String} buttonToFocus
    */
   focusButton(buttonToFocus) {

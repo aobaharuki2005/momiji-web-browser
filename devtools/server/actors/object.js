@@ -520,6 +520,7 @@ class ObjectActor extends Actor {
 
   /**
    * Evaluate the getter function |desc.get|.
+   *
    * @param {Object} getter
    */
   _evaluateGetter(getter) {

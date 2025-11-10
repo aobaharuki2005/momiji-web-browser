@@ -125,7 +125,6 @@ class NetworkEventWatcher {
    * Gets the throttle settings
    *
    * @return {*} data
-   *
    */
   getThrottleData() {
     return this.listener.getThrottleData();
@@ -135,7 +134,6 @@ class NetworkEventWatcher {
    * Sets the throttle data
    *
    * @param {*} data
-   *
    */
   setThrottleData(data) {
     this.listener.setThrottleData(data);
@@ -143,6 +141,7 @@ class NetworkEventWatcher {
 
   /**
    * Instruct to save or ignore request and response bodies
+   *
    * @param {Boolean} save
    */
   setSaveRequestAndResponseBodies(save) {
@@ -151,6 +150,7 @@ class NetworkEventWatcher {
 
   /**
    * Block requests based on the filters
+   *
    * @param {Object} filters
    */
   blockRequest(filters) {
@@ -159,6 +159,7 @@ class NetworkEventWatcher {
 
   /**
    * Unblock requests based on the fitlers
+   *
    * @param {Object} filters
    */
   unblockRequest(filters) {

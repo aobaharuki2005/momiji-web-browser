@@ -36,6 +36,7 @@ registerCleanupFunction(function () {
 /**
  * Captures a screenshot for the currently selected tab, stores it in the cache,
  * retrieves it from the cache and compares pixel color values.
+ *
  * @param aRed The red component's intensity.
  * @param aGreen The green component's intensity.
  * @param aBlue The blue component's intensity.
@@ -57,6 +58,7 @@ async function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
  * For a given URL, loads the corresponding thumbnail
  * to a canvas and passes its image data to the callback.
  * Note, not compat with e10s!
+ *
  * @param aURL The url associated with the thumbnail.
  * @returns Promise
  */
@@ -82,6 +84,7 @@ async function retrieveImageDataForURL(aURL) {
 
 /**
  * Returns the file of the thumbnail with the given URL.
+ *
  * @param aURL The URL of the thumbnail.
  */
 function thumbnailFile(aURL) {
@@ -90,6 +93,7 @@ function thumbnailFile(aURL) {
 
 /**
  * Checks if a thumbnail for the given URL exists.
+ *
  * @param aURL The url associated to the thumbnail.
  */
 function thumbnailExists(aURL) {
@@ -99,6 +103,7 @@ function thumbnailExists(aURL) {
 
 /**
  * Removes the thumbnail for the given URL.
+ *
  * @param aURL The URL associated with the thumbnail.
  */
 function removeThumbnail(aURL) {

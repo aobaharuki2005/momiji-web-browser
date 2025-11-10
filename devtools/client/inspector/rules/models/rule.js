@@ -195,6 +195,7 @@ class Rule {
 
   /**
    * Get the declaration block issues from the compatibility actor
+   *
    * @returns A promise that resolves with an array of objects in following form:
    *    {
    *      // Type of compatibility issue
@@ -908,6 +909,7 @@ class Rule {
 
   /**
    * See whether this rule has any non-invisible properties.
+   *
    * @return {Boolean} true if there is any visible property, or false
    *         if all properties are invisible
    */

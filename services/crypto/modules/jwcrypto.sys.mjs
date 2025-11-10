@@ -164,6 +164,7 @@ class JWCrypto {
  * JWA RFC.
  * The raw ECDH secret is derived into a key using
  * Concat KDF, as defined in Section 5.8.1 of [NIST.800-56A].
+ *
  * @param {CryptoKey} privateKey
  * @param {CryptoKey} publicKey
  * @param {String[]} keyUsages See `SubtleCrypto.deriveKey` 5th paramater documentation.

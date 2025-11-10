@@ -170,6 +170,7 @@ class TreeView extends Component {
   /**
    * Creates a set with the paths of the nodes that should be expanded by default
    * according to the passed options.
+   *
    * @param {Object} The root node of the tree.
    * @param {Object} [optional] An object with the following optional parameters:
    *   - maxLevel: nodes nested deeper than this level won't be expanded.
@@ -569,6 +570,7 @@ class TreeView extends Component {
 
   /**
    * Filter out nodes that don't correspond to the current filter.
+   *
    * @return {Boolean} true if the node should be visible otherwise false.
    */
   onFilter(object) {

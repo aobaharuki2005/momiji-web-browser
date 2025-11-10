@@ -501,6 +501,7 @@ class AutocompletePopup extends EventEmitter {
 
   /**
    * Getter for the selected item.
+   *
    * @type Object
    */
   get selectedItem() {
@@ -610,6 +611,7 @@ class AutocompletePopup extends EventEmitter {
 
   /**
    * Getter for the number of items in the popup.
+   *
    * @type {Number}
    */
   get itemCount() {

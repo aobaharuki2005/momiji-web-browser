@@ -666,6 +666,7 @@ async function getMessagePayload(payload, getLongString) {
  * incoming network update packets. It makes sure the only valid
  * update properties and the values are correct.
  * It's used by Network and Console panel reducers.
+ *
  * @param {object} update
  *        The new update payload
  * @param {object} request
@@ -706,6 +707,7 @@ function isBase64(payload) {
  * This function also handles JSON with XSSI-escaping characters by stripping them
  * and returning the stripped chars in the strippedChars property
  * This function also handles Base64 encoded JSON.
+ *
  * @returns {Object} shape:
  *  {Object} json: parsed JSON object
  *  {Error} error: JSON parsing error
@@ -765,6 +767,7 @@ function parseJSON(payloadUnclean) {
 
 /**
  * Removes XSSI prevention sequences from JSON payloads
+ *
  * @param {string} payloadUnclean: JSON payload that may or may have a
  *                                 XSSI prevention sequence
  * @returns {Object} Shape:

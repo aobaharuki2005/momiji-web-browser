@@ -4,6 +4,7 @@
 
 /**
  * Redux actions for the sources state
+ *
  * @module actions/sources
  */
 

@@ -76,6 +76,7 @@ class EventEmitter {
    * Removes an event `listener` for the given event `type` on this instance
    * If no `listener` is passed removes all listeners of the given
    * `type`. If `type` is not passed removes all the listeners of this instance.
+   *
    * @param {String} [type]
    *    The type of event.
    * @param {Function} [listener]

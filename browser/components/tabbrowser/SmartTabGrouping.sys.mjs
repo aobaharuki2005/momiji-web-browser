@@ -187,6 +187,7 @@ export function getBestAnchorClusterInfo(groupIndices, anchorItems) {
 
 /**
  * Check tab to see if it's a search page
+ *
  * @param {Object} tab
  * @returns {boolean} Returns true if the tab is a web search from the Firefox search UI and the user is still on the original page.
  * Changes in search query after search is made is supported.
@@ -217,6 +218,7 @@ export function isSearchTab(tab) {
 export class SmartTabGroupingManager {
   /**
    * Creates the SmartTabGroupingManager object.
+   *
    * @param {object} config configuration options
    */
   constructor(config) {
@@ -252,6 +254,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Generates suggested tabs for an existing or provisional group
+   *
    * @param {object} group active group we are adding tabs to
    * @param {array} tabs list of tabs from gbrowser, some of which may be grouped in other groups
    * @returns a list of suggested new tabs. If no new tabs are suggested an empty list is returned.
@@ -327,6 +330,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Get tabs that need to be included in suggestions
+   *
    * @param {array} allTabs all tabs that are part of the window
    * @param {array} groupedIndices indices of tabs that are already part of the group
    * @param {array} alreadyGroupedIndices indices of tabs that are part of other groups
@@ -352,6 +356,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Generates similar tabs a grouped list of tabs
+   *
    * @param {array} allTabs all tabs that are part of the window
    * @param {array} groupedIndices indices of tabs that are already part of the group
    * @param {array} alreadyGroupedIndices indices of tabs that are part of other groups
@@ -436,6 +441,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Calculates the average similarity between the anchor embeddings and the candidate embeddings
+   *
    * @param {list[Number]} anchorEmbeddings title embeddings for the anchor tabs
    * @param {list[Number]} candidateEmbeddings title embeddings for the candidate tabs
    */
@@ -590,6 +596,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Changes the clustering method. Must be one of supported methods.
+   *
    * @param {string} method Name of method
    */
   setClusteringMethod(method) {
@@ -617,6 +624,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Sets method to reduce dimensionality of embeddings prior to clustering
+   *
    * @param {string} method Name of method
    */
   setDimensionReductionMethod(method) {
@@ -629,6 +637,7 @@ export class SmartTabGroupingManager {
   /**
    * Sets the field name of the title of a page to be used when clustering or generating embeddings
    * This is useful when clustering test data that is not a tab object
+   *
    * @param {string} titleKey KEY FOR THE TITLE
    */
   setDataTitleKey(titleKey) {
@@ -637,6 +646,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Logs to the appropriate place for debugging. Console for now
+   *
    * @param {string} msg Message to log
    * @param {boolean} useDescription Whether to add description to the final text
    */
@@ -644,6 +654,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Prepares data to be used by the ml models
+   *
    * @param {Object[]} tabList list of tabs in the current window
    * @param {boolean} useDescription whether we should combined the title and description
    * @return {Promise<*[Object]>}
@@ -699,6 +710,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Creates an ML engine for a given config.
+   *
    * @param {*} engineConfig
    * @param {function} progressCallback
    * @returns MLEngine
@@ -745,6 +757,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Generates embeddings from a list of tab data structures
+   *
    * @param  tabList List of tabs with label (title) and description keys
    * @returns {Promise<*[]>} List of embeddings (2d array)
    * @private
@@ -771,6 +784,7 @@ export class SmartTabGroupingManager {
   /**
    * Clusters in desired methods
    * based on the config of the class
+   *
    * @param tabList List of tabs as array
    * @param docEmbeddings Precomputed embeddings for the Tab as two dimensional array
    * @param k Desired number of clusters. Tries a range of sizes if 0.
@@ -975,6 +989,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Create static cluster from a list of tabs. A single tab is Ok. Returns null for 0 tabs
+   *
    * @param tabs
    * @returns {SmartTabGroupingResult} groupingResult
    */
@@ -992,6 +1007,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Utility function that loads all required engines for Smart Tab Grouping and any dependent models
+   *
    * @param {(progress: { percentage: number }) => void} progressCallback callback function to call.
    * Callback passes a dict with percentage indicating best effort 0.0-100.0 progress in model download.
    */
@@ -1055,6 +1071,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Generate model input from keywords and documents
+   *
    * @param {string []} keywords
    * @param {string []} documents
    */
@@ -1069,6 +1086,7 @@ export class SmartTabGroupingManager {
    * One artifact of the LLM output is that sometimes words are duplicated
    * This function cuts the phrase when it sees the first duplicate word.
    * Handles simple singluar / plural duplicates (-s only).
+   *
    * @param {string} phrase Input phrase
    * @returns {string} phrase cut before any duplicate word
    */
@@ -1098,6 +1116,7 @@ export class SmartTabGroupingManager {
   /**
    * Removes trailing domain-related text such as '... - Mail' or '... | News'
    * If there's not enough information remaining after, we keep the text as is
+   *
    * @param {string} text tab title with potential domain information
    * @return {string}
    */
@@ -1133,6 +1152,7 @@ export class SmartTabGroupingManager {
 
   /**
    * Postprocessing of raw output from Topic Model ML Engine
+   *
    * @param {string | undefined} topic Raw topic phrase from topic model or undefined in case of an error
    */
   processTopicModelResult(topic) {
@@ -1153,6 +1173,7 @@ export class SmartTabGroupingManager {
    * item that represents all other ungrouped tabs.
    *
    * In the future this may be updated to more generally find labels for a set of clusters.
+   *
    * @param {SmartTabGroupingResult} groupingResult The cluster we are generating the label for
    * @param {SmartTabGroupingResult} otherGroupingResult A 'made up' cluster representing all other tabs in the window
    */
@@ -1317,6 +1338,7 @@ export class SmartTabGroupingResult {
   /**
    * Creates a result from indices and complete tab and embedding lists.
    * This may create some extra data for management later
+   *
    * @param indices indices of clusters (eg [[2,4], [1], [3]]_
    * @param tabItems 1D array of tabs
    * @param embeddingItems Two dimensional array of embeddings
@@ -1351,6 +1373,7 @@ export class SmartTabGroupingResult {
   /**
    * Returns a list of documents for each cluster. Currently it is a list of documents picked
    * in no particular order.
+   *
    * @return {[strings]} Title and description that represent the cluster. (If no docs are in the class, then titles are returned)
    */
   getRepresentativeDocuments() {
@@ -1366,6 +1389,7 @@ export class SmartTabGroupingResult {
   /**
    * Returns the keywords and documents for the cluster, computing if needed
    * Does not return keywods if only one document is passed to the function.
+   *
    * @param{string[]} otherDocuments other clusters that we'll compare against
    * @return keywords and documents that represent the cluster
    */
@@ -1390,6 +1414,7 @@ export class SmartTabGroupingResult {
 
   /**
    * Get the cluster we originally are grouping around (finding additinoal item)
+   *
    * @returns ClusterRepresentation
    */
   getAnchorCluster() {
@@ -1434,6 +1459,7 @@ export class SmartTabGroupingResult {
 
   /**
    * Computes the inertia of the cluster which is the sum of square total distance.
+   *
    * @returns {number}
    */
   getCentroidInertia() {
@@ -1447,6 +1473,7 @@ export class SmartTabGroupingResult {
   /**
    * Converts a cluster representation to a flat list of tabs, with clusterID key in each
    * tab representing the id of the cluster it was part of.
+   *
    * @returns {[Object]}
    */
   _flatMapItemsInClusters() {
@@ -1464,6 +1491,7 @@ export class SmartTabGroupingResult {
   /**
    * Get rand score which describes the accuracy versus a user labeled
    * annotation on the dataset. Requires the dataset to be labeled.
+   *
    * @param labelKey Key in the tabs that represent a unique label ID for the cluster.
    * @returns {number} The rand score.
    */
@@ -1474,6 +1502,7 @@ export class SmartTabGroupingResult {
 
   /**
    * Get accuracy for a specific cluster
+   *
    * @param labelKey Key in the tabs that represent a unique label ID for the cluster.
    * @param clusterValue is the cluster we are comparing
    * @returns {number} The rand score.
@@ -1517,6 +1546,7 @@ export class SmartTabGroupingResult {
 
 /**
  * Utility function to generate a random ID string
+ *
  * @param len Length of the string
  * @returns {string}
  */
@@ -1553,6 +1583,7 @@ class EmbeddingCluster {
 
   /**
    * Returns number of items in the cluster
+   *
    * @returns {int}
    */
   numItems() {
@@ -1580,6 +1611,7 @@ export class ClusterRepresentation extends EmbeddingCluster {
   /**
    * For a single tab cluster with a search field, set the predicted topic
    * to be the title of the page
+   *
    * @returns {boolean} True if we updated the cluster label successfully
    */
   setSingleTabSearchLabel() {
@@ -1616,6 +1648,7 @@ export class ClusterRepresentation extends EmbeddingCluster {
   /**
    * Returns representative text for a cluster.
    * For this in initial implementation it simply returns title from a few tabs
+   *
    * @returns {string}
    * @private
    */

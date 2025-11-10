@@ -156,6 +156,7 @@ export var TelemetryUtils = {
 
   /**
    * Check if the difference between the times is within the provided tolerance.
+   *
    * @param {Number} t1 A time in milliseconds.
    * @param {Number} t2 A time in milliseconds.
    * @param {Number} tolerance The tolerance, in milliseconds.
@@ -168,6 +169,7 @@ export var TelemetryUtils = {
 
   /**
    * Get the next midnight for a date.
+   *
    * @param {Object} date The date object to check.
    * @return {Object} The Date object representing the next midnight.
    */
@@ -179,6 +181,7 @@ export var TelemetryUtils = {
 
   /**
    * Get the midnight which is closer to the provided date.
+   *
    * @param {Object} date The date object to check.
    * @param {Number} tolerance The tolerance within we find the closest midnight.
    * @return {Object} The Date object representing the closes midnight, or null if midnight
@@ -207,6 +210,7 @@ export var TelemetryUtils = {
 
   /**
    * Find how many months passed between two dates.
+   *
    * @param {Object} aStartDate The starting date.
    * @param {Object} aEndDate The ending date.
    * @return {Integer} The number of months between the two dates.
@@ -222,6 +226,7 @@ export var TelemetryUtils = {
   /**
    * Date.toISOString() gives us UTC times, this gives us local times in
    * the ISO date format. See http://www.w3.org/TR/NOTE-datetime
+   *
    * @param {Object} date The input date.
    * @return {String} The local time ISO string.
    */

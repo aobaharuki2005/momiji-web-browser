@@ -407,6 +407,7 @@ async function getTestTab(client, title) {
 }
 /**
  *  Attach to the client's tab whose title is specified
+ *
  * @param {Object} client
  * @param {Object} title
  * @returns commands
@@ -427,6 +428,7 @@ async function attachTestTab(client, title) {
 /**
  * Attach to the client's tab whose title is specified, and then attach to
  * that tab's thread.
+ *
  * @param {Object} client
  * @param {Object} title
  * @returns {Object}

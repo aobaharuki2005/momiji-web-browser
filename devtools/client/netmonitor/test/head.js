@@ -442,6 +442,7 @@ function restartNetMonitor(monitor, { requestCount }) {
 
 /**
  * Clears the network requests in the UI
+ *
  * @param {Object} monitor
  *         The netmonitor instance used for retrieving a context menu element.
  */
@@ -971,7 +972,6 @@ function testFilterButtonsCustom(monitor, isChecked) {
  * @return Promise A promise that's resolved with object
  *         { status: XMLHttpRequest.status,
  *           response: XMLHttpRequest.response }
- *
  */
 function promiseXHR(data) {
   return new Promise(resolve => {
@@ -1018,7 +1018,6 @@ function promiseXHR(data) {
  * @return Promise A promise that's resolved with object
  *         { status: websocket status(101),
  *           response: empty string }
- *
  */
 function promiseWS(data) {
   return new Promise(resolve => {
@@ -1517,6 +1516,7 @@ function compareValues(first, second) {
 
 /**
  * Click on the "Response" tab to open "Response" panel in the sidebar.
+ *
  * @param {Document} doc
  *        Network panel document.
  * @param {String} name
@@ -1619,6 +1619,7 @@ async function toggleUrlPreview(shouldExpand, monitor) {
 
 /**
  * Wait for the eager evaluated result from the split console
+ *
  * @param {Object} hud
  * @param {String} text - expected evaluation result
  */
@@ -1662,7 +1663,6 @@ function testAutocompleteContents(expected, document) {
  *     A request element from the netmonitor requests list.
  * @return {boolean}
  *     True if the size column contains a valid size, false otherwise.
- *
  */
 function hasValidSize(request) {
   const VALID_SIZE_RE = /^\d+(\.\d+)? \w+/;

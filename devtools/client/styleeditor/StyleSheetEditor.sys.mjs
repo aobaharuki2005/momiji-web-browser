@@ -417,6 +417,7 @@ StyleSheetEditor.prototype = {
 
   /**
    * Called when the stylesheet text changes.
+   *
    * @param {Object} update: The stylesheet resource update packet.
    */
   async onStyleApplied(update) {
@@ -481,6 +482,7 @@ StyleSheetEditor.prototype = {
 
   /**
    * Create source editor and load state into it.
+   *
    * @param  {DOMElement} inputElement
    *         Element to load source editor in
    * @param  {CssProperties} cssProperties

@@ -203,7 +203,6 @@ export function getShouldScrollToSelectedLocation(state) {
  * @param {String} [threadId]
  *         The thread to check, this is optional.
  * @param {Object} sourceActor
- *
  */
 export function getFirstSourceActorForGeneratedSource(
   state,

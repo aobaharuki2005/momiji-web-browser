@@ -431,6 +431,7 @@ export const BrowserWindowTracker = {
   /**
    * Array of browser windows ordered by z-index, in reverse order.
    * This means that the top-most browser window will be the first item.
+   *
    * @param {object} options
    * @param {boolean}  [options.private]
    *   If set, returns only windows with the specified privateness. i.e. `true`

@@ -36,6 +36,7 @@ class DebuggerFSMContext {
 
   /**
    * Transition to a new FSM state.
+   *
    * @param {object} state - The new state instance.
    */
   changeState(state) {
@@ -71,6 +72,7 @@ class DebuggerFSMContext {
 class FSMState {
   /**
    * Base class for FSM states.
+   *
    * @param {DebuggerFSMContext} debuggerFSMContext - The FSM context.
    */
   constructor(debuggerFSMContext) {
@@ -164,6 +166,7 @@ class DomainStageState extends FSMState {
 
   /**
    * Group trackers by their top-level domain.
+   *
    * @param {string[]} trackers - List of tracker hostnames.
    */
   groupByDomain(trackers) {

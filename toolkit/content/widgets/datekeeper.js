@@ -42,6 +42,7 @@ function DateKeeper(props) {
 
     /**
      * Initialize DateKeeper
+     *
      * @param  {Number} year
      * @param  {Number} month
      * @param  {Number} day
@@ -126,6 +127,7 @@ function DateKeeper(props) {
     /**
      * Set new calendar month. The year is always treated as full year, so the
      * short-form is not supported.
+     *
      * @param {Object} date parts
      *        {
      *          {Number} year [optional]
@@ -146,6 +148,7 @@ function DateKeeper(props) {
 
     /**
      * Set selection date
+     *
      * @param {Number} year
      * @param {Number} month
      * @param {Number} day
@@ -158,6 +161,7 @@ function DateKeeper(props) {
 
     /**
      * Set month. Makes sure the day is <= the last day of the month
+     *
      * @param {Number} month
      */
     setMonth(month) {
@@ -166,6 +170,7 @@ function DateKeeper(props) {
 
     /**
      * Set year. Makes sure the day is <= the last day of the month
+     *
      * @param {Number} year
      */
     setYear(year) {
@@ -174,6 +179,7 @@ function DateKeeper(props) {
 
     /**
      * Set month by offset. Makes sure the day is <= the last day of the month
+     *
      * @param {Number} offset
      */
     setMonthByOffset(offset) {
@@ -182,6 +188,7 @@ function DateKeeper(props) {
 
     /**
      * Generate the array of months
+     *
      * @return {Array<Object>}
      *         {
      *           {Number} value: Month in int
@@ -213,6 +220,7 @@ function DateKeeper(props) {
 
     /**
      * Generate the array of years
+     *
      * @return {Array<Object>}
      *         {
      *           {Number} value: Year in int
@@ -255,6 +263,7 @@ function DateKeeper(props) {
 
     /**
      * Get days for calendar
+     *
      * @return {Array<Object>}
      *         {
      *           {Date} dateObj
@@ -348,6 +357,7 @@ function DateKeeper(props) {
 
     /**
      * Check if a date is off step given a starting point and the next increment
+     *
      * @param  {Date} start
      * @param  {Date} next
      * @return {Boolean}
@@ -369,6 +379,7 @@ function DateKeeper(props) {
 
     /**
      * Get week headers for calendar
+     *
      * @param  {Number} firstDayOfWeek
      * @param  {Array<Number>} weekends
      * @return {Array<Object>}
@@ -395,6 +406,7 @@ function DateKeeper(props) {
 
     /**
      * Get the first day on a calendar month
+     *
      * @param  {Date} dateObj
      * @param  {Number} firstDayOfWeek
      * @return {Date}
@@ -420,6 +432,7 @@ function DateKeeper(props) {
 
     /**
      * Helper function for creating UTC dates
+     *
      * @param  {...[Number]} parts
      * @return {Date}
      */

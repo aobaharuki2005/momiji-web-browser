@@ -122,7 +122,6 @@ function getMessage(error, prefix = "") {
  *   truncate: truncate,
  *   stack: stack, // Optional, defaults to the current stack.
  * });
- *
  */
 Assert.AssertionError = function (options) {
   this.name = "AssertionError";

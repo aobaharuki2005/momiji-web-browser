@@ -19,6 +19,7 @@ const MAX_INT_32 = 2 ** 32;
 /**
  * Divides numerator fields by the denominator. Value is set to 0 if denominator is missing or 0.
  * Adds 0 value for all situations where there is a denominator but no numerator value.
+ *
  * @param {Object.<string, number>} numerator
  * @param {Object.<string, number>} denominator
  * returns {Object.<string, number>}
@@ -39,6 +40,7 @@ export function divideDict(numerator, denominator) {
 /**
  * Unary encoding with randomized response for differential privacy.
  * The output must be decoded to back to an integer when aggregating a historgram on a server
+ *
  * @param {number} x - Integer input (0 <= x < N)
  * @param {number} N - Number of values (see ablove)
  * @param {number} p - Probability of keeping a 1-bit as 1 (after one-hot encoding the output)
@@ -63,6 +65,7 @@ export function unaryEncodeDiffPrivacy(x, N, p, q) {
 
 /**
  * Adds value to all a particular key in a dictionary. If the key is missing it sets the value.
+ *
  * @param {Object} dict - The dictionary to modify.
  * @param {string} key - The key whose value should be added or set.
  * @param {number} value - The value to add to the key.
@@ -77,6 +80,7 @@ export function dictAdd(dict, key, value) {
 
 /**
  * Apply function to all keys in dictionary, returning new dictionary.
+ *
  * @param {Object} obj - The object whose values should be transformed.
  * @param {Function} fn - The function to apply to each value.
  * @returns {Object} A new object with the transformed values.
@@ -93,6 +97,7 @@ export function dictApply(obj, fn) {
 export class DayTimeWeighting {
   /**
    * Instantiate class based on a series of day periods in the past.
+   *
    * @param {int[]} pastDays Series of number of days, indicating days ago intervals in reverse chonological order.
    * Intervals are added: If the first value is 1 and the second is 5, then the first inteval is 0-1 and second interval is between 1 and 6.
    * @param {number[]} relativeWeight Relative weight of each period. Must be same length as pastDays
@@ -108,6 +113,7 @@ export class DayTimeWeighting {
 
   /**
    * Get a series of interval pairs in the past based on the pastDays.
+   *
    * @param {number} curTimeMs Base time time in MS. Usually current time.
    * @returns
    */
@@ -126,6 +132,7 @@ export class DayTimeWeighting {
 
   /**
    * Get relative weight of current index.
+   *
    * @param {int} weightIndex Index
    * @returns {number} Weight at index, or 0 if index out of range.
    */
@@ -168,6 +175,7 @@ export class InterestFeatures {
 
   /**
    * Quantize a feature value based on the thresholds specified in the class.
+   *
    * @param {number} inValue Value computed by model for the feature.
    * @returns Quantized value. A value between 0 and number of thresholds specified (inclusive)
    */
@@ -187,6 +195,7 @@ export class InterestFeatures {
    * Applies Differential Privacy Unary Encoding method, outputting a one-hot encoded vector with randomizaiton.
    * Accurate historgrams of values can be computed with reasonable accuracy.
    * If the class has no or 0 p/q values set for differential privacy, then response is original number non-encoded.
+   *
    * @param {number} inValue Value to randomize
    * @returns Bitfield as a string, that is the same as the thresholds length + 1
    */
@@ -311,6 +320,7 @@ export class FeatureModel {
 
   /**
    * Computes an interest vector or aggregate based on the model and raw sql inout.
+   *
    * @param {Object} config
    * @param {Array.<Array.<string|number>>} config.dataForIntervals Raw aggregate output from SQL query. Could be clicks or impressions
    * @param {Object.<string, number>} config.indexSchema Map of keys to indices in each sub-array in dataForIntervals

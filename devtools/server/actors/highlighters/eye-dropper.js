@@ -538,6 +538,7 @@ class EyeDropper {
 
   /**
    * Copy the currently inspected color to the clipboard.
+   *
    * @return {Promise} Resolves when the copy has been done (after a delay that is used to
    * let users know that something was copied).
    */
@@ -563,6 +564,7 @@ exports.EyeDropper = EyeDropper;
 
 /**
  * Draw the visible portion of the window on a canvas and get the resulting ImageData.
+ *
  * @param {Window} win
  * @return {ImageData} The image data for the window.
  */
@@ -588,6 +590,7 @@ function getWindowAsImageData(win) {
 
 /**
  * Get a formatted CSS color string from a color value.
+ *
  * @param {array} rgb Rgb values of a color to format.
  * @param {string} format Format of string. One of "hex", "rgb", "hsl", "name".
  * @return {string} Formatted color value, e.g. "#FFF" or "hsl(20, 10%, 10%)".
@@ -613,6 +616,7 @@ function toColorString(rgb, format) {
 
 /**
  * Produce a hex-formatted color string from rgb values.
+ *
  * @param {array} rgb Rgb values of color to stringify.
  * @return {string} Hex formatted string for color, e.g. "#FFEE00".
  */

@@ -250,7 +250,6 @@ WebChannel.prototype = {
    *               Can be null; if not null, should be a ContentDOMReference.
    *        @param sendingContext.principal {Principal}
    *               The <Principal> of the EventTarget where the message was sent.
-   *
    */
   deliver(data, sendingContext) {
     if (this._deliverCallback) {

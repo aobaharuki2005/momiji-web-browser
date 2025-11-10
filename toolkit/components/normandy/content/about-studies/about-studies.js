@@ -12,6 +12,7 @@ const r = React.createElement;
 
 /**
  * Dispatches a page event to the privileged frame script for this tab.
+ *
  * @param {String} action
  * @param {Object} data
  */

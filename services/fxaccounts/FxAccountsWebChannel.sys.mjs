@@ -454,6 +454,7 @@ FxAccountsWebChannel.prototype = {
 
   /**
    * Create a new channel with the WebChannelBroker, setup a callback listener
+   *
    * @private
    */
   _registerChannel() {
@@ -474,7 +475,6 @@ FxAccountsWebChannel.prototype = {
      *        @param sendingContext.principal {Principal}
      *               The <Principal> of the EventTarget where the message was sent.
      * @private
-     *
      */
     let listener = (webChannelId, message, sendingContext) => {
       if (message) {
@@ -533,6 +533,7 @@ FxAccountsWebChannelHelpers.prototype = {
   /**
    * Checks if the user is potentially hitting an issue with the current
    * account they're logging into. Returns the choice of the user if shown
+   *
    * @returns {string} - The corresponding option the user pressed. Can be either:
    * cancel, continue, switch-profile, or create-profile
    */
@@ -694,6 +695,7 @@ FxAccountsWebChannelHelpers.prototype = {
 
   /**
    * Logins in to sync by completing an OAuth flow
+   *
    * @param { Object } oauthData: The oauth code and state as returned by the server
    */
   async oauthLogin(oauthData) {
@@ -1072,9 +1074,9 @@ FxAccountsWebChannelHelpers.prototype = {
   /**
    * Similar to _promptForRelink but more offers more contextual warnings
    * to the user to support browser profiles.
+   *
    * @returns {string} - The corresponding option the user pressed. Can be either:
    * cancel, continue, switch-profile, or create-profile
-   *
    */
   _promptForProfileSyncWarning(acctEmail, profileLinkedWithAcct) {
     let currentProfile = this._getCurrentProfileName();
@@ -1155,6 +1157,7 @@ FxAccountsWebChannelHelpers.prototype = {
 
   /**
    * Shows the user a warning prompt.
+   *
    * @returns {string} - The corresponding option the user pressed. Can be either:
    * cancel, continue, switch-profile, or create-profile
    */

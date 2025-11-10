@@ -135,6 +135,7 @@ var gHomePane = {
 
   /**
    *  _updateMenuInterface: adds items to or removes them from the menulists
+   *
    * @param {string} selectId Optional Id of the menulist to add or remove items from.
    *                          If not included this will update both home and newtab menus.
    */
@@ -285,6 +286,7 @@ var gHomePane = {
   /**
    * _renderCustomSettings: Hides or shows the UI for setting a custom
    * homepage URL
+   *
    * @param {obj} options
    * @param {bool} options.shouldShow Should the custom UI be shown?
    * @param {bool} options.isControlled Is an extension controlling the home page?
@@ -325,6 +327,7 @@ var gHomePane = {
 
   /**
    * _isHomePageDefaultValue
+   *
    * @returns {bool} Is the homepage set to the default pref value?
    */
   _isHomePageDefaultValue() {
@@ -336,6 +339,7 @@ var gHomePane = {
 
   /**
    * isHomePageBlank
+   *
    * @returns {bool} Is the homepage set to about:blank?
    */
   isHomePageBlank() {
@@ -348,6 +352,7 @@ var gHomePane = {
 
   /**
    * _isTabAboutPreferencesOrSettings: Is a given tab set to about:preferences or about:settings?
+   *
    * @param {Element} aTab A tab element
    * @returns {bool} Is the linkedBrowser of aElement set to about:preferences or about:settings?
    */
@@ -360,6 +365,7 @@ var gHomePane = {
 
   /**
    * _getTabsForHomePage
+   *
    * @returns {Array} An array of current tabs
    */
   _getTabsForHomePage() {

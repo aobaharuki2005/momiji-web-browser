@@ -147,6 +147,7 @@ class ScreenshotsHelper {
 
   /**
    * Get the button from screenshots preview dialog
+   *
    * @param {Sting} name The id of the button to query
    * @returns The button or null
    */
@@ -335,6 +336,7 @@ class ScreenshotsHelper {
    *
    * Note: The distance of the rect should be greater than 40 to enter in the "dragging" state.
    * See https://searchfox.org/mozilla-central/rev/af78418c4b5f2c8721d1a06486cf4cf0b33e1e8d/browser/components/screenshots/ScreenshotsOverlayChild.sys.mjs#809
+   *
    * @param {Number} startX The starting X coordinate. The left edge of the overlay rect.
    * @param {Number} startY The starting Y coordinate. The top edge of the overlay rect.
    * @param {Number} endX The end X coordinate. The right edge of the overlay rect.
@@ -676,6 +678,7 @@ class ScreenshotsHelper {
 
   /**
    * Gets the dialog box
+   *
    * @returns The dialog box
    */
   getDialog() {
@@ -737,6 +740,7 @@ class ScreenshotsHelper {
 
   /**
    * Gets the client and scroll demensions on the window
+   *
    * @returns { Object }
    *   clientHeight The visible height
    *   clientWidth The visible width
@@ -898,6 +902,7 @@ class ScreenshotsHelper {
    * Copied from screenshots extension
    * A helper that returns the size of the image that was just put into the clipboard by the
    * :screenshot command.
+   *
    * @return The {width, height, color} dimension and color object.
    */
   async getImageSizeAndColorFromClipboard(options = {}) {
@@ -1000,6 +1005,7 @@ class ScreenshotsHelper {
 
 /**
  * Get the raw clipboard data
+ *
  * @param flavor Type of data to get from clipboard
  * @returns The data from the clipboard
  */

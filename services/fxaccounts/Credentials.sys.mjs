@@ -54,7 +54,6 @@ export var Credentials = Object.freeze({
    *
    * keyWord derivation for use as a salt.
    *
-   *
    *   @param {String} context  String for use in generating salt
    *
    *   @return {bitArray} the salt

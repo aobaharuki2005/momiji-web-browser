@@ -55,6 +55,7 @@ export var TelemetryArchive = {
 /**
  * Checks if pings can be archived. Some products (e.g. Thunderbird) might not want
  * to do that.
+ *
  * @return {Boolean} True if pings should be archived, false otherwise.
  */
 function shouldArchivePings() {

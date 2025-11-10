@@ -21,6 +21,7 @@ const TEST_HOST = "mochi.test:8888";
 
 /**
  * Add a new test tab in the browser and load the given url.
+ *
  * @param {String} url The url to be loaded in the new tab
  * @param {Window} win The window to add the tab to (default: current window).
  * @return a promise that resolves to the tab object when the url is loaded

@@ -61,6 +61,7 @@ async function captureAndSaveScreenshot(targetFront, window, args = {}) {
 
 /**
  * Take a screenshot of a browser element matching the passed target
+ *
  * @param {TargetFront} targetFront: The targetFront of the frame we want to take a screenshot of.
  * @param {Object} args: See args param in captureAndSaveScreenshot
  */

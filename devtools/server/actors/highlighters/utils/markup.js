@@ -48,6 +48,7 @@ const STYLESHEET_URI =
 
 /**
  * Is this content window a XUL window?
+ *
  * @param {Window} window
  * @return {Boolean}
  */
@@ -59,6 +60,7 @@ exports.isXUL = isXUL;
 /**
  * Returns true if a DOM node is "valid", where "valid" means that the node isn't a dead
  * object wrapper, is still attached to a document, and is of a given type.
+ *
  * @param {DOMNode} node
  * @param {Number} nodeType Optional, defaults to ELEMENT_NODE
  * @return {Boolean}
@@ -367,6 +369,7 @@ class CanvasFrameAnonymousContentHelper {
   /**
    * Remove an event listener from one of the elements inserted in the
    * canvasFrame native anonymous container.
+   *
    * @param {String} id
    * @param {String} type
    */
@@ -514,6 +517,7 @@ class CanvasFrameAnonymousContentHelper {
 
   /**
    * Helper function that creates SVG DOM nodes.
+   *
    * @param {Object} Options for the node include:
    * - nodeType: the type of node, defaults to "box".
    * - attributes: a {name:value} object to be used as attributes for the node.
@@ -532,6 +536,7 @@ class CanvasFrameAnonymousContentHelper {
 
   /**
    * Helper function that creates DOM nodes.
+   *
    * @param {Object} Options for the node include:
    * - nodeType: the type of node, defaults to "div".
    * - namespace: the namespace to use to create the node, defaults to XHTML namespace.
@@ -567,6 +572,7 @@ exports.CanvasFrameAnonymousContentHelper = CanvasFrameAnonymousContentHelper;
 
 /**
  * Wait for document readyness.
+ *
  * @param {Object} iframeOrWindow
  *        IFrame or Window for which the content should be loaded.
  */

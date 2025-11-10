@@ -76,6 +76,7 @@ add_task(async () => {
     async browser => {
       /**
        * A helper function used to get the "flipped" attribute of the video's shadowRoot's first child.
+       *
        * @param {Element} browser The <xul:browser> hosting the <video>
        * @param {String} videoID The ID of the video being checked
        */
@@ -94,6 +95,7 @@ add_task(async () => {
 
       /**
        * A helper function that returns the transform.a of the video being played in PiP.
+       *
        * @param {Element} playerBrowser The <xul:browser> of the PiP window
        */
       async function getPiPVideoTransform(playerBrowser) {

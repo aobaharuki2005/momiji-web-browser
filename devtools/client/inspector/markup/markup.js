@@ -847,7 +847,6 @@ class MarkupView extends EventEmitter {
    *        Optional configuration passed to the highlighter when shown
    *        {CustomHighlighterFront} data.highlighter
    *        Highlighter instance
-   *
    */
   handleHighlighterEvent(eventName, data) {
     switch (data.type) {
@@ -2142,6 +2141,7 @@ class MarkupView extends EventEmitter {
   /**
    * Replace the innerHTML of any node displayed in the inspector with
    * some other HTML code
+   *
    * @param  {Node} node
    *         node which innerHTML will be replaced.
    * @param  {String} newValue

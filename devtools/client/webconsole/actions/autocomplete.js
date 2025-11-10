@@ -95,6 +95,7 @@ function autocompleteUpdate(force, getterPath, expressionVars) {
 
 /**
  * Combine or replace authorizedEvaluations with the newly authorized getter path, if any.
+ *
  * @param {Array<Array<String>>} authorizedEvaluations Existing authorized evaluations (may
  * be updated in place)
  * @param {Array<String>} getterPath The new getter path
@@ -146,6 +147,7 @@ function updateAuthorizedEvaluations(
 
 /**
  * Apply source mapping to the autocomplete input.
+ *
  * @param {String} rawInput The input to map.
  * @param {{[String]: String}} mappedVars Map of original to generated variable names.
  * @param {WebConsole} hud A reference to the webconsole hud.
@@ -308,6 +310,7 @@ function autocompleteDataFetch({
 /**
  * Replace generated variable names in an unsafe getter path with their original
  * counterparts.
+ *
  * @param {Array<String>} getterPath Array of properties leading up to and including the
  * unsafe getter.
  * @param {String} originalExpression The expression that was evaluated, before mapping.

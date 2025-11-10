@@ -667,6 +667,7 @@ async function getBrowsingContextsAndFrameIdsForSubFrames(
 
 /**
  * Test helper for getUserMedia calls.
+ *
  * @param {boolean} aRequestAudio - Whether to request audio
  * @param {boolean} aRequestVideo - Whether to request video
  * @param {string} aFrameId - The ID of the frame
@@ -934,6 +935,7 @@ function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
 /**
  * Tests the siteIdentity icons, the permission panel and the global indicator
  * UI state.
+ *
  * @param {Object} aExpected - Expected state for the current tab.
  * @param {window} [aWin] - Top level chrome window to test state of.
  * @param {Object} [aExpectedGlobal] - Expected state for all tabs.

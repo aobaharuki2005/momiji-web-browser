@@ -19,6 +19,7 @@ function DatePicker(context) {
   DatePicker.prototype = {
     /**
      * Initializes the date picker. Set the default states and properties.
+     *
      * @param  {Object} props
      *         {
      *           {Number} year [optional]
@@ -551,6 +552,7 @@ function DatePicker(context) {
 
     /**
      * Handle events
+     *
      * @param  {DOMEvent} event
      */
     handleEvent(event) {

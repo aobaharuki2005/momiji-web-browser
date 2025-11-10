@@ -692,6 +692,7 @@ export class LoginFormState {
 
   /**
    * Focus event handler for username fields to decide whether to show autocomplete.
+   *
    * @param {HTMLInputElement} focusedField
    */
   #onUsernameFocus(focusedField) {
@@ -747,6 +748,7 @@ export class LoginFormState {
 
   /**
    * Highlight login fields on autocomplete or autofill on page load.
+   *
    * @param {Node} element that needs highlighting.
    */
   static _highlightFilledField(element) {
@@ -2580,6 +2582,7 @@ export class LoginManagerChild extends JSWindowActorChild {
   /**
    * The password field has been filled with a generated password, ensure the
    * field is handled accordingly.
+   *
    * @param {HTMLInputElement} passwordField
    */
   filledWithGeneratedPassword(passwordField) {
@@ -2611,6 +2614,7 @@ export class LoginManagerChild extends JSWindowActorChild {
   /**
    * Notify the parent that a generated password was filled into a field or
    * edited so that it can potentially be saved.
+   *
    * @param {HTMLInputElement} passwordField
    */
   _passwordEditedOrGenerated(
@@ -2653,6 +2657,7 @@ export class LoginManagerChild extends JSWindowActorChild {
 
   /**
    * Filter logins for exact origin/formActionOrigin and dedupe on usernamematche
+   *
    * @param {nsILoginInfo[]} logins an array of nsILoginInfo that could be
    *        used for the form, including ones with a different form action origin
    *        which are only used when the fill is userTriggered

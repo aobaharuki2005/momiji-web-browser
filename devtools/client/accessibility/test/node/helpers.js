@@ -24,6 +24,7 @@ function setupStore({ preloadedState } = {}) {
 
 /**
  * Build a mock accessible object.
+ *
  * @param {Object} form
  *        Data similar to what accessible actor passes to accessible front.
  */

@@ -99,6 +99,7 @@ add_task(async () => {
 
 /**
  * Start the profiler and get FileIO markers.
+ *
  * @param {TestConfig}
  * @returns {Profile}
  */

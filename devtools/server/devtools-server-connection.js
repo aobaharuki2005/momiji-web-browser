@@ -90,6 +90,7 @@ DevToolsServerConnection.prototype = {
 
   /**
    * Used when sending a bulk reply from an actor.
+   *
    * @see DebuggerTransport.prototype.startBulkSend
    */
   startBulkSend(header) {

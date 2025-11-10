@@ -47,6 +47,7 @@ const Localized = createFactory(
 class Preset extends PureComponent {
   /**
    * Handle the checkbox change.
+   *
    * @param {React.ChangeEvent<HTMLInputElement>} event
    */
   onChange = event => {
@@ -114,6 +115,7 @@ class Preset extends PureComponent {
 class Presets extends PureComponent {
   /**
    * Handle the checkbox change.
+   *
    * @param {string} presetName
    */
   onChange = presetName => {

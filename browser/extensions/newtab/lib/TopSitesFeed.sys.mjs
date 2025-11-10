@@ -1656,6 +1656,7 @@ export class TopSitesFeed {
 
   /**
    * Refresh the top sites data for content.
+   *
    * @param {bool} options.broadcast Should the update be broadcasted.
    * @param {bool} options.isStartup Being called while TopSitesFeed is initting.
    */
@@ -1798,6 +1799,7 @@ export class TopSitesFeed {
 
   /**
    * Fetch, cache and broadcast a screenshot for a specific topsite.
+   *
    * @param link cached topsite object
    * @param url where to fetch the image from
    * @param isStartup Whether the screenshot is fetched while initting TopSitesFeed.
@@ -1829,6 +1831,7 @@ export class TopSitesFeed {
 
   /**
    * Dispatch screenshot preview to target or notify if request failed.
+   *
    * @param customScreenshotURL {string} The URL used to capture the screenshot
    * @param target {string} Id of content process where to dispatch the result
    */
@@ -1865,6 +1868,7 @@ export class TopSitesFeed {
 
   /**
    * Pin a site at a specific position saving only the desired keys.
+   *
    * @param customScreenshotURL {string} User set URL of preview image for site
    * @param label {string} User set string of custom site name
    */

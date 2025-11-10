@@ -978,6 +978,7 @@ export class RemoteSettingsClient extends EventEmitter {
   /**
    * Return a more precise error instance, based on the specified
    * error and its message.
+   *
    * @param {Error} e the original error
    * @returns {Error}
    */

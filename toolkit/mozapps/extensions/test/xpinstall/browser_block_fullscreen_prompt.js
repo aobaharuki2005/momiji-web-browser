@@ -6,6 +6,7 @@
 
 /**
  * Spawns content task in browser to enter / leave fullscreen
+ *
  * @param browser - Browser to use for JS fullscreen requests
  * @param {Boolean} fullscreenState - true to enter fullscreen, false to leave
  */

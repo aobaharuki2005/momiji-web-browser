@@ -6,6 +6,7 @@
 
 /**
  * SimpleTest framework object.
+ *
  * @class
  */
 var SimpleTest = {};
@@ -935,7 +936,6 @@ window.setTimeout = function SimpleTest_setTimeoutShim() {
  *
  * @param {String} reason
  *        A string representation of the reason why the test needs timeouts.
- *
  */
 SimpleTest.requestFlakyTimeout = function (reason) {
   SimpleTest.is(typeof reason, "string", "A valid string reason is expected");

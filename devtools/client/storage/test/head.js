@@ -539,6 +539,7 @@ async function selectTableItem(id) {
 
 /**
  * Wait for eventName on target.
+ *
  * @param {Object} target An observable object that either supports on/off or
  * addEventListener/removeEventListener
  * @param {String} eventName
@@ -948,6 +949,7 @@ async function checkState(state) {
 
 /**
  * Checks if document's active element is within the given element.
+ *
  * @param  {HTMLDocument}  doc document with active element in question
  * @param  {DOMNode}       container element tested on focus containment
  * @return {Boolean}
@@ -1031,6 +1033,7 @@ function sidebarParseTreeVisible(state) {
 
 /**
  * Add an item.
+ *
  * @param  {Array} store
  *         An array containing the path to the store to which we wish to add an
  *         item.
@@ -1096,6 +1099,7 @@ async function scroll() {
 
 /**
  * Asserts that the given tree path exists
+ *
  * @param {Document} doc
  * @param {Array} path
  * @param {Boolean} isExpected
@@ -1110,6 +1114,7 @@ function checkTree(doc, path, isExpected = true) {
 
 /**
  * Returns whether a tree path exists
+ *
  * @param {Document} doc
  * @param {Array} path
  */
@@ -1120,6 +1125,7 @@ function isInTree(doc, path) {
 
 /**
  * Returns the label of the node for the provided tree path
+ *
  * @param {Document} doc
  * @param {Array} path
  * @returns {String}
@@ -1132,6 +1138,7 @@ function getTreeNodeLabel(doc, path) {
 
 /**
  * Checks that the pair <name, value> is displayed at the data table
+ *
  * @param {String} name
  * @param {any} value
  */
@@ -1150,6 +1157,7 @@ async function waitForStorageData(name, value) {
 
 /**
  * Returns whether the pair <name, value> is displayed at the data table
+ *
  * @param {String} name
  * @param {any} value
  */
@@ -1159,6 +1167,7 @@ function hasStorageData(name, value) {
 
 /**
  * Returns an URL of a page that uses the document-builder to generate its content
+ *
  * @param {String} domain
  * @param {String} html
  * @param {String} protocol
@@ -1169,6 +1178,7 @@ function buildURLWithContent(domain, html, protocol = "https") {
 
 /**
  * Asserts that the given cookie holds the provided value in the data table
+ *
  * @param {String} name
  * @param {String} value
  */
@@ -1181,6 +1191,7 @@ function checkCookieData(name, value) {
 
 /**
  * Returns whether the given cookie holds the provided value in the data table
+ *
  * @param {String} name
  * @param {String} value
  */

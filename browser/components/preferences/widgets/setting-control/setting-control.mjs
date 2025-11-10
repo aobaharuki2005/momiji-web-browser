@@ -22,6 +22,7 @@ import {
 
 /**
  * Properties that represent a nested HTML element that will be a direct descendant of this setting control element
+ *
  * @typedef {object} SettingNestedElementOption
  * @property {Array<SettingNestedElementOption>} [options]
  * @property {string} control - The {@link HTMLElement#localName} of any HTML element
@@ -31,6 +32,7 @@ import {
 /**
  * Mapping of parent control tag names to the literal tag name for their
  * expected children. eg. "moz-radio-group"->literal`moz-radio`.
+ *
  * @type Map<string, literal>
  */
 const KNOWN_OPTIONS = new Map([
@@ -43,6 +45,7 @@ const KNOWN_OPTIONS = new Map([
  * Mapping of parent control tag names to the expected slot for their children.
  * If there's no entry here for a control then it's expected that its children
  * should go in the default slot.
+ *
  * @type Map<string, string>
  */
 const ITEM_SLOT_BY_PARENT = new Map([
@@ -199,6 +202,7 @@ export class SettingControl extends SettingElement {
 
   /**
    * The default properties for an option.
+   *
    * @param {PreferencesSettingConfigNestedControlOption | SettingNestedElementOption} config
    */
   getOptionPropertyMapping(config) {
@@ -285,6 +289,7 @@ export class SettingControl extends SettingElement {
 
   /**
    * Prepare nested item config and settings.
+   *
    * @param {PreferencesSettingConfigNestedControlOption} config
    * @returns {Array<string>}
    */
@@ -311,6 +316,7 @@ export class SettingControl extends SettingElement {
 
   /**
    * Prepares any children (and any of its children's children) that this element may need.
+   *
    * @param {PreferencesSettingConfigNestedControlOption | SettingNestedElementOption} config
    * @returns {Array<string>}
    */

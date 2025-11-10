@@ -63,6 +63,7 @@ const DEFAULT_SMALL_FAVICON_WIDTH = 16;
 
 /**
  * Calculate the MD5 hash for a string.
+ *
  * @param aValue
  *        The string to convert.
  * @return The base64 representation of the MD5 hash.
@@ -76,6 +77,7 @@ function toHash(aValue) {
 
 /**
  * Properly convert internationalized domain names.
+ *
  * @param {string} host Domain hostname.
  * @returns {string} Hostname suitable to be displayed.
  */
@@ -163,6 +165,7 @@ LinksStorage.prototype = {
 
   /**
    * Gets the value for a given key from the storage.
+   *
    * @param aKey The storage key (a string).
    * @param aDefault A default value if the key doesn't exist.
    * @return The value for the given key.
@@ -178,6 +181,7 @@ LinksStorage.prototype = {
 
   /**
    * Sets the storage value for a given key.
+   *
    * @param aKey The storage key (a string).
    * @param aValue The value to set.
    */
@@ -188,6 +192,7 @@ LinksStorage.prototype = {
 
   /**
    * Removes the storage value for a given key.
+   *
    * @param aKey The storage key (a string).
    */
   remove: function Storage_remove(aKey) {
@@ -227,6 +232,7 @@ var PinnedLinks = {
 
   /**
    * Pins a link at the given position.
+   *
    * @param aLink The link to pin.
    * @param aIndex The grid index to pin the cell at.
    * @return true if link changes, false otherwise
@@ -244,6 +250,7 @@ var PinnedLinks = {
 
   /**
    * Unpins a given link.
+   *
    * @param aLink The link to unpin.
    */
   unpin: function PinnedLinks_unpin(aLink) {
@@ -271,6 +278,7 @@ var PinnedLinks = {
 
   /**
    * Checks whether a given link is pinned.
+   *
    * @params aLink The link to check.
    * @return whether The link is pinned.
    */
@@ -287,6 +295,7 @@ var PinnedLinks = {
 
   /**
    * Finds the index of a given link in the list of pinned links.
+   *
    * @param aLink The link to find an index for.
    * @return The link's index.
    */
@@ -304,6 +313,7 @@ var PinnedLinks = {
 
   /**
    * Transforms link into a "history" link
+   *
    * @param aLink The link to change
    * @return true if link changes, false otherwise
    */
@@ -317,6 +327,7 @@ var PinnedLinks = {
 
   /**
    * Replaces existing link with another link.
+   *
    * @param aUrl The url of existing link
    * @param aLink The replacement link
    */
@@ -371,6 +382,7 @@ var BlockedLinks = {
 
   /**
    * Blocks a given link. Adjusts siteMap accordingly, and notifies listeners.
+   *
    * @param aLink The link to block.
    */
   block: function BlockedLinks_block(aLink) {
@@ -384,6 +396,7 @@ var BlockedLinks = {
 
   /**
    * Unblocks a given link. Adjusts siteMap accordingly, and notifies listeners.
+   *
    * @param aLink The link to unblock.
    */
   unblock: function BlockedLinks_unblock(aLink) {
@@ -403,6 +416,7 @@ var BlockedLinks = {
 
   /**
    * Returns whether a given link is blocked.
+   *
    * @param aLink The link to check.
    */
   isBlocked: function BlockedLinks_isBlocked(aLink) {
@@ -411,6 +425,7 @@ var BlockedLinks = {
 
   /**
    * Checks whether the list of blocked links is empty.
+   *
    * @return Whether the list is empty.
    */
   isEmpty: function BlockedLinks_isEmpty() {
@@ -462,6 +477,7 @@ var PlacesProvider = {
 
   /**
    * Gets the current set of links delivered by this provider.
+   *
    * @param aCallback The function that the array of links is passed to.
    */
   getLinks: function PlacesProvider_getLinks(aCallback) {
@@ -536,6 +552,7 @@ var PlacesProvider = {
 
   /**
    * Registers an object that will be notified when the provider's links change.
+   *
    * @param aObserver An object with the following optional properties:
    *        * onLinkChanged: A function that's called when a single link
    *          changes.  It's passed the provider and the link object.  Only the
@@ -1386,6 +1403,7 @@ var Links = {
 
   /**
    * Adds a link provider.
+   *
    * @param aProvider The link provider.
    */
   addProvider: function Links_addProvider(aProvider) {
@@ -1395,6 +1413,7 @@ var Links = {
 
   /**
    * Removes a link provider.
+   *
    * @param aProvider The link provider.
    */
   removeProvider: function Links_removeProvider(aProvider) {
@@ -1405,6 +1424,7 @@ var Links = {
 
   /**
    * Populates the cache with fresh links from the providers.
+   *
    * @param aCallback The callback to call when finished (optional).
    * @param aForce When true, populates the cache even when it's already filled.
    */
@@ -1451,6 +1471,7 @@ var Links = {
 
   /**
    * Gets the current set of links contained in the grid.
+   *
    * @return The links in the grid.
    */
   getLinks: function Links_getLinks() {
@@ -1506,6 +1527,7 @@ var Links = {
 
   /**
    * Compares two links.
+   *
    * @param aLink1 The first link.
    * @param aLink2 The second link.
    * @return A negative number if aLink1 is ordered before aLink2, zero if
@@ -1593,6 +1615,7 @@ var Links = {
 
   /**
    * Calls getLinks on the given provider and populates our cache for it.
+   *
    * @param aProvider The provider whose cache will be populated.
    * @param aCallback The callback to call when finished.
    * @param aForce When true, populates the provider's cache even when it's
@@ -1638,6 +1661,7 @@ var Links = {
 
   /**
    * Merges the cached lists of links from all providers whose lists are cached.
+   *
    * @return The merged list.
    */
   _getMergedProviderLinks: function Links__getMergedProviderLinks() {
@@ -1685,6 +1709,7 @@ var Links = {
 
   /**
    * Called by a provider to notify us when a single link changes.
+   *
    * @param aProvider The provider whose link changed.
    * @param aLink The link that changed.  If the link is new, it must have all
    *              of the _sortProperties.  Otherwise, it may have as few or as
@@ -1938,6 +1963,7 @@ export var NewTabUtils = {
   /**
    * Extract a "site" from a url in a way that multiple urls of a "site" returns
    * the same "site."
+   *
    * @param aUrl Url spec string
    * @return The "site" string or null
    */
@@ -2012,6 +2038,7 @@ export var NewTabUtils = {
   /**
    * Undoes all sites that have been removed from the grid and keep the pinned
    * tabs.
+   *
    * @param aCallback the callback method.
    */
   undoAll: function NewTabUtils_undoAll(aCallback) {
@@ -2023,6 +2050,7 @@ export var NewTabUtils = {
 
   /**
    * Get the effective top level domain of a host.
+   *
    * @param {string} host The host to be analyzed.
    * @return {str} The suffix or empty string if there's no suffix.
    */
@@ -2087,6 +2115,7 @@ export var NewTabUtils = {
   /**
    * retrieves positive UTC offset, rounded to the nearest integer number greater than 0.
    * (If less than 0, then add 24.)
+   *
    * @param {str} [surfaceID] Optional surface ID to constrain time zone to reduce identifying telemetry.
    * @returns {Number} utc_offset. Output is clamped if surfaceID is specified, and 0 if surfaceID present and not supported.
    */

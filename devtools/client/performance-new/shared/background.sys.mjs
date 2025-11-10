@@ -93,6 +93,7 @@ const lazy = createLazyLoaders({
  * This function is called when the profile is captured with the shortcut keys,
  * with the profiler toolbarbutton, with the button inside the popup, or with
  * the about:logging page.
+ *
  * @param {PageContext} pageContext
  * @return {Promise<void>}
  */
@@ -137,6 +138,7 @@ export async function captureProfile(pageContext) {
  * This function is called when the profiler is started with the shortcut
  * keys, with the profiler toolbarbutton, or with the button inside the
  * popup.
+ *
  * @param {PageContext} pageContext
  */
 export function startProfiler(pageContext) {
@@ -161,6 +163,7 @@ export function startProfiler(pageContext) {
 /**
  * This function is called directly by devtools/startup/DevToolsStartup.jsm when
  * using the shortcut keys to capture a profile.
+ *
  * @type {() => void}
  */
 export function stopProfiler() {
@@ -170,6 +173,7 @@ export function stopProfiler() {
 /**
  * This function is called directly by devtools/startup/DevToolsStartup.jsm when
  * using the shortcut keys to start and stop the profiler.
+ *
  * @param {PageContext} pageContext
  * @return {void}
  */

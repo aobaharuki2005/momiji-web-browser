@@ -400,7 +400,6 @@ export class ExperimentManager {
    * either "normandy_id" or "group_id".
    *
    * @param {object} bucketConfig
-   *
    */
   async getUserId(bucketConfig) {
     let id;
@@ -1746,6 +1745,7 @@ class AboutConfigObserver {
 
   /**
    * Record that a pref is about to change.
+   *
    * @param {string} pref The pref.
    */
   #onWillChange(pref) {
@@ -1754,6 +1754,7 @@ class AboutConfigObserver {
 
   /**
    * Record that a pref has finished changing.
+   *
    * @param {string} pref The pref.
    */
   #onChanged(pref) {

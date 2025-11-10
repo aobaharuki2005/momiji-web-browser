@@ -151,6 +151,7 @@ this.AccessibilityUtils = (function () {
   /**
    * Get related accessible objects that are targets of labelled by relation e.g.
    * labels.
+   *
    * @param   {nsIAccessible} accessible
    *          Accessible objects to get labels for.
    *
@@ -802,6 +803,7 @@ this.AccessibilityUtils = (function () {
    * accessible object. This is used for cases where accessibility best
    * practices are not followed or for something that is not as severe to be
    * considered a failure.
+   *
    * @param {String} message
    * @param {nsIAccessible} accessible
    *        Accessible to log along with the todo message.
@@ -1055,6 +1057,7 @@ this.AccessibilityUtils = (function () {
 
   /**
    * Walk node ancestry and force refresh driver tick in every document.
+   *
    * @param {DOMNode} node
    *        Node for traversing the ancestry.
    */
