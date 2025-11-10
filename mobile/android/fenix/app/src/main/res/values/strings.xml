@@ -2163,10 +2163,19 @@
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Stronger tracking protection and faster performance, but some sites may not work properly.</string>
     <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
-    <string name="preference_enhanced_tracking_protection_allow_list_baseline">Allow %1$s to automatically apply exceptions required to avoid major website breakage.</string>
+    <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Allow %1$s to automatically apply exceptions required to avoid major website breakage.</string>
     <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
-    <string name="preference_enhanced_tracking_protection_allow_list_convenience">Also apply exceptions automatically that are only required to fix minor issues and make convenience features available.</string>
-
+    <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Also apply exceptions automatically that are only required to fix minor issues and make convenience features available.</string>
+    <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+    <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Fix major site issues (recommended)</string>
+    <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+    <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Fix minor site issues</string>
+    <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+    <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">Must be used with fixes for major issues.</string>
+    <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+    <string name="preference_enhanced_tracking_protection_allow_list_subheader">Fix site issues</string>
+    <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+    <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Learn more</string>
     <!-- Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection -->
     <!-- Title for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
     <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Are you sure you want to turn off fixes?</string>
