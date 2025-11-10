@@ -1747,6 +1747,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">추적 방지 기능에 의해 차단된 URL 보내기</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">향상된 추적 방지 기능은 일부 웹 사이트가 제대로 작동하는 데 필요한 추적기와 스크립트를 차단할 수 있습니다.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">보고서 미리보기</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">보고서 미리보기</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">보내기</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -1849,15 +1855,15 @@
   <!-- Accessibility label for sorting options -->
   <string name="bookmark_sort_menu_content_desc">정렬 옵션</string>
   <!-- Label for button to sort bookmarks by user-defined sort order in the bookmark sorting overflow menu. -->
-  <string name="bookmark_sort_menu_custom">사용자 지정 순으로 정렬</string>
+  <string name="bookmark_sort_menu_custom">사용자 지정 순 정렬</string>
   <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_newest">최신순 정렬</string>
   <!-- Label for button to sort bookmarks by oldest in the bookmark sorting overflow menu. -->
   <string name="bookmark_sort_menu_oldest">오래된 순 정렬</string>
   <!-- Label for button to sort bookmarks in alphabetical order in the bookmark sorting overflow menu. -->
-  <string name="bookmark_sort_menu_a_to_z">내림차순 (A &gt; Z)</string>
+  <string name="bookmark_sort_menu_a_to_z">오름차순 정렬 (A &gt; Z)</string>
   <!-- Label for button to sort bookmarks in reverse alphabetical order in the bookmark sorting overflow menu. -->
-  <string name="bookmark_sort_menu_z_to_a">오름차순 (Z &gt; A)</string>
+  <string name="bookmark_sort_menu_z_to_a">내림차순 정렬 (Z &gt; A)</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -3884,6 +3890,26 @@
   <string name="review_prompt_feedback_header">문제가 발생하여 죄송합니다. 어떻게 하면 %1$s를 개선할 수 있는지 알려주세요.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">의견 남기기</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">검색 설정</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
+  <string name="content_description_settings_search_clear_search">검색 지우기</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">뒤로</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">최근 검색 없음</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">오류 발생</string>
+  <!-- Message title displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_found_message">검색 결과 없음</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">모두 지우기</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">최근 검색 결과</string>
   <!--
     Terms of use pop up prompt
 

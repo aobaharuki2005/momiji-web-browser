@@ -39,7 +39,7 @@
     Alert dialog confirmation before downloading a previously downloaded file, this is the description.
     %1$s will be replaced with the name of the file.
   -->
-  <string name="mozac_feature_downloads_already_exists_dialog_title">%1$s-ն արդեն առկա է</string>
+  <string name="mozac_feature_downloads_already_exists_dialog_title">%1$s-ն արդեն կա։</string>
   <!-- Alert dialog confirmation before downloading a previously downloaded file, this is the neutral action that proposes to open the file instead. -->
   <string name="mozac_feature_downloads_open_existing_file">Բացել առկա ֆայլ</string>
   <!--

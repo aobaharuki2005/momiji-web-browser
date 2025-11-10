@@ -249,6 +249,8 @@
   <string name="browser_menu_save_to_collection_2">Vista í safn</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Deila</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Heimasíða</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -1246,6 +1248,18 @@
   <string name="preference_expanded_toolbar">Dregið sundur</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Vistfangastikan verður að vera efst þegar flipastikan er birt.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Opna nýjan flipa</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Deila</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Bæta við bókamerki</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Þýða</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Heimasíða</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Til baka</string>
   <!--
     App icon Preferences
 
@@ -3596,6 +3610,8 @@
   <string name="microsurvey_close_handle_content_description">Loka könnun</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Loka</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Verkfæri fyrir sjálfvirka útfyllingu</string>
   <!--
     Debug drawer logins
 

@@ -337,7 +337,7 @@
     Content description for a banner within the menu which prompt the user to make this app their default browser.
     %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="browser_menu_default_banner_title">Դարձրեք %1$s-ը ձեր սկզբնադիրը</string>
+  <string name="browser_menu_default_banner_title">Դարձնել Ձեր սկզբնադիրը %1$s</string>
   <!-- Label text within the set as default banner -->
   <string name="browser_menu_default_banner_subtitle_2">Արագ է, գաղտնի և ստեղծված ձեզ կողմից:</string>
   <!-- Content description (not visible, for screen readers etc.) for the button that dismisses the set as default banner in the menu -->
@@ -2330,7 +2330,7 @@
   <!-- Instructions on how to access pairing -->
   <string name="sign_in_instructions" tools:ignore="BrandUsage"><![CDATA[Ձեր համակարգչում բացեք Firefox-ը և անցեք <b>https://firefox.com/pair</b>]]></string>
   <!-- Text shown for sign in pairing when ready -->
-  <string name="sign_in_ready_for_scan">Պատրաստ է սկանավորման</string>
+  <string name="sign_in_ready_for_scan">Պատրաստել սկանավորման</string>
   <!-- Text shown for settings option for sign with pairing -->
   <string name="sign_in_with_camera">Մուտք գործել Ձեր տեսախցիկով</string>
   <!-- Text shown for settings option for sign with email -->
@@ -2588,7 +2588,7 @@
   <!-- About page link text to open licensing information link -->
   <string name="about_licensing_information">Արտոնագրի տեղեկություն</string>
   <!-- About page link text to open a screen with libraries that are used -->
-  <string name="about_other_open_source_libraries">Գրադարաններ, որոնք մենք օգտագործում ենք</string>
+  <string name="about_other_open_source_libraries">Օգտագործվող գրադարաններ</string>
   <!--
     Toast shown to the user when they are activating the secret dev menu
     %1$d is number of long clicks left to enable the menu
@@ -3610,6 +3610,8 @@
   <string name="microsurvey_close_handle_content_description">Փակել հարցումը</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Փակել</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Ինքնալրացման գործիքներ</string>
   <!--
     Debug drawer logins
 
