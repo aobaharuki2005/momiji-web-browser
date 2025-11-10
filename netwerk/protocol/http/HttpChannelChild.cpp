@@ -2782,6 +2782,12 @@ HttpChannelChild::IsFromCache(bool* value) {
 }
 
 NS_IMETHODIMP
+HttpChannelChild::HasCacheEntry(bool* value) {
+  *value = mCacheEntryAvailable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelChild::GetCacheEntryId(uint64_t* aCacheEntryId) {
   bool fromCache = false;
   if (NS_FAILED(IsFromCache(&fromCache)) || !fromCache ||

@@ -10568,6 +10568,12 @@ nsHttpChannel::IsFromCache(bool* value) {
 }
 
 NS_IMETHODIMP
+nsHttpChannel::HasCacheEntry(bool* value) {
+  *value = !!mCacheEntry;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpChannel::GetCacheEntryId(uint64_t* aCacheEntryId) {
   bool fromCache = false;
   if (NS_FAILED(IsFromCache(&fromCache)) || !fromCache || !mCacheEntry ||
