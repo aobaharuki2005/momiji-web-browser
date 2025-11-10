@@ -548,8 +548,9 @@ void MPRISServiceHandler::SetMediaMetadata(
     // Only used to hold the image data
     nsCOMPtr<nsIInputStream> inputStream;
 
-    nsresult rv = dom::GetEncodedImageBuffer(
-        image.mDataSurface, mMimeType, getter_AddRefs(inputStream), &size, &data);
+    nsresult rv =
+        dom::GetEncodedImageBuffer(image.mDataSurface, mMimeType,
+                                   getter_AddRefs(inputStream), &size, &data);
     if (NS_FAILED(rv) || !inputStream || size == 0 || !data) {
       LOGMPRIS("Failed to get the image buffer info. Try next image");
       continue;

@@ -325,19 +325,21 @@ void MediaSession::NotifyMetadataUpdated() {
 
   mMetadataRequest.DisconnectIfExists();
 
-  mMediaMetadata->LoadMetadataArtwork()->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [self = RefPtr{this}, currentBC](MediaMetadataBase&& aMetadata) {
-        if (RefPtr<IMediaInfoUpdater> updater =
-                ContentMediaAgent::Get(currentBC)) {
-          updater->UpdateMetadata(currentBC->Id(), Some(aMetadata));
-        }
+  mMediaMetadata->LoadMetadataArtwork()
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}, currentBC](MediaMetadataBase&& aMetadata) {
+            if (RefPtr<IMediaInfoUpdater> updater =
+                    ContentMediaAgent::Get(currentBC)) {
+              updater->UpdateMetadata(currentBC->Id(), Some(aMetadata));
+            }
 
-        self->mMetadataRequest.Complete();
-      },
-      [](nsresult rv) {
-        MOZ_ASSERT_UNREACHABLE("LoadMetadataArtwork should always resolve");
-      })->Track(mMetadataRequest);
+            self->mMetadataRequest.Complete();
+          },
+          [](nsresult rv) {
+            MOZ_ASSERT_UNREACHABLE("LoadMetadataArtwork should always resolve");
+          })
+      ->Track(mMetadataRequest);
 }
 
 void MediaSession::NotifyEnableSupportedAction(MediaSessionAction aAction) {
