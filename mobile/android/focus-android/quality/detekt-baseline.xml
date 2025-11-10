@@ -59,7 +59,6 @@
     <ID>UndocumentedPublicClass:IntentProcessor.kt$IntentProcessor.Result$None : Result</ID>
     <ID>UndocumentedPublicClass:IntentProcessor.kt$IntentProcessor.Result$Tab : Result</ID>
     <ID>UndocumentedPublicClass:LocaleDescriptor.kt$LocaleDescriptor : Comparable</ID>
-    <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity$AppOpenType</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference : Preference</ID>
     <ID>UndocumentedPublicClass:ManualAddSearchEngineSettingsFragment.kt$ManualAddSearchEngineSettingsFragment : BaseSettingsFragment</ID>
     <ID>UndocumentedPublicClass:MozillaPreference.kt$MozillaPreference : Preference</ID>
@@ -105,7 +104,6 @@
     <ID>UndocumentedPublicClass:SitePermissionOption.kt$SitePermissionOption$AskToAllow : SitePermissionOption</ID>
     <ID>UndocumentedPublicClass:SitePermissionOption.kt$SitePermissionOption$Blocked : SitePermissionOption</ID>
     <ID>UndocumentedPublicClass:SitePermissionOptionListItem.kt$SitePermissionOptionListItem</ID>
-    <ID>UndocumentedPublicClass:SitePermissionOptionsFragment.kt$SitePermissionOptionsFragment : BaseComposeFragment</ID>
     <ID>UndocumentedPublicClass:SitePermissionOptionsScreenStore.kt$SitePermissionOptionsScreenAction : Action</ID>
     <ID>UndocumentedPublicClass:SitePermissionOptionsScreenStore.kt$SitePermissionOptionsScreenAction$AndroidPermission : SitePermissionOptionsScreenAction</ID>
     <ID>UndocumentedPublicClass:SitePermissionOptionsScreenStore.kt$SitePermissionOptionsScreenAction$InitSitePermissionOptions : SitePermissionOptionsScreenAction</ID>
@@ -160,10 +158,6 @@
     <ID>UndocumentedPublicFunction:HomeMenu.kt$HomeMenu$fun getMenuBuilder(): BrowserMenuBuilder</ID>
     <ID>UndocumentedPublicFunction:LocaleDescriptor.kt$LocaleDescriptor$fun getNativeName(): String?</ID>
     <ID>UndocumentedPublicFunction:LocaleDescriptor.kt$LocaleDescriptor$fun getTag(): String</ID>
-    <ID>UndocumentedPublicFunction:MainActivity.kt$MainActivity$fun getToolbar(): ActionBar</ID>
-    <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("CyclomaticComplexMethod") fun settings(page: Screen.Settings.Page)</ID>
-    <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$fun showOnBoardingSecondScreen()</ID>
-    <ID>UndocumentedPublicFunction:MainActivityNavigation.kt$MainActivityNavigation$fun sitePermissionOptionsFragment(sitePermission: SitePermission)</ID>
     <ID>UndocumentedPublicFunction:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference$fun setProgressViewShown(isShown: Boolean)</ID>
     <ID>UndocumentedPublicFunction:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference$fun setSearchQueryErrorText(err: String)</ID>
     <ID>UndocumentedPublicFunction:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference$fun validateEngineNameAndShowError(engineName: String, existingEngines: List&lt;SearchEngine&gt;): Boolean</ID>
