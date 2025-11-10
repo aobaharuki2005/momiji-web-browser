@@ -339,7 +339,7 @@ add_task(async function test_IPProtectionService_retry_errors() {
     IPProtectionService,
     "IPProtectionService:StateChanged",
     false,
-    () => !!IPProtectionService.activatedAt
+    () => !!IPPProxyManager.activatedAt
   );
   content.connectionToggleEl.click();
 
@@ -385,7 +385,7 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
     IPProtectionService,
     "IPProtectionService:StateChanged",
     false,
-    () => !!IPProtectionService.activatedAt
+    () => !!IPPProxyManager.activatedAt
   );
   content.connectionToggleEl.click();
 
@@ -401,7 +401,7 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
     IPProtectionService,
     "IPProtectionService:StateChanged",
     false,
-    () => !IPProtectionService.activatedAt
+    () => !IPPProxyManager.activatedAt
   );
 
   setupService({

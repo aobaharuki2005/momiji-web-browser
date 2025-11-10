@@ -13,6 +13,10 @@ const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
 
+const { IPPProxyManager } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPProxyManager.sys.mjs"
+);
+
 const { IPPSignInWatcher } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
 );

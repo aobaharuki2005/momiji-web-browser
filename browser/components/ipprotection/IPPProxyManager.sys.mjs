@@ -5,7 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  GuardianClient: "resource:///modules/ipprotection/GuardianClient.sys.mjs",
   IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
   IPProtectionUsage:
     "resource:///modules/ipprotection/IPProtectionUsage.sys.mjs",
@@ -13,6 +12,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPPNetworkErrorObserver.sys.mjs",
   IPProtectionServerlist:
     "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
+  IPProtectionService:
+    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+  IPProtectionStates:
+    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
 
 const LOG_PREF = "browser.ipProtection.log";
@@ -27,8 +30,7 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
 /**
  * Manages the proxy connection for the IPProtectionService.
  */
-class IPPProxyManager {
-  #guardian = null;
+class IPPProxyManagerSingleton {
   #pass = null;
   /**@type {import("./IPPChannelFilter.sys.mjs").IPPChannelFilter | null} */
   #connection = null;
@@ -38,15 +40,38 @@ class IPPProxyManager {
   #rotateProxyPassPromise = null;
   #activatedAt = false;
 
-  get activatedAt() {
-    return this.#activatedAt;
+  constructor() {
+    this.handleProxyErrorEvent = this.#handleProxyErrorEvent.bind(this);
+    this.handleEvent = this.#handleEvent.bind(this);
   }
 
-  get guardian() {
-    if (!this.#guardian) {
-      this.#guardian = new lazy.GuardianClient();
-    }
-    return this.#guardian;
+  init() {
+    lazy.IPProtectionService.addEventListener(
+      "IPProtectionService:StateChanged",
+      this.handleEvent
+    );
+  }
+
+  initOnStartupCompleted() {}
+
+  uninit() {
+    lazy.IPProtectionService.removeEventListener(
+      "IPProtectionService:StateChanged",
+      this.handleEvent
+    );
+
+    this.reset();
+    this.#connection = null;
+    this.usageObserver.stop();
+  }
+
+  /**
+   * Checks if the proxy is active and was activated.
+   *
+   * @returns {Date}
+   */
+  get activatedAt() {
+    return this.active && this.#activatedAt;
   }
 
   get usageObserver() {
@@ -77,11 +102,6 @@ class IPPProxyManager {
 
   get hasValidProxyPass() {
     return !!this.#pass?.isValid();
-  }
-
-  constructor(guardian) {
-    this.#guardian = guardian;
-    this.handleProxyErrorEvent = this.#handleProxyErrorEvent.bind(this);
   }
 
   createChannelFilter() {
@@ -170,13 +190,17 @@ class IPPProxyManager {
     }
   }
 
-  /**
-   * Cleans up this instance.
-   */
-  destroy() {
-    this.reset();
-    this.#connection = null;
-    this.usageObserver.stop();
+  #handleEvent(_event) {
+    if (
+      lazy.IPProtectionService.state === lazy.IPProtectionStates.UNAVAILABLE ||
+      lazy.IPProtectionService.state === lazy.IPProtectionStates.UNAUTHENTICATED
+    ) {
+      if (this.active) {
+        this.stop(false);
+      }
+
+      this.reset();
+    }
   }
 
   /**
@@ -186,7 +210,8 @@ class IPPProxyManager {
    * @returns {Promise<ProxyPass|Error>} - the proxy pass if it available.
    */
   async #getProxyPass() {
-    let { status, error, pass } = await this.guardian.fetchProxyPass();
+    let { status, error, pass } =
+      await lazy.IPProtectionService.guardian.fetchProxyPass();
     lazy.logConsole.debug("ProxyPass:", {
       status,
       valid: pass?.isValid(),
@@ -251,5 +276,7 @@ class IPPProxyManager {
     return null;
   }
 }
+
+const IPPProxyManager = new IPPProxyManagerSingleton();
 
 export { IPPProxyManager };

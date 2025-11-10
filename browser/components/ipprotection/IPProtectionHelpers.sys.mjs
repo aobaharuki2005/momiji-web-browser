@@ -23,6 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
 
+import { IPPProxyManager } from "resource:///modules/ipprotection/IPPProxyManager.sys.mjs";
 import { IPPAutoStartHelpers } from "resource:///modules/ipprotection/IPPAutoStart.sys.mjs";
 import { IPPEnrollAndEntitleManager } from "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs";
 import { IPPNimbusHelper } from "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs";
@@ -73,48 +74,6 @@ class UIHelper {
 }
 
 /**
- * This simple class resets the account data when needed
- */
-class ProxyResetHelper {
-  constructor() {
-    this.handleEvent = this.#handleEvent.bind(this);
-  }
-
-  init() {
-    lazy.IPProtectionService.addEventListener(
-      "IPProtectionService:StateChanged",
-      this.handleEvent
-    );
-  }
-
-  initOnStartupCompleted() {}
-
-  uninit() {
-    lazy.IPProtectionService.removeEventListener(
-      "IPProtectionService:StateChanged",
-      this.handleEvent
-    );
-  }
-
-  #handleEvent(_event) {
-    if (!lazy.IPProtectionService.proxyManager) {
-      return;
-    }
-
-    if (
-      lazy.IPProtectionService.state === lazy.IPProtectionStates.UNAVAILABLE ||
-      lazy.IPProtectionService.state === lazy.IPProtectionStates.UNAUTHENTICATED
-    ) {
-      if (lazy.IPProtectionService.proxyManager.active) {
-        lazy.IPProtectionService.proxyManager.stop(false);
-      }
-
-      lazy.IPProtectionService.proxyManager.reset();
-    }
-  }
-}
-
-/**
  * This class removes the UI widget if the VPN add-on is installed.
  */
 class VPNAddonHelper {
@@ -159,8 +118,8 @@ const IPPHelpers = [
   IPPSignInWatcher,
   IPProtectionServerlist,
   IPPEnrollAndEntitleManager,
+  IPPProxyManager,
   new UIHelper(),
-  new ProxyResetHelper(),
   new VPNAddonHelper(),
   ...IPPAutoStartHelpers,
   IPPNimbusHelper,

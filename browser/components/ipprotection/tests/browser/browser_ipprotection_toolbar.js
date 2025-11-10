@@ -88,7 +88,7 @@ add_task(async function toolbar_icon_status() {
     lazy.IPProtectionService,
     "IPProtectionService:StateChanged",
     false,
-    () => !!IPProtectionService.activatedAt
+    () => !!IPPProxyManager.activatedAt
   );
   // Toggle the VPN on
   toggle.click();
@@ -135,7 +135,7 @@ add_task(async function toolbar_icon_status_new_window() {
     lazy.IPProtectionService,
     "IPProtectionService:StateChanged",
     false,
-    () => !!IPProtectionService.activatedAt
+    () => !!IPPProxyManager.activatedAt
   );
   // Toggle the VPN on
   content.connectionToggleEl.click();

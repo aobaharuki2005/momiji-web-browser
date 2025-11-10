@@ -9,6 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   IPProtectionServerlist:
     "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
+  IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   IPProtectionStates:
@@ -85,7 +86,7 @@ class IPPAutoStartSingleton {
       case lazy.IPProtectionStates.READY:
         if (this.#shouldStartWhenReady) {
           this.#shouldStartWhenReady = false;
-          lazy.IPProtectionService.start();
+          lazy.IPProtectionService.start(/* user action: */ false);
         }
         break;
 
@@ -112,7 +113,7 @@ class IPPEarlyStartupFilter {
 
   init() {
     if (this.#autoStartAndAtStartup) {
-      lazy.IPProtectionService.proxyManager.createChannelFilter();
+      lazy.IPPProxyManager.createChannelFilter();
 
       lazy.IPProtectionService.addEventListener(
         "IPProtectionService:StateChanged",
@@ -135,7 +136,7 @@ class IPPEarlyStartupFilter {
   }
 
   #cancelChannelFilter() {
-    lazy.IPProtectionService.proxyManager.cancelChannelFilter();
+    lazy.IPPProxyManager.cancelChannelFilter();
   }
 
   #handleEvent(_event) {

@@ -7,11 +7,11 @@
 const { IPPProxyManager } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPProxyManager.sys.mjs"
 );
+const { IPProtectionService } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
+);
 const { IPProtectionServerlist } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs"
-);
-const { GuardianClient } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/GuardianClient.sys.mjs"
 );
 
 add_setup(async function () {
@@ -24,8 +24,7 @@ add_setup(async function () {
  */
 add_task(async function test_IPPProxyManager_start_stop_reset() {
   let sandbox = sinon.createSandbox();
-  let guardian = new GuardianClient();
-  sandbox.stub(guardian, "fetchProxyPass").returns({
+  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").returns({
     status: 200,
     error: undefined,
     pass: {
@@ -36,28 +35,26 @@ add_task(async function test_IPPProxyManager_start_stop_reset() {
 
   await IPProtectionServerlist.maybeFetchList();
 
-  let proxyManager = new IPPProxyManager(guardian);
+  await IPPProxyManager.start();
 
-  await proxyManager.start();
-
-  Assert.ok(proxyManager.active, "Should be active after starting");
+  Assert.ok(IPPProxyManager.active, "Should be active after starting");
 
   Assert.ok(
-    proxyManager.isolationKey,
+    IPPProxyManager.isolationKey,
     "Should have an isolationKey after starting"
   );
 
   Assert.ok(
-    proxyManager.hasValidProxyPass,
+    IPPProxyManager.hasValidProxyPass,
     "Should have a valid proxy pass after starting"
   );
 
-  await proxyManager.stop();
+  await IPPProxyManager.stop();
 
-  Assert.ok(!proxyManager.active, "Should not be active after starting");
+  Assert.ok(!IPPProxyManager.active, "Should not be active after starting");
 
   Assert.ok(
-    !proxyManager.isolationKey,
+    !IPPProxyManager.isolationKey,
     "Should not have an isolationKey after stopping"
   );
 
@@ -70,8 +67,7 @@ add_task(async function test_IPPProxyManager_start_stop_reset() {
  */
 add_task(async function test_IPPProxyManager_reset() {
   let sandbox = sinon.createSandbox();
-  let guardian = new GuardianClient();
-  sandbox.stub(guardian, "fetchProxyPass").returns({
+  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").returns({
     status: 200,
     error: undefined,
     pass: {
@@ -80,33 +76,31 @@ add_task(async function test_IPPProxyManager_reset() {
     },
   });
 
-  let proxyManager = new IPPProxyManager(guardian);
+  await IPPProxyManager.start();
 
-  await proxyManager.start();
-
-  Assert.ok(proxyManager.active, "Should be active after starting");
+  Assert.ok(IPPProxyManager.active, "Should be active after starting");
 
   Assert.ok(
-    proxyManager.isolationKey,
+    IPPProxyManager.isolationKey,
     "Should have an isolationKey after starting"
   );
 
   Assert.ok(
-    proxyManager.hasValidProxyPass,
+    IPPProxyManager.hasValidProxyPass,
     "Should have a valid proxy pass after starting"
   );
 
-  await proxyManager.reset();
+  await IPPProxyManager.reset();
 
-  Assert.ok(!proxyManager.active, "Should not be active after starting");
+  Assert.ok(!IPPProxyManager.active, "Should not be active after starting");
 
   Assert.ok(
-    !proxyManager.isolationKey,
+    !IPPProxyManager.isolationKey,
     "Should not have an isolationKey after stopping"
   );
 
   Assert.ok(
-    !proxyManager.hasValidProxyPass,
+    !IPPProxyManager.hasValidProxyPass,
     "Should not have a proxy pass after stopping"
   );
 

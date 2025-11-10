@@ -9,6 +9,9 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 const { ExtensionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"
 );
+const { IPPProxyManager } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPPProxyManager.sys.mjs"
+);
 const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
 );
@@ -88,7 +91,7 @@ add_task(async function test_IPProtectionService_start() {
   );
 
   Assert.ok(
-    !IPProtectionService.activatedAt,
+    !IPPProxyManager.activatedAt,
     "IP Protection service should not be active initially"
   );
 
@@ -108,11 +111,11 @@ add_task(async function test_IPProtectionService_start() {
     "IP Protection service should be active after starting"
   );
   Assert.ok(
-    IPProtectionService.activatedAt,
+    !!IPPProxyManager.activatedAt,
     "IP Protection service should have an activation timestamp"
   );
   Assert.ok(
-    IPProtectionService.proxyManager.active,
+    IPPProxyManager.active,
     "IP Protection service should have an active connection"
   );
 
@@ -152,7 +155,7 @@ add_task(async function test_IPProtectionService_stop() {
     "IP Protection service should not be active after stopping"
   );
   Assert.ok(
-    !IPProtectionService.activatedAt,
+    !IPPProxyManager.activatedAt,
     "IP Protection service should not have an activation timestamp after stopping"
   );
   Assert.ok(

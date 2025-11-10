@@ -78,7 +78,6 @@ class IPProtectionServiceSingleton extends EventTarget {
   errors = [];
 
   guardian = null;
-  proxyManager = null;
 
   #helpers = null;
 
@@ -90,15 +89,6 @@ class IPProtectionServiceSingleton extends EventTarget {
    */
   get state() {
     return this.#state;
-  }
-
-  /**
-   * Checks if the proxy is active and was activated.
-   *
-   * @returns {Date}
-   */
-  get activatedAt() {
-    return this.proxyManager?.active && this.proxyManager?.activatedAt;
   }
 
   constructor() {
@@ -137,8 +127,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    this.proxyManager = new lazy.IPPProxyManager(this.guardian);
-
     this.#helpers.forEach(helper => helper.init());
 
     this.#updateState();
@@ -159,7 +147,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     if (this.#state === IPProtectionStates.ACTIVE) {
       this.stop(false);
     }
-    this.proxyManager?.destroy();
 
     this.errors = [];
 
@@ -203,7 +190,7 @@ class IPProtectionServiceSingleton extends EventTarget {
 
     let started;
     try {
-      started = await this.proxyManager.start();
+      started = await lazy.IPPProxyManager.start();
     } catch (error) {
       this.#setErrorState(ERRORS.GENERIC, error);
     }
@@ -232,11 +219,11 @@ class IPProtectionServiceSingleton extends EventTarget {
    * True if started by user action, false if system action
    */
   async stop(userAction = true) {
-    if (!this.proxyManager?.active) {
+    if (!lazy.IPPProxyManager.active) {
       return;
     }
 
-    const sessionLength = this.proxyManager.stop();
+    const sessionLength = lazy.IPPProxyManager.stop();
 
     Glean.ipprotection.toggled.record({
       userAction,
@@ -301,7 +288,7 @@ class IPProtectionServiceSingleton extends EventTarget {
     }
 
     // The connection is already active.
-    if (this.proxyManager?.active) {
+    if (lazy.IPPProxyManager.active) {
       return IPProtectionStates.ACTIVE;
     }
 
