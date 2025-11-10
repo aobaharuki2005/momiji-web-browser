@@ -313,7 +313,6 @@ export default [
       "jsdoc/empty-tags": "off",
       "jsdoc/require-param-type": "off",
       "jsdoc/require-returns-type": "off",
-      "jsdoc/tag-lines": ["off", "any", { startLines: 1 }],
       "jsdoc/valid-types": "off",
     },
   },
