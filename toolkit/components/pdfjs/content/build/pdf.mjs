@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.396
- * pdfjsBuild = 0a2680bca
+ * pdfjsVersion = 5.4.402
+ * pdfjsBuild = 57334bd20
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -13083,7 +13083,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.396",
+    apiVersion: "5.4.402",
     data,
     password,
     disableAutoFetch,
@@ -13328,6 +13328,9 @@ class PDFDocumentProxy {
   }
   saveDocument() {
     return this._transport.saveDocument();
+  }
+  extractPages(pageInfos) {
+    return this._transport.extractPages(pageInfos);
   }
   getDownloadInfo() {
     return this._transport.downloadInfoCapability.promise;
@@ -14333,6 +14336,11 @@ class WorkerTransport {
       this.annotationStorage.resetModified();
     });
   }
+  extractPages(pageInfos) {
+    return this.messageHandler.sendWithPromise("ExtractPages", {
+      pageInfos
+    });
+  }
   getPage(pageNumber) {
     if (!Number.isInteger(pageNumber) || pageNumber <= 0 || pageNumber > this._numPages) {
       return Promise.reject(new Error("Invalid page request."));
@@ -14663,8 +14671,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.396";
-const build = "0a2680bca";
+const version = "5.4.402";
+const build = "57334bd20";
 
 ;// ./src/display/editor/color_picker.js
 
