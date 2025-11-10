@@ -10,18 +10,9 @@
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/image/FetchDecodedImage.h"
 #include "nsNetUtil.h"
 
 namespace mozilla::dom {
-
-MediaImage MediaImageData::ToMediaImage() const {
-  MediaImage image;
-  image.mSizes = mSizes;
-  image.mSrc = mSrc;
-  image.mType = mType;
-  return image;
-}
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaMetadata, mParent)
@@ -82,7 +73,7 @@ void MediaMetadata::GetArtwork(JSContext* aCx, nsTArray<JSObject*>& aRetVal,
 
   for (size_t i = 0; i < mArtwork.Length(); ++i) {
     JS::Rooted<JS::Value> value(aCx);
-    if (!ToJSValue(aCx, mArtwork[i].ToMediaImage(), &value)) {
+    if (!ToJSValue(aCx, mArtwork[i], &value)) {
       aRv.NoteJSContextException(aCx);
       return;
     }
@@ -121,53 +112,6 @@ void MediaMetadata::SetArtwork(JSContext* aCx,
   SetArtworkInternal(artwork, aRv);
 };
 
-RefPtr<MediaMetadataBasePromise> MediaMetadata::FetchArtwork(
-    const MediaMetadataBase& aMetadata, nsIPrincipal* aPrincipal,
-    const size_t aIndex) {
-  if (!aPrincipal || aIndex >= aMetadata.mArtwork.Length()) {
-    // No image loaded successfully or no principal, but still resolve without
-    // any image data.
-    return MediaMetadataBasePromise::CreateAndResolve(aMetadata, __func__);
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  if (NS_WARN_IF(NS_FAILED(
-          NS_NewURI(getter_AddRefs(uri), aMetadata.mArtwork[aIndex].mSrc)))) {
-    return FetchArtwork(aMetadata, aPrincipal, aIndex + 1);
-  }
-
-  return image::FetchDecodedImage(uri, gfx::IntSize{}, aPrincipal)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [metadata = aMetadata, principal = RefPtr{aPrincipal},
-           aIndex](already_AddRefed<imgIContainer> aImage) {
-            nsCOMPtr<imgIContainer> image(std::move(aImage));
-            // The promise should only be resolved for decoded images, so using
-            // FLAG_SYNC_DECODE is just a precaution.
-            if (RefPtr<mozilla::gfx::SourceSurface> surface =
-                    image->GetFrame(imgIContainer::FRAME_FIRST,
-                                    imgIContainer::FLAG_SYNC_DECODE |
-                                        imgIContainer::FLAG_ASYNC_NOTIFY)) {
-              if (RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
-                      surface->GetDataSurface()) {
-                MediaMetadataBase data(metadata);
-                data.mArtwork[aIndex].mDataSurface = dataSurface;
-                return MediaMetadataBasePromise::CreateAndResolve(data,
-                                                                  __func__);
-              }
-            }
-            return FetchArtwork(metadata, principal, aIndex + 1);
-          },
-          [metadata = aMetadata, principal = RefPtr{aPrincipal},
-           aIndex](nsresult aStatus) {
-            return FetchArtwork(metadata, principal, aIndex + 1);
-          });
-}
-
-RefPtr<MediaMetadataBasePromise> MediaMetadata::LoadMetadataArtwork() {
-  return FetchArtwork(*this, mParent->PrincipalOrNull(), 0);
-}
-
 static nsIURI* GetEntryBaseURL() {
   nsCOMPtr<Document> doc = GetEntryDocument();
   return doc ? doc->GetDocBaseURI() : nullptr;
@@ -194,19 +138,17 @@ static nsresult ResolveURL(nsString& aURL, nsIURI* aBaseURI) {
 
 void MediaMetadata::SetArtworkInternal(const Sequence<MediaImage>& aArtwork,
                                        ErrorResult& aRv) {
-  nsCOMPtr<nsIURI> baseURI = GetEntryBaseURL();
+  nsTArray<MediaImage> artwork;
+  artwork.Assign(aArtwork);
 
-  nsTArray<MediaImageData> artwork;
-  for (const MediaImage& image : aArtwork) {
-    MediaImageData imageData(image);
-    nsresult rv = ResolveURL(imageData.mSrc, baseURI);
+  nsCOMPtr<nsIURI> baseURI = GetEntryBaseURL();
+  for (MediaImage& image : artwork) {
+    nsresult rv = ResolveURL(image.mSrc, baseURI);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.ThrowTypeError<MSG_INVALID_URL>(NS_ConvertUTF16toUTF8(image.mSrc));
       return;
     }
-    artwork.AppendElement(std::move(imageData));
   }
-
   mArtwork = std::move(artwork);
 }
 
