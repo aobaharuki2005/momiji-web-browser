@@ -1129,10 +1129,6 @@ class PresShell final : public nsStubDocumentObserver,
     return mFontSizeInflationForceEnabled;
   }
 
-  bool FontSizeInflationDisabledInMasterProcess() const {
-    return mFontSizeInflationDisabledInMasterProcess;
-  }
-
   bool FontSizeInflationEnabled() const { return mFontSizeInflationEnabled; }
 
   /**
@@ -3444,7 +3440,6 @@ class PresShell final : public nsStubDocumentObserver,
   bool mVisualViewportResizeEventPending : 1;
 
   bool mFontSizeInflationForceEnabled : 1;
-  bool mFontSizeInflationDisabledInMasterProcess : 1;
   bool mFontSizeInflationEnabled : 1;
 
   // If a document belongs to an invisible DocShell, this flag must be set

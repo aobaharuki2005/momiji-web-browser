@@ -709,7 +709,6 @@ PresShell::PresShell(Document* aDocument)
       mResizeEventPending(false),
       mVisualViewportResizeEventPending(false),
       mFontSizeInflationForceEnabled(false),
-      mFontSizeInflationDisabledInMasterProcess(false),
       mFontSizeInflationEnabled(false),
       mIsNeverPainting(false),
       mResolutionUpdated(false),
@@ -909,8 +908,6 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
       StaticPrefs::font_size_inflation_lineThreshold();
   mFontSizeInflationForceEnabled =
       StaticPrefs::font_size_inflation_forceEnabled();
-  mFontSizeInflationDisabledInMasterProcess =
-      StaticPrefs::font_size_inflation_disabledInMasterProcess();
   // We'll compute the font size inflation state in Initialize(), when we know
   // the document type.
 
@@ -12566,12 +12563,6 @@ bool PresShell::DetermineFontSizeInflationState() {
       // We're in a child process.  Cancel inflation if we're not
       // async-pan zoomed.
       if (!tab->AsyncPanZoomEnabled()) {
-        return false;
-      }
-    } else if (XRE_IsParentProcess()) {
-      // We're in the master process.  Cancel inflation if it's been
-      // explicitly disabled.
-      if (FontSizeInflationDisabledInMasterProcess()) {
         return false;
       }
     }
