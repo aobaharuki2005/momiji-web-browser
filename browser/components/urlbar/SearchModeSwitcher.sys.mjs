@@ -410,9 +410,12 @@ export class SearchModeSwitcher {
         menuitem.classList.add("badge-new");
       }
 
-      menuitem.addEventListener("command", e => {
-        this.search({ engine, openEngineHomePage: e.shiftKey });
-      });
+      menuitem.addEventListener(
+        "command",
+        /** @param {KeyboardEvent} e */ e => {
+          this.search({ engine, openEngineHomePage: e.shiftKey });
+        }
+      );
       this.#popup.insertBefore(menuitem, separator);
     }
 
