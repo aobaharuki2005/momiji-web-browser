@@ -117,4 +117,7 @@ ip-protection-exceptions-dialog-window =
 ip-protection-exclusions-desc = Use VPN for all websites except ones on this list.
 ip-protection-inclusions-desc = Use VPN for only select websites.
 
+ipprotection-site-settings-title =
+  .title = VPN site settings
+
 ##
