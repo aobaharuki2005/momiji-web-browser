@@ -27,6 +27,7 @@
 #include "mozilla/glean/NetwerkMetrics.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/TRRServiceChild.h"
+#include "mozilla/ProfilerMarkers.h"
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
 
@@ -1299,8 +1300,12 @@ void TRRService::ConfirmationContext::CompleteConfirmation(nsresult aStatus,
 
     MOZ_ASSERT(mTask);
     if (NS_SUCCEEDED(aStatus)) {
+      profiler_add_marker("TRR Confirmation Success",
+                          geckoprofiler::category::NETWORK);
       HandleEvent(ConfirmationEvent::ConfirmOK, lock);
     } else {
+      profiler_add_marker("TRR Confirmation Failure",
+                          geckoprofiler::category::NETWORK);
       HandleEvent(ConfirmationEvent::ConfirmFail, lock);
     }
 
