@@ -217,7 +217,7 @@ macosx64-xz:
         toolchain-artifact: public/build/xz.tar.zst
     fetches:
         fetch:
-            - xz-5.4.4
+            - xz-5.8.1
         toolchain:
             - macosx64-clang-toolchain
             - macosx64-sdk-toolchain
