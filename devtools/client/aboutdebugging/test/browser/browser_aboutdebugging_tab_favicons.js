@@ -16,10 +16,7 @@ const TAB_URL =
 
 // This is the same png data-url as the one used in test-tab-favicons.html.
 const EXPECTED_FAVICON =
-  "data:image/png;base64," +
-  "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATklEQVRYhe3SIQ4AI" +
-  "BADwf7/04elBAtrVlSduGnSTDJ7cuT1PQJwwO+Hl7sAGAA07gjAAfgIBeAAoH" +
-  "FHAA7ARygABwCNOwJwAD5CATRgAYXh+kypw86nAAAAAElFTkSuQmCC";
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVRYR+3SMQoAIAxD0fb+h9ZBEM3SKfwlTkISeEN7Va16Xt/feV9oyDsAHKCdaeDIA2AB+BEGgAO0Mw0ceQAsAD/CAHCAdqaBIw+ABeBHGAAO0M40cOQBoIANOAOf8d5vwtsAAAAASUVORK5CYII=";
 
 add_task(async function () {
   const faviconTab = await addTab(TAB_URL, { background: true });
