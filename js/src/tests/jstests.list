@@ -697,6 +697,22 @@ skip script test262/intl402/PluralRules/prototype/resolvedOptions/order.js
 skip script test262/intl402/PluralRules/prototype/constructor/notation.js
 skip script test262/intl402/PluralRules/notation.js
 
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1983837
+skip script test262/staging/top-level-await/tla-hang-entry.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1998671
+skip script test262/language/statements/await-using/syntax/await-using-invalid-arraybindingpattern-after-bindingidentifier.js
+skip script test262/language/statements/await-using/syntax/await-using-invalid-assignment-statement-body-for-of.js
+skip script test262/language/statements/await-using/syntax/await-using-invalid-objectbindingpattern-after-bindingidentifier.js
+skip script test262/language/statements/await-using/syntax/await-using-invalid-assignment-next-expression-for.js
+skip script test262/language/statements/using/syntax/using-invalid-assignment-statement-body-for-of.js
+skip script test262/language/statements/using/syntax/using-invalid-arraybindingpattern-after-bindingidentifier.js
+skip script test262/language/statements/using/syntax/with-initializer-default-statement-list.js
+skip script test262/language/statements/using/syntax/using-invalid-assignment-next-expression-for.js
+skip script test262/language/statements/using/syntax/using-not-allowed-at-top-level-of-eval.js
+skip script test262/language/statements/using/syntax/using-invalid-objectbindingpattern-after-bindingidentifier.js
+skip script test262/language/statements/using/syntax/using-for-using-of-of.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -717,24 +733,33 @@ skip script test262/built-ins/AsyncFunction/is-not-a-global.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1726243
 skip-if(!xulRuntime.shell) script test262/language/module-code/top-level-await/await-dynamic-import-rejection.js
 
+# shell.js defines "var TypedArray" and test file defines "let TypedArray". This causes a SyntaxError.
+# This can be fixed upstream by instead of defining "let TypedArray" including the harness file
+# "testTypedArray.js".
+skip script test262/staging/sm/TypedArray/getter-name.js
+
 
 ####################################################
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
-# This test is lacking the feature "symbols-as-weakmap-keys", see https://github.com/tc39/test262/pull/4579
-skip script test262/built-ins/WeakMap/prototype/getOrInsertComputed/check-state-after-callback-fn-throws.js
-
 # These tests seem incorrect, see https://github.com/tc39/test262/pull/3907
 skip script test262/language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
 skip script test262/language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
 
-# https://github.com/tc39/test262/issues/4359
-skip script test262/staging/sm/WeakMap/symbols.js
-
 # https://github.com/rbuckton/ecma262/pull/14
 skip script test262/staging/explicit-resource-management/call-dispose-methods.js
 skip script test262/staging/explicit-resource-management/await-using-in-switch-case-block.js
+
+# https://github.com/tc39/test262/pull/4623
+skip script test262/built-ins/ThrowTypeError/distinct-cross-realm.js
+
+# https://github.com/tc39/test262/issues/4639
+skip script test262/intl402/Intl/supportedValuesOf/calendars-required-by-intl-era-monthcode.js
+
+# https://github.com/tc39/test262/pull/4649
+skip-if(!xulRuntime.shell) script test262/built-ins/Math/sumPrecise/throws-on-non-number.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
@@ -934,6 +959,8 @@ skip-if(release_or_beta) script test262/intl402/Temporal/PlainMonthDay/from/cons
 # Try re-enabling when Bug 1954138 or Bug 1955545 are fixed.
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic.js
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-rgsa.js
+skip script test262/intl402/DateTimeFormat/constructor-options-calendar-islamic-fallback.js
+skip script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic-rgsa.js
 
 # https://github.com/tc39/proposal-intl-era-monthcode/issues/23. ICU4X 2.0 doesn't have inverse type
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-coptic.js
@@ -964,5 +991,19 @@ skip script test262/intl402/Temporal/PlainYearMonth/from/reference-day-hebrew.js
 skip script test262/intl402/Temporal/PlainDate/from/calendar-not-supporting-eras.js
 skip script test262/intl402/Temporal/PlainDateTime/from/calendar-not-supporting-eras.js
 
-# See https://bugzilla.mozilla.org/show_bug.cgi?id=1983837
-skip script test262/staging/top-level-await/tla-hang-entry.js
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1971346
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/bubble-time-unit.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/bubble-time-unit.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/bubble-time-unit.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1998672
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/toString/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/since/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/until/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/PlainTime/prototype/since/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/PlainTime/prototype/until/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/Instant/prototype/since/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/Instant/prototype/until/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/Instant/prototype/toString/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/since/options-read-before-algorithmic-validation.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/until/options-read-before-algorithmic-validation.js
