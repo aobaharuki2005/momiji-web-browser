@@ -923,6 +923,14 @@ void CodeGenerator::visitModPowTwoI(LModPowTwoI* ins) {
   bool canBeNegative =
       !ins->mir()->isUnsigned() && ins->mir()->canBeNegativeDividend();
 
+  if (shift == 0) {
+    if (canBeNegative && !ins->mir()->isTruncated()) {
+      bailoutTest32(Assembler::Signed, lhs, lhs, ins->snapshot());
+    }
+    masm.Mov(outw, wzr);
+    return;
+  }
+
   Label negative;
   if (canBeNegative) {
     // Switch based on sign of the lhs.
