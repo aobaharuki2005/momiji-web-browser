@@ -366,21 +366,9 @@ void nsBlockFrame::InitDebugFlags() {
   }
 }
 
-#endif
-
-//----------------------------------------------------------------------
-
-// Debugging support code
-
-#ifdef DEBUG
-const char* nsBlockFrame::kReflowCommandType[] = {
-    "ContentChanged", "StyleChanged", "ReflowDirty", "Timeout", "UserDefined",
-};
-
 MOZ_DEFINE_ENUM_TOSTRING_FUNC(LineReflowStatus,
                               (OK, Stop, RedoNoPull, RedoMoreFloats,
                                RedoNextBand, Truncated));
-
 #endif
 
 #ifdef REFLOW_STATUS_COVERAGE

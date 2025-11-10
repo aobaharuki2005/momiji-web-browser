@@ -1071,8 +1071,6 @@ class nsBlockFrame : public nsContainerFrame {
 
   static int32_t gNoiseIndent;
 
-  static const char* kReflowCommandType[];
-
  protected:
   static void InitDebugFlags();
 #endif
