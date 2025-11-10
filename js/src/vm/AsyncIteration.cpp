@@ -338,16 +338,10 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 // AsyncGeneratorUnwrapYieldResumption ( resumptionValue )
 // https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
 //
-// Steps 1-2.
-[[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumption(
+// Step 2.
+[[nodiscard]] static bool AsyncGeneratorUnwrapYieldResumptionWithReturn(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
-    CompletionKind completionKind, JS::Handle<JS::Value> value) {
-  // Step 1. If resumptionValue is not a return completion, return ?
-  //         resumptionValue.
-  if (completionKind != CompletionKind::Return) {
-    return AsyncGeneratorResume(cx, generator, completionKind, value);
-  }
-
+    JS::Handle<JS::Value> value) {
   // Step 2. Let awaited be Completion(Await(resumptionValue.[[Value]])).
   //
   // NOTE: Given that Await needs to be performed asynchronously,
@@ -367,8 +361,17 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 // https://tc39.es/ecma262/#sec-asyncgeneratoryield
 //
 // Stesp 9-12.
+//
+// AsyncGeneratorUnwrapYieldResumption ( resumptionValue )
+// https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption
+//
+// Step 1.
 [[nodiscard]] static bool AsyncGeneratorYield(
-    JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value) {
+    JSContext* cx, Handle<AsyncGeneratorObject*> generator, HandleValue value,
+    bool* resumeAgain, CompletionKind* resumeCompletionKind,
+    JS::MutableHandle<JS::Value> resumeValue) {
+  *resumeAgain = false;
+
   // Step 9. Perform
   //         ! AsyncGeneratorCompleteStep(generator, completion, false,
   //                                      previousRealm).
@@ -401,8 +404,20 @@ AsyncGeneratorRequest* AsyncGeneratorRequest::create(
 
     // Step 11.d. Return ?
     //            AsyncGeneratorUnwrapYieldResumption(resumptionValue).
-    return AsyncGeneratorUnwrapYieldResumption(cx, generator, completionKind,
-                                               completionValue);
+    //
+    // AsyncGeneratorUnwrapYieldResumption
+    // Step 1. If resumptionValue is not a return completion, return ?
+    //         resumptionValue.
+    if (completionKind != CompletionKind::Return) {
+      *resumeAgain = true;
+      *resumeCompletionKind = completionKind;
+      resumeValue.set(completionValue);
+      return true;
+    }
+
+    // Step 2.
+    return AsyncGeneratorUnwrapYieldResumptionWithReturn(cx, generator,
+                                                         completionValue);
   }
 
   // Step 12. Else,
@@ -1074,8 +1089,8 @@ bool js::AsyncGeneratorReturn(JSContext* cx, unsigned argc, Value* vp) {
     // Step 12.f. Return ?
     //            AsyncGeneratorUnwrapYieldResumption(resumptionValue).
     //
-    if (!AsyncGeneratorUnwrapYieldResumption(
-            cx, generator, CompletionKind::Return, completionValue)) {
+    if (!AsyncGeneratorUnwrapYieldResumptionWithReturn(cx, generator,
+                                                       completionValue)) {
       // The failure path here is for the Await inside
       // AsyncGeneratorUnwrapYieldResumption, where a corrupted Promise is
       // passed and called there.
@@ -1212,6 +1227,8 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
 [[nodiscard]] static bool AsyncGeneratorResume(
     JSContext* cx, Handle<AsyncGeneratorObject*> generator,
     CompletionKind completionKind, HandleValue argument) {
+  // Given that yield can resume again, we implement it as a loop.
+  JS::Rooted<JS::Value> resumeArgument(cx, argument);
   while (true) {
     MOZ_ASSERT(!generator->isClosed(),
                "closed generator when resuming async generator");
@@ -1248,7 +1265,7 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
                                         ? cx->names().AsyncGeneratorThrow
                                         : cx->names().AsyncGeneratorReturn;
     FixedInvokeArgs<1> args(cx);
-    args[0].set(argument);
+    args[0].set(resumeArgument);
     RootedValue thisOrRval(cx, ObjectValue(*generator));
     if (!CallSelfHostedFunction(cx, funName, thisOrRval, args, &thisOrRval)) {
       if (!generator->isClosed()) {
@@ -1262,7 +1279,16 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     if (generator->isAfterYield()) {
-      return AsyncGeneratorYield(cx, generator, thisOrRval);
+      bool resumeAgain = false;
+      if (!AsyncGeneratorYield(cx, generator, thisOrRval, &resumeAgain,
+                               &completionKind, &resumeArgument)) {
+        return false;
+      }
+      if (resumeAgain) {
+        MOZ_ASSERT(completionKind != CompletionKind::Return);
+        continue;
+      }
+      return true;
     }
 
     return AsyncGeneratorReturned(cx, generator, thisOrRval);
