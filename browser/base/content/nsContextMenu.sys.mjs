@@ -2422,8 +2422,8 @@ export class nsContextMenu {
 
   /**
    * Checks if there is a query parameter that can be stripped
-   * @returns {Boolean}
    *
+   * @returns {Boolean}
    */
   #canStripParams(uri = this.linkURI) {
     if (!uri) {
@@ -2439,8 +2439,8 @@ export class nsContextMenu {
 
   /**
    * Checks if a webpage is a secure interal webpage
-   * @returns {Boolean}
    *
+   * @returns {Boolean}
    */
   isSecureAboutPage() {
     let { currentURI } = this.browser;

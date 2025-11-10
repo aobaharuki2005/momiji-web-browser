@@ -138,6 +138,8 @@ exports.getFontPreviewData = getFontPreviewData;
 /**
  * Get the text content of a rule given some CSS text, a line and a column
  * Consider the following example:
+ *
+ * ```css
  * body {
  *  color: red;
  * }
@@ -145,8 +147,11 @@ exports.getFontPreviewData = getFontPreviewData;
  *  line-height: 2em;
  *  color: blue;
  * }
- * Calling the function with the whole text above and line=4 and column=1 would
- * return "line-height: 2em; color: blue;"
+ * ```
+ *
+ * Calling the function with the whole text above and `line=4` and `column=1` would
+ * return `line-height: 2em; color: blue;`
+ *
  * @param {String} initialText
  * @param {Number} line (1-indexed)
  * @param {Number} column (1-indexed)

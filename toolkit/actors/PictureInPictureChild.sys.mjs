@@ -1830,6 +1830,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
    * vtt.sys.mjs currently sets snapToLines to false if line is a percentage value, but
    * cues are still ordered by line. In most cases, snapToLines is set to true by default,
    * unless intentionally overridden.
+   *
    * @param allCuesArray {Array<VTTCue>} array of active cues
    */
   getOrderedWebVTTCues(allCuesArray) {

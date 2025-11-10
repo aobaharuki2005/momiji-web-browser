@@ -2117,9 +2117,10 @@ export var NewTabUtils = {
   },
 
   /**
-   *  Returns a normalized OS string used in the newtab-content ping
+   * Returns a normalized OS string used in the newtab-content ping
    * Borrowed from https://github.com/mozilla/gcp-ingestion/ingestion-beam/
    * src/main/java/com/mozilla/telemetry/transforms/NormalizeAttributes.java
+   *
    * @returns {String} Normalized OS string mac|win|linux|android|ios|other
    */
   normalizeOs() {

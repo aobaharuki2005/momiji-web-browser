@@ -156,12 +156,15 @@ var EmeHelper = class EmeHelper {
   /**
    * Adds a key id and key pair to the key map. These should both be hex
    * strings. E.g.
+   * ```js
    * emeHelper.AddKeyIdAndKey(
    *   "2cdb0ed6119853e7850671c3e9906c3c",
    *   "808b9adac384de1e4f56140f4ad76194"
    * );
+   * ```
    * This function will store the keyId and key in lower case to ensure
    * consistency internally.
+   *
    * @param keyId The key id used to lookup the following key.
    * @param key The key associated with the earlier key id.
    */

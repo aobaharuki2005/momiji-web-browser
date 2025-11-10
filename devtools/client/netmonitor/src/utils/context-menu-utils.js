@@ -16,8 +16,9 @@ function baseCopyFormatter({ name, value, hasChildren }) {
 }
 
 /**
- * The default format for the content copied to the
- *  clipboard when the `Copy All` option is selected.
+ * The default format for the content copied to the clipboard when the `Copy All`
+ * option is selected.
+ *
  * @param {Object} object The whole data object
  */
 function baseCopyAllFormatter(object) {

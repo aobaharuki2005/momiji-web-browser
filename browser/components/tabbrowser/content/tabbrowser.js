@@ -4845,6 +4845,7 @@
      * Given an array of tabs, returns a tuple [groups, leftoverTabs] such that:
      *  - groups contains all groups whose tabs are a subset of the initial array
      *  - leftoverTabs contains the remaining tabs
+     *
      * @param {Array} tabs list of tabs
      * @returns {Array} a tuple where the first element is an array of groups
      *                  and the second is an array of tabs

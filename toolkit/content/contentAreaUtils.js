@@ -1180,7 +1180,8 @@ function getCharsetforSave(aDocument) {
 
 /**
  * Open a URL from chrome, determining if we can handle it internally or need to
- *  launch an external application to handle it.
+ * launch an external application to handle it.
+ *
  * @param aURL The URL to be opened
  *
  * WARNING: Please note that openURL() does not perform any content security checks!!!

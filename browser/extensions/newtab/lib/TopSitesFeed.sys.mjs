@@ -1129,8 +1129,9 @@ export class TopSitesFeed {
   }
 
   /**
-   * _maybeInsertSearchShortcuts - if the search shortcuts experiment is running,
-   *                               insert search shortcuts if needed
+   * If the search shortcuts experiment is running, insert search shortcuts if
+   * needed.
+   *
    * @param {Array} plainPinnedSites (from the pinnedSitesCache)
    * @returns {Boolean} Did we insert any search shortcuts?
    */

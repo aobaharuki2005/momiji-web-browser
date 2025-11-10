@@ -323,10 +323,11 @@ export class PageAction {
   }
 
   /**
-   * getStrings - Handles getting the localized strings vs message overrides.
-   *              If string_id is not defined it assumes you passed in an override
-   *              message and it just returns it.
-   *              If subAttribute is provided, the string for it is returned.
+   * Handles getting the localized strings vs message overrides.
+   * If string_id is not defined it assumes you passed in an override message
+   * and it just returns it.
+   * If subAttribute is provided, the string for it is returned.
+   *
    * @return A string. One of 1) passed in string 2) a String object with
    *         attributes property if there are attributes 3) the sub attribute.
    */

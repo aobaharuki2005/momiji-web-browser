@@ -16,6 +16,7 @@
   <script type="application/javascript">
     /**
      * Helper function to test selection bounds.
+     *
      * @param {string} aID  The ID to test.
      * @param {nsIAccessibleText} acc  The accessible to test.
      * @param {int} index  The selection's index to test.
@@ -36,6 +37,7 @@
 
     /**
      * Test adding selections to accessibles.
+     *
      * @param {string} aID  The ID of the element to test.
      * @param {array} aSelections  Array of selection start and end indices.
      */
@@ -66,6 +68,7 @@
 
     /**
      * Test changing selections in accessibles.
+     *
      * @param {string} aID  The ID of the element to test.
      * @param {int} aIndex  The index of the selection to change.
      * @param {array} aSelection  Array of the selection's new start and end
@@ -89,6 +92,7 @@
 
     /**
      * Test removing all selections from accessibles.
+     *
      * @param {string} aID  The ID of the element to test.
      */
     async function removeSelections(aID) {
@@ -108,6 +112,7 @@
 
     /**
      * Test that changing the DOM selection is reflected in the accessibles.
+     *
      * @param {string} aID  The container ID to test in
      * @param {string} aNodeID1  The start node of the selection
      * @param  {int} aNodeOffset1  The offset where the selection should start
@@ -148,6 +153,7 @@
      * Test  expected and unexpected events for selecting
      * all text and focusing both an input and text area. We expect a caret
      * move, but not a text selection change.
+     *
      * @param {string} aID  The ID of the element to test.
      */
     async function eventsForSelectingAllTextAndFocus(aID) {

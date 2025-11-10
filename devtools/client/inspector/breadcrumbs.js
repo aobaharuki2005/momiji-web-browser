@@ -461,9 +461,13 @@ HTMLBreadcrumbs.prototype = {
 
   /**
    * Build <span>s that represent the node:
-   *   <span class="breadcrumbs-widget-item-tag">tagName</span>
-   *   <span class="breadcrumbs-widget-item-id">#id</span>
-   *   <span class="breadcrumbs-widget-item-classes">.class1.class2</span>
+   *
+   * ```html
+   * <span class="breadcrumbs-widget-item-tag">tagName</span>
+   * <span class="breadcrumbs-widget-item-id">#id</span>
+   * <span class="breadcrumbs-widget-item-classes">.class1.class2</span>
+   * ```
+   *
    * @param {NodeFront} node The node to pretty-print
    * @returns {DocumentFragment}
    */

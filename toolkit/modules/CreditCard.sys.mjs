@@ -346,8 +346,8 @@ export class CreditCard {
   }
 
   /**
-   *
    * Please use getLabelInfo above, as it allows for localization.
+   *
    * @deprecated
    */
   static getLabel({ number, name }) {

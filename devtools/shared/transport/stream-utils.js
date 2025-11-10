@@ -206,7 +206,8 @@ StreamCopier.prototype = {
  * stream.  In that case, we only read as many bytes as the stream currently has
  * to offer.
  * TODO: This implementation could be removed if bug 984651 is fixed, which
- *       provides a native version of the same idea.
+ * provides a native version of the same idea.
+ *
  * @param stream nsIInputStream
  *        The input stream to read from.
  * @param delimiter string

@@ -1505,8 +1505,11 @@ function isWindows() {
  *
  * The server can be accessed like:
  *
- *   const server = createTestHTTPServer();
- *   let url = "http://localhost: " + server.identity.primaryPort + "/path";
+ * ```js
+ * const server = createTestHTTPServer();
+ * let url = "http://localhost: " + server.identity.primaryPort + "/path";
+ * ```
+ *
  * @returns {HttpServer}
  */
 function createTestHTTPServer() {

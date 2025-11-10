@@ -614,6 +614,7 @@ FxAccountsWebChannelHelpers.prototype = {
    * * In the non-oauth flows, if the user is verified, then the browser itself is able to transition the
    *   user to fully connected.
    * * In the oauth flows, we will need an `oauth_login` message with our scoped keys to be fully connected.
+   *
    * @param accountData the user's account data and credentials
    */
   async login(accountData) {

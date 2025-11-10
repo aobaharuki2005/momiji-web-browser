@@ -834,11 +834,12 @@ export class _ASRouter {
   }
 
   /**
-   * _resetInitialization - adds the following to the instance:
+   * Adds the following to the instance:
    *  .initialized {bool}            Has AS Router been initialized?
    *  .waitForInitialized {Promise}  A promise that resolves when initializion is complete
    *  ._finishInitializing {func}    A function that, when called, resolves the .waitForInitialized
    *                                 promise and sets .initialized to true.
+   *
    * @memberof _ASRouter
    */
   _resetInitialization() {
@@ -932,8 +933,9 @@ export class _ASRouter {
   }
 
   /**
-   * loadMessagesFromAllProviders - Loads messages from all providers if they require updates.
-   *                                Checks the .lastUpdated field on each provider to see if updates are needed
+   * Loads messages from all providers if they require updates. Checks the
+   * .lastUpdated field on each provider to see if updates are needed
+   *
    * @param toUpdate  An optional list of providers to update. This overrides
    *                  the checks to determine which providers to update.
    * @memberof _ASRouter

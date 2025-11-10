@@ -97,10 +97,9 @@ export class ASRouterStorage {
   }
 
   /**
-   * createOrOpenDb - Open a db (with this.dbName) if it exists.
-   *                  If it does not exist, create it.
-   *                  If an error occurs, deleted the db and attempt to
-   *                  re-create it.
+   * Open a db (with this.dbName) if it exists. If it does not exist, create it.
+   * If an error occurs, deleted the db and attempt to re-create it.
+   *
    * @returns Promise that resolves with a db instance
    */
   async createOrOpenDb() {
