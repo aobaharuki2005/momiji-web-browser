@@ -187,6 +187,19 @@ void WeakMapBase::restoreMarkedWeakMaps(WeakMapColors& markedWeakMaps) {
   }
 }
 
+void WeakMapBase::setHasNurseryEntries() {
+  MOZ_ASSERT(!hasNurseryEntries);
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+
+  GCRuntime* gc = &zone()->runtimeFromMainThread()->gc;
+  if (!gc->nursery().addWeakMapWithNurseryEntries(this)) {
+    oomUnsafe.crash("WeakMapBase::setHasNurseryEntries");
+  }
+
+  hasNurseryEntries = true;
+}
+
 namespace js {
 template class WeakMap<JSObject*, JSObject*, ZoneAllocPolicy>;
 }  // namespace js

@@ -1713,6 +1713,8 @@ void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
     DebugAPI::traceAllForMovingGC(&mover);
   }
   endProfile(ProfileKey::MarkDebugger);
+
+  traceWeakMaps(mover);
 }
 
 bool js::Nursery::shouldTenureEverything(JS::GCReason reason) {
@@ -2594,7 +2596,15 @@ void js::Nursery::sweepMapAndSetObjects() {
   }
 }
 
+void Nursery::traceWeakMaps(TenuringTracer& trc) {
+  // Conservatively assume all weak map keys and values are live.
+  MOZ_ASSERT(trc.weakMapAction() == JS::WeakMapTraceAction::TraceKeysAndValues);
+  weakMapsWithNurseryEntries_.eraseIf(
+      [&](WeakMapBase* wm) { return wm->traceNurseryEntriesOnMinorGC(&trc); });
+}
+
 void js::Nursery::joinSweepTask() { sweepTask->join(); }
+
 void js::Nursery::joinDecommitTask() { decommitTask->join(); }
 
 #ifdef DEBUG

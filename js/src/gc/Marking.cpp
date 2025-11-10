@@ -547,17 +547,9 @@ template void js::TraceSameZoneCrossCompartmentEdge(
 template <typename T>
 void js::TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone,
                                      T** thingp, const char* name) {
-  // We can't use ShouldTraceCrossCompartment here because that assumes the
-  // source of the edge is a CCW object which could be used to delay gray
-  // marking. Instead, assert that the weak map zone is in the same marking
-  // state as the target thing's zone and therefore we can go ahead and mark it.
-#ifdef DEBUG
-  auto thing = *thingp;
-  if (trc->isMarkingTracer()) {
-    MOZ_ASSERT(weakMapZone->isGCMarking());
-    MOZ_ASSERT(weakMapZone->gcState() == thing->zone()->gcState());
-  }
-#endif
+  // We'd like to assert that the the thing's zone is currently being marked but
+  // that's not always true when tracing debugger weak maps which have keys in
+  // other compartments.
 
   // Clear expected compartment for cross-compartment edge.
   AutoClearTracingSource acts(trc);

@@ -4006,7 +4006,7 @@ void DebugAPI::slowPathTraceGeneratorFrame(JSTracer* tracer,
 
     if (Debugger::GeneratorWeakMap::Ptr entry =
             dbg->generatorFrames.lookupUnbarriered(generator)) {
-      HeapPtr<DebuggerFrame*>& frameObj = entry->value();
+      PreBarriered<DebuggerFrame*>& frameObj = entry->value();
       if (frameObj->hasAnyHooks()) {
         // See comment above.
         TraceCrossCompartmentEdge(tracer, generator, &frameObj,
