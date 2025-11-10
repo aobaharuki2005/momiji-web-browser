@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -13,16 +14,16 @@ function f0(a, a) {
 }
 
 // SyntaxError should be thrown if rest parameter name is duplicated.
-assert.throws(SyntaxError, () => eval(`
+assertThrowsInstanceOf(() => eval(`
 function f1(a, ...a) {
 }
-`));
+`), SyntaxError);
 
 // SyntaxError should be thrown if there is a duplicated parameter.
-assert.throws(SyntaxError, () => eval(`
+assertThrowsInstanceOf(() => eval(`
 function f2(a, a, ...b) {
 }
-`));
+`), SyntaxError);
 
 
 reportCompare(0, 0);

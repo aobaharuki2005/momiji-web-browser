@@ -2,12 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, compareArray.js]
+flags:
+  - noStrict
 description: |
-  Implement RegExp unicode flag -- CharacterClassEscape.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1135377
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1135377;
+var summary = "Implement RegExp unicode flag -- CharacterClassEscape.";
+
+print(BUGNUMBER + ": " + summary);
 
 // BMP
 
@@ -76,5 +81,6 @@ testNonBMP(/\W/u);
 testNonBMP(/[\D]/u);
 testNonBMP(/[\S]/u);
 testNonBMP(/[\W]/u);
+
 
 reportCompare(0, 0);

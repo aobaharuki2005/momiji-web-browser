@@ -4,13 +4,23 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  Array length redefinition behavior with non-configurable elements
-info: bugzilla.mozilla.org/show_bug.cgi?id=858381
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 858381;
+var summary =
+  "Array length redefinition behavior with non-configurable elements";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 function addDataProperty(obj, prop, value, enumerable, configurable, writable)
 {
@@ -74,9 +84,16 @@ function strict()
 
   addDataProperty(arr,  27182818, "eep", false, false, false);
 
-  assert.throws(TypeError, function() {
+  try
+  {
     arr.length = 1;
-  }, "non-configurable property should trigger TypeError");
+    throw new Error("didn't throw?!");
+  }
+  catch (e)
+  {
+    assert.sameValue(e instanceof TypeError, true,
+             "non-configurable property should trigger TypeError, got " + e);
+  }
 
   assert.sameValue(arr.length, 27182819);
 
@@ -90,5 +107,9 @@ function strict()
     assert.sameValue(props[i], expected[i], "unexpected property: " + props[i]);
 }
 strict();
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

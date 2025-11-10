@@ -4,33 +4,40 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  pobj_ == obj2
-info: bugzilla.mozilla.org/show_bug.cgi?id=481516
+  pending
 esid: pending
 ---*/
-
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 481516;
+var summary = 'TM: pobj_ == obj2';
 var actual = '';
 var expect = '';
 
+
+//-----------------------------------------------------------------------------
 test();
+//-----------------------------------------------------------------------------
 
 function test()
 {
   expect = '1111222';
 
-  var a = {x: 1};
-  var b = {__proto__: a};
-  var c = {__proto__: b};
-  var objs = [{__proto__: a}, {__proto__: a}, {__proto__: a}, b, {__proto__: a},
+  a = {x: 1};
+  b = {__proto__: a};
+  c = {__proto__: b};
+  objs = [{__proto__: a}, {__proto__: a}, {__proto__: a}, b, {__proto__: a},
           {__proto__: a}];
-  for (var i = 0; i < 6; i++) {
-    actual += ""+c.x;
+  for (i = 0; i < 6; i++) {
+    print(actual += ""+c.x);
     objs[i].x = 2;
   }
-  actual += c.x;
+  print(actual += c.x);
 
-  assert.sameValue(expect, actual);
+  assert.sameValue(expect, actual, summary);
 }
 
 reportCompare(0, 0);

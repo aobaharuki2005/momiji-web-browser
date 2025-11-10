@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('WeakRef')) -- WeakRef is not enabled unconditionally
 // Copyright (C) 2021 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

@@ -4,7 +4,9 @@
  */
 
 /*---
-includes: [sm/assertThrowsValue.js, sm/non262-Reflect-shell.js, deepEqual.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-Reflect-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -122,7 +124,7 @@ assert.sameValue(log, "sp");
 
 // When calling a cross-compartment wrapper, receiver is rewrapped for the
 // target compartment.
-var g = $262.createRealm().global;
+var g = createNewGlobal();
 if (!("assert" in g) && "assert" in globalThis)
     g.assert = assert;  // necessary when exporting to test262
 if (!("assert.sameValue" in g))
@@ -235,7 +237,7 @@ for (obj of [{a: 0}, {get a() { return 0; }}]) {
     proxy = new Proxy(obj, {
         set(t, k, v, r) { return true; }
     });
-    assert.throws(TypeError, () => Reflect.set(proxy, "a", "b"));
+    assertThrowsInstanceOf(() => Reflect.set(proxy, "a", "b"), TypeError);
 }
 
 // Per spec, this should first call p.[[Set]]("0", 42, a) and

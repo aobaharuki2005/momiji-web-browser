@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -27,7 +28,7 @@ assert.sameValue(hit1, 1);
 // It can throw; the exception is propagated out.
 function Fit() {}
 with ({x: 0, get [Symbol.unscopables]() { throw new Fit; }})
-    assert.throws(Fit, () => x);
+    assertThrowsInstanceOf(() => x, Fit);
 
 // Individual properties on the @@unscopables object can have getters.
 let hit2 = 0;
@@ -46,7 +47,7 @@ assert.sameValue(hit2, 1);
 
 // And they can throw.
 with ({x: 0, [Symbol.unscopables]: {get x() { throw new Fit; }}})
-    assert.throws(Fit, () => x);
+    assertThrowsInstanceOf(() => x, Fit);
 
 
 reportCompare(0, 0);

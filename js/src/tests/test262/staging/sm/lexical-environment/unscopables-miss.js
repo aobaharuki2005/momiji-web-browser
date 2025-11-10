@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -12,7 +13,7 @@ esid: pending
 // is a ReferenceError.
 
 with ({x: 1, [Symbol.unscopables]: {x: true}})
-    assert.throws(ReferenceError, () => x);
+    assertThrowsInstanceOf(() => x, ReferenceError);
 
 
 reportCompare(0, 0);

@@ -4,11 +4,24 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  ({}).toString.call(null) == "[object Null]", ({}).toString.call(undefined) == "[object Undefined]"
-info: bugzilla.mozilla.org/show_bug.cgi?id=575522
+  pending
 esid: pending
 ---*/
+var gTestfile = 'object-toString-01.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 575522;
+var summary = '({}).toString.call(null) == "[object Null]", ' +
+              '({}).toString.call(undefined) == "[object Undefined]", ';
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var toString = Object.prototype.toString;
 
@@ -29,5 +42,10 @@ assert.sameValue(toString.call(-Infinity), "[object Number]");
 assert.sameValue(toString.call("foopy"), "[object String]");
 
 assert.sameValue(toString.call({}), "[object Object]");
+
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

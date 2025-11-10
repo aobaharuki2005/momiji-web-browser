@@ -4,11 +4,22 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Implement ES6 binary literals
-info: bugzilla.mozilla.org/show_bug.cgi?id=894026
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 894026;
+var summary = "Implement ES6 binary literals";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var chars = ['b', 'B'];
 
@@ -18,9 +29,17 @@ for (var i = 0; i < 2; i++)
   {
     chars.forEach(function(v)
     {
-      assert.throws(SyntaxError, function() {
+      try
+      {
         eval('0' + v + i);
-      }, "no syntax error evaluating 0" + v + i);
+        throw "didn't throw";
+      }
+      catch (e)
+      {
+        assert.sameValue(e instanceof SyntaxError, true,
+                 "no syntax error evaluating 0" + v + i + ", " +
+                 "got " + e);
+      }
     });
     continue;
   }
@@ -31,9 +50,17 @@ for (var i = 0; i < 2; i++)
     {
       chars.forEach(function(v)
       {
-        assert.throws(SyntaxError, function() {
+        try
+        {
           eval('0' + v + i + j);
-        }, "no syntax error evaluating 0" + v + i + j);
+          throw "didn't throw";
+        }
+        catch (e)
+        {
+          assert.sameValue(e instanceof SyntaxError, true,
+                   "no syntax error evaluating 0" + v + i + j + ", " +
+                   "got " + e);
+        }
       });
       continue;
     }
@@ -44,9 +71,17 @@ for (var i = 0; i < 2; i++)
       {
         chars.forEach(function(v)
         {
-          assert.throws(SyntaxError, function() {
+          try
+          {
             eval('0' + v + i + j + k);
-          }, "no syntax error evaluating 0" + v + i + j + k);
+            throw "didn't throw";
+          }
+          catch (e)
+          {
+            assert.sameValue(e instanceof SyntaxError, true,
+                     "no syntax error evaluating 0" + v + i + j + k + ", " +
+                     "got " + e);
+          }
         });
         continue;
       }
@@ -61,9 +96,14 @@ for (var i = 0; i < 2; i++)
 
 chars.forEach(function(v)
 {
-  assert.throws(SyntaxError, function() {
-    eval('0' + v);
-  }, "no syntax error evaluating 0" + v);
+  try
+  {
+  }
+  catch (e)
+  {
+    assert.sameValue(e instanceof SyntaxError, true,
+             "no syntax error evaluating 0" + v + ", got " + e);
+  }
 });
 
 // Off-by-one check: '/' immediately precedes '0'.
@@ -76,5 +116,9 @@ function strict()
   return 0b11010101;
 }
 assert.sameValue(strict(), 128 + 64 + 16 + 4 + 1);
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

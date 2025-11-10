@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -43,7 +46,7 @@ var obj = new Proxy(x, {
 assert.sameValue(Reflect.get(obj, "mood"), "moodful");
 
 // Exceptions thrown by a proxy's get handler are propagated.
-assert.throws(TypeError, () => Reflect.get(obj, Symbol()));
+assertThrowsInstanceOf(() => Reflect.get(obj, Symbol()), TypeError);
 
 // Ordinary object, property has a setter and no getter
 obj = {set name(x) {}};

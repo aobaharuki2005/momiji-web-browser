@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-strict-shell.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -14,7 +17,7 @@ function test(makeNonArray) {
     C.prototype = []
     if (makeNonArray)
         C.prototype.constructor = C
-    var c = new C();
+    c = new C();
     c.push("foo");
     return c.length
 }

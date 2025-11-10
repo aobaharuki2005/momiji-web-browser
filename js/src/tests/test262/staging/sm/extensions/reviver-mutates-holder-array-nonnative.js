@@ -4,11 +4,22 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Behavior when JSON.parse walks over a non-native object
-info: bugzilla.mozilla.org/show_bug.cgi?id=901380
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 901380;
+var summary = "Behavior when JSON.parse walks over a non-native object";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var typedArray = null;
 
@@ -32,5 +43,9 @@ assert.sameValue(arr[0], 0);
 assert.sameValue(arr[1], typedArray);
 
 assert.sameValue(observedTypedArrayElementCount, 1);
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

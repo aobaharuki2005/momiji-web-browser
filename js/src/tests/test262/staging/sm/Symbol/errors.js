@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -13,12 +16,12 @@ esid: pending
 var sym = Symbol();
 
 // 7.2.2 IsCallable
-assert.throws(TypeError, () => sym());
-assert.throws(TypeError, () => Function.prototype.call.call(sym));
+assertThrowsInstanceOf(() => sym(), TypeError);
+assertThrowsInstanceOf(() => Function.prototype.call.call(sym), TypeError);
 
 // 7.2.5 IsConstructor
-assert.throws(TypeError, () => new sym());
-assert.throws(TypeError, () => new Symbol());
+assertThrowsInstanceOf(() => new sym(), TypeError);
+assertThrowsInstanceOf(() => new Symbol(), TypeError);
 
 
 reportCompare(0, 0);

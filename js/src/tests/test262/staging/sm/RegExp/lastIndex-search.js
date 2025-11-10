@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -92,7 +95,7 @@ for (let Constructor of [RegExp, DuckRegExp]) {
     for (let {regExp, lastIndex, input} of testCasesNotPositiveZero) {
         let re = new Constructor(regExp);
         Object.defineProperty(re, "lastIndex", { value: lastIndex, writable: false });
-        assert.throws(TypeError, () => re[Symbol.search](input));
+        assertThrowsInstanceOf(() => re[Symbol.search](input), TypeError);
         assert.sameValue(re.lastIndex, lastIndex);
     }
 
@@ -101,7 +104,7 @@ for (let Constructor of [RegExp, DuckRegExp]) {
         let re = new Constructor(regExp);
         Object.defineProperty(re, "lastIndex", { value: lastIndex, writable: false });
         if (re.global || re.sticky) {
-            assert.throws(TypeError, () => re[Symbol.search](input));
+            assertThrowsInstanceOf(() => re[Symbol.search](input), TypeError);
         } else {
             re[Symbol.search](input);
         }

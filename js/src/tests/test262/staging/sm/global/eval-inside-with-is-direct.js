@@ -4,13 +4,22 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  with (...) eval(...) is a direct eval
-info: bugzilla.mozilla.org/show_bug.cgi?id=601307
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 601307;
+var summary = "with (...) eval(...) is a direct eval";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var t = "global";
 function test()
@@ -20,5 +29,9 @@ function test()
     return eval("t");
 }
 assert.sameValue(test(), "local");
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

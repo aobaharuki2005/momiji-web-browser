@@ -1,8 +1,11 @@
-// |reftest| skip-if(!this.hasOwnProperty('Temporal')) -- Temporal is not enabled unconditionally
+// |reftest| shell-option(--enable-temporal) skip-if(!this.hasOwnProperty('Temporal')||!xulRuntime.shell) -- Temporal is not enabled unconditionally, requires shell-options
 // Copyright (C) 2024 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 features:
   - Temporal
 description: |
@@ -11,7 +14,7 @@ esid: pending
 ---*/
 
 // https://github.com/unicode-org/icu4x/issues/4914
-assert.throws(RangeError, () => {
+assertThrowsInstanceOf(() => {
   let date = Temporal.PlainDate.from({
     calendar: "islamic-umalqura",
     year: -6823,
@@ -19,7 +22,7 @@ assert.throws(RangeError, () => {
     day: 1,
   });
   // assert.sameValue(date.day, 1);
-});
+}, RangeError);
 
 
 reportCompare(0, 0);

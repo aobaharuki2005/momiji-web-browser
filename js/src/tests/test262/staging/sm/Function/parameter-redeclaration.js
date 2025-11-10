@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -12,16 +15,16 @@ function f1(a = 0) {
 }
 
 // 'let' and 'const' at body-level are not allowed to redeclare parameters.
-assert.throws(SyntaxError, () => {
+assertThrowsInstanceOf(() => {
   eval(`function f2(a = 0) {
     let a;
   }`);
-});
-assert.throws(SyntaxError, () => {
+}, SyntaxError);
+assertThrowsInstanceOf(() => {
   eval(`function f3(a = 0) {
     const a;
   }`);
-});
+}, SyntaxError);
 
 
 reportCompare(0, 0);

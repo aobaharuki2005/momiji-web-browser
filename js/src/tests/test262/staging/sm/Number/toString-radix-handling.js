@@ -4,19 +4,41 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Number.prototype.toString should use ToInteger on the radix and should throw a RangeError if the radix is bad
-info: bugzilla.mozilla.org/show_bug.cgi?id=647385
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 647385;
+var summary =
+  "Number.prototype.toString should use ToInteger on the radix and should " +
+  "throw a RangeError if the radix is bad";
 
-function test(r) {
-  assert.throws(RangeError, function() {
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+function test(r)
+{
+  try
+  {
     5..toString(r);
-  });
+    throw "should have thrown";
+  }
+  catch (e)
+  {
+    assert.sameValue(e instanceof RangeError, true, "expected a RangeError, got " + e);
+  }
 }
-
 test(Math.pow(2, 32) + 10);
 test(55);
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

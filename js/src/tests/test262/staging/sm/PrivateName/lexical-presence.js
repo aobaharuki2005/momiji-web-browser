@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -15,9 +16,9 @@ class A {
 };
 
 function assertThrowsSyntaxError(str) {
-  assert.throws(SyntaxError, () => eval(str));       // Direct Eval
-  assert.throws(SyntaxError, () => (1, eval)(str));  // Indirect Eval
-  assert.throws(SyntaxError, () => Function(str));   // Function
+  assertThrowsInstanceOf(() => eval(str), SyntaxError);       // Direct Eval
+  assertThrowsInstanceOf(() => (1, eval)(str), SyntaxError);  // Indirect Eval
+  assertThrowsInstanceOf(() => Function(str), SyntaxError);   // Function
 }
 
 assertThrowsSyntaxError(`
@@ -54,7 +55,7 @@ function assertNonExisting(fetchCode) {
   }
   var a = new X;
   a.b()`
-  assert.throws(SyntaxError, () => eval(source));
+  assertThrowsInstanceOf(() => eval(source), SyntaxError);
 }
 
 assertNonExisting(`return eval("this.#x")"`);

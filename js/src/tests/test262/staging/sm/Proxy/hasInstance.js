@@ -2,7 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -17,7 +19,7 @@ var p = new Proxy(fun, {
 });
 
 assert.sameValue(new fun instanceof p, true);
-assert.compareArray(get, [Symbol.hasInstance, "prototype"]);
+assert.deepEqual(get, [Symbol.hasInstance, "prototype"]);
 
 
 reportCompare(0, 0);

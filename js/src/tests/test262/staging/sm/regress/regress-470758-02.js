@@ -4,24 +4,31 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Promote evald initializer into upvar
-info: bugzilla.mozilla.org/show_bug.cgi?id=470758
+  pending
 esid: pending
 ---*/
-
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 470758;
+var summary = 'Promote evald initializer into upvar';
 var actual = '';
 var expect = '';
 
+
+//-----------------------------------------------------------------------------
 test();
+//-----------------------------------------------------------------------------
 
 function test()
 {
   expect = 5;
 
-  (function(){var x;eval("for (x = 0; x < 5; x++);"); actual = x;})();
+  (function(){var x;eval("for (x = 0; x < 5; x++);");print(actual = x);})();
 
-  assert.sameValue(expect, actual);
+  assert.sameValue(expect, actual, summary);
 }
 
 reportCompare(0, 0);

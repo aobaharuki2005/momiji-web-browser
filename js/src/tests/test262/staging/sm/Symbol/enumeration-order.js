@@ -4,7 +4,9 @@
  */
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -36,12 +38,13 @@ function test(descsObj) {
     log = [];
     Object.defineProperties(LoggingProxy(), descs);
     assert.sameValue(log.length, keys.length);
-    assert.compareArray(log.map(k => typeof k), ["string", "string", "string", "symbol", "symbol", "symbol"]);
+    assert.deepEqual(log.map(k => typeof k), ["string", "string", "string", "symbol", "symbol", "symbol"]);
     for (var key of keys)
         assert.sameValue(log.indexOf(key) !== -1, true);
 }
 
 test(descs);
 test(new Proxy(descs, {}));
+
 
 reportCompare(0, 0);

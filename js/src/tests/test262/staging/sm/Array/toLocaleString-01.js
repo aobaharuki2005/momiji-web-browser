@@ -4,11 +4,22 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Array.prototype.toLocaleString
-info: bugzilla.mozilla.org/show_bug.cgi?id=562446
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 562446;
+var summary = 'ES5: Array.prototype.toLocaleString';
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var o;
 
@@ -19,9 +30,13 @@ o = {};
 assert.sameValue(Array.prototype.toLocaleString.call(o), "");
 
 var log = '';
-var arr = {length: {valueOf: function () { log += "L"; return 2; }},
+arr = {length: {valueOf: function () { log += "L"; return 2; }},
       0: "x", 1: "z"};
 assert.sameValue(Array.prototype.toLocaleString.call(arr), "x,z");
 assert.sameValue(log, "L");
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

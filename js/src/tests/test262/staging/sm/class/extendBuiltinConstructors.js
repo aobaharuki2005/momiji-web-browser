@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -101,7 +104,7 @@ testBuiltin(WeakSet);
 testBuiltin(ArrayBuffer);
 testBuiltinTypedArrays();
 testBuiltin(DataView, new ArrayBuffer());
-testBuiltin(DataView, new ($262.createRealm().global.ArrayBuffer)());
+testBuiltin(DataView, new (createNewGlobal().ArrayBuffer)());
 testBuiltin(String);
 testBuiltin(Array);
 testBuiltin(Array, 15);

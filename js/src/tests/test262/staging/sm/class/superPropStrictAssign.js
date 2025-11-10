@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -22,7 +23,7 @@ class strictAssignmentTest {
     }
 }
 
-assert.throws(TypeError, ()=>new strictAssignmentTest());
+assertThrowsInstanceOf(()=>new strictAssignmentTest(), TypeError);
 
 // Non-strict. Silent failure.
 ({ test() { super.prop = 14; } }).test();

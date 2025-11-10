@@ -4,11 +4,24 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Don't use a shared-permanent inherited property to implement [].length or (function(){}).length
-info: bugzilla.mozilla.org/show_bug.cgi?id=548671
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 548671;
+var summary =
+  "Don't use a shared-permanent inherited property to implement " +
+  "[].length or (function(){}).length";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var a = [1, 2, 3];
 a.__proto__ = null;
@@ -24,5 +37,8 @@ assert.sameValue(b.hasOwnProperty("length"), true,
 b.length = 42;
 assert.sameValue(b.length, 42, "should have mutated b's (own) length");
 assert.sameValue(a.length, 0, "should not have mutated a's (own) length");
+
+
+print("All tests passed!");
 
 reportCompare(0, 0);

@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Implement RegExp.prototype[@@search].
-info: bugzilla.mozilla.org/show_bug.cgi?id=887016
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 887016;
+var summary = "Implement RegExp.prototype[@@search].";
+
+print(BUGNUMBER + ": " + summary);
 
 assert.sameValue(RegExp.prototype[Symbol.search].name, "[Symbol.search]");
 assert.sameValue(RegExp.prototype[Symbol.search].length, 1);
@@ -26,5 +32,6 @@ assert.sameValue(v, 1);
 re = /d/;
 v = re[Symbol.search]("abcAbcABCD");
 assert.sameValue(v, -1);
+
 
 reportCompare(0, 0);

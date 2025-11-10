@@ -4,14 +4,39 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  |for (x => 0 in 1;;) break;| must be a syntax error per ES6, not an elaborate nop
-info: bugzilla.mozilla.org/show_bug.cgi?id=1163851
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var gTestfile = "arrow-function-in-for-statement-head.js";
+var BUGNUMBER = 1163851;
+var summary =
+  "|for (x => 0 in 1;;) break;| must be a syntax error per ES6, not an " +
+  "elaborate nop";
 
-assert.throws(SyntaxError, function() {
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+try
+{
   Function("for (x => 0 in 1;;) break;");
-});
+  throw new Error("didn't throw");
+}
+catch (e)
+{
+  assert.sameValue(e instanceof SyntaxError, true,
+           "expected syntax error, got " + e);
+}
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

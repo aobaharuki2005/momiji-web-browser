@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -13,13 +14,13 @@ assert.sameValue("arguments" in this, false);
 
 // Declare |arguments| when no pre-existing (and explicit) |arguments| bindings are present.
 function f1(p = eval("var arguments")) {}
-assert.throws(SyntaxError, f1);
+assertThrowsInstanceOf(f1, SyntaxError);
 
 // Declare |arguments| when the function body contains an |arguments| var-binding.
 function f2(p = eval("var arguments")) {
   var arguments;
 }
-assert.throws(SyntaxError, f2);
+assertThrowsInstanceOf(f2, SyntaxError);
 
 // Declare |arguments| when the function body contains an |arguments| function declaration.
 //
@@ -29,7 +30,7 @@ assert.throws(SyntaxError, f2);
 function f3(p = eval("var arguments")) {
   function arguments() {}
 }
-assert.throws(SyntaxError, f3);
+assertThrowsInstanceOf(f3, SyntaxError);
 
 // Declare |arguments| when the function body contains an |arguments| lexical binding.
 //
@@ -39,15 +40,15 @@ assert.throws(SyntaxError, f3);
 function f4(p = eval("var arguments")) {
   let arguments;
 }
-assert.throws(SyntaxError, f4);
+assertThrowsInstanceOf(f4, SyntaxError);
 
 // Declare |arguments| when a following parameter is named |arguments|.
 function f5(p = eval("var arguments"), arguments) {}
-assert.throws(SyntaxError, f5);
+assertThrowsInstanceOf(f5, SyntaxError);
 
 // Declare |arguments| when a preceding parameter is named |arguments|.
 function f6(arguments, p = eval("var arguments")) {}
-assert.throws(SyntaxError, f6);
+assertThrowsInstanceOf(f6, SyntaxError);
 
 
 // Repeat the same kind of tests for arrow function.
@@ -84,11 +85,11 @@ a4();
 
 // Declare |arguments| when a following parameter is named |arguments|.
 var a5 = (p = eval("var arguments"), arguments) => {};
-assert.throws(SyntaxError, a5);
+assertThrowsInstanceOf(a5, SyntaxError);
 
 // Declare |arguments| when a preceding parameter is named |arguments|.
 var a6 = (arguments, p = eval("var arguments")) => {};
-assert.throws(SyntaxError, a6);
+assertThrowsInstanceOf(a6, SyntaxError);
 
 // None of the direct eval calls introduced a global |arguments| binding.
 assert.sameValue("arguments" in this, false);

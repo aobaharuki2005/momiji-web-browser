@@ -4,13 +4,26 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
+info: |
+  needs newGlobal()
 description: |
-  |var eval = otherWindow.eval; eval(...)| should behave like indirectly calling that eval from a script in that other window
-info: bugzilla.mozilla.org/show_bug.cgi?id=608473
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 608473;
+var summary =
+  '|var eval = otherWindow.eval; eval(...)| should behave like indirectly ' +
+  'calling that eval from a script in that other window';
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var originalEval = eval;
 var res;
@@ -20,18 +33,36 @@ function f()
   return [this, eval("this")];
 }
 
-var otherGlobal = $262.createRealm().global;
+var otherGlobalSameCompartment = createNewGlobal("same-compartment");
 
-eval = otherGlobal.eval;
+eval = otherGlobalSameCompartment.eval;
 res = new f();
 assert.sameValue(res[0] !== res[1], true);
 assert.sameValue(res[0] !== this, true);
 assert.sameValue(res[0] instanceof f, true);
-assert.sameValue(res[1], otherGlobal);
+assert.sameValue(res[1], otherGlobalSameCompartment);
 
 res = f();
 assert.sameValue(res[0] !== res[1], true);
 assert.sameValue(res[0], this);
-assert.sameValue(res[1], otherGlobal);
+assert.sameValue(res[1], otherGlobalSameCompartment);
+
+var otherGlobalDifferentCompartment = createNewGlobal();
+
+eval = otherGlobalDifferentCompartment.eval;
+res = new f();
+assert.sameValue(res[0] !== res[1], true);
+assert.sameValue(res[0] !== this, true);
+assert.sameValue(res[0] instanceof f, true);
+assert.sameValue(res[1], otherGlobalDifferentCompartment);
+
+res = f();
+assert.sameValue(res[0] !== res[1], true);
+assert.sameValue(res[0], this);
+assert.sameValue(res[1], otherGlobalDifferentCompartment);
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

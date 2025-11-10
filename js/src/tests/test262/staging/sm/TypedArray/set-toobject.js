@@ -2,7 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js, compareArray.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -13,15 +15,15 @@ let ta = new Int32Array(4);
 
 for (let nullOrUndefined of [null, undefined]) {
     // ToObject(array) throws a TypeError when |array| is null or undefined.
-    assert.throws(TypeError, () => ta.set(nullOrUndefined));
+    assertThrowsInstanceOf(() => ta.set(nullOrUndefined), TypeError);
 
     // ToInteger(offset) is called before ToObject(array).
     class ExpectedError extends Error {}
-    assert.throws(ExpectedError, () => ta.set(nullOrUndefined, {
+    assertThrowsInstanceOf(() => ta.set(nullOrUndefined, {
         valueOf() {
             throw new ExpectedError();
         }
-    }));
+    }), ExpectedError);
 }
 
 // Ensure ta is still initialized with zeros.
@@ -35,7 +37,7 @@ ta.set("123");
 assert.compareArray(ta, [1, 2, 3, 0]);
 
 // Throws a RangeError if the length is too large.
-assert.throws(RangeError, () => ta.set("456789"));
+assertThrowsInstanceOf(() => ta.set("456789"), RangeError);
 assert.compareArray(ta, [1, 2, 3, 0]);
 
 // When called with other primitive values the typed array contents don't

@@ -4,14 +4,36 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Object.freeze([]).pop() must throw a TypeError
-info: bugzilla.mozilla.org/show_bug.cgi?id=858381
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 858381;
+var summary = 'Object.freeze([]).pop() must throw a TypeError';
 
-assert.throws(TypeError, function() {
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+try
+{
   Object.freeze([]).pop();
-});
+  throw new Error("didn't throw");
+}
+catch (e)
+{
+  assert.sameValue(e instanceof TypeError, true,
+           "should have thrown TypeError, instead got: " + e);
+}
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

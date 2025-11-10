@@ -4,20 +4,27 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Coerce the argument passed to Object.getPrototypeOf using ToObject
-info: bugzilla.mozilla.org/show_bug.cgi?id=1079090
+  pending
 esid: pending
-features: [Symbol]
 ---*/
+var BUGNUMBER = 1079090;
+var summary = "Coerce the argument passed to Object.getPrototypeOf using ToObject";
+print(BUGNUMBER + ": " + summary);
 
-assert.throws(TypeError, () => Object.getPrototypeOf());
-assert.throws(TypeError, () => Object.getPrototypeOf(undefined));
-assert.throws(TypeError, () => Object.getPrototypeOf(null));
+assertThrowsInstanceOf(() => Object.getPrototypeOf(), TypeError);
+assertThrowsInstanceOf(() => Object.getPrototypeOf(undefined), TypeError);
+assertThrowsInstanceOf(() => Object.getPrototypeOf(null), TypeError);
 
 assert.sameValue(Object.getPrototypeOf(1), Number.prototype);
 assert.sameValue(Object.getPrototypeOf(true), Boolean.prototype);
 assert.sameValue(Object.getPrototypeOf("foo"), String.prototype);
-assert.sameValue(Object.getPrototypeOf(Symbol("foo")), Symbol.prototype);
+if (typeof Symbol === "function") {
+    assert.sameValue(Object.getPrototypeOf(Symbol("foo")), Symbol.prototype);
+}
+
 
 reportCompare(0, 0);

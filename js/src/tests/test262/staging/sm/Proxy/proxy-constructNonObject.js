@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -15,11 +18,11 @@ function callable() {}
 
 var p = new Proxy(callable, handler);
 
-assert.throws(TypeError, function () { new p(); },
+assertThrowsInstanceOf(function () { new p(); }, TypeError,
                        "[[Construct must throw if an object is not returned.");
 
 handler.construct = bogusConstructUndefined;
-assert.throws(TypeError, function () { new p(); },
+assertThrowsInstanceOf(function () { new p(); }, TypeError,
                        "[[Construct must throw if an object is not returned.");
 
 

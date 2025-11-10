@@ -12,7 +12,6 @@ info: |
   used to apply an unstable QuickSort for arrays with more than 512
   elements, although it used a stable insertion sort for anything else.
   https://github.com/Microsoft/ChakraCore/pull/5724
-features: [stable-array-sort]
 ---*/
 
 const array = [

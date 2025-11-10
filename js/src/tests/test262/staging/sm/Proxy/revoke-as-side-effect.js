@@ -2,16 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 function createProxy(proxyTarget) {
   var {proxy, revoke} = Proxy.revocable(proxyTarget, new Proxy({}, {
     get(target, propertyKey, receiver) {
+      print("trap get:", propertyKey);
       revoke();
     }
   }));
@@ -56,8 +57,8 @@ assert.sameValue(createProxy({}).a, undefined);
 assert.sameValue(createProxy({a: 5}).a, 5);
 
 // [[Set]]
-assert.throws(TypeError, () => createProxy({}).a = 0);
-assert.throws(TypeError, () => createProxy({a: 5}).a = 0);
+assertThrowsInstanceOf(() => createProxy({}).a = 0, TypeError);
+assertThrowsInstanceOf(() => createProxy({a: 5}).a = 0, TypeError);
 
 // [[Delete]]
 assert.sameValue(delete createProxy({}).a, true);
@@ -76,6 +77,8 @@ assert.sameValue(createProxy(function() { return "ok" })(), "ok");
 // [[ConstructorKind]] is "base" per FunctionAllocate) accesses
 // |new.target.prototype| to create the |this| for the construct operation, that
 // would be returned if |return obj;| didn't override it.
-assert.throws(TypeError, () => new (createProxy(function q(){ return obj; })));
+assertThrowsInstanceOf(() => new (createProxy(function q(){ return obj; })),
+                       TypeError);
+
 
 reportCompare(0, 0);

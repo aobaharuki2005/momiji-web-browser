@@ -4,21 +4,38 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Properly implement the spec's distinctions between StatementListItem and Statement grammar productions and their uses
-info: bugzilla.mozilla.org/show_bug.cgi?id=1288459
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 1288459;
+var summary =
+  "Properly implement the spec's distinctions between StatementListItem and " +
+  "Statement grammar productions and their uses";
 
-assert.throws(SyntaxError, () => Function("a: let x;"));
-assert.throws(SyntaxError, () => Function("b: const y = 3;"));
-assert.throws(SyntaxError, () => Function("c: class z {};"));
+print(BUGNUMBER + ": " + summary);
 
-assert.throws(SyntaxError, () => Function("'use strict'; d: function w() {};"));
+/**************
+ * BEGIN TEST *
+ **************/
+
+assertThrowsInstanceOf(() => Function("a: let x;"), SyntaxError);
+assertThrowsInstanceOf(() => Function("b: const y = 3;"), SyntaxError);
+assertThrowsInstanceOf(() => Function("c: class z {};"), SyntaxError);
+
+assertThrowsInstanceOf(() => Function("'use strict'; d: function w() {};"), SyntaxError);
 
 // Annex B.3.2 allows this in non-strict mode code.
 Function("e: function x() {};");
 
-assert.throws(SyntaxError, () => Function("f: function* y() {}"));
+assertThrowsInstanceOf(() => Function("f: function* y() {}"), SyntaxError);
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

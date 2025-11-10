@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -33,13 +36,13 @@ assert.sameValue(dv2.getInt8(0), 37);
 
 // Test that range checking works
 
-assert.throws(RangeError, () => dv.setInt32(4098, -1));
-assert.throws(RangeError, () => dv.setInt32(4094, -1));
-assert.throws(RangeError, () => dv.setInt32(-1, -1));
+assertThrowsInstanceOf(() => dv.setInt32(4098, -1), RangeError);
+assertThrowsInstanceOf(() => dv.setInt32(4094, -1), RangeError);
+assertThrowsInstanceOf(() => dv.setInt32(-1, -1), RangeError);
 
-assert.throws(RangeError, () => dv2.setInt32(2080, -1));
-assert.throws(RangeError, () => dv2.setInt32(2046, -1));
-assert.throws(RangeError, () => dv2.setInt32(-1, -1));
+assertThrowsInstanceOf(() => dv2.setInt32(2080, -1), RangeError);
+assertThrowsInstanceOf(() => dv2.setInt32(2046, -1), RangeError);
+assertThrowsInstanceOf(() => dv2.setInt32(-1, -1), RangeError);
 
 }
 

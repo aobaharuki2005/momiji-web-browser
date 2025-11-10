@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -13,7 +14,7 @@ esid: pending
 
 const x = 1;
 with ({x: 1, [Symbol.unscopables]: {x: true}})
-    assert.throws(TypeError, () => {x = 2;});
+    assertThrowsInstanceOf(() => {x = 2;}, TypeError);
 
 
 reportCompare(0, 0);

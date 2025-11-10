@@ -4,11 +4,24 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Convert computed property name expressions to property key before evaluating the property's value
-info: bugzilla.mozilla.org/show_bug.cgi?id=1199546
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 1199546;
+var summary =
+  "Convert computed property name expressions to property key before " +
+  "evaluating the property's value";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var s = "foo";
 var convertsToS = { toString() { return s; } };
@@ -26,5 +39,9 @@ var o = {
 
 assert.sameValue(o.foo, "abc");
 assert.sameValue(o.bar, "efg");
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

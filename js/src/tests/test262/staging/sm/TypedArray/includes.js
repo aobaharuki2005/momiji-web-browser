@@ -2,14 +2,13 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-TypedArray-shell.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
-var otherGlobal = $262.createRealm().global;
-
 for (var constructor of anyTypedArrayConstructors) {
     assert.sameValue(constructor.prototype.includes.length, 1);
 
@@ -26,16 +25,18 @@ for (var constructor of anyTypedArrayConstructors) {
     assert.sameValue(new constructor([1, 2, 3]).includes(2, 100), false);
 
     // Called from other globals.
-    var includes = otherGlobal[constructor.name].prototype.includes;
-    assert.sameValue(includes.call(new constructor([1, 2, 3]), 2), true);
+    if (typeof createNewGlobal === "function") {
+        var includes = createNewGlobal()[constructor.name].prototype.includes;
+        assert.sameValue(includes.call(new constructor([1, 2, 3]), 2), true);
+    }
 
     // Throws if `this` isn't a TypedArray.
     var invalidReceivers = [undefined, null, 1, false, "", Symbol(), [], {}, /./,
                             new Proxy(new constructor(), {})];
     invalidReceivers.forEach(invalidReceiver => {
-        assert.throws(TypeError, () => {
+        assertThrowsInstanceOf(() => {
             constructor.prototype.includes.call(invalidReceiver);
-        }, "Assert that reverse fails if this value is not a TypedArray");
+        }, TypeError, "Assert that reverse fails if this value is not a TypedArray");
     });
 
     // Test that the length getter is never called.

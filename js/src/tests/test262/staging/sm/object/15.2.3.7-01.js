@@ -4,11 +4,22 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Object.defineProperties(O, Properties)
-info: bugzilla.mozilla.org/show_bug.cgi?id=430133
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 430133;
+var summary = 'ES5 Object.defineProperties(O, Properties)';
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 assert.sameValue("defineProperties" in Object, true);
 assert.sameValue(Object.defineProperties.length, 2);
@@ -40,10 +51,20 @@ props =
     c: { value: NaN, enumerable: false, configurable: true, writable: true },
     b: { value: 44 }
   };
-
-assert.throws(TypeError, function() {
+var error = "before";
+try
+{
   Object.defineProperties(o, props);
-});
+  error = "no exception thrown";
+}
+catch (e)
+{
+  if (e instanceof TypeError)
+    error = "typeerror";
+  else
+    error = "bad exception: " + e;
+}
+assert.sameValue(error, "typeerror", "didn't throw or threw wrongly");
 assert.sameValue("c" in o, true, "new property added");
 assert.sameValue(o.b, 42, "old property value preserved");
 
@@ -73,16 +94,52 @@ assert.sameValue("bar" in o, false, "bar is not an enumerable own property");
 Object.defineProperties(o, "");
 assert.sameValue("quux" in o, false, "quux is not an enumerable own property");
 
-assert.throws(TypeError, function() {
+error = "before";
+try
+{
   Object.defineProperties(o, "1");
-}, "should throw on Properties == '1' due to '1'[0] not being a property descriptor");
+}
+catch (e)
+{
+  if (e instanceof TypeError)
+    error = "typeerror";
+  else
+    error = "bad exception: " + e;
+}
+assert.sameValue(error, "typeerror",
+         "should throw on Properties == '1' due to '1'[0] not being a " +
+         "property descriptor");
 
-assert.throws(TypeError, function() {
+error = "before";
+try
+{
   Object.defineProperties(o, null);
-}, "should throw on Properties == null");
+}
+catch (e)
+{
+  if (e instanceof TypeError)
+    error = "typeerror";
+  else
+    error = "bad exception: " + e;
+}
+assert.sameValue(error, "typeerror", "should throw on Properties == null");
 
-assert.throws(TypeError, function() {
+error = "before";
+try
+{
   Object.defineProperties(o, undefined);
-}, "should throw on Properties == undefined");
+}
+catch (e)
+{
+  if (e instanceof TypeError)
+    error = "typeerror";
+  else
+    error = "bad exception: " + e;
+}
+assert.sameValue(error, "typeerror", "should throw on Properties == undefined");
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

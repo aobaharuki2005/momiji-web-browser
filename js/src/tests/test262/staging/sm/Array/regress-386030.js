@@ -4,23 +4,28 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Array.reduce should ignore holes
-info: bugzilla.mozilla.org/show_bug.cgi?id=386030
+  pending
 esid: pending
 ---*/
-
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 386030;
+var summary = 'Array.reduce should ignore holes';
 var actual = '';
 var expect = '';
 
+
+//-----------------------------------------------------------------------------
 test();
+//-----------------------------------------------------------------------------
 
 function test()
 {
   function add(a, b) { return a + b; }
   function testreduce(v) { return v == 3 ? "PASS" : "FAIL"; }
-
-  var a;
 
   expect = 'PASS';
 
@@ -31,7 +36,7 @@ function test()
   } catch (e) {
     actual = "FAIL, reduce";
   }
-  assert.sameValue(expect, actual, '1');
+  assert.sameValue(expect, actual, summary + ': 1');
 
   try {
     a = new Array(2);
@@ -40,7 +45,7 @@ function test()
   } catch (e) {
     actual = "FAIL, reduceRight";
   }
-  assert.sameValue(expect, actual, '2');
+  assert.sameValue(expect, actual, summary + ': 2');
 
   try {
     a = new Array(2);
@@ -49,16 +54,16 @@ function test()
   } catch (e) {
     actual = "PASS";
   }
-  assert.sameValue(expect, actual, '3');
+  assert.sameValue(expect, actual, summary + ': 3');
 
   try {
     a = new Array(2);
-    a.reduceRight(add);
+    print(a.reduceRight(add));
     actual = "FAIL, empty reduceRight";
   } catch (e) {
     actual = "PASS";
   }
-  assert.sameValue(expect, actual, '4');
+  assert.sameValue(expect, actual, summary + ': 4');
 }
 
 reportCompare(0, 0);

@@ -4,11 +4,23 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  [[DefaultValue]] behavior wrong for Number with overridden valueOf/toString
-info: bugzilla.mozilla.org/show_bug.cgi?id=645464
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 645464;
+var summary =
+  "[[DefaultValue]] behavior wrong for Number with overridden valueOf/toString";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
 
 // equality
 
@@ -157,5 +169,9 @@ function testInOperatorName()
   assert.sameValue(n3 in { 0: 17 }, true);
 }
 testInOperatorName();
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

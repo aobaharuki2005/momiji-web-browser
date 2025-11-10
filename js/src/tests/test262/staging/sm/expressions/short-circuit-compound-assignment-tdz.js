@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -10,54 +13,54 @@ esid: pending
 
 // TDZ for lexical |let| bindings.
 {
-  assert.throws(ReferenceError, () => { let a = (a &&= 0); });
-  assert.throws(ReferenceError, () => { let a = (a ||= 0); });
-  assert.throws(ReferenceError, () => { let a = (a ??= 0); });
+  assertThrowsInstanceOf(() => { let a = (a &&= 0); }, ReferenceError);
+  assertThrowsInstanceOf(() => { let a = (a ||= 0); }, ReferenceError);
+  assertThrowsInstanceOf(() => { let a = (a ??= 0); }, ReferenceError);
 }
 
 // TDZ for lexical |const| bindings.
 {
-  assert.throws(ReferenceError, () => { const a = (a &&= 0); });
-  assert.throws(ReferenceError, () => { const a = (a ||= 0); });
-  assert.throws(ReferenceError, () => { const a = (a ??= 0); });
+  assertThrowsInstanceOf(() => { const a = (a &&= 0); }, ReferenceError);
+  assertThrowsInstanceOf(() => { const a = (a ||= 0); }, ReferenceError);
+  assertThrowsInstanceOf(() => { const a = (a ??= 0); }, ReferenceError);
 }
 
 // TDZ for parameter expressions.
 {
-  assert.throws(ReferenceError, (a = (b &&= 0), b) => {});
-  assert.throws(ReferenceError, (a = (b ||= 0), b) => {});
-  assert.throws(ReferenceError, (a = (b ??= 0), b) => {});
+  assertThrowsInstanceOf((a = (b &&= 0), b) => {}, ReferenceError);
+  assertThrowsInstanceOf((a = (b ||= 0), b) => {}, ReferenceError);
+  assertThrowsInstanceOf((a = (b ??= 0), b) => {}, ReferenceError);
 }
 
 // TDZ for |class| bindings.
 {
-  assert.throws(ReferenceError, () => { class a extends (a &&= 0) {} });
-  assert.throws(ReferenceError, () => { class a extends (a ||= 0) {} });
-  assert.throws(ReferenceError, () => { class a extends (a ??= 0) {} });
+  assertThrowsInstanceOf(() => { class a extends (a &&= 0) {} }, ReferenceError);
+  assertThrowsInstanceOf(() => { class a extends (a ||= 0) {} }, ReferenceError);
+  assertThrowsInstanceOf(() => { class a extends (a ??= 0) {} }, ReferenceError);
 }
 
 // TDZ for lexical |let| bindings with conditional assignment.
 {
-  assert.throws(ReferenceError, () => {
+  assertThrowsInstanceOf(() => {
     const False = false;
     False &&= b;
     b = 2;
     let b;
-  });
+  }, ReferenceError);
 
-  assert.throws(ReferenceError, () => {
+  assertThrowsInstanceOf(() => {
     const True = true;
     True ||= b;
     b = 2;
     let b;
-  });
+  }, ReferenceError);
 
-  assert.throws(ReferenceError, () => {
+  assertThrowsInstanceOf(() => {
     const NonNull = {};
     NonNull ??= b;
     b = 2;
     let b;
-  });
+  }, ReferenceError);
 }
 
 

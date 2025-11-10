@@ -4,29 +4,70 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-strict-shell.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  A string literal containing an octal escape before a strict mode directive should be a syntax error
-info: bugzilla.mozilla.org/show_bug.cgi?id=601262
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 601262;
+var summary =
+  "A string literal containing an octal escape before a strict mode " +
+  "directive should be a syntax error";
 
-assert.throws(SyntaxError, function() {
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+try
+{
   eval(" '\\145'; 'use strict'; ");
-}, "wrong error for octal-escape before strict directive in eval");
+  throw new Error("no error thrown for eval");
+}
+catch (e)
+{
+  assert.sameValue(e instanceof SyntaxError, true,
+           "wrong error for octal-escape before strict directive in eval");
+}
 
-assert.throws(SyntaxError, function() {
+try
+{
   Function(" '\\145'; 'use strict'; ");
-}, "wrong error for octal-escape before strict directive in Function");
+  throw new Error("no error thrown for Function");
+}
+catch (e)
+{
+  assert.sameValue(e instanceof SyntaxError, true,
+           "wrong error for octal-escape before strict directive in Function");
+}
 
-assert.throws(SyntaxError, function() {
+try
+{
   eval(" function f(){ '\\145'; 'use strict'; } ");
-}, "wrong error for octal-escape before strict directive in eval of function");
+  throw new Error("no error thrown for eval of function");
+}
+catch (e)
+{
+  assert.sameValue(e instanceof SyntaxError, true,
+           "wrong error for octal-escape before strict directive in eval of " +
+           "function");
+}
 
-assert.throws(SyntaxError, function() {
+try
+{
   Function(" function f(){ '\\145'; 'use strict'; } ");
-}, "wrong error for octal-escape before strict directive in eval of function");
+  throw new Error("no error thrown for eval of function");
+}
+catch (e)
+{
+  assert.sameValue(e instanceof SyntaxError, true,
+           "wrong error for octal-escape before strict directive in eval of " +
+           "function");
+}
 
 eval("function notAnError1() { 5; '\\145'; function g() { 'use strict'; } }");
 
@@ -38,5 +79,9 @@ function notAnError3()
   "\145";
   function g() { "use strict"; }
 }
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

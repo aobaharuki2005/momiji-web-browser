@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Implement RegExp.prototype.{global, ignoreCase, multiline, sticky, unicode} - property descriptor
-info: bugzilla.mozilla.org/show_bug.cgi?id=1120169
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1120169;
+var summary = "Implement RegExp.prototype.{global, ignoreCase, multiline, sticky, unicode} - property descriptor";
+
+print(BUGNUMBER + ": " + summary);
 
 var getters = [
   "flags",
@@ -25,5 +31,6 @@ for (var name of getters) {
   assert.sameValue("writable" in desc, false);
   assert.sameValue("get" in desc, true);
 }
+
 
 reportCompare(0, 0);

@@ -1,7 +1,11 @@
+// |reftest| shell-option(--enable-iterator-helpers) skip-if(!this.hasOwnProperty('Iterator')||!xulRuntime.shell) -- iterator-helpers is not enabled unconditionally, requires shell-options
 // Copyright (C) 2024 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 features:
   - iterator-helpers
 info: |
@@ -29,7 +33,7 @@ class TestIterator extends Iterator {
 
 const iterator = new TestIterator();
 assert.sameValue(iterator.closed, false, 'iterator starts unclosed');
-assert.throws(TestError, () => iterator.every(x => x));
+assertThrowsInstanceOf(() => iterator.every(x => x), TestError);
 assert.sameValue(iterator.closed, false, 'iterator remains unclosed');
 
 

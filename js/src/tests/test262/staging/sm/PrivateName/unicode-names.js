@@ -2,16 +2,20 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
 
-var source = `class A {
+source = `class A {
   // Ensure this name parses.
   #℘;
 }`;
 
 Function(source);
+
 
 reportCompare(0, 0);

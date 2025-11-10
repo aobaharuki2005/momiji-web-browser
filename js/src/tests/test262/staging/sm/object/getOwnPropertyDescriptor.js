@@ -4,21 +4,26 @@
  */
 
 /*---
-includes: [deepEqual.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
-  Coerce the argument passed to Object.getOwnPropertyDescriptor using ToObject
-info: bugzilla.mozilla.org/show_bug.cgi?id=1079188
+  pending
 esid: pending
-features: [Symbol]
 ---*/
+var BUGNUMBER = 1079188;
+var summary = "Coerce the argument passed to Object.getOwnPropertyDescriptor using ToObject";
+print(BUGNUMBER + ": " + summary);
 
-assert.throws(TypeError, () => Object.getOwnPropertyDescriptor());
-assert.throws(TypeError, () => Object.getOwnPropertyDescriptor(undefined));
-assert.throws(TypeError, () => Object.getOwnPropertyDescriptor(null));
+assertThrowsInstanceOf(() => Object.getOwnPropertyDescriptor(), TypeError);
+assertThrowsInstanceOf(() => Object.getOwnPropertyDescriptor(undefined), TypeError);
+assertThrowsInstanceOf(() => Object.getOwnPropertyDescriptor(null), TypeError);
 
 Object.getOwnPropertyDescriptor(1);
 Object.getOwnPropertyDescriptor(true);
-Object.getOwnPropertyDescriptor(Symbol("foo"));
+if (typeof Symbol === "function") {
+    Object.getOwnPropertyDescriptor(Symbol("foo"));
+}
 
 assert.deepEqual(Object.getOwnPropertyDescriptor("foo", "length"), {
     value: 3,

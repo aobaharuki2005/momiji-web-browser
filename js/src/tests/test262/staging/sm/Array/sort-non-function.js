@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -15,7 +18,7 @@ const array = new Array(0);
 
 // Throws if the comparator is neither undefined nor callable.
 for (let invalidComparator of [null, 0, true, Symbol(), {}, []]) {
-    assert.throws(TypeError, () => array.sort(invalidComparator));
+    assertThrowsInstanceOf(() => array.sort(invalidComparator), TypeError);
 }
 
 // Doesn't throw if the comparator is undefined or a callable object.

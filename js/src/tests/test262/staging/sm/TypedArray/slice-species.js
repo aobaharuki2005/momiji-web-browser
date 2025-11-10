@@ -2,7 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-TypedArray-shell.js, deepEqual.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -13,11 +15,11 @@ for (var constructor of typedArrayConstructors) {
     undefConstructor.constructor = undefined;
     assert.deepEqual(undefConstructor.slice(1), new constructor(1));
 
-    assert.throws(TypeError, () => {
+    assertThrowsInstanceOf(() => {
         var strConstructor = new constructor;
         strConstructor.constructor = "not a constructor";
         strConstructor.slice(123);
-    }, "Assert that we have an invalid constructor");
+    }, TypeError, "Assert that we have an invalid constructor");
 
     // If obj.constructor[@@species] is undefined or null then the default
     // constructor is used.
@@ -47,11 +49,11 @@ for (var constructor of typedArrayConstructors) {
 
     // If obj.constructor[@@species] is neither undefined nor null, and it's
     // not a constructor, TypeError should be thrown.
-    assert.throws(TypeError, () => {
+    assertThrowsInstanceOf(() => {
         var strSpecies = new constructor;
         strSpecies.constructor = { [Symbol.species]: "not a constructor" };
         strSpecies.slice(123);
-    });
+    }, TypeError);
 }
 
 

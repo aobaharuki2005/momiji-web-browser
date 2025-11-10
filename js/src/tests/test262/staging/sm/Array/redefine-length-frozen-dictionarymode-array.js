@@ -4,11 +4,23 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Assertion redefining length property of a frozen dictionary-mode array
-info: bugzilla.mozilla.org/show_bug.cgi?id=880591
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 880591;
+var summary =
+  "Assertion redefining length property of a frozen dictionary-mode array";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 function convertToDictionaryMode(arr)
 {
@@ -21,5 +33,9 @@ var arr = [];
 convertToDictionaryMode(arr);
 Object.freeze(arr);
 Object.defineProperty(arr, "length", {});
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

@@ -4,18 +4,22 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 function C(){}
 C.prototype = 1;
-
-assert.throws(TypeError, function() {
-  Object.defineProperty(C, "prototype", {get: function() { throw 0; }});
-});
-
+try {
+    Object.defineProperty(C, "prototype", {get: function() { throw 0; }});
+    actual = "no exception";
+} catch (exc) {
+    actual = exc.name;
+}
 new C; // don't assert
+assert.sameValue(actual, "TypeError");
 
 reportCompare(0, 0);

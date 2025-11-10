@@ -2,19 +2,23 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
 
 // Can't reference a private field without an object
-assert.throws(SyntaxError, () => eval('#x'));
+assertThrowsInstanceOf(() => eval('#x'), SyntaxError);
 
 // Can't reference a private field without an enclosing class
-assert.throws(SyntaxError, () => eval('this.#x'));
+assertThrowsInstanceOf(() => eval('this.#x'), SyntaxError);
 
 // Can't reference a private field in a random function outside a class context
-assert.throws(SyntaxError, () => eval('function foo() { return this.#x'));
+assertThrowsInstanceOf(
+    () => eval('function foo() { return this.#x'), SyntaxError);
 
 
 

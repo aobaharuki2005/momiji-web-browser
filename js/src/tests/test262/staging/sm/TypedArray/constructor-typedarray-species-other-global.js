@@ -2,7 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-TypedArray-shell.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -13,7 +15,7 @@ esid: pending
 // ensure they are both created in the correct global.
 
 const thisGlobal = this;
-const otherGlobal = $262.createRealm().global;
+const otherGlobal = createNewGlobal();
 
 const typedArrays = [otherGlobal.eval("new Int32Array(0)")];
 

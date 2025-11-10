@@ -2,12 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, compareArray.js]
+flags:
+  - noStrict
 description: |
-  Implement RegExp unicode flag -- everything Atom.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1135377
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1135377;
+var summary = "Implement RegExp unicode flag -- everything Atom.";
+
+print(BUGNUMBER + ": " + summary);
 
 // ==== standalone ====
 
@@ -60,5 +65,6 @@ assert.compareArray(/.*A/u.exec("\u{1F438}\u{1F438}\u{1F438}A"),
 
 assert.compareArray(/A.*/u.exec("A\u{1F438}\u{1F438}\u{1F438}"),
               ["A\u{1F438}\u{1F438}\u{1F438}"]);
+
 
 reportCompare(0, 0);

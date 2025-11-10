@@ -4,21 +4,46 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-strict-shell.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  Assigning to a function expression's name within that function should throw a TypeError in strict mode code
-info: bugzilla.mozilla.org/show_bug.cgi?id=610350
+  pending
 esid: pending
 ---*/
+var gTestfile = 'assign-to-callee-name.js';
+var BUGNUMBER = 610350;
+var summary =
+  "Assigning to a function expression's name within that function should " +
+  "throw a TypeError in strict mode code";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var f = function assignSelfStrict() { "use strict"; assignSelfStrict = 12; };
-assert.throws(TypeError, f);
+
+try
+{
+  var r = f();
+  throw new Error("should have thrown a TypeError, returned " + r);
+}
+catch (e)
+{
+  assert.sameValue(e instanceof TypeError, true,
+           "didn't throw a TypeError: " + e);
+}
 
 var assignSelf = 42;
 var f2 = function assignSelf() { assignSelf = 12; };
 
 f2(); // shouldn't throw, does nothing
 assert.sameValue(assignSelf, 42);
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

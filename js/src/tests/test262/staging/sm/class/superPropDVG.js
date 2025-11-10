@@ -2,25 +2,27 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 // Super property accesses should play nice with the pretty printer.
 class testNonExistent {
     constructor() {
         super["prop"]();
     }
 }
-
 // Should fold to super.prop
-assert.throws(TypeError, () => new testNonExistent());
+assertThrownErrorContains(() => new testNonExistent(), 'super.prop');
 
 var ol = { testNonExistent() { super.prop(); } };
-assert.throws(TypeError, () => ol.testNonExistent());
+assertThrownErrorContains(() => ol.testNonExistent(), "super.prop");
 
 var olElem = { testNonExistent() { var prop = "prop"; super[prop](); } };
-assert.throws(TypeError, () => olElem.testNonExistent());
+assertThrownErrorContains(() => olElem.testNonExistent(), "super[prop]");
+
 
 reportCompare(0, 0);

@@ -4,20 +4,27 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 function throws(code) {
-  assert.throws(SyntaxError, function() {
-    eval(code);
-  });
+    var type;
+    try {
+        eval(code);
+    } catch (ex) {
+        type = ex.name;
+    }
+    assert.sameValue(type, 'SyntaxError');
 }
 
 var s = '\\u0073';
 throws('var thi' + s);
 throws('switch (' + s + 'witch) {}')
 throws('var ' + s + 'witch');
+
 
 reportCompare(0, 0);

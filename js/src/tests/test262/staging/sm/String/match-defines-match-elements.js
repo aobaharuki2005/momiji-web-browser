@@ -4,11 +4,23 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  String.prototype.match must define matches on the returned array, not set them
-info: bugzilla.mozilla.org/show_bug.cgi?id=677820
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 677820;
+var summary =
+  "String.prototype.match must define matches on the returned array, not set " +
+  "them";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var called = false;
 function setterFunction(v) { called = true; }
@@ -36,5 +48,7 @@ assert.sameValue(desc.configurable, false);
 assert.sameValue([][1], "getter");
 
 assert.sameValue(called, false);
+
+print("Tests complete");
 
 reportCompare(0, 0);

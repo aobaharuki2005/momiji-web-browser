@@ -4,6 +4,7 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -15,5 +16,9 @@ function nonstrict() { return nonstrict.caller; }
 function strict() { "use strict"; return nonstrict(); }
 
 assert.sameValue(strict(), null);
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

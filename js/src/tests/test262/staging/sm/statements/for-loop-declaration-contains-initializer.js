@@ -4,11 +4,24 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Support initializer defaults in destructuring declarations in for-in/of loop heads
-info: bugzilla.mozilla.org/show_bug.cgi?id=1233767
+  pending
 esid: pending
 ---*/
+var gTestfile = "for-loop-declaration-contains-computed-name.js";
+var BUGNUMBER = 1233767;
+var summary =
+  "Support initializer defaults in destructuring declarations in for-in/of " +
+  "loop heads";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var count;
 var expr;
@@ -36,5 +49,9 @@ for (var { length: x, [x - 1 + count]: y = "psych" } in "foo")
 
   count++;
 }
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

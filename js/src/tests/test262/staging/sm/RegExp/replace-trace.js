@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Trace RegExp.prototype[@@replace] behavior.
-info: bugzilla.mozilla.org/show_bug.cgi?id=887016
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 887016;
+var summary = "Trace RegExp.prototype[@@replace] behavior.";
+
+print(BUGNUMBER + ": " + summary);
 
 var n;
 var log;
@@ -307,5 +313,6 @@ assert.sameValue(log,
          "get:result[length],get:result[0],get:result[index],get:result[groups],");
 
 stopObserve();
+
 
 reportCompare(0, 0);

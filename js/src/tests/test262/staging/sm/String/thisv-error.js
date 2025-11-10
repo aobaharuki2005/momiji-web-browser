@@ -2,11 +2,13 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 function testName(thisv) {
   var failures = [
     // Not a function
@@ -25,10 +27,10 @@ function testName(thisv) {
     if (key === "constructor") {
       assert.sameValue(String.prototype[key].call(thisv), "");
     } else if (failures.includes(key)) {
-      assert.throws(TypeError, () => String.prototype[key].call(thisv), key);
+      assertThrowsInstanceOf(() => String.prototype[key].call(thisv), TypeError, key);
     } else {
       var expected = `String.prototype.${key} called on incompatible ${thisv}`;
-      assert.throws(TypeError, () => String.prototype[key].call(thisv), expected)
+      assertThrowsInstanceOfWithMessage(() => String.prototype[key].call(thisv), TypeError, expected, key)
     }
   }
 }
@@ -37,7 +39,7 @@ testName(undefined);
 
 // On-off test for Symbol.iterator
 function testIterator(thisv) {
-  assert.throws(TypeError, () => String.prototype[Symbol.iterator].call(thisv),
+  assertThrowsInstanceOfWithMessage(() => String.prototype[Symbol.iterator].call(thisv), TypeError,
     `String.prototype[Symbol.iterator] called on incompatible ${thisv}`);
 }
 testIterator(null);

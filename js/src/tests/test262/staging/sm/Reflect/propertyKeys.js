@@ -4,7 +4,9 @@
  */
 
 /*---
-includes: [sm/assertThrowsValue.js, compareArray.js, deepEqual.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -67,7 +69,7 @@ for (var {value, expected} of keys) {
 
     var obj = {};
     assert.sameValue(Reflect.defineProperty(obj, value, {value: 1, configurable: true}), true);
-    assert.compareArray(Reflect.ownKeys(obj), [expected]);
+    assert.deepEqual(Reflect.ownKeys(obj), [expected]);
     assert.deepEqual(Reflect.getOwnPropertyDescriptor(obj, value),
                  {value: 1,
                   writable: false,

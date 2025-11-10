@@ -4,11 +4,25 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Don't crash compiling a non-body-level for-loop whose loop declaration is a const
-info: bugzilla.mozilla.org/show_bug.cgi?id=1146644
+  pending
 esid: pending
 ---*/
+var gTestfile = "const-declaration-in-for-loop.js";
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 1146644;
+var summary =
+  "Don't crash compiling a non-body-level for-loop whose loop declaration is " +
+  "a const";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 // Don't attempt execution as a script if we can't properly emulate it.  We
 // could perhaps use eval, but eval, while also doing global execution, is its
@@ -73,5 +87,9 @@ Function(`if (true)
             for (const a12 in {})
               continue;
           }`)();
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

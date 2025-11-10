@@ -4,13 +4,31 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Using a name referring to a { get: undefined, set: undefined } descriptor shouldn't assert
-info: bugzilla.mozilla.org/show_bug.cgi?id=560216
+  pending
 esid: pending
 ---*/
+var gTestfile = 'vacuous-accessor-unqualified-name.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 560216;
+var summary =
+  "Using a name referring to a { get: undefined, set: undefined } descriptor " +
+  "shouldn't assert";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 Object.defineProperty(this, "x", { set: undefined, configurable: true });
 x;
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

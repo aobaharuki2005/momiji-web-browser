@@ -4,11 +4,21 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Properly handle explicitly-undefined optional arguments to a bunch of functions
-info: bugzilla.mozilla.org/show_bug.cgi?id=373118
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 373118;
+var summary =
+  'Properly handle explicitly-undefined optional arguments to a bunch of ' +
+  'functions';
+
+print(BUGNUMBER + ": " + summary);
+
+//-----------------------------------------------------------------------------
 
 var a;
 
@@ -28,5 +38,8 @@ a = [1, 2, 3].sort(undefined);
 assert.sameValue(a.join(), '1,2,3');
 
 assert.sameValue((20).toString(undefined), '20');
+
+//-----------------------------------------------------------------------------
+
 
 reportCompare(0, 0);

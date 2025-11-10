@@ -2,10 +2,15 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
+// Since we (for now!) can't emit jitcode for derived class statements. Make
+// sure we can correctly invoke derived class constructors.
 
 class foo extends null {
     constructor() {
@@ -19,7 +24,7 @@ function intermediate() {
 }
 
 for (let i = 0; i < 1100; i++)
-    assert.throws(ReferenceError, intermediate);
+    assertThrownErrorContains(intermediate, "this");
 
 
 reportCompare(0, 0);

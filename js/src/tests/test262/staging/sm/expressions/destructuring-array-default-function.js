@@ -2,15 +2,21 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-expressions-shell.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-expressions-shell.js]
+flags:
+  - noStrict
 description: |
-  Array destructuring with various default values in various context - function expression
-info: bugzilla.mozilla.org/show_bug.cgi?id=1184922
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1184922;
+var summary = "Array destructuring with various default values in various context - function expression";
+
+print(BUGNUMBER + ": " + summary);
 
 testDestructuringArrayDefault("function f() {}");
 testDestructuringArrayDefault("function* g() {}");
 testDestructuringArrayDefault("() => {}");
+
 
 reportCompare(0, 0);

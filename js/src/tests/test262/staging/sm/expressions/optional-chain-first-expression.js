@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -47,8 +50,12 @@ const expressions = [
   "a?.``",
 ];
 
-function tryRun(s) {
-  try { Function(s)(); } catch {}
+function tryParse(s, f = Function) {
+  try { f(s); } catch {}
+}
+
+function tryRun(s, f = Function) {
+  try { f(s)(); } catch {}
 }
 
 for (let expr of expressions) {
@@ -74,5 +81,23 @@ for (let expr of ["super[a]", "super.a", "super()"]) {
   tryRun(inClassConstructor(`void ((${expr})?.());`));
   tryRun(inClassConstructor(`void ((${expr})?.p());`));
 }
+
+if (typeof parseModule === "function") {
+  const expressions = [
+    "import.meta",
+    "import('')",
+  ];
+
+  for (let expr of expressions) {
+    // Evaluate in an expression context.
+    tryParse(`void (${expr}?.());`, parseModule);
+    tryParse(`void (${expr}?.p());`, parseModule);
+
+    // Also try parenthesized.
+    tryParse(`void ((${expr})?.());`, parseModule);
+    tryParse(`void ((${expr})?.p());`, parseModule);
+  }
+}
+
 
 reportCompare(0, 0);

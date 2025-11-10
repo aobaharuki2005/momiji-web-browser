@@ -4,12 +4,15 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
 assert.sameValue(Object.hasOwn({}, "any"), false);
-assert.throws(TypeError, () => Object.hasOwn(null, "any"));
+assertThrowsInstanceOf(() => Object.hasOwn(null, "any"), TypeError);
 
 var x = { test: 'test value'}
 var y = {}

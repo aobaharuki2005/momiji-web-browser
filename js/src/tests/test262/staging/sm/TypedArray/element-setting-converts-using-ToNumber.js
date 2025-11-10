@@ -4,12 +4,25 @@
  */
 
 /*---
-includes: [sm/non262-TypedArray-shell.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js]
+flags:
+  - noStrict
 description: |
-  Typed array element-setting should convert to target type using ToNumber followed by an element-type-specific truncation function
-info: bugzilla.mozilla.org/show_bug.cgi?id=985733
+  pending
 esid: pending
 ---*/
+var gTestfile = 'element-setting-converts-using-ToNumber.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 985733;
+var summary =
+  "Typed array element-setting should convert to target type using ToNumber "
+  "followed by an element-type-specific truncation function";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 anyTypedArrayConstructors.forEach(function(TypedArray) {
   var ta = new TypedArray(1);
@@ -77,5 +90,9 @@ anyTypedArrayConstructors.forEach(function(TypedArray) {
              "(" + Object.prototype.toString.call(big) + ")");
   }
 });
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

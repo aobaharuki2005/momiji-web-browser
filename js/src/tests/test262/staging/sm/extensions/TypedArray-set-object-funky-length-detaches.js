@@ -4,11 +4,26 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  %TypedArray%.prototype.set(object w/funky length property, offset) shouldn't misbehave if the funky length property detaches this typed array's buffer
-info: bugzilla.mozilla.org/show_bug.cgi?id=991981
+  pending
 esid: pending
 ---*/
+var gTestfile = "set-object-funky-length-detaches.js";
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 991981;
+var summary =
+  "%TypedArray%.prototype.set(object w/funky length property, offset) " +
+  "shouldn't misbehave if the funky length property detaches this typed " +
+  "array's buffer";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var ctors = [Int8Array, Uint8Array, Uint8ClampedArray,
              Int16Array, Uint16Array,
@@ -39,5 +54,9 @@ ctors.forEach(function(TypedArray) {
 
       ta.set(arraylike, 0x1234);
 });
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

@@ -2,32 +2,23 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Sort every possible permutation of some arrays.
+  pending
 esid: pending
 ---*/
-
-// Yield every permutation of the elements in some array.
-function* Permutations(items) {
-  if (items.length === 0) {
-    yield [];
-  } else {
-    for (let i = 0; i < items.length; i++) {
-      let tail = items.slice(0);
-      let head = tail.splice(i, 1);
-      for (let e of Permutations(tail)) {
-        yield head.concat(e);
-      }
-    }
-  }
-}
-
+// Sort every possible permutation of some arrays.
 function sortAllPermutations(data, comparefn) {
-  for (let permutation of Permutations(data)) {
-    permutation.sort(comparefn);
-    assert.compareArray(permutation, data);
-  }
+    for (let permutation of Permutations(Array.from(data))) {
+        let sorted = (Array.from(permutation)).sort(comparefn);
+        for (let i in sorted) {
+            assert.sameValue(sorted[i], data[i],
+            [`[${permutation}].sort(${comparefn})`,
+            `returned ${sorted}, expected ${data}`].join(' '));
+        }
+    }
 }
 
 let lex  = [2112, "bob", "is", "my", "name"];

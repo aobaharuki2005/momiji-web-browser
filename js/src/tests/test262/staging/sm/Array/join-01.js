@@ -4,10 +4,19 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Array.prototype.join
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+print("ES5: Array.prototype.join");
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var count;
 var stringifyCounter = { toString: function() { count++; return "obj"; } };
@@ -71,5 +80,9 @@ var funky =
   };
 var trailingHoles = [0, funky, /* 2 */, /* 3 */,];
 assert.sameValue(trailingHoles.join(""), "0funkyfnord");
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

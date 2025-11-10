@@ -4,16 +4,30 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Make __proto__ in object literals a special form not influenced by |Object.prototype|
-info: bugzilla.mozilla.org/show_bug.cgi?id=948583
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 948583;
+var summary =
+  "Make __proto__ in object literals a special form not influenced by " +
+  "|Object.prototype|";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var passed = true;
 
 function performProtoTests(msg)
 {
+  print("Testing " + msg);
   assert.sameValue(passed, true, "passed wrong at start of test set");
 
   assert.sameValue(Object.getPrototypeOf({ __proto__: null }), null);
@@ -24,6 +38,7 @@ function performProtoTests(msg)
   assert.sameValue(Object.getPrototypeOf({ __proto__: obj }), obj);
 
   assert.sameValue(passed, true, "passed wrong at end of test set");
+  print("Tests of " + msg + " passed!");
 }
 
 function poisonProto(obj)
@@ -79,5 +94,7 @@ try
                     "proxy that throws for any access");
 }
 catch (e) {}
+
+print("Tests complete");
 
 reportCompare(0, 0);

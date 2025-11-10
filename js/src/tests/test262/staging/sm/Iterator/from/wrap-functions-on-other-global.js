@@ -1,7 +1,11 @@
+// |reftest| shell-option(--enable-iterator-helpers) skip-if(!this.hasOwnProperty('Iterator')||!xulRuntime.shell) -- iterator-helpers is not enabled unconditionally, requires shell-options
 // Copyright (C) 2024 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 features:
   - iterator-helpers
 description: |
@@ -26,13 +30,13 @@ const iter = {
   throw: (value) => ({done: true, value}),
 };
 const thisWrap = Iterator.from(iter);
-const otherGlobal = $262.createRealm().global;
+const otherGlobal = createNewGlobal({newCompartment: true});
 const otherWrap = otherGlobal.Iterator.from(iter);
 
 checkIterResult(thisWrap.next.call(otherWrap), false, 0);
 checkIterResult(thisWrap.next.call(otherWrap, 'value'), false, 0);
 
-assert.throws(TestError, thisWrap.return.bind(otherWrap));
+assertThrowsInstanceOf(thisWrap.return.bind(otherWrap), TestError);
 
 
 reportCompare(0, 0);

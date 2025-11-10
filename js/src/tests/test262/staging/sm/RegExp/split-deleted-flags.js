@@ -2,14 +2,21 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  RegExp.prototype.split should throw if RegRxp.prototype.flags is deleted.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1322319
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1322319;
+var summary = "RegExp.prototype.split should throw if RegRxp.prototype.flags is deleted."
+
+print(BUGNUMBER + ": " + summary);
 
 delete RegExp.prototype.flags;
 
-assert.throws(SyntaxError, () => "aaaaa".split(/a/));
+assertThrowsInstanceOf(() => "aaaaa".split(/a/), SyntaxError);
+
 
 reportCompare(0, 0);

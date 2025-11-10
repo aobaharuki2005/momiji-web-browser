@@ -2,7 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-TypedArray-shell.js, propertyHelper.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -19,22 +21,20 @@ assert.sameValue(TypedArrayPrototype.toLocaleString === Array.prototype.toLocale
 // The concrete TypedArray prototypes do not have an own "toLocaleString" property.
 assert.sameValue(anyTypedArrayConstructors.every(c => !c.hasOwnProperty("toLocaleString")), true);
 
-verifyProperty(TypedArrayPrototype, "toLocaleString", {
+assert.deepEqual(Object.getOwnPropertyDescriptor(TypedArrayPrototype, "toLocaleString"), {
     value: TypedArrayPrototype.toLocaleString,
     writable: true,
     enumerable: false,
     configurable: true,
-}, {
-    restore: true
 });
 
 assert.sameValue(TypedArrayPrototype.toLocaleString.name, "toLocaleString");
 assert.sameValue(TypedArrayPrototype.toLocaleString.length, 0);
 
 // It's not a generic method.
-assert.throws(TypeError, () => TypedArrayPrototype.toLocaleString.call());
+assertThrowsInstanceOf(() => TypedArrayPrototype.toLocaleString.call(), TypeError);
 for (let invalid of [void 0, null, {}, [], function(){}, true, 0, "", Symbol()]) {
-    assert.throws(TypeError, () => TypedArrayPrototype.toLocaleString.call(invalid));
+    assertThrowsInstanceOf(() => TypedArrayPrototype.toLocaleString.call(invalid), TypeError);
 }
 
 const localeOne = 1..toLocaleString(),
@@ -73,7 +73,7 @@ for (let constructor of anyTypedArrayConstructors) {
 Number.prototype.toLocaleString = originalNumberToLocaleString;
 
 // Calls Number.prototype.toLocaleString from the current Realm.
-const otherGlobal = $262.createRealm().global;
+const otherGlobal = createNewGlobal();
 for (let constructor of anyTypedArrayConstructors) {
     Number.prototype.toLocaleString = function() {
         "use strict";
@@ -86,5 +86,6 @@ for (let constructor of anyTypedArrayConstructors) {
     assert.sameValue(called, true);
 }
 Number.prototype.toLocaleString = originalNumberToLocaleString;
+
 
 reportCompare(0, 0);

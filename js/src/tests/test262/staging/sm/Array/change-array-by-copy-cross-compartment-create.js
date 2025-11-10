@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -26,6 +29,8 @@ function test(otherGlobal) {
     }
 }
 
-test($262.createRealm().global);
+test(createNewGlobal());
+test(createNewGlobal({newCompartment: true}));
+
 
 reportCompare(0, 0);

@@ -4,12 +4,25 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  new DataView(...) shouldn't misbehave horribly if index-argument conversion detaches the ArrayBuffer to be viewed
-info: bugzilla.mozilla.org/show_bug.cgi?id=991981
+  pending
 esid: pending
-features: [host-gc-required]
 ---*/
+var gTestfile = "DataView-construct-arguments-detaching.js";
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 991981;
+var summary =
+  "new DataView(...) shouldn't misbehave horribly if index-argument " +
+  "conversion detaches the ArrayBuffer to be viewed";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 function testByteOffset()
 {
@@ -25,9 +38,16 @@ function testByteOffset()
       }
     };
 
-  assert.throws(TypeError, function() {
+  var ok = false;
+  try
+  {
     new DataView(ab, start);
-  }, "byteOffset weirdness should have thrown");
+  }
+  catch (e)
+  {
+    ok = true;
+  }
+  assert.sameValue(ok, true, "byteOffset weirdness should have thrown");
   assert.sameValue(ab.byteLength, 0, "detaching should work for byteOffset weirdness");
 }
 testByteOffset();
@@ -46,11 +66,22 @@ function testByteLength()
       }
     };
 
-  assert.throws(TypeError, function() {
+  var ok = false;
+  try
+  {
     new DataView(ab, 0x800, len);
-  }, "byteLength weirdness should have thrown");
+  }
+  catch (e)
+  {
+    ok = true;
+  }
+  assert.sameValue(ok, true, "byteLength weirdness should have thrown");
   assert.sameValue(ab.byteLength, 0, "detaching should work for byteLength weirdness");
 }
 testByteLength();
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

@@ -4,12 +4,29 @@
  */
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  String.prototype.split tests
-info: bugzilla.mozilla.org/show_bug.cgi?id=614608
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 614608;
+var summary = "String.prototype.split tests";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+function assertEqArr(a1, a2) {
+    assert.sameValue(a1.length, a2.length);
+
+    for(var i=0; i<a1.length; i++) {
+        assert.sameValue(a1[i], a2[i]);
+    }
+}
 
 var order = "";
 var o1 = { toString: function() { order += "b"; return "-"; }};
@@ -17,19 +34,21 @@ var o2 = { valueOf:  function() { order += "a"; return 1; }};
 var res = "xyz-xyz".split(o1, o2);
 
 assert.sameValue(order, "ab");
-assert.compareArray(res, ["xyz"]);
+assertEqArr(res, ["xyz"]);
 
-assert.compareArray("".split(/.?/), []);
-assert.compareArray("abc".split(/\b/), ["abc"]);
+assertEqArr("".split(/.?/), []);
+assertEqArr("abc".split(/\b/), ["abc"]);
 
-assert.compareArray("abc".split(/((()))./, 2), ["",""]);
-assert.compareArray("abc".split(/((((()))))./, 9), ["","","","","","","","",""]);
+assertEqArr("abc".split(/((()))./, 2), ["",""]);
+assertEqArr("abc".split(/((((()))))./, 9), ["","","","","","","","",""]);
 
 // from ES5 15.5.4.14
-assert.compareArray("ab".split(/a*?/), ["a", "b"]);
-assert.compareArray("ab".split(/a*/), ["", "b"]);
-assert.compareArray("A<B>bold</B>and<CODE>coded</CODE>".split(/<(\/)?([^<>]+)>/),
-                    ["A", undefined, "B", "bold", "/", "B", "and", undefined,
-                     "CODE", "coded", "/", "CODE", ""]);
+assertEqArr("ab".split(/a*?/), ["a", "b"]);
+assertEqArr("ab".split(/a*/), ["", "b"]);
+assertEqArr("A<B>bold</B>and<CODE>coded</CODE>".split(/<(\/)?([^<>]+)>/),
+            ["A", undefined, "B", "bold", "/", "B", "and", undefined,
+             "CODE", "coded", "/", "CODE", ""]);
+
+print("All tests passed!");
 
 reportCompare(0, 0);

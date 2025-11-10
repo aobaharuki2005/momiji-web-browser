@@ -4,15 +4,32 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  decodeURI{,Component} should return the specified character for '%EF%BF%BE' and '%EF%BF%BF', not return U+FFFD
-info: bugzilla.mozilla.org/show_bug.cgi?id=520095
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 520095;
+var summary =
+  "decodeURI{,Component} should return the specified character for " +
+  "'%EF%BF%BE' and '%EF%BF%BF', not return U+FFFD";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 assert.sameValue(decodeURI("%EF%BF%BE"), "\uFFFE");
 assert.sameValue(decodeURI("%EF%BF%BF"), "\uFFFF");
 assert.sameValue(decodeURIComponent("%EF%BF%BE"), "\uFFFE");
 assert.sameValue(decodeURIComponent("%EF%BF%BF"), "\uFFFF");
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

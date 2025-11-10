@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -21,7 +24,7 @@ let value = {
 
 let ta = new Int32Array(5);
 for (let index of indices) {
-  assert.throws(Err, () => ta.with(index, value), Err);
+  assertThrowsInstanceOf(() => ta.with(index, value), Err);
 }
 
 for (let index of indices) {
@@ -34,7 +37,7 @@ for (let index of indices) {
     }
   };
 
-  assert.throws(RangeError, () => ta.with(index, value));
+  assertThrowsInstanceOf(() => ta.with(index, value), RangeError);
 }
 
 

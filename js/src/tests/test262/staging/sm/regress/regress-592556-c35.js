@@ -4,10 +4,12 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
-features: [host-gc-required]
 ---*/
 
 var obj = {a: 0, b: 1, c: 2};

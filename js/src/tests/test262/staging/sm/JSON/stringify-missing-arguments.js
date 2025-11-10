@@ -4,12 +4,28 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  JSON.stringify with no arguments
-info: bugzilla.mozilla.org/show_bug.cgi?id=648471
+  pending
 esid: pending
 ---*/
+var gTestfile = 'stringify-missing-arguments.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 648471;
+var summary = "JSON.stringify with no arguments";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 assert.sameValue(JSON.stringify(), undefined);
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

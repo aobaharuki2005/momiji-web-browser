@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  GetElem for modified arguments shouldn't be optimized to get original argument.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1263811
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1263811;
+var summary = "GetElem for modified arguments shouldn't be optimized to get original argument.";
+
+print(BUGNUMBER + ": " + summary);
 
 function testModifyFirst() {
     function f() {
@@ -33,5 +39,6 @@ function testModifyLater() {
         f(10, 20);
 }
 testModifyLater();
+
 
 reportCompare(0, 0);

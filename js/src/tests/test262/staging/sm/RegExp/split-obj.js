@@ -2,15 +2,21 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
-  RegExp.prototype[@@split] should check if this value is RegExp.
-info: bugzilla.mozilla.org/show_bug.cgi?id=887016
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 887016;
+var summary = "RegExp.prototype[@@split] should check if this value is RegExp.";
+
+print(BUGNUMBER + ": " + summary);
 
 var obj = { flags: "", toString: () => "-" };
-assert.compareArray(RegExp.prototype[Symbol.split].call(obj, "a-b-c"),
+assert.deepEqual(RegExp.prototype[Symbol.split].call(obj, "a-b-c"),
              ["a", "b", "c"]);
+
 
 reportCompare(0, 0);

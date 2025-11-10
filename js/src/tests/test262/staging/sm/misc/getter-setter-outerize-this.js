@@ -2,16 +2,18 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 if (typeof window === "undefined") {
     // This test is meant to run in the browser, but it's easy to
     // run it in the shell as well, even though it has no inner/outer
     // windows.
-    var window = this;
+    window = this;
 }
 
 var res = false;
@@ -26,5 +28,6 @@ Object.defineProperty(this, "foo", {configurable: true,
 	assert.sameValue(window.foo, true, "getter");
     }
 })();
+
 
 reportCompare(0, 0);

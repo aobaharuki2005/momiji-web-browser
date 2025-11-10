@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -10,26 +13,26 @@ esid: pending
 
 // TDZ for lexical |let| bindings with optional chaining.
 {
-  assert.throws(ReferenceError, () => {
+  assertThrowsInstanceOf(() => {
     const Null = null;
     Null?.[b];
     b = 0;
     let b;
-  });
+  }, ReferenceError);
 
-  assert.throws(ReferenceError, () => {
+  assertThrowsInstanceOf(() => {
     const Null = null;
     Null?.[b]();
     b = 0;
     let b;
-  });
+  }, ReferenceError);
 
-  assert.throws(ReferenceError, () => {
+  assertThrowsInstanceOf(() => {
     const Null = null;
     delete Null?.[b];
     b = 0;
     let b;
-  });
+  }, ReferenceError);
 }
 
 

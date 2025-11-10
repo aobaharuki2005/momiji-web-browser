@@ -2,17 +2,19 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-Set-shell.js, compareArray.js, propertyHelper.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-Set-shell.js, deepEqual.js, compareArray.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
 
 assert.sameValue(typeof Set.prototype.symmetricDifference, "function");
-verifyProperty(Set.prototype.symmetricDifference, "length", {
+assert.deepEqual(Object.getOwnPropertyDescriptor(Set.prototype.symmetricDifference, "length"), {
   value: 1, writable: false, enumerable: false, configurable: true,
 });
-verifyProperty(Set.prototype.symmetricDifference, "name", {
+assert.deepEqual(Object.getOwnPropertyDescriptor(Set.prototype.symmetricDifference, "name"), {
   value: "symmetricDifference", writable: false, enumerable: false, configurable: true,
 });
 
@@ -121,7 +123,7 @@ for (let values of [
   }, log);
 
   log.length = 0;
-  assert.throws(TypeError, () => emptySet.symmetricDifference(setLike));
+  assertThrowsInstanceOf(() => emptySet.symmetricDifference(setLike), TypeError);
 
   assert.compareArray(log, [
     "[[get]]", "size",
@@ -136,7 +138,7 @@ for (let values of [
   setLikeObj.keys = () => 123;
 
   log.length = 0;
-  assert.throws(TypeError, () => emptySet.symmetricDifference(setLike));
+  assertThrowsInstanceOf(() => emptySet.symmetricDifference(setLike), TypeError);
 
   assert.compareArray(log, [
     "[[get]]", "size",
@@ -149,7 +151,7 @@ for (let values of [
   setLikeObj.keys = nonCallable;
 
   log.length = 0;
-  assert.throws(TypeError, () => emptySet.symmetricDifference(setLike));
+  assertThrowsInstanceOf(() => emptySet.symmetricDifference(setLike), TypeError);
 
   assert.compareArray(log, [
     "[[get]]", "size",
@@ -162,7 +164,7 @@ for (let values of [
   setLikeObj.has = nonCallable;
 
   log.length = 0;
-  assert.throws(TypeError, () => emptySet.symmetricDifference(setLike));
+  assertThrowsInstanceOf(() => emptySet.symmetricDifference(setLike), TypeError);
 
   assert.compareArray(log, [
     "[[get]]", "size",
@@ -174,7 +176,7 @@ for (let values of [
   sizeValue = NaN;
 
   log.length = 0;
-  assert.throws(TypeError, () => emptySet.symmetricDifference(setLike));
+  assertThrowsInstanceOf(() => emptySet.symmetricDifference(setLike), TypeError);
 
   assert.compareArray(log, [
     "[[get]]", "size",
@@ -185,7 +187,7 @@ for (let values of [
   sizeValue = undefined;
 
   log.length = 0;
-  assert.throws(TypeError, () => emptySet.symmetricDifference(setLike));
+  assertThrowsInstanceOf(() => emptySet.symmetricDifference(setLike), TypeError);
 
   assert.compareArray(log, [
     "[[get]]", "size",
@@ -194,7 +196,7 @@ for (let values of [
 }
 
 // Doesn't accept Array as an input.
-assert.throws(TypeError, () => emptySet.symmetricDifference([]));
+assertThrowsInstanceOf(() => emptySet.symmetricDifference([]), TypeError);
 
 // Works with Set subclasses.
 {
@@ -225,7 +227,7 @@ assert.throws(TypeError, () => emptySet.symmetricDifference([]));
 for (let thisValue of [
   null, undefined, true, "", {}, new Map, new Proxy(new Set, {}),
 ]) {
-  assert.throws(TypeError, () => Set.prototype.symmetricDifference.call(thisValue, emptySet));
+  assertThrowsInstanceOf(() => Set.prototype.symmetricDifference.call(thisValue, emptySet), TypeError);
 }
 
 // Doesn't return the original Set object.

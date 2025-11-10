@@ -1,7 +1,5 @@
-commit 5c07b5224261aae30e54f69727a730956ff4ec41
-Author: Philip Chimento <pchimento@igalia.com>
-Date:   Wed Nov 5 10:55:53 2025 -0800
+commit d0cb9f80f70a924197d0b5e2160b07401ddfef4e
+Author: Daniel Minor <dminor@mozilla.com>
+Date:   Tue Aug 19 10:43:14 2025 -0400
 
-    Temporal: Remove accidental octal literals from a test
-    
-    These cause the test to fail in strict mode.
+    Add symbols-as-weakmap-keys to features

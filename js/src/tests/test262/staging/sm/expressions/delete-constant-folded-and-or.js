@@ -4,13 +4,24 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  Deletion of a && or || expression that constant-folds to a name must not attempt to delete the name
-info: bugzilla.mozilla.org/show_bug.cgi?id=1183400
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 1183400;
+var summary =
+  "Deletion of a && or || expression that constant-folds to a name must not " +
+  "attempt to delete the name";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 Object.defineProperty(this, "nonconfigurable", { value: 42 });
 assert.sameValue(nonconfigurable, 42);
@@ -31,5 +42,9 @@ function nestedStrict()
   assert.sameValue(delete (true && nonconfigurable), true);
 }
 nestedStrict();
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

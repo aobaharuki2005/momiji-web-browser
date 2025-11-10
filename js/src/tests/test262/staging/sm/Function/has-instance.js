@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -50,11 +53,11 @@ for (let nonCallable of nonCallables) {
 
 // Non-callables should throw when used on the right hand side
 // of `instanceof`.
-assert.throws(TypeError, () => {
+assertThrowsInstanceOf(() => {
     function foo() {};
     let obj = {};
     foo instanceof obj;
-});
+}, TypeError);
 
 // Non-callables do not throw for overridden methods
 let o = {[Symbol.hasInstance](v) { return true; }}
@@ -94,7 +97,7 @@ assert.sameValue(desc.configurable, false);
 
 // Attempting to use a non-callable @@hasInstance triggers a type error
 // Bug 1280892
-assert.throws(TypeError, () => {
+assertThrowsInstanceOf(() => {
     var fun = function() {}
     var p = new Proxy(fun, {
         get(target, key) {
@@ -102,7 +105,7 @@ assert.throws(TypeError, () => {
         }
     });
     fun instanceof p;
-});
+}, TypeError);
 
 
 

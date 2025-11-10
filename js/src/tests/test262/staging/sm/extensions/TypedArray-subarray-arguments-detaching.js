@@ -4,11 +4,25 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  %TypedArray.prototype.subarray shouldn't misbehave horribly if index-argument conversion detaches the underlying ArrayBuffer
-info: bugzilla.mozilla.org/show_bug.cgi?id=991981
+  pending
 esid: pending
 ---*/
+var gTestfile = "TypedArray-subarray-arguments-detaching.js";
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 991981;
+var summary =
+  "%TypedArray.prototype.subarray shouldn't misbehave horribly if " +
+  "index-argument conversion detaches the underlying ArrayBuffer";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 function testBegin()
 {
@@ -25,9 +39,16 @@ function testBegin()
 
   var ta = new Uint8Array(ab);
 
-  assert.throws(TypeError, function() {
-    ta.subarray(begin)
-  }, "start weirdness should have thrown");
+  var ok = false;
+  try
+  {
+    ta.subarray(begin);
+  }
+  catch (e)
+  {
+    ok = true;
+  }
+  assert.sameValue(ok, true, "start weirdness should have thrown");
   assert.sameValue(ab.byteLength, 0, "detaching should work for start weirdness");
 }
 testBegin();
@@ -47,9 +68,16 @@ function testBeginWithEnd()
 
   var ta = new Uint8Array(ab);
 
-  assert.throws(TypeError, function() {
+  var ok = false;
+  try
+  {
     ta.subarray(begin, 0x1000);
-  }, "start weirdness should have thrown");
+  }
+  catch (e)
+  {
+    ok = true;
+  }
+  assert.sameValue(ok, true, "start weirdness should have thrown");
   assert.sameValue(ab.byteLength, 0, "detaching should work for start weirdness");
 }
 testBeginWithEnd();
@@ -69,11 +97,22 @@ function testEnd()
 
   var ta = new Uint8Array(ab);
 
-  assert.throws(TypeError, function() {
+  var ok = false;
+  try
+  {
     ta.subarray(0x800, end);
-  }, "end weirdness should have thrown");
-  assert.sameValue(ab.byteLength, 0, "detaching should work for end weirdness");
+  }
+  catch (e)
+  {
+    ok = true;
+  }
+  assert.sameValue(ok, true, "start weirdness should have thrown");
+  assert.sameValue(ab.byteLength, 0, "detaching should work for start weirdness");
 }
 testEnd();
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

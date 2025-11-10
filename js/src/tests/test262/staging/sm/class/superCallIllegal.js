@@ -2,14 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
 // super() invalid outside derived class constructors, including in dynamic
 // functions and eval
-assert.throws(SyntaxError, () => new Function("super();"));
-assert.throws(SyntaxError, () => eval("super()"));
+assertThrowsInstanceOf(() => new Function("super();"), SyntaxError);
+assertThrowsInstanceOf(() => eval("super()"), SyntaxError);
 
 
 reportCompare(0, 0);

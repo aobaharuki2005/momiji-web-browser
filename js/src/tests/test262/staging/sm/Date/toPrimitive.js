@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-Date-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -10,8 +13,8 @@ esid: pending
 
 // The toPrimitive method throws if the this value isn't an object.
 var toPrimitive = Date.prototype[Symbol.toPrimitive];
-assert.throws(TypeError, () => toPrimitive.call(undefined, "default"));
-assert.throws(TypeError, () => toPrimitive.call(3, "default"));
+assertThrowsInstanceOf(() => toPrimitive.call(undefined, "default"), TypeError);
+assertThrowsInstanceOf(() => toPrimitive.call(3, "default"), TypeError);
 
 // It doesn't have to be a Date object, though.
 var obj = {
@@ -23,11 +26,11 @@ assert.sameValue(toPrimitive.call(obj, "string"), "str");
 assert.sameValue(toPrimitive.call(obj, "default"), "str");
 
 // It throws if the hint argument is missing or not one of the three allowed values.
-assert.throws(TypeError, () => toPrimitive.call(obj));
-assert.throws(TypeError, () => toPrimitive.call(obj, undefined));
-assert.throws(TypeError, () => toPrimitive.call(obj, "boolean"));
-assert.throws(TypeError, () => toPrimitive.call(obj, ["number"]));
-assert.throws(TypeError, () => toPrimitive.call(obj, {toString() { throw "FAIL"; }}));
+assertThrowsInstanceOf(() => toPrimitive.call(obj), TypeError);
+assertThrowsInstanceOf(() => toPrimitive.call(obj, undefined), TypeError);
+assertThrowsInstanceOf(() => toPrimitive.call(obj, "boolean"), TypeError);
+assertThrowsInstanceOf(() => toPrimitive.call(obj, ["number"]), TypeError);
+assertThrowsInstanceOf(() => toPrimitive.call(obj, {toString() { throw "FAIL"; }}), TypeError);
 
 // The next few tests cover the OrdinaryToPrimitive algorithm, specified in
 // ES6 7.1.1 ToPrimitive(input [, PreferredType]).
@@ -58,7 +61,7 @@ assert.sameValue(dateobj[Symbol.toPrimitive]("number"), 15);
 
 // If neither is callable, it throws a TypeError.
 Date.prototype.toString = "ponies";
-assert.throws(TypeError, () => dateobj[Symbol.toPrimitive]("default"));
+assertThrowsInstanceOf(() => dateobj[Symbol.toPrimitive]("default"), TypeError);
 
 // Surface features.
 assert.sameValue(toPrimitive.name, "[Symbol.toPrimitive]");

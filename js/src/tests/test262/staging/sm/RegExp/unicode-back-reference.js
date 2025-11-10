@@ -2,12 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, compareArray.js]
+flags:
+  - noStrict
 description: |
-  Implement RegExp unicode flag -- back reference should not match lead surrogate that has corresponding trail surrogate.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1135377
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1135377;
+var summary = "Implement RegExp unicode flag -- back reference should not match lead surrogate that has corresponding trail surrogate.";
+
+print(BUGNUMBER + ": " + summary);
 
 // The last character of back reference is not a surrogate.
 assert.compareArray(/foo(.+)bar\1/u.exec("fooAbarA\uDC00"),
@@ -40,5 +45,6 @@ assert.compareArray(/foo(.+)bar\1/u.exec("foo\uDC00bar\uDC00"),
 
 // Pattern should not match to surrogate pair partially.
 assert.sameValue(/^(.+)\1$/u.exec("\uDC00foobar\uD834\uDC00foobar\uD834"), null);
+
 
 reportCompare(0, 0);

@@ -4,23 +4,45 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  |new| on a cross-compartment wrapper to a non-constructor shouldn't assert
-info: bugzilla.mozilla.org/show_bug.cgi?id=1178653
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 1178653;
+var summary =
+  "|new| on a cross-compartment wrapper to a non-constructor shouldn't assert";
 
-var g = $262.createRealm().global;
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+var g = createNewGlobal();
 
 var otherStr = new g.String("foo");
 assert.sameValue(otherStr instanceof g.String, true);
 assert.sameValue(otherStr.valueOf(), "foo");
 
-// NOTE: not |g.TypeError|, because |new| itself throws because
-//       |!IsConstructor(constructor)|.
-assert.throws(TypeError, function() {
+try
+{
   var constructor = g.parseInt;
   new constructor();
-});
+  throw new Error("no error thrown");
+}
+catch (e)
+{
+  // NOTE: not |g.TypeError|, because |new| itself throws because
+  //       |!IsConstructor(constructor)|.
+  assert.sameValue(e instanceof TypeError, true);
+}
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

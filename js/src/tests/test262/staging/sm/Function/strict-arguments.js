@@ -4,14 +4,36 @@
  */
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  ES5 strict mode: arguments objects of strict mode functions must copy argument values
-info: bugzilla.mozilla.org/show_bug.cgi?id=516255
+  pending
 esid: pending
 ---*/
+var gTestfile = 'strict-arguments.js';
+var BUGNUMBER = 516255;
+var summary =
+  "ES5 strict mode: arguments objects of strict mode functions must copy " +
+  "argument values";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+function arrayEvery(arr, fun)
+{
+  return Array.prototype.every.call(arr, fun);
+}
+
+function arraysEqual(a1, a2)
+{
+  return a1.length === a2.length &&
+         arrayEvery(a1, function(v, i) { return v === a2[i]; });
+}
+
 
 /************************
  * NON-STRICT ARGUMENTS *
@@ -21,16 +43,16 @@ var obj = {};
 
 function noargs() { return arguments; }
 
-assert.compareArray(noargs(), []);
-assert.compareArray(noargs(1), [1]);
-assert.compareArray(noargs(2, obj, 8), [2, obj, 8]);
+assert.sameValue(arraysEqual(noargs(), []), true);
+assert.sameValue(arraysEqual(noargs(1), [1]), true);
+assert.sameValue(arraysEqual(noargs(2, obj, 8), [2, obj, 8]), true);
 
 function args(a) { return arguments; }
 
-assert.compareArray(args(), []);
-assert.compareArray(args(1), [1]);
-assert.compareArray(args(1, obj), [1, obj]);
-assert.compareArray(args("foopy"), ["foopy"]);
+assert.sameValue(arraysEqual(args(), []), true);
+assert.sameValue(arraysEqual(args(1), [1]), true);
+assert.sameValue(arraysEqual(args(1, obj), [1, obj]), true);
+assert.sameValue(arraysEqual(args("foopy"), ["foopy"]), true);
 
 function assign(a)
 {
@@ -38,7 +60,7 @@ function assign(a)
   return arguments;
 }
 
-assert.compareArray(assign(1), [17]);
+assert.sameValue(arraysEqual(assign(1), [17]), true);
 
 function getLaterAssign(a)
 {
@@ -47,7 +69,7 @@ function getLaterAssign(a)
   return o;
 }
 
-assert.compareArray(getLaterAssign(1), [17]);
+assert.sameValue(arraysEqual(getLaterAssign(1), [17]), true);
 
 function assignElementGetParameter(a)
 {
@@ -109,9 +131,9 @@ function strictNoargs()
   return arguments;
 }
 
-assert.compareArray(strictNoargs(), []);
-assert.compareArray(strictNoargs(1), [1]);
-assert.compareArray(strictNoargs(1, obj), [1, obj]);
+assert.sameValue(arraysEqual(strictNoargs(), []), true);
+assert.sameValue(arraysEqual(strictNoargs(1), [1]), true);
+assert.sameValue(arraysEqual(strictNoargs(1, obj), [1, obj]), true);
 
 function strictArgs(a)
 {
@@ -119,9 +141,9 @@ function strictArgs(a)
   return arguments;
 }
 
-assert.compareArray(strictArgs(), []);
-assert.compareArray(strictArgs(1), [1]);
-assert.compareArray(strictArgs(1, obj), [1, obj]);
+assert.sameValue(arraysEqual(strictArgs(), []), true);
+assert.sameValue(arraysEqual(strictArgs(1), [1]), true);
+assert.sameValue(arraysEqual(strictArgs(1, obj), [1, obj]), true);
 
 function strictAssign(a)
 {
@@ -130,9 +152,9 @@ function strictAssign(a)
   return arguments;
 }
 
-assert.compareArray(strictAssign(), []);
-assert.compareArray(strictAssign(1), [1]);
-assert.compareArray(strictAssign(1, obj), [1, obj]);
+assert.sameValue(arraysEqual(strictAssign(), []), true);
+assert.sameValue(arraysEqual(strictAssign(1), [1]), true);
+assert.sameValue(arraysEqual(strictAssign(1, obj), [1, obj]), true);
 
 var upper;
 function strictAssignAfter(a)
@@ -143,9 +165,9 @@ function strictAssignAfter(a)
   return upper;
 }
 
-assert.compareArray(strictAssignAfter(), []);
-assert.compareArray(strictAssignAfter(17), [17]);
-assert.compareArray(strictAssignAfter(obj), [obj]);
+assert.sameValue(arraysEqual(strictAssignAfter(), []), true);
+assert.sameValue(arraysEqual(strictAssignAfter(17), [17]), true);
+assert.sameValue(arraysEqual(strictAssignAfter(obj), [obj]), true);
 
 function strictMaybeAssignOuterParam(p)
 {
@@ -154,9 +176,9 @@ function strictMaybeAssignOuterParam(p)
   return arguments;
 }
 
-assert.compareArray(strictMaybeAssignOuterParam(), []);
-assert.compareArray(strictMaybeAssignOuterParam(42), [42]);
-assert.compareArray(strictMaybeAssignOuterParam(obj), [obj]);
+assert.sameValue(arraysEqual(strictMaybeAssignOuterParam(), []), true);
+assert.sameValue(arraysEqual(strictMaybeAssignOuterParam(42), [42]), true);
+assert.sameValue(arraysEqual(strictMaybeAssignOuterParam(obj), [obj]), true);
 
 function strictAssignOuterParam(p)
 {
@@ -166,9 +188,9 @@ function strictAssignOuterParam(p)
   return arguments;
 }
 
-assert.compareArray(strictAssignOuterParam(), []);
-assert.compareArray(strictAssignOuterParam(17), [17]);
-assert.compareArray(strictAssignOuterParam(obj), [obj]);
+assert.sameValue(arraysEqual(strictAssignOuterParam(), []), true);
+assert.sameValue(arraysEqual(strictAssignOuterParam(17), [17]), true);
+assert.sameValue(arraysEqual(strictAssignOuterParam(obj), [obj]), true);
 
 function strictAssignOuterParamPSYCH(p)
 {
@@ -178,9 +200,9 @@ function strictAssignOuterParamPSYCH(p)
   return arguments;
 }
 
-assert.compareArray(strictAssignOuterParamPSYCH(), []);
-assert.compareArray(strictAssignOuterParamPSYCH(17), [17]);
-assert.compareArray(strictAssignOuterParamPSYCH(obj), [obj]);
+assert.sameValue(arraysEqual(strictAssignOuterParamPSYCH(), []), true);
+assert.sameValue(arraysEqual(strictAssignOuterParamPSYCH(17), [17]), true);
+assert.sameValue(arraysEqual(strictAssignOuterParamPSYCH(obj), [obj]), true);
 
 function strictEval(code, p)
 {
@@ -189,12 +211,12 @@ function strictEval(code, p)
   return arguments;
 }
 
-assert.compareArray(strictEval("1", 2), ["1", 2]);
-assert.compareArray(strictEval("arguments"), ["arguments"]);
-assert.compareArray(strictEval("p = 2"), ["p = 2"]);
-assert.compareArray(strictEval("p = 2", 17), ["p = 2", 17]);
-assert.compareArray(strictEval("arguments[0] = 17"), [17]);
-assert.compareArray(strictEval("arguments[0] = 17", 42), [17, 42]);
+assert.sameValue(arraysEqual(strictEval("1", 2), ["1", 2]), true);
+assert.sameValue(arraysEqual(strictEval("arguments"), ["arguments"]), true);
+assert.sameValue(arraysEqual(strictEval("p = 2"), ["p = 2"]), true);
+assert.sameValue(arraysEqual(strictEval("p = 2", 17), ["p = 2", 17]), true);
+assert.sameValue(arraysEqual(strictEval("arguments[0] = 17"), [17]), true);
+assert.sameValue(arraysEqual(strictEval("arguments[0] = 17", 42), [17, 42]), true);
 
 function strictMaybeNestedEval(code, p)
 {
@@ -203,10 +225,10 @@ function strictMaybeNestedEval(code, p)
   return arguments;
 }
 
-assert.compareArray(strictMaybeNestedEval("1", 2), ["1", 2]);
-assert.compareArray(strictMaybeNestedEval("arguments"), ["arguments"]);
-assert.compareArray(strictMaybeNestedEval("p = 2"), ["p = 2"]);
-assert.compareArray(strictMaybeNestedEval("p = 2", 17), ["p = 2", 17]);
+assert.sameValue(arraysEqual(strictMaybeNestedEval("1", 2), ["1", 2]), true);
+assert.sameValue(arraysEqual(strictMaybeNestedEval("arguments"), ["arguments"]), true);
+assert.sameValue(arraysEqual(strictMaybeNestedEval("p = 2"), ["p = 2"]), true);
+assert.sameValue(arraysEqual(strictMaybeNestedEval("p = 2", 17), ["p = 2", 17]), true);
 
 function strictNestedEval(code, p)
 {
@@ -216,12 +238,12 @@ function strictNestedEval(code, p)
   return arguments;
 }
 
-assert.compareArray(strictNestedEval("1", 2), ["1", 2]);
-assert.compareArray(strictNestedEval("arguments"), ["arguments"]);
-assert.compareArray(strictNestedEval("p = 2"), ["p = 2"]);
-assert.compareArray(strictNestedEval("p = 2", 17), ["p = 2", 17]);
-assert.compareArray(strictNestedEval("arguments[0] = 17"), ["arguments[0] = 17"]);
-assert.compareArray(strictNestedEval("arguments[0] = 17", 42), ["arguments[0] = 17", 42]);
+assert.sameValue(arraysEqual(strictNestedEval("1", 2), ["1", 2]), true);
+assert.sameValue(arraysEqual(strictNestedEval("arguments"), ["arguments"]), true);
+assert.sameValue(arraysEqual(strictNestedEval("p = 2"), ["p = 2"]), true);
+assert.sameValue(arraysEqual(strictNestedEval("p = 2", 17), ["p = 2", 17]), true);
+assert.sameValue(arraysEqual(strictNestedEval("arguments[0] = 17"), ["arguments[0] = 17"]), true);
+assert.sameValue(arraysEqual(strictNestedEval("arguments[0] = 17", 42), ["arguments[0] = 17", 42]), true);
 
 function strictAssignArguments(a)
 {
@@ -293,10 +315,10 @@ function strictNestedAssignShadowVar(p)
   return arguments;
 }
 
-assert.compareArray(strictNestedAssignShadowVar(), []);
-assert.compareArray(strictNestedAssignShadowVar(99), [99]);
-assert.compareArray(strictNestedAssignShadowVar(""), [""]);
-assert.compareArray(strictNestedAssignShadowVar(obj), [obj]);
+assert.sameValue(arraysEqual(strictNestedAssignShadowVar(), []), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowVar(99), [99]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowVar(""), [""]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowVar(obj), [obj]), true);
 
 function strictNestedAssignShadowCatch(p)
 {
@@ -315,10 +337,10 @@ function strictNestedAssignShadowCatch(p)
   return arguments;
 }
 
-assert.compareArray(strictNestedAssignShadowCatch(), []);
-assert.compareArray(strictNestedAssignShadowCatch(99), [99]);
-assert.compareArray(strictNestedAssignShadowCatch(""), [""]);
-assert.compareArray(strictNestedAssignShadowCatch(obj), [obj]);
+assert.sameValue(arraysEqual(strictNestedAssignShadowCatch(), []), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowCatch(99), [99]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowCatch(""), [""]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowCatch(obj), [obj]), true);
 
 function strictNestedAssignShadowCatchCall(p)
 {
@@ -338,10 +360,10 @@ function strictNestedAssignShadowCatchCall(p)
   return arguments;
 }
 
-assert.compareArray(strictNestedAssignShadowCatchCall(), []);
-assert.compareArray(strictNestedAssignShadowCatchCall(99), [99]);
-assert.compareArray(strictNestedAssignShadowCatchCall(""), [""]);
-assert.compareArray(strictNestedAssignShadowCatchCall(obj), [obj]);
+assert.sameValue(arraysEqual(strictNestedAssignShadowCatchCall(), []), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowCatchCall(99), [99]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowCatchCall(""), [""]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowCatchCall(obj), [obj]), true);
 
 function strictNestedAssignShadowFunction(p)
 {
@@ -354,10 +376,10 @@ function strictNestedAssignShadowFunction(p)
   return arguments;
 }
 
-assert.compareArray(strictNestedAssignShadowFunction(), []);
-assert.compareArray(strictNestedAssignShadowFunction(99), [99]);
-assert.compareArray(strictNestedAssignShadowFunction(""), [""]);
-assert.compareArray(strictNestedAssignShadowFunction(obj), [obj]);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunction(), []), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunction(99), [99]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunction(""), [""]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunction(obj), [obj]), true);
 
 function strictNestedAssignShadowFunctionCall(p)
 {
@@ -370,10 +392,10 @@ function strictNestedAssignShadowFunctionCall(p)
   return arguments;
 }
 
-assert.compareArray(strictNestedAssignShadowFunctionCall(), []);
-assert.compareArray(strictNestedAssignShadowFunctionCall(99), [99]);
-assert.compareArray(strictNestedAssignShadowFunctionCall(""), [""]);
-assert.compareArray(strictNestedAssignShadowFunctionCall(obj), [obj]);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunctionCall(), []), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunctionCall(99), [99]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunctionCall(""), [""]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunctionCall(obj), [obj]), true);
 
 function strictNestedShadowAndMaybeEval(code, p)
 {
@@ -382,12 +404,12 @@ function strictNestedShadowAndMaybeEval(code, p)
   return arguments;
 }
 
-assert.compareArray(strictNestedShadowAndMaybeEval("1", 2), ["1", 2]);
-assert.compareArray(strictNestedShadowAndMaybeEval("arguments"), ["arguments"]);
-assert.compareArray(strictNestedShadowAndMaybeEval("p = 2"), ["p = 2"]);
-assert.compareArray(strictNestedShadowAndMaybeEval("p = 2", 17), ["p = 2", 17]);
-assert.compareArray(strictNestedShadowAndMaybeEval("arguments[0] = 17"), ["arguments[0] = 17"]);
-assert.compareArray(strictNestedShadowAndMaybeEval("arguments[0] = 17", 42), ["arguments[0] = 17", 42]);
+assert.sameValue(arraysEqual(strictNestedShadowAndMaybeEval("1", 2), ["1", 2]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndMaybeEval("arguments"), ["arguments"]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndMaybeEval("p = 2"), ["p = 2"]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndMaybeEval("p = 2", 17), ["p = 2", 17]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndMaybeEval("arguments[0] = 17"), ["arguments[0] = 17"]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndMaybeEval("arguments[0] = 17", 42), ["arguments[0] = 17", 42]), true);
 
 function strictNestedShadowAndEval(code, p)
 {
@@ -396,12 +418,12 @@ function strictNestedShadowAndEval(code, p)
   return arguments;
 }
 
-assert.compareArray(strictNestedShadowAndEval("1", 2), ["1", 2]);
-assert.compareArray(strictNestedShadowAndEval("arguments"), ["arguments"]);
-assert.compareArray(strictNestedShadowAndEval("p = 2"), ["p = 2"]);
-assert.compareArray(strictNestedShadowAndEval("p = 2", 17), ["p = 2", 17]);
-assert.compareArray(strictNestedShadowAndEval("arguments[0] = 17"), ["arguments[0] = 17"]);
-assert.compareArray(strictNestedShadowAndEval("arguments[0] = 17", 42), ["arguments[0] = 17", 42]);
+assert.sameValue(arraysEqual(strictNestedShadowAndEval("1", 2), ["1", 2]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndEval("arguments"), ["arguments"]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndEval("p = 2"), ["p = 2"]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndEval("p = 2", 17), ["p = 2", 17]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndEval("arguments[0] = 17"), ["arguments[0] = 17"]), true);
+assert.sameValue(arraysEqual(strictNestedShadowAndEval("arguments[0] = 17", 42), ["arguments[0] = 17", 42]), true);
 
 function strictEvalContainsMutation(code)
 {
@@ -409,8 +431,8 @@ function strictEvalContainsMutation(code)
   return eval(code);
 }
 
-assert.compareArray(strictEvalContainsMutation("code = 17; arguments"), ["code = 17; arguments"]);
-assert.compareArray(strictEvalContainsMutation("arguments[0] = 17; arguments"), [17]);
+assert.sameValue(arraysEqual(strictEvalContainsMutation("code = 17; arguments"), ["code = 17; arguments"]), true);
+assert.sameValue(arraysEqual(strictEvalContainsMutation("arguments[0] = 17; arguments"), [17]), true);
 assert.sameValue(strictEvalContainsMutation("arguments[0] = 17; code"), "arguments[0] = 17; code");
 
 function strictNestedAssignShadowFunctionName(p)
@@ -425,9 +447,14 @@ function strictNestedAssignShadowFunctionName(p)
   return arguments;
 }
 
-assert.compareArray(strictNestedAssignShadowFunctionName(), []);
-assert.compareArray(strictNestedAssignShadowFunctionName(99), [99]);
-assert.compareArray(strictNestedAssignShadowFunctionName(""), [""]);
-assert.compareArray(strictNestedAssignShadowFunctionName(obj), [obj]);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunctionName(), []), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunctionName(99), [99]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunctionName(""), [""]), true);
+assert.sameValue(arraysEqual(strictNestedAssignShadowFunctionName(obj), [obj]), true);
+
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

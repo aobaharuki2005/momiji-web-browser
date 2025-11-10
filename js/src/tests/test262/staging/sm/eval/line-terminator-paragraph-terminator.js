@@ -4,13 +4,30 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  eval via the JSON parser should parse strings containing U+2028/U+2029 (as of <https://tc39.github.io/proposal-json-superset/>, that is)
-info: bugzilla.mozilla.org/show_bug.cgi?id=657367
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 657367;
+var summary =
+  "eval via the JSON parser should parse strings containing U+2028/U+2029 " +
+  "(as of <https://tc39.github.io/proposal-json-superset/>, that is)";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 assert.sameValue(eval('("\u2028")'), "\u2028");
 assert.sameValue(eval('("\u2029")'), "\u2029");
+
+/******************************************************************************/
+
+print("Tests complete!");
 
 reportCompare(0, 0);

@@ -4,11 +4,13 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 assert.sameValue(new Function(
             "eval('var foo = 915805');" +
             "return foo;"
@@ -22,5 +24,9 @@ assert.sameValue(new Function(
             "return foo;"
          )()(),
          915805);
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

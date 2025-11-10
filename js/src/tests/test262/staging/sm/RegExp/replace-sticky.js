@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  String.prototype.replace should use and update lastIndex if sticky flag is set
-info: bugzilla.mozilla.org/show_bug.cgi?id=887016
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 887016;
+var summary = "String.prototype.replace should use and update lastIndex if sticky flag is set";
+
+print(BUGNUMBER + ": " + summary);
 
 var input = "abcdeabcdeabcdefghij";
 var re = new RegExp("abcde", "y");
@@ -21,5 +27,6 @@ assert.sameValue(re.lastIndex, 15);
 ret = input.replace(re, "ABCDE");
 assert.sameValue(ret, "abcdeabcdeabcdefghij");
 assert.sameValue(re.lastIndex, 0);
+
 
 reportCompare(0, 0);

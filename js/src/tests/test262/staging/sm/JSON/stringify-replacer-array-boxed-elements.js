@@ -4,11 +4,23 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Boxed-string/number objects in replacer arrays
-info: bugzilla.mozilla.org/show_bug.cgi?id=648471
+  pending
 esid: pending
 ---*/
+var gTestfile = 'stringify-replacer-array-boxed-elements.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 648471;
+var summary = "Boxed-string/number objects in replacer arrays";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var S = new String(3);
 var N = new Number(4);
@@ -49,5 +61,9 @@ assert.sameValue(JSON.stringify({ 4: 4, 17: 17 }, [N]),
 String.prototype.valueOf = function() { return 42; };
 assert.sameValue(JSON.stringify({ 3: 3, 42: 42 }, [S]),
          '{"42":42}');
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

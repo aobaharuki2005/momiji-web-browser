@@ -4,10 +4,12 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
-features: [host-gc-required]
 ---*/
 var x = {}, h = new WeakMap;
 h.set(x, null);

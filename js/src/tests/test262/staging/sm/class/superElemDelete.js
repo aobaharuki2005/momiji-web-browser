@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -23,7 +26,7 @@ class derived extends base {
                 return "";
             }
         };
-        assert.throws(ReferenceError, () => delete super[key]);
+        assertThrowsInstanceOf(() => delete super[key], ReferenceError);
         assert.sameValue(sideEffect, 0);
     }
 }
@@ -38,17 +41,17 @@ class derivedTestDeleteElem extends base {
             }
         };
 
-        assert.throws(ReferenceError, () => delete super[key]);
+        assertThrowsInstanceOf(() => delete super[key], ReferenceError);
         assert.sameValue(sideEffect, 0);
 
         super();
 
-        assert.throws(ReferenceError, () => delete super[key]);
+        assertThrowsInstanceOf(() => delete super[key], ReferenceError);
         assert.sameValue(sideEffect, 0);
 
         Object.setPrototypeOf(derivedTestDeleteElem.prototype, null);
 
-        assert.throws(ReferenceError, () => delete super[key]);
+        assertThrowsInstanceOf(() => delete super[key], ReferenceError);
         assert.sameValue(sideEffect, 0);
 
         return {};

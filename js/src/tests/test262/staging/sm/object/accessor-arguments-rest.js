@@ -2,20 +2,23 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-assert.throws(SyntaxError, () => eval("({ get x(...a) { } })"));
-assert.throws(SyntaxError, () => eval("({ get x(a, ...b) { } })"));
-assert.throws(SyntaxError, () => eval("({ get x([a], ...b) { } })"));
-assert.throws(SyntaxError, () => eval("({ get x({a}, ...b) { } })"));
-assert.throws(SyntaxError, () => eval("({ get x({a: A}, ...b) { } })"));
+assertThrowsInstanceOf(() => eval("({ get x(...a) { } })"), SyntaxError);
+assertThrowsInstanceOf(() => eval("({ get x(a, ...b) { } })"), SyntaxError);
+assertThrowsInstanceOf(() => eval("({ get x([a], ...b) { } })"), SyntaxError);
+assertThrowsInstanceOf(() => eval("({ get x({a}, ...b) { } })"), SyntaxError);
+assertThrowsInstanceOf(() => eval("({ get x({a: A}, ...b) { } })"), SyntaxError);
 
-assert.throws(SyntaxError, () => eval("({ set x(...a) { } })"));
-assert.throws(SyntaxError, () => eval("({ set x(a, ...b) { } })"));
-assert.throws(SyntaxError, () => eval("({ set x([a], ...b) { } })"));
-assert.throws(SyntaxError, () => eval("({ set x({a: A}, ...b) { } })"));
+assertThrowsInstanceOf(() => eval("({ set x(...a) { } })"), SyntaxError);
+assertThrowsInstanceOf(() => eval("({ set x(a, ...b) { } })"), SyntaxError);
+assertThrowsInstanceOf(() => eval("({ set x([a], ...b) { } })"), SyntaxError);
+assertThrowsInstanceOf(() => eval("({ set x({a: A}, ...b) { } })"), SyntaxError);
 
 ({ get(...a) { } });
 ({ get(a, ...b) { } });

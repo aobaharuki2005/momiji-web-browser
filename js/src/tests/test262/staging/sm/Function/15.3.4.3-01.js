@@ -4,13 +4,34 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  Function.prototype.apply should accept any arraylike arguments
-info: bugzilla.mozilla.org/show_bug.cgi?id=562448
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 562448;
+var summary = 'Function.prototype.apply should accept any arraylike arguments';
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
+function expectTypeError(fun, msg)
+{
+  try
+  {
+    fun();
+    assert.sameValue(true, false, "should have thrown a TypeError");
+  }
+  catch (e)
+  {
+    assert.sameValue(e instanceof TypeError, true, msg + "; instead threw " + e);
+  }
+}
 
 function fun() { }
 
@@ -27,7 +48,7 @@ for (var i = 0, sz = nonfuns.length; i < sz; i++)
   };
   var msg =
     "expected TypeError calling Function.prototype.apply with uncallable this";
-  assert.throws(TypeError, f, msg);
+  expectTypeError(f, msg);
 }
 
 
@@ -111,7 +132,7 @@ for (var i = 0, sz = nonobjs.length; i < sz; i++)
 {
   var f = function() { fun.apply(thisObj, nonobjs[i]); };
   var msg = "should have thrown a TypeError with non-object arguments";
-  assert.throws(TypeError, f, msg);
+  expectTypeError(f, msg);
 }
 
 
@@ -221,5 +242,9 @@ assert.sameValue(res[3], 8, "wrong ret[0]");
 
 strictArgsAsArray.apply(17, argsAccessors);
 assert.sameValue(seenThis, 17, "saw wrong this");
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

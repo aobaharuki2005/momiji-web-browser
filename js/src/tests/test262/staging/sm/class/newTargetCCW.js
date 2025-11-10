@@ -2,12 +2,15 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
 // Make sure we wrap the new target on CCW construct calls.
-var g = $262.createRealm().global;
+var g = createNewGlobal();
 
 let f = g.eval('(function (expected) { this.accept = new.target === expected; })');
 

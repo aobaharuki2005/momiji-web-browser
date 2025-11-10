@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -11,24 +14,24 @@ esid: pending
 // should throw.
 class Foof { constructor() { }; tryBreak() { Foof = 4; } }
 for (let result of [Foof, class Bar { constructor() { }; tryBreak() { Bar = 4; } }])
-    assert.throws(TypeError, () => new result().tryBreak());
+    assertThrowsInstanceOf(() => new result().tryBreak(), TypeError);
 
 {
     class foo { constructor() { }; tryBreak() { foo = 4; } }
     for (let result of [foo, class Bar { constructor() { }; tryBreak() { Bar = 4 } }])
-        assert.throws(TypeError, () => new result().tryBreak());
+        assertThrowsInstanceOf(() => new result().tryBreak(), TypeError);
 }
 
 // TDZ applies to inner bindings
-assert.throws(ReferenceError, ()=>eval(`class Bar {
+assertThrowsInstanceOf(()=>eval(`class Bar {
                                     constructor() { };
                                     [Bar] () { };
-                                 }`));
+                                 }`), ReferenceError);
 
-assert.throws(ReferenceError, ()=>eval(`(class Bar {
+assertThrowsInstanceOf(()=>eval(`(class Bar {
                                     constructor() { };
                                     [Bar] () { };
-                                 })`));
+                                 })`), ReferenceError);
 
 // There's no magic "inner binding" global
 {

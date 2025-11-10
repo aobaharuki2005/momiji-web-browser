@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-strict-shell.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -22,8 +23,8 @@ for (let value of primitives) {
     assert.sameValue(value.x = 5, 5);
     assert.sameValue(value[key] = 6, 6);
 
-    assert.throws(TypeError, function() { "use strict"; value.x = 5; });
-    assert.throws(TypeError, function() { "use strict"; value[key] = 6; });
+    assertThrowsInstanceOf(function() { "use strict"; value.x = 5; }, TypeError);
+    assertThrowsInstanceOf(function() { "use strict"; value[key] = 6; }, TypeError);
 
     let target = {};
     assert.sameValue(Reflect.set(target, key, 5, value), false);

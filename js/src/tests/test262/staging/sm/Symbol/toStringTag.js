@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -59,7 +62,7 @@ function testProxy() {
     assert.sameValue(Object.prototype.toString.call(new Proxy(function() {}, metaHandler)), "[object Function]")
     var {proxy, revoke} = Proxy.revocable({}, metaHandler);
     revoke();
-    assert.throws(TypeError, () => Object.prototype.toString.call(proxy));
+    assertThrowsInstanceOf(() => Object.prototype.toString.call(proxy), TypeError);
 
     assert.sameValue(count, 4);
 }

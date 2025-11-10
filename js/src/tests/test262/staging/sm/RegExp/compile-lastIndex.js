@@ -4,11 +4,24 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  RegExp.prototype.compile must perform all its steps *except* setting .lastIndex, then throw, when provided a RegExp whose .lastIndex has been made non-writable
-info: bugzilla.mozilla.org/show_bug.cgi?id=1253099
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1253099;
+var summary =
+  "RegExp.prototype.compile must perform all its steps *except* setting " +
+  ".lastIndex, then throw, when provided a RegExp whose .lastIndex has been " +
+  "made non-writable";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var regex = /foo/i;
 
@@ -35,7 +48,7 @@ assert.sameValue(regex.test("FOO"), true);
 assert.sameValue(regex.test("bar"), false);
 assert.sameValue(regex.test("BAR"), false);
 
-assert.throws(TypeError, () => regex.compile("bar"));
+assertThrowsInstanceOf(() => regex.compile("bar"), TypeError);
 
 assert.sameValue(regex.global, false);
 assert.sameValue(regex.ignoreCase, false);
@@ -49,7 +62,7 @@ assert.sameValue(regex.test("FOO"), false);
 assert.sameValue(regex.test("bar"), true);
 assert.sameValue(regex.test("BAR"), false);
 
-assert.throws(TypeError, () => regex.compile("^baz", "m"));
+assertThrowsInstanceOf(() => regex.compile("^baz", "m"), TypeError);
 
 assert.sameValue(regex.global, false);
 assert.sameValue(regex.ignoreCase, false);
@@ -68,5 +81,9 @@ assert.sameValue(regex.test("012345678901234567890123456789012345678901baz"), fa
 assert.sameValue(regex.test("012345678901234567890123456789012345678901\nbaz"), true);
 assert.sameValue(regex.test("012345678901234567890123456789012345678901BAZ"), false);
 assert.sameValue(regex.test("012345678901234567890123456789012345678901\nBAZ"), false);
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

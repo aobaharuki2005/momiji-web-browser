@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -14,7 +17,7 @@ assert.sameValue(desc.configurable, true);
 assert.sameValue(desc.enumerable, false);
 assert.sameValue(desc.writable, true);
 assert.sameValue(Array.from.length, 1);
-assert.throws(TypeError, () => new Array.from());  // not a constructor
+assertThrowsInstanceOf(() => new Array.from(), TypeError);  // not a constructor
 
 
 reportCompare(0, 0);

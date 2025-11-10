@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Return value should not be overwritten by finally block with normal execution.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1202134
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1202134;
+var summary = "Return value should not be overwritten by finally block with normal execution.";
+
+print(BUGNUMBER + ": " + summary);
 
 // ==== single ====
 
@@ -172,5 +178,6 @@ f = function() {
   }
 };
 assert.sameValue(f(), 42);
+
 
 reportCompare(0, 0);

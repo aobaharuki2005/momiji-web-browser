@@ -4,11 +4,23 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  String.prototype.relace should zero the .lastIndex when called with a global RegExp
-info: bugzilla.mozilla.org/show_bug.cgi?id=501739
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 501739;
+var summary =
+  "String.prototype.relace should zero the .lastIndex when called with a " +
+  "global RegExp";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var s = '0x2x4x6x8';
 
@@ -25,5 +37,9 @@ s.replace(p2, function(s) {
     return 'y';
 });
 assert.sameValue(p2.lastIndex, 4);
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

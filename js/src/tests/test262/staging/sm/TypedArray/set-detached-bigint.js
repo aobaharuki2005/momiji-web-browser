@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -21,7 +24,7 @@ let obj = {
 };
 
 // Throws a SyntaxError, because "huzzah!" can't be parsed as a BigInt.
-assert.throws(SyntaxError, () => ta.set(obj));
+assertThrowsInstanceOf(() => ta.set(obj), SyntaxError);
 
 
 reportCompare(0, 0);

@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -23,11 +26,11 @@ esid: pending
 // Static field initialisers can't access the outer name binding for class expressions
 // before it has been initialised.
 {
-  assert.throws(ReferenceError, () => {
+  assertThrowsInstanceOf(() => {
     let C = class {
       static field = C;
     };
-  });
+  }, ReferenceError);
 }
 
 // Static field initialisers can access the outer name binding for class expressions after

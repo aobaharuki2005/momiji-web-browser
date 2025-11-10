@@ -4,12 +4,22 @@
  */
 
 /*---
-includes: [deepEqual.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
-  Array.prototype.fill
-info: bugzilla.mozilla.org/show_bug.cgi?id=911147
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 911147;
+var summary = 'Array.prototype.fill';
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 assert.sameValue(typeof [].fill, 'function');
 assert.sameValue([].fill.length, 1);
@@ -83,13 +93,14 @@ Object.freeze(frozenObj);
 var frozenArray = [1, 1, 1];
 Object.freeze(frozenArray);
 
-assert.throws(TypeError, () => [].fill.call(objWithGetterOnly, 2));
-assert.throws(TypeError, () => [].fill.call(objWithReadOnlyProp, 2));
-assert.throws(TypeError, () => [].fill.call(objWithNonconfigurableProp, 2));
-assert.throws(TypeError, () => [].fill.call(frozenObj, 2));
-assert.throws(TypeError, () => [].fill.call(frozenArray, 2));
-assert.throws(TypeError, () => [].fill.call("111", 2));
-assert.throws(TypeError, () => [].fill.call(null, 2));
-assert.throws(TypeError, () => [].fill.call(undefined, 2));
+assertThrowsInstanceOf(() => [].fill.call(objWithGetterOnly, 2), TypeError);
+assertThrowsInstanceOf(() => [].fill.call(objWithReadOnlyProp, 2), TypeError);
+assertThrowsInstanceOf(() => [].fill.call(objWithNonconfigurableProp, 2), TypeError);
+assertThrowsInstanceOf(() => [].fill.call(frozenObj, 2), TypeError);
+assertThrowsInstanceOf(() => [].fill.call(frozenArray, 2), TypeError);
+assertThrowsInstanceOf(() => [].fill.call("111", 2), TypeError);
+assertThrowsInstanceOf(() => [].fill.call(null, 2), TypeError);
+assertThrowsInstanceOf(() => [].fill.call(undefined, 2), TypeError);
+
 
 reportCompare(0, 0);

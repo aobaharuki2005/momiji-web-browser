@@ -4,20 +4,55 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  delete (foo), delete ((foo)), and so on are strict mode early errors
-info: bugzilla.mozilla.org/show_bug.cgi?id=1111101
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 1111101;
+var summary =
+  "delete (foo), delete ((foo)), and so on are strict mode early errors";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 function checkSyntaxError(code)
 {
-  assert.throws(SyntaxError, function() {
-    Function(code);
-  });
-  assert.throws(SyntaxError, function() {
-    (1, eval)(code); // indirect eval
-  });
+  function helper(maker)
+  {
+    var earlyError = false;
+    try
+    {
+      var f = maker(code);
+
+      var error = "no early error, created a function with code <" + code + ">";
+      try
+      {
+        f();
+        error += ", and the function can be called without error";
+      }
+      catch (e)
+      {
+        error +=", and calling the function throws " + e;
+      }
+
+      throw new Error(error);
+    }
+    catch (e)
+    {
+      assert.sameValue(e instanceof SyntaxError, true,
+               "expected syntax error, got " + e);
+    }
+  }
+
+  helper(Function);
+  helper(eval);
 }
 
 checkSyntaxError("function f() { 'use strict'; delete escape; } f();");
@@ -41,5 +76,10 @@ checkFine("function f() { delete (escape); } f();");
 checkFine("function f() { delete (escape); }");
 checkFine("function f() { delete ((escape)); } f();");
 checkFine("function f() { delete ((escape)); }");
+
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

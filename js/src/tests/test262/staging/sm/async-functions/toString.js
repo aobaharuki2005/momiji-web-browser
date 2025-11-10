@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  async function toString
-info: bugzilla.mozilla.org/show_bug.cgi?id=1185106
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1185106;
+var summary = "async function toString";
+
+print(BUGNUMBER + ": " + summary);
 
 async function f1(a, b, c) { await a; }
 
@@ -24,5 +30,6 @@ assert.sameValue((async (a, b, c) => { await a; }).toString(),
 
 assert.sameValue({ async foo(a, b, c) { await a; } }.foo.toString(),
          "async foo(a, b, c) { await a; }");
+
 
 reportCompare(0, 0);

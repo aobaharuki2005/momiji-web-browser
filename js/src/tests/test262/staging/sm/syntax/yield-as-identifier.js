@@ -4,23 +4,47 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  |yield| is sometimes a valid identifier
-info: bugzilla.mozilla.org/show_bug.cgi?id=1288459
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 1288459;
+var summary = "|yield| is sometimes a valid identifier";
 
-var g = $262.createRealm().global;
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 function t(code)
 {
   var strictSemi = " 'use strict'; " + code;
   var strictASI = " 'use strict' \n " + code;
 
-  g.Function(code);
+  var creationFunctions = ["Function"];
+  if (typeof evaluate === "function")
+    creationFunctions.push("evaluate");
+  if (typeof parseModule === "function")
+    creationFunctions.push("parseModule");
 
-  assert.throws(g.SyntaxError, () => g.Function(strictSemi));
-  assert.throws(g.SyntaxError, () => g.Function(strictASI));
+  for (var func of creationFunctions)
+  {
+    var g = createNewGlobal();
+    var f = g[func];
+
+    if (func === "parseModule")
+      assertThrowsInstanceOf(() => f(code), g.SyntaxError);
+    else
+      f(code);
+
+    assertThrowsInstanceOf(() => f(strictSemi), g.SyntaxError);
+    assertThrowsInstanceOf(() => f(strictASI), g.SyntaxError);
+  }
 }
 
 t("var yield = 3;");
@@ -29,5 +53,9 @@ t("const yield = 3;");
 t("for (var yield = 3; ; ) break;");
 t("for (let yield = 3; ; ) break;");
 t("for (const yield = 3; ; ) break;");
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

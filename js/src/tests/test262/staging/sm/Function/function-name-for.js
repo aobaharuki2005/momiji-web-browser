@@ -2,13 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  Anonymous function name should be set based on for-in initializer
-info: bugzilla.mozilla.org/show_bug.cgi?id=883377
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 883377;
+var summary = "Anonymous function name should be set based on for-in initializer";
+
+print(BUGNUMBER + ": " + summary);
 
 var exprs = [
     ["function() {}", false],
@@ -33,5 +37,6 @@ function testForInHead(expr, named) {
 for (var [expr, named] of exprs) {
     testForInHead(expr, named);
 }
+
 
 reportCompare(0, 0);

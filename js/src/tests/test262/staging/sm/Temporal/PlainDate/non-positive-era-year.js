@@ -1,8 +1,11 @@
-// |reftest| skip-if(!this.hasOwnProperty('Temporal')) -- Temporal is not enabled unconditionally
+// |reftest| shell-option(--enable-temporal) skip-if(!this.hasOwnProperty('Temporal')||!xulRuntime.shell) -- Temporal is not enabled unconditionally, requires shell-options
 // Copyright (C) 2025 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 features:
   - Temporal
 description: |
@@ -19,7 +22,6 @@ const tests = [
   {
     calendar: "gregory",
     era: "bce",
-    inverse: true,
     start: "0000-01-01",
   },
 
@@ -60,14 +62,7 @@ const tests = [
   {
     calendar: "japanese",
     era: "bce",
-    inverse: true,
     start: "0000-01-01",
-  },
-
-  {
-    calendar: "buddhist",
-    era: "be",
-    start: "-000542-01-01",
   },
 
   {
@@ -77,74 +72,9 @@ const tests = [
   },
 
   {
-    calendar: "ethioaa",
-    era: "aa",
-    start: "-005492-07-18",
-  },
-
-  {
     calendar: "ethiopic",
     era: "am",
     start: "0008-08-27",
-  },
-  {
-    calendar: "ethiopic",
-    era: "aa",
-    start: "-005492-07-18",
-  },
-
-  {
-    calendar: "hebrew",
-    era: "am",
-    start: "-003760-09-07",
-  },
-
-  {
-    calendar: "indian",
-    era: "shaka",
-    start: "0079-03-23",
-  },
-
-  {
-    calendar: "islamic-civil",
-    era: "ah",
-    start: "0622-07-20",
-  },
-  {
-    calendar: "islamic-civil",
-    era: "bh",
-    inverse: true,
-    start: "0622-01-01",
-  },
-
-  {
-    calendar: "islamic-tbla",
-    era: "ah",
-    start: "0622-07-19",
-  },
-  {
-    calendar: "islamic-tbla",
-    era: "bh",
-    inverse: true,
-    start: "0622-01-01",
-  },
-
-  {
-    calendar: "islamic-umalqura",
-    era: "ah",
-    start: "0622-07-20",
-  },
-  {
-    calendar: "islamic-umalqura",
-    era: "bh",
-    inverse: true,
-    start: "0622-01-01",
-  },
-
-  {
-    calendar: "persian",
-    era: "ap",
-    start: "0622-03-22",
   },
 
   {
@@ -155,12 +85,11 @@ const tests = [
   {
     calendar: "roc",
     era: "broc",
-    inverse: true,
     start: "1911-01-01",
   },
 ];
 
-for (let {calendar, era, start, inverse} of tests) {
+for (let {calendar, era, start} of tests) {
   let eraStart = Temporal.PlainDate.from(start).withCalendar(calendar);
 
   let monthCode = "M01";
@@ -176,13 +105,13 @@ for (let {calendar, era, start, inverse} of tests) {
     });
 
     let years = eraYear - 1;
-    if (inverse) {
+    if (era.endsWith("-inverse")) {
       years = -years;
     }
 
     let expected = eraStart.add({years}).with({monthCode, day});
 
-    assert.sameValue(date.equals(expected), true, `${date} != ${expected} (${calendar} era ${era} year ${eraYear})`);
+    assert.sameValue(date.equals(expected), true, `${date} != ${expected}`);
   }
 }
 

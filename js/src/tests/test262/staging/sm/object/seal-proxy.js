@@ -2,12 +2,13 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -28,10 +29,11 @@ function logProxy(object = {}, handler = {}) {
 
 var {proxy, log} = logProxy();
 Object.seal(proxy);
-assert.compareArray(log, ["preventExtensions", "ownKeys"]);
+assert.deepEqual(log, ["preventExtensions", "ownKeys"]);
 
 var {proxy, log} = logProxy();
 Object.seal(Object.seal(proxy));
-assert.compareArray(log, ["preventExtensions", "ownKeys", "preventExtensions", "ownKeys"]);
+assert.deepEqual(log, ["preventExtensions", "ownKeys", "preventExtensions", "ownKeys"]);
+
 
 reportCompare(0, 0);

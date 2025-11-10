@@ -2,11 +2,13 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
@@ -21,5 +23,6 @@ assert.sameValue(Boolean.prototype.hasOwnProperty('toJSON'), false);
 
 Object.prototype.toJSON = function() { return 2; };
 assert.sameValue(JSON.stringify(new Boolean(true)), "2");
+
 
 reportCompare(0, 0);

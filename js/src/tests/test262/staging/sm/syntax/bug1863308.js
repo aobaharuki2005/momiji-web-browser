@@ -2,29 +2,31 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
-assert.throws(
-    SyntaxError,
+assertThrowsInstanceOfWithMessage(
     () => eval("for (let case of ['foo', 'bar']) {}"),
+    SyntaxError,
     "unexpected token: keyword 'case'");
 
-assert.throws(
-    SyntaxError,
+assertThrowsInstanceOfWithMessage(
     () => eval("for (let debugger of ['foo', 'bar']) {}"),
+    SyntaxError,
     "unexpected token: keyword 'debugger'");
 
-assert.throws(
-    SyntaxError,
+assertThrowsInstanceOfWithMessage(
     () => eval("for (let case in ['foo', 'bar']) {}"),
+    SyntaxError,
     "unexpected token: keyword 'case'");
 
-assert.throws(
-    SyntaxError,
+assertThrowsInstanceOfWithMessage(
     () => eval("for (let debugger in ['foo', 'bar']) {}"),
+    SyntaxError,
     "unexpected token: keyword 'debugger'");
 
 

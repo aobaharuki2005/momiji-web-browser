@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  String.fromCodePoint
-info: bugzilla.mozilla.org/show_bug.cgi?id=918879
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 918879;
+var summary = 'String.fromCodePoint';
+
+print(BUGNUMBER + ": " + summary);
 
 // Tests taken from:
 // https://github.com/mathiasbynens/String.fromCodePoint/blob/master/tests/tests.js
@@ -25,17 +31,17 @@ assert.sameValue(String.fromCodePoint(0x61, 0x62, 0x1D307), 'ab\uD834\uDF07');
 assert.sameValue(String.fromCodePoint(false), '\0');
 assert.sameValue(String.fromCodePoint(null), '\0');
 
-assert.throws(RangeError, function() { String.fromCodePoint('_'); });
-assert.throws(RangeError, function() { String.fromCodePoint('+Infinity'); });
-assert.throws(RangeError, function() { String.fromCodePoint('-Infinity'); });
-assert.throws(RangeError, function() { String.fromCodePoint(-1); });
-assert.throws(RangeError, function() { String.fromCodePoint(0x10FFFF + 1); });
-assert.throws(RangeError, function() { String.fromCodePoint(3.14); });
-assert.throws(RangeError, function() { String.fromCodePoint(3e-2); });
-assert.throws(RangeError, function() { String.fromCodePoint(Infinity); });
-assert.throws(RangeError, function() { String.fromCodePoint(NaN); });
-assert.throws(RangeError, function() { String.fromCodePoint(undefined); });
-assert.throws(RangeError, function() { String.fromCodePoint({}); });
+assertThrowsInstanceOf(function() { String.fromCodePoint('_'); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint('+Infinity'); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint('-Infinity'); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint(-1); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint(0x10FFFF + 1); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint(3.14); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint(3e-2); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint(Infinity); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint(NaN); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint(undefined); }, RangeError);
+assertThrowsInstanceOf(function() { String.fromCodePoint({}); }, RangeError);
 
 var counter = Math.pow(2, 15) * 3 / 2;
 var result = [];
@@ -61,5 +67,6 @@ assert.sameValue(String.fromCodePoint(0x31, 0x32, 0x33, 0x34), '1234');
 assert.sameValue(String.fromCodePoint(0x31, 0x32, 0x33, 0x34, 0x35), '12345');
 // str_fromCodePoint (many arguments, creates a malloc string)
 assert.sameValue(String.fromCodePoint(0x31, 0x32, 0x33, 0x34, 0x35, 0x36), '123456');
+
 
 reportCompare(0, 0);

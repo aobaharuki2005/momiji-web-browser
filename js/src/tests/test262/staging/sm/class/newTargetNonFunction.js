@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -9,10 +12,10 @@ esid: pending
 // Make sure that we can plumb new.target, even if the results are going to
 // throw.
 
-assert.throws(TypeError, () => new ""(...Array()));
+assertThrowsInstanceOf(() => new ""(...Array()), TypeError);
 
-assert.throws(TypeError, () => new ""());
-assert.throws(TypeError, () => new ""(1));
+assertThrowsInstanceOf(() => new ""(), TypeError);
+assertThrowsInstanceOf(() => new ""(1), TypeError);
 
 
 reportCompare(0, 0);

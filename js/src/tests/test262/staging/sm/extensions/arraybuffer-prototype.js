@@ -4,11 +4,22 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  ArrayBuffer cannot access properties defined on the prototype chain.
-info: bugzilla.mozilla.org/show_bug.cgi?id=665961
+  pending
 esid: pending
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 665961;
+var summary =
+  "ArrayBuffer cannot access properties defined on the prototype chain.";
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 ArrayBuffer.prototype.prop = "on prototype";
 var b = new ArrayBuffer([]);
@@ -23,5 +34,6 @@ assert.sameValue(ArrayBuffer.prototype.prop, "on prototype");
 assert.sameValue(new ArrayBuffer([]).prop, "on prototype");
 
 assert.sameValue(c.nonexistent, undefined);
+
 
 reportCompare(0, 0);

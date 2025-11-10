@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Array.from should close iterator on error
-info: bugzilla.mozilla.org/show_bug.cgi?id=1180306
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1180306;
+var summary = 'Array.from should close iterator on error';
+
+print(BUGNUMBER + ": " + summary);
 
 function test(ctor, { mapVal=undefined,
                       nextVal=undefined,
@@ -50,7 +56,7 @@ function test(ctor, { mapVal=undefined,
         }
         assert.sameValue(caught, true);
     } else if (exceptionType) {
-        assert.throws(exceptionType, () => ctor.from(iterable, mapVal));
+        assertThrowsInstanceOf(() => ctor.from(iterable, mapVal), exceptionType);
     } else {
         ctor.from(iterable, mapVal);
     }
@@ -183,5 +189,6 @@ test(Array, {
     nextVal: { value: 1, done: false },
     closed: false,
 });
+
 
 reportCompare(0, 0);

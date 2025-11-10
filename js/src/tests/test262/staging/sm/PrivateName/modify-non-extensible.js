@@ -1,13 +1,8 @@
-// |reftest| skip -- nonextensible-applies-to-private is not supported
 // Copyright (C) 2024 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-features:
-  - class
-  - class-fields-private
-  - class-fields-public
-  - nonextensible-applies-to-private
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -38,8 +33,8 @@ class A extends OverrideBase {
 }
 
 var obj = {};
-new A(obj);  // Add #a to obj, but not g.
 Object.seal(obj);
+new A(obj);  // Add #a to obj, but not g.
 assert.sameValue('g' in obj, false);
 assert.sameValue(A.gs(obj), 1);
 A.inca(obj);
@@ -73,10 +68,8 @@ assert.sameValue(A.gs(proxy), 2)
 
 var target = { a: 10 };
 Object.freeze(target);
-assert.throws(TypeError, function () {
-  new A(target);
-});
-assert.sameValue(Object.isFrozen(target), true);
+new A(target);
+assert.sameValue(Object.isFrozen(target), true)
 
 var getOwnKeys = [];
 var proxy = new Proxy(target, {
@@ -88,5 +81,6 @@ var proxy = new Proxy(target, {
 
 Object.isFrozen(proxy);
 assert.sameValue(getOwnKeys.length, 1);
+
 
 reportCompare(0, 0);

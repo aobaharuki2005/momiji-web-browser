@@ -2,16 +2,13 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-TypedArray-shell.js, deepEqual.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js, deepEqual.js]
 flags:
   - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
-var otherGlobal = $262.createRealm().global;
-
 // Tests for TypedArray#forEach
 for (var constructor of anyTypedArrayConstructors) {
     assert.sameValue(constructor.prototype.forEach.length, 1);
@@ -68,14 +65,14 @@ for (var constructor of anyTypedArrayConstructors) {
     assert.sameValue(count, 3);
 
     // There is no callback or callback is not a function.
-    assert.throws(TypeError, () => {
+    assertThrowsInstanceOf(() => {
         arr.forEach();
-    });
+    }, TypeError);
     var invalidCallbacks = [undefined, null, 1, false, "", Symbol(), [], {}, /./];
     invalidCallbacks.forEach(callback => {
-        assert.throws(TypeError, () => {
+        assertThrowsInstanceOf(() => {
             arr.forEach(callback);
-        });
+        }, TypeError);
     })
 
     // Callback is a generator.
@@ -84,20 +81,22 @@ for (var constructor of anyTypedArrayConstructors) {
     });
 
     // Called from other globals.
-    var forEach = otherGlobal[constructor.name].prototype.forEach;
-    var sum = 0;
-    forEach.call(new constructor([1, 2, 3]), v => {
-        sum += v;
-    });
-    assert.sameValue(sum, 6);
+    if (typeof createNewGlobal === "function") {
+        var forEach = createNewGlobal()[constructor.name].prototype.forEach;
+        var sum = 0;
+        forEach.call(new constructor([1, 2, 3]), v => {
+            sum += v;
+        });
+        assert.sameValue(sum, 6);
+    }
 
     // Throws if `this` isn't a TypedArray.
     var invalidReceivers = [undefined, null, 1, false, "", Symbol(), [], {}, /./,
                             new Proxy(new constructor(), {})];
     invalidReceivers.forEach(invalidReceiver => {
-        assert.throws(TypeError, () => {
+        assertThrowsInstanceOf(() => {
             constructor.prototype.forEach.call(invalidReceiver, () => true);
-        }, "Assert that some fails if this value is not a TypedArray");
+        }, TypeError, "Assert that some fails if this value is not a TypedArray");
     });
 }
 

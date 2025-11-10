@@ -1,8 +1,11 @@
-// |reftest| skip-if(!this.hasOwnProperty('Temporal')) -- Temporal is not enabled unconditionally
+// |reftest| shell-option(--enable-temporal) skip-if(!this.hasOwnProperty('Temporal')||!xulRuntime.shell) -- Temporal is not enabled unconditionally, requires shell-options
 // Copyright (C) 2024 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-Date-shell.js]
+flags:
+  - noStrict
 features:
   - Temporal
 description: |
@@ -25,7 +28,7 @@ let minusOne = Temporal.Duration.from({nanoseconds: -1});
 //Test invalid date
 {
     const invalidDate = new Date(NaN);
-    assert.throws(RangeError, () => invalidDate.toTemporalInstant());
+    assertThrowsInstanceOf(() => invalidDate.toTemporalInstant(), RangeError);
 }
 
 //Test Temporal.Instant properties
@@ -60,12 +63,12 @@ let minusOne = Temporal.Duration.from({nanoseconds: -1});
     assert.sameValue(max.subtract(one).epochNanoseconds, max.epochNanoseconds - 1n);
 
     // Subtracting one from the minimum instant.
-    assert.throws(RangeError, () => min.add(minusOne));
-    assert.throws(RangeError, () => min.subtract(one));
+    assertThrowsInstanceOf(() => min.add(minusOne), RangeError);
+    assertThrowsInstanceOf(() => min.subtract(one), RangeError);
 
     // Adding one to the maximum instant.
-    assert.throws(RangeError, () => max.add(one));
-    assert.throws(RangeError, () => max.subtract(minusOne));
+    assertThrowsInstanceOf(() => max.add(one), RangeError);
+    assertThrowsInstanceOf(() => max.subtract(minusOne), RangeError);
 }
 
 

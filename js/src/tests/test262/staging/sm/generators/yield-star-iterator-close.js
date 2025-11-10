@@ -2,7 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/assertThrowsValue.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-generators-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -18,18 +20,16 @@ function test() {
     var throwCalled = 0;
     var throwCalledExpected = 0;
     var iterable = {};
-    iterable[Symbol.iterator] = function() {
-        return {
-            next() {
-                nextCalled++;
-                return { done: false };
-            },
-            return() {
-                returnCalled++;
-                return { done: true, value: "iter.return" };
-            }
-        };
-    };
+    iterable[Symbol.iterator] = makeIterator({
+        next: function() {
+            nextCalled++;
+            return { done: false };
+        },
+        ret: function() {
+            returnCalled++;
+            return { done: true, value: "iter.return" };
+        }
+    });
 
     function* y() {
         yield* iterable;
@@ -38,9 +38,9 @@ function test() {
     // G.p.throw on an iterator without "throw" calls IteratorClose.
     var g1 = y();
     g1.next();
-    assert.throws(TypeError, function() {
+    assertThrowsInstanceOf(function() {
         g1.throw("foo");
-    });
+    }, TypeError);
     assert.sameValue(returnCalled, ++returnCalledExpected);
     assert.sameValue(nextCalled, ++nextCalledExpected);
     g1.next();
@@ -60,18 +60,16 @@ function test() {
 
     // G.p.return calls "return", and if the result.done is false, continue
     // yielding.
-    iterable[Symbol.iterator] = function() {
-        return {
-            next() {
-                nextCalled++;
-                return { done: false };
-            },
-            return() {
-                returnCalled++;
-                return { done: false, value: "iter.return" };
-            }
-        };
-    };
+    iterable[Symbol.iterator] = makeIterator({
+        next: function() {
+            nextCalled++;
+            return { done: false };
+        },
+        ret: function() {
+            returnCalled++;
+            return { done: false, value: "iter.return" };
+        }
+    });
     var g3 = y();
     g3.next();
     var v3 = g3.return("test return");
@@ -83,17 +81,12 @@ function test() {
     assert.sameValue(nextCalled, ++nextCalledExpected);
 
     // G.p.return throwing does not re-call iter.return.
-    iterable[Symbol.iterator] = function() {
-        return {
-            next() {
-                return { done: false };
-            },
-            return() {
-                returnCalled++;
-                throw "in iter.return";
-            }
-        };
-    };
+    iterable[Symbol.iterator] = makeIterator({
+        ret: function() {
+            returnCalled++;
+            throw "in iter.return";
+        }
+    });
     var g4 = y();
     g4.next();
     assertThrowsValue(function() {
@@ -102,68 +95,53 @@ function test() {
     assert.sameValue(returnCalled, ++returnCalledExpected);
 
     // G.p.return expects iter.return to return an Object.
-    iterable[Symbol.iterator] = function() {
-        return {
-            next() {
-                return { done: false };
-            },
-            return() {
-                returnCalled++;
-                return 42;
-            }
-        };
-    };
+    iterable[Symbol.iterator] = makeIterator({
+        ret: function() {
+            returnCalled++;
+            return 42;
+        }
+    });
     var g5 = y();
     g5.next();
-    assert.throws(TypeError, function() {
+    assertThrowsInstanceOf(function() {
         g5.return("foo");
-    });
+    }, TypeError);
     assert.sameValue(returnCalled, ++returnCalledExpected);
 
     // IteratorClose expects iter.return to return an Object.
     var g6 = y();
     g6.next();
-    assert.throws(
-        TypeError,
+    assertThrowsInstanceOfWithMessageContains(
         () => g6.throw("foo"),
+        TypeError,
         "non-object"
     );
     assert.sameValue(returnCalled, ++returnCalledExpected);
 
     // G.p.return passes its argument to "return".
-    iterable[Symbol.iterator] = function() {
-        return {
-            next() {
-                return { done: false };
-            },
-            return(x) {
-                assert.sameValue(x, "in test");
-                returnCalled++;
-                return { done: true };
-            }
-        };
-    };
+    iterable[Symbol.iterator] = makeIterator({
+        ret: function(x) {
+            assert.sameValue(x, "in test");
+            returnCalled++;
+            return { done: true };
+        }
+    });
     var g7 = y();
     g7.next();
     g7.return("in test");
     assert.sameValue(returnCalled, ++returnCalledExpected);
 
     // If a throw method is present, do not call "return".
-    iterable[Symbol.iterator] = function() {
-        return {
-            next() {
-                return { done: false };
-            },
-            throw(e) {
-                throwCalled++;
-                throw e;
-            },
-            return() {
-                returnCalled++;
-                return { done: true };
-            }
-        };
-    };
+    iterable[Symbol.iterator] = makeIterator({
+        throw: function(e) {
+            throwCalled++;
+            throw e;
+        },
+        ret: function(x) {
+            returnCalled++;
+            return { done: true };
+        }
+    });
     var g8 = y();
     g8.next();
     assertThrowsValue(function() {

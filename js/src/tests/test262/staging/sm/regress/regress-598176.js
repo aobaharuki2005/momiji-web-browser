@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -16,11 +19,11 @@ function make() {
   return r;
 }
 
-var r1 = make();
+r1 = make();
 assert.sameValue(r1.desc.get, r1.info.get);
 
 // Distinct evaluations of an object literal make distinct methods.
-var r2 = make();
+r2 = make();
 assert.sameValue(r1.desc.get === r2.desc.get, false);
 
 r1.info.get.foo = 42;

@@ -4,11 +4,22 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Support const declarations in for-of loop heads
-info: bugzilla.mozilla.org/show_bug.cgi?id=1278150
+  pending
 esid: pending
 ---*/
+var gTestfile = "for-inof-loop-const-declaration.js";
+var BUGNUMBER = 1278150;
+var summary = "Support const declarations in for-of loop heads";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 var count;
 
@@ -82,5 +93,9 @@ for (const { length, 0: c } of "012345")
              "didn't get a TypeError, instead got: " + e);
   }
 }
+
+/******************************************************************************/
+
+print("Tests complete");
 
 reportCompare(0, 0);

@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Internal usage of split should not be affected by prototpe change
-info: bugzilla.mozilla.org/show_bug.cgi?id=1268138
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1268138;
+var summary = 'Internal usage of split should not be affected by prototpe change';
+
+print(BUGNUMBER + ": " + summary);
 
 function test() {
   var t = 24*60*60*1000;
@@ -31,5 +37,6 @@ function test() {
 
 if (this.hasOwnProperty("Intl"))
   test();
+
 
 reportCompare(0, 0);

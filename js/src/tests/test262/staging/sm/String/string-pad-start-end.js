@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -11,13 +14,13 @@ esid: pending
 // `this` must be object coercable.
 
 for (let badThis of [null, undefined]) {
-    assert.throws(TypeError, () => {
+    assertThrowsInstanceOf(() => {
         String.prototype.padStart.call(badThis, 42, "oups");
-    });
+    }, TypeError);
 
-    assert.throws(TypeError, () => {
+    assertThrowsInstanceOf(() => {
         String.prototype.padEnd.call(badThis, 42, "oups");
-    });
+    }, TypeError);
 }
 
 let proxy = new Proxy({}, {
@@ -46,13 +49,13 @@ assert.sameValue("lame", "lame".padEnd(NaN, "foo"));
 assert.sameValue("lame", "lame".padEnd(-1, "foo"));
 assert.sameValue("lame", "lame".padEnd({toString: () => 0}, "foo"));
 
-assert.throws(TypeError, () => {
+assertThrowsInstanceOf(() => {
     "lame".padStart(Symbol("9900"), 0);
-});
+}, TypeError);
 
-assert.throws(TypeError, () => {
+assertThrowsInstanceOf(() => {
     "lame".padEnd(Symbol("9900"), 0);
-});
+}, TypeError);
 
 // The fill argument must be string coercable.
 

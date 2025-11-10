@@ -1,7 +1,11 @@
+// |reftest| shell-option(--enable-iterator-helpers) skip-if(!this.hasOwnProperty('Iterator')||!xulRuntime.shell) -- iterator-helpers is not enabled unconditionally, requires shell-options
 // Copyright (C) 2024 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 features:
   - iterator-helpers
 description: |
@@ -18,7 +22,7 @@ function mapper(x) {
 }
 iterator = [0].values().map(mapper);
 
-assert.throws(TypeError, iterator.next);
+assertThrowsInstanceOf(iterator.next, TypeError);
 
 
 reportCompare(0, 0);

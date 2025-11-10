@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Temporal')) -- Temporal is not enabled unconditionally
+// |reftest| shell-option(--enable-temporal) skip-if(!this.hasOwnProperty('Temporal')||!xulRuntime.shell) -- Temporal is not enabled unconditionally, requires shell-options
 // Copyright (C) 2022 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -13,10 +13,10 @@ features: [BigInt, Symbol, Temporal]
 const timeZone = "UTC";
 const instance = new Temporal.ZonedDateTime(0n, timeZone);
 
-const wrongTypeTests = [
+const primitiveTests = [
   [null, "null"],
   [true, "boolean"],
-  [1, "number"],
+  [1, "number that doesn't convert to a valid ISO string"],
   [1n, "bigint"],
   [19970327, "large number"],
   [-19970327, "negative number"],
@@ -26,12 +26,12 @@ const wrongTypeTests = [
   [new Temporal.Duration(), "duration instance"],
 ];
 
-for (const [calendar, description] of wrongTypeTests) {
+for (const [calendar, description] of primitiveTests) {
   const arg = { year: 2019, monthCode: "M11", day: 1, calendar };
   assert.throws(
     TypeError,
     () => instance.equals(arg),
-    `${description} is not a valid calendar`
+    `${description} does not convert to a valid ISO string`
   );
 }
 

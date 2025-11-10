@@ -4,13 +4,25 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  RegExp.length
-info: bugzilla.mozilla.org/show_bug.cgi?id=614603
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 614603;
+var summary = "RegExp.length";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 assert.sameValue(RegExp.length, 2);
 assert.sameValue(/a/.constructor.length, 2);
+
+print("All tests passed!");
 
 reportCompare(0, 0);

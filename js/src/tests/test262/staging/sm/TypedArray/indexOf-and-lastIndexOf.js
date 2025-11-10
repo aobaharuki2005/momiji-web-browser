@@ -2,7 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-TypedArray-shell.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -41,9 +43,9 @@ for (var constructor of anyTypedArrayConstructors) {
     var invalidReceivers = [undefined, null, 1, false, "", Symbol(), [], {}, /./,
                             new Proxy(new constructor(), {})];
     invalidReceivers.forEach(invalidReceiver => {
-        assert.throws(TypeError, () => {
+        assertThrowsInstanceOf(() => {
             constructor.prototype.indexOf.call(invalidReceiver);
-        }, "Assert that indexOf fails if this value is not a TypedArray");
+        }, TypeError, "Assert that indexOf fails if this value is not a TypedArray");
     });
 
     // test that this.length is never called
@@ -102,9 +104,9 @@ for (var constructor of anyTypedArrayConstructors) {
     var invalidReceivers = [undefined, null, 1, false, "", Symbol(), [], {}, /./,
                             new Proxy(new constructor(), {})];
     invalidReceivers.forEach(invalidReceiver => {
-        assert.throws(TypeError, () => {
+        assertThrowsInstanceOf(() => {
             constructor.prototype.lastIndexOf.call(invalidReceiver);
-        }, "Assert that lastIndexOf fails if this value is not a TypedArray");
+        }, TypeError, "Assert that lastIndexOf fails if this value is not a TypedArray");
     });
 
     // Test that the length getter is never called.

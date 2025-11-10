@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  String.prototype.replace should do nothing if lastIndex is invalid for sticky RegExp
-info: bugzilla.mozilla.org/show_bug.cgi?id=887016
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 887016;
+var summary = "String.prototype.replace should do nothing if lastIndex is invalid for sticky RegExp";
+
+print(BUGNUMBER + ": " + summary);
 
 var re = /a/y;
 re.lastIndex = -1;
@@ -23,5 +29,6 @@ re.lastIndex = "1";
 assert.sameValue("a".replace(re, "b"), "a");
 re.lastIndex = {};
 assert.sameValue("a".replace(re, "b"), "b");
+
 
 reportCompare(0, 0);

@@ -2,7 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [deepEqual.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -32,42 +34,43 @@ for (let test of [a,b]) {
 // As such, it should by a TypeError to try and overwrite "prototype" with a
 // static member. The only way to try is with a computed property name; the rest
 // are early errors.
-assert.throws(TypeError, () => eval(`
+assertThrowsInstanceOf(() => eval(`
                                   class a {
                                     constructor() { };
                                     static ["prototype"]() { }
                                   }
-                                  `));
-assert.throws(TypeError, () => eval(`
+                                  `), TypeError);
+assertThrowsInstanceOf(() => eval(`
                                   class a {
                                     constructor() { };
                                     static get ["prototype"]() { }
                                   }
-                                  `));
-assert.throws(TypeError, () => eval(`
+                                  `), TypeError);
+assertThrowsInstanceOf(() => eval(`
                                   class a {
                                     constructor() { };
                                     static set ["prototype"](x) { }
                                   }
-                                  `));
+                                  `), TypeError);
 
-assert.throws(TypeError, () => eval(`(
+assertThrowsInstanceOf(() => eval(`(
                                   class a {
                                     constructor() { };
                                     static ["prototype"]() { }
                                   }
-                                  )`));
-assert.throws(TypeError, () => eval(`(
+                                  )`), TypeError);
+assertThrowsInstanceOf(() => eval(`(
                                   class a {
                                     constructor() { };
                                     static get ["prototype"]() { }
                                   }
-                                  )`));
-assert.throws(TypeError, () => eval(`(
+                                  )`), TypeError);
+assertThrowsInstanceOf(() => eval(`(
                                   class a {
                                     constructor() { };
                                     static set ["prototype"](x) { }
                                   }
-                                  )`));
+                                  )`), TypeError);
+
 
 reportCompare(0, 0);

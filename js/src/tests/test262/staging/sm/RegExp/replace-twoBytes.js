@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  RegExp.prototype[@@replace] should check latin1/twoBytes for all strings used in relate operation.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1269719
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1269719;
+var summary = "RegExp.prototype[@@replace] should check latin1/twoBytes for all strings used in relate operation.";
+
+print(BUGNUMBER + ": " + summary);
 
 var ans = [
   "[AB$2$3$]",
@@ -44,5 +50,6 @@ for (var matched of ["A", "\u3042"]) {
     }
   }
 }
+
 
 reportCompare(0, 0);

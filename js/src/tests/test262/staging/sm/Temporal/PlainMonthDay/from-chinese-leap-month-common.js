@@ -1,9 +1,11 @@
-// |reftest| skip-if(!this.hasOwnProperty('Temporal')) -- Temporal is not enabled unconditionally
+// |reftest| shell-option(--enable-temporal) skip-if(!this.hasOwnProperty('Temporal')||!xulRuntime.shell) -- Temporal is not enabled unconditionally, requires shell-options
 // Copyright (C) 2024 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-Temporal-PlainMonthDay-shell.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-Temporal-PlainMonthDay-shell.js]
+flags:
+  - noStrict
 features:
   - Temporal
 description: |
@@ -62,9 +64,9 @@ for (let monthCode of monthCodes) {
   assert.sameValue(constrain.day, day);
   assertSameISOFields(constrain, pmd);
 
-  assert.throws(RangeError, () => {
+  assertThrowsInstanceOf(() => {
     Temporal.PlainMonthDay.from({calendar, monthCode, day: day + 1}, {overflow: "reject"});
-  });
+  }, RangeError);
 }
 
 

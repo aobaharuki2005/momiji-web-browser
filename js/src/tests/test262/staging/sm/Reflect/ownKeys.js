@@ -4,7 +4,9 @@
  */
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -38,11 +40,11 @@ var cases = [
      keys: ["0", "8", "773",  // indexes in numeric order
             "str", "-1", "second str", // strings in insertion order
             sym, sym2]}, // symbols in insertion order
-    {object: $262.createRealm().global.Math,  // cross-compartment wrapper
+    {object: createNewGlobal().Math,  // cross-compartment wrapper
      keys: Reflect.ownKeys(Math)}
 ];
 for (var {object, keys} of cases)
-    assert.compareArray(Reflect.ownKeys(object), keys);
+    assert.deepEqual(Reflect.ownKeys(object), keys);
 
 // Reflect.ownKeys() creates a new array each time it is called.
 var object = {}, keys = [];
@@ -59,7 +61,7 @@ proxy = new Proxy(obj, {
     ownKeys() { return keys; }
 });
 var actual = Reflect.ownKeys(proxy);
-assert.compareArray(actual, keys);  // we get correct answers
+assert.deepEqual(actual, keys);  // we get correct answers
 assert.sameValue(actual !== keys, true);  // but not the same object
 
 // If a proxy breaks invariants, a TypeError is thrown.
@@ -67,7 +69,7 @@ var obj = Object.preventExtensions({});
 var proxy = new Proxy(obj, {
     ownKeys() { return ["something"]; }
 });
-assert.throws(TypeError, () => Reflect.ownKeys(proxy));
+assertThrowsInstanceOf(() => Reflect.ownKeys(proxy), TypeError);
 
 // For more Reflect.ownKeys tests, see target.js.
 

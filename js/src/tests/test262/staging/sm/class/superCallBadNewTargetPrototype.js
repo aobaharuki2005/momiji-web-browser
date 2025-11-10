@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -12,7 +15,7 @@ class base { constructor() { } }
 function lies() { }
 lies.prototype = 4;
 
-assert.throws(TypeError, ()=>Reflect.consruct(base, [], lies));
+assertThrowsInstanceOf(()=>Reflect.consruct(base, [], lies), TypeError);
 
 // lie a slightly different way
 function get(target, property, receiver) {
@@ -24,10 +27,10 @@ function get(target, property, receiver) {
 class inst extends base {
     constructor() { super(); }
 }
-assert.throws(TypeError, ()=>new new Proxy(inst, {get})());
+assertThrowsInstanceOf(()=>new new Proxy(inst, {get})(), TypeError);
 
 class defaultInst extends base {}
-assert.throws(TypeError, ()=>new new Proxy(defaultInst, {get})());
+assertThrowsInstanceOf(()=>new new Proxy(defaultInst, {get})(), TypeError);
 
 
 reportCompare(0, 0);

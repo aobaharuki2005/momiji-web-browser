@@ -2,7 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-generators-shell.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-generators-shell.js, deepEqual.js]
 flags:
   - noStrict
 description: |
@@ -17,10 +17,17 @@ esid: pending
 function assertSyntaxError(str) {
     var msg;
     var evil = eval;
-    assert.throws(SyntaxError, function() {
+    try {
         // Non-direct eval.
         evil(str);
-    });
+    } catch (exc) {
+        if (exc instanceof SyntaxError)
+            return;
+        msg = "Assertion failed: expected SyntaxError, got " + exc;
+    }
+    if (msg === undefined)
+        msg = "Assertion failed: expected SyntaxError, but no exception thrown";
+    throw new Error(msg + " - " + str);
 }
 
 // Yield statements.
@@ -53,14 +60,14 @@ function* g() {
     yield *
     foo
 }
-assert.throws(SyntaxError, () => Function("function* g() { yield\n* foo }"));
+assertThrowsInstanceOf(() => Function("function* g() { yield\n* foo }"), SyntaxError);
 assertIteratorNext(function*(){
                        yield
                        3
                    }(), undefined)
 
 // A YieldExpression is not a LogicalORExpression.
-assert.throws(SyntaxError, () => Function("function* g() { yield ? yield : yield }"));
+assertThrowsInstanceOf(() => Function("function* g() { yield ? yield : yield }"), SyntaxError);
 
 // You can have a generator in strict mode.
 function* g() { "use strict"; yield 3; yield 4; }

@@ -2,11 +2,12 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [compareArray.js, deepEqual.js, sm/non262-shell.js, sm/non262.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
-features: [json-parse-with-source]
 ---*/
 
 (function checkJSONParseWithSource() {
@@ -94,14 +95,14 @@ features: [json-parse-with-source]
     function assertIsRawJson(rawJson, expectedRawJsonValue) {
         assert.sameValue(null, Object.getPrototypeOf(rawJson));
         assert.sameValue(true, Object.hasOwn(rawJson, 'rawJSON'));
-        assert.compareArray(['rawJSON'], Object.keys(rawJson));
-        assert.compareArray(['rawJSON'], Object.getOwnPropertyNames(rawJson));
-        assert.compareArray([], Object.getOwnPropertySymbols(rawJson));
+        assert.deepEqual(['rawJSON'], Object.keys(rawJson));
+        assert.deepEqual(['rawJSON'], Object.getOwnPropertyNames(rawJson));
+        assert.deepEqual([], Object.getOwnPropertySymbols(rawJson));
         assert.sameValue(expectedRawJsonValue, rawJson.rawJSON);
     }
 
     assert.sameValue(true, Object.isFrozen(JSON.rawJSON('"shouldBeFrozen"')));
-    assert.throws(SyntaxError, () => JSON.rawJSON());
+    assertThrowsInstanceOf(() => JSON.rawJSON(), SyntaxError);
     assertIsRawJson(JSON.rawJSON(1, 2), '1');
 })();
 
@@ -116,18 +117,17 @@ features: [json-parse-with-source]
     var p = JSON.rawJSON(false);
     var obj = { a: "hi" };
     Object.setPrototypeOf(obj, p);
-    assert.sameValue(obj.rawJSON, "false");
+    assert.deepEqual(obj.rawJSON, "false");
 })();
 
-// Check errors come from correct realm.
-{
-    const otherGlobal = $262.createRealm().global;
+(function checkErrorsComeFromCorrectRealm() {
+    const otherGlobal = createNewGlobal({newCompartment: true});
     assert.sameValue(TypeError !== otherGlobal.TypeError, true);
 
-    let assertErrorComesFromCorrectRealm = (fun, thisRealmType) => {
-        assert.throws(thisRealmType, () => fun(this),
+    assertErrorComesFromCorrectRealm = (fun, thisRealmType) => {
+        assertThrowsInstanceOf(() => fun(this), thisRealmType,
             `${thisRealmType.name} should come from this realm.`);
-        assert.throws(otherGlobal[thisRealmType.name], () => fun(otherGlobal),
+        assertThrowsInstanceOf(() => fun(otherGlobal), otherGlobal[thisRealmType.name],
             `${thisRealmType.name} should come from the other realm.`);
     }
 
@@ -141,6 +141,7 @@ features: [json-parse-with-source]
     assertErrorComesFromCorrectRealm((gbl) => gbl.JSON.rawJSON('123\n'), SyntaxError);
     assertErrorComesFromCorrectRealm((gbl) => gbl.JSON.rawJSON('\t123'), SyntaxError);
     assertErrorComesFromCorrectRealm((gbl) => gbl.JSON.rawJSON(''), SyntaxError);
-}
+})();
+
 
 reportCompare(0, 0);

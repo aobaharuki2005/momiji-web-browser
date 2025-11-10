@@ -2,6 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -16,7 +19,7 @@ try {
 }
 
 // new.target is invalid inside eval inside top-level arrow functions
-assert.throws(SyntaxError, () => eval('new.target'));
+assertThrowsInstanceOf(() => eval('new.target'), SyntaxError);
 
 // new.target is invalid inside indirect eval.
 let ieval = eval;

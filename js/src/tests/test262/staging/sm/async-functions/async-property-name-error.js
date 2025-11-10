@@ -2,16 +2,18 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
-
 function assertSyntaxError(code) {
-    assert.throws(SyntaxError, () => { Function(code); }, "Function:" + code);
-    assert.throws(SyntaxError, () => { eval(code); }, "eval:" + code);
+    assertThrowsInstanceOf(() => { Function(code); }, SyntaxError, "Function:" + code);
+    assertThrowsInstanceOf(() => { eval(code); }, SyntaxError, "eval:" + code);
     var ieval = eval;
-    assert.throws(SyntaxError, () => { ieval(code); }, "indirect eval:" + code);
+    assertThrowsInstanceOf(() => { ieval(code); }, SyntaxError, "indirect eval:" + code);
 }
 
 assertSyntaxError(`({async async: 0})`);
@@ -25,5 +27,6 @@ for (let decl of ["var", "let", "const"]) {
     assertSyntaxError(`${decl} {async async, } = {}`);
     assertSyntaxError(`${decl} {async async = 0} = {}`);
 }
+
 
 reportCompare(0, 0);

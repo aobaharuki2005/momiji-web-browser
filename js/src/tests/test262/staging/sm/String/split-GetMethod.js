@@ -2,12 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [compareArray.js]
+includes: [sm/non262.js, sm/non262-shell.js, deepEqual.js]
+flags:
+  - noStrict
 description: |
-  String.prototype.split should call GetMethod.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1290655
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1290655;
+var summary = "String.prototype.split should call GetMethod.";
+
+print(BUGNUMBER + ": " + summary);
 
 function create(value) {
     return {
@@ -19,11 +24,12 @@ function create(value) {
 }
 
 for (let v of [null, undefined]) {
-    assert.compareArray("a-a".split(create(v)), ["a", "a"]);
+    assert.deepEqual("a-a".split(create(v)), ["a", "a"]);
 }
 
 for (let v of [1, true, Symbol.iterator, "", {}, []]) {
-    assert.throws(TypeError, () => "a-a".split(create(v)));
+    assertThrowsInstanceOf(() => "a-a".split(create(v)), TypeError);
 }
+
 
 reportCompare(0, 0);

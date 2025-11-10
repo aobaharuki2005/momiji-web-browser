@@ -2,6 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
@@ -13,14 +14,14 @@ function f0(a, a) {
 }
 
 // SyntaxError should be thrown if arrow function has duplicated name.
-assert.throws(SyntaxError, () => eval(`
+assertThrowsInstanceOf(() => eval(`
 (a, a) => {
 };
-`));
-assert.throws(SyntaxError, () => eval(`
+`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`
 (a, ...a) => {
 };
-`));
+`), SyntaxError);
 
 
 reportCompare(0, 0);

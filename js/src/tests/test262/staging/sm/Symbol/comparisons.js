@@ -4,6 +4,9 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
@@ -33,7 +36,7 @@ for (var comparator of ["<", "<=", ">", ">="]) {
     var f = Function("a, b", "return a " + comparator + " b;");
     for (var a of symbols) {
         for (var b of values)
-            assert.throws(TypeError, () => f(a, b));
+            assertThrowsInstanceOf(() => f(a, b), TypeError);
     }
 }
 

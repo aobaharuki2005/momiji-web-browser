@@ -2,11 +2,17 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
+flags:
+  - noStrict
 description: |
-  Trailing .* should not be ignored on matchOnly match.
-info: bugzilla.mozilla.org/show_bug.cgi?id=1304737
+  pending
 esid: pending
 ---*/
+var BUGNUMBER = 1304737;
+var summary = "Trailing .* should not be ignored on matchOnly match.";
+
+print(BUGNUMBER + ": " + summary);
 
 function test(r, lastIndexIsZero) {
     r.lastIndex = 0;
@@ -31,5 +37,6 @@ test(/f.*/, true);
 test(/f.*/g, false);
 test(/f.*/y, false);
 test(/f.*/gy, false);
+
 
 reportCompare(0, 0);

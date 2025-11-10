@@ -4,14 +4,21 @@
  */
 
 /*---
+includes: [sm/non262.js, sm/non262-shell.js]
 flags:
   - noStrict
 description: |
-  Handle infinite recursion
-info: bugzilla.mozilla.org/show_bug.cgi?id=622167
+  pending
 esid: pending
-features: [host-gc-required]
 ---*/
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 622167;
+var summary = 'Handle infinite recursion';
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
 
 function eval() { eval(); }
 
@@ -50,5 +57,9 @@ function test()
   foopy();
 }
 test();
+
+/******************************************************************************/
+
+print("All tests passed!");
 
 reportCompare(0, 0);

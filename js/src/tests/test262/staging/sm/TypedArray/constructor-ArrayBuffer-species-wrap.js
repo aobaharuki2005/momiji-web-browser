@@ -2,13 +2,15 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-includes: [sm/non262-TypedArray-shell.js]
+includes: [sm/non262.js, sm/non262-shell.js, sm/non262-TypedArray-shell.js]
+flags:
+  - noStrict
 description: |
   pending
 esid: pending
 ---*/
 
-let g = $262.createRealm().global;
+let g = createNewGlobal();
 
 // Both TypedArray and ArrayBuffer from different global.
 for (let ctor of typedArrayConstructors) {
