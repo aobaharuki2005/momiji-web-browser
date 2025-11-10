@@ -11,6 +11,7 @@
 #include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/MediaSessionBinding.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -30,6 +31,12 @@ struct ParamTraits<mozilla::dom::MediaImageData> {
     WriteParam(aWriter, aParam.mSizes);
     WriteParam(aWriter, aParam.mSrc);
     WriteParam(aWriter, aParam.mType);
+
+    mozilla::Maybe<mozilla::dom::IPCImage> image;
+    if (aParam.mDataSurface) {
+      image = nsContentUtils::SurfaceToIPCImage(*aParam.mDataSurface);
+    }
+    WriteParam(aWriter, std::move(image));
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -37,6 +44,14 @@ struct ParamTraits<mozilla::dom::MediaImageData> {
         !ReadParam(aReader, &(aResult->mSrc)) ||
         !ReadParam(aReader, &(aResult->mType))) {
       return false;
+    }
+
+    mozilla::Maybe<mozilla::dom::IPCImage> image;
+    if (!ReadParam(aReader, &image)) {
+      return false;
+    }
+    if (image) {
+      aResult->mDataSurface = nsContentUtils::IPCImageToSurface(*image);
     }
     return true;
   }

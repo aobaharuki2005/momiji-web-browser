@@ -10,6 +10,7 @@
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/image/FetchDecodedImage.h"
 #include "nsNetUtil.h"
 
 namespace mozilla::dom {
@@ -119,6 +120,54 @@ void MediaMetadata::SetArtwork(JSContext* aCx,
 
   SetArtworkInternal(artwork, aRv);
 };
+
+RefPtr<MediaMetadataBasePromise> MediaMetadata::FetchArtwork(
+    const MediaMetadataBase& aMetadata, nsIPrincipal* aPrincipal,
+    const size_t aIndex) {
+  if (!aPrincipal || aIndex >= aMetadata.mArtwork.Length()) {
+    // No image loaded successfully or no principal, but still resolve without
+    // any image data.
+    return MediaMetadataBasePromise::CreateAndResolve(aMetadata, __func__);
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  if (NS_WARN_IF(NS_FAILED(
+          NS_NewURI(getter_AddRefs(uri), aMetadata.mArtwork[aIndex].mSrc)))) {
+    return FetchArtwork(aMetadata, aPrincipal, aIndex + 1);
+  }
+
+  return image::FetchDecodedImage(uri, gfx::IntSize{}, aPrincipal)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [metadata = aMetadata, principal = RefPtr{aPrincipal},
+           aIndex](already_AddRefed<imgIContainer> aImage) {
+            nsCOMPtr<imgIContainer> image(std::move(aImage));
+            // The promise should only be resolved for decoded images, so using
+            // FLAG_SYNC_DECODE is just a precaution.
+            if (RefPtr<mozilla::gfx::SourceSurface> surface =
+                    image->GetFrame(imgIContainer::FRAME_FIRST,
+                                    imgIContainer::FLAG_SYNC_DECODE |
+                                        imgIContainer::FLAG_ASYNC_NOTIFY)) {
+              if (RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+                      surface->GetDataSurface()) {
+                MediaMetadataBase data(metadata);
+                data.mArtwork[aIndex].mDataSurface = dataSurface;
+                return MediaMetadataBasePromise::CreateAndResolve(data,
+                                                                  __func__);
+              }
+            }
+            return FetchArtwork(metadata, principal, aIndex + 1);
+          },
+          [metadata = aMetadata, principal = RefPtr{aPrincipal},
+           aIndex](nsresult aStatus) {
+            return FetchArtwork(metadata, principal, aIndex + 1);
+          });
+}
+
+RefPtr<MediaMetadataBasePromise> MediaMetadata::LoadMetadataArtwork() {
+  // TODO: Track Promise?
+  return FetchArtwork(*this, mParent->PrincipalOrNull(), 0);
+}
 
 static nsIURI* GetEntryBaseURL() {
   nsCOMPtr<Document> doc = GetEntryDocument();
