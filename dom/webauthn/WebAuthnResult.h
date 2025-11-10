@@ -124,6 +124,21 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
       }
     }
 
+    if (aResponse->dwVersion >= WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_7) {
+      if (aResponse->pHmacSecret) {
+        if (aResponse->pHmacSecret->cbFirst > 0) {
+          mPrfFirst.emplace();
+          mPrfFirst->AppendElements(aResponse->pHmacSecret->pbFirst,
+                                    aResponse->pHmacSecret->cbFirst);
+        }
+        if (aResponse->pHmacSecret->cbSecond > 0) {
+          mPrfSecond.emplace();
+          mPrfSecond->AppendElements(aResponse->pHmacSecret->pbSecond,
+                                     aResponse->pHmacSecret->cbSecond);
+        }
+      }
+    }
+
     if (aResponse->dwVersion >= WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_3) {
       if (aResponse->dwUsedTransport & WEBAUTHN_CTAP_TRANSPORT_USB) {
         mTransports.AppendElement(u"usb"_ns);
