@@ -1854,8 +1854,8 @@ class PresShell final : public nsStubDocumentObserver,
  private:
   ~PresShell();
 
-  template <bool AreWeMerging>
-  void AddAnchorPosAnchorImpl(const nsAtom* aName, nsIFrame* aFrame);
+  void AddAnchorPosAnchorImpl(const nsAtom* aName, nsIFrame* aFrame,
+                              bool aForMerge);
 
   void SetIsActive(bool aIsActive);
   bool ComputeActiveness() const;

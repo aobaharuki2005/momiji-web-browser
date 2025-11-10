@@ -11549,8 +11549,8 @@ const nsIFrame* PresShell::GetAnchorPosAnchor(
   return nullptr;
 }
 
-template <bool AreWeMerging>
-void PresShell::AddAnchorPosAnchorImpl(const nsAtom* aName, nsIFrame* aFrame) {
+void PresShell::AddAnchorPosAnchorImpl(const nsAtom* aName, nsIFrame* aFrame,
+                                       bool aForMerge) {
   MOZ_ASSERT(aName);
 
   auto& entry = mAnchorPosAnchors.LookupOrInsertWith(
@@ -11577,7 +11577,7 @@ void PresShell::AddAnchorPosAnchorImpl(const nsAtom* aName, nsIFrame* aFrame) {
   if (BinarySearchIf(entry, 0, entry.Length(), cmp, &matchOrInsertionIdx)) {
     if (entry.ElementAt(matchOrInsertionIdx) == aFrame) {
       // nsLayoutUtils::CompareTreePosition() returns 0 when the frames are
-      // in different documents or child lists. This indicates that
+      // in different documents or child lists. This could indicate that
       // the tree is being restructured and we can defer anchor insertion
       // to a MergeAnchorPosAnchors call after the restructuring is complete.
       MOZ_ASSERT_UNREACHABLE("Attempt to insert a frame twice was made");
@@ -11585,27 +11585,23 @@ void PresShell::AddAnchorPosAnchorImpl(const nsAtom* aName, nsIFrame* aFrame) {
     }
     MOZ_ASSERT(!entry.Contains(aFrame));
 
-    if constexpr (AreWeMerging) {
-      MOZ_ASSERT_UNREACHABLE(
-          "A frame may not be in a different child list at merge time");
-    } else {
+    if (!aForMerge) {
       // nsLayoutUtils::CompareTreePosition() returns 0 when the frames are
-      // in different documents or child lists. This indicates that
+      // in different documents or child lists. This could indicate that
       // the tree is being restructured and we can defer anchor insertion
       // to a MergeAnchorPosAnchors call after the restructuring is complete.
       mLazyAnchorPosAnchorChanges.AppendElement(
           AnchorPosAnchorChange{RefPtr<const nsAtom>(aName), aFrame});
+      return;
     }
-
-    return;
   }
 
   MOZ_ASSERT(!entry.Contains(aFrame));
-  *entry.InsertElementAt(matchOrInsertionIdx) = aFrame;
+  entry.InsertElementAt(matchOrInsertionIdx, aFrame);
 }
 
 void PresShell::AddAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
-  AddAnchorPosAnchorImpl</* AreWeMerging */ false>(aName, aFrame);
+  AddAnchorPosAnchorImpl(aName, aFrame, /* aForMerge = */ false);
 }
 
 void PresShell::RemoveAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
@@ -11643,7 +11639,7 @@ void PresShell::RemoveAnchorPosAnchor(const nsAtom* aName, nsIFrame* aFrame) {
 
 void PresShell::MergeAnchorPosAnchorChanges() {
   for (const auto& [name, frame] : mLazyAnchorPosAnchorChanges) {
-    AddAnchorPosAnchorImpl</* AreWeMerging */ true>(name, frame);
+    AddAnchorPosAnchorImpl(name, frame, /* aForMerge = */ true);
   }
 
   mLazyAnchorPosAnchorChanges.Clear();
