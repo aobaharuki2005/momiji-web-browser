@@ -506,6 +506,11 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, public JS::JobQueue {
   void runJobs(JSContext* cx) override;
   bool empty() const override;
   bool isDrainingStopped() const override { return false; }
+
+  // Trace hook for non-GCThing microtask values (e.g., Private values
+  // containing MicroTaskRunnable pointers).
+  void traceNonGCThingMicroTask(JSTracer* trc, JS::Value* valuePtr) override;
+
   class SavedMicroTaskQueue;
   js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext*) override;
 

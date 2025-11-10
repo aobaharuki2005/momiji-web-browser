@@ -1055,6 +1055,21 @@ js::UniquePtr<JS::JobQueue::SavedJobQueue> InternalJobQueue::saveJobQueue(
   return saved;
 }
 
+void js::MicroTaskQueueElement::trace(JSTracer* trc) {
+  // For non-objects (like Private values), call the JobQueue hook
+  JSContext* cx = trc->runtime()->mainContextFromOwnThread();
+  MOZ_ASSERT(cx);
+  auto* queue = cx->jobQueue.ref();
+
+  if (!queue || value.isGCThing()) {
+    TraceEdge(trc, &value, "microtask-queue-entry");
+  } else {
+    // It's OK to use unbarriered address here because this is not a GC thing
+    // and so there are no worthwhile barriers to consider here.
+    queue->traceNonGCThingMicroTask(trc, value.unbarrieredAddress());
+  }
+}
+
 JS::MicroTask js::MicroTaskQueueSet::popDebugFront() {
   JS_LOG(mtq, Info, "JS Drain Queue: popDebugFront");
   if (!debugMicroTaskQueue.empty()) {

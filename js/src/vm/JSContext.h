@@ -163,7 +163,7 @@ struct MicroTaskQueueElement {
 
   operator JS::Value() const { return value; }
 
-  void trace(JSTracer* trc) { TraceEdge(trc, &value, "MicroTaskQueueElement"); }
+  void trace(JSTracer* trc);
 
  private:
   js::HeapPtr<JS::Value> value;
