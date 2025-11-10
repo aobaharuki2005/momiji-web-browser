@@ -276,7 +276,7 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
     () => IPPProxyManager.state !== IPPProxyStates.ACTIVE
   );
 
-  IPPProxyManager.stop();
+  await IPPProxyManager.stop();
 
   await stoppedEventPromise;
 

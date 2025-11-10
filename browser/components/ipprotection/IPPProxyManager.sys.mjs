@@ -50,6 +50,7 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
 export const IPPProxyStates = Object.freeze({
   NOT_READY: "not-ready",
   READY: "ready",
+  ACTIVATING: "activating",
   ACTIVE: "active",
   ERROR: "error",
 });
@@ -59,6 +60,8 @@ export const IPPProxyStates = Object.freeze({
  */
 class IPPProxyManagerSingleton extends EventTarget {
   #state = IPPProxyStates.NOT_READY;
+
+  #activatingPromise = null;
 
   #pass = null;
   /**@type {import("./IPPChannelFilter.sys.mjs").IPPChannelFilter | null} */
@@ -96,7 +99,10 @@ class IPPProxyManagerSingleton extends EventTarget {
 
     this.errors = [];
 
-    if (this.#state === IPPProxyStates.ACTIVE) {
+    if (
+      this.#state === IPPProxyStates.ACTIVE ||
+      this.#state === IPPProxyStates.ACTIVATING
+    ) {
       this.stop(false);
     }
 
@@ -173,34 +179,50 @@ class IPPProxyManagerSingleton extends EventTarget {
       throw new Error("This method should not be called when not ready");
     }
 
-    let started = false;
-    try {
-      started = await this.#startInternal();
-    } catch (error) {
-      this.#setErrorState(ERRORS.GENERIC, error);
-      return;
+    if (this.#state === IPPProxyStates.ACTIVATING) {
+      if (!this.#activatingPromise) {
+        throw new Error("Activating without a promise?!?");
+      }
+
+      return this.#activatingPromise;
     }
 
-    if (this.#state === IPPProxyStates.ERROR) {
-      return;
-    }
+    const activating = async () => {
+      let started = false;
+      try {
+        started = await this.#startInternal();
+      } catch (error) {
+        this.#setErrorState(ERRORS.GENERIC, error);
+        return;
+      }
 
-    // Proxy failed to start but no error was given.
-    if (!started) {
-      this.#setState(IPPProxyStates.READY);
-      return;
-    }
+      if (this.#state === IPPProxyStates.ERROR) {
+        return;
+      }
 
-    this.#setState(IPPProxyStates.ACTIVE);
+      // Proxy failed to start but no error was given.
+      if (!started) {
+        this.#setState(IPPProxyStates.READY);
+        return;
+      }
 
-    Glean.ipprotection.toggled.record({
-      userAction,
-      enabled: true,
-    });
+      this.#setState(IPPProxyStates.ACTIVE);
 
-    if (userAction) {
-      this.#reloadCurrentTab();
-    }
+      Glean.ipprotection.toggled.record({
+        userAction,
+        enabled: true,
+      });
+
+      if (userAction) {
+        this.#reloadCurrentTab();
+      }
+    };
+
+    this.#setState(IPPProxyStates.ACTIVATING);
+    this.#activatingPromise = activating().finally(
+      () => (this.#activatingPromise = null)
+    );
+    return this.#activatingPromise;
   }
 
   async #startInternal() {
@@ -271,6 +293,15 @@ class IPPProxyManagerSingleton extends EventTarget {
    * True if started by user action, false if system action
    */
   async stop(userAction = true) {
+    if (this.#state === IPPProxyStates.ACTIVATING) {
+      if (!this.#activatingPromise) {
+        throw new Error("Activating without a promise?!?");
+      }
+
+      await this.#activatingPromise.then(() => this.stop(userAction));
+      return;
+    }
+
     if (this.#state !== IPPProxyStates.ACTIVE) {
       return;
     }
@@ -311,7 +342,10 @@ class IPPProxyManagerSingleton extends EventTarget {
    */
   async reset() {
     this.#pass = null;
-    if (this.#state === IPPProxyStates.ACTIVE) {
+    if (
+      this.#state === IPPProxyStates.ACTIVE ||
+      this.#state === IPPProxyStates.ACTIVATING
+    ) {
       await this.stop();
     }
   }

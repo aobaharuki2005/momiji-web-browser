@@ -97,7 +97,7 @@ add_task(async function test_IPPProxyManager_handleProxyErrorEvent() {
 
   // Test inactive connection
   const isolationKeyBeforeStop = IPPProxyManager.isolationKey;
-  IPPProxyManager.stop();
+  await IPPProxyManager.stop();
 
   const inactiveErrorEvent = new CustomEvent("proxy-http-error", {
     detail: {

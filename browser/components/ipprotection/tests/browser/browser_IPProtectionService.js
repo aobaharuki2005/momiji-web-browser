@@ -346,7 +346,7 @@ add_task(async function test_IPProtectionService_retry_errors() {
 
   Assert.equal(IPPProxyManager.state, IPPProxyStates.ACTIVE, "Proxy is active");
 
-  IPPProxyManager.stop();
+  await IPPProxyManager.stop();
 
   await closePanel();
   await cleanupAlpha();

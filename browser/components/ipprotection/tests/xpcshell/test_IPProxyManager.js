@@ -40,6 +40,12 @@ add_task(async function test_IPPProxyManager_start() {
 
   IPPProxyManager.start();
 
+  Assert.equal(
+    IPPProxyManager.state,
+    IPPProxyStates.ACTIVATING,
+    "Proxy activation"
+  );
+
   await startedEventPromise;
 
   Assert.equal(
@@ -81,14 +87,14 @@ add_task(async function test_IPPProxyManager_stop() {
   let stoppedEventPromise = waitForEvent(
     IPPProxyManager,
     "IPPProxyManager:StateChanged",
-    () => IPPProxyManager.state !== IPPProxyStates.ACTIVE
+    () => IPPProxyManager.state === IPPProxyStates.READY
   );
-  IPPProxyManager.stop();
+  await IPPProxyManager.stop();
 
   await stoppedEventPromise;
-  Assert.notEqual(
+  Assert.equal(
     IPPProxyManager.state,
-    IPPProxyStates.ACTIVE,
+    IPPProxyStates.READY,
     "IP Protection service should not be active after stopping"
   );
   Assert.ok(
@@ -135,7 +141,7 @@ add_task(async function test_IPPProxyManager_start_stop_reset() {
     "Should have a valid proxy pass after starting"
   );
 
-  IPPProxyManager.stop();
+  await IPPProxyManager.stop();
 
   Assert.ok(!IPPProxyManager.active, "Should not be active after starting");
 
@@ -270,7 +276,15 @@ add_task(async function test_IPPProxytates_active() {
     "IP Protection service should be ready"
   );
 
-  await IPPProxyManager.start(false);
+  const startPromise = IPPProxyManager.start(false);
+
+  Assert.equal(
+    IPPProxyManager.state,
+    IPPProxyStates.ACTIVATING,
+    "Proxy activation"
+  );
+
+  await startPromise;
 
   Assert.equal(
     IPProtectionService.state,
@@ -290,6 +304,76 @@ add_task(async function test_IPPProxytates_active() {
     IPProtectionService.state,
     IPProtectionStates.READY,
     "IP Protection service should be ready again"
+  );
+
+  IPProtectionService.uninit();
+  sandbox.restore();
+});
+
+/**
+ * Tests the quick start/stop calls.
+ */
+add_task(async function test_IPPProxytates_start_stop() {
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(IPPSignInWatcher, "isSignedIn").get(() => true);
+  sandbox
+    .stub(IPProtectionService.guardian, "isLinkedToGuardian")
+    .resolves(true);
+  sandbox.stub(IPProtectionService.guardian, "fetchUserInfo").resolves({
+    status: 200,
+    error: undefined,
+    entitlement: { uid: 42 },
+  });
+  sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").resolves({
+    status: 200,
+    error: undefined,
+    pass: {
+      isValid: () => options.validProxyPass,
+      asBearerToken: () => "Bearer helloworld",
+    },
+  });
+
+  const waitForReady = waitForEvent(
+    IPProtectionService,
+    "IPProtectionService:StateChanged",
+    () => IPProtectionService.state === IPProtectionStates.READY
+  );
+
+  IPProtectionService.init();
+
+  await waitForReady;
+
+  Assert.equal(
+    IPProtectionService.state,
+    IPProtectionStates.READY,
+    "IP Protection service should be ready"
+  );
+
+  IPPProxyManager.start(false);
+  IPPProxyManager.start(false);
+  IPPProxyManager.start(false);
+
+  IPPProxyManager.stop(false);
+  IPPProxyManager.stop(false);
+  IPPProxyManager.stop(false);
+  IPPProxyManager.stop(false);
+
+  Assert.equal(
+    IPPProxyManager.state,
+    IPPProxyStates.ACTIVATING,
+    "Proxy activation"
+  );
+
+  await waitForEvent(
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
+    () => IPPProxyManager.state === IPPProxyStates.ACTIVE
+  );
+
+  await waitForEvent(
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
+    () => IPPProxyManager.state === IPPProxyStates.READY
   );
 
   IPProtectionService.uninit();
