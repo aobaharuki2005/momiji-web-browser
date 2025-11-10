@@ -7,7 +7,9 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 
+#include "ImageOps.h"
 #include "MediaController.h"
+#include "gfxDrawable.h"
 #include "imgIEncoder.h"
 #include "imgITools.h"
 #include "mozilla/Logging.h"
@@ -15,8 +17,6 @@
 #include "mozilla/dom/MediaControllerBinding.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "gfxDrawable.h"
-#include "ImageOps.h"
 
 extern mozilla::LazyLogModule gMediaControlLog;
 
@@ -107,10 +107,9 @@ inline nsresult GetEncodedImageBuffer(gfx::DataSourceSurface* aSurface,
     return NS_ERROR_FAILURE;
   }
 
-    RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
-        aSurface, aSurface->GetSize());
-    nsCOMPtr<imgIContainer> image =
-        image::ImageOps::CreateFromDrawable(drawable);
+  RefPtr<gfxDrawable> drawable =
+      new gfxSurfaceDrawable(aSurface, aSurface->GetSize());
+  nsCOMPtr<imgIContainer> image = image::ImageOps::CreateFromDrawable(drawable);
 
   nsCOMPtr<nsIInputStream> inputStream;
   nsresult rv = imgTools->EncodeImage(image, aMimeType, u""_ns,

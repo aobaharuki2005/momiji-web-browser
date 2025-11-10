@@ -617,8 +617,8 @@ void WindowsSMTCProvider::LoadThumbnail(
     // Only used to hold the image data
     nsCOMPtr<nsIInputStream> inputStream;
     nsresult rv = mozilla::dom::GetEncodedImageBuffer(
-        image.mDataSurface, nsLiteralCString(IMAGE_PNG), getter_AddRefs(inputStream),
-        &size, &src);
+        image.mDataSurface, nsLiteralCString(IMAGE_PNG),
+        getter_AddRefs(inputStream), &size, &src);
     if (NS_FAILED(rv) || !inputStream || size == 0 || !src) {
       LOG("Failed to get the image buffer info. Try next image");
       continue;
