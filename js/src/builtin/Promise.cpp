@@ -1678,7 +1678,7 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool EnqueueJob(JSContext* cx, JS::MicroTask&& job) {
+static bool EnqueueJob(JSContext* cx, JS::GenericMicroTask&& job) {
   MOZ_ASSERT(cx->realm());
   GeckoProfilerRuntime& profiler = cx->runtime()->geckoProfiler();
   if (profiler.enabled()) {
@@ -7633,7 +7633,8 @@ void PromiseObject::dumpOwnStringContent(js::GenericPrinter& out) const {}
   return true;
 }
 
-JS_PUBLIC_API bool JS::RunJSMicroTask(JSContext* cx, Handle<MicroTask> entry) {
+JS_PUBLIC_API bool JS::RunJSMicroTask(JSContext* cx,
+                                      Handle<JS::GenericMicroTask> entry) {
 #ifdef DEBUG
   MOZ_ASSERT(entry.isObject());
   JSObject* global = JS::GetExecutionGlobalFromJSMicroTask(entry);
@@ -7691,7 +7692,7 @@ inline bool JSObject::is<MicroTaskEntry>() const {
 }
 
 JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedDataFromJSMicroTask(
-    const MicroTask& entry) {
+    const JS::GenericMicroTask& entry) {
   if (!entry.isObject()) {
     return nullptr;
   }
@@ -7714,7 +7715,7 @@ JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedDataFromJSMicroTask(
 }
 
 JS_PUBLIC_API JSObject* JS::MaybeGetAllocationSiteFromJSMicroTask(
-    const MicroTask& entry) {
+    const JS::GenericMicroTask& entry) {
   if (!entry.isObject()) {
     return nullptr;
   }
@@ -7739,7 +7740,7 @@ JS_PUBLIC_API JSObject* JS::MaybeGetAllocationSiteFromJSMicroTask(
 }
 
 JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedGlobalFromJSMicroTask(
-    const MicroTask& entry) {
+    const JS::GenericMicroTask& entry) {
   if (!entry.isObject()) {
     return nullptr;
   }
@@ -7758,7 +7759,7 @@ JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedGlobalFromJSMicroTask(
 }
 
 JS_PUBLIC_API JSObject* JS::GetExecutionGlobalFromJSMicroTask(
-    const MicroTask& entry) {
+    const JS::GenericMicroTask& entry) {
   MOZ_RELEASE_ASSERT(entry.isObject(), "Only use on JSMicroTasks");
 
   JSObject* unwrapped = UncheckedUnwrap(&entry.toObject());
@@ -7790,7 +7791,7 @@ JS_PUBLIC_API JSObject* JS::GetExecutionGlobalFromJSMicroTask(
 }
 
 JS_PUBLIC_API JSObject* JS::MaybeGetPromiseFromJSMicroTask(
-    const MicroTask& entry) {
+    const JS::GenericMicroTask& entry) {
   MOZ_RELEASE_ASSERT(entry.isObject(), "Only use on JSMicroTasks");
 
   JSObject* unwrapped = UncheckedUnwrap(&entry.toObject());
@@ -7804,8 +7805,8 @@ JS_PUBLIC_API JSObject* JS::MaybeGetPromiseFromJSMicroTask(
   return nullptr;
 }
 
-JS_PUBLIC_API bool JS::GetFlowIdFromJSMicroTask(const MicroTask& entry,
-                                                uint64_t* uid) {
+JS_PUBLIC_API bool JS::GetFlowIdFromJSMicroTask(
+    const JS::GenericMicroTask& entry, uint64_t* uid) {
   MOZ_RELEASE_ASSERT(entry.isObject(), "Only use on JSMicroTasks");
 
   // We want to make sure we get the flow id from the target object
@@ -7821,7 +7822,7 @@ JS_PUBLIC_API bool JS::GetFlowIdFromJSMicroTask(const MicroTask& entry,
   return true;
 }
 
-JS_PUBLIC_API bool JS::IsJSMicroTask(const JS::MicroTask& hv) {
+JS_PUBLIC_API bool JS::IsJSMicroTask(const JS::GenericMicroTask& hv) {
   if (!hv.isObject()) {
     return false;
   }

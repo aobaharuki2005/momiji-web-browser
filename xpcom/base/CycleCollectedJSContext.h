@@ -159,8 +159,8 @@ class MustConsumeMicroTask {
   // This is a non-owning conversion: This class still owns the refcount.
   MicroTaskRunnable* MaybeUnwrapTaskToRunnable() const;
 
-  // Take ownership of a non-JS task inside a JS::MicroTask - This clears the
-  // contents of the value to make it clear that we've transfered ownership.
+  // Take ownership of a non-JS task inside a JS::GenericMicroTask - This clears
+  // the contents of the value to make it clear that we've transfered ownership.
   // `this` is marked is only edited if unwrapping succeeds, and so
   // you can conditionally try to consume as owned;
   //
@@ -196,7 +196,7 @@ class MustConsumeMicroTask {
   // consuming the contents.
   JSObject* GetExecutionGlobalFromJSMicroTask(JSContext* aCx) const {
     MOZ_ASSERT(IsJSMicroTask());
-    JS::Rooted<JS::MicroTask> task(aCx, mMicroTask);
+    JS::Rooted<JS::GenericMicroTask> task(aCx, mMicroTask);
     return JS::GetExecutionGlobalFromJSMicroTask(task);
   }
 
@@ -239,10 +239,10 @@ class MustConsumeMicroTask {
   }
 
  private:
-  explicit MustConsumeMicroTask(JS::MicroTask&& aMicroTask)
+  explicit MustConsumeMicroTask(JS::GenericMicroTask&& aMicroTask)
       : mMicroTask(aMicroTask) {}
 
-  JS::Heap<JS::MicroTask> mMicroTask;
+  JS::Heap<JS::GenericMicroTask> mMicroTask;
 };
 
 class SuppressedMicroTaskList final : public MicroTaskRunnable {

@@ -852,9 +852,9 @@ void CycleCollectedJSContext::AddPendingIDBTransaction(
 //
 // - This means runnables in the queue have their refcounts stay above zero for
 // the duration of the time they are in the queue.
-JS::MicroTask RunnableToMicroTask(
+JS::GenericMicroTask RunnableToMicroTask(
     already_AddRefed<MicroTaskRunnable>& aRunnable) {
-  JS::MicroTask v;
+  JS::GenericMicroTask v;
   auto* r = aRunnable.take();
   MOZ_ASSERT(r);
   v.setPrivate(r);
@@ -864,13 +864,13 @@ JS::MicroTask RunnableToMicroTask(
 bool EnqueueMicroTask(JSContext* aCx,
                       already_AddRefed<MicroTaskRunnable> aRunnable) {
   MOZ_ASSERT(StaticPrefs::javascript_options_use_js_microtask_queue());
-  JS::MicroTask v = RunnableToMicroTask(aRunnable);
+  JS::GenericMicroTask v = RunnableToMicroTask(aRunnable);
   return JS::EnqueueMicroTask(aCx, v);
 }
 bool EnqueueDebugMicroTask(JSContext* aCx,
                            already_AddRefed<MicroTaskRunnable> aRunnable) {
   MOZ_ASSERT(StaticPrefs::javascript_options_use_js_microtask_queue());
-  JS::MicroTask v = RunnableToMicroTask(aRunnable);
+  JS::GenericMicroTask v = RunnableToMicroTask(aRunnable);
   return JS::EnqueueDebugMicroTask(aCx, v);
 }
 
