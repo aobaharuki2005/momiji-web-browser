@@ -3116,6 +3116,8 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   {
     BufferAllocator::MaybeLock lock;
     for (GCZonesIter zone(this); !zone.done(); zone.next()) {
+      MOZ_ASSERT(zone->cellsToAssertNotGray().empty());
+
       // In an incremental GC, clear the arena free lists to ensure that
       // subsequent allocations refill them and end up marking new cells black.
       // See arenaAllocatedDuringGC().
@@ -3576,11 +3578,11 @@ void GCRuntime::checkGCStateNotInUse() {
     MOZ_ASSERT(!zone->isOnList());
     MOZ_ASSERT(!zone->gcNextGraphNode);
     MOZ_ASSERT(!zone->gcNextGraphComponent);
+    MOZ_ASSERT(zone->cellsToAssertNotGray().empty());
     zone->bufferAllocator.checkGCStateNotInUse();
   }
 
   MOZ_ASSERT(zonesToMaybeCompact.ref().isEmpty());
-  MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
 
   MOZ_ASSERT(!atomsUsedByUncollectedZones.ref());
 
@@ -5553,15 +5555,15 @@ JS_PUBLIC_API void js::gc::detail::AssertCellIsNotGray(const Cell* cell) {
   // called during GC and while iterating the heap for memory reporting.
   MOZ_ASSERT(!JS::RuntimeHeapIsCycleCollecting());
 
-  if (tc->zone()->isGCMarkingBlackAndGray()) {
+  Zone* zone = tc->zone();
+  if (zone->isGCMarkingBlackAndGray()) {
     // We are doing gray marking in the cell's zone. Even if the cell is
     // currently marked gray it may eventually be marked black. Delay checking
     // non-black cells until we finish gray marking.
 
     if (!tc->isMarkedBlack()) {
-      JSRuntime* rt = tc->zone()->runtimeFromMainThread();
       AutoEnterOOMUnsafeRegion oomUnsafe;
-      if (!rt->gc.cellsToAssertNotGray.ref().append(cell)) {
+      if (!zone->cellsToAssertNotGray().append(cell)) {
         oomUnsafe.crash("Can't append to delayed gray checks list");
       }
     }

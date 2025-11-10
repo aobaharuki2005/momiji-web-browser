@@ -1302,13 +1302,6 @@ class GCRuntime {
 
   /* The test marking queue might want to be marking a particular color. */
   mozilla::Maybe<js::gc::MarkColor> queueMarkColor;
-
-  // During gray marking, delay AssertCellIsNotGray checks by
-  // recording the cell pointers here and checking after marking has
-  // finished.
-  MainThreadData<Vector<const Cell*, 0, SystemAllocPolicy>>
-      cellsToAssertNotGray;
-  friend void js::gc::detail::AssertCellIsNotGray(const Cell*);
 #endif
 
   friend class SweepGroupsIter;
