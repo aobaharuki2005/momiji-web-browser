@@ -888,20 +888,11 @@ export class BackupService extends EventTarget {
    * @returns {string} The path of the default parent directory
    */
   static get DEFAULT_PARENT_DIR_PATH() {
-    let path = "";
-    try {
-      path =
-        BackupService.oneDriveFolderPath?.path ||
-        Services.dirsvc.get("Docs", Ci.nsIFile).path;
-    } catch (e) {
-      // If this errors, we can safely return an empty string
-      lazy.logConsole.error(
-        "There was an error when getting the Default Parent Directory: ",
-        e
-      );
-    }
-
-    return path;
+    return (
+      BackupService.oneDriveFolderPath?.path ||
+      BackupService.docsDirFolderPath?.path ||
+      ""
+    );
   }
 
   /**
@@ -1139,6 +1130,24 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * Gets the user's Documents folder.
+   * If it doesn't exist, return null.
+   *
+   * @returns {nsIFile|null} The Documents folder or null
+   */
+  static get docsDirFolderPath() {
+    try {
+      return Services.dirsvc.get("Docs", Ci.nsIFile);
+    } catch (e) {
+      lazy.logConsole.warn(
+        "There was an error while trying to get the Document's directory",
+        e
+      );
+    }
+    return null;
+  }
+
+  /**
    * Returns a reference to a BackupService singleton. If this is the first time
    * that this getter is accessed, this causes the BackupService singleton to be
    * be instantiated.
@@ -1226,15 +1235,16 @@ export class BackupService extends EventTarget {
    * @type {object}
    */
   get state() {
-    if (!Object.keys(this.#_state.defaultParent).length) {
+    if (
+      !Object.keys(this.#_state.defaultParent).length ||
+      !this.#_state.defaultParent.path
+    ) {
       let defaultPath = BackupService.DEFAULT_PARENT_DIR_PATH;
-      if (defaultPath) {
-        this.#_state.defaultParent = {
-          path: defaultPath,
-          fileName: PathUtils.filename(defaultPath),
-          iconURL: this.getIconFromFilePath(defaultPath),
-        };
-      }
+      this.#_state.defaultParent = {
+        path: defaultPath,
+        fileName: defaultPath ? PathUtils.filename(defaultPath) : "",
+        iconURL: defaultPath ? this.getIconFromFilePath(defaultPath) : "",
+      };
     }
 
     return Object.freeze(structuredClone(this.#_state));

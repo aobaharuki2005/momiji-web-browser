@@ -38,24 +38,16 @@ add_task(async function test_no_default_folder() {
   let bs = getAndMaybeInitBackupService();
   bs.resetDefaultParentInternalState();
 
-  let callCount = 0;
-  let getterStub = sandbox
-    .stub(BackupService, "DEFAULT_PARENT_DIR_PATH")
-    .get(() => {
-      callCount++;
-      return "";
-    });
+  let docStub = sandbox
+    .stub(BackupService, "docsDirFolderPath")
+    .get()
+    .returns(null);
 
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let settings = browser.contentDocument.querySelector("backup-settings");
     let turnOnButton = settings.scheduledBackupsButtonEl;
 
     await settings.updateComplete;
-
-    console.log(
-      "DO WE HAVE A DEFAULT PARENT ALREADY???",
-      settings.backupServiceState.defaultParent
-    );
 
     Assert.ok(bs.archiveEnabledStatus, "Archive is enabled for backups");
 
@@ -75,13 +67,6 @@ add_task(async function test_no_default_folder() {
       "turn-on-scheduled-backups should be found"
     );
 
-    // woops looks like getting the default dir threw an error, lets make sure we handled that
-    Assert.greaterOrEqual(
-      callCount,
-      1,
-      "The default dir getter was called atleast once"
-    );
-
     let filePathInputDefault = turnOnScheduledBackups.filePathInputDefaultEl;
 
     Assert.equal(
@@ -95,9 +80,9 @@ add_task(async function test_no_default_folder() {
     dialog.close();
 
     await dialogClosePromise;
-
-    getterStub.restore();
   });
+
+  docStub.restore();
 
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let settings = browser.contentDocument.querySelector("backup-settings");

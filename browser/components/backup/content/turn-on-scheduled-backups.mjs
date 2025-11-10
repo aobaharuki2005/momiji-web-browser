@@ -261,7 +261,7 @@ export default class TurnOnScheduledBackups extends MozLitElement {
           ? "turn-on-scheduled-backups-location-default-folder"
           : nothing}
         data-l10n-args=${hasFilename ? l10nArgs : nothing}
-        data-l10n-attrs=${hasFilename ? "value" : "placeholder"}
+        data-l10n-attrs=${hasFilename ? "value" : nothing}
         style=${`background-image: url(${iconURL})`}
       />
     `;
