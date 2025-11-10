@@ -13412,14 +13412,17 @@
   value: false
   mirror: always
 
-# If we should attempt to race the cache and network.
+# If we should attempt to race the cache with network.
+# See also race_with_non_ssd for auto-enable behavior on Windows non-SSD drives.
 - name: network.http.rcwn.enabled
   type: bool
-#if defined(ANDROID)
   value: false
-#else
+  mirror: always
+
+# If we should attempt to race the cache with network for non-SSD drives (Windows only).
+- name: network.http.rcwn.race_with_non_ssd
+  type: bool
   value: true
-#endif
   mirror: always
 
 - name: network.http.rcwn.cache_queue_normal_threshold
