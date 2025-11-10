@@ -20,6 +20,19 @@ class ErrorResult;
 
 namespace dom {
 
+class MediaImageData {
+ public:
+  MediaImageData() = default;
+  explicit MediaImageData(const MediaImage& aImage)
+      : mSizes(aImage.mSizes), mSrc(aImage.mSrc), mType(aImage.mType) {}
+
+  MediaImage ToMediaImage() const;
+
+  nsString mSizes;
+  nsString mSrc;
+  nsString mType;
+};
+
 class MediaMetadataBase {
  public:
   MediaMetadataBase() = default;
@@ -33,7 +46,7 @@ class MediaMetadataBase {
   nsString mArtist;
   nsString mAlbum;
   nsCString mUrl;
-  CopyableTArray<MediaImage> mArtwork;
+  CopyableTArray<MediaImageData> mArtwork;
 };
 
 class MediaMetadata final : public nsISupports,
