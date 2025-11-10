@@ -2,7 +2,9 @@ function checkMarks(expected) {
   assertEq(getMarks().join(", "), expected.join(", "));
 }
 
+gczeal(0);
 gczeal('CheckGrayMarking');
+gc();
 
 let g1 = newGlobal({newCompartment: true});
 let g2 = newGlobal({newCompartment: true});
