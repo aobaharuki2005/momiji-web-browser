@@ -2169,13 +2169,10 @@ AnyRegister LAllocation::toAnyRegister() const {
 }  // namespace js
 
 #include "jit/shared/LIR-shared.h"
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-#  if defined(JS_CODEGEN_X86)
-#    include "jit/x86/LIR-x86.h"
-#  elif defined(JS_CODEGEN_X64)
-#    include "jit/x64/LIR-x64.h"
-#  endif
-#  include "jit/x86-shared/LIR-x86-shared.h"
+#if defined(JS_CODEGEN_X86)
+#  include "jit/x86/LIR-x86.h"
+#elif defined(JS_CODEGEN_X64)
+#  include "jit/x64/LIR-x64.h"
 #elif defined(JS_CODEGEN_ARM)
 #  include "jit/arm/LIR-arm.h"
 #elif defined(JS_CODEGEN_ARM64)
