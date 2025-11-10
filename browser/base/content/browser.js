@@ -4261,7 +4261,7 @@ var PanicButtonNotifier = {
 class TabDialogBox {
   static _containerFor(browser) {
     return browser.closest(
-      ".browserSidebarContainer, .webextension-popup-stack, .sidebar-browser-stack"
+      ".browserStack, .webextension-popup-stack, .sidebar-browser-stack"
     );
   }
 
