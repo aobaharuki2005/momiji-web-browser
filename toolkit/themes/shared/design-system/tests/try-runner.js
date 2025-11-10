@@ -50,16 +50,16 @@ function logStart(name) {
 
 const FILE_PATHS = {
   "tokens-brand.css": {
-    path: path.join("tokens-brand.css"),
-    testPath: path.join(TEST_BUILD_PATH, "tokens-brand.css"),
+    path: path.join("dist/tokens-brand.css"),
+    testPath: path.join(TEST_BUILD_PATH, "dist/tokens-brand.css"),
   },
   "tokens-platform.css": {
-    path: path.join("tokens-platform.css"),
-    testPath: path.join(TEST_BUILD_PATH, "tokens-platform.css"),
+    path: path.join("dist/tokens-platform.css"),
+    testPath: path.join(TEST_BUILD_PATH, "dist/tokens-platform.css"),
   },
   "tokens-shared.css": {
-    path: path.join("tokens-shared.css"),
-    testPath: path.join(TEST_BUILD_PATH, "tokens-shared.css"),
+    path: path.join("dist/tokens-shared.css"),
+    testPath: path.join(TEST_BUILD_PATH, "dist/tokens-shared.css"),
   },
 };
 

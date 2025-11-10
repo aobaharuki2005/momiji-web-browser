@@ -7,7 +7,7 @@ import {
   LitElement,
   classMap,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import { tokensTable, variableLookupTable } from "./tokens-table.mjs";
+import { tokensTable, variableLookupTable } from "./dist/tokens-table.mjs";
 import styles from "./tokens-table.css";
 
 export default {

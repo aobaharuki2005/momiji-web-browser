@@ -755,15 +755,15 @@ const platform = {
   transforms: ["name/figma", "attribute/figma"],
   files: [
     {
-      destination: "tokens-figma-colors.json",
+      destination: "dist/tokens-figma-colors.json",
       format: "json/figma/colors",
     },
     {
-      destination: "tokens-figma-primitives.json",
+      destination: "dist/tokens-figma-primitives.json",
       format: "json/figma/primitives",
     },
     {
-      destination: "tokens-figma-theme.json",
+      destination: "dist/tokens-figma-theme.json",
       format: "json/figma/theme",
     },
   ],

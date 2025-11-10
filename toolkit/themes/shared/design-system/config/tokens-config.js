@@ -542,18 +542,18 @@ module.exports = {
       ],
       files: [
         {
-          destination: "tokens-shared.css",
+          destination: "dist/tokens-shared.css",
           format: "css/variables/shared",
         },
         {
-          destination: "tokens-brand.css",
+          destination: "dist/tokens-brand.css",
           format: "css/variables/brand",
           filter: token =>
             typeof token.original.value == "object" &&
             token.original.value.brand,
         },
         {
-          destination: "tokens-platform.css",
+          destination: "dist/tokens-platform.css",
           format: "css/variables/platform",
           filter: token =>
             typeof token.original.value == "object" &&
@@ -572,7 +572,7 @@ module.exports = {
       ],
       files: [
         {
-          destination: "tokens-table.mjs",
+          destination: "dist/tokens-table.mjs",
           format: "javascript/tokens-table",
         },
       ],
