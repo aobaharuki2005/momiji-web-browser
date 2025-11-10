@@ -47,7 +47,7 @@ export const IPProtectionStates = Object.freeze({
 /**
  * A singleton service that manages proxy integration and backend functionality.
  *
- * @fires event:"IPProtectionService:StateChanged"
+ * @fires IPProtectionServiceSingleton#"IPProtectionService:StateChanged"
  *  When the proxy state machine changes state. Check the `state` attribute to
  *  know the current state.
  */
