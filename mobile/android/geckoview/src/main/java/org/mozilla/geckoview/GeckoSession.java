@@ -733,7 +733,7 @@ public class GeckoSession {
                 delegate.onLoadRequest(GeckoSession.this, request);
 
             if (result == null) {
-              callback.sendSuccess(null);
+              callback.sendSuccess(false);
               return;
             }
 
@@ -779,6 +779,13 @@ public class GeckoSession {
                     }));
           } else if ("GeckoView:OnNewSession".equals(event)) {
             final String uri = message.getString("uri");
+
+            // Early check whether parent is opened. If not opened, we cannot get parent's runtime.
+            if (!GeckoSession.this.isOpen()) {
+              callback.sendError("Parent session is closed or isn't opened yet");
+              return;
+            }
+
             final GeckoResult<GeckoSession> result = delegate.onNewSession(GeckoSession.this, uri);
             if (result == null) {
               callback.sendSuccess(false);
