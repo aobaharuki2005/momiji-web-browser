@@ -9,9 +9,6 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 const { ExtensionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/ExtensionXPCShellUtils.sys.mjs"
 );
-const { IPPProxyManager } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPProxyManager.sys.mjs"
-);
 const { IPPEnrollAndEntitleManager } = ChromeUtils.importESModule(
   "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
 );
@@ -35,98 +32,6 @@ add_setup(async function () {
   registerCleanupFunction(async () => {
     await IPProtectionService.init();
   });
-});
-
-/**
- * Tests that starting the service gets a state changed event.
- */
-add_task(async function test_IPProtectionService_start() {
-  let sandbox = sinon.createSandbox();
-  setupStubs(sandbox);
-
-  IPProtectionService.init();
-
-  await waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state === IPProtectionStates.READY
-  );
-
-  Assert.ok(
-    !IPPProxyManager.activatedAt,
-    "IP Protection service should not be active initially"
-  );
-
-  let startedEventPromise = waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state === IPProtectionStates.ACTIVE
-  );
-
-  IPProtectionService.start();
-
-  await startedEventPromise;
-
-  Assert.equal(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
-    "IP Protection service should be active after starting"
-  );
-  Assert.ok(
-    !!IPPProxyManager.activatedAt,
-    "IP Protection service should have an activation timestamp"
-  );
-  Assert.ok(
-    IPPProxyManager.active,
-    "IP Protection service should have an active connection"
-  );
-
-  IPProtectionService.uninit();
-  sandbox.restore();
-});
-
-/**
- * Tests that stopping the service gets stop events.
- */
-add_task(async function test_IPProtectionService_stop() {
-  let sandbox = sinon.createSandbox();
-  setupStubs(sandbox);
-
-  const waitForReady = waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state === IPProtectionStates.READY
-  );
-
-  IPProtectionService.init();
-  await waitForReady;
-
-  await IPProtectionService.start();
-
-  let stoppedEventPromise = waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state !== IPProtectionStates.ACTIVE
-  );
-  IPProtectionService.stop();
-
-  await stoppedEventPromise;
-  Assert.notEqual(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
-    "IP Protection service should not be active after stopping"
-  );
-  Assert.ok(
-    !IPPProxyManager.activatedAt,
-    "IP Protection service should not have an activation timestamp after stopping"
-  );
-  Assert.ok(
-    !IPProtectionService.connection,
-    "IP Protection service should not have an active connection"
-  );
-
-  IPProtectionService.uninit();
-  sandbox.restore();
 });
 
 /**

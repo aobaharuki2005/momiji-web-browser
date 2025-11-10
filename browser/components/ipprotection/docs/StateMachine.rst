@@ -13,7 +13,6 @@ The service transitions across the following states:
 - ``UNAVAILABLE``: User not eligible (Nimbus) or signed out with no eligibility; UI hidden.
 - ``UNAUTHENTICATED``: User signed out but eligible; UI shows login.
 - ``READY``: Ready to activate the proxy.
-- ``ACTIVE``: Proxy is active.
 
 High‑level transitions
 ----------------------
@@ -21,7 +20,6 @@ High‑level transitions
 - Feature disabled → ``UNINITIALIZED``.
 - During startup, if initialization isn’t complete, use cached state from ``IPPStartupCache``.
 - Not signed in → ``UNAVAILABLE`` if not eligible, otherwise ``UNAUTHENTICATED``.
-- Proxy already active → ``ACTIVE``.
 - If an entitlement is cached/valid → ``READY``.
 - Otherwise, check enrollment with Guardian (via ``IPPErollHelper``):
   - Not enrolled → ``UNAVAILABLE`` (not eligible).

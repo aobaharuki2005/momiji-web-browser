@@ -7,6 +7,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
@@ -60,8 +61,8 @@ add_task(async function user_toggle_on_and_off() {
   Services.fog.testResetFOG();
   await Services.fog.testFlushAllChildren();
   let vpnOnPromise = BrowserTestUtils.waitForEvent(
-    lazy.IPProtectionService,
-    "IPProtectionService:StateChanged",
+    lazy.IPPProxyManager,
+    "IPPProxyManager:StateChanged",
     false,
     () => !!IPPProxyManager.activatedAt
   );
@@ -76,8 +77,8 @@ add_task(async function user_toggle_on_and_off() {
   Assert.equal(toggledEvents[0].extra.userAction, "true");
 
   let vpnOffPromise = BrowserTestUtils.waitForEvent(
-    lazy.IPProtectionService,
-    "IPProtectionService:StateChanged",
+    lazy.IPPProxyManager,
+    "IPPProxyManager:StateChanged",
     false,
     () => !IPPProxyManager.activatedAt
   );
@@ -146,8 +147,8 @@ add_task(async function toggle_off_on_shutdown() {
   Services.fog.testResetFOG();
 
   let vpnOnPromise = BrowserTestUtils.waitForEvent(
-    lazy.IPProtectionService,
-    "IPProtectionService:StateChanged",
+    lazy.IPPProxyManager,
+    "IPPProxyManager:StateChanged",
     false,
     () => !!IPPProxyManager.activatedAt
   );

@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   IPProtectionServerlist:
     "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
+  IPPProxyStates: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   IPProtectionStates:
@@ -85,7 +86,7 @@ class IPPAutoStartSingleton {
       case lazy.IPProtectionStates.READY:
         if (this.#shouldStartWhenReady) {
           this.#shouldStartWhenReady = false;
-          lazy.IPProtectionService.start(/* user action: */ false);
+          lazy.IPPProxyManager.start(/* user action: */ false);
         }
         break;
 
@@ -118,6 +119,10 @@ class IPPEarlyStartupFilter {
         "IPProtectionService:StateChanged",
         this.handleEvent
       );
+      lazy.IPPProxyManager.addEventListener(
+        "IPPProxyManager:StateChanged",
+        this.handleEvent
+      );
     }
   }
 
@@ -127,6 +132,10 @@ class IPPEarlyStartupFilter {
     if (this.autoStartAndAtStartup) {
       this.#autoStartAndAtStartup = false;
 
+      lazy.IPPProxyManager.removeEventListener(
+        "IPPProxyManager:StateChanged",
+        this.handleEvent
+      );
       lazy.IPProtectionService.removeEventListener(
         "IPProtectionService:StateChanged",
         this.handleEvent
@@ -147,14 +156,14 @@ class IPPEarlyStartupFilter {
         this.uninit();
         break;
 
-      case lazy.IPProtectionStates.ACTIVE:
-        // We have completed our task.
-        this.uninit();
-        break;
-
       default:
         // Let's ignoring any other state.
         break;
+    }
+
+    if (lazy.IPPProxyManager.state === lazy.IPPProxyStates.ACTIVE) {
+      // We have completed our task.
+      this.uninit();
     }
   }
 }

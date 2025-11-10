@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs",
   IPPHelpers: "resource:///modules/ipprotection/IPProtectionHelpers.sys.mjs",
   IPPNimbusHelper: "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs",
-  IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   IPPSignInWatcher: "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs",
   IPPStartupCache: "resource:///modules/ipprotection/IPPStartupCache.sys.mjs",
   SpecialMessageActions:
@@ -34,8 +33,6 @@ const ENABLED_PREF = "browser.ipProtection.enabled";
  *  The user is signed out but eligible (via nimbus). The panel should show the login view.
  * @property {string} READY
  *  Ready to be activated.
- * @property {string} ACTIVE
- *  Proxy is active.
  *
  * Note: If you update this list of states, make sure to update the
  * corresponding documentation in the `docs` folder as well.
@@ -45,7 +42,6 @@ export const IPProtectionStates = Object.freeze({
   UNAVAILABLE: "unavailable",
   UNAUTHENTICATED: "unauthenticated",
   READY: "ready",
-  ACTIVE: "active",
 });
 
 /**
@@ -124,10 +120,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       return;
     }
 
-    if (this.#state === IPProtectionStates.ACTIVE) {
-      this.stop(false);
-    }
-
     this.#helpers.forEach(helper => helper.uninit());
 
     this.#setState(IPProtectionStates.UNINITIALIZED);
@@ -137,68 +129,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     await Promise.allSettled(
       this.#helpers.map(helper => helper.initOnStartupCompleted())
     );
-  }
-
-  /**
-   * Start the proxy if the user is eligible.
-   *
-   * @param {boolean} userAction
-   * True if started by user action, false if system action
-   */
-  async start(userAction = true) {
-    const started = await lazy.IPPProxyManager.start();
-
-    // Proxy failed to start but no error was given.
-    if (!started) {
-      return;
-    }
-
-    this.#setState(IPProtectionStates.ACTIVE);
-
-    Glean.ipprotection.toggled.record({
-      userAction,
-      enabled: true,
-    });
-
-    if (userAction) {
-      this.reloadCurrentTab();
-    }
-  }
-
-  /**
-   * Stops the proxy.
-   *
-   * @param {boolean} userAction
-   * True if started by user action, false if system action
-   */
-  async stop(userAction = true) {
-    if (!lazy.IPPProxyManager.active) {
-      return;
-    }
-
-    const sessionLength = lazy.IPPProxyManager.stop();
-
-    Glean.ipprotection.toggled.record({
-      userAction,
-      duration: sessionLength,
-      enabled: false,
-    });
-
-    this.#setState(IPProtectionStates.READY);
-
-    if (userAction) {
-      this.reloadCurrentTab();
-    }
-  }
-
-  /**
-   * Gets the current window and reloads the selected tab.
-   */
-  reloadCurrentTab() {
-    let win = Services.wm.getMostRecentBrowserWindow();
-    if (win) {
-      win.gBrowser.reloadTab(win.gBrowser.selectedTab);
-    }
   }
 
   async startLoginFlow(browser) {
@@ -238,11 +168,6 @@ class IPProtectionServiceSingleton extends EventTarget {
       return !eligible
         ? IPProtectionStates.UNAVAILABLE
         : IPProtectionStates.UNAUTHENTICATED;
-    }
-
-    // The connection is already active.
-    if (lazy.IPPProxyManager.active) {
-      return IPProtectionStates.ACTIVE;
     }
 
     // Check if the current account is enrolled and has an entitlement.

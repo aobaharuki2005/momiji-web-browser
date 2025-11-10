@@ -249,12 +249,12 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
   IPProtectionService.updateState();
 
   let startedEventPromise = waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state === IPProtectionStates.ACTIVE
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
+    () => IPPProxyManager.state === IPPProxyStates.ACTIVE
   );
 
-  IPProtectionService.start();
+  IPPProxyManager.start();
 
   await startedEventPromise;
 
@@ -271,12 +271,12 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
   );
 
   let stoppedEventPromise = waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
-    () => IPProtectionService.state !== IPProtectionStates.ACTIVE
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
+    () => IPPProxyManager.state !== IPPProxyStates.ACTIVE
   );
 
-  IPProtectionService.stop();
+  IPPProxyManager.stop();
 
   await stoppedEventPromise;
 

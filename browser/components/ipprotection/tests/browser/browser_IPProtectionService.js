@@ -335,8 +335,8 @@ add_task(async function test_IPProtectionService_retry_errors() {
   IPPProxyManager.setErrorState();
 
   let startedEventPromise = BrowserTestUtils.waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
     false,
     () => !!IPPProxyManager.activatedAt
   );
@@ -344,13 +344,9 @@ add_task(async function test_IPProtectionService_retry_errors() {
 
   await startedEventPromise;
 
-  Assert.equal(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
-    "Proxy is active"
-  );
+  Assert.equal(IPPProxyManager.state, IPPProxyStates.ACTIVE, "Proxy is active");
 
-  IPProtectionService.stop();
+  IPPProxyManager.stop();
 
   await closePanel();
   await cleanupAlpha();
@@ -381,8 +377,8 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
   );
 
   let startedEventPromise = BrowserTestUtils.waitForEvent(
-    IPProtectionService,
-    "IPProtectionService:StateChanged",
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
     false,
     () => !!IPPProxyManager.activatedAt
   );
@@ -390,11 +386,7 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
 
   await startedEventPromise;
 
-  Assert.equal(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
-    "Proxy is active"
-  );
+  Assert.equal(IPPProxyManager.state, IPPProxyStates.ACTIVE, "Proxy is active");
 
   let vpnOffPromise = BrowserTestUtils.waitForEvent(
     IPProtectionService,
@@ -410,8 +402,8 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
   await vpnOffPromise;
 
   Assert.notStrictEqual(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
+    IPPProxyManager.state,
+    IPPProxyStates.ACTIVE,
     "Proxy has stopped"
   );
 
@@ -469,19 +461,15 @@ add_task(async function test_IPProtectionService_reload() {
   content.connectionToggleEl.click();
   await tabReloaded;
 
-  Assert.equal(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
-    "Proxy is active"
-  );
+  Assert.equal(IPPProxyManager.state, IPPProxyStates.ACTIVE, "Proxy is active");
 
   tabReloaded = waitForTabReloaded(gBrowser.selectedTab);
   content.connectionToggleEl.click();
   await tabReloaded;
 
   Assert.notStrictEqual(
-    IPProtectionService.state,
-    IPProtectionStates.ACTIVE,
+    IPPProxyManager.state,
+    IPPProxyStates.ACTIVE,
     "Proxy is not active"
   );
 

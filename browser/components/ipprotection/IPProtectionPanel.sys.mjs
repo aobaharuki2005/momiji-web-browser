@@ -172,11 +172,11 @@ export class IPProtectionPanel {
   }
 
   #startProxy() {
-    lazy.IPProtectionService.start();
+    lazy.IPPProxyManager.start();
   }
 
   #stopProxy() {
-    lazy.IPProtectionService.stop();
+    lazy.IPPProxyManager.stop();
   }
 
   showHelpPage() {

@@ -15,8 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs",
   IPProtectionService:
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
-  IPProtectionStates:
-    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
   IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   IPPProxyStates: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
   requestIdleCallback: "resource://gre/modules/Timer.sys.mjs",
@@ -274,8 +272,7 @@ class IPProtectionWidget {
    * @param {XULElement} toolbaritem - the widget toolbaritem.
    */
   #onCreated(toolbaritem) {
-    let isActive =
-      lazy.IPProtectionService.state === lazy.IPProtectionStates.ACTIVE;
+    let isActive = lazy.IPPProxyManager.state === lazy.IPPProxyStates.ACTIVE;
     let isError =
       lazy.IPPProxyManager.state === lazy.IPPProxyStates.ERROR &&
       lazy.IPPProxyManager.errors.includes(ERRORS.GENERIC);
@@ -319,7 +316,7 @@ class IPProtectionWidget {
     await Promise.resolve();
     let moved = !!lazy.CustomizableUI.getPlacementOfWidget(widgetId);
     if (!moved) {
-      lazy.IPProtectionService.stop();
+      lazy.IPPProxyManager.stop();
     }
   }
 
@@ -339,8 +336,7 @@ class IPProtectionWidget {
       event.type == "IPPProxyManager:StateChanged"
     ) {
       let status = {
-        isActive:
-          lazy.IPProtectionService.state === lazy.IPProtectionStates.ACTIVE,
+        isActive: lazy.IPPProxyManager.state === lazy.IPPProxyStates.ACTIVE,
         isError:
           lazy.IPPProxyManager.state === lazy.IPPProxyStates.ERROR &&
           lazy.IPPProxyManager.errors.includes(ERRORS.GENERIC),

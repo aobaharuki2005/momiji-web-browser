@@ -35,18 +35,22 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
 /**
  * @typedef {object} IPPProxyStates
  *  List of the possible states of the IPPProxyManager.
+ * @property {string} NOT_READY
+ *  The proxy is not ready because the main state machine is not in the READY state.
  * @property {string} READY
  *  The proxy is ready to be activated.
+ * @property {string} ACTIVE
+ *  The proxy is active.
  * @property {string} ERROR
  *  Error
- *
- * TODO: eventually this will be a proper state machine.
  *
  * Note: If you update this list of states, make sure to update the
  * corresponding documentation in the `docs` folder as well.
  */
 export const IPPProxyStates = Object.freeze({
+  NOT_READY: "not-ready",
   READY: "ready",
+  ACTIVE: "active",
   ERROR: "error",
 });
 
@@ -54,7 +58,7 @@ export const IPPProxyStates = Object.freeze({
  * Manages the proxy connection for the IPProtectionService.
  */
 class IPPProxyManagerSingleton extends EventTarget {
-  #state = IPPProxyStates.READY;
+  #state = IPPProxyStates.NOT_READY;
 
   #pass = null;
   /**@type {import("./IPPChannelFilter.sys.mjs").IPPChannelFilter | null} */
@@ -92,6 +96,10 @@ class IPPProxyManagerSingleton extends EventTarget {
 
     this.errors = [];
 
+    if (this.#state === IPPProxyStates.ACTIVE) {
+      this.stop(false);
+    }
+
     this.reset();
     this.#connection = null;
     this.usageObserver.stop();
@@ -103,7 +111,7 @@ class IPPProxyManagerSingleton extends EventTarget {
    * @returns {Date}
    */
   get activatedAt() {
-    return this.active && this.#activatedAt;
+    return this.#state === IPPProxyStates.ACTIVE && this.#activatedAt;
   }
 
   get usageObserver() {
@@ -125,7 +133,7 @@ class IPPProxyManagerSingleton extends EventTarget {
   }
 
   get active() {
-    return !!this.#connection?.active && !!this.#connection?.proxyInfo;
+    return this.#state === IPPProxyStates.ACTIVE;
   }
 
   get isolationKey() {
@@ -155,14 +163,47 @@ class IPPProxyManagerSingleton extends EventTarget {
   }
 
   /**
-   * Starts the proxy connection:
-   * - Gets a new proxy pass if needed.
-   * - Find the server to use.
-   * - Adds usage and network-error observers.
+   * Start the proxy if the user is eligible.
    *
-   * @returns {Promise<boolean>}
+   * @param {boolean} userAction
+   * True if started by user action, false if system action
    */
-  async start() {
+  async start(userAction = true) {
+    if (this.#state === IPPProxyStates.NOT_READY) {
+      throw new Error("This method should not be called when not ready");
+    }
+
+    let started = false;
+    try {
+      started = await this.#startInternal();
+    } catch (error) {
+      this.#setErrorState(ERRORS.GENERIC, error);
+      return;
+    }
+
+    if (this.#state === IPPProxyStates.ERROR) {
+      return;
+    }
+
+    // Proxy failed to start but no error was given.
+    if (!started) {
+      this.#setState(IPPProxyStates.READY);
+      return;
+    }
+
+    this.#setState(IPPProxyStates.ACTIVE);
+
+    Glean.ipprotection.toggled.record({
+      userAction,
+      enabled: true,
+    });
+
+    if (userAction) {
+      this.#reloadCurrentTab();
+    }
+  }
+
+  async #startInternal() {
     await lazy.IPProtectionServerlist.maybeFetchList();
 
     const enrollAndEntitleData =
@@ -184,16 +225,6 @@ class IPPProxyManagerSingleton extends EventTarget {
 
     this.errors = [];
 
-    try {
-      const started = await this.#startInternal();
-      return started;
-    } catch (error) {
-      this.#setErrorState(ERRORS.GENERIC, error);
-      return false;
-    }
-  }
-
-  async #startInternal() {
     this.createChannelFilter();
 
     // If the current proxy pass is valid, no need to re-authenticate.
@@ -205,8 +236,8 @@ class IPPProxyManagerSingleton extends EventTarget {
     const location = lazy.IPProtectionServerlist.getDefaultLocation();
     const server = lazy.IPProtectionServerlist.selectServer(location?.city);
     if (!server) {
-      lazy.logConsole.error("No server found");
-      throw new Error("No server found");
+      this.#setErrorState(ERRORS.GENERIC, "No server found");
+      return false;
     }
 
     lazy.logConsole.debug("Server:", server?.hostname);
@@ -225,26 +256,54 @@ class IPPProxyManagerSingleton extends EventTarget {
 
     lazy.logConsole.info("Started");
 
-    if (this.active) {
+    if (!!this.#connection?.active && !!this.#connection?.proxyInfo) {
       this.#activatedAt = ChromeUtils.now();
+      return true;
     }
 
-    return this.active;
+    return false;
   }
 
   /**
-   * Stops the proxy connection and observers. Returns the duration of the connection.
+   * Stops the proxy.
    *
-   * @returns {int}
+   * @param {boolean} userAction
+   * True if started by user action, false if system action
    */
-  stop() {
+  async stop(userAction = true) {
+    if (this.#state !== IPPProxyStates.ACTIVE) {
+      return;
+    }
+
     this.cancelChannelFilter();
 
     this.networkErrorObserver.stop();
 
     lazy.logConsole.info("Stopped");
 
-    return ChromeUtils.now() - this.#activatedAt;
+    const sessionLength = ChromeUtils.now() - this.#activatedAt;
+
+    Glean.ipprotection.toggled.record({
+      userAction,
+      duration: sessionLength,
+      enabled: false,
+    });
+
+    this.#setState(IPPProxyStates.READY);
+
+    if (userAction) {
+      this.#reloadCurrentTab();
+    }
+  }
+
+  /**
+   * Gets the current window and reloads the selected tab.
+   */
+  #reloadCurrentTab() {
+    let win = Services.wm.getMostRecentBrowserWindow();
+    if (win) {
+      win.gBrowser.reloadTab(win.gBrowser.selectedTab);
+    }
   }
 
   /**
@@ -252,22 +311,13 @@ class IPPProxyManagerSingleton extends EventTarget {
    */
   async reset() {
     this.#pass = null;
-    if (this.active) {
+    if (this.#state === IPPProxyStates.ACTIVE) {
       await this.stop();
     }
   }
 
   #handleEvent(_event) {
-    if (
-      lazy.IPProtectionService.state === lazy.IPProtectionStates.UNAVAILABLE ||
-      lazy.IPProtectionService.state === lazy.IPProtectionStates.UNAUTHENTICATED
-    ) {
-      if (this.active) {
-        this.stop(false);
-      }
-
-      this.reset();
-    }
+    this.updateState();
   }
 
   /**
@@ -344,8 +394,15 @@ class IPPProxyManagerSingleton extends EventTarget {
   }
 
   updateState() {
-    // TODO: something better here.
-    this.#setState(IPPProxyStates.READY);
+    this.stop(false);
+    this.reset();
+
+    if (lazy.IPProtectionService.state === lazy.IPProtectionStates.READY) {
+      this.#setState(IPPProxyStates.READY);
+      return;
+    }
+
+    this.#setState(IPPProxyStates.NOT_READY);
   }
 
   /**
