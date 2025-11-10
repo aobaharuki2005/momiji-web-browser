@@ -59,6 +59,11 @@ object FeatureFlags {
     const val PRIVATE_BROWSING_MODE_REDESIGN = false
 
     /**
+     * Enables the Mozilla Ads Client.
+     */
+    const val MOZILLA_ADS_CLIENT_ENABLED = false
+
+    /**
      * Enables the app icon selection feature.
      * The implementation of the feature is based on changing activity aliases, and on versions of Android older than 10
      * that also leads to removal of created shortcuts. We need to work out a good UX to avoid confusion and data loss.
