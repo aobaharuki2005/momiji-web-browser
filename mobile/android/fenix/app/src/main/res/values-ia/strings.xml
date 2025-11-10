@@ -1747,6 +1747,8 @@
   <string name="webcompat_reporter_etp_checkbox_text">Invia URL blocate per protection contra-traciamento</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Protection antitraciamento reinfortiate pote blocar traciatores e scripts que alcun sitos web besonia pro functionar correctemente.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Reporto preliminar</string>
   <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
   <string name="webcompat_reporter_preview_bottom_sheet_header">Vista preliminar del reporto</string>
   <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
@@ -3902,6 +3904,12 @@
   <string name="settings_search_empty_query_placeholder">Necun recerca recente</string>
   <!-- Message when error happens with Settings Search -->
   <string name="settings_search_error_message">Un error occurreva</string>
+  <!-- Message title displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_found_message">Nihil appareva</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">Clarar toto</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Resultatos del recercas recente</string>
   <!--
     Terms of use pop up prompt
 
