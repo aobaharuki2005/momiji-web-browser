@@ -3178,6 +3178,7 @@ def coverage_cflags(target, c_compiler, build_env):
 
 
 set_config("COVERAGE_CFLAGS", coverage_cflags)
+add_linker_flag("--coverage", when=code_coverage & building_with_gnu_compatible_cc)
 
 # Assembler detection
 # ==============================================================
