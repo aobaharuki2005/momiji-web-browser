@@ -256,7 +256,7 @@ nsresult CTFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     rv = NS_OK;
   } else {
     uint32_t kCMAP = TRUETYPE_TAG('c', 'm', 'a', 'p');
-    charmap = new gfxCharacterMap();
+    charmap = new gfxCharacterMap(256);
     AutoTable cmapTable(this, kCMAP);
 
     if (cmapTable) {
@@ -353,7 +353,7 @@ nsresult CTFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     mHasCmapTable = true;
   } else {
     // if error occurred, initialize to null cmap
-    charmap = new gfxCharacterMap();
+    charmap = new gfxCharacterMap(0);
     mHasCmapTable = false;
   }
   if (setCharMap) {
@@ -1639,7 +1639,7 @@ void CTFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
       if (cmapTable) {
         const uint8_t* cmapData = (const uint8_t*)CFDataGetBytePtr(cmapTable);
         uint32_t cmapLen = CFDataGetLength(cmapTable);
-        RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+        RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap(256);
         uint32_t offset;
         nsresult rv;
 
@@ -1758,7 +1758,7 @@ void CoreTextFontList::AddFaceInitData(
       AutoCFTypeRef<CFDataRef> data(CGFontCopyTableForTag(font, kCMAP));
       if (data) {
         uint32_t offset;
-        charmap = new gfxCharacterMap();
+        charmap = new gfxCharacterMap(256);
         gfxFontUtils::ReadCMAP(CFDataGetBytePtr(data), CFDataGetLength(data),
                                *charmap, offset);
       }

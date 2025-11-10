@@ -125,7 +125,8 @@ class gfxCharacterMap : public gfxSparseBitSet {
     }
   }
 
-  gfxCharacterMap() = default;
+  explicit gfxCharacterMap(uint32_t aReserveBlocks)
+      : gfxSparseBitSet(aReserveBlocks) {}
 
   explicit gfxCharacterMap(const gfxSparseBitSet& aOther)
       : gfxSparseBitSet(aOther) {}

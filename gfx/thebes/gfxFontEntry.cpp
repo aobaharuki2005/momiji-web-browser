@@ -217,7 +217,7 @@ bool gfxFontEntry::SupportsScriptInGSUB(const hb_tag_t* aScriptTags,
 
 nsresult gfxFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   MOZ_ASSERT(false, "using default no-op implementation of ReadCMAP");
-  RefPtr<gfxCharacterMap> cmap = new gfxCharacterMap();
+  RefPtr<gfxCharacterMap> cmap = new gfxCharacterMap(0);
   if (mCharacterMap.compareExchange(nullptr, cmap.get())) {
     cmap.forget().leak();  // mCharacterMap now owns the reference
   }

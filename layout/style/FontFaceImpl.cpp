@@ -609,7 +609,7 @@ static already_AddRefed<gfxCharacterMap> ComputeCharacterMap(
   if (ranges.IsEmpty()) {
     return nullptr;
   }
-  auto charMap = MakeRefPtr<gfxCharacterMap>();
+  auto charMap = MakeRefPtr<gfxCharacterMap>(256);
   for (auto& range : ranges) {
     charMap->SetRange(range.start, range.end);
   }
