@@ -1565,6 +1565,8 @@ InputContext GeckoEditableSupport::GetInputContext() {
 }
 
 void GeckoEditableSupport::TransferParent(jni::Object::Param aEditableParent) {
+  ALOGIME("IME: TransferParent, mIMEFocusCount=%d", mIMEFocusCount);
+
   AutoGeckoEditableBlocker blocker(this);
 
   mEditable->SetParent(aEditableParent);
@@ -1662,9 +1664,13 @@ void GeckoEditableSupport::SetOnBrowserChild(dom::BrowserChild* aBrowserChild) {
     support->mEditableAttached = true;
   }
 
-  // Transfer to a new parent that corresponds to the BrowserChild.
-  java::GeckoServiceChildProcess::GetEditableParent(support->GetJavaEditable(),
-                                                    contentId, tabId);
+  MOZ_ASSERT(support->mEditable);
+
+  if (!support->mEditable->HasEditableParent()) {
+    // Transfer to a new parent that corresponds to the BrowserChild.
+    java::GeckoServiceChildProcess::GetEditableParent(
+        support->GetJavaEditable(), contentId, tabId);
+  }
 }
 
 nsIWidget* GeckoEditableSupport::GetWidget() const {
