@@ -1224,7 +1224,6 @@ IncrementalProgress GCRuntime::beginMarkingSweepGroup(JS::GCContext* gcx,
   for (auto& marker : markers) {
     MOZ_ASSERT(marker->markColor() == MarkColor::Black);
   }
-  MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
 #endif
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK);
@@ -1234,6 +1233,8 @@ IncrementalProgress GCRuntime::beginMarkingSweepGroup(JS::GCContext* gcx,
   // will be marked through, as they are not marked with
   // TraceCrossCompartmentEdge.
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
+    MOZ_ASSERT_IF(!zone->isGCMarkingBlackAndGray(),
+                  zone->cellsToAssertNotGray().empty());
     zone->changeGCState(zone->initialMarkingState(), Zone::MarkBlackAndGray);
   }
 
@@ -1653,14 +1654,14 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
     if (zone->isAtomsZone()) {
       sweepingAtoms = true;
     }
-  }
 
 #ifdef DEBUG
-  for (const auto* cell : cellsToAssertNotGray.ref()) {
-    JS::AssertCellIsNotGray(cell);
-  }
-  cellsToAssertNotGray.ref().clearAndFree();
+    for (const auto* cell : zone->cellsToAssertNotGray()) {
+      JS::AssertCellIsNotGray(cell);
+    }
+    zone->cellsToAssertNotGray().clearAndFree();
 #endif
+  }
 
   // Updating the atom marking bitmaps. This marks atoms referenced by
   // uncollected zones so cannot be done in parallel with the other sweeping
