@@ -157,5 +157,6 @@ Recommended steps:
    Be mindful of ordering if your helper depends on others. For example,
    ``IPPNimbusHelper`` is registered last to avoid premature state updates
    triggered by Nimbus’ immediate callback.
-4. If your component needs to trigger a recomputation, call
-   ``IPProtectionService.updateState``.
+4. If your component needs to recompute the service state, call
+   ``IPProtectionService.updateState()`` after updating the helper data it
+   relies on; the recomputation is synchronous.

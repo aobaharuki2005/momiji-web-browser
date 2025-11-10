@@ -136,12 +136,11 @@ class IPProtectionServiceSingleton extends EventTarget {
   }
 
   /**
-   * Request to update the current state.
-   *
-   * Updates will be queued if another update is in progress.
+   * Recomputes the current state synchronously using the latest helper data.
+   * Callers should update their own inputs before invoking this.
    */
   #updateState() {
-    this.#setState(this.#checkState());
+    this.#setState(this.#computeState());
   }
 
   /**
@@ -149,7 +148,7 @@ class IPProtectionServiceSingleton extends EventTarget {
    *
    * @returns {Promise<IPProtectionStates>}
    */
-  #checkState() {
+  #computeState() {
     // The IPP feature is disabled.
     if (!this.featureEnabled) {
       return IPProtectionStates.UNINITIALIZED;
