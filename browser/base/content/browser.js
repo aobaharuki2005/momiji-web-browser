@@ -105,7 +105,6 @@ ChromeUtils.defineESModuleGetters(this, {
   UITour: "moz-src:///browser/components/uitour/UITour.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
-  UrlbarInput: "moz-src:///browser/components/urlbar/UrlbarInput.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarProviderSearchTips:
     "moz-src:///browser/components/urlbar/UrlbarProviderSearchTips.sys.mjs",
@@ -368,10 +367,7 @@ ChromeUtils.defineLazyGetter(this, "gNavToolbox", () => {
 });
 
 ChromeUtils.defineLazyGetter(this, "gURLBar", () => {
-  let urlbar = new UrlbarInput({
-    textbox: document.getElementById("urlbar"),
-    sapName: "urlbar",
-  });
+  let urlbar = document.getElementById("urlbar");
 
   let beforeFocusOrSelect = event => {
     // In customize mode, the url bar is disabled. If a new tab is opened or the

@@ -540,9 +540,7 @@ export class UrlbarView {
       return;
     }
 
-    this.#inputWidthOnLastClose = getBoundsWithoutFlushing(
-      this.input.textbox
-    ).width;
+    this.#inputWidthOnLastClose = getBoundsWithoutFlushing(this.input).width;
 
     // We exit search mode preview on close since the result previewing it is
     // implicitly unselected.
@@ -656,8 +654,7 @@ export class UrlbarView {
     if (
       this.#rows.firstElementChild &&
       this.#queryContext.searchString == this.input.value &&
-      this.#inputWidthOnLastClose ==
-        getBoundsWithoutFlushing(this.input.textbox).width
+      this.#inputWidthOnLastClose == getBoundsWithoutFlushing(this.input).width
     ) {
       // We can reuse the current rows.
       queryOptions.allowAutofill = this.#queryContext.allowAutofill;
@@ -3239,7 +3236,7 @@ export class UrlbarView {
   }
 
   #enableOrDisableRowWrap() {
-    let wrap = getBoundsWithoutFlushing(this.input.textbox).width < 650;
+    let wrap = getBoundsWithoutFlushing(this.input).width < 650;
     this.#rows.toggleAttribute("wrap", wrap);
     this.oneOffSearchButtons?.container.toggleAttribute("wrap", wrap);
   }

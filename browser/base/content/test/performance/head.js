@@ -820,7 +820,7 @@ async function runUrlbarTest(
     await UrlbarTestUtils.promisePopupClose(win);
   };
 
-  let urlbarRect = URLBar.textbox.getBoundingClientRect();
+  let urlbarRect = URLBar.getBoundingClientRect();
   // To isolate unexpected repaints, we need to filter out the rectangle of
   // pixels changed by showing the urlbar popover
   const SHADOW_SIZE = 17; // The blur/spread of the box shadow, plus 1px fudge factor

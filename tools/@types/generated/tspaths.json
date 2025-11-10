@@ -122,6 +122,9 @@
       "chrome://browser/content/preferences/widgets/setting-group.mjs": [
         "browser/components/preferences/widgets/setting-group/setting-group.mjs"
       ],
+      "chrome://browser/content/preferences/widgets/sync-device-name.mjs": [
+        "browser/components/preferences/widgets/sync-device-name/sync-device-name.mjs"
+      ],
       "chrome://browser/content/profiles/avatar.mjs": [
         "browser/components/profiles/content/avatar.mjs"
       ],
@@ -157,6 +160,9 @@
       ],
       "chrome://browser/content/translations/TranslationsPanelShared.sys.mjs": [
         "browser/components/translations/content/TranslationsPanelShared.sys.mjs"
+      ],
+      "chrome://browser/content/urlbar/UrlbarInput.mjs": [
+        "browser/components/urlbar/content/UrlbarInput.mjs"
       ],
       "chrome://browser/content/webrtc/webrtc-preview.mjs": [
         "browser/components/webrtc/content/webrtc-preview/webrtc-preview.mjs"
@@ -941,12 +947,6 @@
       "resource:///modules/Discovery.sys.mjs": [
         "browser/modules/Discovery.sys.mjs"
       ],
-      "resource:///modules/DownloadsCommon.sys.mjs": [
-        "browser/components/downloads/DownloadsCommon.sys.mjs"
-      ],
-      "resource:///modules/DownloadsViewUI.sys.mjs": [
-        "browser/components/downloads/DownloadsViewUI.sys.mjs"
-      ],
       "resource:///modules/ESEDBReader.sys.mjs": [
         "browser/components/migration/ESEDBReader.sys.mjs"
       ],
@@ -1084,9 +1084,6 @@
       ],
       "resource:///modules/UnitConverterTimezone.sys.mjs": [
         "browser/components/urlbar/unitconverters/UnitConverterTimezone.sys.mjs"
-      ],
-      "resource:///modules/UrlbarUtils.sys.mjs": [
-        "browser/components/urlbar/UrlbarUtils.sys.mjs"
       ],
       "resource:///modules/WebProtocolHandlerRegistrar.sys.mjs": [
         "browser/components/protocolhandler/WebProtocolHandlerRegistrar.sys.mjs"
@@ -1259,6 +1256,9 @@
       "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs": [
         "browser/components/ipprotection/IPPChannelFilter.sys.mjs"
       ],
+      "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs": [
+        "browser/components/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
+      ],
       "resource:///modules/ipprotection/IPPExceptionsManager.sys.mjs": [
         "browser/components/ipprotection/IPPExceptionsManager.sys.mjs"
       ],
@@ -1426,6 +1426,9 @@
       ],
       "resource:///modules/topsites/constants.mjs": [
         "browser/components/topsites/constants.mjs"
+      ],
+      "resource:///modules/urlbar/private/GeolocationUtils.sys.mjs": [
+        "browser/components/urlbar/private/GeolocationUtils.sys.mjs"
       ],
       "resource:///modules/webrtcUI.sys.mjs": [
         "browser/modules/webrtcUI.sys.mjs"
@@ -5370,16 +5373,16 @@
         "toolkit/components/processsingleton/CustomElementsListener.sys.mjs"
       ],
       "resource://gre/modules/DAPIncrementality.sys.mjs": [
-        "toolkit/components/telemetry/dap/DAPIncrementality.sys.mjs"
+        "toolkit/components/dap/DAPIncrementality.sys.mjs"
       ],
       "resource://gre/modules/DAPReportController.sys.mjs": [
-        "toolkit/components/telemetry/dap/DAPReportController.sys.mjs"
+        "toolkit/components/dap/DAPReportController.sys.mjs"
       ],
       "resource://gre/modules/DAPTelemetrySender.sys.mjs": [
-        "toolkit/components/telemetry/dap/DAPTelemetrySender.sys.mjs"
+        "toolkit/components/dap/DAPTelemetrySender.sys.mjs"
       ],
       "resource://gre/modules/DAPVisitCounter.sys.mjs": [
-        "toolkit/components/telemetry/dap/DAPVisitCounter.sys.mjs"
+        "toolkit/components/dap/DAPVisitCounter.sys.mjs"
       ],
       "resource://gre/modules/DateTimePickerPanel.sys.mjs": [
         "toolkit/modules/DateTimePickerPanel.sys.mjs"
@@ -6473,6 +6476,9 @@
       "resource://newtab/lib/HighlightsFeed.sys.mjs": [
         "browser/extensions/newtab/lib/HighlightsFeed.sys.mjs"
       ],
+      "resource://newtab/lib/ImportHelper.sys.mjs": [
+        "browser/extensions/newtab/lib/ImportHelper.sys.mjs"
+      ],
       "resource://newtab/lib/InferredModel/FeatureModel.sys.mjs": [
         "browser/extensions/newtab/lib/InferredModel/FeatureModel.sys.mjs"
       ],
@@ -7105,6 +7111,9 @@
       ],
       "resource://testing-common/FormHistoryTestUtils.sys.mjs": [
         "toolkit/components/satchel/test/FormHistoryTestUtils.sys.mjs"
+      ],
+      "resource://testing-common/GeolocationTestUtils.sys.mjs": [
+        "browser/components/urlbar/tests/quicksuggest/GeolocationTestUtils.sys.mjs"
       ],
       "resource://testing-common/HandlerServiceTestUtils.sys.mjs": [
         "uriloader/exthandler/tests/HandlerServiceTestUtils.sys.mjs"

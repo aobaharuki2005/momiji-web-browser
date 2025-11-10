@@ -128,10 +128,12 @@ class _OpenSearchManager {
    */
   updateOpenSearchBadge(win) {
     let engines = this.#offeredEngines.get(win.gBrowser.selectedBrowser);
-    win.gURLBar.addSearchEngineHelper.setEnginesFromBrowser(
-      win.gBrowser.selectedBrowser,
-      engines || []
-    );
+    for (let urlbar of win.document.querySelectorAll("moz-urlbar")) {
+      urlbar.addSearchEngineHelper.setEnginesFromBrowser(
+        win.gBrowser.selectedBrowser,
+        engines || []
+      );
+    }
 
     let searchBar = win.document.getElementById("searchbar");
     if (!searchBar) {

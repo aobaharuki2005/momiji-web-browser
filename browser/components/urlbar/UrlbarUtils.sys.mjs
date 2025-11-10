@@ -2352,6 +2352,13 @@ export class UrlbarQueryContext {
    *   The name under which the local form history is registered.
    */
   constructor(options) {
+    // Clone to make sure all properties belong to the system realm.
+    // This is required because this method is called from a window.
+    // Not doing this causes a window leak if providers don't properly
+    // clean up after a query and keep references to UrlbarQueryContext
+    // properties (e.g. ProviderPlaces).
+    options = structuredClone(options);
+
     this._checkRequiredOptions(options, [
       "allowAutofill",
       "isPrivate",

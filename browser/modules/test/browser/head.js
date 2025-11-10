@@ -321,8 +321,8 @@ async function initPageActionsTest() {
 
   // Make the main button visible. It's not unless the window is narrow. This
   // test isn't concerned with that behavior. We have other tests for that.
-  BrowserPageActions.mainButtonNode.style.visibility = "visible";
+  BrowserPageActions.mainButtonNode.style.display = "flex";
   registerCleanupFunction(() => {
-    BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
+    BrowserPageActions.mainButtonNode.style.removeProperty("display");
   });
 }

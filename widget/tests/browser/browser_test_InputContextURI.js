@@ -6,7 +6,10 @@
 const gDOMWindowUtils = EventUtils._getDOMWindowUtils(window);
 
 function promiseURLBarFocus() {
-  const waitForFocusInURLBar = BrowserTestUtils.waitForEvent(gURLBar, "focus");
+  const waitForFocusInURLBar = BrowserTestUtils.waitForEvent(
+    gURLBar.inputField,
+    "focus"
+  );
   gURLBar.blur();
   gURLBar.focus();
   return Promise.all([

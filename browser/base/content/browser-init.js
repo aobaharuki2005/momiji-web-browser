@@ -154,6 +154,10 @@ var gBrowserInit = {
 
     gBrowser = new window.Tabbrowser();
     gBrowser.init();
+    gURLBar.addGBrowserListeners();
+    if (Services.prefs.getBoolPref("browser.search.widget.new", false)) {
+      document.getElementById("searchbar-new")?.addGBrowserListeners();
+    }
 
     BrowserUtils.callModulesFromCategory(
       { categoryName: "browser-window-domcontentloaded" },
@@ -163,13 +167,6 @@ var gBrowserInit = {
     FirefoxViewHandler.init();
 
     gURLBar.initPlaceHolder();
-
-    if (Services.prefs.getBoolPref("browser.search.widget.new", false)) {
-      new UrlbarInput({
-        textbox: document.getElementById("searchbar-new"),
-        sapName: "searchbar",
-      });
-    }
 
     // Hack to ensure that the various initial pages favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
@@ -428,6 +425,9 @@ var gBrowserInit = {
 
     BookmarkingUI.init();
     gURLBar.delayedStartupInit();
+    if (Services.prefs.getBoolPref("browser.search.widget.new", false)) {
+      document.getElementById("searchbar-new")?.delayedStartupInit();
+    }
     gProtectionsHandler.init();
     gTrustPanelHandler.init();
 

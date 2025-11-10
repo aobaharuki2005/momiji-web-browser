@@ -430,7 +430,8 @@
 /* The page actions menu is hidden by default, it is only shown in small
    windows as the overflow target of multiple page action buttons */
 #pageActionButton {
-  visibility: collapse;
+  /* TODO: display: none fixes browser_startup_images.js but breaks some tests. */
+  display: none;
 }
 
 /* 680px is just below half of popular 1366px wide screens, so when putting two
@@ -444,7 +445,7 @@
     display: none;
   }
   #pageActionButton[multiple-children] {
-    visibility: visible;
+    display: revert;
   }
 }
 

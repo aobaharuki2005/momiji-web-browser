@@ -40,7 +40,9 @@ add_task(async function changeSelectionUsingKeyboard() {
 
   await BrowserTestUtils.switchTab(gBrowser, tab3);
   info("Move focus to location bar using the keyboard");
-  await synthesizeKeyAndWaitForFocus(gURLBar, "l", { accelKey: true });
+  await synthesizeKeyAndWaitForFocus(gURLBar.inputField, "l", {
+    accelKey: true,
+  });
   is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
 
   info("Move focus to the selected tab using the keyboard");
