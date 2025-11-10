@@ -912,6 +912,14 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
   nsCOMPtr<nsIFilePickerShownCallback> callback =
       new HTMLInputElement::nsFilePickerShownCallback(this, filePicker);
 
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    // Used by WebDriver BiDi to emit input.fileDialogOpened whenever an input
+    // type=file opens a file picker.
+    obs->NotifyObservers(ToSupports(this), "file-input-picker-opening",
+                         nullptr);
+  }
+
   if (!oldFiles.IsEmpty() && aType != FILE_PICKER_DIRECTORY) {
     nsAutoString path;
 
