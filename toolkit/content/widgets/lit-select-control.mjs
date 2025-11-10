@@ -243,7 +243,6 @@ export class SelectControlBaseElement extends MozLitElement {
           this.value = nextItem.value;
           nextItem.click();
         }
-        nextItem.focus();
         return;
       }
     }
