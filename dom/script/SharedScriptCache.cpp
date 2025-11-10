@@ -244,10 +244,26 @@ void SharedScriptCache::UpdateDiskCache() {
       }
     }
 
-    ScriptLoader::EncodeBytecodeAndSave(fc, loadedScript);
+    Vector<uint8_t> compressed;
+    if (!ScriptLoader::EncodeAndCompress(
+            fc, loadedScript, loadedScript->GetStencil(),
+            loadedScript->SRIAndBytecode(), compressed)) {
+      loadedScript->DropDiskCacheReference();
+      loadedScript->DropBytecode();
+      TRACE_FOR_TEST(loadedScript, "diskcache:failed");
+      continue;
+    }
+
+    if (!ScriptLoader::SaveToDiskCache(loadedScript, compressed)) {
+      loadedScript->DropDiskCacheReference();
+      loadedScript->DropBytecode();
+      TRACE_FOR_TEST(loadedScript, "diskcache:failed");
+      continue;
+    }
 
     loadedScript->DropDiskCacheReference();
     loadedScript->DropBytecode();
+    TRACE_FOR_TEST(loadedScript, "diskcache:saved");
   }
 
   if (fc) {
