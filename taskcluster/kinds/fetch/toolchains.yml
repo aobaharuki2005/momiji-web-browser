@@ -222,9 +222,9 @@ wine:
     description: wine source code
     fetch:
         type: static-url
-        url: https://dl.winehq.org/wine/source/8.0/wine-8.0.2.tar.xz
-        sha256: 6ec8fb6f2c72d576cb11f52b2f8d59af64404802154651d122b98466d91dc847
-        size: 29060452
+        url: https://dl.winehq.org/wine/source/10.x/wine-10.18.tar.xz
+        sha256: 51fb7273d65d09dea032c4a5e2197b12724b27ca360e1a622b2373d1ee50ad7b
+        size: 32970828
         gpg-signature:
             sig-url: "{url}.sign"
             key-path: build/unix/build-gcc/DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D.key
