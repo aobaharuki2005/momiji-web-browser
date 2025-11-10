@@ -496,12 +496,15 @@ Maybe<AnchorPosInfo> AnchorPositioningUtils::ResolveAnchorPosRect(
     const nsIFrame* aPositioned, const nsIFrame* aAbsoluteContainingBlock,
     const nsAtom* aAnchorName, bool aCBRectIsvalid,
     AnchorPosResolutionCache* aResolutionCache) {
-  MOZ_ASSERT(aPositioned->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
-  MOZ_ASSERT(aPositioned->GetParent() == aAbsoluteContainingBlock);
-
   if (!aPositioned) {
     return Nothing{};
   }
+
+  if (!aPositioned->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    return Nothing{};
+  }
+
+  MOZ_ASSERT(aPositioned->GetParent() == aAbsoluteContainingBlock);
 
   const auto* anchorName = GetUsedAnchorName(aPositioned, aAnchorName);
   if (!anchorName) {
