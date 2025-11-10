@@ -210,8 +210,8 @@ void LIRGeneratorX86Shared::lowerDivI(MDiv* div) {
     return;
   }
 
-  LDivI* lir = new (alloc())
-      LDivI(useRegister(div->lhs()), useRegister(div->rhs()), tempFixed(edx));
+  auto* lir = new (alloc()) LDivI(useFixedAtStart(div->lhs(), eax),
+                                  useRegister(div->rhs()), tempFixed(edx));
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
@@ -241,8 +241,8 @@ void LIRGeneratorX86Shared::lowerModI(MMod* mod) {
     return;
   }
 
-  LModI* lir = new (alloc())
-      LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), tempFixed(eax));
+  auto* lir = new (alloc()) LModI(useFixedAtStart(mod->lhs(), eax),
+                                  useRegister(mod->rhs()), tempFixed(eax));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }
@@ -373,8 +373,8 @@ void LIRGeneratorX86Shared::lowerUDiv(MDiv* div) {
     return;
   }
 
-  auto* lir = new (alloc())
-      LUDiv(useRegister(div->lhs()), useRegister(div->rhs()), tempFixed(edx));
+  auto* lir = new (alloc()) LUDiv(useFixedAtStart(div->lhs(), eax),
+                                  useRegister(div->rhs()), tempFixed(edx));
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
@@ -404,8 +404,8 @@ void LIRGeneratorX86Shared::lowerUMod(MMod* mod) {
     return;
   }
 
-  auto* lir = new (alloc())
-      LUMod(useRegister(mod->lhs()), useRegister(mod->rhs()), tempFixed(eax));
+  auto* lir = new (alloc()) LUMod(useFixedAtStart(mod->lhs(), eax),
+                                  useRegister(mod->rhs()), tempFixed(eax));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }
