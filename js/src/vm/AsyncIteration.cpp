@@ -148,17 +148,15 @@ AsyncGeneratorRequest* AsyncGeneratorObject::createRequest(
       return true;
     }
 
-    Rooted<ListObject*> queue(cx, ListObject::create(cx));
+    ListObject* queue = ListObject::create(cx);
     if (!queue) {
       return false;
     }
 
-    RootedValue requestVal(cx, ObjectValue(*generator->singleQueueRequest()));
-    if (!queue->append(cx, requestVal)) {
+    if (!queue->append(cx, ObjectValue(*generator->singleQueueRequest()))) {
       return false;
     }
-    requestVal = ObjectValue(*request);
-    if (!queue->append(cx, requestVal)) {
+    if (!queue->append(cx, ObjectValue(*request))) {
       return false;
     }
 
@@ -166,9 +164,7 @@ AsyncGeneratorRequest* AsyncGeneratorObject::createRequest(
     return true;
   }
 
-  Rooted<ListObject*> queue(cx, generator->queue());
-  RootedValue requestVal(cx, ObjectValue(*request));
-  return queue->append(cx, requestVal);
+  return generator->queue()->append(cx, ObjectValue(*request));
 }
 
 /* static */

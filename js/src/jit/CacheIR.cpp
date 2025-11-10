@@ -4043,8 +4043,7 @@ AttachDecision HasPropIRGenerator::tryAttachSmallObjectVariableKey(
       return AttachDecision::NoAction;
     }
 
-    RootedValue key(cx_, StringValue(iter->key().toAtom()));
-    if (!keyListObj->append(cx_, key)) {
+    if (!keyListObj->append(cx_, StringValue(iter->key().toAtom()))) {
       cx_->recoverFromOutOfMemory();
       return AttachDecision::NoAction;
     }
