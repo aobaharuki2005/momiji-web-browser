@@ -522,7 +522,7 @@ function getTableName(tokenName) {
 }
 
 module.exports = {
-  source: ["design-tokens.json"],
+  source: ["src/design-tokens.json"],
   format: {
     "css/variables/shared": createDesktopFormat(),
     "css/variables/brand": createDesktopFormat("brand"),

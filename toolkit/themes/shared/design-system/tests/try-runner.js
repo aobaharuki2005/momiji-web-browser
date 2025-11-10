@@ -27,7 +27,7 @@ function buildFilesWithTestConfig() {
   // Use our real config, just modify some values for the test. This prevents us
   // from re-building the CSS files that get checked in when we run the tests.
   let testConfig = Object.assign({}, config);
-  testConfig.source = [path.join(__dirname, "../design-tokens.json")];
+  testConfig.source = [path.join(__dirname, "../src/design-tokens.json")];
   testConfig.platforms.css.buildPath = TEST_BUILD_PATH;
   testConfig.platforms.tables.buildPath = TEST_BUILD_PATH;
   testConfig.platforms.figma.buildPath = TEST_BUILD_PATH;
