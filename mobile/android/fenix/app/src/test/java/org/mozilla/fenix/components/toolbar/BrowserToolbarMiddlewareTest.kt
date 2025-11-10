@@ -36,6 +36,7 @@ import mozilla.components.browser.state.action.ShareResourceAction
 import mozilla.components.browser.state.action.TabListAction.AddTabAction
 import mozilla.components.browser.state.action.TabListAction.RemoveTabAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.ext.getUrl
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
@@ -75,6 +76,8 @@ import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.compose.browser.toolbar.store.ProgressBarConfig
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
@@ -1733,12 +1736,15 @@ class BrowserToolbarMiddlewareTest {
         every { settings.shouldUseBottomToolbar } returns false
         val currentTab = createTab("test.com", private = false)
         val captureMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
+        val engine = mockk<Engine>(relaxed = true)
+        val session = mockk<EngineSession>(relaxed = true)
+        every { engine.createSession() } returns session
         val browserStore = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(currentTab),
                 selectedTabId = currentTab.id,
             ),
-            middleware = listOf(captureMiddleware),
+            middleware = listOf(captureMiddleware) + EngineMiddleware.create(engine),
         )
         val middleware = buildMiddleware(appStore, browserStore = browserStore)
         val toolbarStore = buildStore(middleware)
@@ -1774,7 +1780,7 @@ class BrowserToolbarMiddlewareTest {
                 tabs = listOf(currentTab),
                 selectedTabId = currentTab.id,
             ),
-            middleware = listOf(captureMiddleware),
+            middleware = listOf(captureMiddleware) + EngineMiddleware.create(mockk()),
         )
         val middleware = buildMiddleware(appStore, browserStore = browserStore)
         val toolbarStore = buildStore(middleware)

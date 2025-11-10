@@ -12,6 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState.Source
@@ -41,7 +42,11 @@ class CustomTabIntentProcessorTest {
     @Test
     fun processCustomTabIntentWithDefaultHandlers() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(middleware))
+        val store = BrowserStore(
+            middleware = listOf(middleware) + EngineMiddleware.create(
+                engine = mock(),
+            ),
+        )
         val useCases = SessionUseCases(store)
         val customTabsUseCases = CustomTabsUseCases(store, useCases.loadUrl)
 
@@ -83,7 +88,11 @@ class CustomTabIntentProcessorTest {
     @Test
     fun processCustomTabIntentWithAdditionalHeaders() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(middleware))
+        val store = BrowserStore(
+            middleware = listOf(middleware) + EngineMiddleware.create(
+                engine = mock(),
+            ),
+        )
         val useCases = SessionUseCases(store)
         val customTabsUseCases = CustomTabsUseCases(store, useCases.loadUrl)
 
@@ -132,7 +141,11 @@ class CustomTabIntentProcessorTest {
     @Test
     fun processPrivateCustomTabIntentWithDefaultHandlers() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
-        val store = BrowserStore(middleware = listOf(middleware))
+        val store = BrowserStore(
+            middleware = listOf(middleware) + EngineMiddleware.create(
+                engine = mock(),
+            ),
+        )
         val useCases = SessionUseCases(store)
         val customTabsUseCases = CustomTabsUseCases(store, useCases.loadUrl)
 

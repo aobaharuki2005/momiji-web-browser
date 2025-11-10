@@ -94,7 +94,7 @@ class CfrMiddlewareTest {
     @Test
     fun `GIVEN mozilla tab WHEN UpdateSecurityInfoAction is intercepted THEN showTrackingProtectionCfr is not changed to true`() {
         if (onboardingExperiment.isCfrEnabled) {
-            val mozillaTab = createTab(id = "1", url = "https://www.mozilla.org")
+            val mozillaTab = createTab(tabId = 1, tabUrl = "https://www.mozilla.org")
             val updateSecurityInfoAction = ContentAction.UpdateSecurityInfoAction(
                 "1",
                 SecurityInfoState(

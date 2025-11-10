@@ -4,9 +4,6 @@
 
 package mozilla.components.support.test.libstate.ext
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -17,10 +14,6 @@ import mozilla.components.lib.state.Store
  * state changes.
  */
 fun <S : State, A : Action> Store<S, A>.waitUntilIdle() {
-    val scopeField = Store::class.java.getDeclaredField("scope")
-    scopeField.isAccessible = true
-    val scope = scopeField.get(this) as CoroutineScope
-    runBlocking {
-        scope.coroutineContext[Job]?.children?.forEach { it.join() }
-    }
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=1980348
+    // this is no longer required and will be deleted later in the stack
 }

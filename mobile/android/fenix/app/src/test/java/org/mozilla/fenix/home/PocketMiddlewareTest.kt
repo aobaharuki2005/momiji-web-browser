@@ -9,8 +9,11 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import mozilla.components.service.pocket.PocketStoriesService
 import mozilla.components.service.pocket.PocketStory.ContentRecommendation
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
@@ -146,10 +149,11 @@ class PocketMiddlewareTest {
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `WHEN PocketStoriesCategoriesChange is dispatched THEN intercept and dispatch PocketStoriesCategoriesSelectionsChange`() = runTestOnMain {
+    fun `WHEN PocketStoriesCategoriesChange is dispatched THEN intercept and dispatch PocketStoriesCategoriesSelectionsChange`() = runTest {
         val dataStore = FakeDataStore()
-        val currentCategories = listOf(mockk<PocketRecommendedStoriesCategory>())
+        val currentCategories = listOf<PocketRecommendedStoriesCategory>()
         val pocketMiddleware = PocketMiddleware(
             mockk(),
             dataStore,
@@ -169,6 +173,8 @@ class PocketMiddlewareTest {
         )
 
         appStore.dispatch(ContentRecommendationsAction.PocketStoriesCategoriesChange(currentCategories)).joinBlocking()
+
+        advanceUntilIdle()
 
         verify {
             appStore.dispatch(
@@ -265,7 +271,7 @@ class PocketMiddlewareTest {
     @Test
     fun `WHEN restoreSelectedCategories is called THEN dispatch PocketStoriesCategoriesSelectionsChange with data read from the persistence layer`() = runTestOnMain {
         val dataStore = FakeDataStore("testCategory")
-        val currentCategories = listOf(mockk<PocketRecommendedStoriesCategory>())
+        val currentCategories = listOf<PocketRecommendedStoriesCategory>()
         val captorMiddleware = CaptureActionsMiddleware<AppState, AppAction>()
         val appStore = AppStore(
             initialState = AppState(),

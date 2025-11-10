@@ -117,6 +117,7 @@ class TranslationsMiddlewareTest {
 
         doReturn(mockSessionState).`when`(tab).translationsState
         doReturn(mockBrowserState).`when`(state).translationEngine
+        whenever(store.state).thenReturn(state)
     }
 
     @Test

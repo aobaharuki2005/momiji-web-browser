@@ -5,7 +5,6 @@
 package mozilla.components.lib.state
 
 import androidx.annotation.MainThread
-import mozilla.components.lib.state.internal.UiStoreDispatcher
 
 /**
  * A generic store holding an immutable [State] that will always run on the Main thread.
@@ -26,5 +25,4 @@ open class UiStore<S : State, A : Action>(
     initialState,
     reducer,
     middleware,
-    UiStoreDispatcher(),
 )

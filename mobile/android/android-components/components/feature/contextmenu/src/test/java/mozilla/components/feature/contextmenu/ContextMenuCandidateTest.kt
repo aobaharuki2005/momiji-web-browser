@@ -155,6 +155,9 @@ class ContextMenuCandidateTest {
                     createTab("https://www.mozilla.org", contextId = "1"),
                 ),
             ),
+            middleware = EngineMiddleware.create(
+                engine = mock(),
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
@@ -184,6 +187,9 @@ class ContextMenuCandidateTest {
                 tabs = listOf(
                     createTab("https://www.mozilla.org"),
                 ),
+            ),
+            middleware = EngineMiddleware.create(
+                engine = mock(),
             ),
         )
 
@@ -255,6 +261,9 @@ class ContextMenuCandidateTest {
                 ),
                 selectedTabId = "mozilla",
             ),
+            middleware = EngineMiddleware.create(
+                engine = mock(),
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
@@ -282,7 +291,7 @@ class ContextMenuCandidateTest {
     fun `Open Link in New Tab with text fragment`() {
         val middleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val store = BrowserStore(
-            middleware = listOf(middleware),
+            middleware = listOf(middleware) + EngineMiddleware.create(engine = mock()),
             initialState = BrowserState(
                 tabs = listOf(
                     createTab("https://www.mozilla.org", id = "mozilla"),
@@ -415,6 +424,9 @@ class ContextMenuCandidateTest {
                 ),
                 selectedTabId = "mozilla",
             ),
+            middleware = EngineMiddleware.create(
+                engine = mock(),
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
@@ -485,6 +497,9 @@ class ContextMenuCandidateTest {
                     createTab("https://www.mozilla.org", id = "mozilla"),
                 ),
                 selectedTabId = "mozilla",
+            ),
+            middleware = EngineMiddleware.create(
+                engine = mock(),
             ),
         )
 
@@ -633,6 +648,9 @@ class ContextMenuCandidateTest {
                 ),
                 selectedTabId = "mozilla",
             ),
+            middleware = EngineMiddleware.create(
+                engine = mock(),
+            ),
         )
 
         val tabsUseCases = TabsUseCases(store)
@@ -666,6 +684,9 @@ class ContextMenuCandidateTest {
                     createTab("https://www.mozilla.org", id = "mozilla", contextId = "1"),
                 ),
                 selectedTabId = "mozilla",
+            ),
+            middleware = EngineMiddleware.create(
+                engine = mock(),
             ),
         )
 

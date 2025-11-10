@@ -265,6 +265,7 @@ class BrowserFragmentTest {
 
         val newSelectedTab: TabSessionState = mockk(relaxed = true)
         every { newSelectedTab.content.loadRequest?.triggeredByRedirect } returns true
+        every { newSelectedTab.parentId } returns null
 
         browserFragment.observeTabSource(store)
         addAndSelectTab(newSelectedTab)

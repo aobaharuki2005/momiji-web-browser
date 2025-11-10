@@ -20,6 +20,7 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
@@ -123,6 +124,7 @@ class PromptFeatureTest {
                 ),
                 selectedTabId = tabId,
             ),
+            middleware = EngineMiddleware.create(mock()),
         )
         loginPicker = mock()
         creditCardPicker = mock()

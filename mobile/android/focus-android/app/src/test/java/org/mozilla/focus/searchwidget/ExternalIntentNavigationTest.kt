@@ -100,7 +100,7 @@ internal class ExternalIntentNavigationTest {
 
     @Test
     fun `GIVEN a tab is already open WHEN trying to navigate to the current tab THEN navigate to it and return true`() {
-        activity.components.tabsUseCases.addTab(url = "https://mozilla.com")
+        activity.components.tabsUseCases.addTab(url = "https://mozilla.com", private = true)
         activity.components.store.waitUntilIdle()
         val result = ExternalIntentNavigation.handleBrowserTabAlreadyOpen(activity)
         activity.components.appStore.waitUntilIdle()

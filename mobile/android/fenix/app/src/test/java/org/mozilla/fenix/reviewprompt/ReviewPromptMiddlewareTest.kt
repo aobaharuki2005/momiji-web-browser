@@ -138,10 +138,12 @@ class ReviewPromptMiddlewareTest {
 
     @Test
     fun `GIVEN check ran WHEN check requested again THEN does nothing`() {
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        mainCriteria = sequenceOf()
+        subCriteria = sequenceOf()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
         val expectedState = store.state
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(expectedState, store.state)
     }

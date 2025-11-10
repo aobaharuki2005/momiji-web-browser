@@ -25,12 +25,14 @@ import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHig
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.MicrophoneChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.NotificationChangedAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.PersistentStorageChangedAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.Permission.AppAudio
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
@@ -128,7 +130,19 @@ class SitePermissionsFeatureTest {
             url = "https://www.mozilla.org",
             id = SESSION_ID,
         )
-        mockStore = spy(BrowserStore(initialState = BrowserState(tabs = listOf(selectedTab), selectedTabId = selectedTab.id)))
+        val mockEngine = mock<Engine>()
+        whenever(mockEngine.createSession()).thenReturn(mock())
+        mockStore = spy(
+            BrowserStore(
+                initialState = BrowserState(
+                    tabs = listOf(selectedTab),
+                    selectedTabId = selectedTab.id,
+                ),
+                middleware = EngineMiddleware.create(
+                    engine = mockEngine,
+                ),
+            ),
+        )
         sitePermissionFeature = spy(
             SitePermissionsFeature(
                 context = testContext,

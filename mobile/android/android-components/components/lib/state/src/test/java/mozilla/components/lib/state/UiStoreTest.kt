@@ -5,9 +5,6 @@
 package mozilla.components.lib.state
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
@@ -101,23 +98,5 @@ class UiStoreTest {
         store.dispatch(TestAction.IncrementAction)
 
         assertTrue(caughtException is IOException)
-    }
-
-    @Test(expected = IllegalThreadStateException::class)
-    fun `Dispatching on a non-UI dispatcher will throw an exception`() = runTestOnMain {
-        val observingMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
-            CoroutineScope(Dispatchers.IO).launch {
-                store.dispatch(TestAction.IncrementAction)
-            }
-
-            next(action)
-        }
-        val store = UiStore(
-            TestState(counter = 0),
-            ::reducer,
-            listOf(observingMiddleware),
-        )
-
-        store.dispatch(TestAction.DoNothingAction)
     }
 }

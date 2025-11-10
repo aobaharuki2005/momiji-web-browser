@@ -315,6 +315,13 @@ class TrustPanelMiddlewareTest {
             trustPanelState = TrustPanelState(
                 sitePermissions = null,
                 sessionState = sessionState,
+                websitePermissionsState = mapOf(
+                    PhoneFeature.AUTOPLAY to WebsitePermission.Autoplay(
+                        autoplayValue = AutoplayValue.AUTOPLAY_BLOCK_AUDIBLE,
+                        isVisible = true,
+                        deviceFeature = PhoneFeature.CAMERA,
+                    ),
+                ),
             ),
         )
 
@@ -352,6 +359,13 @@ class TrustPanelMiddlewareTest {
             trustPanelState = TrustPanelState(
                 sitePermissions = originalSitePermissions,
                 sessionState = sessionState,
+                websitePermissionsState = mapOf(
+                    PhoneFeature.AUTOPLAY to WebsitePermission.Autoplay(
+                        autoplayValue = AutoplayValue.AUTOPLAY_BLOCK_AUDIBLE,
+                        isVisible = true,
+                        deviceFeature = PhoneFeature.CAMERA,
+                    ),
+                ),
             ),
         )
 

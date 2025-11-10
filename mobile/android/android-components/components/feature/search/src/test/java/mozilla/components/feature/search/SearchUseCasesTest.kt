@@ -9,6 +9,7 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
@@ -71,7 +72,9 @@ class SearchUseCasesTest {
                     regionSearchEngines = listOf(searchEngine),
                 ),
             ),
-            middleware = listOf(middleware),
+            middleware = listOf(middleware) + EngineMiddleware.create(
+                engine = mock(),
+            ),
         )
 
         useCases = SearchUseCases(

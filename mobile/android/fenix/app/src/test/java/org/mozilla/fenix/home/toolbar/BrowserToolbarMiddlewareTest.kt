@@ -700,7 +700,7 @@ class BrowserToolbarMiddlewareTest {
             browserStore.state.search.selectedOrDefaultSearchEngine,
         )
         assertSearchSelectorEquals(
-            expectedSearchSelector(selectedSearchEngine),
+            expectedSearchSelector(selectedSearchEngine, listOf(otherSearchEngine)),
             toolbarStore.state.displayState.pageActionsStart[0] as SearchSelectorAction,
         )
     }

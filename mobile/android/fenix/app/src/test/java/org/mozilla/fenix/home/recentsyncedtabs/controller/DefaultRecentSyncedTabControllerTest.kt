@@ -12,6 +12,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
@@ -86,6 +87,7 @@ class DefaultRecentSyncedTabControllerTest {
                 ),
                 selectedTabId = nonSyncId,
             ),
+            middleware = EngineMiddleware.create(engine = mockk(relaxed = true)),
         )
         val selectOrAddTabUseCase = TabsUseCases.SelectOrAddUseCase(store)
 

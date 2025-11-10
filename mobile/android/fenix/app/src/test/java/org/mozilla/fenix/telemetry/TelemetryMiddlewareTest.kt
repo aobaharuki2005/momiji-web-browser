@@ -16,6 +16,7 @@ import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.ExtensionsProcessAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TranslationsAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
@@ -44,6 +45,7 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.fake.FakeMetricController
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -66,7 +68,7 @@ class TelemetryMiddlewareTest {
     val gleanRule = FenixGleanTestRule(ApplicationProvider.getApplicationContext())
 
     private val clock = FakeClock()
-    private val metrics: MetricController = mockk()
+    private val metrics = FakeMetricController()
 
     @Before
     fun setUp() {
@@ -85,7 +87,7 @@ class TelemetryMiddlewareTest {
         every { engine.createSession(any(), any()) } returns mockk(relaxed = true)
 
         store = BrowserStore(
-            middleware = listOf(telemetryMiddleware),
+            middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine),
             initialState = BrowserState(),
         )
         appStore = AppStore()
@@ -447,7 +449,7 @@ class TelemetryMiddlewareTest {
     fun `WHEN uri loaded to engine THEN matching event is sent to metrics`() = runTest {
         store.dispatch(EngineAction.LoadUrlAction("", "")).joinBlocking()
 
-        verify { metrics.track(Event.GrowthData.FirstUriLoadForDay) }
+        assertTrue(metrics.trackedEvents.contains(Event.GrowthData.FirstUriLoadForDay))
     }
 
     @Test

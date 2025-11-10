@@ -11,6 +11,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.TabSessionState
@@ -275,6 +276,7 @@ class ReaderViewFeatureTest {
                     tabs = listOf(tab),
                     selectedTabId = tab.id,
                 ),
+                middleware = EngineMiddleware.create(engine),
             ),
         )
 
