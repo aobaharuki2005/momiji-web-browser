@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/MediaSessionBinding.h"
+#include "mozilla/gfx/2D.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -31,6 +32,9 @@ class MediaImageData {
   nsString mSizes;
   nsString mSrc;
   nsString mType;
+  // Maybe null, only the first valid artwork is fetched by
+  // MediaMetadata::FetchArtwork.
+  RefPtr<mozilla::gfx::DataSourceSurface> mDataSurface;
 };
 
 class MediaMetadataBase {
@@ -48,6 +52,9 @@ class MediaMetadataBase {
   nsCString mUrl;
   CopyableTArray<MediaImageData> mArtwork;
 };
+
+using MediaMetadataBasePromise =
+    mozilla::MozPromise<MediaMetadataBase, nsresult, true>;
 
 class MediaMetadata final : public nsISupports,
                             public nsWrapperCache,
@@ -85,10 +92,10 @@ class MediaMetadata final : public nsISupports,
   void SetArtwork(JSContext* aCx, const Sequence<JSObject*>& aArtwork,
                   ErrorResult& aRv);
 
-  // This would expose MediaMetadataBase's members as public, so use this method
-  // carefully. Now we only use this when we want to update the metadata to the
-  // media session controller in the chrome process.
-  MediaMetadataBase* AsMetadataBase() { return this; }
+  // This function will always resolve successfully, even when no artwork was
+  // loaded.
+  // At most, it returns one decoded image of the artwork.
+  RefPtr<MediaMetadataBasePromise> LoadMetadataArtwork();
 
  private:
   MediaMetadata(nsIGlobalObject* aParent, const nsString& aTitle,
@@ -100,6 +107,10 @@ class MediaMetadata final : public nsISupports,
   // `aArtwork` if the conversion works, otherwise throw a type error in `aRv`.
   void SetArtworkInternal(const Sequence<MediaImage>& aArtwork,
                           ErrorResult& aRv);
+
+  static RefPtr<MediaMetadataBasePromise> FetchArtwork(
+      const MediaMetadataBase& aMetadata, nsIPrincipal* aPrincipal,
+      const size_t aIndex);
 
   nsCOMPtr<nsIGlobalObject> mParent;
 };
