@@ -450,11 +450,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   //////////////////////////////////////////////////////////////////////////////
   // Downcasting and types
 
-  inline bool IsAbbreviation() const {
-    return mContent &&
-           mContent->IsAnyOfHTMLElements(nsGkAtoms::abbr, nsGkAtoms::acronym);
-  }
-
   ApplicationAccessible* AsApplication();
 
   DocAccessible* AsDoc();

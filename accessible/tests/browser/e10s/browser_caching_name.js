@@ -593,3 +593,52 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test abbr name change notification
+ */
+addAccessibleTask(
+  `<abbr id="abbr" title="JavaScript Object Notation">JSON</abbr>
+   <abbr id="labelled-abbr" aria-label="YML"
+         title="Yet Another Markup Language">YAML</abbr>`,
+  async function testAbbrName(browser, docAcc) {
+    const abbr = findAccessibleChildByID(docAcc, "abbr");
+    testName(abbr, "JavaScript Object Notation");
+
+    let nameChanged = waitForEvent(EVENT_NAME_CHANGE, abbr);
+    invokeSetAttribute(browser, "abbr", "title", "Jason's Other Nettle");
+    await nameChanged;
+    testName(abbr, "Jason's Other Nettle");
+
+    nameChanged = waitForEvent(EVENT_NAME_CHANGE, abbr);
+    invokeSetAttribute(browser, "abbr", "title");
+    await nameChanged;
+    testName(abbr, null);
+
+    const labelledAbbr = findAccessibleChildByID(docAcc, "labelled-abbr");
+    testName(labelledAbbr, "YML");
+
+    let events = waitForEvents({
+      expected: [[EVENT_DESCRIPTION_CHANGE, labelledAbbr]],
+      unexpected: [[EVENT_NAME_CHANGE, labelledAbbr]],
+    });
+    invokeSetAttribute(
+      browser,
+      "labelled-abbr",
+      "title",
+      "Your Another Marker Lye"
+    );
+    await events;
+    is(labelledAbbr.description, "Your Another Marker Lye");
+
+    events = waitForEvents([
+      [EVENT_NAME_CHANGE, labelledAbbr],
+      // Bug 1997464 - When losing ARIA name, we lose the description that is used
+      // now for the name.
+      // [EVENT_DESCRIPTION_CHANGE, labelledAbbr],
+    ]);
+    invokeSetAttribute(browser, "labelled-abbr", "aria-label");
+    await events;
+  },
+  { chrome: true, topLevel: true }
+);
