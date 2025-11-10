@@ -133,3 +133,5 @@ GFXINFO_FEATURE(GL_NORM16_TEXTURES, "GL_NORM16", "gl.norm16-textures")
 GFXINFO_FEATURE(HARDWARE_VIDEO_ENCODING, "HARDWARE_VIDEO_ENCODING", "hardwarevideoencoding")
 /* Whether WebGPU's GPUExternalTexture API is supported, starting in 143. */
 GFXINFO_FEATURE(WEBGPU_EXTERNAL_TEXTURE, "WEBGPU_EXTERNAL_TEXTURE", "webgpu.external-texture")
+/* Whether Mesa threading is allowed, starting in 146. */
+GFXINFO_FEATURE(MESA_THREADING, "MESA_THREADING", "mesa.threading")
