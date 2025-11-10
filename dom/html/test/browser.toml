@@ -34,6 +34,8 @@ support-files = [
 
 ["browser_form_post_from_file_to_http.js"]
 
+["browser_input_file_picker_opening_notification.js"]
+
 ["browser_refresh_after_document_write.js"]
 support-files = ["file_refresh_after_document_write.html"]
 
