@@ -7821,7 +7821,7 @@ JS_PUBLIC_API bool JS::GetFlowIdFromJSMicroTask(const MicroTask& entry,
   return true;
 }
 
-JS_PUBLIC_API bool JS::IsJSMicroTask(const JS::Value& hv) {
+JS_PUBLIC_API bool JS::IsJSMicroTask(const JS::MicroTask& hv) {
   if (!hv.isObject()) {
     return false;
   }
