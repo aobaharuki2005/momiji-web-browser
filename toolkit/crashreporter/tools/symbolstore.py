@@ -320,11 +320,27 @@ def IsInDir(file, dir):
         return False
 
 
+def TryGetGitRepoInfoFromHg(srcdir):
+    rev = os.environ.get("MOZ_SOURCE_CHANGESET")
+    if rev:
+        git_commit = read_output(
+            "hg", "-R", srcdir, "log", "-r", rev, "-T", "{extras.git_commit}"
+        )
+        if git_commit:
+            git_root = "https://github.com/mozilla/firefox"
+            return GitRepoInfo(srcdir, git_commit, git_root)
+    return None
+
+
 def GetVCSFilenameFromSrcdir(file, srcdir):
     if srcdir not in Dumper.srcdirRepoInfo:
-        # Not in cache, so find it adnd cache it
+        # Not in cache, so find it and cache it
         if os.path.isdir(os.path.join(srcdir, ".hg")):
-            Dumper.srcdirRepoInfo[srcdir] = HGRepoInfo(srcdir)
+            git_repo_info = TryGetGitRepoInfoFromHg(srcdir)
+            if git_repo_info:
+                Dumper.srcdirRepoInfo[srcdir] = git_repo_info
+            else:
+                Dumper.srcdirRepoInfo[srcdir] = HGRepoInfo(srcdir)
         else:
             # Unknown VCS or file is not in a repo.
             return None
@@ -434,6 +450,7 @@ def SourceIndex(fileStream, outputPath, vcs_root, s3_bucket):
         + "SRCSRV: variables ------------------------------------------\r\n"
         + "SRCSRVVERCTRL=http\r\n"
         + "RUST_GITHUB_TARGET=https://github.com/rust-lang/rust/raw/%var4%/%var3%\r\n"
+        + "FIREFOX_GITHUB_TARGET=https://github.com/mozilla/firefox/raw/%var4%/%var3%\r\n"
     )
     pdbStreamFile.write("HGSERVER=" + vcs_root + "\r\n")
     pdbStreamFile.write("HG_TARGET=%hgserver%/raw-file/%var4%/%var3%\r\n")
@@ -443,7 +460,7 @@ def SourceIndex(fileStream, outputPath, vcs_root, s3_bucket):
         pdbStreamFile.write("S3_TARGET=https://%s3_bucket%.s3.amazonaws.com/%var3%\r\n")
 
     # Allow each entry to choose its template via "var2".
-    # Possible values for var2 are: HG_TARGET / S3_TARGET / RUST_GITHUB_TARGET
+    # Possible values for var2 are: HG_TARGET / S3_TARGET / RUST_GITHUB_TARGET / FIREFOX_GITHUB_TARGET
     pdbStreamFile.write("SRCSRVTRG=%fnvar%(%var2%)\r\n")
 
     pdbStreamFile.write(
@@ -694,6 +711,10 @@ class Dumper:
                         elif filename.startswith("git:github.com/rust-lang/rust:"):
                             (vcs, repo, source_file, revision) = filename.split(":", 3)
                             sourceFileStream += sourcepath + "*RUST_GITHUB_TARGET*"
+                            sourceFileStream += source_file + "*" + revision + "\r\n"
+                        elif filename.startswith("git:github.com/mozilla/firefox:"):
+                            (vcs, repo, source_file, revision) = filename.split(":", 3)
+                            sourceFileStream += sourcepath + "*FIREFOX_GITHUB_TARGET*"
                             sourceFileStream += source_file + "*" + revision + "\r\n"
                         f.write("FILE %s %s\n" % (index, filename))
                     elif line.startswith("INFO CODE_ID "):
