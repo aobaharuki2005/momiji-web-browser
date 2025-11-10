@@ -26,6 +26,8 @@ run-if = ["updater"]
 
 ["browser_applications_selection.js"]
 
+["browser_backup_visibility.js"]
+
 ["browser_basic_rebuild_fonts_test.js"]
 
 ["browser_browser_languages_subdialog.js"]

@@ -69,7 +69,10 @@ function checkElements(expectedPane) {
     }
 
     // Backup is currently disabled by default. (bug 1895791)
-    if (element.id == "dataBackupSection" && backupSectionDisabled) {
+    if (
+      (element.id == "dataBackupGroup" || element.id == "backupCategory") &&
+      backupSectionDisabled
+    ) {
       is_element_hidden(element, "Disabled dataBackupSection should be hidden");
       continue;
     }
