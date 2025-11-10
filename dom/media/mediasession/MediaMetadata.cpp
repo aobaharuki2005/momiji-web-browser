@@ -14,6 +14,14 @@
 
 namespace mozilla::dom {
 
+MediaImage MediaImageData::ToMediaImage() const {
+  MediaImage image;
+  image.mSizes = mSizes;
+  image.mSrc = mSrc;
+  image.mType = mType;
+  return image;
+}
+
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaMetadata, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaMetadata)
@@ -73,7 +81,7 @@ void MediaMetadata::GetArtwork(JSContext* aCx, nsTArray<JSObject*>& aRetVal,
 
   for (size_t i = 0; i < mArtwork.Length(); ++i) {
     JS::Rooted<JS::Value> value(aCx);
-    if (!ToJSValue(aCx, mArtwork[i], &value)) {
+    if (!ToJSValue(aCx, mArtwork[i].ToMediaImage(), &value)) {
       aRv.NoteJSContextException(aCx);
       return;
     }
@@ -138,17 +146,19 @@ static nsresult ResolveURL(nsString& aURL, nsIURI* aBaseURI) {
 
 void MediaMetadata::SetArtworkInternal(const Sequence<MediaImage>& aArtwork,
                                        ErrorResult& aRv) {
-  nsTArray<MediaImage> artwork;
-  artwork.Assign(aArtwork);
-
   nsCOMPtr<nsIURI> baseURI = GetEntryBaseURL();
-  for (MediaImage& image : artwork) {
-    nsresult rv = ResolveURL(image.mSrc, baseURI);
+
+  nsTArray<MediaImageData> artwork;
+  for (const MediaImage& image : aArtwork) {
+    MediaImageData imageData(image);
+    nsresult rv = ResolveURL(imageData.mSrc, baseURI);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.ThrowTypeError<MSG_INVALID_URL>(NS_ConvertUTF16toUTF8(image.mSrc));
       return;
     }
+    artwork.AppendElement(std::move(imageData));
   }
+
   mArtwork = std::move(artwork);
 }
 

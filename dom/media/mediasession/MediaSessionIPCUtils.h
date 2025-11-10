@@ -23,8 +23,8 @@ typedef Maybe<MediaMetadataBase> MaybeMediaMetadataBase;
 namespace IPC {
 
 template <>
-struct ParamTraits<mozilla::dom::MediaImage> {
-  typedef mozilla::dom::MediaImage paramType;
+struct ParamTraits<mozilla::dom::MediaImageData> {
+  typedef mozilla::dom::MediaImageData paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mSizes);
