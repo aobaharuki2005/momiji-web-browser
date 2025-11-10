@@ -121,7 +121,7 @@ def fill_template(config, tasks):
         if task.get("arch", "") == "arm64":
             worker_type = "images-aarch64"
         else:
-            worker_type = "images-gcp"
+            worker_type = "images"
 
         # include some information that is useful in reconstructing this task
         # from JSON
