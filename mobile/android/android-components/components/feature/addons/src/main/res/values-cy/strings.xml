@@ -421,7 +421,7 @@
   <!-- Status message below an add-on in the add-ons manager when this add-on has been soft-blocked but the user re-enabled it. -->
   <string name="mozac_feature_addons_status_softblocked_re_enabled" moz:removedIn="147" tools:ignore="UnusedResources">Mae\'r estyniad hwn yn groes i bolisïau Mozilla. Gall fod yn beryglus ei ddefnyddio.</string>
   <!-- Status message below an add-on in the add-ons manager when this add-on has been soft-blocked but the user re-enabled it. -->
-  <string name="mozac_feature_addons_status_softblocked_re_enabled_2">Mae\'r estyniad hwn yn gyfyngedig. Gall fod yn beryglus ei ddefnyddio.</string>
+  <string name="mozac_feature_addons_status_softblocked_re_enabled_2">Mae\'r estyniad hwn wedi\'i gyfyngu. Gall fod yn beryglus ei ddefnyddio.</string>
   <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_status_unsigned">Nid oedd modd gwirio %1$s yn ddiogel ac mae wedi ei analluogi.</string>
   <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->

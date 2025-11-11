@@ -1747,6 +1747,10 @@
   <string name="webcompat_reporter_etp_checkbox_text">Фиристодани нишониҳои «URL», ки ба воситаи муҳофизат аз пайгирӣ манъ карда шудаанд</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Муҳофизати такмилёфта аз пайгирӣ метавонад васоити пайгирӣ ва скриптҳоеро манъ кунад, ки барои кори дурусти сомонаҳо лозиманд.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Пешнамоиши гузориш</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Пешнамоиши гузориш</string>
   <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
   <string name="webcompat_reporter_preview_bottom_sheet_send">Фиристодан</string>
   <!--
