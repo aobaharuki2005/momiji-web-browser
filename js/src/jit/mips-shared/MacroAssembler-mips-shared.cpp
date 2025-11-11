@@ -119,8 +119,8 @@ void MacroAssemblerMIPSShared::ma_rol(Register rd, Register rt,
   if (hasR2()) {
     as_rotrv(rd, rt, scratch);
   } else {
-    as_srlv(rd, rt, scratch);
-    as_sllv(scratch, rt, shift);
+    as_srlv(scratch, rt, scratch);
+    as_sllv(rd, rt, shift);
     as_or(rd, rd, scratch);
   }
 }
@@ -162,15 +162,27 @@ void MacroAssemblerMIPSShared::ma_ins(Register rt, Register rs, uint16_t pos,
   } else {
     UseScratchRegisterScope temps(*this);
     Register scratch = temps.Acquire();
-    Register scratch2 = temps.Acquire();
-    ma_subu(scratch, zero, Imm32(1));
-    as_srl(scratch, scratch, 32 - size);
-    as_and(scratch2, rs, scratch);
-    as_sll(scratch2, scratch2, pos);
-    as_sll(scratch, scratch, pos);
-    as_nor(scratch, scratch, zero);
-    as_and(scratch, rt, scratch);
-    as_or(rt, scratch2, scratch);
+    if (pos == 0) {
+      ma_ext(scratch, rs, 0, size);
+      as_srl(rt, rt, size);
+      as_sll(rt, rt, size);
+      as_or(rt, rt, scratch);
+    } else if (pos + size == 32) {
+      as_sll(scratch, rs, pos);
+      as_sll(rt, rt, size);
+      as_srl(rt, rt, size);
+      as_or(rt, rt, scratch);
+    } else {
+      Register scratch2 = temps.Acquire();
+      ma_subu(scratch, zero, Imm32(1));
+      as_srl(scratch, scratch, 32 - size);
+      as_and(scratch2, rs, scratch);
+      as_sll(scratch2, scratch2, pos);
+      as_sll(scratch, scratch, pos);
+      as_nor(scratch, scratch, zero);
+      as_and(scratch, rt, scratch);
+      as_or(rt, scratch2, scratch);
+    }
   }
 }
 

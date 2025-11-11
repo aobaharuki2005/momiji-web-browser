@@ -316,21 +316,23 @@ void MacroAssemblerMIPS64::ma_dsra(Register rd, Register rt, Imm32 shift) {
 }
 
 void MacroAssemblerMIPS64::ma_dror(Register rd, Register rt, Imm32 shift) {
-  if (31 < shift.value) {
-    as_drotr32(rd, rt, shift.value);
+  if (hasR2()) {
+    if (31 < shift.value) {
+      as_drotr32(rd, rt, shift.value);
+    } else {
+      as_drotr(rd, rt, shift.value);
+    }
   } else {
-    as_drotr(rd, rt, shift.value);
+    UseScratchRegisterScope temps(*this);
+    Register scratch = temps.Acquire();
+    ma_dsrl(scratch, rt, shift);
+    ma_dsll(rd, rt, Imm32(64 - shift.value));
+    as_or(rd, rd, scratch);
   }
 }
 
 void MacroAssemblerMIPS64::ma_drol(Register rd, Register rt, Imm32 shift) {
-  uint32_t s = 64 - shift.value;
-
-  if (31 < s) {
-    as_drotr32(rd, rt, s);
-  } else {
-    as_drotr(rd, rt, s);
-  }
+  ma_dror(rd, rt, Imm32(64 - shift.value));
 }
 
 void MacroAssemblerMIPS64::ma_dsll(Register rd, Register rt, Register shift) {
@@ -346,39 +348,87 @@ void MacroAssemblerMIPS64::ma_dsra(Register rd, Register rt, Register shift) {
 }
 
 void MacroAssemblerMIPS64::ma_dror(Register rd, Register rt, Register shift) {
-  as_drotrv(rd, rt, shift);
+  if (hasR2()) {
+    as_drotrv(rd, rt, shift);
+  } else {
+    UseScratchRegisterScope temps(*this);
+    Register scratch = temps.Acquire();
+    as_dsubu(scratch, zero, shift);
+    as_dsllv(scratch, rt, scratch);
+    as_dsrlv(rd, rt, shift);
+    as_or(rd, rd, scratch);
+  }
 }
 
 void MacroAssemblerMIPS64::ma_drol(Register rd, Register rt, Register shift) {
   UseScratchRegisterScope temps(*this);
   Register scratch = temps.Acquire();
   as_dsubu(scratch, zero, shift);
-  as_drotrv(rd, rt, scratch);
+  if (hasR2()) {
+    as_drotrv(rd, rt, scratch);
+  } else {
+    as_dsrlv(scratch, rt, scratch);
+    as_dsllv(rd, rt, shift);
+    as_or(rd, rd, scratch);
+  }
 }
 
 void MacroAssemblerMIPS64::ma_dins(Register rt, Register rs, Imm32 pos,
                                    Imm32 size) {
-  if (pos.value >= 0 && pos.value < 32) {
-    if (pos.value + size.value > 32) {
-      as_dinsm(rt, rs, pos.value, size.value);
+  if (hasR2()) {
+    if (pos.value >= 0 && pos.value < 32) {
+      if (pos.value + size.value > 32) {
+        as_dinsm(rt, rs, pos.value, size.value);
+      } else {
+        as_dins(rt, rs, pos.value, size.value);
+      }
     } else {
-      as_dins(rt, rs, pos.value, size.value);
+      as_dinsu(rt, rs, pos.value, size.value);
     }
   } else {
-    as_dinsu(rt, rs, pos.value, size.value);
+    UseScratchRegisterScope temps(*this);
+    Register scratch = temps.Acquire();
+
+    // optimize for special positions
+    if (pos.value == 0) {
+      ma_dext(scratch, rs, Imm32(0), size);
+      ma_dsrl(rt, rt, size);
+      ma_dsll(rt, rt, size);
+      as_or(rt, rt, scratch);
+    } else if (pos.value + size.value == 64) {
+      ma_dsll(scratch, rs, pos);
+      ma_dsll(rt, rt, size);
+      ma_dsrl(rt, rt, size);
+      as_or(rt, rt, scratch);
+    } else {
+      Register scratch2 = temps.Acquire();
+      ma_dsubu(scratch, zero, Imm32(1));
+      ma_dsrl(scratch, scratch, Imm32(64 - size.value));
+      as_and(scratch2, rs, scratch);
+      ma_dsll(scratch, scratch, pos);
+      ma_dsll(scratch2, scratch2, pos);
+      as_nor(scratch, scratch, zero);
+      as_and(rt, rt, scratch);
+      as_or(rt, rt, scratch2);
+    }
   }
 }
 
 void MacroAssemblerMIPS64::ma_dext(Register rt, Register rs, Imm32 pos,
                                    Imm32 size) {
-  if (pos.value >= 0 && pos.value < 32) {
-    if (size.value > 32) {
-      as_dextm(rt, rs, pos.value, size.value);
+  if (hasR2()) {
+    if (pos.value >= 0 && pos.value < 32) {
+      if (size.value > 32) {
+        as_dextm(rt, rs, pos.value, size.value);
+      } else {
+        as_dext(rt, rs, pos.value, size.value);
+      }
     } else {
-      as_dext(rt, rs, pos.value, size.value);
+      as_dextu(rt, rs, pos.value, size.value);
     }
   } else {
-    as_dextu(rt, rs, pos.value, size.value);
+    ma_dsll(rt, rs, Imm32(64 - pos.value - size.value));
+    ma_dsrl(rt, rt, Imm32(64 - size.value));
   }
 }
 
