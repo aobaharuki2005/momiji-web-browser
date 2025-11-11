@@ -194,7 +194,7 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
                                             ),
                                         )
                                     },
-                                    clipboardManager = requireActivity().getSystemService(),
+                                    clipboardManager = lifecycleHolder.homeActivity.getSystemService(),
                                 ),
                             ),
                             lifecycleHolder = lifecycleHolder,
@@ -212,7 +212,12 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
                 }
                 setContent {
                     FirefoxTheme {
-                        SavedLoginsScreen(buildStore = buildStore)
+                        SavedLoginsScreen(
+                            buildStore = buildStore,
+                            exitLogins = {
+                                findNavController().popBackStack()
+                            },
+                        )
                     }
                 }
             }

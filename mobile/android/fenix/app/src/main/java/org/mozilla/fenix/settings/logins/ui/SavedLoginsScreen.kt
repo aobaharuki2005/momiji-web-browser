@@ -61,6 +61,7 @@ import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.SelectableFaviconListItem
+import org.mozilla.fenix.settings.biometric.ui.SecureScreen
 import org.mozilla.fenix.settings.logins.ui.LoginsSortOrder.Alphabetical.isGuidToDelete
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
@@ -70,17 +71,22 @@ import mozilla.components.ui.icons.R as iconsR
  *
  * @param buildStore A builder function to construct a [LoginsStore] using the NavController that's local
  * to the nav graph for the Logins view hierarchy.
+ * @param exitLogins A callback invoked when the user indicates to exit the secure screen.
  * @param startDestination the screen on which to initialize [SavedLoginsScreen] with.
  */
 @Composable
 internal fun SavedLoginsScreen(
     buildStore: (NavHostController) -> LoginsStore,
+    exitLogins: () -> Unit = {},
     startDestination: String = LoginsDestinations.LIST,
 ) {
     val navController = rememberNavController()
     val store = buildStore(navController)
 
-    RequireAuthorization(store) {
+    SecureScreen(
+        title = stringResource(R.string.logins_biometric_prompt_message_2),
+        onExit = exitLogins,
+    ) {
         NavHost(
             navController = navController,
             startDestination = startDestination,
@@ -139,31 +145,29 @@ private fun LoginsList(store: LoginsStore) {
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (state.biometricAuthenticationState == BiometricAuthenticationState.Authorized) {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .width(FirefoxTheme.layout.size.containerMaxWidth)
-                        .weight(1f, false)
-                        .semantics {
-                            collectionInfo =
-                                CollectionInfo(rowCount = state.loginItems.size, columnCount = 1)
-                        },
-                ) {
-                    itemsIndexed(state.loginItems) { _, item ->
+            LazyColumn(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .width(FirefoxTheme.layout.size.containerMaxWidth)
+                    .weight(1f, false)
+                    .semantics {
+                        collectionInfo =
+                            CollectionInfo(rowCount = state.loginItems.size, columnCount = 1)
+                    },
+            ) {
+                itemsIndexed(state.loginItems) { _, item ->
 
-                        if (state.isGuidToDelete(item.guid)) {
-                            return@itemsIndexed
-                        }
-
-                        SelectableFaviconListItem(
-                            label = item.url.trimmed(),
-                            url = item.url,
-                            isSelected = false,
-                            onClick = { store.dispatch(LoginClicked(item)) },
-                            description = item.username.trimmed(),
-                        )
+                    if (state.isGuidToDelete(item.guid)) {
+                        return@itemsIndexed
                     }
+
+                    SelectableFaviconListItem(
+                        label = item.url.trimmed(),
+                        url = item.url,
+                        isSelected = false,
+                        onClick = { store.dispatch(LoginClicked(item)) },
+                        description = item.username.trimmed(),
+                    )
                 }
             }
 
@@ -440,7 +444,9 @@ private fun LoginsListScreenPreview() {
 
     FirefoxTheme {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
-            SavedLoginsScreen(store)
+            SavedLoginsScreen(
+                buildStore = store,
+            )
         }
     }
 }
@@ -459,7 +465,9 @@ private fun EmptyLoginsListScreenPreview() {
 
     FirefoxTheme {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
-            SavedLoginsScreen(store)
+            SavedLoginsScreen(
+                buildStore = store,
+            )
         }
     }
 }

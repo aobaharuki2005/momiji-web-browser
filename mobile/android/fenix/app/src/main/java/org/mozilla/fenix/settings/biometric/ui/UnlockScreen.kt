@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings.logins.ui
+package org.mozilla.fenix.settings.biometric.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
@@ -43,11 +43,13 @@ private const val TABLET_HEIGHT = 1280
 /**
  * A screen allowing users to unlock their logins.
  *
+ * @param title The title of the screen.
  * @param onUnlockClicked Invoked when the user taps the unlock button.
  * @param onLeaveClicked Invoked when the user taps the leave logins text.
  */
 @Composable
-internal fun UnlockLoginsScreen(
+internal fun UnlockScreen(
+    title: String,
     onUnlockClicked: () -> Unit,
     onLeaveClicked: () -> Unit,
 ) {
@@ -61,14 +63,14 @@ internal fun UnlockLoginsScreen(
     ) {
         Spacer(modifier = Modifier.height(32.dp))
 
-        Header()
+        Header(title)
 
         Footer(onUnlockClicked, onLeaveClicked)
     }
 }
 
 @Composable
-private fun Header() {
+private fun Header(title: String) {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,7 +80,7 @@ private fun Header() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = stringResource(id = R.string.logins_biometric_prompt_message_2),
+            text = title,
             color = FirefoxTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
             style = FirefoxTheme.typography.headline6,
@@ -165,7 +167,8 @@ private fun ScreenPreviewPrivateTablet() = ScreenPreview(Theme.Private)
 @Composable
 private fun ScreenPreview(theme: Theme) {
     FirefoxTheme(theme) {
-        UnlockLoginsScreen(
+        UnlockScreen(
+            title = "Unlock to view your secure feature",
             onUnlockClicked = {},
             onLeaveClicked = {},
         )
