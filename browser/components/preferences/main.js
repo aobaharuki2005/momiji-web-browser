@@ -1177,6 +1177,35 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  home: {
+    inProgress: true,
+    headingLevel: 2,
+    l10nId: "home-prefs-content-header",
+    // Icons are not ready to be used yet.
+    // iconSrc: "chrome://browser/skin/home.svg",
+    items: [
+      {
+        id: "webSearch",
+        l10nId: "home-prefs-search-header2",
+        control: "moz-toggle",
+      },
+      {
+        id: "weather",
+        l10nId: "home-prefs-weather-header",
+        control: "moz-toggle",
+      },
+      {
+        id: "lists",
+        l10nId: "home-prefs-lists-header",
+        control: "moz-toggle",
+      },
+      {
+        id: "timer",
+        l10nId: "home-prefs-timer-header",
+        control: "moz-toggle",
+      },
+    ],
+  },
   zoom: {
     // This section is marked as in progress for testing purposes
     inProgress: true,
