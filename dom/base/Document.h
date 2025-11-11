@@ -1175,7 +1175,8 @@ class Document : public nsINode,
    * presshell if the presshell should observe document mutations.
    */
   MOZ_CAN_RUN_SCRIPT already_AddRefed<PresShell> CreatePresShell(
-      nsPresContext* aContext, nsViewManager* aViewManager);
+      nsPresContext* aContext, nsViewManager* aViewManager,
+      nsSubDocumentFrame* aEmbedderFrame);
   void DeletePresShell();
 
   PresShell* GetPresShell() const {

@@ -341,8 +341,7 @@ void nsMenuPopupFrame::CreateWidget() {
 LayoutDeviceIntRect nsMenuPopupFrame::CalcWidgetBounds() const {
   return nsView::CalcWidgetBounds(
       GetRect(), PresContext()->AppUnitsPerDevPixel(),
-      PresShell()->GetViewManager()->GetRootView(), nullptr,
-      widget::WindowType::Popup,
+      PresShell()->GetRootFrame(), nullptr, widget::WindowType::Popup,
       nsLayoutUtils::GetFrameTransparency(this, this));
 }
 
