@@ -34,6 +34,10 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
  public:
   explicit MediaEngineWebRTCMicrophoneSource(const MediaDevice* aMediaDevice);
 
+  static already_AddRefed<MediaEngineWebRTCMicrophoneSource> CreateFrom(
+      const MediaEngineWebRTCMicrophoneSource* aSource,
+      const MediaDevice* aMediaDevice);
+
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
                     const char** aOutBadConstraint) override;

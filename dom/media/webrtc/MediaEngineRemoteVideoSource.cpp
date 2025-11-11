@@ -203,6 +203,22 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
   }
 }
 
+/*static*/
+already_AddRefed<MediaEngineRemoteVideoSource>
+MediaEngineRemoteVideoSource::CreateFrom(
+    const MediaEngineRemoteVideoSource* aSource,
+    const MediaDevice* aMediaDevice) {
+  auto src = MakeRefPtr<MediaEngineRemoteVideoSource>(aMediaDevice);
+  *static_cast<MediaTrackSettings*>(src->mSettings) = *aSource->mSettings;
+  *static_cast<MediaTrackCapabilities*>(src->mTrackCapabilities) =
+      *aSource->mTrackCapabilities;
+  {
+    MutexAutoLock lock(aSource->mMutex);
+    src->mIncomingImageSize = aSource->mIncomingImageSize;
+  }
+  return src.forget();
+}
+
 MediaEngineRemoteVideoSource::~MediaEngineRemoteVideoSource() {
   mFirstFramePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
 }
@@ -283,8 +299,8 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
         .mCapabilityWidth = cw ? Some(cw) : Nothing(),
         .mCapabilityHeight = ch ? Some(ch) : Nothing(),
         .mCapEngine = mCapEngine,
-        .mInputWidth = cw,
-        .mInputHeight = ch,
+        .mInputWidth = cw ? cw : mIncomingImageSize.width,
+        .mInputHeight = ch ? ch : mIncomingImageSize.height,
         .mRotation = 0,
     };
     framerate = input.mCanCropAndScale.valueOr(false)
