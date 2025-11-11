@@ -721,8 +721,8 @@ nsresult nsPrintJob::ReconstructAndReflow() {
     if (po->mParent) {
       nsSize adjSize;
       bool doReturn = false;
-      nsresult rv =
-          SetRootView(po, /* aDocumentIsTopLevel = */ false, doReturn, adjSize);
+      documentIsTopLevel = false;
+      nsresult rv = SetRootView(po, documentIsTopLevel, doReturn, adjSize);
       if (NS_FAILED(rv) || doReturn) {
         return rv;
       }
