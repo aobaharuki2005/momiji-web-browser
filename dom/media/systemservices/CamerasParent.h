@@ -30,13 +30,12 @@ class VideoEngine;
 
 class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
-  CallbackHelper(CaptureEngine aCapEng, uint32_t aStreamId,
-                 CamerasParent* aParent)
+  CallbackHelper(CaptureEngine aCapEng, int aStreamId, CamerasParent* aParent)
       : mCapEngine(aCapEng),
         mStreamId(aStreamId),
         mTrackingId(CaptureEngineToTrackingSourceStr(aCapEng), aStreamId),
         mParent(aParent),
-        mConfiguration("CallbackHelper::mConfiguration") {};
+        mConfiguration("CallbackHelper::mConfiguration") {}
 
   void SetConfiguration(const webrtc::VideoCaptureCapability& aCapability,
                         const NormalizedConstraints& aConstraints,
@@ -56,7 +55,7 @@ class CallbackHelper : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
     dom::VideoResizeModeEnum mResizeMode{};
   };
   const CaptureEngine mCapEngine;
-  const uint32_t mStreamId;
+  const int mStreamId;
   const TrackingId mTrackingId;
   CamerasParent* const mParent;
   MediaEventListener mCaptureEndedListener;
@@ -139,7 +138,7 @@ class CamerasParent final : public PCamerasParent {
   ShmemBuffer GetBuffer(size_t aSize);
 
   // helper to forward to the PBackground thread
-  int DeliverFrameOverIPC(CaptureEngine aCapEngine, uint32_t aStreamId,
+  int DeliverFrameOverIPC(CaptureEngine aCapEngine, int aStreamId,
                           const TrackingId& aTrackingId, ShmemBuffer aBuffer,
                           unsigned char* aAltBuffer,
                           const VideoFrameProperties& aProps);
@@ -161,9 +160,6 @@ class CamerasParent final : public PCamerasParent {
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> GetDeviceInfo(
       int aEngine);
   VideoEngine* EnsureInitialized(int aEngine);
-
-  bool IsWindowCapturing(VideoEngine* aEngine, uint64_t aWindowID,
-                         const nsACString& aUniqueIdUTF8);
 
   // Stops any ongoing capturing and releases resources. Called on
   // mVideoCaptureThread. Idempotent.
@@ -197,7 +193,7 @@ class CamerasParent final : public PCamerasParent {
   // Set to true in ActorDestroy. PBackground only.
   bool mDestroyed;
 
-  std::map<nsCString, std::map<uint32_t, webrtc::VideoCaptureCapability>>
+  std::map<nsCString, std::map<int, webrtc::VideoCaptureCapability>>
       mAllCandidateCapabilities;
 
   // Listener for the camera VideoEngine::DeviceChangeEvent(). Video capture
