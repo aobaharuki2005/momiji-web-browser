@@ -1027,6 +1027,7 @@ class BrowserToolbarMiddleware(
             .collect {
                 updateEndBrowserActions(context)
                 updateEndPageActions(context)
+                updateNavigationActions(context)
             }
         }
     }

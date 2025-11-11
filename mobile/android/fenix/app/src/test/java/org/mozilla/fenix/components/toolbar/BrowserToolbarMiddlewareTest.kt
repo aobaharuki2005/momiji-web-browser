@@ -3099,6 +3099,46 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN expanded toolbar use translate shortcut AND current page is not translated WHEN initializing toolbar THEN show Translate in navigation actions`() = runTest {
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.shouldUseExpandedToolbar } returns true
+        every { settings.toolbarExpandedShortcutKey } returns ShortcutType.TRANSLATE
+
+        val pageTranslationStatus: PageTranslationStatus = mockk(relaxed = true) {
+            every { isTranslationPossible } returns true
+            every { isTranslated } returns false
+            every { isTranslateProcessing } returns false
+        }
+
+        every { browserScreenState.pageTranslationStatus } returns pageTranslationStatus
+
+        val toolbarStore = buildStore()
+
+        val translateButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
+        assertEquals(expectedTranslateButton(), translateButton)
+    }
+
+    @Test
+    fun `GIVEN expanded toolbar use translate shortcut AND current page is translated WHEN initializing toolbar THEN show ACTIVE Translate in navigation actions`() = runTest {
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.shouldUseExpandedToolbar } returns true
+        every { settings.toolbarExpandedShortcutKey } returns ShortcutType.TRANSLATE
+
+        val pageTranslationStatus: PageTranslationStatus = mockk(relaxed = true) {
+            every { isTranslationPossible } returns true
+            every { isTranslated } returns true
+            every { isTranslateProcessing } returns false
+        }
+
+        every { browserScreenState.pageTranslationStatus } returns pageTranslationStatus
+
+        val toolbarStore = buildStore()
+
+        val translateButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
+        assertEquals(expectedTranslateButton(isActive = true), translateButton)
+    }
+
+    @Test
     fun `mapShortcutToAction maps keys to actions and falls back to default set`() {
         assertEquals(
             ToolbarAction.NewTab,

@@ -57,7 +57,7 @@ internal val allShortcutOptions: List<ShortcutOption> = listOf(
         ShortcutType.TRANSLATE,
         iconsR.drawable.mozac_ic_translate_24,
         R.string.toolbar_customize_shortcut_translate,
-        setOf(ShortcutAvailability.SIMPLE),
+        setOf(ShortcutAvailability.SIMPLE, ShortcutAvailability.EXPANDED),
     ),
     ShortcutOption(
         ShortcutType.HOMEPAGE,

@@ -79,6 +79,7 @@ import org.mozilla.fenix.home.toolbar.TabCounterInteractions.TabCounterClicked
 import org.mozilla.fenix.home.toolbar.TabCounterInteractions.TabCounterLongClicked
 import org.mozilla.fenix.search.BrowserToolbarSearchMiddleware
 import org.mozilla.fenix.search.ext.searchEngineShortcuts
+import org.mozilla.fenix.settings.ShortcutType
 import org.mozilla.fenix.tabstray.Page
 import mozilla.components.lib.state.Action as MVIAction
 import mozilla.components.ui.icons.R as iconsR
@@ -364,12 +365,17 @@ class BrowserToolbarMiddleware(
      */
     private fun buildNavigationActions(): List<Action> {
         val environment = environment ?: return emptyList()
+        val settings = environment.context.settings()
         val isWideWindow = environment.fragment.isWideWindow()
         val isTallWindow = environment.fragment.isTallWindow()
-        val shouldUseExpandedToolbar = environment.context.settings().shouldUseExpandedToolbar
+        val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
+        val useCustomPrimary = settings.shouldShowToolbarCustomization && shouldUseExpandedToolbar
+        val primarySlotAction = mapShortcutToAction(
+            settings.toolbarExpandedShortcutKey,
+        ).takeIf { useCustomPrimary } ?: HomeToolbarAction.FakeBookmark
 
         return listOf(
-            HomeToolbarActionConfig(HomeToolbarAction.FakeBookmark) {
+            HomeToolbarActionConfig(primarySlotAction) {
                 shouldUseExpandedToolbar && isTallWindow && !isWideWindow
             },
             HomeToolbarActionConfig(HomeToolbarAction.FakeShare) {
@@ -476,6 +482,7 @@ class BrowserToolbarMiddleware(
         FakeBookmark,
         FakeShare,
         NewTab,
+        FakeTranslate,
     }
 
     private data class HomeToolbarActionConfig(
@@ -546,5 +553,23 @@ class BrowserToolbarMiddleware(
                 AddNewTab(source)
             },
         )
+
+        HomeToolbarAction.FakeTranslate -> ActionButtonRes(
+            drawableResId = iconsR.drawable.mozac_ic_translate_24,
+            contentDescription = R.string.browser_toolbar_translate,
+            state = ActionButton.State.DISABLED,
+            onClick = FakeClicked,
+        )
+    }
+
+    companion object {
+        @VisibleForTesting
+        internal fun mapShortcutToAction(
+            key: String,
+        ): HomeToolbarAction = when (key) {
+            ShortcutType.BOOKMARK -> HomeToolbarAction.FakeBookmark
+            ShortcutType.TRANSLATE -> HomeToolbarAction.FakeTranslate
+            else -> HomeToolbarAction.FakeBookmark
+        }
     }
 }
