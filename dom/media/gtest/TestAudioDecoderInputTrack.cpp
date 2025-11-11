@@ -67,8 +67,6 @@ class MockTestGraph : public MediaTrackGraphImpl {
    protected:
     ~MockDriver() = default;
   };
-
-  bool mEnableFakeAppend = false;
 };
 
 AudioData* CreateAudioDataFromInfo(uint32_t aFrames, const AudioInfo& aInfo) {
