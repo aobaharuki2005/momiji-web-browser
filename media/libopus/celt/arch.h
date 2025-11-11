@@ -142,7 +142,7 @@ typedef opus_int32 opus_val32;
 typedef opus_int64 opus_val64;
 
 typedef opus_val32 celt_sig;
-typedef opus_val16 celt_norm;
+typedef opus_val32 celt_norm;
 typedef opus_val32 celt_ener;
 typedef opus_val32 celt_glog;
 
@@ -152,7 +152,7 @@ typedef opus_val32 opus_res;
 #define SIG2RES(a)      PSHR32(a, SIG_SHIFT-RES_SHIFT)
 #define RES2INT16(a)    SAT16(PSHR32(a, RES_SHIFT))
 #define RES2INT24(a)    (a)
-#define RES2FLOAT(a)    ((1.f/32768.f/256.)*(a))
+#define RES2FLOAT(a)    ((1.f/32768.f/256.f)*(a))
 #define INT16TORES(a)   SHL32(EXTEND32(a), RES_SHIFT)
 #define INT24TORES(a)   (a)
 #define ADD_RES(a, b)   ADD32(a, b)
@@ -181,6 +181,7 @@ typedef opus_val16 opus_res;
 #define INT16TOSIG(a)   SHL32(EXTEND32(a), SIG_SHIFT)
 #define INT24TOSIG(a)   SHL32(a, SIG_SHIFT-8)
 
+#define NORM_SHIFT 24
 #ifdef ENABLE_QEXT
 typedef opus_val32 celt_coef;
 #define COEF_ONE Q31ONE
@@ -214,7 +215,7 @@ typedef opus_val16 celt_coef;
    so the limit should be about 2^31*sqrt(.5). */
 #define SIG_SAT (536870911)
 
-#define NORM_SCALING 16384
+#define NORM_SCALING (1<<NORM_SHIFT)
 
 #define DB_SHIFT 24
 
@@ -374,7 +375,7 @@ static OPUS_INLINE int celt_isnan(float x)
 #define RES2INT24(a)    float2int(32768.f*256.f*(a))
 #define RES2FLOAT(a)    (a)
 #define INT16TORES(a)   ((a)*(1/CELT_SIG_SCALE))
-#define INT24TORES(a)   ((1.f/32768.f/256.)*(a))
+#define INT24TORES(a)   ((1.f/32768.f/256.f)*(a))
 #define ADD_RES(a, b)   ADD32(a, b)
 #define FLOAT2RES(a)    (a)
 #define RES2SIG(a)      (CELT_SIG_SCALE*(a))

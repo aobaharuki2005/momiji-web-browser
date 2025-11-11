@@ -43,6 +43,13 @@
 #include "arch.h"
 #include "kiss_fft.h"
 
+#ifdef ENABLE_QEXT
+#define ARG_QEXT(arg) , arg
+#else
+#define ARG_QEXT(arg)
+#endif
+
+
 #ifdef ENABLE_DEEP_PLC
 #include "lpcnet.h"
 #endif
@@ -54,6 +61,8 @@ extern "C" {
 #define CELTEncoder OpusCustomEncoder
 #define CELTDecoder OpusCustomDecoder
 #define CELTMode OpusCustomMode
+
+#define QEXT_EXTENSION_ID 124
 
 #define LEAK_BANDS 19
 
@@ -161,6 +170,7 @@ int celt_decode_with_ec_dred(CELTDecoder * OPUS_RESTRICT st, const unsigned char
 #ifdef ENABLE_DEEP_PLC
       ,LPCNetPLCState *lpcnet
 #endif
+      ARG_QEXT(const unsigned char *qext_payload) ARG_QEXT(int qext_payload_len)
       );
 
 int celt_decode_with_ec(OpusCustomDecoder * OPUS_RESTRICT st, const unsigned char *data,
@@ -170,7 +180,7 @@ int celt_decode_with_ec(OpusCustomDecoder * OPUS_RESTRICT st, const unsigned cha
 #define celt_decoder_ctl opus_custom_decoder_ctl
 
 
-#ifdef CUSTOM_MODES
+#if defined(CUSTOM_MODES) || defined(ENABLE_OPUS_CUSTOM_API)
 #define OPUS_CUSTOM_NOSTATIC
 #else
 #define OPUS_CUSTOM_NOSTATIC static OPUS_INLINE
@@ -182,7 +192,7 @@ static const unsigned char spread_icdf[4] = {25, 23, 2, 0};
 
 static const unsigned char tapset_icdf[3]={2,1,0};
 
-#ifdef CUSTOM_MODES
+#if defined(CUSTOM_MODES) || defined(ENABLE_OPUS_CUSTOM_API)
 static const unsigned char toOpusTable[20] = {
       0xE0, 0xE8, 0xF0, 0xF8,
       0xC0, 0xC8, 0xD0, 0xD8,
@@ -245,7 +255,15 @@ void init_caps(const CELTMode *m,int *cap,int LM,int C);
 void deemphasis(celt_sig *in[], opus_res *pcm, int N, int C, int downsample, const opus_val16 *coef, celt_sig *mem, int accum);
 void celt_synthesis(const CELTMode *mode, celt_norm *X, celt_sig * out_syn[],
       celt_glog *oldBandE, int start, int effEnd, int C, int CC, int isTransient,
-      int LM, int downsample, int silence, int arch);
+      int LM, int downsample, int silence, int arch ARG_QEXT(const CELTMode *qext_mode) ARG_QEXT(const celt_glog *qext_bandLogE) ARG_QEXT(int qext_end));
+#endif
+
+#ifdef ENABLE_QEXT
+#define QEXT_SCALE(x) ((qext_scale)*(x))
+#define QEXT_SCALE2(x, qext_scale) ((qext_scale)*(x))
+#else
+#define QEXT_SCALE(x) (x)
+#define QEXT_SCALE2(x, qext_scale) (x)
 #endif
 
 #ifdef __cplusplus
