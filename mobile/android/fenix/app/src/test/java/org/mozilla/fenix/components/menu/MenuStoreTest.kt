@@ -140,9 +140,9 @@ class MenuStoreTest {
         }
 
         assertEquals(firefoxTab, newState.browserMenuState!!.selectedTab)
-        assertNull(state.browserMenuState.bookmarkState.guid)
-        assertFalse(state.browserMenuState.bookmarkState.isBookmarked)
-        assertFalse(state.browserMenuState.isPinned)
+        assertNull(newState.browserMenuState.bookmarkState.guid)
+        assertFalse(newState.browserMenuState.bookmarkState.isBookmarked)
+        assertFalse(newState.browserMenuState.isPinned)
 
         val bookmarkState = BookmarkState(guid = "id", isBookmarked = true)
         val isPinned = true
