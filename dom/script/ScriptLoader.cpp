@@ -3641,10 +3641,27 @@ void ScriptLoader::UpdateDiskCache() {
       continue;
     }
 
-    EncodeBytecodeAndSave(fc, loadedScript);
+    MOZ_ASSERT(loadedScript->HasStencil());
+
+    Vector<uint8_t> compressed;
+    if (!EncodeAndCompress(fc, loadedScript, loadedScript->GetStencil(),
+                           loadedScript->SRIAndBytecode(), compressed)) {
+      loadedScript->DropDiskCacheReference();
+      loadedScript->DropBytecode();
+      TRACE_FOR_TEST(loadedScript, "diskcache:failed");
+      continue;
+    }
+
+    if (!SaveToDiskCache(loadedScript, compressed)) {
+      loadedScript->DropDiskCacheReference();
+      loadedScript->DropBytecode();
+      TRACE_FOR_TEST(loadedScript, "diskcache:failed");
+      continue;
+    }
 
     loadedScript->DropDiskCacheReference();
     loadedScript->DropBytecode();
+    TRACE_FOR_TEST(loadedScript, "diskcache:saved");
   }
   mDiskCacheQueue.Clear();
 
@@ -3652,25 +3669,20 @@ void ScriptLoader::UpdateDiskCache() {
 }
 
 /* static */
-void ScriptLoader::EncodeBytecodeAndSave(
-    JS::FrontendContext* aFc, JS::loader::LoadedScript* aLoadedScript) {
-  MOZ_ASSERT(aLoadedScript->HasDiskCacheReference());
-  MOZ_ASSERT(aLoadedScript->HasStencil());
-
-  auto bytecodeFailed = mozilla::MakeScopeExit(
-      [&]() { TRACE_FOR_TEST(aLoadedScript, "diskcache:failed"); });
-
-  size_t SRILength = aLoadedScript->SRIAndBytecode().length();
+bool ScriptLoader::EncodeAndCompress(
+    JS::FrontendContext* aFc, const JS::loader::LoadedScript* aLoadedScript,
+    JS::Stencil* aStencil, const JS::TranscodeBuffer& aSRI,
+    Vector<uint8_t>& aCompressed) {
+  size_t SRILength = aSRI.length();
   MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(SRILength));
 
   JS::TranscodeBuffer SRIAndBytecode;
-  if (!SRIAndBytecode.appendAll(aLoadedScript->SRIAndBytecode())) {
+  if (!SRIAndBytecode.appendAll(aSRI)) {
     LOG(("LoadedScript (%p): Cannot allocate buffer", aLoadedScript));
-    return;
+    return false;
   }
 
-  JS::TranscodeResult result =
-      JS::EncodeStencil(aFc, aLoadedScript->GetStencil(), SRIAndBytecode);
+  JS::TranscodeResult result = JS::EncodeStencil(aFc, aStencil, SRIAndBytecode);
 
   if (result != JS::TranscodeResult::Ok) {
     // Encoding can be aborted for non-supported syntax (e.g. asm.js), or
@@ -3679,22 +3691,30 @@ void ScriptLoader::EncodeBytecodeAndSave(
     JS::ClearFrontendErrors(aFc);
 
     LOG(("LoadedScript (%p): Cannot serialize bytecode", aLoadedScript));
-    return;
+    return false;
   }
 
-  Vector<uint8_t> compressedBytecode;
   // TODO probably need to move this to a helper thread
-  if (!ScriptBytecodeCompress(SRIAndBytecode, SRILength, compressedBytecode)) {
-    return;
+  if (!ScriptBytecodeCompress(SRIAndBytecode, SRILength, aCompressed)) {
+    return false;
   }
 
-  if (compressedBytecode.length() >= UINT32_MAX) {
+  if (aCompressed.length() >= UINT32_MAX) {
     LOG(
         ("LoadedScript (%p): Bytecode cache is too large to be decoded "
          "correctly.",
          aLoadedScript));
-    return;
+    return false;
   }
+
+  return true;
+}
+
+/* static */
+bool ScriptLoader::SaveToDiskCache(
+    const JS::loader::LoadedScript* aLoadedScript,
+    const Vector<uint8_t>& aCompressed) {
+  MOZ_ASSERT(NS_IsMainThread());
 
   // Open the output stream to the cache entry alternate data storage. This
   // might fail if the stream is already open by another request, in which
@@ -3702,14 +3722,13 @@ void ScriptLoader::EncodeBytecodeAndSave(
   nsCOMPtr<nsIAsyncOutputStream> output;
   nsresult rv = aLoadedScript->mCacheInfo->OpenAlternativeOutputStream(
       BytecodeMimeTypeFor(aLoadedScript),
-      static_cast<int64_t>(compressedBytecode.length()),
-      getter_AddRefs(output));
+      static_cast<int64_t>(aCompressed.length()), getter_AddRefs(output));
   if (NS_FAILED(rv)) {
     LOG(
         ("LoadedScript (%p): Cannot open bytecode cache (rv = %X, output "
          "= %p)",
          aLoadedScript, unsigned(rv), output.get()));
-    return;
+    return false;
   }
   MOZ_ASSERT(output);
 
@@ -3719,20 +3738,18 @@ void ScriptLoader::EncodeBytecodeAndSave(
   });
 
   uint32_t n;
-  rv = output->Write(reinterpret_cast<char*>(compressedBytecode.begin()),
-                     compressedBytecode.length(), &n);
+  rv = output->Write(reinterpret_cast<const char*>(aCompressed.begin()),
+                     aCompressed.length(), &n);
   LOG(
       ("LoadedScript (%p): Write bytecode cache (rv = %X, length = %u, "
        "written = %u)",
-       aLoadedScript, unsigned(rv), unsigned(compressedBytecode.length()), n));
+       aLoadedScript, unsigned(rv), unsigned(aCompressed.length()), n));
   if (NS_FAILED(rv)) {
-    return;
+    return false;
   }
 
-  MOZ_RELEASE_ASSERT(compressedBytecode.length() == n);
-
-  bytecodeFailed.release();
-  TRACE_FOR_TEST(aLoadedScript, "diskcache:saved");
+  MOZ_RELEASE_ASSERT(aCompressed.length() == n);
+  return true;
 }
 
 void ScriptLoader::GiveUpDiskCaching() {
