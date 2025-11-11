@@ -1227,14 +1227,8 @@ history-remember-option-never =
 history-remember-option-custom =
     .label = Use custom settings for history
 
-history-remember-description2 =
-    .description ={ -brand-short-name } will remember your browsing, download, form, and search history.
-
-history-dontremember-description2 =
-    .description = { -brand-short-name } will use the same settings as private browsing, and will not remember any history as you browse the Web.
-
-history-custom-description =
-    .description = { -brand-short-name } will use custom settings for your browsing, download, form and search history.
+history-remember-description = { -brand-short-name } will remember your browsing, download, form, and search history.
+history-dontremember-description = { -brand-short-name } will use the same settings as private browsing, and will not remember any history as you browse the Web.
 
 history-private-browsing-permanent =
     .label = Always use private browsing mode

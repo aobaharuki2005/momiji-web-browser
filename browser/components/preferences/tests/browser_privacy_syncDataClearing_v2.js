@@ -29,9 +29,6 @@ add_task(async function test_syncWithoutCustomPrefs() {
 
   deleteOnCloseBox.click();
 
-  // Wait for UI to update.
-  await new Promise(resolve => requestAnimationFrame(resolve));
-
   ok(deleteOnCloseBox.checked, "DeleteOnClose is selected");
   is(
     deleteOnCloseBox.checked,
@@ -66,9 +63,6 @@ add_task(async function test_syncWithoutCustomPrefs() {
   );
 
   deleteOnCloseBox.click();
-
-  // Wait for UI to update.
-  await new Promise(resolve => requestAnimationFrame(resolve));
 
   ok(!deleteOnCloseBox.checked, "DeleteOnClose is deselected");
   is(
@@ -166,9 +160,6 @@ add_task(async function test_syncWithCustomPrefs() {
   );
 
   deleteOnCloseBox.click();
-
-  // Wait for UI to update.
-  await new Promise(resolve => requestAnimationFrame(resolve));
 
   ok(!deleteOnCloseBox.checked, "DeleteOnClose is deselected");
   is(
@@ -321,8 +312,9 @@ add_task(async function test_initialState() {
   );
 
   // Reset history mode
-  await SpecialPowers.popPrefEnv();
-  gBrowser.contentWindow.Preferences.getSetting("historyMode").value =
-    "remember";
+  let historyMode = document.getElementById("historyMode");
+  historyMode.value = "remember";
+  historyMode.doCommand();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await SpecialPowers.popPrefEnv();
 });
