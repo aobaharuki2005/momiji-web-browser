@@ -13751,8 +13751,21 @@ nsresult nsDocShell::OnOverLink(nsIContent* aContent, nsIURI* aURI,
 
   NS_ConvertUTF8toUTF16 uStr(spec);
 
-  PredictorPredict(aURI, mCurrentURI, nsINetworkPredictor::PREDICT_LINK,
-                   aContent->NodePrincipal()->OriginAttributesRef(), nullptr);
+  // The speculative connect used to go through the predictor, but we don't
+  // need all that just to initiate a speculative connect.
+  if ((StaticPrefs::network_predictor_enable_hover_on_ssl() &&
+       mCurrentURI->SchemeIs("https")) ||
+      mCurrentURI->SchemeIs("http")) {
+    if (nsCOMPtr<nsISpeculativeConnect> specService =
+            mozilla::components::IO::Service()) {
+      // This would be a navigation, so if this is cross origin the speculative
+      // connection needs to have the origin of the URL not the current page.
+      nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
+          aURI, aContent->NodePrincipal()->OriginAttributesRef());
+
+      specService->SpeculativeConnect(aURI, principal, nullptr, false);
+    }
+  }
 
   rv = browserChrome->SetLinkStatus(uStr);
   return rv;
