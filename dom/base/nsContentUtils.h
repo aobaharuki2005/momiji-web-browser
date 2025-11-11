@@ -118,7 +118,6 @@ class nsNodeInfoManager;
 class nsParser;
 class nsPIWindowRoot;
 class nsPresContext;
-class nsView;
 class nsWrapperCache;
 enum class WindowMediatorFilter : uint8_t;
 
