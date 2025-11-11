@@ -353,8 +353,8 @@
         "AND NEW.key_presses >= %d) "                                        \
         "BEGIN "                                                             \
         "UPDATE moz_places "                                                 \
-        "SET recalc_alt_frecency = 1 "                                       \
-        "WHERE id = NEW.place_id; "                                          \
+        "SET recalc_frecency = 1, recalc_alt_frecency = 1 "                  \
+        "WHERE id = NEW.place_id AND frecency > 0; "                         \
         "END",                                                               \
         TOTAL_VIEW_TIME, TOTAL_VIEW_TIME_IF_MANY_KEYPRESSES, MANY_KEY_PRESSES)
 
@@ -374,8 +374,8 @@
         "    AND OLD.key_presses < %d AND NEW.key_presses >= %d) "            \
         "BEGIN "                                                              \
         "UPDATE moz_places "                                                  \
-        "SET recalc_alt_frecency = 1 "                                        \
-        "WHERE id = NEW.place_id; "                                           \
+        "SET recalc_frecency = 1, recalc_alt_frecency = 1 "                   \
+        "WHERE id = NEW.place_id AND frecency > 0; "                          \
         "END",                                                                \
         TOTAL_VIEW_TIME, TOTAL_VIEW_TIME, TOTAL_VIEW_TIME_IF_MANY_KEYPRESSES, \
         TOTAL_VIEW_TIME_IF_MANY_KEYPRESSES, MANY_KEY_PRESSES,                 \

@@ -15888,20 +15888,77 @@
   value: 2 * 60
   mirror: once
 
-# Minimum time required to upgrade a visit score.
+# Minimum view time required to upgrade a visit score.
 - name: places.frecency.pages.alternative.interactions.viewTimeSeconds
   type: uint32_t
   value: 60
   mirror: once
 
-# Minimum time required to upgrade a visit score of a visit
+# Minimum view time required to upgrade a visit score of a visit
 # provided there is a minimum threshold of keypresses.
 - name: places.frecency.pages.alternative.interactions.viewTimeIfManyKeypressesSeconds
   type: uint32_t
   value: 20
   mirror: once
 
+# Minimum keypresses of a visit required to upgrade a visit score.
 - name: places.frecency.pages.alternative.interactions.manyKeypresses
+  type: uint32_t
+  value: 50
+  mirror: once
+
+# Preferences related to interaction based frecency.
+- name: places.frecency.pages.veryHighWeight
+  type: uint32_t
+  value: 200
+  mirror: once
+
+- name: places.frecency.pages.highWeight
+  type: uint32_t
+  value: 100
+  mirror: once
+
+- name: places.frecency.pages.mediumWeight
+  type: uint32_t
+  value: 50
+  mirror: once
+
+- name: places.frecency.pages.lowWeight
+  type: uint32_t
+  value: 20
+  mirror: once
+
+- name: places.frecency.pages.halfLifeDays
+  type: uint32_t
+  value: 30
+  mirror: once
+
+- name: places.frecency.pages.numSampledVisits
+  type: uint32_t
+  value: 10
+  mirror: once
+
+# Max difference allowed between a visit and an interaction.
+- name: places.frecency.pages.interactions.maxVisitGapSeconds
+  type: uint32_t
+  value: 2 * 60
+  mirror: once
+
+# Minimum view time required to upgrade a visit score.
+- name: places.frecency.pages.interactions.viewTimeSeconds
+  type: uint32_t
+  value: 60
+  mirror: once
+
+# Minimum view time required to upgrade a visit score of a visit
+# provided there is a minimum threshold of keypresses.
+- name: places.frecency.pages.interactions.viewTimeIfManyKeypressesSeconds
+  type: uint32_t
+  value: 20
+  mirror: once
+
+# Minimum keypresses of a visit required to upgrade a visit score.
+- name: places.frecency.pages.interactions.manyKeypresses
   type: uint32_t
   value: 50
   mirror: once
