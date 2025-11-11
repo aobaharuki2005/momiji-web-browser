@@ -210,6 +210,11 @@ struct DeviceState {
     MOZ_ASSERT(mTrackSource);
   }
 
+  // true if we have allocated mDevice. When not allocated, we may not stop or
+  // deallocate.
+  // MainThread only.
+  bool mAllocated = false;
+
   // true if we have stopped mDevice, this is a terminal state.
   // MainThread only.
   bool mStopped = false;
@@ -389,7 +394,8 @@ class DeviceListener : public SupportsWeakPtr {
    * Marks this listener as active and creates the internal device state.
    */
   void Activate(RefPtr<LocalMediaDevice> aDevice,
-                RefPtr<LocalTrackSource> aTrackSource, bool aStartMuted);
+                RefPtr<LocalTrackSource> aTrackSource, bool aStartMuted,
+                bool aIsAllocated);
 
   /**
    * Posts a task to initialize and start the associated device.
@@ -571,7 +577,7 @@ class GetUserMediaWindowListener {
    */
   void Activate(RefPtr<DeviceListener> aListener,
                 RefPtr<LocalMediaDevice> aDevice,
-                RefPtr<LocalTrackSource> aTrackSource) {
+                RefPtr<LocalTrackSource> aTrackSource, bool aIsAllocated) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aListener);
     MOZ_ASSERT(!aListener->Activated());
@@ -589,7 +595,8 @@ class GetUserMediaWindowListener {
     }
 
     mInactiveListeners.RemoveElement(aListener);
-    aListener->Activate(std::move(aDevice), std::move(aTrackSource), muted);
+    aListener->Activate(std::move(aDevice), std::move(aTrackSource), muted,
+                        aIsAllocated);
     mActiveListeners.AppendElement(std::move(aListener));
   }
 
@@ -1774,11 +1781,13 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
   // is freed when the page is invalidated (on navigation or close).
   if (mAudioDeviceListener) {
     mWindowListener->Activate(mAudioDeviceListener, mAudioDevice,
-                              std::move(audioTrackSource));
+                              std::move(audioTrackSource),
+                              /*aIsAllocated=*/true);
   }
   if (mVideoDeviceListener) {
     mWindowListener->Activate(mVideoDeviceListener, mVideoDevice,
-                              std::move(videoTrackSource));
+                              std::move(videoTrackSource),
+                              /*aIsAllocated=*/true);
   }
 
   // Dispatch to the media thread to ask it to start the sources, because that
@@ -4263,7 +4272,7 @@ void DeviceListener::Register(GetUserMediaWindowListener* aListener) {
 
 void DeviceListener::Activate(RefPtr<LocalMediaDevice> aDevice,
                               RefPtr<LocalTrackSource> aTrackSource,
-                              bool aStartMuted) {
+                              bool aStartMuted, bool aIsAllocated) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
   LOG("DeviceListener %p activating %s device %p", this,
@@ -4289,6 +4298,7 @@ void DeviceListener::Activate(RefPtr<LocalMediaDevice> aDevice,
   mDeviceState = MakeUnique<DeviceState>(
       std::move(aDevice), std::move(aTrackSource), offWhileDisabled);
   mDeviceState->mDeviceMuted = aStartMuted;
+  mDeviceState->mAllocated = aIsAllocated;
   if (aStartMuted) {
     mDeviceState->mTrackSource->Mute();
   }
@@ -4403,10 +4413,12 @@ void DeviceListener::Stop() {
 
     mDeviceState->mTrackSource->Stop();
 
-    MediaManager::Dispatch(NewTaskFrom([device = mDeviceState->mDevice]() {
-      device->Stop();
-      device->Deallocate();
-    }));
+    if (mDeviceState->mAllocated) {
+      MediaManager::Dispatch(NewTaskFrom([device = mDeviceState->mDevice]() {
+        device->Stop();
+        device->Deallocate();
+      }));
+    }
 
     mWindowListener->ChromeAffectingStateChanged();
   }
