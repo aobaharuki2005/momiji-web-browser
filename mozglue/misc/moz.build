@@ -38,6 +38,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "PreXULSkeletonUI.h",
         "StackWalk_windows.h",
         "StackWalkThread.h",
+        "TimeStamp_windows.h",
         "WindowsDpiAwareness.h",
     ]
 
