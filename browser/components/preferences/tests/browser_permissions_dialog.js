@@ -586,13 +586,12 @@ add_task(async function testTabBehaviour() {
 
 add_task(async function addSpeakerPermission() {
   let enabled = Services.prefs.getBoolPref("media.setsinkid.enabled", false);
-  let speakerButton = gBrowser.contentDocument.getElementById(
-    "speakerSettingsButton"
-  );
+  let speakerRow =
+    gBrowser.contentDocument.getElementById("speakerSettingsRow");
   Assert.equal(
-    BrowserTestUtils.isVisible(speakerButton),
+    BrowserTestUtils.isVisible(speakerRow),
     enabled,
-    "speakerButton visible"
+    "speakerRow visible"
   );
   if (!enabled) {
     return;
@@ -639,45 +638,35 @@ add_task(async function addSpeakerPermission() {
 
 add_task(async function testLocalNetworkAccessPermissionVisibility() {
   let enabled = Services.prefs.getBoolPref("network.lna.blocking", false);
-  let localHostSettingsButton = gBrowser.contentDocument.getElementById(
-    "localHostSettingsButton"
+  let localHostSettingsRow = gBrowser.contentDocument.getElementById(
+    "localHostSettingsRow"
   );
-  let localNetworkSettingsButton = gBrowser.contentDocument.getElementById(
-    "localNetworkSettingsButton"
+  let localNetworkSettingsRow = gBrowser.contentDocument.getElementById(
+    "localNetworkSettingsRow"
   );
 
   Assert.equal(
-    BrowserTestUtils.isVisible(localNetworkSettingsButton),
+    BrowserTestUtils.isVisible(localNetworkSettingsRow),
     enabled,
     "localhost permissions visible"
   );
   Assert.equal(
-    BrowserTestUtils.isVisible(localHostSettingsButton),
+    BrowserTestUtils.isVisible(localHostSettingsRow),
     enabled,
     "localhost permissions visible"
-  );
-
-  let changeLocalHostButton = waitForSettingControlChange(
-    localHostSettingsButton
-  );
-  let changeLocalNetworkButton = waitForSettingControlChange(
-    localNetworkSettingsButton
   );
 
   enabled = !enabled;
   Services.prefs.setBoolPref("network.lna.blocking", enabled);
 
-  await changeLocalHostButton;
-  await changeLocalNetworkButton;
-
   Assert.equal(
-    BrowserTestUtils.isVisible(localHostSettingsButton),
+    BrowserTestUtils.isVisible(localHostSettingsRow),
     enabled,
     "localhost permissions toggle"
   );
 
   Assert.equal(
-    BrowserTestUtils.isVisible(localNetworkSettingsButton),
+    BrowserTestUtils.isVisible(localNetworkSettingsRow),
     enabled,
     "localhost permissions toggle"
   );
