@@ -191,6 +191,9 @@ support-files = ["file_lnk.lnk",]
 
 ["browser_ipAddressSpace_mainpage_unaffected.js"]
 
+["browser_link_hover_speculative_connection.js"]
+support-files = ["file_link_hover.sjs"]
+
 ["browser_mock_https_rr.js"]
 skip-if = [
   "http3",
