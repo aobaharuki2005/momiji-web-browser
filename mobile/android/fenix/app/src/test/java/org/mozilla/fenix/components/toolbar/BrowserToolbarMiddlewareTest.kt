@@ -3139,6 +3139,18 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN expanded toolbar use homepage shortcut WHEN initializing toolbar THEN show Homepage in navigation actions`() = runTest {
+        every { settings.shouldUseExpandedToolbar } returns true
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.toolbarExpandedShortcutKey } returns ShortcutType.HOMEPAGE
+
+        val toolbarStore = buildStore()
+
+        val homepageButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
+        assertEquals(expectedHomepageButton(source = Source.NavigationBar), homepageButton)
+    }
+
+    @Test
     fun `mapShortcutToAction maps keys to actions and falls back to default set`() {
         assertEquals(
             ToolbarAction.NewTab,

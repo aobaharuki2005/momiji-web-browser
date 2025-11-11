@@ -483,6 +483,7 @@ class BrowserToolbarMiddleware(
         FakeShare,
         NewTab,
         FakeTranslate,
+        FakeHomepage,
     }
 
     private data class HomeToolbarActionConfig(
@@ -560,6 +561,13 @@ class BrowserToolbarMiddleware(
             state = ActionButton.State.DISABLED,
             onClick = FakeClicked,
         )
+
+        HomeToolbarAction.FakeHomepage -> ActionButtonRes(
+            drawableResId = iconsR.drawable.mozac_ic_home_24,
+            contentDescription = R.string.browser_menu_homepage,
+            state = ActionButton.State.DISABLED,
+            onClick = FakeClicked,
+        )
     }
 
     companion object {
@@ -569,6 +577,7 @@ class BrowserToolbarMiddleware(
         ): HomeToolbarAction = when (key) {
             ShortcutType.BOOKMARK -> HomeToolbarAction.FakeBookmark
             ShortcutType.TRANSLATE -> HomeToolbarAction.FakeTranslate
+            ShortcutType.HOMEPAGE -> HomeToolbarAction.FakeHomepage
             else -> HomeToolbarAction.FakeBookmark
         }
     }

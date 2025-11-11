@@ -835,6 +835,24 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN expanded toolbar use homepage shortcut WHEN initializing toolbar THEN show DISABLED Homepage in navigation actions`() = runTest {
+        every { testContext.settings().shouldShowToolbarCustomization } returns true
+        every { testContext.settings().shouldUseExpandedToolbar } returns true
+        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.HOMEPAGE
+
+        val middleware = BrowserToolbarMiddleware(
+            appStore,
+            browserStore,
+            mockk(),
+            mockk(),
+        )
+        val toolbarStore = buildStore(middleware)
+
+        val homepageButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
+        assertEquals(expectedHomepageButton, homepageButton)
+    }
+
+    @Test
     fun `mapShortcutToAction maps keys to actions and falls back to fake bookmark action`() {
         assertEquals(
             HomeToolbarAction.FakeBookmark,
@@ -843,6 +861,10 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(
             HomeToolbarAction.FakeTranslate,
             mapShortcutToAction(key = ShortcutType.TRANSLATE),
+        )
+        assertEquals(
+            HomeToolbarAction.FakeHomepage,
+            mapShortcutToAction(key = ShortcutType.HOMEPAGE),
         )
         assertEquals(
             HomeToolbarAction.FakeBookmark,
@@ -979,6 +1001,13 @@ class BrowserToolbarMiddlewareTest {
     private val expectedTranslateButton = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_translate_24,
         contentDescription = R.string.browser_toolbar_translate,
+        state = ActionButton.State.DISABLED,
+        onClick = FakeClicked,
+    )
+
+    private val expectedHomepageButton = ActionButtonRes(
+        drawableResId = iconsR.drawable.mozac_ic_home_24,
+        contentDescription = R.string.browser_menu_homepage,
         state = ActionButton.State.DISABLED,
         onClick = FakeClicked,
     )
