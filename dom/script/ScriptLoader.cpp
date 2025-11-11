@@ -3614,6 +3614,7 @@ void ScriptLoader::MaybeUpdateDiskCache() {
 }
 
 void ScriptLoader::UpdateDiskCache() {
+  MOZ_ASSERT(!mCache);
   LOG(("ScriptLoader (%p): Start bytecode encoding.", this));
 
   // If any script got added in the previous loop cycle, wait until all
@@ -3635,12 +3636,6 @@ void ScriptLoader::UpdateDiskCache() {
   for (auto& loadedScript : mDiskCacheQueue) {
     // The bytecode encoding is performed only when there was no
     // bytecode stored in the necko cache.
-    //
-    // For in-memory cached case, the save might already be performed
-    // by other requests.
-    // See also ScriptLoader::MaybePrepareModuleForDiskCacheAfterExecute.
-    //
-    // TODO: Move this to SharedScriptCache.
     if (!loadedScript->HasDiskCacheReference()) {
       continue;
     }
