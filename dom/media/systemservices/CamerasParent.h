@@ -193,7 +193,7 @@ class CamerasParent final : public PCamerasParent {
   mozilla::ipc::IPCResult RecvStopCapture(const CaptureEngine& aCapEngine,
                                           const int& aStreamId) override;
   mozilla::ipc::IPCResult RecvReleaseFrame(
-      mozilla::ipc::Shmem&& aShmem) override;
+      const int& aCaptureId, mozilla::ipc::Shmem&& aShmem) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
   mozilla::ipc::IPCResult RecvEnsureInitialized(
       const CaptureEngine& aCapEngine) override;
@@ -207,10 +207,10 @@ class CamerasParent final : public PCamerasParent {
     MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
     return mDestroyed;
   };
-  ShmemBuffer GetBuffer(size_t aSize);
+  ShmemBuffer GetBuffer(int aCaptureId, size_t aSize);
 
   // helper to forward to the PBackground thread
-  int DeliverFrameOverIPC(CaptureEngine aCapEngine,
+  int DeliverFrameOverIPC(CaptureEngine aCapEngine, int aCaptureId,
                           const Span<const int>& aStreamId,
                           const TrackingId& aTrackingId, ShmemBuffer aBuffer,
                           unsigned char* aAltBuffer,
@@ -272,8 +272,13 @@ class CamerasParent final : public PCamerasParent {
   // capture thread only.
   const RefPtr<VideoCaptureFactory> mVideoCaptureFactory;
 
-  // image buffers
-  ShmemPool mShmemPool;
+  // Image buffers. One pool per CamerasParent instance and capture id (i.e.
+  // unique source). Multiple CamerasParent instances capturing the same source
+  // need distinct ShmemPools as ShmemBuffers are tied to the IPC channel.
+  // Access is on the PBackground thread for mutations and
+  // allocating shmem buffers, and on the callback thread (varies by capture
+  // backend) for querying an existing pool for an available buffer.
+  DataMutex<std::map<int, ShmemPool>> mShmemPools;
 
   // PBackgroundParent thread
   const nsCOMPtr<nsISerialEventTarget> mPBackgroundEventTarget;

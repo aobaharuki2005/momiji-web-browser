@@ -490,18 +490,18 @@ mozilla::ipc::IPCResult CamerasChild::RecvCaptureEnded(
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvDeliverFrame(
-    nsTArray<int>&& capIds, mozilla::ipc::Shmem&& shmem,
-    const VideoFrameProperties& prop) {
+    const int& aCaptureId, nsTArray<int>&& aStreamIds,
+    mozilla::ipc::Shmem&& aShmem, const VideoFrameProperties& aProps) {
   MutexAutoLock lock(mCallbackMutex);
-  for (int capId : capIds) {
-    if (auto* cb = Callback(capId)) {
-      unsigned char* image = shmem.get<unsigned char>();
-      cb->DeliverFrame(image, prop);
+  for (const int& streamId : aStreamIds) {
+    if (auto* cb = Callback(streamId)) {
+      unsigned char* image = aShmem.get<unsigned char>();
+      cb->DeliverFrame(image, aProps);
     } else {
       LOG(("DeliverFrame called with dead callback"));
     }
   }
-  SendReleaseFrame(std::move(shmem));
+  SendReleaseFrame(aCaptureId, std::move(aShmem));
   return IPC_OK();
 }
 
