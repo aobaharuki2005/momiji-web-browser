@@ -7,6 +7,7 @@ import { MozLitElement } from "../lit-utils.mjs";
 
 /**
  * Functions to wrap a string in a heading.
+ *
  * @type {Record<number, (label: string) => ReturnType<typeof html>>}
  */
 const HEADING_LEVEL_TEMPLATES = {
