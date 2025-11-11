@@ -91,6 +91,53 @@
        `${JSON.stringify(cloneExpected)} by ${JSON.stringify(video)} ` +
        `and ${JSON.stringify(cloneVideo)}`));
 
+  [
+    [
+      [{echoCancellation: true}, {echoCancellation: false, noiseSuppression: true, autoGainControl: true}],
+      [
+        {echoCancellation: true, noiseSuppression: true, autoGainControl: true},
+        {echoCancellation: false, noiseSuppression: true, autoGainControl: true},
+      ],
+    ],
+    [
+      [{echoCancellation: false, noiseSuppression: false, autoGainControl: false}, {}],
+      [
+        {echoCancellation: false, noiseSuppression: false, autoGainControl: false},
+        {echoCancellation: true, noiseSuppression: true, autoGainControl: true},
+      ],
+    ],
+  ].forEach(
+    ([
+      [audio, cloneAudio],
+      [expected, cloneExpected],
+    ]) => promise_test(async t => {
+      const stream = await navigator.mediaDevices.getUserMedia({audio});
+      const [track] = stream.getTracks();
+      const clone = track.clone();
+      t.add_cleanup(() => {
+        track.stop();
+        clone.stop();
+      });
+      let settings = track.getSettings();
+      let cloneSettings = clone.getSettings();
+      for (const key of Object.keys(expected)) {
+        assert_equals(settings[key], expected[key], `original: ${key}`);
+        assert_equals(cloneSettings[key], expected[key], `clone: ${key}`);
+      }
+      await clone.applyConstraints(cloneAudio);
+      settings = track.getSettings();
+      cloneSettings = clone.getSettings();
+      for (const key of Object.keys(expected)) {
+        assert_equals(settings[key], expected[key], `original-post: ${key}`);
+      }
+      for (const key of Object.keys(cloneExpected)) {
+        assert_equals(cloneSettings[key], cloneExpected[key], `clone-post: ${key}`);
+      }
+    }, `gUM gets ${JSON.stringify(expected)} + clone ` +
+       `${JSON.stringify(cloneExpected)} by ${JSON.stringify(audio)} ` +
+       `and ${JSON.stringify(cloneAudio)}`));
+
+
 
   promise_test(async t => {
     const stream = await navigator.mediaDevices.getUserMedia({video: true});
