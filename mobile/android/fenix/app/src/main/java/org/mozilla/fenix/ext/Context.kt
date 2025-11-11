@@ -167,6 +167,35 @@ fun Context.tabsClosedUndoMessage(private: Boolean): String =
  */
 fun Context.isLargeWindow(): Boolean = AcornWindowSize.isLargeWindow(this)
 
+internal const val TALL_SCREEN_HEIGHT_DP = 480
+internal const val WIDE_SCREEN_WIDTH_DP = 600
+
+/**
+ * Helper function to determine whether the app's current window height
+ * is at least more than [TALL_SCREEN_HEIGHT_DP].
+ *
+ * This is useful when navigation bar should only be enabled on
+ * taller screens (e.g., to avoid crowding content vertically).
+ *
+ * @return true if the window height size is more than [TALL_SCREEN_HEIGHT_DP].
+ */
+fun Context.isTallWindow(): Boolean {
+    return resources.configuration.screenHeightDp > TALL_SCREEN_HEIGHT_DP
+}
+
+/**
+ * Helper function to determine whether the app's current window width
+ * is at least more than [WIDE_SCREEN_WIDTH_DP].
+ *
+ * This is useful when navigation bar should only be enabled on
+ * wider screens (e.g., to avoid crowding content horizontally).
+ *
+ * @return true if the window width size is more than [WIDE_SCREEN_WIDTH_DP].
+ */
+fun Context.isWideWindow(): Boolean {
+    return resources.configuration.screenWidthDp > WIDE_SCREEN_WIDTH_DP
+}
+
 /**
  *  This will record an event in the Nimbus internal event store. Used for behavioral targeting.
  */
