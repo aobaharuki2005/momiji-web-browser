@@ -113,12 +113,16 @@ class InputModule extends RootBiDiModule {
    *
    * @param {BrowsingContext} context
    *     The browsing context to forward the command to.
-   *
-   * @returns {Promise}
-   *     Promise that resolves when the finalization is done.
    */
-  #finalizeAction(context) {
-    return this._forwardToWindowGlobal("_finalizeAction", context.id);
+  async #finalizeAction(context) {
+    try {
+      await this._forwardToWindowGlobal("_finalizeAction", context.id);
+    } catch (e) {
+      // Ignore the error if the underlying browsing context is already gone.
+      if (e.name !== "DiscardedBrowsingContextError") {
+        throw e;
+      }
+    }
   }
 
   /**
