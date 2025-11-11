@@ -189,12 +189,12 @@ struct MicroTaskQueueSet {
   MicroTaskQueueSet(const MicroTaskQueueSet&) = delete;
   MicroTaskQueueSet& operator=(const MicroTaskQueueSet&) = delete;
 
-  bool enqueueRegularMicroTask(JSContext* cx, const JS::GenericMicroTask&);
-  bool enqueueDebugMicroTask(JSContext* cx, const JS::GenericMicroTask&);
-  bool prependRegularMicroTask(JSContext* cx, const JS::GenericMicroTask&);
+  bool enqueueRegularMicroTask(JSContext* cx, const JS::MicroTask&);
+  bool enqueueDebugMicroTask(JSContext* cx, const JS::MicroTask&);
+  bool prependRegularMicroTask(JSContext* cx, const JS::MicroTask&);
 
-  JS::GenericMicroTask popFront();
-  JS::GenericMicroTask popDebugFront();
+  JS::MicroTask popFront();
+  JS::MicroTask popDebugFront();
 
   bool empty() { return microTaskQueue.empty() && debugMicroTaskQueue.empty(); }
 
