@@ -1870,7 +1870,7 @@ void MacroAssembler::call(JitCode* c) {
 CodeOffset MacroAssembler::nopPatchableToCall() {
   as_nop();  // lui
   as_nop();  // ori
-  as_nop();  // drotr32
+  as_nop();  // dsll
   as_nop();  // ori
   as_nop();  // jalr
   as_nop();

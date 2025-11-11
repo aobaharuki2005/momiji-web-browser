@@ -273,8 +273,8 @@ void MacroAssemblerMIPS64::ma_liPatchable(Register dest, ImmWord imm,
                                           LiFlags flags) {
   if (Li64 == flags) {
     m_buffer.ensureSpace(6 * sizeof(uint32_t));
-    as_lui(dest, Imm16::Upper(Imm32(imm.value >> 32)).encode());
-    as_ori(dest, dest, Imm16::Lower(Imm32(imm.value >> 32)).encode());
+    as_lui(dest, Imm16::Upper(Imm32((imm.value >> 32) + 0x8000)).encode());
+    as_daddiu(dest, dest, int16_t((imm.value >> 32) & 0xffff));
     as_dsll(dest, dest, 16);
     as_ori(dest, dest, Imm16::Upper(Imm32(imm.value)).encode());
     as_dsll(dest, dest, 16);
@@ -283,7 +283,7 @@ void MacroAssemblerMIPS64::ma_liPatchable(Register dest, ImmWord imm,
     m_buffer.ensureSpace(4 * sizeof(uint32_t));
     as_lui(dest, Imm16::Lower(Imm32(imm.value >> 32)).encode());
     as_ori(dest, dest, Imm16::Upper(Imm32(imm.value)).encode());
-    as_drotr32(dest, dest, 48);
+    as_dsll(dest, dest, 16);
     as_ori(dest, dest, Imm16::Lower(Imm32(imm.value)).encode());
   }
 }
