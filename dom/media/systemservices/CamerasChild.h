@@ -45,6 +45,10 @@ class CamerasChild;
 template <class T>
 class LockAndDispatch;
 
+static constexpr int kSuccess = 0;
+static constexpr int kError = -1;
+static constexpr int kIpcError = -2;
+
 // We emulate the sync webrtc.org API with the help of singleton
 // CamerasSingleton, which manages a pointer to an IPC object, a thread
 // where IPC operations should run on, and a mutex.
@@ -223,7 +227,13 @@ class CamerasChild final : public PCamerasChild {
   ~CamerasChild();
   // Dispatch a Runnable to the PCamerasParent, by executing it on the
   // decidecated Cameras IPC/PBackground thread.
-  bool DispatchToParent(nsIRunnable* aRunnable, MonitorAutoLock& aMonitor);
+  enum class DispatchToParentResult : int8_t {
+    SUCCESS = 0,
+    FAILURE = -1,
+    DISCONNECTED = -2,
+  };
+  DispatchToParentResult DispatchToParent(nsIRunnable* aRunnable,
+                                          MonitorAutoLock& aMonitor);
   void AddCallback(int capture_id, FrameRelay* render);
   void RemoveCallback(int capture_id);
 
@@ -250,7 +260,6 @@ class CamerasChild final : public PCamerasChild {
   bool mReceivedReply;
   // Async responses data contents;
   bool mReplySuccess;
-  const int mZero;
   int mReplyInteger;
   webrtc::VideoCaptureCapability* mReplyCapability = nullptr;
   nsCString mReplyDeviceName;
