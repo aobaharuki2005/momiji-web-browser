@@ -3667,7 +3667,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRespondStartSwipeEvent(
   return IPC_OK();
 }
 
-bool BrowserParent::GetDocShellIsActive() {
+bool BrowserParent::GetDocShellIsActive() const {
   return mBrowsingContext && mBrowsingContext->IsActive();
 }
 
