@@ -100,7 +100,9 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   void Close();
   bool HasBatchedData() const;
 
-  MediaEventSource<int64_t, AwakeTimeStamp>& OnOutput() { return mOnOutput; }
+  MediaEventSource<int64_t, TimeStamp, AwakeTimeStamp>& OnOutput() {
+    return mOnOutput;
+  }
   MediaEventSource<void>& OnEnd() { return mOnEnd; }
 
   // Graph Thread API
@@ -176,8 +178,8 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   const RefPtr<nsISerialEventTarget> mDecoderThread;
 
   // Notify the amount of audio frames which have been sent to the track,
-  // sampled by the system time they were sent.
-  MediaEventProducer<int64_t, AwakeTimeStamp> mOnOutput;
+  // sampled by the awake system time (and non-awake, for now) they were sent.
+  MediaEventProducer<int64_t, TimeStamp, AwakeTimeStamp> mOnOutput;
   // Notify when the track is ended.
   MediaEventProducer<void> mOnEnd;
 
