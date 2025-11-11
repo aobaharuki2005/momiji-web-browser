@@ -21,12 +21,20 @@ add_task(async function () {
     url: `http://${host}`,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
+  // Add one visit to http to give it a realistic origin frecency score instead
+  // of the default value of 1. This ensures the threshold test doesn't use an
+  // artificially low baseline.
+  await PlacesTestUtils.addVisits(`http://${host}`);
+
   for (let i = 0; i < 3; i++) {
     await PlacesTestUtils.addVisits(`https://${host}`);
   }
   // ensure both fall below the threshold.
   for (let i = 0; i < 15; i++) {
-    await PlacesTestUtils.addVisits(`https://not-${host}`);
+    await PlacesTestUtils.addVisits({
+      url: `https://not-${host}`,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
+    });
   }
 
   async function check_autofill() {
@@ -78,10 +86,19 @@ add_task(async function () {
   await checkOriginsOrder(host, ["http://", "https://"]);
   await PlacesUtils.bookmarks.remove(bookmark);
   await PlacesUtils.withConnectionWrapper("removeOrphans", async db => {
-    db.execute(`DELETE FROM moz_places WHERE url = :url`, {
+    // Delete the visit.
+    await db.execute(
+      `
+      DELETE FROM moz_historyvisits
+      WHERE place_id = (SELECT id FROM moz_places WHERE url = :url)`,
+      { url: `http://${host}/` }
+    );
+
+    await db.execute(`DELETE FROM moz_places WHERE url = :url`, {
       url: `http://${host}/`,
     });
-    db.execute(
+
+    await db.execute(
       `DELETE FROM moz_origins WHERE prefix = "http://" AND host = :host`,
       { host }
     );
@@ -90,6 +107,8 @@ add_task(async function () {
     url: `http://${host}`,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
+  // Add a visit to prevent origin frecency from being too low.
+  await PlacesTestUtils.addVisits(`http://${host}`);
 
   await checkOriginsOrder(host, ["https://", "http://"]);
 

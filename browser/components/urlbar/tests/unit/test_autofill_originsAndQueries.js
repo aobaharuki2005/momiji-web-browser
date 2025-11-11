@@ -848,6 +848,21 @@ add_autofill_task(async function bookmarkBelowThreshold() {
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
+
+  // Bookmarks without a visit are given a frecency boost. To reduce its
+  // frecency (and thus, make it lower than the origin autofill threshold),
+  // set its creation date to a long time ago.
+  let thirtyYearsAgoMicroseconds =
+    (Date.now() - 30 * 365 * 24 * 60 * 60 * 1000) * 1000;
+  await PlacesUtils.withConnectionWrapper(
+    "test_autofill_originsAndQueries::add_autofill_task",
+    async db => {
+      await db.execute("UPDATE moz_bookmarks SET dateAdded = :dateAdded", {
+        dateAdded: thirtyYearsAgoMicroseconds,
+      });
+    }
+  );
+
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   // Make sure the bookmarked origin and place frecencies are below the
