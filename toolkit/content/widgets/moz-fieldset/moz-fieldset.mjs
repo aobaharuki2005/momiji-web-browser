@@ -79,6 +79,7 @@ export default class MozFieldset extends MozLitElement {
 
   /**
    * Returns true when the fieldset should render its label as a heading element.
+   *
    * @returns {boolean}
    */
   get hasHeading() {
