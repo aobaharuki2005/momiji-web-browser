@@ -897,12 +897,12 @@ OutOfLineCode* CodeGeneratorX86Shared::emitOutOfLineZeroForDivideByZero(
 }
 
 void CodeGenerator::visitUDiv(LUDiv* ins) {
-  Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register output = ToRegister(ins->output());
   Register remainder = ToRegister(ins->temp0());
 
-  MOZ_ASSERT_IF(lhs != rhs, rhs != eax);
+  MOZ_ASSERT(ToRegister(ins->lhs()) == eax);
+  MOZ_ASSERT(rhs != eax);
   MOZ_ASSERT(rhs != edx);
   MOZ_ASSERT(output == eax);
   MOZ_ASSERT(remainder == edx);
@@ -910,11 +910,6 @@ void CodeGenerator::visitUDiv(LUDiv* ins) {
   MDiv* mir = ins->mir();
 
   OutOfLineCode* ool = nullptr;
-
-  // Put the lhs in eax.
-  if (lhs != eax) {
-    masm.mov(lhs, eax);
-  }
 
   // Prevent divide by zero.
   if (mir->canBeDivideByZero()) {
@@ -950,11 +945,11 @@ void CodeGenerator::visitUDiv(LUDiv* ins) {
 }
 
 void CodeGenerator::visitUMod(LUMod* ins) {
-  Register lhs = ToRegister(ins->lhs());
   Register rhs = ToRegister(ins->rhs());
   Register output = ToRegister(ins->output());
 
-  MOZ_ASSERT_IF(lhs != rhs, rhs != eax);
+  MOZ_ASSERT(ToRegister(ins->lhs()) == eax);
+  MOZ_ASSERT(rhs != eax);
   MOZ_ASSERT(rhs != edx);
   MOZ_ASSERT(output == edx);
   MOZ_ASSERT(ToRegister(ins->temp0()) == eax);
@@ -962,11 +957,6 @@ void CodeGenerator::visitUMod(LUMod* ins) {
   MMod* mir = ins->mir();
 
   OutOfLineCode* ool = nullptr;
-
-  // Put the lhs in eax.
-  if (lhs != eax) {
-    masm.mov(lhs, eax);
-  }
 
   // Prevent divide by zero.
   if (mir->canBeDivideByZero()) {
@@ -1321,7 +1311,8 @@ void CodeGenerator::visitDivI(LDivI* ins) {
   Register rhs = ToRegister(ins->rhs());
   Register output = ToRegister(ins->output());
 
-  MOZ_ASSERT_IF(lhs != rhs, rhs != eax);
+  MOZ_ASSERT(lhs == eax);
+  MOZ_ASSERT(rhs != eax);
   MOZ_ASSERT(rhs != edx);
   MOZ_ASSERT(remainder == edx);
   MOZ_ASSERT(output == eax);
@@ -1330,12 +1321,6 @@ void CodeGenerator::visitDivI(LDivI* ins) {
 
   Label done;
   OutOfLineCode* ool = nullptr;
-
-  // Put the lhs in eax, for either the negative overflow case or the regular
-  // divide case.
-  if (lhs != eax) {
-    masm.mov(lhs, eax);
-  }
 
   // Handle divide by zero.
   if (mir->canBeDivideByZero()) {
@@ -1376,9 +1361,6 @@ void CodeGenerator::visitDivI(LDivI* ins) {
   }
 
   // Sign extend the lhs into edx to make (edx:eax), since idiv is 64-bit.
-  if (lhs != eax) {
-    masm.mov(lhs, eax);
-  }
   masm.cdq();
   masm.idiv(rhs);
 
@@ -1469,7 +1451,8 @@ void CodeGenerator::visitModI(LModI* ins) {
   Register rhs = ToRegister(ins->rhs());
 
   // Required to use idiv.
-  MOZ_ASSERT_IF(lhs != rhs, rhs != eax);
+  MOZ_ASSERT(lhs == eax);
+  MOZ_ASSERT(rhs != eax);
   MOZ_ASSERT(rhs != edx);
   MOZ_ASSERT(remainder == edx);
   MOZ_ASSERT(ToRegister(ins->temp0()) == eax);
@@ -1479,11 +1462,6 @@ void CodeGenerator::visitModI(LModI* ins) {
   Label done;
   OutOfLineCode* ool = nullptr;
   ModOverflowCheck* overflow = nullptr;
-
-  // Set up eax in preparation for doing a div.
-  if (lhs != eax) {
-    masm.mov(lhs, eax);
-  }
 
   // Prevent divide by zero.
   if (mir->canBeDivideByZero()) {
