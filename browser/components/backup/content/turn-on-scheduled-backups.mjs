@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html, nothing } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
@@ -120,6 +120,7 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     this._showPasswordOptions = false;
     this._passwordsMatch = false;
     this.enableBackupErrorCode = 0;
+    this.disableSubmit = false;
   }
 
   connectedCallback() {
@@ -185,20 +186,9 @@ export default class TurnOnScheduledBackups extends MozLitElement {
   }
 
   handleConfirm() {
-    let detail;
-    if (this._newPath) {
-      detail = {
-        parentDirPath: this._newPath,
-      };
-    } else if (this.backupServiceState?.backupDirPath) {
-      detail = {
-        parentDirPath: this.backupServiceState?.backupDirPath,
-      };
-    } else {
-      detail = {
-        parentDirPath: this.defaultPath,
-      };
-    }
+    let detail = {
+      parentDirPath: this._newPath || this.defaultPath,
+    };
 
     if (this._showPasswordOptions && this._passwordsMatch) {
       detail.password = this._inputPassValue;
@@ -237,6 +227,7 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     this._passwordsMatch = false;
     this._inputPassValue = "";
     this.enableBackupErrorCode = 0;
+    this.disableSubmit = false;
     // we don't want to reset the path when embedded in the spotlight
     if (!this.embeddedFxBackupOptIn) {
       this._newPath = "";
@@ -255,17 +246,22 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     let filename = this.defaultLabel;
     let iconURL = this.defaultIconURL || this.#placeholderIconURL;
 
+    const hasFilename = !!filename;
+    const l10nArgs = hasFilename
+      ? JSON.stringify({ recommendedFolder: filename })
+      : null;
+
     return html`
       <input
         id="backup-location-filepicker-input-default"
         class="backup-location-filepicker-input"
         type="text"
         readonly
-        data-l10n-id="turn-on-scheduled-backups-location-default-folder"
-        data-l10n-args=${JSON.stringify({
-          recommendedFolder: filename,
-        })}
-        data-l10n-attrs="value"
+        data-l10n-id=${hasFilename
+          ? "turn-on-scheduled-backups-location-default-folder"
+          : nothing}
+        data-l10n-args=${hasFilename ? l10nArgs : nothing}
+        data-l10n-attrs=${hasFilename ? "value" : "placeholder"}
         style=${`background-image: url(${iconURL})`}
       />
     `;
@@ -362,6 +358,20 @@ export default class TurnOnScheduledBackups extends MozLitElement {
   }
 
   contentTemplate() {
+    // All the situations where we want to disable submit:
+    // - passwords don't match
+    // - there's no destination folder
+    // - other unknown errors
+    if (
+      (this._showPasswordOptions && !this._passwordsMatch) ||
+      (this._newPath == "" && this.defaultLabel == "") ||
+      this.enableBackupErrorCode != ERRORS.NONE
+    ) {
+      this.disableSubmit = true;
+    } else {
+      this.disableSubmit = false;
+    }
+
     return html`
       <form
         id="backup-turn-on-scheduled-wrapper"
@@ -407,7 +417,7 @@ export default class TurnOnScheduledBackups extends MozLitElement {
             type="primary"
             data-l10n-id=${this.turnOnBackupConfirmBtnL10nId ||
             "turn-on-scheduled-backups-confirm-button"}
-            ?disabled=${this._showPasswordOptions && !this._passwordsMatch}
+            ?disabled=${this.disableSubmit}
           ></moz-button>
         </moz-button-group>
       </form>

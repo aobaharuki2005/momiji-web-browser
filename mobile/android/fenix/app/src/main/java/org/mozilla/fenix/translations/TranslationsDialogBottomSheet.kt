@@ -5,6 +5,7 @@
 package org.mozilla.fenix.translations
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +43,6 @@ import mozilla.components.compose.base.text.Text
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.TranslationError
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.BetaLabel
 import org.mozilla.fenix.compose.InfoCard
 import org.mozilla.fenix.compose.InfoType
 import org.mozilla.fenix.compose.LinkText
@@ -458,33 +458,29 @@ private fun TranslationsDialogHeader(
     showPageSettings: Boolean,
     onSettingClicked: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column {
-            BetaLabel()
-        }
-        Column {
-            if (showPageSettings) {
-                IconButton(
-                    onClick = { onSettingClicked() },
-                    modifier = Modifier.size(24.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(id = iconsR.drawable.mozac_ic_settings_24),
-                        contentDescription = stringResource(
-                            id = R.string.translation_option_bottom_sheet_title_heading,
-                        ),
-                        tint = FirefoxTheme.colors.iconPrimary,
-                    )
-                }
+    if (showPageSettings) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            IconButton(
+                onClick = { onSettingClicked() },
+                modifier = Modifier.size(24.dp),
+            ) {
+                Icon(
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_settings_24),
+                    contentDescription = stringResource(
+                        id = R.string.translation_option_bottom_sheet_title_heading,
+                    ),
+                    tint = FirefoxTheme.colors.iconPrimary,
+                )
             }
         }
     }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(top = 12.dp),
+        modifier = Modifier.padding(top = if (showPageSettings) { 12.dp } else { 0.dp }),
     ) {
         Text(
             text = title,
@@ -671,22 +667,24 @@ private fun getLongestLanguageWidth(languages: List<Language>, style: TextStyle)
 @PreviewLightDark
 private fun TranslationsDialogBottomSheetPreview() {
     FirefoxTheme {
-        TranslationsDialogBottomSheet(
-            translationsDialogState = TranslationsDialogState(
-                positiveButtonType = PositiveButtonType.Enabled,
-                toLanguages = getTranslateToLanguageList(),
-                fromLanguages = getTranslateFromLanguageList(),
-            ),
-            learnMoreUrl = "",
-            showPageSettings = true,
-            showFirstTimeFlow = true,
-            onSettingClicked = {},
-            onLearnMoreClicked = {},
-            onPositiveButtonClicked = {},
-            onNegativeButtonClicked = {},
-            onFromDropdownSelected = {},
-            onToDropdownSelected = {},
-        )
+        Column(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
+            TranslationsDialogBottomSheet(
+                translationsDialogState = TranslationsDialogState(
+                    positiveButtonType = PositiveButtonType.Enabled,
+                    toLanguages = getTranslateToLanguageList(),
+                    fromLanguages = getTranslateFromLanguageList(),
+                ),
+                learnMoreUrl = "",
+                showPageSettings = true,
+                showFirstTimeFlow = true,
+                onSettingClicked = {},
+                onLearnMoreClicked = {},
+                onPositiveButtonClicked = {},
+                onNegativeButtonClicked = {},
+                onFromDropdownSelected = {},
+                onToDropdownSelected = {},
+            )
+        }
     }
 }
 

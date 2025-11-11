@@ -247,7 +247,7 @@ bool nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
 }
 
 /* static */
-void nsTableFrame::PositionedTablePartMaybeChanged(nsIFrame* aFrame,
+void nsTableFrame::PositionedTablePartMaybeChanged(nsContainerFrame* aFrame,
                                                    ComputedStyle* aOldStyle) {
   const bool wasPositioned =
       aOldStyle && aOldStyle->IsAbsPosContainingBlock(aFrame);
@@ -262,13 +262,13 @@ void nsTableFrame::PositionedTablePartMaybeChanged(nsIFrame* aFrame,
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
 
   // Retrieve the positioned parts array for this table.
-  FrameTArray* positionedParts =
-      tableFrame->GetProperty(PositionedTablePartArray());
+  TablePartsArray* positionedParts =
+      tableFrame->GetProperty(PositionedTablePartsProperty());
 
   // Lazily create the array if it doesn't exist yet.
   if (!positionedParts) {
-    positionedParts = new FrameTArray;
-    tableFrame->SetProperty(PositionedTablePartArray(), positionedParts);
+    positionedParts = new TablePartsArray;
+    tableFrame->SetProperty(PositionedTablePartsProperty(), positionedParts);
   }
 
   if (isPositioned) {
@@ -280,7 +280,8 @@ void nsTableFrame::PositionedTablePartMaybeChanged(nsIFrame* aFrame,
 }
 
 /* static */
-void nsTableFrame::MaybeUnregisterPositionedTablePart(nsIFrame* aFrame) {
+void nsTableFrame::MaybeUnregisterPositionedTablePart(
+    nsContainerFrame* aFrame) {
   if (!aFrame->IsAbsPosContainingBlock()) {
     return;
   }
@@ -292,8 +293,8 @@ void nsTableFrame::MaybeUnregisterPositionedTablePart(nsIFrame* aFrame) {
   }
 
   // Retrieve the positioned parts array for this table.
-  FrameTArray* positionedParts =
-      tableFrame->GetProperty(PositionedTablePartArray());
+  TablePartsArray* positionedParts =
+      tableFrame->GetProperty(PositionedTablePartsProperty());
 
   // Remove the frame.
   MOZ_ASSERT(
@@ -1826,7 +1827,8 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
 void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
                                              ReflowOutput& aDesiredSize,
                                              const ReflowInput& aReflowInput) {
-  FrameTArray* positionedParts = GetProperty(PositionedTablePartArray());
+  TablePartsArray* positionedParts =
+      GetProperty(PositionedTablePartsProperty());
   if (!positionedParts) {
     return;
   }
@@ -1834,9 +1836,7 @@ void nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
   OverflowChangedTracker overflowTracker;
   overflowTracker.SetSubtreeRoot(this);
 
-  for (size_t i = 0; i < positionedParts->Length(); ++i) {
-    nsIFrame* positionedPart = positionedParts->ElementAt(i);
-
+  for (nsContainerFrame* positionedPart : *positionedParts) {
     // As we've already finished reflow, positionedParts's size and overflow
     // areas have already been assigned, so we just pull them back out.
     const WritingMode wm = positionedPart->GetWritingMode();

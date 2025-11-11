@@ -49,7 +49,7 @@
 
   .label {
     grid-area: label;
-    font-weight: var(--box-label-font-weight);
+    font-weight: var(--box-label-font-weight, normal);
   }
 
   .icon {

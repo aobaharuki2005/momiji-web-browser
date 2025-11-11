@@ -1235,7 +1235,6 @@ export var UrlbarTestUtils = {
       Object.assign(
         {
           input: {
-            isAddressbar: true,
             isPrivate: false,
             onFirstResult() {
               return false;

@@ -36,9 +36,6 @@
 #  include "mozilla/RemoteMediaManagerChild.h"
 #  include "mozilla/StaticPrefs_media.h"
 #endif
-#ifdef XP_WIN
-#  include "mozilla/WindowsVersion.h"
-#endif
 #ifdef MOZ_WMF_CDM
 #  include "mozilla/WMFCDMProxy.h"
 #endif

@@ -164,7 +164,7 @@ export class SidebarHistory extends SidebarPage {
       // Avoid opening multiple links at once.
       return;
     }
-    navigateToLink(e);
+    navigateToLink(e, e.originalTarget.url, { forceNewTab: false });
     this.treeView.clearSelection();
   }
 

@@ -37,6 +37,11 @@ RTCEncodedFrameBase::RTCEncodedFrameBase(nsIGlobalObject* aGlobal,
       (void*)(mState.mFrame->GetData().data()));
 }
 
+RTCEncodedFrameState::RTCEncodedFrameState(
+    std::unique_ptr<webrtc::TransformableFrameInterface> aFrame,
+    uint64_t aCounter, unsigned long aTimestamp)
+    : mFrame(std::move(aFrame)), mCounter(aCounter), mTimestamp(aTimestamp) {}
+
 RTCEncodedFrameBase::~RTCEncodedFrameBase() = default;
 
 unsigned long RTCEncodedFrameBase::Timestamp() const {

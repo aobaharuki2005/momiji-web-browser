@@ -563,6 +563,10 @@
   <string name="onboarding_redesign_continue_button">ادامه</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_redesign_positive_button">تایید</string>
+  <!-- Sync onboarding redesign positive button text. -->
+  <string name="onboarding_redesign_sync_positive_button">آغاز همگام‌سازی</string>
+  <!-- Sync onboarding redesign negative button text. -->
+  <string name="onboarding_redesign_sync_negative_button">اکنون نه</string>
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">به ما در رشد Firefox کمک کنید</string>
   <!-- Marketing onboarding page body. 'Firefox' is intentionally hardcoded. -->

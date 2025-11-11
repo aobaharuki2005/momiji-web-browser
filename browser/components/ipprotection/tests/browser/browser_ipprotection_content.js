@@ -203,7 +203,7 @@ add_task(async function test_ipprotection_events_on_toggle() {
 
   // Reset service state.
   cleanupService();
-  await IPProtectionService.updateState();
+  IPProtectionService.updateState();
 
   let button = document.getElementById(lazy.IPProtectionWidget.WIDGET_ID);
   let panelView = PanelMultiView.getViewNode(
@@ -220,9 +220,9 @@ add_task(async function test_ipprotection_events_on_toggle() {
 
   setupService({
     isSignedIn: true,
-    isEnrolled: true,
+    isEnrolledAndEntitled: true,
   });
-  await IPProtectionService.updateState();
+  await IPPEnrollAndEntitleManager.refetchEntitlement();
 
   Assert.ok(
     BrowserTestUtils.isVisible(content),

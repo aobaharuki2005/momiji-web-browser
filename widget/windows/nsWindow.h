@@ -11,7 +11,7 @@
  */
 
 #include "mozilla/RefPtr.h"
-#include "nsBaseWidget.h"
+#include "nsIWidget.h"
 #include "CompositorWidget.h"
 #include "mozilla/EventForwards.h"
 #include "nsClassHashtable.h"
@@ -64,6 +64,7 @@ class imgIContainer;
 
 namespace mozilla {
 class WidgetMouseEvent;
+class InputData;
 namespace widget {
 class NativeKey;
 class InProcessWinCompositorWidget;
@@ -133,14 +134,14 @@ void SetWindowStyles(HWND, const WindowStyles&);
 
 }  // namespace mozilla::widget
 
-class nsWindow final : public nsBaseWidget {
+class nsWindow final : public nsIWidget {
  public:
   using Styles = mozilla::widget::WindowStyles;
   using WindowHook = mozilla::widget::WindowHook;
   using IMEContext = mozilla::widget::IMEContext;
   using WidgetEventTime = mozilla::WidgetEventTime;
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsBaseWidget)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsWindow, nsIWidget)
 
   nsWindow();
 
@@ -187,22 +188,14 @@ class nsWindow final : public nsBaseWidget {
   nsWindow* GetParentWindowBase(bool aIncludeOwner);
 
   // nsIWidget interface
-  using nsBaseWidget::Create;  // for Create signature not overridden here
-  [[nodiscard]] nsresult Create(nsIWidget* aParent,
-                                const LayoutDeviceIntRect& aRect,
-                                InitData* aInitData = nullptr) override;
+  using nsIWidget::Create;  // for Create signature not overridden here
+  [[nodiscard]] nsresult Create(nsIWidget* aParent, const LayoutDeviceIntRect&,
+                                const InitData&) override;
   void Destroy() override;
   float GetDPI() override;
   double GetDefaultScaleInternal() override;
   void DidClearParent(nsIWidget* aOldParent) override;
   int32_t LogToPhys(double aValue);
-  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() override {
-    if (mozilla::widget::WinUtils::IsPerMonitorDPIAware()) {
-      return mozilla::DesktopToLayoutDeviceScale(1.0);
-    } else {
-      return mozilla::DesktopToLayoutDeviceScale(GetDefaultScaleInternal());
-    }
-  }
 
   void Show(bool aState) override;
   bool IsVisible() const override;
@@ -211,10 +204,9 @@ class nsWindow final : public nsBaseWidget {
   void LockAspectRatio(bool aShouldLock) override;
   const SizeConstraints GetSizeConstraints() override;
   void SetInputRegion(const InputRegion&) override;
-  void Move(double aX, double aY) override;
-  void Resize(double aWidth, double aHeight, bool aRepaint) override;
-  void Resize(double aX, double aY, double aWidth, double aHeight,
-              bool aRepaint) override;
+  void Move(const DesktopPoint&) override;
+  void Resize(const DesktopSize&, bool aRepaint) override;
+  void Resize(const DesktopRect&, bool aRepaint) override;
   void SetSizeMode(nsSizeMode aMode) override;
   nsSizeMode SizeMode() override;
   void GetWorkspaceID(nsAString& workspaceID) override;
@@ -241,7 +233,6 @@ class nsWindow final : public nsBaseWidget {
                   bool aIncludeChildren = false);
   void Invalidate(const LayoutDeviceIntRect& aRect) override;
   void* GetNativeData(uint32_t aDataType) override;
-  void FreeNativeData(void* data, uint32_t aDataType) override;
   nsresult SetTitle(const nsAString& aTitle) override;
   void SetIcon(const nsAString& aIconSpec) override;
   LayoutDeviceIntPoint WidgetToScreenOffset() override;
@@ -830,6 +821,8 @@ class nsWindow final : public nsBaseWidget {
   // Opaque region maintained by UpdateOpaqueRegion (relative to the client
   // area).
   LayoutDeviceIntRegion mOpaqueRegion;
+
+  LayoutDeviceIntRect mBounds;
 
   // Graphics
   LayoutDeviceIntRect mLastPaintBounds;

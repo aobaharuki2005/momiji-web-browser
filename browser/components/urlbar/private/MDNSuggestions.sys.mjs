@@ -24,11 +24,7 @@ const RESULT_MENU_COMMAND = {
  */
 export class MDNSuggestions extends SuggestProvider {
   get enablingPreferences() {
-    return [
-      "mdn.featureGate",
-      "suggest.mdn",
-      "suggest.quicksuggest.nonsponsored",
-    ];
+    return ["mdn.featureGate", "suggest.mdn", "suggest.quicksuggest.all"];
   }
 
   get primaryUserControlledPreferences() {

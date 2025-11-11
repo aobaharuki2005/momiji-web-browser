@@ -9,12 +9,14 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         "http3server",
     ]
 
-# Ideally, the build system would set @rpath to be @executable_path as
-# a default for this executable so that this addition to LDFLAGS would not be
-# needed here. Bug 1772575 is filed to implement that.
-if CONFIG["OS_ARCH"] == "Darwin":
-    LDFLAGS += ["-Wl,-rpath,@executable_path"]
-
+#reverting commit https://hg.mozilla.org/mozilla-unified/rev/1bc4ee894015268a6be66950b80705e73f17147e
+# for bakcwards compatibility
+## Ideally, the build system would set @rpath to be @executable_path as
+## a default for this executable so that this addition to LDFLAGS would not be
+## needed here. Bug 1772575 is filed to implement that.
+##if CONFIG["OS_ARCH"] == "Darwin":
+##    LDFLAGS += ["-Wl,-rpath,@executable_path"]
+#
 
 if CONFIG["MOZ_SYSTEM_NSS"]:
     LDFLAGS += CONFIG["NSS_LIBS"]

@@ -11,6 +11,9 @@ const backupSectionDisabled = !(
   SpecialPowers.getBoolPref("browser.backup.archive.enabled") ||
   SpecialPowers.getBoolPref("browser.backup.restore.enabled")
 );
+const ipProtectionExperiment = SpecialPowers.getStringPref(
+  "browser.ipProtection.variant"
+);
 const profilesGroupDisabled = !SelectableProfileService.isEnabled;
 const updatePrefContainers = ["updatesCategory", "updateApp"];
 const updateContainersGroupDisabled =
@@ -73,6 +76,14 @@ function checkElements(expectedPane) {
 
     // Profiles is only enabled in Nightly by default (bug 1947633)
     if (element.id === "profilesGroup" && profilesGroupDisabled) {
+      continue;
+    }
+
+    // IP Protection is only enabled by browser.ipProtection.variant = beta
+    if (
+      element.id === "dataIPProtectionGroup" &&
+      ipProtectionExperiment !== "beta"
+    ) {
       continue;
     }
 

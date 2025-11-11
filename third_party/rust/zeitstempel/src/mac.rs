@@ -44,6 +44,7 @@ extern "C" {
 }
 
 const CLOCK_MONOTONIC_RAW: clockid_t = 4;
+const CLOCK_UPTIME_RAW: clockid_t = 8;
 
 /// The time from a clock that increments monotonically,
 /// tracking the time since an arbitrary point.
@@ -60,9 +61,24 @@ pub fn now_including_suspend() -> u64 {
     }
     else
     {
-        let now = Instant::now();
-        now.checked_duration_since(*INIT_TIME)
-            .and_then(|diff| diff.as_nanos().try_into().ok())
-            .unwrap_or(0)
+        let d = INIT_TIME.elapsed();
+        d.as_millis().try_into().unwrap_or(0)
+    }
+}
+
+/// The time from a clock that increments monotonically,
+/// in the same manner as CLOCK_MONOTONIC_RAW,
+/// but that does not increment while the system is asleep.
+///
+/// See `clock_gettime_nsec_np`.
+pub fn now_awake() -> u64 {
+    if macos_kernel_major_version() >= Ok(MACOS_KERNEL_MAJOR_VERSION_SIERRA)
+    {
+        unsafe { clock_gettime_nsec_np(CLOCK_UPTIME_RAW) }
+    }
+    else
+    {
+        let d = INIT_TIME.elapsed();
+        d.as_millis().try_into().unwrap_or(0)
     }
 }

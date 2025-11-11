@@ -13,6 +13,7 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
 
   (define should-log (param "SHOULD_LOG"))
   (define app-path (param "APP_PATH"))
+  (define app-binary-path (param "APP_BINARY_PATH"))
   (define macosVersion (string->number (param "MAC_OS_VERSION")))
   (define crashPort (param "CRASH_PORT"))
   (define isRosettaTranslated (param "IS_ROSETTA_TRANSLATED"))
@@ -44,11 +45,13 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
       (allow file-map-executable file-read*
         (subpath "/System/Library")
         (subpath "/usr/lib")
-        (subpath app-path)))
+        (subpath app-path)
+        (subpath app-binary-path)))
     (allow file-read*
       (subpath "/System/Library")
       (subpath "/usr/lib")
-      (subpath app-path)))
+      (subpath app-path)
+      (subpath app-binary-path)))
 
   (if (string? crashPort)
     (allow mach-lookup (global-name crashPort)))

@@ -1745,6 +1745,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">Dërgo URL-ra të bllokuara nga mbrojtja nga gjurmimet</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Mbrojtja e Thelluar Nga Gjurmimi mund të bllokojë gjurmues dhe programthe të cilët disa sajti i kanë të nevojshëm për të punuar si duhet.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Bëni Paraparje të Raportimit</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Paraparje Raportimi</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Dërgoje</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -3604,6 +3610,8 @@
   <string name="microsurvey_close_handle_content_description">Mbylleni pyetësorin</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Mbylle</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Mjete vetëplotësimi</string>
   <!--
     Debug drawer logins
 
@@ -3808,6 +3816,8 @@
   <string name="setup_checklist_task_toolbar_selection">Zgjidhni vendosje paneli</string>
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Eksploroni zgjerime</string>
+  <!-- The title of the search widget task for the setup checklist -->
+  <string name="setup_checklist_task_search_widget_2">Eksploroni widget-in e kërkimeve</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 
@@ -3872,6 +3882,26 @@
   <string name="review_prompt_feedback_header">Na vjen keq që keni probleme. Na bëni të diur se si mund ta përmirësojmë %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Jepni përshtypjet</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">Rregullime Kërkimi</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
+  <string name="content_description_settings_search_clear_search">Spastroje Kërkimin</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">Shko Mbrapsht</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">S’ka kërkime së fundi</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">Ndodhi një gabim</string>
+  <!-- Message title displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_found_message">S’u prodhua gjë</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">Spastroji krejt</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Përfundime kërkimesh së fundi</string>
   <!--
     Terms of use pop up prompt
 

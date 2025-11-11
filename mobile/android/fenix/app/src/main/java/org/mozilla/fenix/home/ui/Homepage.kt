@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
@@ -80,6 +81,7 @@ private const val BOTTOM_PADDING = 47
  * @param state State representing the homepage.
  * @param interactor [HomepageInteractor] for interactions with the homepage UI.
  * @param onTopSitesItemBound Invoked during the composition of a top site item.
+ * @param modifier [Modifier] to be applied to the layout.
  */
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
@@ -87,11 +89,12 @@ internal fun Homepage(
     state: HomepageState,
     interactor: HomepageInteractor,
     onTopSitesItemBound: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .semantics {
                 testTagsAsResourceId = true
                 testTag = HOMEPAGE
@@ -446,43 +449,40 @@ private fun CollectionsSection(
 @PreviewLightDark
 private fun HomepagePreview() {
     FirefoxTheme {
-        Column(
+        Homepage(
+            state = HomepageState.Normal(
+                nimbusMessage = FakeHomepagePreview.nimbusMessageState(),
+                topSites = FakeHomepagePreview.topSites(),
+                recentTabs = FakeHomepagePreview.recentTabs(),
+                syncedTab = FakeHomepagePreview.recentSyncedTab(),
+                bookmarks = FakeHomepagePreview.bookmarks(),
+                recentlyVisited = FakeHomepagePreview.recentHistory(),
+                collectionsState = FakeHomepagePreview.collectionsPlaceholder(),
+                pocketState = FakeHomepagePreview.pocketState(),
+                showTopSites = true,
+                showRecentTabs = true,
+                showRecentSyncedTab = true,
+                showBookmarks = true,
+                showRecentlyVisited = true,
+                showPocketStories = true,
+                showCollections = true,
+                showHeader = false,
+                searchBarVisible = true,
+                searchBarEnabled = false,
+                firstFrameDrawn = true,
+                setupChecklistState = null,
+                topSiteColors = TopSiteColors.colors(),
+                cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
+                buttonTextColor = WallpaperState.default.buttonTextColor,
+                buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
+                isSearchInProgress = false,
+            ),
+            interactor = FakeHomepagePreview.homepageInteractor,
+            onTopSitesItemBound = {},
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = FirefoxTheme.colors.layer1),
-        ) {
-            Homepage(
-                HomepageState.Normal(
-                    nimbusMessage = FakeHomepagePreview.nimbusMessageState(),
-                    topSites = FakeHomepagePreview.topSites(),
-                    recentTabs = FakeHomepagePreview.recentTabs(),
-                    syncedTab = FakeHomepagePreview.recentSyncedTab(),
-                    bookmarks = FakeHomepagePreview.bookmarks(),
-                    recentlyVisited = FakeHomepagePreview.recentHistory(),
-                    collectionsState = FakeHomepagePreview.collectionsPlaceholder(),
-                    pocketState = FakeHomepagePreview.pocketState(),
-                    showTopSites = true,
-                    showRecentTabs = true,
-                    showRecentSyncedTab = true,
-                    showBookmarks = true,
-                    showRecentlyVisited = true,
-                    showPocketStories = true,
-                    showCollections = true,
-                    showHeader = false,
-                    searchBarVisible = true,
-                    searchBarEnabled = false,
-                    firstFrameDrawn = true,
-                    setupChecklistState = null,
-                    topSiteColors = TopSiteColors.colors(),
-                    cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
-                    buttonTextColor = WallpaperState.default.buttonTextColor,
-                    buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
-                    isSearchInProgress = false,
-                ),
-                interactor = FakeHomepagePreview.homepageInteractor,
-                onTopSitesItemBound = {},
-            )
-        }
+                .background(color = MaterialTheme.colorScheme.surface),
+        )
     }
 }
 
@@ -491,7 +491,7 @@ private fun HomepagePreview() {
 private fun HomepagePreviewCollections() {
     FirefoxTheme {
         Homepage(
-            HomepageState.Normal(
+            state = HomepageState.Normal(
                 nimbusMessage = null,
                 topSites = FakeHomepagePreview.topSites(),
                 recentTabs = FakeHomepagePreview.recentTabs(),
@@ -520,6 +520,9 @@ private fun HomepagePreviewCollections() {
             ),
             interactor = FakeHomepagePreview.homepageInteractor,
             onTopSitesItemBound = {},
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.surface),
         )
     }
 }
@@ -528,22 +531,19 @@ private fun HomepagePreviewCollections() {
 @Preview
 private fun PrivateHomepagePreview() {
     FirefoxTheme(theme = Theme.Private) {
-        Box(
+        Homepage(
+            state = HomepageState.Private(
+                showHeader = false,
+                firstFrameDrawn = true,
+                isSearchInProgress = false,
+                privateModeRedesignEnabled = false,
+            ),
+            interactor = FakeHomepagePreview.homepageInteractor,
+            onTopSitesItemBound = {},
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = FirefoxTheme.colors.layer1),
-        ) {
-            Homepage(
-                HomepageState.Private(
-                    showHeader = false,
-                    firstFrameDrawn = true,
-                    isSearchInProgress = false,
-                    privateModeRedesignEnabled = false,
-                ),
-                interactor = FakeHomepagePreview.homepageInteractor,
-                onTopSitesItemBound = {},
-            )
-        }
+                .background(color = MaterialTheme.colorScheme.surface),
+        )
     }
 }
 

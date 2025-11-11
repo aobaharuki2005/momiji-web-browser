@@ -23,8 +23,10 @@ bool Mutex::SpinInKernelSpace() {
 const bool Mutex::gSpinInKernelSpace = SpinInKernelSpace();
 
 bool Mutex::TryLock() {
+  MOZ_ASSERT(mInitialised);
+
 #if defined(XP_WIN)
-  return !!TryEnterCriticalSection(&mMutex);
+  return !!TryEnterCriticalSection(mMutex.addr());
 #elif defined(XP_DARWIN)
   if(__builtin_available(macOS 10.12, *))  
   return os_unfair_lock_trylock(&mMutex.mUnfairLock);

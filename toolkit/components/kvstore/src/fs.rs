@@ -4,16 +4,17 @@
 
 use std::{borrow::Borrow, io, path::PathBuf};
 
-/// A representation of a path as a wide character sequence that can
-/// contain unpaired surrogates.
-///
-/// A [`WidePathBuf`] can be created from an [`nsstring::nsAString`],
-/// and copied into an `[nsstring::nsString]`, without re-encoding.
-/// Unlike `ns{A}String`, [`WidePathBuf`] implements the built-in
-/// comparison and hashing traits, so it can be used as a key in
-/// a `HashMap` or a `BTreeMap`.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialOrd, PartialEq)]
 pub struct WidePathBuf(Vec<u16>);
+
+//alex's shim from crashreporter
+// Shim until min rust version 1.74 which allows std::io::Error::other
+fn error_other<E>(error: E) -> std::io::Error
+where
+    E: Into<Box<dyn std::error::Error + Send + Sync>>,
+{
+    std::io::Error::new(std::io::ErrorKind::Other, error)
+}
 
 impl WidePathBuf {
     /// Creates a [`WidePathBuf`] from a wide character sequence.
@@ -49,7 +50,7 @@ impl WidePathBuf {
                 ffi::{CStr, CString, OsString},
                 os::unix::prelude::*,
             };
-            let path = CString::new(String::from_utf16(&*self.0).map_err(io::Error::other)?)?;
+            let path = CString::new(String::from_utf16(&*self.0).map_err(error_other)?)?;
             let mut bytes = [0 as libc::c_char; libc::PATH_MAX as usize];
             let ptr = unsafe { libc::realpath(path.as_ptr(), bytes[..].as_mut_ptr()) };
             if ptr.is_null() {

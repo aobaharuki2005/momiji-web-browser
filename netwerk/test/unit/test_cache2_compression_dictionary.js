@@ -76,7 +76,6 @@ function serveCompressedResource(request, response) {
 }
 
 add_setup(async function () {
-  Services.prefs.setBoolPref("network.http.dictionaries.enable", true);
   if (!server) {
     server = new NodeHTTPSServer();
     await server.start();
@@ -87,10 +86,6 @@ add_setup(async function () {
     await server.registerPathHandler(dictPath, serveDictionary);
     await server.registerPathHandler(resourcePath, serveCompressedResource);
   }
-});
-
-registerCleanupFunction(async () => {
-  Services.prefs.clearUserPref("network.http.dictionaries.enable");
 });
 
 add_task(async function test_resource_without_dictionary() {

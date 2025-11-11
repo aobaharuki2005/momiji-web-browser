@@ -248,7 +248,7 @@ class Assembler : public AssemblerShared,
       Header(int size_, bool isNatural_)
           : size(size_), isNatural(isNatural_), ONES(0xffff) {}
 
-      Header(uint32_t data) : data(data) {
+      explicit Header(uint32_t data) : data(data) {
         static_assert(sizeof(Header) == sizeof(uint32_t));
         MOZ_ASSERT(ONES == 0xffff);
       }
@@ -354,8 +354,6 @@ class Assembler : public AssemblerShared,
     DoubleGreaterThanOrEqualOrUnordered,
     DoubleLessThanOrUnordered,
     DoubleLessThanOrEqualOrUnordered,
-    FIRST_UNORDERED = DoubleUnordered,
-    LAST_UNORDERED = DoubleLessThanOrEqualOrUnordered
   };
 
   Register getStackPointer() const { return StackPointer; }
@@ -498,8 +496,6 @@ class Assembler : public AssemblerShared,
   GeneralRegisterSet* GetScratchRegisterList() {
     return &scratch_register_list_;
   }
-
-  void EmitConstPoolWithJumpIfNeeded(size_t margin = 0) {}
 
   // As opposed to x86/x64 version, the data relocation has to be executed
   // before to recover the pointer, and not after.

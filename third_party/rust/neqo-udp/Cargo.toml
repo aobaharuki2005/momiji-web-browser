@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.81.0"
 name = "neqo-udp"
-version = "0.16.1"
+version = "0.18.0"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 build = "build.rs"
 autolib = false
@@ -25,16 +25,16 @@ description = "Neqo, the Mozilla implementation of QUIC in Rust."
 homepage = "https://github.com/mozilla/neqo/"
 readme = "../README.md"
 keywords = [
-"quic",
-"http3",
-"neqo",
-"mozilla",
-"ietf",
-"firefox",
+    "quic",
+    "http3",
+    "neqo",
+    "mozilla",
+    "ietf",
+    "firefox",
 ]
 categories = [
-"network-programming",
-"web-programming",
+    "network-programming",
+    "web-programming",
 ]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
@@ -43,7 +43,10 @@ repository = "https://github.com/mozilla/neqo/"
 ignored = ["cfg_aliases"]
 
 [features]
-bench = ["neqo-common/bench"]
+bench = [
+    "neqo-common/bench",
+    "log/release_max_level_info",
+]
 
 [lib]
 name = "neqo_udp"
@@ -98,6 +101,7 @@ literal_string_with_formatting_args = "allow"
 lossy_float_literal = "warn"
 map_with_unused_argument_over_ranges = "warn"
 mem_forget = "warn"
+missing_asserts_for_indexing = "warn"
 mixed_read_write_in_expression = "warn"
 module_name_repetitions = "warn"
 multiple_crate_versions = "allow"
@@ -105,6 +109,8 @@ multiple_inherent_impl = "warn"
 mutex_atomic = "warn"
 mutex_integer = "warn"
 needless_raw_strings = "warn"
+non_ascii_literal = "warn"
+non_zero_suggestions = "warn"
 partial_pub_fields = "warn"
 pathbuf_init_then_push = "warn"
 precedence_bits = "warn"
@@ -157,3 +163,8 @@ unused_import_braces = "warn"
 unused_lifetimes = "warn"
 unused_macro_rules = "warn"
 unused_qualifications = "warn"
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+priority = 0
+check-cfg = ["cfg(coverage,coverage_nightly)"]

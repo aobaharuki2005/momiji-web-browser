@@ -624,7 +624,7 @@ class DistributionIdManagerTest {
             UTMParams(
                 source = "source",
                 medium = "medium",
-                campaign = "vivo-india-preinstall",
+                campaign = "adj_tracker%3D1234%26adj_campaign%3Dvivo-india-preinstall",
                 content = "content",
                 term = "term",
             ),

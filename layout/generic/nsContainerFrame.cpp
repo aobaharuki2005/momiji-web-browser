@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "AnchorPositioningUtils.h"
 #include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
@@ -216,7 +217,7 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
     if (MOZ_LIKELY(frame)) {
       frame->Destroy(aContext);
     } else {
-      Unused << TakeProperty(aProp);
+      (void)TakeProperty(aProp);
       frameList->Delete(aPresShell);
       return;
     }
@@ -344,13 +345,13 @@ void nsContainerFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
     } else if (aProp == OverflowContainersProperty()) {
       MOZ_ASSERT(CanContainOverflowContainers(),
                  "found unexpected OverflowContainersProperty");
-      Unused << this;  // silence clang -Wunused-lambda-capture in opt builds
+      (void)this;  // silence clang -Wunused-lambda-capture in opt builds
       reinterpret_cast<L>(aValue)->AppendIfNonempty(
           aLists, FrameChildListID::OverflowContainers);
     } else if (aProp == ExcessOverflowContainersProperty()) {
       MOZ_ASSERT(CanContainOverflowContainers(),
                  "found unexpected ExcessOverflowContainersProperty");
-      Unused << this;  // silence clang -Wunused-lambda-capture in opt builds
+      (void)this;  // silence clang -Wunused-lambda-capture in opt builds
       reinterpret_cast<L>(aValue)->AppendIfNonempty(
           aLists, FrameChildListID::ExcessOverflowContainers);
     } else if (aProp == BackdropProperty()) {
@@ -633,9 +634,8 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
     devMaxSize.height = devMinSize.height;
   }
 
-  nsIWidget* rootWidget = aPresContext->GetNearestWidget();
   DesktopToLayoutDeviceScale constraintsScale(MOZ_WIDGET_INVALID_SCALE);
-  if (rootWidget) {
+  if (nsIWidget* rootWidget = aPresContext->GetNearestWidget()) {
     constraintsScale = rootWidget->GetDesktopToDeviceScale();
   }
 
@@ -644,16 +644,20 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
   // The sizes are in inner window sizes, so convert them into outer window
   // sizes. Use a size of (200, 200) as only the difference between the inner
   // and outer size is needed.
-  LayoutDeviceIntSize windowSize =
-      aWidget->ClientToWindowSize(LayoutDeviceIntSize(200, 200));
-  if (constraints.mMinSize.width)
-    constraints.mMinSize.width += windowSize.width - 200;
-  if (constraints.mMinSize.height)
-    constraints.mMinSize.height += windowSize.height - 200;
-  if (constraints.mMaxSize.width != NS_MAXSIZE)
-    constraints.mMaxSize.width += windowSize.width - 200;
-  if (constraints.mMaxSize.height != NS_MAXSIZE)
-    constraints.mMaxSize.height += windowSize.height - 200;
+  const LayoutDeviceIntSize sizeDiff =
+      aWidget->NormalSizeModeClientToWindowSizeDifference();
+  if (constraints.mMinSize.width) {
+    constraints.mMinSize.width += sizeDiff.width;
+  }
+  if (constraints.mMinSize.height) {
+    constraints.mMinSize.height += sizeDiff.height;
+  }
+  if (constraints.mMaxSize.width != NS_MAXSIZE) {
+    constraints.mMaxSize.width += sizeDiff.width;
+  }
+  if (constraints.mMaxSize.height != NS_MAXSIZE) {
+    constraints.mMaxSize.height += sizeDiff.height;
+  }
 
   aWidget->SetSizeConstraints(constraints);
 }
@@ -961,6 +965,35 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
   aKidFrame->DidReflow(aPresContext, aReflowInput);
 }
 
+void nsContainerFrame::FinishReflowWithAbsoluteFrames(
+    nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+    const ReflowInput& aReflowInput, nsReflowStatus& aStatus) {
+  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
+  FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
+}
+
+void nsContainerFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
+                                            ReflowOutput& aDesiredSize,
+                                            const ReflowInput& aReflowInput,
+                                            nsReflowStatus& aStatus) {
+  if (HasAbsolutelyPositionedChildren()) {
+    AbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
+
+    // The containing block for the abs pos kids is formed by our padding edge.
+    nsMargin usedBorder = GetUsedBorder();
+    nsRect containingBlock(nsPoint{}, aDesiredSize.PhysicalSize());
+    containingBlock.Deflate(usedBorder);
+    // XXX: To optimize the performance, set the flags only when the CB width or
+    // height actually changes.
+    AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation,
+                            AbsPosReflowFlag::CBWidthChanged,
+                            AbsPosReflowFlag::CBHeightChanged};
+    absoluteContainer->Reflow(this, aPresContext, aReflowInput, aStatus,
+                              containingBlock, flags,
+                              &aDesiredSize.mOverflowAreas);
+  }
+}
+
 void nsContainerFrame::ReflowOverflowContainerChildren(
     nsPresContext* aPresContext, const ReflowInput& aReflowInput,
     OverflowAreas& aOverflowRects, ReflowChildFlags aFlags,
@@ -1119,7 +1152,7 @@ bool nsContainerFrame::TryRemoveFrame(FrameListPropertyDescriptor aProp,
   if (list && list->StartRemoveFrame(aChildToRemove)) {
     // aChildToRemove *may* have been removed from this list.
     if (list->IsEmpty()) {
-      Unused << TakeProperty(aProp);
+      (void)TakeProperty(aProp);
       list->Delete(PresShell());
     }
     return true;
@@ -2589,7 +2622,9 @@ StyleAlignFlags nsContainerFrame::CSSAlignmentForAbsPosChild(
 
 StyleAlignFlags
 nsContainerFrame::CSSAlignmentForAbsPosChildWithinContainingBlock(
-    const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const {
+    const ReflowInput& aChildRI, LogicalAxis aLogicalAxis,
+    const StylePositionArea& aResolvedPositionArea,
+    const LogicalSize& aCBSize) const {
   MOZ_ASSERT(aChildRI.mFrame->IsAbsolutelyPositioned(),
              "This method should only be called for abspos children");
   // When determining the position of absolutely-positioned boxes,
@@ -2598,6 +2633,45 @@ nsContainerFrame::CSSAlignmentForAbsPosChildWithinContainingBlock(
       (aLogicalAxis == LogicalAxis::Inline)
           ? aChildRI.mStylePosition->UsedJustifySelf(nullptr)._0
           : aChildRI.mStylePosition->UsedAlignSelf(nullptr)._0;
+
+  // Check if position-area is set - if so, it determines the default alignment
+  // https://drafts.csswg.org/css-anchor-position/#position-area-alignment
+  if (!aResolvedPositionArea.IsNone() && alignment == StyleAlignFlags::NORMAL) {
+    const WritingMode cbWM = GetWritingMode();
+    const auto anchorResolutionParams = AnchorPosResolutionParams::From(
+        &aChildRI, /* aIgnorePositionArea = */ true);
+    const auto anchorOffsetResolutionParams =
+        AnchorPosOffsetResolutionParams::ExplicitCBFrameSize(
+            anchorResolutionParams, &aCBSize);
+
+    // Check if we have exactly one auto inset in this axis (IMCB situation)
+    const auto singleAutoInset =
+        aChildRI.mStylePosition->GetSingleAutoInsetInAxis(
+            aLogicalAxis, cbWM, anchorOffsetResolutionParams);
+
+    // Check if exactly one inset in the axis is auto
+    // https://drafts.csswg.org/css-anchor-position/#position-area-alignment
+    // "However, if only one inset property in the relevant axis is auto, the
+    // default alignment is instead towards the edge with the non-auto inset;
+    // and this is an unsafe alignment."
+    if (singleAutoInset.isSome()) {
+      const LogicalSide startSide = aLogicalAxis == LogicalAxis::Inline
+                                        ? LogicalSide::IStart
+                                        : LogicalSide::BStart;
+      const mozilla::Side autoSide = *singleAutoInset;
+      const mozilla::Side startPhysicalSide = cbWM.PhysicalSide(startSide);
+      // Exactly one inset is auto - align toward the non-auto edge, unsafely
+      alignment = (autoSide == startPhysicalSide) ? StyleAlignFlags::END
+                                                  : StyleAlignFlags::START;
+      alignment |= StyleAlignFlags::UNSAFE;
+    } else {
+      auto keyword = aLogicalAxis == LogicalAxis::Inline
+                         ? aResolvedPositionArea.first
+                         : aResolvedPositionArea.second;
+      // Use normal position-area alignment
+      Servo_ResolvePositionAreaSelfAlignment(&keyword, &alignment);
+    }
+  }
 
   return MapCSSAlignment(alignment, aChildRI, aLogicalAxis, GetWritingMode());
 }
@@ -2946,7 +3020,8 @@ void nsContainerFrame::List(FILE* out, const char* aPrefix,
                             ListFlags aFlags) const {
   nsCString str;
   ListGeneric(str, aPrefix, aFlags);
-  ExtraContainerFrameInfo(str);
+  ExtraContainerFrameInfo(str,
+                          aFlags.contains(ListFlag::OnlyListDeterministicInfo));
 
   // Output the frame name and various fields.
   fprintf_stderr(out, "%s <\n", str.get());
@@ -2998,8 +3073,9 @@ void nsContainerFrame::ListChildLists(FILE* aOut, const char* aPrefix,
 
     // Use nsPrintfCString so that %p don't output prefix "0x". This is
     // consistent with nsIFrame::ListTag().
-    const nsPrintfCString str("%s%s@%p <\n", aPrefix, ChildListName(listID),
-                              &GetChildList(listID));
+    nsCString str{nsPrintfCString("%s%s", aPrefix, ChildListName(listID))};
+    ListPtr(str, aFlags, &GetChildList(listID), "@");
+    str += " <\n";
     fprintf_stderr(aOut, "%s", str.get());
 
     for (nsIFrame* kid : list) {
@@ -3011,8 +3087,6 @@ void nsContainerFrame::ListChildLists(FILE* aOut, const char* aPrefix,
   }
 }
 
-void nsContainerFrame::ExtraContainerFrameInfo(nsACString& aTo) const {
-  (void)aTo;
-}
+void nsContainerFrame::ExtraContainerFrameInfo(nsACString&, bool) const {}
 
 #endif

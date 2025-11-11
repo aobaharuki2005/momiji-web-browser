@@ -40,6 +40,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -110,6 +111,7 @@ import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
+import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.lib.state.ext.observeAsState
@@ -315,7 +317,7 @@ private fun BookmarksList(
             }
             false -> {
                 appStore.dispatch(AppAction.SearchAction.SearchEnded)
-                toolbarStore.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(""))
+                toolbarStore.dispatch(BrowserEditToolbarAction.SearchQueryUpdated(BrowserToolbarQuery("")))
                 browserStore.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
                 focusManager.clearFocus()
                 keyboardController?.hide()
@@ -952,30 +954,32 @@ private fun FolderListItem(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    val modifier = Modifier
-        .padding(start = folder.startPadding)
-        .width(FirefoxTheme.layout.size.containerMaxWidth)
-
     if (folder.isDesktopRoot) {
-        Row(modifier) {
-            Spacer(modifier = Modifier.width(56.dp))
-            Text(
-                text = folder.title,
-                color = FirefoxTheme.colors.textAccent,
-                style = FirefoxTheme.typography.headline8,
-            )
+        Box(modifier = Modifier.padding(start = folder.startPadding)) {
+            Row(modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth)) {
+                Spacer(modifier = Modifier.width(56.dp))
+                Text(
+                    text = folder.title,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    style = FirefoxTheme.typography.headline8,
+                )
+            }
         }
     } else {
-        SelectableIconListItem(
-            label = folder.title,
-            isSelected = isSelected,
-            beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
-            modifier = modifier.toggleable(
-                value = isSelected,
-                role = Role.RadioButton,
-                onValueChange = { onClick() },
-            ),
-        )
+        Box(modifier = Modifier.padding(start = folder.startPadding)) {
+            SelectableIconListItem(
+                label = folder.title,
+                isSelected = isSelected,
+                beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                modifier = Modifier
+                    .width(FirefoxTheme.layout.size.containerMaxWidth)
+                    .toggleable(
+                        value = isSelected,
+                        role = Role.RadioButton,
+                        onValueChange = { onClick() },
+                    ),
+            )
+        }
     }
 }
 
@@ -984,9 +988,11 @@ private fun NewFolderListItem(onClick: () -> Unit) {
     IconListItem(
         label = stringResource(R.string.bookmark_select_folder_new_folder_button_title),
         modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
-        labelTextColor = FirefoxTheme.colors.textAccent,
+        colors = ListItemDefaults.colors(
+            headlineColor = MaterialTheme.colorScheme.tertiary,
+            ),
         beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_add_24),
-        beforeIconTint = FirefoxTheme.colors.textAccent,
+        beforeIconTint = MaterialTheme.colorScheme.tertiary,
         onClick = onClick,
     )
 }

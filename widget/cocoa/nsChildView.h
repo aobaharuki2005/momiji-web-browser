@@ -14,7 +14,6 @@
 #endif
 
 #include "nsISupports.h"
-#include "nsBaseWidget.h"
 #include "nsIWeakReferenceUtils.h"
 #include "TextInputHandler.h"
 #include "nsCocoaUtils.h"
@@ -24,7 +23,6 @@
 #include "mozilla/Mutex.h"
 #include "nsRegion.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 #include "nsString.h"

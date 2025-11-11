@@ -435,12 +435,21 @@ private fun TopSiteFaviconCard(
                 shape = RoundedCornerShape(4.dp),
             ) {
                 if (topSite is TopSite.Provided) {
-                    TopSiteFavicon(topSite.url, topSite.imageUrl)
+                    TopSiteFavicon(url = topSite.url, imageUrl = topSite.imageUrl)
                 } else {
-                    TopSiteFavicon(topSite.url)
+                    TopSiteFavicon(url = topSite.url, imageUrl = getImageUrl(url = topSite.url))
                 }
             }
         }
+    }
+}
+
+private fun getImageUrl(url: String): String? {
+    return when (url) {
+        "https://tenki.jp/" -> "https://tenki.jp/favicon.ico"
+        "https://m.yahoo.co.jp/" -> "https://s.yimg.jp/c/icon/s/bsc/2.0/favicon.ico"
+        "https://ameblo.jp/" -> "https://stat100.ameba.jp/common_style/img/favicon.ico"
+        else -> null
     }
 }
 

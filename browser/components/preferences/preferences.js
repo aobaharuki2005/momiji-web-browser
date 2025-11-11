@@ -51,18 +51,18 @@ var fxAccounts = getFxAccountsSingleton();
 XPCOMUtils.defineLazyServiceGetters(this, {
   gApplicationUpdateService: [
     "@mozilla.org/updates/update-service;1",
-    "nsIApplicationUpdateService",
+    Ci.nsIApplicationUpdateService,
   ],
 
   listManager: [
     "@mozilla.org/url-classifier/listmanager;1",
-    "nsIUrlListManager",
+    Ci.nsIUrlListManager,
   ],
   gHandlerService: [
     "@mozilla.org/uriloader/handler-service;1",
-    "nsIHandlerService",
+    Ci.nsIHandlerService,
   ],
-  gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
+  gMIMEService: ["@mozilla.org/mime;1", Ci.nsIMIMEService],
 });
 
 if (Cc["@mozilla.org/gio-service;1"]) {
@@ -70,7 +70,7 @@ if (Cc["@mozilla.org/gio-service;1"]) {
     this,
     "gGIOService",
     "@mozilla.org/gio-service;1",
-    "nsIGIOService"
+    Ci.nsIGIOService
   );
 } else {
   this.gGIOService = null;
@@ -81,6 +81,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.sys.mjs",
   ExtensionSettingsStore:
@@ -168,7 +169,7 @@ function srdSectionEnabled(section) {
 const CONFIG_PANES = {
   containers2: {
     parent: "general",
-    l10nId: "containers-header",
+    l10nId: "containers-section-header",
     groupIds: ["containers"],
   },
 };
@@ -242,16 +243,17 @@ function init_all() {
   if (Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")) {
     register_module("paneTranslations", gTranslationsPane);
   }
-  if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
+  if (ExperimentAPI.labsEnabled) {
     // Set hidden based on previous load's hidden value or if Nimbus is
     // disabled.
     document.getElementById("category-experimental").hidden =
-      !ExperimentAPI.studiesEnabled ||
       Services.prefs.getBoolPref(
         "browser.preferences.experimental.hidden",
         false
       );
     register_module("paneExperimental", gExperimentalPane);
+  } else {
+    document.getElementById("category-experimental").hidden = true;
   }
 
   NimbusFeatures.moreFromMozilla.recordExposureEvent({ once: true });
@@ -380,6 +382,10 @@ async function gotoPref(
     // Overwrite the hash, unless there is no hash and we're switching to the
     // default category, e.g. by using the 'back' button after navigating to
     // a different category.
+
+    // Note: Bug 1983388 - If there is an element in the DOM that has the same
+    // ID as the `friendlyName`, then focus will be lost when navigating the
+    // category navigation via keyboard when that `friendlyName` category is selected.
     if (
       !(!document.location.hash && category == kDefaultCategoryInternalName)
     ) {

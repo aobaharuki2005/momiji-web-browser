@@ -35,19 +35,28 @@ class MacAutoreleasePool {
  * terminate.
  */
 static void LaunchTask(NSString* aPath, NSArray* aArguments) {
-  NSTask* task = [[NSTask alloc] init];
-  if (aArguments) {
-    [task setArguments:aArguments];
+  @try {
+    NSTask* task = [[NSTask alloc] init];
+    if (@available(macOS 10.13, *)) {
+      [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+      if (aArguments) {
+        [task setArguments:aArguments];
+      }
+      [task launchAndReturnError:nil];
+    } else {
+      NSArray* arguments = aArguments;
+      if (!arguments) {
+        arguments = @[];
+      }
+      task = [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
+    }
+    [task waitUntilExit];
+    if (@available(macOS 10.13, *)) {
+      [task release];
+    }
+  } @catch (NSException* e) {
+    NSLog(@"%@: %@", e.name, e.reason);
   }
-  if (@available(macOS 10.13, *)) {
-    [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
-    [task launchAndReturnError:nil];
-  } else {
-    [task setLaunchPath:aPath];
-    [task launch];
-  }
-  [task waitUntilExit];
-  [task release];
 }
 
 static void RegisterAppWithLaunchServices(NSString* aBundlePath) {

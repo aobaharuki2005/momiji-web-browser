@@ -825,6 +825,111 @@ describe("MultiStageAboutWelcomeProton module", () => {
         "Second child is ProtonScreenActionButtons"
       );
     });
+
+    it("should render action buttons after tiles by default when no position is configured", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "test title",
+          position: "center",
+          primary_button: { label: "Confirm and continue" },
+          tiles_header: { title: "Title" },
+          tiles: {
+            type: "multiselect",
+            data: [
+              { id: "checkbox-1", label: "Option 1" },
+              { id: "checkbox-2", label: "Option 2" },
+            ],
+          },
+        },
+      };
+
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+
+      const mainInner = wrapper.find(".main-content-inner");
+      const lastChild = mainInner.children().last();
+      assert.strictEqual(
+        lastChild.type(),
+        ProtonScreenActionButtons,
+        "Last child is ProtonScreenActionButtons"
+      );
+    });
+
+    it("should render action buttons after subtitle when configured", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "Test title",
+          subtitle: "Test subtitle",
+          position: "center",
+          action_buttons_position: "after_subtitle",
+          primary_button: { label: "Get started" },
+        },
+      };
+
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists(), "Screen renders");
+
+      // Find the welcome text container
+      const welcomeTextEl = wrapper.find(".welcome-text");
+      assert.isTrue(welcomeTextEl.exists(), "Welcome text exists");
+
+      const subtitleEl = welcomeTextEl.find("h2");
+      assert.ok(subtitleEl.exists(), "Subtitle exists");
+      const nextEl = subtitleEl.getDOMNode().nextElementSibling;
+      assert.isTrue(
+        nextEl.classList.contains("action-buttons"),
+        "Next element is action-buttons"
+      );
+    });
+
+    it("should render action buttons after supporting content but before tiles when configured", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "Welcome to Firefox",
+          position: "center",
+          action_buttons_position: "after_supporting_content",
+          above_button_content: [
+            {
+              type: "text",
+              text: { string_id: "tou-existing-user-spotlight-body" },
+              font_styles: "legal",
+              link_keys: ["terms-of-use", "privacy-notice", "learn-more"],
+            },
+          ],
+          primary_button: { label: "Confirm and continue" },
+          tiles_header: {
+            title: {
+              string_id: "preonboarding-manage-data-header-button-title",
+            },
+          },
+          tiles: {
+            type: "multiselect",
+            data: [
+              { id: "checkbox-1", label: "Interaction data" },
+              { id: "checkbox-2", label: "Crash data" },
+            ],
+          },
+        },
+      };
+
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+
+      const legalParagraphEl = wrapper.find(".legal-paragraph");
+      assert.equal(legalParagraphEl.exists(), true, "Legal paragraph renders");
+
+      const nextEl = legalParagraphEl.getDOMNode().nextElementSibling;
+      assert.isTrue(
+        nextEl.classList.contains("action-buttons"),
+        "Next element after legal paragraph should be action buttons"
+      );
+
+      const afterButtonsEl = nextEl.nextElementSibling;
+      assert.isTrue(
+        afterButtonsEl.classList.contains("content-tiles-header"),
+        "Next element after action buttons should be content-tiles-header"
+      );
+    });
   });
 
   describe("AboutWelcomeDefaults for proton", () => {

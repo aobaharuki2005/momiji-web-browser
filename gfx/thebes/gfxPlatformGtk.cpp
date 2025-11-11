@@ -25,7 +25,6 @@
 #include "gfxFT2FontBase.h"
 #include "gfxTextRun.h"
 #include "GLContextProvider.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/FontPropertyTypes.h"
@@ -229,7 +228,7 @@ void gfxPlatformGtk::InitDmabufConfig() {
                            failureId);
     }
     // Make sure we have DMABuf formats available.
-    Unused << GetGlobalDMABufFormats();
+    (void)GetGlobalDMABufFormats();
   }
 }
 

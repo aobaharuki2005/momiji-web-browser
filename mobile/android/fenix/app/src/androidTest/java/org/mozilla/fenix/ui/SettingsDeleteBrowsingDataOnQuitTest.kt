@@ -18,8 +18,9 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.setNetworkEnabled
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
-import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestAssetHelper.getStorageTestAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.storageCheckPageAsset
+import org.mozilla.fenix.helpers.TestAssetHelper.storageWritePageAsset
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.restartApp
@@ -86,7 +87,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/416049
     @Test
     fun deleteOpenTabsOnQuitTest() {
-        val testPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val testPage = mockWebServer.getGenericAsset(1)
 
         homeScreen {
         }.openThreeDotMenu {
@@ -111,8 +112,7 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/416050
     @Test
     fun deleteBrowsingHistoryOnQuitTest() {
-        val genericPage =
-            getStorageTestAsset(mockWebServer, "generic1.html")
+        val genericPage = mockWebServer.getGenericAsset(1)
 
         homeScreen {
         }.openThreeDotMenu {
@@ -140,10 +140,8 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/416051
     @Test
     fun deleteCookiesAndSiteDataOnQuitTest() {
-        val storageWritePage =
-            getStorageTestAsset(mockWebServer, "storage_write.html")
-        val storageCheckPage =
-            getStorageTestAsset(mockWebServer, "storage_check.html")
+        val storageWritePage = mockWebServer.storageWritePageAsset
+        val storageCheckPage = mockWebServer.storageCheckPageAsset
 
         homeScreen {
         }.openThreeDotMenu {
@@ -243,8 +241,6 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
     @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1987355")
     @Test
     fun deleteCachedFilesOnQuitTest() {
-        val wikipedia = getStringResource(R.string.default_top_site_wikipedia)
-
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -253,8 +249,8 @@ class SettingsDeleteBrowsingDataOnQuitTest : TestSetup() {
             exitMenu()
         }
         homeScreen {
-            verifyExistingTopSitesTabs(composeTestRule, wikipedia)
-        }.openTopSiteTabWithTitle(composeTestRule, wikipedia) {
+            verifyExistingTopSitesTabs(composeTestRule, "Wikipedia")
+        }.openTopSiteTabWithTitle(composeTestRule, "Wikipedia") {
             verifyUrl("wikipedia.org")
         }.goToHomescreen(composeTestRule) {
         }.openThreeDotMenu {

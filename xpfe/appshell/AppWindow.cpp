@@ -213,7 +213,7 @@ nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
   mWindow->SetWidgetListener(&mWidgetListenerDelegate);
   rv = mWindow->Create(parentWidget.get(),  // Parent nsIWidget
                        deskRect,            // Widget dimensions
-                       &widgetInitData);    // Widget initialization data
+                       widgetInitData);     // Widget initialization data
   NS_ENSURE_SUCCESS(rv, rv);
 
   LayoutDeviceIntRect r = mWindow->GetClientBounds();
@@ -386,9 +386,7 @@ static LayoutDeviceIntSize GetOuterToInnerSizeDifference(nsIWidget* aWindow) {
   if (!aWindow) {
     return LayoutDeviceIntSize();
   }
-  LayoutDeviceIntSize baseSize(200, 200);
-  LayoutDeviceIntSize windowSize = aWindow->ClientToWindowSize(baseSize);
-  return windowSize - baseSize;
+  return aWindow->NormalSizeModeClientToWindowSizeDifference();
 }
 
 static CSSIntSize GetOuterToInnerSizeDifferenceInCSSPixels(
@@ -399,17 +397,25 @@ static CSSIntSize GetOuterToInnerSizeDifferenceInCSSPixels(
 
 NS_IMETHODIMP
 AppWindow::GetOuterToInnerHeightDifferenceInCSSPixels(uint32_t* aResult) {
-  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
-                 mWindow, UnscaledDevicePixelsPerCSSPixel())
-                 .height;
+  if (mWindow && mWindow->PersistClientBounds()) {
+    *aResult = 0;
+  } else {
+    *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
+                   mWindow, UnscaledDevicePixelsPerCSSPixel())
+                   .height;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 AppWindow::GetOuterToInnerWidthDifferenceInCSSPixels(uint32_t* aResult) {
-  *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
-                 mWindow, UnscaledDevicePixelsPerCSSPixel())
-                 .width;
+  if (mWindow && mWindow->PersistClientBounds()) {
+    *aResult = 0;
+  } else {
+    *aResult = GetOuterToInnerSizeDifferenceInCSSPixels(
+                   mWindow, UnscaledDevicePixelsPerCSSPixel())
+                   .width;
+  }
   return NS_OK;
 }
 
@@ -710,15 +716,14 @@ nsresult AppWindow::MoveResize(const Maybe<DesktopPoint>& aPosition,
   }
 
   if (aPosition && aSize) {
-    mWindow->Resize(aPosition->x, aPosition->y, aSize->width, aSize->height,
-                    aRepaint);
+    mWindow->Resize(DesktopRect(*aPosition, *aSize), aRepaint);
     dirtyAttributes = {PersistentAttribute::Size,
                        PersistentAttribute::Position};
   } else if (aSize) {
-    mWindow->Resize(aSize->width, aSize->height, aRepaint);
+    mWindow->Resize(*aSize, aRepaint);
     dirtyAttributes = {PersistentAttribute::Size};
   } else if (aPosition) {
-    mWindow->Move(aPosition->x, aPosition->y);
+    mWindow->Move(*aPosition);
     dirtyAttributes = {PersistentAttribute::Position};
   }
 
@@ -1870,7 +1875,7 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
 
   settings.verticalTabs = Preferences::GetBool("sidebar.verticalTabs", false);
 
-  Unused << PersistPreXULSkeletonUIValues(settings);
+  (void)PersistPreXULSkeletonUIValues(settings);
 #endif
 
   return NS_OK;
@@ -1925,6 +1930,8 @@ void AppWindow::MaybeSavePersistentPositionAndSize(
     return;
   }
 
+  const bool isClient = mWindow->PersistClientBounds();
+
   // we use CSS pixels for size, but desktop pixels for position
   CSSToLayoutDeviceScale sizeScale = UnscaledDevicePixelsPerCSSPixel();
   DesktopToLayoutDeviceScale posScale = DevicePixelsPerDesktopPixel();
@@ -1946,7 +1953,7 @@ void AppWindow::MaybeSavePersistentPositionAndSize(
       sizeString.AppendInt(NSToIntRound(rect.X() / posScale.scale));
       aRootElement.SetAttr(nsGkAtoms::screenX, sizeString, IgnoreErrors());
       if (aShouldPersist) {
-        Unused << SetPersistentValue(nsGkAtoms::screenX, sizeString);
+        (void)SetPersistentValue(nsGkAtoms::screenX, sizeString);
       }
     }
     if (aPersistString.Find(u"screenY") >= 0) {
@@ -1954,20 +1961,20 @@ void AppWindow::MaybeSavePersistentPositionAndSize(
       sizeString.AppendInt(NSToIntRound(rect.Y() / posScale.scale));
       aRootElement.SetAttr(nsGkAtoms::screenY, sizeString, IgnoreErrors());
       if (aShouldPersist) {
-        Unused << SetPersistentValue(nsGkAtoms::screenY, sizeString);
+        (void)SetPersistentValue(nsGkAtoms::screenY, sizeString);
       }
     }
   }
 
   if (aAttributes.contains(PersistentAttribute::Size)) {
-    LayoutDeviceIntRect innerRect =
-        rect - GetOuterToInnerSizeDifference(mWindow);
+    const LayoutDeviceIntRect innerRect =
+        isClient ? rect : rect - GetOuterToInnerSizeDifference(mWindow);
     if (aPersistString.Find(u"width") >= 0) {
       sizeString.Truncate();
       sizeString.AppendInt(NSToIntRound(innerRect.Width() / sizeScale.scale));
       aRootElement.SetAttr(nsGkAtoms::width, sizeString, IgnoreErrors());
       if (aShouldPersist) {
-        Unused << SetPersistentValue(nsGkAtoms::width, sizeString);
+        (void)SetPersistentValue(nsGkAtoms::width, sizeString);
       }
     }
     if (aPersistString.Find(u"height") >= 0) {
@@ -1975,12 +1982,12 @@ void AppWindow::MaybeSavePersistentPositionAndSize(
       sizeString.AppendInt(NSToIntRound(innerRect.Height() / sizeScale.scale));
       aRootElement.SetAttr(nsGkAtoms::height, sizeString, IgnoreErrors());
       if (aShouldPersist) {
-        Unused << SetPersistentValue(nsGkAtoms::height, sizeString);
+        (void)SetPersistentValue(nsGkAtoms::height, sizeString);
       }
     }
   }
 
-  Unused << MaybeSaveEarlyWindowPersistentValues(rect);
+  (void)MaybeSaveEarlyWindowPersistentValues(rect);
 }
 
 void AppWindow::MaybeSavePersistentMiscAttributes(
@@ -2002,7 +2009,7 @@ void AppWindow::MaybeSavePersistentMiscAttributes(
     }
     aRootElement.SetAttr(nsGkAtoms::sizemode, sizeString, IgnoreErrors());
     if (aShouldPersist && aPersistString.Find(u"sizemode") >= 0) {
-      Unused << SetPersistentValue(nsGkAtoms::sizemode, sizeString);
+      (void)SetPersistentValue(nsGkAtoms::sizemode, sizeString);
     }
   }
   aRootElement.SetAttribute(u"gtktiledwindow"_ns,
@@ -2542,7 +2549,7 @@ void AppWindow::SizeShell() {
 
   if (mChromeLoaded && mCenterAfterLoad && !positionSet &&
       mWindow->SizeMode() == nsSizeMode_Normal) {
-    Center(parentWindow, parentWindow ? false : true, false);
+    Center(parentWindow, !parentWindow, false);
   }
 }
 
@@ -2893,7 +2900,8 @@ static bool sWaitingForHiddenWindowToLoadNativeMenus =
 #  endif
     ;
 
-MOZ_RUNINIT static nsTArray<LoadNativeMenusListener> sLoadNativeMenusListeners;
+MOZ_CONSTINIT static nsTArray<LoadNativeMenusListener>
+    sLoadNativeMenusListeners;
 
 static void BeginLoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow);
 

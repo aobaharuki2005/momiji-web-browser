@@ -545,7 +545,7 @@ var gSyncPane = {
    * with the given entrypoint as a query parameter
    * @param entrypoint: An string appended to the query parameters, used in telemtry to differentiate
    * different entrypoints to accounts
-   * */
+   */
   async reSignIn(entrypoint) {
     const url = await FxAccounts.config.promiseConnectAccountURI(entrypoint);
     this.replaceTabWithUrl(url);

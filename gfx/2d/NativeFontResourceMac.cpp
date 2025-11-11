@@ -83,7 +83,7 @@ void NativeFontResourceMac::RegisterMemoryReporter() {
 
 /* static */
 already_AddRefed<NativeFontResourceMac> NativeFontResourceMac::Create(
-    uint8_t* aFontData, uint32_t aDataLength) {
+    const uint8_t* aFontData, uint32_t aDataLength) {
   CFDataRef data = CFDataCreate(kCFAllocatorDefault, aFontData, aDataLength);
   if (!data) {
     return nullptr;

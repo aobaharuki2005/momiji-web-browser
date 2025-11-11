@@ -17,7 +17,7 @@ bool RLBoxSoundTouch::Init() {
   const bool success = mSandbox.create_sandbox(
     /* shouldAbortOnFailure = */ false,
     /* custom capacity = */ nullptr,
-    "rlbox_wasm2c_soundtouch");
+    "rlbox_wasm2c_soundtouch"); 
 #else
   const bool success = true;
   mSandbox.create_sandbox();

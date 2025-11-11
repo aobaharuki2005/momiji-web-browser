@@ -130,13 +130,13 @@ class DistributionIdManager(
      * @param utmParams the UTM parameters from the google play install referrer response
      */
     fun updateDistributionIdFromUtmParams(utmParams: UTMParams) {
-        when (utmParams.campaign) {
-            VIVO_INDIA_UTM_CAMPAIGN -> {
+        when {
+            utmParams.campaign.contains(VIVO_INDIA_UTM_CAMPAIGN) -> {
                 browserStoreProvider.updateDistributionId(Distribution.VIVO_002.id)
                 distributionSettings.saveDistributionId(Distribution.VIVO_002.id)
                 Metrics.distributionId.set(Distribution.VIVO_002.id)
             }
-            Distribution.XIAOMI_001.id -> {
+            utmParams.campaign.contains(Distribution.XIAOMI_001.id) -> {
                 browserStoreProvider.updateDistributionId(Distribution.XIAOMI_001.id)
                 distributionSettings.saveDistributionId(Distribution.XIAOMI_001.id)
                 Metrics.distributionId.set(Distribution.XIAOMI_001.id)

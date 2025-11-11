@@ -280,7 +280,6 @@ CGRGBPixel* SkScalerContext_Mac::Offscreen::getCG(const SkScalerContext_Mac& con
 
         if (SkMask::kARGB32_Format != glyph.maskFormat()) {
             // Draw black on white to create mask. (Special path exists to speed this up in CG.)
-            // If light-on-dark is requested, draw white on black.
             CGContextSetGrayFillColor(fCG.get(), 0.0f, 1.0f);
         } else {
             CGContextSetFillColorWithColor(fCG.get(), fCGForegroundColor.get());
@@ -535,9 +534,9 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph, void* imageBuffer)
         CGRGBPixel* addr = cgPixels;
         for (int y = 0; y < glyph.height(); ++y) {
             for (int x = 0; x < glyph.width(); ++x) {
-                int r = linear[(addr[x] >> 16) & 0xFF];
-                int g = linear[(addr[x] >>  8) & 0xFF];
-                int b = linear[(addr[x] >>  0) & 0xFF];
+                int r = (addr[x] >> 16) & 0xFF;
+                int g = (addr[x] >>  8) & 0xFF;
+                int b = (addr[x] >>  0) & 0xFF;
                 addr[x] = (linear[r] << 16) | (linear[g] << 8) | linear[b];
             }
             addr = SkTAddOffset<CGRGBPixel>(addr, cgRowBytes);
@@ -592,7 +591,6 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph, void* imageBuffer)
 
 namespace {
 class SkCTPathGeometrySink {
-    SkPathBuilder fBuilder;
     bool fStarted;
     CGPoint fCurrent;
 
@@ -609,9 +607,9 @@ class SkCTPathGeometrySink {
     }
 
 public:
-    SkCTPathGeometrySink() : fStarted{false}, fCurrent{0,0} {}
+    SkPathBuilder fBuilder;
 
-    SkPath detach() { return fBuilder.detach(); }
+    SkCTPathGeometrySink() : fStarted{false}, fCurrent{0,0} {}
 
     static void ApplyElement(void *ctx, const CGPathElement *element) {
         SkCTPathGeometrySink& self = *(SkCTPathGeometrySink*)ctx;
@@ -671,9 +669,10 @@ public:
  */
 #define kScaleForSubPixelPositionHinting (4.0f)
 
-bool SkScalerContext_Mac::generatePath(const SkGlyph& glyph, SkPath* path, bool* modified) {
+std::optional<SkScalerContext::GeneratedPath>
+SkScalerContext_Mac::generatePath(const SkGlyph& glyph) {
     if(isMavericks())
-        return false;
+        return {};
     SkScalar scaleX = SK_Scalar1;
     SkScalar scaleY = SK_Scalar1;
 
@@ -710,20 +709,18 @@ bool SkScalerContext_Mac::generatePath(const SkGlyph& glyph, SkPath* path, bool*
     CGGlyph cgGlyph = SkTo<CGGlyph>(glyph.getGlyphID());
     SkUniqueCFRef<CGPathRef> cgPath(CTFontCreatePathForGlyph(fCTFont.get(), cgGlyph, &xform));
 
-    path->reset();
     if (!cgPath) {
-        return false;
+        return {};
     }
 
     SkCTPathGeometrySink sink;
     CGPathApply(cgPath.get(), &sink, SkCTPathGeometrySink::ApplyElement);
-    *path = sink.detach();
     if (fDoSubPosition) {
         SkMatrix m;
         m.setScale(SkScalarInvert(scaleX), SkScalarInvert(scaleY));
-        path->transform(m);
+        sink.fBuilder.transform(m);
     }
-    return true;
+    return {{sink.fBuilder.detach(), false}};
 }
 
 void SkScalerContext_Mac::generateFontMetrics(SkFontMetrics* metrics) {

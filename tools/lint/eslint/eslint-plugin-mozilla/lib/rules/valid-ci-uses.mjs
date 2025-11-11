@@ -32,6 +32,7 @@ const platformSpecificInterfaces = new Map([
   ["nsIAccessibleMacInterface", "darwin"],
   ["nsILocalFileMac", "darwin"],
   ["nsIAccessibleMacEvent", "darwin"],
+  ["nsIKeychainMigrationUtils", "darwin"],
   ["nsIMacAttributionService", "darwin"],
   ["nsIMacShellService", "darwin"],
   ["nsIMacDockSupport", "darwin"],
@@ -46,6 +47,7 @@ const platformSpecificInterfaces = new Map([
   ["nsITouchBarUpdater", "darwin"],
   ["mozISandboxReporter", "linux"],
   ["nsIApplicationChooser", "linux"],
+  ["nsIAvailableMemoryWatcherTestingLinux", "linux"],
   ["nsIGNOMEShellService", "linux"],
   ["nsIGtkTaskbarProgress", "linux"],
 

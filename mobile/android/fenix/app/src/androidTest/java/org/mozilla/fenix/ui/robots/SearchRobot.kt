@@ -9,6 +9,7 @@ package org.mozilla.fenix.ui.robots
 import android.util.Log
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -22,9 +23,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performTextReplacement
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.assertion.PositionAssertions
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
@@ -32,6 +35,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
+import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_SEARCH_BOX
 import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.SEARCH_SELECTOR
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -51,16 +55,16 @@ import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import mozilla.components.browser.toolbar.R as toolbarR
-import mozilla.components.compose.browser.toolbar.R as composeToolbarR
 import mozilla.components.feature.qr.R as qrR
 
 /**
@@ -373,13 +377,15 @@ class SearchRobot {
         assertItemTextEquals(browserToolbarEditView(), expectedText = text)
     }
 
-    fun verifySearchBarPlaceholderWithComposableToolbar(searchHint: String) {
-        assertUIObjectExists(
-            itemWithResIdContainingText(
-                "$packageName:id/mozac_addressbar_search_query_input",
-                searchHint,
-            ),
-        )
+    fun verifySearchBarPlaceholderWithComposableToolbar(
+        composeTestRule: ComposeTestRule, searchHint: String,
+    ) {
+        Log.i(TAG, "verifySearchBarPlaceholderWithComposableToolbar: Verify hint is $searchHint")
+        composeTestRule
+            .onNodeWithTag(ADDRESSBAR_SEARCH_BOX)
+            .assert(hasText(searchHint))
+            .assertIsDisplayed()
+        Log.i(TAG, "verifySearchBarPlaceholderWithComposableToolbar: Verification successful")
     }
 
     fun verifySearchShortcutListContains(vararg searchEngineName: String, shouldExist: Boolean = true) {
@@ -415,15 +421,13 @@ class SearchRobot {
         Log.i(TAG, "selectTemporarySearchMethodWithComposableToolbar: Clicked the $searchEngineName search shortcut")
     }
 
-    fun clickScanButton() =
-        scanButton().also {
-            Log.i(TAG, "clickScanButton: Waiting for $waitingTime ms for the scan button to exist")
-            it.waitForExists(waitingTime)
-            Log.i(TAG, "clickScanButton: Waited for $waitingTime ms for the scan button to exist")
-            Log.i(TAG, "clickScanButton: Trying to click the scan button")
-            it.click()
-            Log.i(TAG, "clickScanButton: Clicked the scan button")
-        }
+    fun clickScanButton() {
+        waitForAppWindowToBeUpdated()
+        assertUIObjectExists(scanButton())
+        Log.i(TAG, "clickScanButton: Trying to click the scan button and wait for $waitingTimeShort ms for a new window")
+        scanButton().clickAndWaitForNewWindow(waitingTimeShort)
+        Log.i(TAG, "clickScanButton: Clicked the scan button and waited for $waitingTimeShort ms for a new window")
+    }
 
     fun clickScanButtonWithComposableToolbar(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickScanButtonWithComposableToolbar: Trying to click the scan button")
@@ -474,9 +478,9 @@ class SearchRobot {
         Log.i(TAG, "typeSearch: Waited for device to be idle")
     }
 
-    fun typeSearchWithComposableToolbar(searchTerm: String) {
+    fun typeSearchWithComposableToolbar(composeTestRule: ComposeTestRule, searchTerm: String) {
         Log.i(TAG, "typeSearchWithComposableToolbar: Trying to set the edit mode toolbar text to $searchTerm")
-        onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(replaceText(searchTerm))
+        composeTestRule.onNodeWithTag(ADDRESSBAR_SEARCH_BOX).performTextReplacement(searchTerm)
         Log.i(TAG, "typeSearchWithComposableToolbar: Edit mode toolbar text was set to $searchTerm")
     }
 
@@ -517,12 +521,31 @@ class SearchRobot {
     }
 
     fun clickPasteText() {
-        Log.i(TAG, "clickPasteText: Waiting for $waitingTimeShort ms for the \"Paste\" option to exist")
-        mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTimeShort)
-        Log.i(TAG, "clickPasteText: Waited for $waitingTimeShort ms for the \"Paste\" option to exist")
-        Log.i(TAG, "clickPasteText: Trying to click the \"Paste\" button")
-        mDevice.findObject(By.textContains("Paste")).click()
-        Log.i(TAG, "clickPasteText: Clicked the \"Paste\" button")
+        for (i in 1..RETRY_COUNT) {
+            Log.i(TAG, "clickPasteText: Started try #$i")
+            try {
+                Log.i(TAG, "clickPasteText: Waiting for $waitingTime ms for the \"Paste\" option to exist")
+                mDevice.findObject(UiSelector().textContains("Paste")).waitForExists(waitingTime)
+                Log.i(TAG, "clickPasteText: Waited for $waitingTime ms for the \"Paste\" option to exist")
+                Log.i(TAG, "clickPasteText: Trying to click the \"Paste\" button")
+                mDevice.findObject(By.textContains("Paste")).click()
+                Log.i(TAG, "clickPasteText: Clicked the \"Paste\" button")
+
+                break
+            } catch (e: NullPointerException) {
+                Log.i(TAG, "clickPasteText: NullPointerException caught, executing fallback methods")
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    searchScreen {
+                    }.dismissSearchBar {
+                    }.openSearch {
+                        clickClearButton()
+                        longClickToolbar()
+                    }
+                }
+            }
+        }
     }
 
     fun verifyTranslatedFocusedNavigationToolbar(toolbarHintString: String) =
@@ -535,12 +558,23 @@ class SearchRobot {
             waitingTime = waitingTimeShort,
         )
 
-    fun verifyTypedToolbarTextWithComposableToolbar(expectedText: String, exists: Boolean) =
-        assertUIObjectExists(
-            itemWithResIdAndText("$packageName:id/mozac_addressbar_search_query_input", expectedText),
-            exists = exists,
-            waitingTime = waitingTimeShort,
+    fun verifyTypedToolbarTextWithComposableToolbar(
+        composeTestRule: ComposeTestRule, expectedText: String, exists: Boolean,
+    ) {
+        Log.i(TAG, "verifyTypedToolbarTextWithComposableToolbar: Verifying that text '$expectedText' exists?: $exists")
+
+        val editToolbar = composeTestRule.onNode(
+            hasTestTag(ADDRESSBAR_SEARCH_BOX) and hasText(expectedText),
+            useUnmergedTree = true,
         )
+
+        when (exists) {
+            true -> editToolbar.assertIsDisplayed()
+            false -> editToolbar.assertIsNotDisplayed()
+        }
+
+        Log.i(TAG, "verifyTypedToolbarTextWithComposableToolbar: Verification successful.")
+    }
 
     fun verifySearchBarPosition(bottomPosition: Boolean) {
         Log.i(TAG, "verifySearchBarPosition: Trying to verify that the search bar is set to bottom: $bottomPosition")
@@ -597,7 +631,7 @@ class SearchRobot {
             browserToolbarEditView().setText("mozilla\n")
             Log.i(TAG, "openBrowser: Edit mode toolbar text was set to: mozilla")
             Log.i(TAG, "openBrowser: Trying to click device enter button")
-            mDevice.pressEnter()
+            pressImeActionOnToolbarEditView()
             Log.i(TAG, "openBrowser: Clicked device enter button")
 
             BrowserRobot().interact()
@@ -611,7 +645,7 @@ class SearchRobot {
             browserToolbarEditView().setText(query)
             Log.i(TAG, "submitQuery: Edit mode toolbar text was set to: $query")
             Log.i(TAG, "submitQuery: Trying to click device enter button")
-            mDevice.pressEnter()
+            pressImeActionOnToolbarEditView()
             Log.i(TAG, "submitQuery: Clicked device enter button")
 
             registerAndCleanupIdlingResources(sessionLoadedIdlingResource) {
@@ -622,13 +656,17 @@ class SearchRobot {
             return BrowserRobot.Transition()
         }
 
-        fun submitQueryWithComposableToolbar(query: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            Log.i(TAG, "submitQueryWithComposableToolbar: Trying to set toolbar text to: $query")
-            onView(withId(composeToolbarR.id.mozac_addressbar_search_query_input)).perform(replaceText(query))
-            Log.i(TAG, "submitQueryWithComposableToolbar: Toolbar text was set to: $query")
-            Log.i(TAG, "submitQueryWithComposableToolbar: Trying to click device enter button")
-            mDevice.pressEnter()
-            Log.i(TAG, "submitQueryWithComposableToolbar: Clicked device enter button")
+        fun submitQueryWithComposableToolbar(
+            composeTestRule: ComposeTestRule,
+            query: String, interact: BrowserRobot.() -> Unit,
+        ): BrowserRobot.Transition {
+            Log.i(TAG, "submitQueryWithComposableToolbar: Trying to set toolbar text to: $query and pressing IME action")
+
+            composeTestRule.onNodeWithTag(ADDRESSBAR_SEARCH_BOX).apply {
+                performTextReplacement(query)
+                performImeAction()
+            }
+            Log.i(TAG, "submitQueryWithComposableToolbar: Toolbar text was set to: $query and IME action performed")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -666,6 +704,20 @@ fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
 
 private fun browserToolbarEditView() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
+
+private fun pressImeActionOnToolbarEditView() {
+    val context = appContext
+    val resId = context.resources.getIdentifier(
+        "mozac_browser_toolbar_edit_url_view",
+        "id",
+        packageName,
+    )
+
+    Log.i(TAG, "pressImeActionOnToolbarEditView: Trying to perform pressImeActionButton via Espresso")
+    onView(withId(resId))
+        .perform(pressImeActionButton())
+    Log.i(TAG, "pressImeActionOnToolbarEditView: Performed pressImeActionButton via Espresso")
+}
 
 private fun dismissPermissionButton() =
     mDevice.findObject(UiSelector().text("Dismiss"))

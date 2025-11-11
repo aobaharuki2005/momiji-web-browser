@@ -142,7 +142,7 @@ export default class RestoreFromBackup extends MozLitElement {
     }
   }
 
-  async handleChooseBackupFile() {
+  handleChooseBackupFile() {
     this.dispatchEvent(
       new CustomEvent("BackupUI:ShowFilepicker", {
         bubbles: true,
@@ -150,7 +150,7 @@ export default class RestoreFromBackup extends MozLitElement {
         detail: {
           win: window.browsingContext,
           filter: "filterHTML",
-          displayDirectoryPath: this.backupServiceState?.backupFileToRestore,
+          existingBackupPath: this.backupServiceState?.backupFileToRestore,
         },
       })
     );
@@ -265,6 +265,8 @@ export default class RestoreFromBackup extends MozLitElement {
         href=${this.getSupportURLWithUTM(supportPage)}
         data-l10n-id=${ifDefined(l10nId)}
         data-l10n-name=${ifDefined(l10nName)}
+        dir="auto"
+        rel="noopener noreferrer"
       ></a>`;
     }
 
@@ -275,12 +277,16 @@ export default class RestoreFromBackup extends MozLitElement {
       support-page=${supportPage}
       data-l10n-id=${ifDefined(l10nId)}
       data-l10n-name=${ifDefined(l10nName)}
+      dir="auto"
     ></a>`;
   }
 
   applyContentCustomizations() {
     if (this.aboutWelcomeEmbedded) {
-      this.style.setProperty("--label-font-weight", "600");
+      this.style.setProperty(
+        "--label-font-weight",
+        "var(--font-weight-semibold)"
+      );
     }
   }
 
@@ -384,6 +390,7 @@ export default class RestoreFromBackup extends MozLitElement {
           style=${styles}
           @input=${this.handleTextareaResize}
           aria-describedby=${describedBy}
+          data-l10n-id="restore-from-backup-filepicker-input"
         ></textarea>
       `;
     }
@@ -395,6 +402,7 @@ export default class RestoreFromBackup extends MozLitElement {
         readonly
         .value=${backupFileName}
         style=${styles}
+        data-l10n-id="restore-from-backup-filepicker-input"
       />
     `;
   }
@@ -544,18 +552,19 @@ export default class RestoreFromBackup extends MozLitElement {
       return null;
     }
 
-    // Note: the l10n id used here is interim, and will be updated in Bug 1994877
     return html`
       <span
         id="backup-generic-file-error"
         class="field-error"
-        data-l10n-id="restored-from-backup-error-subtitle"
+        data-l10n-id="backup-file-restore-file-validation-error"
       >
         <a
           id="backup-generic-error-link"
+          target="_blank"
           slot="support-link"
           data-l10n-name="restore-problems"
           href=${this.getSupportURLWithUTM("firefox-backup")}
+          rel="noopener noreferrer"
         ></a>
       </span>
     `;

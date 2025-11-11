@@ -31,11 +31,7 @@ const RESULT_MENU_COMMAND = {
  */
 export class AddonSuggestions extends SuggestProvider {
   get enablingPreferences() {
-    return [
-      "addonsFeatureGate",
-      "suggest.addons",
-      "suggest.quicksuggest.nonsponsored",
-    ];
+    return ["addonsFeatureGate", "suggest.addons", "suggest.quicksuggest.all"];
   }
 
   get primaryUserControlledPreferences() {

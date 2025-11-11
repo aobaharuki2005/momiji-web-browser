@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "styleSheetService",
   "@mozilla.org/content/style-sheet-service;1",
-  "nsIStyleSheetService"
+  Ci.nsIStyleSheetService
 );
 
 // Query selector for selectable elements in results.
@@ -113,7 +113,7 @@ export class UrlbarView {
   }
 
   get oneOffSearchButtons() {
-    if (!this.input.isAddressbar) {
+    if (this.input.sapName != "urlbar") {
       return null;
     }
     if (!this.#oneOffSearchButtons) {
@@ -205,7 +205,7 @@ export class UrlbarView {
   }
 
   /**
-   * @returns {Element}
+   * @returns {HTMLElement}
    *   The currently selected element.
    */
   get selectedElement() {
@@ -2328,12 +2328,19 @@ export class UrlbarView {
       this.#updateElementForDynamicType(node, update, item, result);
       if (update.style) {
         for (let [styleName, value] of Object.entries(update.style)) {
-          node.style[styleName] = value;
+          if (styleName.includes("-")) {
+            // Expect hyphen-case. e.g. "background-image", "--a-variable".
+            node.style.setProperty(styleName, value);
+          } else {
+            // Expect camel-case. e.g. "backgroundImage"
+            // NOTE: If want to define the variable, please use hyphen-case.
+            node.style[styleName] = value;
+          }
         }
       }
       if (update.l10n) {
         this.#l10nCache.setElementL10n(node, update.l10n);
-      } else if (update.textContent) {
+      } else if (update.hasOwnProperty("textContent")) {
         lazy.UrlbarUtils.addTextContentWithHighlights(
           node,
           update.textContent,

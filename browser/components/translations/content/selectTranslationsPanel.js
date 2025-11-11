@@ -21,14 +21,14 @@ XPCOMUtils.defineLazyServiceGetter(
   this,
   "ClipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
-  "nsIClipboardHelper"
+  Ci.nsIClipboardHelper
 );
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "GfxInfo",
   "@mozilla.org/gfx/info;1",
-  "nsIGfxInfo"
+  Ci.nsIGfxInfo
 );
 
 /**
@@ -255,7 +255,6 @@ var SelectTranslationsPanel = new (class {
       };
 
       TranslationsPanelShared.defineLazyElements(document, this.#lazyElements, {
-        betaIcon: "select-translations-panel-beta-icon",
         cancelButton: "select-translations-panel-cancel-button",
         copyButton: "select-translations-panel-copy-button",
         doneButtonPrimary: "select-translations-panel-done-button-primary",

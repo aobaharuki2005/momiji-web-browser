@@ -634,8 +634,8 @@ const BASE_MESSAGES = () => [
               fontSize: "13px",
             },
             screen_style: {
-              width: "664px",
-              height: "620px",
+              width: "700px",
+              height: "650px",
             },
             logo: {
               imageURL:
@@ -1998,20 +1998,6 @@ const BASE_MESSAGES = () => [
             title: {
               string_id: "restored-from-backup-success-title",
             },
-            cta_paragraph: {
-              text: {
-                string_id: "restored-from-backup-success-no-checklist-subtitle",
-                string_name: "settings",
-                paddingInline: "0 100px",
-              },
-              action: {
-                type: "OPEN_ABOUT_PAGE",
-                data: {
-                  args: "preferences",
-                  where: "tab",
-                },
-              },
-            },
             primary_button: {
               label: {
                 string_id:
@@ -2028,7 +2014,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "source == 'startup' && !doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "source == 'startup' && !doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue && !'browser.profiles.profile-copied'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },
@@ -2133,7 +2119,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "source == 'startup' && doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "source == 'startup' && doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue && !'browser.profiles.profile-copied'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },
@@ -2216,7 +2202,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "source == 'startup' && !doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "source == 'startup' && !doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser && !willShowDefaultPrompt && 'browser.backup.profile-restoration-date'|preferenceValue && !'browser.profiles.profile-copied'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },
@@ -2310,7 +2296,7 @@ const BASE_MESSAGES = () => [
       ],
     },
     targeting:
-      "source == 'startup' && doesAppNeedPin && !willShowDefaultPrompt &&(!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && 'browser.backup.profile-restoration-date'|preferenceValue",
+      "source == 'startup' && doesAppNeedPin && !willShowDefaultPrompt &&(!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser) && 'browser.backup.profile-restoration-date'|preferenceValue && !'browser.profiles.profile-copied'|preferenceValue",
     trigger: {
       id: "defaultBrowserCheck",
     },

@@ -920,7 +920,7 @@
 
 @media (prefers-contrast) and (-moz-platform: windows) {
   #translations-button-locale {
-    font-weight: bold;
+    font-weight: var(--font-weight-bold);
   }
 
   #translations-button[translationsactive]:is(:hover, [open]) > #translations-button-icon {
@@ -1209,10 +1209,14 @@
 }
 
 .searchmode-switcher-dropmarker {
+  @media (prefers-reduced-motion: no-preference) {
+    transition: 120ms transform ease-out;
+  }
+
   .urlbar[searchmode] & {
     display: none;
   }
-  .urlbar-searchmode-switcher[open] & {
+  .searchmode-switcher[open] > & {
     transform: rotate(180deg);
   }
 }

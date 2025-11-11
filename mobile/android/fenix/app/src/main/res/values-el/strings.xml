@@ -1747,6 +1747,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">Αποστολή URL αποκλεισμένων από προστασία καταγραφής</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Η Ενισχυμένη προστασία από καταγραφή ενδέχεται να αποκλείσει ιχνηλάτες και σενάρια εντολών που χρειάζονται ορισμένοι ιστότοποι για να λειτουργούν σωστά.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Προεπισκόπηση αναφοράς</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Προεπισκόπηση αναφοράς</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Αποστολή</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -3884,6 +3890,16 @@
   <string name="review_prompt_feedback_header">Λυπούμαστε που αντιμετωπίζετε προβλήματα. Πείτε μας πώς μπορούμε να βελτιώσουμε το %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Υποβολή σχολίων</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">Αναζήτηση ρυθμίσεων</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">Προέκυψε σφάλμα</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Πρόσφατα αποτελέσματα αναζήτησης</string>
   <!--
     Terms of use pop up prompt
 

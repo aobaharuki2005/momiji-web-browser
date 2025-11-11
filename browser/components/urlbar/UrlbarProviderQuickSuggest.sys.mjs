@@ -87,13 +87,11 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
-   * Starts querying. Extended classes should return a Promise resolved when the
-   * provider is done searching AND returning results.
+   * Starts querying.
    *
-   * @param {UrlbarQueryContext} queryContext The query context object
-   * @param {Function} addCallback Callback invoked by the provider to add a new
-   *        result. A UrlbarResult should be passed to it.
-   * @returns {Promise}
+   * @param {UrlbarQueryContext} queryContext
+   * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} addCallback
+   *   Callback invoked by the provider to add a new result.
    */
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
@@ -569,10 +567,9 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
     let feature = lazy.QuickSuggest.getFeatureByResult(result);
     if (
       !feature &&
-      ((result.payload.isSponsored &&
-        !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
-        (!result.payload.isSponsored &&
-          !lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")))
+      (!lazy.UrlbarPrefs.get("suggest.quicksuggest.all") ||
+        (result.payload.isSponsored &&
+          !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")))
     ) {
       return false;
     }

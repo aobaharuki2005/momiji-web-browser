@@ -48,7 +48,7 @@ hr {
   --box-icon-size: var(--connection-globe-icon-size);
   --box-icon-fill: var(--connection-shield-color);
   --box-icon-stroke: var(--shield-bgcolor);
-  --box-label-font-weight: var(--font-weight-bold);
+  --box-label-font-weight: var(--font-weight-semibold);
   -moz-context-properties: fill, stroke;
   /**
    * moz-box-group changes the border of items based on its position in the group.
@@ -110,7 +110,7 @@ hr {
 
 #location-wrapper {
   --box-icon-fill: currentColor;
-  --box-label-font-weight: var(--font-weight-bold);
+  --box-label-font-weight: var(--font-weight-semibold);
 }
 
 .vpn-bottom-content {

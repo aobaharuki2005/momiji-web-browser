@@ -11,7 +11,6 @@
 #ifndef AttrArray_h___
 #define AttrArray_h___
 
-#include "mozilla/Attributes.h"
 #include "mozilla/BindgenUniquePtr.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Span.h"

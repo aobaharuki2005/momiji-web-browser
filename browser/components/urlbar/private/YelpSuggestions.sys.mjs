@@ -39,6 +39,7 @@ export class YelpSuggestions extends SuggestProvider {
     return [
       "yelpFeatureGate",
       "suggest.yelp",
+      "suggest.quicksuggest.all",
       "suggest.quicksuggest.sponsored",
     ];
   }

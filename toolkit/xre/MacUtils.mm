@@ -17,21 +17,25 @@ void LaunchTask(NSString* aPath, NSArray* aArguments) {
 
   @try {
     NSTask* task = [[NSTask alloc] init];
-    if (aArguments) {
-      [task setArguments:aArguments];
-    }
-    if(@available(macOS 10.13, *)) {
+    if (@available(macOS 10.13, *)) {
       [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+      if (aArguments) {
+        [task setArguments:aArguments];
+      }
       [task launchAndReturnError:nil];
     } else {
-      [task setLaunchPath:aPath];
-      [task launch];
+      NSArray* arguments = aArguments;
+      if (!arguments) {
+        arguments = @[];
+      }
+      task = [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
     }
     [task waitUntilExit];
-    [task release];
+    if (@available(macOS 10.13, *)) {
+      [task release];
+    }
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);
   }
 }
-
 }  // namespace mozilla::MacUtils

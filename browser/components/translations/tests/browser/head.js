@@ -329,14 +329,22 @@ async function switchTab(tab, name) {
 async function toggleReaderMode() {
   logAction();
   const readerButton = document.getElementById("reader-mode-button");
-  await waitForCondition(() => readerButton.hidden === false);
+  await BrowserTestUtils.waitForMutationCondition(
+    readerButton,
+    { attributes: true, attributeFilter: ["hidden"] },
+    () => readerButton.hidden === false
+  );
 
   readerButton.getAttribute("readeractive")
     ? info("Exiting reader mode")
     : info("Entering reader mode");
 
   const readyPromise = readerButton.getAttribute("readeractive")
-    ? waitForCondition(() => !readerButton.getAttribute("readeractive"))
+    ? BrowserTestUtils.waitForMutationCondition(
+        readerButton,
+        { attributes: true, attributeFilter: ["readeractive"] },
+        () => !readerButton.getAttribute("readeractive")
+      )
     : BrowserTestUtils.waitForContentEvent(
         gBrowser.selectedBrowser,
         "AboutReaderContentReady"
@@ -3060,7 +3068,6 @@ class SelectTranslationsTestUtils {
     SharedTranslationsTestUtils._assertPanelElementVisibility(
       SelectTranslationsPanel.elements,
       {
-        betaIcon: false,
         cancelButton: false,
         copyButton: false,
         doneButtonPrimary: false,
@@ -3135,7 +3142,6 @@ class SelectTranslationsTestUtils {
     const isFullPageTranslationsRestrictedForPage =
       TranslationsParent.isFullPageTranslationsRestrictedForPage(gBrowser);
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
-      betaIcon: true,
       copyButton: true,
       doneButtonPrimary: true,
       fromLabel: true,
@@ -3211,7 +3217,6 @@ class SelectTranslationsTestUtils {
     await SelectTranslationsTestUtils.waitForPanelState("init-failure");
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       header: true,
-      betaIcon: true,
       cancelButton: true,
       initFailureContent: true,
       initFailureMessageBar: true,
@@ -3245,7 +3250,6 @@ class SelectTranslationsTestUtils {
     await SelectTranslationsTestUtils.waitForPanelState("translation-failure");
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       header: true,
-      betaIcon: true,
       cancelButton: true,
       fromLabel: true,
       fromMenuList: true,
@@ -3307,7 +3311,6 @@ class SelectTranslationsTestUtils {
       unsupportedLanguageMessageBar,
     } = SelectTranslationsPanel.elements;
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
-      betaIcon: true,
       doneButtonSecondary: true,
       header: true,
       settingsButton: true,
@@ -3399,7 +3402,6 @@ class SelectTranslationsTestUtils {
       "The textarea should have the translating class."
     );
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
-      betaIcon: true,
       copyButton: true,
       doneButtonPrimary: true,
       fromLabel: true,

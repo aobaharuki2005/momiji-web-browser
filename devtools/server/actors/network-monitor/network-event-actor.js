@@ -468,9 +468,9 @@ class NetworkEventActor extends Actor {
     };
   }
 
-  /** ****************************************************************
+  /******************************************************************
    * Listeners for new network event data coming from NetworkMonitor.
-   ******************************************************************/
+   *****************************************************************/
 
   addCacheDetails({ fromCache, fromServiceWorker }) {
     this._resource.fromCache = fromCache;

@@ -753,18 +753,14 @@ FFmpegVideoEncoder<LIBAV_VER>::GetExtraData(AVPacket* aPacket) {
   BufferReader reader(buf);
 
   // The first part is sps.
-  uint32_t spsSize;
-  MOZ_TRY_VAR(spsSize, reader.ReadU32());
-  Span<const uint8_t> spsData;
-  MOZ_TRY_VAR(spsData,
-              reader.ReadSpan<const uint8_t>(static_cast<size_t>(spsSize)));
+  uint32_t spsSize = MOZ_TRY(reader.ReadU32());
+  Span<const uint8_t> spsData =
+      MOZ_TRY(reader.ReadSpan<const uint8_t>(static_cast<size_t>(spsSize)));
 
   // The second part is pps.
-  uint32_t ppsSize;
-  MOZ_TRY_VAR(ppsSize, reader.ReadU32());
-  Span<const uint8_t> ppsData;
-  MOZ_TRY_VAR(ppsData,
-              reader.ReadSpan<const uint8_t>(static_cast<size_t>(ppsSize)));
+  uint32_t ppsSize = MOZ_TRY(reader.ReadU32());
+  Span<const uint8_t> ppsData =
+      MOZ_TRY(reader.ReadSpan<const uint8_t>(static_cast<size_t>(ppsSize)));
 
   // Ensure we have profile, constraints and level needed to create the extra
   // data.

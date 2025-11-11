@@ -61,10 +61,7 @@
 //   | Word size                 |  32 bit |  64 bit |  64 bit |
 //   | Page size                 |    4 Kb |    4 Kb |   16 Kb |
 //   |=========================================================|
-//   | Small    | Tiny           |    4/-w |      -w |       - |
-//   |          |                |       8 |    8/-w |       8 |
-//   |          |----------------+---------|---------|---------|
-//   |          | Quantum-spaced |      16 |      16 |      16 |
+//   | Small    | Quantum-spaced |      16 |      16 |      16 |
 //   |          |                |      32 |      32 |      32 |
 //   |          |                |      48 |      48 |      48 |
 //   |          |                |     ... |     ... |     ... |
@@ -100,13 +97,8 @@
 //
 // Legend:
 //   n:    Size class exists for this platform.
-//   n/-w: This size class doesn't exist on Windows (see kMinTinyClass).
 //   -:    This size class doesn't exist for this platform.
 //   ...:  Size classes follow a pattern here.
-//
-// NOTE: Due to Mozilla bug 691003, we cannot reserve less than one word for an
-// allocation on Linux or Mac.  So on 32-bit *nix, the smallest bucket size is
-// 4 bytes, and on 64-bit, the smallest bucket size is 8 bytes.
 //
 // A different mechanism is used for each category:
 //
@@ -146,7 +138,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Alignment.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
@@ -161,8 +152,6 @@
 // instead of the one defined here; use only MozTagAnonymousMemory().
 #include "mozilla/TaggedAnonymousMemory.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/XorShift128PlusRNG.h"
 #include "mozilla/fallible.h"
 #include "RadixTree.h"
@@ -223,18 +212,18 @@ StaticMutex gInitLock MOZ_UNANNOTATED = {STATIC_MUTEX_INIT};
 
 struct arena_stats_t {
   // Number of bytes currently mapped.
-  size_t mapped;
+  size_t mapped = 0;
 
   // Current number of committed pages (non madvised/decommitted)
-  size_t committed;
+  size_t committed = 0;
 
   // Per-size-category statistics.
-  size_t allocated_small;
+  size_t allocated_small = 0;
 
-  size_t allocated_large;
+  size_t allocated_large = 0;
 
   // The number of "memory operations" aka mallocs/frees.
-  uint64_t operations;
+  uint64_t operations = 0;
 };
 
 // Describe size classes to which allocations are rounded up to.
@@ -243,7 +232,6 @@ struct arena_stats_t {
 class SizeClass {
  public:
   enum ClassType {
-    Tiny,
     Quantum,
     QuantumWide,
     SubPage,
@@ -251,10 +239,12 @@ class SizeClass {
   };
 
   explicit inline SizeClass(size_t aSize) {
-    if (aSize <= kMaxTinyClass) {
-      mType = Tiny;
-      mSize = std::max(RoundUpPow2(aSize), kMinTinyClass);
-    } else if (aSize <= kMaxQuantumClass) {
+    // We can skip an extra condition here if aSize > 0 and kQuantum >=
+    // kMinQuantumClass.
+    MOZ_ASSERT(aSize > 0);
+    static_assert(kQuantum >= kMinQuantumClass);
+
+    if (aSize <= kMaxQuantumClass) {
       mType = Quantum;
       mSize = QUANTUM_CEILING(aSize);
     } else if (aSize <= kMaxQuantumWideClass) {
@@ -413,7 +403,7 @@ struct arena_bin_t {
   uint32_t mRunFirstRegionOffset;
 
   // Current number of runs in this bin, full or otherwise.
-  uint32_t mNumRuns;
+  uint32_t mNumRuns = 0;
 
   // A constant for fast division by size class.  This value is 16 bits wide so
   // it is placed last.
@@ -442,7 +432,7 @@ struct arena_bin_t {
   //  1280  24 KiB   1536  32 KiB   1792  16 KiB   2048 128 KiB
   //  2304  16 KiB   2560  48 KiB   2816  36 KiB   3072  64 KiB
   //  3328  36 KiB   3584  32 KiB   3840  64 KiB
-  inline void Init(SizeClass aSizeClass);
+  explicit arena_bin_t(SizeClass aSizeClass);
 };
 
 // We try to keep the above structure aligned with common cache lines sizes,
@@ -473,8 +463,8 @@ enum PurgeCondition { PurgeIfThreshold, PurgeUnconditional };
 
 struct arena_t {
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-  uint32_t mMagic;
 #  define ARENA_MAGIC 0x947d3d24
+  uint32_t mMagic = ARENA_MAGIC;
 #endif
 
   // Linkage for the tree of arenas by id.
@@ -485,7 +475,7 @@ struct arena_t {
   // Arena id, that we keep away from the beginning of the struct so that
   // free list pointers in TypedBaseAlloc<arena_t> don't overflow in it,
   // and it keeps the value it had after the destructor.
-  arena_id_t mId;
+  arena_id_t mId = 0;
 
   // Operations on this arena require that lock be locked. The MaybeMutex
   // class will elude locking if the arena is accessed from a single thread
@@ -528,7 +518,7 @@ struct arena_t {
   // There is one spare chunk per arena, rather than one spare total, in
   // order to avoid interactions between multiple threads that could make
   // a single spare inadequate.
-  arena_chunk_t* mSpare MOZ_GUARDED_BY(mLock);
+  arena_chunk_t* mSpare MOZ_GUARDED_BY(mLock) = nullptr;
 
   // A per-arena opt-in to randomize the offset of small allocations
   // Needs no lock, read-only.
@@ -537,8 +527,9 @@ struct arena_t {
   // A pseudorandom number generator. Initially null, it gets initialized
   // on first use to avoid recursive malloc initialization (e.g. on OSX
   // arc4random allocates memory).
-  mozilla::non_crypto::XorShift128PlusRNG* mPRNG MOZ_GUARDED_BY(mLock);
-  bool mIsPRNGInitializing MOZ_GUARDED_BY(mLock);
+  mozilla::non_crypto::XorShift128PlusRNG* mPRNG MOZ_GUARDED_BY(mLock) =
+      nullptr;
+  bool mIsPRNGInitializing MOZ_GUARDED_BY(mLock) = false;
 
  public:
   // Whether this is a private arena. Multiple public arenas are just a
@@ -555,23 +546,23 @@ struct arena_t {
   // dirty, and for which madvise(... MADV_FREE) has not been called.  By
   // tracking this, we can institute a limit on how much dirty unused
   // memory is mapped for each arena.
-  size_t mNumDirty MOZ_GUARDED_BY(mLock);
+  size_t mNumDirty MOZ_GUARDED_BY(mLock) = 0;
 
   // Precalculated value for faster checks.
   size_t mMaxDirty MOZ_GUARDED_BY(mLock);
 
   // The current number of pages that are available without a system call (but
   // probably a page fault).
-  size_t mNumMAdvised MOZ_GUARDED_BY(mLock);
-  size_t mNumFresh MOZ_GUARDED_BY(mLock);
+  size_t mNumMAdvised MOZ_GUARDED_BY(mLock) = 0;
+  size_t mNumFresh MOZ_GUARDED_BY(mLock) = 0;
 
   // Maximum value allowed for mNumDirty.
   // Needs no lock, read-only.
   size_t mMaxDirtyBase;
 
   // Needs no lock, read-only.
-  int32_t mMaxDirtyIncreaseOverride;
-  int32_t mMaxDirtyDecreaseOverride;
+  int32_t mMaxDirtyIncreaseOverride = 0;
+  int32_t mMaxDirtyDecreaseOverride = 0;
 
   // The link to gArenas.mOutstandingPurges.
   // Note that this must only be accessed while holding gArenas.mPurgeListLock
@@ -595,7 +586,7 @@ struct arena_t {
   // completely done.  This is used to avoid accessing the list (and list lock)
   // on every call to ShouldStartPurge() and to avoid deleting arenas that
   // another thread is purging.
-  bool mIsPurgePending MOZ_GUARDED_BY(mLock);
+  bool mIsPurgePending MOZ_GUARDED_BY(mLock) = false;
 
   // A mirror of ArenaCollection::mIsDeferredPurgeEnabled, here only to
   // optimize memory reads in ShouldStartPurge().
@@ -609,7 +600,7 @@ struct arena_t {
   // fixed size area including a null terminating byte.  The actual maximum
   // length of the string is one less than LABEL_MAX_CAPACITY;
   static constexpr size_t LABEL_MAX_CAPACITY = 128;
-  char mLabel[LABEL_MAX_CAPACITY];
+  char mLabel[LABEL_MAX_CAPACITY] = {};
 
  private:
   // Size/address-ordered tree of this arena's available runs.  This tree
@@ -918,14 +909,8 @@ struct ArenaTreeTrait {
 //   used by the standard API.
 class ArenaCollection {
  public:
+
   bool Init() MOZ_REQUIRES(gInitLock) MOZ_EXCLUDES(mLock) {
-    MOZ_PUSH_IGNORE_THREAD_SAFETY
-    mArenas.Init();
-    mPrivateArenas.Init();
-#ifndef NON_RANDOM_ARENA_IDS
-    mMainThreadArenas.Init();
-#endif
-    MOZ_POP_THREAD_SAFETY
     arena_params_t params;
     // The main arena allows more dirty pages than the default for other arenas.
     params.mMaxDirty = opt_dirty_max;
@@ -1235,7 +1220,7 @@ class ArenaCollection {
   Atomic<bool> mIsDeferredPurgeEnabled;
 };
 
-MOZ_RUNINIT static ArenaCollection gArenas;
+ MOZ_RUNINIT static ArenaCollection gArenas;
 
 // Protects huge allocation-related data structures.
 static Mutex huge_mtx;
@@ -2568,7 +2553,7 @@ arena_run_t* arena_t::GetNonFullBinRun(arena_bin_t* aBin) {
   return GetNewEmptyBinRun(aBin);
 }
 
-void arena_bin_t::Init(SizeClass aSizeClass) {
+arena_bin_t::arena_bin_t(SizeClass aSizeClass) : mSizeClass(aSizeClass.Size()) {
   size_t try_run_size;
   unsigned try_nregs, try_mask_nelms, try_reg0_offset;
   // Size of the run header, excluding mRegionsMask.
@@ -2577,9 +2562,6 @@ void arena_bin_t::Init(SizeClass aSizeClass) {
   MOZ_ASSERT(aSizeClass.Size() <= gMaxBinClass);
 
   try_run_size = gPageSize;
-
-  mSizeClass = aSizeClass.Size();
-  mNumRuns = 0;
 
   // Run size expansion loop.
   while (true) {
@@ -2680,7 +2662,7 @@ void arena_t::InitPRNG() {
       *mPRNG = prng;
     } else {
       void* backing =
-          base_alloc(sizeof(mozilla::non_crypto::XorShift128PlusRNG));
+          sBaseAlloc.alloc(sizeof(mozilla::non_crypto::XorShift128PlusRNG));
       mPRNG = new (backing)
           mozilla::non_crypto::XorShift128PlusRNG(std::move(prng));
     }
@@ -2696,25 +2678,18 @@ void* arena_t::MallocSmall(size_t aSize, bool aZero) {
   aSize = sizeClass.Size();
 
   switch (sizeClass.Type()) {
-    case SizeClass::Tiny:
-      bin = &mBins[FloorLog2(aSize / kMinTinyClass)];
-      break;
     case SizeClass::Quantum:
       // Although we divide 2 things by kQuantum, the compiler will
-      // reduce `kMinQuantumClass / kQuantum` and `kNumTinyClasses` to a
-      // single constant.
-      bin = &mBins[kNumTinyClasses + (aSize / kQuantum) -
-                   (kMinQuantumClass / kQuantum)];
+      // reduce `kMinQuantumClass / kQuantum` to a single constant.
+      bin = &mBins[(aSize / kQuantum) - (kMinQuantumClass / kQuantum)];
       break;
     case SizeClass::QuantumWide:
-      bin =
-          &mBins[kNumTinyClasses + kNumQuantumClasses + (aSize / kQuantumWide) -
-                 (kMinQuantumWideClass / kQuantumWide)];
+      bin = &mBins[kNumQuantumClasses + (aSize / kQuantumWide) -
+                   (kMinQuantumWideClass / kQuantumWide)];
       break;
     case SizeClass::SubPage:
-      bin =
-          &mBins[kNumTinyClasses + kNumQuantumClasses + kNumQuantumWideClasses +
-                 (FloorLog2(aSize) - LOG2(kMinSubPageClass))];
+      bin = &mBins[kNumQuantumClasses + kNumQuantumWideClasses +
+                   (FloorLog2(aSize) - LOG2(kMinSubPageClass))];
       break;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected size class type");
@@ -3501,21 +3476,15 @@ void arena_t::operator delete(void* aPtr) {
   TypedBaseAlloc<arena_t>::dealloc((arena_t*)aPtr);
 }
 
-arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
-  unsigned i;
-
-  memset(&mLink, 0, sizeof(mLink));
-  memset(&mStats, 0, sizeof(arena_stats_t));
-  mId = 0;
-
-  // Initialize chunks.
-  mChunksDirty.Init();
-#ifdef MALLOC_DOUBLE_PURGE
-  new (&mChunksMAdvised) DoublyLinkedList<arena_chunk_t>();
-#endif
-  mSpare = nullptr;
-
-  mRandomizeSmallAllocations = opt_randomize_small;
+arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate)
+    : mRandomizeSmallAllocations(opt_randomize_small),
+      mIsPrivate(aIsPrivate),
+      // The default maximum amount of dirty pages allowed on arenas is a
+      // fraction of opt_dirty_max.
+      mMaxDirtyBase((aParams && aParams->mMaxDirty) ? aParams->mMaxDirty
+                                                    : (opt_dirty_max / 8)),
+      mLastSignificantReuseNS(GetTimestampNS()),
+      mIsDeferredPurgeEnabled(gArenas.IsDeferredPurgeEnabled()) {
   MaybeMutex::DoLock doLock = MaybeMutex::MUST_LOCK;
   if (aParams) {
     uint32_t randFlags = aParams->mFlags & ARENA_FLAG_RANDOMIZE_SMALL_MASK;
@@ -3557,50 +3526,25 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
       strncpy(mLabel, aParams->mLabel, LABEL_MAX_CAPACITY - 1);
       mLabel[LABEL_MAX_CAPACITY - 1] = 0;
 
-      // If the string was trucated, then replace it's end with "..."
+      // If the string was truncated, then replace its end with "..."
       if (strlen(aParams->mLabel) >= LABEL_MAX_CAPACITY) {
         for (int i = 0; i < 3; i++) {
           mLabel[LABEL_MAX_CAPACITY - 2 - i] = '.';
         }
       }
-    } else {
-      mLabel[0] = 0;
     }
-  } else {
-    mMaxDirtyIncreaseOverride = 0;
-    mMaxDirtyDecreaseOverride = 0;
-
-    mLabel[0] = 0;
   }
-
-  mLastSignificantReuseNS = GetTimestampNS();
-  mIsPurgePending = false;
-  mIsDeferredPurgeEnabled = gArenas.IsDeferredPurgeEnabled();
 
   MOZ_RELEASE_ASSERT(mLock.Init(doLock));
 
-  mPRNG = nullptr;
-  mIsPRNGInitializing = false;
-
-  mIsPrivate = aIsPrivate;
-
-  mNumDirty = 0;
-  mNumFresh = 0;
-  mNumMAdvised = 0;
-  // The default maximum amount of dirty pages allowed on arenas is a fraction
-  // of opt_dirty_max.
-  mMaxDirtyBase = (aParams && aParams->mMaxDirty) ? aParams->mMaxDirty
-                                                  : (opt_dirty_max / 8);
   UpdateMaxDirty();
-
-  mRunsAvail.Init();
 
   // Initialize bins.
   SizeClass sizeClass(1);
 
+  unsigned i;
   for (i = 0;; i++) {
-    arena_bin_t& bin = mBins[i];
-    bin.Init(sizeClass);
+    new (&mBins[i]) arena_bin_t(sizeClass);
 
     // SizeClass doesn't want sizes larger than gMaxBinClass for now.
     if (sizeClass.Size() == gMaxBinClass) {
@@ -3609,10 +3553,6 @@ arena_t::arena_t(arena_params_t* aParams, bool aIsPrivate) {
     sizeClass = sizeClass.Next();
   }
   MOZ_ASSERT(i == NUM_SMALL_CLASSES - 1);
-
-#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-  mMagic = ARENA_MAGIC;
-#endif
 }
 
 arena_t::~arena_t() {
@@ -3732,7 +3672,6 @@ arena_id_t ArenaCollection::MakeRandArenaId(bool aIsMainThreadOnly) const {
 static void huge_init() MOZ_REQUIRES(gInitLock) {
   huge_mtx.Init();
   MOZ_PUSH_IGNORE_THREAD_SAFETY
-  huge.Init();
   huge_allocated = 0;
   huge_mapped = 0;
   huge_operations = 0;
@@ -4058,7 +3997,7 @@ static bool malloc_init_hard() {
 
   chunks_init();
   huge_init();
-  base_init();
+  sBaseAlloc.Init();
 
   // Initialize arenas collection here.
   if (!gArenas.Init()) {
@@ -4249,7 +4188,9 @@ inline void* MozJemalloc::valloc(size_t aSize) {
 
 // This was added by Mozilla for use by SQLite.
 inline size_t MozJemalloc::malloc_good_size(size_t aSize) {
-  if (aSize <= gMaxLargeClass) {
+  if (aSize == 0) {
+    aSize = SizeClass(1).Size();
+  } else if (aSize <= gMaxLargeClass) {
     // Small or large
     aSize = SizeClass(aSize).Size();
   } else {
@@ -4318,12 +4259,9 @@ inline void MozJemalloc::jemalloc_stats_internal(
   }
 
   // Get base mapped/allocated.
-  {
-    MutexAutoLock lock(base_mtx);
-    non_arena_mapped += base_mapped;
-    aStats->bookkeeping += base_committed;
-    MOZ_ASSERT(base_mapped >= base_committed);
-  }
+  auto base_stats = sBaseAlloc.GetStats();
+  non_arena_mapped += base_stats.mMapped;
+  aStats->bookkeeping += base_stats.mCommitted;
 
   gArenas.mLock.Lock();
 
@@ -4493,8 +4431,8 @@ static size_t hard_purge_chunk(arena_chunk_t* aChunk) {
     if (npages > 0) {
       pages_decommit(((char*)aChunk) + (i << gPageSize2Pow),
                      npages << gPageSize2Pow);
-      Unused << pages_commit(((char*)aChunk) + (i << gPageSize2Pow),
-                             npages << gPageSize2Pow);
+      (void)pages_commit(((char*)aChunk) + (i << gPageSize2Pow),
+                         npages << gPageSize2Pow);
     }
     total_npages += npages;
     i += npages;
@@ -4828,7 +4766,7 @@ void _malloc_prefork(void) MOZ_NO_THREAD_SAFETY_ANALYSIS {
 
   gArenas.mPurgeListLock.Lock();
 
-  base_mtx.Lock();
+  sBaseAlloc.mMutex.Lock();
 
   huge_mtx.Lock();
 }
@@ -4838,7 +4776,7 @@ void _malloc_postfork_parent(void) MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // Release all mutexes, now that fork() has completed.
   huge_mtx.Unlock();
 
-  base_mtx.Unlock();
+  sBaseAlloc.mMutex.Unlock();
 
   gArenas.mPurgeListLock.Unlock();
 
@@ -4859,7 +4797,7 @@ void _malloc_postfork_child(void) {
   // Reinitialize all mutexes, now that fork() has completed.
   huge_mtx.Init();
 
-  base_mtx.Init();
+  sBaseAlloc.mMutex.Init();
 
   gArenas.mPurgeListLock.Init();
 

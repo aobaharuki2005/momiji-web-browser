@@ -539,7 +539,10 @@ export default class SidebarMain extends MozLitElement {
             e.target.id
           )
         ) {
-          this.onSidebarPopupShowing(e);
+          this.onSidebarPopupShowing(e).then(() => {
+            // populating the context menu can be async, so dispatch an event when ready
+            this.dispatchEvent(new CustomEvent("sidebar-contextmenu-ready"));
+          });
         }
         break;
       case "popuphidden":

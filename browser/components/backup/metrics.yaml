@@ -14,7 +14,10 @@ browser.backup:
   enabled:
     type: boolean
     description: >
-      True if the BackupService is enabled by default.
+      True if the BackupService has initialized and reached idle. You may want
+      to use archive_enabled/restore_enabled to determine whether those
+      features are available, or use scheduler_enabled for whether automatic
+      backups are enabled.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1908727
     data_reviews:
@@ -25,6 +28,38 @@ browser.backup:
       - mconley@mozilla.com
     expires: never
     telemetry_mirror: BROWSER_BACKUP_ENABLED
+
+  archive_enabled:
+    type: boolean
+    description: >
+      True if the user can create backups, i.e. it has not been disabled by a
+      pref or otherwise deemed incompatible.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1997389
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1997389
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - drubino@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_ARCHIVE_ENABLED
+
+  restore_enabled:
+    type: boolean
+    description: >
+      True if the user can restore backups, i.e. it has not been disabled by a
+      pref or otherwise deemed incompatible.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1997389
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1997389
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - drubino@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_RESTORE_ENABLED
 
   scheduler_enabled:
     type: boolean
@@ -676,11 +711,28 @@ browser.backup:
       - drubino@mozilla.com
     expires: never
 
-  backup_disabled_reason:
+  archive_disabled_reason:
     type: string
     description: >
       Only set if `browser.backup.enabled` is `false`. Possible reasons are
-      "nimbus", "pref" (non-Nimbus), "policy", "managedProfiles".
+      "nimbus", "pref" (non-Nimbus), "policy", "sanitizeOnShutdown",
+      "selectable profiles".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992808
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D268774
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - drubino@mozilla.com
+    expires: never
+
+  restore_disabled_reason:
+    type: string
+    description: >
+      Only set if `browser.backup.enabled` is `false`. Possible reasons are
+      "nimbus", "pref" (non-Nimbus), "policy", "sanitizeOnShutdown",
+      "selectable profiles".
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1992808
     data_reviews:

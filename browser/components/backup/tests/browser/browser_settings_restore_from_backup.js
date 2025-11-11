@@ -170,6 +170,62 @@ add_task(async function test_restore_from_backup() {
 });
 
 /**
+ * Tests that the backup file chooser starts at the correct folder.
+ */
+add_task(async function test_restore_uses_matching_initial_folder() {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    const mockBackupFilePath = await IOUtils.createUniqueFile(
+      TEST_PROFILE_PATH,
+      "backup.html"
+    );
+
+    const mockBackupFile = Cc["@mozilla.org/file/local;1"].createInstance(
+      Ci.nsIFile
+    );
+    mockBackupFile.initWithPath(mockBackupFilePath);
+
+    let filePickerShownPromise = new Promise(resolve => {
+      MockFilePicker.showCallback = async picker => {
+        Assert.equal(
+          picker.displayDirectory.path,
+          TEST_PROFILE_PATH,
+          "Folder containing backup was shown"
+        );
+        MockFilePicker.setFiles([mockBackupFile]);
+        resolve();
+      };
+    });
+    MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+    let settings = browser.contentDocument.querySelector("backup-settings");
+    await settings.updateComplete;
+
+    Assert.ok(
+      settings.restoreFromBackupButtonEl,
+      "Button to restore backups should be found"
+    );
+
+    settings.restoreFromBackupButtonEl.click();
+    await settings.updateComplete;
+
+    let restoreFromBackup = settings.restoreFromBackupEl;
+    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
+
+    let selectedFilePromise = BrowserTestUtils.waitForEvent(
+      settings,
+      "BackupUI:SelectNewFilepickerPath"
+    );
+
+    restoreFromBackup.backupServiceState.backupFileToRestore =
+      mockBackupFilePath;
+    restoreFromBackup.chooseButtonEl.click();
+
+    await filePickerShownPromise;
+    await selectedFilePromise;
+  });
+});
+
+/**
  * Tests that the dialog stays open while restoring from the settings page.
  */
 add_task(async function test_restore_in_progress() {
