@@ -3493,12 +3493,12 @@ void MediaDecoderStateMachine::AudioAudibleChanged(bool aAudible) {
 MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
   if (mOutputCaptureState != MediaDecoder::OutputCaptureState::None) {
     DecodedStream* stream = new DecodedStream(
-        this,
+        OwnerThread(),
         mOutputCaptureState == MediaDecoder::OutputCaptureState::Capture
             ? mOutputDummyTrack.Ref()
             : nullptr,
-        mOutputTracks, mVolume, mPlaybackRate, mPreservesPitch, mAudioQueue,
-        mVideoQueue, mSinkDevice.Ref());
+        mOutputTracks, CanonicalOutputPrincipal(), mVolume, mPlaybackRate,
+        mPreservesPitch, mAudioQueue, mVideoQueue);
     mAudibleListener.DisconnectIfExists();
     mAudibleListener = stream->AudibleEvent().Connect(
         OwnerThread(), this, &MediaDecoderStateMachine::AudioAudibleChanged);
