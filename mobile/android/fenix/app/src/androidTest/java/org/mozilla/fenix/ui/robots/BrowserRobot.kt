@@ -10,7 +10,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.SystemClock
 import android.util.Log
-import android.widget.TimePicker
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
@@ -32,10 +31,8 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.PickerActions
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
-import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -770,11 +767,9 @@ class BrowserRobot {
 
     fun selectTime(hour: Int, minute: Int) {
         Log.i(TAG, "selectTime: Trying to select time picker hour: $hour and minute: $minute")
-        onView(
-            isAssignableFrom(TimePicker::class.java),
-        ).inRoot(
-            isDialog(),
-        ).perform(PickerActions.setTime(hour, minute))
+        itemWithDescription("$hour o'clock").click()
+        waitForAppWindowToBeUpdated()
+        itemWithDescription("$minute minutes").click()
         Log.i(TAG, "selectTime: Selected time picker hour: $hour and minute: $minute")
     }
 
