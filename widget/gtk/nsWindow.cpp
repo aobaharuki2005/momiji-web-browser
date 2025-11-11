@@ -1148,10 +1148,6 @@ void nsWindow::ResizeInt(const Maybe<DesktopIntPoint>& aMove,
     return;
   }
 
-  // TODO: Behave better if there's an active move-to-rect callback.
-  if (mWaitingForMoveToRectCallback) {
-    NS_WARNING("Resized during active move-to-rect callbak!");
-  }
   NativeMoveResize(moved, resized);
 }
 
@@ -2159,7 +2155,6 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
       newClientArea.y, newClientArea.width, newClientArea.height);
 
   if (!needsSizeUpdate && !needsPositionUpdate) {
-    LOG("  Size/position is the same, quit.");
     return;
   }
   if (needsSizeUpdate) {
@@ -2168,10 +2163,10 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
     // Beware that gtk_window_resize() requests sizes asynchronously and so
     // newClientArea might not have the size from the most recent
     // gtk_window_resize().
-    if (newClientArea.width < mLastSizeRequest.width) {
+    if (mClientArea.width < mLastSizeRequest.width) {
       mMoveToRectPopupSize.width = newClientArea.width;
     }
-    if (newClientArea.height < mLastSizeRequest.height) {
+    if (mClientArea.height < mLastSizeRequest.height) {
       mMoveToRectPopupSize.height = newClientArea.height;
     }
     LOG("  mMoveToRectPopupSize set to [%d, %d]", mMoveToRectPopupSize.width,
@@ -3475,6 +3470,8 @@ void nsWindow::RecomputeBoundsX11(bool aMayChangeCsdMargin) {
 #endif
 #ifdef MOZ_WAYLAND
 void nsWindow::RecomputeBoundsWayland(bool aMayChangeCsdMargin) {
+  LOG("RecomputeBoundsWayland(%d)", aMayChangeCsdMargin);
+
   auto GetBounds = [&](GdkWindow* aWin) {
     GdkRectangle b{0};
     gdk_window_get_position(aWin, &b.x, &b.y);
@@ -3484,14 +3481,8 @@ void nsWindow::RecomputeBoundsWayland(bool aMayChangeCsdMargin) {
   };
 
   const auto toplevelBounds = GetBounds(GetToplevelGdkWindow());
+
   mClientArea = GetBounds(mGdkWindow);
-
-  LOG("RecomputeBoundsWayland(%d) GetBounds(mGdkWindow) [%d,%d] -> [%d x %d] "
-      "GetBounds(mShell) [%d,%d] -> [%d x %d]",
-      aMayChangeCsdMargin, mClientArea.x, mClientArea.y, mClientArea.width,
-      mClientArea.height, toplevelBounds.x, toplevelBounds.y,
-      toplevelBounds.width, toplevelBounds.height);
-
   if (mClientArea.X() < 0 || mClientArea.Y() < 0 || mClientArea.Width() <= 1 ||
       mClientArea.Height() <= 1) {
     // If we don't have gdkwindow bounds, assume we take the whole toplevel.
@@ -4330,6 +4321,7 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
     return FALSE;
   }
 
+  SchedulePendingBounds(MayChangeCsdMargin::No);
   return FALSE;
 }
 
