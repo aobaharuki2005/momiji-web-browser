@@ -279,6 +279,7 @@ Preferences.addAll([
   { id: "network.trr.uri", type: "string" },
   { id: "network.trr.default_provider_uri", type: "string" },
   { id: "network.trr.custom_uri", type: "string" },
+  { id: "network.trr_ui.fallback_was_checked", type: "bool" },
   { id: "doh-rollout.disable-heuristics", type: "bool" },
 
   // Local Network Access
@@ -1984,6 +1985,410 @@ Preferences.addSetting({
   onUserClick: () => gPrivacyPane.showXRExceptions(),
 });
 
+Preferences.addSetting({
+  id: "dohBox",
+});
+
+Preferences.addSetting({
+  id: "dohAdvancedButton",
+  onUserClick(e) {
+    e.preventDefault();
+    gotoPref("paneDnsOverHttps");
+  },
+});
+
+Preferences.addSetting({
+  id: "dohExceptionsButton",
+  onUserClick: () => gPrivacyPane.showDoHExceptions(),
+});
+
+Preferences.addSetting({
+  id: "dohMode",
+  pref: "network.trr.mode",
+  setup(emitChange) {
+    Services.obs.addObserver(emitChange, "network:trr-mode-changed");
+    Services.obs.addObserver(emitChange, "network:trr-confirmation");
+    return () => {
+      Services.obs.removeObserver(emitChange, "network:trr-mode-changed");
+      Services.obs.removeObserver(emitChange, "network:trr-confirmation");
+    };
+  },
+});
+
+Preferences.addSetting({
+  id: "dohURL",
+  pref: "network.trr.uri",
+  setup(emitChange) {
+    Services.obs.addObserver(emitChange, "network:trr-uri-changed");
+    Services.obs.addObserver(emitChange, "network:trr-confirmation");
+    return () => {
+      Services.obs.removeObserver(emitChange, "network:trr-uri-changed");
+      Services.obs.removeObserver(emitChange, "network:trr-confirmation");
+    };
+  },
+});
+
+Preferences.addSetting({
+  id: "dohDefaultURL",
+  pref: "network.trr.default_provider_uri",
+});
+
+Preferences.addSetting({
+  id: "dohDisableHeuristics",
+  pref: "doh-rollout.disable-heuristics",
+});
+
+Preferences.addSetting({
+  id: "dohModeBoxItem",
+  deps: ["dohMode"],
+  getControlConfig: (config, deps) => {
+    let l10nId = "preferences-doh-overview-off";
+    if (deps.dohMode.value == Ci.nsIDNSService.MODE_NATIVEONLY) {
+      l10nId = "preferences-doh-overview-default";
+    } else if (
+      deps.dohMode.value == Ci.nsIDNSService.MODE_TRRFIRST ||
+      deps.dohMode.value == Ci.nsIDNSService.MODE_TRRONLY
+    ) {
+      l10nId = "preferences-doh-overview-custom";
+    }
+    return {
+      ...config,
+      l10nId,
+    };
+  },
+});
+
+Preferences.addSetting({
+  id: "dohStatusBox",
+  deps: ["dohMode", "dohURL"],
+  getControlConfig: config => {
+    let l10nId = "preferences-doh-status-item-off";
+    let l10nArgs = {};
+    let supportPage = "";
+    let controlAttrs = { type: "info" };
+
+    let trrURI = Services.dns.currentTrrURI;
+    let hostname = URL.parse(trrURI)?.hostname;
+
+    let name = hostname || trrURI;
+    let nameFound = false;
+    let steering = false;
+    for (let resolver of DoHConfigController.currentConfig.providerList) {
+      if (resolver.uri == trrURI) {
+        name = resolver.UIName || name;
+        nameFound = true;
+        break;
+      }
+    }
+    if (!nameFound) {
+      for (let resolver of DoHConfigController.currentConfig.providerSteering
+        .providerList) {
+        if (resolver.uri == trrURI) {
+          steering = true;
+          name = resolver.UIName || name;
+          break;
+        }
+      }
+    }
+
+    let mode = Services.dns.currentTrrMode;
+    if (
+      (mode == Ci.nsIDNSService.MODE_TRRFIRST ||
+        mode == Ci.nsIDNSService.MODE_TRRONLY) &&
+      lazy.gParentalControlsService?.parentalControlsEnabled
+    ) {
+      l10nId = "preferences-doh-status-item-not-active";
+      supportPage = "doh-status";
+      l10nArgs = {
+        reason: Services.dns.getTRRSkipReasonName(
+          Ci.nsITRRSkipReason.TRR_PARENTAL_CONTROL
+        ),
+        name,
+      };
+    } else {
+      let confirmationState = Services.dns.currentTrrConfirmationState;
+      if (
+        mode != Ci.nsIDNSService.MODE_TRRFIRST &&
+        mode != Ci.nsIDNSService.MODE_TRRONLY
+      ) {
+        l10nId = "preferences-doh-status-item-off";
+      } else if (
+        confirmationState == Ci.nsIDNSService.CONFIRM_TRYING_OK ||
+        confirmationState == Ci.nsIDNSService.CONFIRM_OK ||
+        confirmationState == Ci.nsIDNSService.CONFIRM_DISABLED
+      ) {
+        if (steering) {
+          l10nId = "preferences-doh-status-item-active-local";
+          controlAttrs = { type: "success" };
+        } else {
+          l10nId = "preferences-doh-status-item-active";
+          controlAttrs = { type: "success" };
+        }
+      } else if (steering) {
+        l10nId = "preferences-doh-status-item-not-active-local";
+        supportPage = "doh-status";
+        controlAttrs = { type: "warning" };
+      } else {
+        l10nId = "preferences-doh-status-item-not-active";
+        supportPage = "doh-status";
+        controlAttrs = { type: "warning" };
+      }
+
+      let confirmationStatus = Services.dns.lastConfirmationStatus;
+      if (confirmationStatus != Cr.NS_OK) {
+        l10nArgs = {
+          reason: ChromeUtils.getXPCOMErrorName(confirmationStatus),
+          name,
+        };
+      } else {
+        l10nArgs = {
+          reason: Services.dns.getTRRSkipReasonName(
+            Services.dns.lastConfirmationSkipReason
+          ),
+          name,
+        };
+        if (
+          Services.dns.lastConfirmationSkipReason ==
+            Ci.nsITRRSkipReason.TRR_BAD_URL ||
+          !name
+        ) {
+          l10nId = "preferences-doh-status-item-not-active-bad-url";
+          supportPage = "doh-status";
+          controlAttrs = { type: "warning" };
+        }
+      }
+    }
+
+    return {
+      ...config,
+      l10nId,
+      l10nArgs,
+      supportPage,
+      controlAttrs,
+    };
+  },
+});
+
+Preferences.addSetting({
+  id: "dohRadioGroup",
+  // These deps are complicated:
+  // this radio group, along with dohFallbackIfCustom controls the mode and URL.
+  // Therefore, we set dohMode and dohURL as deps here. This is a smell, but needed
+  // for the mismatch of control-to-pref.
+  deps: ["dohFallbackIfCustom", "dohMode", "dohURL"],
+  onUserChange: (val, deps) => {
+    let value = null;
+    if (val == "default") {
+      value = "dohDefaultRadio";
+    } else if (val == "off") {
+      value = "dohOffRadio";
+    } else if (val == "custom" && deps.dohFallbackIfCustom.value) {
+      value = "dohEnabledRadio";
+    } else if (val == "custom" && !deps.dohFallbackIfCustom.value) {
+      value = "dohStrictRadio";
+    }
+    if (value) {
+      Glean.securityDohSettings.modeChangedButton.record({
+        value,
+      });
+    }
+  },
+  get: (_val, deps) => {
+    switch (deps.dohMode.value) {
+      case Ci.nsIDNSService.MODE_NATIVEONLY:
+        return "default";
+      case Ci.nsIDNSService.MODE_TRRFIRST:
+      case Ci.nsIDNSService.MODE_TRRONLY:
+        return "custom";
+      case Ci.nsIDNSService.MODE_TRROFF:
+      case Ci.nsIDNSService.MODE_RESERVED1:
+      case Ci.nsIDNSService.MODE_RESERVED4:
+      default:
+        return "off";
+    }
+  },
+  set: (val, deps) => {
+    if (val == "custom") {
+      if (deps.dohFallbackIfCustom.value) {
+        deps.dohMode.value = Ci.nsIDNSService.MODE_TRRFIRST;
+      } else {
+        deps.dohMode.value = Ci.nsIDNSService.MODE_TRRONLY;
+      }
+    } else if (val == "off") {
+      deps.dohMode.value = Ci.nsIDNSService.MODE_TRROFF;
+    } else {
+      deps.dohMode.value = Ci.nsIDNSService.MODE_NATIVEONLY;
+    }
+
+    // When the mode is set to 0 we need to clear the URI so
+    // doh-rollout can kick in.
+    if (deps.dohMode.value == Ci.nsIDNSService.MODE_NATIVEONLY) {
+      deps.dohURL.pref.value = undefined;
+      Services.prefs.clearUserPref("doh-rollout.disable-heuristics");
+    }
+
+    // Bug 1861285
+    // When the mode is set to 2 or 3, we need to check if network.trr.uri is a empty string.
+    // In this case, we need to update network.trr.uri to default to fallbackProviderURI.
+    // This occurs when the mode is previously set to 0 (Default Protection).
+    if (
+      deps.dohMode.value == Ci.nsIDNSService.MODE_TRRFIRST ||
+      deps.dohMode.value == Ci.nsIDNSService.MODE_TRRONLY
+    ) {
+      if (!deps.dohURL.value) {
+        deps.dohURL.value =
+          DoHConfigController.currentConfig.fallbackProviderURI;
+      }
+    }
+
+    // Bug 1900672
+    // When the mode is set to 5, clear the pref to ensure that
+    // network.trr.uri is set to fallbackProviderURIwhen the mode is set to 2 or 3 afterwards
+    if (deps.dohMode.value == Ci.nsIDNSService.MODE_TRROFF) {
+      deps.dohURL.pref.value = undefined;
+    }
+  },
+});
+
+Preferences.addSetting({
+  id: "dohFallbackIfCustom",
+  pref: "network.trr_ui.fallback_was_checked",
+  // These deps are complicated:
+  // this checkbox, along with dohRadioGroup controls the mode and URL.
+  // Therefore, we set dohMode as a dep here. This is a smell, but needed
+  // for the mismatch of control-to-pref.
+  deps: ["dohMode"],
+  onUserChange: val => {
+    if (val) {
+      Glean.securityDohSettings.modeChangedButton.record({
+        value: "dohEnabledRadio",
+      });
+    } else {
+      Glean.securityDohSettings.modeChangedButton.record({
+        value: "dohStrictRadio",
+      });
+    }
+  },
+  get: (val, deps) => {
+    // If we are in a custom mode, we need to get the value from the Setting
+    if (deps.dohMode.value == Ci.nsIDNSService.MODE_TRRFIRST) {
+      return true;
+    }
+    if (deps.dohMode.value == Ci.nsIDNSService.MODE_TRRONLY) {
+      return false;
+    }
+
+    // Propagate the preference otherwise
+    return val;
+  },
+  set: (val, deps) => {
+    // Toggle the preference that controls the setting if are in a custom mode
+    // This should be the only case where the checkbox is enabled, but we can be
+    // careful and test.
+    if (deps.dohMode.value == Ci.nsIDNSService.MODE_TRRFIRST && !val) {
+      deps.dohMode.value = Ci.nsIDNSService.MODE_TRRONLY;
+    } else if (deps.dohMode.value == Ci.nsIDNSService.MODE_TRRONLY && val) {
+      deps.dohMode.value = Ci.nsIDNSService.MODE_TRRFIRST;
+    }
+    // Propagate to the real preference
+    return val;
+  },
+});
+
+Preferences.addSetting({
+  id: "dohCustomProvider",
+  deps: ["dohProviderSelect", "dohURL"],
+  _value: null,
+  visible: deps => {
+    return deps.dohProviderSelect.value == "custom";
+  },
+  get(_val, deps) {
+    if (this._value === null) {
+      return deps.dohURL.value;
+    }
+    return this._value;
+  },
+  set(val, deps) {
+    this._value = val;
+    if (val == "") {
+      val = " ";
+    }
+    deps.dohURL.value = val;
+  },
+});
+
+Preferences.addSetting({
+  id: "dohProviderSelect",
+  deps: ["dohURL", "dohDefaultURL"],
+  _custom: false,
+  onUserChange: value => {
+    Glean.securityDohSettings.providerChoiceValue.record({
+      value,
+    });
+  },
+  getControlConfig(config, deps) {
+    let options = [];
+
+    let resolvers = DoHConfigController.currentConfig.providerList;
+    // if there's no default, we'll hold its position with an empty string
+    let defaultURI = DoHConfigController.currentConfig.fallbackProviderURI;
+    let defaultFound = resolvers.some(p => p.uri == defaultURI);
+    if (!defaultFound && defaultURI) {
+      // the default value for the pref isn't included in the resolvers list
+      // so we'll make a stub for it. Without an id, we'll have to use the url as the label
+      resolvers.unshift({ uri: defaultURI });
+    }
+    let currentURI = deps.dohURL.value;
+    if (currentURI && !resolvers.some(p => p.uri == currentURI)) {
+      this._custom = true;
+    }
+
+    options = resolvers.map(resolver => {
+      let option = {
+        value: resolver.uri,
+        l10nArgs: {
+          name: resolver.UIName || resolver.uri,
+        },
+      };
+      if (resolver.uri == defaultURI) {
+        option.l10nId = "connection-dns-over-https-url-item-default";
+      } else {
+        option.l10nId = "connection-dns-over-https-url-item";
+      }
+      return option;
+    });
+    options.push({
+      value: "custom",
+      l10nId: "connection-dns-over-https-url-custom",
+    });
+
+    return {
+      options,
+      ...config,
+    };
+  },
+  get(_val, deps) {
+    if (this._custom) {
+      return "custom";
+    }
+    let currentURI = deps.dohURL.value;
+    if (!currentURI) {
+      currentURI = deps.dohDefaultURL.value;
+    }
+    return currentURI;
+  },
+  set(val, deps, setting) {
+    if (val != "custom") {
+      this._custom = false;
+      deps.dohURL.value = val;
+    } else {
+      this._custom = true;
+    }
+    setting.emit("change");
+    return val;
+  },
+});
+
 function setEventListener(aId, aEventType, aCallback) {
   document
     .getElementById(aId)
@@ -2542,6 +2947,8 @@ var gPrivacyPane = {
     initSettingGroup("certificates");
     initSettingGroup("ipprotection");
     initSettingGroup("permissions");
+    initSettingGroup("dnsOverHttps");
+    initSettingGroup("dnsOverHttpsAdvanced");
 
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
@@ -2678,13 +3085,6 @@ var gPrivacyPane = {
     setSyncFromPrefListener("rememberHistory", microControlHandler);
     setSyncFromPrefListener("rememberForms", microControlHandler);
     setSyncFromPrefListener("alwaysClear", microControlHandler);
-
-    setSyncFromPrefListener("popupPolicy", () =>
-      this.updateButtons("popupPolicyButton", "dom.disable_open_during_load")
-    );
-    setSyncFromPrefListener("warnAddonInstall", () =>
-      this.readWarnAddonInstall()
-    );
 
     if (AlertsServiceDND) {
       let notificationsDoNotDisturbBox = document.getElementById(

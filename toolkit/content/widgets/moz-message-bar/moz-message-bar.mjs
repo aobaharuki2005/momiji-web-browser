@@ -54,6 +54,7 @@ export default class MozMessageBar extends MozLitElement {
     closeButton: "moz-button.close",
     messageEl: ".message",
     supportLinkSlot: "slot[name=support-link]",
+    supportLinkHolder: ".link",
   };
 
   static properties = {
@@ -61,6 +62,7 @@ export default class MozMessageBar extends MozLitElement {
     heading: { type: String, fluent: true },
     message: { type: String, fluent: true },
     dismissable: { type: Boolean },
+    supportPage: { type: String },
     messageL10nId: { type: String },
     messageL10nArgs: { type: String },
   };
@@ -134,7 +136,25 @@ export default class MozMessageBar extends MozLitElement {
   }
 
   get supportLinkEls() {
+    if (this.supportPage) {
+      return this.supportLinkHolder.childElements();
+    }
     return this.supportLinkSlot.assignedElements();
+  }
+
+  supportLinkTemplate() {
+    if (this.supportPage) {
+      return html`<a
+        is="moz-support-link"
+        support-page=${this.supportPage}
+        part="support-link"
+        aria-describedby="heading message"
+      ></a>`;
+    }
+    return html`<slot
+      name="support-link"
+      @slotchange=${this.onLinkSlotChange}
+    ></slot>`;
   }
 
   iconTemplate() {
@@ -192,6 +212,7 @@ export default class MozMessageBar extends MozLitElement {
               <div>
                 <slot name="message">
                   <span
+                    id="message"
                     class="message"
                     data-l10n-id=${ifDefined(this.messageL10nId)}
                     data-l10n-args=${ifDefined(
@@ -201,12 +222,7 @@ export default class MozMessageBar extends MozLitElement {
                     ${this.message}
                   </span>
                 </slot>
-                <span class="link">
-                  <slot
-                    name="support-link"
-                    @slotchange=${this.onLinkSlotChange}
-                  ></slot>
-                </span>
+                <span class="link"> ${this.supportLinkTemplate()} </span>
               </div>
             </div>
           </div>

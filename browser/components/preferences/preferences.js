@@ -172,6 +172,11 @@ const CONFIG_PANES = {
     l10nId: "containers-section-header",
     groupIds: ["containers"],
   },
+  dnsOverHttps: {
+    parent: "privacy",
+    l10nId: "preferences-doh-header2",
+    groupIds: ["dnsOverHttpsAdvanced"],
+  },
 };
 
 var gLastCategory = { category: undefined, subcategory: undefined };

@@ -1832,6 +1832,84 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  dnsOverHttps: {
+    inProgress: true,
+    items: [
+      {
+        id: "dohBox",
+        control: "moz-box-group",
+        items: [
+          {
+            id: "dohModeBoxItem",
+            control: "moz-box-item",
+          },
+          {
+            id: "dohAdvancedButton",
+            l10nId: "preferences-doh-advanced-button",
+            control: "moz-box-button",
+          },
+        ],
+      },
+    ],
+  },
+  dnsOverHttpsAdvanced: {
+    inProgress: true,
+    l10nId: "preferences-doh-advanced-section",
+    supportPage: "dns-over-https",
+    headingLevel: 2,
+    items: [
+      {
+        id: "dohStatusBox",
+        control: "moz-message-bar",
+      },
+      {
+        id: "dohRadioGroup",
+        control: "moz-radio-group",
+        options: [
+          {
+            id: "dohRadioDefault",
+            value: "default",
+            l10nId: "preferences-doh-radio-default",
+          },
+          {
+            id: "dohRadioCustom",
+            value: "custom",
+            l10nId: "preferences-doh-radio-custom",
+            items: [
+              {
+                id: "dohFallbackIfCustom",
+                l10nId: "preferences-doh-fallback-label",
+              },
+              {
+                id: "dohProviderSelect",
+                l10nId: "preferences-doh-select-resolver-label",
+                control: "moz-select",
+              },
+              {
+                id: "dohCustomProvider",
+                control: "moz-input-text",
+                l10nId: "preferences-doh-custom-provider-label",
+              },
+            ],
+          },
+          {
+            id: "dohRadioOff",
+            value: "off",
+            l10nId: "preferences-doh-radio-off",
+          },
+        ],
+      },
+      {
+        id: "dohExceptionsButton",
+        l10nId: "preferences-doh-manage-exceptions2",
+        control: "moz-box-button",
+        controlAttrs: {
+          "search-l10n-ids":
+            "permissions-doh-entry-field,permissions-doh-add-exception.label,permissions-doh-remove.label,permissions-doh-remove-all.label,permissions-exceptions-doh-window.title,permissions-exceptions-manage-doh-desc,",
+        },
+      },
+    ],
+  },
 };
 
 /**
