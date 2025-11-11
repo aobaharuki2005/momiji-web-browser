@@ -17113,6 +17113,13 @@
     type: RelaxedAtomicBool
     value: false
     mirror: always
+
+  # Whether \Device\KsecDD is closed in content process. We are closing this
+  # using a pref to give users a work-around if they have issues.
+-   name: security.sandbox.content.close-ksecdd-handle
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)

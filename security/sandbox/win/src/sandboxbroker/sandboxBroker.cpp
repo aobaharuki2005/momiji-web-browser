@@ -1083,6 +1083,12 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     config->SetDesktop(sandbox::Desktop::kAlternateWinstation);
   }
 
+  if (StaticPrefs::security_sandbox_content_close_ksecdd_handle()) {
+    result = config->AddKernelObjectToClose(L"File", L"\\Device\\KsecDD");
+    MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                       "AddKernelObjectToClose should never fail.");
+  }
+
   sandbox::MitigationFlags mitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
