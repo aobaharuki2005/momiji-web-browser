@@ -69,7 +69,7 @@ class InputModule extends WindowGlobalBiDiModule {
           lazy.event.sendKeyUp(details.eventData, this.messageHandler.window);
           break;
         case "synthesizeMouseAtPoint":
-          lazy.event.synthesizeMouseAtPoint(
+          await lazy.event.synthesizeMouseAtPoint(
             details.x,
             details.y,
             details.eventData,
