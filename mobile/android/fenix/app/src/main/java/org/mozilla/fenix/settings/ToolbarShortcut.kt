@@ -69,7 +69,7 @@ internal val allShortcutOptions: List<ShortcutOption> = listOf(
         ShortcutType.BACK,
         iconsR.drawable.mozac_ic_back_24,
         R.string.toolbar_customize_shortcut_back,
-        setOf(ShortcutAvailability.SIMPLE),
+        setOf(ShortcutAvailability.SIMPLE, ShortcutAvailability.EXPANDED),
     ),
 )
 

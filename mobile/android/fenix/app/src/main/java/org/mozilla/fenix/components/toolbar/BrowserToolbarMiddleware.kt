@@ -1041,6 +1041,7 @@ class BrowserToolbarMiddleware(
                 )
             }.collect {
                 updateEndBrowserActions(context)
+                updateNavigationActions(context)
                 updateStartBrowserActions(context)
             }
         }

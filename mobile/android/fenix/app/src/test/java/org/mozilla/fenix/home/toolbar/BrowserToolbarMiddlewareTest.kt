@@ -853,6 +853,24 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN expanded toolbar use back shortcut WHEN initializing toolbar THEN show DISABLED Back in navigation actions`() = runTest {
+        every { testContext.settings().shouldShowToolbarCustomization } returns true
+        every { testContext.settings().shouldUseExpandedToolbar } returns true
+        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BACK
+
+        val middleware = BrowserToolbarMiddleware(
+            appStore,
+            browserStore,
+            mockk(),
+            mockk(),
+        )
+        val toolbarStore = buildStore(middleware)
+
+        val backButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
+        assertEquals(expectedBackButton, backButton)
+    }
+
+    @Test
     fun `mapShortcutToAction maps keys to actions and falls back to fake bookmark action`() {
         assertEquals(
             HomeToolbarAction.FakeBookmark,
@@ -865,6 +883,10 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(
             HomeToolbarAction.FakeHomepage,
             mapShortcutToAction(key = ShortcutType.HOMEPAGE),
+        )
+        assertEquals(
+            HomeToolbarAction.FakeBack,
+            mapShortcutToAction(key = ShortcutType.BACK),
         )
         assertEquals(
             HomeToolbarAction.FakeBookmark,
@@ -1008,6 +1030,13 @@ class BrowserToolbarMiddlewareTest {
     private val expectedHomepageButton = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_home_24,
         contentDescription = R.string.browser_menu_homepage,
+        state = ActionButton.State.DISABLED,
+        onClick = FakeClicked,
+    )
+
+    private val expectedBackButton = ActionButtonRes(
+        drawableResId = iconsR.drawable.mozac_ic_back_24,
+        contentDescription = R.string.browser_menu_back,
         state = ActionButton.State.DISABLED,
         onClick = FakeClicked,
     )

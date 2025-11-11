@@ -3151,6 +3151,43 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN expanded toolbar use back shortcut AND current page has no history WHEN initializing toolbar THEN show DISABLED Back in navigation actions`() = runTest {
+        every { settings.shouldUseExpandedToolbar } returns true
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.toolbarExpandedShortcutKey } returns ShortcutType.BACK
+
+        val toolbarStore = buildStore()
+
+        val backButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
+        assertEquals(expectedGoBackButton(isActive = false), backButton)
+    }
+
+    @Test
+    fun `GIVEN expanded toolbar use back shortcut AND current page has history WHEN initializing toolbar THEN show ACTIVE Back in navigation actions`() = runTest {
+        every { settings.shouldUseExpandedToolbar } returns true
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.toolbarExpandedShortcutKey } returns ShortcutType.BACK
+
+        val tab = createTab(url = "https://example.com").let {
+            it.copy(content = it.content.copy(canGoBack = true))
+        }
+        val browserStore = BrowserStore(
+            BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            ),
+        )
+        val middleware = buildMiddleware(
+            browserStore = browserStore,
+        )
+        val toolbarStore = buildStore(middleware)
+        mainLooperRule.idle()
+
+        val backButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
+        assertEquals(expectedGoBackButton(), backButton)
+    }
+
+    @Test
     fun `mapShortcutToAction maps keys to actions and falls back to default set`() {
         assertEquals(
             ToolbarAction.NewTab,
