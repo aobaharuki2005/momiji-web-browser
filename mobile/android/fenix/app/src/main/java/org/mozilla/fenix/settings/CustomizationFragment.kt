@@ -93,18 +93,29 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateToolbarShortcutBasedOnLayout() {
-        val category = requirePreference<PreferenceCategory>(
-            R.string.pref_key_customization_category_toolbar_shortcut,
+        val simpleCategory = requirePreference<PreferenceCategory>(
+            R.string.pref_key_customization_category_toolbar_simple_shortcut,
+        )
+        val expandedCategory = requirePreference<PreferenceCategory>(
+            R.string.pref_key_customization_category_toolbar_expanded_shortcut,
         )
         val settings = requireContext().settings()
 
-        category.isVisible =
+        simpleCategory.isVisible =
             settings.shouldShowToolbarCustomization &&
                     Config.channel.isNightlyOrDebug &&
                     settings.shouldUseComposableToolbar &&
                     settings.toolbarRedesignEnabled &&
                     isTallWindow() &&
                     !settings.shouldUseExpandedToolbar
+
+        expandedCategory.isVisible =
+            settings.shouldShowToolbarCustomization &&
+                    Config.channel.isNightlyOrDebug &&
+                    settings.shouldUseComposableToolbar &&
+                    settings.toolbarRedesignEnabled &&
+                    isTallWindow() &&
+                    settings.shouldUseExpandedToolbar
     }
 
     private fun setupRadioGroups() {

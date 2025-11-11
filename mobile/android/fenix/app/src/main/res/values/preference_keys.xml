@@ -203,8 +203,10 @@
     <string name="pref_key_customization_category_toolbar" translatable="false">pref_key_customization_category_toolbar</string>
     <string name="pref_key_customization_category_toolbar_layout" translatable="false">pref_key_customization_category_toolbar_layout</string>
     <string name="pref_key_customization_category_app_icon" translatable="false">pref_key_customization_category_app_icon</string>
-    <string name="pref_key_customization_category_toolbar_shortcut" translatable="false">pref_key_customization_category_toolbar_shortcut</string>
-    <string name="pref_key_toolbar_shortcut" translatable="false">pref_key_toolbar_shortcut</string>
+    <string name="pref_key_customization_category_toolbar_simple_shortcut" translatable="false">pref_key_customization_category_toolbar_simple_shortcut</string>
+    <string name="pref_key_customization_category_toolbar_expanded_shortcut" translatable="false">pref_key_customization_category_toolbar_expanded_shortcut</string>
+    <string name="pref_key_toolbar_simple_shortcut" translatable="false">pref_key_toolbar_simple_shortcut</string>
+    <string name="pref_key_toolbar_expanded_shortcut" translatable="false">pref_key_toolbar_expanded_shortcut</string>
 
     <!-- HTTPS Only Settings -->
     <string name="pref_key_https_only_settings" translatable="false">pref_key_https_only_settings</string>

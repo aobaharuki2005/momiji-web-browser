@@ -204,11 +204,20 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates what toolbar shortcut key is currently selected.
+     * Indicates what simple toolbar shortcut key is currently selected.
      */
-    var toolbarShortcutKey: String by stringPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_toolbar_shortcut),
+    var toolbarSimpleShortcutKey: String by stringPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_toolbar_simple_shortcut),
         default = { "new_tab" },
+        persistDefaultIfNotExists = true,
+    )
+
+    /**
+     * Indicates what expanded toolbar shortcut key is currently selected.
+     */
+    var toolbarExpandedShortcutKey: String by stringPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_toolbar_expanded_shortcut),
+        default = { "bookmark" },
         persistDefaultIfNotExists = true,
     )
 

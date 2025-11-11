@@ -16,8 +16,6 @@ import android.widget.RadioButton
 import android.widget.TextView
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.core.widget.ImageViewCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
@@ -28,43 +26,43 @@ import com.google.android.material.R as materialR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
- * Custom Preference that renders the options list.
+ * Custom Preference that renders the simple shortcut options list.
  * Selecting an option moves it to the top and persists to SharedPreferences.
  */
-class ToolbarShortcutPreference @JvmOverloads constructor(
+class ToolbarSimpleShortcutPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : Preference(context, attrs) {
 
-    private val options: List<Option> by lazy {
+    private val options: List<ShortcutOption> by lazy {
         listOf(
-            Option(
-                Keys.NEW_TAB,
+            ShortcutOption(
+                ShortcutType.NEW_TAB,
                 iconsR.drawable.mozac_ic_plus_24,
                 R.string.toolbar_customize_shortcut_new_tab,
             ),
-            Option(
-                Keys.SHARE,
+            ShortcutOption(
+                ShortcutType.SHARE,
                 iconsR.drawable.mozac_ic_share_android_24,
                 R.string.toolbar_customize_shortcut_share,
             ),
-            Option(
-                Keys.BOOKMARK,
+            ShortcutOption(
+                ShortcutType.BOOKMARK,
                 iconsR.drawable.mozac_ic_bookmark_24,
                 R.string.toolbar_customize_shortcut_add_bookmark,
             ),
-            Option(
-                Keys.TRANSLATE,
+            ShortcutOption(
+                ShortcutType.TRANSLATE,
                 iconsR.drawable.mozac_ic_translate_24,
                 R.string.toolbar_customize_shortcut_translate,
             ),
-            Option(
-                Keys.HOMEPAGE,
+            ShortcutOption(
+                ShortcutType.HOMEPAGE,
                 iconsR.drawable.mozac_ic_home_24,
                 R.string.toolbar_customize_shortcut_homepage,
             ),
-            Option(
-                Keys.BACK,
+            ShortcutOption(
+                ShortcutType.BACK,
                 iconsR.drawable.mozac_ic_back_24,
                 R.string.toolbar_customize_shortcut_back,
             ),
@@ -89,7 +87,7 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         super.onBindViewHolder(holder)
 
         val settings = context.settings()
-        val selectedKey = settings.toolbarShortcutKey
+        val selectedKey = settings.toolbarSimpleShortcutKey
 
         val selectedContainer = holder.findViewById(R.id.selected_container) as LinearLayout
         val optionsContainer = holder.findViewById(R.id.options_container) as LinearLayout
@@ -122,7 +120,7 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
                     isChecked = false,
                     isEnabled = true,
                 ) { newlySelected ->
-                    settings.toolbarShortcutKey = newlySelected.key
+                    settings.toolbarSimpleShortcutKey = newlySelected.key
                     notifyChanged()
                 },
             )
@@ -133,10 +131,10 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
 
     private fun makeRow(
         parent: ViewGroup,
-        option: Option,
+        option: ShortcutOption,
         isChecked: Boolean,
         isEnabled: Boolean,
-        onClick: (Option) -> Unit,
+        onClick: (ShortcutOption) -> Unit,
     ): View {
         val row = LayoutInflater.from(context)
             .inflate(R.layout.toolbar_shortcut_row, parent, false) as LinearLayout
@@ -185,24 +183,5 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
 
     private fun View.getMaterialColor(@AttrRes attr: Int): Int {
         return MaterialColors.getColor(this, attr)
-    }
-
-    private data class Option(
-        val key: String,
-        @param:DrawableRes val icon: Int,
-        @param:StringRes val label: Int,
-    )
-
-    /**
-     * String keys used to persist and map the selected toolbar shortcut option.
-     * These values are stored in preferences and also used to resolve the UI/action.
-     */
-    object Keys {
-        const val NEW_TAB = "new_tab"
-        const val SHARE = "share"
-        const val BOOKMARK = "bookmark"
-        const val TRANSLATE = "translate"
-        const val HOMEPAGE = "homepage"
-        const val BACK = "back"
     }
 }
