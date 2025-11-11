@@ -53,12 +53,15 @@ add_task(async function test_urlbar() {
 add_task(async function test_searchBar() {
   let searchBar = await gCUITestUtils.addSearchBar();
 
-  let focusPromise = BrowserTestUtils.waitForEvent(searchBar.textbox, "focus");
+  let focusPromise = BrowserTestUtils.waitForEvent(
+    searchBar.inputField,
+    "focus"
+  );
   EventUtils.synthesizeKey("k", { accelKey: true });
   await focusPromise;
   Assert.equal(
     document.activeElement,
-    searchBar.textbox,
+    searchBar.inputField,
     "Focused the search bar."
   );
 

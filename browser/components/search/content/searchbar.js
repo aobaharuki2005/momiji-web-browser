@@ -207,6 +207,13 @@
       return this._textbox;
     }
 
+    /**
+     * Textbox alias for API compatibility with UrlbarInput.
+     */
+    get inputField() {
+      return this.textbox;
+    }
+
     set value(val) {
       this._textbox.value = val;
     }
