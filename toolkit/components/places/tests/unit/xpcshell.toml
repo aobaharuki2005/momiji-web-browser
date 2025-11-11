@@ -116,10 +116,8 @@ run-if = ["buildapp == 'browser'"]
 ["test_childlessTags.js"]
 
 ["test_frecency_interactions.js"]
-prefs = ["places.frecency.pages.alternative.featureGate=true"]
 
 ["test_frecency_interactions_trigger_recalc.js"]
-prefs = ["places.frecency.pages.alternative.featureGate=true"]
 
 ["test_frecency_observers.js"]
 
