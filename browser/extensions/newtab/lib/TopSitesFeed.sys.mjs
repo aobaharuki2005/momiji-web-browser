@@ -2,6 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// We use importESModule here instead of static import so that
+// the Karma test environment won't choke on this module. This
+// is because the Karma test environment already stubs out
+// AppConstants, and overrides importESModule to be a no-op (which
+// can't be done for a static import statement).
+
+// eslint-disable-next-line mozilla/use-static-import
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 import {
   actionCreators as ac,
   actionTypes as at,
@@ -31,6 +42,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ObliviousHTTP: "resource://gre/modules/ObliviousHTTP.sys.mjs",
   PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   PersistentCache: "resource://newtab/lib/PersistentCache.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
@@ -44,10 +56,23 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
   return new Logger("TopSitesFeed");
 });
 
+ChromeUtils.defineLazyGetter(lazy, "pageFrecencyThreshold", () => {
+  // @backward-compat { version 147 }
+  // Frecency was changed in 147 Nightly.
+  if (Services.vc.compare(AppConstants.MOZ_APP_VERSION, "147.0a1") >= 0) {
+    // 30 days ago, 5 visits. The threshold avoids one non-typed visit from
+    // immediately being included in recent history to mimic the original
+    // threshold which aimed to prevent first-run visits from being included in
+    // Top Sites.
+    return lazy.PlacesUtils.history.pageFrecencyThreshold(30, 5, false);
+  }
+  // The old threshold used for classic frecency: Slightly over one visit.
+  return 101;
+});
+
 const DEFAULT_SITES_PREF = "default.sites";
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 export const DEFAULT_TOP_SITES = [];
-const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
 const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot", "customScreenshot"];
 const PINNED_FAVICON_PROPS_TO_MIGRATE = [
@@ -1328,7 +1353,7 @@ export class TopSitesFeed {
     const cache = await this.frecentCache.request({
       // We need to overquery due to the top 5 alexa search + default search possibly being removed
       numItems: numFetch + SEARCH_FILTERS.length + 1,
-      topsiteFrecency: FRECENCY_THRESHOLD,
+      topsiteFrecency: lazy.pageFrecencyThreshold,
     });
     for (let link of cache) {
       const hostname = lazy.NewTabUtils.shortURL(link);

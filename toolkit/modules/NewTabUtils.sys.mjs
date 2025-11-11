@@ -8,6 +8,11 @@ import {
   SEARCH_SHORTCUTS_EXPERIMENT,
 } from "moz-src:///toolkit/components/search/SearchShortcuts.sys.mjs";
 
+// eslint-disable-next-line mozilla/use-static-import
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -48,7 +53,18 @@ const LINKS_GET_LINKS_LIMIT = 100;
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 
 // Some default frecency threshold for Activity Stream requests
-const ACTIVITY_STREAM_DEFAULT_FRECENCY = 150;
+ChromeUtils.defineLazyGetter(lazy, "pageFrecencyThreshold", () => {
+  // @backward-compat { version 147 }
+  // Frecency was graduated in 147 Nightly.
+  if (Services.vc.compare(AppConstants.MOZ_APP_VERSION, "147.0a1") >= 0) {
+    // 30 days ago, 7 visits. The threshold avoids one non-typed visit from
+    // immediately being included in recent history and is slightly higher than
+    // Top Sites to mimic how this had a higher threshold.
+    return lazy.PlacesUtils.history.pageFrecencyThreshold(30, 7, false);
+  }
+  // The old threshold used for classic frecency.
+  return 150;
+});
 
 // Some default query limit for Activity Stream requests
 const ACTIVITY_STREAM_DEFAULT_LIMIT = 12;
@@ -999,7 +1015,7 @@ var ActivityStreamProvider = {
       {
         ignoreBlocked: false,
         numItems: ACTIVITY_STREAM_DEFAULT_LIMIT,
-        topsiteFrecency: ACTIVITY_STREAM_DEFAULT_FRECENCY,
+        topsiteFrecency: lazy.pageFrecencyThreshold,
         onePerDomain: true,
         includeFavicon: true,
         hideWithSearchParam: Services.prefs.getCharPref(
@@ -1127,6 +1143,9 @@ var ActivityStreamProvider = {
           url => url.match(/:\/\/(?:www\.)?([^\/]+)/),
           // Combine frecencies when deduping these links
           (targetLink, otherLink) => {
+            // TODO: Experiment with max() vs sum() for frecency combination.
+            // Current additive approach may bias toward sites requiring
+            // deduplication.
             targetLink.frecency = link.frecency + otherLink.frecency;
           }
         );

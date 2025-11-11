@@ -198,6 +198,7 @@ const TEST_GLOBAL = {
       insert() {},
       markPageAsTyped() {},
       removeObserver() {},
+      pageFrecencyThreshold() {},
     },
     "@mozilla.org/io/string-input-stream;1": {
       createInstance() {
@@ -444,6 +445,20 @@ const TEST_GLOBAL = {
     scriptSecurityManager: {
       createNullPrincipal() {},
       getSystemPrincipal() {},
+    },
+    vc: {
+      compare(a, b) {
+        // Rather than re-write Services.vc.compare completely, do
+        // a simple comparison of the major version.
+        // This means this function will give the wrong output for differences
+        // in minor versions, but should be sufficient for unit tests.
+        let majorA = parseInt(a, 10);
+        let majorB = parseInt(b, 10);
+        if (majorA === majorB) {
+          return 0;
+        }
+        return majorA > majorB ? 1 : -1;
+      },
     },
     wm: {
       getMostRecentWindow: () => window,
