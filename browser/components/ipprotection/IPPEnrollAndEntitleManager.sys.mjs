@@ -26,7 +26,6 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
 class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
   #runningPromise = null;
 
-  #isEnrolled = false;
   #entitlement = null;
 
   constructor() {
@@ -39,7 +38,6 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
     // We will use data from the cache until we are fully functional. Then we
     // will recompute the state in `initOnStartupCompleted`.
     this.#entitlement = lazy.IPPStartupCache.entitlement;
-    this.#isEnrolled = !!this.#entitlement;
 
     lazy.IPPSignInWatcher.addEventListener(
       "IPPSignInWatcher:StateChanged",
@@ -58,26 +56,24 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
       lazy.IPProtectionService.guardian
         .isLinkedToGuardian(/* only cache: */ true)
         .then(
-          async isEnrolled => {
-            this.#isEnrolled = isEnrolled;
-
-            if (isEnrolled) {
-              const data =
-                await IPPEnrollAndEntitleManagerSingleton.#maybeEntitle();
-              this.#setEntitlement(data.entitlement);
-            } else {
-              this.#setEntitlement(null);
+          async isLinked => {
+            if (isLinked) {
+              const { status, entitlement } =
+                await lazy.IPProtectionService.guardian.fetchUserInfo();
+              if (status === 200) {
+                this.#setEntitlement(entitlement);
+                return;
+              }
             }
+            this.#setEntitlement(null);
           },
           () => {
             // In case we were using cached values, it's time to reset them.
-            this.#isEnrolled = false;
             this.#setEntitlement(null);
           }
         );
     } catch (_) {
       // In case we were using cached values, it's time to reset them.
-      this.#isEnrolled = false;
       this.#setEntitlement(null);
     }
   }
@@ -89,12 +85,10 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
     );
 
     this.#entitlement = null;
-    this.#isEnrolled = false;
   }
 
   #handleEvent(_event) {
     if (!lazy.IPPSignInWatcher.isSignedIn) {
-      this.#isEnrolled = false;
       this.#setEntitlement(null);
       return;
     }
@@ -107,21 +101,13 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
       return this.#runningPromise;
     }
 
-    if (this.#entitlement && this.#isEnrolled) {
+    if (this.#entitlement) {
       return Promise.resolve({ isEnrolledAndEntitled: true });
     }
 
     const enrollAndEntitle = async () => {
-      if (!this.#isEnrolled) {
-        const data = await IPPEnrollAndEntitleManagerSingleton.#maybeEnroll();
-        if (!data.isEnrolled) {
-          return { isEnrolledAndEntitled: false, error: data.error };
-        }
-
-        this.#isEnrolled = true;
-      }
-
-      const data = await IPPEnrollAndEntitleManagerSingleton.#maybeEntitle();
+      const data =
+        await IPPEnrollAndEntitleManagerSingleton.#maybeEnrollAndEntitle();
       if (!data.entitlement) {
         return { isEnrolledAndEntitled: false, error: data.error };
       }
@@ -139,39 +125,37 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
 
   // This method is static because we don't want to change the internal state
   // of the singleton.
-  static async #maybeEnroll() {
-    let isEnrolled = false;
+  static async #maybeEnrollAndEntitle() {
+    let isLinked = false;
     try {
-      isEnrolled = await lazy.IPProtectionService.guardian.isLinkedToGuardian(
+      isLinked = await lazy.IPProtectionService.guardian.isLinkedToGuardian(
         /* only cache: */ false
       );
     } catch (error) {
-      return { isEnrolled, error: error?.message };
+      // If not linked, it's not an issue.
     }
 
-    if (isEnrolled) {
-      return { isEnrolled };
+    if (isLinked) {
+      // Linked does not mean enrolled: it could be that the link comes from a
+      // previous MozillaVPN subscription. Let's see if `fetchUserInfo` is able
+      // to obtain the entitlement.
+      const { status, entitlement } =
+        await lazy.IPProtectionService.guardian.fetchUserInfo();
+      if (status === 200) {
+        return { entitlement };
+      }
     }
 
     try {
       const enrollment = await lazy.IPProtectionService.guardian.enroll();
-      isEnrolled = !!enrollment?.ok;
-
-      lazy.logConsole.debug(
-        "Guardian:",
-        isEnrolled ? "Enrolled" : "Enrollment Failed"
-      );
-
-      return { isEnrolled, error: enrollment?.error };
+      if (!enrollment?.ok) {
+        return { entitlement: null, error: enrollment?.error };
+      }
     } catch (error) {
-      return { isEnrolled, error: error?.message };
+      return { enrollment: null, error: error?.message };
     }
-  }
 
-  // This method is static because we don't want to change the internal state
-  // of the singleton.
-  static async #maybeEntitle() {
-    let { status, entitlement, error } =
+    const { status, entitlement, error } =
       await lazy.IPProtectionService.guardian.fetchUserInfo();
     lazy.logConsole.debug("Entitlement:", { status, entitlement, error });
 
@@ -198,7 +182,7 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
   }
 
   get isEnrolledAndEntitled() {
-    return this.#isEnrolled && !!this.#entitlement;
+    return !!this.#entitlement;
   }
 
   /**

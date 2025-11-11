@@ -83,6 +83,10 @@ function setupStubs(
     error: null,
     entitlement: options.entitlement,
   });
+  sandbox.stub(IPProtectionService.guardian, "enroll").resolves({
+    status: 200,
+    error: null,
+  });
   sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").resolves({
     status: 200,
     error: undefined,
