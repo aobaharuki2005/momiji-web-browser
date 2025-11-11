@@ -757,10 +757,21 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
  public:
   /**
-   * Encode the stencils and save the bytecode to the necko cache.
+   * Encode the stencils and compress it.
+   * aLoadedScript is used only for logging purpose, in order to allow
+   * performing this off main thread.
    */
-  static void EncodeBytecodeAndSave(JS::FrontendContext* aFc,
-                                    JS::loader::LoadedScript* aLoadedScript);
+  static bool EncodeAndCompress(JS::FrontendContext* aFc,
+                                const JS::loader::LoadedScript* aLoadedScript,
+                                JS::Stencil* aStencil,
+                                const JS::TranscodeBuffer& aSRI,
+                                Vector<uint8_t>& aCompressed);
+
+  /**
+   * Save the bytecode to the necko cache.
+   */
+  static bool SaveToDiskCache(const JS::loader::LoadedScript* aLoadedScript,
+                              const Vector<uint8_t>& aCompressed);
 
  private:
   /**

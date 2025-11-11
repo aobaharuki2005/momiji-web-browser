@@ -8,6 +8,7 @@
 
 #include "ScriptLoadHandler.h"  // ScriptLoadHandler
 #include "ScriptLoader.h"       // ScriptLoader
+#include "ScriptTrace.h"        // TRACE_FOR_TEST
 #include "js/experimental/CompileScript.h"  // JS::FrontendContext, JS::NewFrontendContext, JS::DestroyFrontendContext
 #include "mozilla/Maybe.h"              // Maybe, Some, Nothing
 #include "mozilla/dom/ContentParent.h"  // dom::ContentParent
@@ -244,10 +245,26 @@ void SharedScriptCache::UpdateDiskCache() {
       }
     }
 
-    ScriptLoader::EncodeBytecodeAndSave(fc, loadedScript);
+    Vector<uint8_t> compressed;
+    if (!ScriptLoader::EncodeAndCompress(
+            fc, loadedScript, loadedScript->GetStencil(),
+            loadedScript->SRIAndBytecode(), compressed)) {
+      loadedScript->DropDiskCacheReference();
+      loadedScript->DropBytecode();
+      TRACE_FOR_TEST(loadedScript, "diskcache:failed");
+      continue;
+    }
+
+    if (!ScriptLoader::SaveToDiskCache(loadedScript, compressed)) {
+      loadedScript->DropDiskCacheReference();
+      loadedScript->DropBytecode();
+      TRACE_FOR_TEST(loadedScript, "diskcache:failed");
+      continue;
+    }
 
     loadedScript->DropDiskCacheReference();
     loadedScript->DropBytecode();
+    TRACE_FOR_TEST(loadedScript, "diskcache:saved");
   }
 
   if (fc) {
