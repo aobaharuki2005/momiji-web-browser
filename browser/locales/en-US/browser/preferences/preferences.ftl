@@ -1514,59 +1514,41 @@ tracking-manage-exceptions =
 
 ## Privacy Section - Permissions
 
-permissions-header = Permissions
+permissions-header2 =
+    .label = Permissions
+    .description = Permissions you give to websites you browse.
 
-permissions-location = Location
-permissions-location-settings =
-    .label = Settings…
-    .accesskey = t
+permissions-location2 =
+    .label = Location
 
-permissions-localhost = Device apps and services
-permissions-localhost-settings =
-    .label = Settings…
-    .accesskey = t
+permissions-localhost2 =
+    .label = Device apps and services
 
-permissions-local-network = Local Network Devices
-permissions-local-network-settings =
-    .label = Settings…
-    .accesskey = t
+permissions-local-network2 =
+    .label = Local network devices
 
-permissions-xr = Virtual Reality
-permissions-xr-settings =
-    .label = Settings…
-    .accesskey = t
+permissions-xr2 =
+    .label = Virtual reality
 
-permissions-camera = Camera
-permissions-camera-settings =
-    .label = Settings…
-    .accesskey = t
+permissions-camera2 =
+    .label = Camera
 
-permissions-microphone = Microphone
-permissions-microphone-settings =
-    .label = Settings…
-    .accesskey = t
+permissions-microphone2 =
+    .label = Microphone
 
-# Short form for "the act of choosing sound output devices and redirecting audio to the chosen devices".
-permissions-speaker = Speaker Selection
-permissions-speaker-settings =
-    .label = Settings…
-    .accesskey = t
+# Privacy permission for sound output devices.
+permissions-speaker2 =
+    .label = Speaker
 
-permissions-notification = Notifications
-permissions-notification-settings =
-    .label = Settings…
-    .accesskey = t
-permissions-notification-link = Learn more
+permissions-notification2 =
+    .label = Notifications
 
 permissions-notification-pause =
     .label = Pause notifications until { -brand-short-name } restarts
     .accesskey = n
 
-permissions-autoplay = Autoplay
-
-permissions-autoplay-settings =
-    .label = Settings…
-    .accesskey = t
+permissions-autoplay2 =
+    .label = Autoplay
 
 permissions-block-popups2 =
     .label = Block pop-ups and third-party redirects
@@ -1574,17 +1556,17 @@ permissions-block-popups2 =
 
 # "popup" is a misspelling that is more popular than the correct spelling of
 # "pop-up" so it's included as a search keyword, not displayed in the UI.
-permissions-block-popups-exceptions-button =
-    .label = Exceptions…
+permissions-block-popups-exceptions-button2 =
+    .label = Manage pop-up and third-party redirect exceptions
     .accesskey = E
     .searchkeywords = popups
 
-permissions-addon-install-warning =
-    .label = Warn you when websites try to install add-ons
+permissions-addon-install-warning2 =
+    .label = Warn when websites try to install extensions
     .accesskey = W
 
-permissions-addon-exceptions =
-    .label = Exceptions…
+permissions-addon-exceptions2 =
+    .label = Choose which websites can install extensions
     .accesskey = E
 
 ## Privacy Section - Data Collection
