@@ -476,25 +476,30 @@ void Shutdown(void) {
   CamerasSingleton::Thread() = nullptr;
 }
 
-mozilla::ipc::IPCResult CamerasChild::RecvCaptureEnded(const int& capId) {
+mozilla::ipc::IPCResult CamerasChild::RecvCaptureEnded(
+    nsTArray<int>&& aCaptureIds) {
   MutexAutoLock lock(mCallbackMutex);
-  if (Callback(capId)) {
-    Callback(capId)->OnCaptureEnded();
-  } else {
-    LOG(("CaptureEnded called with dead callback"));
+  for (int capId : aCaptureIds) {
+    if (auto* cb = Callback(capId)) {
+      cb->OnCaptureEnded();
+    } else {
+      LOG(("CaptureEnded called with dead callback"));
+    }
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CamerasChild::RecvDeliverFrame(
-    const int& capId, mozilla::ipc::Shmem&& shmem,
+    nsTArray<int>&& capIds, mozilla::ipc::Shmem&& shmem,
     const VideoFrameProperties& prop) {
   MutexAutoLock lock(mCallbackMutex);
-  if (Callback(capId)) {
-    unsigned char* image = shmem.get<unsigned char>();
-    Callback(capId)->DeliverFrame(image, prop);
-  } else {
-    LOG(("DeliverFrame called with dead callback"));
+  for (int capId : capIds) {
+    if (auto* cb = Callback(capId)) {
+      unsigned char* image = shmem.get<unsigned char>();
+      cb->DeliverFrame(image, prop);
+    } else {
+      LOG(("DeliverFrame called with dead callback"));
+    }
   }
   SendReleaseFrame(std::move(shmem));
   return IPC_OK();
