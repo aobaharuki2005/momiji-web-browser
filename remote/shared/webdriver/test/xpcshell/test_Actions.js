@@ -314,7 +314,8 @@ add_task(async function test_computePointerDestinationViewport() {
   const actionItem = chain[0][0];
   const inputSource = state.getInputSource(actionItem.id);
   // these values should not affect the outcome
-  inputSource.moveTo(99, 10);
+  inputSource.x = "99";
+  inputSource.y = "10";
   const target = await actionItem.origin.getTargetCoordinates(
     inputSource,
     [actionItem.x, actionItem.y],
@@ -342,7 +343,8 @@ add_task(async function test_computePointerDestinationPointer() {
   );
   const actionItem = chain[0][0];
   const inputSource = state.getInputSource(actionItem.id);
-  inputSource.moveTo(10, 99);
+  inputSource.x = 10;
+  inputSource.y = 99;
   const target = await actionItem.origin.getTargetCoordinates(
     inputSource,
     [actionItem.x, actionItem.y],
