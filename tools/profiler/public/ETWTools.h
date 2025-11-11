@@ -247,8 +247,14 @@ static inline void CreateDataDescForPayloadNonPOD(
 static inline void CreateDataDescForPayloadNonPOD(
     PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
     const mozilla::TimeStamp& aPayload) {
-  CreateDataDescForPayloadPOD(aBuffer, aDescriptor,
-                              aPayload.RawQueryPerformanceCounterValue());
+  if (aPayload.RawQueryPerformanceCounterValue().isNothing()) {
+    // This should never happen?
+    EventDataDescCreate(&aDescriptor, nullptr, 0);
+    return;
+  }
+
+  CreateDataDescForPayloadPOD(
+      aBuffer, aDescriptor, aPayload.RawQueryPerformanceCounterValue().value());
 }
 
 static inline void CreateDataDescForPayloadNonPOD(
@@ -302,13 +308,13 @@ static inline void StoreBaseEventDataDesc(
     const mozilla::MarkerOptions& aOptions) {
   if (aOptions.IsTimingUnspecified()) {
     aStorage.mStartTime =
-        mozilla::TimeStamp::Now().RawQueryPerformanceCounterValue();
+        mozilla::TimeStamp::Now().RawQueryPerformanceCounterValue().value();
     aStorage.mPhase = 0;
   } else {
     aStorage.mStartTime =
-        aOptions.Timing().StartTime().RawQueryPerformanceCounterValue();
+        aOptions.Timing().StartTime().RawQueryPerformanceCounterValue().value();
     aStorage.mEndTime =
-        aOptions.Timing().EndTime().RawQueryPerformanceCounterValue();
+        aOptions.Timing().EndTime().RawQueryPerformanceCounterValue().value();
     aStorage.mPhase = uint8_t(aOptions.Timing().MarkerPhase());
   }
   if (!aOptions.InnerWindowId().IsUnspecified()) {
