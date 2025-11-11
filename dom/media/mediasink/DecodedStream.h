@@ -13,10 +13,12 @@
 #include "MediaSegment.h"
 #include "MediaSink.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/AwakeTimeStamp.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StateMirroring.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -28,7 +30,6 @@ class VideoData;
 struct PlaybackInfoInit;
 class ProcessedMediaTrack;
 struct SharedDummyTrack;
-class TimeStamp;
 
 template <class T>
 class MediaQueue;
@@ -85,7 +86,7 @@ class DecodedStream : public MediaSink {
   void ResetAudio();
   void ResetVideo(const PrincipalHandle& aPrincipalHandle);
   void SendData();
-  void NotifyOutput(int64_t aTime);
+  void NotifyOutput(int64_t aTime, AwakeTimeStamp aSystemTime);
   void CheckIsDataAudible(const AudioData* aData);
 
   void AssertOwnerThread() const {
@@ -128,6 +129,8 @@ class DecodedStream : public MediaSink {
 
   media::NullableTimeUnit mStartTime;
   media::TimeUnit mLastOutputTime;
+  Maybe<AwakeTimeStamp> mLastOutputSystemTime;
+  Maybe<media::TimeUnit> mLastReportedPosition;
   MediaInfo mInfo;
   // True when stream is producing audible sound, false when stream is silent.
   bool mIsAudioDataAudible = false;
