@@ -82,6 +82,7 @@ class DecodedStream : public MediaSink {
   media::TimeUnit GetPositionImpl(TimeStamp aNow, AwakeTimeStamp aAwakeNow,
                                   TimeStamp* aTimeStamp = nullptr);
   AwakeTimeStamp LastOutputSystemTime() const;
+  TimeStamp LastVideoTimeStamp() const;
 
  private:
   void DestroyData(UniquePtr<DecodedStreamData>&& aData);
