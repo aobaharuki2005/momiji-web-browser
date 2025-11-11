@@ -357,39 +357,35 @@ void quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
    RESTORE_STACK;
 }
 
-void quant_fine_energy(const CELTMode *m, int start, int end, celt_glog *oldEBands, celt_glog *error, int *prev_quant, int *extra_quant, ec_enc *enc, int C)
+void quant_fine_energy(const CELTMode *m, int start, int end, celt_glog *oldEBands, celt_glog *error, int *fine_quant, ec_enc *enc, int C)
 {
    int i, c;
+
    /* Encode finer resolution */
    for (i=start;i<end;i++)
    {
-      opus_int16 extra, prev;
-      extra = 1<<extra_quant[i];
-      if (extra_quant[i] <= 0)
+      opus_int16 frac = 1<<fine_quant[i];
+      if (fine_quant[i] <= 0)
          continue;
-      if (ec_tell(enc)+C*extra_quant[i] > (opus_int32)enc->storage*8) continue;
-      prev = (prev_quant!=NULL) ? prev_quant[i] : 0;
       c=0;
       do {
          int q2;
          celt_glog offset;
 #ifdef FIXED_POINT
          /* Has to be without rounding */
-         q2 = VSHR32(ADD32(error[i+c*m->nbEBands], SHR32(GCONST(.5f), prev)), DB_SHIFT-extra_quant[i]-prev);
+         q2 = (error[i+c*m->nbEBands]+GCONST(.5f))>>(DB_SHIFT-fine_quant[i]);
 #else
-         q2 = (int)floor((error[i+c*m->nbEBands]*(1<<prev)+.5f)*extra);
+         q2 = (int)floor((error[i+c*m->nbEBands]+.5f)*frac);
 #endif
-         if (q2 > extra-1)
-            q2 = extra-1;
+         if (q2 > frac-1)
+            q2 = frac-1;
          if (q2<0)
             q2 = 0;
-         ec_enc_bits(enc, q2, extra_quant[i]);
+         ec_enc_bits(enc, q2, fine_quant[i]);
 #ifdef FIXED_POINT
-         offset = SUB32(VSHR32(2*q2+1, extra_quant[i]-DB_SHIFT+1), GCONST(.5f));
-         offset = SHR32(offset, prev);
+         offset = SUB32(VSHR32(2*q2+1, fine_quant[i]-DB_SHIFT+1), GCONST(.5f));
 #else
-         offset = (q2+.5f)*(1<<(14-extra_quant[i]))*(1.f/16384) - .5f;
-         offset *= (1<<(14-prev))*(1.f/16384);
+         offset = (q2+.5f)*(1<<(14-fine_quant[i]))*(1.f/16384) - .5f;
 #endif
          oldEBands[i+c*m->nbEBands] += offset;
          error[i+c*m->nbEBands] -= offset;
@@ -420,7 +416,7 @@ void quant_energy_finalise(const CELTMode *m, int start, int end, celt_glog *old
 #else
             offset = (q2-.5f)*(1<<(14-fine_quant[i]-1))*(1.f/16384);
 #endif
-            if (oldEBands != NULL) oldEBands[i+c*m->nbEBands] += offset;
+            oldEBands[i+c*m->nbEBands] += offset;
             error[i+c*m->nbEBands] -= offset;
             bits_left--;
          } while (++c < C);
@@ -493,29 +489,23 @@ void unquant_coarse_energy(const CELTMode *m, int start, int end, celt_glog *old
    }
 }
 
-void unquant_fine_energy(const CELTMode *m, int start, int end, celt_glog *oldEBands, int *prev_quant, int *extra_quant, ec_dec *dec, int C)
+void unquant_fine_energy(const CELTMode *m, int start, int end, celt_glog *oldEBands, int *fine_quant, ec_dec *dec, int C)
 {
    int i, c;
    /* Decode finer resolution */
    for (i=start;i<end;i++)
    {
-      opus_int16 extra, prev;
-      extra = extra_quant[i];
-      if (extra_quant[i] <= 0)
+      if (fine_quant[i] <= 0)
          continue;
-      if (ec_tell(dec)+C*extra_quant[i] > (opus_int32)dec->storage*8) continue;
-      prev = (prev_quant!=NULL) ? prev_quant[i] : 0;
       c=0;
       do {
          int q2;
          celt_glog offset;
-         q2 = ec_dec_bits(dec, extra);
+         q2 = ec_dec_bits(dec, fine_quant[i]);
 #ifdef FIXED_POINT
-         offset = SUB32(VSHR32(2*q2+1, extra-DB_SHIFT+1), GCONST(.5f));
-         offset = SHR32(offset, prev);
+         offset = SUB32(VSHR32(2*q2+1, fine_quant[i]-DB_SHIFT+1), GCONST(.5f));
 #else
-         offset = (q2+.5f)*(1<<(14-extra))*(1.f/16384) - .5f;
-         offset *= (1<<(14-prev))*(1.f/16384);
+         offset = (q2+.5f)*(1<<(14-fine_quant[i]))*(1.f/16384) - .5f;
 #endif
          oldEBands[i+c*m->nbEBands] += offset;
       } while (++c < C);
@@ -543,7 +533,7 @@ void unquant_energy_finalise(const CELTMode *m, int start, int end, celt_glog *o
 #else
             offset = (q2-.5f)*(1<<(14-fine_quant[i]-1))*(1.f/16384);
 #endif
-            if (oldEBands != NULL) oldEBands[i+c*m->nbEBands] += offset;
+            oldEBands[i+c*m->nbEBands] += offset;
             bits_left--;
          } while (++c < C);
       }
