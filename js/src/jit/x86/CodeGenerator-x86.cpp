@@ -886,10 +886,10 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
     masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notOverflow);
     if (mir->isWasmBuiltinModI64()) {
       masm.xor64(output, output);
+      masm.jump(&done);
     } else {
       masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->trapSiteDesc());
     }
-    masm.jump(&done);
     masm.bind(&notOverflow);
   }
 
