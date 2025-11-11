@@ -1657,13 +1657,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
     if (zone->isAtomsZone()) {
       sweepingAtoms = true;
     }
-
-#ifdef DEBUG
-    for (const auto* cell : zone->cellsToAssertNotGray()) {
-      JS::AssertCellIsNotGray(cell);
-    }
-    zone->cellsToAssertNotGray().clearAndFree();
-#endif
   }
 
   // Updating the atom marking bitmaps. This marks atoms referenced by
@@ -1673,6 +1666,17 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
     AutoPhase ap(stats(), PhaseKind::UPDATE_ATOMS_BITMAP);
     updateAtomsBitmap();
   }
+
+#ifdef DEBUG
+  // Now that the final mark state has been computed check any gray marking
+  // assertions we delayed until this point.
+  for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
+    for (const auto* cell : zone->cellsToAssertNotGray()) {
+      JS::AssertCellIsNotGray(cell);
+    }
+    zone->cellsToAssertNotGray().clearAndFree();
+  }
+#endif
 
 #ifdef JS_GC_ZEAL
   validateIncrementalMarking();
