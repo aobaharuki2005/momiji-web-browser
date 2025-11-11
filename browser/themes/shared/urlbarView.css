@@ -684,6 +684,10 @@
   .urlbarView-row:not([has-action], [has-url], [restyled-search]) & {
     display: none;
   }
+
+  #searchbar-new & {
+    display: none;
+  }
 }
 
 /* Action labels */
@@ -729,6 +733,10 @@
     margin-inline: 0;
     padding-inline: 0;
     border-inline: 0;
+  }
+
+  #searchbar-new & {
+    display: none;
   }
 }
 

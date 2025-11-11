@@ -1193,8 +1193,13 @@
   overflow: hidden;
   white-space: nowrap;
   max-width: var(--search-engine-name-max-width);
+  margin-inline-end: var(--urlbar-searchmodeswitcher-inline-padding);
 
   &:empty {
+    display: none;
+  }
+
+  #searchbar-new & {
     display: none;
   }
 }
@@ -1202,7 +1207,7 @@
 .searchmode-switcher-close {
   appearance: none;
   pointer-events: all;
-  margin-inline: var(--urlbar-searchmodeswitcher-inline-padding);
+  margin-inline-end: var(--urlbar-searchmodeswitcher-inline-padding);
 
   .urlbar[searchmode] & {
     display: inline-flex;
