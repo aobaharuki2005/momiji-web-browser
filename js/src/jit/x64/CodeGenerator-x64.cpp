@@ -212,7 +212,8 @@ void CodeGenerator::visitDivI64(LDivI64* lir) {
   Register lhs = ToRegister(lir->lhs());
   Register rhs = ToRegister(lir->rhs());
 
-  MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
+  MOZ_ASSERT(lhs == rax);
+  MOZ_ASSERT(rhs != rax);
   MOZ_ASSERT(rhs != rdx);
   MOZ_ASSERT(ToRegister(lir->output()) == rax);
   MOZ_ASSERT(ToRegister(lir->temp0()) == rdx);
@@ -231,11 +232,6 @@ void CodeGenerator::visitDivI64(LDivI64* lir) {
     masm.bind(&notOverflow);
   }
 
-  // Put the lhs in rax.
-  if (lhs != rax) {
-    masm.mov(lhs, rax);
-  }
-
   // Sign extend the lhs into rdx to make rdx:rax.
   masm.cqo();
   masm.idivq(rhs);
@@ -246,7 +242,8 @@ void CodeGenerator::visitModI64(LModI64* lir) {
   Register rhs = ToRegister(lir->rhs());
   Register output = ToRegister(lir->output());
 
-  MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
+  MOZ_ASSERT(lhs == rax);
+  MOZ_ASSERT(rhs != rax);
   MOZ_ASSERT(rhs != rdx);
   MOZ_ASSERT(ToRegister(lir->output()) == rdx);
   MOZ_ASSERT(ToRegister(lir->temp0()) == rax);
@@ -270,11 +267,6 @@ void CodeGenerator::visitModI64(LModI64* lir) {
     masm.bind(&notOverflow);
   }
 
-  // Put the lhs in rax.
-  if (lhs != rax) {
-    masm.mov(lhs, rax);
-  }
-
   // Sign extend the lhs into rdx to make rdx:rax.
   masm.cqo();
   masm.idivq(rhs);
@@ -283,10 +275,10 @@ void CodeGenerator::visitModI64(LModI64* lir) {
 }
 
 void CodeGenerator::visitUDivI64(LUDivI64* lir) {
-  Register lhs = ToRegister(lir->lhs());
   Register rhs = ToRegister(lir->rhs());
 
-  MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
+  MOZ_ASSERT(ToRegister(lir->lhs()) == rax);
+  MOZ_ASSERT(rhs != rax);
   MOZ_ASSERT(rhs != rdx);
   MOZ_ASSERT(ToRegister(lir->output()) == rax);
   MOZ_ASSERT(ToRegister(lir->temp0()) == rdx);
@@ -294,32 +286,22 @@ void CodeGenerator::visitUDivI64(LUDivI64* lir) {
   // Prevent divide by zero.
   TrapIfDivideByZero(masm, lir, rhs);
 
-  // Put the lhs in rax.
-  if (lhs != rax) {
-    masm.mov(lhs, rax);
-  }
-
   // Zero extend the lhs into rdx to make (rdx:rax).
   masm.xorl(rdx, rdx);
   masm.udivq(rhs);
 }
 
 void CodeGenerator::visitUModI64(LUModI64* lir) {
-  Register lhs = ToRegister(lir->lhs());
   Register rhs = ToRegister(lir->rhs());
 
-  MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
+  MOZ_ASSERT(ToRegister(lir->lhs()) == rax);
+  MOZ_ASSERT(rhs != rax);
   MOZ_ASSERT(rhs != rdx);
   MOZ_ASSERT(ToRegister(lir->output()) == rdx);
   MOZ_ASSERT(ToRegister(lir->temp0()) == rax);
 
   // Prevent divide by zero.
   TrapIfDivideByZero(masm, lir, rhs);
-
-  // Put the lhs in rax.
-  if (lhs != rax) {
-    masm.mov(lhs, rax);
-  }
 
   // Zero extend the lhs into rdx to make (rdx:rax).
   masm.xorl(rdx, rdx);
