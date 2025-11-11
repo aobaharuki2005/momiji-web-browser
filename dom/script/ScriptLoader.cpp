@@ -3347,7 +3347,8 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
 }
 
 /* static */
-nsCString& ScriptLoader::BytecodeMimeTypeFor(ScriptLoadRequest* aRequest) {
+nsCString& ScriptLoader::BytecodeMimeTypeFor(
+    const ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     return nsContentUtils::JSModuleBytecodeMimeType();
   }
@@ -3356,7 +3357,7 @@ nsCString& ScriptLoader::BytecodeMimeTypeFor(ScriptLoadRequest* aRequest) {
 
 /* static */
 nsCString& ScriptLoader::BytecodeMimeTypeFor(
-    JS::loader::LoadedScript* aLoadedScript) {
+    const JS::loader::LoadedScript* aLoadedScript) {
   if (aLoadedScript->IsModuleScript()) {
     return nsContentUtils::JSModuleBytecodeMimeType();
   }
