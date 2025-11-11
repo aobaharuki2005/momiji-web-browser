@@ -27,9 +27,8 @@ add_task(async function test_privatebrowsing_disabled() {
     "about:preferences#privacy",
     async browser => {
       ok(
-        browser.contentDocument
-          .getElementById("historyMode")
-          .inputEl.querySelector("option[value='dontremember']").disabled,
+        browser.contentDocument.querySelector("menuitem[value='dontremember']")
+          .disabled,
         "Don't remember history should be disabled"
       );
     }

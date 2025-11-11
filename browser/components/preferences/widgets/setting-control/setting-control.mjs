@@ -208,8 +208,6 @@ export class SettingControl extends SettingElement {
   getOptionPropertyMapping(config) {
     const props = this.getCommonPropertyMapping(config);
     props[".value"] = config.value;
-    props[".disabled"] = config.disabled;
-    props[".hidden"] = config.hidden;
     return props;
   }
 
