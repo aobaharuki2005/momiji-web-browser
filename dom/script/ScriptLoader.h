@@ -709,9 +709,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
       JS::Handle<JS::Value> aDebuggerPrivateValue,
       JS::Handle<JSScript*> aDebuggerIntroductionScript, ErrorResult& aRv);
 
-  static nsCString& BytecodeMimeTypeFor(ScriptLoadRequest* aRequest);
+  static nsCString& BytecodeMimeTypeFor(const ScriptLoadRequest* aRequest);
   static nsCString& BytecodeMimeTypeFor(
-      JS::loader::LoadedScript* aLoadedScript);
+      const JS::loader::LoadedScript* aLoadedScript);
 
   // Queue the script load request for caching if we decided to cache it, or
   // cleanup the script load request fields otherwise.
