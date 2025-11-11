@@ -1686,6 +1686,73 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  history: {
+    items: [
+      {
+        id: "historyMode",
+        control: "moz-select",
+        options: [
+          {
+            value: "remember",
+            l10nId: "history-remember-option-all",
+          },
+          { value: "dontremember", l10nId: "history-remember-option-never" },
+          { value: "custom", l10nId: "history-remember-option-custom" },
+        ],
+        controlAttrs: {
+          "search-l10n-ids": `
+            history-remember-description2,
+            history-dontremember-description2,
+            history-private-browsing-permanent.label,
+            history-remember-browser-option.label,
+            history-remember-search-option.label,
+            history-clear-on-close-option.label,
+            history-clear-on-close-settings.label
+          `,
+        },
+      },
+      {
+        id: "privateBrowsingAutoStart",
+        l10nId: "history-private-browsing-permanent",
+      },
+      {
+        id: "rememberHistory",
+        l10nId: "history-remember-browser-option",
+      },
+      {
+        id: "rememberForms",
+        l10nId: "history-remember-search-option",
+      },
+      {
+        id: "alwaysClear",
+        l10nId: "history-clear-on-close-option",
+      },
+      {
+        id: "clearDataSettings",
+        l10nId: "history-clear-on-close-settings",
+        control: "moz-box-button",
+        controlAttrs: {
+          "search-l10n-ids": `
+            clear-data-settings-label,
+            history-section-label,
+            item-history-and-downloads.label,
+            item-cookies.label,
+            item-active-logins.label,
+            item-cache.label,
+            item-form-search-history.label,
+            data-section-label,
+            item-site-settings.label,
+            item-offline-apps.label
+          `,
+        },
+      },
+      {
+        id: "clearHistoryButton",
+        l10nId: "history-clear-button",
+        control: "moz-box-button",
+      },
+    ],
+  },
 };
 
 /**
