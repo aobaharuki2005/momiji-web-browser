@@ -739,19 +739,6 @@ class nsLayoutUtils {
                                            nsIContent** aContainer,
                                            int32_t* aOffset);
 
-  /**
-   * Translate from view coordinates to the widget's coordinates.
-   * @param aPresContext the PresContext for the view
-   * @param aView the view
-   * @param aPt the point relative to the view
-   * @param aViewportType whether the point is in visual or layout coordinates
-   * @param aWidget the widget to which returned coordinates are relative
-   * @return the point in the view's coordinates
-   */
-  static mozilla::LayoutDeviceIntPoint TranslateViewToWidget(
-      nsPresContext* aPresContext, nsView* aView, nsPoint aPt,
-      ViewportType aViewportType, nsIWidget* aWidget);
-
   static mozilla::LayoutDeviceIntPoint WidgetToWidgetOffset(
       nsIWidget* aFromWidget, nsIWidget* aToWidget);
 
