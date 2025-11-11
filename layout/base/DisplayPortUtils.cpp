@@ -836,7 +836,9 @@ nsIFrame* DisplayPortUtils::OneStepInAsyncScrollableAncestorChain(
     nsIFrame* aFrame) {
   if (aFrame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
       nsLayoutUtils::IsReallyFixedPos(aFrame)) {
-    return aFrame->PresShell()->GetRootScrollContainerFrame();
+    if (nsIFrame* root = aFrame->PresShell()->GetRootScrollContainerFrame()) {
+      return root;
+    }
   }
   return nsLayoutUtils::GetCrossDocParentFrameInProcess(aFrame);
 }
