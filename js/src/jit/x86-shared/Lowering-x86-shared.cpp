@@ -201,12 +201,21 @@ void LIRGeneratorX86Shared::lowerDivI(MDiv* div) {
       return;
     }
 
+#ifdef JS_CODEGEN_X86
     auto* lir = new (alloc())
         LDivConstantI(useRegister(div->lhs()), tempFixed(eax), rhs);
     if (div->fallible()) {
       assignSnapshot(lir, div->bailoutKind());
     }
     defineFixed(lir, div, LAllocation(AnyRegister(edx)));
+#else
+    auto* lir =
+        new (alloc()) LDivConstantI(useRegister(div->lhs()), temp(), rhs);
+    if (div->fallible()) {
+      assignSnapshot(lir, div->bailoutKind());
+    }
+    define(lir, div);
+#endif
     return;
   }
 
@@ -232,12 +241,21 @@ void LIRGeneratorX86Shared::lowerModI(MMod* mod) {
       return;
     }
 
+#ifdef JS_CODEGEN_X86
     auto* lir = new (alloc())
         LModConstantI(useRegister(mod->lhs()), tempFixed(edx), rhs);
     if (mod->fallible()) {
       assignSnapshot(lir, mod->bailoutKind());
     }
     defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
+#else
+    auto* lir =
+        new (alloc()) LModConstantI(useRegister(mod->lhs()), temp(), rhs);
+    if (mod->fallible()) {
+      assignSnapshot(lir, mod->bailoutKind());
+    }
+    define(lir, mod);
+#endif
     return;
   }
 
@@ -363,12 +381,21 @@ void LIRGeneratorX86Shared::lowerUDiv(MDiv* div) {
       }
       defineReuseInput(lir, div, 0);
     } else {
+#ifdef JS_CODEGEN_X86
       auto* lir = new (alloc())
           LUDivConstant(useRegister(div->lhs()), tempFixed(eax), rhs);
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
       }
       defineFixed(lir, div, LAllocation(AnyRegister(edx)));
+#else
+      auto* lir =
+          new (alloc()) LUDivConstant(useRegister(div->lhs()), temp(), rhs);
+      if (div->fallible()) {
+        assignSnapshot(lir, div->bailoutKind());
+      }
+      define(lir, div);
+#endif
     }
     return;
   }
@@ -394,12 +421,21 @@ void LIRGeneratorX86Shared::lowerUMod(MMod* mod) {
       }
       defineReuseInput(lir, mod, 0);
     } else {
+#ifdef JS_CODEGEN_X86
       auto* lir = new (alloc())
           LUModConstant(useRegister(mod->lhs()), tempFixed(edx), rhs);
       if (mod->fallible()) {
         assignSnapshot(lir, mod->bailoutKind());
       }
       defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
+#else
+      auto* lir =
+          new (alloc()) LUModConstant(useRegister(mod->lhs()), temp(), rhs);
+      if (mod->fallible()) {
+        assignSnapshot(lir, mod->bailoutKind());
+      }
+      define(lir, mod);
+#endif
     }
     return;
   }

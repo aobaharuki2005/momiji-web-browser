@@ -987,14 +987,17 @@ void CodeGenerator::visitUMod(LUMod* ins) {
 }
 
 template <class LUDivOrUMod>
-static void UnsignedDivideWithConstant(MacroAssembler& masm, LUDivOrUMod* ins) {
+static void UnsignedDivideWithConstant(MacroAssembler& masm, LUDivOrUMod* ins,
+                                       Register result, Register temp) {
   Register lhs = ToRegister(ins->numerator());
-  [[maybe_unused]] Register output = ToRegister(ins->output());
-  [[maybe_unused]] Register temp = ToRegister(ins->temp0());
   uint32_t d = ins->denominator();
 
-  MOZ_ASSERT(lhs != eax && lhs != edx);
-  MOZ_ASSERT((output == eax && temp == edx) || (output == edx && temp == eax));
+  MOZ_ASSERT(lhs != result && lhs != temp);
+#ifdef JS_CODEGEN_X86
+  MOZ_ASSERT(result == edx && temp == eax);
+#else
+  MOZ_ASSERT(result != temp);
+#endif
 
   // The denominator isn't a power of 2 (see LDivPowTwoI and LModPowTwoI).
   MOZ_ASSERT(!mozilla::IsPowerOfTwo(d));
@@ -1002,8 +1005,23 @@ static void UnsignedDivideWithConstant(MacroAssembler& masm, LUDivOrUMod* ins) {
   auto rmc = ReciprocalMulConstants::computeUnsignedDivisionConstants(d);
 
   // We first compute (M * n) >> 32, where M = rmc.multiplier.
+#ifdef JS_CODEGEN_X86
   masm.movl(Imm32(rmc.multiplier), eax);
   masm.umull(lhs);
+#else
+  // Zero-extend |lhs| in preparation for a 64-bit multiplication.
+  masm.movl(lhs, result);
+
+  // Note that imul sign-extends its 32-bit immediate, but we need an unsigned
+  // multiplication.
+  if (int32_t(rmc.multiplier) >= 0) {
+    masm.imulq(Imm32(rmc.multiplier), result, result);
+  } else {
+    masm.movl(Imm32(rmc.multiplier), temp);
+    masm.imulq(temp, result);
+  }
+  masm.shrq(Imm32(32), result);
+#endif
   if (rmc.multiplier > UINT32_MAX) {
     // M >= 2^32 and shift == 0 is impossible, as d >= 2 implies that
     // ((M * n) >> (32 + shift)) >= n > floor(n/d) whenever n >= d,
@@ -1011,35 +1029,40 @@ static void UnsignedDivideWithConstant(MacroAssembler& masm, LUDivOrUMod* ins) {
     MOZ_ASSERT(rmc.shiftAmount > 0);
     MOZ_ASSERT(rmc.multiplier < (int64_t(1) << 33));
 
-    // We actually computed edx = ((uint32_t(M) * n) >> 32) instead. Since
-    // (M * n) >> (32 + shift) is the same as (edx + n) >> shift, we can
+    // We actually computed result = ((uint32_t(M) * n) >> 32) instead. Since
+    // (M * n) >> (32 + shift) is the same as (result + n) >> shift, we can
     // correct for the overflow. This case is a bit trickier than the signed
-    // case, though, as the (edx + n) addition itself can overflow; however,
-    // note that (edx + n) >> shift == (((n - edx) >> 1) + edx) >> (shift - 1),
+    // case, though, as the (result + n) addition itself can overflow; however,
+    // note that
+    // (result + n) >> shift == (((n - result) >> 1) + result) >> (shift - 1),
     // which is overflow-free. See Hacker's Delight, section 10-8 for details.
 
-    // Compute (n - edx) >> 1 into eax.
-    masm.movl(lhs, eax);
-    masm.subl(edx, eax);
-    masm.shrl(Imm32(1), eax);
+    // Compute (n - result) >> 1 into temp.
+    masm.movl(lhs, temp);
+    masm.subl(result, temp);
+    masm.shrl(Imm32(1), temp);
 
     // Finish the computation.
-    masm.addl(eax, edx);
-    masm.shrl(Imm32(rmc.shiftAmount - 1), edx);
+    masm.addl(temp, result);
+    masm.shrl(Imm32(rmc.shiftAmount - 1), result);
   } else {
-    masm.shrl(Imm32(rmc.shiftAmount), edx);
+    masm.shrl(Imm32(rmc.shiftAmount), result);
   }
 }
 
 void CodeGenerator::visitUDivConstant(LUDivConstant* ins) {
   Register lhs = ToRegister(ins->numerator());
   Register output = ToRegister(ins->output());
+  Register temp = ToRegister(ins->temp0());
   uint32_t d = ins->denominator();
 
   MDiv* mir = ins->mir();
 
+#ifdef JS_CODEGEN_X86
   // This emits the division answer into edx.
   MOZ_ASSERT(output == edx);
+  MOZ_ASSERT(temp == eax);
+#endif
 
   if (d == 0) {
     if (mir->trapOnError()) {
@@ -1052,24 +1075,28 @@ void CodeGenerator::visitUDivConstant(LUDivConstant* ins) {
     return;
   }
 
-  // Compute the truncated division result in |edx|.
-  UnsignedDivideWithConstant(masm, ins);
+  // Compute the truncated division result in |output|.
+  UnsignedDivideWithConstant(masm, ins, output, temp);
 
   if (!mir->isTruncated()) {
-    masm.imull(Imm32(d), edx, eax);
-    bailoutCmp32(Assembler::NotEqual, lhs, eax, ins->snapshot());
+    masm.imull(Imm32(d), output, temp);
+    bailoutCmp32(Assembler::NotEqual, lhs, temp, ins->snapshot());
   }
 }
 
 void CodeGenerator::visitUModConstant(LUModConstant* ins) {
   Register lhs = ToRegister(ins->numerator());
   Register output = ToRegister(ins->output());
+  Register temp = ToRegister(ins->temp0());
   uint32_t d = ins->denominator();
 
   MMod* mir = ins->mir();
 
+#ifdef JS_CODEGEN_X86
   // This emits the modulus answer into eax.
   MOZ_ASSERT(output == eax);
+  MOZ_ASSERT(temp == edx);
+#endif
 
   if (d == 0) {
     if (mir->trapOnError()) {
@@ -1082,17 +1109,17 @@ void CodeGenerator::visitUModConstant(LUModConstant* ins) {
     return;
   }
 
-  // Compute the truncated division result in |edx|.
-  UnsignedDivideWithConstant(masm, ins);
+  // Compute the truncated division result in |temp|.
+  UnsignedDivideWithConstant(masm, ins, temp, output);
 
-  // We now have the truncated division value in edx. If we're computing a
+  // We now have the truncated division value in |temp|. If we're computing a
   // modulus or checking whether the division resulted in an integer, we need
   // to multiply the obtained value by d and finish the computation/check.
   //
-  // eax = lhs - d * edx
-  masm.imull(Imm32(d), edx, edx);
-  masm.movl(lhs, eax);
-  masm.subl(edx, eax);
+  // output = lhs - d * temp
+  masm.imull(Imm32(d), temp, temp);
+  masm.movl(lhs, output);
+  masm.subl(temp, output);
 
   // The final result of the modulus op, just computed above by the
   // sub instruction, can be a number in the range [2^31, 2^32). If
@@ -1179,14 +1206,17 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
 }
 
 template <class LDivOrMod>
-static void DivideWithConstant(MacroAssembler& masm, LDivOrMod* ins) {
+static void DivideWithConstant(MacroAssembler& masm, LDivOrMod* ins,
+                               Register result, Register temp) {
   Register lhs = ToRegister(ins->numerator());
-  [[maybe_unused]] Register output = ToRegister(ins->output());
-  [[maybe_unused]] Register temp = ToRegister(ins->temp0());
   int32_t d = ins->denominator();
 
-  MOZ_ASSERT(lhs != eax && lhs != edx);
-  MOZ_ASSERT((output == eax && temp == edx) || (output == edx && temp == eax));
+  MOZ_ASSERT(lhs != result && lhs != temp);
+#ifdef JS_CODEGEN_X86
+  MOZ_ASSERT(result == edx && temp == eax);
+#else
+  MOZ_ASSERT(result != temp);
+#endif
 
   // The absolute value of the denominator isn't a power of 2 (see LDivPowTwoI
   // and LModPowTwoI).
@@ -1199,45 +1229,56 @@ static void DivideWithConstant(MacroAssembler& masm, LDivOrMod* ins) {
   auto rmc = ReciprocalMulConstants::computeSignedDivisionConstants(d);
 
   // We first compute (M * n) >> 32, where M = rmc.multiplier.
+#ifdef JS_CODEGEN_X86
   masm.movl(Imm32(rmc.multiplier), eax);
   masm.imull(lhs);
+#else
+  // Sign-extend |lhs| in preparation for a 64-bit multiplication.
+  masm.movslq(lhs, result);
+  masm.imulq(Imm32(rmc.multiplier), result, result);
+  masm.shrq(Imm32(32), result);
+#endif
   if (rmc.multiplier > INT32_MAX) {
     MOZ_ASSERT(rmc.multiplier < (int64_t(1) << 32));
 
-    // We actually computed edx = ((int32_t(M) * n) >> 32) instead. Since
-    // (M * n) >> 32 is the same as (edx + n), we can correct for the overflow.
-    // (edx + n) can't overflow, as n and edx have opposite signs because
-    // int32_t(M) is negative.
-    masm.addl(lhs, edx);
+    // We actually computed result = ((int32_t(M) * n) >> 32) instead. Since
+    // (M * n) >> 32 is the same as (result + n), we can correct for the
+    // overflow. (result + n) can't overflow, as n and |result| have opposite
+    // signs because int32_t(M) is negative.
+    masm.addl(lhs, result);
   }
   // (M * n) >> (32 + shift) is the truncated division answer if n is
   // non-negative, as proved in the comments of computeDivisionConstants. We
   // must add 1 later if n is negative to get the right answer in all cases.
-  masm.sarl(Imm32(rmc.shiftAmount), edx);
+  masm.sarl(Imm32(rmc.shiftAmount), result);
 
   // We'll subtract -1 instead of adding 1, because (n < 0 ? -1 : 0) can be
   // computed with just a sign-extending shift of 31 bits.
   if (mir->canBeNegativeDividend()) {
-    masm.movl(lhs, eax);
-    masm.sarl(Imm32(31), eax);
-    masm.subl(eax, edx);
+    masm.movl(lhs, temp);
+    masm.sarl(Imm32(31), temp);
+    masm.subl(temp, result);
   }
 
-  // After this, edx contains the correct truncated division result.
+  // After this, |result| contains the correct truncated division result.
   if (d < 0) {
-    masm.negl(edx);
+    masm.negl(result);
   }
 }
 
 void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
   Register lhs = ToRegister(ins->numerator());
   Register output = ToRegister(ins->output());
+  Register temp = ToRegister(ins->temp0());
   int32_t d = ins->denominator();
 
   MDiv* mir = ins->mir();
 
+#ifdef JS_CODEGEN_X86
   // This emits the division answer into edx.
   MOZ_ASSERT(output == edx);
+  MOZ_ASSERT(temp == eax);
+#endif
 
   if (d == 0) {
     if (mir->trapOnError()) {
@@ -1250,14 +1291,14 @@ void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
     return;
   }
 
-  // Compute the truncated division result in |edx|.
-  DivideWithConstant(masm, ins);
+  // Compute the truncated division result in |output|.
+  DivideWithConstant(masm, ins, output, temp);
 
   if (!mir->isTruncated()) {
     // This is a division op. Multiply the obtained value by d to check if
     // the correct answer is an integer. This cannot overflow, since |d| > 1.
-    masm.imull(Imm32(d), edx, eax);
-    bailoutCmp32(Assembler::NotEqual, lhs, eax, ins->snapshot());
+    masm.imull(Imm32(d), output, temp);
+    bailoutCmp32(Assembler::NotEqual, lhs, temp, ins->snapshot());
 
     // If lhs is zero and the divisor is negative, the answer should have
     // been -0.
@@ -1270,12 +1311,16 @@ void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
 void CodeGenerator::visitModConstantI(LModConstantI* ins) {
   Register lhs = ToRegister(ins->numerator());
   Register output = ToRegister(ins->output());
+  Register temp = ToRegister(ins->temp0());
   int32_t d = ins->denominator();
 
   MMod* mir = ins->mir();
 
+#ifdef JS_CODEGEN_X86
   // This emits the modulus answer into eax.
   MOZ_ASSERT(output == eax);
+  MOZ_ASSERT(temp == edx);
+#endif
 
   if (d == 0) {
     if (mir->trapOnError()) {
@@ -1288,19 +1333,19 @@ void CodeGenerator::visitModConstantI(LModConstantI* ins) {
     return;
   }
 
-  // Compute the truncated division result in |edx|.
-  DivideWithConstant(masm, ins);
+  // Compute the truncated division result in |temp|.
+  DivideWithConstant(masm, ins, temp, output);
 
-  // Compute the remainder in |eax|: eax = lhs - d * edx
-  masm.imull(Imm32(-d), edx, eax);
-  masm.addl(lhs, eax);
+  // Compute the remainder in |output|: output = lhs - d * temp
+  masm.imull(Imm32(-d), temp, output);
+  masm.addl(lhs, output);
 
   if (!mir->isTruncated() && mir->canBeNegativeDividend()) {
     // This is a mod op. If the computed value is zero and lhs
     // is negative, the answer should have been -0.
     Label done;
     masm.branch32(Assembler::GreaterThanOrEqual, lhs, Imm32(0), &done);
-    bailoutTest32(Assembler::Zero, eax, eax, ins->snapshot());
+    bailoutTest32(Assembler::Zero, output, output, ins->snapshot());
     masm.bind(&done);
   }
 }
