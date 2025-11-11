@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.util.AttributeSet
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 
 internal class ToolbarSimpleShortcutPreference @JvmOverloads constructor(
@@ -20,4 +21,6 @@ internal class ToolbarSimpleShortcutPreference @JvmOverloads constructor(
     override fun writeSelectedKey(key: String) {
         context.settings().toolbarSimpleShortcutKey = key
     }
+
+    override fun toolbarShortcutPreview(): Int = R.drawable.ic_toolbar_simple_shortcut_preview
 }

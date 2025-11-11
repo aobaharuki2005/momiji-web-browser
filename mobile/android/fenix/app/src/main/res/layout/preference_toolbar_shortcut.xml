@@ -26,8 +26,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
         android:layout_marginTop="16dp"
-        android:contentDescription="@null"
-        app:srcCompat="@drawable/ic_toolbar_simple_shortcut_preview" />
+        android:contentDescription="@null" />
 
     <LinearLayout
         android:id="@+id/selected_container"

@@ -49,12 +49,12 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
     protected abstract val options: List<ShortcutOption>
     protected abstract fun readSelectedKey(): String?
     protected abstract fun writeSelectedKey(key: String)
+    protected abstract fun toolbarShortcutPreview(): Int
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
-        val selectedKey = readSelectedKey()
-
+        val preview = holder.findViewById(R.id.toolbar_preview) as ImageView
         val selectedContainer = holder.findViewById(R.id.selected_container) as LinearLayout
         val optionsContainer = holder.findViewById(R.id.options_container) as LinearLayout
         val separator = holder.findViewById(R.id.separator) as View
@@ -63,8 +63,10 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
         colorOnSurface = holder.itemView.getMaterialColor(materialR.attr.colorOnSurface)
         colorOnSurfaceVariant = holder.itemView.getMaterialColor(materialR.attr.colorOnSurfaceVariant)
 
-        val selected = options.firstOrNull { it.key == selectedKey } ?: options.first()
+        preview.setImageResource(toolbarShortcutPreview())
 
+        val selectedKey = readSelectedKey()
+        val selected = options.firstOrNull { it.key == selectedKey } ?: options.first()
         selectedContainer.removeAllViews()
         selectedContainer.addView(
             makeRow(
