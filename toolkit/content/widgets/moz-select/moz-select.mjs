@@ -48,7 +48,7 @@ export default class MozSelect extends MozBaseInputElement {
   firstUpdated(changedProperties) {
     super.firstUpdated(changedProperties);
     this.optionsMutationObserver.observe(this, {
-      attributeFilter: ["label", "value", "iconsrc"],
+      attributeFilter: ["label", "value", "iconsrc", "disabled"],
       childList: true,
       subtree: true,
     });
@@ -82,10 +82,12 @@ export default class MozSelect extends MozBaseInputElement {
         const optionValue = node.getAttribute("value");
         const optionLabel = node.getAttribute("label");
         const optionIconSrc = node.getAttribute("iconsrc");
+        const optionDisabled = node.getAttribute("disabled") !== null;
         this.options.push({
           value: optionValue,
           label: optionLabel,
           iconSrc: optionIconSrc,
+          disabled: optionDisabled,
         });
 
         if (optionIconSrc) {
@@ -154,6 +156,7 @@ export default class MozSelect extends MozBaseInputElement {
               <option
                 value=${option.value}
                 ?selected=${option.value == this.value}
+                ?disabled=${option.disabled}
               >
                 ${option.label}
               </option>
@@ -183,6 +186,7 @@ customElements.define("moz-select", MozSelect);
  * @property {string} value - The value of the option
  * @property {string} label - The label of the option
  * @property {string} iconSrc - The path to the icon of the the option
+ * @property {boolean} disabled - Whether the option is disabled
  */
 export class MozOption extends MozLitElement {
   static properties = {
@@ -191,6 +195,7 @@ export class MozOption extends MozLitElement {
     // Reflect the attribute so that moz-select can detect changes with a MutationObserver
     label: { type: String, reflect: true, fluent: true },
     iconSrc: { type: String, reflect: true },
+    disabled: { type: Boolean, reflect: true },
   };
 
   constructor() {
@@ -198,6 +203,7 @@ export class MozOption extends MozLitElement {
     this.value = "";
     this.label = "";
     this.iconSrc = "";
+    this.disabled = false;
   }
 
   render() {
