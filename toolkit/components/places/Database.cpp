@@ -1728,8 +1728,6 @@ nsresult Database::InitFunctions(mozIStorageConnection* aMainConn) {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = StripPrefixAndUserinfoFunction::create(aMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = IsFrecencyDecayingFunction::create(aMainConn);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = NoteSyncChangeFunction::create(aMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = InvalidateDaysOfHistoryFunction::create(aMainConn);

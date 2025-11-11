@@ -1150,13 +1150,6 @@ interface nsINavHistoryService : nsISupports
   unsigned long long hashURL(in ACString aSpec, [optional] in ACString aMode);
 
   /**
-   * Whether frecency is in the process of being decayed. The value can also
-   * be read through the is_frecency_decaying() SQL function exposed by Places
-   * database connections.
-   */
-  attribute boolean isFrecencyDecaying;
-
-  /**
    * Whether alternative frecency is enabled. This is preferred over directly
    * checking the feature gating preference, as it ensures consistency between
    * the backend and frontend by avoiding discrepancies in preference values

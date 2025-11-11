@@ -130,17 +130,10 @@
         "END")
 
 // This trigger runs on updates to moz_places.frecency.
-//
-// However, we skip this when frecency changes are due to frecency decay
-// since (1) decay updates all frecencies at once, so this trigger would
-// run for each moz_place, which would be expensive; and (2) decay does
-// not change the ordering of frecencies since all frecencies decay by
-// the same percentage.
 #  define CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER                           \
     nsLiteralCString(                                                          \
         "CREATE TEMP TRIGGER moz_places_afterupdate_frecency_trigger "         \
         "AFTER UPDATE OF frecency ON moz_places FOR EACH ROW "                 \
-        "WHEN NOT is_frecency_decaying() "                                     \
         "BEGIN "                                                               \
         "UPDATE moz_places SET recalc_frecency = 0 WHERE id = NEW.id; "        \
         "UPDATE moz_origins SET recalc_frecency = 1, recalc_alt_frecency = 1 " \

@@ -390,26 +390,16 @@ export class PlacesFrecencyRecalculator {
   }
 
   /**
-   * Decays frecency and adaptive history.
+   * Decays adaptive history.
    *
    * @returns {Promise<void>} once the process is complete. Never rejects.
    */
   async decay() {
-    lazy.logger.trace("Decay frecency");
+    lazy.logger.trace("Decay adaptive history.");
     let timerId = Glean.places.idleFrecencyDecayTime.start();
-    // Ensure moz_places_afterupdate_frecency_trigger ignores decaying
-    // frecency changes.
-    lazy.PlacesUtils.history.isFrecencyDecaying = true;
     try {
       let db = await lazy.PlacesUtils.promiseUnsafeWritableDBConnection();
       await db.executeTransaction(async function () {
-        // Decay all frecency rankings to reduce value of pages that haven't
-        // been visited in a while.
-        await db.executeCached(
-          `UPDATE moz_places SET frecency = ROUND(frecency * :decay_rate)
-            WHERE frecency > 0 AND recalc_frecency = 0`,
-          { decay_rate: lazy.frecencyDecayRate }
-        );
         // Decay potentially unused adaptive entries (e.g. those that are at 1)
         // to allow better chances for new entries that will start at 1.
         await db.executeCached(
@@ -428,14 +418,11 @@ export class PlacesFrecencyRecalculator {
         );
 
         Glean.places.idleFrecencyDecayTime.stopAndAccumulate(timerId);
-        PlacesObservers.notifyListeners([new PlacesRanking()]);
       });
     } catch (ex) {
       Glean.places.idleFrecencyDecayTime.cancel(timerId);
       console.error(ex);
       lazy.logger.error(ex);
-    } finally {
-      lazy.PlacesUtils.history.isFrecencyDecaying = false;
     }
   }
 

@@ -506,7 +506,6 @@ mozilla::Maybe<nsCString> nsNavHistory::GetTargetFolderGuid(
 
 Atomic<int64_t> nsNavHistory::sLastInsertedPlaceId(0);
 Atomic<int64_t> nsNavHistory::sLastInsertedVisitId(0);
-Atomic<bool> nsNavHistory::sIsFrecencyDecaying(false);
 Atomic<bool> nsNavHistory::sShouldStartFrecencyRecalculation(false);
 
 void  // static
@@ -1816,19 +1815,6 @@ nsNavHistory::MarkPageAsFollowedLink(nsIURI* aURI) {
   if (mRecentLink.Count() > RECENT_EVENT_QUEUE_MAX_LENGTH)
     ExpireNonrecentEvents(&mRecentLink);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistory::GetIsFrecencyDecaying(bool* _out) {
-  NS_ENSURE_ARG_POINTER(_out);
-  *_out = nsNavHistory::sIsFrecencyDecaying;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistory::SetIsFrecencyDecaying(bool aVal) {
-  nsNavHistory::sIsFrecencyDecaying = aVal;
   return NS_OK;
 }
 
