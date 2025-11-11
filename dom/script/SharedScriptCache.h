@@ -14,8 +14,10 @@
 #include "js/loader/ScriptLoadRequest.h"     // JS::loader::ScriptLoadRequest
 #include "mozilla/CORSMode.h"                // mozilla::CORSMode
 #include "mozilla/MemoryReporting.h"         // MallocSizeOf
+#include "mozilla/Mutex.h"                   // Mutex, GUARDED_BY, MutexAutoLock
 #include "mozilla/RefPtr.h"                  // RefPtr
 #include "mozilla/SharedSubResourceCache.h"  // SharedSubResourceCache, SharedSubResourceCacheLoadingValueBase, SubResourceNetworkMetadataHolder
+#include "mozilla/ThreadSafety.h"            // MOZ_GUARDED_BY
 #include "mozilla/WeakPtr.h"                 // SupportsWeakPtr
 #include "mozilla/dom/CacheExpirationTime.h"  // CacheExpirationTime
 #include "mozilla/dom/SRIMetadata.h"          // mozilla::dom::SRIMetadata
@@ -196,6 +198,9 @@ class SharedScriptCache final
   bool MaybeScheduleUpdateDiskCache();
   void UpdateDiskCache();
 
+  void EncodeAndCompress();
+  void SaveToDiskCache();
+
   // This has to be static because it's also called for loaders that don't have
   // a sheet cache (loaders that are not owned by a document).
   static void LoadCompleted(SharedScriptCache*, ScriptLoadData&);
@@ -210,6 +215,28 @@ class SharedScriptCache final
 
  protected:
   ~SharedScriptCache();
+
+ private:
+  class EncodeItem {
+   public:
+    EncodeItem(JS::Stencil* aStencil, JS::TranscodeBuffer&& aSRI,
+               JS::loader::LoadedScript* aLoadedScript)
+        : mStencil(aStencil),
+          mSRI(std::move(aSRI)),
+          mLoadedScript(aLoadedScript) {}
+
+    // These fields can be touched from multiple threads.
+    RefPtr<JS::Stencil> mStencil;
+    JS::TranscodeBuffer mSRI;
+    Vector<uint8_t> mCompressed;
+
+    // This can be dereferenced only from the main thread.
+    // Reading the pointer itself is allowed also off main thread.
+    RefPtr<JS::loader::LoadedScript> mLoadedScript;
+  };
+
+  Mutex mEncodeMutex{"SharedScriptCache::mEncodeMutex"};
+  Vector<EncodeItem> mEncodeItems MOZ_GUARDED_BY(mEncodeMutex);
 };
 
 }  // namespace dom
