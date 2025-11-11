@@ -694,10 +694,6 @@ support-files = [
   "video-overhang.ogg^headers^",
   "vp9-superframes.webm",
   "vp9-superframes.webm^headers^",
-  "vp9-yuv420p10.webm",
-  "vp9-yuv420p10.webm^headers^",
-  "vp9-yuv420p12.webm",
-  "vp9-yuv420p12.webm^headers^",
   "vp9.webm",
   "vp9.webm^headers^",
   "vp9-short.webm",
@@ -769,6 +765,8 @@ support-files = [
 
 ["test_audioDocumentTitle.html"]
 skip-if = ["true"] # bug 475110 - disabled since we don't play Wave files standalone
+
+["test_av1_high_professional_profiles.html"]
 
 ["test_buffered.html"]
 
@@ -897,8 +895,6 @@ skip-if = ["os == 'win' && os_version == '11.26100' && arch == 'x86_64' && debug
 ["test_new_audio.html"]
 
 ["test_no_load_event.html"]
-
-["test_non_8bit_video.html"]
 
 ["test_not_reset_playbackRate_when_removing_nonloaded_media_from_document.html"]
 
