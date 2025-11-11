@@ -539,13 +539,6 @@ void MediaStreamTrack::RemoveConsumer(MediaStreamTrackConsumer* aConsumer) {
   }
 }
 
-already_AddRefed<MediaStreamTrack> MediaStreamTrack::Clone() {
-  RefPtr<MediaStreamTrack> newTrack = CloneInternal();
-  newTrack->SetEnabled(Enabled());
-  newTrack->SetMuted(Muted());
-  return newTrack.forget();
-}
-
 void MediaStreamTrack::SetReadyState(MediaStreamTrackState aState) {
   MOZ_ASSERT(!(mReadyState == MediaStreamTrackState::Ended &&
                aState == MediaStreamTrackState::Live),
