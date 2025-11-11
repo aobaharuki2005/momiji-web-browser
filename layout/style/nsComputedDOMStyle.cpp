@@ -788,14 +788,6 @@ static bool MayNeedToFlushLayout(nsCSSPropertyID aPropID) {
     case eCSSProperty_perspective_origin:
     case eCSSProperty_transform_origin:
     case eCSSProperty_transform:
-    case eCSSProperty_border_top_width:
-    case eCSSProperty_border_bottom_width:
-    case eCSSProperty_border_left_width:
-    case eCSSProperty_border_right_width:
-    case eCSSProperty_border_block_start_width:
-    case eCSSProperty_border_block_end_width:
-    case eCSSProperty_border_inline_start_width:
-    case eCSSProperty_border_inline_end_width:
     case eCSSProperty_top:
     case eCSSProperty_right:
     case eCSSProperty_bottom:
@@ -1727,22 +1719,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetPaddingRight() {
   return GetPaddingWidthFor(eSideRight);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderTopWidth() {
-  return GetBorderWidthFor(eSideTop);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderBottomWidth() {
-  return GetBorderWidthFor(eSideBottom);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderLeftWidth() {
-  return GetBorderWidthFor(eSideLeft);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderRightWidth() {
-  return GetBorderWidthFor(eSideRight);
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginTop() {
   return GetMarginFor(eSideTop);
 }
@@ -2063,11 +2039,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
   }
   AssertFlushedPendingReflows();
   return AppUnitsToCSSValue(mInnerFrame->GetUsedPadding().Side(aSide));
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::GetBorderWidthFor(
-    mozilla::Side aSide) {
-  return AppUnitsToCSSValue(StyleBorder()->GetComputedBorderWidth(aSide));
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginFor(Side aSide) {

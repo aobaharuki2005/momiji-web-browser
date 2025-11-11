@@ -108,6 +108,7 @@ include = [
   "Au",
   "BreakBetween",
   "BreakWithin",
+  "BorderSideWidth",
   "BorderStyle",
   "BorderSpacing",
   "BoolInteger",

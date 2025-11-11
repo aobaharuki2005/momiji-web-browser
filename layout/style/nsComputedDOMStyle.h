@@ -198,8 +198,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   already_AddRefed<CSSValue> GetPaddingWidthFor(mozilla::Side aSide);
 
-  already_AddRefed<CSSValue> GetBorderWidthFor(mozilla::Side aSide);
-
   already_AddRefed<CSSValue> GetMarginFor(mozilla::Side aSide);
 
   already_AddRefed<CSSValue> GetTransformValue(const mozilla::StyleTransform&);
@@ -252,12 +250,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetPaddingBottom();
   already_AddRefed<CSSValue> DoGetPaddingLeft();
   already_AddRefed<CSSValue> DoGetPaddingRight();
-
-  /* Border Properties */
-  already_AddRefed<CSSValue> DoGetBorderTopWidth();
-  already_AddRefed<CSSValue> DoGetBorderBottomWidth();
-  already_AddRefed<CSSValue> DoGetBorderLeftWidth();
-  already_AddRefed<CSSValue> DoGetBorderRightWidth();
 
   /* Margin Properties */
   already_AddRefed<CSSValue> DoGetMarginTop();

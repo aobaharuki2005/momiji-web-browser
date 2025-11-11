@@ -8403,7 +8403,7 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
 fn computed_or_resolved_value(
     style: &ComputedValues,
     prop: NonCustomPropertyId,
-    context: Option<&resolved::Context>,
+    mut context: Option<&mut resolved::Context>,
     value: &mut nsACString,
 ) {
     let shorthand = match prop.longhand_or_shorthand() {
@@ -8418,7 +8418,7 @@ fn computed_or_resolved_value(
     let mut block = PropertyDeclarationBlock::new();
     for longhand in shorthand.longhands() {
         block.push(
-            style.computed_or_resolved_declaration(longhand, context),
+            style.computed_or_resolved_declaration(longhand, context.as_deref_mut()),
             Importance::Normal,
         );
     }
@@ -8446,16 +8446,17 @@ pub unsafe extern "C" fn Servo_GetResolvedValue(
     let data = raw_data.borrow();
     let device = data.stylist.device();
     let prop = NonCustomPropertyId::from_nscsspropertyid(prop).unwrap();
-    let context = resolved::Context {
+    let mut context = resolved::Context {
         style,
         device,
         element_info: resolved::ResolvedElementInfo {
             element: GeckoElement(element),
         },
         for_property: prop,
+        current_longhand: None,
     };
 
-    computed_or_resolved_value(style, prop, Some(&context), value)
+    computed_or_resolved_value(style, prop, Some(&mut context), value)
 }
 
 #[no_mangle]
