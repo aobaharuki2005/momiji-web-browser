@@ -48,7 +48,7 @@ export default class MozSelect extends MozBaseInputElement {
   firstUpdated(changedProperties) {
     super.firstUpdated(changedProperties);
     this.optionsMutationObserver.observe(this, {
-      attributeFilter: ["label", "value", "iconsrc", "disabled"],
+      attributeFilter: ["label", "value", "iconsrc", "disabled", "hidden"],
       childList: true,
       subtree: true,
     });
@@ -83,11 +83,13 @@ export default class MozSelect extends MozBaseInputElement {
         const optionLabel = node.getAttribute("label");
         const optionIconSrc = node.getAttribute("iconsrc");
         const optionDisabled = node.getAttribute("disabled") !== null;
+        const optionHidden = node.getAttribute("hidden") !== null;
         this.options.push({
           value: optionValue,
           label: optionLabel,
           iconSrc: optionIconSrc,
           disabled: optionDisabled,
+          hidden: optionHidden,
         });
 
         if (optionIconSrc) {
@@ -157,6 +159,7 @@ export default class MozSelect extends MozBaseInputElement {
                 value=${option.value}
                 ?selected=${option.value == this.value}
                 ?disabled=${option.disabled}
+                ?hidden=${option.hidden}
               >
                 ${option.label}
               </option>
@@ -187,6 +190,7 @@ customElements.define("moz-select", MozSelect);
  * @property {string} label - The label of the option
  * @property {string} iconSrc - The path to the icon of the the option
  * @property {boolean} disabled - Whether the option is disabled
+ * @property {boolean} hidden - Whether the option is hidden
  */
 export class MozOption extends MozLitElement {
   static properties = {
@@ -196,6 +200,7 @@ export class MozOption extends MozLitElement {
     label: { type: String, reflect: true, fluent: true },
     iconSrc: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
+    hidden: { type: Boolean, reflect: true },
   };
 
   constructor() {
@@ -204,6 +209,7 @@ export class MozOption extends MozLitElement {
     this.label = "";
     this.iconSrc = "";
     this.disabled = false;
+    this.hidden = false;
   }
 
   render() {
