@@ -439,7 +439,6 @@ impl NeqoHttp3Conn {
             .pmtud_iface_mtu(cfg!(not(target_os = "openbsd")))
             // MLKEM support is configured further below. By default, disable it.
             .mlkem(false)
-            .datagram_size(1500)
             .pmtud(pmtud_enabled);
 
         // Set a short timeout when fuzzing.
