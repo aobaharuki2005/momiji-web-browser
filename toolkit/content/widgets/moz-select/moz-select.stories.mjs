@@ -109,6 +109,8 @@ const Template = ({
   options = useOtherOptions ? OTHER_OPTIONS : DEFAULT_OPTIONS,
   hasSlottedSupportLink,
   ellipsized,
+  disabledOption,
+  hiddenOption,
 }) => html`
   <div style="width:300px">
     <moz-select
@@ -128,11 +130,13 @@ const Template = ({
         ? html`<a slot="support-link" href="www.example.com">Click me!</a>`
         : ""}
       ${options.map(
-        opt =>
+        (opt, i) =>
           html`<moz-option
             value=${opt.value}
             data-l10n-id=${opt.l10nId}
             iconsrc=${opt.iconSrc}
+            ?disabled=${disabledOption && i == 1}
+            ?hidden=${hiddenOption && i == 2}
           ></moz-option>`
       )}
     </moz-select>
@@ -224,4 +228,16 @@ WithEllipsizedLabel.args = {
   ...Default.args,
   ellipsized: true,
   l10nId: "moz-select-long-label",
+};
+
+export const WithDisabledOption = Template.bind({});
+WithDisabledOption.args = {
+  ...Default.args,
+  disabledOption: true,
+};
+
+export const WithHiddenOption = Template.bind({});
+WithHiddenOption.args = {
+  ...Default.args,
+  hiddenOption: true,
 };
