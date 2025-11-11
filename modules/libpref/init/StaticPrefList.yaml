@@ -15222,11 +15222,6 @@
   #
   # See https://bugzilla.mozilla.org/show_bug.cgi?id=1979279 for details.
   value: 1
-#elif defined(ANDROID)
-  # Disable GSO on Android.
-  #
-  # See <https://bugzilla.mozilla.org/show_bug.cgi?id=1987256> for details.
-  value: 1
 #else
   # Current industry standard. Likely worth tuning.
   value: 10
