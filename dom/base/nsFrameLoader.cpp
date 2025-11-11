@@ -117,6 +117,7 @@
 #include "nsSubDocumentFrame.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsView.h"
 #include "nsViewManager.h"
 #include "nsXPCOMPrivate.h"  // for XUL_DLL
 #include "nsXULPopupManager.h"
@@ -167,6 +168,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
                              bool aIsRemoteFrame, bool aNetworkCreated)
     : mPendingBrowsingContext(aBrowsingContext),
       mOwnerContent(aOwner),
+      mDetachedSubdocFrame(nullptr),
       mPendingSwitchID(0),
       mChildID(0),
       mRemoteType(NOT_REMOTE_TYPE),
@@ -969,8 +971,13 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* aFrame) {
   const bool marginsChanged =
       ds->UpdateFrameMargins(GetMarginAttributes(mOwnerContent));
 
+  nsView* view = aFrame->EnsureInnerView();
+  if (!view) {
+    return false;
+  }
+
   // If we already have a pres shell (which can happen with <object> / <embed>)
-  // then hook it up to the frame.
+  // then hook it up in the view tree.
   if (PresShell* presShell = ds->GetPresShell()) {
     // Ensure root scroll frame is reflowed in case margins have changed.
     if (marginsChanged) {
@@ -980,12 +987,24 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* aFrame) {
                                     IntrinsicDirty::None, NS_FRAME_IS_DIRTY);
       }
     }
-    aFrame->EnsureEmbeddingPresShell(presShell);
-    MOZ_DIAGNOSTIC_ASSERT(presShell->GetViewManager()->GetRootView());
+    nsView* childView = presShell->GetViewManager()->GetRootView();
+    MOZ_DIAGNOSTIC_ASSERT(childView);
+    if (childView->GetParent() == view) {
+      // We were probably doing a docshell swap and succeeded before getting
+      // here, hooray, nothing else to do.
+      return true;
+    }
+
+    // We did layout before due to <object> or <embed> and now we need to fix
+    // up our stuff and initialize our docshell below too.
+    MOZ_DIAGNOSTIC_ASSERT(!view->GetFirstChild());
+    MOZ_DIAGNOSTIC_ASSERT(!childView->GetParent(), "Stale view?");
+    nsSubDocumentFrame::InsertViewsInReverseOrder(childView, view);
+    nsSubDocumentFrame::EndSwapDocShellsForViews(view->GetFirstChild());
   }
 
   RefPtr<nsDocShell> baseWindow = GetDocShell();
-  baseWindow->InitWindow(nullptr, 0, 0, size.width, size.height);
+  baseWindow->InitWindow(view->GetWidget(), 0, 0, size.width, size.height);
   baseWindow->SetVisibility(true);
   NS_ENSURE_TRUE(GetDocShell(), false);
 
@@ -3022,12 +3041,16 @@ nsFrameLoader::GetLazyLoadFrameResumptionState() {
   return sEmpty;
 }
 
-void nsFrameLoader::SetDetachedSubdocs(WeakPresShellArray&& aDocs) {
-  mDetachedSubdocs = std::move(aDocs);
+void nsFrameLoader::SetDetachedSubdocFrame(nsIFrame* aDetachedFrame) {
+  mDetachedSubdocFrame = aDetachedFrame;
+  mHadDetachedFrame = !!aDetachedFrame;
 }
 
-auto nsFrameLoader::TakeDetachedSubdocs() -> WeakPresShellArray {
-  return std::move(mDetachedSubdocs);
+nsIFrame* nsFrameLoader::GetDetachedSubdocFrame(bool* aOutIsSet) const {
+  if (aOutIsSet) {
+    *aOutIsSet = mHadDetachedFrame;
+  }
+  return mDetachedSubdocFrame.GetFrame();
 }
 
 void nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags) {

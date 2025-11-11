@@ -463,7 +463,6 @@ class PresShell final : public nsStubDocumentObserver,
 
   // Get the current frame of our embedder, if it's in our same process.
   nsSubDocumentFrame* GetInProcessEmbedderFrame() const;
-  void SetInProcessEmbedderFrame(nsSubDocumentFrame*);
 
   /**
    * Get root scroll container frame from the frame constructor.
@@ -3158,7 +3157,8 @@ class PresShell final : public nsStubDocumentObserver,
 
   void ClearApproximatelyVisibleFramesList(
       const Maybe<OnNonvisible>& aNonvisibleAction = Nothing());
-  void ClearApproximateFrameVisibilityVisited();
+  static void ClearApproximateFrameVisibilityVisited(nsView* aView,
+                                                     bool aClear);
   static void MarkFramesInListApproximatelyVisible(const nsDisplayList& aList);
   void MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
                                                const nsRect& aRect,
@@ -3358,9 +3358,6 @@ class PresShell final : public nsStubDocumentObserver,
 
   // The focus sequence number of the last processed input event
   uint64_t mAPZFocusSequenceNumber;
-
-  // The nsSubDocumentFrame* that is embedding us.
-  WeakFrame mEmbedderFrame;
 
   nscoord mLastAnchorScrollPositionY = 0;
 

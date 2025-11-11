@@ -25,8 +25,6 @@ class VideoStreamTrack : public MediaStreamTrack {
       bool aMuted = false,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints());
 
-  already_AddRefed<MediaStreamTrack> Clone() override;
-
   void Destroy() override;
 
   VideoStreamTrack* AsVideoStreamTrack() override { return this; }
@@ -46,6 +44,9 @@ class VideoStreamTrack : public MediaStreamTrack {
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
 
   void GetLabel(nsAString& aLabel, CallerType aCallerType) override;
+
+ protected:
+  already_AddRefed<MediaStreamTrack> CloneInternal() override;
 
  private:
   nsTArray<RefPtr<VideoOutput>> mVideoOutputs;

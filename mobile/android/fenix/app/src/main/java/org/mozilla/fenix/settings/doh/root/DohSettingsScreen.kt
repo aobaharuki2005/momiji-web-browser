@@ -332,7 +332,6 @@ private fun DohSelection(
 
     if (state.selectedProvider is Provider.Custom && state.isCustomProviderDialogOn) {
         AlertDialogAddCustomProvider(
-            customProviderUrl = state.selectedProvider.url,
             customProviderErrorState = state.customProviderErrorState,
             onCustomCancelClicked = { onCustomCancelClicked() },
             onCustomAddClicked = { url ->
@@ -444,12 +443,11 @@ private fun buildProviderMenuItems(
 
 @Composable
 private fun AlertDialogAddCustomProvider(
-    customProviderUrl: String,
     customProviderErrorState: CustomProviderErrorState,
     onCustomCancelClicked: () -> Unit,
     onCustomAddClicked: (String) -> Unit,
 ) {
-    var customProviderInput by remember { mutableStateOf(customProviderUrl) }
+    var customProviderInput by remember { mutableStateOf("") }
     val onCustomProviderInputChange: (String) -> Unit = { it -> customProviderInput = it }
     val nonHttpsString = stringResource(R.string.preference_doh_provider_custom_dialog_error_https)
     val invalidString = stringResource(R.string.preference_doh_provider_custom_dialog_error_invalid)

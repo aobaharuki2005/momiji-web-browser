@@ -21,26 +21,12 @@ add_task(async function testDiskCache_dynamicImport() {
             ev("load:source", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
             ev("diskcache:disabled", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported1.mjs",
-                false
-              ),
-              ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported2.mjs",
-                false
-              ),
-              ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported3.mjs",
-                false
-              ),
-            ]),
+            ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported3.mjs", false),
           ],
         },
         {
@@ -49,26 +35,12 @@ add_task(async function testDiskCache_dynamicImport() {
             ev("load:source", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
             ev("diskcache:disabled", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported1.mjs",
-                false
-              ),
-              ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported2.mjs",
-                false
-              ),
-              ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported3.mjs",
-                false
-              ),
-            ]),
+            ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported3.mjs", false),
           ],
         },
         {
@@ -77,26 +49,12 @@ add_task(async function testDiskCache_dynamicImport() {
             ev("load:source", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
             ev("diskcache:disabled", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported1.mjs",
-                false
-              ),
-              ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported2.mjs",
-                false
-              ),
-              ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported3.mjs",
-                false
-              ),
-            ]),
+            ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported3.mjs", false),
           ],
         },
         {
@@ -105,32 +63,16 @@ add_task(async function testDiskCache_dynamicImport() {
             ev("load:source", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
             ev("diskcache:register", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
-              ev(
-                "diskcache:register",
-                "file_js_cache_dyn_imported1.mjs",
-                false
-              ),
-              ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
-              ev(
-                "diskcache:register",
-                "file_js_cache_dyn_imported2.mjs",
-                false
-              ),
-              ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
-              ev(
-                "diskcache:register",
-                "file_js_cache_dyn_imported3.mjs",
-                false
-              ),
-            ]),
+            ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
+            ev("diskcache:register", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
+            ev("diskcache:register", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
+            ev("diskcache:register", "file_js_cache_dyn_imported3.mjs", false),
             ev("diskcache:saved", "file_js_cache_dyn_importer.mjs", false),
-            unordered([
-              ev("diskcache:saved", "file_js_cache_dyn_imported1.mjs", false),
-              ev("diskcache:saved", "file_js_cache_dyn_imported2.mjs", false),
-              ev("diskcache:saved", "file_js_cache_dyn_imported3.mjs", false),
-            ]),
+            ev("diskcache:saved", "file_js_cache_dyn_imported1.mjs", false),
+            ev("diskcache:saved", "file_js_cache_dyn_imported2.mjs", false),
+            ev("diskcache:saved", "file_js_cache_dyn_imported3.mjs", false),
           ],
         },
         {
@@ -139,26 +81,12 @@ add_task(async function testDiskCache_dynamicImport() {
             ev("load:diskcache", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
             ev("diskcache:disabled", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:diskcache", "file_js_cache_dyn_imported1.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported1.mjs",
-                false
-              ),
-              ev("load:diskcache", "file_js_cache_dyn_imported2.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported2.mjs",
-                false
-              ),
-              ev("load:diskcache", "file_js_cache_dyn_imported3.mjs", false),
-              ev(
-                "diskcache:disabled",
-                "file_js_cache_dyn_imported3.mjs",
-                false
-              ),
-            ]),
+            ev("load:diskcache", "file_js_cache_dyn_imported1.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:diskcache", "file_js_cache_dyn_imported2.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:diskcache", "file_js_cache_dyn_imported3.mjs", false),
+            ev("diskcache:disabled", "file_js_cache_dyn_imported3.mjs", false),
           ],
         },
       ],
@@ -194,14 +122,12 @@ add_task(async function testMemoryCache_dynamicImport() {
             ev("load:source", "file_js_cache_dyn_importer.mjs"),
             ev("memorycache:saved", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
-              ev("memorycache:saved", "file_js_cache_dyn_imported1.mjs", false),
-              ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
-              ev("memorycache:saved", "file_js_cache_dyn_imported2.mjs", false),
-              ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
-              ev("memorycache:saved", "file_js_cache_dyn_imported3.mjs", false),
-            ]),
+            ev("load:source", "file_js_cache_dyn_imported1.mjs", false),
+            ev("memorycache:saved", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported2.mjs", false),
+            ev("memorycache:saved", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:source", "file_js_cache_dyn_imported3.mjs", false),
+            ev("memorycache:saved", "file_js_cache_dyn_imported3.mjs", false),
             ev("diskcache:noschedule"),
           ],
         },
@@ -210,11 +136,9 @@ add_task(async function testMemoryCache_dynamicImport() {
           events: [
             ev("load:memorycache", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:memorycache", "file_js_cache_dyn_imported1.mjs", false),
-              ev("load:memorycache", "file_js_cache_dyn_imported2.mjs", false),
-              ev("load:memorycache", "file_js_cache_dyn_imported3.mjs", false),
-            ]),
+            ev("load:memorycache", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:memorycache", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:memorycache", "file_js_cache_dyn_imported3.mjs", false),
             ev("diskcache:noschedule"),
           ],
         },
@@ -223,11 +147,9 @@ add_task(async function testMemoryCache_dynamicImport() {
           events: [
             ev("load:memorycache", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:memorycache", "file_js_cache_dyn_imported1.mjs", false),
-              ev("load:memorycache", "file_js_cache_dyn_imported2.mjs", false),
-              ev("load:memorycache", "file_js_cache_dyn_imported3.mjs", false),
-            ]),
+            ev("load:memorycache", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:memorycache", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:memorycache", "file_js_cache_dyn_imported3.mjs", false),
             ev("diskcache:noschedule"),
           ],
         },
@@ -236,11 +158,9 @@ add_task(async function testMemoryCache_dynamicImport() {
           events: [
             ev("load:memorycache", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:memorycache", "file_js_cache_dyn_imported1.mjs", false),
-              ev("load:memorycache", "file_js_cache_dyn_imported2.mjs", false),
-              ev("load:memorycache", "file_js_cache_dyn_imported3.mjs", false),
-            ]),
+            ev("load:memorycache", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:memorycache", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:memorycache", "file_js_cache_dyn_imported3.mjs", false),
             unordered([
               ev("diskcache:saved", "file_js_cache_dyn_importer.mjs", false),
               ev("diskcache:saved", "file_js_cache_dyn_imported1.mjs", false),
@@ -254,11 +174,9 @@ add_task(async function testMemoryCache_dynamicImport() {
           events: [
             ev("load:memorycache", "file_js_cache_dyn_importer.mjs"),
             ev("evaluate:module", "file_js_cache_dyn_importer.mjs"),
-            unordered([
-              ev("load:memorycache", "file_js_cache_dyn_imported1.mjs", false),
-              ev("load:memorycache", "file_js_cache_dyn_imported2.mjs", false),
-              ev("load:memorycache", "file_js_cache_dyn_imported3.mjs", false),
-            ]),
+            ev("load:memorycache", "file_js_cache_dyn_imported1.mjs", false),
+            ev("load:memorycache", "file_js_cache_dyn_imported2.mjs", false),
+            ev("load:memorycache", "file_js_cache_dyn_imported3.mjs", false),
             ev("diskcache:noschedule"),
           ],
         },

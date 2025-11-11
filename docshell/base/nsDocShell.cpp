@@ -7480,7 +7480,10 @@ nsresult nsDocShell::RestoreFromHistory() {
 
   // In cases where we use a transient about:blank viewer between loads,
   // we never show the transient viewer, so _its_ previous viewer is never
-  // destroyed.  Destroy any such previous viewer now.
+  // unhooked from the view hierarchy.  Destroy any such previous viewer now,
+  // before we grab the root view sibling, so that we don't grab a view
+  // that's about to go away.
+
   if (mDocumentViewer) {
     // Make sure to hold a strong ref to previousViewer here while we
     // drop the reference to it from mDocumentViewer.
@@ -7492,12 +7495,38 @@ nsresult nsDocShell::RestoreFromHistory() {
     }
   }
 
-  // Save the bounds of the root view's widget.
+  // Save off the root view's parent and sibling so that we can insert the
+  // new content viewer's root view at the same position.  Also save the
+  // bounds of the root view's widget.
+
+  nsView* rootViewSibling = nullptr;
+  nsView* rootViewParent = nullptr;
   LayoutDeviceIntRect newBounds(0, 0, 0, 0);
 
   PresShell* oldPresShell = GetPresShell();
   if (oldPresShell) {
-    mDocumentViewer->GetBounds(newBounds);
+    nsViewManager* vm = oldPresShell->GetViewManager();
+    if (vm) {
+      nsView* oldRootView = vm->GetRootView();
+
+      if (oldRootView) {
+        rootViewSibling = oldRootView->GetNextSibling();
+        rootViewParent = oldRootView->GetParent();
+
+        mDocumentViewer->GetBounds(newBounds);
+      }
+    }
+  }
+
+  nsCOMPtr<nsIContent> container;
+  RefPtr<Document> sibling;
+  if (rootViewParent && rootViewParent->GetParent()) {
+    nsIFrame* frame = rootViewParent->GetParent()->GetFrame();
+    container = frame ? frame->GetContent() : nullptr;
+  }
+  if (rootViewSibling) {
+    nsIFrame* frame = rootViewSibling->GetFrame();
+    sibling = frame ? frame->PresShell()->GetDocument() : nullptr;
   }
 
   // Transfer ownership to mDocumentViewer.  By ensuring that either the
@@ -7700,6 +7729,39 @@ nsresult nsDocShell::RestoreFromHistory() {
   nsViewManager* newVM = presShell ? presShell->GetViewManager() : nullptr;
   nsView* newRootView = newVM ? newVM->GetRootView() : nullptr;
 
+  // Insert the new root view at the correct location in the view tree.
+  if (container) {
+    nsSubDocumentFrame* subDocFrame =
+        do_QueryFrame(container->GetPrimaryFrame());
+    rootViewParent = subDocFrame ? subDocFrame->EnsureInnerView() : nullptr;
+  } else {
+    rootViewParent = nullptr;
+  }
+  if (sibling && sibling->GetPresShell() &&
+      sibling->GetPresShell()->GetViewManager()) {
+    rootViewSibling = sibling->GetPresShell()->GetViewManager()->GetRootView();
+  } else {
+    rootViewSibling = nullptr;
+  }
+  if (rootViewParent && newRootView &&
+      newRootView->GetParent() != rootViewParent) {
+    nsViewManager* parentVM = rootViewParent->GetViewManager();
+    if (parentVM) {
+      // InsertChild(parent, child, sib, true) inserts the child after
+      // sib in content order, which is before sib in view order. BUT
+      // when sib is null it inserts at the end of the the document
+      // order, i.e., first in view order.  But when oldRootSibling is
+      // null, the old root as at the end of the view list --- last in
+      // content order --- and we want to call InsertChild(parent, child,
+      // nullptr, false) in that case.
+      parentVM->InsertChild(rootViewParent, newRootView, rootViewSibling,
+                            rootViewSibling ? true : false);
+
+      NS_ASSERTION(newRootView->GetNextSibling() == rootViewSibling,
+                   "error in InsertChild");
+    }
+  }
+
   nsCOMPtr<nsPIDOMWindowInner> privWinInner = privWin->GetCurrentInnerWindow();
 
   // If parent is suspended, increase suspension count.
@@ -7736,6 +7798,15 @@ nsresult nsDocShell::RestoreFromHistory() {
   // presentation.  If this is not the same size we showed it at last time,
   // then we need to resize the widget.
 
+  // XXXbryner   This interacts poorly with Firefox's infobar.  If the old
+  // presentation had the infobar visible, then we will resize the new
+  // presentation to that smaller size.  However, firing the locationchanged
+  // event will hide the infobar, which will immediately resize the window
+  // back to the larger size.  A future optimization might be to restore
+  // the presentation at the "wrong" size, then fire the locationchanged
+  // event and check whether the docshell's new size is the same as the
+  // cached viewer size (skipping the resize if they are equal).
+
   if (newRootView) {
     if (!newBounds.IsEmpty() &&
         !newBounds.ToUnknownRect().IsEqualEdges(oldBounds)) {
@@ -7751,7 +7822,7 @@ nsresult nsDocShell::RestoreFromHistory() {
 
   // The FinishRestore call below can kill these, null them out so we don't
   // have invalid pointer lying around.
-  newRootView = nullptr;
+  newRootView = rootViewSibling = rootViewParent = nullptr;
   newVM = nullptr;
 
   // If the IsUnderHiddenEmbedderElement() state has been changed, we need to
@@ -13751,21 +13822,8 @@ nsresult nsDocShell::OnOverLink(nsIContent* aContent, nsIURI* aURI,
 
   NS_ConvertUTF8toUTF16 uStr(spec);
 
-  // The speculative connect used to go through the predictor, but we don't
-  // need all that just to initiate a speculative connect.
-  if ((StaticPrefs::network_predictor_enable_hover_on_ssl() &&
-       mCurrentURI->SchemeIs("https")) ||
-      mCurrentURI->SchemeIs("http")) {
-    if (nsCOMPtr<nsISpeculativeConnect> specService =
-            mozilla::components::IO::Service()) {
-      // This would be a navigation, so if this is cross origin the speculative
-      // connection needs to have the origin of the URL not the current page.
-      nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
-          aURI, aContent->NodePrincipal()->OriginAttributesRef());
-
-      specService->SpeculativeConnect(aURI, principal, nullptr, false);
-    }
-  }
+  PredictorPredict(aURI, mCurrentURI, nsINetworkPredictor::PREDICT_LINK,
+                   aContent->NodePrincipal()->OriginAttributesRef(), nullptr);
 
   rv = browserChrome->SetLinkStatus(uStr);
   return rv;

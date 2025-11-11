@@ -61,7 +61,6 @@ class CubebInputStream final {
     void operator()(cubeb_stream* aStream) const;
   };
   CubebInputStream(already_AddRefed<Listener>&& aListener,
-                   already_AddRefed<CubebUtils::CubebHandle>&& aCubeb,
                    UniquePtr<cubeb_stream, CubebDestroyPolicy>&& aStream);
 
   void Init();

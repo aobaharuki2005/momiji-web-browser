@@ -335,6 +335,7 @@ private fun TabList(
                 .padding(
                     start = TabListPadding,
                     end = TabListPadding,
+                    top = TabListPadding,
                 )
                 .clip(TabListCornerShape)
                 .background(MaterialTheme.colorScheme.surface)

@@ -4330,11 +4330,7 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
     return FALSE;
   }
 
-  // X11 calc bounds from outer window while Wayland uses
-  // container size after container allocation event.
-  if (GdkIsX11Display()) {
-    SchedulePendingBounds(MayChangeCsdMargin::No);
-  }
+  SchedulePendingBounds(MayChangeCsdMargin::No);
   return FALSE;
 }
 

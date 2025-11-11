@@ -40,8 +40,9 @@ void AudioStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
   MediaStreamTrack::GetLabel(aLabel, aCallerType);
 }
 
-already_AddRefed<MediaStreamTrack> AudioStreamTrack::Clone() {
-  return MediaStreamTrack::CloneInternal<AudioStreamTrack>();
+already_AddRefed<MediaStreamTrack> AudioStreamTrack::CloneInternal() {
+  return do_AddRef(new AudioStreamTrack(mWindow, mInputTrack, mSource,
+                                        ReadyState(), Muted(), mConstraints));
 }
 
 }  // namespace mozilla::dom

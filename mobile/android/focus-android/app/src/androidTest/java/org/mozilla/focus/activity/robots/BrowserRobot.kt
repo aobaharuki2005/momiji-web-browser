@@ -291,10 +291,12 @@ class BrowserRobot {
     fun clickCalendarForm() = clickPageObject(webPageItemWithResourceId("calendar"))
 
     fun selectDate() {
+        mDevice.findObject(UiSelector().resourceId("android:id/month_view")).waitForExists(waitingTime)
+
         mDevice.findObject(
             UiSelector()
                 .textContains("$currentDay")
-                .descriptionContains("$currentMonth $currentDay"),
+                .descriptionContains("$currentDay $currentMonth $currentYear"),
         ).click()
     }
 

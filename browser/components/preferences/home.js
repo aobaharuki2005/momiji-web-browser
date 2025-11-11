@@ -38,77 +38,6 @@ const NEW_TAB_KEY = "newTabURL";
 
 const BLANK_HOMEPAGE_URL = "chrome://browser/content/blanktab.html";
 
-// New Prefs UI: we need to check for this setting before registering prefs
-// so that old-style prefs continue working
-if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
-  Preferences.addAll([
-    { id: "browser.newtabpage.activity-stream.showSearch", type: "bool" },
-    {
-      id: "browser.newtabpage.activity-stream.system.showWeather",
-      type: "bool",
-    },
-    { id: "browser.newtabpage.activity-stream.showWeather", type: "bool" },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.system.lists.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.lists.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.system.focusTimer.enabled",
-      type: "bool",
-    },
-    {
-      id: "browser.newtabpage.activity-stream.widgets.focusTimer.enabled",
-      type: "bool",
-    },
-  ]);
-
-  // Search
-  Preferences.addSetting({
-    id: "webSearch",
-    pref: "browser.newtabpage.activity-stream.showSearch",
-  });
-
-  // Weather
-  Preferences.addSetting({
-    id: "showWeather",
-    pref: "browser.newtabpage.activity-stream.system.showWeather",
-  });
-  Preferences.addSetting({
-    id: "weather",
-    pref: "browser.newtabpage.activity-stream.showWeather",
-    deps: ["showWeather"],
-    visible: ({ showWeather }) => showWeather.value,
-  });
-
-  // Widgets: lists
-  Preferences.addSetting({
-    id: "listsEnabled",
-    pref: "browser.newtabpage.activity-stream.widgets.system.lists.enabled",
-  });
-  Preferences.addSetting({
-    id: "lists",
-    pref: "browser.newtabpage.activity-stream.widgets.lists.enabled",
-    deps: ["listsEnabled"],
-    visible: ({ listsEnabled }) => listsEnabled.value,
-  });
-
-  // Widgets: timer
-  Preferences.addSetting({
-    id: "timerEnabled",
-    pref: "browser.newtabpage.activity-stream.widgets.system.focusTimer.enabled",
-  });
-  Preferences.addSetting({
-    id: "timer",
-    pref: "browser.newtabpage.activity-stream.widgets.focusTimer.enabled",
-    deps: ["timerEnabled"],
-    visible: ({ timerEnabled }) => timerEnabled.value,
-  });
-}
-
 var gHomePane = {
   HOME_MODE_FIREFOX_HOME: "0",
   HOME_MODE_BLANK: "1",
@@ -737,8 +666,6 @@ var gHomePane = {
   },
 
   init() {
-    initSettingGroup("home");
-
     // Event Listeners
     document
       .getElementById("homePageUrl")

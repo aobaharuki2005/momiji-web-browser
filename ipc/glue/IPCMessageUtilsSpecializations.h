@@ -27,6 +27,9 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
+#ifdef XP_WIN
+#  include "mozilla/TimeStamp_windows.h"
+#endif
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
@@ -431,6 +434,27 @@ struct ParamTraits<mozilla::TimeStamp> {
     return ReadParam(aReader, &aResult->mValue);
   };
 };
+
+#ifdef XP_WIN
+
+template <>
+struct ParamTraits<mozilla::TimeStampValue> {
+  typedef mozilla::TimeStampValue paramType;
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mGTC);
+    WriteParam(aWriter, aParam.mQPC);
+    WriteParam(aWriter, aParam.mIsNull);
+    WriteParam(aWriter, aParam.mHasQPC);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return (ReadParam(aReader, &aResult->mGTC) &&
+            ReadParam(aReader, &aResult->mQPC) &&
+            ReadParam(aReader, &aResult->mIsNull) &&
+            ReadParam(aReader, &aResult->mHasQPC));
+  }
+};
+
+#endif
 
 template <>
 struct ParamTraits<mozilla::dom::ipc::StructuredCloneData> {

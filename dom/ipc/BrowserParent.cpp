@@ -1126,7 +1126,7 @@ void BrowserParent::UpdateDimensions(const LayoutDeviceIntRect& rect,
 
   LayoutDeviceIntPoint clientOffset = GetClientOffset();
   LayoutDeviceIntPoint chromeOffset = !GetBrowserBridgeParent()
-                                          ? GetChildProcessOffset()
+                                          ? -GetChildProcessOffset()
                                           : LayoutDeviceIntPoint();
 
   if (!mUpdatedDimensions || mDimensions != size || !mRect.IsEqualEdges(rect) ||
@@ -2717,7 +2717,7 @@ BrowserParent::GetChildToParentConversionMatrix() {
   if (mChildToParentConversionMatrix) {
     return *mChildToParentConversionMatrix;
   }
-  LayoutDevicePoint offset(GetChildProcessOffset());
+  LayoutDevicePoint offset(-GetChildProcessOffset());
   return LayoutDeviceToLayoutDeviceMatrix4x4::Translation(offset);
 }
 
@@ -2741,20 +2741,34 @@ void BrowserParent::SetChildToParentConversionMatrix(
 LayoutDeviceIntPoint BrowserParent::GetChildProcessOffset() {
   // The "toplevel widget" in child processes is always at position
   // 0,0.  Map the event coordinates to match that.
+
+  LayoutDeviceIntPoint offset(0, 0);
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
-    return {};
+    return offset;
   }
   nsIFrame* targetFrame = frameLoader->GetPrimaryFrameOfOwningContent();
   if (!targetFrame) {
-    return {};
+    return offset;
   }
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    return {};
+    return offset;
   }
 
+  nsPresContext* presContext = targetFrame->PresContext();
+  nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
+  nsView* rootView = rootFrame ? rootFrame->GetView() : nullptr;
+  if (!rootView) {
+    return offset;
+  }
+
+  // Note that we don't want to take into account transforms here:
+#if 0
+  nsPoint pt(0, 0);
+  nsLayoutUtils::TransformPoint(targetFrame, rootFrame, pt);
+#endif
   // In practice, when transforms are applied to this frameLoader, we currently
   // get the wrong results whether we take transforms into account here or not.
   // But applying transforms here gives us the wrong results in all
@@ -2766,13 +2780,15 @@ LayoutDeviceIntPoint BrowserParent::GetChildProcessOffset() {
   // What we actually need to do is apply the transforms to the coordinates of
   // any events we send to the child, and reverse them for any screen
   // coordinates that we retrieve from the child.
-  auto point = nsLayoutUtils::FrameToWidgetOffset(targetFrame, widget);
-  if (!point) {
-    return {};
-  }
-  nsPresContext* pc = targetFrame->PresContext();
-  return LayoutDeviceIntPoint::FromAppUnitsRounded(*point,
-                                                   pc->AppUnitsPerDevPixel());
+
+  // TODO: Once we take into account transforms here, set viewportType
+  // correctly. For now we use Visual as this means we don't apply
+  // the layout-to-visual transform in TranslateViewToWidget().
+  ViewportType viewportType = ViewportType::Visual;
+
+  nsPoint pt = targetFrame->GetOffsetTo(rootFrame);
+  return -nsLayoutUtils::TranslateViewToWidget(presContext, rootView, pt,
+                                               viewportType, widget);
 }
 
 LayoutDeviceIntPoint BrowserParent::GetClientOffset() {

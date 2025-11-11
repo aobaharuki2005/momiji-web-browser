@@ -13,7 +13,6 @@ support-files = [
   "early_hint_asset_html.sjs",
   "early_hint_csp_options_html.sjs",
   "early_hint_preconnect_html.sjs",
-  "request_accept_language.sjs",
   "file_channel.html",
   "post.html",
   "res.css",
@@ -151,8 +150,6 @@ support-files = ["early_hint_preload_test_helper.sys.mjs",]
 ["browser_about_cache.js"]
 skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'"] # Bug 1970244
 
-["browser_accept_language_override.js"]
-
 ["browser_backgroundtask_purgeHTTPCache.js"]
 
 ["browser_bug968273.js"]
@@ -193,9 +190,6 @@ support-files = ["file_lnk.lnk",]
 ["browser_http_index_format.js"]
 
 ["browser_ipAddressSpace_mainpage_unaffected.js"]
-
-["browser_link_hover_speculative_connection.js"]
-support-files = ["file_link_hover.sjs"]
 
 ["browser_mock_https_rr.js"]
 skip-if = [

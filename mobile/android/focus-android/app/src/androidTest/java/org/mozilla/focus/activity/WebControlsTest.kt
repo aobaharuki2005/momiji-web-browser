@@ -169,7 +169,7 @@ class WebControlsTest : TestSetup() {
             progressBar.waitUntilGone(waitingTime)
             clickCalendarForm()
             selectDate()
-            clickButtonWithText("Set")
+            clickButtonWithText("OK")
             clickSubmitDateButton()
             verifySelectedDate()
         }

@@ -205,13 +205,6 @@ export class AboutPreferences {
      * We have to potentially re-assign the `id` if it is `web-search`.
      * We should restore `id` back to a const after Fx146+.
      */
-
-    /* Do not render old-style settings if new settings UI is enabled - this is needed to avoid
-     * registering prefs twice and ensuing errors */
-    if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
-      return;
-    }
-
     let { id } = sectionData;
     const {
       pref: prefData,

@@ -179,48 +179,40 @@ void LIRGeneratorX86Shared::lowerDivI(MDiv* div) {
     int32_t shift = FloorLog2(Abs(rhs));
     if (rhs != 0 && uint32_t(1) << shift == Abs(rhs)) {
       LAllocation lhs = useRegisterAtStart(div->lhs());
-
+      LDivPowTwoI* lir;
       // When truncated with maybe a non-zero remainder, we have to round the
       // result toward 0. This requires an extra register to round up/down
       // whether the left-hand-side is signed.
-      //
-      // If the numerator might be signed, and needs adjusting, then an extra
-      // lhs copy is needed to round the result of the integer division towards
-      // zero.
-      //
-      // Otherwise the numerator is unsigned, so does not need adjusting.
       bool needRoundNeg = div->canBeNegativeDividend() && div->isTruncated();
-      LAllocation lhsCopy =
-          needRoundNeg ? useRegister(div->lhs()) : LAllocation();
-
-      auto* lir = new (alloc()) LDivPowTwoI(lhs, lhsCopy, shift, rhs < 0);
+      if (!needRoundNeg) {
+        // Numerator is unsigned, so does not need adjusting.
+        lir = new (alloc()) LDivPowTwoI(lhs, lhs, shift, rhs < 0);
+      } else {
+        // Numerator might be signed, and needs adjusting, and an extra lhs copy
+        // is needed to round the result of the integer division towards zero.
+        lir = new (alloc())
+            LDivPowTwoI(lhs, useRegister(div->lhs()), shift, rhs < 0);
+      }
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
       }
       defineReuseInput(lir, div, 0);
       return;
     }
-
-#ifdef JS_CODEGEN_X86
-    auto* lir = new (alloc())
-        LDivConstantI(useRegister(div->lhs()), tempFixed(eax), rhs);
-    if (div->fallible()) {
-      assignSnapshot(lir, div->bailoutKind());
+    if (rhs != 0) {
+      LDivOrModConstantI* lir;
+      lir = new (alloc())
+          LDivOrModConstantI(useRegister(div->lhs()), rhs, tempFixed(eax));
+      if (div->fallible()) {
+        assignSnapshot(lir, div->bailoutKind());
+      }
+      defineFixed(lir, div, LAllocation(AnyRegister(edx)));
+      return;
     }
-    defineFixed(lir, div, LAllocation(AnyRegister(edx)));
-#else
-    auto* lir =
-        new (alloc()) LDivConstantI(useRegister(div->lhs()), temp(), rhs);
-    if (div->fallible()) {
-      assignSnapshot(lir, div->bailoutKind());
-    }
-    define(lir, div);
-#endif
-    return;
   }
 
-  auto* lir = new (alloc()) LDivI(useFixedAtStart(div->lhs(), eax),
-                                  useRegister(div->rhs()), tempFixed(edx));
+  LDivI* lir = new (alloc())
+      LDivI(useRegister(div->lhs()), useRegister(div->rhs()), tempFixed(edx));
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
@@ -232,7 +224,7 @@ void LIRGeneratorX86Shared::lowerModI(MMod* mod) {
     int32_t rhs = mod->rhs()->toConstant()->toInt32();
     int32_t shift = FloorLog2(Abs(rhs));
     if (rhs != 0 && uint32_t(1) << shift == Abs(rhs)) {
-      auto* lir =
+      LModPowTwoI* lir =
           new (alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
       if (mod->fallible()) {
         assignSnapshot(lir, mod->bailoutKind());
@@ -240,27 +232,20 @@ void LIRGeneratorX86Shared::lowerModI(MMod* mod) {
       defineReuseInput(lir, mod, 0);
       return;
     }
-
-#ifdef JS_CODEGEN_X86
-    auto* lir = new (alloc())
-        LModConstantI(useRegister(mod->lhs()), tempFixed(edx), rhs);
-    if (mod->fallible()) {
-      assignSnapshot(lir, mod->bailoutKind());
+    if (rhs != 0) {
+      LDivOrModConstantI* lir;
+      lir = new (alloc())
+          LDivOrModConstantI(useRegister(mod->lhs()), rhs, tempFixed(edx));
+      if (mod->fallible()) {
+        assignSnapshot(lir, mod->bailoutKind());
+      }
+      defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
+      return;
     }
-    defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
-#else
-    auto* lir =
-        new (alloc()) LModConstantI(useRegister(mod->lhs()), temp(), rhs);
-    if (mod->fallible()) {
-      assignSnapshot(lir, mod->bailoutKind());
-    }
-    define(lir, mod);
-#endif
-    return;
   }
 
-  auto* lir = new (alloc()) LModI(useFixedAtStart(mod->lhs(), eax),
-                                  useRegister(mod->rhs()), tempFixed(eax));
+  LModI* lir = new (alloc())
+      LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), tempFixed(eax));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }
@@ -373,35 +358,26 @@ void LIRGeneratorX86Shared::lowerUDiv(MDiv* div) {
     uint32_t rhs = div->rhs()->toConstant()->toInt32();
     int32_t shift = FloorLog2(rhs);
 
+    LAllocation lhs = useRegisterAtStart(div->lhs());
     if (rhs != 0 && uint32_t(1) << shift == rhs) {
-      auto* lir = new (alloc()) LDivPowTwoI(useRegisterAtStart(div->lhs()),
-                                            LAllocation(), shift, false);
+      LDivPowTwoI* lir = new (alloc()) LDivPowTwoI(lhs, lhs, shift, false);
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
       }
       defineReuseInput(lir, div, 0);
     } else {
-#ifdef JS_CODEGEN_X86
-      auto* lir = new (alloc())
-          LUDivConstant(useRegister(div->lhs()), tempFixed(eax), rhs);
+      LUDivOrModConstant* lir = new (alloc())
+          LUDivOrModConstant(useRegister(div->lhs()), rhs, tempFixed(eax));
       if (div->fallible()) {
         assignSnapshot(lir, div->bailoutKind());
       }
       defineFixed(lir, div, LAllocation(AnyRegister(edx)));
-#else
-      auto* lir =
-          new (alloc()) LUDivConstant(useRegister(div->lhs()), temp(), rhs);
-      if (div->fallible()) {
-        assignSnapshot(lir, div->bailoutKind());
-      }
-      define(lir, div);
-#endif
     }
     return;
   }
 
-  auto* lir = new (alloc()) LUDiv(useFixedAtStart(div->lhs(), eax),
-                                  useRegister(div->rhs()), tempFixed(edx));
+  LUDivOrMod* lir = new (alloc()) LUDivOrMod(
+      useRegister(div->lhs()), useRegister(div->rhs()), tempFixed(edx));
   if (div->fallible()) {
     assignSnapshot(lir, div->bailoutKind());
   }
@@ -414,34 +390,25 @@ void LIRGeneratorX86Shared::lowerUMod(MMod* mod) {
     int32_t shift = FloorLog2(rhs);
 
     if (rhs != 0 && uint32_t(1) << shift == rhs) {
-      auto* lir =
+      LModPowTwoI* lir =
           new (alloc()) LModPowTwoI(useRegisterAtStart(mod->lhs()), shift);
       if (mod->fallible()) {
         assignSnapshot(lir, mod->bailoutKind());
       }
       defineReuseInput(lir, mod, 0);
     } else {
-#ifdef JS_CODEGEN_X86
-      auto* lir = new (alloc())
-          LUModConstant(useRegister(mod->lhs()), tempFixed(edx), rhs);
+      LUDivOrModConstant* lir = new (alloc())
+          LUDivOrModConstant(useRegister(mod->lhs()), rhs, tempFixed(edx));
       if (mod->fallible()) {
         assignSnapshot(lir, mod->bailoutKind());
       }
       defineFixed(lir, mod, LAllocation(AnyRegister(eax)));
-#else
-      auto* lir =
-          new (alloc()) LUModConstant(useRegister(mod->lhs()), temp(), rhs);
-      if (mod->fallible()) {
-        assignSnapshot(lir, mod->bailoutKind());
-      }
-      define(lir, mod);
-#endif
     }
     return;
   }
 
-  auto* lir = new (alloc()) LUMod(useFixedAtStart(mod->lhs(), eax),
-                                  useRegister(mod->rhs()), tempFixed(eax));
+  LUDivOrMod* lir = new (alloc()) LUDivOrMod(
+      useRegister(mod->lhs()), useRegister(mod->rhs()), tempFixed(eax));
   if (mod->fallible()) {
     assignSnapshot(lir, mod->bailoutKind());
   }

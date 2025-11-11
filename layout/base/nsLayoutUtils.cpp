@@ -1211,6 +1211,37 @@ nsIFrame* nsLayoutUtils::GetLastSibling(nsIFrame* aFrame) {
 }
 
 // static
+nsView* nsLayoutUtils::FindSiblingViewFor(nsView* aParentView,
+                                          nsIFrame* aFrame) {
+  nsIFrame* parentViewFrame = aParentView->GetFrame();
+  nsIContent* parentViewContent =
+      parentViewFrame ? parentViewFrame->GetContent() : nullptr;
+  for (nsView* insertBefore = aParentView->GetFirstChild(); insertBefore;
+       insertBefore = insertBefore->GetNextSibling()) {
+    nsIFrame* f = insertBefore->GetFrame();
+    if (!f) {
+      // this view could be some anonymous view attached to a meaningful parent
+      for (nsView* searchView = insertBefore->GetParent(); searchView;
+           searchView = searchView->GetParent()) {
+        f = searchView->GetFrame();
+        if (f) {
+          break;
+        }
+      }
+      NS_ASSERTION(f, "Can't find a frame anywhere!");
+    }
+    if (!f || !aFrame->GetContent() || !f->GetContent() ||
+        nsContentUtils::CompareTreePosition<TreeKind::Flat>(
+            aFrame->GetContent(), f->GetContent(), parentViewContent) > 0) {
+      // aFrame's content is after f's content (or we just don't know),
+      // so put our view before f's view
+      return insertBefore;
+    }
+  }
+  return nullptr;
+}
+
+// static
 ScrollContainerFrame* nsLayoutUtils::GetScrollContainerFrameFor(
     const nsIFrame* aScrolledFrame) {
   nsIFrame* frame = aScrolledFrame->GetParent();
@@ -1485,21 +1516,15 @@ nsPoint GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
     rootFrame = f;
   }
 
-  nsPoint widgetToRoot = [&] {
-    nsPresContext* pc = rootFrame->PresContext();
-    nsPoint widgetOffset;
-    nsIWidget* widget = rootFrame->GetNearestWidget(widgetOffset);
-    if (NS_WARN_IF(!widget)) {
-      return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-    }
-    LayoutDeviceIntPoint widgetPoint =
-        aPoint + nsLayoutUtils::WidgetToWidgetOffset(aWidget, widget);
-    nsPoint widgetAppUnits(pc->DevPixelsToAppUnits(widgetPoint.x),
-                           pc->DevPixelsToAppUnits(widgetPoint.y));
-    return widgetAppUnits - widgetOffset;
-  }();
+  nsView* rootView = rootFrame->GetView();
+  if (!rootView) {
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
 
-  if (widgetToRoot == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
+  nsPoint widgetToView = nsLayoutUtils::TranslateWidgetToView(
+      rootFrame->PresContext(), aWidget, aPoint, rootView);
+
+  if (widgetToView == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
@@ -1507,20 +1532,20 @@ nsPoint GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
   // is in.
   int32_t rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
   int32_t localAPD = frame->PresContext()->AppUnitsPerDevPixel();
-  widgetToRoot = widgetToRoot.ScaleToOtherAppUnits(rootAPD, localAPD);
+  widgetToView = widgetToView.ScaleToOtherAppUnits(rootAPD, localAPD);
 
   /* If we encountered a transform, we can't do simple arithmetic to figure
    * out how to convert back to aFrame's coordinates and must use the CTM.
    */
   if (transformFound || frame->IsInSVGTextSubtree()) {
     return nsLayoutUtils::TransformRootPointToFrame(ViewportType::Visual,
-                                                    aFrame, widgetToRoot);
+                                                    aFrame, widgetToView);
   }
 
   /* Otherwise, all coordinate systems are translations of one another,
    * so we can just subtract out the difference.
    */
-  return widgetToRoot - frame->GetOffsetToCrossDoc(rootFrame);
+  return widgetToView - frame->GetOffsetToCrossDoc(rootFrame);
 }
 
 nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(
@@ -2359,19 +2384,6 @@ nsRect nsLayoutUtils::TransformFrameRectToAncestor(
       result, aAncestor.mFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
-Maybe<nsPoint> nsLayoutUtils::FrameToWidgetOffset(const nsIFrame* aFrame,
-                                                  nsIWidget* aWidget) {
-  nsPoint toNearestOffset;
-  auto* nearest = aFrame->GetNearestWidget(toNearestOffset);
-  if (!nearest) {
-    return {};
-  }
-  return Some(toNearestOffset +
-              LayoutDeviceIntPoint::ToAppUnits(
-                  WidgetToWidgetOffset(nearest, aWidget),
-                  aFrame->PresContext()->AppUnitsPerDevPixel()));
-}
-
 LayoutDeviceIntPoint nsLayoutUtils::WidgetToWidgetOffset(nsIWidget* aFrom,
                                                          nsIWidget* aTo) {
   if (aFrom == aTo) {
@@ -2380,6 +2392,23 @@ LayoutDeviceIntPoint nsLayoutUtils::WidgetToWidgetOffset(nsIWidget* aFrom,
   auto fromOffset = aFrom->WidgetToScreenOffset();
   auto toOffset = aTo->WidgetToScreenOffset();
   return fromOffset - toOffset;
+}
+
+nsPoint nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
+                                             nsIWidget* aWidget,
+                                             const LayoutDeviceIntPoint& aPt,
+                                             nsView* aView) {
+  nsPoint viewOffset;
+  nsIWidget* viewWidget = aView->GetNearestWidget(&viewOffset);
+  if (!viewWidget) {
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
+  LayoutDeviceIntPoint widgetPoint =
+      aPt + WidgetToWidgetOffset(aWidget, viewWidget);
+  nsPoint widgetAppUnits(aPresContext->DevPixelsToAppUnits(widgetPoint.x),
+                         aPresContext->DevPixelsToAppUnits(widgetPoint.y));
+  return widgetAppUnits - viewOffset;
 }
 
 LayoutDeviceIntPoint nsLayoutUtils::TranslateViewToWidget(

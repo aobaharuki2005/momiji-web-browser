@@ -1448,9 +1448,8 @@ TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
 #undef RPAREN
 }
 
-template <typename F, typename Comparator, typename ItemComparator>
-bool TestCompareMethodsImpl(F aItemCreator, const Comparator& aComp,
-                            const ItemComparator& aItemComp) {
+template <typename Comparator>
+bool TestCompareMethods(const Comparator& aComp) {
   nsTArray<int> ary({57, 4, 16, 17, 3, 5, 96, 12});
 
   ary.Sort(aComp);
@@ -1462,23 +1461,18 @@ bool TestCompareMethodsImpl(F aItemCreator, const Comparator& aComp,
     }
   }
 
-  if (!ary.ContainsSorted(aItemCreator(5), aItemComp)) {
+  if (!ary.ContainsSorted(5, aComp)) {
     return false;
   }
-  if (ary.ContainsSorted(aItemCreator(42), aItemComp)) {
+  if (ary.ContainsSorted(42, aComp)) {
     return false;
   }
 
-  if (ary.BinaryIndexOf(aItemCreator(16), aItemComp) != 4) {
+  if (ary.BinaryIndexOf(16, aComp) != 4) {
     return false;
   }
 
   return true;
-}
-
-template <typename Comparator>
-bool TestCompareMethods(const Comparator& aComp) {
-  return TestCompareMethodsImpl([](int aI) { return aI; }, aComp, aComp);
 }
 
 struct IntComparator {
@@ -1487,18 +1481,11 @@ struct IntComparator {
   bool LessThan(int aLeft, int aRight) const { return aLeft < aRight; }
 };
 
-struct IntWrapper {
-  int mI;
-};
-
 TEST(TArray, test_comparator_objects)
 {
   ASSERT_TRUE(TestCompareMethods(IntComparator()));
   ASSERT_TRUE(
       TestCompareMethods([](int aLeft, int aRight) { return aLeft - aRight; }));
-  ASSERT_TRUE(TestCompareMethodsImpl(
-      [](int aI) { return IntWrapper{.mI = aI}; }, IntComparator(),
-      [](int aElem, const IntWrapper& aItem) { return aElem - aItem.mI; }));
 }
 
 struct Big {

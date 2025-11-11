@@ -526,8 +526,8 @@ void LIRGenerator::visitSubstr(MSubstr* ins) {
 }
 
 void LIRGeneratorX64::lowerDivI64(MDiv* div) {
-  auto* lir = new (alloc()) LDivI64(useFixedAtStart(div->lhs(), rax),
-                                    useRegister(div->rhs()), tempFixed(rdx));
+  LDivOrModI64* lir = new (alloc()) LDivOrModI64(
+      useRegister(div->lhs()), useRegister(div->rhs()), tempFixed(rdx));
   defineInt64Fixed(lir, div, LInt64Allocation(LAllocation(AnyRegister(rax))));
 }
 
@@ -536,8 +536,8 @@ void LIRGeneratorX64::lowerWasmBuiltinDivI64(MWasmBuiltinDivI64* div) {
 }
 
 void LIRGeneratorX64::lowerModI64(MMod* mod) {
-  auto* lir = new (alloc()) LModI64(useFixedAtStart(mod->lhs(), rax),
-                                    useRegister(mod->rhs()), tempFixed(rax));
+  LDivOrModI64* lir = new (alloc()) LDivOrModI64(
+      useRegister(mod->lhs()), useRegister(mod->rhs()), tempFixed(rax));
   defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
 }
 
@@ -546,14 +546,14 @@ void LIRGeneratorX64::lowerWasmBuiltinModI64(MWasmBuiltinModI64* mod) {
 }
 
 void LIRGeneratorX64::lowerUDivI64(MDiv* div) {
-  auto* lir = new (alloc()) LUDivI64(useFixedAtStart(div->lhs(), rax),
-                                     useRegister(div->rhs()), tempFixed(rdx));
+  LUDivOrModI64* lir = new (alloc()) LUDivOrModI64(
+      useRegister(div->lhs()), useRegister(div->rhs()), tempFixed(rdx));
   defineInt64Fixed(lir, div, LInt64Allocation(LAllocation(AnyRegister(rax))));
 }
 
 void LIRGeneratorX64::lowerUModI64(MMod* mod) {
-  auto* lir = new (alloc()) LUModI64(useFixedAtStart(mod->lhs(), rax),
-                                     useRegister(mod->rhs()), tempFixed(rax));
+  LUDivOrModI64* lir = new (alloc()) LUDivOrModI64(
+      useRegister(mod->lhs()), useRegister(mod->rhs()), tempFixed(rax));
   defineInt64Fixed(lir, mod, LInt64Allocation(LAllocation(AnyRegister(rdx))));
 }
 
