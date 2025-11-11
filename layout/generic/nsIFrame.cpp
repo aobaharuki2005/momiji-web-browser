@@ -3583,14 +3583,15 @@ void nsIFrame::BuildDisplayListForStackingContext(
       // We don't need to isolate the root frame.
       return reasons;
     }
-    // Elements with a view-transition name also form a backdrop-root.
+    // Elements with a view-transition name also form a backdrop-root. Same for
+    // masks / clip-path.
     // See https://www.w3.org/TR/css-view-transitions-1/#named-and-transitioning
     // and https://github.com/w3c/csswg-drafts/issues/11772
     const bool hasViewTransitionName =
         style.StyleUIReset()->HasViewTransitionName() &&
         !style.IsRootElementStyle();
     if ((disp->mWillChange.bits & StyleWillChangeBits::BACKDROP_ROOT) ||
-        hasViewTransitionName) {
+        hasViewTransitionName || usingMask) {
       reasons |= StackingContextBits::ContainsBackdropFilter;
     }
     if (!combines3DTransformWithAncestors) {
@@ -3686,9 +3687,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
           clipForMask.isSome()
               ? nsDisplayItem::ContainerASRType::Constant
               : nsDisplayItem::ContainerASRType::AncestorOfContained,
-          usingBackdropFilter);
+          usingBackdropFilter, ShouldForceIsolation());
       createdContainer = true;
-      MarkAsIsolated();
     }
 
     // TODO(miko): We could probably create a wraplist here and avoid creating

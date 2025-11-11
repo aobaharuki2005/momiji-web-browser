@@ -6092,12 +6092,13 @@ class nsDisplayMasksAndClipPaths final : public nsDisplayEffectsBase {
                              nsDisplayList* aList,
                              const ActiveScrolledRoot* aActiveScrolledRoot,
                              ContainerASRType aContainerASRType,
-                             bool aWrapsBackdropFilter);
+                             bool aWrapsBackdropFilter, bool aForceIsolation);
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
                              const nsDisplayMasksAndClipPaths& aOther)
       : nsDisplayEffectsBase(aBuilder, aOther),
         mDestRects(aOther.mDestRects.Clone()),
-        mWrapsBackdropFilter(aOther.mWrapsBackdropFilter) {
+        mWrapsBackdropFilter(aOther.mWrapsBackdropFilter),
+        mForceIsolation(aOther.mForceIsolation) {
     MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
   }
 
@@ -6162,7 +6163,8 @@ class nsDisplayMasksAndClipPaths final : public nsDisplayEffectsBase {
   NS_DISPLAY_ALLOW_CLONING()
 
   nsTArray<nsRect> mDestRects;
-  bool mWrapsBackdropFilter;
+  bool mWrapsBackdropFilter : 1;
+  bool mForceIsolation : 1;
 };
 
 class nsDisplayBackdropFilters final : public nsDisplayWrapList {

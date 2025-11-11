@@ -8130,10 +8130,12 @@ static void ComputeMaskGeometry(PaintFramesParams& aParams) {
 nsDisplayMasksAndClipPaths::nsDisplayMasksAndClipPaths(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot,
-    ContainerASRType aContainerASRType, bool aWrapsBackdropFilter)
+    ContainerASRType aContainerASRType, bool aWrapsBackdropFilter,
+    bool aForceIsolation)
     : nsDisplayEffectsBase(aBuilder, aFrame, aList, aActiveScrolledRoot,
-                           aContainerASRType, true),
-      mWrapsBackdropFilter(aWrapsBackdropFilter) {
+                           aContainerASRType, /* aClearClipChain = */ true),
+      mWrapsBackdropFilter(aWrapsBackdropFilter),
+      mForceIsolation(aForceIsolation) {
   MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
 
   nsPresContext* presContext = mFrame->PresContext();
@@ -8452,6 +8454,9 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
     wr::StackingContextParams params;
     params.clip = wr::WrStackingContextClip::ClipChain(clip->id);
     params.opacity = opacity.ptrOr(nullptr);
+    if (mForceIsolation) {
+      params.flags |= wr::StackingContextFlags::FORCED_ISOLATION;
+    }
     if (mWrapsBackdropFilter) {
       params.flags |= wr::StackingContextFlags::WRAPS_BACKDROP_FILTER;
     }
