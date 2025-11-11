@@ -550,14 +550,19 @@ void MacroAssemblerMIPSShared::ma_load_unaligned(Register dest,
         as_lb(scratch, base, hiOffset);
       }
       as_lbu(dest, base, lowOffset);
-      ma_ins(dest, scratch, 8, 24);
+      if (hasR2()) {
+        as_ins(dest, scratch, 8, 24);
+      } else {
+        as_sll(scratch, scratch, 8);
+        as_or(dest, dest, scratch);
+      }
       break;
     case SizeWord:
       MOZ_ASSERT(dest != base);
       as_lwl(dest, base, hiOffset);
       as_lwr(dest, base, lowOffset);
       if (extension == ZeroExtend) {
-        as_dext(dest, dest, 0, 32);
+        asMasm().ma_dext(dest, dest, Imm32(0), Imm32(32));
       }
       break;
     case SizeDouble:
@@ -602,7 +607,12 @@ void MacroAssemblerMIPSShared::ma_load_unaligned(Register dest,
         as_lb(scratch2, base, hiOffset);
       }
       as_lbu(dest, base, lowOffset);
-      ma_ins(dest, scratch2, 8, 24);
+      if (hasR2()) {
+        as_ins(dest, scratch2, 8, 24);
+      } else {
+        as_sll(scratch2, scratch2, 8);
+        as_or(dest, dest, scratch2);
+      }
       break;
     case SizeWord:
       MOZ_ASSERT(dest != base);
@@ -659,13 +669,18 @@ void MacroAssemblerMIPSShared::ma_load_unaligned(
         load = as_lb(temp, base, hiOffset);
       }
       as_lbu(dest, base, lowOffset);
-      ma_ins(dest, temp, 8, 24);
+      if (hasR2()) {
+        as_ins(dest, temp, 8, 24);
+      } else {
+        as_sll(temp, temp, 8);
+        as_or(dest, dest, temp);
+      }
       break;
     case SizeWord:
       load = as_lwl(dest, base, hiOffset);
       as_lwr(dest, base, lowOffset);
       if (extension == ZeroExtend) {
-        as_dext(dest, dest, 0, 32);
+        asMasm().ma_dext(dest, dest, Imm32(0), Imm32(32));
       }
       break;
     case SizeDouble:
@@ -3433,8 +3448,14 @@ void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
   moveFromDouble(rhs, rhsi);
 
   // Combine.
-  ma_dins(rhsi, lhsi, Imm32(0), Imm32(63));
-
+  if (hasR2()) {
+    ma_dins(rhsi, lhsi, Imm32(0), Imm32(63));
+  } else {
+    ma_dext(lhsi, lhsi, Imm32(0), Imm32(63));
+    ma_dsrl(rhsi, rhsi, Imm32(63));
+    ma_dsll(rhsi, rhsi, Imm32(63));
+    as_or(rhsi, rhsi, lhsi);
+  }
   moveToDouble(rhsi, output);
 }
 
@@ -3448,8 +3469,14 @@ void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
   moveFromFloat32(rhs, rhsi);
 
   // Combine.
-  ma_ins(rhsi, lhsi, 0, 31);
-
+  if (hasR2()) {
+    ma_ins(rhsi, lhsi, 0, 31);
+  } else {
+    ma_ext(lhsi, lhsi, 0, 31);
+    ma_srl(rhsi, rhsi, Imm32(31));
+    ma_sll(rhsi, rhsi, Imm32(31));
+    as_or(rhsi, rhsi, lhsi);
+  }
   moveToFloat32(rhsi, output);
 }
 

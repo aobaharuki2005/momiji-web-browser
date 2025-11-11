@@ -221,7 +221,8 @@ void MacroAssemblerMIPS64::ma_li(Register dest, ImmWord imm) {
     as_lui(dest, uint16_t(value >> 16));
   } else if (0 == (value >> 32)) {
     as_lui(dest, uint16_t(value >> 16));
-    as_dinsu(dest, zero, 32, 32);
+    // mips spec recommends dinsu but it is unfriendly to mips3
+    ma_dext(dest, dest, Imm32(0), Imm32(32));
   } else if (-1 == (value >> 47) || 0 == (value >> 47)) {
     as_lui(dest, uint16_t(value >> 32));
     if (uint16_t(value >> 16)) {
@@ -230,7 +231,8 @@ void MacroAssemblerMIPS64::ma_li(Register dest, ImmWord imm) {
     as_dsll(dest, dest, 16);
   } else if (0 == (value >> 48)) {
     as_lui(dest, uint16_t(value >> 32));
-    as_dinsu(dest, zero, 32, 32);
+    // mips spec recommends dinsu but it is unfriendly to mips3
+    ma_dext(dest, dest, Imm32(0), Imm32(32));
     if (uint16_t(value >> 16)) {
       as_ori(dest, dest, uint16_t(value >> 16));
     }
@@ -1990,7 +1992,7 @@ void MacroAssemblerMIPS64Compat::boxValue(JSValueType type, Register src,
   if (type == JSVAL_TYPE_INT32) {
     ma_dins(dest, src, Imm32(0), Imm32(32));
   } else {
-    ma_dins(dest, src, Imm32(0), Imm32(JSVAL_TAG_SHIFT));
+    as_or(dest, dest, src);
   }
 }
 
@@ -2228,7 +2230,7 @@ void MacroAssemblerMIPS64Compat::tagValue(JSValueType type, Register payload,
         ma_li(scratch, Imm32(shifted));
 
         // Insert tag into the result.
-        as_dinsu(dest.valueReg(), scratch, 32, 32);
+        ma_dins(dest.valueReg(), scratch, Imm32(32), Imm32(32));
         return;
       }
       case JSVAL_TYPE_STRING:
@@ -2246,8 +2248,8 @@ void MacroAssemblerMIPS64Compat::tagValue(JSValueType type, Register payload,
         as_daddiu(scratch, zero, signExtendedShiftedTag);
 
         // Insert tag into the result.
-        as_dinsu(dest.valueReg(), scratch, JSVAL_TAG_SHIFT,
-                 64 - JSVAL_TAG_SHIFT);
+        ma_dins(dest.valueReg(), scratch, Imm32(JSVAL_TAG_SHIFT),
+                Imm32(64 - JSVAL_TAG_SHIFT));
         return;
       }
       case JSVAL_TYPE_DOUBLE:
