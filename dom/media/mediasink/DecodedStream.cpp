@@ -102,8 +102,10 @@ class DecodedStreamGraphListener {
     if (mAudioTrack) {
       mOnAudioOutput = mAudioTrack->OnOutput().Connect(
           mDecoderThread, [self = RefPtr<DecodedStreamGraphListener>(this)](
-                              TrackTime aTime, AwakeTimeStamp aSystemTime) {
-            self->NotifyOutput(MediaSegment::AUDIO, aTime, aSystemTime);
+                              TrackTime aTime, TimeStamp aSystemTime,
+                              AwakeTimeStamp aAwakeSystemTime) {
+            self->NotifyOutput(MediaSegment::AUDIO, aTime, aSystemTime,
+                               aAwakeSystemTime);
           });
       mOnAudioEnd = mAudioTrack->OnEnd().Connect(
           mDecoderThread, [self = RefPtr<DecodedStreamGraphListener>(this)]() {
@@ -145,7 +147,7 @@ class DecodedStreamGraphListener {
   }
 
   void NotifyOutput(MediaSegment::Type aType, TrackTime aCurrentTrackTime,
-                    AwakeTimeStamp aCurrentSystemTime) {
+                    TimeStamp aSystemTime, AwakeTimeStamp aAwakeSystemTime) {
     AssertOnDecoderThread();
     if (aType == MediaSegment::AUDIO) {
       mAudioOutputFrames = aCurrentTrackTime;
@@ -180,7 +182,7 @@ class DecodedStreamGraphListener {
                                   ? static_cast<MediaTrack*>(mVideoTrack)
                                   : static_cast<MediaTrack*>(mAudioTrack);
     mOnOutput.Notify(track->TrackTimeToMicroseconds(aCurrentTrackTime),
-                     aCurrentSystemTime);
+                     aSystemTime, aAwakeSystemTime);
   }
 
   void NotifyEnded(MediaSegment::Type aType) {
@@ -236,7 +238,9 @@ class DecodedStreamGraphListener {
     return mAudioOutputFrames;
   }
 
-  MediaEventSource<int64_t, AwakeTimeStamp>& OnOutput() { return mOnOutput; }
+  MediaEventSource<int64_t, TimeStamp, AwakeTimeStamp>& OnOutput() {
+    return mOnOutput;
+  }
 
  private:
   ~DecodedStreamGraphListener() {
@@ -251,7 +255,7 @@ class DecodedStreamGraphListener {
   const RefPtr<nsISerialEventTarget> mDecoderThread;
 
   // Accessible on any thread, but only notify on the decoder thread.
-  MediaEventProducer<int64_t, AwakeTimeStamp> mOnOutput;
+  MediaEventProducer<int64_t, TimeStamp, AwakeTimeStamp> mOnOutput;
 
   RefPtr<SourceVideoTrackListener> mVideoTrackListener;
 
@@ -299,9 +303,11 @@ void SourceVideoTrackListener::NotifyOutput(MediaTrackGraph* aGraph,
   mDecoderThread->Dispatch(NS_NewRunnableFunction(
       "SourceVideoTrackListener::NotifyOutput",
       [self = RefPtr<SourceVideoTrackListener>(this), aCurrentTrackTime,
-       currentSystemTime = AwakeTimeStamp::Now()]() {
-        self->mGraphListener->NotifyOutput(
-            MediaSegment::VIDEO, aCurrentTrackTime, currentSystemTime);
+       systemTime = TimeStamp::Now(),
+       awakeSystemTime = AwakeTimeStamp::Now()]() {
+        self->mGraphListener->NotifyOutput(MediaSegment::VIDEO,
+                                           aCurrentTrackTime, systemTime,
+                                           awakeSystemTime);
       }));
 }
 
@@ -333,7 +339,7 @@ class DecodedStreamData final {
       float aPlaybackRate, float aVolume, bool aPreservesPitch,
       nsISerialEventTarget* aDecoderThread);
   ~DecodedStreamData();
-  MediaEventSource<int64_t, AwakeTimeStamp>& OnOutput();
+  MediaEventSource<int64_t, TimeStamp, AwakeTimeStamp>& OnOutput();
   // This is used to mark track as closed and should be called before Forget().
   // Decoder thread only.
   void Close();
@@ -443,7 +449,8 @@ DecodedStreamData::~DecodedStreamData() {
   }
 }
 
-MediaEventSource<int64_t, AwakeTimeStamp>& DecodedStreamData::OnOutput() {
+MediaEventSource<int64_t, TimeStamp, AwakeTimeStamp>&
+DecodedStreamData::OnOutput() {
   return mListener->OnOutput();
 }
 
@@ -1104,18 +1111,23 @@ TimeUnit DecodedStream::GetEndTime(TrackType aType) const {
 TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) {
   AssertOwnerThread();
   TRACE("DecodedStream::GetPosition");
+  return GetPositionImpl(TimeStamp::Now(), AwakeTimeStamp::Now(), aTimeStamp);
+}
+
+TimeUnit DecodedStream::GetPositionImpl(TimeStamp aNow,
+                                        AwakeTimeStamp aAwakeNow,
+                                        TimeStamp* aTimeStamp) {
+  AssertOwnerThread();
   // This is only called after MDSM starts playback. So mStartTime is
   // guaranteed to be something.
   MOZ_ASSERT(mStartTime.isSome());
-  TimeStamp now = TimeStamp::Now();
-  AwakeTimeStamp awakeNow = AwakeTimeStamp::Now();
   if (aTimeStamp) {
-    *aTimeStamp = now;
+    *aTimeStamp = aNow;
   }
   AwakeTimeDuration timeSinceLastOutput;
   if (mLastOutputSystemTime) {
-    MOZ_ASSERT(awakeNow >= *mLastOutputSystemTime);
-    timeSinceLastOutput = awakeNow - *mLastOutputSystemTime;
+    MOZ_ASSERT(aAwakeNow >= *mLastOutputSystemTime);
+    timeSinceLastOutput = aAwakeNow - *mLastOutputSystemTime;
   }
   TimeUnit position = mStartTime.ref() + mLastOutputTime +
                       TimeUnit::FromSeconds(timeSinceLastOutput.ToSeconds());
@@ -1128,7 +1140,13 @@ TimeUnit DecodedStream::GetPosition(TimeStamp* aTimeStamp) {
   return position;
 }
 
-void DecodedStream::NotifyOutput(int64_t aTime, AwakeTimeStamp aSystemTime) {
+AwakeTimeStamp DecodedStream::LastOutputSystemTime() const {
+  AssertOwnerThread();
+  return *mLastOutputSystemTime;
+}
+
+void DecodedStream::NotifyOutput(int64_t aTime, TimeStamp aSystemTime,
+                                 AwakeTimeStamp aAwakeSystemTime) {
   AssertOwnerThread();
   TimeUnit time = TimeUnit::FromMicroseconds(aTime);
   if (time == mLastOutputTime) {
@@ -1136,9 +1154,10 @@ void DecodedStream::NotifyOutput(int64_t aTime, AwakeTimeStamp aSystemTime) {
   }
   MOZ_ASSERT(mLastOutputTime < time);
   mLastOutputTime = time;
-  MOZ_ASSERT_IF(mLastOutputSystemTime, *mLastOutputSystemTime < aSystemTime);
-  mLastOutputSystemTime = Some(aSystemTime);
-  auto currentTime = GetPosition();
+  MOZ_ASSERT_IF(mLastOutputSystemTime,
+                *mLastOutputSystemTime < aAwakeSystemTime);
+  mLastOutputSystemTime = Some(aAwakeSystemTime);
+  auto currentTime = GetPositionImpl(aSystemTime, aAwakeSystemTime);
 
   if (profiler_thread_is_being_profiled_for_markers()) {
     nsPrintfCString markerString("OutputTime=%" PRId64,

@@ -71,6 +71,24 @@ class OnFallbackListener : public MediaTrackListener {
   }
 };
 
+class TestableDecodedStream : public DecodedStream {
+ public:
+  TestableDecodedStream(
+      AbstractThread* aOwnerThread,
+      nsMainThreadPtrHandle<SharedDummyTrack> aDummyTrack,
+      CopyableTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
+      AbstractCanonical<PrincipalHandle>* aCanonicalOutputPrincipal,
+      double aVolume, double aPlaybackRate, bool aPreservesPitch,
+      MediaQueue<AudioData>& aAudioQueue, MediaQueue<VideoData>& aVideoQueue)
+      : DecodedStream(aOwnerThread, std::move(aDummyTrack),
+                      std::move(aOutputTracks), aCanonicalOutputPrincipal,
+                      aVolume, aPlaybackRate, aPreservesPitch, aAudioQueue,
+                      aVideoQueue) {}
+
+  using DecodedStream::GetPositionImpl;
+  using DecodedStream::LastOutputSystemTime;
+};
+
 template <MediaType Type>
 class TestDecodedStream : public Test {
  public:
@@ -84,7 +102,7 @@ class TestDecodedStream : public Test {
   nsMainThreadPtrHandle<SharedDummyTrack> mDummyTrack;
   CopyableTArray<RefPtr<ProcessedMediaTrack>> mOutputTracks;
   Canonical<PrincipalHandle> mCanonicalOutputPrincipal;
-  RefPtr<DecodedStream> mDecodedStream;
+  RefPtr<TestableDecodedStream> mDecodedStream;
 
   TestDecodedStream()
       : mMockCubeb(MakeRefPtr<MockCubeb>(MockCubeb::RunningMode::Manual)),
@@ -98,7 +116,7 @@ class TestDecodedStream : public Test {
         mCanonicalOutputPrincipal(
             AbstractThread::GetCurrent(), PRINCIPAL_HANDLE_NONE,
             "TestDecodedStream::mCanonicalOutputPrincipal"),
-        mDecodedStream(MakeRefPtr<DecodedStream>(
+        mDecodedStream(MakeRefPtr<TestableDecodedStream>(
             AbstractThread::GetCurrent(), mDummyTrack, mOutputTracks,
             &mCanonicalOutputPrincipal, /* aVolume = */ 1.0,
             /* aPlaybackRate = */ 1.0,
@@ -193,6 +211,30 @@ using TestDecodedStreamAV = TestDecodedStream<AudioVideo>;
 TEST_F(TestDecodedStreamAV, StartStop) {
   mDecodedStream->Start(TimeUnit::Zero(), CreateMediaInfo());
   mDecodedStream->SetPlaying(true);
+  mDecodedStream->Stop();
+}
+
+TEST_F(TestDecodedStreamA, LastOutputSystemTime) {
+  auto start = AwakeTimeStamp::Now();
+  BlankAudioDataCreator creator(2, kRate);
+  auto raw = MakeRefPtr<MediaRawData>();
+  raw->mDuration = TimeUnit(kRate, kRate);
+  mAudioQueue.Push(RefPtr(creator.Create(raw))->As<AudioData>());
+
+  mDecodedStream->Start(TimeUnit::Zero(), CreateMediaInfo());
+  mDecodedStream->SetPlaying(true);
+  NS_ProcessPendingEvents(nullptr);
+  mMockCubebStream->ManualDataCallback(0);
+
+  auto before = AwakeTimeStamp::Now();
+  // This runs the events on the graph thread, sampling the system clock.
+  mMockCubebStream->ManualDataCallback(512);
+  auto after = AwakeTimeStamp::Now();
+  // This runs the event handlers on the MDSM thread, updating the timestamps.
+  NS_ProcessPendingEvents(nullptr);
+  EXPECT_GE(mDecodedStream->LastOutputSystemTime() - start, before - start);
+  EXPECT_LE(mDecodedStream->LastOutputSystemTime() - start, after - start);
+
   mDecodedStream->Stop();
 }
 }  // namespace mozilla
