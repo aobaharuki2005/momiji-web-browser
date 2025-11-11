@@ -1597,17 +1597,11 @@ Preferences.addSetting({
   },
 });
 
-// Register the setting for simpler access in settings that depend on this, but it hasn't been converted yet.
-Preferences.addSetting({
-  id: "privateBrowsingAutostart",
-  pref: "browser.privatebrowsing.autostart",
-});
-
 Preferences.addSetting({
   id: "deleteOnCloseInfo",
-  deps: ["privateBrowsingAutostart"],
-  visible({ privateBrowsingAutostart }) {
-    return privateBrowsingAutostart.value;
+  deps: ["privateBrowsingAutoStart"],
+  visible({ privateBrowsingAutoStart }) {
+    return privateBrowsingAutoStart.value;
   },
 });
 
@@ -1781,9 +1775,9 @@ Preferences.addSetting({
     "clearOnCloseCache",
     "clearOnCloseStorage",
     "sanitizeOnShutdown",
-    "privateBrowsingAutostart",
-    "historyModeCustom",
+    "privateBrowsingAutoStart",
     "cookieBehavior",
+    "alwaysClear",
   ],
   setup() {
     // Make sure to do the migration for the clear history dialog before implementing logic for delete on close
@@ -1791,21 +1785,20 @@ Preferences.addSetting({
     // overwriting prefs
     Sanitizer.maybeMigratePrefs("clearOnShutdown");
   },
-  disabled({ privateBrowsingAutostart, cookieBehavior }) {
+  disabled({ privateBrowsingAutoStart, cookieBehavior }) {
     return (
-      privateBrowsingAutostart.value ||
+      privateBrowsingAutoStart.value ||
       cookieBehavior.value == Ci.nsICookieService.BEHAVIOR_REJECT
     );
   },
-  get(_, { privateBrowsingAutostart }) {
+  get(_, { privateBrowsingAutoStart }) {
     return (
-      isCookiesAndStorageClearingOnShutdown() || privateBrowsingAutostart.value
+      isCookiesAndStorageClearingOnShutdown() || privateBrowsingAutoStart.value
     );
   },
   set(
     value,
     {
-      historyModeCustom,
       clearOnCloseCookies,
       clearOnCloseCache,
       clearOnCloseStorage,
@@ -1826,14 +1819,240 @@ Preferences.addSetting({
     // If no other cleaning category is selected, sanitizeOnShutdown gets synced with deleteOnClose
     sanitizeOnShutdown.value =
       gPrivacyPane._isCustomCleaningPrefPresent() || value;
+  },
+});
 
-    // Update the view of the history settings
-    if (value && !historyModeCustom.value) {
-      historyModeCustom.value = true;
-      gPrivacyPane.initializeHistoryMode();
-      gPrivacyPane.updateHistoryModePane();
-      gPrivacyPane.updatePrivacyMicroControls();
+Preferences.addSetting({
+  id: "historyModeCustom",
+  pref: "privacy.history.custom",
+});
+Preferences.addSetting({
+  id: "historyEnabled",
+  pref: "places.history.enabled",
+});
+Preferences.addSetting({
+  id: "formFillEnabled",
+  pref: "browser.formfill.enable",
+});
+
+// Store this on the window so tests can suppress the prompt.
+window._shouldPromptForRestartPBM = true;
+async function onChangePrivateBrowsingAutoStart(value, revertFn) {
+  if (!window._shouldPromptForRestartPBM) {
+    return false;
+  }
+
+  // The PBM autostart pref has changed so we need to prompt for restart.
+  let buttonIndex = await confirmRestartPrompt(value, 1, true, false);
+
+  // User accepts, restart the browser.
+  if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+    Services.startup.quit(
+      Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+    );
+    return false;
+  }
+
+  // Don't prompt for the revert operation itself.
+  window._shouldPromptForRestartPBM = false;
+  revertFn();
+  window._shouldPromptForRestartPBM = true;
+
+  // User cancels, do nothing. The caller will clean up the pref change.
+  return true;
+}
+
+Preferences.addSetting({
+  id: "historyMode",
+  deps: [
+    "historyModeCustom",
+    "privateBrowsingAutoStart",
+    "historyEnabled",
+    "formFillEnabled",
+    "sanitizeOnShutdown",
+  ],
+  get(
+    _,
+    {
+      historyModeCustom,
+      privateBrowsingAutoStart,
+      historyEnabled,
+      formFillEnabled,
+      sanitizeOnShutdown,
     }
+  ) {
+    if (historyModeCustom.value) {
+      return "custom";
+    }
+
+    if (privateBrowsingAutoStart.value) {
+      return "dontremember";
+    }
+
+    if (
+      historyEnabled.value &&
+      formFillEnabled.value &&
+      !sanitizeOnShutdown.value
+    ) {
+      return "remember";
+    }
+
+    return "custom";
+  },
+  set(
+    value,
+    {
+      historyModeCustom,
+      privateBrowsingAutoStart,
+      historyEnabled,
+      formFillEnabled,
+      sanitizeOnShutdown,
+    }
+  ) {
+    let lastHistoryModeCustom = historyModeCustom.value;
+    let lastHistoryEnabled = historyEnabled.value;
+    let lastFormFillEnabled = formFillEnabled.value;
+    let lastSanitizeOnShutdown = sanitizeOnShutdown.value;
+    let lastPrivateBrowsingAutoStart = privateBrowsingAutoStart.value;
+
+    historyModeCustom.value = value == "custom";
+
+    if (value == "remember") {
+      historyEnabled.value = true;
+      formFillEnabled.value = true;
+      sanitizeOnShutdown.value = false;
+      privateBrowsingAutoStart.value = false;
+    } else if (value == "dontremember") {
+      privateBrowsingAutoStart.value = true;
+    }
+
+    if (privateBrowsingAutoStart.value !== lastPrivateBrowsingAutoStart) {
+      // The PBM autostart pref has changed so we need to prompt for restart.
+      onChangePrivateBrowsingAutoStart(privateBrowsingAutoStart.value, () => {
+        // User cancelled the action, revert the change.
+        // Simply reverting the setting value itself is not enough, because a
+        // state transition to "custom" does not override any of the sub-prefs.
+        // We need to update them all manually.
+        historyModeCustom.value = lastHistoryModeCustom;
+        historyEnabled.value = lastHistoryEnabled;
+        formFillEnabled.value = lastFormFillEnabled;
+        sanitizeOnShutdown.value = lastSanitizeOnShutdown;
+        privateBrowsingAutoStart.value = lastPrivateBrowsingAutoStart;
+      });
+    }
+  },
+  disabled({ privateBrowsingAutoStart }) {
+    // Disable history dropdown if PBM autostart is locked on.
+    return privateBrowsingAutoStart.locked && privateBrowsingAutoStart.value;
+  },
+  getControlConfig(config, { privateBrowsingAutoStart }, setting) {
+    let l10nId = null;
+    if (setting.value == "remember") {
+      l10nId = "history-remember-description2";
+    } else if (setting.value == "dontremember") {
+      l10nId = "history-dontremember-description2";
+    } else if (setting.value == "custom") {
+      l10nId = "history-custom-description";
+    }
+
+    let dontRememberOption = config.options.find(
+      opt => opt.value == "dontremember"
+    );
+
+    // If PBM is unavailable hide the "Never remember history" option.
+    dontRememberOption.hidden = !PrivateBrowsingUtils.enabled;
+
+    // If the PBM autostart pref is locked disable the "Never remember history"
+    // option.
+    dontRememberOption.disabled =
+      privateBrowsingAutoStart.locked && !privateBrowsingAutoStart.value;
+
+    return {
+      ...config,
+      l10nId,
+    };
+  },
+});
+
+Preferences.addSetting({
+  id: "privateBrowsingAutoStart",
+  pref: "browser.privatebrowsing.autostart",
+  deps: ["historyMode"],
+  onUserChange(value, _, setting) {
+    onChangePrivateBrowsingAutoStart(value, () => {
+      // User cancelled the action, revert the setting.
+      setting.value = !value;
+    });
+  },
+  visible({ historyMode }) {
+    return PrivateBrowsingUtils.enabled && historyMode.value == "custom";
+  },
+});
+Preferences.addSetting({
+  id: "rememberHistory",
+  pref: "places.history.enabled",
+  deps: ["historyMode", "privateBrowsingAutoStart"],
+  visible({ historyMode }) {
+    return historyMode.value == "custom";
+  },
+  disabled({ privateBrowsingAutoStart }) {
+    return privateBrowsingAutoStart.value;
+  },
+});
+Preferences.addSetting({
+  id: "rememberForms",
+  pref: "browser.formfill.enable",
+  deps: ["historyMode", "privateBrowsingAutoStart"],
+  visible({ historyMode }) {
+    return historyMode.value == "custom";
+  },
+  disabled({ privateBrowsingAutoStart }) {
+    return privateBrowsingAutoStart.value;
+  },
+});
+Preferences.addSetting({
+  id: "alwaysClear",
+  pref: "privacy.sanitize.sanitizeOnShutdown",
+  deps: ["historyMode", "privateBrowsingAutoStart"],
+  visible({ historyMode }) {
+    return historyMode.value == "custom";
+  },
+  disabled({ privateBrowsingAutoStart }) {
+    return privateBrowsingAutoStart.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "clearDataSettings",
+  deps: ["historyMode", "alwaysClear"],
+  visible({ historyMode }) {
+    return historyMode.value == "custom";
+  },
+  disabled({ alwaysClear }) {
+    return !alwaysClear.value || alwaysClear.disabled;
+  },
+  onUserClick() {
+    let dialogFile = useOldClearHistoryDialog
+      ? "chrome://browser/content/preferences/dialogs/sanitize.xhtml"
+      : "chrome://browser/content/sanitize_v2.xhtml";
+
+    gSubDialog.open(
+      dialogFile,
+      {
+        features: "resizable=no",
+      },
+      {
+        mode: "clearOnShutdown",
+      }
+    );
+  },
+});
+
+Preferences.addSetting({
+  id: "clearHistoryButton",
+  deps: ["historyMode"],
+  onUserClick(_, { historyMode }) {
+    gPrivacyPane.clearPrivateDataNow(historyMode.value == "dontremember");
   },
 });
 
@@ -2440,12 +2659,7 @@ var gPrivacyPane = {
     initSettingGroup("cookiesAndSiteData");
     initSettingGroup("certificates");
     initSettingGroup("ipprotection");
-
-    this._updateSanitizeSettingsButton();
-    this.initializeHistoryMode();
-    this.updateHistoryModePane();
-    this.updatePrivacyMicroControls();
-    this.initAutoStartPrivateBrowsingReverter();
+    initSettingGroup("history");
 
     /* Initialize Content Blocking */
     this.initContentBlocking();
@@ -2495,40 +2709,10 @@ var gPrivacyPane = {
       gPrivacyPane.showTrackingProtectionExceptions
     );
 
-    Preferences.get("privacy.sanitize.sanitizeOnShutdown").on(
-      "change",
-      gPrivacyPane._updateSanitizeSettingsButton.bind(gPrivacyPane)
-    );
-    Preferences.get("browser.privatebrowsing.autostart").on(
-      "change",
-      gPrivacyPane.updatePrivacyMicroControls.bind(gPrivacyPane)
-    );
-    setEventListener("historyMode", "command", function () {
-      gPrivacyPane.updateHistoryModePane();
-      gPrivacyPane.updateHistoryModePrefs();
-      gPrivacyPane.updatePrivacyMicroControls();
-      gPrivacyPane.updateAutostart();
-    });
-    setEventListener("clearHistoryButton", "command", function () {
-      let historyMode = document.getElementById("historyMode");
-      // Select "everything" in the clear history dialog if the
-      // user has set their history mode to never remember history.
-      gPrivacyPane.clearPrivateDataNow(historyMode.value == "dontremember");
-    });
-    setEventListener(
-      "privateBrowsingAutoStart",
-      "command",
-      gPrivacyPane.updateAutostart
-    );
     setEventListener(
       "dohExceptionsButton",
       "command",
       gPrivacyPane.showDoHExceptions
-    );
-    setEventListener(
-      "clearDataSettings",
-      "command",
-      gPrivacyPane.showClearPrivateDataSettings
     );
     setEventListener(
       "passwordExceptions",
@@ -2634,12 +2818,6 @@ var gPrivacyPane = {
 
     setSyncFromPrefListener("savePasswords", () => this.readSavePasswords());
 
-    let microControlHandler = el =>
-      this.ensurePrivacyMicroControlUncheckedWhenDisabled(el);
-    setSyncFromPrefListener("rememberHistory", microControlHandler);
-    setSyncFromPrefListener("rememberForms", microControlHandler);
-    setSyncFromPrefListener("alwaysClear", microControlHandler);
-
     setSyncFromPrefListener("popupPolicy", () =>
       this.updateButtons("popupPolicyButton", "dom.disable_open_during_load")
     );
@@ -2689,26 +2867,6 @@ var gPrivacyPane = {
     appendSearchKeywords("showPasswords", [
       signonBundle.getString("loginsDescriptionAll2"),
     ]);
-    if (!PrivateBrowsingUtils.enabled) {
-      document.getElementById("privateBrowsingAutoStart").hidden = true;
-      document.querySelector("menuitem[value='dontremember']").hidden = true;
-    }
-
-    let privateBrowsingPref = Preferences.get(
-      "browser.privatebrowsing.autostart"
-    );
-
-    if (privateBrowsingPref.locked) {
-      // If permanent private browsing mode is locked to off,
-      // disable the "Never Remember History" option
-      document.querySelector("menuitem[value='dontremember']").disabled =
-        !privateBrowsingPref.value;
-
-      // If we're locked in permanent private browsing mode,
-      // disable the dropdown menu completely
-      document.getElementById("historyMode").disabled =
-        privateBrowsingPref.value;
-    }
 
     setEventListener(
       "contentBlockingBaselineExceptionsStrict",
@@ -3372,175 +3530,6 @@ var gPrivacyPane = {
     );
   },
 
-  // HISTORY MODE
-
-  /**
-   * The list of preferences which affect the initial history mode settings.
-   * If the auto start private browsing mode pref is active, the initial
-   * history mode would be set to "Don't remember anything".
-   * If ALL of these preferences are set to the values that correspond
-   * to keeping some part of history, and the auto-start
-   * private browsing mode is not active, the initial history mode would be
-   * set to "Remember everything".
-   * Otherwise, the initial history mode would be set to "Custom".
-   *
-   * Extensions adding their own preferences can set values here if needed.
-   */
-  prefsForKeepingHistory: {
-    "places.history.enabled": true, // History is enabled
-    "browser.formfill.enable": true, // Form information is saved
-    "privacy.sanitize.sanitizeOnShutdown": false, // Private date is NOT cleared on shutdown
-  },
-
-  /**
-   * The list of control IDs which are dependent on the auto-start private
-   * browsing setting, such that in "Custom" mode they would be disabled if
-   * the auto-start private browsing checkbox is checked, and enabled otherwise.
-   *
-   * Extensions adding their own controls can append their IDs to this array if needed.
-   */
-  dependentControls: [
-    "rememberHistory",
-    "rememberForms",
-    "alwaysClear",
-    "clearDataSettings",
-  ],
-
-  /**
-   * Check whether preferences values are set to keep history
-   *
-   * @param aPrefs an array of pref names to check for
-   * @returns boolean true if all of the prefs are set to keep history,
-   *                  false otherwise
-   */
-  _checkHistoryValues(aPrefs) {
-    for (let pref of Object.keys(aPrefs)) {
-      if (Preferences.get(pref).value != aPrefs[pref]) {
-        return false;
-      }
-    }
-    return true;
-  },
-
-  /**
-   * Initialize the history mode menulist based on the privacy preferences
-   */
-  initializeHistoryMode() {
-    let mode;
-    let getVal = aPref => Preferences.get(aPref).value;
-
-    if (getVal("privacy.history.custom")) {
-      mode = "custom";
-    } else if (this._checkHistoryValues(this.prefsForKeepingHistory)) {
-      if (getVal("browser.privatebrowsing.autostart")) {
-        mode = "dontremember";
-      } else {
-        mode = "remember";
-      }
-    } else {
-      mode = "custom";
-    }
-
-    document.getElementById("historyMode").value = mode;
-  },
-
-  /**
-   * Update the selected pane based on the history mode menulist
-   */
-  updateHistoryModePane() {
-    let selectedIndex = -1;
-    switch (document.getElementById("historyMode").value) {
-      case "remember":
-        selectedIndex = 0;
-        break;
-      case "dontremember":
-        selectedIndex = 1;
-        break;
-      case "custom":
-        selectedIndex = 2;
-        break;
-    }
-    document.getElementById("historyPane").selectedIndex = selectedIndex;
-    Preferences.get("privacy.history.custom").value = selectedIndex == 2;
-  },
-
-  /**
-   * Update the private browsing auto-start pref and the history mode
-   * micro-management prefs based on the history mode menulist
-   */
-  updateHistoryModePrefs() {
-    let pref = Preferences.get("browser.privatebrowsing.autostart");
-    switch (document.getElementById("historyMode").value) {
-      case "remember":
-        if (pref.value) {
-          pref.value = false;
-        }
-
-        // select the remember history option if needed
-        Preferences.get("places.history.enabled").value = true;
-
-        // select the remember forms history option
-        Preferences.get("browser.formfill.enable").value = true;
-
-        // select the clear on close option
-        Preferences.get("privacy.sanitize.sanitizeOnShutdown").value = false;
-        break;
-      case "dontremember":
-        if (!pref.value) {
-          pref.value = true;
-        }
-        break;
-    }
-  },
-
-  /**
-   * Update the privacy micro-management controls based on the
-   * value of the private browsing auto-start preference.
-   */
-  updatePrivacyMicroControls() {
-    let clearDataSettings = document.getElementById("clearDataSettings");
-
-    if (document.getElementById("historyMode").value == "custom") {
-      let disabled = Preferences.get("browser.privatebrowsing.autostart").value;
-      this.dependentControls.forEach(aElement => {
-        let control = document.getElementById(aElement);
-        let preferenceId = control.getAttribute("preference");
-        if (!preferenceId) {
-          let dependentControlId = control.getAttribute("control");
-          if (dependentControlId) {
-            let dependentControl = document.getElementById(dependentControlId);
-            preferenceId = dependentControl.getAttribute("preference");
-          }
-        }
-
-        let preference = preferenceId ? Preferences.get(preferenceId) : {};
-        control.disabled = disabled || preference.locked;
-        if (control != clearDataSettings) {
-          this.ensurePrivacyMicroControlUncheckedWhenDisabled(control);
-        }
-      });
-
-      clearDataSettings.removeAttribute("hidden");
-
-      if (!disabled) {
-        // adjust the Settings button for sanitizeOnShutdown
-        this._updateSanitizeSettingsButton();
-      }
-    } else {
-      clearDataSettings.hidden = true;
-    }
-  },
-
-  ensurePrivacyMicroControlUncheckedWhenDisabled(el) {
-    if (Preferences.get("browser.privatebrowsing.autostart").value) {
-      // Set checked to false when called from updatePrivacyMicroControls
-      el.checked = false;
-      // return false for the onsyncfrompreference case:
-      return false;
-    }
-    return undefined; // tell preferencesBindings to assign the 'right' value.
-  },
-
   // CLEAR PRIVATE DATA
 
   /*
@@ -3613,89 +3602,8 @@ var gPrivacyPane = {
     );
   },
 
-  /**
-   * Enables or disables the "Settings..." button depending
-   * on the privacy.sanitize.sanitizeOnShutdown preference value
-   */
-  _updateSanitizeSettingsButton() {
-    var settingsButton = document.getElementById("clearDataSettings");
-    var sanitizeOnShutdownPref = Preferences.get(
-      "privacy.sanitize.sanitizeOnShutdown"
-    );
-
-    settingsButton.disabled = !sanitizeOnShutdownPref.value;
-  },
-
   toggleDoNotDisturbNotifications(event) {
     AlertsServiceDND.manualDoNotDisturb = event.target.checked;
-  },
-
-  // PRIVATE BROWSING
-
-  /**
-   * Initialize the starting state for the auto-start private browsing mode pref reverter.
-   */
-  initAutoStartPrivateBrowsingReverter() {
-    // We determine the mode in initializeHistoryMode, which is guaranteed to have been
-    // called before now, so this is up-to-date.
-    let mode = document.getElementById("historyMode");
-    this._lastMode = mode.selectedIndex;
-    // The value of the autostart pref, on the other hand, is gotten from Preferences,
-    // which updates the DOM asynchronously, so we can't rely on the DOM. Get it directly
-    // from the prefs.
-    this._lastCheckState = Preferences.get(
-      "browser.privatebrowsing.autostart"
-    ).value;
-  },
-
-  _lastMode: null,
-  _lastCheckState: null,
-  async updateAutostart() {
-    let mode = document.getElementById("historyMode");
-    let autoStart = document.getElementById("privateBrowsingAutoStart");
-    let pref = Preferences.get("browser.privatebrowsing.autostart");
-    if (
-      (mode.value == "custom" && this._lastCheckState == autoStart.checked) ||
-      (mode.value == "remember" && !this._lastCheckState) ||
-      (mode.value == "dontremember" && this._lastCheckState)
-    ) {
-      // These are all no-op changes, so we don't need to prompt.
-      this._lastMode = mode.selectedIndex;
-      this._lastCheckState = autoStart.hasAttribute("checked");
-      return;
-    }
-
-    if (!this._shouldPromptForRestart) {
-      // We're performing a revert. Just let it happen.
-      return;
-    }
-
-    let buttonIndex = await confirmRestartPrompt(
-      autoStart.checked,
-      1,
-      true,
-      false
-    );
-    if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
-      pref.value = autoStart.hasAttribute("checked");
-      Services.startup.quit(
-        Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
-      );
-      return;
-    }
-
-    this._shouldPromptForRestart = false;
-
-    if (this._lastCheckState) {
-      autoStart.checked = "checked";
-    } else {
-      autoStart.removeAttribute("checked");
-    }
-    pref.value = autoStart.hasAttribute("checked");
-    mode.selectedIndex = this._lastMode;
-    mode.doCommand();
-
-    this._shouldPromptForRestart = true;
   },
 
   /**
