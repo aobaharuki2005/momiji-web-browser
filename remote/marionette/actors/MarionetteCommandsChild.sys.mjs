@@ -87,7 +87,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
           lazy.event.sendKeyUp(details.eventData, win);
           break;
         case "synthesizeMouseAtPoint":
-          await lazy.event.synthesizeMouseAtPoint(
+          lazy.event.synthesizeMouseAtPoint(
             details.x,
             details.y,
             details.eventData,
