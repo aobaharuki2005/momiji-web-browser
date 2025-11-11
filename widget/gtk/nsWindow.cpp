@@ -4330,7 +4330,6 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
     return FALSE;
   }
 
-  SchedulePendingBounds(MayChangeCsdMargin::No);
   return FALSE;
 }
 
