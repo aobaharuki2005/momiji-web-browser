@@ -1737,11 +1737,14 @@ export class UrlbarView {
       this.#addRowButton(item, {
         name: "result-menu",
         classList: ["urlbarView-button-menu"],
-        l10n: {
-          id: result.showFeedbackMenu
-            ? "urlbar-result-menu-button-feedback"
-            : "urlbar-result-menu-button",
-        },
+        l10n: result.showFeedbackMenu
+          ? {
+              id: "urlbar-result-menu-button-feedback",
+              cacheable: true,
+            }
+          : {
+              id: "urlbar-result-menu-button",
+            },
         attributes: lazy.UrlbarPrefs.get("resultMenu.keyboardAccessible")
           ? null
           : {
