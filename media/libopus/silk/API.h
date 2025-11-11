@@ -60,8 +60,7 @@ typedef struct {
 /* Get size in bytes of the Silk encoder state */
 /***********************************************/
 opus_int silk_Get_Encoder_Size(                         /* O    Returns error code                              */
-    opus_int                        *encSizeBytes,      /* O    Number of bytes in SILK encoder state           */
-    opus_int                         channels           /* I    Number of channels                              */
+    opus_int                        *encSizeBytes       /* O    Number of bytes in SILK encoder state           */
 );
 
 /*************************/
@@ -69,7 +68,6 @@ opus_int silk_Get_Encoder_Size(                         /* O    Returns error co
 /*************************/
 opus_int silk_InitEncoder(                              /* O    Returns error code                              */
     void                            *encState,          /* I/O  State                                           */
-    int                              channels,          /* I    Number of channels                              */
     int                              arch,              /* I    Run-time architecture                           */
     silk_EncControlStruct           *encStatus          /* O    Encoder Status                                  */
 );

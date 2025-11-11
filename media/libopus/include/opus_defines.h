@@ -175,10 +175,6 @@ extern "C" {
 /*#define OPUS_GET_DNN_BLOB_REQUEST 4053 */
 #define OPUS_SET_OSCE_BWE_REQUEST 4054
 #define OPUS_GET_OSCE_BWE_REQUEST 4055
-#define OPUS_SET_QEXT_REQUEST 4056
-#define OPUS_GET_QEXT_REQUEST 4057
-#define OPUS_SET_IGNORE_EXTENSIONS_REQUEST 4058
-#define OPUS_GET_IGNORE_EXTENSIONS_REQUEST 4059
 
 /** Defines for the presence of extended APIs. */
 #define OPUS_HAVE_OPUS_PROJECTION_H
@@ -220,10 +216,6 @@ extern "C" {
 /** Only use when lowest-achievable latency is what matters most. Voice-optimized modes cannot be used.
  * @hideinitializer */
 #define OPUS_APPLICATION_RESTRICTED_LOWDELAY 2051
-/** Experts only: forces SILK encoding; don't allocate CELT state at all. Disables OPUS_SET_APPLICATION. */
-#define OPUS_APPLICATION_RESTRICTED_SILK     2052
-/** Experts only: forces CELT encoding; don't allocate SILK state at all. Disables OPUS_SET_APPLICATION. */
-#define OPUS_APPLICATION_RESTRICTED_CELT     2053
 
 #define OPUS_SIGNAL_VOICE                    3001 /**< Signal being encoded is voice */
 #define OPUS_SIGNAL_MUSIC                    3002 /**< Signal being encoded is music */
@@ -658,13 +650,6 @@ extern "C" {
   * @hideinitializer */
 #define OPUS_SET_DNN_BLOB(data, len) OPUS_SET_DNN_BLOB_REQUEST, __opus_check_void_ptr(data), __opus_check_int(len)
 
-/** If set to 1, enables quality extension (QEXT), otherwise disables it (default). Warning: This will *hurt* audio quality unless operating at
-    a very high bitrate.
-  * @hideinitializer */
-#define OPUS_SET_QEXT(x) OPUS_SET_QEXT_REQUEST, __opus_check_int(x)
-/** Gets the encoder's configured quality extension (QEXT).
-  * @hideinitializer */
-#define OPUS_GET_QEXT(x) OPUS_GET_QEXT_REQUEST, __opus_check_int_ptr(x)
 
 /**@}*/
 
@@ -828,13 +813,6 @@ extern "C" {
   * @hideinitializer */
  #define OPUS_GET_OSCE_BWE(x) OPUS_GET_OSCE_BWE_REQUEST, __opus_check_int_ptr(x)
 
-/** If set to 1, enables quality extension (QEXT), otherwise disables it (default). Warning: This will *hurt* audio quality unless operating at
-    a very high bitrate.
-  * @hideinitializer */
-#define OPUS_SET_IGNORE_EXTENSIONS(x) OPUS_SET_IGNORE_EXTENSIONS_REQUEST, __opus_check_int(x)
-/** Gets the encoder's configured quality extension (QEXT).
-  * @hideinitializer */
-#define OPUS_GET_IGNORE_EXTENSIONS(x) OPUS_GET_IGNORE_EXTENSIONS_REQUEST, __opus_check_int_ptr(x)
 
 /**@}*/
 
