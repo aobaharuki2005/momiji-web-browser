@@ -81,9 +81,12 @@ TimeStamp nsMenuPopupFrame::sLastKeyTime;
 extern mozilla::LazyLogModule gWidgetPopupLog;
 #  define LOG_WAYLAND(...) \
     MOZ_LOG(gWidgetPopupLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#  define LOG_WAYLAND_VERBOSE(...) \
+    MOZ_LOG(gWidgetPopupLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
 #else
 #  define IS_WAYLAND_DISPLAY() false
 #  define LOG_WAYLAND(...)
+#  define LOG_WAYLAND_VERBOSE(...)
 #endif
 
 nsIFrame* NS_NewMenuPopupFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
@@ -1618,28 +1621,42 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
       // only info we have there.
       const nsSize waylandSize = LayoutDeviceIntRect::ToAppUnits(
           widget->GetMoveToRectPopupSize(), a2d);
+
+      LOG_WAYLAND_VERBOSE(
+          "[%p] Wayland popup size from layout [%d x %d] a2d %d", widget,
+          result.mUsedRect.width / a2d, result.mUsedRect.height / a2d, a2d);
+      LOG_WAYLAND_VERBOSE(
+          "[%p] Wayland popup size from last move-to-rect [%d x %d] a2d %d",
+          widget, widget->GetMoveToRectPopupSize().width,
+          widget->GetMoveToRectPopupSize().height, a2d);
+
       if (waylandSize.width > 0 && result.mUsedRect.width > waylandSize.width) {
-        LOG_WAYLAND("Wayland constraint width [%p]:  %d to %d", widget,
+        LOG_WAYLAND("[%p] Wayland constraint width %d to %d", widget,
                     result.mUsedRect.width, waylandSize.width);
         result.mUsedRect.width = waylandSize.width;
       }
       if (waylandSize.height > 0 &&
           result.mUsedRect.height > waylandSize.height) {
-        LOG_WAYLAND("Wayland constraint height [%p]:  %d to %d", widget,
+        LOG_WAYLAND("[%p] Wayland constraint height %d to %d", widget,
                     result.mUsedRect.height, waylandSize.height);
         result.mUsedRect.height = waylandSize.height;
       }
       if (RefPtr<widget::Screen> s = widget->GetWidgetScreen()) {
         const nsSize screenSize =
             LayoutDeviceIntSize::ToAppUnits(s->GetAvailRect().Size(), a2d);
+        LOG_WAYLAND_VERBOSE("[%p] Wayland screen size [%d x %d] a2d %d", widget,
+                            s->GetAvailRect().Size().width,
+                            s->GetAvailRect().Size().height, a2d);
+
         if (result.mUsedRect.height > screenSize.height) {
-          LOG_WAYLAND("Wayland constraint height to screen [%p]:  %d to %d",
-                      widget, result.mUsedRect.height, screenSize.height);
+          LOG_WAYLAND("[%p] Wayland constraint height to screen %d to %d",
+                      widget, result.mUsedRect.height / a2d,
+                      screenSize.height / a2d);
           result.mUsedRect.height = screenSize.height;
         }
         if (result.mUsedRect.width > screenSize.width) {
-          LOG_WAYLAND("Wayland constraint widthto screen [%p]:  %d to %d",
-                      widget, result.mUsedRect.width, screenSize.width);
+          LOG_WAYLAND("[%p] Wayland constraint widthto screen %d to %d", widget,
+                      result.mUsedRect.width / a2d, screenSize.width / a2d);
           result.mUsedRect.width = screenSize.width;
         }
       }
