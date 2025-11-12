@@ -271,7 +271,7 @@ var gViewSourceUtils = {
           let ssm = Services.scriptSecurityManager;
           let principal = ssm.createContentPrincipal(
             data.uri,
-            browser.contentPrincipal.originAttributes
+            browser ? browser.contentPrincipal.originAttributes : {}
           );
           webBrowserPersist.saveURI(
             uri,
