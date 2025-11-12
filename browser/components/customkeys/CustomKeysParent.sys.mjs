@@ -26,7 +26,10 @@ export class CustomKeysParent extends JSWindowActorParent {
   // { <categoryTitle>: { <keyId>: { title: <title>, shortcut: <String>, isCustomized: <Boolean> } }
   // If categoryTitle or keyTitle begins with "customkeys-", it is a Fluent id.
   getKeys() {
+    // Make Dev Tools populate the Browser Tools menu so we can gather those
+    // shortcuts here.
     const topWin = this.browsingContext.topChromeWindow;
+    Services.obs.notifyObservers(topWin, "customkeys-ui-showing");
 
     const add = (category, id, title) => {
       const data = this.getKeyData(id);
