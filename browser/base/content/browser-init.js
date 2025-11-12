@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { CustomKeys } = ChromeUtils.importESModule(
+  "resource:///modules/CustomKeys.sys.mjs"
+);
+
 let _resolveDelayedStartup;
 var delayedStartupPromise = new Promise(resolve => {
   _resolveDelayedStartup = resolve;
@@ -265,6 +269,7 @@ var gBrowserInit = {
     if (gToolbarKeyNavEnabled) {
       ToolbarKeyboardNavigator.init();
     }
+    CustomKeys.initWindow(window);
 
     // Update UI if browser is under remote control.
     gRemoteControl.updateVisualCue();
@@ -1083,6 +1088,7 @@ var gBrowserInit = {
     if (gToolbarKeyNavEnabled) {
       ToolbarKeyboardNavigator.uninit();
     }
+    CustomKeys.uninitWindow(window);
 
     // Bug 1952900 to allow switching to unload category without leaking
     ChromeUtils.importESModule(
