@@ -65,6 +65,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextEquals
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithClassNameAndContainingDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
@@ -766,11 +767,21 @@ class BrowserRobot {
     }
 
     fun selectTime(hour: Int, minute: Int) {
-        Log.i(TAG, "selectTime: Trying to select time picker hour: $hour and minute: $minute")
-        itemWithDescription("$hour o'clock").click()
+        Log.i(TAG, "selectTime: Trying to select time picker hour: $hour and minute: $minute AM")
+        itemWithClassNameAndContainingDescription(
+            "android.widget.TextView",
+            "$hour o'clock",
+        ).click()
         waitForAppWindowToBeUpdated()
-        itemWithDescription("$minute minutes").click()
-        Log.i(TAG, "selectTime: Selected time picker hour: $hour and minute: $minute")
+        itemWithClassNameAndContainingDescription(
+            "android.widget.TextView",
+            "$minute minutes",
+        ).click()
+        itemWithResIdContainingText(
+            "$packageName:id/material_clock_period_am_button",
+            "AM",
+        ).click()
+        Log.i(TAG, "selectTime: Selected time picker hour: $hour and minute: $minute AM")
     }
 
     fun verifySelectedDate() {
