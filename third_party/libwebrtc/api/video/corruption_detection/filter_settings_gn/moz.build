@@ -190,4 +190,4 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["_GNU_SOURCE"] = True
 
-Library("corruption_detection_filter_settings_gn")
+Library("filter_settings_gn")
