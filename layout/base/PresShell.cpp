@@ -5960,8 +5960,7 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
   if (rootView->GetFrame()) {
     popupFrame = FindPopupFrame(mPresContext, rootView->GetWidget(),
                                 LayoutDeviceIntPoint::FromAppUnitsToNearest(
-                                    aPointerInfo.mLastRefPointInRootDoc,
-                                    APD));
+                                    aPointerInfo.mLastRefPointInRootDoc, APD));
     if (popupFrame) {
       pointShell = popupFrame->PresShell();
       widget = popupFrame->GetWidget();

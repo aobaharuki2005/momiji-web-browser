@@ -10,8 +10,8 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ScopeExit.h"
-#include "nsGlobalWindowInner.h"
 #include "nsDeviceContext.h"
+#include "nsGlobalWindowInner.h"
 
 // Local Includes
 #include "Navigator.h"
