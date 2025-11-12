@@ -8,7 +8,6 @@
 #define mozilla_layers_WebRenderBridgeParent_h
 
 #include <unordered_map>
-#include <unordered_set>
 
 #include "CompositableHost.h"  // for CompositableHost, ImageCompositeNotificationInfo
 #include "GLContextProvider.h"

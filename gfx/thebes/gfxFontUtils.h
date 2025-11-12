@@ -9,7 +9,6 @@
 #include <string.h>
 #include <algorithm>
 #include <new>
-#include <utility>
 #include "gfxPlatform.h"
 #include "harfbuzz/hb.h"
 #include "mozilla/Assertions.h"

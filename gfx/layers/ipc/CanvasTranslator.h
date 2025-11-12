@@ -10,7 +10,6 @@
 #include <deque>
 #include <memory>
 #include <unordered_map>
-#include <vector>
 
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/InlineTranslator.h"

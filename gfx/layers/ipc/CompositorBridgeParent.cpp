@@ -8,7 +8,6 @@
 
 #include <stdio.h>   // for fprintf, stdout
 #include <stdint.h>  // for uint64_t
-#include <map>       // for _Rb_tree_iterator, etc
 #include <utility>   // for pair
 
 #include "apz/src/APZCTreeManager.h"  // for APZCTreeManager

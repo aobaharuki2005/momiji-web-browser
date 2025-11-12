@@ -51,8 +51,6 @@
 #include "nsWindowsHelpers.h"
 #include "gfx2DGlue.h"
 
-#include <string>
-
 #include <d3d10_1.h>
 
 #include "mozilla/gfx/2D.h"

@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include <vector>
 #include <unordered_map>
-#include <unordered_set>
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
