@@ -5,6 +5,13 @@ function test(obj, expected) {
   }
   assertEq(actual, expected);
 }
+function test2(obj, expected) {
+  var actual = 0;
+  for (var s of Object.keys(obj)) {
+    actual += obj[s];
+  }
+  assertEq(actual, expected);
+}
 
 var arr = [];
 var elem_obj = [];
@@ -22,4 +29,5 @@ with ({}) {}
 for (var i = 0; i < 2000; i++) {
   var idx = i % arr.length;
   test(arr[idx], idx);
+  test2(arr[idx], idx);
 }

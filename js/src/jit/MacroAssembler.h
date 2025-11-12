@@ -5723,6 +5723,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void extractCurrentIndexAndKindFromIterator(Register iterator,
                                               Register outIndex,
                                               Register outKind);
+  void extractIndexAndKindFromIteratorByIterIndex(Register iterator,
+                                                  Register inOutIndex,
+                                                  Register outKind,
+                                                  Register scratch);
 
   template <typename IdType>
 #ifdef JS_CODEGEN_X86

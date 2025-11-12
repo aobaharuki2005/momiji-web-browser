@@ -6,6 +6,12 @@ function foo(obj) {
   }
 }
 
+function foo2(obj) {
+  for (var key of Object.keys(obj)) {
+    assertEq(id(obj[key]), obj[key]);
+  }
+}
+
 var arr = [];
 for (var i = 0; i < 8; i++) {
   var obj = {["x" + i]: 1};
@@ -16,4 +22,5 @@ with ({}) {}
 for (var i = 0; i < 1000; i++) {
   let obj = arr[i % arr.length];
   foo(obj);
+  foo2(obj);
 }
