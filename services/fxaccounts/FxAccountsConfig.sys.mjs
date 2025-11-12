@@ -335,22 +335,13 @@ export var FxAccountsConfig = {
     return lazy.fxAccounts.getSignedInUser();
   },
 
-  _isOAuthFlow() {
-    return Services.prefs.getBoolPref(
-      "identity.fxaccounts.oauth.enabled",
-      false
-    );
-  },
-
   async _getAuthParams() {
     let params = { service: SYNC_PARAM };
-    if (this._isOAuthFlow()) {
-      const scopes = [SCOPE_APP_SYNC, SCOPE_PROFILE];
-      Object.assign(
-        params,
-        await lazy.fxAccounts._internal.beginOAuthFlow(scopes)
-      );
-    }
+    const scopes = [SCOPE_APP_SYNC, SCOPE_PROFILE];
+    Object.assign(
+      params,
+      await lazy.fxAccounts._internal.beginOAuthFlow(scopes)
+    );
     return params;
   },
 };

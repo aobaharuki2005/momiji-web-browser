@@ -93,13 +93,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "oauthEnabled",
-  "identity.fxaccounts.oauth.enabled",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
   "allowSyncMerge",
   "browser.profiles.sync.allow-danger-merge",
   false
@@ -646,14 +639,11 @@ FxAccountsWebChannelHelpers.prototype = {
     } else {
       log.debug("Webchannel is logging new a user in.");
     }
-    // There are (or were) extra fields here we don't want to actually store.
+    // Stuff we never want to keep after being logged in (and no longer get in 2026)
     delete accountData.customizeSync;
     delete accountData.verifiedCanLinkAccount;
-    if (lazy.oauthEnabled) {
-      // We once accidentally saw these from the server and got confused about who owned the key fetching.
-      delete accountData.keyFetchToken;
-      delete accountData.unwrapBKey;
-    }
+    delete accountData.keyFetchToken;
+    delete accountData.unwrapBKey;
 
     // The "services" being connected - see above re our careful handling of existing data.
     // Note that we don't attempt to merge any data - we keep the first value we see for a service
@@ -663,33 +653,19 @@ FxAccountsWebChannelHelpers.prototype = {
       ...(accountData.services ?? {}),
       ...existingServices,
     };
-    delete accountData.services;
-
-    // This `verified` check is really just for our tests and pre-oauth flows.
-    // However, in all cases it's misplaced - we should set it as soon as *sync*
-    // starts or is configured, as it's the merging done by sync it protects against.
-    // We should clean up handling of this pref in a followup.
-    if (accountData.verified) {
-      this.setPreviousAccountNameHashPref(accountData.email);
-    }
-
     await this._fxAccounts.telemetry.recordConnection(
       Object.keys(requestedServices),
       "webchannel"
     );
+    delete accountData.services;
+    // We need to remember the requested services because we can't act on them until we get the `oauth_login` message.
+    // And because we might not get that message in this browser session (eg, the browser might restart before the
+    // user enters their verification code), they are persisted with the account state.
+    log.debug(`storing info for services ${Object.keys(requestedServices)}`);
+    accountData.requestedServices = JSON.stringify(requestedServices);
 
-    if (lazy.oauthEnabled) {
-      // We need to remember the requested services because we can't act on them until we get the `oauth_login` message.
-      // And because we might not get that message in this browser session (eg, the browser might restart before the
-      // user enters their verification code), they are persisted with the account state.
-      log.debug(`storing info for services ${Object.keys(requestedServices)}`);
-      accountData.requestedServices = JSON.stringify(requestedServices);
-      await this._fxAccounts._internal.setSignedInUser(accountData);
-    } else {
-      // Note we don't persist anything in requestedServices for non oauth flows because we act on them now.
-      await this._fxAccounts._internal.setSignedInUser(accountData);
-      await this._enableRequestedServices(requestedServices);
-    }
+    this.setPreviousAccountNameHashPref(accountData.email);
+    await this._fxAccounts._internal.setSignedInUser(accountData);
     log.debug("Webchannel finished logging a user in.");
   },
 
@@ -855,11 +831,7 @@ FxAccountsWebChannelHelpers.prototype = {
   },
 
   _getCapabilities() {
-    // pre-oauth flows there we a strange setup where we just supplied the "extra" engines,
-    // whereas oauth flows want them all.
-    let engines = lazy.oauthEnabled
-      ? Array.from(CHOOSE_WHAT_TO_SYNC_ALWAYS_AVAILABLE)
-      : [];
+    let engines = Array.from(CHOOSE_WHAT_TO_SYNC_ALWAYS_AVAILABLE);
     for (let optionalEngine of CHOOSE_WHAT_TO_SYNC_OPTIONALLY_AVAILABLE) {
       if (
         Services.prefs.getBoolPref(
