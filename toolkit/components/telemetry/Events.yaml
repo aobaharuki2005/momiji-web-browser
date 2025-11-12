@@ -774,7 +774,7 @@ normandy:
       This is different from enrollment or experiment activation because it
       registers when a user actually gets exposed to the experiment feature.
     bug_numbers: [1675104]
-    notification_emails: ["ujet@mozilla.com"]
+    notification_emails: ["omc-core@mozilla.com"]
     expiry_version: "never"
     extra_keys:
       branchSlug: The slug for the branch the user is enrolled in.
@@ -1447,7 +1447,7 @@ messaging_experiments:
       experiments. All qualified branch ID(s) will be recorded in the 'extra_keys'
       for each active experiment, and the event 'value' will be the experiment ID
     bug_numbers: [1471318]
-    notification_emails: ["ujet@mozilla.com"]
+    notification_emails: ["omc-core@mozilla.com"]
     expiry_version: "never"
     extra_keys:
       branches: >
@@ -1473,7 +1473,7 @@ messaging_experiments:
     bug_numbers:
       - 1644743
     notification_emails:
-      - ujet@mozilla.com
+      - omc-core@mozilla.com
     expiry_version: never
 
 # This category contains event entries used for Telemetry tests.
