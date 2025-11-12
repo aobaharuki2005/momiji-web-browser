@@ -57,7 +57,7 @@ class MOZ_STACK_CLASS EmitterScope : public Nestable<EmitterScope> {
 #endif
 
   // The number of enclosing environments. Used for error checking.
-  uint16_t environmentChainLength_;
+  uint8_t environmentChainLength_;
 
   // The next usable slot on the frame for not-closed over bindings.
   //

@@ -8677,7 +8677,7 @@ PBIResult PortableBaselineInterpret(
       }
 
       CASE(EnvCallee) {
-        uint16_t numHops = GET_ENVCOORD_HOPS(pc);
+        uint8_t numHops = GET_UINT8(pc);
         JSObject* env = &frame->environmentChain()->as<EnvironmentObject>();
         for (unsigned i = 0; i < numHops; i++) {
           env = &env->as<EnvironmentObject>().enclosingEnvironment();
