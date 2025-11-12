@@ -5,6 +5,7 @@
 
 #include "nsView.h"
 
+#include "nsDeviceContext.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -190,9 +191,7 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(
                                         aTransparency);
 }
 
-void nsView::SetDimensions(const nsRect& aRect) {
-  mDimBounds = aRect;
-}
+void nsView::SetDimensions(const nsRect& aRect) { mDimBounds = aRect; }
 
 void nsView::SetNeedsWindowPropertiesSync() {
   mNeedsWindowPropertiesSync = true;
@@ -290,17 +289,11 @@ void nsView::List(FILE* out, int32_t aIndent) const {
   int32_t i;
   for (i = aIndent; --i >= 0;) fputs("  ", out);
   fprintf(out, "%p ", (void*)this);
-  if (nullptr != mWindow) {
-    nscoord p2a = mViewManager->AppUnitsPerDevPixel();
-    LayoutDeviceIntRect rect = mWindow->GetClientBounds();
-    nsRect windowBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
-    rect = mWindow->GetBounds();
-    nsRect nonclientBounds = LayoutDeviceIntRect::ToAppUnits(rect, p2a);
+  if (mWindow) {
     nsrefcnt widgetRefCnt = mWindow.get()->AddRef() - 1;
     mWindow.get()->Release();
-    fprintf(out, "(widget=%p[%" PRIuPTR "] pos={%d,%d,%d,%d}) ", (void*)mWindow,
-            widgetRefCnt, nonclientBounds.X(), nonclientBounds.Y(),
-            windowBounds.Width(), windowBounds.Height());
+    fprintf(out, "(widget=%p[%" PRIuPTR "] pos=%s) ", (void*)mWindow,
+            widgetRefCnt, ToString(mWindow->GetBounds()).c_str());
   }
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}", brect.X(), brect.Y(), brect.Width(),
@@ -328,11 +321,20 @@ bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
     return false;
   }
 
-  RefPtr<nsDeviceContext> devContext = mViewManager->GetDeviceContext();
+  PresShell* ps = mViewManager->GetPresShell();
+  if (!ps) {
+    return false;
+  }
+
+  nsPresContext* pc = ps->GetPresContext();
+  if (!pc) {
+    return false;
+  }
+
   // ensure DPI is up-to-date, in case of window being opened and sized
   // on a non-default-dpi display (bug 829963)
-  devContext->CheckDPIChange();
-  int32_t p2a = devContext->AppUnitsPerDevPixel();
+  pc->DeviceContext()->CheckDPIChange();
+  int32_t p2a = pc->AppUnitsPerDevPixel();
   if (auto* frame = GetFrame()) {
     // Usually the resize would deal with this, but there are some cases (like
     // web-extension popups) where frames might already be correctly sized etc
@@ -344,10 +346,7 @@ bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
                                     NSIntPixelsToAppUnits(aHeight, p2a));
 
   if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-    PresShell* presShell = mViewManager->GetPresShell();
-    if (presShell && presShell->GetDocument()) {
-      pm->AdjustPopupsOnWindowChange(presShell);
-    }
+    pm->AdjustPopupsOnWindowChange(ps);
   }
 
   return true;
@@ -460,7 +459,7 @@ void nsView::RequestRepaint() {
 
 nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent,
                                   bool aUseAttachedEvents) {
-  MOZ_ASSERT(nullptr != aEvent->mWidget, "null widget ptr");
+  MOZ_ASSERT(aEvent->mWidget, "null widget ptr");
 
   nsEventStatus result = nsEventStatus_eIgnore;
   nsView* view;

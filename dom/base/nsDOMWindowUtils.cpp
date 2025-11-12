@@ -56,6 +56,7 @@
 #include "nsComputedDOMStyle.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
+#include "nsDeviceContext.h"
 #include "nsError.h"
 #include "nsFocusManager.h"
 #include "nsFrameManager.h"

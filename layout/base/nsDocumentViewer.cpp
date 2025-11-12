@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
+#include "nsDeviceContext.h"
 #include "nsFrameSelection.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIContent.h"
@@ -2180,7 +2181,7 @@ void nsDocumentViewer::MakeWindow(const nsSize& aSize) {
     return;
   }
 
-  mViewManager = new nsViewManager(mPresContext->DeviceContext());
+  mViewManager = new nsViewManager();
 
   // Create a view
   nsView* view = mViewManager->CreateView(aSize);

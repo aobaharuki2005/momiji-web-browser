@@ -72,6 +72,7 @@
 #include "nsCRT.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContentUtils.h"
+#include "nsDeviceContext.h"
 #include "nsDocShell.h"
 #include "nsFontCache.h"
 #include "nsFontFaceLoader.h"

@@ -51,15 +51,12 @@ using namespace mozilla::layers;
 
 uint32_t nsViewManager::gLastUserEventTime = 0;
 
-nsViewManager::nsViewManager(nsDeviceContext* aContext)
-    : mContext(aContext),
-      mPresShell(nullptr),
+nsViewManager::nsViewManager()
+    : mPresShell(nullptr),
       mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
       mRootView(nullptr),
       mPainting(false),
-      mHasPendingWidgetGeometryChanges(false) {
-  MOZ_ASSERT(aContext);
-}
+      mHasPendingWidgetGeometryChanges(false) {}
 
 nsViewManager::~nsViewManager() {
   if (mRootView) {
