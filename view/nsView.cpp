@@ -181,29 +181,6 @@ static LayoutDeviceIntRect WidgetViewBoundsToDevicePixels(
                                               aViewBounds.mRoundTo);
 }
 
-LayoutDeviceIntRect nsView::CalcWidgetBounds(WindowType aType,
-                                             TransparencyMode aTransparency) {
-  int32_t p2a = mViewManager->AppUnitsPerDevPixel();
-  auto viewBounds =
-      CalcWidgetViewBounds(mDimBounds, p2a, nullptr, mWindow.get(), aType);
-  auto newBounds =
-      WidgetViewBoundsToDevicePixels(viewBounds, p2a, aType, aTransparency);
-
-  // Compute where the top-left of our widget ended up relative to the parent
-  // widget, in appunits.
-  nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.X(), p2a),
-                        NSIntPixelsToAppUnits(newBounds.Y(), p2a));
-
-  // mViewToWidgetOffset is added to coordinates relative to the view origin
-  // to get coordinates relative to the widget.
-  // The view origin, relative to the parent widget, is at
-  // mDimBounds.TopLeft() + viewBounds.TopLeft().
-  // Our widget, relative to the parent widget, is roundedOffset.
-  mViewToWidgetOffset =
-      mDimBounds.TopLeft() + viewBounds.mBounds.TopLeft() - roundedOffset;
-  return newBounds;
-}
-
 LayoutDeviceIntRect nsView::CalcWidgetBounds(
     const nsRect& aBounds, int32_t aAppUnitsPerDevPixel, nsIFrame* aParentFrame,
     nsIWidget* aThisWidget, WindowType aType, TransparencyMode aTransparency) {
@@ -213,21 +190,7 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(
                                         aTransparency);
 }
 
-LayoutDeviceIntRect nsView::RecalcWidgetBounds() {
-  MOZ_ASSERT(mWindow);
-  return CalcWidgetBounds(mWindow->GetWindowType(),
-                          mWindow->GetTransparencyMode());
-}
-
 void nsView::SetDimensions(const nsRect& aRect) {
-  // Don't use nsRect's operator== here, since it returns true when
-  // both rects are empty even if they have different widths and we
-  // have cases where that sort of thing matters to us.
-  if (mDimBounds.TopLeft() == aRect.TopLeft() &&
-      mDimBounds.Size() == aRect.Size()) {
-    return;
-  }
-
   mDimBounds = aRect;
 }
 
@@ -268,9 +231,6 @@ void nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
     mWindow->AsyncEnableDragDrop(true);
   }
   mWidgetIsTopLevel = true;
-
-  // Refresh the view bounds
-  RecalcWidgetBounds();
 }
 
 // Detach this view from an attached widget.
