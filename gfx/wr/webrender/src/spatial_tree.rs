@@ -116,6 +116,40 @@ impl ops::Not for VisibleFace {
 pub trait SpatialNodeContainer {
     /// Get the common information for a given spatial node
     fn get_node_info(&self, index: SpatialNodeIndex) -> SpatialNodeInfo;
+
+    fn get_snapping_info(
+        &self,
+        parent_index: Option<SpatialNodeIndex>
+    ) -> Option<(ScaleOffset, LayoutVector2D)> {
+        match parent_index {
+            Some(parent_index) => {
+                let node_info = self.get_node_info(parent_index);
+
+                match node_info.snapping_transform {
+                    Some(snapping_transform) => {
+                        let content_offset = match node_info.node_type {
+                            SpatialNodeType::StickyFrame(ref info) => {
+                                info.previously_applied_offset
+                            }
+                            SpatialNodeType::ScrollFrame(ref info) => {
+                                info.external_scroll_offset
+                            }
+                            SpatialNodeType::ReferenceFrame(..) => {
+                                LayoutVector2D::zero()
+                            }
+                        };
+                        Some((snapping_transform, content_offset))
+                    }
+                    None => {
+                        None
+                    }
+                }
+            }
+            None => {
+                Some((ScaleOffset::identity(), LayoutVector2D::zero()))
+            }
+        }
+    }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -438,17 +472,10 @@ impl SceneSpatialTree {
         mut node: SceneSpatialNode,
         uid: SpatialNodeUid,
     ) -> SpatialNodeIndex {
-        let parent_snapping_transform = match node.parent {
-            Some(parent_index) => {
-                self.get_node_info(parent_index).snapping_transform
-            }
-            None => {
-                Some(ScaleOffset::identity())
-            }
-        };
+        let parent_info = self.get_snapping_info(node.parent);
 
         node.snapping_transform = calculate_snapping_transform(
-            parent_snapping_transform,
+            parent_info,
             &node.descriptor.node_type,
         );
 
@@ -1206,19 +1233,13 @@ impl SpatialTree {
         node_index: SpatialNodeIndex,
         scene_properties: &SceneProperties,
     ) {
-        let parent_snapping_transform = match self.get_spatial_node(node_index).parent {
-            Some(parent_index) => {
-                self.get_node_info(parent_index).snapping_transform
-            }
-            None => {
-                Some(ScaleOffset::identity())
-            }
-        };
+        let parent_index = self.get_spatial_node(node_index).parent;
+        let parent_info = self.get_snapping_info(parent_index);
 
         let node = &mut self.spatial_nodes[node_index.0 as usize];
 
         node.snapping_transform = calculate_snapping_transform(
-            parent_snapping_transform,
+            parent_info,
             &node.node_type,
         );
 
@@ -1399,27 +1420,39 @@ pub fn get_external_scroll_offset<S: SpatialNodeContainer>(
 }
 
 fn calculate_snapping_transform(
-    parent_snapping_transform: Option<ScaleOffset>,
+    parent_info: Option<(ScaleOffset, LayoutVector2D)>,
     node_type: &SpatialNodeType,
 ) -> Option<ScaleOffset> {
     // We need to incorporate the parent scale/offset with the child.
     // If the parent does not have a scale/offset, then we know we are
     // not 2d axis aligned and thus do not need to snap its children
     // either.
-    let parent_scale_offset = match parent_snapping_transform {
-        Some(parent_snapping_transform) => parent_snapping_transform,
+    let (parent_scale_offset, content_fract_offset) = match parent_info {
+        Some((transform, content_offset)) => {
+            (
+                transform,
+                LayoutVector2D::new(
+                    content_offset.x.fract(),
+                    content_offset.y.fract(),
+                )
+            )
+        }
         None => return None,
     };
 
     let scale_offset = match node_type {
         SpatialNodeType::ReferenceFrame(ref info) => {
+            // Ensure that if a parent external scroll offset has a fractional component
+            // that this doesn't affect the snapping calculations during scene building
+            // (the overall scroll offset is snapped to device pixel by the spatial tree)
+            let origin_offset = info.origin_in_parent_reference_frame - content_fract_offset;
+
             match info.source_transform {
                 PropertyBinding::Value(ref value) => {
                     // We can only get a ScaleOffset if the transform is 2d axis
                     // aligned.
                     match ScaleOffset::from_transform(value) {
                         Some(scale_offset) => {
-                            let origin_offset = info.origin_in_parent_reference_frame;
                             scale_offset.then(&ScaleOffset::from_offset(origin_offset.to_untyped()))
                         }
                         None => return None,
@@ -1430,7 +1463,6 @@ fn calculate_snapping_transform(
                 // We still want to incorporate the reference frame offset however.
                 // TODO(aosmond): Is there a better known starting point?
                 PropertyBinding::Binding(..) => {
-                    let origin_offset = info.origin_in_parent_reference_frame;
                     ScaleOffset::from_offset(origin_offset.to_untyped())
                 }
             }
