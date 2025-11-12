@@ -8,7 +8,6 @@
 #define mozilla_ipc_ProcessUtils_h
 
 #include <functional>
-#include <vector>
 
 #include "mozilla/GeckoArgs.h"
 #include "mozilla/ipc/FileDescriptor.h"

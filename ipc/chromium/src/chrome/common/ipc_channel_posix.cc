@@ -27,9 +27,6 @@
 #include <sys/un.h>
 #include <sys/uio.h>
 
-#include <string>
-#include <map>
-
 #include "base/command_line.h"
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
