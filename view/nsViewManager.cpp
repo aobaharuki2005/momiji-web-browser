@@ -531,18 +531,6 @@ void nsViewManager::ResizeView(nsView* aView, const nsRect& aRect) {
   // because layout will change it back again if necessary.
 }
 
-LayoutDeviceIntRect nsViewManager::ViewToWidget(nsView* aView,
-                                                const nsRect& aRect) const {
-  NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
-
-  // account for the view's origin not lining up with the widget's
-  nsRect rect = aRect + aView->ViewToWidgetOffset();
-
-  // finally, convert to device coordinates.
-  return LayoutDeviceIntRect::FromUnknownRect(
-      rect.ToOutsidePixels(AppUnitsPerDevPixel()));
-}
-
 void nsViewManager::IsPainting(bool& aIsPainting) {
   aIsPainting = IsPainting();
 }

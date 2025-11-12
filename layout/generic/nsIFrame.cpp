@@ -7868,7 +7868,6 @@ nsIWidget* nsIFrame::GetNearestWidget(nsPoint& aOffset) const {
     }
     if (auto* view = frame->GetView()) {
       if (auto* widget = view->GetWidget()) {
-        aOffset += view->ViewToWidgetOffset();
         aOffset = aOffset.ScaleToOtherAppUnits(curAPD, targetAPD);
         return widget;
       }
