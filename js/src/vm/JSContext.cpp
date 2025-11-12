@@ -901,7 +901,7 @@ void InternalJobQueue::runJobs(JSContext* cx) {
 
     if (JS::Prefs::use_js_microtask_queue()) {
       // Execute jobs in a loop until we've reached the end of the queue.
-      JS::Rooted<JS::MicroTask> job(cx);
+      JS::Rooted<JS::GenericMicroTask> job(cx);
       while (JS::HasAnyMicroTasks(cx)) {
         MOZ_ASSERT(queue.empty());
         // A previous job might have set this flag. E.g., the js shell
@@ -1081,7 +1081,7 @@ void js::MicroTaskQueueElement::trace(JSTracer* trc) {
   }
 }
 
-JS::MicroTask js::MicroTaskQueueSet::popDebugFront() {
+JS::GenericMicroTask js::MicroTaskQueueSet::popDebugFront() {
   JS_LOG(mtq, Info, "JS Drain Queue: popDebugFront");
   if (!debugMicroTaskQueue.empty()) {
     JS::Value p = debugMicroTaskQueue.front();
@@ -1091,7 +1091,7 @@ JS::MicroTask js::MicroTaskQueueSet::popDebugFront() {
   return JS::NullValue();
 }
 
-JS::MicroTask js::MicroTaskQueueSet::popFront() {
+JS::GenericMicroTask js::MicroTaskQueueSet::popFront() {
   JS_LOG(mtq, Info, "JS Drain Queue");
   if (!debugMicroTaskQueue.empty()) {
     JS::Value p = debugMicroTaskQueue.front();
@@ -1108,49 +1108,52 @@ JS::MicroTask js::MicroTaskQueueSet::popFront() {
 }
 
 bool js::MicroTaskQueueSet::enqueueRegularMicroTask(
-    JSContext* cx, const JS::MicroTask& entry) {
+    JSContext* cx, const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Verbose, "JS: Enqueue Regular MT");
   JS::JobQueueMayNotBeEmpty(cx);
   return microTaskQueue.pushBack(entry);
 }
 
 bool js::MicroTaskQueueSet::prependRegularMicroTask(
-    JSContext* cx, const JS::MicroTask& entry) {
+    JSContext* cx, const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Verbose, "JS: Prepend Regular MT");
   JS::JobQueueMayNotBeEmpty(cx);
   return microTaskQueue.emplaceFront(entry);
 }
 
-bool js::MicroTaskQueueSet::enqueueDebugMicroTask(JSContext* cx,
-                                                  const JS::MicroTask& entry) {
+bool js::MicroTaskQueueSet::enqueueDebugMicroTask(
+    JSContext* cx, const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Verbose, "JS: Enqueue Debug MT");
   return debugMicroTaskQueue.pushBack(entry);
 }
 
-JS_PUBLIC_API bool JS::EnqueueMicroTask(JSContext* cx, const MicroTask& entry) {
+JS_PUBLIC_API bool JS::EnqueueMicroTask(JSContext* cx,
+                                        const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Info, "Enqueue of non JS MT");
 
   return cx->microTaskQueues->enqueueRegularMicroTask(cx, entry);
 }
 
-JS_PUBLIC_API bool JS::EnqueueDebugMicroTask(JSContext* cx,
-                                             const MicroTask& entry) {
+JS_PUBLIC_API bool JS::EnqueueDebugMicroTask(
+    JSContext* cx, const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Info, "Enqueue of non JS MT");
 
   return cx->microTaskQueues->enqueueDebugMicroTask(cx, entry);
 }
 
-JS_PUBLIC_API bool JS::PrependMicroTask(JSContext* cx, const MicroTask& entry) {
+JS_PUBLIC_API bool JS::PrependMicroTask(JSContext* cx,
+                                        const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Info, "Prepend job to MTQ");
 
   return cx->microTaskQueues->prependRegularMicroTask(cx, entry);
 }
 
-JS_PUBLIC_API JS::MicroTask JS::DequeueNextMicroTask(JSContext* cx) {
+JS_PUBLIC_API JS::GenericMicroTask JS::DequeueNextMicroTask(JSContext* cx) {
   return cx->microTaskQueues->popFront();
 }
 
-JS_PUBLIC_API JS::MicroTask JS::DequeueNextDebuggerMicroTask(JSContext* cx) {
+JS_PUBLIC_API JS::GenericMicroTask JS::DequeueNextDebuggerMicroTask(
+    JSContext* cx) {
   return cx->microTaskQueues->popDebugFront();
 }
 
@@ -1200,10 +1203,11 @@ JS_PUBLIC_API bool JS::HasRegularMicroTasks(JSContext* cx) {
   return !cx->microTaskQueues->microTaskQueue.empty();
 }
 
-JS_PUBLIC_API JS::MicroTask JS::DequeueNextRegularMicroTask(JSContext* cx) {
+JS_PUBLIC_API JS::GenericMicroTask JS::DequeueNextRegularMicroTask(
+    JSContext* cx) {
   auto& queue = cx->microTaskQueues->microTaskQueue;
   if (!queue.empty()) {
-    JS::MicroTask p = queue.front();
+    JS::GenericMicroTask p = queue.front();
     queue.popFront();
     return p;
   }
