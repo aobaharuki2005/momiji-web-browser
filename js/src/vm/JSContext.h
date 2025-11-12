@@ -700,6 +700,12 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 #endif
   }
 
+  // OOM stack trace buffer management
+  void unsetOOMStackTrace();
+  const char* getOOMStackTrace() const;
+  bool hasOOMStackTrace() const;
+  void captureOOMStackTrace();
+
   js::ContextData<int32_t> reportGranularity; /* see vm/Probes.h */
 
   js::ContextData<js::AutoResolving*> resolvingList;
@@ -971,6 +977,14 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::ContextData<JS::PromiseRejectionTrackerCallback>
       promiseRejectionTrackerCallback;
   js::ContextData<void*> promiseRejectionTrackerCallbackData;
+
+  // Pre-allocated buffer for storing out-of-memory stack traces.
+  // This buffer is allocated during context initialization to avoid
+  // allocation during OOM conditions. The buffer stores a formatted
+  // stack trace string that can be retrieved by privileged JavaScript.
+  static constexpr size_t OOMStackTraceBufferSize = 4096;
+  js::ContextData<char*> oomStackTraceBuffer_;
+  js::ContextData<bool> oomStackTraceBufferValid_;
 
   JSObject* getIncumbentGlobal(JSContext* cx);
   bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job,

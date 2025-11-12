@@ -10037,6 +10037,32 @@ static bool TestingFunc_SupportDifferentialTesting(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool GetLastOOMStackTrace(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!cx->hasOOMStackTrace()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  const char* stackTrace = cx->getOOMStackTrace();
+  if (!stackTrace) {
+    args.rval().setNull();
+    return true;
+  }
+
+  JSString* str = JS_NewStringCopyZ(cx, stackTrace);
+  if (!str) {
+    return false;
+  }
+
+  // Clear the stored OOM stack trace after retrieving it once.
+  cx->unsetOOMStackTrace();
+
+  args.rval().setString(str);
+  return true;
+}
+
 // clang-format off
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
@@ -11154,6 +11180,12 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
   JS_FN_HELP("popAllFusesInRealm", PopAllFusesInRealm, 0, 0,
   "popAllFusesInRealm()",
   " Pops all the fuses in the current realm"),
+
+    JS_FN_HELP("getLastOOMStackTrace", GetLastOOMStackTrace, 0, 0,
+"getLastOOMStackTrace()",
+"  Returns the stack trace captured from the most recent out-of-memory exception,\n"
+"  or null if no OOM stack trace is available. The stack trace shows the JavaScript\n"
+"  call stack at the time the out-of-memory condition occurred."),
 
   JS_FN_HELP("popAllFusesInRuntime", PopAllFusesInRuntime, 0, 0,
   "popAllFusesInRuntime()",
