@@ -587,7 +587,7 @@ static already_AddRefed<Element> MakePseudo(Document& aDoc,
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document* aDoc,
-                    nsCSSPropertyID aProp, const nsACString& aValue) {
+                    NonCustomCSSPropertyId aProp, const nsACString& aValue) {
   return Servo_DeclarationBlock_SetPropertyById(
       aDecls, aProp, &aValue,
       /* is_important = */ false, aDoc->DefaultStyleAttrURLData(),
@@ -596,12 +596,14 @@ static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document* aDoc,
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document*,
-                    nsCSSPropertyID aProp, float aLength, nsCSSUnit aUnit) {
+                    NonCustomCSSPropertyId aProp, float aLength,
+                    nsCSSUnit aUnit) {
   return Servo_DeclarationBlock_SetLengthValue(aDecls, aProp, aLength, aUnit);
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document*,
-                    nsCSSPropertyID aProp, const CSSToCSSMatrix4x4Flagged& aM) {
+                    NonCustomCSSPropertyId aProp,
+                    const CSSToCSSMatrix4x4Flagged& aM) {
   MOZ_ASSERT(aProp == eCSSProperty_transform);
   AutoTArray<StyleTransformOperation, 1> ops;
   ops.AppendElement(
@@ -612,37 +614,40 @@ static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document*,
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document* aDoc,
-                    nsCSSPropertyID aProp, const StyleWritingModeProperty aWM) {
+                    NonCustomCSSPropertyId aProp,
+                    const StyleWritingModeProperty aWM) {
   return Servo_DeclarationBlock_SetKeywordValue(aDecls, aProp, (int32_t)aWM);
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document* aDoc,
-                    nsCSSPropertyID aProp, const StyleDirection aDirection) {
+                    NonCustomCSSPropertyId aProp,
+                    const StyleDirection aDirection) {
   return Servo_DeclarationBlock_SetKeywordValue(aDecls, aProp,
                                                 (int32_t)aDirection);
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document* aDoc,
-                    nsCSSPropertyID aProp,
+                    NonCustomCSSPropertyId aProp,
                     const StyleTextOrientation aTextOrientation) {
   return Servo_DeclarationBlock_SetKeywordValue(aDecls, aProp,
                                                 (int32_t)aTextOrientation);
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document* aDoc,
-                    nsCSSPropertyID aProp, const StyleBlend aBlend) {
+                    NonCustomCSSPropertyId aProp, const StyleBlend aBlend) {
   return Servo_DeclarationBlock_SetKeywordValue(aDecls, aProp, (int32_t)aBlend);
 }
 
 static bool SetProp(
-    StyleLockedDeclarationBlock* aDecls, Document*, nsCSSPropertyID aProp,
+    StyleLockedDeclarationBlock* aDecls, Document*,
+    NonCustomCSSPropertyId aProp,
     const StyleOwnedSlice<mozilla::StyleFilter>& aBackdropFilters) {
   return Servo_DeclarationBlock_SetBackdropFilter(aDecls, aProp,
                                                   &aBackdropFilters);
 }
 
 static bool SetProp(StyleLockedDeclarationBlock* aDecls, Document*,
-                    nsCSSPropertyID aProp,
+                    NonCustomCSSPropertyId aProp,
                     const StyleColorScheme& aColorScheme) {
   return Servo_DeclarationBlock_SetColorScheme(aDecls, aProp, &aColorScheme);
 }

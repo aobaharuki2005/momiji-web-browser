@@ -380,7 +380,7 @@ renaming_overrides_prefixing = true
 "ComputedTiming" = "ComputedTiming"
 "CountedUnknownProperty" = "CountedUnknownProperty"
 "RefPtr" = "RefPtr"
-"nsCSSPropertyID" = "nsCSSPropertyID"
+"NonCustomCSSPropertyId" = "NonCustomCSSPropertyId"
 "nsCSSPropertyIDSet" = "nsCSSPropertyIDSet"
 "AnimatedPropertyID" = "AnimatedPropertyID"
 "nsCSSValueSharedList" = "nsCSSValueSharedList"
@@ -1207,7 +1207,7 @@ renaming_overrides_prefixing = true
 "TransitionProperty" = """
   bool IsAll() const {
     return IsNonCustom() &&
-           nsCSSPropertyID(AsNonCustom()._0) == eCSSProperty_all;
+           NonCustomCSSPropertyId(AsNonCustom()._0) == eCSSProperty_all;
   }
 """
 

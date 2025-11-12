@@ -57,7 +57,7 @@ bool nsTransitionManager::UpdateTransitions(
 
 // This function expands the shorthands and "all" keyword specified in
 // transition-property, and then execute |aHandler| on the expanded longhand.
-// |aHandler| should be a lamda function which accepts nsCSSPropertyID.
+// |aHandler| should be a lamda function which accepts NonCustomCSSPropertyId.
 template <typename T>
 static void ExpandTransitionProperty(const StyleTransitionProperty& aProperty,
                                      T aHandler) {
@@ -70,7 +70,8 @@ static void ExpandTransitionProperty(const StyleTransitionProperty& aProperty,
       break;
     }
     case StyleTransitionProperty::Tag::NonCustom: {
-      nsCSSPropertyID id = nsCSSPropertyID(aProperty.AsNonCustom()._0);
+      NonCustomCSSPropertyId id =
+          NonCustomCSSPropertyId(aProperty.AsNonCustom()._0);
       if (nsCSSProps::IsShorthand(id)) {
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, id,
                                              CSSEnabledState::ForAllContent) {
@@ -262,7 +263,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     const ComputedStyle& aOldStyle, const ComputedStyle& aNewStyle,
     AnimatedPropertyIDSet& aPropertiesChecked) {
   // IsShorthand itself will assert if aProperty is not a property.
-  MOZ_ASSERT(aProperty.IsCustom() || !nsCSSProps::IsShorthand(aProperty.mID),
+  MOZ_ASSERT(aProperty.IsCustom() || !nsCSSProps::IsShorthand(aProperty.mId),
              "property out of range");
   NS_ASSERTION(
       !aElementTransitions || &aElementTransitions->mElement == aElement,

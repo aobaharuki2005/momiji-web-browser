@@ -2787,7 +2787,7 @@ void CanvasRenderingContext2D::SetShadowColor(const nsACString& aShadowColor) {
 //
 
 static already_AddRefed<StyleLockedDeclarationBlock> CreateDeclarationForServo(
-    nsCSSPropertyID aProperty, const nsACString& aPropertyValue,
+    NonCustomCSSPropertyId aProperty, const nsACString& aPropertyValue,
     Document* aDocument) {
   ServoCSSParser::ParsingEnvironment env{aDocument->DefaultStyleAttrURLData(),
                                          aDocument->GetCompatibilityMode(),
@@ -2973,7 +2973,7 @@ void CanvasRenderingContext2D::SetFilter(const nsACString& aFilter,
 }
 
 static already_AddRefed<const ComputedStyle> ResolveStyleForServo(
-    nsCSSPropertyID aProperty, const nsACString& aString,
+    NonCustomCSSPropertyId aProperty, const nsACString& aString,
     const ComputedStyle* aParentStyle, PresShell* aPresShell,
     ErrorResult& aError) {
   RefPtr<StyleLockedDeclarationBlock> declarations =
@@ -2992,8 +2992,8 @@ static already_AddRefed<const ComputedStyle> ResolveStyleForServo(
 }
 
 already_AddRefed<const ComputedStyle>
-CanvasRenderingContext2D::ResolveStyleForProperty(nsCSSPropertyID aProperty,
-                                                  const nsACString& aValue) {
+CanvasRenderingContext2D::ResolveStyleForProperty(
+    NonCustomCSSPropertyId aProperty, const nsACString& aValue) {
   RefPtr<PresShell> presShell = GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return nullptr;

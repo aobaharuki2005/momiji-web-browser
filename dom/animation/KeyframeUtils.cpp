@@ -81,14 +81,14 @@ struct AdditionalProperty {
     }
     bool LessThan(const AdditionalProperty& aLhs,
                   const AdditionalProperty& aRhs) const {
-      bool customLhs =
-          aLhs.mProperty.mID == nsCSSPropertyID::eCSSPropertyExtra_variable;
-      bool customRhs =
-          aRhs.mProperty.mID == nsCSSPropertyID::eCSSPropertyExtra_variable;
+      bool customLhs = aLhs.mProperty.mId ==
+                       NonCustomCSSPropertyId::eCSSPropertyExtra_variable;
+      bool customRhs = aRhs.mProperty.mId ==
+                       NonCustomCSSPropertyId::eCSSPropertyExtra_variable;
       if (!customLhs && !customRhs) {
         // Compare by IDL names.
-        return nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty.mID) <
-               nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty.mID);
+        return nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty.mId) <
+               nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty.mId);
       }
       if (customLhs && customRhs) {
         // Compare by custom property names.
@@ -129,15 +129,15 @@ struct KeyframeValueEntry {
     static bool LessThan(const KeyframeValueEntry& aLhs,
                          const KeyframeValueEntry& aRhs) {
       // First, sort by property name.
-      bool customLhs =
-          aLhs.mProperty.mID == nsCSSPropertyID::eCSSPropertyExtra_variable;
-      bool customRhs =
-          aRhs.mProperty.mID == nsCSSPropertyID::eCSSPropertyExtra_variable;
+      bool customLhs = aLhs.mProperty.mId ==
+                       NonCustomCSSPropertyId::eCSSPropertyExtra_variable;
+      bool customRhs = aRhs.mProperty.mId ==
+                       NonCustomCSSPropertyId::eCSSPropertyExtra_variable;
       if (!customLhs && !customRhs) {
         // Compare by IDL names.
         int32_t order =
-            nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty.mID) -
-            nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty.mID);
+            nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty.mId) -
+            nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty.mId);
         if (order != 0) {
           return order < 0;
         }
@@ -353,7 +353,7 @@ bool KeyframeUtils::IsAnimatableProperty(const AnimatedPropertyID& aProperty) {
   // Regardless of the backend type, treat the 'display' property as not
   // animatable. (Servo will report it as being animatable, since it is
   // in fact animatable by SMIL.)
-  if (aProperty.mID == eCSSProperty_display) {
+  if (aProperty.mId == eCSSProperty_display) {
     return false;
   }
   return Servo_Property_IsAnimatable(&aProperty);
@@ -499,7 +499,7 @@ static bool ConvertKeyframeSequence(JSContext* aCx, dom::Document* aDocument,
       // includes a chrome-only member that can be set to indicate that
       // ComputeValues should fail for shorthand property values on that
       // keyframe.
-      if (nsCSSProps::IsShorthand(pair.mProperty.mID) &&
+      if (nsCSSProps::IsShorthand(pair.mProperty.mId) &&
           keyframeDict.mSimulateComputeValuesFailure) {
         MarkAsComputeValuesFailureKey(keyframe->mPropertyValues.LastElement());
       }
@@ -555,26 +555,27 @@ static bool GetPropertyValuesPairs(JSContext* aCx,
     // This means if the attribute is the string "cssOffset"/"cssFloat", we use
     // CSS "offset"/"float" property.
     // https://drafts.csswg.org/web-animations/#property-name-conversion
-    nsCSSPropertyID propertyID = nsCSSPropertyID::eCSSProperty_UNKNOWN;
+    NonCustomCSSPropertyId propertyId =
+        NonCustomCSSPropertyId::eCSSProperty_UNKNOWN;
     if (nsCSSProps::IsCustomPropertyName(propName)) {
-      propertyID = eCSSPropertyExtra_variable;
+      propertyId = eCSSPropertyExtra_variable;
     } else if (propName.EqualsLiteral("cssOffset")) {
-      propertyID = nsCSSPropertyID::eCSSProperty_offset;
+      propertyId = NonCustomCSSPropertyId::eCSSProperty_offset;
     } else if (propName.EqualsLiteral("cssFloat")) {
-      propertyID = nsCSSPropertyID::eCSSProperty_float;
+      propertyId = NonCustomCSSPropertyId::eCSSProperty_float;
     } else if (!propName.EqualsLiteral("offset") &&
                !propName.EqualsLiteral("float")) {
-      propertyID = nsCSSProps::LookupPropertyByIDLName(
+      propertyId = nsCSSProps::LookupPropertyByIDLName(
           propName, CSSEnabledState::ForAllContent);
     }
 
     // TODO(zrhoffman, bug 1811897) Add test coverage for removing the `--`
     // prefix here.
     AnimatedPropertyID property =
-        propertyID == eCSSPropertyExtra_variable
+        propertyId == eCSSPropertyExtra_variable
             ? AnimatedPropertyID(
                   NS_Atomize(Substring(propName, 2, propName.Length() - 2)))
-            : AnimatedPropertyID(propertyID);
+            : AnimatedPropertyID(propertyId);
 
     if (KeyframeUtils::IsAnimatableProperty(property)) {
       properties.AppendElement(AdditionalProperty{std::move(property), i});
@@ -729,7 +730,7 @@ static bool HasValidOffsets(const nsTArray<Keyframe>& aKeyframes) {
  *              a shorthand property.
  */
 static void MarkAsComputeValuesFailureKey(PropertyValuePair& aPair) {
-  MOZ_ASSERT(nsCSSProps::IsShorthand(aPair.mProperty.mID),
+  MOZ_ASSERT(nsCSSProps::IsShorthand(aPair.mProperty.mId),
              "Only shorthand property values can be marked as failure values");
 
   aPair.mSimulateComputeValuesFailure = true;

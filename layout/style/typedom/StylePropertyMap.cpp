@@ -42,8 +42,8 @@ void StylePropertyMap::Set(
     ErrorResult& aRv) {
   // Step 2.
 
-  nsCSSPropertyID propID = nsCSSProps::LookupProperty(aProperty);
-  if (propID == eCSSProperty_UNKNOWN) {
+  NonCustomCSSPropertyId propId = nsCSSProps::LookupProperty(aProperty);
+  if (propId == eCSSProperty_UNKNOWN) {
     aRv.ThrowTypeError("Invalid property: "_ns + aProperty);
     return;
   }

@@ -102,7 +102,7 @@ class SVGImageElement final : public SVGImageElementBase,
 
   already_AddRefed<Promise> Decode(ErrorResult& aRv);
 
-  static nsCSSPropertyID GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum);
+  static NonCustomCSSPropertyId GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum);
 
   gfx::Rect GeometryBounds(const gfx::Matrix& aToBoundsSpace);
 

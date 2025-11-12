@@ -12,9 +12,9 @@
 #ifndef mozilla_DeclarationBlock_h
 #define mozilla_DeclarationBlock_h
 
+#include "NonCustomCSSPropertyId.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/ServoBindings.h"
-#include "nsCSSPropertyID.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -179,8 +179,9 @@ class DeclarationBlock final {
     Servo_DeclarationBlock_GetPropertyValue(mRaw, &aProperty, &aValue);
   }
 
-  void GetPropertyValueByID(nsCSSPropertyID aPropID, nsACString& aValue) const {
-    Servo_DeclarationBlock_GetPropertyValueById(mRaw, aPropID, &aValue);
+  void GetPropertyValueById(NonCustomCSSPropertyId aPropId,
+                            nsACString& aValue) const {
+    Servo_DeclarationBlock_GetPropertyValueById(mRaw, aPropId, &aValue);
   }
 
   bool GetPropertyIsImportant(const nsACString& aProperty) const {
@@ -201,7 +202,7 @@ class DeclarationBlock final {
   }
 
   // Returns whether the property was removed.
-  bool RemovePropertyByID(nsCSSPropertyID aProperty,
+  bool RemovePropertyById(NonCustomCSSPropertyId aProperty,
                           DeclarationBlockMutationClosure aClosure = {}) {
     AssertMutable();
     return Servo_DeclarationBlock_RemovePropertyById(mRaw, aProperty, aClosure);

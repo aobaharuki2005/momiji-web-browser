@@ -2483,7 +2483,7 @@ class nsLayoutUtils {
    * not overridden by !important rules.
    */
   static bool HasEffectiveAnimation(const nsIFrame* aFrame,
-                                    nsCSSPropertyID aProperty);
+                                    NonCustomCSSPropertyId aProperty);
 
   /**
    * Returns true if |aFrame| has an animation where at least one of the

@@ -3255,16 +3255,16 @@ nsDOMWindowUtils::ComputeAnimationDistance(Element* aElement,
                                            double* aResult) {
   NS_ENSURE_ARG_POINTER(aElement);
 
-  nsCSSPropertyID propertyID =
+  NonCustomCSSPropertyId propertyId =
       nsCSSProps::LookupProperty(NS_ConvertUTF16toUTF8(aProperty));
-  if (propertyID == eCSSProperty_UNKNOWN ||
-      nsCSSProps::IsShorthand(propertyID)) {
+  if (propertyId == eCSSProperty_UNKNOWN ||
+      nsCSSProps::IsShorthand(propertyId)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  AnimatedPropertyID property = propertyID == eCSSPropertyExtra_variable
+  AnimatedPropertyID property = propertyId == eCSSPropertyExtra_variable
                                     ? AnimatedPropertyID(NS_Atomize(aProperty))
-                                    : AnimatedPropertyID(propertyID);
+                                    : AnimatedPropertyID(propertyId);
 
   AnimationValue v1 = AnimationValue::FromString(
       property, NS_ConvertUTF16toUTF8(aValue1), aElement);
@@ -3288,17 +3288,17 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCSSPropertyID propertyID =
+  NonCustomCSSPropertyId propertyId =
       nsCSSProps::LookupProperty(NS_ConvertUTF16toUTF8(aProperty));
-  if (propertyID == eCSSProperty_UNKNOWN ||
-      nsCSSProps::IsShorthand(propertyID)) {
+  if (propertyId == eCSSProperty_UNKNOWN ||
+      nsCSSProps::IsShorthand(propertyId)) {
     return NS_ERROR_INVALID_ARG;
   }
   AnimatedPropertyID property =
-      propertyID == eCSSPropertyExtra_variable
+      propertyId == eCSSPropertyExtra_variable
           ? AnimatedPropertyID(
                 NS_Atomize(Substring(aProperty, 2, aProperty.Length() - 2)))
-          : AnimatedPropertyID(propertyID);
+          : AnimatedPropertyID(propertyId);
 
   switch (aFlushType) {
     case FLUSH_NONE:

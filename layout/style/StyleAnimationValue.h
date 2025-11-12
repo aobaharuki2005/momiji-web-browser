@@ -9,11 +9,11 @@
 #ifndef mozilla_StyleAnimationValue_h_
 #define mozilla_StyleAnimationValue_h_
 
+#include "NonCustomCSSPropertyId.h"
 #include "mozilla/AnimatedPropertyID.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoStyleConsts.h"  // Servo_AnimationValue_Dump
-#include "nsCSSPropertyID.h"
 #include "nsColor.h"
 #include "nsStringFwd.h"
 #include "nsStyleTransformMatrix.h"
@@ -108,7 +108,7 @@ struct AnimationValue {
   // StyleAnimationValue, so we return its already_AddRefed<> to avoid
   // adding/removing a redundant ref-count.
   static already_AddRefed<StyleAnimationValue> FromAnimatable(
-      nsCSSPropertyID aProperty, const layers::Animatable& aAnimatable);
+      NonCustomCSSPropertyId aProperty, const layers::Animatable& aAnimatable);
 
   RefPtr<StyleAnimationValue> mServo;
 };

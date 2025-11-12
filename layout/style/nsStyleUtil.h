@@ -6,8 +6,8 @@
 #ifndef nsStyleUtil_h___
 #define nsStyleUtil_h___
 
+#include "NonCustomCSSPropertyId.h"
 #include "nsCRT.h"
-#include "nsCSSPropertyID.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsGkAtoms.h"

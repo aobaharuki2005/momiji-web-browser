@@ -622,7 +622,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                     nsACString& aNormalized);
 
   already_AddRefed<const ComputedStyle> ResolveStyleForProperty(
-      nsCSSPropertyID aProperty, const nsACString& aValue);
+      NonCustomCSSPropertyId aProperty, const nsACString& aValue);
 
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,

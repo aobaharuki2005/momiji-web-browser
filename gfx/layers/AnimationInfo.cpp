@@ -327,7 +327,7 @@ static Maybe<ScrollTimelineOptions> GetScrollTimelineOptions(
   return Some(ScrollTimelineOptions(source, timeline->Axis()));
 }
 
-static void SetAnimatable(nsCSSPropertyID aProperty,
+static void SetAnimatable(NonCustomCSSPropertyId aProperty,
                           const AnimationValue& aAnimationValue,
                           nsIFrame* aFrame, TransformReferenceBox& aRefBox,
                           layers::Animatable& aAnimatable) {
@@ -456,7 +456,7 @@ void AnimationInfo::AddAnimationForProperty(
   animation->fillMode() = static_cast<uint8_t>(computedTiming.mFill);
   MOZ_ASSERT(!aProperty.mProperty.IsCustom(),
              "We don't animate custom properties in the compositor");
-  animation->property() = aProperty.mProperty.mID;
+  animation->property() = aProperty.mProperty.mId;
   animation->playbackRate() =
       static_cast<float>(aAnimation->CurrentOrPendingPlaybackRate());
   animation->previousPlaybackRate() =
@@ -487,7 +487,7 @@ void AnimationInfo::AddAnimationForProperty(
       aAnimation->GetEffect()->AsKeyframeEffect()->BaseStyle(
           aProperty.mProperty);
   if (!baseStyle.IsNull()) {
-    SetAnimatable(aProperty.mProperty.mID, baseStyle, aFrame, refBox,
+    SetAnimatable(aProperty.mProperty.mId, baseStyle, aFrame, refBox,
                   animation->baseStyle());
   } else {
     animation->baseStyle() = null_t();
@@ -495,9 +495,9 @@ void AnimationInfo::AddAnimationForProperty(
 
   for (const AnimationPropertySegment& segment : aProperty.mSegments) {
     AnimationSegment* animSegment = animation->segments().AppendElement();
-    SetAnimatable(aProperty.mProperty.mID, segment.mFromValue, aFrame, refBox,
+    SetAnimatable(aProperty.mProperty.mId, segment.mFromValue, aFrame, refBox,
                   animSegment->startState());
-    SetAnimatable(aProperty.mProperty.mID, segment.mToValue, aFrame, refBox,
+    SetAnimatable(aProperty.mProperty.mId, segment.mToValue, aFrame, refBox,
                   animSegment->endState());
 
     animSegment->startPortion() = segment.mFromKey;
@@ -552,10 +552,11 @@ void AnimationInfo::AddAnimationForProperty(
 // ]
 //
 // And then, for each transaction, we send this list to the compositor thread.
-static HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
+static HashMap<NonCustomCSSPropertyId, nsTArray<RefPtr<dom::Animation>>>
 GroupAnimationsByProperty(const nsTArray<RefPtr<dom::Animation>>& aAnimations,
                           const nsCSSPropertyIDSet& aPropertySet) {
-  HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>> groupedAnims;
+  HashMap<NonCustomCSSPropertyId, nsTArray<RefPtr<dom::Animation>>>
+      groupedAnims;
   for (const RefPtr<dom::Animation>& anim : aAnimations) {
     const dom::KeyframeEffect* effect = anim->GetEffect()->AsKeyframeEffect();
     MOZ_ASSERT(effect);
@@ -566,10 +567,10 @@ GroupAnimationsByProperty(const nsTArray<RefPtr<dom::Animation>>& aAnimations,
       }
 
       auto animsForPropertyPtr =
-          groupedAnims.lookupForAdd(property.mProperty.mID);
+          groupedAnims.lookupForAdd(property.mProperty.mId);
       if (!animsForPropertyPtr) {
         DebugOnly<bool> rv =
-            groupedAnims.add(animsForPropertyPtr, property.mProperty.mID,
+            groupedAnims.add(animsForPropertyPtr, property.mProperty.mId,
                              nsTArray<RefPtr<dom::Animation>>());
         MOZ_ASSERT(rv, "Should have enough memory");
       }
@@ -582,8 +583,9 @@ GroupAnimationsByProperty(const nsTArray<RefPtr<dom::Animation>>& aAnimations,
 bool AnimationInfo::AddAnimationsForProperty(
     nsIFrame* aFrame, const EffectSet* aEffects,
     const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
-    const Maybe<TransformData>& aTransformData, nsCSSPropertyID aProperty,
-    Send aSendFlag, WebRenderLayerManager* aLayerManager) {
+    const Maybe<TransformData>& aTransformData,
+    NonCustomCSSPropertyId aProperty, Send aSendFlag,
+    WebRenderLayerManager* aLayerManager) {
   bool addedAny = false;
   // Add from first to last (since last overrides)
   for (dom::Animation* anim : aCompositorAnimations) {
@@ -842,7 +844,7 @@ static Maybe<TransformData> CreateAnimationData(
 void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
     const nsCSSPropertyIDSet& aNonAnimatingProperties, nsIFrame* aFrame,
     Send aSendFlag) {
-  auto appendFakeAnimation = [this, aSendFlag](nsCSSPropertyID aProperty,
+  auto appendFakeAnimation = [this, aSendFlag](NonCustomCSSPropertyId aProperty,
                                                Animatable&& aBaseStyle) {
     layers::Animation* animation = (aSendFlag == Send::NextTransaction)
                                        ? AddAnimationForNextTransaction()
@@ -860,7 +862,7 @@ void AnimationInfo::AddNonAnimatingTransformLikePropertiesStyles(
       !display->mOffsetPath.IsNone() ||
       !aNonAnimatingProperties.HasProperty(eCSSProperty_offset_path);
 
-  for (nsCSSPropertyID id : aNonAnimatingProperties) {
+  for (NonCustomCSSPropertyId id : aNonAnimatingProperties) {
     switch (id) {
       case eCSSProperty_transform:
         if (!display->mTransform.IsNone()) {
@@ -962,7 +964,7 @@ void AnimationInfo::AddAnimationsForDisplayItem(
     return;
   }
 
-  const HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
+  const HashMap<NonCustomCSSPropertyId, nsTArray<RefPtr<dom::Animation>>>
       compositorAnimations =
           GroupAnimationsByProperty(matchedAnimations, propertySet);
   Maybe<TransformData> transformData =

@@ -1401,7 +1401,7 @@ void nsGenericHTMLElement::MapVAlignAttributeInto(
 }
 
 void nsGenericHTMLElement::MapDimensionAttributeInto(
-    MappedDeclarationsBuilder& aBuilder, nsCSSPropertyID aProp,
+    MappedDeclarationsBuilder& aBuilder, NonCustomCSSPropertyId aProp,
     const nsAttrValue& aValue) {
   MOZ_ASSERT(!aBuilder.PropertyIsSet(aProp),
              "Why mapping the same property twice?");

@@ -7,39 +7,40 @@
 #ifndef mozilla_AnimatedPropertyID_h
 #define mozilla_AnimatedPropertyID_h
 
+#include "NonCustomCSSPropertyId.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/ServoBindings.h"
-#include "nsCSSPropertyID.h"
 #include "nsCSSProps.h"
 #include "nsString.h"
 
 namespace mozilla {
 
 struct AnimatedPropertyID {
-  explicit AnimatedPropertyID(nsCSSPropertyID aProperty) : mID(aProperty) {
+  explicit AnimatedPropertyID(NonCustomCSSPropertyId aProperty)
+      : mId(aProperty) {
     MOZ_ASSERT(aProperty != eCSSPropertyExtra_variable,
                "Cannot create an AnimatedPropertyID from only a "
                "eCSSPropertyExtra_variable.");
   }
 
   explicit AnimatedPropertyID(RefPtr<nsAtom> aCustomName)
-      : mID(eCSSPropertyExtra_variable), mCustomName(std::move(aCustomName)) {
+      : mId(eCSSPropertyExtra_variable), mCustomName(std::move(aCustomName)) {
     MOZ_ASSERT(mCustomName, "Null custom property name");
   }
 
-  nsCSSPropertyID mID = eCSSProperty_UNKNOWN;
+  NonCustomCSSPropertyId mId = eCSSProperty_UNKNOWN;
   RefPtr<nsAtom> mCustomName;
 
-  bool IsCustom() const { return mID == eCSSPropertyExtra_variable; }
+  bool IsCustom() const { return mId == eCSSPropertyExtra_variable; }
   bool operator==(const AnimatedPropertyID& aOther) const {
-    return mID == aOther.mID && mCustomName == aOther.mCustomName;
+    return mId == aOther.mId && mCustomName == aOther.mCustomName;
   }
   bool operator!=(const AnimatedPropertyID& aOther) const {
     return !(*this == aOther);
   }
 
   bool IsValid() const {
-    if (mID == eCSSProperty_UNKNOWN) {
+    if (mId == eCSSProperty_UNKNOWN) {
       return false;
     }
     return IsCustom() == !!mCustomName;
@@ -52,7 +53,7 @@ struct AnimatedPropertyID {
       aString.AssignLiteral("--");
       AppendUTF16toUTF8(nsDependentAtomString(mCustomName), aString);
     } else {
-      aString.Assign(nsCSSProps::GetStringValue(mID));
+      aString.Assign(nsCSSProps::GetStringValue(mId));
     }
   }
 
@@ -63,20 +64,20 @@ struct AnimatedPropertyID {
       aString.AssignLiteral("--");
       aString.Append(nsDependentAtomString(mCustomName));
     } else {
-      aString.Assign(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(mID)));
+      aString.Assign(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(mId)));
     }
   }
 
   HashNumber Hash() const {
     HashNumber hash = mCustomName ? mCustomName->hash() : 0;
-    return AddToHash(hash, mID);
+    return AddToHash(hash, mId);
   }
 
   AnimatedPropertyID ToPhysical(const ComputedStyle& aStyle) const {
     if (IsCustom()) {
       return *this;
     }
-    return AnimatedPropertyID{nsCSSProps::Physicalize(mID, aStyle)};
+    return AnimatedPropertyID{nsCSSProps::Physicalize(mId, aStyle)};
   }
 };
 
@@ -86,7 +87,7 @@ inline std::ostream& operator<<(std::ostream& aOut,
   if (aProperty.IsCustom()) {
     return aOut << nsAtomCString(aProperty.mCustomName);
   }
-  return aOut << nsCSSProps::GetStringValue(aProperty.mID);
+  return aOut << nsCSSProps::GetStringValue(aProperty.mId);
 }
 
 }  // namespace mozilla

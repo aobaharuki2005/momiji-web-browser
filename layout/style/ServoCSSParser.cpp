@@ -55,7 +55,7 @@ bool ServoCSSParser::ColorTo(const nsACString& aFromColor,
 
 /* static */
 already_AddRefed<StyleLockedDeclarationBlock> ServoCSSParser::ParseProperty(
-    nsCSSPropertyID aProperty, const nsACString& aValue,
+    NonCustomCSSPropertyId aProperty, const nsACString& aValue,
     const ParsingEnvironment& aParsingEnvironment,
     const StyleParsingMode& aParsingMode) {
   AnimatedPropertyID property(aProperty);

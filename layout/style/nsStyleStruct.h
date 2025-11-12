@@ -331,8 +331,8 @@ struct nsStyleImageLayers {
   nsStyleImageLayers& operator=(nsStyleImageLayers&& aOther) = default;
   bool operator==(const nsStyleImageLayers& aOther) const;
 
-  static const nsCSSPropertyID kBackgroundLayerTable[];
-  static const nsCSSPropertyID kMaskLayerTable[];
+  static const NonCustomCSSPropertyId kBackgroundLayerTable[];
+  static const NonCustomCSSPropertyId kMaskLayerTable[];
 
 #define NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(var_, layers_) \
   for (uint32_t var_ = (layers_).mImageCount; (var_)-- != 0;)

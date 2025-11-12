@@ -49,7 +49,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "layout_style"
 
 EXPORTS += [
-    "!nsCSSPropertyID.h",
+    "!NonCustomCSSPropertyId.h",
     "AnimationCommon.h",
     "CounterStyleManager.h",
     "nsAnimationManager.h",
@@ -324,10 +324,10 @@ CONTENT_ACCESSIBLE_FILES += [
 
 
 GeneratedFile(
-    "nsCSSPropertyID.h",
+    "NonCustomCSSPropertyId.h",
     script="GenerateCSSPropertyID.py",
     entry_point="generate",
-    inputs=["nsCSSPropertyID.h.in", "!ServoCSSPropList.py"],
+    inputs=["NonCustomCSSPropertyId.h.in", "!ServoCSSPropList.py"],
 )
 GeneratedFile(
     "ServoCSSPropList.h",

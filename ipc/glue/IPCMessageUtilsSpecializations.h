@@ -33,7 +33,7 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/UserActivation.h"
 #include "gfxPlatform.h"
-#include "nsCSSPropertyID.h"
+#include "NonCustomCSSPropertyId.h"
 #include "nsContentPermissionHelper.h"
 #include "nsDebug.h"
 #include "nsIContentPolicy.h"
@@ -374,9 +374,9 @@ struct ParamTraits<float> {
 };
 
 template <>
-struct ParamTraits<nsCSSPropertyID>
-    : public ContiguousEnumSerializer<nsCSSPropertyID, eCSSProperty_UNKNOWN,
-                                      eCSSProperty_COUNT> {};
+struct ParamTraits<NonCustomCSSPropertyId>
+    : public ContiguousEnumSerializer<
+          NonCustomCSSPropertyId, eCSSProperty_UNKNOWN, eCSSProperty_COUNT> {};
 
 template <>
 struct ParamTraits<nsID> {

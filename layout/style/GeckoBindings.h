@@ -237,7 +237,7 @@ bool Gecko_ElementHasWebAnimations(
 size_t Gecko_ElementTransitions_Length(
     const mozilla::dom::Element* aElementOrPseudo);
 
-nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(
+NonCustomCSSPropertyId Gecko_ElementTransitions_PropertyAt(
     const mozilla::dom::Element* aElementOrPseudo, size_t aIndex);
 
 const mozilla::StyleAnimationValue* Gecko_ElementTransitions_EndValueAt(
@@ -499,7 +499,7 @@ nscolor Gecko_ComputeSystemColor(mozilla::StyleSystemColor,
 int32_t Gecko_GetLookAndFeelInt(int32_t int_id);
 float Gecko_GetLookAndFeelFloat(int32_t float_id);
 
-void Gecko_AddPropertyToSet(nsCSSPropertyIDSet*, nsCSSPropertyID);
+void Gecko_AddPropertyToSet(nsCSSPropertyIDSet*, NonCustomCSSPropertyId);
 
 // Style-struct management.
 #define DECLARE_GECKO_FUNCTIONS(name)                                        \

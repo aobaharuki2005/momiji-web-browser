@@ -120,7 +120,7 @@ MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
 
   AnimatedPropertyID property(eCSSProperty_UNKNOWN);
   Servo_AnimationValue_GetPropertyId(mServo, &property);
-  switch (property.mID) {
+  switch (property.mId) {
     case eCSSProperty_scale: {
       const StyleScale& scale = GetScaleProperty();
       return scale.IsNone()
@@ -222,7 +222,7 @@ AnimationValue AnimationValue::FromString(AnimatedPropertyID& aProperty,
 
 /* static */
 already_AddRefed<StyleAnimationValue> AnimationValue::FromAnimatable(
-    nsCSSPropertyID aProperty, const layers::Animatable& aAnimatable) {
+    NonCustomCSSPropertyId aProperty, const layers::Animatable& aAnimatable) {
   switch (aAnimatable.type()) {
     case layers::Animatable::Tnull_t:
       break;

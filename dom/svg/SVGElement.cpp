@@ -208,7 +208,7 @@ nsresult SVGElement::CopyInnerTo(mozilla::dom::Element* aDest) {
     dest->GetLengthInfo().CopyAllFrom(lengthInfo);
     if (SVGGeometryProperty::ElementMapsLengthsToStyle(this)) {
       for (uint32_t i = 0; i < lengthInfo.mCount; i++) {
-        nsCSSPropertyID propId =
+        NonCustomCSSPropertyId propId =
             SVGGeometryProperty::AttrEnumToCSSPropId(this, i);
 
         // We don't map use element width/height currently. We can remove this
@@ -1052,7 +1052,7 @@ already_AddRefed<DOMSVGAnimatedString> SVGElement::ClassName() {
 
 /* static */
 bool SVGElement::UpdateDeclarationBlockFromLength(
-    const StyleLockedDeclarationBlock& aBlock, nsCSSPropertyID aPropId,
+    const StyleLockedDeclarationBlock& aBlock, NonCustomCSSPropertyId aPropId,
     const SVGAnimatedLength& aLength, ValToUse aValToUse) {
   float value;
   uint8_t units;
@@ -1248,16 +1248,16 @@ class MOZ_STACK_CLASS MappedAttrParser {
 
 void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
                                             const nsAString& aMappedAttrValue) {
-  // Get the nsCSSPropertyID ID for our mapped attribute.
-  nsCSSPropertyID propertyID =
+  // Get the NonCustomCSSPropertyId id for our mapped attribute.
+  NonCustomCSSPropertyId propertyId =
       nsCSSProps::LookupProperty(nsAutoAtomCString(aMappedAttrName));
-  if (propertyID != eCSSProperty_UNKNOWN) {
+  if (propertyId != eCSSProperty_UNKNOWN) {
     bool changed = false;  // outparam for ParseProperty.
     NS_ConvertUTF16toUTF8 value(aMappedAttrValue);
 
     auto* doc = mElement.OwnerDoc();
     changed = Servo_DeclarationBlock_SetPropertyById(
-        &EnsureDeclarationBlock(), propertyID, &value, false,
+        &EnsureDeclarationBlock(), propertyId, &value, false,
         &EnsureExtraData(), StyleParsingMode::ALLOW_UNITLESS_LENGTH,
         doc->GetCompatibilityMode(), &doc->EnsureCSSLoader(),
         StyleCssRuleType::Style, {});
@@ -1266,7 +1266,7 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
     // can pass the document use counters down the FFI call. For now manually
     // count them.
     if (changed && StaticPrefs::layout_css_use_counters_enabled()) {
-      UseCounter useCounter = nsCSSProps::UseCounterFor(propertyID);
+      UseCounter useCounter = nsCSSProps::UseCounterFor(propertyId);
       MOZ_ASSERT(useCounter != eUseCounter_UNKNOWN);
       doc->SetUseCounter(useCounter);
     }
@@ -1276,16 +1276,16 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
              "Only 'lang' should be unrecognized!");
   // CSS parser doesn't know about 'lang', so we need to handle it specially.
   if (aMappedAttrName == nsGkAtoms::lang) {
-    propertyID = eCSSProperty__x_lang;
+    propertyId = eCSSProperty__x_lang;
     RefPtr<nsAtom> atom = NS_Atomize(aMappedAttrValue);
     Servo_DeclarationBlock_SetIdentStringValue(&EnsureDeclarationBlock(),
-                                               propertyID, atom);
+                                               propertyId, atom);
   }
 }
 
 void MappedAttrParser::TellStyleAlreadyParsedResult(
     nsAtom const* aAtom, SVGAnimatedLength const& aLength) {
-  nsCSSPropertyID propertyID =
+  NonCustomCSSPropertyId propertyID =
       nsCSSProps::LookupProperty(nsAutoAtomCString(aAtom));
   SVGElement::UpdateDeclarationBlockFromLength(EnsureDeclarationBlock(),
                                                propertyID, aLength,
@@ -1532,7 +1532,7 @@ void SVGElement::DidAnimateLength(uint8_t aAttrEnum) {
   ClearAnyCachedPath();
 
   if (SVGGeometryProperty::ElementMapsLengthsToStyle(this)) {
-    nsCSSPropertyID propId =
+    NonCustomCSSPropertyId propId =
         SVGGeometryProperty::AttrEnumToCSSPropId(this, aAttrEnum);
 
     // We don't map use element width/height currently. We can remove this

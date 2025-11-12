@@ -6,8 +6,8 @@
 
 /* enum types for CSS properties and their values */
 
-#ifndef nsCSSPropertyID_h___
-#define nsCSSPropertyID_h___
+#ifndef NonCustomCSSPropertyId_h___
+#define NonCustomCSSPropertyId_h___
 
 #include <nsHashKeys.h>
 
@@ -18,7 +18,7 @@
    To change the list of properties, see ServoCSSPropList.h
 
  */
-enum nsCSSPropertyID : int32_t {
+enum NonCustomCSSPropertyId : int32_t {
   eCSSProperty_UNKNOWN = -1,
 
 $property_ids
@@ -33,18 +33,18 @@ $property_ids
 // MOZ_DBG support is defined in nsCSSProps.h since it depends on
 // nsCSSProps::GetStringValue
 
-const nsCSSPropertyID
+const NonCustomCSSPropertyId
   eCSSProperty_COUNT_no_shorthands = $longhand_count;
-const nsCSSPropertyID
+const NonCustomCSSPropertyId
   eCSSProperty_COUNT = $shorthand_count;
-const nsCSSPropertyID
+const NonCustomCSSPropertyId
   eCSSProperty_COUNT_with_aliases = eCSSPropertyExtra_variable;
 
 namespace mozilla {
 
 template<>
 inline PLDHashNumber
-Hash<nsCSSPropertyID>(const nsCSSPropertyID& aValue)
+Hash<NonCustomCSSPropertyId>(const NonCustomCSSPropertyId& aValue)
 {
   return uint32_t(aValue);
 }
@@ -84,4 +84,4 @@ enum class CountedUnknownProperty : uint32_t {
 
 } // namespace mozilla
 
-#endif /* nsCSSPropertyID_h___ */
+#endif /* NonCustomCSSPropertyId_h___ */

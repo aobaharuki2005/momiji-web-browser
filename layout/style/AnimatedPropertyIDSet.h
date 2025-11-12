@@ -34,7 +34,7 @@ class AnimatedPropertyIDSet {
     if (aProperty.IsCustom()) {
       mCustomNames.Insert(aProperty.mCustomName);
     } else {
-      mIDs.AddProperty(aProperty.mID);
+      mIDs.AddProperty(aProperty.mId);
     }
   }
 
@@ -42,7 +42,7 @@ class AnimatedPropertyIDSet {
     if (aProperty.IsCustom()) {
       mCustomNames.Remove(aProperty.mCustomName);
     } else {
-      mIDs.RemoveProperty(aProperty.mID);
+      mIDs.RemoveProperty(aProperty.mId);
     }
   }
 
@@ -50,7 +50,7 @@ class AnimatedPropertyIDSet {
     if (aProperty.IsCustom()) {
       return mCustomNames.Contains(aProperty.mCustomName);
     }
-    return mIDs.HasProperty(aProperty.mID);
+    return mIDs.HasProperty(aProperty.mId);
   }
 
   bool Intersects(const nsCSSPropertyIDSet& aIDs) const {
@@ -162,14 +162,14 @@ class AnimatedPropertyIDSet {
 
     AnimatedPropertyID operator*() {
       if (mIDIterator != mPropertySet.mIDs.end()) {
-        mPropertyID.mID = *mIDIterator;
+        mPropertyID.mId = *mIDIterator;
         mPropertyID.mCustomName = nullptr;
       } else if (mCustomNameIterator != mPropertySet.mCustomNames.end()) {
-        mPropertyID.mID = eCSSPropertyExtra_variable;
+        mPropertyID.mId = eCSSPropertyExtra_variable;
         mPropertyID.mCustomName = *mCustomNameIterator;
       } else {
         MOZ_ASSERT_UNREACHABLE("Should not dereference beyond end");
-        mPropertyID.mID = eCSSProperty_UNKNOWN;
+        mPropertyID.mId = eCSSProperty_UNKNOWN;
         mPropertyID.mCustomName = nullptr;
       }
       return mPropertyID;

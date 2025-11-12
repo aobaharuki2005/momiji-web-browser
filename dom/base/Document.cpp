@@ -29,6 +29,7 @@
 #include "MobileViewportManager.h"
 #include "NSSErrorsService.h"
 #include "NodeUbiReporting.h"
+#include "NonCustomCSSPropertyId.h"
 #include "PLDHashTable.h"
 #include "StorageAccessPermissionRequest.h"
 #include "ThirdPartyUtil.h"
@@ -292,7 +293,6 @@
 #include "nsBaseHashtable.h"
 #include "nsBidiUtils.h"
 #include "nsCRT.h"
-#include "nsCSSPropertyID.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
@@ -17220,7 +17220,7 @@ bool Document::HasScriptsBlockedBySandbox() const {
 void Document::SetCssUseCounterBits() {
   if (StaticPrefs::layout_css_use_counters_enabled()) {
     for (size_t i = 0; i < eCSSProperty_COUNT_with_aliases; ++i) {
-      auto id = nsCSSPropertyID(i);
+      auto id = NonCustomCSSPropertyId(i);
       if (Servo_IsPropertyIdRecordedInUseCounter(mStyleUseCounters.get(), id)) {
         SetUseCounter(nsCSSProps::UseCounterFor(id));
       }
