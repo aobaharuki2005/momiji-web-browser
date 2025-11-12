@@ -196,7 +196,8 @@ class MustConsumeMicroTask {
   // consuming the contents.
   JSObject* GetExecutionGlobalFromJSMicroTask(JSContext* aCx) const {
     MOZ_ASSERT(IsJSMicroTask());
-    JS::Rooted<JS::GenericMicroTask> task(aCx, mMicroTask);
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    MOZ_ASSERT(task);
     return JS::GetExecutionGlobalFromJSMicroTask(task);
   }
 
@@ -206,30 +207,46 @@ class MustConsumeMicroTask {
   // These are documented in MicroTask.h.
 
   bool GetFlowIdFromJSMicroTask(uint64_t* aFlowId) {
-    MOZ_ASSERT(IsJSMicroTask());
-    return JS::GetFlowIdFromJSMicroTask(mMicroTask, aFlowId);
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    MOZ_ASSERT(task);
+    return JS::GetFlowIdFromJSMicroTask(task, aFlowId);
   }
 
   JSObject* MaybeGetPromiseFromJSMicroTask() {
-    MOZ_ASSERT(IsJSMicroTask());
-    return JS::MaybeGetPromiseFromJSMicroTask(mMicroTask);
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    MOZ_ASSERT(task);
+    return JS::MaybeGetPromiseFromJSMicroTask(task);
   }
 
   JSObject* MaybeGetHostDefinedDataFromJSMicroTask() {
-    return JS::MaybeGetHostDefinedDataFromJSMicroTask(mMicroTask);
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    if (!task) {
+      return nullptr;
+    }
+    return JS::MaybeGetHostDefinedDataFromJSMicroTask(task);
   }
 
   JSObject* MaybeGetAllocationSiteFromJSMicroTask() {
-    return JS::MaybeGetAllocationSiteFromJSMicroTask(mMicroTask);
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    if (!task) {
+      return nullptr;
+    }
+    return JS::MaybeGetAllocationSiteFromJSMicroTask(task);
   }
 
   JSObject* MaybeGetHostDefinedGlobalFromJSMicroTask() {
-    return JS::MaybeGetHostDefinedGlobalFromJSMicroTask(mMicroTask);
+    JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
+    if (!task) {
+      return nullptr;
+    }
+    return JS::MaybeGetHostDefinedGlobalFromJSMicroTask(task);
   }
 
   bool RunAndConsumeJSMicroTask(JSContext* aCx) {
-    JS::Rooted<JS::Value> rootedTask(aCx, mMicroTask);
-    bool v = JS::RunJSMicroTask(aCx, rootedTask);
+    JS::Rooted<JS::JSMicroTask*> task(
+        aCx, JS::ToMaybeWrappedJSMicroTask(mMicroTask));
+    MOZ_ASSERT(task);
+    bool v = JS::RunJSMicroTask(aCx, task);
     mMicroTask.setUndefined();
     return v;
   }

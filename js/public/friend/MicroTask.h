@@ -59,15 +59,20 @@ namespace JS {
 // An embedding is free to do with non-JS MicroTasks as it
 // sees fit.
 using GenericMicroTask = JS::Value;
+using JSMicroTask = JSObject;
 
 JS_PUBLIC_API bool IsJSMicroTask(const JS::GenericMicroTask& hv);
+JS_PUBLIC_API JSMicroTask* ToUnwrappedJSMicroTask(
+    const JS::GenericMicroTask& genericMicroTask);
+JS_PUBLIC_API JSMicroTask* ToMaybeWrappedJSMicroTask(
+    const JS::GenericMicroTask& genericMicroTask);
 
 // Run a MicroTask that is known to be a JS MicroTask. This will crash
 // if provided an invalid task kind.
 //
 // This will return false if an exception is thrown while processing.
 JS_PUBLIC_API bool RunJSMicroTask(JSContext* cx,
-                                  Handle<GenericMicroTask> entry);
+                                  Handle<JS::JSMicroTask*> entry);
 
 // Queue Management. This is done per-JSContext.
 //
@@ -122,8 +127,7 @@ JS_PUBLIC_API bool HasRegularMicroTasks(JSContext* cx);
 JS_PUBLIC_API size_t GetRegularMicroTaskCount(JSContext* cx);
 
 // This is the global associated with the realm RunJSMicroTask expects to be in.
-JS_PUBLIC_API JSObject* GetExecutionGlobalFromJSMicroTask(
-    const GenericMicroTask& entry);
+JS_PUBLIC_API JSObject* GetExecutionGlobalFromJSMicroTask(JSMicroTask* entry);
 
 // To handle cases where the queue needs to be set aside for some reason
 // (mostly the Debugger API), we provide a Save and Restore API.
@@ -152,23 +156,21 @@ JS_PUBLIC_API void RestoreMicroTaskQueue(
 // All of these may return null if there's no data, or if there's a
 // security error.
 JS_PUBLIC_API JSObject* MaybeGetHostDefinedDataFromJSMicroTask(
-    const GenericMicroTask& entry);
+    JSMicroTask* entry);
 JS_PUBLIC_API JSObject* MaybeGetAllocationSiteFromJSMicroTask(
-    const GenericMicroTask& entry);
+    JSMicroTask* entry);
 
 // In some circumstances an entry may not have host defined data but may
 // still have a host defined global;
 JS_PUBLIC_API JSObject* MaybeGetHostDefinedGlobalFromJSMicroTask(
-    const GenericMicroTask& entry);
+    JSMicroTask* entry);
 
-JS_PUBLIC_API JSObject* MaybeGetPromiseFromJSMicroTask(
-    const GenericMicroTask& entry);
+JS_PUBLIC_API JSObject* MaybeGetPromiseFromJSMicroTask(JSMicroTask* entry);
 
 // Get the flow ID from a JS microtask for profiler markers.
 // This only returns false if entry has become a dead wrapper,
 // in which case the microtask doesn't run anyhow.
-JS_PUBLIC_API bool GetFlowIdFromJSMicroTask(const GenericMicroTask& entry,
-                                            uint64_t* uid);
+JS_PUBLIC_API bool GetFlowIdFromJSMicroTask(JSMicroTask* entry, uint64_t* uid);
 
 }  // namespace JS
 
