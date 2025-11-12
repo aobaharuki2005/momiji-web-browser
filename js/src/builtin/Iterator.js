@@ -1922,4 +1922,22 @@ function IteratorRange(start, end, optionOrStep) {
   ThrowTypeError(JSMSG_ITERATOR_RANGE_INVALID_START);
 
 }
+
+/**
+ *  Iterator.prototype.chunks ( chunkSize )
+ *
+ *  https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.chunks
+ */
+function IteratorChunks(chunkSize) {
+  return false;
+}
+
+/**
+ *  Iterator.prototype.windows ( windowSize, undersized )
+ *
+ *  https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.windows
+ */
+function IteratorWindows(windowSize, undersized) {
+  return false;
+}
 #endif

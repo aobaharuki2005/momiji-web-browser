@@ -1939,6 +1939,10 @@ static const JSFunctionSpec iterator_methods[] = {
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
     JS_SELF_HOSTED_SYM_FN(dispose, "IteratorDispose", 0, 0),
 #endif
+#ifdef NIGHTLY_BUILD
+    JS_SELF_HOSTED_FN("chunks", "IteratorChunks", 1, 0),
+    JS_SELF_HOSTED_FN("windows", "IteratorWindows", 2, 0),
+#endif
     JS_FS_END,
 };
 
