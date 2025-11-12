@@ -47,7 +47,7 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.R
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
-import mozilla.components.support.utils.ext.getPackageInfoCompat
+import mozilla.components.support.utils.ext.packageManagerCompatHelper
 import java.io.File
 
 /**
@@ -55,7 +55,7 @@ import java.io.File
  * attribute. E.g. "2.0". Returns an empty string if versionName is null.
  */
 val Context.appVersionName: String
-    get() = packageManager.getPackageInfoCompat(packageName, 0).versionName ?: ""
+    get() = packageManagerCompatHelper.getPackageInfoCompat(packageName, 0).versionName ?: ""
 
 /**
  * Returns the name (label) of the application or the package name as a fallback.

@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.support.utils.ext.getPackageInfoCompat
+import mozilla.components.support.utils.ext.packageManagerCompatHelper
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
@@ -172,7 +172,7 @@ private fun getAboutHeader(context: Context): String {
     val servicesAbbreviation = context.getString(R.string.services_abbreviation)
     val servicesIndicator = mozilla.components.Build.APPLICATION_SERVICES_VERSION
     val packageInfo =
-        context.packageManager.getPackageInfoCompat(context.packageName, 0)
+        context.packageManagerCompatHelper.getPackageInfoCompat(context.packageName, 0)
     val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
     val vcsHash = if (BuildConfig.VCS_HASH.isNotBlank()) ", ${BuildConfig.VCS_HASH}" else ""
 
