@@ -137,7 +137,9 @@ abstract class FenixBrowserToolbarView(
     internal fun setDynamicToolbarBehavior(isToolbarAtBottom: Boolean) {
         (parent.findViewInHierarchy { it is EngineView } as? EngineView)?.let { engineView ->
             (layout.layoutParams as CoordinatorLayout.LayoutParams).apply {
-                behavior = EngineViewScrollingBehaviorFactory.build(
+                behavior = EngineViewScrollingBehaviorFactory(
+                    useScrollData = settings.useNewDynamicToolbarBehaviour,
+                ).build(
                     engineView = engineView,
                     dependency = layout,
                     dependencyGravity = when (isToolbarAtBottom) {

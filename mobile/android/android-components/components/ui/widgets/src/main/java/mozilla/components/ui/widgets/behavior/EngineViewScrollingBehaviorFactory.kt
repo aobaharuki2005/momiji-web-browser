@@ -7,11 +7,14 @@ package mozilla.components.ui.widgets.behavior
 import android.view.View
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.ui.widgets.behavior.DependencyGravity.Bottom
 
 /**
  * Factory for [EngineViewScrollingBehavior] instances.
  */
-object EngineViewScrollingBehaviorFactory {
+class EngineViewScrollingBehaviorFactory(
+    private val useScrollData: Boolean = false,
+) {
     /**
      * Create a new [EngineViewScrollingBehavior] instance.
      *
@@ -25,10 +28,18 @@ object EngineViewScrollingBehaviorFactory {
         dependency: View,
         dependencyGravity: DependencyGravity,
         crashReporting: CrashReporting? = null,
-    ) = EngineViewScrollingGesturesBehavior(
-        engineView = engineView,
-        dependency = dependency,
-        dependencyGravity = dependencyGravity,
-        crashReporting = crashReporting,
-    )
+    ) = when (useScrollData && dependencyGravity is Bottom) {
+        true -> EngineViewScrollingDataBehavior(
+            engineView = engineView,
+            dependency = dependency,
+            dependencyGravity = dependencyGravity,
+        )
+
+        false -> EngineViewScrollingGesturesBehavior(
+            engineView = engineView,
+            dependency = dependency,
+            dependencyGravity = dependencyGravity,
+            crashReporting = crashReporting,
+        )
+    }
 }
