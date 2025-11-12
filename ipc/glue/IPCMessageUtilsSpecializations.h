@@ -375,7 +375,7 @@ struct ParamTraits<float> {
 template <>
 struct ParamTraits<NonCustomCSSPropertyId>
     : public ContiguousEnumSerializer<
-          NonCustomCSSPropertyId, eCSSProperty_UNKNOWN, eCSSProperty_COUNT> {};
+          NonCustomCSSPropertyId, eCSSProperty_FIRST, eCSSProperty_INVALID> {};
 
 template <>
 struct ParamTraits<nsID> {
