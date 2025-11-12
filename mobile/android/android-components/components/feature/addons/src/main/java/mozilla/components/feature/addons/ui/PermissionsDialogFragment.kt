@@ -190,7 +190,7 @@ class PermissionsDialogFragment : AddonDialogFragment() {
     }
 
     @SuppressLint("InflateParams")
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod")
     private fun createContainer(): View {
         val rootView = LayoutInflater.from(requireContext()).inflate(
             R.layout.mozac_feature_addons_fragment_dialog_addon_permissions,

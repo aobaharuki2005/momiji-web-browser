@@ -134,7 +134,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @param extensionSubmenu The content of extensions menu item to avoid configuration during animation.
  * @param extensionsMenuItemDescription The label of extensions menu item description.
  */
-@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
 @Composable
 fun MainMenu(
     accessPoint: MenuAccessPoint,
@@ -336,7 +336,7 @@ fun MainMenu(
     }
 }
 
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "CognitiveComplexMethod")
 @Composable
 private fun ExtensionsMenuItem(
     isExtensionsProcessDisabled: Boolean,
@@ -500,7 +500,7 @@ private fun QuitMenuGroup(
     }
 }
 
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "CognitiveComplexMethod")
 @Composable
 private fun ToolsAndActionsMenuGroup(
     isBookmarked: Boolean,

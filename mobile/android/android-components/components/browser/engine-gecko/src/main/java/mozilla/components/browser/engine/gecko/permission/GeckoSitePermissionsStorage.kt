@@ -149,7 +149,7 @@ class GeckoSitePermissionsStorage(
      * on the [geckoStorage] otherwise the same [SitePermissions].
      */
     @VisibleForTesting
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod")
     internal suspend fun updateGeckoPermissionIfNeeded(
         userSitePermissions: SitePermissions,
         permissionRequest: PermissionRequest? = null,
@@ -271,7 +271,7 @@ class GeckoSitePermissionsStorage(
      * @return a [SitePermissions] containing the values from the on disk and gecko permission.
      */
     @VisibleForTesting
-    @Suppress("ComplexMethod")
+    @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
     internal fun mergePermissions(
         onDiskPermissions: SitePermissions?,
         geckoPermissionByType: Map<Int, List<ContentPermission>>,

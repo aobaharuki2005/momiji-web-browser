@@ -66,7 +66,7 @@ private const val THUMBNAIL_SIZE = 108
  * @param onSeeAllSyncedTabsButtonClick Invoked when user clicks on the "See all" button in the synced tab card.
  * @param onRemoveSyncedTab Invoked when user clicks on the "Remove" dropdown menu option.
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod")
 @Composable
 fun RecentSyncedTab(
     tab: RecentSyncedTab?,

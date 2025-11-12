@@ -47,7 +47,7 @@ class TranslationsMiddleware(
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("TranslationsMiddleware")
 
-    @Suppress("LongMethod", "CyclomaticComplexMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
@@ -959,6 +959,7 @@ class TranslationsMiddleware(
      * @param context The context used to update the language models.
      * @param options The change and specified language models that should change state.
      */
+    @Suppress("CognitiveComplexMethod")
     private fun updateLanguageModel(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         options: ModelManagementOptions,

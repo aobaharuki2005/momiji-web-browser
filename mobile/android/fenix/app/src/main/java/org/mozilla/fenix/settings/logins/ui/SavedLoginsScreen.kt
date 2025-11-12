@@ -246,7 +246,7 @@ private fun EmptyList(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod")
 private fun LoginsListTopBar(
     store: LoginsStore,
     text: String,

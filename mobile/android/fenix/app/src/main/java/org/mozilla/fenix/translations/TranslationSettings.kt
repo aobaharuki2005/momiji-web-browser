@@ -43,7 +43,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onNeverTranslationClicked Invoked when the user clicks on the "Never Translation" button.
  * @param onDownloadLanguageClicked Invoked when the user clicks on the "Download Language" button.
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod")
 @Composable
 fun TranslationSettings(
     translationSwitchList: List<TranslationSwitchItem>,

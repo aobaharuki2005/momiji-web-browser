@@ -50,7 +50,7 @@ class TranslationsBinding(
     private val onShowTranslationsDialog: () -> Unit = { },
 ) : AbstractBinding<BrowserState>(browserStore) {
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod")
     override suspend fun onState(flow: Flow<BrowserState>) {
         // Browser level flows
         val browserFlow = flow.mapNotNull { state -> state }

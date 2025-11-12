@@ -158,7 +158,7 @@ class SwipeToDismissState2(
 }
 
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1957790
-@Suppress("DEPRECATION")
+@Suppress("DEPRECATION", "CognitiveComplexMethod")
 private fun Modifier.anchoredHorizontalDraggable(
     state: SwipeToDismissState2,
     scope: CoroutineScope,
@@ -214,6 +214,7 @@ private fun isReallyHorizontal(x: Float, y: Float) =
  * @param dismissContent The content that can be dismissed.
  */
 @Composable
+@Suppress("CognitiveComplexMethod")
 fun SwipeToDismissBox2(
     state: SwipeToDismissState2,
     modifier: Modifier = Modifier,

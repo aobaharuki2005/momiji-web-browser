@@ -67,6 +67,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         binding = null
     }
 
+    @Suppress("CognitiveComplexMethod")
     private fun bindRecyclerView() {
         val managementView = AddonsManagementView(
             navController = findNavController(),

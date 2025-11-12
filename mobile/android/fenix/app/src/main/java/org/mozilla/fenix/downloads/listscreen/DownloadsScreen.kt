@@ -83,7 +83,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @param onItemClick Callback invoked when a download item is clicked.
  * @param onNavigationIconClick Callback for the back button click in the toolbar.
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod")
 @Composable
 fun DownloadsScreen(
     downloadsStore: DownloadUIStore,
@@ -402,7 +402,7 @@ private fun DownloadsScreenContent(
 }
 
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "CognitiveComplexMethod")
 private fun DownloadsContent(
     items: List<DownloadListItem>,
     mode: Mode,

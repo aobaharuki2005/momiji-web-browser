@@ -72,7 +72,7 @@ private val BANNER_ROUNDED_CORNER_SHAPE = RoundedCornerShape(
 
 private const val DROPDOWN_TEXT_WIDTH_FRACTION = 0.5f
 
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "CognitiveComplexMethod")
 @Composable
 internal fun ProtectionPanel(
     websiteInfoState: WebsiteInfoState,
@@ -272,6 +272,7 @@ private fun ProtectionPanelBanner(
 }
 
 @Composable
+@Suppress("CognitiveComplexMethod")
 private fun WebsitePermissionsMenuGroup(
     websitePermissions: List<WebsitePermission>,
     onAutoplayValueClick: (AutoplayValue) -> Unit,

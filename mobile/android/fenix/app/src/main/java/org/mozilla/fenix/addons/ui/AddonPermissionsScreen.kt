@@ -41,7 +41,7 @@ import mozilla.components.feature.addons.R as addonsR
  * The permissions screen for an addon which allows a user to edit the optional permissions.
  */
 @Composable
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "CognitiveComplexMethod")
 fun AddonPermissionsScreen(
     permissions: List<String>,
     optionalPermissions: List<Addon.LocalizedPermission>,

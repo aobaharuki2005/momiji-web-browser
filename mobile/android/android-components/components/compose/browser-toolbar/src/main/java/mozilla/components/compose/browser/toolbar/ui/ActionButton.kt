@@ -49,7 +49,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @param onInteraction Callback for handling [BrowserToolbarEvent]s on user interactions.
  */
 @Composable
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
 internal fun ActionButton(
     icon: Drawable,
     contentDescription: String,

@@ -75,7 +75,7 @@ private const val LIGHTEN_TRACK_COLOR_FACTOR = 0.2f
  * @param progressAnimSpec The animation behavior when values change. By default the change is shown instantly.
  */
 @Composable
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod")
 fun AnimatedProgressBar(
     @IntRange(from = 0, to = 100) progress: Int,
     modifier: Modifier = Modifier,

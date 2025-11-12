@@ -111,7 +111,7 @@ class TrustPanelFragment : BottomSheetDialogFragment() {
             }
         }
 
-    @Suppress("LongMethod", "MagicNumber")
+    @Suppress("LongMethod", "MagicNumber", "CognitiveComplexMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

@@ -87,11 +87,11 @@ class AppLinksUseCases(
      * @param includeInstallAppFallback If {true} then offer an app-link to the installed market app
      * if no web fallback is available.
      */
-    @Suppress("ComplexMethod")
     inner class GetAppLinkRedirect internal constructor(
         private val includeHttpAppLinks: Boolean = false,
         private val includeInstallAppFallback: Boolean = false,
     ) {
+        @Suppress("CyclomaticComplexMethod")
         operator fun invoke(url: String): AppLinkRedirect {
             val urlHash = (url + includeHttpAppLinks + includeHttpAppLinks).hashCode()
             val currentTimeStamp = SystemClock.elapsedRealtime()

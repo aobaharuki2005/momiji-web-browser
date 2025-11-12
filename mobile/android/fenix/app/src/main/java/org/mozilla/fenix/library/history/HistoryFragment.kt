@@ -446,7 +446,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         else -> false
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod")
     @OptIn(ExperimentalLayoutApi::class) // for WindowInsets.isImeVisible
     private fun handleShowingSearchUX() {
         if (searchLayout == null) {

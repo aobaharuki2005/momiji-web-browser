@@ -33,6 +33,7 @@ class AdjustMetricsService(
     override val type = MetricServiceType.Marketing
     private val logger = Logger("AdjustMetricsService")
 
+    @Suppress("CognitiveComplexMethod")
     override fun start() {
         val settings = application.components.settings
 

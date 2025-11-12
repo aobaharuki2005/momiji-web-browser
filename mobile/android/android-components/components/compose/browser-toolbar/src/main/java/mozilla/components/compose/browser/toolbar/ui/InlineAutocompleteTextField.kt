@@ -93,7 +93,7 @@ private const val TEXT_HIGHLIGHT_COLOR = "#5C592ACB"
  * @param onUrlCommitted A callback for when the user commits the text via an IME action like "Go".
  */
 @OptIn(ExperimentalComposeUiApi::class) // for InterceptPlatformTextInput
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
 @Composable
 internal fun InlineAutocompleteTextField(
     query: String,

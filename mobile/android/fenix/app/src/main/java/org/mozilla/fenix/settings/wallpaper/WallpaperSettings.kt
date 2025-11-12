@@ -223,6 +223,7 @@ fun WallpaperThumbnails(
  * @param onSelect Action to take when a new wallpaper is selected.
  */
 @Composable
+@Suppress("CognitiveComplexMethod")
 private fun WallpaperThumbnailItem(
     wallpaper: Wallpaper,
     defaultWallpaper: Wallpaper,

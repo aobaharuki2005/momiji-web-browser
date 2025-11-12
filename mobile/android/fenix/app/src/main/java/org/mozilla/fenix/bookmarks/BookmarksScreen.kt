@@ -232,7 +232,7 @@ internal object BookmarksDestinations {
  * The Bookmarks list screen.
  */
 @OptIn(ExperimentalLayoutApi::class) // for WindowInsets.isImeVisible
-@Suppress("LongMethod", "ComplexMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod", "CyclomaticComplexMethod")
 @Composable
 private fun BookmarksList(
     store: BookmarksStore,

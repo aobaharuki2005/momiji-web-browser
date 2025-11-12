@@ -52,7 +52,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @param offset Offset to be added to the position of the menu.
  * @param onDismissRequest Invoked when user dismisses the menu or on orientation changes.
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod")
 @Composable
 private fun Menu(
     menuItems: List<MenuItem>,

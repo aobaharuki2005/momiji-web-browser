@@ -444,7 +444,7 @@ sealed class SearchFragmentAction : Action {
 /**
  * The SearchState Reducer.
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod")
 private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmentAction): SearchFragmentState {
     return when (action) {
         is Init -> {

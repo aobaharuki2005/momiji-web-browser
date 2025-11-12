@@ -50,6 +50,7 @@ class DownloadLanguagesPreferenceFragment : Fragment() {
         showToolbar(getString(R.string.download_languages_translations_toolbar_title_preference))
     }
 
+    @Suppress("CognitiveComplexMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

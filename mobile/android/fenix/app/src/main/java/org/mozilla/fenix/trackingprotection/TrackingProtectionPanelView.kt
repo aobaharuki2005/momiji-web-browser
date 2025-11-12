@@ -215,6 +215,7 @@ class TrackingProtectionPanelView(
      * visibility, where "..._loaded" titles correspond to "Allowed" permissions and the other
      * corresponds to "Blocked" permissions for each category.
      */
+    @Suppress("CognitiveComplexMethod")
     private fun getLastUsedCategoryView(categoryTitle: String) = when (categoryTitle) {
         CROSS_SITE_TRACKING_COOKIES.name -> {
             if (binding.crossSiteTracking.isGone) binding.crossSiteTrackingLoaded else binding.crossSiteTracking

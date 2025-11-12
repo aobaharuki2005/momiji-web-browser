@@ -104,7 +104,7 @@ class DefaultBrowserToolbarMenuController(
     @VisibleForTesting
     internal var ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
-    @Suppress("ComplexMethod", "LongMethod")
+    @Suppress("CognitiveComplexMethod", "LongMethod", "CyclomaticComplexMethod")
     override fun handleToolbarItemInteraction(item: ToolbarMenu.Item) {
         val sessionUseCases = activity.components.useCases.sessionUseCases
         val customTabUseCases = activity.components.useCases.customTabsUseCases
@@ -452,7 +452,7 @@ class DefaultBrowserToolbarMenuController(
         }
     }
 
-    @Suppress("ComplexMethod", "LongMethod")
+    @Suppress("CognitiveComplexMethod", "LongMethod")
     private fun trackToolbarItemInteraction(item: ToolbarMenu.Item) {
         when (item) {
             is ToolbarMenu.Item.OpenInFenix ->

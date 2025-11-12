@@ -526,7 +526,7 @@ abstract class BaseBrowserFragment :
         }
     }
 
-    @Suppress("ComplexMethod", "LongMethod", "DEPRECATION")
+    @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod", "LongMethod", "DEPRECATION")
     // https://github.com/mozilla-mobile/fenix/issues/19920
     @CallSuper
     internal open fun initializeUI(view: View, tab: SessionState) {
@@ -1715,7 +1715,7 @@ abstract class BaseBrowserFragment :
         }
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod")
     private fun initializeMicrosurveyPrompt() {
         val context = requireContext()
         val view = requireView()
@@ -2608,6 +2608,7 @@ abstract class BaseBrowserFragment :
         findInPageIntegration.withFeature { it.launch() }
     }
 
+    @Suppress("CognitiveComplexMethod")
     private fun setupIMEInsetsHandling(view: View) {
         // Ensure that navigating to new webpages which triggers this handling being set again
         // would not leave the engine view with half set values from the previous animation.

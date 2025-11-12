@@ -183,6 +183,7 @@ internal sealed class State {
     }
 }
 
+@Suppress("CognitiveComplexMethod")
 internal fun State.next(event: Event): State? = when (this) {
     // Reacting to external events.
     is State.Idle -> when (this.accountState) {

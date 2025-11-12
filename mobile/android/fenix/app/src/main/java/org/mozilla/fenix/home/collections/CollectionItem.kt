@@ -55,6 +55,7 @@ private val BOTTOM_TAB_SHAPE = RoundedCornerShape(bottomStart = 8.dp, bottomEnd 
  * @param onRemove Invoked when the user removes the tab informing also if the tab was swiped to be removed.
  */
 @Composable
+@Suppress("CognitiveComplexMethod")
 fun CollectionItem(
     tab: Tab,
     isLastInCollection: Boolean,

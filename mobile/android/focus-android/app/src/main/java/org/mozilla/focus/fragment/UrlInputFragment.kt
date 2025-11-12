@@ -424,6 +424,7 @@ class UrlInputFragment :
      */
     // This method correctly triggers a complexity warning. This method is indeed very and too complex.
     // However refactoring it is not trivial at this point so we ignore the warning for now.
+    @Suppress("CognitiveComplexMethod")
     private fun playVisibilityAnimation(reverse: Boolean) {
         if (isAnimating) {
             // We are already animating, let's ignore another request.

@@ -722,6 +722,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    @Suppress("CognitiveComplexMethod")
     private fun initializeMicrosurveyPrompt() {
         val context = requireContext()
 

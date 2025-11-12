@@ -736,7 +736,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
      * the current metrics ping design. The values set here will be sent in every metrics ping even
      * if these values have not changed since the last startup.
      */
-    @Suppress("ComplexMethod", "LongMethod")
+    @Suppress("CognitiveComplexMethod", "LongMethod", "CyclomaticComplexMethod")
     @VisibleForTesting
     internal fun setStartupMetrics(
         browserStore: BrowserStore,
@@ -904,7 +904,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     private fun isDeviceRamAboveThreshold() = deviceRamApproxMegabytes() > RAM_THRESHOLD_MEGABYTES
 
-    @Suppress("ComplexMethod")
+    @Suppress("CyclomaticComplexMethod")
     private fun setPreferenceMetrics(
         settings: Settings,
         dohSettingsProvider: DohSettingsProvider,

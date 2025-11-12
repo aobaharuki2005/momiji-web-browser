@@ -98,7 +98,7 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
             }
         }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

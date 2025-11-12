@@ -85,7 +85,7 @@ private val TrailingIconHeight = 24.dp
  * called. Note that this IME action may be different from what you specified in
  * [KeyboardOptions.imeAction].
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CognitiveComplexMethod")
 @Composable
 fun TextField(
     value: String,

@@ -62,7 +62,7 @@ typealias OnTabCloseClick = (deviceId: String, tab: SyncTab) -> Unit
  * @param onTabClick The lambda for handling clicks on synced tabs.
  * @param onTabCloseClick The lambda for handling clicks on a synced tab's close button.
  */
-@SuppressWarnings("LongMethod")
+@SuppressWarnings("LongMethod", "CognitiveComplexMethod")
 @Composable
 fun SyncedTabsList(
     syncedTabs: List<SyncedTabsListItem>,

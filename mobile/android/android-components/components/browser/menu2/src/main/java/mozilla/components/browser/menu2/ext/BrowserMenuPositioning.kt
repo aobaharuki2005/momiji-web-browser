@@ -18,7 +18,7 @@ import kotlin.math.roundToInt
 
 const val HALF_MENU_ITEM = 0.5
 
-@Suppress("ComplexMethod")
+@Suppress("CyclomaticComplexMethod")
 internal fun inferMenuPositioningData(
     containerView: View,
     anchor: View,

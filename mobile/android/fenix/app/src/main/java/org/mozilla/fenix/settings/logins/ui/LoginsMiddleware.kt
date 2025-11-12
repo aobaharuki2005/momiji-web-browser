@@ -45,7 +45,7 @@ internal class LoginsMiddleware(
 
     private val scope = CoroutineScope(ioDispatcher)
 
-    @Suppress("LongMethod", "ComplexMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun invoke(
         context: MiddlewareContext<LoginsState, LoginsAction>,
         next: (LoginsAction) -> Unit,

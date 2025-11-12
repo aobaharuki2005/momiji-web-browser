@@ -182,6 +182,7 @@ class ProfilerViewModel(
     /**
      * Polls the profiler status until it becomes active or the operation is cancelled.
      */
+    @Suppress("CognitiveComplexMethod")
     private fun pollUntilProfilerActiveAndThen(onActive: () -> Unit, onPollFail: () -> Unit) {
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch(ioDispatcher) {

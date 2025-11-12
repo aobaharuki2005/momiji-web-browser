@@ -2,6 +2,10 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
+    <ID>ForbiddenSuppress:AppReducer.kt$@Suppress("CyclomaticComplexMethod", "ReturnCount")</ID>
+    <ID>ForbiddenSuppress:IntentProcessor.kt$IntentProcessor$@Suppress("ReturnCount", "CognitiveComplexMethod")</ID>
+    <ID>ForbiddenSuppress:MainActivityNavigation.kt$MainActivityNavigation$@Suppress("CyclomaticComplexMethod")</ID>
+    <ID>ForbiddenSuppress:UrlInputFragment.kt$UrlInputFragment$@Suppress("CognitiveComplexMethod")</ID>
     <ID>UndocumentedPublicClass:AdvancedSettingsFragment.kt$AdvancedSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$NavigateUp : AppAction</ID>
     <ID>UndocumentedPublicClass:AppAction.kt$AppAction$OpenSettings : AppAction</ID>
@@ -93,7 +97,6 @@
     <ID>UndocumentedPublicClass:SearchWidgetProvider.kt$SearchWidgetProvider : AppSearchWidgetProvider</ID>
     <ID>UndocumentedPublicClass:SearchWidgetUtils.kt$SearchWidgetUtils</ID>
     <ID>UndocumentedPublicClass:SecretSettingsFragment.kt$SecretSettingsFragment : BaseSettingsFragmentOnSharedPreferenceChangeListener</ID>
-    <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun getSitePermissionLabel(sitePermission: SitePermission): String</ID>
     <ID>UndocumentedPublicClass:SitePermission.kt$SitePermission : Parcelable</ID>
     <ID>UndocumentedPublicClass:SitePermissionOption.kt$AutoplayOption</ID>
     <ID>UndocumentedPublicClass:SitePermissionOption.kt$AutoplayOption$AllowAudioVideo : SitePermissionOption</ID>
@@ -196,6 +199,7 @@
     <ID>UndocumentedPublicFunction:SearchSuggestionsViewModel.kt$SearchSuggestionsViewModel$fun setSearchQuery(query: String)</ID>
     <ID>UndocumentedPublicFunction:SearchUtils.kt$SearchUtils$fun createSearchUrl(context: Context?, text: String): String</ID>
     <ID>UndocumentedPublicFunction:SecretSettingsUnlocker.kt$SecretSettingsUnlocker$fun increment()</ID>
+    <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun getSitePermissionLabel(sitePermission: SitePermission): String</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun getSitePermissionsSettingsRules()</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun isAndroidPermissionGranted(sitePermission: SitePermission): Boolean</ID>
     <ID>UndocumentedPublicFunction:SitePermissionOptionsStorage.kt$SitePermissionOptionsStorage$fun isSitePermissionNotBlocked(permissionsList: Array&lt;String&gt;): Boolean</ID>

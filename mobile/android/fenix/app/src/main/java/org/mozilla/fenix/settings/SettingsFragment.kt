@@ -316,7 +316,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     @SuppressLint("InflateParams")
-    @Suppress("ComplexMethod", "LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         // Hide the scrollbar so the animation looks smoother
         val recyclerView = requireView().findViewById<RecyclerView>(R.id.recycler_view)

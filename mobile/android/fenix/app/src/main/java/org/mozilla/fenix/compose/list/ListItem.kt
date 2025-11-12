@@ -662,6 +662,7 @@ fun SelectableFaviconListItem(
  * not supplied.
  */
 @Composable
+@Suppress("CognitiveComplexMethod")
 fun SelectableIconListItem(
     label: String,
     isSelected: Boolean,

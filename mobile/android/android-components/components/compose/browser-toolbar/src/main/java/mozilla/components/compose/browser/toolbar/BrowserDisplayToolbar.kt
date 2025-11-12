@@ -74,7 +74,7 @@ private const val LARGE_TOOLBAR_PADDING_DP = 24
  * @param onInteraction Callback for handling [BrowserToolbarEvent]s on user interactions.
  */
 @Composable
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
 fun BrowserDisplayToolbar(
     pageOrigin: PageOrigin,
     gravity: ToolbarGravity,

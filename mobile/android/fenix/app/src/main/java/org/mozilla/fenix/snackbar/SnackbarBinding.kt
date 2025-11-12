@@ -73,7 +73,7 @@ class SnackbarBinding(
     private val currentSession
         get() = browserStore.state.findCustomTabOrSelectedTab(customTabSessionId)
 
-    @Suppress("LongMethod", "ComplexMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod", "CyclomaticComplexMethod")
     override suspend fun onState(flow: Flow<AppState>) {
         flow.map { state -> state.snackbarState }
             .distinctUntilChanged()

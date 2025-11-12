@@ -195,7 +195,7 @@ class TabManagementFragment : DialogFragment() {
         setStyle(STYLE_NO_TITLE, R.style.TabManagerDialogStyle)
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

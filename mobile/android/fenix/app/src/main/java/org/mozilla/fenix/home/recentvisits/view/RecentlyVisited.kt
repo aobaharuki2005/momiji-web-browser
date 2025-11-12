@@ -68,6 +68,7 @@ private val contentPadding = 16.dp
  * the item resides in.
  */
 @Composable
+@Suppress("CognitiveComplexMethod")
 fun RecentlyVisited(
     recentVisits: List<RecentlyVisitedItem>,
     menuItems: List<RecentVisitMenuItem>,

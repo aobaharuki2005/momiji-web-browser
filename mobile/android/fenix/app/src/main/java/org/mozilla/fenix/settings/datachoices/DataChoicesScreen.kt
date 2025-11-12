@@ -317,6 +317,7 @@ private fun TogglePreferenceSection(
  * @param onClick Callback invoked when the section is clicked (if enabled).
  */
 @Composable
+@Suppress("CognitiveComplexMethod")
 private fun StudiesSection(
     studiesEnabled: Boolean = true,
     sectionEnabled: Boolean = true,

@@ -68,7 +68,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
         return null
     }
 
-    @Suppress("NestedBlockDepth")
+    @Suppress("NestedBlockDepth", "CognitiveComplexMethod")
     private fun parseXmlFile(
         parser: XmlResourceParser,
         preferenceFileInformation: PreferenceFileInformation,

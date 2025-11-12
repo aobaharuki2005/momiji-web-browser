@@ -53,6 +53,7 @@ private const val TWO_DIGITS_SIZE_RATIO = 0.4f
  * @param iconColor the border color of the tab counter.
  */
 @Composable
+@Suppress("CognitiveComplexMethod")
 fun TabCounter(
     tabCount: Int,
     showPrivacyBadge: Boolean = false,

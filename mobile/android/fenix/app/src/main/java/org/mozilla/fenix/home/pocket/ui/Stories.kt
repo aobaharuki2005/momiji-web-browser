@@ -261,7 +261,7 @@ fun ContentRecommendationStory(
  * @param onStoryShown Callback for when a certain story is visible to the user.
  * @param onStoryClicked Callback for when the user taps on a recommended story.
  */
-@Suppress("CyclomaticComplexMethod", "LongMethod")
+@Suppress("CyclomaticComplexMethod", "LongMethod", "CognitiveComplexMethod")
 @Composable
 fun Stories(
     @PreviewParameter(StoryProvider::class) stories: List<PocketStory>,
