@@ -3334,7 +3334,6 @@ class nsIFrame : public nsQueryFrame {
   }
   void SetView(nsView* aView);
 
-
   /**
    * Get the offset between the coordinate systems of |this| and aOther.
    * Adding the return value to a point in the coordinate system of |this|
