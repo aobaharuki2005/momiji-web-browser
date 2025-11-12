@@ -11,6 +11,8 @@
 
  */
 
+use std::i32;
+
 use crate::gpu_types::UvRectKind;
 use crate::internal_types::{FrameMemory, FrameVec};
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
@@ -70,24 +72,44 @@ pub struct GpuBufferBlockI {
     data: [i32; 4],
 }
 
+// TODO(gw): Temporarily encode GPU Cache addresses as a single int.
+//           In the future, we can change the PrimitiveInstanceData struct
+//           to use 2x u16 for the vertex attribute instead of an i32.
+#[repr(transparent)]
 #[derive(Copy, Debug, Clone, MallocSizeOf, Eq, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GpuBufferAddress {
-    pub u: u16,
-    pub v: u16,
-}
+pub struct GpuBufferAddress(u32);
 
 impl GpuBufferAddress {
-    #[allow(dead_code)]
-    pub fn as_int(self) -> i32 {
-        // TODO(gw): Temporarily encode GPU Cache addresses as a single int.
-        //           In the future, we can change the PrimitiveInstanceData struct
-        //           to use 2x u16 for the vertex attribute instead of an i32.
-        self.v as i32 * MAX_VERTEX_TEXTURE_WIDTH as i32 + self.u as i32
+    pub fn new(u: u16, v: u16) -> Self {
+        GpuBufferAddress(
+            v as u32 * MAX_VERTEX_TEXTURE_WIDTH as u32 + u as u32
+        )
     }
 
-    pub const INVALID: GpuBufferAddress = GpuBufferAddress { u: !0, v: !0 };
+    pub fn as_u32(self) -> u32 {
+        self.0
+    }
+
+    pub fn from_u32(val: u32) -> Self {
+        GpuBufferAddress(val)
+    }
+
+    #[allow(dead_code)]
+    pub fn as_int(self) -> i32 {
+        self.0 as i32
+    }
+
+    #[allow(dead_code)]
+    pub fn uv(self) -> (u16, u16) {
+        (
+            (self.0 as usize % MAX_VERTEX_TEXTURE_WIDTH) as u16,
+            (self.0 as usize / MAX_VERTEX_TEXTURE_WIDTH) as u16,
+        )
+    }
+
+    pub const INVALID: GpuBufferAddress = GpuBufferAddress(u32::MAX - 1);
 }
 
 impl GpuBufferBlockF {
@@ -260,10 +282,7 @@ impl<'a, T> GpuBufferWriter<'a, T> where T: Texel {
     pub fn finish(self) -> GpuBufferAddress {
         assert!(self.buffer.len() <= self.index + self.max_block_count);
 
-        GpuBufferAddress {
-            u: (self.index % MAX_VERTEX_TEXTURE_WIDTH) as u16,
-            v: (self.index / MAX_VERTEX_TEXTURE_WIDTH) as u16,
-        }
+        GpuBufferAddress(self.index as u32)
     }
 }
 
@@ -307,10 +326,7 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
 
         self.data.extend_from_slice(blocks);
 
-        GpuBufferAddress {
-            u: (index % MAX_VERTEX_TEXTURE_WIDTH) as u16,
-            v: (index / MAX_VERTEX_TEXTURE_WIDTH) as u16,
-        }
+        GpuBufferAddress(index as u32)
     }
 
     /// Begin writing a specific number of blocks
@@ -346,10 +362,7 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
             self.data.push(Default::default());
         }
 
-        GpuBufferAddress {
-            u: (index % MAX_VERTEX_TEXTURE_WIDTH) as u16,
-            v: (index / MAX_VERTEX_TEXTURE_WIDTH) as u16,
-        }
+        GpuBufferAddress(index as u32)
     }
 
     pub fn finalize(

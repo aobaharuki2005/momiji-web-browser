@@ -4956,7 +4956,7 @@ impl Renderer {
                 .insert(DeferredResolveIndex(i as u32), texture);
 
             let addr = deferred_resolve.address;
-            let index = addr.u as usize + addr.v as usize * MAX_VERTEX_TEXTURE_WIDTH;
+            let index = addr.as_u32() as usize;
             gpu_buffer.data[index] = image.uv.to_array().into();
             gpu_buffer.data[index + 1] = [0f32; 4].into();
         }
