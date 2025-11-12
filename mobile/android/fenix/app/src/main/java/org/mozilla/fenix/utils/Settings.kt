@@ -60,7 +60,6 @@ import org.mozilla.fenix.nimbus.CookieBannersSection
 import org.mozilla.fenix.nimbus.DefaultBrowserPrompt
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
-import org.mozilla.fenix.nimbus.Mr2022Section
 import org.mozilla.fenix.nimbus.QueryParameterStrippingSection
 import org.mozilla.fenix.nimbus.QueryParameterStrippingSection.QUERY_PARAMETER_STRIPPING
 import org.mozilla.fenix.nimbus.QueryParameterStrippingSection.QUERY_PARAMETER_STRIPPING_ALLOW_LIST
@@ -461,10 +460,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the wallpaper onboarding dialog should be shown.
      */
-    var showWallpaperOnboarding by lazyFeatureFlagPreference(
+    var showWallpaperOnboarding by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_wallpapers_onboarding),
-        featureFlag = true,
-        default = { mr2022Sections[Mr2022Section.WALLPAPERS_SELECTION_TOOL] == true },
+        default = true,
     )
 
     var openLinksInAPrivateTab by booleanPreference(
@@ -1187,9 +1185,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
-    val enabledTotalCookieProtection: Boolean
-        get() = mr2022Sections[Mr2022Section.TCP_FEATURE] == true
-
     /**
      * Indicates if the cookie banners CRF should be shown.
      */
@@ -1211,11 +1206,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     val blockCookiesSelectionInCustomTrackingProtection by stringPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies_select),
-        default = if (enabledTotalCookieProtection) {
-            appContext.getString(R.string.total_protection)
-        } else {
-            appContext.getString(R.string.social)
-        },
+        default = appContext.getString(R.string.total_protection),
     )
 
     val blockTrackingContentInCustomTrackingProtection by booleanPreference(
@@ -1967,10 +1958,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         val featureGate = RegionAddressFeatureGate(locale, debugRepository)
         return featureGate.isAddressFeatureEnabled()
     }
-
-    private val mr2022Sections: Map<Mr2022Section, Boolean>
-        get() =
-            FxNimbus.features.mr2022.value().sectionsEnabled
 
     private val cookieBannersSection: Map<CookieBannersSection, Int>
         get() =

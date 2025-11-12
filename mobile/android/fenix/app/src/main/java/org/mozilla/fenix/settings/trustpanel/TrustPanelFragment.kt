@@ -306,7 +306,6 @@ class TrustPanelFragment : BottomSheetDialogFragment() {
                         Route.TrackerCategoryDetailsPanel -> {
                             TrackerCategoryDetailsPanel(
                                 title = args.title,
-                                isTotalCookieProtectionEnabled = components.settings.enabledTotalCookieProtection,
                                 detailedTrackerCategory = detailedTrackerCategory,
                                 bucketedTrackers = bucketedTrackers,
                                 onBackButtonClick = {
