@@ -204,15 +204,13 @@ fn main() {
             build
                 .flag("/std:c++17")
                 .flag("/EHs-")
-                .flag("/GR-")
-                .flag("/UMOZILLA_CONFIG_H");
+                .flag("/GR-");
         } else {
             build
                 .flag("-std=c++17")
                 .flag("-fno-exceptions")
                 .flag("-fno-rtti")
-                .flag("-fno-math-errno")
-                .flag("-UMOZILLA_CONFIG_H");
+                .flag("-fno-math-errno");
         }
         // SWGL relies heavily on inlining for performance so override -Oz with -O2
         if tool.args().contains(&"-Oz".into()) {
