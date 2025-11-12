@@ -96,6 +96,10 @@ WaylandSurface::WaylandSurface(RefPtr<WaylandSurface> aParent,
 
 WaylandSurface::~WaylandSurface() {
   LOGWAYLAND("WaylandSurface::~WaylandSurface()");
+
+  wl_egl_window* tmp = nullptr;
+  mEGLWindow.exchange(tmp);
+  MozClearPointer(tmp, wl_egl_window_destroy);
   MozClearPointer(mSurface, wl_surface_destroy);
 
   MOZ_RELEASE_ASSERT(!mIsMapped, "We can't release mapped WaylandSurface!");
@@ -630,9 +634,6 @@ void WaylandSurface::UnmapLocked(WaylandSurfaceLock& aSurfaceLock) {
   mViewportDestinationSize = gfx::IntSize(-1, -1);
   mViewportSourceRect = gfx::Rect(-1, -1, -1, -1);
 
-  wl_egl_window* tmp = nullptr;
-  mEGLWindow.exchange(tmp);
-  MozClearPointer(tmp, wl_egl_window_destroy);
   MozClearPointer(mFractionalScaleListener, wp_fractional_scale_v1_destroy);
   MozClearPointer(mSubsurface, wl_subsurface_destroy);
   MozClearPointer(mColorSurface, wp_color_management_surface_v1_destroy);
@@ -1045,11 +1046,6 @@ wl_egl_window* WaylandSurface::GetEGLWindow(DesktopIntSize aSize) {
 
   WaylandSurfaceLock lock(this);
   MOZ_DIAGNOSTIC_ASSERT(mSurface, "Missing wl_surface!");
-  if (!mIsReadyToDraw) {
-    LOGWAYLAND("  quit, mSurface %p mIsReadyToDraw %d", mSurface,
-               (bool)mIsReadyToDraw);
-    return nullptr;
-  }
 
   auto scaledSize = LayoutDeviceIntSize::Round(
       aSize * DesktopToLayoutDeviceScale(GetScale()));
@@ -1082,9 +1078,7 @@ bool WaylandSurface::SetEGLWindowSize(LayoutDeviceIntSize aSize) {
   // In such case don't return false which would block compositor.
   // We return true here and don't block flush WebRender queue.
   // We'll be repainted if our window become visible again anyway.
-  if (!mEGLWindow) {
-    return true;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mEGLWindow, "Missing ELG window?");
 
   auto unscaledSize =
       DesktopIntSize::Round(aSize / DesktopToLayoutDeviceScale(GetScale()));
