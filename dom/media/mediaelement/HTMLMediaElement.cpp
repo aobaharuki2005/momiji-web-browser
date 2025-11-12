@@ -6109,7 +6109,7 @@ void HTMLMediaElement::CheckProgress(bool aHaveNewProgress) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mNetworkState == NETWORK_LOADING);
 
-  TimeStamp now = TimeStamp::NowLoRes();
+  TimeStamp now = TimeStamp::Now();
 
   if (aHaveNewProgress) {
     mDataTime = now;
@@ -6127,11 +6127,11 @@ void HTMLMediaElement::CheckProgress(bool aHaveNewProgress) {
                  TimeDuration::FromMilliseconds(PROGRESS_MS) &&
              mDataTime > mProgressTime)) {
     QueueEvent(u"progress"_ns);
-    // Resolution() ensures that future data will have now > mProgressTime,
+    // Going back 1ms ensures that future data will have now > mProgressTime,
     // and so will trigger another event.  mDataTime is not reset because it
     // is still required to detect stalled; it is similarly offset by
-    // resolution to indicate the new data has not yet arrived.
-    mProgressTime = now - TimeDuration::Resolution();
+    // 1ms to indicate the new data has not yet arrived.
+    mProgressTime = now - TimeDuration::FromMilliseconds(1);
     if (mDataTime > mProgressTime) {
       mDataTime = mProgressTime;
     }
@@ -6185,7 +6185,7 @@ void HTMLMediaElement::StartProgressTimer() {
 
 void HTMLMediaElement::StartProgress() {
   // Record the time now for detecting stalled.
-  mDataTime = TimeStamp::NowLoRes();
+  mDataTime = TimeStamp::Now();
   // Reset mProgressTime so that mDataTime is not indicating bytes received
   // after the last progress event.
   mProgressTime = TimeStamp();
