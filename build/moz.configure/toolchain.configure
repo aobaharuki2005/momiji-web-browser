@@ -653,15 +653,19 @@ def check_compiler(configure_cache, compiler, language, target, android_version)
             flags.append("-Xclang")
         flags.append("-std=gnu17")
 
-    cxx17_version = 201703
-    if info.language == "C++":
-        if info.language_version != cxx17_version:
-            # MSVC headers include C++17 features, but don't guard them
-            # with appropriate checks.
-            if info.type == "clang-cl":
-                flags.append("-std:c++17")
-            else:
-                flags.append("-std=gnu++17")
+    cxx20_version = 202002
+    if info.language == "C++" and info.language_version != cxx20_version:
+        if info.type == "clang-cl":
+            flags.append("-std:c++20")
+        else:
+            flags.append("-std=gnu++20")
+
+        # gcc 10 defines C++20's __cplusplus as 201709L instead of 202002L.
+        # Redefine as C++20's final vesion for gcc 10 so modern C++20 code's
+        # __cplusplus version checks work as expected.
+        if info.type == "gcc" and info.version < Version("11.0.0"):
+            flags.append("-U__cplusplus")
+            flags.append("-D__cplusplus=202002L")
 
     # Check compiler target
     # --------------------------------------------------------------------
@@ -1322,7 +1326,7 @@ def sysroot(host_or_target, target_sysroot=None):
         elif host_or_target.os == "iOS" and ios_sdk:
             path = ios_sdk
         if path:
-            # Find the version of libstdc++ headears in the sysroot
+            # Find the version of libstdc++ headers in the sysroot
             include = os.path.join(path, "usr/include/c++")
             if os.path.isdir(include):
                 with os.scandir(include) as d:

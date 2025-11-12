@@ -202,12 +202,12 @@ fn main() {
     if let Ok(tool) = build.try_get_compiler() {
         if tool.is_like_msvc() {
             build
-                .flag("/std:c++17")
+                .flag("/std:c++20")
                 .flag("/EHs-")
                 .flag("/GR-");
         } else {
             build
-                .flag("-std=c++17")
+                .flag("-std=c++20")
                 .flag("-fno-exceptions")
                 .flag("-fno-rtti")
                 .flag("-fno-math-errno");

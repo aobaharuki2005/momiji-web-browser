@@ -29,6 +29,8 @@ DEFAULT_CXX_14 = {"__cplusplus": "201402L"}
 
 DEFAULT_CXX_17 = {"__cplusplus": "201703L"}
 
+DEFAULT_CXX_20 = {"__cplusplus": "202002L"}
+
 SUPPORTS_GNU99 = {"-std=gnu99": DEFAULT_C99}
 
 SUPPORTS_GNU17 = {"-std=gnu17": DEFAULT_C17}
@@ -47,6 +49,13 @@ SUPPORTS_GNUXX17 = {"-std=gnu++17": DEFAULT_CXX_17}
 SUPPORTS_CXX17 = {
     "-std=c++17": DEFAULT_CXX_17,
     "-std:c++17": DEFAULT_CXX_17,
+}
+
+SUPPORTS_GNUXX20 = {"-std=gnu++20": DEFAULT_CXX_20}
+
+SUPPORTS_CXX20 = {
+    "-std=c++20": DEFAULT_CXX_20,
+    "-std:c++20": DEFAULT_CXX_20,
 }
 
 
@@ -76,9 +85,18 @@ def GXX(version):
 GCC_7 = GCC("7.3.0") + DEFAULT_C11
 GXX_7 = GXX("7.3.0") + DEFAULT_CXX_14 + SUPPORTS_GNUXX17 + SUPPORTS_CXX17
 GCC_10 = GCC("10.2.1") + DEFAULT_C17
-GXX_10 = GXX("10.2.1") + DEFAULT_CXX_14 + SUPPORTS_GNUXX17 + SUPPORTS_CXX17
+GXX_10 = (
+    GXX("10.2.1")
+    + DEFAULT_CXX_14
+    + SUPPORTS_GNUXX17
+    + SUPPORTS_CXX17
+    + {
+        "-std=gnu++20": {"__cplusplus": "201709L"},
+        "-std=c++20": {"__cplusplus": "201709L"},
+    }
+)
 GCC_14 = GCC("14.3.0") + DEFAULT_C17
-GXX_14 = GXX("14.3.0") + DEFAULT_CXX_17
+GXX_14 = GXX("14.3.0") + DEFAULT_CXX_17 + SUPPORTS_GNUXX20 + SUPPORTS_CXX20
 
 DEFAULT_GCC = GCC_14
 DEFAULT_GXX = GXX_14
@@ -163,17 +181,34 @@ def XCODE(compiler):
 CLANG_14 = CLANG("14.0.0") + DEFAULT_C17
 CLANGXX_14 = CLANGXX("14.0.0") + DEFAULT_CXX_14
 CLANG_17 = CLANG("17.0.0") + DEFAULT_C17
-CLANGXX_17 = CLANGXX("17.0.0") + DEFAULT_CXX_17
+CLANGXX_17 = CLANGXX("17.0.0") + DEFAULT_CXX_17 + SUPPORTS_CXX20 + SUPPORTS_GNUXX20
 CLANG_19 = CLANG("19.1.7") + DEFAULT_C17
-CLANGXX_19 = CLANGXX("19.1.7") + DEFAULT_CXX_17
+CLANGXX_19 = CLANGXX("19.1.7") + DEFAULT_CXX_17 + SUPPORTS_CXX20 + SUPPORTS_GNUXX20
 
 XCODE_CLANG_14 = XCODE(CLANG("14.0.0") + DEFAULT_C17)
-XCODE_CLANGXX_14 = XCODE(CLANGXX("14.0.0") + SUPPORTS_GNUXX17 + SUPPORTS_CXX17)
+XCODE_CLANGXX_14 = XCODE(
+    CLANGXX("14.0.0")
+    + SUPPORTS_GNUXX17
+    + SUPPORTS_CXX17
+    + SUPPORTS_GNUXX20
+    + SUPPORTS_CXX20
+)
 XCODE_CLANG_17 = XCODE(CLANG("16.0.0") + DEFAULT_C17)
-XCODE_CLANGXX_17 = XCODE(CLANGXX("16.0.0") + SUPPORTS_GNUXX17 + SUPPORTS_CXX17)
+XCODE_CLANGXX_17 = XCODE(
+    CLANGXX("16.0.0")
+    + SUPPORTS_GNUXX17
+    + SUPPORTS_CXX17
+    + SUPPORTS_GNUXX20
+    + SUPPORTS_CXX20
+)
 XCODE_CLANG_19 = XCODE(CLANG("17.0.0") + DEFAULT_C17)
 XCODE_CLANGXX_19 = XCODE(
-    CLANGXX("17.0.0") + DEFAULT_CXX_14 + SUPPORTS_GNUXX17 + SUPPORTS_CXX17
+    CLANGXX("17.0.0")
+    + DEFAULT_CXX_14
+    + SUPPORTS_GNUXX17
+    + SUPPORTS_CXX17
+    + SUPPORTS_GNUXX20
+    + SUPPORTS_CXX20
 )
 DEFAULT_CLANG = CLANG_19
 DEFAULT_CLANGXX = CLANGXX_19
@@ -235,6 +270,7 @@ CLANG_CL_14 = (
     + SUPPORTS_GNUXX11
     + SUPPORTS_CXX14
     + SUPPORTS_CXX17
+    + SUPPORTS_CXX20
 ) + {"*.cpp": {"__STDC_VERSION__": False, "__cplusplus": "201703L"}}
 CLANG_CL_19 = (
     CLANG_19
@@ -243,6 +279,7 @@ CLANG_CL_19 = (
     + SUPPORTS_GNUXX11
     + SUPPORTS_CXX14
     + SUPPORTS_CXX17
+    + SUPPORTS_CXX20
 ) + {"*.cpp": {"__STDC_VERSION__": False, "__cplusplus": "201703L"}}
 
 CLANG_CL_PLATFORM_X86 = FakeCompiler(
@@ -307,6 +344,7 @@ LIBRARY_NAME_INFOS = {
 class BaseToolchainTest(BaseConfigureTest):
     def setUp(self):
         super(BaseToolchainTest, self).setUp()
+        self.maxDiff = None
         self.out = StringIO()
         self.logger = logging.getLogger("BaseToolchainTest")
         self.logger.setLevel(logging.ERROR)
@@ -439,7 +477,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         language="C",
     )
     GXX_10_RESULT = CompilerResult(
-        flags=["-std=gnu++17"],
+        flags=["-std=gnu++20", "-U__cplusplus", "-D__cplusplus=202002L"],
         version="10.2.1",
         type="gcc",
         compiler="/usr/bin/g++-10",
@@ -447,7 +485,7 @@ class LinuxToolchainTest(BaseToolchainTest):
     )
     GCC_14_RESULT = GCC_10_RESULT + {"compiler": "/usr/bin/gcc-14", "version": "14.3.0"}
     GXX_14_RESULT = CompilerResult(
-        flags=[],
+        flags=["-std=gnu++20"],
         version="14.3.0",
         type="gcc",
         compiler="/usr/bin/g++-14",
@@ -470,7 +508,7 @@ class LinuxToolchainTest(BaseToolchainTest):
         language="C",
     )
     CLANGXX_17_RESULT = CompilerResult(
-        flags=[],
+        flags=["-std=gnu++20"],
         version="17.0.0",
         type="clang",
         compiler="/usr/bin/clang++-17",
@@ -835,7 +873,7 @@ class OSXToolchainTest(BaseToolchainTest):
         language="C",
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
-        flags=["-stdlib=libc++", "-std=gnu++17"],
+        flags=["-stdlib=libc++", "-std=gnu++20"],
         version="19.1.4.or.more",
         type="clang",
         compiler="/usr/bin/clang++",
@@ -943,7 +981,7 @@ class MingwToolchainTest(BaseToolchainTest):
     )
     CLANGXX_CL_19_RESULT = CompilerResult(
         version="19.1.7",
-        flags=[],
+        flags=["-std:c++20"],
         type="clang-cl",
         compiler="/usr/bin/clang-cl",
         language="C++",
@@ -1498,7 +1536,7 @@ class OSXCrossToolchainTest(BaseToolchainTest):
         language="C",
     )
     DEFAULT_CLANGXX_RESULT = CompilerResult(
-        flags=[],
+        flags=["-std=gnu++20"],
         version="17.0.0",
         type="clang",
         compiler="/usr/bin/clang++",
