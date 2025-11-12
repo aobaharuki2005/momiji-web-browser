@@ -637,3 +637,70 @@ async function clickCheckboxWithConfirmDialog(
 
   return checkbox;
 }
+
+/**
+ * Select the given history mode via dropdown in the privacy pane.
+ *
+ * @param {Window} win - The preferences window which contains the
+ * dropdown.
+ * @param {string} value - The history mode to select.
+ */
+async function selectHistoryMode(win, value) {
+  let historyMode = win.document.getElementById("historyMode").inputEl;
+
+  // Find the index of the option with the given value. Do this before the first
+  // click so we can bail out early if the option does not exist.
+  let optionIndexStr = Array.from(historyMode.children)
+    .findIndex(option => option.value == value)
+    ?.toString();
+  if (optionIndexStr == null) {
+    throw new Error(
+      "Could not find history mode option item for value: " + value
+    );
+  }
+
+  // Scroll into view for click to succeed.
+  historyMode.scrollIntoView();
+
+  let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
+
+  await EventUtils.synthesizeMouseAtCenter(
+    historyMode,
+    {},
+    historyMode.ownerGlobal
+  );
+
+  let popup = await popupShownPromise;
+  let popupItems = Array.from(popup.children);
+
+  let targetItem = popupItems.find(item => item.value == optionIndexStr);
+
+  if (!targetItem) {
+    throw new Error(
+      "Could not find history mode popup item for value: " + value
+    );
+  }
+
+  let popupHiddenPromise = BrowserTestUtils.waitForPopupEvent(popup, "hidden");
+
+  EventUtils.synthesizeMouseAtCenter(targetItem, {}, targetItem.ownerGlobal);
+
+  await popupHiddenPromise;
+}
+
+async function updateCheckBox(win, id, value) {
+  let checkbox = win.document.getElementById(id);
+  ok(checkbox, "the " + id + " checkbox should exist");
+  is_element_visible(checkbox, "the " + id + " checkbox should be visible");
+
+  // No need to click if we're already in the desired state.
+  if (checkbox.checked === value) {
+    return;
+  }
+
+  // Scroll into view for click to succeed.
+  checkbox.scrollIntoView();
+
+  // Toggle the state.
+  await EventUtils.synthesizeMouseAtCenter(checkbox, {}, checkbox.ownerGlobal);
+}

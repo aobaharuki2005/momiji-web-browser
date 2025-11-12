@@ -667,6 +667,8 @@ ClearHistoryDialogHelper.prototype = {
         clearDialogOpenButtonId = "clearDataSettings";
       }
       // open dialog
+      // Wait a tick for the button to be initialized.œ
+      await new Promise(resolve => requestAnimationFrame(resolve));
       tabWindow.document.getElementById(clearDialogOpenButtonId).click();
     }
     // We open the dialog in the chrome context in other cases

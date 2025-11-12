@@ -37,6 +37,8 @@ add_task(async function testMigrationForDeleteOnClose() {
   ok(!alwaysClearBox.checked, "AlwaysClear initial state is deselected");
 
   deleteOnCloseBox.click();
+  // Wait for change to take effect.
+  await new Promise(resolve => requestAnimationFrame(resolve));
 
   ok(deleteOnCloseBox.checked, "DeleteOnClose is selected");
   is(
