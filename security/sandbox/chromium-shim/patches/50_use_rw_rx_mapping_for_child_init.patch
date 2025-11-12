@@ -13,14 +13,14 @@ We also delete ServiceResolverThunk::CopyThunk which is dead code.
 ---
  sandbox/win/src/eat_resolver.cc        |  9 ++-
  sandbox/win/src/eat_resolver.h         |  1 +
- sandbox/win/src/interception.cc        | 57 ++++++++++++-------
+ sandbox/win/src/interception.cc        | 56 +++++++++++--------
  sandbox/win/src/interception_agent.cc  |  2 +-
  sandbox/win/src/resolver.cc            |  4 +-
  sandbox/win/src/resolver.h             |  2 +
  sandbox/win/src/service_resolver.h     | 10 +---
- sandbox/win/src/service_resolver_32.cc | 50 ++--------------
+ sandbox/win/src/service_resolver_32.cc | 50 ++---------------
  sandbox/win/src/service_resolver_64.cc | 49 ++++------------
- 9 files changed, 65 insertions(+), 119 deletions(-)
+ 9 files changed, 64 insertions(+), 119 deletions(-)
 
 diff --git a/sandbox/win/src/eat_resolver.cc b/sandbox/win/src/eat_resolver.cc
 index 97f77c1849d2..e1dc18a241bb 100644
@@ -58,7 +58,7 @@ index 924354e447a3..9d45c2863942 100644
                   size_t storage_bytes,
                   size_t* storage_used) override;
 diff --git a/sandbox/win/src/interception.cc b/sandbox/win/src/interception.cc
-index 04f32b099646..9fef6728eb3e 100644
+index 04f32b099646..4a5e06b35d84 100644
 --- a/sandbox/win/src/interception.cc
 +++ b/sandbox/win/src/interception.cc
 @@ -28,6 +28,8 @@
@@ -100,7 +100,7 @@ index 04f32b099646..9fef6728eb3e 100644
  
    // Find an aligned, random location within the reserved range.
    size_t thunk_bytes =
-@@ -381,19 +402,24 @@ ResultCode InterceptionManager::PatchNtdll(bool hot_patch_needed) {
+@@ -381,19 +402,23 @@ ResultCode InterceptionManager::PatchNtdll(bool hot_patch_needed) {
    size_t thunk_offset = internal::GetGranularAlignedRandomOffset(thunk_bytes);
  
    // Split the base and offset along page boundaries.
@@ -115,12 +115,11 @@ index 04f32b099646..9fef6728eb3e 100644
 -      ::VirtualAllocEx(child, thunk_base, thunk_bytes_padded, MEM_COMMIT,
 -                       PAGE_EXECUTE_READWRITE));
 -  CHECK(thunk_base);  // If this fails we'd crash anyway on an invalid access.
++  // MOZ: Committing RW pages in the parent also commits the corresponding RX
++  //      pages in the child (see TestSharedMappingCommit).
 +  local_thunk_base = reinterpret_cast<BYTE*>(::VirtualAlloc(
 +      local_thunk_base, thunk_bytes_padded, MEM_COMMIT, PAGE_READWRITE));
 +  CHECK(local_thunk_base);
-+  thunk_base = reinterpret_cast<BYTE*>(::VirtualAllocEx(
-+      child, thunk_base, thunk_bytes_padded, MEM_COMMIT, PAGE_EXECUTE_READ));
-+  CHECK(thunk_base);
 +
    DllInterceptionData* thunks =
        reinterpret_cast<DllInterceptionData*>(thunk_base + thunk_offset);
@@ -131,7 +130,7 @@ index 04f32b099646..9fef6728eb3e 100644
    dll_data.data_bytes = thunk_bytes;
    dll_data.num_thunks = 0;
    dll_data.used_bytes = offsetof(DllInterceptionData, thunks);
-@@ -407,20 +433,6 @@ ResultCode InterceptionManager::PatchNtdll(bool hot_patch_needed) {
+@@ -407,20 +432,6 @@ ResultCode InterceptionManager::PatchNtdll(bool hot_patch_needed) {
    if (rc != SBOX_ALL_OK)
      return rc;
  
@@ -152,7 +151,7 @@ index 04f32b099646..9fef6728eb3e 100644
    ResultCode ret =
        child_->TransferVariable("g_originals", g_originals, sizeof(g_originals));
    return ret;
-@@ -475,6 +487,7 @@ ResultCode InterceptionManager::PatchClientFunctions(
+@@ -475,6 +486,7 @@ ResultCode InterceptionManager::PatchClientFunctions(
      NTSTATUS ret = thunk.Setup(
          ntdll_base, interceptor_base, interception.function.c_str(),
          interception.interceptor.c_str(), interception.interceptor_address,
