@@ -353,7 +353,7 @@ void nsView::List(FILE* out, int32_t aIndent) const {
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}", brect.X(), brect.Y(), brect.Width(),
           brect.Height());
-  fprintf(out, " vis=%d frame=%p <\n", mFrame);
+  fprintf(out, " frame=%p <\n", mFrame);
   for (i = aIndent; --i >= 0;) fputs("  ", out);
   fputs(">\n", out);
 }
