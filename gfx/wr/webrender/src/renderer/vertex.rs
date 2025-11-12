@@ -505,22 +505,6 @@ pub mod desc {
         ],
     };
 
-    pub const GPU_CACHE_UPDATE: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[
-            VertexAttribute {
-                name: "aPosition",
-                count: 2,
-                kind: VertexAttributeKind::U16Norm,
-            },
-            VertexAttribute {
-                name: "aValue",
-                count: 4,
-                kind: VertexAttributeKind::F32,
-            },
-        ],
-        instance_attributes: &[],
-    };
-
     pub const RESOLVE: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",

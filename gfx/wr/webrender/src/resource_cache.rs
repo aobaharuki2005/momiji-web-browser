@@ -27,7 +27,6 @@ use crate::glyph_cache::{GlyphCache, CachedGlyphInfo};
 use crate::glyph_cache::GlyphCacheEntry;
 use glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer, GlyphRasterJob};
 use glyph_rasterizer::{SharedFontResources, BaseFontInstance};
-use crate::gpu_cache::GpuCache;
 use crate::gpu_types::UvRectKind;
 use crate::internal_types::{
     CacheTextureId, FastHashMap, FastHashSet, TextureSource, ResourceUpdateList,
@@ -632,18 +631,16 @@ impl ResourceCache {
         key: Option<RenderTaskCacheKey>,
         is_opaque: bool,
         parent: RenderTaskParent,
-        gpu_cache: &mut GpuCache,
         gpu_buffer_builder: &mut GpuBufferBuilderF,
         rg_builder: &mut RenderTaskGraphBuilder,
         surface_builder: &mut SurfaceBuilder,
-        f: &mut dyn FnMut(&mut RenderTaskGraphBuilder, &mut GpuBufferBuilderF, &mut GpuCache) -> RenderTaskId,
+        f: &mut dyn FnMut(&mut RenderTaskGraphBuilder, &mut GpuBufferBuilderF) -> RenderTaskId,
     ) -> RenderTaskId {
         self.cached_render_tasks.request_render_task(
             key.clone(),
             &mut self.texture_cache,
             is_opaque,
             parent,
-            gpu_cache,
             gpu_buffer_builder,
             rg_builder,
             surface_builder,
@@ -657,13 +654,12 @@ impl ResourceCache {
         size: DeviceIntSize,
         rg_builder: &mut RenderTaskGraphBuilder,
         gpu_buffer_builder: &mut GpuBufferBuilderF,
-        gpu_cache: &mut GpuCache,
         is_opaque: bool,
         adjustment: &AdjustedImageSource,
-        f: &mut dyn FnMut(&mut RenderTaskGraphBuilder, &mut GpuBufferBuilderF, &mut GpuCache) -> RenderTaskId,
+        f: &mut dyn FnMut(&mut RenderTaskGraphBuilder, &mut GpuBufferBuilderF) -> RenderTaskId,
     ) -> RenderTaskId {
 
-        let task_id = f(rg_builder, gpu_buffer_builder, gpu_cache);
+        let task_id = f(rg_builder, gpu_buffer_builder);
 
         let render_task = rg_builder.get_task_mut(task_id);
 

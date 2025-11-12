@@ -17,7 +17,6 @@ use crate::renderer::GpuBufferBuilder;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::clip::{ClipChainInstance, ClipTree};
 use crate::frame_builder::FrameBuilderConfig;
-use crate::gpu_cache::GpuCache;
 use crate::picture::{PictureCompositeMode, ClusterFlags, SurfaceInfo, TileCacheInstance};
 use crate::picture::{SurfaceIndex, RasterConfig, SubSliceIndex};
 use crate::prim_store::{ClipTaskIndex, PictureIndex, PrimitiveInstanceKind};
@@ -42,7 +41,6 @@ pub struct FrameVisibilityContext<'a> {
 pub struct FrameVisibilityState<'a> {
     pub clip_store: &'a mut ClipStore,
     pub resource_cache: &'a mut ResourceCache,
-    pub gpu_cache: &'a mut GpuCache,
     pub frame_gpu_data: &'a mut GpuBufferBuilder,
     pub data_stores: &'a mut DataStores,
     pub clip_tree: &'a mut ClipTree,

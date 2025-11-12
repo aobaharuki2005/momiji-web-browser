@@ -562,11 +562,10 @@ impl LinearGradientTemplate {
                 }),
                 false,
                 RenderTaskParent::Surface,
-                frame_state.gpu_cache,
                 &mut frame_state.frame_gpu_data.f32,
                 frame_state.rg_builder,
                 &mut frame_state.surface_builder,
-                &mut |rg_builder, _, _| {
+                &mut |rg_builder, _| {
                     rg_builder.add().init(RenderTask::new_dynamic(
                         self.task_size,
                         RenderTaskKind::FastLinearGradient(gradient),
@@ -591,11 +590,10 @@ impl LinearGradientTemplate {
                 }),
                 false,
                 RenderTaskParent::Surface,
-                frame_state.gpu_cache,
                 &mut frame_state.frame_gpu_data.f32,
                 frame_state.rg_builder,
                 &mut frame_state.surface_builder,
-                &mut |rg_builder, gpu_buffer_builder, _| {
+                &mut |rg_builder, gpu_buffer_builder| {
                     let stops = Some(GradientGpuBlockBuilder::build(
                         self.reverse_stops,
                         gpu_buffer_builder,

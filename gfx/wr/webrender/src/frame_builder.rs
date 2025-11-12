@@ -13,10 +13,9 @@ use crate::spatial_node::SpatialNodeType;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_item::DebugItem;
-use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::{QuadSegment, TransformData};
-use crate::internal_types::{FastHashMap, PlaneSplitter, FrameId, FrameStamp};
+use crate::internal_types::{FastHashMap, PlaneSplitter, FrameStamp};
 use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceInfo, SurfaceIndex, ResolvedSurfaceTexture};
 use crate::picture::{SubpixelMode, RasterConfig, PictureCompositeMode};
@@ -166,7 +165,6 @@ pub struct FrameBuildingState<'a> {
     pub rg_builder: &'a mut RenderTaskGraphBuilder,
     pub clip_store: &'a mut ClipStore,
     pub resource_cache: &'a mut ResourceCache,
-    pub gpu_cache: &'a mut GpuCache,
     pub transforms: &'a mut TransformPalette,
     pub segment_builder: SegmentBuilder,
     pub surfaces: &'a mut Vec<SurfaceInfo>,
@@ -283,7 +281,6 @@ impl FrameBuilder {
         present: bool,
         global_screen_world_rect: WorldRect,
         resource_cache: &mut ResourceCache,
-        gpu_cache: &mut GpuCache,
         rg_builder: &mut RenderTaskGraphBuilder,
         global_device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
@@ -395,7 +392,6 @@ impl FrameBuilder {
                 let mut visibility_state = FrameVisibilityState {
                     clip_store: &mut scene.clip_store,
                     resource_cache,
-                    gpu_cache,
                     frame_gpu_data,
                     data_stores,
                     clip_tree: &mut scene.clip_tree,
@@ -456,7 +452,6 @@ impl FrameBuilder {
                         let mut visibility_state = FrameVisibilityState {
                             clip_store: &mut scene.clip_store,
                             resource_cache,
-                            gpu_cache,
                             frame_gpu_data,
                             data_stores,
                             clip_tree: &mut scene.clip_tree,
@@ -529,7 +524,6 @@ impl FrameBuilder {
             rg_builder,
             clip_store: &mut scene.clip_store,
             resource_cache,
-            gpu_cache,
             transforms: transform_palette,
             segment_builder: SegmentBuilder::new(),
             surfaces: &mut scene.surfaces,
@@ -644,7 +638,6 @@ impl FrameBuilder {
         scene: &mut BuiltScene,
         present: bool,
         resource_cache: &mut ResourceCache,
-        gpu_cache: &mut GpuCache,
         rg_builder: &mut RenderTaskGraphBuilder,
         stamp: FrameStamp,
         device_origin: DeviceIntPoint,
@@ -672,7 +665,6 @@ impl FrameBuilder {
         profile.set(profiler::PRIMITIVES, scene.prim_instances.len());
         profile.set(profiler::PICTURE_CACHE_SLICES, scene.tile_cache_config.picture_cache_slice_count);
         scratch.begin_frame();
-        gpu_cache.begin_frame(stamp);
         resource_cache.begin_frame(stamp, profile);
 
         // TODO(gw): Follow up patches won't clear this, as they'll be assigned
@@ -710,7 +702,6 @@ impl FrameBuilder {
             present,
             screen_world_rect,
             resource_cache,
-            gpu_cache,
             rg_builder,
             global_device_pixel_scale,
             scene_properties,
@@ -780,7 +771,6 @@ impl FrameBuilder {
                     pass,
                     output_size,
                     &mut ctx,
-                    gpu_cache,
                     &mut gpu_buffer_builder,
                     &render_tasks,
                     &scene.clip_store,
@@ -831,8 +821,6 @@ impl FrameBuilder {
 
         profile.end_time(profiler::FRAME_BATCHING_TIME);
 
-        let gpu_cache_frame_id = gpu_cache.end_frame(profile).frame_id();
-
         resource_cache.end_frame(profile);
 
         self.prim_headers_prealloc.record_vec(&prim_headers.headers_int);
@@ -855,7 +843,6 @@ impl FrameBuilder {
             transform_palette: transform_palette.finish(),
             render_tasks,
             deferred_resolves,
-            gpu_cache_frame_id,
             has_been_rendered: false,
             has_texture_cache_tasks,
             prim_headers,
@@ -1056,7 +1043,6 @@ pub fn build_render_pass(
     src_pass: &Pass,
     screen_size: DeviceIntSize,
     ctx: &mut RenderTargetContext,
-    _gpu_cache: &mut GpuCache,
     gpu_buffer_builder: &mut GpuBufferBuilder,
     render_tasks: &RenderTaskGraph,
     clip_store: &ClipStore,
@@ -1322,9 +1308,6 @@ pub struct Frame {
     pub transform_palette: FrameVec<TransformData>,
     pub render_tasks: RenderTaskGraph,
     pub prim_headers: PrimitiveHeaders,
-
-    /// The GPU cache frame that the contents of Self depend on
-    pub gpu_cache_frame_id: FrameId,
 
     /// List of textures that we don't know about yet
     /// from the backend thread. The render thread
