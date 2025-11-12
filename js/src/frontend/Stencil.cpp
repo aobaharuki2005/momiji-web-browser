@@ -1151,7 +1151,7 @@ NameLocation ScopeContext::searchInEnclosingScopeWithCache(
   mozilla::Maybe<NameLocation> found;
 
   // Number of enclosing scope we walked over.
-  uint8_t hops = 0;
+  uint16_t hops = 0;
 
   for (InputScopeIter si(input.enclosingScope); si; si++) {
     MOZ_ASSERT(NameIsOnEnvironment(fc, parserAtoms, input.atomCache, si.scope(),
@@ -1220,8 +1220,8 @@ NameLocation ScopeContext::searchInEnclosingScopeNoCache(
   // NameLocation which contains relative locations to access `name`.
   mozilla::Maybe<NameLocation> result;
 
-  // Number of enclosing scoep we walked over.
-  uint8_t hops = 0;
+  // Number of enclosing scope we walked over.
+  uint16_t hops = 0;
 
   for (InputScopeIter si(input.enclosingScope); si; si++) {
     MOZ_ASSERT(NameIsOnEnvironment(fc, parserAtoms, input.atomCache, si.scope(),
