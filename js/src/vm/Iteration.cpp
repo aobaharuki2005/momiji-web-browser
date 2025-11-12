@@ -94,6 +94,8 @@ class PropertyEnumerator {
   uint32_t flags_;
   Rooted<PropertyKeySet> visited_;
 
+  uint32_t ownPropertyCount_;
+
   bool enumeratingProtoChain_ = false;
 
   enum class IndicesState {
@@ -138,6 +140,7 @@ class PropertyEnumerator {
   bool allocatingIndices() const {
     return indicesState_ == IndicesState::Allocating;
   }
+  uint32_t ownPropertyCount() const { return ownPropertyCount_; }
 
  private:
   template <bool CheckForDuplicates>
@@ -667,6 +670,10 @@ bool PropertyEnumerator::snapshot(JSContext* cx) {
       MOZ_CRASH("non-native objects must have an enumerate op");
     }
 
+    if (!enumeratingProtoChain_) {
+      ownPropertyCount_ = props_.length();
+    }
+
     if (flags_ & JSITER_OWNONLY) {
       break;
     }
@@ -783,7 +790,7 @@ static inline size_t AllocationSize(size_t propertyCount,
 static PropertyIteratorObject* CreatePropertyIterator(
     JSContext* cx, Handle<JSObject*> objBeingIterated, HandleIdVector props,
     bool supportsIndices, PropertyIndexVector* indices,
-    uint32_t cacheableProtoChainLength) {
+    uint32_t cacheableProtoChainLength, uint32_t ownPropertyCount) {
   MOZ_ASSERT_IF(indices, supportsIndices);
   if (props.length() >= NativeIterator::PropCountLimit) {
     ReportAllocationOverflow(cx);
@@ -819,8 +826,9 @@ static PropertyIteratorObject* CreatePropertyIterator(
 
   // This also registers |ni| with |propIter|.
   bool hadError = false;
-  new (mem) NativeIterator(cx, propIter, objBeingIterated, props,
-                           supportsIndices, indices, numShapes, &hadError);
+  new (mem)
+      NativeIterator(cx, propIter, objBeingIterated, props, supportsIndices,
+                     indices, numShapes, ownPropertyCount, &hadError);
   if (hadError) {
     return nullptr;
   }
@@ -844,13 +852,14 @@ NativeIterator::NativeIterator(JSContext* cx,
                                Handle<JSObject*> objBeingIterated,
                                HandleIdVector props, bool supportsIndices,
                                PropertyIndexVector* indices, uint32_t numShapes,
-                               bool* hadError)
+                               uint32_t ownPropertyCount, bool* hadError)
     : objectBeingIterated_(objBeingIterated),
       iterObj_(propIter),
       objShape_(numShapes > 0 ? objBeingIterated->shape() : nullptr),
       // This holds the allocated property count until we're done with
       // initialization
       propertyCursor_(props.length()),
+      ownPropertyCount_(ownPropertyCount),
       shapesHash_(0) {
   // If there are shapes, the object and all objects on its prototype chain must
   // be native objects. See CanCompareIterableObjectToCache.
@@ -1207,6 +1216,7 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
   RootedIdVector keys(cx);
   PropertyIndexVector indices(cx);
   bool supportsIndices = false;
+  uint32_t ownPropertyCount = 0;
 
   if (MOZ_UNLIKELY(obj->is<ProxyObject>())) {
     if (!Proxy::enumerate(cx, obj, &keys)) {
@@ -1219,6 +1229,7 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
       return nullptr;
     }
     supportsIndices = enumerator.supportsIndices();
+    ownPropertyCount = enumerator.ownPropertyCount();
     MOZ_ASSERT_IF(WantIndices && supportsIndices,
                   keys.length() == indices.length());
   }
@@ -1240,8 +1251,9 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
 
   PropertyIndexVector* indicesPtr =
       WantIndices && supportsIndices ? &indices : nullptr;
-  PropertyIteratorObject* iterobj = CreatePropertyIterator(
-      cx, obj, keys, supportsIndices, indicesPtr, cacheableProtoChainLength);
+  PropertyIteratorObject* iterobj =
+      CreatePropertyIterator(cx, obj, keys, supportsIndices, indicesPtr,
+                             cacheableProtoChainLength, ownPropertyCount);
   if (!iterobj) {
     return nullptr;
   }
@@ -1644,7 +1656,7 @@ PropertyIteratorObject* GlobalObject::getOrCreateEmptyIterator(JSContext* cx) {
   if (!cx->global()->data().emptyIterator) {
     RootedIdVector props(cx);  // Empty
     PropertyIteratorObject* iter =
-        CreatePropertyIterator(cx, nullptr, props, false, nullptr, 0);
+        CreatePropertyIterator(cx, nullptr, props, false, nullptr, 0, 0);
     if (!iter) {
       return nullptr;
     }
