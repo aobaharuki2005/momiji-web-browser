@@ -960,7 +960,9 @@
     <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
     <string name="alternative_app_icon_group_gradients">Gradients</string>
     <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-    <string name="alternative_app_icon_group_other">Other</string>
+    <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Other</string>
+    <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+    <string name="alternative_app_icon_group_featured">Featured</string>
     <!-- Title to show in alert when user selects an alternative app icon-->
     <string name="restart_warning_dialog_title">Change app icon?</string>
     <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
