@@ -9420,8 +9420,8 @@ static void LoadNativeIterator(MacroAssembler& masm, Register obj,
 // Otherwise, jump to |failure|.
 void MacroAssembler::maybeLoadIteratorFromShape(Register obj, Register dest,
                                                 Register temp, Register temp2,
-                                                Register temp3,
-                                                Label* failure) {
+                                                Register temp3, Label* failure,
+                                                bool exclusive) {
   // Register usage:
   // obj: always contains the input object
   // temp: walks the obj->shape->baseshape->proto->shape->... chain
@@ -9457,7 +9457,10 @@ void MacroAssembler::maybeLoadIteratorFromShape(Register obj, Register dest,
   // Load the native iterator and verify that it's reusable.
   andPtr(Imm32(~ShapeCachePtr::MASK), dest);
   LoadNativeIterator(*this, dest, nativeIterator);
-  branchIfNativeIteratorNotReusable(nativeIterator, failure);
+
+  if (exclusive) {
+    branchIfNativeIteratorNotReusable(nativeIterator, failure);
+  }
 
   Label skipIndices;
   load32(Address(nativeIterator, NativeIterator::offsetOfPropertyCount()),
@@ -9553,6 +9556,20 @@ void MacroAssembler::iteratorMore(Register obj, ValueOperand output,
   moveValue(MagicValue(JS_NO_ITER_VALUE), output);
 
   bind(&done);
+}
+
+void MacroAssembler::iteratorLength(Register obj, Register output) {
+  LoadNativeIterator(*this, obj, output);
+  load32(Address(output, NativeIterator::offsetOfOwnPropertyCount()), output);
+}
+
+void MacroAssembler::iteratorLoadElement(Register obj, Register index,
+                                         Register output) {
+  LoadNativeIterator(*this, obj, output);
+  loadPtr(BaseIndex(output, index, ScalePointer,
+                    NativeIterator::offsetOfFirstProperty()),
+          output);
+  andPtr(Imm32(int32_t(~IteratorProperty::DeletedBit)), output);
 }
 
 void MacroAssembler::iteratorClose(Register obj, Register temp1, Register temp2,
