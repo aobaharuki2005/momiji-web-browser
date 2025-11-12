@@ -6309,7 +6309,7 @@ void CacheIRCompiler::emitActivateIterator(Register objBeingIterated,
 #endif
 
   // Mark iterator as active.
-  Address iterFlagsAddr(nativeIter, NativeIterator::offsetOfFlags());
+  Address iterFlagsAddr(nativeIter, NativeIterator::offsetOfFlagsAndCount());
   masm.storePtr(objBeingIterated, iterObjAddr);
   masm.or32(Imm32(NativeIterator::Flags::Active), iterFlagsAddr);
 
@@ -6340,7 +6340,7 @@ bool CacheIRCompiler::emitObjectToIteratorResult(
 
   Label callVM, done;
   masm.maybeLoadIteratorFromShape(obj, iterObj, scratch, scratch2, scratch3,
-                                  &callVM, /* exclusive = */ true);
+                                  &callVM);
 
   masm.loadPrivate(
       Address(iterObj, PropertyIteratorObject::offsetOfIteratorSlot()),
@@ -6434,8 +6434,7 @@ bool CacheIRCompiler::emitObjectCreateResult(uint32_t templateObjectOffset) {
   return true;
 }
 
-bool CacheIRCompiler::emitObjectKeysResult(ObjOperandId objId,
-                                           uint32_t resultShapeOffset) {
+bool CacheIRCompiler::emitObjectKeysResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoCallVM callvm(masm, this, allocator);

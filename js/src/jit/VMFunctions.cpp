@@ -1492,27 +1492,6 @@ JSObject* ObjectKeys(JSContext* cx, HandleObject obj) {
   return argv[0].toObjectOrNull();
 }
 
-JSObject* ObjectKeysFromIterator(JSContext* cx, HandleObject iterObj) {
-  MOZ_RELEASE_ASSERT(iterObj->is<PropertyIteratorObject>());
-  NativeIterator* iter =
-      iterObj->as<PropertyIteratorObject>().getNativeIterator();
-
-  size_t length = iter->ownPropertyCount();
-  Rooted<ArrayObject*> array(cx, NewDenseFullyAllocatedArray(cx, length));
-  if (!array) {
-    return nullptr;
-  }
-
-  array->ensureDenseInitializedLength(0, length);
-
-  for (size_t i = 0; i < length; ++i) {
-    array->initDenseElement(
-        i, StringValue((iter->propertiesBegin() + i)->asString()));
-  }
-
-  return array;
-}
-
 bool ObjectKeysLength(JSContext* cx, HandleObject obj, int32_t* length) {
   MOZ_ASSERT(!obj->is<ProxyObject>());
   return js::obj_keys_length(cx, obj, *length);

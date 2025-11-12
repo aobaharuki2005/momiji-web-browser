@@ -1084,6 +1084,18 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
+  if (!mir->compilingWasm() && !JitOptions.disableIteratorIndices) {
+    if (!OptimizeIteratorIndices(mir, graph)) {
+      return false;
+    }
+    mir->spewPass("Iterator Indices");
+    AssertGraphCoherency(graph);
+
+    if (mir->shouldCancel("Iterator Indices")) {
+      return false;
+    }
+  }
+
   if (!JitOptions.disableRecoverIns &&
       mir->optimizationInfo().scalarReplacementEnabled()) {
     JitSpewCont(JitSpew_Escape, "\n");
@@ -1094,18 +1106,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
     AssertGraphCoherency(graph);
 
     if (mir->shouldCancel("Scalar Replacement")) {
-      return false;
-    }
-  }
-
-  if (!mir->compilingWasm() && !JitOptions.disableIteratorIndices) {
-    if (!OptimizeIteratorIndices(mir, graph)) {
-      return false;
-    }
-    mir->spewPass("Iterator Indices");
-    AssertGraphCoherency(graph);
-
-    if (mir->shouldCancel("Iterator Indices")) {
       return false;
     }
   }

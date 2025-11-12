@@ -145,7 +145,6 @@ namespace jit {
   _(Callee)                       \
   _(FunctionEnvironment)          \
   _(ObjectKeys)                   \
-  _(ObjectKeysFromIterator)       \
   _(ObjectState)                  \
   _(ArrayState)                   \
   _(AtomicIsLockFree)             \
@@ -1001,14 +1000,6 @@ class RNewCallObject final : public RInstruction {
 class RObjectKeys final : public RInstruction {
  public:
   RINSTRUCTION_HEADER_NUM_OP_(ObjectKeys, 1)
-
-  [[nodiscard]] bool recover(JSContext* cx,
-                             SnapshotIterator& iter) const override;
-};
-
-class RObjectKeysFromIterator final : public RInstruction {
- public:
-  RINSTRUCTION_HEADER_NUM_OP_(ObjectKeysFromIterator, 1)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;

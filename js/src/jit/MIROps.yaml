@@ -2073,16 +2073,13 @@
 - name: ObjectKeys
   operands:
     object: Object
-  arguments:
-    resultShape: Shape*
   result_type: Object
-  can_recover: custom
 
-- name: ObjectKeysFromIterator
-  operands:
-    iterator: Object
-  result_type: Object
-  can_recover: true
+  # We can recover Object.keys on bailout as long as the object is not escaped
+  # or that the object is not mutated by any aliased calls in-between the
+  # instruction and the recovered location, as the recovered keys array might be
+  # different.
+  can_recover: custom
 
 # Used to fold Object.keys(obj).length into a single operation.
 #
@@ -2780,20 +2777,6 @@
 - name: ObjectToIterator
   gen_boilerplate: false
 
-- name: IteratorLength
-  operands:
-    iter: Object
-  result_type: Int32
-  generate_lir: true
-
-- name: LoadIteratorElement
-  operands:
-    iter: Object
-    index: Int32
-  result_type: String
-  alias_set: none
-  generate_lir: true
-
 - name: ValueToIterator
   operands:
     value: Value
@@ -2823,37 +2806,6 @@
   alias_set: custom
   generate_lir: true
   lir_temps: 2
-
-
-# The following two instructions need too many registers on x86. We could
-# spill or do some cheeky stuff potentially but it's likely not worth the
-# complexity
-#ifndef JS_CODEGEN_X86
-
-# Okay this is a confusing name, but essentially, the above ops load/store a
-# slot of an object using the PropertyIndex associated with the *current* key
-# for the iterator. The below op uses the PropertyIndex associated with the
-# key indexed by `index`, rather than the current one.
-- name: LoadSlotByIteratorIndexIndexed
-  operands:
-    object: Object
-    iterator: Object
-    index: Int32
-  result_type: Value
-  alias_set: custom
-  generate_lir: true
-  lir_temps: 2
-
-- name: StoreSlotByIteratorIndexIndexed
-  operands:
-    object: Object
-    iterator: Object
-    index: Int32
-    value: Value
-  alias_set: custom
-  generate_lir: true
-  lir_temps: 2
-#endif
 
 # Load the private value expando from a DOM proxy. The target is stored in the
 # proxy object's private slot.

@@ -5040,10 +5040,6 @@ void LIRGenerator::visitObjectKeys(MObjectKeys* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitObjectKeysFromIterator(MObjectKeysFromIterator* ins) {
-  MOZ_CRASH("ObjectKeysFromIterator is purely for recovery purposes.");
-}
-
 void LIRGenerator::visitObjectKeysLength(MObjectKeysLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Int32);
@@ -6254,24 +6250,6 @@ void LIRGenerator::visitStoreSlotByIteratorIndex(
   add(lir, ins);
 }
 
-#ifndef JS_CODEGEN_X86
-void LIRGenerator::visitLoadSlotByIteratorIndexIndexed(
-    MLoadSlotByIteratorIndexIndexed* ins) {
-  auto* lir = new (alloc()) LLoadSlotByIteratorIndexIndexed(
-      useRegister(ins->object()), useRegister(ins->iterator()),
-      useRegister(ins->index()), temp(), temp());
-  defineBox(lir, ins);
-}
-
-void LIRGenerator::visitStoreSlotByIteratorIndexIndexed(
-    MStoreSlotByIteratorIndexIndexed* ins) {
-  auto* lir = new (alloc()) LStoreSlotByIteratorIndexIndexed(
-      useRegister(ins->object()), useRegister(ins->iterator()),
-      useRegister(ins->index()), useBox(ins->value()), temp(), temp());
-  add(lir, ins);
-}
-#endif
-
 void LIRGenerator::visitIteratorHasIndices(MIteratorHasIndices* ins) {
   MOZ_ASSERT(ins->hasOneUse());
   emitAtUses(ins);
@@ -6368,24 +6346,6 @@ void LIRGenerator::visitCloseIterCache(MCloseIterCache* ins) {
       new (alloc()) LCloseIterCache(useRegister(ins->iter()), temp());
   add(lir, ins);
   assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitLoadIteratorElement(MLoadIteratorElement* ins) {
-  MOZ_ASSERT(ins->iter()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-  MOZ_ASSERT(ins->type() == MIRType::String);
-
-  auto* lir = new (alloc()) LLoadIteratorElement(
-      useRegister(ins->iter()), useRegisterOrConstant(ins->index()));
-  define(lir, ins);
-}
-
-void LIRGenerator::visitIteratorLength(MIteratorLength* ins) {
-  MOZ_ASSERT(ins->iter()->type() == MIRType::Object);
-  MOZ_ASSERT(ins->type() == MIRType::Int32);
-
-  auto* lir = new (alloc()) LIteratorLength(useRegister(ins->iter()));
-  define(lir, ins);
 }
 
 void LIRGenerator::visitOptimizeGetIteratorCache(
