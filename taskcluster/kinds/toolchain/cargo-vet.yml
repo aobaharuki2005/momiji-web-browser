@@ -27,6 +27,17 @@ linux64-cargo-vet:
             - linux64-rust-toolchain
             - sysroot-x86_64-linux-gnu
 
+linux64-aarch64-cargo-vet:
+    treeherder:
+        symbol: TLA64(cargo-vet)
+    run:
+        arguments: ['aarch64-unknown-linux-gnu', 'reqwest/native-tls-vendored']
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-rust-toolchain
+            - sysroot-aarch64-linux-gnu
+
 macosx64-cargo-vet:
     treeherder:
         symbol: TM(cargo-vet)
@@ -54,6 +65,7 @@ win64-cargo-vet:
         symbol: TW64(cargo-vet)
     run:
         arguments: ['x86_64-pc-windows-msvc']
+        toolchain-alias: win64-aarch64-cargo-vet
     fetches:
         toolchain:
             - linux64-clang-toolchain
