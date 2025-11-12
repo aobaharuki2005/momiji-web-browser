@@ -33,7 +33,7 @@ enum class ViewPosition {
  * - Show/Hide the [View] automatically when scrolling vertically.
  * - Snap the [View] to be hidden or visible when the user stops scrolling.
  */
-class EngineViewScrollingBehavior(
+class EngineViewScrollingGesturesBehavior(
     val context: Context?,
     attrs: AttributeSet?,
     private val viewPosition: ViewPosition,

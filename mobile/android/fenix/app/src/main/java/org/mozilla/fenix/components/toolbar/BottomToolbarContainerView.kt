@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.concept.toolbar.ScrollableToolbar
-import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
 import mozilla.components.ui.widgets.behavior.ViewPosition
 import org.mozilla.fenix.R
 
@@ -50,7 +50,7 @@ class BottomToolbarContainerView(
         ).apply {
             gravity = Gravity.BOTTOM
             if (hideOnScroll) {
-                behavior = EngineViewScrollingBehavior(parent.context, null, ViewPosition.BOTTOM)
+                behavior = EngineViewScrollingGesturesBehavior(parent.context, null, ViewPosition.BOTTOM)
             }
         }
 
@@ -78,25 +78,25 @@ class ToolbarContainerView @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr), ScrollableToolbar {
     override fun enableScrolling() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingBehavior)?.enableScrolling()
+            (behavior as? EngineViewScrollingGesturesBehavior)?.enableScrolling()
         }
     }
 
     override fun disableScrolling() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingBehavior)?.disableScrolling()
+            (behavior as? EngineViewScrollingGesturesBehavior)?.disableScrolling()
         }
     }
 
     override fun expand() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingBehavior)?.forceExpand(this@ToolbarContainerView)
+            (behavior as? EngineViewScrollingGesturesBehavior)?.forceExpand(this@ToolbarContainerView)
         }
     }
 
     override fun collapse() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingBehavior)?.forceCollapse(this@ToolbarContainerView)
+            (behavior as? EngineViewScrollingGesturesBehavior)?.forceCollapse(this@ToolbarContainerView)
         }
     }
 }

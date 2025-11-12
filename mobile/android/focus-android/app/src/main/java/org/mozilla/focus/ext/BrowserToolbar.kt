@@ -10,7 +10,7 @@ import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.ui.widgets.behavior.EngineViewClippingBehavior
-import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
 import org.mozilla.focus.R
 import mozilla.components.ui.widgets.behavior.ViewPosition as browserToolbarPosition
 
@@ -39,7 +39,7 @@ fun BrowserToolbar.disableDynamicBehavior(engineView: EngineView) {
  * @param engineView [EngineView] that should react to toolbar's dynamic behavior.
  */
 fun BrowserToolbar.enableDynamicBehavior(context: Context, engineView: EngineView) {
-    (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior = EngineViewScrollingBehavior(
+    (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior = EngineViewScrollingGesturesBehavior(
         context,
         null,
         browserToolbarPosition.TOP,

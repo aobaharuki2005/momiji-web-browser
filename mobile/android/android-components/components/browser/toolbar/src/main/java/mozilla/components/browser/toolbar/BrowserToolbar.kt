@@ -37,7 +37,7 @@ import mozilla.components.support.ktx.kotlin.trimmed
 import mozilla.components.ui.autocomplete.AutocompleteView
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.OnFilterListener
-import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
 import kotlin.coroutines.CoroutineContext
 
 internal fun ImageView.setTintResource(@ColorRes tintColorResource: Int) {
@@ -394,26 +394,26 @@ class BrowserToolbar @JvmOverloads constructor(
     override fun enableScrolling() {
         // Behavior can be changed without us knowing. Not safe to use a memoized value.
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingBehavior)?.enableScrolling()
+            (behavior as? EngineViewScrollingGesturesBehavior)?.enableScrolling()
         }
     }
 
     override fun disableScrolling() {
         // Behavior can be changed without us knowing. Not safe to use a memoized value.
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingBehavior)?.disableScrolling()
+            (behavior as? EngineViewScrollingGesturesBehavior)?.disableScrolling()
         }
     }
 
     override fun expand() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingBehavior)?.forceExpand(this@BrowserToolbar)
+            (behavior as? EngineViewScrollingGesturesBehavior)?.forceExpand(this@BrowserToolbar)
         }
     }
 
     override fun collapse() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingBehavior)?.forceCollapse(this@BrowserToolbar)
+            (behavior as? EngineViewScrollingGesturesBehavior)?.forceCollapse(this@BrowserToolbar)
         }
     }
 

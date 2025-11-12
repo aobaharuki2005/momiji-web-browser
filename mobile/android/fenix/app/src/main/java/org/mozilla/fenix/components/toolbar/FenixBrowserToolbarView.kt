@@ -12,7 +12,7 @@ import androidx.core.view.isVisible
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.toolbar.ScrollableToolbar
-import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
 import mozilla.components.ui.widgets.behavior.ViewPosition
 import org.mozilla.fenix.utils.Settings
 
@@ -49,7 +49,7 @@ abstract class FenixBrowserToolbarView(
         }
 
         (layout.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            (behavior as? EngineViewScrollingBehavior)?.forceExpand(layout)
+            (behavior as? EngineViewScrollingGesturesBehavior)?.forceExpand(layout)
         }
     }
 
@@ -60,19 +60,19 @@ abstract class FenixBrowserToolbarView(
         }
 
         (layout.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            (behavior as? EngineViewScrollingBehavior)?.forceCollapse(layout)
+            (behavior as? EngineViewScrollingGesturesBehavior)?.forceCollapse(layout)
         }
     }
 
     override fun enableScrolling() {
         (layout.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            (behavior as? EngineViewScrollingBehavior)?.enableScrolling()
+            (behavior as? EngineViewScrollingGesturesBehavior)?.enableScrolling()
         }
     }
 
     override fun disableScrolling() {
         (layout.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            (behavior as? EngineViewScrollingBehavior)?.disableScrolling()
+            (behavior as? EngineViewScrollingGesturesBehavior)?.disableScrolling()
         }
     }
 
@@ -132,7 +132,7 @@ abstract class FenixBrowserToolbarView(
     @VisibleForTesting
     internal fun setDynamicToolbarBehavior(toolbarPosition: ViewPosition) {
         (layout.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            behavior = EngineViewScrollingBehavior(layout.context, null, toolbarPosition)
+            behavior = EngineViewScrollingGesturesBehavior(layout.context, null, toolbarPosition)
         }
     }
 

@@ -29,7 +29,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
-import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
 import mozilla.components.ui.widgets.behavior.ViewPosition
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -924,7 +924,7 @@ class BrowserToolbarTest {
     fun `enable scrolling is forwarded to the toolbar behavior`() {
         // Seems like real instances are needed for things to be set properly
         val toolbar = BrowserToolbar(testContext)
-        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
         val params = CoordinatorLayout.LayoutParams(10, 10).apply {
             this.behavior = behavior
         }
@@ -939,7 +939,7 @@ class BrowserToolbarTest {
     fun `disable scrolling is forwarded to the toolbar behavior`() {
         // Seems like real instances are needed for things to be set properly
         val toolbar = BrowserToolbar(testContext)
-        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
         val params = CoordinatorLayout.LayoutParams(10, 10).apply {
             this.behavior = behavior
         }
@@ -954,7 +954,7 @@ class BrowserToolbarTest {
     fun `expand is forwarded to the toolbar behavior`() {
         // Seems like real instances are needed for things to be set properly
         val toolbar = BrowserToolbar(testContext)
-        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
         val params = CoordinatorLayout.LayoutParams(10, 10).apply {
             this.behavior = behavior
         }
@@ -969,7 +969,7 @@ class BrowserToolbarTest {
     fun `collapse is forwarded to the toolbar behavior`() {
         // Seems like real instances are needed for things to be set properly
         val toolbar = BrowserToolbar(testContext)
-        val behavior = spy(EngineViewScrollingBehavior(testContext, null, ViewPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
         val params = CoordinatorLayout.LayoutParams(10, 10).apply {
             this.behavior = behavior
         }

@@ -14,7 +14,7 @@ import io.mockk.verify
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -31,7 +31,7 @@ import mozilla.components.ui.widgets.behavior.ViewPosition as MozacToolbarPositi
 class BrowserHomeToolbarViewTest {
     private lateinit var toolbarView: BrowserToolbarView
     private lateinit var toolbar: BrowserToolbar
-    private lateinit var behavior: EngineViewScrollingBehavior
+    private lateinit var behavior: EngineViewScrollingGesturesBehavior
     private lateinit var settings: Settings
 
     @Before
@@ -60,7 +60,7 @@ class BrowserHomeToolbarViewTest {
         )
 
         toolbarView.toolbar = toolbar
-        behavior = spyk(EngineViewScrollingBehavior(testContext, null, MozacToolbarPosition.BOTTOM))
+        behavior = spyk(EngineViewScrollingGesturesBehavior(testContext, null, MozacToolbarPosition.BOTTOM))
         (toolbarView.layout.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
     }
 
