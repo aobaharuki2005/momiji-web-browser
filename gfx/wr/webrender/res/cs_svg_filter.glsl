@@ -4,7 +4,7 @@
 
 #define WR_FEATURE_TEXTURE_2D
 
-#include shared,prim_shared
+#include shared,prim_shared,gpu_buffer
 
 varying highp vec2 vInput1Uv;
 varying highp vec2 vInput2Uv;
@@ -126,18 +126,18 @@ void main(void) {
             vData = ivec4(aFilterGenericInt, 0, 0, 0);
             break;
         case FILTER_FLOOD:
-            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
             break;
         case FILTER_OPACITY:
             vFloat0.x = filter_task.user_data.x;
             break;
         case FILTER_COLOR_MATRIX:
-            vec4 mat_data[4] = fetch_from_gpu_cache_4_direct(aFilterExtraDataAddress);
+            vec4 mat_data[4] = fetch_from_gpu_buffer_4f_direct(aFilterExtraDataAddress);
             vColorMat = mat4(mat_data[0], mat_data[1], mat_data[2], mat_data[3]);
-            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress + ivec2(4, 0));
+            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress + ivec2(4, 0));
             break;
         case FILTER_DROP_SHADOW:
-            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
             break;
         case FILTER_OFFSET:
             vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
@@ -154,7 +154,7 @@ void main(void) {
         case FILTER_COMPOSITE:
             vData = ivec4(aFilterGenericInt, 0, 0, 0);
             if (aFilterGenericInt == COMPOSITE_ARITHMETIC) {
-              vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+              vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
             }
             break;
         default:
@@ -443,21 +443,21 @@ vec4 ComponentTransfer(vec4 colora) {
             case COMPONENT_TRANSFER_DISCRETE:
                 // fetch value from lookup table
                 k = int(floor(colora[i]*255.0 + 0.5));
-                texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset + k/4, 0));
+                texel = fetch_from_gpu_buffer_1f_direct(vData.xy + ivec2(offset + k/4, 0));
                 colora[i] = clamp(texel[k % 4], 0.0, 1.0);
                 // offset plus 256/4 blocks
                 offset = offset + 64;
                 break;
             case COMPONENT_TRANSFER_LINEAR:
                 // fetch the two values for use in the linear equation
-                texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset, 0));
+                texel = fetch_from_gpu_buffer_1f_direct(vData.xy + ivec2(offset, 0));
                 colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
                 // offset plus 1 block
                 offset = offset + 1;
                 break;
             case COMPONENT_TRANSFER_GAMMA:
                 // fetch the three values for use in the gamma equation
-                texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset, 0));
+                texel = fetch_from_gpu_buffer_1f_direct(vData.xy + ivec2(offset, 0));
                 colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
                 // offset plus 1 block
                 offset = offset + 1;

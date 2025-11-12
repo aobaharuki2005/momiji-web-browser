@@ -12,7 +12,7 @@ use crate::pattern::PatternKind;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId};
 use glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress};
-use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
+use crate::gpu_types::{BrushFlags, BrushInstance, ImageSource, PrimitiveHeaders, UvRectKind, ZBufferId, ZBufferIdGenerator};
 use crate::gpu_types::SplitCompositeInstance;
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
@@ -1085,7 +1085,7 @@ impl BatchBuilder {
 
                     let (uv_rect_address, texture) = render_tasks.resolve_location(
                         pic_task_id,
-                        gpu_cache,
+
                     ).unwrap();
 
                     // The set of input textures that most composite modes use,
@@ -1147,7 +1147,7 @@ impl BatchBuilder {
                                     let shadow_textures = textures;
 
                                     let content_uv_rect_address = render_tasks[secondary_id]
-                                        .get_texture_address(gpu_cache)
+                                        .get_texture_address()
                                         .as_int();
 
                                     // Build BatchTextures for shadow/content
@@ -1297,7 +1297,7 @@ impl BatchBuilder {
                                   filter_data.data.b_func.to_int() << 20 |
                                   filter_data.data.a_func.to_int() << 16) as i32);
 
-                            let user_data = filter_data.gpu_cache_handle.as_int(gpu_cache);
+                            let user_data = filter_data.gpu_buffer_address.as_int();
 
                             let key = BatchKey::new(
                                 BatchKind::Brush(BrushBatchKind::Blend),
@@ -1384,8 +1384,8 @@ impl BatchBuilder {
                                     clip_mask: clip_mask_texture_id,
                                 },
                             );
-                            let src_uv_address = render_tasks[pic_task_id].get_texture_address(gpu_cache);
-                            let readback_uv_address = render_tasks[backdrop_id].get_texture_address(gpu_cache);
+                            let src_uv_address = render_tasks[pic_task_id].get_texture_address();
+                            let readback_uv_address = render_tasks[backdrop_id].get_texture_address();
                             let prim_header = PrimitiveHeader {
                                 user_data: [
                                     mode as u32 as i32,
@@ -1653,7 +1653,7 @@ impl BatchBuilder {
         };
 
         if let Some((src_color, visible_tiles_range, brush_segments)) = img_brush_data {
-            let src_color = render_tasks.resolve_location(src_color, gpu_cache);
+            let src_color = render_tasks.resolve_location(src_color);
 
             let (uv_rect_address, texture_source) = match src_color {
                 Some(src) => src,
@@ -1809,7 +1809,7 @@ impl BatchBuilder {
                 // task for each valid edge / corner of the border.
 
                 for task_id in task_ids {
-                    if let Some((uv_rect_address, texture)) = render_tasks.resolve_location(*task_id, gpu_cache) {
+                    if let Some((uv_rect_address, texture)) = render_tasks.resolve_location(*task_id) {
                         segment_data.push(
                             SegmentInstanceData {
                                 textures: TextureSet::prim_textured(texture),
@@ -1910,7 +1910,6 @@ impl BatchBuilder {
                     font,
                     &glyph_keys,
                     &mut self.glyph_fetch_buffer,
-                    gpu_cache,
                     |texture_id, glyph_format, glyphs| {
                         debug_assert_ne!(texture_id, TextureSource::Invalid);
 
@@ -2088,7 +2087,7 @@ impl BatchBuilder {
 
                 let (batch_kind, textures, prim_user_data, specific_resource_address) = match render_task {
                     Some(task_id) => {
-                        let (uv_rect_address, texture) = render_tasks.resolve_location(*task_id, gpu_cache).unwrap();
+                        let (uv_rect_address, texture) = render_tasks.resolve_location(*task_id).unwrap();
                         let textures = BatchTextures::prim_textured(
                             texture,
                             clip_mask_texture_id,
@@ -2201,7 +2200,7 @@ impl BatchBuilder {
                 debug_assert!(channel_count <= 3);
                 for channel in 0 .. channel_count {
 
-                    let src_channel = render_tasks.resolve_location(yuv_image_data.src_yuv[channel], gpu_cache);
+                    let src_channel = render_tasks.resolve_location(yuv_image_data.src_yuv[channel]);
 
                     let (uv_rect_address, texture_source) = match src_channel {
                         Some(src) => src,
@@ -2313,7 +2312,7 @@ impl BatchBuilder {
                         }
                     }
 
-                    let src_color = render_tasks.resolve_location(image_instance.src_color, gpu_cache);
+                    let src_color = render_tasks.resolve_location(image_instance.src_color);
 
                     let (uv_rect_address, texture_source) = match src_color {
                         Some(src) => src,
@@ -2406,7 +2405,7 @@ impl BatchBuilder {
                         let prim_header_index = prim_headers.push(&prim_header);
 
                         for (i, tile) in chunk.iter().enumerate() {
-                            let (uv_rect_address, texture) = match render_tasks.resolve_location(tile.src_color, gpu_cache) {
+                            let (uv_rect_address, texture) = match render_tasks.resolve_location(tile.src_color) {
                                 Some(result) => result,
                                 None => {
                                     return;
@@ -2533,10 +2532,7 @@ impl BatchBuilder {
                 let kind = BatchKind::Brush(
                     BrushBatchKind::Image(ImageBufferKind::Texture2D)
                 );
-                let (_, texture) = render_tasks.resolve_location(
-                    pic_task_id,
-                    gpu_cache,
-                ).unwrap();
+                let (_, texture) = render_tasks.resolve_location(pic_task_id).unwrap();
                 let textures = BatchTextures::prim_textured(
                     texture,
                     clip_mask_texture_id,
@@ -2596,23 +2592,19 @@ impl BatchBuilder {
                     calculate_screen_uv(points[3].unwrap() * pic_info.device_pixel_scale, backdrop_rect),
                 ];
 
-                // TODO (gw): This is a hack that provides the GPU cache blocks for an
-                //            ImageSource. We should update the GPU cache interfaces to
-                //            allow pushing per-frame blocks via a request interface.
-                let gpu_blocks = &[
-                    GpuBlockData::from([
-                        target_rect.min.x as f32,
-                        target_rect.min.y as f32,
-                        target_rect.max.x as f32,
-                        target_rect.max.y as f32,
-                    ]),
-                    GpuBlockData::from([0.0; 4]),
-                    GpuBlockData::from(uvs[0]),
-                    GpuBlockData::from(uvs[1]),
-                    GpuBlockData::from(uvs[2]),
-                    GpuBlockData::from(uvs[3]),
-                ];
-                let uv_rect_handle = gpu_cache.push_per_frame_blocks(gpu_blocks);
+                let source = ImageSource {
+                    p0: target_rect.min.to_f32(),
+                    p1: target_rect.max.to_f32(),
+                    user_data: [0.0; 4],
+                    uv_rect_kind: UvRectKind::Quad {
+                        top_left: uvs[0],
+                        top_right: uvs[1],
+                        bottom_left: uvs[2],
+                        bottom_right: uvs[3],
+                    },
+                };
+
+                let uv_rect_address = source.write_gpu_blocks(&mut gpu_buffer_builder.f32);
 
                 self.add_brush_instance_to_batches(
                     key,
@@ -2624,7 +2616,7 @@ impl BatchBuilder {
                     clip_task_address,
                     brush_flags,
                     prim_header_index,
-                    uv_rect_handle.as_int(gpu_cache),
+                    uv_rect_address.as_int(),
                 );
             }
         }
@@ -3157,7 +3149,6 @@ impl ClipBatcher {
         clip_node_range: ClipNodeRange,
         root_spatial_node_index: SpatialNodeIndex,
         render_tasks: &RenderTaskGraph,
-        gpu_cache: &GpuCache,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
         actual_rect: DeviceRect,
@@ -3202,7 +3193,7 @@ impl ClipBatcher {
                     let task_id = source
                         .render_task
                         .expect("bug: render task handle not allocated");
-                    let (uv_rect_address, texture) = render_tasks.resolve_location(task_id, gpu_cache).unwrap();
+                    let (uv_rect_address, texture) = render_tasks.resolve_location(task_id).unwrap();
 
                     self.get_batch_list(is_first_clip)
                         .box_shadows

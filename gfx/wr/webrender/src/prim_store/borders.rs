@@ -256,7 +256,7 @@ impl ImageBorderData {
 
             let size = frame_state.resource_cache.request_image(
                 self.request,
-                frame_state.gpu_cache,
+                &mut frame_state.frame_gpu_data.f32,
             );
 
             let task_id = frame_state.rg_builder.add().init(

@@ -70,7 +70,7 @@ use crate::device::FBOId;
 use crate::debug_item::DebugItem;
 use crate::frame_builder::Frame;
 use glyph_rasterizer::GlyphFormat;
-use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
+use crate::gpu_cache::GpuCacheUpdateList;
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{ScalingInstance, SvgFilterInstance, SVGFEFilterInstance, CopyInstance, PrimitiveInstanceData};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
@@ -1748,7 +1748,9 @@ impl Renderer {
                     "Cleared texture cache without sending new document frame.");
         }
 
-        match self.prepare_gpu_cache(&frame.deferred_resolves) {
+        self.update_deferred_resolves(&frame.deferred_resolves, &mut frame.gpu_buffer_f);
+
+        match self.prepare_gpu_cache() {
             Ok(..) => {
                 assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
                     "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
@@ -4945,27 +4947,22 @@ impl Renderer {
         }
     }
 
-    fn update_deferred_resolves(&mut self, deferred_resolves: &[DeferredResolve]) -> Option<GpuCacheUpdateList> {
+    fn update_deferred_resolves(
+        &mut self,
+        deferred_resolves: &[DeferredResolve],
+        gpu_buffer: &mut GpuBufferF,
+    ) {
         // The first thing we do is run through any pending deferred
         // resolves, and use a callback to get the UV rect for this
         // custom item. Then we patch the resource_rects structure
         // here before it's uploaded to the GPU.
         if deferred_resolves.is_empty() {
-            return None;
+            return;
         }
 
         let handler = self.external_image_handler
             .as_mut()
             .expect("Found external image, but no handler set!");
-
-        let mut list = GpuCacheUpdateList {
-            frame_id: FrameId::INVALID,
-            clear: false,
-            height: self.gpu_cache_texture.get_height(),
-            blocks: Vec::new(),
-            updates: Vec::new(),
-            debug_commands: Vec::new(),
-        };
 
         for (i, deferred_resolve) in deferred_resolves.iter().enumerate() {
             self.gpu_profiler.place_marker("deferred resolve");
@@ -5019,16 +5016,11 @@ impl Renderer {
                 .external_images
                 .insert(DeferredResolveIndex(i as u32), texture);
 
-            list.updates.push(GpuCacheUpdate::Copy {
-                block_index: list.blocks.len(),
-                block_count: BLOCKS_PER_UV_RECT,
-                address: deferred_resolve.address,
-            });
-            list.blocks.push(image.uv.into());
-            list.blocks.push([0f32; 4].into());
+            let addr = deferred_resolve.address;
+            let index = addr.u as usize + addr.v as usize * MAX_VERTEX_TEXTURE_WIDTH;
+            gpu_buffer.data[index] = image.uv.to_array().into();
+            gpu_buffer.data[index + 1] = [0f32; 4].into();
         }
-
-        Some(list)
     }
 
     fn unlock_external_images(

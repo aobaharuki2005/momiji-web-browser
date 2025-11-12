@@ -4,7 +4,7 @@
 
 #define VECS_PER_SPECIFIC_BRUSH 3
 
-#include shared,prim_shared,brush
+#include shared,prim_shared,brush,image_source
 
 // Interpolated UV coordinates to sample.
 varying highp vec2 v_uv;

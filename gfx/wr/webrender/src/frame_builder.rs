@@ -396,6 +396,7 @@ impl FrameBuilder {
                     clip_store: &mut scene.clip_store,
                     resource_cache,
                     gpu_cache,
+                    frame_gpu_data,
                     data_stores,
                     clip_tree: &mut scene.clip_tree,
                     composite_state,
@@ -456,6 +457,7 @@ impl FrameBuilder {
                             clip_store: &mut scene.clip_store,
                             resource_cache,
                             gpu_cache,
+                            frame_gpu_data,
                             data_stores,
                             clip_tree: &mut scene.clip_tree,
                             composite_state,
@@ -631,7 +633,7 @@ impl FrameBuilder {
             profile_marker!("BlockOnResources");
 
             resource_cache.block_until_all_resources_added(
-                gpu_cache,
+                frame_gpu_data,
                 profile,
             );
         }
@@ -666,7 +668,7 @@ impl FrameBuilder {
         profile.set(profiler::PICTURE_CACHE_SLICES, scene.tile_cache_config.picture_cache_slice_count);
         scratch.begin_frame();
         gpu_cache.begin_frame(stamp);
-        resource_cache.begin_frame(stamp, gpu_cache, profile);
+        resource_cache.begin_frame(stamp, profile);
 
         // TODO(gw): Follow up patches won't clear this, as they'll be assigned
         //           statically during scene building.
@@ -735,7 +737,7 @@ impl FrameBuilder {
         // Finish creating the frame graph and build it.
         let render_tasks = rg_builder.end_frame(
             resource_cache,
-            gpu_cache,
+            &mut gpu_buffer_builder,
             &mut deferred_resolves,
             scene.config.max_shared_surface_size,
             &frame_memory,
@@ -821,7 +823,7 @@ impl FrameBuilder {
                 self.build_composite_pass(
                     scene,
                     &mut ctx,
-                    gpu_cache,
+                    &mut gpu_buffer_builder,
                     &mut deferred_resolves,
                     &mut composite_state,
                 );
@@ -1006,7 +1008,7 @@ impl FrameBuilder {
         &self,
         scene: &BuiltScene,
         ctx: &RenderTargetContext,
-        gpu_cache: &mut GpuCache,
+        gpu_buffers: &mut GpuBufferBuilder,
         deferred_resolves: &mut FrameVec<DeferredResolve>,
         composite_state: &mut CompositeState,
     ) {
@@ -1034,7 +1036,7 @@ impl FrameBuilder {
                         tile_cache,
                         device_clip_rect,
                         ctx.resource_cache,
-                        gpu_cache,
+                        &mut gpu_buffers.f32,
                         deferred_resolves,
                     );
                 }
@@ -1093,7 +1095,6 @@ pub fn build_render_pass(
                             target.add_task(
                                 *task_id,
                                 ctx,
-                                gpu_cache,
                                 gpu_buffer_builder,
                                 render_tasks,
                                 clip_store,
@@ -1118,7 +1119,6 @@ pub fn build_render_pass(
                             target.add_task(
                                 *task_id,
                                 ctx,
-                                gpu_cache,
                                 gpu_buffer_builder,
                                 render_tasks,
                                 clip_store,
@@ -1256,7 +1256,6 @@ pub fn build_render_pass(
                     texture.add_task(
                         *task_id,
                         ctx,
-                        gpu_cache,
                         gpu_buffer_builder,
                         render_tasks,
                         clip_store,

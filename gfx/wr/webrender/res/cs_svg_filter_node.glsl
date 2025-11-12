@@ -38,7 +38,7 @@ Notes about specific filter kinds:
 
 #define WR_FEATURE_TEXTURE_2D
 
-#include shared,prim_shared
+#include shared,prim_shared,gpu_buffer
 
 varying highp vec2 vInput1Uv;
 varying highp vec2 vInput2Uv;
@@ -271,9 +271,9 @@ void main(void) {
             break;
         case FILTER_COLOR_MATRIX:
         case FILTER_COLOR_MATRIX_CONVERTSRGB:
-            vec4 mat_data[4] = fetch_from_gpu_cache_4_direct(aFilterExtraDataAddress);
+            vec4 mat_data[4] = fetch_from_gpu_buffer_4f_direct(aFilterExtraDataAddress);
             vColorMat = mat4(mat_data[0], mat_data[1], mat_data[2], mat_data[3]);
-            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress + ivec2(4, 0));
+            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress + ivec2(4, 0));
             break;
         case FILTER_COMPONENT_TRANSFER:
         case FILTER_COMPONENT_TRANSFER_CONVERTSRGB:
@@ -282,7 +282,7 @@ void main(void) {
         case FILTER_COMPOSITE_ARITHMETIC:
         case FILTER_COMPOSITE_ARITHMETIC_CONVERTSRGB:
             // arithmetic parameters
-            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
             break;
         case FILTER_COMPOSITE_ATOP:
         case FILTER_COMPOSITE_ATOP_CONVERTSRGB:
@@ -326,12 +326,12 @@ void main(void) {
             // TODO
             break;
         case FILTER_DROP_SHADOW:
-            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
             // premultiply the color
             vFilterData0.rgb = vFilterData0.rgb * vFilterData0.a;
             break;
         case FILTER_DROP_SHADOW_CONVERTSRGB:
-            vFilterData0 = fetch_from_gpu_cache_1_direct(aFilterExtraDataAddress);
+            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
             // convert from sRGB to linearRGB and premultiply by alpha
             vFilterData0.rgb = vertexSrgbToLinear(vFilterData0.rgb);
             vFilterData0.rgb = vFilterData0.rgb * vFilterData0.a;
@@ -601,7 +601,7 @@ void main(void) {
     vec4 result = vec4(1.0, 0.0, 0.0, 1.0);
 
     // This would produce more efficient code for swgl if we used a switch statement.
-    // However, the glsl-optimizer pass produces awful code for switch statements, 
+    // However, the glsl-optimizer pass produces awful code for switch statements,
     // resulting in the optimized fragment shader taking half a minute to compile on
     // some Adreno devices. See bug 1929209.
     // We should fix the optimizer to produce more sensible output for switch

@@ -13,7 +13,7 @@ use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::SpatialTree;
 use crate::clip::{ClipStore, ClipItemKind};
 use crate::frame_builder::FrameGlobalResources;
-use crate::gpu_cache::{GpuCache, GpuCacheAddress};
+use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, SVGFEFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator, MaskInstance, ClipSpace, BlurEdgeMode};
 use crate::gpu_types::{ZBufferId, QuadSegment, PrimitiveInstanceData, TransformPaletteId};
@@ -354,7 +354,6 @@ impl RenderTarget {
         &mut self,
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
-        gpu_cache: &mut GpuCache,
         gpu_buffer_builder: &mut GpuBufferBuilder,
         render_tasks: &RenderTaskGraph,
         clip_store: &ClipStore,
@@ -444,7 +443,7 @@ impl RenderTarget {
                     task_id,
                     task.children.get(0).cloned(),
                     task.children.get(1).cloned(),
-                    task_info.extra_gpu_cache_handle.map(|handle| gpu_cache.get_address(&handle)),
+                    task_info.extra_gpu_data,
                     &ctx.frame_memory,
                 )
             }
@@ -456,7 +455,7 @@ impl RenderTarget {
                     task,
                     task.children.get(0).cloned(),
                     task.children.get(1).cloned(),
-                    task_info.extra_gpu_cache_handle.map(|handle| gpu_cache.get_address(&handle)),
+                    task_info.extra_gpu_data,
                     &ctx.frame_memory,
                 )
             }
@@ -471,7 +470,6 @@ impl RenderTarget {
                     task_info.clip_node_range,
                     task_info.root_spatial_node_index,
                     render_tasks,
-                    gpu_cache,
                     clip_store,
                     transforms,
                     task_info.actual_rect,
@@ -682,7 +680,7 @@ fn add_svg_filter_instances(
     task_id: RenderTaskId,
     input_1_task: Option<RenderTaskId>,
     input_2_task: Option<RenderTaskId>,
-    extra_data_address: Option<GpuCacheAddress>,
+    extra_data_address: Option<GpuBufferAddress>,
     memory: &FrameMemory,
 ) {
     let mut textures = BatchTextures::empty();
@@ -753,7 +751,7 @@ fn add_svg_filter_instances(
         input_count,
         generic_int,
         padding: 0,
-        extra_data_address: extra_data_address.unwrap_or(GpuCacheAddress::INVALID),
+        extra_data_address: extra_data_address.unwrap_or(GpuBufferAddress::INVALID),
     };
 
     for (ref mut batch_textures, ref mut batch) in instances.iter_mut() {
@@ -786,7 +784,7 @@ fn add_svg_filter_node_instances(
     target_task: &RenderTask,
     input_1_task: Option<RenderTaskId>,
     input_2_task: Option<RenderTaskId>,
-    extra_data_address: Option<GpuCacheAddress>,
+    extra_data_address: Option<GpuBufferAddress>,
     memory: &FrameMemory,
 ) {
     let node = &task_info.node;
@@ -808,7 +806,7 @@ fn add_svg_filter_node_instances(
         input_2_task_address: RenderTaskId::INVALID.into(),
         kind: 0,
         input_count: node.inputs.len() as u16,
-        extra_data_address: extra_data_address.unwrap_or(GpuCacheAddress::INVALID),
+        extra_data_address: extra_data_address.unwrap_or(GpuBufferAddress::INVALID),
     };
 
     // Must match FILTER_* in cs_svg_filter_node.glsl

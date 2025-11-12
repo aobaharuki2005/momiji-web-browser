@@ -9,7 +9,6 @@ use crate::{
     device::{CustomVAO, Device, DrawTarget, Program, ReadTarget, Texture, TextureFilter, UploadPBOPool, VBO},
     gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList},
     internal_types::{FrameId, RenderTargetInfo, Swizzle},
-    prim_store::DeferredResolve,
     profiler,
     render_api::MemoryReport,
 };
@@ -484,10 +483,7 @@ impl super::Renderer {
         self.profile.set(profiler::GPU_CACHE_BLOCKS_UPDATED, updated_blocks);
     }
 
-    pub fn prepare_gpu_cache(
-        &mut self,
-        deferred_resolves: &[DeferredResolve],
-    ) -> Result<(), super::RendererError> {
+    pub fn prepare_gpu_cache(&mut self) -> Result<(), super::RendererError> {
         self.profile.start_time(profiler::GPU_CACHE_PREPARE_TIME);
 
         if self.pending_gpu_cache_clear {
@@ -504,9 +500,6 @@ impl super::Renderer {
             old_cache.deinit(&mut self.device);
             self.pending_gpu_cache_clear = false;
         }
-
-        let deferred_update_list = self.update_deferred_resolves(deferred_resolves);
-        self.pending_gpu_cache_updates.extend(deferred_update_list);
 
         self.update_gpu_cache();
 
