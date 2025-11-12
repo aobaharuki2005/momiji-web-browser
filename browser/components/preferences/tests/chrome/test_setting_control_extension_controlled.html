@@ -121,6 +121,8 @@
         const ADDON_NAME = "Ext Controlled";
         const STORE_ID = "privacy.containers";
         const TEST_FLUENT_ID = "test-fluent-id";
+        const SUPPORT_PAGE = "support-test";
+        const SUPPORT_URL = Services.prefs.getStringPref("app.support.baseURL");
         await SpecialPowers.pushPrefEnv({
           set: [[PREF_ID, false]],
         });
@@ -152,6 +154,7 @@
           controllingExtensionInfo: {
             storeId: STORE_ID,
             l10nId: TEST_FLUENT_ID,
+            supportPage: SUPPORT_PAGE,
           },
         });
 
@@ -217,6 +220,21 @@
           "disable-extension",
           "The disable extension button should have the correct data-l10n-id"
         );
+
+        // Assert that moz-message-bar appears with a support link with correct attributes
+        let supportLink = messageBar.querySelector("a[slot='support-link']");
+        ok(supportLink, "There should be a slotted support link element");
+        is(
+          supportLink.getAttribute("support-page"),
+          SUPPORT_PAGE,
+          "The support link should have the correct value for 'support-page'"
+        );
+        is(
+          supportLink.href,
+          `${SUPPORT_URL}${SUPPORT_PAGE}`,
+          "The support link should have the correct generated href value"
+        );
+
         // Unload the test extension and remove the setting-control element
         await extension.unload();
         control.remove();
