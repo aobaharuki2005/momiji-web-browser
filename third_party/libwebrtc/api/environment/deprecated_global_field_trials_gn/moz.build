@@ -34,7 +34,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/api/transport/field_trial_based_config.cc"
+    "/third_party/libwebrtc/api/environment/deprecated_global_field_trials.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -219,4 +219,4 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["_GNU_SOURCE"] = True
 
-Library("field_trial_based_config_gn")
+Library("deprecated_global_field_trials_gn")
