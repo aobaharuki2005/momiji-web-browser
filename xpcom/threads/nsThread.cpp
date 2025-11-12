@@ -50,8 +50,6 @@
 #include "ThreadEventTarget.h"
 #include "ThreadDelay.h"
 
-#include <limits>
-
 #ifdef XP_LINUX
 #  ifdef __GLIBC__
 #    include <gnu/libc-version.h>
