@@ -6309,7 +6309,7 @@ void CacheIRCompiler::emitActivateIterator(Register objBeingIterated,
 #endif
 
   // Mark iterator as active.
-  Address iterFlagsAddr(nativeIter, NativeIterator::offsetOfFlagsAndCount());
+  Address iterFlagsAddr(nativeIter, NativeIterator::offsetOfFlags());
   masm.storePtr(objBeingIterated, iterObjAddr);
   masm.or32(Imm32(NativeIterator::Flags::Active), iterFlagsAddr);
 
