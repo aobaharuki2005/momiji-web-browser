@@ -87,10 +87,17 @@ WaylandSurface::WaylandSurface(RefPtr<WaylandSurface> aParent,
   LOGWAYLAND("WaylandSurface::WaylandSurface(), parent [%p] size [%d x %d]",
              mParent ? mParent->GetLoggingWidget() : nullptr, mSizeScaled.width,
              mSizeScaled.height);
+  struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
+  mSurface = wl_compositor_create_surface(compositor);
+  if (!mSurface) {
+    LOGWAYLAND("  Failed - can't create surface!");
+  }
 }
 
 WaylandSurface::~WaylandSurface() {
   LOGWAYLAND("WaylandSurface::~WaylandSurface()");
+  MozClearPointer(mSurface, wl_surface_destroy);
+
   MOZ_RELEASE_ASSERT(!mIsMapped, "We can't release mapped WaylandSurface!");
   MOZ_RELEASE_ASSERT(!mSurfaceLock, "We can't release locked WaylandSurface!");
   MOZ_RELEASE_ASSERT(mBufferTransactions.Length() == 0,
@@ -486,7 +493,8 @@ bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
   MOZ_DIAGNOSTIC_ASSERT(!mIsMapped, "Already mapped?");
   MOZ_DIAGNOSTIC_ASSERT(!(aParentWLSurface && aParentWaylandSurfaceLock),
                         "Only one parent can be used.");
-  MOZ_DIAGNOSTIC_ASSERT(!mSurface && !mSubsurface, "Already mapped?");
+  MOZ_DIAGNOSTIC_ASSERT(!mSubsurface, "Already mapped?");
+  MOZ_DIAGNOSTIC_ASSERT(mSurface, "mSurface is missing!");
 
   if (aParentWLSurface) {
     LOGWAYLAND(" parent wl_surface [%p]", aParentWLSurface);
@@ -505,17 +513,9 @@ bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
   mBufferAttached = false;
   mLatestAttachedBuffer = 0;
 
-  struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
-  mSurface = wl_compositor_create_surface(compositor);
-  if (!mSurface) {
-    LOGWAYLAND("    Failed - can't create surface!");
-    return false;
-  }
-
   mSubsurface = wl_subcompositor_get_subsurface(
       WaylandDisplayGet()->GetSubcompositor(), mSurface, mParentSurface);
   if (!mSubsurface) {
-    MozClearPointer(mSurface, wl_surface_destroy);
     LOGWAYLAND("    Failed - can't create sub-surface!");
     return false;
   }
@@ -600,9 +600,6 @@ void WaylandSurface::GdkCleanUpLocked(const WaylandSurfaceLock& aProofOfLock) {
   MozClearHandleID(mEmulatedFrameCallbackTimerID, g_source_remove);
 
   mIsPendingGdkCleanup = false;
-  if (!mIsMapped) {
-    MozClearPointer(mSurface, wl_surface_destroy);
-  }
 }
 
 void WaylandSurface::ReleaseAllWaylandTransactionsLocked(
@@ -647,12 +644,6 @@ void WaylandSurface::UnmapLocked(WaylandSurfaceLock& aSurfaceLock) {
 
   MozClearPointer(mPendingOpaqueRegion, wl_region_destroy);
   MozClearPointer(mOpaqueRegionFrameCallback, wl_callback_destroy);
-
-  // We can't release mSurface if it's used by Gdk for frame callback routing,
-  // it will be released at GdkCleanUpLocked().
-  if (!mIsPendingGdkCleanup) {
-    MozClearPointer(mSurface, wl_surface_destroy);
-  }
 
   mIsReadyToDraw = false;
   mBufferAttached = false;
@@ -1053,7 +1044,8 @@ wl_egl_window* WaylandSurface::GetEGLWindow(DesktopIntSize aSize) {
   LOGWAYLAND("WaylandSurface::GetEGLWindow() eglwindow %p", (void*)mEGLWindow);
 
   WaylandSurfaceLock lock(this);
-  if (!mSurface || !mIsReadyToDraw) {
+  MOZ_DIAGNOSTIC_ASSERT(mSurface, "Missing wl_surface!");
+  if (!mIsReadyToDraw) {
     LOGWAYLAND("  quit, mSurface %p mIsReadyToDraw %d", mSurface,
                (bool)mIsReadyToDraw);
     return nullptr;
