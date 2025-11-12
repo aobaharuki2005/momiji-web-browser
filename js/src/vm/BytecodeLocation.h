@@ -10,7 +10,7 @@
 #include "frontend/NameAnalysisTypes.h"
 #include "js/TypeDecls.h"
 #include "vm/BuiltinObjectKind.h"
-#include "vm/BytecodeUtil.h"
+#include "vm/BytecodeUtil.h"            // GET_ENVCOORD_HOPS
 #include "vm/CheckIsObjectKind.h"       // CheckIsObjectKind
 #include "vm/CompletionKind.h"          // CompletionKind
 #include "vm/ConstantCompareOperand.h"  // ConstantCompareOperand
@@ -261,7 +261,7 @@ class BytecodeLocation {
 
   uint32_t getEnvCalleeNumHops() const {
     MOZ_ASSERT(is(JSOp::EnvCallee));
-    return GET_UINT8(rawBytecode_);
+    return GET_ENVCOORD_HOPS(rawBytecode_);
   }
 
   EnvironmentCoordinate getEnvironmentCoordinate() const {
