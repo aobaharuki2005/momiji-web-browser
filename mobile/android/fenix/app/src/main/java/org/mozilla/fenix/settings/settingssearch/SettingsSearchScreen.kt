@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.GleanMetrics.SettingsSearch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -89,6 +90,7 @@ fun SettingsSearchScreen(
                 SearchResults(
                     store = store,
                     searchItems = state.searchResults,
+                    isRecentSearch = false,
                     modifier = Modifier
                         .padding(top = topPadding)
                         .fillMaxSize(),
@@ -120,6 +122,7 @@ private fun SettingsSearchMessageContent(
 private fun SearchResults(
     store: SettingsSearchStore,
     searchItems: List<SettingsSearchItem>,
+    isRecentSearch: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val state by store.observeAsComposableState { it }
@@ -136,6 +139,12 @@ private fun SearchResults(
                 item = searchItem,
                 query = state.searchQuery,
                 onClick = {
+                    SettingsSearch.searchResultClicked.record(
+                        SettingsSearch.SearchResultClickedExtra(
+                            itemPreferenceKey = searchItem.preferenceKey,
+                            isRecentSearch = isRecentSearch,
+                        ),
+                    )
                     store.dispatch(
                         SettingsSearchAction.ResultItemClicked(
                             searchItem,
@@ -175,7 +184,12 @@ private fun RecentSearchesContent(
                 },
             )
         }
-        SearchResults(store, recentSearches, Modifier)
+        SearchResults(
+            store = store,
+            searchItems = recentSearches,
+            isRecentSearch = true,
+            modifier = Modifier,
+        )
     }
 }
 
