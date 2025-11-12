@@ -34,6 +34,7 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.TabStrip
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -186,6 +187,7 @@ class FenixApplicationTest {
         every { dohSettingsProvider.getSelectedProtectionLevel() } returns ProtectionLevel.Max
         every { settings.getHttpsOnlyMode() } returns HttpsOnlyMode.ENABLED_PRIVATE_ONLY
         every { settings.shouldEnableGlobalPrivacyControl } returns true
+        every { settings.isTabStripEnabled } returns true
 
         assertTrue(settings.contileContextId.isNotEmpty())
         assertNotNull(TopSites.contextId.testGetValue())
@@ -244,6 +246,7 @@ class FenixApplicationTest {
         assertEquals("Max", Preferences.dohProtectionLevel.testGetValue())
         assertEquals("ENABLED_PRIVATE_ONLY", Preferences.httpsOnlyMode.testGetValue())
         assertEquals(true, Preferences.globalPrivacyControlEnabled.testGetValue())
+        assertEquals(true, TabStrip.enabled.testGetValue())
 
         val contextId = TopSites.contextId.testGetValue()!!.toString()
 

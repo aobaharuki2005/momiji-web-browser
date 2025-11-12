@@ -81,6 +81,7 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.TabStrip
 import org.mozilla.fenix.GleanMetrics.TermsOfUse
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.Core
@@ -924,6 +925,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             signedInSync.set(settings.signedInFxaAccount)
             isolatedContentProcessesEnabled.set(settings.isIsolatedProcessEnabled)
             appZygoteIsolatedContentProcessesEnabled.set(settings.isAppZygoteEnabled)
+            TabStrip.enabled.set(settings.isTabStripEnabled)
 
             val syncedItems = SyncEnginesStorage(applicationContext).getStatus().entries.filter {
                 it.value
