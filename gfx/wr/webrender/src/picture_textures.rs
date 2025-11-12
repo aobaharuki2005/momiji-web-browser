@@ -13,8 +13,8 @@ use crate::internal_types::{
 };
 use crate::profiler::{self, TransactionProfile};
 use crate::gpu_types::{ImageSource, UvRectKind};
+use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF};
 
 
 #[derive(Debug, PartialEq)]
@@ -42,23 +42,24 @@ pub struct PictureCacheEntry {
     //           in the glyph cache eviction code. We could probably remove it
     //           entirely in future (or move to EntryDetails::Picture).
     pub last_access: FrameStamp,
-    /// Handle to the resource rect in the float GPU buffer.
-    pub uv_rect_handle: GpuBufferAddress,
+    /// Handle to the resource rect in the GPU cache.
+    pub uv_rect_handle: GpuCacheHandle,
     /// The actual device texture ID this is part of.
     pub texture_id: CacheTextureId,
 }
 
 impl PictureCacheEntry {
-    fn write_gpu_blocks(&mut self, gpu_buffer: &mut GpuBufferBuilderF) {
-        let origin = DeviceIntPoint::zero();
-        let image_source = ImageSource {
-            p0: origin.to_f32(),
-            p1: (origin + self.size).to_f32(),
-            uv_rect_kind: UvRectKind::Rect,
-            user_data: [0.0; 4],
-        };
-
-        self.uv_rect_handle = image_source.write_gpu_blocks(gpu_buffer);
+    fn update_gpu_cache(&mut self, gpu_cache: &mut GpuCache) {
+        if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
+            let origin = DeviceIntPoint::zero();
+            let image_source = ImageSource {
+                p0: origin.to_f32(),
+                p1: (origin + self.size).to_f32(),
+                uv_rect_kind: UvRectKind::Rect,
+                user_data: [0.0; 4],
+            };
+            image_source.write_gpu_blocks(&mut request);
+        }
     }
 }
 
@@ -129,7 +130,7 @@ impl PictureTextures {
         &mut self,
         tile_size: DeviceIntSize,
         handle: &mut Option<PictureCacheTextureHandle>,
-        gpu_buffer: &mut GpuBufferBuilderF,
+        gpu_cache: &mut GpuCache,
         next_texture_id: &mut CacheTextureId,
         pending_updates: &mut TextureUpdateList,
     ) {
@@ -159,7 +160,7 @@ impl PictureTextures {
             self.cache_entries
                 .get_opt_mut(handle)
                 .expect("BUG: handle must be valid now")
-                .write_gpu_blocks(gpu_buffer);
+                .update_gpu_cache(gpu_cache);
         } else {
             panic!("The handle should be valid picture cache handle now")
         }
@@ -218,7 +219,7 @@ impl PictureTextures {
         let cache_entry = PictureCacheEntry {
             size: tile_size,
             last_access: self.now,
-            uv_rect_handle: GpuBufferAddress::INVALID,
+            uv_rect_handle: GpuCacheHandle::new(),
             texture_id,
         };
 
@@ -263,14 +264,14 @@ impl PictureTextures {
         }
     }
 
-    pub fn request(&mut self, handle: &PictureCacheTextureHandle, gpu_buffer: &mut GpuBufferBuilderF) -> bool {
+    pub fn request(&mut self, handle: &PictureCacheTextureHandle, gpu_cache: &mut GpuCache) -> bool {
         let entry = self.cache_entries.get_opt_mut(handle);
         let now = self.now;
         entry.map_or(true, |entry| {
             // If an image is requested that is already in the cache,
             // refresh the GPU cache data associated with this item.
             entry.last_access = now;
-            entry.write_gpu_blocks(gpu_buffer);
+            entry.update_gpu_cache(gpu_cache);
             false
         })
     }

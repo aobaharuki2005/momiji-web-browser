@@ -24,15 +24,15 @@
 /// | z: flags                   |    |   |   |    local_clip_rect  |  +-----------------------+ | |
 /// |    segment_index           |    |   |   +---------------------+                            | |
 /// | w: resource_address       +--+  |   |                                                      | |
-/// +----------------------------+ |  |   |                             (float gpu buffer)       | |
-///                                |  |   |   (float gpu buffer)         +------------+          | |
+/// +----------------------------+ |  |   |                                 (sGpuCache)          | |
+///                                |  |   |         (sGpuCache)          +------------+          | |
 ///                                |  |   |   +---------------+          | Transform  | <--------+ |
-///           (float gpu buffer)   |  |   +-> | Picture task  |          +------------+            |
+///                (sGpuCache)     |  |   +-> | Picture task  |          +------------+            |
 ///            +-------------+     |  |       |               |                                    |
 ///            |  Resource   | <---+  |       |         ...   |                                    |
 ///            |             |        |       +---------------+   +--------------------------------+
 ///            |             |        |                           |
-///            +-------------+        |       (float gpu buffer)  v                (float gpu buffer)
+///            +-------------+        |             (sGpuCache)   v                        (sGpuCache)
 ///                                   |       +---------------+  +--------------+---------------+-+-+
 ///                                   +-----> | Clip area     |  | Brush data   |  Segment data | | |
 ///                                           |               |  |              |               | | |
@@ -113,7 +113,7 @@ void brush_shader_main_vs(
                               VECS_PER_SPECIFIC_BRUSH +
                               instance.segment_index * VECS_PER_SEGMENT;
 
-        vec4[2] segment_info = fetch_from_gpu_buffer_2f(segment_address);
+        vec4[2] segment_info = fetch_from_gpu_cache_2(segment_address);
         segment_rect = RectWithEndpoint(segment_info[0].xy, segment_info[0].zw);
         segment_rect.p0 += ph.local_rect.p0;
         segment_rect.p1 += ph.local_rect.p0;

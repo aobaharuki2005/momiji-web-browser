@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared,gpu_buffer
+#include shared,prim_shared
 
 flat varying mediump vec4 v_color;
 flat varying mediump vec3 v_mask_swizzle;
@@ -45,7 +45,7 @@ Glyph fetch_glyph(int specific_prim_address,
     int glyph_address = specific_prim_address +
                         VECS_PER_TEXT_RUN +
                         int(uint(glyph_index) / GLYPHS_PER_GPU_BLOCK);
-    vec4 data = fetch_from_gpu_buffer_1f(glyph_address);
+    vec4 data = fetch_from_gpu_cache_1(glyph_address);
     // Select XY or ZW based on glyph index.
     vec2 glyph = mix(data.xy, data.zw,
                      bvec2(uint(glyph_index) % GLYPHS_PER_GPU_BLOCK == 1U));
@@ -60,7 +60,7 @@ struct GlyphResource {
 };
 
 GlyphResource fetch_glyph_resource(int address) {
-    vec4 data[2] = fetch_from_gpu_buffer_2f(address);
+    vec4 data[2] = fetch_from_gpu_cache_2(address);
     return GlyphResource(data[0], data[1].xy, data[1].z);
 }
 
@@ -69,7 +69,7 @@ struct TextRun {
 };
 
 TextRun fetch_text_run(int address) {
-    vec4 data = fetch_from_gpu_buffer_1f(address);
+    vec4 data = fetch_from_gpu_cache_1(address);
     return TextRun(data);
 }
 

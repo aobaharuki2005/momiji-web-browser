@@ -4,7 +4,7 @@
 
 #define VECS_PER_SPECIFIC_BRUSH 3
 
-#include shared,prim_shared,brush,image_source
+#include shared,prim_shared,brush
 
 // Interpolated UV coordinates to sample.
 varying highp vec2 v_uv;
@@ -38,7 +38,7 @@ struct ImageBrushData {
 };
 
 ImageBrushData fetch_image_data(int address) {
-    vec4[3] raw_data = fetch_from_gpu_buffer_3f(address);
+    vec4[3] raw_data = fetch_from_gpu_cache_3(address);
     ImageBrushData data = ImageBrushData(
         raw_data[0],
         raw_data[1],

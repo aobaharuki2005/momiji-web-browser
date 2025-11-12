@@ -70,9 +70,11 @@ use crate::device::FBOId;
 use crate::debug_item::DebugItem;
 use crate::frame_builder::Frame;
 use glyph_rasterizer::GlyphFormat;
+use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
+use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{ScalingInstance, SvgFilterInstance, SVGFEFilterInstance, CopyInstance, PrimitiveInstanceData};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
-use crate::internal_types::{TextureSource, TextureSourceExternal, FrameVec};
+use crate::internal_types::{TextureSource, TextureSourceExternal, FrameId, FrameVec};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
 use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
@@ -120,6 +122,7 @@ use std::collections::hash_map::Entry;
 
 mod debug;
 mod gpu_buffer;
+mod gpu_cache;
 mod shade;
 mod vertex;
 mod upload;
@@ -129,7 +132,7 @@ pub use debug::DebugRenderer;
 pub use shade::{PendingShadersToPrecache, Shaders, SharedShaders};
 pub use vertex::{desc, VertexArrayKind, MAX_VERTEX_TEXTURE_WIDTH};
 pub use gpu_buffer::{GpuBuffer, GpuBufferF, GpuBufferBuilderF, GpuBufferI, GpuBufferBuilderI};
-pub use gpu_buffer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferWriterF, GpuBufferBlockF};
+pub use gpu_buffer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferWriterF};
 
 /// The size of the array of each type of vertex data texture that
 /// is round-robin-ed each frame during bind_frame_data. Doing this
@@ -387,6 +390,7 @@ pub(crate) enum TextureSampler {
     Color0,
     Color1,
     Color2,
+    GpuCache,
     TransformPalette,
     RenderTasks,
     Dither,
@@ -416,14 +420,15 @@ impl Into<TextureSlot> for TextureSampler {
             TextureSampler::Color0 => TextureSlot(0),
             TextureSampler::Color1 => TextureSlot(1),
             TextureSampler::Color2 => TextureSlot(2),
-            TextureSampler::TransformPalette => TextureSlot(3),
-            TextureSampler::RenderTasks => TextureSlot(4),
-            TextureSampler::Dither => TextureSlot(5),
-            TextureSampler::PrimitiveHeadersF => TextureSlot(6),
-            TextureSampler::PrimitiveHeadersI => TextureSlot(7),
-            TextureSampler::ClipMask => TextureSlot(8),
-            TextureSampler::GpuBufferF => TextureSlot(9),
-            TextureSampler::GpuBufferI => TextureSlot(10),
+            TextureSampler::GpuCache => TextureSlot(3),
+            TextureSampler::TransformPalette => TextureSlot(4),
+            TextureSampler::RenderTasks => TextureSlot(5),
+            TextureSampler::Dither => TextureSlot(6),
+            TextureSampler::PrimitiveHeadersF => TextureSlot(7),
+            TextureSampler::PrimitiveHeadersI => TextureSlot(8),
+            TextureSampler::ClipMask => TextureSlot(9),
+            TextureSampler::GpuBufferF => TextureSlot(10),
+            TextureSampler::GpuBufferI => TextureSlot(11),
         }
     }
 }
@@ -820,6 +825,8 @@ pub struct Renderer {
     /// True if there are any TextureCacheUpdate pending.
     pending_texture_cache_updates: bool,
     pending_native_surface_updates: Vec<NativeSurfaceOperation>,
+    pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
+    pending_gpu_cache_clear: bool,
     pending_shader_updates: Vec<PathBuf>,
     active_documents: FastHashMap<DocumentId, RenderedDocument>,
 
@@ -838,6 +845,7 @@ pub struct Renderer {
     profile: TransactionProfile,
     frame_counter: u64,
     resource_upload_time: f64,
+    gpu_cache_upload_time: f64,
     profiler: Profiler,
     #[cfg(feature = "debugger")]
     debugger: Debugger,
@@ -847,8 +855,17 @@ pub struct Renderer {
     pub gpu_profiler: GpuProfiler,
     vaos: vertex::RendererVAOs,
 
+    gpu_cache_texture: gpu_cache::GpuCacheTexture,
     vertex_data_textures: Vec<vertex::VertexDataTextures>,
     current_vertex_data_textures: usize,
+
+    /// When the GPU cache debugger is enabled, we keep track of the live blocks
+    /// in the GPU cache so that we can use them for the debug display. This
+    /// member stores those live blocks, indexed by row.
+    gpu_cache_debug_chunks: Vec<Vec<GpuCacheDebugChunk>>,
+
+    gpu_cache_frame_id: FrameId,
+    gpu_cache_overflow: bool,
 
     pipeline_info: PipelineInfo,
 
@@ -1102,6 +1119,32 @@ impl Renderer {
                     self.pending_native_surface_updates.extend(resource_update_list.native_surface_updates);
                     self.documents_seen.insert(document_id);
                 }
+                ResultMsg::UpdateGpuCache(mut list) => {
+                    if list.clear {
+                        self.pending_gpu_cache_clear = true;
+                    }
+                    if list.clear {
+                        self.gpu_cache_debug_chunks = Vec::new();
+                    }
+                    for cmd in mem::replace(&mut list.debug_commands, Vec::new()) {
+                        match cmd {
+                            GpuCacheDebugCmd::Alloc(chunk) => {
+                                let row = chunk.address.v as usize;
+                                if row >= self.gpu_cache_debug_chunks.len() {
+                                    self.gpu_cache_debug_chunks.resize(row + 1, Vec::new());
+                                }
+                                self.gpu_cache_debug_chunks[row].push(chunk);
+                            },
+                            GpuCacheDebugCmd::Free(address) => {
+                                let chunks = &mut self.gpu_cache_debug_chunks[address.v as usize];
+                                let pos = chunks.iter()
+                                    .position(|x| x.address == address).unwrap();
+                                chunks.remove(pos);
+                            },
+                        }
+                    }
+                    self.pending_gpu_cache_updates.push(list);
+                }
                 ResultMsg::UpdateResources {
                     resource_updates,
                     memory_pressure,
@@ -1326,6 +1369,9 @@ impl Renderer {
             | DebugCommand::SimulateLongSceneBuild(_)
             | DebugCommand::EnableNativeCompositor(_)
             | DebugCommand::SetBatchingLookback(_) => {}
+            DebugCommand::InvalidateGpuCache => {
+                self.gpu_cache_texture.invalidate();
+            }
             DebugCommand::SetFlags(flags) => {
                 self.set_debug_flags(flags);
             }
@@ -1461,6 +1507,7 @@ impl Renderer {
             DebugFlags::RENDER_TARGET_DBG |
             DebugFlags::TEXTURE_CACHE_DBG |
             DebugFlags::EPOCHS |
+            DebugFlags::GPU_CACHE_DBG |
             DebugFlags::PICTURE_CACHING_DBG |
             DebugFlags::PICTURE_BORDERS |
             DebugFlags::ZOOM_DBG |
@@ -1701,30 +1748,39 @@ impl Renderer {
                     "Cleared texture cache without sending new document frame.");
         }
 
-        self.update_deferred_resolves(&frame.deferred_resolves, &mut frame.gpu_buffer_f);
+        match self.prepare_gpu_cache(&frame.deferred_resolves) {
+            Ok(..) => {
+                assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id,
+                    "Received frame depends on a later GPU cache epoch ({:?}) than one we received last via `UpdateGpuCache` ({:?})",
+                    frame.gpu_cache_frame_id, self.gpu_cache_frame_id);
 
-        self.draw_frame(
-            frame,
-            device_size,
-            buffer_age,
-            &mut results,
-        );
+                self.draw_frame(
+                    frame,
+                    device_size,
+                    buffer_age,
+                    &mut results,
+                );
 
-        // TODO(nical): do this automatically by selecting counters in the wr profiler
-        // Profile marker for the number of invalidated picture cache
-        if thread_is_being_profiled() {
-            let duration = Duration::new(0,0);
-            if let Some(n) = self.profile.get(profiler::RENDERED_PICTURE_TILES) {
-                let message = (n as usize).to_string();
-                add_text_marker("NumPictureCacheInvalidated", &message, duration);
+                // TODO(nical): do this automatically by selecting counters in the wr profiler
+                // Profile marker for the number of invalidated picture cache
+                if thread_is_being_profiled() {
+                    let duration = Duration::new(0,0);
+                    if let Some(n) = self.profile.get(profiler::RENDERED_PICTURE_TILES) {
+                        let message = (n as usize).to_string();
+                        add_text_marker("NumPictureCacheInvalidated", &message, duration);
+                    }
+                }
+
+                if device_size.is_some() {
+                    self.draw_frame_debug_items(&frame.debug_items);
+                }
+
+                self.profile.merge(profile);
+            }
+            Err(e) => {
+                self.renderer_errors.push(e);
             }
         }
-
-        if device_size.is_some() {
-            self.draw_frame_debug_items(&frame.debug_items);
-        }
-
-        self.profile.merge(profile);
 
         self.unlock_external_images(&frame.deferred_resolves);
 
@@ -1745,6 +1801,7 @@ impl Renderer {
             self.bind_debug_overlay(device_size).map(|draw_target| {
                 self.draw_render_target_debug(&draw_target);
                 self.draw_texture_cache_debug(&draw_target);
+                self.draw_gpu_cache_debug(device_size);
                 self.draw_zoom_debug(device_size);
                 self.draw_epoch_debug();
                 self.draw_window_visibility_debug();
@@ -1792,6 +1849,8 @@ impl Renderer {
         self.frame_counter += 1;
         results.stats.resource_upload_time = self.resource_upload_time;
         self.resource_upload_time = 0.0;
+        results.stats.gpu_cache_upload_time = self.gpu_cache_upload_time;
+        self.gpu_cache_upload_time = 0.0;
 
         if let Some(stats) = active_doc.frame_stats.take() {
           // Copy the full frame stats to RendererStats
@@ -4886,22 +4945,27 @@ impl Renderer {
         }
     }
 
-    fn update_deferred_resolves(
-        &mut self,
-        deferred_resolves: &[DeferredResolve],
-        gpu_buffer: &mut GpuBufferF,
-    ) {
+    fn update_deferred_resolves(&mut self, deferred_resolves: &[DeferredResolve]) -> Option<GpuCacheUpdateList> {
         // The first thing we do is run through any pending deferred
         // resolves, and use a callback to get the UV rect for this
         // custom item. Then we patch the resource_rects structure
         // here before it's uploaded to the GPU.
         if deferred_resolves.is_empty() {
-            return;
+            return None;
         }
 
         let handler = self.external_image_handler
             .as_mut()
             .expect("Found external image, but no handler set!");
+
+        let mut list = GpuCacheUpdateList {
+            frame_id: FrameId::INVALID,
+            clear: false,
+            height: self.gpu_cache_texture.get_height(),
+            blocks: Vec::new(),
+            updates: Vec::new(),
+            debug_commands: Vec::new(),
+        };
 
         for (i, deferred_resolve) in deferred_resolves.iter().enumerate() {
             self.gpu_profiler.place_marker("deferred resolve");
@@ -4955,11 +5019,16 @@ impl Renderer {
                 .external_images
                 .insert(DeferredResolveIndex(i as u32), texture);
 
-            let addr = deferred_resolve.address;
-            let index = addr.as_u32() as usize;
-            gpu_buffer.data[index] = image.uv.to_array().into();
-            gpu_buffer.data[index + 1] = [0f32; 4].into();
+            list.updates.push(GpuCacheUpdate::Copy {
+                block_index: list.blocks.len(),
+                block_count: BLOCKS_PER_UV_RECT,
+                address: deferred_resolve.address,
+            });
+            list.blocks.push(image.uv.into());
+            list.blocks.push([0f32; 4].into());
         }
+
+        Some(list)
     }
 
     fn unlock_external_images(
@@ -5251,6 +5320,10 @@ impl Renderer {
             .unwrap_or(0);
         let gpu_buffer_mb = (gpu_buffer_bytes_f + gpu_buffer_bytes_i) as f32 * bytes_to_mb;
         self.profile.set(profiler::GPU_BUFFER_MEM, gpu_buffer_mb);
+
+        let gpu_cache_bytes = self.gpu_cache_texture.gpu_size_in_bytes();
+        let gpu_cache_mb = gpu_cache_bytes as f32 * bytes_to_mb;
+        self.profile.set(profiler::GPU_CACHE_MEM, gpu_cache_mb);
 
         // Determine the present mode and dirty rects, if device_size
         // is Some(..). If it's None, no composite will occur and only
@@ -5959,6 +6032,42 @@ impl Renderer {
         }
     }
 
+    fn draw_gpu_cache_debug(&mut self, device_size: DeviceIntSize) {
+        if !self.debug_flags.contains(DebugFlags::GPU_CACHE_DBG) {
+            return;
+        }
+
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => return,
+        };
+
+        let (x_off, y_off) = (30f32, 30f32);
+        let height = self.gpu_cache_texture.get_height()
+            .min(device_size.height - (y_off as i32) * 2) as usize;
+        debug_renderer.add_quad(
+            x_off,
+            y_off,
+            x_off + MAX_VERTEX_TEXTURE_WIDTH as f32,
+            y_off + height as f32,
+            ColorU::new(80, 80, 80, 80),
+            ColorU::new(80, 80, 80, 80),
+        );
+
+        let upper = self.gpu_cache_debug_chunks.len().min(height);
+        for chunk in self.gpu_cache_debug_chunks[0..upper].iter().flatten() {
+            let color = ColorU::new(250, 0, 0, 200);
+            debug_renderer.add_quad(
+                x_off + chunk.address.u as f32,
+                y_off + chunk.address.v as f32,
+                x_off + chunk.address.u as f32 + chunk.size as f32,
+                y_off + chunk.address.v as f32 + 1.0,
+                color,
+                color,
+            );
+        }
+    }
+
     /// Pass-through to `Device::read_pixels_into`, used by Gecko's WR bindings.
     pub fn read_pixels_into(&mut self, rect: FramebufferIntRect, format: ImageFormat, output: &mut [u8]) {
         self.device.read_pixels_into(rect, format, output);
@@ -5986,6 +6095,7 @@ impl Renderer {
             }
             compositor.deinit(&mut self.device);
         }
+        self.gpu_cache_texture.deinit(&mut self.device);
         if let Some(dither_matrix_texture) = self.dither_matrix_texture {
             self.device.delete_texture(dither_matrix_texture);
         }
@@ -6025,6 +6135,9 @@ impl Renderer {
     /// Collects a memory report.
     pub fn report_memory(&self, swgl: *mut c_void) -> MemoryReport {
         let mut report = MemoryReport::default();
+
+        // GPU cache CPU memory.
+        self.gpu_cache_texture.report_memory_to(&mut report, self.size_of_ops.as_ref().unwrap());
 
         self.staging_texture_pool.report_memory_to(&mut report, self.size_of_ops.as_ref().unwrap());
 
@@ -6142,6 +6255,7 @@ pub struct RendererStats {
     pub color_target_count: usize,
     pub texture_upload_mb: f64,
     pub resource_upload_time: f64,
+    pub gpu_cache_upload_time: f64,
     pub gecko_display_list_time: f64,
     pub wr_display_list_time: f64,
     pub scene_build_time: f64,
@@ -6201,6 +6315,8 @@ struct PlainTexture {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainRenderer {
     device_size: Option<DeviceIntSize>,
+    gpu_cache: PlainTexture,
+    gpu_cache_frame_id: FrameId,
     textures: FastHashMap<CacheTextureId, PlainTexture>,
 }
 
@@ -6433,8 +6549,15 @@ impl Renderer {
                 fs::create_dir(&path_textures).unwrap();
             }
 
+            info!("saving GPU cache");
+            self.update_gpu_cache(); // flush pending updates
             let mut plain_self = PlainRenderer {
                 device_size: self.device_size,
+                gpu_cache: Self::save_texture(
+                    self.gpu_cache_texture.get_texture(),
+                    None, "gpu", &root, &mut self.device,
+                ),
+                gpu_cache_frame_id: self.gpu_cache_frame_id,
                 textures: FastHashMap::default(),
             };
 
@@ -6543,6 +6666,7 @@ impl Renderer {
         }
 
         self.device.begin_frame();
+        self.gpu_cache_texture.remove_texture(&mut self.device);
 
         if let Some(renderer) = config.deserialize_for_resource::<PlainRenderer, _>("renderer") {
             info!("loading cached textures");
@@ -6566,6 +6690,17 @@ impl Renderer {
                     category: texture.category.unwrap_or(TextureCacheCategory::Standalone),
                 });
             }
+
+            info!("loading gpu cache");
+            let (t, gpu_cache_data) = Self::load_texture(
+                ImageBufferKind::Texture2D,
+                &renderer.gpu_cache,
+                Some(RenderTargetInfo { has_depth: false }),
+                &root,
+                &mut self.device,
+            );
+            self.gpu_cache_texture.load_from_data(t, gpu_cache_data);
+            self.gpu_cache_frame_id = renderer.gpu_cache_frame_id;
         } else {
             info!("loading cached textures");
             self.device.begin_frame();
