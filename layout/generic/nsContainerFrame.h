@@ -47,8 +47,6 @@ class nsContainerFrame : public nsSplittableFrame {
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  void Init(nsIContent* aContent, nsContainerFrame* aParent,
-            nsIFrame* aPrevInFlow) override;
   nsContainerFrame* GetContentInsertionFrame() override { return this; }
 
   const nsFrameList& GetChildList(ChildListID aList) const override;
@@ -151,9 +149,6 @@ class nsContainerFrame : public nsSplittableFrame {
   virtual void DeleteNextInFlowChild(DestroyContext&, nsIFrame* aNextInFlow,
                                      bool aDeletingEmptyFrames);
 
-  // Positions the frame's view based on the frame's origin
-  static void PositionFrameView(nsIFrame* aKidFrame);
-
   /**
    * Reparent aFrame from aOldParent to aNewParent.
    */
@@ -171,12 +166,6 @@ class nsContainerFrame : public nsSplittableFrame {
   static void ReparentFrames(nsFrameList& aFrameList,
                              nsContainerFrame* aOldParent,
                              nsContainerFrame* aNewParent);
-
-  // Set the view's size and position after its frame has been reflowed.
-  static void SyncFrameViewAfterReflow(
-      nsPresContext* aPresContext, nsIFrame* aFrame, nsView* aView,
-      const nsRect& aInkOverflowArea,
-      ReflowChildFlags aFlags = ReflowChildFlags::Default);
 
   /**
    * Converts the minimum and maximum sizes given in inner window app units to
@@ -281,8 +270,6 @@ class nsContainerFrame : public nsSplittableFrame {
                                 const ReflowOutput& aDesiredSize,
                                 const ReflowInput* aReflowInput, nscoord aX,
                                 nscoord aY, ReflowChildFlags aFlags);
-
-  static void PositionChildViews(nsIFrame* aFrame);
 
   /**
    * Let the absolutely positioned containing block reflow any absolutely
@@ -460,14 +447,6 @@ class nsContainerFrame : public nsSplittableFrame {
    */
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
-
-  static void PlaceFrameView(nsIFrame* aFrame) {
-    if (aFrame->GetView()) {
-      nsContainerFrame::PositionFrameView(aFrame);
-    } else {
-      nsContainerFrame::PositionChildViews(aFrame);
-    }
-  }
 
   /**
    * Returns a CSS Box Alignment constant which the caller can use to align

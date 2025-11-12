@@ -1373,16 +1373,6 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
           bEndInsetAuto ? 0 : offsets.BEnd(outerWM),
           iStartInsetAuto ? 0 : offsets.IStart(outerWM)};
       cb.mRect.Deflate(insetModification.GetPhysicalMargin(outerWM));
-
-      nsView* view = aKidFrame->GetView();
-      if (view) {
-        // Size and position the view and set its opacity, visibility, content
-        // transparency, and clip
-        nsContainerFrame::SyncFrameViewAfterReflow(
-            aPresContext, aKidFrame, view, kidDesiredSize.InkOverflow());
-      } else {
-        nsContainerFrame::PositionChildViews(aKidFrame);
-      }
     }
 
     aKidFrame->DidReflow(aPresContext, &kidReflowInput);
@@ -1419,7 +1409,6 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
         // Ensure that the positioned frame's overflow is updated. Absolutely
         // containing block's overflow will be updated shortly below.
         aKidFrame->UpdateOverflow();
-        nsContainerFrame::PlaceFrameView(aKidFrame);
       }
       aAnchorPosResolutionCache->mReferenceData->mDefaultScrollShift = offset;
     }();
@@ -1480,7 +1469,6 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     }
     aKidFrame->SetPosition(position);
     aKidFrame->UpdateOverflow();
-    nsContainerFrame::PlaceFrameView(aKidFrame);
   }();
 
   // If author asked for `position-visibility: no-overflow` and we overflow

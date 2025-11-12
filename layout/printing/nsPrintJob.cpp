@@ -1184,7 +1184,6 @@ nsresult nsPrintJob::SetRootView(nsPrintObject* aPO, bool aDocumentIsTopLevel,
                                  bool& doReturn, nsSize& adjSize) {
   bool canCreateScrollbars = true;
 
-  nsView* rootView;
   if (!aDocumentIsTopLevel) {
     nsIFrame* frame =
         aPO->mContent ? aPO->mContent->GetPrimaryFrame() : nullptr;
@@ -1210,23 +1209,15 @@ nsresult nsPrintJob::SetRootView(nsPrintObject* aPO, bool aDocumentIsTopLevel,
     adjSize = mPrt->mPrintDC->GetDeviceSurfaceDimensions();
   }
 
-  if ((rootView = aPO->mViewManager->GetRootView())) {
-    // Remove it from its existing parent if necessary
-    aPO->mViewManager->RemoveChild(rootView);
-    rootView->SetParent(nullptr);
-  } else {
+  if (!aPO->mViewManager->GetRootView()) {
     // Create a child window of the parent that is our "root view/window"
-    nsRect tbounds = nsRect(nsPoint(), adjSize);
-    rootView = aPO->mViewManager->CreateView(tbounds, nullptr);
-    NS_ENSURE_TRUE(rootView, NS_ERROR_OUT_OF_MEMORY);
+    nsView* rootView = aPO->mViewManager->CreateView(adjSize);
+    aPO->mViewManager->SetRootView(rootView);
   }
 
   if (mIsCreatingPrintPreview && aDocumentIsTopLevel) {
     aPO->mPresContext->SetPaginatedScrolling(canCreateScrollbars);
   }
-
-  // Setup hierarchical relationship in view manager
-  aPO->mViewManager->SetRootView(rootView);
 
   return NS_OK;
 }

@@ -212,12 +212,6 @@ void nsTableFrame::Destroy(DestroyContext& aContext) {
   nsContainerFrame::Destroy(aContext);
 }
 
-// Make sure any views are positioned properly
-void nsTableFrame::RePositionViews(nsIFrame* aFrame) {
-  nsContainerFrame::PositionFrameView(aFrame);
-  nsContainerFrame::PositionChildViews(aFrame);
-}
-
 static bool IsRepeatedFrame(nsIFrame* kidFrame) {
   return (kidFrame->IsTableRowFrame() || kidFrame->IsTableRowGroupFrame()) &&
          kidFrame->HasAnyStateBits(NS_REPEATED_ROW_OR_ROWGROUP);
@@ -1787,7 +1781,6 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
     if (0 != xAdjustmentForAllKids) {
       for (nsIFrame* kid : mFrames) {
         kid->MovePositionBy(nsPoint(xAdjustmentForAllKids, 0));
-        RePositionViews(kid);
       }
     }
   }
@@ -2884,7 +2877,6 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         // move to the new position
         kidFrame->MovePositionBy(
             wm, LogicalPoint(wm, 0, aReflowInput.mBCoord - kidRect.BStart(wm)));
-        RePositionViews(kidFrame);
         // invalidate the new position
         kidFrame->InvalidateFrameSubtree();
       }
@@ -3088,7 +3080,6 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
             amountUsed += amountForRow;
             amountUsedByRG += amountForRow;
             // rowFrame->DidResize();
-            nsTableFrame::RePositionViews(rowFrame);
 
             rgFrame->InvalidateFrameWithRect(origRowRect);
             rgFrame->InvalidateFrame();
@@ -3099,7 +3090,6 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
             rowFrame->InvalidateFrameSubtree();
             rowFrame->MovePositionBy(
                 wm, LogicalPoint(wm, 0, bOriginRow - rowNormalRect.BStart(wm)));
-            nsTableFrame::RePositionViews(rowFrame);
             rowFrame->InvalidateFrameSubtree();
           }
           bOriginRow += rowNormalRect.BSize(wm) + rowSpacing;
@@ -3129,7 +3119,6 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
       rgFrame->MovePositionBy(
           wm, LogicalPoint(wm, 0, bOriginRG - rgNormalRect.BStart(wm)));
       // Make sure child views are properly positioned
-      nsTableFrame::RePositionViews(rgFrame);
       rgFrame->InvalidateFrameSubtree();
     }
     bOriginRG = bEndRG;
@@ -3263,8 +3252,6 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
           amountUsedByRG += amountForRow;
           NS_ASSERTION((amountUsed <= aAmount), "invalid row allocation");
           // rowFrame->DidResize();
-          nsTableFrame::RePositionViews(rowFrame);
-
           nsTableFrame::InvalidateTableFrame(rowFrame, origRowRect,
                                              rowInkOverflow, false);
         } else {
@@ -3272,7 +3259,6 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
             rowFrame->InvalidateFrameSubtree();
             rowFrame->MovePositionBy(
                 wm, LogicalPoint(wm, 0, bOriginRow - rowNormalRect.BStart(wm)));
-            nsTableFrame::RePositionViews(rowFrame);
             rowFrame->InvalidateFrameSubtree();
           }
           bOriginRow += rowNormalRect.BSize(wm) + rowSpacing;
@@ -3308,7 +3294,6 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
              rowFrame = rowFrame->GetNextRow()) {
           rowFrame->InvalidateFrameSubtree();
           rowFrame->MovePositionBy(nsPoint(rgWidth, 0));
-          nsTableFrame::RePositionViews(rowFrame);
           rowFrame->InvalidateFrameSubtree();
         }
       }
@@ -3317,7 +3302,6 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
       rgFrame->MovePositionBy(
           wm, LogicalPoint(wm, 0, bOriginRG - rgNormalRect.BStart(wm)));
       // Make sure child views are properly positioned
-      nsTableFrame::RePositionViews(rgFrame);
       rgFrame->InvalidateFrameSubtree();
     }
     bOriginRG = bEndRG;

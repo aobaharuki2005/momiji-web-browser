@@ -48,20 +48,12 @@ class nsViewManager final {
 
   /**
    * Create an ordinary view
-   * @param aBounds initial bounds for view
+   * @param aSize initial size for view
    *        XXX We should eliminate this parameter; you can set the bounds
    *        after CreateView
-   * @param aParent intended parent for view. this is not actually set in the
-   *        nsView through this method. it is only used by the initialization
-   *        code to walk up the view tree, if necessary, to find resources.
-   *        XXX We should eliminate this parameter!
-   * @param aVisibilityFlag initial visibility state of view
-   *        XXX We should eliminate this parameter; you can set it after
-   *        CreateView
    * @result The new view.  Never null.
    */
-  nsView* CreateView(const nsRect& aBounds, nsView* aParent,
-                     ViewVisibility aVisibilityFlag = ViewVisibility::Show);
+  nsView* CreateView(const nsSize& aSize);
 
   /**
    * Get the root of the view tree.
@@ -125,44 +117,6 @@ class nsViewManager final {
                      nsEventStatus* aStatus);
 
   /**
-   * Given a parent view, insert another view as its child.
-   * aSibling and aAbove control the "document order" for the insertion.
-   * If aSibling is null, the view is inserted at the end of the document order
-   * if aAfter is true, otherwise it is inserted at the beginning.
-   * If aSibling is non-null, then if aAfter is true, the view is inserted
-   * after the sibling in document order (appearing above the sibling unless
-   * overriden by z-order).
-   * If it is false, the view is inserted before the sibling.
-   * The view manager generates the appopriate dirty regions.
-   * @param aParent parent view
-   * @param aChild child view
-   * @param aSibling sibling view
-   * @param aAfter after or before in the document order
-   */
-  void InsertChild(nsView* aParent, nsView* aChild, nsView* aSibling,
-                   bool aAfter);
-
-  /**
-   * Remove a specific child view from its parent. This will NOT remove its
-   * placeholder if there is one. The view manager generates the appropriate
-   * dirty regions.
-   * @param aParent parent view
-   * @param aChild child view
-   */
-  void RemoveChild(nsView* aChild);
-
-  /**
-   * Move a view to the specified position, provided in parent coordinates.
-   * The new position is the (0, 0) origin for the view's coordinate system.
-   * The view's bounds may extend above or to the left of this point.
-   * The view manager generates the appropriate dirty regions.
-   * @param aView view to move
-   * @param aX x value for new view position
-   * @param aY y value for new view position
-   */
-  void MoveViewTo(nsView* aView, nscoord aX, nscoord aY);
-
-  /**
    * Resize a view. In addition to setting the width and height, you can
    * set the x and y of its bounds relative to its position. Negative x and y
    * will let the view extend above and to the left of the (0,0) point in its
@@ -172,19 +126,6 @@ class nsViewManager final {
    * @param the new bounds relative to the current position
    */
   void ResizeView(nsView* aView, const nsRect& aRect);
-
-  /**
-   * Set the visibility of a view. Hidden views have the effect of hiding
-   * their descendants as well. This does not affect painting, so layout
-   * is responsible for ensuring that content in hidden views is not
-   * painted nor handling events. It does affect the visibility of widgets;
-   * if a view is hidden, descendant views with widgets have their widgets
-   * hidden.
-   * The view manager generates the appropriate dirty regions.
-   * @param aView view to change visibility state of
-   * @param visible new visibility state
-   */
-  void SetViewVisibility(nsView* aView, ViewVisibility aVisible);
 
   /**
    * Set the presshell associated with this manager
@@ -217,12 +158,6 @@ class nsViewManager final {
    * saves the time of the last user event.
    */
   static uint32_t GetLastUserEventTime() { return gLastUserEventTime; }
-
-  /**
-   * Find the nearest display root view for the view aView. This is the view for
-   * the nearest enclosing popup or the root view for the root document.
-   */
-  static nsView* GetDisplayRootFor(nsView* aView);
 
   /**
    * Flush the accumulated dirty region to the widget and update widget
@@ -268,10 +203,6 @@ class nsViewManager final {
   // aView is the view for aWidget and aRegion is relative to aWidget.
   MOZ_CAN_RUN_SCRIPT
   void Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion);
-
-  // Utilities
-
-  bool IsViewInserted(nsView* aView);
 
   /**
    * Intersects aRect with aView's bounds and then transforms it from aView's

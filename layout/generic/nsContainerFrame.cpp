@@ -43,8 +43,6 @@
 #include "nsPrintfCString.h"
 #include "nsRect.h"
 #include "nsStyleConsts.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -62,19 +60,6 @@ nsContainerFrame::~nsContainerFrame() = default;
 NS_QUERYFRAME_HEAD(nsContainerFrame)
   NS_QUERYFRAME_ENTRY(nsContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSplittableFrame)
-
-void nsContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                            nsIFrame* aPrevInFlow) {
-  nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
-  if (aPrevInFlow) {
-    // Make sure we copy bits from our prev-in-flow that will affect
-    // us. A continuation for a container frame needs to know if it
-    // has a child with a view so that we'll properly reposition it.
-    if (aPrevInFlow->HasAnyStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-      AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-    }
-  }
-}
 
 void nsContainerFrame::SetInitialChildList(ChildListID aListID,
                                            nsFrameList&& aChildList) {
@@ -225,11 +210,6 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
 }
 
 void nsContainerFrame::Destroy(DestroyContext& aContext) {
-  // Prevent event dispatch during destruction.
-  if (auto* view = GetView()) {
-    view->SetFrame(nullptr);
-  }
-
   DestroyAbsoluteFrames(aContext);
 
   // Destroy frames on the principal child list.
@@ -560,40 +540,6 @@ nsIFrame::FrameSearchResult nsContainerFrame::PeekOffsetCharacter(
 /////////////////////////////////////////////////////////////////////////////
 // Helper member functions
 
-/**
- * Position the view associated with |aKidFrame|, if there is one. A
- * container frame should call this method after positioning a frame,
- * but before |Reflow|.
- */
-void nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame) {
-  if (MOZ_LIKELY(!aKidFrame->MayHaveView())) {
-    return;
-  }
-  nsIFrame* parentFrame = aKidFrame->GetParent();
-  if (!parentFrame) {
-    return;
-  }
-  auto* view = aKidFrame->GetView();
-  if (!view) {
-    return;
-  }
-
-  nsViewManager* vm = view->GetViewManager();
-  nsPoint pt;
-  nsView* ancestorView = parentFrame->GetClosestView(&pt);
-
-  if (ancestorView != view->GetParent()) {
-    NS_ASSERTION(ancestorView == view->GetParent()->GetParent(),
-                 "Allowed only one anonymous view between frames");
-    // parentFrame is responsible for positioning aKidFrame's view
-    // explicitly
-    return;
-  }
-
-  pt += aKidFrame->GetPosition();
-  vm->MoveViewTo(view, pt.x, pt.y);
-}
-
 void nsContainerFrame::ReparentFrame(nsIFrame* aFrame,
                                      nsContainerFrame* aOldParent,
                                      nsContainerFrame* aNewParent) {
@@ -660,26 +606,6 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
   }
 
   aWidget->SetSizeConstraints(constraints);
-}
-
-void nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
-                                                nsIFrame* aFrame, nsView* aView,
-                                                const nsRect& aInkOverflowArea,
-                                                ReflowChildFlags aFlags) {
-  if (!aView) {
-    return;
-  }
-
-  // Make sure the view is sized and positioned correctly
-  if (!(aFlags & ReflowChildFlags::NoMoveView)) {
-    PositionFrameView(aFrame);
-  }
-
-  if (!(aFlags & ReflowChildFlags::NoSizeView)) {
-    nsViewManager* vm = aView->GetViewManager();
-
-    vm->ResizeView(aView, aInkOverflowArea);
-  }
 }
 
 void nsContainerFrame::DoInlineMinISize(const IntrinsicSizeInput& aInput,
@@ -784,11 +710,6 @@ void nsContainerFrame::ReflowChild(
     aKidFrame->SetPosition(aWM, aPos, aContainerSize);
   }
 
-  if (!(aFlags & ReflowChildFlags::NoMoveView)) {
-    PositionFrameView(aKidFrame);
-    PositionChildViews(aKidFrame);
-  }
-
   // Reflow the child frame
   aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
@@ -825,11 +746,6 @@ void nsContainerFrame::ReflowChild(nsIFrame* aKidFrame,
     aKidFrame->SetPosition(nsPoint(aX, aY));
   }
 
-  if (!(aFlags & ReflowChildFlags::NoMoveView)) {
-    PositionFrameView(aKidFrame);
-    PositionChildViews(aKidFrame);
-  }
-
   // Reflow the child frame
   aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
@@ -849,29 +765,6 @@ void nsContainerFrame::ReflowChild(nsIFrame* aKidFrame,
   }
 }
 
-/**
- * Position the views of |aFrame|'s descendants. A container frame
- * should call this method if it moves a frame after |Reflow|.
- */
-void nsContainerFrame::PositionChildViews(nsIFrame* aFrame) {
-  if (!aFrame->HasAnyStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    return;
-  }
-
-  // Recursively walk aFrame's child frames.
-  // Process the additional child lists, but skip the popup list as the view for
-  // popups is managed by the parent.
-  // Currently only nsMenuFrame has a popupList and during layout will adjust
-  // the view manually to position the popup.
-  for (const auto& [list, listID] : aFrame->ChildLists()) {
-    for (nsIFrame* childFrame : list) {
-      // Position the frame's view (if it has one) otherwise recursively
-      // process its children
-      PlaceFrameView(childFrame);
-    }
-  }
-}
-
 void nsContainerFrame::FinishReflowChild(
     nsIFrame* aKidFrame, nsPresContext* aPresContext,
     const ReflowOutput& aDesiredSize, const ReflowInput* aReflowInput,
@@ -887,7 +780,6 @@ void nsContainerFrame::FinishReflowChild(
                  "FinishReflowChild with unconstrained container width!");
   }
 
-  nsPoint curOrigin = aKidFrame->GetPosition();
   const LogicalSize convertedSize = aDesiredSize.Size(aWM);
   LogicalPoint pos(aPos);
 
@@ -910,18 +802,6 @@ void nsContainerFrame::FinishReflowChild(
     aKidFrame->SetSize(aWM, convertedSize);
   }
 
-  if (nsView* view = aKidFrame->GetView()) {
-    // Make sure the frame's view is properly sized and positioned and has
-    // things like opacity correct
-    SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
-                             aDesiredSize.InkOverflow(), aFlags);
-  } else if (!(aFlags & ReflowChildFlags::NoMoveView) &&
-             curOrigin != aKidFrame->GetPosition()) {
-    // If the frame has moved, then we need to make sure any child views are
-    // correctly positioned
-    PositionChildViews(aKidFrame);
-  }
-
   aKidFrame->DidReflow(aPresContext, aReflowInput);
 }
 #if defined(_MSC_VER) && !defined(__clang__) && defined(_M_AMD64)
@@ -940,7 +820,6 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
              "only the logical version supports ApplyRelativePositioning "
              "since ApplyRelativePositioning requires the container size");
 
-  nsPoint curOrigin = aKidFrame->GetPosition();
   nsPoint pos(aX, aY);
   nsSize size(aDesiredSize.PhysicalSize());
 
@@ -949,17 +828,6 @@ void nsContainerFrame::FinishReflowChild(nsIFrame* aKidFrame,
     aKidFrame->SetRect(nsRect(pos, size));
   } else {
     aKidFrame->SetSize(size);
-  }
-
-  if (nsView* view = aKidFrame->GetView()) {
-    // Make sure the frame's view is properly sized and positioned and has
-    // things like opacity correct
-    SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
-                             aDesiredSize.InkOverflow(), aFlags);
-  } else if (!(aFlags & ReflowChildFlags::NoMoveView) && curOrigin != pos) {
-    // If the frame has moved, then we need to make sure any child views are
-    // correctly positioned
-    PositionChildViews(aKidFrame);
   }
 
   aKidFrame->DidReflow(aPresContext, aReflowInput);

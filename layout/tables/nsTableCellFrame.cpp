@@ -471,10 +471,6 @@ void nsTableCellFrame::AlignChildWithinCell(
   FinishAndStoreOverflow(&reflowOutput);
 
   if (kidPosition != kidRect.Origin(innerWM)) {
-    // Make sure any child views are correctly positioned. We know the inner
-    // table cell won't have a view.
-    nsContainerFrame::PositionChildViews(inner);
-
     // Invalidate new overflow rect.
     inner->InvalidateFrameSubtree();
   }

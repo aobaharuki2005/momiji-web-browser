@@ -93,12 +93,6 @@ enum class WindowType : uint8_t;
  * nsDocumentViewer::ShouldAttachToTopLevel)
  */
 
-// Enumerated type to indicate the visibility of a layer.
-// hide - the layer is not shown.
-// show - the layer is shown irrespective of the visibility of
-//        the layer's parent.
-enum class ViewVisibility : uint8_t { Hide = 0, Show = 1 };
-
 //----------------------------------------------------------------------
 
 /**
@@ -151,20 +145,6 @@ class nsView final : public nsIWidgetListener {
   void Destroy();
 
   /**
-   * Called to get the position of a view.
-   * The specified coordinates are relative to the parent view's origin, but
-   * are in appunits of this.
-   * This is the (0, 0) origin of the coordinate space established by this view.
-   * @param x out parameter for x position
-   * @param y out parameter for y position
-   */
-  nsPoint GetPosition() const {
-    NS_ASSERTION(!IsRoot() || (mPosX == 0 && mPosY == 0),
-                 "root views should always have explicit position of (0,0)");
-    return nsPoint(mPosX, mPosY);
-  }
-
-  /**
    * Called to get the dimensions and position of the view's bounds.
    * The view's bounds (x,y) are relative to the origin of the parent view, but
    * are in appunits of this.
@@ -175,60 +155,6 @@ class nsView final : public nsIWidgetListener {
   nsRect GetBounds() const { return mDimBounds; }
 
   /**
-   * The bounds of this view relative to this view. So this is the same as
-   * GetBounds except this is relative to this view instead of the parent view.
-   */
-  nsRect GetDimensions() const {
-    nsRect r = mDimBounds;
-    r.MoveBy(-mPosX, -mPosY);
-    return r;
-  }
-
-  /**
-   * Get the offset between the coordinate systems of |this| and aOther.
-   * Adding the return value to a point in the coordinate system of |this|
-   * will transform the point to the coordinate system of aOther.
-   *
-   * The offset is expressed in appunits of |this|. So if you are getting the
-   * offset between views in different documents that might have different
-   * appunits per devpixel ratios you need to be careful how you use the
-   * result.
-   *
-   * If aOther is null, this will return the offset of |this| from the
-   * root of the viewmanager tree.
-   *
-   * This function is fastest when aOther is an ancestor of |this|.
-   *
-   * NOTE: this actually returns the offset from aOther to |this|, but
-   * that offset is added to transform _coordinates_ from |this| to aOther.
-   */
-  nsPoint GetOffsetTo(const nsView* aOther) const;
-
-  /**
-   * Called to query the visibility state of a view.
-   * @result current visibility state
-   */
-  ViewVisibility GetVisibility() const { return mVis; }
-
-  /**
-   * Called to query the parent of the view.
-   * @result view's parent
-   */
-  nsView* GetParent() const { return mParent; }
-
-  /**
-   * The view's first child is the child which is earliest in document order.
-   * @result first child
-   */
-  nsView* GetFirstChild() const { return mFirstChild; }
-
-  /**
-   * Called to query the next sibling of the view.
-   * @result view's next sibling
-   */
-  nsView* GetNextSibling() const { return mNextSibling; }
-
-  /**
    * Set the view's frame.
    */
   void SetFrame(nsIFrame* aRootFrame) { mFrame = aRootFrame; }
@@ -237,18 +163,6 @@ class nsView final : public nsIWidgetListener {
    * Retrieve the view's frame.
    */
   nsIFrame* GetFrame() const { return mFrame; }
-
-  /**
-   * Get the nearest widget in this view or a parent of this view and
-   * the offset from the widget's origin to this view's origin
-   * @param aOffset - if non-null the offset from this view's origin to the
-   * widget's origin (usually positive) expressed in appunits of this will be
-   * returned in aOffset.
-   * @return the widget closest to this view; can be null because some view
-   * trees don't have widgets at all (e.g., printing), but if any view in the
-   * view tree has a widget, then it's safe to assume this will not return null
-   */
-  nsIWidget* GetNearestWidget(nsPoint* aOffset) const;
 
   /**
    * Destroys the associated widget for this view.  If this method is
@@ -346,19 +260,6 @@ class nsView final : public nsIWidgetListener {
   // origin) to view origin expressed in appunits of this.
   nsPoint ViewToWidgetOffset() const { return mViewToWidgetOffset; }
 
-  /**
-   * Called to indicate that the position of the view has been changed.
-   * The specified coordinates are in the parent view's coordinate space.
-   * @param x new x position
-   * @param y new y position
-   */
-  void SetPosition(nscoord aX, nscoord aY);
-  void SetParent(nsView* aParent) { mParent = aParent; }
-  void SetNextSibling(nsView* aSibling) {
-    NS_ASSERTION(aSibling != this, "Can't be our own sibling!");
-    mNextSibling = aSibling;
-  }
-
   // nsIWidgetListener
   mozilla::PresShell* GetPresShell() override;
   nsView* GetView() override { return this; }
@@ -388,19 +289,14 @@ class nsView final : public nsIWidgetListener {
 
   virtual ~nsView();
 
-  nsPoint GetOffsetTo(const nsView* aOther, const int32_t aAPD) const;
-  nsIWidget* GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const;
-
   bool IsPrimaryFramePaintSuppressed();
 
  private:
-  explicit nsView(nsViewManager* = nullptr,
-                  ViewVisibility = ViewVisibility::Show);
+  explicit nsView(nsViewManager* = nullptr);
 
   bool ForcedRepaint() { return mForcedRepaint; }
 
   void InitializeWindow(bool aEnableDragDrop, bool aResetVisibility);
-  bool IsEffectivelyVisible();
 
   /**
    * Called to indicate that the dimensions of the view have been changed.
@@ -410,13 +306,6 @@ class nsView final : public nsIWidgetListener {
    */
   void SetDimensions(const nsRect& aRect);
 
-  /**
-   * Called to indicate that the visibility of a view has been
-   * changed.
-   * @param visibility new visibility state
-   */
-  void SetVisibility(ViewVisibility visibility);
-
   // Helper function to get mouse grabbing off this view (by moving it to the
   // parent, if we can)
   void DropMouseGrabbing();
@@ -424,27 +313,16 @@ class nsView final : public nsIWidgetListener {
   bool IsDirty() const { return mIsDirty; }
   void SetIsDirty(bool aDirty) { mIsDirty = aDirty; }
 
-  void InsertChild(nsView* aChild, nsView* aSibling);
-  void RemoveChild(nsView* aChild);
-
   void AssertNoWindow();
-
-  void NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible);
 
   void CallOnAllRemoteChildren(
       const std::function<mozilla::CallState(mozilla::dom::BrowserParent*)>&
           aCallback);
 
   nsViewManager* mViewManager;
-  nsView* mParent;
   nsCOMPtr<nsIWidget> mWindow;
   nsCOMPtr<nsIWidget> mPreviousWindow;
-  nsView* mNextSibling;
-  nsView* mFirstChild;
   nsIFrame* mFrame;
-  ViewVisibility mVis;
-  // position relative our parent view origin but in our appunits
-  nscoord mPosX, mPosY;
   // relative to parent, but in our appunits
   nsRect mDimBounds;
   // in our appunits

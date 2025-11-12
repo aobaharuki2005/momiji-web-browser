@@ -178,8 +178,6 @@ class nsTableFrame : public nsContainerFrame {
   // special height reflow will occur.
   static void RequestSpecialBSizeReflow(const ReflowInput& aReflowInput);
 
-  static void RePositionViews(nsIFrame* aFrame);
-
   static bool PageBreakAfter(nsIFrame* aSourceFrame, nsIFrame* aNextFrame);
 
   // Register or deregister a positioned table part with its nsTableFrame.
