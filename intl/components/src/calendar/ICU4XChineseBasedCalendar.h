@@ -7,7 +7,6 @@
 #include "mozilla/intl/calendar/ICU4XCalendar.h"
 
 #include <stdint.h>
-#include <string_view>
 
 namespace mozilla::intl::calendar {
 

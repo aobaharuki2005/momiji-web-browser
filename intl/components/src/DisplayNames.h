@@ -4,7 +4,6 @@
 #ifndef intl_components_DisplayNames_h_
 #define intl_components_DisplayNames_h_
 
-#include <string>
 #include <string_view>
 #include "unicode/udat.h"
 #include "unicode/udatpg.h"

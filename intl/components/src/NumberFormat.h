@@ -5,7 +5,6 @@
 #define intl_components_NumberFormat_h_
 #include <string_view>
 #include <utility>
-#include <vector>
 
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/Maybe.h"
