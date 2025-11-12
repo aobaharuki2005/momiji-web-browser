@@ -8,6 +8,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.widget.FrameLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import kotlinx.coroutines.flow.flowOf
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
@@ -118,6 +119,8 @@ class SwipeRefreshFeatureTest {
     }
 
     private open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
+        override val verticalScrollPosition = flowOf(0f)
+        override val verticalScrollDelta = flowOf(0f)
         override fun setVerticalClipping(clippingHeight: Int) {}
         override fun setDynamicToolbarMaxHeight(height: Int) {}
         override fun setActivityContext(context: Context?) {}

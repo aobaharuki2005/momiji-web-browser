@@ -94,6 +94,11 @@ class GeckoEngineView @JvmOverloads constructor(
 
     override var selectionActionDelegate: SelectionActionDelegate? = null
 
+    @VisibleForTesting
+    internal var verticalScrollListener = GeckoVerticalScrollListener()
+    override val verticalScrollPosition = verticalScrollListener.scrollYPosition
+    override val verticalScrollDelta = verticalScrollListener.scrollYDeltas
+
     init {
         addView(geckoView)
 
@@ -138,6 +143,7 @@ class GeckoEngineView @JvmOverloads constructor(
             try {
                 geckoView.setSession(internalSession.geckoSession)
                 attachSelectionActionDelegate(internalSession.geckoSession)
+                verticalScrollListener.observe(internalSession.geckoSession)
             } catch (e: IllegalStateException) {
                 // This is to debug "display already acquired" crashes
                 val otherActivityClassName =
@@ -172,6 +178,7 @@ class GeckoEngineView @JvmOverloads constructor(
     @Synchronized
     override fun release() {
         detachSelectionActionDelegate(currentSession?.geckoSession)
+        verticalScrollListener.release()
 
         currentSession = null
 

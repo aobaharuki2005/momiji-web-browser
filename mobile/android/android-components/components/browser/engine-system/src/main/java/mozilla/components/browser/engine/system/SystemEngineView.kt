@@ -42,6 +42,7 @@ import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.engine.system.permission.SystemPermissionRequest
@@ -76,6 +77,9 @@ class SystemEngineView @JvmOverloads constructor(
     internal var session: SystemEngineSession? = null
 
     override var selectionActionDelegate: SelectionActionDelegate? = null
+
+    override val verticalScrollPosition = flowOf(0f)
+    override val verticalScrollDelta = flowOf(0f)
 
     /**
      * Render the content of the given session.

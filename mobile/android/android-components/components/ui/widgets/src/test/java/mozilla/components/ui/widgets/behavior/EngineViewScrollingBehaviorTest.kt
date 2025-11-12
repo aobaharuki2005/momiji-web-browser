@@ -13,6 +13,7 @@ import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.flow.flowOf
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.InputResultDetail
@@ -531,6 +532,8 @@ class EngineViewScrollingBehaviorTest {
     private fun createDummyEngineView(context: Context): EngineView = DummyEngineView(context)
 
     open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
+        override val verticalScrollPosition = flowOf(0f)
+        override val verticalScrollDelta = flowOf(0f)
         override fun setVerticalClipping(clippingHeight: Int) {}
         override fun setDynamicToolbarMaxHeight(height: Int) {}
         override fun setActivityContext(context: Context?) {}
