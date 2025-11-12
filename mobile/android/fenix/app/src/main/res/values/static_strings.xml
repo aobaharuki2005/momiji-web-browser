@@ -95,6 +95,8 @@
     <string name="preferences_debug_settings_toolbar_customization">Enable Toolbar Customization</string>
     <!-- Label for a longer description of the redesigned toolbar depending on the composable toolbar feature -->
     <string name="preferences_debug_settings_toolbar_redesign_summary" translatable="false">This needs the Composable Toolbar feature enabled</string>
+    <!-- Label for the option of using new scroll data for animating the dynamic toolbar -->
+    <string name="preferences_debug_settings_use_scroll_data_for_dynamic_toolbar" translatable="false">Animate dynamic toolbars based on website scroll data</string>
     <!-- Label for a longer description of the redesigned toolbar depending on the redesigned toolbar options feature -->
     <string name="preferences_debug_settings_toolbar_customization_summary" translatable="false">This needs the Redesigned Toolbar Options feature enabled</string>
     <!-- Label for toggling Remote Crash Pull -->

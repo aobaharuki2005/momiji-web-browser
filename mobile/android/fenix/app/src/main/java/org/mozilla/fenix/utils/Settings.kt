@@ -1917,6 +1917,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
+    var useNewDynamicToolbarBehaviour by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_use_scroll_data_for_dynamic_toolbar),
+        default = false,
+    )
     var isSwipeToolbarToSwitchTabsEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_swipe_toolbar_switch_tabs),
         default = true,
