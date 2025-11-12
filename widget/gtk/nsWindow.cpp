@@ -7667,8 +7667,7 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
     }
   }
   LayoutDeviceIntPoint point;
-  nsIRollupListener::RollupOptions options{0,
-                                           nsIRollupListener::FlushViews::Yes};
+  nsIRollupListener::RollupOptions options;
   // if we're dealing with menus, we probably have submenus and
   // we don't want to rollup if the click is in a parent menu of
   // the current submenu

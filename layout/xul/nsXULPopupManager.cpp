@@ -357,7 +357,7 @@ nsXULPopupManager* nsXULPopupManager::GetInstance() {
 }
 
 bool nsXULPopupManager::RollupTooltips() {
-  const RollupOptions options{0, FlushViews::Yes, nullptr, AllowAnimations::No};
+  const RollupOptions options{0, nullptr, AllowAnimations::No};
   return RollupInternal(RollupKind::Tooltip, options, nullptr);
 }
 
@@ -517,10 +517,6 @@ bool nsXULPopupManager::RollupInternal(RollupKind aKind,
     }
   }
 
-  nsPresContext* presContext = item->Frame()->PresContext();
-  RefPtr<nsViewManager> viewManager =
-      presContext->PresShell()->GetViewManager();
-
   HidePopupOptions options{HidePopupOption::HideChain,
                            HidePopupOption::DeselectMenu,
                            HidePopupOption::IsRollup};
@@ -529,12 +525,6 @@ bool nsXULPopupManager::RollupInternal(RollupKind aKind,
   }
 
   HidePopup(item->Element(), options, lastPopup);
-
-  if (aOptions.mFlush == FlushViews::Yes) {
-    // The popup's visibility doesn't update until the minimize animation
-    // has finished, so call UpdateWidgetGeometry to update it right away.
-    viewManager->UpdateWidgetGeometry();
-  }
 
   return consume;
 }

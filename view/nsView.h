@@ -281,7 +281,6 @@ class nsView final : public nsIWidgetListener {
                           const mozilla::TimeStamp& aCompositeStart,
                           const mozilla::TimeStamp& aCompositeEnd) override;
   void RequestRepaint() override;
-  bool ShouldNotBeVisible() override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
                             bool aUseAttachedEvents) override;

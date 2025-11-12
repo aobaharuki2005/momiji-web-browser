@@ -2069,9 +2069,6 @@ class PresShell final : public nsStubDocumentObserver,
       nsRect aArea, const LayoutDeviceIntPoint aPoint,
       LayoutDeviceIntRect* aScreenRect, RenderImageFlags aFlags);
 
-  // Hide a view if it is a popup
-  void HideViewIfPopup(nsView* aView);
-
   // Utility method to restore the root scrollframe state
   void RestoreRootScrollPosition();
 
