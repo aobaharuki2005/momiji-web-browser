@@ -20,7 +20,7 @@ task-defaults:
     treeherder:
         kind: build
         tier: 2
-    worker-type: b-linux-xlarge-amd
+    worker-type: b-linux-docker-xlarge-amd
     run:
         checkout: true
     worker:
