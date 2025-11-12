@@ -334,6 +334,14 @@ export function GeckoDriver(server) {
   this._actionsHelper = new ActionsHelper(this);
 }
 
+GeckoDriver.prototype._trace = function (message, browsingContext = null) {
+  if (browsingContext !== null) {
+    lazy.logger.trace(`[${browsingContext.id}] ${message}`);
+  } else {
+    lazy.logger.trace(message);
+  }
+};
+
 /**
  * The current context decides if commands are executed in chrome- or
  * content space.
@@ -410,7 +418,14 @@ GeckoDriver.prototype.QueryInterface = ChromeUtils.generateQI([
  * Callback used to observe the closing of modal dialogs
  * during the session's lifetime.
  */
-GeckoDriver.prototype.handleClosedModalDialog = function () {
+GeckoDriver.prototype.handleClosedModalDialog = function (_eventName, data) {
+  const { contentBrowser, detail } = data;
+
+  this._trace(
+    `Prompt closed (type: "${detail.promptType}", accepted: "${detail.accepted}")`,
+    contentBrowser.browsingContext
+  );
+
   this.dialog = null;
 };
 
@@ -418,12 +433,24 @@ GeckoDriver.prototype.handleClosedModalDialog = function () {
  * Callback used to observe the creation of new modal dialogs
  * during the session's lifetime.
  */
-GeckoDriver.prototype.handleOpenModalDialog = function (eventName, data) {
-  this.dialog = data.prompt;
+GeckoDriver.prototype.handleOpenModalDialog = function (_eventName, data) {
+  const { contentBrowser, prompt } = data;
+
+  prompt.getText().then(text => {
+    // We need the text to identify a user prompt when it gets
+    // randomly opened. Because on Android the text is asynchronously
+    // retrieved lets delay the logging without making the handler async.
+    this._trace(
+      `Prompt opened (type: "${prompt.promptType}", text: "${text}")`,
+      contentBrowser.browsingContext
+    );
+  });
+
+  this.dialog = prompt;
 
   if (this.dialog.promptType === "beforeunload" && !this.currentSession?.bidi) {
     // Only implicitly accept the prompt when its not a BiDi session.
-    lazy.logger.trace(`Implicitly accepted "beforeunload" prompt`);
+    this._trace(`Implicitly accepted "beforeunload" prompt`);
     this.dialog.accept();
     return;
   }
