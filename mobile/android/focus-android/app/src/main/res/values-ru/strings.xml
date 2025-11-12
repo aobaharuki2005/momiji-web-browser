@@ -149,7 +149,7 @@
     Content of about focus. %1$s is the name of the app (for example "Firefox Focus" or "Firefox Klar").
     %2$s is the url for the learn-more link.
   -->
-  <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s даёт вам контроль.</p> <p>Используйте его как приватный браузер: <ul> <li>Ищите и просматривайте сеть</li> <li>Блокируйте трекеры (или измените настройки, чтобы разрешить их)</li> <li>Стирайте и удаляйте куки, историю поиска и просмотра</li> </ul> </p> <p>%1$s создан Mozilla. Наша миссия способствовать здоровому, открытому Интернету.<br/> <a href=\"%2$s\">Узнать больше</a></p>]]></string>
+  <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s даёт вам контроль.</p>\n<p>Используйте его как приватный браузер:\n<ul>\n<li>Ищите и просматривайте сеть</li>\n<li>Блокируйте трекеры (или измените настройки, чтобы разрешить их)</li>\n<li>Стирайте и удаляйте куки, историю поиска и просмотра</li>\n</ul> </p>\n<p>%1$s создан Mozilla. Наша миссия способствовать здоровому, открытому Интернету.<br/>\n<a href=\"%2$s\">Узнать больше</a></p>]]></string>
   <!-- A link to SUMO at the bottom of About Focus screen. -->
   <string name="about_screen_learn_more">Подробнее</string>
   <!-- Header for the Privacy and Security settings menu -->
@@ -517,7 +517,7 @@
   <string name="firstrun_privacy_title">Сделайте приватность своей привычкой</string>
   <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
   <string name="firstrun_privacy_text">Установите %1$s своим браузером по умолчанию и получите преимущества приватного веб-сёрфинга, когда вы открываете веб-страницы из других приложений.</string>
-  <string name="firstrun_close_button">ОК, понятно!</string>
+  <string name="firstrun_close_button">Хорошо, понятно!</string>
   <string name="firstrun_skip_button">Пропустить</string>
   <string name="firstrun_next_button">Далее</string>
   <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
@@ -875,7 +875,7 @@
   <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
   <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[Это может быть проблемой с конфигурацией сервера или же кто-то пытается подменить нужный вам сервер другим. <br/><br/> Если в прошлом вы успешно соединялись с этим сервером, то, возможно, эта ошибка является временной.]]></string>
   <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
-  <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Возможно, кто-то пытается подменить нужный вам сайт другим, поэтому продолжение может быть рискованным.</label> <br><br> <label>%1$s не может доверять <b>%2$s</b>, потому что издатель его сертификата неизвестен, сертификат подписан самим сайтом или его сервер не отправляет правильные промежуточные сертификаты.</label>]]></string>
+  <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Возможно, кто-то пытается подменить нужный вам сайт другим, поэтому продолжение может быть рискованным.</label> <br><br>\n<label>%1$s не может доверять <b>%2$s</b>, потому что издатель его сертификата неизвестен, сертификат подписан самим сайтом или его сервер не отправляет правильные промежуточные сертификаты.</label>]]></string>
   <!--
     Sessions List
 

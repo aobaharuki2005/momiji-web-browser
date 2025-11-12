@@ -296,7 +296,7 @@ events:
           show_search_shortcuts, open_links_in_a_private_tab, pref_key_sync_logins,
           pref_key_sync_bookmarks, pref_key_sync_history, pref_key_show_voice_search,
           pref_key_show_search_suggestions_in_private, pref_key_show_trending_search_suggestions,
-          pref_key_show_recent_search_suggestions, pref_key_show_shortcuts_suggestions.
+          pref_key_show_recent_search_suggestions.
         type: string
       enabled:
         description: "Whether or not the preference is *now* enabled"

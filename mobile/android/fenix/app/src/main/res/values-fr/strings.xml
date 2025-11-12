@@ -1748,9 +1748,9 @@
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">La protection renforcée contre le pistage peut bloquer des traqueurs et des scripts dont certains sites web ont besoin pour fonctionner correctement.</string>
   <!-- The button text for the preview report button to view a preview of the report. -->
-  <string name="webcompat_reporter_preview_report">Aperçu du rapport</string>
+  <string name="webcompat_reporter_preview_report">Aperçu du signalement</string>
   <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
-  <string name="webcompat_reporter_preview_bottom_sheet_header">Aperçu du rapport</string>
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Aperçu du signalement</string>
   <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
   <string name="webcompat_reporter_preview_bottom_sheet_send">Envoyer</string>
   <!--
@@ -3895,7 +3895,7 @@
 
     Title of Settings Search. "Search" is a verb here
   -->
-  <string name="settings_search_title">Paramètres de recherche</string>
+  <string name="settings_search_title">Rechercher dans les paramètres</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
   <string name="content_description_settings_search_clear_search">Effacer la recherche</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->

@@ -1747,6 +1747,8 @@
   <string name="webcompat_reporter_etp_checkbox_text">Troch beskerming tsjin folgjen blokkearre URL’s ferstjoere</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Ferbettere beskerming tsjin folgjen kin trackers en scripts blokkearje dy’t guon websites nedich hawwe om goed te wurkjen.</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Ferstjoere</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -3884,6 +3886,14 @@
   <string name="review_prompt_feedback_header">It spyt ús dat jo problemen hawwe. Lit ús witte hoe’t wy %1$s ferbetterje kinne.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Kommentaar efterlitte</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">Ynstellingen sykje</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">Alles wiskje</string>
   <!--
     Terms of use pop up prompt
 
