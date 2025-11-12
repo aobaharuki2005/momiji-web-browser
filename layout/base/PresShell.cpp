@@ -5961,7 +5961,9 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
   if (rootView->GetFrame()) {
     popupFrame = FindPopupFrame(mPresContext, rootView->GetWidget(),
                                 LayoutDeviceIntPoint::FromAppUnitsToNearest(
-                                    aPointerInfo.mLastRefPointInRootDoc, APD));
+                                    aPointerInfo.mLastRefPointInRootDoc +
+                                        rootView->ViewToWidgetOffset(),
+                                    APD));
     if (popupFrame) {
       pointShell = popupFrame->PresShell();
       widget = popupFrame->GetWidget();
@@ -5985,7 +5987,8 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
     // pointView can be null in situations related to mouse capture
     pointShell = (pointView ? pointView : rootView)->GetPresShell();
     bbc = GetChildBrowser(pointView);
-    refpoint = aPointerInfo.mLastRefPointInRootDoc;
+    refpoint =
+        aPointerInfo.mLastRefPointInRootDoc + rootView->ViewToWidgetOffset();
   }
   NS_ASSERTION(widget, "view should have a widget here");
   Maybe<WidgetMouseEvent> mouseMoveEvent;

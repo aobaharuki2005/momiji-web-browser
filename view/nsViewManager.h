@@ -204,6 +204,13 @@ class nsViewManager final {
   MOZ_CAN_RUN_SCRIPT
   void Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion);
 
+  /**
+   * Intersects aRect with aView's bounds and then transforms it from aView's
+   * coordinate system to the coordinate system of the widget attached to
+   * aView.
+   */
+  LayoutDeviceIntRect ViewToWidget(nsView* aView, const nsRect& aRect) const;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
   bool ShouldDelayResize() const;
