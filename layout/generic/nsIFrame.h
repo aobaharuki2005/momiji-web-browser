@@ -3359,6 +3359,9 @@ class nsIFrame : public nsQueryFrame {
    */
   nsPoint GetOffsetTo(const nsIFrame* aOther) const;
 
+  // GetOffsetTo() to the root of this document.
+  nsPoint GetOffsetToRootFrame() const;
+
   /**
    * Just like GetOffsetTo, but treats all scrollframes as scrolled to
    * their origin.
@@ -3406,12 +3409,6 @@ class nsIFrame : public nsQueryFrame {
    * @return the app unit rect of the frame in screen coordinates.
    */
   nsRect GetScreenRectInAppUnits() const;
-
-  /**
-   * Returns the offset from this frame to the closest geometric parent that
-   * has a view. Also returns the containing view or null in case of error
-   */
-  void GetOffsetFromView(nsPoint& aOffset, nsView** aView) const;
 
   /**
    * Returns the nearest widget containing this frame. If this frame has a

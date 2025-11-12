@@ -7756,6 +7756,10 @@ nsPoint nsIFrame::GetOffsetTo(const nsIFrame* aOther) const {
   return OffsetCalculator<&nsIFrame::GetPosition>(this, aOther);
 }
 
+nsPoint nsIFrame::GetOffsetToRootFrame() const {
+  return GetOffsetTo(PresShell()->GetRootFrame());
+}
+
 nsPoint nsIFrame::GetOffsetToIgnoringScrolling(const nsIFrame* aOther) const {
   return OffsetCalculator<&nsIFrame::GetPositionIgnoringScrolling>(this,
                                                                    aOther);
@@ -7843,27 +7847,6 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const {
   }
 
   return nsRect(rootScreenPos + GetOffsetTo(rootFrame), GetSize());
-}
-
-// Returns the offset from this frame to the closest geometric parent that
-// has a view. Also returns the containing view or null in case of error
-void nsIFrame::GetOffsetFromView(nsPoint& aOffset, nsView** aView) const {
-  MOZ_ASSERT(aView, "null OUT parameter pointer");
-  nsIFrame* frame = const_cast<nsIFrame*>(this);
-
-  *aView = nullptr;
-  aOffset.MoveTo(0, 0);
-  while (true) {
-    aOffset += frame->GetPosition();
-    frame = frame->GetParent();
-    if (!frame) {
-      break;
-    }
-    if (auto* view = frame->GetView()) {
-      *aView = view;
-      break;
-    }
-  }
 }
 
 nsIWidget* nsIFrame::GetNearestWidget() const {
@@ -9275,9 +9258,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
         farStoppingFrame = firstFrame;
       }
     }
-    nsPoint offset;
-    nsView* view;  // used for call of get offset from view
-    aBlockFrame->GetOffsetFromView(offset, &view);
+    nsPoint offset = aBlockFrame->GetOffsetToRootFrame();
     nsPoint newDesiredPos =
         aPos->mDesiredCaretPos -
         offset;  // get desired position into blockframe coords
@@ -9338,12 +9319,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
       while (!found) {
         nsPoint point;
         nsRect tempRect = resultFrame->GetRect();
-        nsPoint offset;
-        nsView* view;  // used for call of get offset from view
-        resultFrame->GetOffsetFromView(offset, &view);
-        if (!view) {
-          return NS_ERROR_FAILURE;
-        }
+        nsPoint offset = resultFrame->GetOffsetToRootFrame();
         if (resultFrame->GetWritingMode().IsVertical()) {
           point.y = aPos->mDesiredCaretPos.y;
           point.x = tempRect.width + offset.x;
@@ -9352,10 +9328,8 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
           point.x = aPos->mDesiredCaretPos.x;
         }
 
-        if (!resultFrame->GetView()) {
-          nsView* view;
-          nsPoint offset;
-          resultFrame->GetOffsetFromView(offset, &view);
+        if (!resultFrame->IsViewportFrame()) {
+          nsPoint offset = resultFrame->GetOffsetToRootFrame();
           nsIFrame::ContentOffsets offsets =
               resultFrame->GetContentOffsetsFromPoint(
                   point - offset, nsIFrame::IGNORE_NATIVE_ANONYMOUS_SUBTREE);
@@ -9396,9 +9370,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
       }
       while (!found) {
         nsPoint point = aPos->mDesiredCaretPos;
-        nsView* view;
-        nsPoint offset;
-        resultFrame->GetOffsetFromView(offset, &view);
+        nsPoint offset = resultFrame->GetOffsetToRootFrame();
         nsIFrame::ContentOffsets offsets =
             resultFrame->GetContentOffsetsFromPoint(
                 point - offset, nsIFrame::IGNORE_NATIVE_ANONYMOUS_SUBTREE);

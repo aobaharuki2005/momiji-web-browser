@@ -516,12 +516,7 @@ nsresult nsFrameSelection::DesiredCaretPos::FetchPos(
   if (!caretFrame) {
     return NS_ERROR_FAILURE;
   }
-  nsPoint viewOffset(0, 0);
-  nsView* view = nullptr;
-  caretFrame->GetOffsetFromView(viewOffset, &view);
-  if (view) {
-    coord += viewOffset;
-  }
+  coord += caretFrame->GetOffsetToRootFrame();
   aDesiredCaretPos = coord.TopLeft();
   return NS_OK;
 }
