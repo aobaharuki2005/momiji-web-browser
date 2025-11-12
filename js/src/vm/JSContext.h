@@ -458,11 +458,9 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return offsetof(JSContext, jitActivation);
   }
 
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   static size_t offsetOfInUnsafeCallWithABI() {
     return offsetof(JSContext, inUnsafeCallWithABI);
   }
-#endif
 
  public:
   js::InterpreterStack& interpreterStack() {
@@ -501,10 +499,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   js::ContextData<js::EnterDebuggeeNoExecute*> noExecuteDebuggerTop;
 
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   js::ContextData<uint32_t> inUnsafeCallWithABI;
   js::ContextData<bool> hasAutoUnsafeCallWithABI;
-#endif
 
 #ifdef DEBUG
   js::ContextData<uint32_t> liveArraySortDataInstances;
@@ -1222,22 +1218,17 @@ enum UnsafeABIStrictness {
 // the function is not called with a pending exception, and that it does not
 // throw an exception itself.
 class MOZ_RAII AutoUnsafeCallWithABI {
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   JSContext* cx_;
   bool nested_;
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   bool checkForPendingException_;
 #endif
   JS::AutoCheckCannotGC nogc;
 
  public:
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   explicit AutoUnsafeCallWithABI(
       UnsafeABIStrictness strictness = UnsafeABIStrictness::NoExceptions);
   ~AutoUnsafeCallWithABI();
-#else
-  explicit AutoUnsafeCallWithABI(
-      UnsafeABIStrictness unused_ = UnsafeABIStrictness::NoExceptions) {}
-#endif
 };
 
 template <typename T>
