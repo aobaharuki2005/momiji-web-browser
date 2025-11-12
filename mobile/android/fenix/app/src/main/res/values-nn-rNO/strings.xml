@@ -1747,6 +1747,10 @@
   <string name="webcompat_reporter_etp_checkbox_text">Send URL-ar blokkerte av sporingsvern</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Utvida sporingsvern kan blokkere sporarar og skript som enkelte nettstadar treng for å fungere ordentleg.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Førehandsvis rapport</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Førehandsvising av rapport</string>
   <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
   <string name="webcompat_reporter_preview_bottom_sheet_send">Send</string>
   <!--
@@ -3894,8 +3898,18 @@
   <string name="settings_search_title">Søkjeinnstillingar</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
   <string name="content_description_settings_search_clear_search">Tøm søk</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">Naviger tilbake</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">Ingen nylege søk</string>
   <!-- Message when error happens with Settings Search -->
   <string name="settings_search_error_message">Det oppstod ein feil</string>
+  <!-- Message title displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_found_message">Ingenting dukka opp</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">Fjern alle</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Nylege søkjeresultat</string>
   <!--
     Terms of use pop up prompt
 
