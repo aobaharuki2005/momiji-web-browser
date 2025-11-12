@@ -364,6 +364,7 @@ export default [
     files: [
       "browser/base/content/aboutRestartRequired.js",
       "browser/base/content/aboutTabCrashed.js",
+      "browser/components/customkeys/content/customkeys.js",
       "browser/components/privatebrowsing/content/aboutPrivateBrowsing.js",
       "browser/components/profiles/content/delete-profile-card.mjs",
       "browser/components/profiles/content/edit-profile-card.mjs",

@@ -2,3 +2,5 @@
 support-files = ["head.js"]
 
 ["browser_CustomKeys.js"]
+
+["browser_aboutKeyboard.js"]

@@ -13,6 +13,10 @@ const consts = {
   historyDisplay: isMac ? "⇧⌘H" : "Ctrl+H",
   historyModifiers: isMac ? "accel,shift" : "accel",
   historyOptions: { accelKey: true, shiftKey: isMac },
+  // key_openDownloads
+  downloadsDisplay: (isMac && "⌘J") || (isLinux && "Ctrl+Shift+Y") || "Ctrl+J",
+  // key_newNavigator
+  newWindowDisplay: isMac ? "⌘N" : "Ctrl+N",
 
   // The following unused* constants specify a key combination which is unused by
   // default. This will need to be updated if this key combination is assigned to
@@ -21,5 +25,6 @@ const consts = {
   unusedOptions: { accelKey: true, shiftKey: true },
   unusedKey: isLinux ? "Q" : "Y",
   unusedModifiersDisplay: isMac ? "⇧⌘" : "Ctrl+Shift+",
+  unusedModifiersArgs: ["KEY_Shift", { accelKey: true }],
 };
 consts.unusedDisplay = `${consts.unusedModifiersDisplay}${consts.unusedKey}`;
