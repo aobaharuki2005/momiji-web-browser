@@ -42,18 +42,10 @@ nsView::nsView(nsViewManager* aViewManager)
   // SetViewContentTransparency.
 }
 
-void nsView::DropMouseGrabbing() {
-  if (mViewManager->GetPresShell()) {
-    PresShell::ClearMouseCapture();
-  }
-}
-
 nsView::~nsView() {
   MOZ_COUNT_DTOR(nsView);
 
   if (mViewManager) {
-    DropMouseGrabbing();
-
     nsView* rootView = mViewManager->GetRootView();
     if (rootView == this) {
       // Inform the view manager that the root view has gone away...

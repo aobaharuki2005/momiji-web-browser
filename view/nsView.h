@@ -306,10 +306,6 @@ class nsView final : public nsIWidgetListener {
    */
   void SetDimensions(const nsRect& aRect);
 
-  // Helper function to get mouse grabbing off this view (by moving it to the
-  // parent, if we can)
-  void DropMouseGrabbing();
-
   bool IsDirty() const { return mIsDirty; }
   void SetIsDirty(bool aDirty) { mIsDirty = aDirty; }
 

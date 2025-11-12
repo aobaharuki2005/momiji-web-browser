@@ -344,6 +344,9 @@ void ViewportFrame::Destroy(DestroyContext& aContext) {
   if (auto* view = GetView()) {
     view->SetFrame(nullptr);
   }
+  if (PresShell()->IsDestroying()) {
+    PresShell::ClearMouseCapture(this);
+  }
   nsContainerFrame::Destroy(aContext);
 }
 
