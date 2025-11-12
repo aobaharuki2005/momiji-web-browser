@@ -608,6 +608,7 @@ void WaylandSurface::UnmapLocked(WaylandSurfaceLock& aSurfaceLock) {
 
   LOGWAYLAND("WaylandSurface::UnmapLocked()");
 
+  RemoveAttachedBufferLocked(aSurfaceLock);
   ClearReadyToDrawCallbacksLocked(aSurfaceLock);
   ClearFrameCallbackLocked(aSurfaceLock);
   ClearScaleLocked(aSurfaceLock);
