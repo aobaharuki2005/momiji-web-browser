@@ -303,6 +303,22 @@ features:
                   body-line-one-link-text: onboarding_marketing_redesign_learn_more
                   body-line-two-text: onboarding_marketing_redesign_opt_out_checkbox
 
+      - channel: nightly
+        value:
+          use-onboarding-redesign: true
+          cards:
+            add-search-widget:
+              enabled: false
+
+            notification-permission:
+              enabled: false
+
+            theme-selection:
+              enabled: false
+
+            toolbar-placement:
+              ordering: 17
+
 objects:
 
   OnboardingCardData:
