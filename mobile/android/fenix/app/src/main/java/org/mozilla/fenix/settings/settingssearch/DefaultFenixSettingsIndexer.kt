@@ -94,6 +94,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
                             DEFAULT_BROWSER_PREFERENCE_TAG,
                             PREFERENCE_TAG,
                             SWITCH_PREFERENCE_TAG,
+                            SWITCH_PREFERENCE_PLAIN_TAG,
                             TEXT_PERCENTAGE_SEEK_BAR_PREFERENCE_TAG,
                             TOGGLE_RADIO_BUTTON_PREFERENCE_TAG,
                                 -> {
@@ -106,7 +107,6 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
                                     }
                             }
                             RADIO_BUTTON_PREFERENCE_TAG,
-                            SWITCH_PREFERENCE_PLAIN_TAG,
                                 -> {
                                 if (categoryItem != null && !categoryItemAdded) {
                                     categoryItemAdded = true
@@ -329,6 +329,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             PreferenceFileInformation.OpenLinksInAppsPreferences,
             PreferenceFileInformation.PrivateBrowsingPreferences,
             PreferenceFileInformation.SearchSettingsPreferences,
+            PreferenceFileInformation.SiteSettingsPreferences,
             PreferenceFileInformation.TabsPreferences,
             PreferenceFileInformation.TrackingProtectionPreferences,
             PreferenceFileInformation.SaveLoginsPreferences,
