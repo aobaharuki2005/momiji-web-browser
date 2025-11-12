@@ -74,6 +74,9 @@ ipprotection-message-generic-error =
   .heading = Couldn’t connect to VPN
   .message = Try again in a few minutes.
 
+ipprotection-message-continuous-onboarding-1 =
+  .message = Turn on VPN to hide your location and add extra encryption to your browsing.
+
 ## IP Protection Settings
 
 ip-protection-description =
