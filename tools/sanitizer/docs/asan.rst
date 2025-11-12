@@ -97,8 +97,6 @@ Run ``mach bootstrap`` to get an updated clang-cl in your
    ac_add_options --enable-address-sanitizer
    ac_add_options --disable-jemalloc
 
-   export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
-
 If you launch an ASan build under WinDbg, you may see spurious
 first-chance Access Violation exceptions. These come from ASan creating
 shadow memory pages on demand, and can be ignored. Run ``sxi av`` to
