@@ -132,7 +132,7 @@ void MacroAssembler::byteSwap16ZeroExtend(Register reg) {
 
 void MacroAssembler::byteSwap32(Register reg) {
   ma_wsbh(reg, reg);
-  as_rotr(reg, reg, 16);
+  ma_ror(reg, reg, Imm32(16));
 }
 
 // ===============================================================

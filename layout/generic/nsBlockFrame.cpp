@@ -1645,7 +1645,6 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // resetting the size. Because of this, we must not reflow our abs-pos
   // children in that situation --- what we think is our "new size" will not be
   // our real new size. This also happens to be more efficient.
-  WritingMode parentWM = aMetrics.GetWritingMode();
   if (HasAbsolutelyPositionedChildren()) {
     AbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
     bool haveInterrupt = aPresContext->HasPendingInterrupt();
@@ -1695,9 +1694,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
           aMetrics.Height() != oldSize.height;
 
       const LogicalRect containingBlock = [&]() {
-        LogicalRect rect{parentWM, LogicalPoint{parentWM},
-                         aMetrics.Size(parentWM)};
-        rect.Deflate(parentWM, aReflowInput.ComputedLogicalBorder(parentWM));
+        LogicalRect rect(wm, LogicalPoint(wm), aMetrics.Size(wm));
+        rect.Deflate(wm, aReflowInput.ComputedLogicalBorder(wm));
         return rect;
       }();
       AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation};
@@ -1713,8 +1711,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       SetupLineCursorForQuery();
       absoluteContainer->Reflow(
           this, aPresContext, aReflowInput, reflowStatus,
-          containingBlock.GetPhysicalRect(parentWM, aMetrics.PhysicalSize()),
-          flags, &aMetrics.mOverflowAreas);
+          containingBlock.GetPhysicalRect(wm, aMetrics.PhysicalSize()), flags,
+          &aMetrics.mOverflowAreas);
     }
   }
 

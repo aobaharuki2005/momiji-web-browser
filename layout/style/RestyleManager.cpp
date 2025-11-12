@@ -687,7 +687,6 @@ nsCString RestyleManager::ChangeHintToString(nsChangeHint aHint) {
                          "ChildrenOnlyTransform",
                          "RecomputePosition",
                          "UpdateContainingBlock",
-                         "BorderStyleNoneChange",
                          "SchedulePaint",
                          "NeutralChange",
                          "InvalidateRenderingObservers",
