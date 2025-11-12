@@ -1264,6 +1264,7 @@ browsertime-trr-performance:
             - trr-comcas
             - trr-next
             - trr-native
+            - trr-multi
             - trr-w-clou
             - trr-w-cira
             - trr-w-comc
