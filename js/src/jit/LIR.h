@@ -1118,6 +1118,8 @@ class LBlock {
   LMoveGroup* entryMoveGroup_;
   LMoveGroup* exitMoveGroup_;
   Label label_;
+  // If true, this block will be generated out of line.
+  bool isOutOfLine_;
 
  public:
   explicit LBlock(MBasicBlock* block);
@@ -1131,6 +1133,7 @@ class LBlock {
   LPhi* getPhi(size_t index) { return &phis_[index]; }
   const LPhi* getPhi(size_t index) const { return &phis_[index]; }
   MBasicBlock* mir() const { return block_; }
+  bool isOutOfLine() const { return isOutOfLine_; }
   LInstructionIterator begin() { return instructions_.begin(); }
   LInstructionIterator begin(LInstruction* at) {
     return instructions_.begin(at);

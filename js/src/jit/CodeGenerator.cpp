@@ -8369,7 +8369,7 @@ bool CodeGenerator::generateBody() {
   AutoCreatedBy acb(masm, "CodeGenerator::generateBody");
 
   JitSpew(JitSpew_Codegen, "==== BEGIN CodeGenerator::generateBody ====");
-  IonScriptCounts* counts = maybeCreateScriptCounts();
+  counts_ = maybeCreateScriptCounts();
 
   const bool compilingWasm = gen->compilingWasm();
 
@@ -8387,108 +8387,157 @@ bool CodeGenerator::generateBody() {
       return false;
     }
 
-#ifdef JS_JITSPEW
-    const char* filename = nullptr;
-    size_t lineNumber = 0;
-    JS::LimitedColumnNumberOneOrigin columnNumber;
-    if (current->mir()->info().script()) {
-      filename = current->mir()->info().script()->filename();
-      if (current->mir()->pc()) {
-        lineNumber = PCToLineNumber(current->mir()->info().script(),
-                                    current->mir()->pc(), &columnNumber);
-      }
-    }
-    JitSpew(JitSpew_Codegen, "--------------------------------");
-    JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:", i,
-            filename ? filename : "?", lineNumber,
-            columnNumber.oneOriginValue(),
-            current->mir()->isLoopHeader() ? " (loop header)" : "");
-#endif
-
-    if (current->mir()->isLoopHeader() && compilingWasm) {
-      masm.nopAlign(CodeAlignment);
+    // Skip out of line blocks for now. They will be emitted in
+    // generateOutOfLineBlocks.
+    if (current->isOutOfLine()) {
+      continue;
     }
 
-    masm.bind(current->label());
-
-    mozilla::Maybe<ScriptCountBlockState> blockCounts;
-    if (counts) {
-      blockCounts.emplace(&counts->block(i), &masm);
-      if (!blockCounts->init()) {
-        return false;
-      }
-    }
-
-    for (LInstructionIterator iter = current->begin(); iter != current->end();
-         iter++) {
-      if (gen->shouldCancel("Generate Code (instruction loop)")) {
-        return false;
-      }
-      if (!alloc().ensureBallast()) {
-        return false;
-      }
-
-      perfSpewer().recordInstruction(masm, *iter);
-#ifdef JS_JITSPEW
-      JitSpewStart(JitSpew_Codegen, "                                # LIR=%s",
-                   iter->opName());
-      if (const char* extra = iter->getExtraName()) {
-        JitSpewCont(JitSpew_Codegen, ":%s", extra);
-      }
-      JitSpewFin(JitSpew_Codegen);
-#endif
-
-      if (counts) {
-        blockCounts->visitInstruction(*iter);
-      }
-
-#ifdef CHECK_OSIPOINT_REGISTERS
-      if (iter->safepoint() && !compilingWasm) {
-        resetOsiPointRegs(iter->safepoint());
-      }
-#endif
-
-      if (!compilingWasm) {
-        if (MDefinition* mir = iter->mirRaw()) {
-          if (!addNativeToBytecodeEntry(mir->trackedSite())) {
-            return false;
-          }
-        }
-      }
-
-      setElement(*iter);  // needed to encode correct snapshot location.
-
-#ifdef DEBUG
-      emitDebugForceBailing(*iter);
-#endif
-
-      switch (iter->op()) {
-#ifndef JS_CODEGEN_NONE
-#  define LIROP(op)              \
-    case LNode::Opcode::op:      \
-      visit##op(iter->to##op()); \
-      break;
-        LIR_OPCODE_LIST(LIROP)
-#  undef LIROP
-#endif
-        case LNode::Opcode::Invalid:
-        default:
-          MOZ_CRASH("Invalid LIR op");
-      }
-
-#ifdef DEBUG
-      if (!counts) {
-        emitDebugResultChecks(*iter);
-      }
-#endif
-    }
-    if (masm.oom()) {
+    // Generate a basic block
+    if (!generateBlock(current, i, counts_, compilingWasm)) {
       return false;
     }
   }
 
   JitSpew(JitSpew_Codegen, "==== END CodeGenerator::generateBody ====\n");
   return true;
+}
+
+bool CodeGenerator::generateBlock(LBlock* current, size_t blockNumber,
+                                  IonScriptCounts* counts, bool compilingWasm) {
+#ifdef JS_JITSPEW
+  const char* filename = nullptr;
+  size_t lineNumber = 0;
+  JS::LimitedColumnNumberOneOrigin columnNumber;
+  if (current->mir()->info().script()) {
+    filename = current->mir()->info().script()->filename();
+    if (current->mir()->pc()) {
+      lineNumber = PCToLineNumber(current->mir()->info().script(),
+                                  current->mir()->pc(), &columnNumber);
+    }
+  }
+  JitSpew(JitSpew_Codegen, "--------------------------------");
+  JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:", blockNumber,
+          filename ? filename : "?", lineNumber, columnNumber.oneOriginValue(),
+          current->mir()->isLoopHeader() ? " (loop header)" : "");
+#endif
+
+  if (current->mir()->isLoopHeader() && compilingWasm) {
+    masm.nopAlign(CodeAlignment);
+  }
+
+  masm.bind(current->label());
+
+  mozilla::Maybe<ScriptCountBlockState> blockCounts;
+  if (counts) {
+    blockCounts.emplace(&counts->block(blockNumber), &masm);
+    if (!blockCounts->init()) {
+      return false;
+    }
+  }
+
+  for (LInstructionIterator iter = current->begin(); iter != current->end();
+       iter++) {
+    if (gen->shouldCancel("Generate Code (instruction loop)")) {
+      return false;
+    }
+    if (!alloc().ensureBallast()) {
+      return false;
+    }
+
+    perfSpewer().recordInstruction(masm, *iter);
+#ifdef JS_JITSPEW
+    JitSpewStart(JitSpew_Codegen, "                                # LIR=%s",
+                 iter->opName());
+    if (const char* extra = iter->getExtraName()) {
+      JitSpewCont(JitSpew_Codegen, ":%s", extra);
+    }
+    JitSpewFin(JitSpew_Codegen);
+#endif
+
+    if (counts) {
+      blockCounts->visitInstruction(*iter);
+    }
+
+#ifdef CHECK_OSIPOINT_REGISTERS
+    if (iter->safepoint() && !compilingWasm) {
+      resetOsiPointRegs(iter->safepoint());
+    }
+#endif
+
+    if (!compilingWasm) {
+      if (MDefinition* mir = iter->mirRaw()) {
+        if (!addNativeToBytecodeEntry(mir->trackedSite())) {
+          return false;
+        }
+      }
+    }
+
+    setElement(*iter);  // needed to encode correct snapshot location.
+
+#ifdef DEBUG
+    emitDebugForceBailing(*iter);
+#endif
+
+    switch (iter->op()) {
+#ifndef JS_CODEGEN_NONE
+#  define LIROP(op)              \
+    case LNode::Opcode::op:      \
+      visit##op(iter->to##op()); \
+      break;
+      LIR_OPCODE_LIST(LIROP)
+#  undef LIROP
+#endif
+      case LNode::Opcode::Invalid:
+      default:
+        MOZ_CRASH("Invalid LIR op");
+    }
+
+#ifdef DEBUG
+    if (!counts) {
+      emitDebugResultChecks(*iter);
+    }
+#endif
+  }
+
+  return !masm.oom();
+}
+
+bool CodeGenerator::generateOutOfLineBlocks() {
+  AutoCreatedBy acb(masm, "CodeGeneratorShared::generateOutOfLineBlocks");
+
+  // Generate out of line basic blocks.
+  // If we are generated some blocks at the end of the function, we need
+  // to adjust the frame depth.
+  if (!gen->branchHintingEnabled()) {
+    return true;
+  }
+  masm.setFramePushed(frameDepth_);
+
+  const bool compilingWasm = gen->compilingWasm();
+
+  for (size_t i = 0; i < graph.numBlocks(); i++) {
+    current = graph.getBlock(i);
+
+    if (gen->shouldCancel("Generate Code (block loop)")) {
+      return false;
+    }
+
+    if (current->isTrivial()) {
+      continue;
+    }
+
+    // If this block is marked as out of line, we need to generate it now.
+    if (!current->isOutOfLine()) {
+      continue;
+    }
+
+    if (!generateBlock(current, i, counts_, compilingWasm)) {
+      return false;
+    }
+  }
+
+  return !masm.oom();
 }
 
 void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
@@ -17086,6 +17135,13 @@ bool CodeGenerator::generateWasm(wasm::CallIndirectId callIndirectId,
   masm.bind(&returnLabel_);
   wasm::GenerateFunctionEpilogue(masm, frameSize(), offsets);
 
+  perfSpewer().recordOffset(masm, "OOLBlocks");
+  // This must come before we generate OOL code, as OOL blocks may
+  // generate OOL code.
+  if (!generateOutOfLineBlocks()) {
+    return false;
+  }
+
   perfSpewer().recordOffset(masm, "OOLCode");
   if (!generateOutOfLineCode()) {
     return false;
@@ -17196,6 +17252,13 @@ bool CodeGenerator::generate(const WarpSnapshot* snapshot) {
 
   perfSpewer().recordOffset(masm, "InvalidateEpilogue");
   generateInvalidateEpilogue();
+
+  perfSpewer().recordOffset(masm, "OOLBlocks");
+  // This must come before we generate OOL code, as OOL blocks may
+  // generate OOL code.
+  if (!generateOutOfLineBlocks()) {
+    return false;
+  }
 
   // native => bytecode entries for OOL code will be added
   // by CodeGeneratorShared::generateOutOfLineCode
@@ -20405,22 +20468,22 @@ void CodeGenerator::visitWasmParameter(LWasmParameter* lir) {}
 void CodeGenerator::visitWasmParameterI64(LWasmParameterI64* lir) {}
 
 void CodeGenerator::visitWasmReturn(LWasmReturn* lir) {
-  // Don't emit a jump to the return label if this is the last block.
-  if (current->mir() != *gen->graph().poBegin()) {
+  //  Don't emit a jump to the return label if this is the last block.
+  if (current->mir() != *gen->graph().poBegin() || current->isOutOfLine()) {
     masm.jump(&returnLabel_);
   }
 }
 
 void CodeGenerator::visitWasmReturnI64(LWasmReturnI64* lir) {
   // Don't emit a jump to the return label if this is the last block.
-  if (current->mir() != *gen->graph().poBegin()) {
+  if (current->mir() != *gen->graph().poBegin() || current->isOutOfLine()) {
     masm.jump(&returnLabel_);
   }
 }
 
 void CodeGenerator::visitWasmReturnVoid(LWasmReturnVoid* lir) {
   // Don't emit a jump to the return label if this is the last block.
-  if (current->mir() != *gen->graph().poBegin()) {
+  if (current->mir() != *gen->graph().poBegin() || current->isOutOfLine()) {
     masm.jump(&returnLabel_);
   }
 }
