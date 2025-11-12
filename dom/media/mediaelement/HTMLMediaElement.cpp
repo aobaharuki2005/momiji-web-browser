@@ -187,6 +187,7 @@ static const double MAX_PLAYBACKRATE = 16.0;
 
 static double ClampPlaybackRate(double aPlaybackRate) {
   MOZ_ASSERT(aPlaybackRate >= 0.0);
+  MOZ_ASSERT(std::isfinite(mPlaybackRate));
 
   if (aPlaybackRate == 0.0) {
     return aPlaybackRate;
