@@ -555,7 +555,7 @@ export const HeuristicsRegExp = {
         "|vorname" + // de-DE
         "|nombre" + // es
         "|forename|prénom|prenom" + // fr-FR
-        "|名" + // ja-JP
+        "|(^|[^\\p{L}\\p{N}])名([^\\p{L}\\p{N}]|$)" + // ja-JP
         "|nome" + // pt-BR, pt-PT
         "|Имя" + // ru
         "|نام" + // fa
@@ -692,7 +692,14 @@ export const HeuristicsRegExp = {
           // lower-cased field name and get a rough equivalent of a case-insensitive
           // match. This avoids a performance cliff with the "iu" flag on regular
           // expressions.
-          regexps.push(`(${set[name].toLowerCase()})`.normalize("NFKC"));
+          let pattern = `(${set[name].toLowerCase()})`.normalize("NFKC");
+
+          // We should not lower case the \p{L} & \p{N} parts of the pattern,
+          // revert them back.
+          pattern = pattern.replaceAll("\\p{l}", "\\p{L}");
+          pattern = pattern.replaceAll("\\p{n}", "\\p{N}");
+
+          regexps.push(pattern);
         }
       });
 

@@ -26,17 +26,15 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Uptime.h"
 
-// Estimate of the smallest duration of time we can measure.
-static uint64_t sResolution;
-static uint64_t sResolutionSigDigs;
+// Each tick is significant, so we have a resolution of 1.
+static constexpr uint64_t kResolution = 1;
 
-static const uint64_t kNsPerMs = 1000000;
 static const uint64_t kUsPerSec = 1000000;
 static const double kNsPerMsd = 1000000.0;
 static const double kNsPerSecd = 1000000000.0;
 
 static bool gInitialized = false;
-static double sNsPerTick;
+static double sNsPerTickd;
 
 static uint64_t ClockTime() {
   // mach_absolute_time is it when it comes to ticks on the Mac.  Other calls
@@ -49,53 +47,25 @@ static uint64_t ClockTime() {
   return mach_absolute_time();
 }
 
-static uint64_t ClockResolutionNs() {
-  uint64_t start = ClockTime();
-  uint64_t end = ClockTime();
-  uint64_t minres = (end - start);
-
-  // 10 total trials is arbitrary: what we're trying to avoid by
-  // looping is getting unlucky and being interrupted by a context
-  // switch or signal, or being bitten by paging/cache effects
-  for (int i = 0; i < 9; ++i) {
-    start = ClockTime();
-    end = ClockTime();
-
-    uint64_t candidate = (start - end);
-    if (candidate < minres) {
-      minres = candidate;
-    }
-  }
-
-  if (0 == minres) {
-    // measurable resolution is either incredibly low, ~1ns, or very
-    // high.  fall back on NSPR's resolution assumption
-    minres = 1 * kNsPerMs;
-  }
-
-  return minres;
-}
-
 namespace mozilla {
 
 double BaseTimeDurationPlatformUtils::ToSeconds(int64_t aTicks) {
   MOZ_ASSERT(gInitialized, "calling TimeDuration too early");
-  return (aTicks * sNsPerTick) / kNsPerSecd;
+  return (aTicks * sNsPerTickd) / kNsPerSecd;
 }
 
 double BaseTimeDurationPlatformUtils::ToSecondsSigDigits(int64_t aTicks) {
   MOZ_ASSERT(gInitialized, "calling TimeDuration too early");
-  // don't report a value < mResolution ...
-  int64_t valueSigDigs = sResolution * (aTicks / sResolution);
-  // and chop off insignificant digits
-  valueSigDigs = sResolutionSigDigs * (valueSigDigs / sResolutionSigDigs);
-  return (valueSigDigs * sNsPerTick) / kNsPerSecd;
+  // As we fix the resolution to 1, all digits are significant and there are
+  // no extra calculations needed. Ensure we do not change this inadvertedly.
+  static_assert(kResolution == 1);
+  return ToSeconds(aTicks);
 }
 
 int64_t BaseTimeDurationPlatformUtils::TicksFromMilliseconds(
     double aMilliseconds) {
   MOZ_ASSERT(gInitialized, "calling TimeDuration too early");
-  double result = (aMilliseconds * kNsPerMsd) / sNsPerTick;
+  double result = (aMilliseconds * kNsPerMsd) / sNsPerTickd;
   // NOTE: this MUST be a >= test, because int64_t(double(INT64_MAX))
   // overflows and gives INT64_MIN.
   if (result >= double(INT64_MAX)) {
@@ -109,7 +79,7 @@ int64_t BaseTimeDurationPlatformUtils::TicksFromMilliseconds(
 
 int64_t BaseTimeDurationPlatformUtils::ResolutionInTicks() {
   MOZ_ASSERT(gInitialized, "calling TimeDuration too early");
-  return static_cast<int64_t>(sResolution);
+  return static_cast<int64_t>(kResolution);
 }
 
 void TimeStamp::Startup() {
@@ -126,15 +96,7 @@ void TimeStamp::Startup() {
     MOZ_RELEASE_ASSERT(false, "mach_timebase_info failed");
   }
 
-  sNsPerTick = double(timebaseInfo.numer) / timebaseInfo.denom;
-
-  sResolution = ClockResolutionNs();
-
-  // find the number of significant digits in sResolution, for the
-  // sake of ToSecondsSigDigits()
-  for (sResolutionSigDigs = 1; !(sResolutionSigDigs == sResolution ||
-                                 10 * sResolutionSigDigs > sResolution);
-       sResolutionSigDigs *= 10);
+  sNsPerTickd = double(timebaseInfo.numer) / timebaseInfo.denom;
 
   gInitialized = true;
 }
@@ -146,7 +108,7 @@ TimeStamp TimeStamp::Now(bool aHighResolution) {
 }
 
 uint64_t TimeStamp::RawMachAbsoluteTimeNanoseconds() const {
-  return static_cast<uint64_t>(double(mValue) * sNsPerTick);
+  return static_cast<uint64_t>(double(mValue) * sNsPerTickd);
 }
 
 // Computes and returns the process uptime in microseconds.

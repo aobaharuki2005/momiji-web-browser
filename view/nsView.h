@@ -205,15 +205,6 @@ class nsView final : public nsIWidgetListener {
   nsPoint GetOffsetTo(const nsView* aOther) const;
 
   /**
-   * Get the offset between the origin of |this| and the origin of aWidget.
-   * Adding the return value to a point in the coordinate system of |this|
-   * will transform the point to the coordinate system of aWidget.
-   *
-   * The offset is expressed in appunits of |this|.
-   */
-  nsPoint GetOffsetToWidget(nsIWidget* aWidget) const;
-
-  /**
    * Called to query the visibility state of a view.
    * @result current visibility state
    */
@@ -340,9 +331,9 @@ class nsView final : public nsIWidgetListener {
   bool IsRoot() const;
 
   static LayoutDeviceIntRect CalcWidgetBounds(
-      const nsRect& aBounds, int32_t aAppUnitsPerDevPixel, nsView* aParentView,
-      nsIWidget* aThisWidget, mozilla::widget::WindowType,
-      mozilla::widget::TransparencyMode);
+      const nsRect& aBounds, int32_t aAppUnitsPerDevPixel,
+      nsIFrame* aParentFrame, nsIWidget* aThisWidget,
+      mozilla::widget::WindowType, mozilla::widget::TransparencyMode);
 
   LayoutDeviceIntRect CalcWidgetBounds(mozilla::widget::WindowType,
                                        mozilla::widget::TransparencyMode);
@@ -439,9 +430,6 @@ class nsView final : public nsIWidgetListener {
   void AssertNoWindow();
 
   void NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible);
-
-  // Update the cached RootViewManager for all view manager descendents.
-  void InvalidateHierarchy();
 
   void CallOnAllRemoteChildren(
       const std::function<mozilla::CallState(mozilla::dom::BrowserParent*)>&

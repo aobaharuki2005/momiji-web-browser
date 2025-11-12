@@ -20,8 +20,6 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::DebugOnly;
-
 CodeGeneratorX64::CodeGeneratorX64(MIRGenerator* gen, LIRGraph* graph,
                                    MacroAssembler* masm,
                                    const wasm::CodeMetadata* wasmCodeMeta)
@@ -197,42 +195,75 @@ void CodeGenerator::visitMulI64(LMulI64* lir) {
   }
 }
 
-void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
+template <class LIR>
+static void TrapIfDivideByZero(MacroAssembler& masm, LIR* lir, Register rhs) {
+  auto* mir = lir->mir();
+  MOZ_ASSERT(mir->trapOnError());
+
+  if (mir->canBeDivideByZero()) {
+    Label nonZero;
+    masm.branchTestPtr(Assembler::NonZero, rhs, rhs, &nonZero);
+    masm.wasmTrap(wasm::Trap::IntegerDivideByZero, mir->trapSiteDesc());
+    masm.bind(&nonZero);
+  }
+}
+
+void CodeGenerator::visitDivI64(LDivI64* lir) {
+  Register lhs = ToRegister(lir->lhs());
+  Register rhs = ToRegister(lir->rhs());
+
+  MOZ_ASSERT(lhs == rax);
+  MOZ_ASSERT(rhs != rax);
+  MOZ_ASSERT(rhs != rdx);
+  MOZ_ASSERT(ToRegister(lir->output()) == rax);
+  MOZ_ASSERT(ToRegister(lir->temp0()) == rdx);
+
+  MDiv* mir = lir->mir();
+
+  // Handle divide by zero.
+  TrapIfDivideByZero(masm, lir, rhs);
+
+  // Handle an integer overflow exception from INT64_MIN / -1.
+  if (mir->canBeNegativeOverflow()) {
+    Label notOverflow;
+    masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notOverflow);
+    masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notOverflow);
+    masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->trapSiteDesc());
+    masm.bind(&notOverflow);
+  }
+
+  // Sign extend the lhs into rdx to make rdx:rax.
+  masm.cqo();
+  masm.idivq(rhs);
+}
+
+void CodeGenerator::visitModI64(LModI64* lir) {
   Register lhs = ToRegister(lir->lhs());
   Register rhs = ToRegister(lir->rhs());
   Register output = ToRegister(lir->output());
 
-  MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
+  MOZ_ASSERT(lhs == rax);
+  MOZ_ASSERT(rhs != rax);
   MOZ_ASSERT(rhs != rdx);
-  MOZ_ASSERT_IF(output == rax, ToRegister(lir->remainder()) == rdx);
-  MOZ_ASSERT_IF(output == rdx, ToRegister(lir->remainder()) == rax);
+  MOZ_ASSERT(ToRegister(lir->output()) == rdx);
+  MOZ_ASSERT(ToRegister(lir->temp0()) == rax);
+
+  MMod* mir = lir->mir();
 
   Label done;
 
-  // Put the lhs in rax.
-  if (lhs != rax) {
-    masm.mov(lhs, rax);
-  }
-
   // Handle divide by zero.
-  if (lir->canBeDivideByZero()) {
-    Label nonZero;
-    masm.branchTestPtr(Assembler::NonZero, rhs, rhs, &nonZero);
-    masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->trapSiteDesc());
-    masm.bind(&nonZero);
-  }
+  TrapIfDivideByZero(masm, lir, rhs);
 
   // Handle an integer overflow exception from INT64_MIN / -1.
-  if (lir->canBeNegativeOverflow()) {
+  if (mir->canBeNegativeDividend()) {
     Label notOverflow;
     masm.branchPtr(Assembler::NotEqual, lhs, ImmWord(INT64_MIN), &notOverflow);
     masm.branchPtr(Assembler::NotEqual, rhs, ImmWord(-1), &notOverflow);
-    if (lir->mir()->isMod()) {
+    {
       masm.xorl(output, output);
-    } else {
-      masm.wasmTrap(wasm::Trap::IntegerOverflow, lir->trapSiteDesc());
+      masm.jump(&done);
     }
-    masm.jump(&done);
     masm.bind(&notOverflow);
   }
 
@@ -243,36 +274,38 @@ void CodeGenerator::visitDivOrModI64(LDivOrModI64* lir) {
   masm.bind(&done);
 }
 
-void CodeGenerator::visitUDivOrModI64(LUDivOrModI64* lir) {
-  Register lhs = ToRegister(lir->lhs());
+void CodeGenerator::visitUDivI64(LUDivI64* lir) {
   Register rhs = ToRegister(lir->rhs());
 
-  DebugOnly<Register> output = ToRegister(lir->output());
-  MOZ_ASSERT_IF(lhs != rhs, rhs != rax);
+  MOZ_ASSERT(ToRegister(lir->lhs()) == rax);
+  MOZ_ASSERT(rhs != rax);
   MOZ_ASSERT(rhs != rdx);
-  MOZ_ASSERT_IF(output.value == rax, ToRegister(lir->remainder()) == rdx);
-  MOZ_ASSERT_IF(output.value == rdx, ToRegister(lir->remainder()) == rax);
-
-  // Put the lhs in rax.
-  if (lhs != rax) {
-    masm.mov(lhs, rax);
-  }
-
-  Label done;
+  MOZ_ASSERT(ToRegister(lir->output()) == rax);
+  MOZ_ASSERT(ToRegister(lir->temp0()) == rdx);
 
   // Prevent divide by zero.
-  if (lir->canBeDivideByZero()) {
-    Label nonZero;
-    masm.branchTestPtr(Assembler::NonZero, rhs, rhs, &nonZero);
-    masm.wasmTrap(wasm::Trap::IntegerDivideByZero, lir->trapSiteDesc());
-    masm.bind(&nonZero);
-  }
+  TrapIfDivideByZero(masm, lir, rhs);
 
   // Zero extend the lhs into rdx to make (rdx:rax).
   masm.xorl(rdx, rdx);
   masm.udivq(rhs);
+}
 
-  masm.bind(&done);
+void CodeGenerator::visitUModI64(LUModI64* lir) {
+  Register rhs = ToRegister(lir->rhs());
+
+  MOZ_ASSERT(ToRegister(lir->lhs()) == rax);
+  MOZ_ASSERT(rhs != rax);
+  MOZ_ASSERT(rhs != rdx);
+  MOZ_ASSERT(ToRegister(lir->output()) == rdx);
+  MOZ_ASSERT(ToRegister(lir->temp0()) == rax);
+
+  // Prevent divide by zero.
+  TrapIfDivideByZero(masm, lir, rhs);
+
+  // Zero extend the lhs into rdx to make (rdx:rax).
+  masm.xorl(rdx, rdx);
+  masm.udivq(rhs);
 }
 
 void CodeGeneratorX64::emitBigIntPtrDiv(LBigIntPtrDiv* ins, Register dividend,

@@ -123,8 +123,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
       const std::function<bool(bool, DictionaryCacheEntry*)>& aCallback);
   [[nodiscard]] nsresult AddStandardRequestHeaders(
       nsHttpRequestHead*, nsIURI* aURI, bool aIsHTTPS,
-      ExtContentPolicyType aContentPolicyType,
-      bool aShouldResistFingerprinting);
+      ExtContentPolicyType aContentPolicyType, bool aShouldResistFingerprinting,
+      const nsCString& aLanguageOverride);
   [[nodiscard]] nsresult AddConnectionHeader(nsHttpRequestHead*, uint32_t caps);
   bool IsAcceptableEncoding(const char* encoding, bool isSecure);
 

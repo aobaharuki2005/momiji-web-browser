@@ -26,9 +26,9 @@
 #include "mozilla/TextEvents.h"
 #include "PuppetWidget.h"
 #include "nsContentUtils.h"
+#include "nsView.h"
 #include "nsIWidgetListener.h"
 #include "imgIContainer.h"
-#include "nsView.h"
 #include "nsXPLookAndFeel.h"
 #include "nsPrintfCString.h"
 

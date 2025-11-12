@@ -16,13 +16,12 @@
 
     <style name="NormalThemeBase" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="preferenceTheme">@style/PreferenceTheme</item>
-
+        <item name="materialTimePickerTheme">@style/Normal.MaterialTimePicker</item>
+        <item name="materialCalendarTheme">@style/MaterialCalendar</item>
         <!-- Android system styling -->
         <item name="searchViewStyle">@style/SearchViewStyle</item>
         <item name="autoCompleteTextViewStyle">@style/AutoCompleteTextViewStyle</item>
-        <item name="android:textAlignment">viewStart</item>
         <item name="android:windowContentTransitions">true</item>
-        <item name="android:datePickerDialogTheme">@style/DatePickerDialogStyle</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -200,32 +199,6 @@
         <item name="tabCounterTintColor">?attr/textPrimary</item>
     </style>
 
-    <!-- A theme to fix DatePickerDialogs year picker text alignment
-        https://bugzilla.mozilla.org/show_bug.cgi?id=1986252 -->
-    <style name="DatePickerDialogStyle" parent="ThemeOverlay.MaterialComponents.Dialog">
-        <item name="android:textAlignment">gravity</item>
-        <item name="android:windowBackground">?attr/layer1</item>
-        <item name="android:colorEdgeEffect">@color/accent_normal_theme</item>
-        <item name="android:colorAccent">@color/fx_mobile_text_color_primary</item>
-        <item name="android:textColorPrimary">@color/state_list_text_color</item>
-        <item name="android:textColorSecondary">@color/secondary_state_list_text_color</item>
-        <item name="android:colorForeground">@color/toggle_off_track_normal_theme</item>
-    </style>
-
-    <style name="PrivateDatePickerDialogStyle" parent="ThemeOverlay.MaterialComponents.Dialog">
-        <item name="android:textAlignment">gravity</item>
-        <!-- For some reason in private mode it was trying to load @drawable/?
-            as the window background. This resolved to #424242. Hard coding
-            this until we know what color we want private mode dialogs to be.
-            see: https://bugzilla.mozilla.org/show_bug.cgi?id=1986252-->
-        <item name="android:windowBackground">#424242</item>
-        <item name="android:colorEdgeEffect">@color/accent_private_theme</item>
-        <item name="android:colorAccent">@color/fx_mobile_private_text_color_primary</item>
-        <item name="android:textColorPrimary">@color/state_list_text_color</item>
-        <item name="android:textColorSecondary">@color/secondary_state_list_text_color</item>
-        <item name="android:colorForeground">@color/toggle_off_track_dark_theme</item>
-    </style>
-
     <!-- A theme derived from the normal activity theme, but to look and behave like a dialog -->
     <style name="DialogActivityTheme" parent="NormalTheme">
         <item name="android:windowElevation">16dp</item>
@@ -259,6 +232,25 @@
         <item name="android:background">?attr/layer2</item>
         <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.App.Title.Text.Private</item>
         <item name="materialAlertDialogBodyTextStyle">@style/MaterialAlertDialog.App.Body.Text.Private</item>
+    </style>
+
+    <style name="Normal.MaterialTimePicker" parent="ThemeOverlay.Material3.MaterialTimePicker">
+        <item name="materialButtonOutlinedStyle">@style/My.Widget.MaterialComponents.TimePicker.Button</item>
+    </style>
+
+    <style name="Private.MaterialTimePicker" parent="ThemeOverlay.Material3.MaterialTimePicker">
+        <item name="materialClockStyle">@style/Private.MaterialTimePickerClock</item>
+        <item name="materialButtonOutlinedStyle">@style/My.Widget.MaterialComponents.TimePicker.Button</item>
+    </style>
+
+    <style name="My.Widget.MaterialComponents.TimePicker.Button" parent="Widget.Material3.MaterialTimePicker.Button">
+        <item name="backgroundTint">@color/time_picker_button_background_tint</item>
+    </style>
+
+    <style name="Private.MaterialTimePickerClock" parent="Widget.MaterialComponents.TimePicker.Clock">
+        <item name="clockFaceBackgroundColor">?attr/colorSurfaceContainerHighest</item>
+        <item name="clockHandColor">?attr/colorPrimary</item>
+        <item name="clockNumberTextColor">?attr/colorOnSurface</item>
     </style>
 
     <style name="MaterialAlertDialog.App.Body.Text.Private" parent="MaterialAlertDialog.App.Body.Text">
@@ -295,6 +287,23 @@
         <item name="android:gravity">center</item>
     </style>
 
+    <style name="MaterialCalendar" parent="ThemeOverlay.Material3.MaterialCalendar">
+        <item name="materialCalendarHeaderDivider">@style/MaterialCalendar.HeaderDivider</item>
+        <item name="materialCalendarHeaderTitle">@style/MaterialCalendar.Title.Text</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
+    </style>
+
+    <style name="MaterialCalendar.Title.Text" parent="@style/Widget.Material3.MaterialCalendar.HeaderTitle">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:titleTextStyle">?attr/textAppearanceHeadlineLarge</item>
+    </style>
+
+    <style name="MaterialCalendar.HeaderDivider" parent="Widget.Material3.MaterialCalendar.HeaderDivider">
+        <item name="android:visibility">visible</item>
+        <item name="android:background">?attr/colorOutlineVariant</item>
+    </style>
+
     <style name="MaterialAlertDialogShapeAppearance" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/material_dialog_corner_radius</item>
@@ -308,13 +317,13 @@
 
     <style name="PrivateThemeBase" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Android system styling -->
+        <item name="materialTimePickerTheme">@style/Private.MaterialTimePicker</item>
+        <item name="materialCalendarTheme">@style/MaterialCalendar</item>
         <item name="searchViewStyle">@style/SearchViewStyle</item>
         <item name="android:textColorLink">@color/fx_mobile_private_text_color_accent</item>
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="checkboxStyle">@style/App.Widget.CompoundButton.CheckBox</item>
         <item name="autoCompleteTextViewStyle">@style/AutoCompleteTextViewStyle</item>
-        <item name="android:textAlignment">viewStart</item>
-        <item name="android:datePickerDialogTheme">@style/PrivateDatePickerDialogStyle</item>
         <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>

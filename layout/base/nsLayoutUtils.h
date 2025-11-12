@@ -740,19 +740,6 @@ class nsLayoutUtils {
                                            int32_t* aOffset);
 
   /**
-   * Translate from widget coordinates to the view's coordinates
-   * @param aPresContext the PresContext for the view
-   * @param aWidget the widget
-   * @param aPt the point relative to the widget
-   * @param aView  view to which returned coordinates are relative
-   * @return the point in the view's coordinates
-   */
-  static nsPoint TranslateWidgetToView(nsPresContext* aPresContext,
-                                       nsIWidget* aWidget,
-                                       const mozilla::LayoutDeviceIntPoint& aPt,
-                                       nsView* aView);
-
-  /**
    * Translate from view coordinates to the widget's coordinates.
    * @param aPresContext the PresContext for the view
    * @param aView the view
@@ -767,6 +754,9 @@ class nsLayoutUtils {
 
   static mozilla::LayoutDeviceIntPoint WidgetToWidgetOffset(
       nsIWidget* aFromWidget, nsIWidget* aToWidget);
+
+  static mozilla::Maybe<nsPoint> FrameToWidgetOffset(const nsIFrame* aFrame,
+                                                     nsIWidget* aWidget);
 
   enum class FrameForPointOption {
     /**

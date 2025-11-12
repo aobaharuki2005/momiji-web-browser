@@ -8,8 +8,10 @@
 
 #include "ScriptLoadHandler.h"  // ScriptLoadHandler
 #include "ScriptLoader.h"       // ScriptLoader
+#include "ScriptTrace.h"        // TRACE_FOR_TEST
 #include "js/experimental/CompileScript.h"  // JS::FrontendContext, JS::NewFrontendContext, JS::DestroyFrontendContext
 #include "mozilla/Maybe.h"              // Maybe, Some, Nothing
+#include "mozilla/TaskController.h"     // TaskController, Task
 #include "mozilla/dom/ContentParent.h"  // dom::ContentParent
 #include "nsIMemoryReporter.h"  // nsIMemoryReporter, MOZ_DEFINE_MALLOC_SIZE_OF, RegisterWeakMemoryReporter, UnregisterWeakMemoryReporter, MOZ_COLLECT_REPORT, KIND_HEAP, UNITS_BYTES
 #include "nsIPrefBranch.h"   // nsIPrefBranch, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID
@@ -221,13 +223,54 @@ bool SharedScriptCache::MaybeScheduleUpdateDiskCache() {
   return true;
 }
 
+class ScriptEncodeAndCompressionTask : public mozilla::Task {
+ public:
+  ScriptEncodeAndCompressionTask()
+      : Task(Kind::OffMainThreadOnly, EventQueuePriority::Idle) {}
+  virtual ~ScriptEncodeAndCompressionTask() = default;
+
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  bool GetName(nsACString& aName) override {
+    aName.AssignLiteral("ScriptEncodeAndCompressionTask");
+    return true;
+  }
+#endif
+
+  TaskResult Run() override {
+    SharedScriptCache::Get()->EncodeAndCompress();
+    return TaskResult::Complete;
+  }
+};
+
+class ScriptSaveTask : public mozilla::Task {
+ public:
+  ScriptSaveTask() : Task(Kind::MainThreadOnly, EventQueuePriority::Idle) {}
+  virtual ~ScriptSaveTask() = default;
+
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  bool GetName(nsACString& aName) override {
+    aName.AssignLiteral("ScriptSaveTask");
+    return true;
+  }
+#endif
+
+  TaskResult Run() override {
+    SharedScriptCache::Get()->SaveToDiskCache();
+    return TaskResult::Complete;
+  }
+};
+
 void SharedScriptCache::UpdateDiskCache() {
   auto strategy = ScriptLoader::GetDiskCacheStrategy();
   if (strategy.mIsDisabled) {
     return;
   }
 
-  JS::FrontendContext* fc = nullptr;
+  mozilla::MutexAutoLock lock(mEncodeMutex);
+
+  if (!mEncodeItems.empty()) {
+    return;
+  }
 
   for (auto iter = mComplete.Iter(); !iter.Done(); iter.Next()) {
     JS::loader::LoadedScript* loadedScript = iter.Data().mResource;
@@ -235,24 +278,69 @@ void SharedScriptCache::UpdateDiskCache() {
       continue;
     }
 
-    if (!fc) {
-      // Lazily create the context only when there's at least one script
-      // that needs to be saved.
-      fc = JS::NewFrontendContext();
-      if (!fc) {
-        return;
-      }
+    if (!mEncodeItems.emplaceBack(loadedScript->GetStencil(),
+                                  std::move(loadedScript->SRIAndBytecode()),
+                                  loadedScript)) {
+      continue;
+    }
+  }
+
+  if (mEncodeItems.empty()) {
+    return;
+  }
+
+  RefPtr<ScriptEncodeAndCompressionTask> encodeTask =
+      new ScriptEncodeAndCompressionTask();
+  RefPtr<ScriptSaveTask> saveTask = new ScriptSaveTask();
+  saveTask->AddDependency(encodeTask);
+
+  TaskController::Get()->AddTask(encodeTask.forget());
+  TaskController::Get()->AddTask(saveTask.forget());
+}
+
+void SharedScriptCache::EncodeAndCompress() {
+  JS::FrontendContext* fc = JS::NewFrontendContext();
+  if (!fc) {
+    return;
+  }
+
+  mozilla::MutexAutoLock lock(mEncodeMutex);
+
+  for (auto& item : mEncodeItems) {
+    if (!ScriptLoader::EncodeAndCompress(fc, item.mLoadedScript, item.mStencil,
+                                         item.mSRI, item.mCompressed)) {
+      item.mCompressed.clear();
+    }
+  }
+
+  JS::DestroyFrontendContext(fc);
+}
+
+void SharedScriptCache::SaveToDiskCache() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mozilla::MutexAutoLock lock(mEncodeMutex);
+
+  for (const auto& item : mEncodeItems) {
+    if (item.mCompressed.empty()) {
+      item.mLoadedScript->DropDiskCacheReference();
+      item.mLoadedScript->DropBytecode();
+      TRACE_FOR_TEST(item.mLoadedScript, "diskcache:failed");
+      continue;
     }
 
-    ScriptLoader::EncodeBytecodeAndSave(fc, loadedScript);
+    if (!ScriptLoader::SaveToDiskCache(item.mLoadedScript, item.mCompressed)) {
+      item.mLoadedScript->DropDiskCacheReference();
+      item.mLoadedScript->DropBytecode();
+      TRACE_FOR_TEST(item.mLoadedScript, "diskcache:failed");
+    }
 
-    loadedScript->DropDiskCacheReference();
-    loadedScript->DropBytecode();
+    item.mLoadedScript->DropDiskCacheReference();
+    item.mLoadedScript->DropBytecode();
+    TRACE_FOR_TEST(item.mLoadedScript, "diskcache:saved");
   }
 
-  if (fc) {
-    JS::DestroyFrontendContext(fc);
-  }
+  mEncodeItems.clear();
 }
 
 }  // namespace mozilla::dom

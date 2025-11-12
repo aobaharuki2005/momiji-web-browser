@@ -204,12 +204,6 @@ class nsViewManager final {
 
  public:
   /**
-   * Retrieve the widget at the root of the nearest enclosing
-   * view manager whose root view has a widget.
-   */
-  nsIWidget* GetRootWidget() const;
-
-  /**
    * Indicate whether the viewmanager is currently painting
    *
    * @param aPainting true if the viewmanager is painting
@@ -248,8 +242,6 @@ class nsViewManager final {
  private:
   static uint32_t gLastUserEventTime;
 
-  /* Update the cached RootViewManager pointer on this view manager. */
-  void InvalidateHierarchy();
   void FlushPendingInvalidates();
 
   MOZ_CAN_RUN_SCRIPT
@@ -296,11 +288,9 @@ class nsViewManager final {
 
   void SetPainting(bool aPainting) { RootViewManager()->mPainting = aPainting; }
 
-  nsViewManager* RootViewManager() const {
-    return mRootViewManager ? mRootViewManager.get()
-                            : const_cast<nsViewManager*>(this);
-  }
-  bool IsRootVM() const { return !mRootViewManager; }
+  nsViewManager* RootViewManager() const;
+  nsViewManager* GetParentViewManager() const;
+  bool IsRootVM() const { return !GetParentViewManager(); }
 
   MOZ_CAN_RUN_SCRIPT void WillPaintWindow(nsIWidget* aWidget);
   MOZ_CAN_RUN_SCRIPT
@@ -319,12 +309,6 @@ class nsViewManager final {
   nsSize mDelayedResize;
 
   nsView* mRootView;
-
-  // mRootViewManager is a strong reference to the root view manager, unless
-  // |this| is the root, in which case mRootViewManager is null.  Callers
-  // should use RootViewManager() (which handles that case) rather than using
-  // mRootViewManager directly.
-  RefPtr<nsViewManager> mRootViewManager;
 
   // The following members should not be accessed directly except by
   // the root view manager.  Some have accessor functions to enforce

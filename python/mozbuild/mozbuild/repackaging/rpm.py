@@ -93,7 +93,7 @@ def repackage_rpm(
         ) as f:
             f.write("This is a packaged app.\n")
 
-        inject_distribution_folder(source_dir, "rpm", app_name)
+        inject_distribution_folder(rpm_dir, "", app_name)
         inject_desktop_entry_file(
             log,
             rpm_dir,

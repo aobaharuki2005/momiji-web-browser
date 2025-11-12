@@ -117,7 +117,7 @@ FRAME_CLASSES = [
     Frame("nsPageSequenceFrame", "PageSequence", COMMON),
     Frame("nsSliderFrame", "Slider", COMMON),
     Frame("nsSplitterFrame", "SimpleXULLeaf", COMMON | LEAF),
-    Frame("nsSubDocumentFrame", "SubDocument", REPLACED_SIZING | LEAF | MAY_HAVE_VIEW),
+    Frame("nsSubDocumentFrame", "SubDocument", REPLACED_SIZING | LEAF),
     Frame("PrintedSheetFrame", "PrintedSheet", COMMON),
     Frame("SVGAFrame", "SVGA", SVG_CONTAINER),
     Frame("SVGClipPathFrame", "SVGClipPath", SVG_RENDERING_OBSERVER_CONTAINER),

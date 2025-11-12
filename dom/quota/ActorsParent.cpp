@@ -7969,7 +7969,8 @@ QuotaManager::GetOriginInfosExceedingGlobalLimit() const {
 }
 
 QuotaManager::OriginInfosNestedTraversable
-QuotaManager::GetOriginInfosWithZeroUsage() const {
+QuotaManager::GetOriginInfosWithZeroUsage(
+    const Maybe<int64_t>& aCutoffAccessTime) const {
   MutexAutoLock lock(mQuotaMutex);
 
   QuotaManager::OriginInfosNestedTraversable res;
@@ -7984,7 +7985,8 @@ QuotaManager::GetOriginInfosWithZeroUsage() const {
     MOZ_ASSERT(!entry.GetKey().IsEmpty());
     MOZ_ASSERT(pair);
 
-    pair->MaybeInsertNonPersistedZeroUsageOriginInfos(inserter);
+    pair->MaybeInsertNonPersistedZeroUsageOriginInfos(inserter,
+                                                      aCutoffAccessTime);
   }
 
   res.AppendElement(std::move(originInfos));
