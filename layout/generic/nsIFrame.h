@@ -3334,12 +3334,6 @@ class nsIFrame : public nsQueryFrame {
   }
   void SetView(nsView* aView);
 
-  /**
-   * Find the closest view (on |this| or an ancestor).
-   * If aOffset is non-null, it will be set to the offset of |this|
-   * from the returned view.
-   */
-  nsView* GetClosestView(nsPoint* aOffset = nullptr) const;
 
   /**
    * Get the offset between the coordinate systems of |this| and aOther.

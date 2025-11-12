@@ -10429,22 +10429,6 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
                                aPos.mAncestorLimiter);
 }
 
-nsView* nsIFrame::GetClosestView(nsPoint* aOffset) const {
-  nsPoint offset(0, 0);
-  for (const nsIFrame* f = this; f; f = f->GetParent()) {
-    if (auto* view = f->GetView()) {
-      if (aOffset) {
-        *aOffset = offset;
-      }
-      return view;
-    }
-    offset += f->GetPosition();
-  }
-
-  MOZ_ASSERT_UNREACHABLE("No view on any parent?  How did that happen?");
-  return nullptr;
-}
-
 /* virtual */
 void nsIFrame::ChildIsDirty(nsIFrame* aChild) {
   MOZ_ASSERT_UNREACHABLE(
