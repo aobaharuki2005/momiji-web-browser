@@ -539,11 +539,9 @@ void JS::Zone::beforeClearDelegateInternal(JSObject* wrapper,
   MOZ_ASSERT(needsIncrementalBarrier());
   MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(this));
 
-  // If |wrapper| might be a key in a weak map, trigger a barrier to account for
+  // |wrapper| might be a key in a weak map, so trigger a barrier to account for
   // the removal of the automatically added edge from delegate to wrapper.
-  if (HasUniqueId(wrapper)) {
-    PreWriteBarrier(wrapper);
-  }
+  PreWriteBarrier(wrapper);
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
