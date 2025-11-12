@@ -13,7 +13,7 @@ use crate::spatial_node::SpatialNodeType;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_item::DebugItem;
-use crate::gpu_cache::{GpuCache, GpuCacheHandle};
+use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::{QuadSegment, TransformData};
 use crate::internal_types::{FastHashMap, PlaneSplitter, FrameId, FrameStamp};
@@ -25,7 +25,7 @@ use crate::prim_store::{PictureIndex, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
-use crate::renderer::{GpuBufferF, GpuBufferBuilderF, GpuBufferI, GpuBufferBuilderI, GpuBufferBuilder};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF, GpuBufferBuilderI, GpuBufferF, GpuBufferI};
 use crate::render_target::{PictureCacheTarget, PictureCacheTargetKind};
 use crate::render_target::{RenderTargetContext, RenderTargetKind, RenderTarget};
 use crate::render_task_graph::{Pass, RenderTaskGraph, RenderTaskId, SubPassSurface};
@@ -81,40 +81,40 @@ pub struct FrameBuilderConfig {
 pub struct FrameGlobalResources {
     /// The image shader block for the most common / default
     /// set of image parameters (color white, stretch == rect.size).
-    pub default_image_handle: GpuCacheHandle,
+    pub default_image_data: GpuBufferAddress,
 
     /// A GPU cache config for drawing cut-out rectangle primitives.
     /// This is used to 'cut out' overlay tiles where a compositor
     /// surface exists.
-    pub default_black_rect_handle: GpuCacheHandle,
+    pub default_black_rect_address: GpuBufferAddress,
 }
 
 impl FrameGlobalResources {
     pub fn empty() -> Self {
         FrameGlobalResources {
-            default_image_handle: GpuCacheHandle::new(),
-            default_black_rect_handle: GpuCacheHandle::new(),
+            default_image_data: GpuBufferAddress::INVALID,
+            default_black_rect_address: GpuBufferAddress::INVALID,
         }
     }
 
     pub fn update(
         &mut self,
-        gpu_cache: &mut GpuCache,
+        gpu_buffers: &mut GpuBufferBuilder,
     ) {
-        if let Some(mut request) = gpu_cache.request(&mut self.default_image_handle) {
-            request.push(PremultipliedColorF::WHITE);
-            request.push(PremultipliedColorF::WHITE);
-            request.push([
-                -1.0,       // -ve means use prim rect for stretch size
-                0.0,
-                0.0,
-                0.0,
-            ]);
-        }
+        let mut writer = gpu_buffers.f32.write_blocks(3);
+        writer.push_one(PremultipliedColorF::WHITE);
+        writer.push_one(PremultipliedColorF::WHITE);
+        writer.push_one([
+            -1.0,       // -ve means use prim rect for stretch size
+            0.0,
+            0.0,
+            0.0,
+        ]);
+        self.default_image_data = writer.finish();
 
-        if let Some(mut request) = gpu_cache.request(&mut self.default_black_rect_handle) {
-            request.push(PremultipliedColorF::BLACK);
-        }
+        let mut writer = gpu_buffers.f32.write_blocks(1);
+        writer.push_one(PremultipliedColorF::BLACK);
+        self.default_black_rect_address = writer.finish();
     }
 }
 
@@ -663,6 +663,11 @@ impl FrameBuilder {
         profile_marker!("BuildFrame");
 
         let mut frame_memory = FrameMemory::new(chunk_pool, stamp.frame_id());
+        // TODO(gw): Recycle backing vec buffers for gpu buffer builder between frames
+        let mut gpu_buffer_builder = GpuBufferBuilder {
+            f32: GpuBufferBuilderF::new(&frame_memory),
+            i32: GpuBufferBuilderI::new(&frame_memory),
+        };
 
         profile.set(profiler::PRIMITIVES, scene.prim_instances.len());
         profile.set(profiler::PICTURE_CACHE_SLICES, scene.tile_cache_config.picture_cache_slice_count);
@@ -674,7 +679,7 @@ impl FrameBuilder {
         //           statically during scene building.
         scene.surfaces.clear();
 
-        self.globals.update(gpu_cache);
+        self.globals.update(&mut gpu_buffer_builder);
 
         spatial_tree.update_tree(scene_properties);
         let mut transform_palette = spatial_tree.build_transform_palette(&frame_memory);
@@ -699,12 +704,6 @@ impl FrameBuilder {
         self.composite_state_prealloc.preallocate(&mut composite_state);
 
         let mut cmd_buffers = CommandBufferList::new();
-
-        // TODO(gw): Recycle backing vec buffers for gpu buffer builder between frames
-        let mut gpu_buffer_builder = GpuBufferBuilder {
-            f32: GpuBufferBuilderF::new(&frame_memory),
-            i32: GpuBufferBuilderI::new(&frame_memory),
-        };
 
         self.build_layer_screen_rects_and_cull_layers(
             scene,
@@ -1057,7 +1056,7 @@ pub fn build_render_pass(
     src_pass: &Pass,
     screen_size: DeviceIntSize,
     ctx: &mut RenderTargetContext,
-    gpu_cache: &mut GpuCache,
+    _gpu_cache: &mut GpuCache,
     gpu_buffer_builder: &mut GpuBufferBuilder,
     render_tasks: &RenderTaskGraph,
     clip_store: &ClipStore,
@@ -1167,7 +1166,6 @@ pub fn build_render_pass(
                                 cmd,
                                 spatial_node_index,
                                 ctx,
-                                gpu_cache,
                                 render_tasks,
                                 prim_headers,
                                 transforms,
@@ -1271,7 +1269,6 @@ pub fn build_render_pass(
 
     pass.color.build(
         ctx,
-        gpu_cache,
         render_tasks,
         prim_headers,
         transforms,
@@ -1282,7 +1279,6 @@ pub fn build_render_pass(
     );
     pass.alpha.build(
         ctx,
-        gpu_cache,
         render_tasks,
         prim_headers,
         transforms,
@@ -1295,7 +1291,6 @@ pub fn build_render_pass(
     for target in &mut pass.texture_cache.values_mut() {
         target.build(
             ctx,
-            gpu_cache,
             render_tasks,
             prim_headers,
             transforms,

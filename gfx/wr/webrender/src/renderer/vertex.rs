@@ -479,8 +479,8 @@ pub mod desc {
             // specific clip attributes
             VertexAttribute {
                 name: "aClipDataResourceAddress",
-                count: 2,
-                kind: VertexAttributeKind::U16,
+                count: 1,
+                kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
                 name: "aClipSrcRectSize",
@@ -578,8 +578,8 @@ pub mod desc {
             },
             VertexAttribute {
                 name: "aFilterExtraDataAddress",
-                count: 2,
-                kind: VertexAttributeKind::U16,
+                count: 1,
+                kind: VertexAttributeKind::I32,
             },
         ],
     };
@@ -628,8 +628,8 @@ pub mod desc {
             },
             VertexAttribute {
                 name: "aFilterExtraDataAddress",
-                count: 2,
-                kind: VertexAttributeKind::U16,
+                count: 1,
+                kind: VertexAttributeKind::I32,
             },
         ],
     };

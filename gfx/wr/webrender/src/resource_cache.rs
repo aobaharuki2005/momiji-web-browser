@@ -1290,7 +1290,6 @@ impl ResourceCache {
                 if let Some(entry) = glyph_key_cache.try_get(key) {
                     match entry {
                         GlyphCacheEntry::Cached(ref glyph) => {
-                            // Skip the glyph if it is already has a valid texture cache handle.
                             if !texture_cache.request(&glyph.texture_cache_handle, gpu_buffer) {
                                 return false;
                             }

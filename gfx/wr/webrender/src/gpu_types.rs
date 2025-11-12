@@ -8,7 +8,6 @@ use euclid::HomogeneousVector;
 use crate::composite::{CompositeFeatures, CompositorClip};
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
-use crate::gpu_cache::GpuCacheAddress;
 use crate::internal_types::{FastHashMap, FrameVec, FrameMemory};
 use crate::prim_store::ClipData;
 use crate::render_task::RenderTaskAddress;
@@ -173,7 +172,7 @@ pub struct SvgFilterInstance {
     pub input_count: u16,
     pub generic_int: u16,
     pub padding: u16,
-    pub extra_data_address: GpuBufferAddress,
+    pub extra_data_address: i32,
 }
 
 #[derive(Clone, Debug)]
@@ -188,7 +187,7 @@ pub struct SVGFEFilterInstance {
     pub input_2_task_address: RenderTaskAddress,
     pub kind: u16,
     pub input_count: u16,
-    pub extra_data_address: GpuBufferAddress,
+    pub extra_data_address: i32,
 }
 
 #[derive(Copy, Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
@@ -262,7 +261,7 @@ pub struct BoxShadowData {
 #[repr(C)]
 pub struct ClipMaskInstanceBoxShadow {
     pub common: ClipMaskInstanceCommon,
-    pub resource_address: GpuBufferAddress,
+    pub resource_address: i32,
     pub shadow_data: BoxShadowData,
 }
 
@@ -506,7 +505,7 @@ impl PrimitiveHeaders {
         self.headers_int.push(PrimitiveHeaderI {
             z: prim_header.z,
             render_task_address: prim_header.render_task_address,
-            specific_prim_address: prim_header.specific_prim_address.as_int(),
+            specific_prim_address: prim_header.specific_prim_address,
             transform_id: prim_header.transform_id,
             user_data: prim_header.user_data,
         });
@@ -521,7 +520,7 @@ impl PrimitiveHeaders {
 pub struct PrimitiveHeader {
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
-    pub specific_prim_address: GpuCacheAddress,
+    pub specific_prim_address: i32,
     pub transform_id: TransformPaletteId,
     pub z: ZBufferId,
     pub render_task_address: RenderTaskAddress,
@@ -613,8 +612,8 @@ impl From<SplitCompositeInstance> for PrimitiveInstanceData {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct QuadInstance {
     pub dst_task_address: RenderTaskAddress,
-    pub prim_address_i: GpuBufferAddress,
-    pub prim_address_f: GpuBufferAddress,
+    pub prim_address_i: i32,
+    pub prim_address_f: i32,
     pub quad_flags: u8,
     pub edge_flags: u8,
     pub part_index: u8,
@@ -632,8 +631,8 @@ impl From<QuadInstance> for PrimitiveInstanceData {
 
         PrimitiveInstanceData {
             data: [
-                instance.prim_address_i.as_int(),
-                instance.prim_address_f.as_int(),
+                instance.prim_address_i,
+                instance.prim_address_f,
 
                 ((instance.quad_flags as i32)    << 24) |
                 ((instance.edge_flags as i32)    << 16) |

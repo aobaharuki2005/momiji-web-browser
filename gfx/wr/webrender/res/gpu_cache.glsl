@@ -4,8 +4,6 @@
 
 uniform HIGHP_SAMPLER_FLOAT sampler2D sGpuCache;
 
-#define VECS_PER_IMAGE_RESOURCE     2
-
 // TODO(gw): This is here temporarily while we have
 //           both GPU store and cache. When the GPU
 //           store code is removed, we can change the

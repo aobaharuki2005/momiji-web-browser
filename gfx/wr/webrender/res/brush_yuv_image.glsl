@@ -28,7 +28,7 @@ flat varying mediump int vRescaleFactor;
 #ifdef WR_VERTEX_SHADER
 
 YuvPrimitive fetch_yuv_primitive(int address) {
-    vec4 data = fetch_from_gpu_cache_1(address);
+    vec4 data = fetch_from_gpu_buffer_1f(address);
     // From YuvImageData.write_prim_gpu_blocks:
     int channel_bit_depth = int(data.x);
     int color_space = int(data.y);

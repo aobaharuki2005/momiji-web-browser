@@ -4,6 +4,8 @@
 
 #include gpu_buffer
 
+#define VECS_PER_IMAGE_RESOURCE     2
+
 #ifdef WR_VERTEX_SHADER
 
 #include rect

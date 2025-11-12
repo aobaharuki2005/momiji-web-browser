@@ -53,7 +53,7 @@ PER_INSTANCE in int aFilterInput2TaskAddress;
 PER_INSTANCE in int aFilterKind;
 PER_INSTANCE in int aFilterInputCount;
 PER_INSTANCE in int aFilterGenericInt;
-PER_INSTANCE in ivec2 aFilterExtraDataAddress;
+PER_INSTANCE in int aFilterExtraDataAddress;
 
 struct FilterTask {
     RectWithEndpoint task_rect;
@@ -126,18 +126,20 @@ void main(void) {
             vData = ivec4(aFilterGenericInt, 0, 0, 0);
             break;
         case FILTER_FLOOD:
-            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
+            vFilterData0 = fetch_from_gpu_buffer_1f(aFilterExtraDataAddress);
             break;
         case FILTER_OPACITY:
             vFloat0.x = filter_task.user_data.x;
             break;
-        case FILTER_COLOR_MATRIX:
-            vec4 mat_data[4] = fetch_from_gpu_buffer_4f_direct(aFilterExtraDataAddress);
+        case FILTER_COLOR_MATRIX: {
+            ivec2 buffer_uv = get_gpu_buffer_uv(aFilterExtraDataAddress);
+            vec4 mat_data[4] = fetch_from_gpu_buffer_4f_direct(buffer_uv);
             vColorMat = mat4(mat_data[0], mat_data[1], mat_data[2], mat_data[3]);
-            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress + ivec2(4, 0));
+            vFilterData0 = fetch_from_gpu_buffer_1f_direct(buffer_uv + ivec2(4, 0));
             break;
+        }
         case FILTER_DROP_SHADOW:
-            vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
+            vFilterData0 = fetch_from_gpu_buffer_1f(aFilterExtraDataAddress);
             break;
         case FILTER_OFFSET:
             vec2 texture_size = vec2(TEX_SIZE(sColor0).xy);
@@ -148,13 +150,15 @@ void main(void) {
             clipRect /= texture_size.xyxy;
             vFilterData1 = clipRect;
             break;
-        case FILTER_COMPONENT_TRANSFER:
-            vData = ivec4(aFilterExtraDataAddress, 0, 0);
+        case FILTER_COMPONENT_TRANSFER: {
+            ivec2 buffer_uv = get_gpu_buffer_uv(aFilterExtraDataAddress);
+            vData = ivec4(buffer_uv, 0, 0);
             break;
+        }
         case FILTER_COMPOSITE:
             vData = ivec4(aFilterGenericInt, 0, 0, 0);
             if (aFilterGenericInt == COMPOSITE_ARITHMETIC) {
-              vFilterData0 = fetch_from_gpu_buffer_1f_direct(aFilterExtraDataAddress);
+              vFilterData0 = fetch_from_gpu_buffer_1f(aFilterExtraDataAddress);
             }
             break;
         default:
