@@ -6,6 +6,7 @@
 
 #include "nsLayoutDebuggingTools.h"
 
+#include "ErrorList.h"
 #include "RetainedDisplayListBuilder.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -376,15 +377,7 @@ nsLayoutDebuggingTools::DumpReflowStats() {
 }
 
 nsresult nsLayoutDebuggingTools::ForceRefresh() {
-  RefPtr<nsViewManager> vm(view_manager(mDocShell));
-  if (!vm) {
-    return NS_OK;
-  }
-  nsView* root = vm->GetRootView();
-  if (root) {
-    vm->InvalidateView(root);
-  }
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsLayoutDebuggingTools::SetBoolPrefAndRefresh(const char* aPrefName,

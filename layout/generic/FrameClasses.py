@@ -16,7 +16,6 @@ MATHML = {"MathML"}
 SVG = {"SVG"}
 BFC = {"BlockFormattingContext"}
 LINE_PARTICIPANT = {"LineParticipant"}
-MAY_HAVE_VIEW = {"MayHaveView"}
 
 BLOCK = COMMON | {"CanContainOverflowContainers"}
 
@@ -172,7 +171,7 @@ FRAME_CLASSES = [
     Frame("nsTreeBodyFrame", "SimpleXULLeaf", COMMON | LEAF),
     Frame("nsVideoFrame", "HTMLVideo", REPLACED_SIZING),
     Frame("nsAudioFrame", "HTMLVideo", REPLACED_SIZING - {"SupportsAspectRatio"}),
-    Frame("ViewportFrame", "Viewport", COMMON | MAY_HAVE_VIEW),
+    Frame("ViewportFrame", "Viewport", COMMON),
     Frame("WBRFrame", "Wbr", COMMON | LEAF),
     # Non-concrete classes (for FrameIID use)
     AbstractFrame("ButtonControlFrame"),

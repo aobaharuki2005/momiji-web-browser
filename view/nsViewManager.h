@@ -93,18 +93,6 @@ class nsViewManager final {
   void FlushDelayedResize();
 
   /**
-   * Called to inform the view manager that the entire area of a view
-   * is dirty and needs to be redrawn.
-   * @param aView view to paint. should be root view
-   */
-  void InvalidateView(nsView* aView);
-
-  /**
-   * Called to inform the view manager that it should invalidate all views.
-   */
-  void InvalidateAllViews();
-
-  /**
    * Called to dispatch an event to the appropriate view. Often called
    * as a result of receiving a mouse or keyboard event from the widget
    * event system.
@@ -187,18 +175,12 @@ class nsViewManager final {
   MOZ_CAN_RUN_SCRIPT
   void ProcessPendingUpdatesPaint(nsIWidget* aWidget);
 
-  void FlushDirtyRegionToWidget(nsView* aView);
   /**
    * Call WillPaint() on all view observers under this vm root.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void CallWillPaintOnObservers();
   static void CollectVMsForWillPaint(nsView* aView, nsViewManager* aParentVM,
                                      nsTArray<RefPtr<nsViewManager>>& aVMs);
-
-  void InvalidateWidgetArea(nsView* aWidgetView,
-                            const nsRegion& aDamagedRegion);
-
-  void InvalidateViews(nsView* aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
   MOZ_CAN_RUN_SCRIPT
@@ -246,7 +228,6 @@ class nsViewManager final {
   // this, as noted.
   // Use IsPainting() and SetPainting() to access mPainting.
   bool mPainting;
-  bool mRecursiveRefreshPending;
   bool mHasPendingWidgetGeometryChanges;
 
   // from here to public should be static and locked... MMP

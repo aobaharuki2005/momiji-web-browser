@@ -57,7 +57,6 @@ nsViewManager::nsViewManager(nsDeviceContext* aContext)
       mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
       mRootView(nullptr),
       mPainting(false),
-      mRecursiveRefreshPending(false),
       mHasPendingWidgetGeometryChanges(false) {
   MOZ_ASSERT(aContext);
 }
@@ -206,9 +205,8 @@ void nsViewManager::Refresh(nsView* aView,
     return;
   }
 
-  NS_ASSERTION(!IsPainting(), "recursive painting not permitted");
-  if (IsPainting()) {
-    RootViewManager()->mRecursiveRefreshPending = true;
+  MOZ_ASSERT(!IsPainting(), "recursive painting not permitted");
+  if (NS_WARN_IF(IsPainting())) {
     return;
   }
 
@@ -242,11 +240,6 @@ void nsViewManager::Refresh(nsView* aView,
 
     SetPainting(false);
   }
-
-  if (RootViewManager()->mRecursiveRefreshPending) {
-    RootViewManager()->mRecursiveRefreshPending = false;
-    InvalidateAllViews();
-  }
 }
 
 void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
@@ -279,10 +272,8 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   if (aFlushDirtyRegion) {
     nsAutoScriptBlocker scriptBlocker;
     SetPainting(true);
-    for (uint32_t i = 0; i < widgets.Length(); ++i) {
-      nsIWidget* widget = widgets[i];
-      nsView* view = nsView::GetViewFor(widget);
-      if (view) {
+    for (nsIWidget* widget : widgets) {
+      if (nsView* view = nsView::GetViewFor(widget)) {
         RefPtr<nsViewManager> viewManager = view->GetViewManager();
         viewManager->ProcessPendingUpdatesPaint(MOZ_KnownLive(widget));
       }
@@ -297,11 +288,8 @@ void nsViewManager::ProcessPendingUpdatesRecurse(
     return;
   }
 
-  nsIWidget* widget = aView->GetWidget();
-  if (widget) {
+  if (nsIWidget* widget = aView->GetWidget()) {
     aWidgets.AppendElement(widget);
-  } else {
-    FlushDirtyRegionToWidget(aView);
   }
 }
 
@@ -347,21 +335,6 @@ void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
 #endif
     }
   }
-  FlushDirtyRegionToWidget(nsView::GetViewFor(aWidget));
-}
-
-void nsViewManager::FlushDirtyRegionToWidget(nsView* aView) {
-  NS_ASSERTION(aView->GetViewManager() == this,
-               "FlushDirtyRegionToWidget called on view we don't own");
-
-  if (!aView->IsDirty() || !aView->HasWidget()) {
-    return;
-  }
-
-  const nsRect dirtyRegion = aView->GetBounds();
-  nsViewManager* widgetVM = aView->GetViewManager();
-  widgetVM->InvalidateWidgetArea(aView, dirtyRegion);
-  aView->SetIsDirty(false);
 }
 
 void nsViewManager::PostPendingUpdate() {
@@ -371,79 +344,6 @@ void nsViewManager::PostPendingUpdate() {
     rootVM->mPresShell->SetNeedLayoutFlush();
     rootVM->mPresShell->SchedulePaint();
   }
-}
-
-/**
- * @param aDamagedRegion this region, relative to aWidgetView, is invalidated in
- * every widget child of aWidgetView, plus aWidgetView's own widget
- */
-void nsViewManager::InvalidateWidgetArea(nsView* aWidgetView,
-                                         const nsRegion& aDamagedRegion) {
-  NS_ASSERTION(aWidgetView->GetViewManager() == this,
-               "InvalidateWidgetArea called on view we don't own");
-  nsIWidget* widget = aWidgetView->GetWidget();
-
-#if 0
-  nsRect dbgBounds = aDamagedRegion.GetBounds();
-  printf("InvalidateWidgetArea view:%X (%d) widget:%X region: %d, %d, %d, %d\n",
-    aWidgetView, aWidgetView->IsAttachedToTopLevel(),
-    widget, dbgBounds.x, dbgBounds.y, dbgBounds.width, dbgBounds.height);
-#endif
-
-  // If the widget is hidden, it don't cover nothing
-  if (widget && !widget->IsVisible()) {
-    return;
-  }
-
-  if (!widget) {
-    // The root view or a scrolling view might not have a widget
-    // (for example, during printing). We get here when we scroll
-    // during printing to show selected options in a listbox, for example.
-    return;
-  }
-
-  if (!aDamagedRegion.IsEmpty()) {
-    for (auto iter = aDamagedRegion.RectIter(); !iter.Done(); iter.Next()) {
-      LayoutDeviceIntRect bounds = ViewToWidget(aWidgetView, iter.Get());
-      widget->Invalidate(bounds);
-    }
-  }
-}
-
-static bool ShouldIgnoreInvalidation(nsViewManager* aVM) {
-  PresShell* presShell = aVM->GetPresShell();
-  return !presShell || presShell->ShouldIgnoreInvalidation();
-}
-
-void nsViewManager::InvalidateView(nsView* aView) {
-  // If painting is suppressed in the presshell or an ancestor drop all
-  // invalidates, it will invalidate everything when it unsuppresses.
-  if (ShouldIgnoreInvalidation(this)) {
-    return;
-  }
-
-  NS_ASSERTION(aView->GetViewManager() == this,
-               "InvalidateView called on view we don't own");
-
-  if (aView->GetBounds().IsEmpty()) {
-    return;
-  }
-  MOZ_ASSERT(!aView->GetFrame() || !aView->GetFrame()->GetParent(),
-             "Frame should be a display root");
-  aView->SetIsDirty(true);
-}
-
-void nsViewManager::InvalidateAllViews() {
-  if (RootViewManager() != this) {
-    return RootViewManager()->InvalidateAllViews();
-  }
-
-  InvalidateViews(mRootView);
-}
-
-void nsViewManager::InvalidateViews(nsView* aView) {
-  // Invalidate this view.
-  InvalidateView(aView);
 }
 
 void nsViewManager::WillPaintWindow(nsIWidget* aWidget) {

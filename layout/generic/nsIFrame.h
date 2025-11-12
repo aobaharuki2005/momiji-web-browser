@@ -664,8 +664,6 @@ enum class LayoutFrameClassFlags : uint32_t {
   BlockFormattingContext = 1 << 14,
   // Whether we're a SVG rendering observer container.
   SVGRenderingObserverContainer = 1 << 15,
-  // Whether this frame type may store an nsView
-  MayHaveView = 1 << 16,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LayoutFrameClassFlags)
@@ -2277,8 +2275,7 @@ class nsIFrame : public nsQueryFrame {
    * Event handling of GUI events.
    *
    * @param aEvent event structure describing the type of event and rge widget
-   * where the event originated. The |point| member of this is in the coordinate
-   * system of the view returned by GetOffsetFromView.
+   * where the event originated.
    *
    * @param aEventStatus a return value indicating whether the event was
    * handled and whether default processing should be done
@@ -3317,22 +3314,18 @@ class nsIFrame : public nsQueryFrame {
   }
 
  protected:
-  virtual nsView* GetViewInternal() const {
-    MOZ_ASSERT_UNREACHABLE("method should have been overridden by subclass");
-    return nullptr;
-  }
-  virtual void SetViewInternal(nsView* aView) {
-    MOZ_ASSERT_UNREACHABLE("method should have been overridden by subclass");
-  }
+  nsView* DoGetView() const;
 
  public:
+  // Gets the widget owned by this frame.
+  nsIWidget* GetOwnWidget() const;
+
   nsView* GetView() const {
-    if (MOZ_LIKELY(!MayHaveView())) {
+    if (MOZ_LIKELY(!IsViewportFrame())) {
       return nullptr;
     }
-    return GetViewInternal();
+    return DoGetView();
   }
-  void SetView(nsView* aView);
 
   /**
    * Get the offset between the coordinate systems of |this| and aOther.
@@ -3567,7 +3560,6 @@ class nsIFrame : public nsQueryFrame {
   CLASS_FLAG_METHOD(IsBidiInlineContainer, BidiInlineContainer);
   CLASS_FLAG_METHOD(IsLineParticipant, LineParticipant);
   CLASS_FLAG_METHOD(HasReplacedSizing, ReplacedSizing);
-  CLASS_FLAG_METHOD(MayHaveView, MayHaveView);
   CLASS_FLAG_METHOD(IsTablePart, TablePart);
   CLASS_FLAG_METHOD0(CanContainOverflowContainers)
   CLASS_FLAG_METHOD0(SupportsCSSTransforms);

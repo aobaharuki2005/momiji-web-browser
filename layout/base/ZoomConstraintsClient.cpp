@@ -64,9 +64,7 @@ static nsIWidget* GetWidget(PresShell* aPresShell) {
     // see https://bugzilla.mozilla.org/show_bug.cgi?id=1648427#c7 .
     return rootFrame->GetNearestWidget();
 #else
-    if (nsView* view = rootFrame->GetView()) {
-      return view->GetWidget();
-    }
+    return rootFrame->GetOwnWidget();
 #endif
   }
   return nullptr;
