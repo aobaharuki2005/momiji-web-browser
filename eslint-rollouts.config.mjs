@@ -488,13 +488,6 @@ export default [
       "browser/components/ipprotection/IPPNetworkErrorObserver.sys.mjs",
       "browser/components/ipprotection/IPProtectionService.sys.mjs",
       "browser/components/uitour/UITour-lib.js",
-      "remote/shared/AppInfo.sys.mjs",
-      "remote/shared/NavigationManager.sys.mjs",
-      "remote/shared/UserContextManager.sys.mjs",
-      "remote/shared/listeners/CachedResourceListener.sys.mjs",
-      "remote/shared/listeners/DataChannelListener.sys.mjs",
-      "remote/shared/listeners/DownloadListener.sys.mjs",
-      "remote/shared/listeners/NetworkListener.sys.mjs",
     ],
     rules: {
       "jsdoc/valid-types": "off",
