@@ -5,6 +5,7 @@
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ContextId: "moz-src:///browser/modules/ContextId.sys.mjs",
+  DEFAULT_SECTION_LAYOUT: "resource://newtab/lib/SectionsLayoutManager.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   ObliviousHTTP: "resource://gre/modules/ObliviousHTTP.sys.mjs",
@@ -123,6 +124,8 @@ const PREF_VISIBLE_SECTIONS =
   "discoverystream.sections.interestPicker.visibleSections";
 const PREF_PRIVATE_PING_ENABLED = "telemetry.privatePing.enabled";
 const PREF_SURFACE_ID = "telemetry.surfaceId";
+const PREF_CLIENT_LAYOUT_ENABLED =
+  "discoverystream.sections.clientLayout.enabled";
 
 let getHardcodedLayout;
 
@@ -1877,6 +1880,9 @@ export class DiscoveryStreamFeed {
         }));
 
         if (sectionsEnabled) {
+          const useClientLayout =
+            this.store.getState().Prefs.values[PREF_CLIENT_LAYOUT_ENABLED];
+
           for (const [sectionKey, sectionData] of Object.entries(
             feedResponse.feeds
           )) {
@@ -1903,6 +1909,7 @@ export class DiscoveryStreamFeed {
                   isTimeSensitive: item.isTimeSensitive,
                 });
               }
+
               sections.push({
                 sectionKey,
                 title: sectionData.title,
@@ -1914,6 +1921,19 @@ export class DiscoveryStreamFeed {
                 visible: sectionData.isInitiallyVisible,
               });
             }
+          }
+
+          if (useClientLayout || sections.some(s => !s.layout)) {
+            sections.sort((a, b) => a.receivedRank - b.receivedRank);
+
+            sections.forEach((section, index) => {
+              if (useClientLayout || !section.layout) {
+                section.layout =
+                  lazy.DEFAULT_SECTION_LAYOUT[
+                    index % lazy.DEFAULT_SECTION_LAYOUT.length
+                  ];
+              }
+            });
           }
         }
 

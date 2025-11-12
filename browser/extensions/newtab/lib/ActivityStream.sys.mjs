@@ -1308,6 +1308,13 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "discoverystream.sections.clientLayout.enabled",
+    {
+      title: "Enables client side layout for recommended stories",
+      value: false,
+    },
+  ],
+  [
     "support.url",
     {
       title: "Link to HNT's support page",

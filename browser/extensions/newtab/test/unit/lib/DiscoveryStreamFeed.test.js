@@ -10,6 +10,7 @@ import { RecommendationProvider } from "lib/RecommendationProvider.sys.mjs";
 import { reducers } from "common/Reducers.sys.mjs";
 
 import { PersistentCache } from "lib/PersistentCache.sys.mjs";
+import { DEFAULT_SECTION_LAYOUT } from "lib/SectionsLayoutManager.sys.mjs";
 
 const CONFIG_PREF_NAME = "discoverystream.config";
 const ENDPOINTS_PREF_NAME = "discoverystream.endpoints";
@@ -3742,6 +3743,111 @@ describe("DiscoveryStreamFeed", () => {
       };
 
       assert.deepEqual(feedData, expectedData);
+    });
+
+    describe("client layout for sections", () => {
+      beforeEach(() => {
+        setPref("discoverystream.sections.enabled", true);
+        globals.set("DEFAULT_SECTION_LAYOUT", DEFAULT_SECTION_LAYOUT);
+        const fakeCache = {};
+        sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+        sandbox.stub(feed, "rotate").callsFake(val => val);
+        sandbox
+          .stub(feed, "scoreItems")
+          .callsFake(val => ({ data: val, filtered: [], personalized: false }));
+        sandbox.stub(feed, "fetchFromEndpoint").resolves({
+          recommendedAt: 1755834072383,
+          surfaceId: "NEW_TAB_EN_US",
+          data: [],
+          feeds: {
+            "section-1": {
+              title: "Section 1",
+              subtitle: "Subtitle 1",
+              receivedFeedRank: 1,
+              layout: { name: "original-layout" },
+              iab: "iab-category",
+              isInitiallyVisible: true,
+              recommendations: [],
+            },
+            "section-2": {
+              title: "Section 2",
+              subtitle: "Subtitle 2",
+              receivedFeedRank: 2,
+              layout: { name: "another-layout" },
+              iab: "iab-category-2",
+              isInitiallyVisible: true,
+              recommendations: [],
+            },
+          },
+        });
+      });
+      it("should return default layout when sections.clientLayout.enabled is false and server returns a layout object", async () => {
+        const feedData = await feed.getComponentFeed("url");
+        assert.equal(feedData.data.sections.length, 2);
+        assert.equal(
+          feedData.data.sections[0].layout.name,
+          "original-layout",
+          "First section should use original layout from server"
+        );
+        assert.equal(
+          feedData.data.sections[1].layout.name,
+          "another-layout",
+          "Second section should use second default layout"
+        );
+      });
+      it("should apply client layout when sections.clientLayout.enabled is true", async () => {
+        setPref("discoverystream.sections.clientLayout.enabled", true);
+        const feedData = await feed.getComponentFeed("url");
+
+        assert.equal(
+          feedData.data.sections[0].layout.name,
+          "7-double-row-2-ad",
+          "First section should use first default layout"
+        );
+        assert.equal(
+          feedData.data.sections[1].layout.name,
+          "6-small-medium-1-ad",
+          "Second section should use second default layout"
+        );
+      });
+      it("should apply client layout when any section has a missing layout property", async () => {
+        feed.fetchFromEndpoint.resolves({
+          recommendedAt: 1755834072383,
+          surfaceId: "NEW_TAB_EN_US",
+          data: [],
+          feeds: {
+            "section-1": {
+              title: "Section 1",
+              subtitle: "Subtitle 1",
+              receivedFeedRank: 1,
+              iab: "iab-category",
+              isInitiallyVisible: true,
+              recommendations: [],
+            },
+            "section-2": {
+              title: "Section 2",
+              subtitle: "Subtitle 2",
+              receivedFeedRank: 2,
+              layout: { name: "another-layout" },
+              iab: "iab-category-2",
+              isInitiallyVisible: true,
+              recommendations: [],
+            },
+          },
+        });
+        const feedData = await feed.getComponentFeed("url");
+
+        assert.equal(
+          feedData.data.sections[0].layout.name,
+          "7-double-row-2-ad",
+          "First section without layout should use client default layout"
+        );
+        assert.equal(
+          feedData.data.sections[1].layout.name,
+          "another-layout",
+          "Second section with layout should keep its original layout"
+        );
+      });
     });
   });
 
