@@ -269,6 +269,12 @@ static void MaybeReportOutOfMemoryForDifferentialTesting() {
   }
 }
 
+bool JSContext::safeToCaptureStackTrace() const {
+  // If we're in an unsafe ABI context, we don't need to capture a stack trace
+  // because the function will explicitly recover from OOM.
+  return !inUnsafeCallWithABI && !unsafeToCaptureStackTrace;
+}
+
 /*
  * Since memory has been exhausted, avoid the normal error-handling path which
  * allocates an error object, report and callstack. Instead simply throw the
@@ -282,11 +288,7 @@ void JSContext::onOutOfMemory() {
   gc::AutoSuppressGC suppressGC(this);
 
   // Capture stack trace before doing anything else that might use memory.
-  // If we're in an unsafe ABI context, we don't need to capture a stack trace
-  // because the function will explicitly recover from OOM.
-  if (!inUnsafeCallWithABI) {
-    captureOOMStackTrace();
-  }
+  maybeCaptureOOMStackTrace();
 
   /* Report the oom. */
   if (JS::OutOfMemoryCallback oomCallback = runtime()->oomCallback) {
@@ -1227,6 +1229,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       activation_(this, nullptr),
       profilingActivation_(nullptr),
       noExecuteDebuggerTop(this, nullptr),
+      unsafeToCaptureStackTrace(this, false),
       inUnsafeCallWithABI(this, false),
       hasAutoUnsafeCallWithABI(this, false),
 #ifdef DEBUG
@@ -1359,7 +1362,7 @@ const char* JSContext::getOOMStackTrace() const {
 
 bool JSContext::hasOOMStackTrace() const { return oomStackTraceBufferValid_; }
 
-void JSContext::captureOOMStackTrace() {
+void JSContext::maybeCaptureOOMStackTrace() {
   // Clear any existing stack trace
   oomStackTraceBufferValid_ = false;
 
@@ -1369,9 +1372,13 @@ void JSContext::captureOOMStackTrace() {
 
   // Write directly to pre-allocated buffer to avoid any memory allocation
   FixedBufferPrinter fbp(oomStackTraceBuffer_, OOMStackTraceBufferSize);
-  js::DumpBacktrace(this, fbp);
-  MOZ_ASSERT(strlen(oomStackTraceBuffer_) < OOMStackTraceBufferSize);
+  if (safeToCaptureStackTrace()) {
+    js::DumpBacktrace(this, fbp);
+  } else {
+    fbp.put("Unsafe to capture stack trace");
+  }
 
+  MOZ_ASSERT(strlen(oomStackTraceBuffer_) < OOMStackTraceBufferSize);
   oomStackTraceBufferValid_ = true;
 }
 
@@ -1749,6 +1756,17 @@ void JSContext::suspendExecutionTracing() {
 }
 
 #endif
+
+AutoUnsafeStackTrace::AutoUnsafeStackTrace(JSContext* cx)
+    : cx_(cx), nested_(cx_->unsafeToCaptureStackTrace) {
+  cx_->unsafeToCaptureStackTrace = true;
+}
+
+AutoUnsafeStackTrace::~AutoUnsafeStackTrace() {
+  if (!nested_) {
+    cx_->unsafeToCaptureStackTrace = false;
+  }
+}
 
 AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
     : cx_(TlsContext.get()),

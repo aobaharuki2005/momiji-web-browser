@@ -280,6 +280,8 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return thing->compartment() == compartment();
   }
 
+  bool safeToCaptureStackTrace() const;
+
   void onOutOfMemory();
   void* onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                       size_t nbytes, void* reallocPtr = nullptr) {
@@ -499,6 +501,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   js::ContextData<js::EnterDebuggeeNoExecute*> noExecuteDebuggerTop;
 
+  js::ContextData<bool> unsafeToCaptureStackTrace;
   js::ContextData<uint32_t> inUnsafeCallWithABI;
   js::ContextData<bool> hasAutoUnsafeCallWithABI;
 
@@ -704,7 +707,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   void unsetOOMStackTrace();
   const char* getOOMStackTrace() const;
   bool hasOOMStackTrace() const;
-  void captureOOMStackTrace();
+  void maybeCaptureOOMStackTrace();
 
   js::ContextData<int32_t> reportGranularity; /* see vm/Probes.h */
 
@@ -1208,6 +1211,17 @@ class MOZ_RAII AutoNoteExclusiveDebuggerOnEval {
   ~AutoNoteExclusiveDebuggerOnEval() {
     cx->insideExclusiveDebuggerOnEval = oldValue;
   }
+};
+
+// Should be used in functions that manipulate the stack so FrameIter is unable
+// to iterate over it.
+class MOZ_RAII AutoUnsafeStackTrace {
+  JSContext* cx_;
+  bool nested_;
+
+ public:
+  explicit AutoUnsafeStackTrace(JSContext* cx);
+  ~AutoUnsafeStackTrace();
 };
 
 enum UnsafeABIStrictness { NoExceptions, AllowPendingExceptions };
