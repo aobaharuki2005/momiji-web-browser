@@ -186,18 +186,18 @@ void SourceSurfaceWebgl::SetHandle(TextureHandle* aHandle) {
 }
 
 // Handler for when the owner DrawTargetWebgl is destroying the cached texture
-// handle that has been allocated for this snapshot.
+// handle that has been allocated for this snapshot, or if the surface has
+// uploaded data.
 void SourceSurfaceWebgl::OnUnlinkTexture(SharedContextWebgl* aContext,
-                                         bool aForce) {
-  // If we get here, then we must have copied a snapshot, which only happens
-  // if the target changed.
-  MOZ_ASSERT(!mDT);
+                                         TextureHandle* aHandle, bool aForce) {
   // If the snapshot was mapped before the target changed, we may have read
   // data instead of holding a copied texture handle. If subsequently we then
   // try to draw with this snapshot, we might have allocated an external texture
   // handle in the texture cache that still links to this snapshot and can cause
   // us to end up here inside OnUnlinkTexture.
-  MOZ_ASSERT(mHandle || mData || mReadBuffer);
+  if (mHandle != aHandle) {
+    return;
+  }
   if (!mData && !mReadBuffer) {
     if (!aForce) {
       mReadBuffer = aContext->ReadSnapshotIntoPBO(this, mHandle);

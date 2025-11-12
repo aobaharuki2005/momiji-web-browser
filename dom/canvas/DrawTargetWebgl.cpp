@@ -276,7 +276,7 @@ inline void SharedContextWebgl::UnlinkSurfaceTexture(
     // Ensure any WebGL snapshot textures get unlinked.
     if (surface->GetType() == SurfaceType::WEBGL) {
       static_cast<SourceSurfaceWebgl*>(surface.get())
-          ->OnUnlinkTexture(this, aForce);
+          ->OnUnlinkTexture(this, aHandle, aForce);
     }
     surface->RemoveUserData(&mTextureHandleKey);
   }
@@ -1267,6 +1267,9 @@ already_AddRefed<DataSourceSurface> SharedContextWebgl::ReadSnapshot(
     format = aHandle->GetFormat();
     bounds = aHandle->GetBounds();
   } else {
+    if (!mCurrentTarget) {
+      return nullptr;
+    }
     format = mCurrentTarget->GetFormat();
     bounds = mCurrentTarget->GetRect();
   }
@@ -1298,6 +1301,9 @@ already_AddRefed<WebGLBuffer> SharedContextWebgl::ReadSnapshotIntoPBO(
     format = aHandle->GetFormat();
     bounds = aHandle->GetBounds();
   } else {
+    if (!mCurrentTarget) {
+      return nullptr;
+    }
     format = mCurrentTarget->GetFormat();
     bounds = mCurrentTarget->GetRect();
   }
