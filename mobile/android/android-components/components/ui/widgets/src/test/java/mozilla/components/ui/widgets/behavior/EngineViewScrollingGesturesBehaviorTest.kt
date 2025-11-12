@@ -10,8 +10,8 @@ import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.View
 import android.widget.FrameLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
+import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.flowOf
 import mozilla.components.concept.engine.EngineSession
@@ -21,7 +21,7 @@ import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
+import mozilla.components.ui.widgets.behavior.DependencyGravity.Bottom
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -32,16 +32,16 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class EngineViewScrollingGesturesBehaviorTest {
     @Test
     fun `onStartNestedScroll should attempt scrolling only if browserToolbar is valid`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val browserToolbar: View = mock()
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), browserToolbar, Bottom))
         doReturn(true).`when`(behavior).shouldScroll
 
-        behavior.dynamicScrollView = null
+        doReturn(View.GONE).`when`(browserToolbar).isVisible
         var acceptsNestedScroll = behavior.onStartNestedScroll(
             coordinatorLayout = mock(),
             child = mock(),
@@ -53,7 +53,7 @@ class EngineViewScrollingGesturesBehaviorTest {
         assertFalse(acceptsNestedScroll)
         verify(behavior, never()).startNestedScroll(anyInt(), anyInt())
 
-        behavior.dynamicScrollView = mock()
+        doReturn(View.VISIBLE).`when`(browserToolbar).isVisible
         acceptsNestedScroll = behavior.onStartNestedScroll(
             coordinatorLayout = mock(),
             child = mock(),
@@ -68,7 +68,7 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `startNestedScroll should cancel an ongoing snap animation`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom))
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
         doReturn(true).`when`(behavior).shouldScroll
@@ -84,7 +84,7 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `startNestedScroll should not accept nested scrolls on the horizontal axis`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom))
         doReturn(true).`when`(behavior).shouldScroll
 
         var acceptsNestedScroll = behavior.startNestedScroll(
@@ -102,14 +102,13 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `GIVEN a gesture that doesn't scroll the toolbar WHEN startNestedScroll THEN nested scroll is not accepted`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
-        val engineView: EngineView = mock()
+        val engineView = spy(createDummyEngineView())
+        val behavior = spy(EngineViewScrollingGesturesBehavior(engineView, mock(), Bottom))
         val inputResultDetail: InputResultDetail = mock()
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
         doReturn(false).`when`(behavior).shouldScroll
         doReturn(true).`when`(inputResultDetail).isTouchUnhandled()
-        behavior.engineView = engineView
         doReturn(inputResultDetail).`when`(engineView).getInputResultDetail()
 
         val acceptsNestedScroll = behavior.startNestedScroll(
@@ -122,8 +121,7 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `Behavior should not accept nested scrolls on the horizontal axis`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
-        behavior.dynamicScrollView = mock()
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom))
         doReturn(true).`when`(behavior).shouldScroll
 
         var acceptsNestedScroll = behavior.onStartNestedScroll(
@@ -149,15 +147,14 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `Behavior should delegate the onStartNestedScroll logic`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
-        val view: View = mock()
-        behavior.dynamicScrollView = view
+        val dependency: View = mock()
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom))
         val inputType = ViewCompat.TYPE_TOUCH
         val axes = ViewCompat.SCROLL_AXIS_VERTICAL
 
         behavior.onStartNestedScroll(
             coordinatorLayout = mock(),
-            child = view,
+            child = dependency,
             directTargetChild = mock(),
             target = mock(),
             axes = axes,
@@ -169,9 +166,10 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `onStopNestedScroll should attempt stopping nested scrolling only if browserToolbar is valid`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency: View = mock()
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom))
 
-        behavior.dynamicScrollView = null
+        doReturn(View.GONE).`when`(dependency).visibility
         behavior.onStopNestedScroll(
             coordinatorLayout = mock(),
             child = mock(),
@@ -180,7 +178,7 @@ class EngineViewScrollingGesturesBehaviorTest {
         )
         verify(behavior, never()).stopNestedScroll(anyInt(), any())
 
-        behavior.dynamicScrollView = mock()
+        doReturn(View.VISIBLE).`when`(dependency).visibility
         behavior.onStopNestedScroll(
             coordinatorLayout = mock(),
             child = mock(),
@@ -192,26 +190,25 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `Behavior should delegate the onStopNestedScroll logic`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency: View = mock()
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom))
         val inputType = ViewCompat.TYPE_TOUCH
-        val view: View = mock()
 
-        behavior.dynamicScrollView = null
+        doReturn(View.GONE).`when`(dependency).visibility
         behavior.onStopNestedScroll(
             coordinatorLayout = mock(),
-            child = view,
+            child = dependency,
             target = mock(),
             type = inputType,
         )
-        verify(behavior, never()).stopNestedScroll(inputType, view)
+        verify(behavior, never()).stopNestedScroll(inputType, dependency)
     }
 
     @Test
     fun `stopNestedScroll will snap toolbar up if toolbar is more than 50 percent visible`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom))
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
-        behavior.dynamicScrollView = mock()
         doReturn(true).`when`(behavior).shouldScroll
 
         val child = mock<View>()
@@ -239,19 +236,18 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `stopNestedScroll will snap toolbar down if toolbar is less than 50 percent visible`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency: View = mock()
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom))
         doReturn(true).`when`(behavior).shouldScroll
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
 
-        val child = mock<View>()
-        behavior.dynamicScrollView = child
-        doReturn(100).`when`(child).height
-        doReturn(90f).`when`(child).translationY
+        doReturn(100).`when`(dependency).height
+        doReturn(90f).`when`(dependency).translationY
 
         behavior.onStartNestedScroll(
             coordinatorLayout = mock(),
-            child = child,
+            child = dependency,
             directTargetChild = mock(),
             target = mock(),
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
@@ -263,15 +259,16 @@ class EngineViewScrollingGesturesBehaviorTest {
         verify(yTranslator, never()).expandWithAnimation(any())
         verify(yTranslator, never()).collapseWithAnimation(any())
 
-        behavior.stopNestedScroll(0, child)
+        behavior.stopNestedScroll(0, dependency)
 
-        verify(yTranslator).snapWithAnimation(child)
+        verify(yTranslator).snapWithAnimation(dependency)
     }
 
     @Test
     fun `onStopNestedScroll should snap the toolbar only if browserToolbar is valid`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
-        behavior.dynamicScrollView = null
+        val dependency: View = mock()
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom))
+        doReturn(View.GONE).`when`(dependency).visibility
 
         behavior.onStopNestedScroll(
             coordinatorLayout = mock(),
@@ -285,10 +282,9 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `Behavior will intercept MotionEvents and pass them to the custom gesture detector`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val behavior = EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom)
         val gestureDetector: BrowserGestureDetector = mock()
-        behavior.initGesturesDetector(gestureDetector)
-        behavior.dynamicScrollView = mock()
+        behavior.gesturesDetector = gestureDetector
         val downEvent = TestUtils.getMotionEvent(ACTION_DOWN)
 
         behavior.onInterceptTouchEvent(mock(), mock(), downEvent)
@@ -298,9 +294,11 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `Behavior should only dispatch MotionEvents to the gesture detector only if browserToolbar is valid`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency: View = mock()
+        doReturn(View.GONE).`when`(dependency).isVisible
+        val behavior = EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom)
         val gestureDetector: BrowserGestureDetector = mock()
-        behavior.initGesturesDetector(gestureDetector)
+        behavior.gesturesDetector = gestureDetector
         val downEvent = TestUtils.getMotionEvent(ACTION_DOWN)
 
         behavior.onInterceptTouchEvent(mock(), mock(), downEvent)
@@ -310,35 +308,29 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `Behavior will apply translation to toolbar only for vertical scrolls`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
-        behavior.initGesturesDetector(behavior.createGestureDetector())
-        val child = spy(View(testContext, null, 0))
-        behavior.dynamicScrollView = child
+        val dependency: View = mock()
+        val engineView = spy(createDummyEngineView())
+        val behavior = EngineViewScrollingGesturesBehavior(engineView, dependency, Bottom)
+        val yTranslator: ViewYTranslator = mock()
+        behavior.isScrollEnabled = true
+        behavior.startedScroll = true
+        behavior.yTranslator = yTranslator
+        val validInputResultDetail: InputResultDetail = mock()
+        doReturn(true).`when`(validInputResultDetail).canScrollToBottom()
+        doReturn(validInputResultDetail).`when`(engineView).getInputResultDetail()
         val downEvent = TestUtils.getMotionEvent(ACTION_DOWN, 0f, 0f)
         val moveEvent = TestUtils.getMotionEvent(ACTION_MOVE, 0f, 100f, downEvent)
 
         behavior.onInterceptTouchEvent(mock(), mock(), downEvent)
         behavior.onInterceptTouchEvent(mock(), mock(), moveEvent)
 
-        verify(behavior).tryToScrollVertically(-100f)
-    }
-
-    @Test
-    fun `GIVEN a null InputResultDetail from the EngineView WHEN shouldScroll is called THEN it returns false`() {
-        val behavior = EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM)
-        behavior.engineView = null
-        assertFalse(behavior.shouldScroll)
-        behavior.engineView = mock()
-        `when`(behavior.engineView!!.getInputResultDetail()).thenReturn(null)
-
-        assertFalse(behavior.shouldScroll)
+        verify(yTranslator).translate(dependency, -100f)
     }
 
     @Test
     fun `GIVEN an InputResultDetail with the right values and scroll enabled WHEN shouldScroll is called THEN it returns true`() {
-        val behavior = EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM)
-        val engineView: EngineView = mock()
-        behavior.engineView = engineView
+        val engineView = spy(createDummyEngineView())
+        val behavior = EngineViewScrollingGesturesBehavior(engineView, mock(), Bottom)
         behavior.isScrollEnabled = true
         val validInputResultDetail: InputResultDetail = mock()
         doReturn(validInputResultDetail).`when`(engineView).getInputResultDetail()
@@ -358,8 +350,8 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `GIVEN an InputResultDetail with the right values but with scroll disabled WHEN shouldScroll is called THEN it returns false`() {
-        val behavior = EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM)
-        behavior.engineView = mock()
+        val engineView = spy(createDummyEngineView())
+        val behavior = EngineViewScrollingGesturesBehavior(engineView, mock(), Bottom)
         behavior.isScrollEnabled = false
         val validInputResultDetail: InputResultDetail = mock()
         doReturn(true).`when`(validInputResultDetail).canScrollToBottom()
@@ -370,8 +362,7 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `GIVEN scroll enabled but EngineView cannot scroll to bottom WHEN shouldScroll is called THEN it returns false`() {
-        val behavior = EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM)
-        behavior.engineView = mock()
+        val behavior = EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom)
         behavior.isScrollEnabled = true
         val validInputResultDetail: InputResultDetail = mock()
         doReturn(false).`when`(validInputResultDetail).canScrollToBottom()
@@ -382,8 +373,7 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `GIVEN scroll enabled but EngineView cannot scroll to top WHEN shouldScroll is called THEN it returns false`() {
-        val behavior = EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM)
-        behavior.engineView = mock()
+        val behavior = EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom)
         behavior.isScrollEnabled = true
         val validInputResultDetail: InputResultDetail = mock()
         doReturn(true).`when`(validInputResultDetail).canScrollToBottom()
@@ -394,29 +384,28 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `Behavior will vertically scroll nested scroll started and EngineView handled the event`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency = spy(View(testContext, null, 0))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom))
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
         doReturn(true).`when`(behavior).shouldScroll
-        val child = spy(View(testContext, null, 0))
-        behavior.dynamicScrollView = child
-        doReturn(100).`when`(child).height
-        doReturn(0f).`when`(child).translationY
+        doReturn(100).`when`(dependency).height
+        doReturn(0f).`when`(dependency).translationY
         behavior.startedScroll = true
 
         behavior.tryToScrollVertically(25f)
 
-        verify(yTranslator).translate(child, 25f)
+        verify(yTranslator).translate(dependency, 25f)
     }
 
     @Test
     fun `Behavior will not scroll vertically if startedScroll is false`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency = spy(View(testContext, null, 0))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom))
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
         doReturn(true).`when`(behavior).shouldScroll
         val child = spy(View(testContext, null, 0))
-        behavior.dynamicScrollView = child
         doReturn(100).`when`(child).height
         doReturn(0f).`when`(child).translationY
         behavior.startedScroll = false
@@ -428,12 +417,12 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `Behavior will not scroll vertically if EngineView did not handled the event`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency = spy(View(testContext, null, 0))
+        val behavior = spy(EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom))
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
         doReturn(false).`when`(behavior).shouldScroll
         val child = spy(View(testContext, null, 0))
-        behavior.dynamicScrollView = child
         doReturn(100).`when`(child).height
         doReturn(0f).`when`(child).translationY
 
@@ -444,43 +433,43 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `forceExpand should delegate the translator`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency: View = mock()
+        val behavior = EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom)
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
-        val view: View = mock()
 
-        behavior.forceExpand(view)
+        behavior.forceExpand()
 
-        verify(yTranslator).expandWithAnimation(view)
+        verify(yTranslator).expandWithAnimation(dependency)
     }
 
     @Test
     fun `forceCollapse should delegate the translator`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency: View = mock()
+        val behavior = EngineViewScrollingGesturesBehavior(createDummyEngineView(), dependency, Bottom)
         val yTranslator: ViewYTranslator = mock()
         behavior.yTranslator = yTranslator
-        val view: View = mock()
 
-        behavior.forceCollapse(view)
+        behavior.forceCollapse()
 
-        verify(yTranslator).collapseWithAnimation(view)
+        verify(yTranslator).collapseWithAnimation(dependency)
     }
 
     @Test
     fun `Behavior will not forceExpand when scrolling up and !shouldScroll if the touch was not yet handled in the browser`() {
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
+        val dependency: View = mock()
+        val engineView = spy(createDummyEngineView())
+        val behavior = EngineViewScrollingGesturesBehavior(engineView, dependency, Bottom)
         val yTranslator: ViewYTranslator = mock()
+        behavior.isScrollEnabled = true
+        behavior.startedScroll = true
         behavior.yTranslator = yTranslator
-        behavior.initGesturesDetector(behavior.createGestureDetector())
-        val view: View = spy(View(testContext, null, 0))
-        behavior.dynamicScrollView = view
-        val engineView: EngineView = mock()
-        behavior.engineView = engineView
-        val handledTouchInput = InputResultDetail.newInstance()
-        doReturn(handledTouchInput).`when`(engineView).getInputResultDetail()
+        val validInputResultDetail: InputResultDetail = mock()
+        doReturn(true).`when`(validInputResultDetail).canScrollToBottom()
+        doReturn(validInputResultDetail).`when`(engineView).getInputResultDetail()
 
-        doReturn(100).`when`(view).height
-        doReturn(100f).`when`(view).translationY
+        doReturn(100).`when`(dependency).height
+        doReturn(100f).`when`(dependency).translationY
 
         val downEvent = TestUtils.getMotionEvent(ACTION_DOWN, 0f, 0f)
         val moveEvent = TestUtils.getMotionEvent(ACTION_MOVE, 0f, 30f, downEvent)
@@ -488,29 +477,13 @@ class EngineViewScrollingGesturesBehaviorTest {
         behavior.onInterceptTouchEvent(mock(), mock(), downEvent)
         behavior.onInterceptTouchEvent(mock(), mock(), moveEvent)
 
-        verify(behavior).tryToScrollVertically(-30f)
-        verify(yTranslator, never()).forceExpandIfNotAlready(view, -30f)
-    }
-
-    @Test
-    fun `onLayoutChild initializes browserToolbar and engineView`() {
-        val view = View(testContext)
-        val engineView = createDummyEngineView(testContext).asView()
-        val container = CoordinatorLayout(testContext).apply {
-            addView(View(testContext))
-            addView(engineView)
-        }
-        val behavior = spy(EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM))
-
-        behavior.onLayoutChild(container, view, View.LAYOUT_DIRECTION_LTR)
-
-        assertEquals(view, behavior.dynamicScrollView)
-        assertEquals(engineView, behavior.engineView)
+        verify(yTranslator).translate(dependency, -30f)
+        verify(yTranslator, never()).forceExpandIfNotAlready(dependency, -30f)
     }
 
     @Test
     fun `enableScrolling sets isScrollEnabled to true`() {
-        val behavior = EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM)
+        val behavior = EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom)
 
         assertFalse(behavior.isScrollEnabled)
         behavior.enableScrolling()
@@ -520,7 +493,7 @@ class EngineViewScrollingGesturesBehaviorTest {
 
     @Test
     fun `disableScrolling sets isScrollEnabled to false`() {
-        val behavior = EngineViewScrollingGesturesBehavior(testContext, null, ViewPosition.BOTTOM)
+        val behavior = EngineViewScrollingGesturesBehavior(createDummyEngineView(), mock(), Bottom)
         behavior.isScrollEnabled = true
 
         assertTrue(behavior.isScrollEnabled)
@@ -529,7 +502,7 @@ class EngineViewScrollingGesturesBehaviorTest {
         assertFalse(behavior.isScrollEnabled)
     }
 
-    private fun createDummyEngineView(context: Context): EngineView = DummyEngineView(context)
+    private fun createDummyEngineView(): EngineView = DummyEngineView(testContext)
 
     open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
         override val verticalScrollPosition = flowOf(0f)
@@ -546,5 +519,6 @@ class EngineViewScrollingGesturesBehaviorTest {
             listener: androidx.core.view.OnApplyWindowInsetsListener?,
         ) {}
         override fun removeWindowInsetsListener(key: String) {}
+        override fun asView() = View(context)
     }
 }

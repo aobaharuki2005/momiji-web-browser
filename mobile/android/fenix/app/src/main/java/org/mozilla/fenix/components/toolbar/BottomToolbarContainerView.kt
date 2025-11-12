@@ -12,9 +12,12 @@ import android.widget.LinearLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.toolbar.ScrollableToolbar
-import mozilla.components.ui.widgets.behavior.EngineViewScrollingGesturesBehavior
-import mozilla.components.ui.widgets.behavior.ViewPosition
+import mozilla.components.support.ktx.android.view.findViewInHierarchy
+import mozilla.components.ui.widgets.behavior.DependencyGravity.Bottom
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
+import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehaviorFactory
 import org.mozilla.fenix.R
 
 /**
@@ -49,8 +52,13 @@ class BottomToolbarContainerView(
             CoordinatorLayout.LayoutParams.WRAP_CONTENT,
         ).apply {
             gravity = Gravity.BOTTOM
-            if (hideOnScroll) {
-                behavior = EngineViewScrollingGesturesBehavior(parent.context, null, ViewPosition.BOTTOM)
+            val engineView = parent.findViewInHierarchy { it is EngineView } as? EngineView
+            if (hideOnScroll && engineView != null) {
+                behavior = EngineViewScrollingBehaviorFactory.build(
+                    engineView = engineView,
+                    dependency = toolbarContainerView,
+                    dependencyGravity = Bottom,
+                )
             }
         }
 
@@ -78,25 +86,25 @@ class ToolbarContainerView @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr), ScrollableToolbar {
     override fun enableScrolling() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingGesturesBehavior)?.enableScrolling()
+            (behavior as? EngineViewScrollingBehavior)?.enableScrolling()
         }
     }
 
     override fun disableScrolling() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingGesturesBehavior)?.disableScrolling()
+            (behavior as? EngineViewScrollingBehavior)?.disableScrolling()
         }
     }
 
     override fun expand() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingGesturesBehavior)?.forceExpand(this@ToolbarContainerView)
+            (behavior as? EngineViewScrollingBehavior)?.forceExpand()
         }
     }
 
     override fun collapse() {
         (layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            (behavior as? EngineViewScrollingGesturesBehavior)?.forceCollapse(this@ToolbarContainerView)
+            (behavior as? EngineViewScrollingBehavior)?.forceCollapse()
         }
     }
 }

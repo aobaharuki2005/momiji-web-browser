@@ -69,7 +69,7 @@ class BrowserToolbarComposable(
     private val searchSuggestionsContent: @Composable (Modifier) -> Unit,
     private val navigationBarContent: (@Composable () -> Unit)?,
 ) : FenixBrowserToolbarView(
-    context = activity,
+    parent = container,
     settings = settings,
     customTabSession = customTabSession,
 ) {
