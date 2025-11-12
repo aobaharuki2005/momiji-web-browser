@@ -999,49 +999,42 @@ let interfaceNamesInGlobalScope = [
   {
     name: "NavigateEvent",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "Navigation",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "NavigationActivation",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "NavigationCurrentEntryChangeEvent",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "NavigationDestination",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "NavigationHistoryEntry",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   {
     name: "NavigationPrecommitController",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1050,7 +1043,6 @@ let interfaceNamesInGlobalScope = [
   {
     name: "NavigationTransition",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1820,7 +1812,6 @@ let interfaceNamesInGlobalScope = [
   {
     name: "navigation",
     insecureContext: true,
-    earlyBetaOrEarlier: true,
     sessionHistoryInParent: true,
   },
   // IMPORTANT: Do not change this list without review from a DOM peer!
