@@ -434,28 +434,26 @@ private fun TopSiteFaviconCard(
                 color = backgroundColor,
                 shape = RoundedCornerShape(4.dp),
             ) {
-                if (topSite is TopSite.Provided) {
-                    TopSiteFavicon(url = topSite.url, imageUrl = topSite.imageUrl)
-                } else {
-                    TopSiteFavicon(url = topSite.url, imageUrl = getImageUrl(url = topSite.url))
-                }
+                TopSiteFavicon(url = topSite.url)
             }
         }
     }
 }
 
-private fun getImageUrl(url: String): String? {
-    return when (url) {
-        "https://tenki.jp/" -> "https://tenki.jp/favicon.ico"
-        "https://m.yahoo.co.jp/" -> "https://s.yimg.jp/c/icon/s/bsc/2.0/favicon.ico"
-        "https://ameblo.jp/" -> "https://stat100.ameba.jp/common_style/img/favicon.ico"
-        else -> null
-    }
-}
-
 @Composable
-private fun TopSiteFavicon(url: String, imageUrl: String? = null) {
-    Favicon(url = url, size = TOP_SITES_FAVICON_SIZE.dp, imageUrl = imageUrl)
+private fun TopSiteFavicon(url: String) {
+    when (val favicon = getTopSitesFavicon(url)) {
+        is TopSitesFavicon.ImageUrl -> Favicon(
+            url = url,
+            size = TOP_SITES_FAVICON_SIZE.dp,
+            imageUrl = favicon.url,
+        )
+
+        is TopSitesFavicon.Drawable -> Favicon(
+            size = TOP_SITES_FAVICON_SIZE.dp,
+            imageResource = favicon.drawableResId,
+        )
+    }
 }
 
 @Composable
