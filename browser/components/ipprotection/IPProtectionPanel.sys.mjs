@@ -78,8 +78,6 @@ export class IPProtectionPanel {
    *  True if we're running the Alpha variant, else false.
    * @property {boolean} hasUpgraded
    *  True if a Mozilla VPN subscription is linked to the user's Mozilla account.
-   * @property {string} onboardingMessage
-   * Continuous onboarding message to display in-panel, empty string if none applicable
    */
 
   /**
@@ -125,7 +123,6 @@ export class IPProtectionPanel {
       error: "",
       isAlpha: lazy.IPPEnrollAndEntitleManager.isAlpha,
       hasUpgraded: lazy.IPPEnrollAndEntitleManager.hasUpgraded,
-      onboardingMessage: "",
     };
 
     if (window) {
