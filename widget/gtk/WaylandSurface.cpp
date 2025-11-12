@@ -303,7 +303,11 @@ void WaylandSurface::RequestFrameCallbackLocked(
         }};
     mOpaqueRegionFrameCallback = wl_surface_frame(mSurface);
     wl_callback_add_listener(mOpaqueRegionFrameCallback, &listener, this);
-    mSurfaceNeedsCommit = true;
+    // Apply opaque changes only if we have buffer attached to avoid painting
+    // of empty window.
+    if (mBufferAttached) {
+      mSurfaceNeedsCommit = true;
+    }
   }
 
   if (!mFrameCallbackEnabled || !mFrameCallbackHandler.IsSet()) {
