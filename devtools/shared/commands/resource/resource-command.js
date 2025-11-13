@@ -1352,11 +1352,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   LegacyListeners,
-  ResourceCommand.TYPES.CSS_CHANGE,
-  "resource://devtools/shared/commands/resource/legacy-listeners/css-changes.js"
-);
-loader.lazyRequireGetter(
-  LegacyListeners,
   ResourceCommand.TYPES.CSS_MESSAGE,
   "resource://devtools/shared/commands/resource/legacy-listeners/css-messages.js"
 );
