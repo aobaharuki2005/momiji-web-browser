@@ -4,6 +4,8 @@ support-files = ["head.js"]
 ["browser_beforeunload_permit_http.js"]
 support-files = ["file_beforeunload_permit_http.html"]
 
+["browser_client_cert.js"]
+
 ["browser_downgrade_mixed_content_auto_upgrade_console.js"]
 support-files = [
   "file_mixed_content_auto_upgrade.html",
