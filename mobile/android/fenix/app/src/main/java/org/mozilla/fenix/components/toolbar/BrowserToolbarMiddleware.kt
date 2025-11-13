@@ -1025,9 +1025,13 @@ class BrowserToolbarMiddleware(
         browserScreenStore.observeWhileActive {
             distinctUntilChangedBy { it.pageTranslationStatus }
             .collect {
-                updateEndBrowserActions(context)
                 updateEndPageActions(context)
-                updateNavigationActions(context)
+                if (settings.toolbarSimpleShortcutKey == ShortcutType.TRANSLATE) {
+                    updateEndBrowserActions(context)
+                }
+                if (settings.toolbarExpandedShortcutKey == ShortcutType.TRANSLATE) {
+                    updateNavigationActions(context)
+                }
             }
         }
     }
