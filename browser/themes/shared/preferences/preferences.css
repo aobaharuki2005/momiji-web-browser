@@ -1380,6 +1380,12 @@ richlistitem .text-link:hover {
 }
 /** SRD web-appearance-chooser control END **/
 
+/** SRD rows control for New Tab START **/
+setting-group[groupid="home"] {
+  --select-max-width: 17rem;
+}
+/** SRD rows control for New Tab END **/
+
 #translations-manage-install-list {
   height: 220px;
   overflow: auto;

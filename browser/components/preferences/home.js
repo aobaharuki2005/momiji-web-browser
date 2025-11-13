@@ -64,6 +64,26 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
       id: "browser.newtabpage.activity-stream.widgets.focusTimer.enabled",
       type: "bool",
     },
+    {
+      id: "browser.newtabpage.activity-stream.feeds.section.highlights",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.section.highlights.rows",
+      type: "int",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.section.highlights.includeVisited",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.section.highlights.includeBookmarks",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.section.highlights.includeDownloads",
+      type: "bool",
+    },
   ]);
 
   // Search
@@ -106,6 +126,28 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
     pref: "browser.newtabpage.activity-stream.widgets.focusTimer.enabled",
     deps: ["timerEnabled"],
     visible: ({ timerEnabled }) => timerEnabled.value,
+  });
+
+  // Recent activity
+  Preferences.addSetting({
+    id: "recentActivity",
+    pref: "browser.newtabpage.activity-stream.feeds.section.highlights",
+  });
+  Preferences.addSetting({
+    id: "recentActivityRows",
+    pref: "browser.newtabpage.activity-stream.section.highlights.rows",
+  });
+  Preferences.addSetting({
+    id: "recentActivityVisited",
+    pref: "browser.newtabpage.activity-stream.section.highlights.includeVisited",
+  });
+  Preferences.addSetting({
+    id: "recentActivityBookmarks",
+    pref: "browser.newtabpage.activity-stream.section.highlights.includeBookmarks",
+  });
+  Preferences.addSetting({
+    id: "recentActivityDownloads",
+    pref: "browser.newtabpage.activity-stream.section.highlights.includeDownloads",
   });
 }
 

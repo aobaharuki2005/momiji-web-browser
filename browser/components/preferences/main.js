@@ -1204,6 +1204,57 @@ let SETTINGS_CONFIG = {
         l10nId: "home-prefs-timer-header",
         control: "moz-toggle",
       },
+      {
+        id: "recentActivity",
+        l10nId: "home-prefs-recent-activity-header",
+        control: "moz-toggle",
+        items: [
+          {
+            id: "recentActivityRows",
+            control: "moz-select",
+            controlAttrs: {
+              class: "newtab-rows-select",
+            },
+            options: [
+              {
+                value: 1,
+                l10nId: "home-prefs-sections-rows-option",
+                l10nArgs: { num: 1 },
+              },
+              {
+                value: 2,
+                l10nId: "home-prefs-sections-rows-option",
+                l10nArgs: { num: 2 },
+              },
+              {
+                value: 3,
+                l10nId: "home-prefs-sections-rows-option",
+                l10nArgs: { num: 3 },
+              },
+              {
+                value: 4,
+                l10nId: "home-prefs-sections-rows-option",
+                l10nArgs: { num: 4 },
+              },
+            ],
+          },
+          {
+            id: "recentActivityVisited",
+            l10nId: "home-prefs-highlights-option-visited-pages",
+            control: "moz-checkbox",
+          },
+          {
+            id: "recentActivityBookmarks",
+            l10nId: "home-prefs-highlights-options-bookmarks",
+            control: "moz-checkbox",
+          },
+          {
+            id: "recentActivityDownloads",
+            l10nId: "home-prefs-highlights-option-most-recent-download",
+            control: "moz-checkbox",
+          },
+        ],
+      },
     ],
   },
   zoom: {
