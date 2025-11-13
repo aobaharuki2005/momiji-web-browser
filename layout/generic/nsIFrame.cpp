@@ -3904,9 +3904,18 @@ void nsIFrame::BuildDisplayListForStackingContext(
         aBuilder->CurrentActiveScrolledRoot(),
         clipState.IsClippedToDisplayPort());
 
-    auto* ssc = StickyScrollContainer::GetOrCreateForFrame(this);
-    const bool shouldFlatten =
-        !ssc || !ssc->ScrollContainer()->IsMaybeAsynchronouslyScrolled();
+    bool shouldFlatten = true;
+
+    StickyScrollContainer* stickyScrollContainer =
+        StickyScrollContainer::GetOrCreateForFrame(this);
+    if (stickyScrollContainer) {
+      if (stickyScrollContainer->ScrollContainer()
+              ->IsMaybeAsynchronouslyScrolled()) {
+        shouldFlatten = false;
+      }
+      stickyScrollContainer->SetShouldFlatten(shouldFlatten);
+    }
+
     stickyItem->SetShouldFlatten(shouldFlatten);
 
     resultList.AppendToTop(stickyItem);
