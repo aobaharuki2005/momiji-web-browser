@@ -171,3 +171,77 @@ def push_schedules(branch, rev):
         }
 
     return data
+
+
+@memoize
+def patch_schedules(base_rev, patch_content, mode="quick"):
+    """Query BugBug API with a patch to get test recommendations.
+
+    This is used by `./mach test --auto` to get test recommendations for local changes.
+
+    Args:
+        base_rev (str): The base revision hash.
+        patch_content (str): The patch content with commit metadata.
+        mode (str): The mode of test selection, which determines the confidence
+            threshold. One of 'extensive', 'moderate', or 'quick'.
+    Returns:
+        dict: A dictionary with containing test recommendations filtered by
+            confidence threshold.
+
+    Raises:
+        BugbugTimeoutException: If the API times out.
+    """
+
+    import hashlib
+    import re
+
+    # This ensures consistent hashing across multiple runs with identical
+    # changes by stripping the date before hashing.
+    filtered_content = re.sub(r"^Date: .*$", "", patch_content, flags=re.MULTILINE)
+    patch_hash = hashlib.md5(filtered_content.encode("utf-8")).hexdigest()
+
+    url = BUGBUG_BASE_URL + f"/patch/{base_rev}/{patch_hash}/schedules"
+    # FIXME: Remove fallback once BugBug is fully migrated.
+    url = url.replace(BUGBUG_BASE_URL, BUGBUG_BASE_FALLBACK_URL)
+
+    session = get_session()
+
+    r = session.post(
+        url,
+        data=patch_content.encode("utf-8"),
+        headers={"Content-Type": "text/plain"},
+    )
+    r.raise_for_status()
+
+    timeout = RETRY_TIMEOUT
+    attempts = timeout / RETRY_INTERVAL
+    i = 0
+    while i < attempts:
+        if r.status_code != 202:
+            break
+
+        time.sleep(RETRY_INTERVAL)
+        r = session.get(url)
+        r.raise_for_status()
+        i += 1
+
+    data = r.json()
+    if r.status_code == 202:
+        raise BugbugTimeoutException(f"Timed out waiting for result from '{url}'")
+
+    if mode == "extensive":
+        confidence_threshold = CT_LOW
+    elif mode == "moderate":
+        confidence_threshold = CT_MEDIUM
+    elif mode == "quick":
+        confidence_threshold = CT_HIGH
+    else:
+        raise ValueError(
+            f"Invalid mode: '{mode}'; expected one of 'extensive', 'moderate', 'quick'"
+        )
+
+    return {
+        translate_group(k): v
+        for k, v in data["groups"].items()
+        if v >= confidence_threshold
+    }

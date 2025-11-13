@@ -54,7 +54,7 @@ def get_test_parser():
     parser.add_argument(
         "what",
         default=None,
-        nargs="+",
+        nargs="*",
         help=TEST_HELP.format(", ".join(sorted(TEST_SUITES))),
     )
     parser.add_argument(
@@ -71,6 +71,18 @@ def get_test_parser():
         action="store",
         nargs="?",
         help="Specify a debugger to use.",
+    )
+    parser.add_argument(
+        "--auto",
+        nargs="?",
+        const="quick",
+        default=False,
+        choices=["extensive", "moderate", "quick"],
+        metavar="LEVEL",
+        help="Automatically select tests based on local changes using BugBug. "
+        "Optional confidence level: 'extensive' (more tests), 'moderate' or "
+        "'quick' (fewer tests with highest confidence to be related). "
+        "Default: quick",
     )
     add_logging_group(parser)
     return parser
@@ -375,6 +387,50 @@ def test(command_context, what, extra_args, **log_args):
     from mozlog.commandline import setup_logging
     from mozlog.handlers import ResourceHandler, StreamHandler
     from moztest.resolve import TEST_SUITES, TestResolver, get_suite_definition
+
+    if not log_args.get("auto") and not what:
+        print("Error: You must specify test paths or use --auto flag")
+        return 1
+
+    if log_args.get("auto"):
+        from itertools import chain
+
+        from gecko_taskgraph.util.bugbug import patch_schedules
+        from mozversioncontrol.factory import get_specific_repository_object
+
+        if what:
+            print(
+                "Note: when using --auto, any test paths specified will be combined with BugBug's recommendations."
+            )
+
+        selection_mode = log_args.get("auto")
+
+        repo = get_specific_repository_object(".", "git")
+        base_commit = repo.base_ref_as_commit()
+        patch = "\n".join(
+            [
+                repo.get_patches_after_ref(base_commit),
+                repo.get_patch_for_uncommitted_changes(),
+            ]
+        )
+
+        print(
+            f"Querying BugBug for test recommendations... (based on changes after {base_commit[:8]})"
+        )
+        schedules = patch_schedules(base_commit, patch, selection_mode)
+
+        if not schedules:
+            print(
+                "BugBug did not recommend any tests for your changes. Consider specifying tests by path or suite name."
+            )
+            return 0
+
+        test_paths = sorted(schedules.keys())
+        print(f"BugBug recommended {len(test_paths)} test group(s):")
+        for path in test_paths:
+            print(f"  {path} (confidence: {schedules[path]:.2f})")
+
+        what = set(chain(what, test_paths))
 
     resolver = command_context._spawn(TestResolver)
     run_suites, run_tests = resolver.resolve_metadata(what)
