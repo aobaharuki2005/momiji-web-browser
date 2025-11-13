@@ -500,6 +500,10 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
   virtual nsTArray<int32_t>& GetCachedHyperTextOffsets() override;
 
+  nsTArray<RemoteAccessible*> LegendsOrCaptions() const;
+
+  RemoteAccessible* LegendOrCaptionFor() const;
+
  private:
   /**
    * Update mIndexInParent on each child starting at aStartIdx up to the last

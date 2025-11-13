@@ -1278,41 +1278,67 @@ Relation RemoteAccessible::RelationByType(RelationType aType) const {
   // the cached relations need to take precedence. For example, a <figure> with
   // both aria-labelledby and a <figcaption> must return two LABELLED_BY
   // targets: the aria-labelledby and then the <figcaption>.
-  auto AddChildWithTag = [this, &rel](nsAtom* aTarget) {
+  if (aType == RelationType::LABELLED_BY) {
+    for (RemoteAccessible* label : LegendsOrCaptions()) {
+      rel.AppendTarget(label);
+    }
+  } else if (aType == RelationType::LABEL_FOR) {
+    if (RemoteAccessible* labelTarget = LegendOrCaptionFor()) {
+      rel.AppendTarget(labelTarget);
+    }
+  }
+
+  return rel;
+}
+
+nsTArray<RemoteAccessible*> RemoteAccessible::LegendsOrCaptions() const {
+  nsTArray<RemoteAccessible*> children;
+  auto AddChildWithTag = [this, &children](nsAtom* aTarget) {
     uint32_t count = ChildCount();
     for (uint32_t c = 0; c < count; ++c) {
       RemoteAccessible* child = RemoteChildAt(c);
       MOZ_ASSERT(child);
       if (child->TagName() == aTarget) {
-        rel.AppendTarget(child);
+        children.AppendElement(child);
       }
     }
   };
-  if (aType == RelationType::LABELLED_BY) {
-    auto tag = TagName();
-    if (tag == nsGkAtoms::figure) {
-      AddChildWithTag(nsGkAtoms::figcaption);
-    } else if (tag == nsGkAtoms::fieldset) {
-      AddChildWithTag(nsGkAtoms::legend);
-    }
-  } else if (aType == RelationType::LABEL_FOR) {
-    auto tag = TagName();
-    if (tag == nsGkAtoms::figcaption) {
-      if (RemoteAccessible* parent = RemoteParent()) {
-        if (parent->TagName() == nsGkAtoms::figure) {
-          rel.AppendTarget(parent);
-        }
+
+  auto tag = TagName();
+  if (tag == nsGkAtoms::figure) {
+    AddChildWithTag(nsGkAtoms::figcaption);
+  } else if (tag == nsGkAtoms::fieldset) {
+    AddChildWithTag(nsGkAtoms::legend);
+  } else if (tag == nsGkAtoms::table) {
+    AddChildWithTag(nsGkAtoms::caption);
+  }
+
+  return children;
+}
+
+RemoteAccessible* RemoteAccessible::LegendOrCaptionFor() const {
+  auto tag = TagName();
+  if (tag == nsGkAtoms::figcaption) {
+    if (RemoteAccessible* parent = RemoteParent()) {
+      if (parent->TagName() == nsGkAtoms::figure) {
+        return parent;
       }
-    } else if (tag == nsGkAtoms::legend) {
-      if (RemoteAccessible* parent = RemoteParent()) {
-        if (parent->TagName() == nsGkAtoms::fieldset) {
-          rel.AppendTarget(parent);
-        }
+    }
+  } else if (tag == nsGkAtoms::legend) {
+    if (RemoteAccessible* parent = RemoteParent()) {
+      if (parent->TagName() == nsGkAtoms::fieldset) {
+        return parent;
+      }
+    }
+  } else if (tag == nsGkAtoms::caption) {
+    if (RemoteAccessible* parent = RemoteParent()) {
+      if (parent->TagName() == nsGkAtoms::table) {
+        return parent;
       }
     }
   }
 
-  return rel;
+  return nullptr;
 }
 
 void RemoteAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,

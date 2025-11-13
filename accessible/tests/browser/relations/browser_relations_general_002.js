@@ -354,3 +354,23 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test table caption.
+ */
+addAccessibleTask(
+  `
+<table id="table">
+  <caption id="caption">caption</caption>
+  <tr><th>a</th></tr>
+</table>
+  `,
+  async function testTableCaption(browser, docAcc) {
+    const table = findAccessibleChildByID(docAcc, "table");
+
+    const caption = findAccessibleChildByID(docAcc, "caption");
+    await testCachedRelation(table, RELATION_LABELLED_BY, caption);
+    await testCachedRelation(caption, RELATION_LABEL_FOR, table);
+  },
+  { chrome: true, topLevel: true }
+);
