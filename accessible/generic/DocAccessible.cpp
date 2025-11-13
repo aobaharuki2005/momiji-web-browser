@@ -183,6 +183,10 @@ ENameValueFlag DocAccessible::Name(nsString& aName) const {
     URL(aName);
   }
 
+  if (aName.IsEmpty()) {
+    aName.SetIsVoid(true);
+  }
+
   return eNameOK;
 }
 

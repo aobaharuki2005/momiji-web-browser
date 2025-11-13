@@ -6,7 +6,11 @@
 requestLongerTimeout(2);
 
 /* import-globals-from ../../mochitest/name.js */
-loadScripts({ name: "name.js", dir: MOCHITESTS_DIR });
+/* import-globals-from ../../mochitest/attributes.js */
+loadScripts(
+  { name: "name.js", dir: MOCHITESTS_DIR },
+  { name: "attributes.js", dir: MOCHITESTS_DIR }
+);
 
 /**
  * Rules for name tests that are inspired by
@@ -641,4 +645,36 @@ addAccessibleTask(
     await events;
   },
   { chrome: true, topLevel: true }
+);
+
+/**
+ * Test consistent doc name for remote and local docs.
+ */
+addAccessibleTask(
+  `<iframe id="iframe"></iframe>`,
+  async function testDocName(browser, docAcc) {
+    const iframe = findAccessibleChildByID(docAcc, "iframe");
+    info("Setting iframe src");
+    // This iframe won't finish loading. Thus, it will get the stale state and
+    // won't fire a document load complete event. We use the reorder event on
+    // the iframe to know when the document has been created.
+    let reordered = waitForEvent(EVENT_REORDER, iframe);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("iframe").src =
+        `data:text/html,<html><body>hey</body></html>`;
+    });
+    let iframeDoc = (await reordered).accessible.firstChild;
+    is(iframeDoc.name, null, "Doc should have 'null' name");
+    testAbsentAttrs(iframeDoc, { "explicit-name": "true" });
+
+    reordered = waitForEvent(EVENT_REORDER, iframe);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("iframe").src =
+        `data:text/html,<html><title>hello</title><body>hey</body></html>`;
+    });
+    iframeDoc = (await reordered).accessible.firstChild;
+    is(iframeDoc.name, "hello", "Doc should have name");
+    testAttrs(iframeDoc, { "explicit-name": "true" }, true);
+  },
+  { topLevel: true, chrome: true }
 );
