@@ -722,7 +722,26 @@ class WalkerActor extends Actor {
     if (rawNode == this.rootDoc) {
       return null;
     }
-    return InspectorUtils.getParentForNode(rawNode, /* anonymous = */ true);
+    const parentNode = InspectorUtils.getParentForNode(
+      rawNode,
+      /* anonymous = */ true
+    );
+
+    if (!parentNode) {
+      return null;
+    }
+
+    const filter = this.showAllAnonymousContent
+      ? allAnonymousContentTreeWalkerFilter
+      : standardTreeWalkerFilter;
+    // If the parent node is one we should ignore (e.g. :-moz-snapshot-containing-block,
+    // which is the root node for ::view-transition pseudo elements), we want to return
+    // the closest non-ignored parent.
+    if (filter(parentNode) === nodeFilterConstants.FILTER_ACCEPT_CHILDREN) {
+      return this.rawParentNode(parentNode);
+    }
+
+    return parentNode;
   }
 
   /**
@@ -924,8 +943,15 @@ class WalkerActor extends Actor {
       includeAssigned
     );
     for (const child of children) {
-      if (filter(child) == nodeFilterConstants.FILTER_ACCEPT) {
+      const filterResult = filter(child);
+      if (filterResult == nodeFilterConstants.FILTER_ACCEPT) {
         ret.push(child);
+      } else if (filterResult == nodeFilterConstants.FILTER_ACCEPT_CHILDREN) {
+        // In some cases, we want to completly ignore a node, and display its children
+        // instead (e.g. for `<div type="::-moz-snapshot-containing-block">`,
+        // we don't want it displayed in the markup view,
+        // but we do want to have its `::view-transition` child)
+        ret.push(...this._rawChildren(child, includeAssigned));
       }
     }
     return ret;
