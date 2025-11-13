@@ -771,7 +771,11 @@ const nsAtom* AnchorPositioningUtils::GetUsedAnchorName(
     return aAnchorName;
   }
 
-  const auto defaultAnchor = aPositioned->StylePosition()->mPositionAnchor;
+  const auto& defaultAnchor = aPositioned->StylePosition()->mPositionAnchor;
+  if (defaultAnchor.IsNone()) {
+    return nullptr;
+  }
+
   if (defaultAnchor.IsIdent()) {
     return defaultAnchor.AsIdent().AsAtom();
   }

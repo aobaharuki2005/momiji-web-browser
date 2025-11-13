@@ -1013,7 +1013,7 @@ nsStylePosition::nsStylePosition()
       mHeight(StyleSize::Auto()),
       mMinHeight(StyleSize::Auto()),
       mMaxHeight(StyleMaxSize::None()),
-      mPositionAnchor(StylePositionAnchor::Auto()),
+      mPositionAnchor(StylePositionAnchor::None()),
       mPositionVisibility(StylePositionVisibility::ALWAYS),
       mPositionTryFallbacks(StylePositionTryFallbacks()),
       mPositionTryOrder(StylePositionTryOrder::Normal),
