@@ -40,7 +40,7 @@ export const NewTabActorRegistry = {
   },
 
   /**
-   * Registers the Attribution actor.
+   * Registers the Attribution actor to handle conversion events from advertiser websites.
    * Called by NewTabAttributionFeed when attribution is enabled.
    */
   registerAttributionActor() {

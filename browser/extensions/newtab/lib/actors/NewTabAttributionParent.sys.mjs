@@ -16,10 +16,6 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   });
 });
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
-
 /**
  * Allowed fields in the conversion event payload from advertisers.
  * - partnerId: Mozilla-generated UUID associated with the advertiser
@@ -49,10 +45,9 @@ function isPlainObject(obj) {
   );
 }
 
-const ATTRIBUTION_ALLOWLIST_COLLECTION = "newtab-attribution-allowlist";
-
+// RS collection: https://bugzilla.mozilla.org/show_bug.cgi?id=1994040
+// TODO: connect to RS collection when created
 let gAllowList = new Set([]);
-let gAllowListClient = null;
 
 /**
  * Parent-side JSWindowActor for handling attribution conversion events.
@@ -62,11 +57,6 @@ let gAllowListClient = null;
  * Upon successful validation, the conversion data is passed to NewTabAttributionService
  */
 export class AttributionParent extends JSWindowActorParent {
-  constructor() {
-    super();
-    this._onSync = this.onSync.bind(this);
-  }
-
   /**
    * TEST-ONLY: Override the allowlist from a test.
    *
@@ -74,73 +64,6 @@ export class AttributionParent extends JSWindowActorParent {
    */
   setAllowListForTest(origins = []) {
     gAllowList = new Set(origins);
-  }
-
-  /**
-   * TEST-ONLY: Reset the Remote Settings client.
-   */
-  resetRemoteSettingsClientForTest() {
-    gAllowListClient = null;
-  }
-
-  /**
-   * This thin wrapper around lazy.RemoteSettings makes it easier for us to write
-   * automated tests that simulate responses from this fetch.
-   */
-  RemoteSettings(...args) {
-    return lazy.RemoteSettings(...args);
-  }
-
-  /**
-   * Updates the global allowlist with the provided records.
-   *
-   * @param {Array} records - Array of Remote Settings records containing domain fields.
-   */
-  updateAllowList(records) {
-    if (records?.length) {
-      const domains = records.map(record => record.domain);
-      gAllowList = new Set(domains);
-    } else {
-      gAllowList = new Set([]);
-    }
-  }
-
-  /**
-   * Retrieves the allow list of advertiser origins from Remote Settings.
-   * Populates the internal gAllowList set with the retrieved origins.
-   */
-  async retrieveAllowList() {
-    try {
-      if (!gAllowListClient) {
-        gAllowListClient = this.RemoteSettings(
-          ATTRIBUTION_ALLOWLIST_COLLECTION
-        );
-        gAllowListClient.on("sync", this._onSync);
-        const records = await gAllowListClient.get();
-        this.updateAllowList(records);
-      }
-    } catch (error) {
-      lazy.logConsole.error(
-        `AttributionParent: failed to retrieve allow list: ${error}`
-      );
-    }
-  }
-
-  /**
-   * Handles Remote Settings sync events.
-   * Updates the allow list when the collection changes.
-   *
-   * @param {object} event - The sync event object.
-   * @param {Array} event.data.current - The current records after sync.
-   */
-  onSync({ data: { current } }) {
-    this.updateAllowList(current);
-  }
-
-  didDestroy() {
-    if (gAllowListClient) {
-      gAllowListClient.off("sync", this._onSync);
-    }
   }
 
   /**
@@ -215,10 +138,6 @@ export class AttributionParent extends JSWindowActorParent {
         `AttributionParent: conversion events must be sent over HTTPS`
       );
       return;
-    }
-
-    if (!gAllowList.size) {
-      await this.retrieveAllowList();
     }
 
     // Only accept conversion events from allowlisted origins

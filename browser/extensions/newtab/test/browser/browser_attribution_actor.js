@@ -11,16 +11,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://newtab/lib/NewTabAttributionService.sys.mjs",
 });
 
-const { AttributionParent } = ChromeUtils.importESModule(
-  "resource://newtab/lib/actors/NewTabAttributionParent.sys.mjs"
-);
-
 const { DAPSender } = ChromeUtils.importESModule(
   "resource://gre/modules/DAPSender.sys.mjs"
-);
-
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
 );
 
 let sandbox;
@@ -256,104 +248,5 @@ add_task(async function test_parent_blocks_missing_detail() {
     await dispatchAttributionEvent(browser, {});
 
     Assert.ok(!conversionStub.called, "onAttributionConversion was not called");
-  });
-});
-
-/**
- * Test that Remote Settings client uses get() and registers onSync handler.
- */
-add_task(async function test_remote_settings_sync_and_handler() {
-  await resetTestState();
-
-  const mockClient = {
-    get: sandbox
-      .stub()
-      .resolves([
-        { domain: "https://example.com" },
-        { domain: "https://partner.com" },
-      ]),
-    on: sandbox.stub(),
-    off: sandbox.stub(),
-  };
-
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    const parent = await getParentActor(browser);
-    parent.resetRemoteSettingsClientForTest();
-    sandbox.stub(parent, "RemoteSettings").returns(mockClient);
-
-    await parent.retrieveAllowList();
-
-    Assert.ok(mockClient.get.calledOnce, "get() was called once");
-    Assert.ok(mockClient.on.calledOnce, "on() was called once");
-    Assert.equal(
-      mockClient.on.firstCall.args[0],
-      "sync",
-      "on() was called with 'sync' event"
-    );
-  });
-});
-
-/**
- * Test that onSync updates the allowlist when Remote Settings syncs.
- */
-add_task(async function test_onSync_updates_allowlist() {
-  await resetTestState();
-
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    const parent = await getParentActor(browser);
-    const testOrigin = "https://test-partner.com";
-
-    parent.setAllowListForTest([]);
-
-    parent.onSync({
-      data: {
-        current: [{ domain: "https://example.com" }, { domain: testOrigin }],
-      },
-    });
-
-    const origin = parent.manager.documentPrincipal.originNoSuffix;
-    parent.setAllowListForTest([origin]);
-
-    await dispatchAttributionEvent(browser, {
-      partnerId: "test-partner",
-      lookbackDays: 7,
-      impressionType: "view",
-    });
-
-    await BrowserTestUtils.waitForCondition(() => conversionStub.calledOnce);
-    Assert.ok(
-      conversionStub.calledOnce,
-      "onAttributionConversion was called after onSync updated allowlist"
-    );
-  });
-});
-
-/**
- * Test that didDestroy removes the onSync event listener.
- */
-add_task(async function test_didDestroy_removes_listener() {
-  await resetTestState();
-
-  const mockClient = {
-    get: sandbox.stub().resolves([]),
-    on: sandbox.stub(),
-    off: sandbox.stub(),
-  };
-
-  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    const parent = await getParentActor(browser);
-    parent.resetRemoteSettingsClientForTest();
-    sandbox.stub(parent, "RemoteSettings").returns(mockClient);
-
-    await parent.retrieveAllowList();
-
-    parent.didDestroy();
-
-    Assert.ok(mockClient.off.calledOnce, "off() was called once");
-    Assert.equal(
-      mockClient.off.firstCall.args[0],
-      "sync",
-      "off() was called with 'sync' event"
-    );
   });
 });
