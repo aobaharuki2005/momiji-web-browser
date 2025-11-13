@@ -916,6 +916,42 @@ export const tokensTable = {
     },
     {
       value: {
+        forcedColors: "LinkText",
+        brand: { default: "var(--color-accent-primary)" },
+        platform: { default: "LinkText" },
+      },
+      name: "--link-color",
+    },
+    {
+      value: {
+        forcedColors: "LinkText",
+        brand: { default: "var(--color-accent-primary-hover)" },
+        platform: {
+          default: "color-mix(in srgb, black 10%, var(--link-color))",
+        },
+      },
+      name: "--link-color-hover",
+    },
+    {
+      value: {
+        forcedColors: "ActiveText",
+        brand: { default: "var(--color-accent-primary-active)" },
+        platform: {
+          default: "color-mix(in srgb, black 20%, var(--link-color))",
+        },
+      },
+      name: "--link-color-active",
+    },
+    {
+      value: {
+        forcedColors: "var(--link-color)",
+        brand: { default: "var(--link-color)" },
+        platform: { default: "var(--link-color)" },
+      },
+      name: "--link-color-visited",
+    },
+    {
+      value: {
         prefersContrast: "CanvasText",
         brand: {
           light: "var(--color-gray-100)",
@@ -980,6 +1016,7 @@ export const tokensTable = {
     },
     { value: "2px", name: "--focus-outline-offset" },
     { value: "2px", name: "--focus-outline-width" },
+    { value: "1px", name: "--link-focus-outline-offset" },
     {
       value: {
         light: "var(--color-red-70)",
@@ -997,45 +1034,6 @@ export const tokensTable = {
     { value: "20px", name: "--icon-size-medium" },
     { value: "var(--size-item-medium)", name: "--icon-size-large" },
     { value: "var(--size-item-large)", name: "--icon-size-xlarge" },
-  ],
-  link: [
-    {
-      value: {
-        forcedColors: "LinkText",
-        brand: { default: "var(--color-accent-primary)" },
-        platform: { default: "LinkText" },
-      },
-      name: "--link-color",
-    },
-    {
-      value: {
-        forcedColors: "LinkText",
-        brand: { default: "var(--color-accent-primary-hover)" },
-        platform: {
-          default: "color-mix(in srgb, black 10%, var(--link-color))",
-        },
-      },
-      name: "--link-color-hover",
-    },
-    {
-      value: {
-        forcedColors: "ActiveText",
-        brand: { default: "var(--color-accent-primary-active)" },
-        platform: {
-          default: "color-mix(in srgb, black 20%, var(--link-color))",
-        },
-      },
-      name: "--link-color-active",
-    },
-    {
-      value: {
-        forcedColors: "var(--link-color)",
-        brand: { default: "var(--link-color)" },
-        platform: { default: "var(--link-color)" },
-      },
-      name: "--link-color-visited",
-    },
-    { value: "1px", name: "--link-focus-outline-offset" },
   ],
   "box-shadow": [
     {

@@ -482,7 +482,6 @@ function formatTokensTableData(tokensData) {
 const SINGULAR_TABLE_CATEGORIES = [
   "button",
   "color",
-  "link",
   "size",
   "space",
   "opacity",
@@ -508,6 +507,14 @@ function getTableName(tokenName) {
 
   if (tokenName.includes("heading-font-weight")) {
     return "font-weight";
+  }
+
+  if (tokenName.includes("link-color")) {
+    return "text-color";
+  }
+
+  if (tokenName.includes("outline-offset")) {
+    return "outline";
   }
 
   let replacePattern =
