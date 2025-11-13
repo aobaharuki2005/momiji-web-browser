@@ -395,7 +395,7 @@ class InputModule extends RootBiDiModule {
   }
 
   static get supportedEvents() {
-    return [];
+    return ["input.fileDialogOpened"];
   }
 }
 
