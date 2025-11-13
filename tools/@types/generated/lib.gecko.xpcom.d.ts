@@ -5879,6 +5879,7 @@ interface nsICacheInfoChannel extends nsISupports, Enums<typeof nsICacheInfoChan
   readonly cacheTokenFetchCount: u32;
   readonly cacheTokenExpirationTime: u32;
   isFromCache(): boolean;
+  hasCacheEntry(): boolean;
   isRacing(): boolean;
   getCacheEntryId(): u64;
   cacheKey: u32;
@@ -6747,7 +6748,6 @@ interface nsINetworkLinkService extends nsISupports {
 // https://searchfox.org/mozilla-central/source/netwerk/base/nsINetworkPredictor.idl
 
 interface nsINetworkPredictor extends nsISupports {
-  readonly PREDICT_LINK?: 0;
   readonly PREDICT_LOAD?: 1;
   readonly PREDICT_STARTUP?: 2;
   readonly LEARN_LOAD_TOPLEVEL?: 0;
@@ -6965,7 +6965,7 @@ interface nsIProtocolProxyService extends nsISupports {
   asyncResolve(aChannelOrURI: nsISupports, aFlags: u32, aCallback: nsIProtocolProxyCallback, aMainThreadTarget?: nsISerialEventTarget): nsICancelable;
   newProxyInfo(aType: string, aHost: string, aPort: i32, aProxyAuthorizationHeader: string, aConnectionIsolationKey: string, aFlags: u32, aFailoverTimeout: u32, aFailoverProxy: nsIProxyInfo): nsIProxyInfo;
   newProxyInfoWithAuth(aType: string, aHost: string, aPort: i32, aUsername: string, aPassword: string, aProxyAuthorizationHeader: string, aConnectionIsolationKey: string, aFlags: u32, aFailoverTimeout: u32, aFailoverProxy: nsIProxyInfo): nsIProxyInfo;
-  newMASQUEProxyInfo(aHost: string, aPort: i32, aPathTemplate: string, aProxyAuthorizationHeader: string, aConnectionIsolationKey: string, aFlags: u32, aFailoverTimeout: u32, aFailoverProxy: nsIProxyInfo): nsIProxyInfo;
+  newMASQUEProxyInfo(aHost: string, aPort: i32, aMasqueTemplate: string, aProxyAuthorizationHeader: string, aConnectionIsolationKey: string, aFlags: u32, aFailoverTimeout: u32, aFailoverProxy: nsIProxyInfo): nsIProxyInfo;
   getFailoverForProxy(aProxyInfo: nsIProxyInfo, aURI: nsIURI, aReason: nsresult): nsIProxyInfo;
   registerFilter(aFilter: nsIProtocolProxyFilter, aPosition: u32): void;
   registerChannelFilter(aFilter: nsIProtocolProxyChannelFilter, aPosition: u32): void;
@@ -7017,7 +7017,7 @@ interface nsIProxyInfo extends nsISupports {
   sourceId: string;
   readonly proxyAuthorizationHeader: string;
   readonly connectionIsolationKey: string;
-  pathTemplate: string;
+  masqueTemplate: string;
 }
 
 // https://searchfox.org/mozilla-central/source/netwerk/base/nsIRandomGenerator.idl
@@ -8887,6 +8887,17 @@ interface nsIWebTransportHash extends nsISupports {
   readonly value: u8[];
 }
 
+// https://searchfox.org/mozilla-central/source/netwerk/protocol/webtransport/nsIWebTransportEventService.idl
+
+interface nsIWebTransportEventListener extends nsISupports {
+}
+
+interface nsIWebTransportEventService extends nsISupports {
+  addListener(aInnerWindowID: u64, aListener: nsIWebTransportEventListener): void;
+  removeListener(aInnerWindowID: u64, aListener: nsIWebTransportEventListener): void;
+  hasListenerFor(aInnerWindowID: u64): boolean;
+}
+
 // https://searchfox.org/mozilla-central/source/netwerk/protocol/webtransport/nsIWebTransportStream.idl
 
 interface nsIWebTransportSendStreamStats extends nsISupports {
@@ -10085,7 +10096,7 @@ namespace nsINavHistoryService {
 }
 
 interface nsINavHistoryService extends nsISupports, Enums<typeof nsINavHistoryService_TransitionType> {
-  readonly DATABASE_SCHEMA_VERSION?: 82;
+  readonly DATABASE_SCHEMA_VERSION?: 83;
   readonly DATABASE_STATUS_OK?: 0;
   readonly DATABASE_STATUS_CREATE?: 1;
   readonly DATABASE_STATUS_CORRUPT?: 2;
@@ -10110,7 +10121,6 @@ interface nsINavHistoryService extends nsISupports, Enums<typeof nsINavHistorySe
   makeGuid(): string;
   pageFrecencyThreshold(aVisitAgeInDays: i32, aNumVisits: i32, aBookmarked: boolean): i64;
   hashURL(aSpec: string, aMode?: string): u64;
-  isFrecencyDecaying: boolean;
   readonly isAlternativeFrecencyEnabled: boolean;
   shouldStartFrecencyRecalculation: boolean;
   readonly DBConnection: mozIStorageConnection;
@@ -11471,11 +11481,6 @@ interface nsICookieBannerService extends nsISupports, Enums<typeof nsICookieBann
   markSiteExecuted(aSite: string, aIsTopLevel: boolean, aIsPrivate: boolean): void;
   removeExecutedRecordForSite(aSite: string, aIsPrivate: boolean): void;
   removeAllExecutedRecords(aIsPrivate: boolean): void;
-}
-
-// https://searchfox.org/mozilla-central/source/toolkit/components/cookiebanners/nsICookieBannerTelemetryService.idl
-
-interface nsICookieBannerTelemetryService extends nsISupports {
 }
 
 // https://searchfox.org/mozilla-central/source/toolkit/components/cookiebanners/nsICookieRule.idl
@@ -16094,6 +16099,8 @@ interface nsIXPCComponents_Interfaces {
   WebTransportSessionEventListener: nsJSIID<WebTransportSessionEventListener, typeof WebTransportSessionEventListener_DatagramOutcome>;
   nsIWebTransportStreamCallback: nsJSIID<nsIWebTransportStreamCallback>;
   nsIWebTransportHash: nsJSIID<nsIWebTransportHash>;
+  nsIWebTransportEventListener: nsJSIID<nsIWebTransportEventListener>;
+  nsIWebTransportEventService: nsJSIID<nsIWebTransportEventService>;
   nsIWebTransportSendStreamStats: nsJSIID<nsIWebTransportSendStreamStats>;
   nsIWebTransportReceiveStreamStats: nsJSIID<nsIWebTransportReceiveStreamStats>;
   nsIWebTransportStreamStatsCallback: nsJSIID<nsIWebTransportStreamStatsCallback>;
@@ -16271,7 +16278,6 @@ interface nsIXPCComponents_Interfaces {
   nsICookieBannerListService: nsJSIID<nsICookieBannerListService>;
   nsICookieBannerRule: nsJSIID<nsICookieBannerRule>;
   nsICookieBannerService: nsJSIID<nsICookieBannerService, typeof nsICookieBannerService_Modes>;
-  nsICookieBannerTelemetryService: nsJSIID<nsICookieBannerTelemetryService>;
   nsICookieRule: nsJSIID<nsICookieRule>;
   nsICrashService: nsJSIID<nsICrashService>;
   nsIFinalizationWitnessService: nsJSIID<nsIFinalizationWitnessService>;

@@ -3120,6 +3120,9 @@ interface GleanImpl {
     lenientThis: GleanCounter;
     mathMlDeprecatedMathSpaceValue2: GleanCounter;
     mathMlDeprecatedMathVariant: GleanCounter;
+    mathMlDeprecatedMoExplicitAccent: GleanCounter;
+    mathMlDeprecatedMoverNonExplicitAccent: GleanCounter;
+    mathMlDeprecatedMunderNonExplicitAccentunder: GleanCounter;
     motionEvent: GleanCounter;
     mouseEventMozPressure: GleanCounter;
     mozInputSource: GleanCounter;
@@ -3168,6 +3171,9 @@ interface GleanImpl {
     lenientThis: GleanCounter;
     mathMlDeprecatedMathSpaceValue2: GleanCounter;
     mathMlDeprecatedMathVariant: GleanCounter;
+    mathMlDeprecatedMoExplicitAccent: GleanCounter;
+    mathMlDeprecatedMoverNonExplicitAccent: GleanCounter;
+    mathMlDeprecatedMunderNonExplicitAccentunder: GleanCounter;
     motionEvent: GleanCounter;
     mouseEventMozPressure: GleanCounter;
     mozInputSource: GleanCounter;
@@ -5466,9 +5472,6 @@ interface GleanImpl {
   }
 
   cookieBanners: {
-    googleGdprChoiceCookie: Record<string, GleanString>;
-    googleGdprChoiceCookieEvent: GleanEventWithExtras<{ choice?: string, region?: string, search_domain?: string }>;
-    googleGdprChoiceCookieEventPbm: GleanEventWithExtras<{ choice?: string }>;
     normalWindowServiceMode: Record<"disabled"|"invalid"|"reject"|"reject_or_accept", GleanBoolean>;
     privateWindowServiceMode: Record<"disabled"|"invalid"|"reject"|"reject_or_accept", GleanBoolean>;
     serviceDetectOnly: GleanBoolean;
@@ -5923,7 +5926,7 @@ interface GleanImpl {
     remoteSettingsSyncError: GleanEventWithExtras<{ collection?: string, force_sync?: string, reason?: string, trigger?: string }>;
     startupDatabaseConsistency: GleanEventWithExtras<{ db_active_count?: string, primary?: string, store_active_count?: string, total_db_count?: string, total_store_count?: string, trigger?: string }>;
     unenrollFailed: GleanEventWithExtras<{ experiment?: string, reason?: string }>;
-    unenrollment: GleanEventWithExtras<{ branch?: string, changed_pref?: string, conflicting_slug?: string, experiment?: string, locale?: string, pref_name?: string, pref_type?: string, reason?: string }>;
+    unenrollment: GleanEventWithExtras<{ about_config_change?: string, branch?: string, changed_pref?: string, conflicting_slug?: string, experiment?: string, locale?: string, pref_name?: string, pref_type?: string, reason?: string }>;
     validationFailed: GleanEventWithExtras<{ branch?: string, experiment?: string, l10n_ids?: string, locale?: string, reason?: string }>;
   }
 

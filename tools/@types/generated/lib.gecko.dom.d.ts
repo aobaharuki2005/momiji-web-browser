@@ -712,6 +712,7 @@ interface DecodedStreamDebugInfo {
     instance?: string;
     lastAudio?: number;
     lastOutputTime?: number;
+    lastReportedPosition?: number;
     playing?: number;
     startTime?: number;
 }
@@ -1570,6 +1571,11 @@ interface ImageDecoderInit {
 interface ImageEncodeOptions {
     quality?: number;
     type?: string;
+}
+
+interface ImageSize {
+    height: number;
+    width: number;
 }
 
 interface ImageText {
@@ -3657,7 +3663,6 @@ interface RedirectBlockedEventInit extends EventInit {
 
 interface RegistrationOptions {
     scope?: string;
-    type?: WorkerType;
     updateViaCache?: ServiceWorkerUpdateViaCache;
 }
 
@@ -13345,6 +13350,7 @@ interface ImageTrack {
     readonly frameCount: number;
     readonly repetitionCount: number;
     selected: boolean;
+    getSizes(): ImageSize[];
 }
 
 declare var ImageTrack: {
@@ -25872,6 +25878,8 @@ declare namespace CSS {
 
 declare namespace ChromeUtils {
     var aliveUtilityProcesses: number;
+    var cpuTimeSinceProcessStart: number;
+    var currentProcessMemoryUsage: number;
     var domProcessChild: nsIDOMProcessChild | null;
     var recentJSDevError: any;
     function CreateOriginAttributesFromOriginSuffix(suffix: string): OriginAttributesDictionary;
