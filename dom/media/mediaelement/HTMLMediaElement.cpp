@@ -99,6 +99,7 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/nsVideoFrame.h"
 #include "nsAttrValueInlines.h"
+#include "nsAttrValueOrString.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
@@ -5218,13 +5219,12 @@ void HTMLMediaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::src) {
       mSrcMediaSource = nullptr;
+      nsAttrValueOrString srcVal(aValue);
       mSrcAttrTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
-          this, aValue ? aValue->GetStringValue() : EmptyString(),
-          aMaybeScriptedPrincipal);
+          this, srcVal.String(), aMaybeScriptedPrincipal);
       if (aValue) {
-        nsString srcStr = aValue->GetStringValue();
         nsCOMPtr<nsIURI> uri;
-        NewURIFromString(srcStr, getter_AddRefs(uri));
+        NewURIFromString(srcVal.String(), getter_AddRefs(uri));
         if (uri && IsMediaSourceURI(uri)) {
           nsresult rv = NS_GetSourceForMediaSourceURI(
               uri, getter_AddRefs(mSrcMediaSource));

@@ -361,9 +361,11 @@ void SVGElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                               const nsAttrValue* aOldValue,
                               nsIPrincipal* aSubjectPrincipal, bool aNotify) {
   if (IsEventAttributeName(aName) && aValue) {
-    MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
-               "Expected string value for script body");
-    SetEventHandler(GetEventNameForAttr(aName), aValue->GetStringValue());
+    MOZ_ASSERT(aValue->Type() == nsAttrValue::eString ||
+                   aValue->Type() == nsAttrValue::eAtom,
+               "Expected string or atom value for script body");
+    SetEventHandler(GetEventNameForAttr(aName),
+                    nsAttrValueOrString(aValue).String());
   }
 
   // The nonce will be copied over to an internal slot and cleared from the
@@ -371,7 +373,7 @@ void SVGElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   // the CSP list contains a header-delivered CSP.
   if (nsGkAtoms::nonce == aName && kNameSpaceID_None == aNamespaceID) {
     if (aValue) {
-      SetNonce(aValue->GetStringValue());
+      SetNonce(nsAttrValueOrString(aValue).String());
       if (OwnerDoc()->GetHasCSPDeliveredThroughHeader()) {
         SetFlags(NODE_HAS_NONCE_AND_HEADER_CSP);
       }

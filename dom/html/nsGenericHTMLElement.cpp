@@ -58,6 +58,7 @@
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/UnbindContext.h"
 #include "nsAtom.h"
+#include "nsAttrValueOrString.h"
 #include "nsCOMPtr.h"
 #include "nsCaseTreatment.h"
 #include "nsComputedDOMStyle.h"
@@ -721,9 +722,11 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                         bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (IsEventAttributeName(aName) && aValue) {
-      MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
-                 "Expected string value for script body");
-      SetEventHandler(GetEventNameForAttr(aName), aValue->GetStringValue());
+      MOZ_ASSERT(aValue->Type() == nsAttrValue::eString ||
+                     aValue->Type() == nsAttrValue::eAtom,
+                 "Expected string or atom value for script body");
+      SetEventHandler(GetEventNameForAttr(aName),
+                      nsAttrValueOrString(aValue).String());
     } else if (aNotify && aName == nsGkAtoms::spellcheck) {
       SyncEditorsOnSubtree(this);
     } else if (aName == nsGkAtoms::popover) {
@@ -872,7 +875,7 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     // the CSP list contains a header-delivered CSP.
     if (nsGkAtoms::nonce == aName) {
       if (aValue) {
-        SetNonce(aValue->GetStringValue());
+        SetNonce(nsAttrValueOrString(aValue).String());
         if (OwnerDoc()->GetHasCSPDeliveredThroughHeader()) {
           SetFlags(NODE_HAS_NONCE_AND_HEADER_CSP);
         }
@@ -1677,8 +1680,8 @@ const nsAttrValue* nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr,
 
   // Don't care about return value.  If it fails, we still want to
   // return true, and *aURI will be null.
-  nsContentUtils::NewURIWithDocumentCharset(aURI, attr->GetStringValue(),
-                                            OwnerDoc(), baseURI);
+  nsContentUtils::NewURIWithDocumentCharset(
+      aURI, nsAttrValueOrString(attr).String(), OwnerDoc(), baseURI);
   return attr;
 }
 

@@ -55,6 +55,7 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/glean/DomMetrics.h"
 #include "nsAttrValueInlines.h"
+#include "nsAttrValueOrString.h"
 #include "nsBaseCommandController.h"
 #include "nsCRTGlue.h"
 #include "nsColorControlFrame.h"
@@ -1305,17 +1306,17 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None) {
     bool needValidityUpdate = false;
     if (aName == nsGkAtoms::src) {
+      nsAttrValueOrString value(aValue);
       mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
-          this, aValue ? aValue->GetStringValue() : EmptyString(),
-          aSubjectPrincipal);
+          this, value.String(), aSubjectPrincipal);
       if (aNotify && mType == FormControlType::InputImage) {
         if (aValue) {
           // Mark channel as urgent-start before load image if the image load is
           // initiated by a user interaction.
           mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
-          LoadImage(aValue->GetStringValue(), true, aNotify,
-                    eImageLoadType_Normal, mSrcTriggeringPrincipal);
+          LoadImage(value.String(), true, aNotify, eImageLoadType_Normal,
+                    mSrcTriggeringPrincipal);
         } else {
           // Null value means the attr got unset; drop the image
           CancelImageRequests(aNotify);
