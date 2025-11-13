@@ -5744,8 +5744,7 @@ class nsDisplayStickyPosition final : public nsDisplayOwnLayer {
       : nsDisplayOwnLayer(aBuilder, aOther),
         mContainerASR(aOther.mContainerASR),
         mClippedToDisplayPort(aOther.mClippedToDisplayPort),
-        mShouldFlatten(false),
-        mWrStickyAnimationId(0) {
+        mShouldFlatten(false) {
     MOZ_COUNT_CTOR(nsDisplayStickyPosition);
   }
 
@@ -5817,13 +5816,6 @@ class nsDisplayStickyPosition final : public nsDisplayOwnLayer {
 
   // True if this item should be flattened away.
   bool mShouldFlatten;
-
-  // Used for APZ to animate the sticky element in the compositor
-  // for purposes such as dynamic toolbar movement and (in the future)
-  // overscroll-related adjustment. Unlike nsDisplayOwnLayer::mWrAnimationId,
-  // this does not create a WebRender ReferenceFrame, which is important
-  // because sticky elements do not establish Gecko reference frames either.
-  uint64_t mWrStickyAnimationId;
 };
 
 class nsDisplayViewTransitionCapture final : public nsDisplayOwnLayer {

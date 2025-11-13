@@ -5812,8 +5812,7 @@ nsDisplayStickyPosition::nsDisplayStickyPosition(
                         aContainerASRType),
       mContainerASR(aContainerASR),
       mClippedToDisplayPort(aClippedToDisplayPort),
-      mShouldFlatten(false),
-      mWrStickyAnimationId(0) {
+      mShouldFlatten(false) {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
 }
 
