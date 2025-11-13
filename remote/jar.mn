@@ -91,6 +91,7 @@ remote.jar:
   content/shared/webdriver/Certificates.sys.mjs (shared/webdriver/Certificates.sys.mjs)
   content/shared/webdriver/Errors.sys.mjs (shared/webdriver/Errors.sys.mjs)
   content/shared/webdriver/Event.sys.mjs (shared/webdriver/Event.sys.mjs)
+  content/shared/webdriver/FilePickerHandler.sys.mjs (shared/webdriver/FilePickerHandler.sys.mjs)
   content/shared/webdriver/KeyData.sys.mjs (shared/webdriver/KeyData.sys.mjs)
   content/shared/webdriver/NodeCache.sys.mjs (shared/webdriver/NodeCache.sys.mjs)
   content/shared/webdriver/Session.sys.mjs (shared/webdriver/Session.sys.mjs)

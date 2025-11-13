@@ -14,6 +14,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Capabilities: "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
   Certificates: "chrome://remote/content/shared/webdriver/Certificates.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  FilePickerHandler:
+    "chrome://remote/content/shared/webdriver/FilePickerHandler.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
@@ -284,6 +286,11 @@ export class WebDriverSession {
     // Start the tracking of browsing contexts to create Navigable ids.
     lazy.NavigableManager.startTracking();
 
+    // Temporarily dismiss all file pickers.
+    // Bug 1999693: File pickers should only be dismissed when the unhandled
+    // prompt behaviour for type "file" is not set to "ignore".
+    lazy.FilePickerHandler.dismissFilePickers(this);
+
     webDriverSessions.set(this.#id, this);
   }
 
@@ -293,6 +300,8 @@ export class WebDriverSession {
     // Stop the tracking of browsing contexts when no WebDriver
     // session exists anymore.
     lazy.NavigableManager.stopTracking();
+
+    lazy.FilePickerHandler.allowFilePickers(this);
 
     lazy.unregisterProcessDataActor();
 
