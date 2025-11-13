@@ -11708,7 +11708,6 @@ interface nsISearchService extends nsISupports, Enums<typeof nsISearchService_Op
   maybeSetAndOverrideDefault(extension: any): Promise<any>;
   getDefaultEngineInfo(): any;
   parseSubmissionURL(url: string): nsISearchParseSubmissionResult;
-  getAlternateDomains(domain: string): string[];
 }
 
 // https://searchfox.org/mozilla-central/source/toolkit/components/shell/nsIToolkitShellService.idl

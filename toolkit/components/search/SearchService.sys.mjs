@@ -1051,10 +1051,6 @@ export class SearchService {
     );
   }
 
-  getAlternateDomains(domain) {
-    return lazy.SearchStaticData.getAlternateDomains(domain);
-  }
-
   /**
    * Whether to display the "Search in Private Window" result in the urlbar.
    */
