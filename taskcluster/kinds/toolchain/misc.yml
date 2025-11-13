@@ -309,7 +309,6 @@ android-custom-car:
         script: build-custom-car.sh
         arguments: [
             car_android.tar.zst,
-            blink_symbol_level=0,
             chrome_pgo_phase=2,
             dcheck_always_on=false,
             enable_nacl=false,
@@ -319,12 +318,11 @@ android-custom-car:
             is_component_build=false,
             is_debug=false,
             is_official_build=true,
-            symbol_level=0,
+            symbol_level=2,
             target_cpu="arm64",
             target_os="android",
             is_android=true,
-            is_high_end_android=true,
-            v8_symbol_level=0
+            is_high_end_android=true
         ]
         toolchain-artifact: public/build/car_android.tar.zst
 
