@@ -108,7 +108,6 @@
 #include "mozilla/net/ExtensionProtocolHandler.h"
 #include "mozilla/net/PageThumbProtocolHandler.h"
 #include "mozilla/net/SFVService.h"
-#include <limits>
 #include "nsICookieService.h"
 #include "nsIXPConnect.h"
 #include "nsParserConstants.h"

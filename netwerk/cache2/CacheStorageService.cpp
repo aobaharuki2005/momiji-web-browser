@@ -6,7 +6,6 @@
 
 #include "CacheLog.h"
 #include "CacheStorageService.h"
-#include <iterator>
 #include "CacheFileIOManager.h"
 #include "CacheObserver.h"
 #include "CacheIndex.h"
