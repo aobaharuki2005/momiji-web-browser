@@ -334,12 +334,6 @@ StickyScrollContainer* ClipManager::GetStickyScrollContainer(
   return stickyScrollContainer;
 }
 
-static nsDisplayStickyPosition* FindStickyPositionItem(
-    const ActiveScrolledRoot* aASR, nsDisplayItem* aItem) {
-  // TODO(bug 1730749): Implement somehow.
-  return nullptr;
-}
-
 // Returns the smallest distance from "0" to the range [min, max] where
 // min <= max. Despite the name, the return value is actually a 1-D vector,
 // and so may be negative if max < 0.
@@ -385,14 +379,6 @@ Maybe<wr::WrSpatialId> ClipManager::DefineStickyNode(
     nsDisplayListBuilder* aBuilder, Maybe<wr::WrSpatialId> aParentSpatialId,
     const ActiveScrolledRoot* aASR, nsDisplayItem* aItem) {
   nsIFrame* stickyFrame = aASR->mFrame;
-  nsDisplayStickyPosition* stickyItem = FindStickyPositionItem(aASR, aItem);
-  MOZ_ASSERT(stickyItem->Frame() == stickyFrame);
-
-  // Do not create a spatial node for sticky items with mShouldFlatten=true.
-  // These are inside inactive scroll frames and so cannot move asynchronously.
-  if (stickyItem->ShouldFlattenAway(aBuilder)) {
-    return Nothing();
-  }
 
   if (Maybe<wr::WrSpatialId> space =
           mBuilder->GetSpatialIdForDefinedStickyLayer(aASR)) {
@@ -406,10 +392,15 @@ Maybe<wr::WrSpatialId> ClipManager::DefineStickyNode(
     return Nothing();
   }
 
+  // Do not create a spatial node for sticky items with mShouldFlatten=true.
+  // These are inside inactive scroll frames and so cannot move asynchronously.
+  if (stickyScrollContainer->ShouldFlattenAway()) {
+    return Nothing();
+  }
+
   float auPerDevPixel = stickyFrame->PresContext()->AppUnitsPerDevPixel();
 
-  bool snap;
-  nsRect itemBounds = stickyItem->GetBounds(aBuilder, &snap);
+  nsRect itemBounds = stickyFrame->GetRect();
 
   Maybe<float> topMargin;
   Maybe<float> rightMargin;
@@ -426,7 +417,7 @@ Maybe<wr::WrSpatialId> ClipManager::DefineStickyNode(
   nsPoint offset =
       stickyScrollContainer->ScrollContainer()->GetOffsetToCrossDoc(
           stickyFrame) +
-      stickyItem->ToReferenceFrame();
+      aBuilder->ToReferenceFrame(stickyFrame);
 
   // Adjust the scrollPort coordinates to be relative to the reference frame,
   // so that it is in the same space as everything else.
@@ -542,16 +533,18 @@ Maybe<wr::WrSpatialId> ClipManager::DefineStickyNode(
   wr::LayoutVector2D applied = {
       NSAppUnitsToFloatPixels(appliedOffset.x, auPerDevPixel),
       NSAppUnitsToFloatPixels(appliedOffset.y, auPerDevPixel)};
-  bool needsProp = stickyItem->ShouldGetStickyAnimationId();
+  bool needsProp =
+      nsDisplayStickyPosition::ShouldGetStickyAnimationId(stickyFrame);
   Maybe<wr::WrAnimationProperty> prop;
-  auto spatialKey =
-      wr::SpatialKey(uint64_t(stickyFrame), stickyItem->GetPerFrameKey(),
-                     wr::SpatialKeyKind::Sticky);
+  auto displayItemKey = nsDisplayItem::GetPerFrameKey(
+      0, 0, DisplayItemType::TYPE_STICKY_POSITION);
+  auto spatialKey = wr::SpatialKey(uint64_t(stickyFrame), displayItemKey,
+                                   wr::SpatialKeyKind::Sticky);
   if (needsProp) {
     RefPtr<WebRenderAPZAnimationData> animationData =
         mManager->CommandBuilder()
             .CreateOrRecycleWebRenderUserData<WebRenderAPZAnimationData>(
-                stickyItem);
+                displayItemKey, stickyFrame);
     uint64_t animationId = animationData->GetAnimationId();
 
     prop.emplace();
