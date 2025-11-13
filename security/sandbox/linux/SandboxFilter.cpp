@@ -1399,6 +1399,13 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       case __NR_getcwd:
         return Error(ENOENT);
 
+        // Basically every process type ends up using this for some
+        // reason (nsSystemInfo in content, Mesa in RDD, bug 1992904 for
+        // utility, etc.).  Other than GMP, which overrides this (see
+        // below), it's relatively safe to expose this information.
+      case __NR_uname:
+        return Allow();
+
       default:
         return SandboxPolicyBase::EvaluateSyscall(sysno);
     }
@@ -1781,9 +1788,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 
 #endif  // DESKTOP
 
-        // nsSystemInfo uses uname (and we cache an instance, so
-        // the info remains present even if we block the syscall)
-      case __NR_uname:
 #ifdef DESKTOP
       case __NR_sysinfo:
 #endif
@@ -2118,10 +2122,6 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
       case __NR_sched_get_priority_max:
         return Allow();
 
-        // Mesa sometimes wants to know the OS version.
-      case __NR_uname:
-        return Allow();
-
         // nvidia tries to mknod(!) its devices; that won't work anyway,
         // so quietly reject it.
 #ifdef __NR_mknod
@@ -2312,10 +2312,6 @@ class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
             .Else(InvalidSyscall());
       }
 #endif  // DESKTOP
-
-      // Bug 1640612
-      case __NR_uname:
-        return Allow();
 
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);

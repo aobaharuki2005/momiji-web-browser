@@ -1001,11 +1001,16 @@ void RunTestsGenericUtility(SandboxTestingChild* child) {
     return rv;
   });
 
-  struct rusage res;
   child->ErrnoTest("getrusage"_ns, true, [&] {
-    int rv = getrusage(RUSAGE_SELF, &res);
-    return rv;
+    struct rusage res;
+    return getrusage(RUSAGE_SELF, &res);
   });
+
+  child->ErrnoTest("uname"_ns, true, [&] {
+    struct utsname uts;
+    return uname(&uts);
+  });
+
 #  elif XP_MACOSX  // XP_LINUX
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);
