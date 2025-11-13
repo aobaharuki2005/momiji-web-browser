@@ -87,6 +87,7 @@ export default class PasswordValidationInputs extends MozLitElement {
     this._tooShort = true;
     this._passwordsMatch = false;
     this._passwordsValid = false;
+    this.passwordRulesEl.hide();
   }
 
   handleFocusNewPassword() {
