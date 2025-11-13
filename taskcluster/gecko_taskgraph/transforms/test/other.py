@@ -1137,15 +1137,14 @@ def enable_parallel_marking_in_tsan_tests(config, tasks):
 @transforms.add
 def set_webgpu_ignore_blocklist(config, tasks):
     """
-    Ignore the WebGPU blocklist on Linux (because CI's Mesa is old,
-    <https://bugzilla.mozilla.org/show_bug.cgi?id=1985348>) and on pre-Tahoe
-    MacOS (<https://bugzilla.mozilla.org/show_bug.cgi?id=1993341>).
+    Ignore the WebGPU blocklist on Linux because CI's Mesa is old
+
+    See <https://bugzilla.mozilla.org/show_bug.cgi?id=1985348>
     """
     for task in tasks:
-        if "web-platform-tests-webgpu" in task["test-name"] and (
-            task["test-platform"].startswith("linux")
-            or task["test-platform"].startswith("macosx1")
-        ):
+        if "web-platform-tests-webgpu" in task["test-name"] and task[
+            "test-platform"
+        ].startswith("linux"):
             extra_options = task["mozharness"].setdefault("extra-options", [])
             extra_options.append("--setpref=gfx.webgpu.ignore-blocklist=true")
 
