@@ -198,6 +198,9 @@ hashbrown_0_15 = { package = "hashbrown", path = "build/rust/hashbrown" }
 # Patch `thiserror` 1 to 2.
 thiserror = { path = "build/rust/thiserror" }
 
+# Patch `toml` 0.5 to 0.9
+toml = { path = "build/rust/toml" }
+
 # Patch thin_vec with not-yet-published changes.
 thin-vec = { path = "third_party/rust/thin-vec" }
 

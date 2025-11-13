@@ -257,6 +257,7 @@ export class Setting extends EventEmitter {
   _clearControllingExtensionInfo() {
     delete this.controllingExtensionInfo.id;
     delete this.controllingExtensionInfo.name;
+    delete this.controllingExtensionInfo.supportPage;
     // Request an update to the setting control so the UI is in the correct state
     this.onChange();
   }

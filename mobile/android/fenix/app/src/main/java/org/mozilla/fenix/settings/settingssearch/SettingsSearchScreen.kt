@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.settingssearch
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
@@ -21,12 +23,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.GleanMetrics.SettingsSearch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -76,17 +80,17 @@ fun SettingsSearchScreen(
                 }
             }
             is SettingsSearchState.NoSearchResults -> {
-                SettingsSearchMessageContent(
+                EmptySearchResultsView(
                     modifier = Modifier
                         .padding(top = topPadding)
                         .fillMaxSize(),
-                    currentUserQuery = state.searchQuery,
-                    )
+                )
             }
             is SettingsSearchState.SearchInProgress -> {
                 SearchResults(
                     store = store,
                     searchItems = state.searchResults,
+                    isRecentSearch = false,
                     modifier = Modifier
                         .padding(top = topPadding)
                         .fillMaxSize(),
@@ -99,16 +103,8 @@ fun SettingsSearchScreen(
 @Composable
 private fun SettingsSearchMessageContent(
     modifier: Modifier = Modifier,
-    currentUserQuery: String = "",
 ) {
-    val displayMessage = if (currentUserQuery.isBlank()) {
-        stringResource(R.string.settings_search_empty_query_placeholder)
-    } else {
-        stringResource(
-            R.string.settings_search_no_results_found_message,
-            currentUserQuery,
-        )
-    }
+    val displayMessage = stringResource(R.string.settings_search_empty_query_placeholder)
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center,
@@ -126,6 +122,7 @@ private fun SettingsSearchMessageContent(
 private fun SearchResults(
     store: SettingsSearchStore,
     searchItems: List<SettingsSearchItem>,
+    isRecentSearch: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val state by store.observeAsComposableState { it }
@@ -142,6 +139,12 @@ private fun SearchResults(
                 item = searchItem,
                 query = state.searchQuery,
                 onClick = {
+                    SettingsSearch.searchResultClicked.record(
+                        SettingsSearch.SearchResultClickedExtra(
+                            itemPreferenceKey = searchItem.preferenceKey,
+                            isRecentSearch = isRecentSearch,
+                        ),
+                    )
                     store.dispatch(
                         SettingsSearchAction.ResultItemClicked(
                             searchItem,
@@ -181,7 +184,44 @@ private fun RecentSearchesContent(
                 },
             )
         }
-        SearchResults(store, recentSearches, Modifier)
+        SearchResults(
+            store = store,
+            searchItems = recentSearches,
+            isRecentSearch = true,
+            modifier = Modifier,
+        )
+    }
+}
+
+@Composable
+private fun EmptySearchResultsView(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                modifier = Modifier.size(77.dp),
+                painter = painterResource(R.drawable.fox_exclamation_alert),
+                contentDescription = null,
+            )
+
+            Text(
+                text = stringResource(R.string.settings_search_no_results_title),
+                textAlign = TextAlign.Center,
+                style = FirefoxTheme.typography.headline7,
+            )
+            Text(
+                text = stringResource(R.string.settings_search_no_results_message),
+                textAlign = TextAlign.Center,
+                style = FirefoxTheme.typography.body2,
+            )
+        }
     }
 }
 

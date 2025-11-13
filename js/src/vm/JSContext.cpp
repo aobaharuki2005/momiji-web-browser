@@ -57,7 +57,9 @@
 #include "util/NativeStack.h"
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
-#include "vm/BytecodeUtil.h"  // JSDVG_IGNORE_STACK
+#include "js/friend/DumpFunctions.h"  // for stack trace utilities
+#include "js/Printer.h"               // for FixedBufferPrinter
+#include "vm/BytecodeUtil.h"          // JSDVG_IGNORE_STACK
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
 #include "vm/FrameIter.h"
@@ -267,6 +269,12 @@ static void MaybeReportOutOfMemoryForDifferentialTesting() {
   }
 }
 
+bool JSContext::safeToCaptureStackTrace() const {
+  // If we're in an unsafe ABI context, we don't need to capture a stack trace
+  // because the function will explicitly recover from OOM.
+  return !inUnsafeCallWithABI && !unsafeToCaptureStackTrace;
+}
+
 /*
  * Since memory has been exhausted, avoid the normal error-handling path which
  * allocates an error object, report and callstack. Instead simply throw the
@@ -278,6 +286,9 @@ static void MaybeReportOutOfMemoryForDifferentialTesting() {
 void JSContext::onOutOfMemory() {
   runtime()->hadOutOfMemory = true;
   gc::AutoSuppressGC suppressGC(this);
+
+  // Capture stack trace before doing anything else that might use memory.
+  maybeCaptureOOMStackTrace();
 
   /* Report the oom. */
   if (JS::OutOfMemoryCallback oomCallback = runtime()->oomCallback) {
@@ -783,9 +794,10 @@ JSObject* InternalJobQueue::copyJobs(JSContext* cx) {
     auto& queues = cx->microTaskQueues;
     auto addToArray = [&](auto& queue) -> bool {
       for (const auto& e : queue) {
-        if (JS::GetExecutionGlobalFromJSMicroTask(e)) {
+        JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(e);
+        if (task) {
           // All any test cares about is the global of the job so let's do it.
-          RootedObject global(cx, JS::GetExecutionGlobalFromJSMicroTask(e));
+          RootedObject global(cx, JS::GetExecutionGlobalFromJSMicroTask(task));
           if (!cx->compartment()->wrap(cx, &global)) {
             return false;
           }
@@ -890,7 +902,8 @@ void InternalJobQueue::runJobs(JSContext* cx) {
 
     if (JS::Prefs::use_js_microtask_queue()) {
       // Execute jobs in a loop until we've reached the end of the queue.
-      JS::Rooted<JS::MicroTask> job(cx);
+      JS::Rooted<JS::JSMicroTask*> job(cx);
+      JS::Rooted<JS::GenericMicroTask> dequeueJob(cx);
       while (JS::HasAnyMicroTasks(cx)) {
         MOZ_ASSERT(queue.empty());
         // A previous job might have set this flag. E.g., the js shell
@@ -901,8 +914,10 @@ void InternalJobQueue::runJobs(JSContext* cx) {
 
         cx->runtime()->offThreadPromiseState.ref().internalDrain(cx);
 
-        job = JS::DequeueNextMicroTask(cx);
-        MOZ_ASSERT(!job.isNull());
+        dequeueJob = JS::DequeueNextMicroTask(cx);
+        MOZ_ASSERT(!dequeueJob.isNull());
+        job = JS::ToMaybeWrappedJSMicroTask(dequeueJob);
+        MOZ_ASSERT(job);
 
         // If the next job is the last job in the job queue, allow
         // skipping the standard job queuing behavior.
@@ -1070,7 +1085,7 @@ void js::MicroTaskQueueElement::trace(JSTracer* trc) {
   }
 }
 
-JS::MicroTask js::MicroTaskQueueSet::popDebugFront() {
+JS::GenericMicroTask js::MicroTaskQueueSet::popDebugFront() {
   JS_LOG(mtq, Info, "JS Drain Queue: popDebugFront");
   if (!debugMicroTaskQueue.empty()) {
     JS::Value p = debugMicroTaskQueue.front();
@@ -1080,7 +1095,7 @@ JS::MicroTask js::MicroTaskQueueSet::popDebugFront() {
   return JS::NullValue();
 }
 
-JS::MicroTask js::MicroTaskQueueSet::popFront() {
+JS::GenericMicroTask js::MicroTaskQueueSet::popFront() {
   JS_LOG(mtq, Info, "JS Drain Queue");
   if (!debugMicroTaskQueue.empty()) {
     JS::Value p = debugMicroTaskQueue.front();
@@ -1097,49 +1112,52 @@ JS::MicroTask js::MicroTaskQueueSet::popFront() {
 }
 
 bool js::MicroTaskQueueSet::enqueueRegularMicroTask(
-    JSContext* cx, const JS::MicroTask& entry) {
+    JSContext* cx, const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Verbose, "JS: Enqueue Regular MT");
   JS::JobQueueMayNotBeEmpty(cx);
   return microTaskQueue.pushBack(entry);
 }
 
 bool js::MicroTaskQueueSet::prependRegularMicroTask(
-    JSContext* cx, const JS::MicroTask& entry) {
+    JSContext* cx, const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Verbose, "JS: Prepend Regular MT");
   JS::JobQueueMayNotBeEmpty(cx);
   return microTaskQueue.emplaceFront(entry);
 }
 
-bool js::MicroTaskQueueSet::enqueueDebugMicroTask(JSContext* cx,
-                                                  const JS::MicroTask& entry) {
+bool js::MicroTaskQueueSet::enqueueDebugMicroTask(
+    JSContext* cx, const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Verbose, "JS: Enqueue Debug MT");
   return debugMicroTaskQueue.pushBack(entry);
 }
 
-JS_PUBLIC_API bool JS::EnqueueMicroTask(JSContext* cx, const MicroTask& entry) {
+JS_PUBLIC_API bool JS::EnqueueMicroTask(JSContext* cx,
+                                        const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Info, "Enqueue of non JS MT");
 
   return cx->microTaskQueues->enqueueRegularMicroTask(cx, entry);
 }
 
-JS_PUBLIC_API bool JS::EnqueueDebugMicroTask(JSContext* cx,
-                                             const MicroTask& entry) {
+JS_PUBLIC_API bool JS::EnqueueDebugMicroTask(
+    JSContext* cx, const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Info, "Enqueue of non JS MT");
 
   return cx->microTaskQueues->enqueueDebugMicroTask(cx, entry);
 }
 
-JS_PUBLIC_API bool JS::PrependMicroTask(JSContext* cx, const MicroTask& entry) {
+JS_PUBLIC_API bool JS::PrependMicroTask(JSContext* cx,
+                                        const JS::GenericMicroTask& entry) {
   JS_LOG(mtq, Info, "Prepend job to MTQ");
 
   return cx->microTaskQueues->prependRegularMicroTask(cx, entry);
 }
 
-JS_PUBLIC_API JS::MicroTask JS::DequeueNextMicroTask(JSContext* cx) {
+JS_PUBLIC_API JS::GenericMicroTask JS::DequeueNextMicroTask(JSContext* cx) {
   return cx->microTaskQueues->popFront();
 }
 
-JS_PUBLIC_API JS::MicroTask JS::DequeueNextDebuggerMicroTask(JSContext* cx) {
+JS_PUBLIC_API JS::GenericMicroTask JS::DequeueNextDebuggerMicroTask(
+    JSContext* cx) {
   return cx->microTaskQueues->popDebugFront();
 }
 
@@ -1189,10 +1207,11 @@ JS_PUBLIC_API bool JS::HasRegularMicroTasks(JSContext* cx) {
   return !cx->microTaskQueues->microTaskQueue.empty();
 }
 
-JS_PUBLIC_API JS::MicroTask JS::DequeueNextRegularMicroTask(JSContext* cx) {
+JS_PUBLIC_API JS::GenericMicroTask JS::DequeueNextRegularMicroTask(
+    JSContext* cx) {
   auto& queue = cx->microTaskQueues->microTaskQueue;
   if (!queue.empty()) {
-    JS::MicroTask p = queue.front();
+    JS::GenericMicroTask p = queue.front();
     queue.popFront();
     return p;
   }
@@ -1218,10 +1237,9 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       activation_(this, nullptr),
       profilingActivation_(nullptr),
       noExecuteDebuggerTop(this, nullptr),
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
+      unsafeToCaptureStackTrace(this, false),
       inUnsafeCallWithABI(this, false),
       hasAutoUnsafeCallWithABI(this, false),
-#endif
 #ifdef DEBUG
       liveArraySortDataInstances(this, 0),
 #endif
@@ -1283,9 +1301,17 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       canSkipEnqueuingJobs(this, false),
       promiseRejectionTrackerCallback(this, nullptr),
       promiseRejectionTrackerCallbackData(this, nullptr),
+      oomStackTraceBuffer_(this, nullptr),
+      oomStackTraceBufferValid_(this, false),
       insideExclusiveDebuggerOnEval(this, nullptr) {
   MOZ_ASSERT(static_cast<JS::RootingContext*>(this) ==
              JS::RootingContext::get(this));
+
+  if (JS::Prefs::experimental_capture_oom_stack_trace()) {
+    // Allocate pre-allocated buffer for OOM stack traces
+    oomStackTraceBuffer_ =
+        static_cast<char*>(js_calloc(OOMStackTraceBufferSize));
+  }
 }
 
 #ifdef ENABLE_WASM_JSPI
@@ -1325,7 +1351,43 @@ JSContext::~JSContext() {
     irregexp::DestroyIsolate(isolate.ref());
   }
 
+  // Free the pre-allocated OOM stack trace buffer
+  if (oomStackTraceBuffer_) {
+    js_free(oomStackTraceBuffer_);
+  }
+
   TlsContext.set(nullptr);
+}
+
+void JSContext::unsetOOMStackTrace() { oomStackTraceBufferValid_ = false; }
+
+const char* JSContext::getOOMStackTrace() const {
+  if (!oomStackTraceBufferValid_ || !oomStackTraceBuffer_) {
+    return nullptr;
+  }
+  return oomStackTraceBuffer_;
+}
+
+bool JSContext::hasOOMStackTrace() const { return oomStackTraceBufferValid_; }
+
+void JSContext::maybeCaptureOOMStackTrace() {
+  // Clear any existing stack trace
+  oomStackTraceBufferValid_ = false;
+
+  if (!oomStackTraceBuffer_) {
+    return;  // Buffer not available
+  }
+
+  // Write directly to pre-allocated buffer to avoid any memory allocation
+  FixedBufferPrinter fbp(oomStackTraceBuffer_, OOMStackTraceBufferSize);
+  if (safeToCaptureStackTrace()) {
+    js::DumpBacktrace(this, fbp);
+  } else {
+    fbp.put("Unsafe to capture stack trace");
+  }
+
+  MOZ_ASSERT(strlen(oomStackTraceBuffer_) < OOMStackTraceBufferSize);
+  oomStackTraceBufferValid_ = true;
 }
 
 void JSContext::setRuntime(JSRuntime* rt) {
@@ -1703,7 +1765,16 @@ void JSContext::suspendExecutionTracing() {
 
 #endif
 
-#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
+AutoUnsafeStackTrace::AutoUnsafeStackTrace(JSContext* cx)
+    : cx_(cx), nested_(cx_->unsafeToCaptureStackTrace) {
+  cx_->unsafeToCaptureStackTrace = true;
+}
+
+AutoUnsafeStackTrace::~AutoUnsafeStackTrace() {
+  if (!nested_) {
+    cx_->unsafeToCaptureStackTrace = false;
+  }
+}
 
 AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
     : cx_(TlsContext.get()),
@@ -1713,6 +1784,7 @@ AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
     // This is a helper thread doing Ion or Wasm compilation - nothing to do.
     return;
   }
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   switch (strictness) {
     case UnsafeABIStrictness::NoExceptions:
       MOZ_ASSERT(!JS_IsExceptionPending(cx_));
@@ -1721,10 +1793,8 @@ AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
     case UnsafeABIStrictness::AllowPendingExceptions:
       checkForPendingException_ = !JS_IsExceptionPending(cx_);
       break;
-    case UnsafeABIStrictness::AllowThrownExceptions:
-      checkForPendingException_ = false;
-      break;
   }
+#endif
 
   cx_->hasAutoUnsafeCallWithABI = true;
 }
@@ -1733,15 +1803,15 @@ AutoUnsafeCallWithABI::~AutoUnsafeCallWithABI() {
   if (!cx_) {
     return;
   }
+#ifdef JS_CHECK_UNSAFE_CALL_WITH_ABI
   MOZ_ASSERT(cx_->hasAutoUnsafeCallWithABI);
+  MOZ_ASSERT_IF(checkForPendingException_, !JS_IsExceptionPending(cx_));
+#endif
   if (!nested_) {
     cx_->hasAutoUnsafeCallWithABI = false;
     cx_->inUnsafeCallWithABI = false;
   }
-  MOZ_ASSERT_IF(checkForPendingException_, !JS_IsExceptionPending(cx_));
 }
-
-#endif  // JS_CHECK_UNSAFE_CALL_WITH_ABI
 
 #ifdef __wasi__
 JS_PUBLIC_API void js::IncWasiRecursionDepth(JSContext* cx) {

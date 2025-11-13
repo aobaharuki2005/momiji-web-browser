@@ -100,8 +100,6 @@
 #  include "VRManagerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-#include <numeric>
-
 #include "nsXULPopupManager.h"
 
 using namespace mozilla;

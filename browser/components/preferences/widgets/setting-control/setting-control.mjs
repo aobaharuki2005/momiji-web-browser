@@ -337,6 +337,10 @@ export class SettingControl extends SettingElement {
     });
   }
 
+  get extensionSupportPage() {
+    return this.setting.controllingExtensionInfo.supportPage;
+  }
+
   render() {
     // Allow the Setting to override the static config if necessary.
     this.config = this.setting.getControlConfig(this.config);
@@ -359,11 +363,19 @@ export class SettingControl extends SettingElement {
     // there are no extensions controlling the setting.
     if (this.isControlledByExtension()) {
       let args = { name: this.extensionName };
+      let supportPage = this.extensionSupportPage;
       messageBar = html`<moz-message-bar
         class="extension-controlled-message-bar"
         .messageL10nId=${this.extensionMessageId}
         .messageL10nArgs=${args}
       >
+        ${supportPage
+          ? html`<a
+              is="moz-support-link"
+              slot="support-link"
+              support-page=${supportPage}
+            ></a>`
+          : ""}
         <moz-button
           slot="actions"
           @click=${this.disableExtension}

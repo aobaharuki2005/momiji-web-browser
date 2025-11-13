@@ -47,6 +47,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.CookieBanners
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.SettingsSearch
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.R
@@ -225,6 +226,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 title = toolbarTitle,
                 iconResId = R.drawable.ic_search,
                 onClick = {
+                    SettingsSearch.opened.record()
                     findNavController().navigate(R.id.action_settingsFragment_to_settingsSearchFragment)
                 },
             )

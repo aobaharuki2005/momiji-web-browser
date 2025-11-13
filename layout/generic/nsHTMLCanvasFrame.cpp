@@ -8,8 +8,6 @@
 
 #include "nsHTMLCanvasFrame.h"
 
-#include <algorithm>
-
 #include "ActiveLayerTracker.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/PresShell.h"

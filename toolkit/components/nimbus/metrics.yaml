@@ -1232,7 +1232,7 @@ normandy:
     data_reviews:
       - https://bugzil.la/1675104
     notification_emails:
-      - ujet@mozilla.com
+      - omc-core@mozilla.com
     expires: never
     extra_keys:
       value:

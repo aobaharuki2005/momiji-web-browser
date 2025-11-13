@@ -1146,6 +1146,9 @@ static int32_t CoerceInPlace_JitEntry(int funcIndex, Instance* instance,
 // Allocate a BigInt without GC, corresponds to the similar VMFunction.
 static BigInt* AllocateBigIntTenuredNoGC() {
   JSContext* cx = TlsContext.get();  // Cold code (the caller is elaborate)
+  // WasmFrameIter doesn't know how to walk the stack from here (see bug
+  // 1999042), so we can't capture a stack trace if we OOM
+  AutoUnsafeStackTrace aust(cx);
 
   BigInt* bi = cx->newCell<BigInt, NoGC>(gc::Heap::Tenured);
   if (!bi) {

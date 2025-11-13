@@ -101,12 +101,30 @@ sealed class PreferenceFileInformation(
     )
 
     /**
+     * Represents the "Save Logins" settings screen.
+     */
+    object SaveLoginsPreferences : PreferenceFileInformation(
+        xmlResourceId = R.xml.save_logins_preferences,
+        topBreadcrumbResourceId = R.string.preferences_passwords_save_logins_2,
+        fragmentId = R.id.savedLogins,
+    )
+
+    /**
      * Represents the "Search Settings" settings screen.
      */
     object SearchSettingsPreferences : PreferenceFileInformation(
         xmlResourceId = R.xml.search_settings_preferences,
         topBreadcrumbResourceId = R.string.preferences_search,
         fragmentId = R.id.search_engine_graph,
+    )
+
+    /**
+     * Represents the "Site Settings" settings screen.
+     */
+    object SiteSettingsPreferences : PreferenceFileInformation(
+        xmlResourceId = R.xml.site_permissions_preferences,
+        topBreadcrumbResourceId = R.string.preferences_site_settings,
+        fragmentId = R.id.sitePermissionsFragment,
     )
 
     /**
@@ -125,14 +143,5 @@ sealed class PreferenceFileInformation(
         xmlResourceId = R.xml.tracking_protection_preferences,
         topBreadcrumbResourceId = R.string.preference_enhanced_tracking_protection,
         fragmentId = R.id.trackingProtectionFragment,
-    )
-
-    /**
-     * Represents the "Save Logins" settings screen.
-     */
-    object SaveLoginsPreferences : PreferenceFileInformation(
-        xmlResourceId = R.xml.save_logins_preferences,
-        topBreadcrumbResourceId = R.string.preferences_passwords_save_logins_2,
-        fragmentId = R.id.savedLogins,
     )
 }

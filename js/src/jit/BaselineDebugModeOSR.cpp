@@ -416,6 +416,9 @@ bool js::jit::RecompileBaselineScriptForDebugMode(
           observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
   AutoKeepJitScripts keepJitScripts(cx);
+  // FrameIter can't walk the stack if OOM happens because script doesn't have a
+  // BaselineScript while we recompile it.
+  AutoUnsafeStackTrace aust(cx);
   BaselineScript* oldBaselineScript =
       script->jitScript()->clearBaselineScript(cx->gcContext(), script);
 

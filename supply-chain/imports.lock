@@ -735,11 +735,32 @@ user-login = "Darksonn"
 user-name = "Alice Ryhl"
 
 [[publisher.toml]]
-version = "0.5.7"
-when = "2020-10-11"
-user-id = 1
-user-login = "alexcrichton"
-user-name = "Alex Crichton"
+version = "0.9.8"
+when = "2025-10-09"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
+
+[[publisher.toml_datetime]]
+version = "0.7.3"
+when = "2025-10-09"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
+
+[[publisher.toml_parser]]
+version = "1.0.4"
+when = "2025-10-09"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
+
+[[publisher.toml_writer]]
+version = "1.0.4"
+when = "2025-10-09"
+user-id = 6743
+user-login = "epage"
+user-name = "Ed Page"
 
 [[publisher.unicode-ident]]
 version = "1.0.6"
@@ -944,8 +965,8 @@ user-login = "kennykerr"
 user-name = "Kenny Kerr"
 
 [[publisher.winnow]]
-version = "0.7.9"
-when = "2025-05-02"
+version = "0.7.13"
+when = "2025-08-22"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"

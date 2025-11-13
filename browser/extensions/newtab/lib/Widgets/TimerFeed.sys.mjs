@@ -65,7 +65,16 @@ export class TimerFeed {
 
   get enabled() {
     const prefs = this.store.getState()?.Prefs.values;
-    return prefs?.[PREF_TIMER_ENABLED] && prefs?.[PREF_SYSTEM_TIMER_ENABLED];
+    const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
+    const nimbusTimerTrainhopEnabled =
+      prefs.trainhopConfig?.widgets?.timerEnabled;
+
+    return (
+      prefs?.[PREF_TIMER_ENABLED] &&
+      (prefs?.[PREF_SYSTEM_TIMER_ENABLED] ||
+        nimbusTimerEnabled ||
+        nimbusTimerTrainhopEnabled)
+    );
   }
 
   async init() {
@@ -91,6 +100,24 @@ export class TimerFeed {
     );
   }
 
+  /**
+   * @param {object} action - The action object containing pref change data
+   * @param {string} action.data.name - The name of the pref that changed
+   */
+  async onPrefChangedAction(action) {
+    switch (action.data.name) {
+      case PREF_TIMER_ENABLED:
+      case PREF_SYSTEM_TIMER_ENABLED:
+      case "trainhopConfig":
+      case "widgetsConfig": {
+        if (this.enabled && !this.initialized) {
+          await this.init();
+        }
+        break;
+      }
+    }
+  }
+
   async onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -99,15 +126,7 @@ export class TimerFeed {
         }
         break;
       case at.PREF_CHANGED:
-        if (
-          (action.data.name === PREF_TIMER_ENABLED ||
-            action.data.name === PREF_SYSTEM_TIMER_ENABLED) &&
-          action.data.value
-        ) {
-          if (this.enabled) {
-            await this.init();
-          }
-        }
+        await this.onPrefChangedAction(action);
         break;
       case at.WIDGETS_TIMER_END:
         {
