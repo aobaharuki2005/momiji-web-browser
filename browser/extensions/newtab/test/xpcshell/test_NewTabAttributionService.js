@@ -4,7 +4,7 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  NewTabAttributionService:
+  NewTabAttributionServiceClass:
     "resource://newtab/lib/NewTabAttributionService.sys.mjs",
 });
 
@@ -41,7 +41,7 @@ class MockDateProvider {
   }
 }
 
-class MockDAPTelemetrySender {
+class MockDAPSender {
   constructor() {
     this.receivedMeasurements = [];
   }
@@ -104,9 +104,9 @@ add_setup(async function () {
 });
 
 add_task(async function testSuccessfulConversion() {
-  const mockSender = new MockDAPTelemetrySender();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const mockSender = new MockDAPSender();
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
   });
 
   const partnerIdentifier = "partner_identifier";
@@ -153,9 +153,9 @@ add_task(async function testSuccessfulConversion() {
 });
 
 add_task(async function testConversionWithoutImpression() {
-  const mockSender = new MockDAPTelemetrySender();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const mockSender = new MockDAPSender();
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
   });
 
   const partnerIdentifier = "partner_identifier_no_impression";
@@ -170,9 +170,9 @@ add_task(async function testConversionWithoutImpression() {
 });
 
 add_task(async function testConversionWithInvalidLookbackDays() {
-  const mockSender = new MockDAPTelemetrySender();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const mockSender = new MockDAPSender();
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
   });
 
   const partnerIdentifier = "partner_identifier";
@@ -201,10 +201,10 @@ add_task(async function testConversionWithInvalidLookbackDays() {
 });
 
 add_task(async function testSelectionByLastView() {
-  const mockSender = new MockDAPTelemetrySender();
+  const mockSender = new MockDAPSender();
   const mockDateProvider = new MockDateProvider();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
     dateProvider: mockDateProvider,
   });
 
@@ -268,10 +268,10 @@ add_task(async function testSelectionByLastView() {
 });
 
 add_task(async function testSelectionByLastClick() {
-  const mockSender = new MockDAPTelemetrySender();
+  const mockSender = new MockDAPSender();
   const mockDateProvider = new MockDateProvider();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
     dateProvider: mockDateProvider,
   });
 
@@ -335,10 +335,10 @@ add_task(async function testSelectionByLastClick() {
 });
 
 add_task(async function testSelectionByLastTouch() {
-  const mockSender = new MockDAPTelemetrySender();
+  const mockSender = new MockDAPSender();
   const mockDateProvider = new MockDateProvider();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
     dateProvider: mockDateProvider,
   });
 
@@ -389,10 +389,10 @@ add_task(async function testSelectionByLastTouch() {
 });
 
 add_task(async function testSelectionByPartnerId() {
-  const mockSender = new MockDAPTelemetrySender();
+  const mockSender = new MockDAPSender();
   const mockDateProvider = new MockDateProvider();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
     dateProvider: mockDateProvider,
   });
 
@@ -444,10 +444,10 @@ add_task(async function testSelectionByPartnerId() {
 });
 
 add_task(async function testExpiredImpressions() {
-  const mockSender = new MockDAPTelemetrySender();
+  const mockSender = new MockDAPSender();
   const mockDateProvider = new MockDateProvider();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
     dateProvider: mockDateProvider,
   });
 
@@ -482,9 +482,9 @@ add_task(async function testExpiredImpressions() {
 });
 
 add_task(async function testConversionBudget() {
-  const mockSender = new MockDAPTelemetrySender();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const mockSender = new MockDAPSender();
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
   });
 
   const partnerIdentifier = "partner_identifier_budget";
@@ -532,9 +532,9 @@ add_task(async function testConversionBudget() {
 });
 
 add_task(async function testHistogramSize() {
-  const mockSender = new MockDAPTelemetrySender();
-  const privateAttribution = new NewTabAttributionService({
-    dapTelemetrySender: mockSender,
+  const mockSender = new MockDAPSender();
+  const privateAttribution = new NewTabAttributionServiceClass({
+    dapSender: mockSender,
   });
 
   const partnerIdentifier = "partner_identifier_bad_settings";
@@ -574,7 +574,7 @@ add_task(async function testWithRealDAPSender() {
   const mockServer = new MockServer();
   mockServer.start();
 
-  const privateAttribution = new NewTabAttributionService();
+  const privateAttribution = new NewTabAttributionServiceClass();
 
   const partnerIdentifier = "partner_identifier_real_dap";
   const conversionSettings = {

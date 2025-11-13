@@ -7,7 +7,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
-  DAPTelemetrySender: "resource://gre/modules/DAPTelemetrySender.sys.mjs",
+  DAPSender: "resource://gre/modules/DAPSender.sys.mjs",
 });
 
 const MAX_CONVERSIONS = 5;
@@ -18,7 +18,7 @@ const CONVERSION_RESET_MILLI = 7 * DAY_IN_MILLI;
 /**
  *
  */
-export class NewTabAttributionService {
+class NewTabAttributionService {
   /**
    * @typedef { 'view' | 'click' | 'default' } matchType - Available matching methodologies for conversion events.
    *
@@ -46,13 +46,13 @@ export class NewTabAttributionService {
    * @property {number} conversions - Number of conversions that have occurred in the budget period.
    * @property {number} nextReset - Timestamp in milliseconds for the end of the period this budget applies to.
    */
-  #dapTelemetrySenderInternal;
+  #dapSenderInternal;
   #dateProvider;
   // eslint-disable-next-line no-unused-private-class-members
   #testDapOptions;
 
-  constructor({ dapTelemetrySender, dateProvider, testDapOptions } = {}) {
-    this.#dapTelemetrySenderInternal = dapTelemetrySender;
+  constructor({ dapSender, dateProvider, testDapOptions } = {}) {
+    this.#dapSenderInternal = dapSender;
     this.#dateProvider = dateProvider ?? Date;
     this.#testDapOptions = testDapOptions;
 
@@ -68,8 +68,8 @@ export class NewTabAttributionService {
     };
   }
 
-  get #dapTelemetrySender() {
-    return this.#dapTelemetrySenderInternal || lazy.DAPTelemetrySender;
+  get #dapSender() {
+    return this.#dapSenderInternal || lazy.DAPSender;
   }
 
   #now() {
@@ -205,7 +205,7 @@ export class NewTabAttributionService {
       }
 
       await this.#updateBudget(budget, budgetSpend, partnerId);
-      await this.#dapTelemetrySender.sendDAPMeasurement(
+      await this.#dapSender.sendDAPMeasurement(
         conversion.task,
         measurement,
         {}
@@ -403,3 +403,10 @@ export class NewTabAttributionService {
     return this.models[type] ?? this.models.default;
   }
 }
+
+const newTabAttributionService = new NewTabAttributionService();
+
+export {
+  newTabAttributionService,
+  NewTabAttributionService as NewTabAttributionServiceClass,
+};
