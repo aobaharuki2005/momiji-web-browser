@@ -19,7 +19,6 @@ support-files = [
   "doc_markup_pagesize_01.html",
   "doc_markup_pagesize_02.html",
   "doc_markup_pseudo.html",
-  "doc_markup_search.css",
   "doc_markup_search.html",
   "doc_markup_subgrid.html",
   "doc_markup_svg_attributes.html",

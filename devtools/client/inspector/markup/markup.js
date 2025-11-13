@@ -1174,7 +1174,6 @@ class MarkupView extends EventEmitter {
     // If there's no selected container, or if the search is empty, we don't have anything
     // to highlight.
     if (!this._selectedContainer || !searchQuery) {
-      this.emitForTests("search-results-highlighting-updated");
       return;
     }
 
@@ -1245,7 +1244,6 @@ class MarkupView extends EventEmitter {
         false
       );
     }
-    this.emitForTests("search-results-highlighting-updated");
   }
 
   /**

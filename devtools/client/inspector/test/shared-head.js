@@ -1200,9 +1200,6 @@ async function searchInMarkupView(inspector, search) {
 
   const onNewNodeFront = inspector.selection.once("new-node-front");
   const onSearchResult = inspector.search.once("search-result");
-  const onSearchResultHighlightingUpdated = inspector.markup.once(
-    "search-results-highlighting-updated"
-  );
   EventUtils.sendKey("return", inspector.panelWin);
 
   info("Wait for search-result");
@@ -1210,7 +1207,4 @@ async function searchInMarkupView(inspector, search) {
 
   info("Wait for new node being selected");
   await onNewNodeFront;
-
-  info("Wait for the search results highlighted to be updated");
-  await onSearchResultHighlightingUpdated;
 }
