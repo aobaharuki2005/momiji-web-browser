@@ -42,7 +42,7 @@ class TrustPanelNavigationMiddlewareTest {
 
         verify {
             navController.navigate(
-                TrustPanelFragmentDirections.actionGlobalSettingsFragment(
+                TrustPanelFragmentDirections.actionGlobalTrackingProtectionFragment(
                     preferenceToScrollTo = privacySecurityPrefKey,
                 ),
                 null,
