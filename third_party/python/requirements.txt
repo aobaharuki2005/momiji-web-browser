@@ -465,9 +465,6 @@ jinxed==1.3.0  \
     --hash=sha256:1593124b18a41b7a3da3b078471442e51dbad3d77b4d4f2b0c26ab6f7d660dbf \
     --hash=sha256:b993189f39dc2d7504d802152671535b06d380b26d78070559551cbf92df4fc5
     # via blessed
-jsmin==3.0.1 \
-    --hash=sha256:c0959a121ef94542e807a674142606f7e90214a2b3d1eb17300244bbb5cc2bfc
-    # via mozilla-third-party-python-vendor-dir
 json-e==4.8.0 \
     --hash=sha256:51ead93962912d701c6f1a6a0b27cc34bb2cb8397a82affd8adb2401898e27ea \
     --hash=sha256:91a50ba4e1a9e6d40c36c0601d68acda9ae44ca2817525e09938b2c82ce23572
