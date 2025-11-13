@@ -43,7 +43,6 @@ struct MarkerHasTranslator<
 
 #  include <windows.h>
 #  include <TraceLoggingProvider.h>
-#  include <vector>
 
 namespace ETW {
 
