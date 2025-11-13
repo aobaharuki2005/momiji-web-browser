@@ -200,7 +200,7 @@ ActiveScrolledRoot::CreateASRForStickyFrame(const ActiveScrolledRoot* aParent,
                                             bool aIsRetained) {
   RefPtr<ActiveScrolledRoot> asr;
   if (aIsRetained) {
-    asr = aStickyFrame->GetProperty(ActiveScrolledRootCache());
+    asr = aStickyFrame->GetProperty(StickyActiveScrolledRootCache());
   }
 
   if (!asr) {
@@ -208,7 +208,8 @@ ActiveScrolledRoot::CreateASRForStickyFrame(const ActiveScrolledRoot* aParent,
 
     if (aIsRetained) {
       RefPtr<ActiveScrolledRoot> ref = asr;
-      aStickyFrame->SetProperty(ActiveScrolledRootCache(), ref.forget().take());
+      aStickyFrame->SetProperty(StickyActiveScrolledRootCache(),
+                                ref.forget().take());
     }
   }
 
@@ -311,7 +312,9 @@ ScrollableLayerGuid::ViewID ActiveScrolledRoot::ComputeViewId() const {
 
 ActiveScrolledRoot::~ActiveScrolledRoot() {
   if (mFrame && mRetained) {
-    mFrame->RemoveProperty(ActiveScrolledRootCache());
+    mFrame->RemoveProperty(mKind == ASRKind::Sticky
+                               ? StickyActiveScrolledRootCache()
+                               : ActiveScrolledRootCache());
   }
 }
 
