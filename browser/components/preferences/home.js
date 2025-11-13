@@ -65,6 +65,14 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
       type: "bool",
     },
     {
+      id: "browser.newtabpage.activity-stream.feeds.topsites",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.topSitesRows",
+      type: "int",
+    },
+    {
       id: "browser.newtabpage.activity-stream.feeds.section.highlights",
       type: "bool",
     },
@@ -126,6 +134,16 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
     pref: "browser.newtabpage.activity-stream.widgets.focusTimer.enabled",
     deps: ["timerEnabled"],
     visible: ({ timerEnabled }) => timerEnabled.value,
+  });
+
+  // Shortcuts
+  Preferences.addSetting({
+    id: "shortcuts",
+    pref: "browser.newtabpage.activity-stream.feeds.topsites",
+  });
+  Preferences.addSetting({
+    id: "shortcutsRows",
+    pref: "browser.newtabpage.activity-stream.topSitesRows",
   });
 
   // Recent activity
