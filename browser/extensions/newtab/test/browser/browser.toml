@@ -33,8 +33,6 @@ skip-if = ["os == 'win' && os_version == '11.26100' && verify-standalone"]
 
 ["browser_as_render.js"]
 
-["browser_attribution_actor.js"]
-
 ["browser_context_menu_item.js"]
 
 ["browser_customize_menu_content.js"]

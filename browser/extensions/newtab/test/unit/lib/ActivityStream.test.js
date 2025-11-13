@@ -41,7 +41,6 @@ describe("ActivityStream", () => {
       DEFAULT_SITES,
       AboutPreferences,
       DefaultPrefs,
-      NewTabActorRegistry: { init: () => {} },
       NewTabInit,
       SectionsFeed,
       RecommendationProvider,

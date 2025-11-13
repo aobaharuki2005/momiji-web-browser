@@ -7,7 +7,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
-  DAPSender: "resource://gre/modules/DAPSender.sys.mjs",
+  DAPTelemetrySender: "resource://gre/modules/DAPTelemetrySender.sys.mjs",
 });
 
 const MAX_CONVERSIONS = 5;
@@ -18,7 +18,7 @@ const CONVERSION_RESET_MILLI = 7 * DAY_IN_MILLI;
 /**
  *
  */
-class NewTabAttributionService {
+export class NewTabAttributionService {
   /**
    * @typedef { 'view' | 'click' | 'default' } matchType - Available matching methodologies for conversion events.
    *
@@ -46,13 +46,13 @@ class NewTabAttributionService {
    * @property {number} conversions - Number of conversions that have occurred in the budget period.
    * @property {number} nextReset - Timestamp in milliseconds for the end of the period this budget applies to.
    */
-  #dapSenderInternal;
+  #dapTelemetrySenderInternal;
   #dateProvider;
   // eslint-disable-next-line no-unused-private-class-members
   #testDapOptions;
 
-  constructor({ dapSender, dateProvider, testDapOptions } = {}) {
-    this.#dapSenderInternal = dapSender;
+  constructor({ dapTelemetrySender, dateProvider, testDapOptions } = {}) {
+    this.#dapTelemetrySenderInternal = dapTelemetrySender;
     this.#dateProvider = dateProvider ?? Date;
     this.#testDapOptions = testDapOptions;
 
@@ -68,8 +68,8 @@ class NewTabAttributionService {
     };
   }
 
-  get #dapSender() {
-    return this.#dapSenderInternal || lazy.DAPSender;
+  get #dapTelemetrySender() {
+    return this.#dapTelemetrySenderInternal || lazy.DAPTelemetrySender;
   }
 
   #now() {
@@ -205,7 +205,7 @@ class NewTabAttributionService {
       }
 
       await this.#updateBudget(budget, budgetSpend, partnerId);
-      await this.#dapSender.sendDAPMeasurement(
+      await this.#dapTelemetrySender.sendDAPMeasurement(
         conversion.task,
         measurement,
         {}
@@ -403,10 +403,3 @@ class NewTabAttributionService {
     return this.models[type] ?? this.models.default;
   }
 }
-
-const newTabAttributionService = new NewTabAttributionService();
-
-export {
-  newTabAttributionService,
-  NewTabAttributionService as NewTabAttributionServiceClass,
-};
