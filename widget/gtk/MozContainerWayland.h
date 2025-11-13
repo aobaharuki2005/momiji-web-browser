@@ -10,7 +10,6 @@
 
 #include <gtk/gtk.h>
 #include <functional>
-#include <vector>
 #include "mozilla/Mutex.h"
 #include "WindowSurface.h"
 #include "WaylandSurface.h"

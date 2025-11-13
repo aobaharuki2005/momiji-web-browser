@@ -45,7 +45,6 @@
 #include "DriverCrashGuard.h"
 
 #ifdef MOZ_WIDGET_ANDROID
-#  include <set>
 #  include "AndroidBuild.h"
 #  include "nsContentUtils.h"
 #endif

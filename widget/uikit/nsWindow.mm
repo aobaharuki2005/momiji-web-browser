@@ -15,8 +15,6 @@
 #import <UIKit/UIWindow.h>
 #import <QuartzCore/QuartzCore.h>
 
-#include <algorithm>
-
 #include "nsWindow.h"
 #include "ScreenHelperUIKit.h"
 #include "nsAppShell.h"

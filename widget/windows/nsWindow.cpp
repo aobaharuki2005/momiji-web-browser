@@ -75,7 +75,6 @@
 
 #include "mozilla/ipc/MessageChannel.h"
 #include <algorithm>
-#include <limits>
 
 #include "mozilla/widget/WinEventObserver.h"
 #include "mozilla/widget/WinMessages.h"
