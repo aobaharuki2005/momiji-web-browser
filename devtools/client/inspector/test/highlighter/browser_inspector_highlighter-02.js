@@ -52,7 +52,7 @@ add_task(async function () {
   const ulBeforeNodeFront = ulChildren[0];
   is(
     ulBeforeNodeFront.displayName,
-    "::before",
+    "_moz_generated_content_before",
     "Got expexected ul::before pseudo element"
   );
 
@@ -74,7 +74,7 @@ add_task(async function () {
   const ulBeforeMarkerNodeFront = ulBeforeChildren[0];
   is(
     ulBeforeMarkerNodeFront.displayName,
-    "::marker",
+    "_moz_generated_content_marker",
     "Got expexected ul::before::marker pseudo element"
   );
 

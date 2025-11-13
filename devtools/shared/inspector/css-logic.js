@@ -29,12 +29,6 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/indentation.js",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "getNodeDisplayName",
-  "resource://devtools/server/actors/inspector/utils.js",
-  true
-);
 const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const styleInspectorL10N = new LocalizationHelper(
   "devtools/shared/locales/styleinspector.properties"
@@ -561,18 +555,15 @@ exports.prettifyCSS = prettifyCSS;
 function getBindingElementAndPseudo(node) {
   let bindingElement = node;
   let pseudo = null;
-  if (node.implementedPseudoElement) {
-    // we can't return `node.implementedPseudoElement` directly as the property only holds
-    // the pseudo element type (e.g. "::view-transition-group"), while the callsites of this
-    // function need the full pseudo element name (e.g. "::view-transition-group(root)")
-    pseudo = getNodeDisplayName(node);
-    if (
-      pseudo === "::marker" ||
-      pseudo === "::before" ||
-      pseudo === "::after"
-    ) {
-      bindingElement = node.parentNode;
-    }
+  if (node.nodeName == "_moz_generated_content_marker") {
+    bindingElement = node.parentNode;
+    pseudo = "::marker";
+  } else if (node.nodeName == "_moz_generated_content_before") {
+    bindingElement = node.parentNode;
+    pseudo = "::before";
+  } else if (node.nodeName == "_moz_generated_content_after") {
+    bindingElement = node.parentNode;
+    pseudo = "::after";
   }
   return {
     bindingElement,

@@ -8,6 +8,9 @@
 "use strict";
 
 const {
+  isAfterPseudoElement,
+  isBeforePseudoElement,
+  isMarkerPseudoElement,
   isNativeAnonymous,
 } = require("resource://devtools/shared/layout/utils.js");
 const Debugger = require("Debugger");
@@ -422,9 +425,15 @@ class JQueryEventCollector extends MainEventCollector {
     const jQuery = this.getJQuery(node);
     const handlers = [];
 
-    // If jQuery is not on the page, if this is an anonymous node (that includes pseudo
-    // elements), we need to return early.
-    if (!jQuery || isNativeAnonymous(node)) {
+    // If jQuery is not on the page, if this is an anonymous node or a pseudo
+    // element we need to return early.
+    if (
+      !jQuery ||
+      isNativeAnonymous(node) ||
+      isMarkerPseudoElement(node) ||
+      isBeforePseudoElement(node) ||
+      isAfterPseudoElement(node)
+    ) {
       if (checkOnly) {
         return false;
       }

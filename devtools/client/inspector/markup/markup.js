@@ -2834,13 +2834,13 @@ class MarkupView extends EventEmitter {
 
     if (nextSibling) {
       while (
-        nextSibling.displayName === "::marker" ||
-        nextSibling.displayName === "::before"
+        nextSibling.isMarkerPseudoElement ||
+        nextSibling.isBeforePseudoElement
       ) {
         nextSibling =
           this.getContainer(nextSibling).elt.nextSibling.container.node;
       }
-      if (nextSibling.displayName === "::after") {
+      if (nextSibling.isAfterPseudoElement) {
         parent = target.parentNode.container.node.parentNode();
         nextSibling = null;
       }

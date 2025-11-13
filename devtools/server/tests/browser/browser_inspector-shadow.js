@@ -100,14 +100,12 @@ add_task(async function () {
   const children = await walker.children(el);
 
   ok(children.nodes[0].isShadowRoot, "#host-pseudo 1st child is a shadow root");
-  is(
-    children.nodes[1].displayName,
-    "::before",
+  ok(
+    children.nodes[1].isBeforePseudoElement,
     "#host-pseudo 2nd child is ::before"
   );
-  is(
-    children.nodes[2].displayName,
-    "::after",
+  ok(
+    children.nodes[2].isAfterPseudoElement,
     "#host-pseudo 3rd child is ::after"
   );
 });
@@ -124,8 +122,12 @@ add_task(async function () {
   is(shadowChildren.nodes[1].displayName, "slot", "shadow-root has a slot");
 
   const slottedChildren = await walker.children(shadowChildren.nodes[1]);
-  is(slottedChildren.nodes[0].displayName, "::before", "slot has ::before");
-  is(slottedChildren.nodes.at(-1).displayName, "::after", "slot has ::after");
+  ok(slottedChildren.nodes[0].isBeforePseudoElement, "slot has ::before");
+  ok(
+    slottedChildren.nodes[slottedChildren.nodes.length - 1]
+      .isAfterPseudoElement,
+    "slot has ::after"
+  );
 });
 
 add_task(async function () {

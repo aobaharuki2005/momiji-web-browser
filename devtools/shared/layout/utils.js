@@ -488,9 +488,13 @@ exports.isShadowHost = isShadowHost;
  * @return {Boolean}
  */
 function isDirectShadowHostChild(node) {
-  // native anonymous elements (which includes pseudo elements) are always part of the
-  // anonymous tree.
-  if (node.isNativeAnonymous) {
+  // Pseudo elements and native anonymous elements are always part of the anonymous tree.
+  if (
+    isMarkerPseudoElement(node) ||
+    isBeforePseudoElement(node) ||
+    isAfterPseudoElement(node) ||
+    node.isNativeAnonymous
+  ) {
     return false;
   }
 
@@ -498,6 +502,39 @@ function isDirectShadowHostChild(node) {
   return parentNode && !!parentNode.openOrClosedShadowRoot;
 }
 exports.isDirectShadowHostChild = isDirectShadowHostChild;
+
+/**
+ * Determine whether a node is a ::marker pseudo.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isMarkerPseudoElement(node) {
+  return node.nodeName === "_moz_generated_content_marker";
+}
+exports.isMarkerPseudoElement = isMarkerPseudoElement;
+
+/**
+ * Determine whether a node is a ::before pseudo.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isBeforePseudoElement(node) {
+  return node.nodeName === "_moz_generated_content_before";
+}
+exports.isBeforePseudoElement = isBeforePseudoElement;
+
+/**
+ * Determine whether a node is a ::after pseudo.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+function isAfterPseudoElement(node) {
+  return node.nodeName === "_moz_generated_content_after";
+}
+exports.isAfterPseudoElement = isAfterPseudoElement;
 
 /**
  * Get the current zoom factor applied to the container window of a given node.

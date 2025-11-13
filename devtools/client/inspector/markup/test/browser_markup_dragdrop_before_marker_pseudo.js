@@ -26,7 +26,11 @@ add_task(async function () {
   info("Test placing an element before a ::marker psuedo");
   await moveElementBeforeMarker("#last-list-child", parentFront, inspector);
   const childNodes = await getChildrenOf(parentFront, inspector);
-  is(childNodes[0], "::marker", "::marker is still the first child of #list");
+  is(
+    childNodes[0],
+    "_moz_generated_content_marker",
+    "::marker is still the first child of #list"
+  );
   is(
     childNodes[1],
     "last-list-child",
@@ -66,7 +70,7 @@ async function moveElementBeforeMarker(selector, parentFront, inspector) {
 async function getChildrenOf(parentFront, { walker }) {
   const { nodes } = await walker.children(parentFront);
   return nodes.map(node => {
-    if (node.displayName === "::marker") {
+    if (node.isMarkerPseudoElement) {
       return node.displayName;
     }
     return node.id;

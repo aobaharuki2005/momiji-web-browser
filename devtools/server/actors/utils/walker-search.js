@@ -6,10 +6,11 @@
 
 loader.lazyRequireGetter(
   this,
-  ["isWhitespaceTextNode", "getNodeDisplayName"],
+  "isWhitespaceTextNode",
   "resource://devtools/server/actors/inspector/utils.js",
   true
 );
+
 /**
  * The walker-search module provides a simple API to index and search strings
  * and elements inside a given document.
@@ -103,26 +104,22 @@ class WalkerIndex {
       }
 
       if (node.nodeType === 1) {
-        if (node.implementedPseudoElement) {
-          // For pseudo elements we get the displayName (e.g. `::view-transition-group(myGroup)`)
-          const displayName = getNodeDisplayName(node);
-          this._addToIndex("tag", node, displayName);
-
-          // And for the pseudo elements that do have text child (via the CSS `content` property),
-          // we also get the text.
-          if (
-            displayName === "::marker" ||
-            displayName === "::before" ||
-            displayName === "::after"
-          ) {
-            this._addToIndex("text", node, node.textContent.trim());
-          }
+        // For each element node, we get the tagname and all attributes names
+        // and values
+        const localName = node.localName;
+        if (localName === "_moz_generated_content_marker") {
+          this._addToIndex("tag", node, "::marker");
+          this._addToIndex("text", node, node.textContent.trim());
+        } else if (localName === "_moz_generated_content_before") {
+          this._addToIndex("tag", node, "::before");
+          this._addToIndex("text", node, node.textContent.trim());
+        } else if (localName === "_moz_generated_content_after") {
+          this._addToIndex("tag", node, "::after");
+          this._addToIndex("text", node, node.textContent.trim());
         } else {
-          // For each element node, we get the tagname …
           this._addToIndex("tag", node, node.localName);
         }
 
-        // … and all attributes names and values
         for (const { name, value } of node.attributes) {
           this._addToIndex("attributeName", node, name);
           this._addToIndex("attributeValue", node, value);

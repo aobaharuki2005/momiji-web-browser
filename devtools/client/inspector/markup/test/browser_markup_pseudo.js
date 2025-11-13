@@ -44,7 +44,7 @@ add_task(async function testMarkerOnPseudo() {
   const ulBeforeNodeFront = ulChildren[0];
   is(
     ulBeforeNodeFront.displayName,
-    "::before",
+    "_moz_generated_content_before",
     "Got expexected ul::before pseudo element"
   );
   const ulBeforeContainer = await getContainerForNodeFront(
@@ -64,7 +64,7 @@ add_task(async function testMarkerOnPseudo() {
   const ulBeforeMarkerNodeFront = ulBeforeChildren[0];
   is(
     ulBeforeMarkerNodeFront.displayName,
-    "::marker",
+    "_moz_generated_content_marker",
     "Got expexected ul::before::marker pseudo element"
   );
   const ulBeforeMarkerContainer = await getContainerForNodeFront(
@@ -81,7 +81,7 @@ add_task(async function testMarkerOnPseudo() {
   const ulAfterNodeFront = ulChildren[3];
   is(
     ulAfterNodeFront.displayName,
-    "::after",
+    "_moz_generated_content_after",
     "Got expexected ul::after pseudo element"
   );
   const ulAfterContainer = await getContainerForNodeFront(
@@ -104,15 +104,13 @@ async function checkMarkupView(inspector) {
   const divNode = childrenContainers[1].node;
   const afterNode = childrenContainers[2].node;
 
-  is(
-    beforeNode.displayName,
-    "::before",
+  ok(
+    beforeNode.isBeforePseudoElement,
     "The first child is the ::before pseudo element"
   );
   is(divNode.displayName, "div", "The second child is the <div> element");
-  is(
-    afterNode.displayName,
-    "::after",
+  ok(
+    afterNode.isAfterPseudoElement,
     "The last child is the ::after pseudo element"
   );
 }
