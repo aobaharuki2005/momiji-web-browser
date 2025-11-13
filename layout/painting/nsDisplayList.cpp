@@ -5355,14 +5355,19 @@ bool nsDisplayOwnLayer::IsStickyPositionLayer() const {
   return GetType() == DisplayItemType::TYPE_STICKY_POSITION;
 }
 
-bool nsDisplayOwnLayer::HasDynamicToolbar() const {
-  if (!mFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
+/* static */
+bool nsDisplayOwnLayer::HasDynamicToolbar(nsIFrame* aFrame) {
+  if (!aFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
     return false;
   }
-  return mFrame->PresContext()->HasDynamicToolbar() ||
+  return aFrame->PresContext()->HasDynamicToolbar() ||
          // For tests on Android, this pref is set to simulate the dynamic
          // toolbar
          StaticPrefs::apz_fixed_margin_override_enabled();
+}
+
+bool nsDisplayOwnLayer::HasDynamicToolbar() const {
+  return HasDynamicToolbar(mFrame);
 }
 
 bool nsDisplayOwnLayer::CreateWebRenderCommands(
@@ -6115,8 +6120,17 @@ bool nsDisplayStickyPosition::UpdateScrollData(
   return ret;
 }
 
+bool nsDisplayStickyPosition::ShouldGetStickyAnimationId(
+    nsIFrame* aStickyFrame) {
+  // Also implies being in the cross-process RCD.
+  // The animation id is how we translate the layer by the dynamic toolbar
+  // offset. It's not needed for regular sticky positioning, that's handled
+  // by WebRender without an animation id.
+  return nsDisplayOwnLayer::HasDynamicToolbar(aStickyFrame);
+}
+
 bool nsDisplayStickyPosition::ShouldGetStickyAnimationId() const {
-  return HasDynamicToolbar();  // also implies being in the cross-process RCD
+  return ShouldGetStickyAnimationId(mFrame);
 }
 
 nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(

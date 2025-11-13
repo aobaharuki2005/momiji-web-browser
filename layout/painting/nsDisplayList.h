@@ -5638,6 +5638,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   bool IsZoomingLayer() const;
   bool IsFixedPositionLayer() const;
   bool IsStickyPositionLayer() const;
+  static bool HasDynamicToolbar(nsIFrame* aFrame);
   bool HasDynamicToolbar() const;
   virtual bool ShouldGetFixedAnimationId() { return false; }
 
@@ -5768,6 +5769,7 @@ class nsDisplayStickyPosition final : public nsDisplayOwnLayer {
     return mShouldFlatten;
   }
 
+  static bool ShouldGetStickyAnimationId(nsIFrame* aStickyFrame);
   bool ShouldGetStickyAnimationId() const;
 
  private:
