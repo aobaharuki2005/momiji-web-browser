@@ -70,7 +70,7 @@ sealed class PreferenceFileInformation(
     object DownloadsSettingsPreferences : PreferenceFileInformation(
         xmlResourceId = R.xml.downloads_settings_preferences,
         topBreadcrumbResourceId = R.string.preferences_downloads,
-        fragmentId = R.id.downloadsFragment,
+        fragmentId = R.id.openDownloadsSettingsFragment,
     )
 
     /**
