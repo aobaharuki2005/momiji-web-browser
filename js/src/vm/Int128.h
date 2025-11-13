@@ -64,8 +64,8 @@ class alignas(16) Uint128 final {
    * Based on "Unsigned doubleword division from long division" from
    * Hacker's Delight, 2nd edition, figure 9-5.
    */
-  static std::pair<Uint128, Uint128> udivdi(const Uint128& u,
-                                            const Uint128& v) {
+  static constexpr std::pair<Uint128, Uint128> udivdi(const Uint128& u,
+                                                      const Uint128& v) {
     MOZ_ASSERT(v != Uint128{});
 
     // If v < 2**64
@@ -131,8 +131,8 @@ class alignas(16) Uint128 final {
    * Based on "Divide long unsigned, using fullword division instructions" from
    * Hacker's Delight, 2nd edition, figure 9-3.
    */
-  static std::pair<uint64_t, uint64_t> divlu(uint64_t u1, uint64_t u0,
-                                             uint64_t v) {
+  static constexpr std::pair<uint64_t, uint64_t> divlu(uint64_t u1, uint64_t u0,
+                                                       uint64_t v) {
     // Number base (32 bits).
     constexpr uint64_t base = 4294967296;
 
@@ -281,16 +281,16 @@ class alignas(16) Uint128 final {
   /**
    * Return the quotient and remainder of the division.
    */
-  std::pair<Uint128, Uint128> divrem(const Uint128& divisor) const {
+  constexpr std::pair<Uint128, Uint128> divrem(const Uint128& divisor) const {
     return udivdi(*this, divisor);
   }
 
-  Uint128 operator/(const Uint128& other) const {
+  constexpr Uint128 operator/(const Uint128& other) const {
     auto [quot, rem] = divrem(other);
     return quot;
   }
 
-  Uint128 operator%(const Uint128& other) const {
+  constexpr Uint128 operator%(const Uint128& other) const {
     auto [quot, rem] = divrem(other);
     return rem;
   }
@@ -390,12 +390,12 @@ class alignas(16) Uint128 final {
     return *this;
   }
 
-  Uint128 operator/=(const Uint128& other) {
+  constexpr Uint128 operator/=(const Uint128& other) {
     *this = *this / other;
     return *this;
   }
 
-  Uint128 operator%=(const Uint128& other) {
+  constexpr Uint128 operator%=(const Uint128& other) {
     *this = *this % other;
     return *this;
   }
@@ -448,7 +448,8 @@ class alignas(16) Int128 final {
    * Based on "Signed doubleword division from unsigned doubleword division"
    * from Hacker's Delight, 2nd edition, figure 9-6.
    */
-  static std::pair<Int128, Int128> divdi(const Int128& u, const Int128& v) {
+  static constexpr std::pair<Int128, Int128> divdi(const Int128& u,
+                                                   const Int128& v) {
     auto [q, r] = Uint128::udivdi(u.abs(), v.abs());
 
     // If u and v have different signs, negate q.
@@ -474,7 +475,7 @@ class alignas(16) Int128 final {
   /**
    * Return the quotient and remainder of the division.
    */
-  std::pair<Int128, Int128> divrem(const Int128& divisor) const {
+  constexpr std::pair<Int128, Int128> divrem(const Int128& divisor) const {
     return divdi(*this, divisor);
   }
 
@@ -542,12 +543,12 @@ class alignas(16) Int128 final {
     return Int128{Uint128{*this} * Uint128{other}};
   }
 
-  Int128 operator/(const Int128& other) const {
+  constexpr Int128 operator/(const Int128& other) const {
     auto [quot, rem] = divrem(other);
     return quot;
   }
 
-  Int128 operator%(const Int128& other) const {
+  constexpr Int128 operator%(const Int128& other) const {
     auto [quot, rem] = divrem(other);
     return rem;
   }
@@ -631,12 +632,12 @@ class alignas(16) Int128 final {
     return *this;
   }
 
-  Int128 operator/=(const Int128& other) {
+  constexpr Int128 operator/=(const Int128& other) {
     *this = *this / other;
     return *this;
   }
 
-  Int128 operator%=(const Int128& other) {
+  constexpr Int128 operator%=(const Int128& other) {
     *this = *this % other;
     return *this;
   }
