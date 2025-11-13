@@ -42,13 +42,14 @@ def lint(paths, config, fix=None, **lintargs):
 
     for file_name in file_names:
         path = mozpath.relpath(file_name, topsrcdir)
-        os.path.basename(file_name)
+        if path == ".cargo/audit.toml":
+            continue  # special case that cannot be excluded in yml
         parser = TestManifest(use_toml=True, document=True)
 
         try:
             parser.read(file_name)
-        except Exception:
-            r = make_result(path, "The manifest is not valid TOML.", True)
+        except Exception as e:
+            r = make_result(path, f"The manifest is not valid TOML: {str(e)}", True)
             results.append(result.from_config(config, **r))
             continue
 
@@ -100,7 +101,7 @@ def lint(paths, config, fix=None, **lintargs):
         for section, keyvals in manifest.body:
             if section is None:
                 continue
-            if not isinstance(keyvals, Table):
+            elif not isinstance(keyvals, Table):
                 r = make_result(
                     path, f"Bad assignment in preamble: {section} = {keyvals}", True
                 )
@@ -124,9 +125,21 @@ def lint(paths, config, fix=None, **lintargs):
                                         True,
                                     )
                                     results.append(result.from_config(config, **r))
+                                if e.find("bits == ") > 0:
+                                    r = make_result(
+                                        path,
+                                        "using 'bits' is not idiomatic, use 'arch' instead",
+                                    )
+                                    results.append(result.from_config(config, **r))
+                                if e.find("processor == ") > 0:
+                                    r = make_result(
+                                        path,
+                                        "using 'processor' is not idiomatic, use 'arch' instead",
+                                    )
+                                    results.append(result.from_config(config, **r))
 
         if fix:
-            manifest_str = alphabetize_toml_str(manifest)
+            manifest_str = alphabetize_toml_str(manifest, True)
             fp = open(file_name, "w", encoding="utf-8", newline="\n")
             fp.write(manifest_str)
             fp.close()

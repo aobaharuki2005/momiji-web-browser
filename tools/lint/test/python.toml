@@ -42,8 +42,6 @@ skip-if = ["os == 'win'"]
 
 ["test_lintpref.py"]
 
-["test_manifest_alpha.py"]
-
 ["test_manifest_toml.py"]
 
 ["test_node_licenses.py"]

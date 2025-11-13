@@ -540,7 +540,7 @@ yellow = submarine
         parser = ManifestParser(use_toml=True)
         manifest = os.path.join(here, "broken-skip-if.toml")
         with self.assertRaisesRegex(
-            Exception, "Should not assign in skip-if condition for DEFAULT"
+            Exception, "Should not assign in skip-if list condition for DEFAULT"
         ):
             parser.read(manifest)
 

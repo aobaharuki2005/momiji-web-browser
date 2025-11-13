@@ -33,3 +33,10 @@ Errors Detected
 * Section name not double quoted (fixable)
 * Disabling a path by commenting out the section
 * Conditional contains explicit ||
+* Conditional is NOT an array
+* Missing include file
+
+Non idiomatic manifest warnings
+-------------------------------
+* Using ``processor`` instead of ``arch``
+* Using ``bits`` instead of ``arch``
