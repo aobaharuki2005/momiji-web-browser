@@ -4093,6 +4093,7 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 #ifndef MOZ_WIDGET_ANDROID
           gfxCriticalNoteOnce << "inserted scroll frame";
 #endif
+          MOZ_ASSERT(!ShouldActivateAllScrollFrames());
           asrSetter.InsertScrollFrame(this);
           aBuilder->SetDisablePartialUpdates(true);
         }
