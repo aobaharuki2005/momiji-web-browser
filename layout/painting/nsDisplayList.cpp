@@ -169,26 +169,21 @@ void InitializeHitTestInfo(nsDisplayListBuilder* aBuilder,
 /* static */
 already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
     const ActiveScrolledRoot* aParent,
-    ScrollContainerFrame* aScrollContainerFrame, bool aIsRetained) {
-  RefPtr<ActiveScrolledRoot> asr;
-  if (aIsRetained) {
-    asr = aScrollContainerFrame->GetProperty(ActiveScrolledRootCache());
-  }
+    ScrollContainerFrame* aScrollContainerFrame) {
+  RefPtr<ActiveScrolledRoot> asr =
+      aScrollContainerFrame->GetProperty(ActiveScrolledRootCache());
 
   if (!asr) {
     asr = new ActiveScrolledRoot();
 
-    if (aIsRetained) {
-      RefPtr<ActiveScrolledRoot> ref = asr;
-      aScrollContainerFrame->SetProperty(ActiveScrolledRootCache(),
-                                         ref.forget().take());
-    }
+    RefPtr<ActiveScrolledRoot> ref = asr;
+    aScrollContainerFrame->SetProperty(ActiveScrolledRootCache(),
+                                       ref.forget().take());
   }
   asr->mParent = aParent;
   asr->mFrame = aScrollContainerFrame;
   asr->mKind = ASRKind::Scroll;
   asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
-  asr->mRetained = aIsRetained;
 
   return asr.forget();
 }
@@ -196,28 +191,22 @@ already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
 /* static */
 already_AddRefed<ActiveScrolledRoot>
 ActiveScrolledRoot::CreateASRForStickyFrame(const ActiveScrolledRoot* aParent,
-                                            nsIFrame* aStickyFrame,
-                                            bool aIsRetained) {
-  RefPtr<ActiveScrolledRoot> asr;
-  if (aIsRetained) {
-    asr = aStickyFrame->GetProperty(StickyActiveScrolledRootCache());
-  }
+                                            nsIFrame* aStickyFrame) {
+  RefPtr<ActiveScrolledRoot> asr =
+      aStickyFrame->GetProperty(StickyActiveScrolledRootCache());
 
   if (!asr) {
     asr = new ActiveScrolledRoot();
 
-    if (aIsRetained) {
-      RefPtr<ActiveScrolledRoot> ref = asr;
-      aStickyFrame->SetProperty(StickyActiveScrolledRootCache(),
-                                ref.forget().take());
-    }
+    RefPtr<ActiveScrolledRoot> ref = asr;
+    aStickyFrame->SetProperty(StickyActiveScrolledRootCache(),
+                              ref.forget().take());
   }
 
   asr->mParent = aParent;
   asr->mFrame = aStickyFrame;
   asr->mKind = ASRKind::Sticky;
   asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
-  asr->mRetained = aIsRetained;
 
   return asr.forget();
 }
@@ -311,7 +300,7 @@ ScrollableLayerGuid::ViewID ActiveScrolledRoot::ComputeViewId() const {
 }
 
 ActiveScrolledRoot::~ActiveScrolledRoot() {
-  if (mFrame && mRetained) {
+  if (mFrame) {
     mFrame->RemoveProperty(mKind == ASRKind::Sticky
                                ? StickyActiveScrolledRootCache()
                                : ActiveScrolledRootCache());
@@ -1500,16 +1489,16 @@ void nsDisplayListBuilder::MarkPreserve3DFramesForDisplayList(
 ActiveScrolledRoot* nsDisplayListBuilder::AllocateActiveScrolledRoot(
     const ActiveScrolledRoot* aParent,
     ScrollContainerFrame* aScrollContainerFrame) {
-  RefPtr<ActiveScrolledRoot> asr = ActiveScrolledRoot::CreateASRForFrame(
-      aParent, aScrollContainerFrame, IsRetainingDisplayList());
+  RefPtr<ActiveScrolledRoot> asr =
+      ActiveScrolledRoot::CreateASRForFrame(aParent, aScrollContainerFrame);
   mActiveScrolledRoots.AppendElement(asr);
   return asr;
 }
 
 ActiveScrolledRoot* nsDisplayListBuilder::AllocateActiveScrolledRootForSticky(
     const ActiveScrolledRoot* aParent, nsIFrame* aStickyFrame) {
-  RefPtr<ActiveScrolledRoot> asr = ActiveScrolledRoot::CreateASRForStickyFrame(
-      aParent, aStickyFrame, IsRetainingDisplayList());
+  RefPtr<ActiveScrolledRoot> asr =
+      ActiveScrolledRoot::CreateASRForStickyFrame(aParent, aStickyFrame);
   mActiveScrolledRoots.AppendElement(asr);
   return asr;
 }

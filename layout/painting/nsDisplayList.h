@@ -187,10 +187,9 @@ struct ActiveScrolledRoot {
   // TODO: Just have one function with an extra ASRKind parameter
   static already_AddRefed<ActiveScrolledRoot> CreateASRForFrame(
       const ActiveScrolledRoot* aParent,
-      ScrollContainerFrame* aScrollContainerFrame, bool aIsRetained);
+      ScrollContainerFrame* aScrollContainerFrame);
   static already_AddRefed<ActiveScrolledRoot> CreateASRForStickyFrame(
-      const ActiveScrolledRoot* aParent, nsIFrame* aStickyFrame,
-      bool aIsRetained);
+      const ActiveScrolledRoot* aParent, nsIFrame* aStickyFrame);
 
   static const ActiveScrolledRoot* PickAncestor(
       const ActiveScrolledRoot* aOne, const ActiveScrolledRoot* aTwo) {
@@ -249,7 +248,7 @@ struct ActiveScrolledRoot {
   NS_INLINE_DECL_REFCOUNTING(ActiveScrolledRoot)
 
  private:
-  ActiveScrolledRoot() : mDepth(0), mRetained(false) {}
+  ActiveScrolledRoot() : mDepth(0) {}
 
   ~ActiveScrolledRoot();
 
@@ -278,7 +277,6 @@ struct ActiveScrolledRoot {
   mutable Maybe<layers::ScrollableLayerGuid::ViewID> mViewId;
 
   uint32_t mDepth;
-  bool mRetained;
 };
 
 enum class nsDisplayListBuilderMode : uint8_t {
