@@ -119,12 +119,12 @@ var gPermissionManager = {
       if (params.capabilityFilter === Ci.nsIPermissionManager.ALLOW_ACTION) {
         l10n = {
           window: "ip-protection-exceptions-dialog-window",
-          description: "ip-protection-exclusions-desc",
+          description: "ip-protection-inclusions-desc",
         };
       } else {
         l10n = {
           window: "ip-protection-exceptions-dialog-window",
-          description: "ip-protection-inclusions-desc",
+          description: "ip-protection-exclusions-desc",
         };
       }
     } else {

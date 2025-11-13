@@ -118,8 +118,8 @@ ip-protection-site-exceptions-select-sites-button =
 
 ip-protection-exceptions-dialog-window =
   .title = Where to use { -firefox-vpn-brand-name }
-ip-protection-exclusions-desc = Use VPN for all websites except ones on this list.
-ip-protection-inclusions-desc = Use VPN for only select websites.
+ip-protection-exclusions-desc = Use VPN for all websites except ones on this list. Add websites to this list by turning { -firefox-vpn-brand-name } on or off for any site in the VPN panel.
+ip-protection-inclusions-desc = Use VPN only for select websites. Add websites to this list by turning { -firefox-vpn-brand-name } on or off for any site in the VPN panel.
 
 ipprotection-site-settings-title =
   .title = VPN site settings
