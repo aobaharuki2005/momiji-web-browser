@@ -5854,7 +5854,6 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
     auto spatialId = aBuilder.GetSpatialIdForDefinedStickyLayer(stickyAsr);
     MOZ_ASSERT(spatialId.isSome());
     saccHelper.emplace(aBuilder, *spatialId);
-    aManager->CommandBuilder().PushOverrideForASR(mContainerASR, *spatialId);
   }
 
   {
@@ -5865,10 +5864,6 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
                              aBuilder, params);
     nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, sc,
                                                aManager, aDisplayListBuilder);
-  }
-
-  if (stickyScrollContainer) {
-    aManager->CommandBuilder().PopOverrideForASR(mContainerASR);
   }
 
   return true;
