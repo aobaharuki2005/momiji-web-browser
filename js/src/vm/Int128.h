@@ -203,8 +203,14 @@ class alignas(16) Uint128 final {
   constexpr Uint128() = default;
   constexpr Uint128(const Uint128&) = default;
 
+  explicit constexpr Uint128(int64_t value)
+      : Uint128(uint64_t(value), uint64_t(value >> 63)) {}
+
   explicit constexpr Uint128(uint64_t value)
       : Uint128(uint64_t(value), uint64_t(0)) {}
+
+  explicit constexpr Uint128(int32_t value) : Uint128(int64_t(value)) {}
+  explicit constexpr Uint128(uint32_t value) : Uint128(uint64_t(value)) {}
 
   constexpr bool operator==(const Uint128& other) const {
     return low == other.low && high == other.high;
@@ -458,6 +464,12 @@ class alignas(16) Int128 final {
 
   explicit constexpr Int128(int64_t value)
       : Int128(uint64_t(value), uint64_t(value >> 63)) {}
+
+  explicit constexpr Int128(uint64_t value)
+      : Int128(uint64_t(value), uint64_t(0)) {}
+
+  explicit constexpr Int128(int32_t value) : Int128(int64_t(value)) {}
+  explicit constexpr Int128(uint32_t value) : Int128(uint64_t(value)) {}
 
   /**
    * Return the quotient and remainder of the division.
