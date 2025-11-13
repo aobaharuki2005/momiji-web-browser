@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_Int128_h
-#define vm_Int128_h
+#ifndef builtin_temporal_Int128_h
+#define builtin_temporal_Int128_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
@@ -16,7 +16,7 @@
 #include <stdint.h>
 #include <utility>
 
-namespace js {
+namespace js::temporal {
 
 class Int128;
 class Uint128;
@@ -64,8 +64,8 @@ class alignas(16) Uint128 final {
    * Based on "Unsigned doubleword division from long division" from
    * Hacker's Delight, 2nd edition, figure 9-5.
    */
-  static constexpr std::pair<Uint128, Uint128> udivdi(const Uint128& u,
-                                                      const Uint128& v) {
+  static std::pair<Uint128, Uint128> udivdi(const Uint128& u,
+                                            const Uint128& v) {
     MOZ_ASSERT(v != Uint128{});
 
     // If v < 2**64
@@ -131,8 +131,8 @@ class alignas(16) Uint128 final {
    * Based on "Divide long unsigned, using fullword division instructions" from
    * Hacker's Delight, 2nd edition, figure 9-3.
    */
-  static constexpr std::pair<uint64_t, uint64_t> divlu(uint64_t u1, uint64_t u0,
-                                                       uint64_t v) {
+  static std::pair<uint64_t, uint64_t> divlu(uint64_t u1, uint64_t u0,
+                                             uint64_t v) {
     // Number base (32 bits).
     constexpr uint64_t base = 4294967296;
 
@@ -203,14 +203,8 @@ class alignas(16) Uint128 final {
   constexpr Uint128() = default;
   constexpr Uint128(const Uint128&) = default;
 
-  explicit constexpr Uint128(int64_t value)
-      : Uint128(uint64_t(value), uint64_t(value >> 63)) {}
-
   explicit constexpr Uint128(uint64_t value)
       : Uint128(uint64_t(value), uint64_t(0)) {}
-
-  explicit constexpr Uint128(int32_t value) : Uint128(int64_t(value)) {}
-  explicit constexpr Uint128(uint32_t value) : Uint128(uint64_t(value)) {}
 
   constexpr bool operator==(const Uint128& other) const {
     return low == other.low && high == other.high;
@@ -281,16 +275,16 @@ class alignas(16) Uint128 final {
   /**
    * Return the quotient and remainder of the division.
    */
-  constexpr std::pair<Uint128, Uint128> divrem(const Uint128& divisor) const {
+  std::pair<Uint128, Uint128> divrem(const Uint128& divisor) const {
     return udivdi(*this, divisor);
   }
 
-  constexpr Uint128 operator/(const Uint128& other) const {
+  Uint128 operator/(const Uint128& other) const {
     auto [quot, rem] = divrem(other);
     return quot;
   }
 
-  constexpr Uint128 operator%(const Uint128& other) const {
+  Uint128 operator%(const Uint128& other) const {
     auto [quot, rem] = divrem(other);
     return rem;
   }
@@ -390,12 +384,12 @@ class alignas(16) Uint128 final {
     return *this;
   }
 
-  constexpr Uint128 operator/=(const Uint128& other) {
+  Uint128 operator/=(const Uint128& other) {
     *this = *this / other;
     return *this;
   }
 
-  constexpr Uint128 operator%=(const Uint128& other) {
+  Uint128 operator%=(const Uint128& other) {
     *this = *this % other;
     return *this;
   }
@@ -448,8 +442,7 @@ class alignas(16) Int128 final {
    * Based on "Signed doubleword division from unsigned doubleword division"
    * from Hacker's Delight, 2nd edition, figure 9-6.
    */
-  static constexpr std::pair<Int128, Int128> divdi(const Int128& u,
-                                                   const Int128& v) {
+  static std::pair<Int128, Int128> divdi(const Int128& u, const Int128& v) {
     auto [q, r] = Uint128::udivdi(u.abs(), v.abs());
 
     // If u and v have different signs, negate q.
@@ -466,16 +459,10 @@ class alignas(16) Int128 final {
   explicit constexpr Int128(int64_t value)
       : Int128(uint64_t(value), uint64_t(value >> 63)) {}
 
-  explicit constexpr Int128(uint64_t value)
-      : Int128(uint64_t(value), uint64_t(0)) {}
-
-  explicit constexpr Int128(int32_t value) : Int128(int64_t(value)) {}
-  explicit constexpr Int128(uint32_t value) : Int128(uint64_t(value)) {}
-
   /**
    * Return the quotient and remainder of the division.
    */
-  constexpr std::pair<Int128, Int128> divrem(const Int128& divisor) const {
+  std::pair<Int128, Int128> divrem(const Int128& divisor) const {
     return divdi(*this, divisor);
   }
 
@@ -543,12 +530,12 @@ class alignas(16) Int128 final {
     return Int128{Uint128{*this} * Uint128{other}};
   }
 
-  constexpr Int128 operator/(const Int128& other) const {
+  Int128 operator/(const Int128& other) const {
     auto [quot, rem] = divrem(other);
     return quot;
   }
 
-  constexpr Int128 operator%(const Int128& other) const {
+  Int128 operator%(const Int128& other) const {
     auto [quot, rem] = divrem(other);
     return rem;
   }
@@ -632,12 +619,12 @@ class alignas(16) Int128 final {
     return *this;
   }
 
-  constexpr Int128 operator/=(const Int128& other) {
+  Int128 operator/=(const Int128& other) {
     *this = *this / other;
     return *this;
   }
 
-  constexpr Int128 operator%=(const Int128& other) {
+  Int128 operator%=(const Int128& other) {
     *this = *this % other;
     return *this;
   }
@@ -670,10 +657,10 @@ class alignas(16) Int128 final {
 
 constexpr Uint128::operator Int128() const { return Int128{low, high}; }
 
-} /* namespace js */
+} /* namespace js::temporal */
 
 template <>
-class std::numeric_limits<js::Int128> {
+class std::numeric_limits<js::temporal::Int128> {
  public:
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = true;
@@ -688,7 +675,7 @@ class std::numeric_limits<js::Int128> {
   static constexpr bool is_iec559 = false;
   static constexpr bool is_bounded = true;
   static constexpr bool is_modulo = true;
-  static constexpr int digits = CHAR_BIT * sizeof(js::Int128) - 1;
+  static constexpr int digits = CHAR_BIT * sizeof(js::temporal::Int128) - 1;
   static constexpr int digits10 = int(digits * /* std::log10(2) */ 0.30102999);
   static constexpr int max_digits10 = 0;
   static constexpr int radix = 2;
@@ -699,19 +686,25 @@ class std::numeric_limits<js::Int128> {
   static constexpr bool traps = true;
   static constexpr bool tinyness_before = false;
 
-  static constexpr auto min() noexcept { return js::Int128{1} << 127; }
+  static constexpr auto min() noexcept {
+    return js::temporal::Int128{1} << 127;
+  }
   static constexpr auto lowest() noexcept { return min(); }
   static constexpr auto max() noexcept { return ~min(); }
-  static constexpr auto epsilon() noexcept { return js::Int128{}; }
-  static constexpr auto round_error() noexcept { return js::Int128{}; }
-  static constexpr auto infinity() noexcept { return js::Int128{}; }
-  static constexpr auto quiet_NaN() noexcept { return js::Int128{}; }
-  static constexpr auto signaling_NaN() noexcept { return js::Int128{}; }
-  static constexpr auto denorm_min() noexcept { return js::Int128{}; }
+  static constexpr auto epsilon() noexcept { return js::temporal::Int128{}; }
+  static constexpr auto round_error() noexcept {
+    return js::temporal::Int128{};
+  }
+  static constexpr auto infinity() noexcept { return js::temporal::Int128{}; }
+  static constexpr auto quiet_NaN() noexcept { return js::temporal::Int128{}; }
+  static constexpr auto signaling_NaN() noexcept {
+    return js::temporal::Int128{};
+  }
+  static constexpr auto denorm_min() noexcept { return js::temporal::Int128{}; }
 };
 
 template <>
-class std::numeric_limits<js::Uint128> {
+class std::numeric_limits<js::temporal::Uint128> {
  public:
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = false;
@@ -726,7 +719,7 @@ class std::numeric_limits<js::Uint128> {
   static constexpr bool is_iec559 = false;
   static constexpr bool is_bounded = true;
   static constexpr bool is_modulo = true;
-  static constexpr int digits = CHAR_BIT * sizeof(js::Uint128);
+  static constexpr int digits = CHAR_BIT * sizeof(js::temporal::Uint128);
   static constexpr int digits10 = int(digits * /* std::log10(2) */ 0.30102999);
   static constexpr int max_digits10 = 0;
   static constexpr int radix = 2;
@@ -737,15 +730,21 @@ class std::numeric_limits<js::Uint128> {
   static constexpr bool traps = true;
   static constexpr bool tinyness_before = false;
 
-  static constexpr auto min() noexcept { return js::Uint128{}; }
+  static constexpr auto min() noexcept { return js::temporal::Uint128{}; }
   static constexpr auto lowest() noexcept { return min(); }
-  static constexpr auto max() noexcept { return ~js::Uint128{}; }
-  static constexpr auto epsilon() noexcept { return js::Uint128{}; }
-  static constexpr auto round_error() noexcept { return js::Uint128{}; }
-  static constexpr auto infinity() noexcept { return js::Uint128{}; }
-  static constexpr auto quiet_NaN() noexcept { return js::Uint128{}; }
-  static constexpr auto signaling_NaN() noexcept { return js::Uint128{}; }
-  static constexpr auto denorm_min() noexcept { return js::Uint128{}; }
+  static constexpr auto max() noexcept { return ~js::temporal::Uint128{}; }
+  static constexpr auto epsilon() noexcept { return js::temporal::Uint128{}; }
+  static constexpr auto round_error() noexcept {
+    return js::temporal::Uint128{};
+  }
+  static constexpr auto infinity() noexcept { return js::temporal::Uint128{}; }
+  static constexpr auto quiet_NaN() noexcept { return js::temporal::Uint128{}; }
+  static constexpr auto signaling_NaN() noexcept {
+    return js::temporal::Uint128{};
+  }
+  static constexpr auto denorm_min() noexcept {
+    return js::temporal::Uint128{};
+  }
 };
 
-#endif /* vm_Int128_h */
+#endif /* builtin_temporal_Int128_h */

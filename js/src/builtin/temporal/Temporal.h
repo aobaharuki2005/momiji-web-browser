@@ -13,11 +13,11 @@
 
 #include "jstypes.h"
 
+#include "builtin/temporal/Int128.h"
 #include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
-#include "vm/Int128.h"
 #include "vm/NativeObject.h"
 
 namespace js {
