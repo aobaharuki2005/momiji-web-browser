@@ -101,7 +101,7 @@ void ClipManager::EndList(const StackingContextHelper& aStackingContext) {
 
 void ClipManager::PushOverrideForASR(const ActiveScrolledRoot* aASR,
                                      const wr::WrSpatialId& aSpatialId) {
-  wr::WrSpatialId space = GetScrollLayer(aASR);
+  wr::WrSpatialId space = GetSpatialId(aASR);
 
   CLIP_LOG("Pushing %p override %zu -> %zu\n", aASR, space.id, aSpatialId.id);
   auto it = mASROverride.insert({space, std::stack<wr::WrSpatialId>()});
@@ -127,7 +127,7 @@ void ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR) {
   MOZ_ASSERT(!mCacheStack.empty());
   mCacheStack.pop();
 
-  wr::WrSpatialId space = GetScrollLayer(aASR);
+  wr::WrSpatialId space = GetSpatialId(aASR);
   auto it = mASROverride.find(space);
   if (it == mASROverride.end()) {
     MOZ_ASSERT_UNREACHABLE("Push/PopOverrideForASR should be balanced");
@@ -265,7 +265,7 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
   // for it.
   clips.mClipChainId = DefineClipChain(clip, auPerDevPixel);
 
-  wr::WrSpatialId space = GetScrollLayer(asr);
+  wr::WrSpatialId space = GetSpatialId(asr);
   clips.mScrollId = SpatialIdAfterOverride(space);
   CLIP_LOG("\tassigning %d -> %d\n", (int)space.id, (int)clips.mScrollId.id);
 
@@ -285,10 +285,14 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
   return spaceAndClipChain;
 }
 
-wr::WrSpatialId ClipManager::GetScrollLayer(const ActiveScrolledRoot* aASR) {
+wr::WrSpatialId ClipManager::GetSpatialId(const ActiveScrolledRoot* aASR) {
   for (const ActiveScrolledRoot* asr = aASR; asr; asr = asr->mParent) {
-    Maybe<wr::WrSpatialId> space =
-        mBuilder->GetScrollIdForDefinedScrollLayer(asr->GetViewId());
+    Maybe<wr::WrSpatialId> space = Nothing();
+    if (asr->mKind == ActiveScrolledRoot::ASRKind::Sticky) {
+      space = mBuilder->GetSpatialIdForDefinedStickyLayer(asr);
+    } else {
+      space = mBuilder->GetScrollIdForDefinedScrollLayer(asr->GetViewId());
+    }
     if (space) {
       return *space;
     }
@@ -436,7 +440,7 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
     AutoTArray<wr::ComplexClipRegion, 6> wrRoundedRects;
     chain->mClip.ToComplexClipRegions(aAppUnitsPerDevPixel, wrRoundedRects);
 
-    wr::WrSpatialId space = GetScrollLayer(chain->mASR);
+    wr::WrSpatialId space = GetSpatialId(chain->mASR);
     // Define the clip
     space = SpatialIdAfterOverride(space);
 

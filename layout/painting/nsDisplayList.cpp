@@ -6043,14 +6043,19 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
       prop->key = spatialKey;
       prop->effect_type = wr::WrAnimationType::Transform;
     }
-    wr::WrSpatialId spatialId = aBuilder.DefineStickyFrame(
-        Nothing(), wr::ToLayoutRect(bounds), topMargin.ptrOr(nullptr),
-        rightMargin.ptrOr(nullptr), bottomMargin.ptrOr(nullptr),
-        leftMargin.ptrOr(nullptr), vBounds, hBounds, applied, spatialKey,
-        prop.ptrOr(nullptr));
+    aBuilder.DefineStickyFrame(
+        mStickyASR, Nothing(), wr::ToLayoutRect(bounds),
+        topMargin.ptrOr(nullptr), rightMargin.ptrOr(nullptr),
+        bottomMargin.ptrOr(nullptr), leftMargin.ptrOr(nullptr), vBounds,
+        hBounds, applied, spatialKey, prop.ptrOr(nullptr));
 
-    saccHelper.emplace(aBuilder, spatialId);
-    aManager->CommandBuilder().PushOverrideForASR(mContainerASR, spatialId);
+    const ActiveScrolledRoot* stickyAsr =
+        ActiveScrolledRoot::GetStickyASRFromFrame(mFrame);
+    MOZ_ASSERT(stickyAsr);
+    auto spatialId = aBuilder.GetSpatialIdForDefinedStickyLayer(stickyAsr);
+    MOZ_ASSERT(spatialId.isSome());
+    saccHelper.emplace(aBuilder, *spatialId);
+    aManager->CommandBuilder().PushOverrideForASR(mContainerASR, *spatialId);
   }
 
   {
