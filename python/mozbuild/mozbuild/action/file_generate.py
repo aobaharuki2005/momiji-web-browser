@@ -14,7 +14,7 @@ import traceback
 
 import buildconfig
 
-from mozbuild.logging import serialize_root_logger
+from mozbuild.serialized_logging import serialize_root_logger
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
