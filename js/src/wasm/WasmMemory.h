@@ -22,6 +22,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 
+#include <compare>  // std::strong_ordering
 #include <stdint.h>
 
 #include "js/Value.h"
@@ -124,12 +125,7 @@ struct Pages {
 
   // Implement pass-through comparison operators so that Pages can be compared.
 
-  bool operator==(Pages other) const { return value_ == other.value_; }
-  bool operator!=(Pages other) const { return value_ != other.value_; }
-  bool operator<=(Pages other) const { return value_ <= other.value_; }
-  bool operator<(Pages other) const { return value_ < other.value_; }
-  bool operator>=(Pages other) const { return value_ >= other.value_; }
-  bool operator>(Pages other) const { return value_ > other.value_; }
+  constexpr auto operator<=>(const Pages& other) const = default;
 };
 
 // The largest number of pages the application can request.
