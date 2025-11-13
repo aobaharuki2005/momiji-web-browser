@@ -458,6 +458,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void MaybeReconstructActiveEntryList();
 
+  // Get the load listener for the current load in this browsing context.
+  already_AddRefed<net::DocumentLoadListener> GetCurrentLoad();
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();

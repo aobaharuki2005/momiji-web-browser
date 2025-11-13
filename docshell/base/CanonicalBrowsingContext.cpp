@@ -3735,6 +3735,11 @@ EntryList* CanonicalBrowsingContext::GetActiveEntries() {
   return mActiveEntryList;
 }
 
+already_AddRefed<net::DocumentLoadListener>
+CanonicalBrowsingContext::GetCurrentLoad() {
+  return do_AddRef(this->mCurrentLoad);
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CanonicalBrowsingContext,
