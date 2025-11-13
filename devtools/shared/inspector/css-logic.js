@@ -555,17 +555,13 @@ exports.prettifyCSS = prettifyCSS;
  * it was.  Otherwise, return the node itself.
  *
  * @returns {Object}
- *            - {DOMNode} node: The non-anonymous node
- *            - {string|null} pseudo: The label representing the anonymous node
- *                                    (e.g. '::marker',  '::before', '::after', '::view-transition', …).
- *                                    null if node isn't an anonymous node or isn't handled
- *                                    yet.
+ *            - {DOMNode} node The non-anonymous node
+ *            - {string} pseudo One of '::marker', '::before', '::after', or null.
  */
 function getBindingElementAndPseudo(node) {
   let bindingElement = node;
   let pseudo = null;
-  const { implementedPseudoElement } = node;
-  if (implementedPseudoElement) {
+  if (node.implementedPseudoElement) {
     // we can't return `node.implementedPseudoElement` directly as the property only holds
     // the pseudo element type (e.g. "::view-transition-group"), while the callsites of this
     // function need the full pseudo element name (e.g. "::view-transition-group(root)")
@@ -576,14 +572,8 @@ function getBindingElementAndPseudo(node) {
       pseudo === "::after"
     ) {
       bindingElement = node.parentNode;
-    } else if (implementedPseudoElement.startsWith("::view-transition")) {
-      // The binding for all view transition pseudo element is the <html> element, i.e. we
-      // can't use `node.parentNode` as for`::view-transition-old` element, we'd get the
-      // `::view-transition-group`, which is not the binding element.
-      bindingElement = node.getRootNode().documentElement;
     }
   }
-
   return {
     bindingElement,
     pseudo,
