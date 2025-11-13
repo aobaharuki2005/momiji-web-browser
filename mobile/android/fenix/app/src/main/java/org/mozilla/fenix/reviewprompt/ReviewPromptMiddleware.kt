@@ -119,14 +119,10 @@ class ReviewPromptMiddleware(
         }
 
         if (shouldShowPrompt) {
-            if (!isReviewPromptFeatureEnabled()) {
-                context.dispatch(ShowPlayStorePrompt)
+            if (isTelemetryEnabled()) {
+                context.dispatch(ShowCustomReviewPrompt)
             } else {
-                if (isTelemetryEnabled()) {
-                    context.dispatch(ShowCustomReviewPrompt)
-                } else {
-                    context.dispatch(ShowPlayStorePrompt)
-                }
+                context.dispatch(ShowPlayStorePrompt)
             }
         } else {
             context.dispatch(DoNotShowReviewPrompt)

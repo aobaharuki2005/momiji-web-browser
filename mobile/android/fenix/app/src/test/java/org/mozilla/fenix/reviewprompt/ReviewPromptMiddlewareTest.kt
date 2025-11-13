@@ -272,7 +272,7 @@ class ReviewPromptMiddlewareTest {
         store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
 
         assertEquals(
-            AppState(reviewPrompt = ReviewPromptState.Eligible(Type.PlayStore)),
+            AppState(reviewPrompt = ReviewPromptState.Eligible(Type.Custom)),
             store.state,
         )
     }
