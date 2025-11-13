@@ -189,13 +189,6 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
     // the sticky item.
     auto* sticky = static_cast<nsDisplayStickyPosition*>(aItem);
     asr = sticky->GetContainerASR();
-
-    // If the leafmost clip for the sticky item is just the displayport clip,
-    // then skip it. This allows sticky items to remain visible even if the
-    // rest of the content in the enclosing scrollframe is checkerboarding.
-    if (sticky->IsClippedToDisplayPort() && clip && clip->mASR == asr) {
-      clip = clip->mParent;
-    }
   }
 
   CLIP_LOG("processing item %p (%s) asr %p clip %p, inherited = %p\n", aItem,

@@ -3483,6 +3483,11 @@ void nsIFrame::BuildDisplayListForStackingContext(
     nsDisplayListBuilder::AutoInEventsOnly inEventsSetter(
         aBuilder, opacityItemForEventsOnly);
 
+    DisplayListClipState::AutoSaveRestore stickyItemNestedClipState(aBuilder);
+    if (useStickyPosition && !shouldFlattenStickyItem) {
+      stickyItemNestedClipState.MaybeRemoveDisplayportClip();
+    }
+
     // If we have a mask, compute a clip to bound the masked content.
     // This is necessary in case the content moves with an ancestor
     // ASR of the mask.
@@ -3919,14 +3924,15 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // that on the display item as the "container ASR" (i.e. the normal ASR of
     // the container item, excluding the special behaviour induced by fixed
     // descendants).
+    DisplayListClipState::AutoSaveRestore stickyItemClipState(aBuilder);
+    stickyItemClipState.MaybeRemoveDisplayportClip();
     const ActiveScrolledRoot* stickyItemASR = ActiveScrolledRoot::PickAncestor(
         containerItemASR, aBuilder->CurrentActiveScrolledRoot());
 
     auto* stickyItem = MakeDisplayItem<nsDisplayStickyPosition>(
         aBuilder, this, &resultList, stickyItemASR,
         nsDisplayItem::ContainerASRType::AncestorOfContained,
-        aBuilder->CurrentActiveScrolledRoot(),
-        clipState.IsClippedToDisplayPort());
+        aBuilder->CurrentActiveScrolledRoot());
 
     stickyItem->SetShouldFlatten(shouldFlattenStickyItem);
 

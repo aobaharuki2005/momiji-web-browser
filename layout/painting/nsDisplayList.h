@@ -5737,13 +5737,11 @@ class nsDisplayStickyPosition final : public nsDisplayOwnLayer {
                           nsDisplayList* aList,
                           const ActiveScrolledRoot* aActiveScrolledRoot,
                           ContainerASRType aContainerASRType,
-                          const ActiveScrolledRoot* aContainerASR,
-                          bool aClippedToDisplayPort);
+                          const ActiveScrolledRoot* aContainerASR);
   nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
                           const nsDisplayStickyPosition& aOther)
       : nsDisplayOwnLayer(aBuilder, aOther),
         mContainerASR(aOther.mContainerASR),
-        mClippedToDisplayPort(aOther.mClippedToDisplayPort),
         mShouldFlatten(false) {
     MOZ_COUNT_CTOR(nsDisplayStickyPosition);
   }
@@ -5753,7 +5751,6 @@ class nsDisplayStickyPosition final : public nsDisplayOwnLayer {
   const DisplayItemClip& GetClip() const override {
     return DisplayItemClip::NoClip();
   }
-  bool IsClippedToDisplayPort() const { return mClippedToDisplayPort; }
 
   NS_DISPLAY_DECL_NAME("StickyPosition", TYPE_STICKY_POSITION)
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
@@ -5802,17 +5799,6 @@ class nsDisplayStickyPosition final : public nsDisplayOwnLayer {
   // has no fixed descendants. This may be the same as the ASR returned by
   // GetActiveScrolledRoot(), or it may be a descendant of that.
   RefPtr<const ActiveScrolledRoot> mContainerASR;
-  // This flag tracks if this sticky item is just clipped to the enclosing
-  // scrollframe's displayport, or if there are additional clips in play. In
-  // the former case, we can skip setting the displayport clip as the scrolled-
-  // clip of the corresponding layer. This allows sticky items to remain
-  // unclipped when the enclosing scrollframe is scrolled past the displayport.
-  // i.e. when the rest of the scrollframe checkerboards, the sticky item will
-  // not. This makes sense to do because the sticky item has abnormal scrolling
-  // behavior and may still be visible even if the rest of the scrollframe is
-  // checkerboarded. Note that the sticky item will still be subject to the
-  // scrollport clip.
-  bool mClippedToDisplayPort;
 
   // True if this item should be flattened away.
   bool mShouldFlatten;

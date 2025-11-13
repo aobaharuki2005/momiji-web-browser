@@ -5806,12 +5806,10 @@ void nsDisplayTableFixedPosition::Destroy(nsDisplayListBuilder* aBuilder) {
 nsDisplayStickyPosition::nsDisplayStickyPosition(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     const ActiveScrolledRoot* aActiveScrolledRoot,
-    ContainerASRType aContainerASRType, const ActiveScrolledRoot* aContainerASR,
-    bool aClippedToDisplayPort)
+    ContainerASRType aContainerASRType, const ActiveScrolledRoot* aContainerASR)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot,
                         aContainerASRType),
       mContainerASR(aContainerASR),
-      mClippedToDisplayPort(aClippedToDisplayPort),
       mShouldFlatten(false) {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
 }

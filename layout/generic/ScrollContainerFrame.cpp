@@ -4011,13 +4011,15 @@ void ScrollContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         scrolledRectClip = scrolledRectClip.Intersect(visibleRect);
         clippedToDisplayPort = scrolledRectClip.IsEqualEdges(visibleRect);
       }
-      scrolledRectClipState.ClipContainingBlockDescendants(
-          scrolledRectClip + aBuilder->ToReferenceFrame(this));
       if (clippedToDisplayPort) {
+        scrolledRectClipState.ClipToDisplayPort(
+            scrolledRectClip + aBuilder->ToReferenceFrame(this));
+      } else {
         // We have to do this after the ClipContainingBlockDescendants call
         // above, otherwise that call will clobber the flag set by this call
         // to SetClippedToDisplayPort.
-        scrolledRectClipState.SetClippedToDisplayPort();
+        scrolledRectClipState.ClipContainingBlockDescendants(
+            scrolledRectClip + aBuilder->ToReferenceFrame(this));
       }
 
       nsRect visibleRectForChildren = visibleRect;
