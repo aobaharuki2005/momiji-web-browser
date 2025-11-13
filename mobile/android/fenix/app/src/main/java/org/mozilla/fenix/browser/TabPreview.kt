@@ -527,7 +527,7 @@ class TabPreview @JvmOverloads constructor(
         val tabStripEnabled = settings.isTabStripEnabled
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
-        val useCustomPrimary = settings.shouldShowToolbarCustomization && !shouldUseExpandedToolbar
+        val useCustomPrimary = settings.shouldShowToolbarCustomization
         val primarySlotAction = mapShortcutToAction(
             settings.toolbarSimpleShortcutKey,
             ToolbarAction.NewTab,
@@ -566,7 +566,7 @@ class TabPreview @JvmOverloads constructor(
         val isTallWindow = context.isTallWindow()
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
-        val useCustomPrimary = settings.shouldShowToolbarCustomization && shouldUseExpandedToolbar
+        val useCustomPrimary = settings.shouldShowToolbarCustomization
         val primarySlotAction = mapShortcutToAction(
             settings.toolbarExpandedShortcutKey,
             getBookmarkAction(isBookmarked),

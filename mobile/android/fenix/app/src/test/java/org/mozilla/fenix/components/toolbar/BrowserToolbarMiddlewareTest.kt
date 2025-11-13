@@ -2976,6 +2976,23 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN expanded toolbar is used and navbar is hidden WHEN building end browser actions THEN use simple toolbar shortcuts`() = runTest {
+        configuration = Configuration().apply {
+            screenHeightDp = 400
+            screenWidthDp = 700
+        }
+        every { mockContext.resources.configuration } returns configuration
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.shouldUseExpandedToolbar } returns true
+        every { settings.toolbarSimpleShortcutKey } returns ShortcutType.HOMEPAGE
+
+        val toolbarStore = buildStore()
+
+        val homepageButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        assertEquals(expectedHomepageButton(), homepageButton)
+    }
+
+    @Test
     fun `GIVEN simple toolbar use add bookmark shortcut AND the current page is not bookmarked WHEN initializing toolbar THEN show Bookmark in end browser actions`() = runTest {
         every { settings.shouldShowToolbarCustomization } returns true
         every { settings.toolbarSimpleShortcutKey } returns ShortcutType.BOOKMARK
