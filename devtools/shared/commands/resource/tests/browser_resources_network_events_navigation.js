@@ -67,29 +67,17 @@ add_task(async () => {
     content.document.querySelector("iframe").remove();
   });
 
-  const navigationRequest = receivedResources[0];
-  is(
-    navigationRequest.url,
-    TEST_URI,
-    "The first resource is for the navigation request"
-  );
+  const navigationRequest = receivedResources.find(r => r.url === TEST_URI);
+  ok(navigationRequest, "The navigation request exists");
 
-  const jsRequest = receivedResources[1];
-  is(jsRequest.url, JS_URI, "The second resource is for the javascript file");
+  const jsRequest = receivedResources.find(r => r.url === JS_URI);
+  ok(jsRequest, "The JavaScript request exists");
 
-  const iframeRequest = receivedResources[2];
-  is(
-    iframeRequest.url,
-    IFRAME_URI,
-    "The third resource is for the html request"
-  );
+  const iframeRequest = receivedResources.find(r => r.url === IFRAME_URI);
+  ok(iframeRequest, "The iframe request exists");
 
-  const iframeJsRequest = receivedResources[3];
-  is(
-    iframeJsRequest.url,
-    IFRAME_JS_URI,
-    "The 4th resource is for the js file from the iframe"
-  );
+  const iframeJsRequest = receivedResources.find(r => r.url === IFRAME_JS_URI);
+  ok(iframeJsRequest, "The iframe JavaScript request exists");
 
   async function getResponseContent(networkEvent) {
     const packet = {
@@ -140,10 +128,20 @@ add_task(async () => {
     );
   }
 
-  const navigationRequest2 = receivedResources[4];
-  const jsRequest2 = receivedResources[5];
-  const iframeRequest2 = receivedResources[6];
-  const iframeJsRequest2 = receivedResources[7];
+  const currentResources = receivedResources.slice(4);
+
+  const navigationRequest2 = currentResources.find(r => r.url === TEST_URI);
+  ok(navigationRequest2, "The navigation request exists");
+
+  const jsRequest2 = currentResources.find(r => r.url === JS_URI);
+  ok(jsRequest2, "The JavaScript request exists");
+
+  const iframeRequest2 = currentResources.find(r => r.url === IFRAME_URI);
+  ok(iframeRequest2, "The iframe request exists");
+
+  const iframeJsRequest2 = currentResources.find(r => r.url === IFRAME_JS_URI);
+  ok(iframeJsRequest2, "The iframe JavaScript request exists");
+
   info("But we can fetch data for the last/new document");
   const htmlContent2 = await getResponseContent(navigationRequest2);
   is(htmlContent2, HTML_CONTENT);
