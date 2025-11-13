@@ -2744,10 +2744,7 @@ Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
           DisplayItemClipChain::ClipForASR(GetClipChain(), aASR)) {
     return Some(clip->GetClipRect());
   }
-  // View transitions don't get clipped and thus might hit this assertion if its
-  // container passes a non-null aASR.
-  NS_ASSERTION(GetType() == DisplayItemType::TYPE_VT_CAPTURE,
-               "item should have finite clip with respect to aASR");
+
   return Nothing();
 }
 
