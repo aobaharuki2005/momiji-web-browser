@@ -192,6 +192,8 @@ already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
 already_AddRefed<ActiveScrolledRoot>
 ActiveScrolledRoot::CreateASRForStickyFrame(const ActiveScrolledRoot* aParent,
                                             nsIFrame* aStickyFrame) {
+  aStickyFrame = aStickyFrame->FirstContinuation();
+
   RefPtr<ActiveScrolledRoot> asr =
       aStickyFrame->GetProperty(StickyActiveScrolledRootCache());
 
