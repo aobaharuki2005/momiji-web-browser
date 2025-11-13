@@ -998,8 +998,21 @@ public class Tokenizer implements Locator, Locator2 {
      * @return the buffer as a string
      */
     @Inline protected String strBufToString() {
+        // CPPONLY: String digitAtom = TryAtomizeForSingleDigit();
+        // CPPONLY: if (digitAtom) {
+        // CPPONLY:   return digitAtom;
+        // CPPONLY: }
+        // CPPONLY:
+        // CPPONLY: boolean maybeAtomize = false;
+        // CPPONLY: if (!newAttributesEachTime) {
+        // CPPONLY:   if (attributeName == AttributeName.CLASS ||
+        // CPPONLY:       attributeName == AttributeName.TYPE) {
+        // CPPONLY:     maybeAtomize = true;
+        // CPPONLY:   }
+        // CPPONLY: }
+        // CPPONLY:
         String str = Portability.newStringFromBuffer(strBuf, 0, strBufLen
-            // CPPONLY: , tokenHandler, !newAttributesEachTime && attributeName == AttributeName.CLASS
+            // CPPONLY: , tokenHandler, maybeAtomize
         );
         clearStrBufAfterUse();
         return str;

@@ -2834,7 +2834,40 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
                           nsIPrincipal* aSubjectPrincipal, bool aNotify) {
   // Keep this in sync with SetParsedAttr below and SetSingleClassFromParser
   // above.
+  const nsAttrValueOrString valueForComparison(aValue);
+  return SetAttrInternal(aNamespaceID, aName, aPrefix, valueForComparison,
+                         aSubjectPrincipal, aNotify,
+                         [&](nsAttrValue& attrValue) {
+                           if (!ParseAttribute(aNamespaceID, aName, aValue,
+                                               aSubjectPrincipal, attrValue)) {
+                             attrValue.SetTo(aValue);
+                           }
+                         });
+}
 
+nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
+                          nsAtom* aValue, nsIPrincipal* aSubjectPrincipal,
+                          bool aNotify) {
+  // Keep this in sync with SetParsedAttr below and SetSingleClassFromParser
+  // above.
+  const nsDependentAtomString valueString(aValue);
+  const nsAttrValueOrString valueForComparison(valueString);
+  return SetAttrInternal(aNamespaceID, aName, aPrefix, valueForComparison,
+                         aSubjectPrincipal, aNotify,
+                         [&](nsAttrValue& attrValue) {
+                           if (!ParseAttribute(aNamespaceID, aName, valueString,
+                                               aSubjectPrincipal, attrValue)) {
+                             attrValue.SetTo(aValue);
+                           }
+                         });
+}
+
+template <typename ParseFunc>
+nsresult Element::SetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
+                                  nsAtom* aPrefix,
+                                  const nsAttrValueOrString& aValue,
+                                  nsIPrincipal* aSubjectPrincipal, bool aNotify,
+                                  ParseFunc&& aParseFn) {
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
@@ -2843,13 +2876,10 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
   nsAttrValue oldValue;
   bool oldValueSet;
 
-  {
-    const nsAttrValueOrString value(aValue);
-    if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
-                               oldValue, &modType, &oldValueSet)) {
-      OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
-      return NS_OK;
-    }
+  if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, aValue, aNotify,
+                             oldValue, &modType, &oldValueSet)) {
+    OnAttrSetButNotChanged(aNamespaceID, aName, aValue, aNotify);
+    return NS_OK;
   }
 
   // Hold a script blocker while calling ParseAttribute since that can call
@@ -2863,10 +2893,7 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
   }
 
   nsAttrValue attrValue;
-  if (!ParseAttribute(aNamespaceID, aName, aValue, aSubjectPrincipal,
-                      attrValue)) {
-    attrValue.SetTo(aValue);
-  }
+  aParseFn(attrValue);
 
   BeforeSetAttr(aNamespaceID, aName, &attrValue, aNotify);
 
