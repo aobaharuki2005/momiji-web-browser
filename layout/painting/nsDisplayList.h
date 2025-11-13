@@ -2266,15 +2266,19 @@ class nsDisplayItem {
    * Pairing this with the Frame() pointer gives a key that
    * uniquely identifies this display item in the display item tree.
    */
-  uint32_t GetPerFrameKey() const {
+  static uint32_t GetPerFrameKey(uint8_t aPageNum, uint16_t aPerFrameIndex,
+                                 DisplayItemType aType) {
     // The top 8 bits are the page index
     // The middle 16 bits of the per frame key uniquely identify the display
     // item when there are more than one item of the same type for a frame.
     // The low 8 bits are the display item type.
-    return (static_cast<uint32_t>(mPageNum)
-            << (TYPE_BITS + (sizeof(mPerFrameIndex) * 8))) |
-           (static_cast<uint32_t>(mPerFrameIndex) << TYPE_BITS) |
-           static_cast<uint32_t>(mType);
+    return (static_cast<uint32_t>(aPageNum)
+            << (TYPE_BITS + (sizeof(aPerFrameIndex) * 8))) |
+           (static_cast<uint32_t>(aPerFrameIndex) << TYPE_BITS) |
+           static_cast<uint32_t>(aType);
+  }
+  uint32_t GetPerFrameKey() const {
+    return GetPerFrameKey(mPageNum, mPerFrameIndex, mType);
   }
 
   /**
