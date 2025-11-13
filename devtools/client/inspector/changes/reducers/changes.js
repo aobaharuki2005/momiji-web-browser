@@ -181,10 +181,10 @@ const INITIAL_STATE = {};
 
 const reducers = {
   /**
-   * CSS changes are collected on the server by the ChangesActor which dispatches them to
-   * the client as atomic operations: a rule/declaration updated, added or removed.
+   * CSS changes are collected on the server by the CSSChangeWatcher which sends CSS_CHANGE
+   * resources to the client as atomic operations: a rule/declaration updated, added or removed.
    *
-   * By design, the ChangesActor has no big-picture context of all the collected changes.
+   * By design, the CSSChangeWatcher has no big-picture context of all the collected changes.
    * It only holds the stack of atomic changes. This makes it roboust for many use cases:
    * building a diff-view, supporting undo/redo, offline persistence, etc. Consumers,
    * like the Changes panel, get to massage the data for their particular purposes.
