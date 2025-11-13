@@ -1104,8 +1104,8 @@ impl RenderTaskGraphBuilder {
 
         let frame_memory = FrameMemory::fallback();
         let mut gpu_buffers = GpuBufferBuilder {
-            f32: GpuBufferBuilderF::new(&frame_memory),
-            i32: GpuBufferBuilderI::new(&frame_memory),
+            f32: GpuBufferBuilderF::new(&frame_memory, 0),
+            i32: GpuBufferBuilderI::new(&frame_memory, 0),
         };
         let g = self.end_frame(&mut rc, &mut gpu_buffers, &mut frame_memory.new_vec(), 2048, &frame_memory);
         g.print();

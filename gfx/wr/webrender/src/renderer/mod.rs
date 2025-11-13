@@ -847,6 +847,10 @@ pub struct Renderer {
     pub gpu_profiler: GpuProfiler,
     vaos: vertex::RendererVAOs,
 
+    gpu_buffer_texture_f: Option<Texture>,
+    gpu_buffer_texture_f_too_large: i32,
+    gpu_buffer_texture_i: Option<Texture>,
+    gpu_buffer_texture_i_too_large: i32,
     vertex_data_textures: Vec<vertex::VertexDataTextures>,
     current_vertex_data_textures: usize,
 
@@ -1151,6 +1155,12 @@ impl Renderer {
                     if memory_pressure {
                         self.texture_upload_pbo_pool.on_memory_pressure(&mut self.device);
                         self.staging_texture_pool.delete_textures(&mut self.device);
+                        if let Some(texture) = self.gpu_buffer_texture_f.take() {
+                            self.device.delete_texture(texture);
+                        }
+                        if let Some(texture) = self.gpu_buffer_texture_i.take() {
+                            self.device.delete_texture(texture);
+                        }
                     }
 
                     self.device.end_frame();
@@ -5110,6 +5120,22 @@ impl Renderer {
         );
         self.current_vertex_data_textures =
             (self.current_vertex_data_textures + 1) % VERTEX_DATA_TEXTURE_COUNT;
+
+        if let Some(texture) = &self.gpu_buffer_texture_f {
+            self.device.bind_texture(
+                TextureSampler::GpuBufferF,
+                &texture,
+                Swizzle::default(),
+            );
+        }
+
+        if let Some(texture) = &self.gpu_buffer_texture_i {
+            self.device.bind_texture(
+                TextureSampler::GpuBufferI,
+                &texture,
+                Swizzle::default(),
+            );
+        }
     }
 
     fn update_native_surfaces(&mut self) {
@@ -5173,35 +5199,75 @@ impl Renderer {
         }
     }
 
-    fn create_gpu_buffer_texture<T: Texel>(
-        &mut self,
+    fn update_gpu_buffer_texture<T: Texel>(
+        device: &mut Device,
         buffer: &GpuBuffer<T>,
-        sampler: TextureSampler,
-    ) -> Option<Texture> {
+        dst_texture: &mut Option<Texture>,
+        pbo_pool: &mut UploadPBOPool,
+    ) {
         if buffer.is_empty() {
-            None
-        } else {
-            let gpu_buffer_texture = self.device.create_texture(
-                ImageBufferKind::Texture2D,
-                buffer.format,
-                buffer.size.width,
-                buffer.size.height,
-                TextureFilter::Nearest,
-                None,
-            );
+            return;
+        }
 
-            self.device.bind_texture(
-                sampler,
-                &gpu_buffer_texture,
-                Swizzle::default(),
-            );
+        if let Some(texture) = dst_texture {
+            assert!(texture.get_dimensions().width == buffer.size.width);
+            if texture.get_dimensions().height < buffer.size.height {
+                device.delete_texture(dst_texture.take().unwrap());
+            }
+        }
 
-            self.device.upload_texture_immediate(
-                &gpu_buffer_texture,
-                &buffer.data,
+        if dst_texture.is_none() {
+            let height = ((buffer.size.height + 7) & !7).max(8);
+            assert!(height >= buffer.size.height);
+            *dst_texture = Some(
+                device.create_texture(
+                    ImageBufferKind::Texture2D,
+                    buffer.format,
+                    buffer.size.width,
+                    height,
+                    TextureFilter::Nearest,
+                    None,
+                )
             );
+        }
 
-            Some(gpu_buffer_texture)
+        let mut uploader = device.upload_texture(pbo_pool);
+
+        uploader.upload(
+            device,
+            dst_texture.as_mut().unwrap(),
+            DeviceIntRect {
+                min: DeviceIntPoint::zero(),
+                max: DeviceIntPoint::new(buffer.size.width, buffer.size.height),
+            },
+            None,
+            None,
+            buffer.data.as_ptr(),
+            buffer.data.len(),
+        );
+
+        uploader.flush(device);
+    }
+
+    fn maybe_evict_gpu_buffer_texture(
+        device: &mut Device,
+        gpu_buffer_height: i32,
+        texture: &mut Option<Texture>,
+        texture_too_large: &mut i32,
+    ) {
+        if let Some(tex) = texture {
+            if tex.get_dimensions().height > gpu_buffer_height * 2 {
+                *texture_too_large += 1;
+            } else {
+                *texture_too_large = 0;
+            }
+        }
+
+        // Delete the texture if it has been too large for 10 frames
+        // or more.
+        if *texture_too_large > 10 {
+            device.delete_texture(texture.take().unwrap());
+            *texture_too_large = 0;
         }
     }
 
@@ -5223,32 +5289,32 @@ impl Renderer {
             return;
         }
 
+        {
+            let _gm = self.gpu_profiler.start_marker("gpu buffer update");
+
+            Self::update_gpu_buffer_texture(
+                &mut self.device,
+                &frame.gpu_buffer_f,
+                &mut self.gpu_buffer_texture_f,
+                &mut self.texture_upload_pbo_pool,
+            );
+            Self::update_gpu_buffer_texture(
+                &mut self.device,
+                &frame.gpu_buffer_i,
+                &mut self.gpu_buffer_texture_i,
+                &mut self.texture_upload_pbo_pool,
+            );
+        }
+
         self.device.disable_depth_write();
         self.set_blend(false, FramebufferKind::Other);
         self.device.disable_stencil();
 
         self.bind_frame_data(frame);
 
-        // Upload experimental GPU buffer texture if there is any data present
-        // TODO: Recycle these textures, upload via PBO or best approach for platform
-        let gpu_buffer_texture_f = self.create_gpu_buffer_texture(
-            &frame.gpu_buffer_f,
-            TextureSampler::GpuBufferF,
-        );
-        let gpu_buffer_texture_i = self.create_gpu_buffer_texture(
-            &frame.gpu_buffer_i,
-            TextureSampler::GpuBufferI,
-        );
-
         let bytes_to_mb = 1.0 / 1000000.0;
-        let gpu_buffer_bytes_f = gpu_buffer_texture_f
-            .as_ref()
-            .map(|tex| tex.size_in_bytes())
-            .unwrap_or(0);
-        let gpu_buffer_bytes_i = gpu_buffer_texture_i
-            .as_ref()
-            .map(|tex| tex.size_in_bytes())
-            .unwrap_or(0);
+        let gpu_buffer_bytes_f = frame.gpu_buffer_f.size.to_f32().area() * 16.0;
+        let gpu_buffer_bytes_i = frame.gpu_buffer_i.size.to_f32().area() * 16.0;
         let gpu_buffer_mb = (gpu_buffer_bytes_f + gpu_buffer_bytes_i) as f32 * bytes_to_mb;
         self.profile.set(profiler::GPU_BUFFER_MEM, gpu_buffer_mb);
 
@@ -5451,14 +5517,21 @@ impl Renderer {
             present_mode,
         );
 
-        if let Some(gpu_buffer_texture_f) = gpu_buffer_texture_f {
-            self.device.delete_texture(gpu_buffer_texture_f);
-        }
-        if let Some(gpu_buffer_texture_i) = gpu_buffer_texture_i {
-            self.device.delete_texture(gpu_buffer_texture_i);
-        }
-
         frame.has_been_rendered = true;
+
+        Self::maybe_evict_gpu_buffer_texture(
+            &mut self.device,
+            frame.gpu_buffer_f.size.height,
+            &mut self.gpu_buffer_texture_f,
+            &mut self.gpu_buffer_texture_f_too_large,
+        );
+
+        Self::maybe_evict_gpu_buffer_texture(
+            &mut self.device,
+            frame.gpu_buffer_i.size.height,
+            &mut self.gpu_buffer_texture_i,
+            &mut self.gpu_buffer_texture_i_too_large,
+        );
     }
 
     fn composite_frame(
@@ -5991,6 +6064,12 @@ impl Renderer {
         }
         if let Some(zoom_debug_texture) = self.zoom_debug_texture {
             self.device.delete_texture(zoom_debug_texture);
+        }
+        if let Some(texture) = self.gpu_buffer_texture_f {
+            self.device.delete_texture(texture);
+        }
+        if let Some(texture) = self.gpu_buffer_texture_i {
+            self.device.delete_texture(texture);
         }
         for textures in self.vertex_data_textures.drain(..) {
             textures.deinit(&mut self.device);
