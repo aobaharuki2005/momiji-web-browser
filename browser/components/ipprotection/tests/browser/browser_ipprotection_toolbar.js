@@ -51,7 +51,6 @@ add_task(async function toolbar_added_and_removed() {
 /**
  * Tests that the toolbar icon state updates when the connection status changes
  */
-
 add_task(async function toolbar_icon_status() {
   let button = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
@@ -82,7 +81,9 @@ add_task(async function toolbar_icon_status() {
   await content.updateComplete;
 
   Assert.ok(content, "Panel content should be present");
-  let toggle = content.connectionToggleEl;
+
+  let statusCard = content.statusCardEl;
+  let toggle = statusCard.connectionToggleEl;
   Assert.ok(toggle, "Status card connection toggle should be present");
 
   let vpnOnPromise = BrowserTestUtils.waitForEvent(
@@ -139,7 +140,8 @@ add_task(async function toolbar_icon_status_new_window() {
     () => !!IPPProxyManager.activatedAt
   );
   // Toggle the VPN on
-  content.connectionToggleEl.click();
+  let statusCard = content.statusCardEl;
+  statusCard.connectionToggleEl.click();
   await vpnOnPromise;
 
   let button = document.getElementById(IPProtectionWidget.WIDGET_ID);

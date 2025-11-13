@@ -55,7 +55,9 @@ add_task(async function user_toggle_on_and_off() {
   IPProtectionService.updateState();
   await content.updateComplete;
 
-  let toggle = content.connectionToggleEl;
+  let statusCard = content.shadowRoot.querySelector("ipprotection-status-card");
+
+  let toggle = statusCard.connectionToggleEl;
   Assert.ok(toggle, "Status card connection toggle should be present");
 
   Services.fog.testResetFOG();
@@ -141,7 +143,8 @@ add_task(async function toggle_off_on_shutdown() {
   await content.updateComplete;
   await putServerInRemoteSettings();
 
-  let toggle = content.connectionToggleEl;
+  let statusCard = content.statusCardEl;
+  let toggle = statusCard.connectionToggleEl;
   Assert.ok(toggle, "Status card connection toggle should be present");
 
   Services.fog.testResetFOG();
