@@ -10,10 +10,9 @@ use api::{
 use api::units::*;
 use euclid::point2;
 use crate::composite::CompositorSurfaceKind;
-use crate::renderer::GpuBufferBuilderF;
+use crate::renderer::{GpuBufferBuilderF, GpuBufferWriterF};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
-use crate::gpu_cache::{GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
@@ -391,19 +390,19 @@ impl ImageData {
             );
         }
 
-        if let Some(mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {
-            self.write_prim_gpu_blocks(&image_instance.adjustment, &mut request);
-        }
+        let mut writer = frame_state.frame_gpu_data.f32.write_blocks(3);
+        self.write_prim_gpu_blocks(&image_instance.adjustment, &mut writer);
+        common.gpu_buffer_address = writer.finish();
     }
 
-    pub fn write_prim_gpu_blocks(&self, adjustment: &AdjustedImageSource, request: &mut GpuDataRequest) {
+    pub fn write_prim_gpu_blocks(&self, adjustment: &AdjustedImageSource, writer: &mut GpuBufferWriterF) {
         let stretch_size = adjustment.map_stretch_size(self.stretch_size);
         // Images are drawn as a white color, modulated by the total
         // opacity coming from any collapsed property bindings.
         // Size has to match `VECS_PER_SPECIFIC_BRUSH` from `brush_image.glsl` exactly.
-        request.push(self.color.premultiplied());
-        request.push(PremultipliedColorF::WHITE);
-        request.push([
+        writer.push_one(self.color.premultiplied());
+        writer.push_one(PremultipliedColorF::WHITE);
+        writer.push_one([
             stretch_size.width + self.tile_spacing.width,
             stretch_size.height + self.tile_spacing.height,
             0.0,
@@ -688,11 +687,11 @@ impl YuvImageData {
             self.src_yuv[channel] = Some(task_id);
         }
 
-        if let Some(mut request) = frame_state.gpu_cache.request(&mut common.gpu_cache_handle) {
-            self.write_prim_gpu_blocks(&mut request);
-        };
+        let mut writer = frame_state.frame_gpu_data.f32.write_blocks(1);
+        self.write_prim_gpu_blocks(&mut writer);
+        common.gpu_buffer_address = writer.finish();
 
-        // YUV images never have transparency
+    // YUV images never have transparency
         common.opacity = PrimitiveOpacity::opaque();
     }
 
@@ -715,9 +714,9 @@ impl YuvImageData {
         }
     }
 
-    pub fn write_prim_gpu_blocks(&self, request: &mut GpuDataRequest) {
+    pub fn write_prim_gpu_blocks(&self, writer: &mut GpuBufferWriterF) {
         let ranged_color_space = self.color_space.with_range(self.color_range);
-        request.push([
+        writer.push_one([
             pack_as_float(self.color_depth.bit_depth()),
             pack_as_float(ranged_color_space as u32),
             pack_as_float(self.format as u32),
@@ -786,9 +785,9 @@ fn test_struct_sizes() {
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
     assert_eq!(mem::size_of::<Image>(), 32, "Image size changed");
-    assert_eq!(mem::size_of::<ImageTemplate>(), 72, "ImageTemplate size changed");
+    assert_eq!(mem::size_of::<ImageTemplate>(), 68, "ImageTemplate size changed");
     assert_eq!(mem::size_of::<ImageKey>(), 52, "ImageKey size changed");
     assert_eq!(mem::size_of::<YuvImage>(), 32, "YuvImage size changed");
-    assert_eq!(mem::size_of::<YuvImageTemplate>(), 84, "YuvImageTemplate size changed");
+    assert_eq!(mem::size_of::<YuvImageTemplate>(), 80, "YuvImageTemplate size changed");
     assert_eq!(mem::size_of::<YuvImageKey>(), 52, "YuvImageKey size changed");
 }

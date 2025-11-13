@@ -1219,8 +1219,8 @@ pub fn add_to_batch<F>(
 
     let mut instance = QuadInstance {
         dst_task_address,
-        prim_address_i,
-        prim_address_f,
+        prim_address_i: prim_address_i.as_int(),
+        prim_address_f: prim_address_f.as_int(),
         edge_flags: edge_flags_bits,
         quad_flags: quad_flags.bits(),
         part_index: PartIndex::All as u8,
