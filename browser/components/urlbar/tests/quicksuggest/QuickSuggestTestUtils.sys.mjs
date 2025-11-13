@@ -940,7 +940,10 @@ class _QuickSuggestTestUtils {
         displayUrl: url.replace(/^https:\/\//, ""),
         isSponsored: false,
         shouldShowUrl: true,
-        bottomTextL10n: { id: "firefox-suggest-addons-recommended" },
+        bottomTextL10n: {
+          id: "firefox-suggest-addons-recommended",
+          cacheable: true,
+        },
         helpUrl: lazy.QuickSuggest.HELP_URL,
         telemetryType: "amo",
       },
@@ -995,7 +998,10 @@ class _QuickSuggestTestUtils {
         description,
         icon: "chrome://global/skin/icons/mdn.svg",
         shouldShowUrl: true,
-        bottomTextL10n: { id: "firefox-suggest-mdn-bottom-text" },
+        bottomTextL10n: {
+          id: "firefox-suggest-mdn-bottom-text",
+          cacheable: true,
+        },
         source: "rust",
         provider: "Mdn",
         suggestionObject: new lazy.Suggestion.Mdn({
@@ -1055,7 +1061,10 @@ class _QuickSuggestTestUtils {
         source,
         provider,
         telemetryType: "yelp",
-        bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
+        bottomTextL10n: {
+          id: "firefox-suggest-yelp-bottom-text",
+          cacheable: true,
+        },
         url,
         originalUrl,
         title,
