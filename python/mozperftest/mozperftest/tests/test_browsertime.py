@@ -232,13 +232,6 @@ def test_browser_desktop(*mocked):
 
     try:
         with sys as s, browser as b, silence():
-            # just checking that the setup_helper property gets
-            # correctly initialized
-            browsertime = browser.layers[-1]
-            assert browsertime.setup_helper is not None
-            helper = browsertime.setup_helper
-            assert browsertime.setup_helper is helper
-
             b(s(metadata))
     finally:
         shutil.rmtree(mach_cmd._mach_context.state_dir)
@@ -268,13 +261,6 @@ def test_existing_results(*mocked):
 
     try:
         with sys as s, browser as b, silence():
-            # just checking that the setup_helper property gets
-            # correctly initialized
-            browsertime = browser.layers[-1]
-            assert browsertime.setup_helper is not None
-            helper = browsertime.setup_helper
-            assert browsertime.setup_helper is helper
-
             m = b(s(metadata))
             results = m.get_results()
             assert len(results) == 1
@@ -300,7 +286,9 @@ def test_add_options():
     "mozperftest.test.noderunner.NodeRunner.verify_node_install", new=lambda x: True
 )
 @mock.patch("mozbuild.artifact_cache.ArtifactCache.fetch", new=fetch)
-@mock.patch("mozperftest.test.browsertime.runner.BrowsertimeRunner.setup_helper")
+@mock.patch(
+    "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages"
+)
 def test_install_url(*mocked):
     url = "https://here/tarball/" + "".join(
         [random.choice(string.hexdigits[:-6]) for c in range(40)]
