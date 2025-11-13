@@ -3917,7 +3917,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // inhibits paint skipping).
     if (aBuilder->GetFilterASR() && aBuilder->GetFilterASR() == stickyASR) {
       aBuilder->GetFilterASR()
-          ->mScrollContainerFrame->SetHasOutOfFlowContentInsideFilter();
+          ->GetNearestScrollASR()
+          ->ScrollFrame()
+          ->SetHasOutOfFlowContentInsideFilter();
     }
   }
 

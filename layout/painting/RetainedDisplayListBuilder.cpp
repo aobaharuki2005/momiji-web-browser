@@ -300,12 +300,11 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
     // so we have to work around it. Bug 1730749 and bug 1730826 should resolve
     // this.
     nsIFrame* agrFrame = nullptr;
-    if (aAsyncAncestorASR == item->GetActiveScrolledRoot() ||
-        !item->GetActiveScrolledRoot()) {
+    const ActiveScrolledRoot* asr = item->GetNearestScrollASR();
+    if (aAsyncAncestorASR == asr || !asr) {
       agrFrame = aAsyncAncestor;
     } else {
-      auto* scrollContainerFrame =
-          item->GetActiveScrolledRoot()->mScrollContainerFrame;
+      auto* scrollContainerFrame = asr->ScrollFrame();
       if (MOZ_UNLIKELY(!scrollContainerFrame)) {
         MOZ_DIAGNOSTIC_ASSERT(false);
         gfxCriticalNoteOnce << "Found null mScrollContainerFrame in asr";
@@ -368,7 +367,7 @@ static Maybe<const ActiveScrolledRoot*> SelectContainerASR(
       aClipChain ? aClipChain->mASR : nullptr;
 
   MOZ_DIAGNOSTIC_ASSERT(!aClipChain || aClipChain->mOnStack || !itemClipASR ||
-                        itemClipASR->mScrollContainerFrame);
+                        itemClipASR->mFrame);
 
   const ActiveScrolledRoot* finiteBoundsASR =
       ActiveScrolledRoot::PickDescendant(itemClipASR, aItemASR);

@@ -185,7 +185,36 @@ already_AddRefed<ActiveScrolledRoot> ActiveScrolledRoot::CreateASRForFrame(
     }
   }
   asr->mParent = aParent;
-  asr->mScrollContainerFrame = aScrollContainerFrame;
+  asr->mFrame = aScrollContainerFrame;
+  asr->mKind = ASRKind::Scroll;
+  asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
+  asr->mRetained = aIsRetained;
+
+  return asr.forget();
+}
+
+/* static */
+already_AddRefed<ActiveScrolledRoot>
+ActiveScrolledRoot::CreateASRForStickyFrame(const ActiveScrolledRoot* aParent,
+                                            nsIFrame* aStickyFrame,
+                                            bool aIsRetained) {
+  RefPtr<ActiveScrolledRoot> asr;
+  if (aIsRetained) {
+    asr = aStickyFrame->GetProperty(ActiveScrolledRootCache());
+  }
+
+  if (!asr) {
+    asr = new ActiveScrolledRoot();
+
+    if (aIsRetained) {
+      RefPtr<ActiveScrolledRoot> ref = asr;
+      aStickyFrame->SetProperty(ActiveScrolledRootCache(), ref.forget().take());
+    }
+  }
+
+  asr->mParent = aParent;
+  asr->mFrame = aStickyFrame;
+  asr->mKind = ASRKind::Sticky;
   asr->mDepth = aParent ? aParent->mDepth + 1 : 1;
   asr->mRetained = aIsRetained;
 
@@ -219,12 +248,52 @@ bool ActiveScrolledRoot::IsProperAncestor(
   return aAncestor != aDescendant && IsAncestor(aAncestor, aDescendant);
 }
 
+ScrollContainerFrame* ActiveScrolledRoot::ScrollFrameOrNull() const {
+  if (mKind == ASRKind::Scroll) {
+    ScrollContainerFrame* scrollFrame =
+        static_cast<ScrollContainerFrame*>(mFrame);
+    MOZ_ASSERT(scrollFrame);
+    return scrollFrame;
+  }
+  return nullptr;
+}
+
+const ActiveScrolledRoot* ActiveScrolledRoot::GetNearestScrollASR() const {
+  const ActiveScrolledRoot* ret = this;
+
+  while (ret && ret->mKind != ASRKind::Scroll) {
+    ret = ret->mParent;
+  }
+
+  if (!ret || ret->mKind != ASRKind::Scroll) {
+    return nullptr;
+  }
+
+  return ret;
+}
+
+layers::ScrollableLayerGuid::ViewID
+ActiveScrolledRoot::GetNearestScrollASRViewId() const {
+  const ActiveScrolledRoot* scrollASR = GetNearestScrollASR();
+  if (scrollASR) {
+    return scrollASR->GetViewId();
+  }
+  return ScrollableLayerGuid::NULL_SCROLL_ID;
+}
+
 /* static */
 nsCString ActiveScrolledRoot::ToString(
     const ActiveScrolledRoot* aActiveScrolledRoot) {
   nsAutoCString str;
+  if (!aActiveScrolledRoot) {
+    str.AppendPrintf("null");
+    return str;
+  }
+  if (aActiveScrolledRoot->mKind == ASRKind::Sticky) {
+    str.AppendPrintf("sticky ");
+  }
   for (const auto* asr = aActiveScrolledRoot; asr; asr = asr->mParent) {
-    str.AppendPrintf("<0x%p>", asr->mScrollContainerFrame);
+    str.AppendPrintf("<0x%p>", asr->mFrame);
     if (asr->mParent) {
       str.AppendLiteral(", ");
     }
@@ -233,13 +302,16 @@ nsCString ActiveScrolledRoot::ToString(
 }
 
 ScrollableLayerGuid::ViewID ActiveScrolledRoot::ComputeViewId() const {
-  nsIContent* content = mScrollContainerFrame->GetScrolledFrame()->GetContent();
+  const ActiveScrolledRoot* scrollASR = GetNearestScrollASR();
+  MOZ_ASSERT(scrollASR,
+             "ComputeViewId() called on ASR with no enclosing scroll frame");
+  nsIContent* content = scrollASR->ScrollFrame()->GetContent();
   return nsLayoutUtils::FindOrCreateIDFor(content);
 }
 
 ActiveScrolledRoot::~ActiveScrolledRoot() {
-  if (mScrollContainerFrame && mRetained) {
-    mScrollContainerFrame->RemoveProperty(ActiveScrolledRootCache());
+  if (mFrame && mRetained) {
+    mFrame->RemoveProperty(ActiveScrolledRootCache());
   }
 }
 
@@ -454,7 +526,9 @@ void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
                                   aActiveScrolledRoot, mBuilder->mFilterASR)) {
     for (const ActiveScrolledRoot* asr = mBuilder->mFilterASR;
          asr && asr != aActiveScrolledRoot; asr = asr->mParent) {
-      asr->mScrollContainerFrame->SetHasOutOfFlowContentInsideFilter();
+      if (ScrollContainerFrame* scrollFrame = asr->ScrollFrameOrNull()) {
+        scrollFrame->SetHasOutOfFlowContentInsideFilter();
+      }
     }
   }
 
@@ -2626,6 +2700,14 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
 }
 
 void nsDisplayItem::SetDeletedFrame() { mItemFlags += ItemFlag::DeletedFrame; }
+
+const ActiveScrolledRoot* nsDisplayItem::GetNearestScrollASR() const {
+  const ActiveScrolledRoot* asr = GetActiveScrolledRoot();
+  if (asr) {
+    return asr->GetNearestScrollASR();
+  }
+  return nullptr;
+}
 
 bool nsDisplayItem::HasDeletedFrame() const {
   bool retval = mItemFlags.contains(ItemFlag::DeletedFrame) ||
@@ -7675,10 +7757,12 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
     // In OOP documents, the root scrollable frame of the in-process root
     // document is always active, so using IsAncestorFrameCrossDocInProcess
     // should be fine here.
-    if (nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
-            asr->mScrollContainerFrame->GetScrolledFrame(), perspectiveFrame)) {
-      scrollingRelativeTo.emplace(asr->GetViewId());
-      break;
+    if (ScrollContainerFrame* scrollFrame = asr->ScrollFrameOrNull()) {
+      if (nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
+              scrollFrame->GetScrolledFrame(), perspectiveFrame)) {
+        scrollingRelativeTo.emplace(asr->GetViewId());
+        break;
+      }
     }
   }
 

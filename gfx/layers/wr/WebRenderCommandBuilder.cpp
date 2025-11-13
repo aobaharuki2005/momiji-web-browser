@@ -1699,7 +1699,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
 
   ScrollableLayerGuid::ViewID scrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
   if (const ActiveScrolledRoot* asr = aWrappingItem->GetActiveScrolledRoot()) {
-    scrollId = asr->GetViewId();
+    scrollId = asr->GetNearestScrollASRViewId();
   }
 
   g.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
@@ -1916,7 +1916,7 @@ struct NewLayerData {
     }
     if (mDeferredItem) {
       if (const auto* asr = mDeferredItem->GetActiveScrolledRoot()) {
-        mDeferredId = asr->GetViewId();
+        mDeferredId = asr->GetNearestScrollASRViewId();
       }
       if (mDeferredItem->GetActiveScrolledRoot() !=
           aItem->GetActiveScrolledRoot()) {

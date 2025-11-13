@@ -723,11 +723,13 @@ static PartialPrerenderData GetPartialPrerenderData(
       nsLayoutUtils::AsyncPanZoomEnabled(aFrame)) {
     const bool isInPositionFixed =
         nsLayoutUtils::IsInPositionFixedSubtree(aFrame);
-    const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
+    // We need to find asynchronously scrollable ASRs, therefore we should
+    // ignore ASRs for pos:sticky display items.
+    const ActiveScrolledRoot* asr = aItem->GetNearestScrollASR();
     if (!isInPositionFixed && asr &&
-        aFrame->PresContext() == asr->mScrollContainerFrame->PresContext()) {
+        aFrame->PresContext() == asr->ScrollFrame()->PresContext()) {
       scrollId = asr->GetViewId();
-      MOZ_ASSERT(clipFrame == asr->mScrollContainerFrame);
+      MOZ_ASSERT(clipFrame == asr->ScrollFrame());
     } else {
       // Use the root scroll id in the same document if the target frame is in
       // position:fixed subtree or there is no ASR or the ASR is in a different

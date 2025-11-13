@@ -310,18 +310,30 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
     // Recursion base case
     return Nothing();
   }
-  ScrollableLayerGuid::ViewID viewId = aASR->GetViewId();
-  Maybe<wr::WrSpatialId> space =
-      mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
-  if (space) {
-    // If we've already defined this scroll layer before, we can early-exit
-    return space;
+
+  ScrollableLayerGuid::ViewID viewId = ScrollableLayerGuid::NULL_SCROLL_ID;
+  if (aASR->mKind == ActiveScrolledRoot::ASRKind::Scroll) {
+    viewId = aASR->GetViewId();
+    Maybe<wr::WrSpatialId> space =
+        mBuilder->GetScrollIdForDefinedScrollLayer(viewId);
+    if (space) {
+      // If we've already defined this scroll layer before, we can early-exit
+      return space;
+    }
   }
+
   // Recurse to define the ancestors
   Maybe<wr::WrSpatialId> ancestorSpace =
       DefineScrollLayers(aASR->mParent, aItem);
 
-  ScrollContainerFrame* scrollContainerFrame = aASR->mScrollContainerFrame;
+  if (aASR->mKind == ActiveScrolledRoot::ASRKind::Sticky) {
+    // TODO: Handle.
+    return ancestorSpace;
+  }
+
+  MOZ_ASSERT(viewId != ScrollableLayerGuid::NULL_SCROLL_ID);
+
+  ScrollContainerFrame* scrollContainerFrame = aASR->ScrollFrame();
   Maybe<ScrollMetadata> metadata = scrollContainerFrame->ComputeScrollMetadata(
       mManager, aItem->Frame(), aItem->ToReferenceFrame());
   if (!metadata) {
@@ -402,7 +414,7 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
   for (const DisplayItemClipChain* chain = aChain; chain;
        chain = chain->mParent) {
     MOZ_DIAGNOSTIC_ASSERT(chain->mOnStack || !chain->mASR ||
-                          chain->mASR->mScrollContainerFrame);
+                          chain->mASR->mFrame);
 
     if (!chain->mClip.HasClip()) {
       // This item in the chain is a no-op, skip over it
