@@ -28,15 +28,6 @@
 // code are installed via the std_functions JSFunctionSpec[] in
 // SelfHosting.cpp.
 
-/********** Specification types **********/
-
-// A "Record" is an internal type used in the ECMAScript spec to define a struct
-// made up of key / values. It is never exposed to user script, but we use a
-// simple Object (with null prototype) as a convenient implementation.
-function new_Record() {
-  return std_Object_create(null);
-}
-
 /********** Abstract operations defined in ECMAScript Language Specification **********/
 
 /* Spec: ECMAScript Language Specification, 5.1 edition, 9.2 and 11.4.9 */

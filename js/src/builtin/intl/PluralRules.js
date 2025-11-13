@@ -196,7 +196,7 @@ function InitializePluralRules(pluralRules, locales, options) {
   }
 
   // Step 3.
-  var opt = new_Record();
+  var opt = NEW_RECORD();
   lazyPluralRulesData.opt = opt;
 
   // Steps 4-5.

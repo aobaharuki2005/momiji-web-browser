@@ -268,7 +268,7 @@ function InitializeDateTimeFormat(
 
   // Compute options that impact interpretation of locale.
   // Step 4.
-  var localeOpt = new_Record();
+  var localeOpt = NEW_RECORD();
   lazyDateTimeFormatData.localeOpt = localeOpt;
 
   // Steps 5-6.
@@ -372,7 +372,7 @@ function InitializeDateTimeFormat(
   lazyDateTimeFormatData.timeZone = timeZone;
 
   // Step 34.
-  var formatOptions = new_Record();
+  var formatOptions = NEW_RECORD();
   lazyDateTimeFormatData.formatOptions = formatOptions;
 
   if (mozExtensions) {
