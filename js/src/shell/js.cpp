@@ -5731,7 +5731,7 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
 
   UniqueChars filename;
   CompileOptions options(cx);
-  bool jsonModule = false;
+  JS::ModuleType moduleType = JS::ModuleType::JavaScript;
   if (args.length() > 1) {
     if (!args[1].isString()) {
       const char* typeName = InformalValueTypeName(args[1]);
@@ -5761,7 +5761,7 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
       if (JS_LinearStringEqualsLiteral(linearStr, "json")) {
-        jsonModule = true;
+        moduleType = JS::ModuleType::JSON;
       } else if (!JS_LinearStringEqualsLiteral(linearStr, "js")) {
         JS_ReportErrorASCII(cx, "moduleType string ('js' or 'json') expected");
         return false;
@@ -5782,7 +5782,7 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject module(cx);
-  if (jsonModule) {
+  if (moduleType == JS::ModuleType::JSON) {
     module = JS::CompileJsonModule(cx, options, srcBuf);
   } else {
     options.setModule();
@@ -5793,7 +5793,8 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<ShellModuleObjectWrapper*> wrapper(
-      cx, ShellModuleObjectWrapper::create(cx, module.as<ModuleObject>()));
+      cx, ShellModuleObjectWrapper::create(cx, module.as<ModuleObject>(),
+                                           moduleType));
   if (!wrapper) {
     return false;
   }
@@ -6052,10 +6053,8 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS::ModuleType moduleType = JS::ModuleType::JavaScript;
-  if (module->hasSyntheticModuleFields()) {
-    moduleType = JS::ModuleType::JSON;
-  }
+  JS::ModuleType moduleType =
+      args[1].toObject().as<ShellModuleObjectWrapper>().getModuleType();
 
   RootedObject moduleRequest(
       cx, ModuleRequestObject::create(cx, specifier, moduleType));
@@ -6068,7 +6067,7 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<ShellModuleObjectWrapper*> wrapper(
-      cx, ShellModuleObjectWrapper::create(cx, module));
+      cx, ShellModuleObjectWrapper::create(cx, module, moduleType));
   if (!wrapper) {
     return false;
   }
