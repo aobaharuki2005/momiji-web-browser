@@ -158,10 +158,12 @@ class ActionsHelper {
    */
   dispatchEvent(eventName, browsingContext, details) {
     if (
-      eventName === "synthesizeWheelAtPoint" &&
-      lazy.actions.useAsyncWheelEvents
+      (eventName === "synthesizeWheelAtPoint" &&
+        lazy.actions.useAsyncWheelEvents) ||
+      (eventName == "synthesizeMouseAtPoint" &&
+        lazy.actions.useAsyncMouseEvents)
     ) {
-      browsingContext = browsingContext.topChromeWindow.browsingContext;
+      browsingContext = browsingContext.topChromeWindow?.browsingContext;
       details.eventData.asyncEnabled = true;
     }
 
