@@ -800,6 +800,8 @@ skip-if = ["os == 'android'"]
 
 ["test_bug1785739.html"]
 
+["test_bug1995614_atomized_attributes.html"]
+
 ["test_change_crossorigin.html"]
 skip-if = [
   "http3",
