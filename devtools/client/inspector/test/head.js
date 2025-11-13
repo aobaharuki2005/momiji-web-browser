@@ -1327,8 +1327,7 @@ async function assertMarkupViewAsTree(tree, selector, inspector) {
 
 async function _checkMarkupViewNode(treeNode, container, inspector) {
   const { node, children, path } = treeNode;
-  info("Checking [" + path + "]");
-  info("Checking node: " + node);
+  info(`Checking [${path}]`);
 
   const ignoreChildren = node.includes("!ignore-children");
   const slotted = node.includes("!slotted");
@@ -1409,7 +1408,7 @@ function _parseMarkupViewTree(inputString) {
       children: [],
       parent,
       level,
-      path: parent.path + " " + nodeString,
+      path: (parent.path ? parent.path + " > " : "") + nodeString,
     };
 
     parent.children.push(node);
@@ -1438,7 +1437,7 @@ function assertContainerHasText(container, expectedText) {
   const textContent = container.elt.textContent;
   ok(
     textContent.includes(expectedText),
-    "Container has expected text: " + expectedText
+    `Container has expected text "${expectedText}"${!textContent.includes(expectedText) ? ` - got "${textContent}"` : ""}`
   );
 }
 
