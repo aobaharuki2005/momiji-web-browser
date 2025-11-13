@@ -2202,6 +2202,10 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
         id == NameToId(cx->names().isError)) {
       return true;
     }
+    if (!JS::Prefs::experimental_iterator_sequencing() &&
+        id == NameToId(cx->names().concat)) {
+      return true;
+    }
   }
 
 #ifdef JS_HAS_INTL_API
@@ -2223,10 +2227,6 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
     if (!JS::Prefs::experimental_joint_iteration() &&
         (id == NameToId(cx->names().zip) ||
          id == NameToId(cx->names().zipKeyed))) {
-      return true;
-    }
-    if (!JS::Prefs::experimental_iterator_sequencing() &&
-        id == NameToId(cx->names().concat)) {
       return true;
     }
   }
