@@ -1054,7 +1054,7 @@ set_config("MOZ_PACKAGER_FORMAT", packager_format)
 @depends(target_is_android, "--enable-debug", milestone.is_nightly)
 def enable_minify_default(is_android, debug, is_nightly):
     if is_android and not debug and not is_nightly:
-        return ("properties", "js")
+        return ("properties",)
     return ("properties",)
 
 

@@ -18,7 +18,8 @@
 "use strict";
 
 function ast(filename) {
-  return JSON.stringify(Reflect.parse(snarf(filename), { loc: 0 }));
+  const parseOptions = { loc: 0, target: "module" };
+  return JSON.stringify(Reflect.parse(snarf(filename), parseOptions));
 }
 
 if (scriptArgs.length !== 2) {
