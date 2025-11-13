@@ -703,6 +703,23 @@ win64-vs2022:
             - vs
             - vs-toolchain
 
+win64-vs2026:
+    description: "VS 2026"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TW64(msvc2026)
+    worker:
+        env:
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
+    run:
+        script: get_vs.py
+        arguments:
+            - build/vs/vs2026.yaml
+        resources:
+            - build/vs/vs2026.yaml
+        toolchain-artifact: project/gecko/vs/vs.tar.zst
+
 win64-WindowsAppSDK:
     description: "WindowsAppSDK headers and libraries (x86_64)"
     attributes:
@@ -767,6 +784,23 @@ win64-aarch64-vs2022:
             - build/vs/vs2022-aarch64.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
         toolchain-alias: win64-aarch64-vs
+
+win64-aarch64-vs2026:
+    description: "VS 2026 (AArch64)"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TWA64(msvc2026)
+    worker:
+        env:
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
+    run:
+        script: get_vs.py
+        arguments:
+            - build/vs/vs2026-aarch64.yaml
+        resources:
+            - build/vs/vs2026-aarch64.yaml
+        toolchain-artifact: project/gecko/vs/vs.tar.zst
 
 linux64-afl-instrumentation-4.0:
     description: "AFL++ instrumentation toolchain build"
