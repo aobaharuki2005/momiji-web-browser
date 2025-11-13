@@ -501,9 +501,6 @@ add_task(async function test_IPProtectionService_reload() {
 add_task(async function test_IPProtectionService_addon() {
   let cleanupAlpha = await setupExperiment({ enabled: true, variant: "alpha" });
   let widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
-  let prevPosition = CustomizableUI.getPlacementOfWidget(
-    IPProtectionWidget.WIDGET_ID
-  ).position;
 
   Assert.ok(
     BrowserTestUtils.isVisible(widget),
@@ -542,20 +539,13 @@ add_task(async function test_IPProtectionService_addon() {
     "IP-Protection toolbaritem is removed"
   );
 
-  // Reset to the toolbar
-  CustomizableUI.addWidgetToArea(
-    IPProtectionWidget.WIDGET_ID,
-    CustomizableUI.AREA_NAVBAR,
-    prevPosition
-  );
+  await extension.unload();
 
   widget = document.getElementById(IPProtectionWidget.WIDGET_ID);
   Assert.ok(
     BrowserTestUtils.isVisible(widget),
     "IP-Protection toolbaritem is re-added"
   );
-
-  await extension.unload();
 
   cleanupService(); // hasUpgraded=false
   await IPPEnrollAndEntitleManager.refetchEntitlement();

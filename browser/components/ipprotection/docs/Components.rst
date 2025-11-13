@@ -30,12 +30,12 @@ A diagram of all the main components is the following:
        IPPStartupCache["Startup Cache Helper"]
        IPPSignInWatcher["Sign-in Observer"]
        IPProtectionServerlist
-       IPPEarlyStartupFilter["Early Startup Filter Helper"]
+       IPPEnrollAndEntitleManager["Enroll & Entitle Manager"]
        IPPProxyManager
        UIHelper["UI Helper"]
-       VPNAddonHelper["VPN Add-on Helper"]
+       IPPVPNAddonHelper["VPN Add-on Helper"]
        IPPAutoStart["Auto-Start Helper"]
-       IPPEnrollAndEntitleManager["Enroll & Entitle Manager"]
+       IPPEarlyStartupFilter["Early Startup Filter Helper"]
        IPPNimbusHelper["Nimbus Eligibility Helper"]
      end
 
@@ -125,7 +125,7 @@ AccountResetHelper
   Resets stored account information and stops the proxy when the account becomes
   unavailable.
 
-VPNAddonHelper
+IPPVPNAddonHelper
   Monitors the installation of the Mozilla VPN add‑on and removes the UI when
   appropriate.
 
