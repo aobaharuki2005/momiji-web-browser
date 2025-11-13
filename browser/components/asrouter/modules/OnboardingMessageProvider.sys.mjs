@@ -542,7 +542,7 @@ const BASE_MESSAGES = () => [
             isEncryptedBackup: false,
             screen_style: {
               width: "650px",
-              height: "560px",
+              height: "600px",
             },
             tiles: {
               type: "fx_backup_file_path",
@@ -588,7 +588,7 @@ const BASE_MESSAGES = () => [
             },
             screen_style: {
               width: "650px",
-              height: "560px",
+              height: "600px",
             },
             tiles: {
               type: "fx_backup_file_path",
