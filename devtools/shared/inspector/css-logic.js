@@ -29,6 +29,12 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/indentation.js",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "getNodeDisplayName",
+  "resource://devtools/server/actors/inspector/utils.js",
+  true
+);
 const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const styleInspectorL10N = new LocalizationHelper(
   "devtools/shared/locales/styleinspector.properties"
@@ -555,15 +561,17 @@ exports.prettifyCSS = prettifyCSS;
 function getBindingElementAndPseudo(node) {
   let bindingElement = node;
   let pseudo = null;
-  if (node.nodeName == "_moz_generated_content_marker") {
-    bindingElement = node.parentNode;
-    pseudo = "::marker";
-  } else if (node.nodeName == "_moz_generated_content_before") {
-    bindingElement = node.parentNode;
-    pseudo = "::before";
-  } else if (node.nodeName == "_moz_generated_content_after") {
-    bindingElement = node.parentNode;
-    pseudo = "::after";
+  const { implementedPseudoElement } = node;
+  if (implementedPseudoElement) {
+    // we only want to explicitly handle the elements we're displaying in the markup view
+    if (
+      implementedPseudoElement === "::marker" ||
+      implementedPseudoElement === "::before" ||
+      implementedPseudoElement === "::after"
+    ) {
+      pseudo = getNodeDisplayName(node);
+      bindingElement = node.parentNode;
+    }
   }
   return {
     bindingElement,
