@@ -12,8 +12,6 @@
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/ThreadLocal.h"
 
-#include <utility>
-
 #include "threading/ThreadId.h"
 
 namespace js {

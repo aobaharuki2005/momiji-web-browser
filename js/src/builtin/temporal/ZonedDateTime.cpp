@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <utility>
 
 #include "jspubtd.h"
 #include "NamespaceImports.h"

@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <stdint.h>

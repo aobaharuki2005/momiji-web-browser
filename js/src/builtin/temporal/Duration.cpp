@@ -15,10 +15,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include <initializer_list>
 #include <stdint.h>
 #include <type_traits>
-#include <utility>
 
 #include "jsnum.h"
 #include "jspubtd.h"

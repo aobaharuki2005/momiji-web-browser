@@ -21,8 +21,6 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include <utility>
-
 #include "js/HeapAPI.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"

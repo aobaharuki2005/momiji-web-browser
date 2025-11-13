@@ -5,10 +5,7 @@
 #ifndef V8_UTIL_VECTOR_H_
 #define V8_UTIL_VECTOR_H_
 
-#include <algorithm>
 #include <cstring>
-#include <iterator>
-#include <memory>
 
 #include "js/AllocPolicy.h"
 #include "js/Utility.h"

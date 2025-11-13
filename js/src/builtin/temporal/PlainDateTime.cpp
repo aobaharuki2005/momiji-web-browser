@@ -10,7 +10,6 @@
 #include "mozilla/Casting.h"
 
 #include <algorithm>
-#include <utility>
 
 #include "jspubtd.h"
 #include "NamespaceImports.h"

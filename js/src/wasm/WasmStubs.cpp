@@ -19,7 +19,6 @@
 #include "wasm/WasmStubs.h"
 
 #include <algorithm>
-#include <iterator>
 #include <type_traits>
 
 #include "jit/ABIArgGenerator.h"

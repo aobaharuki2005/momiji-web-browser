@@ -13,7 +13,6 @@
 #  include <limits>
 #  include <optional>
 #  include <stdint.h>
-#  include <utility>
 
 #  include "builtin/temporal/Int128.h"
 #  include "jsapi-tests/tests.h"

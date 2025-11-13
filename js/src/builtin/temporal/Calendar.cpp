@@ -24,11 +24,8 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <initializer_list>
-#include <iterator>
 #include <stddef.h>
 #include <stdint.h>
-#include <utility>
 
 #include "diplomat_runtime.hpp"
 #include "jsnum.h"

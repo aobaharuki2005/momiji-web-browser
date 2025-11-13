@@ -8,8 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include <iterator>
-
 #include "jsnum.h"
 
 #include "jit/CodeGenerator.h"

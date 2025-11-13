@@ -9,7 +9,6 @@
 #include "mozilla/Maybe.h"  // mozilla::Maybe
 
 #include <algorithm>  // std::max
-#include <iterator>   // std::size
 #include <stddef.h>   // size_t
 #include <stdint.h>   // uint8_t, uint32_t
 

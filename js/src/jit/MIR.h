@@ -26,7 +26,6 @@
 #endif
 
 #include <algorithm>
-#include <initializer_list>
 
 #include "NamespaceImports.h"
 

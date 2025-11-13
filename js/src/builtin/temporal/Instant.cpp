@@ -12,10 +12,8 @@
 #include <algorithm>
 #include <array>
 #include <cstdlib>
-#include <iterator>
 #include <stddef.h>
 #include <stdint.h>
-#include <utility>
 
 #include "jsnum.h"
 #include "jspubtd.h"

@@ -10,8 +10,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 
-#include <type_traits>
-
 #include "gc/FinalizationObservers.h"
 #include "gc/GCContext.h"
 #include "gc/PublicIterators.h"
