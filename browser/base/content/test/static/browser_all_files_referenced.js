@@ -46,6 +46,9 @@ var gExceptionPaths = [
   "chrome://browser/content/asrouter/assets/fox-with-devices.svg",
   "chrome://browser/content/asrouter/assets/fox-with-locked-box.svg",
   "chrome://browser/content/asrouter/assets/fox-with-mobile.svg",
+  "chrome://browser/content/asrouter/assets/desktop-to-mobile-banner.svg",
+  "chrome://browser/content/asrouter/assets/desktop-to-mobile-non-eu-QR.svg",
+  "chrome://browser/content/asrouter/assets/desktop-to-mobile-eu-QR.svg",
 
   // toolkit/components/pdfjs/content/build/pdf.js
   "resource://pdf.js/web/images/",
