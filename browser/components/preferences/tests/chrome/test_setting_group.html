@@ -30,20 +30,24 @@
     ></script>
     <script>
       /* import-globals-from /toolkit/content/preferencesBindings.js */
-      let html, testHelpers;
+      let html, nothing, testHelpers;
 
       const LABEL_L10N_ID = "browsing-use-autoscroll";
       const GROUP_L10N_ID = "pane-experimental-reset";
       const PREF_ONE = "test.settings-group.itemone";
       const PREF_TWO = "test.settings-group.itemtwo";
 
-      function renderTemplate(config) {
-        return testHelpers.renderTemplate(html`
+      function settingGroupTemplate(config) {
+        return html`
           <setting-group
             .config=${config}
             .getSetting=${(...args) => Preferences.getSetting(...args)}
           ></setting-group>
-        `);
+        `;
+      }
+
+      function renderTemplate(config) {
+        return testHelpers.renderTemplate(settingGroupTemplate(config));
       }
 
       function waitForSettingChange(setting) {
@@ -57,7 +61,7 @@
 
       add_setup(async function setup() {
         testHelpers = new InputTestHelpers();
-        ({ html } = await testHelpers.setupLit());
+        ({ html, nothing } = await testHelpers.setupLit());
         testHelpers.setupTests({
           templateFn: () => html`<setting-group></setting-group>`,
         });
@@ -118,6 +122,124 @@
       });
 
       add_task(async function testSettingGroupVisibility() {
+        /**
+         * Wait for a requestAnimationFrame so lit renders have completed.
+         */
+        function waitForRenderUpdate() {
+          return new Promise(r => requestAnimationFrame(r));
+        }
+
+        /**
+         * Render the common template into a groupbox that may be hidden from search.
+         */
+        async function renderTemplateInGroupbox(
+          config,
+          hiddenFromSearch = false
+        ) {
+          return testHelpers.renderTemplate(html`
+            <groupbox
+              data-hidden-from-search=${hiddenFromSearch ? "true" : nothing}
+              ?hidden=${hiddenFromSearch}
+            >
+              ${settingGroupTemplate(config)}
+            </groupbox>
+          `);
+        }
+
+        async function assertVisibilityChanges(group, staysHidden = false) {
+          await waitForRenderUpdate();
+          ok(group, "setting-group is created");
+          let [control1, control2] = group.querySelectorAll("setting-control");
+          is(control1.hidden, true, "First setting-control should be hidden");
+          is(control2.hidden, true, "Second setting-control should be hidden");
+
+          ok(
+            group.hidden,
+            "setting-group should be hidden since its controls are hidden"
+          );
+          is(
+            group.getAttribute("data-hidden-from-search"),
+            "true",
+            "setting-group is hidden from search when hidden"
+          );
+          info(group.hasAttribute("data-hidden-by-setting-group"));
+
+          Services.prefs.setBoolPref(PREF_ONE, true);
+          await waitForRenderUpdate();
+          if (staysHidden) {
+            ok(BrowserTestUtils.isHidden(group), "Group should stay hidden");
+            is(
+              group.getAttribute("data-hidden-from-search"),
+              "true",
+              "setting-group is hidden from search when hidden"
+            );
+          } else {
+            ok(
+              !control1.hidden,
+              "Control 1 should be visible after changing pref value"
+            );
+            ok(
+              !group.hidden,
+              "Group should be visible since one of the controls is visible"
+            );
+            ok(
+              !group.hasAttribute("data-hidden-from-search"),
+              "setting-group is not hidden from search when visible"
+            );
+            is(
+              control2.hidden,
+              true,
+              "The second setting-control should still be hidden"
+            );
+          }
+          Services.prefs.setBoolPref(PREF_TWO, true);
+          await waitForRenderUpdate();
+          if (staysHidden) {
+            ok(
+              BrowserTestUtils.isHidden(group),
+              "Group should still stay hidden"
+            );
+            is(
+              group.getAttribute("data-hidden-from-search"),
+              "true",
+              "setting-group is hidden from search when hidden"
+            );
+          } else {
+            ok(
+              !control2.hidden,
+              "Control 2 should be visible after changing pref value"
+            );
+            ok(!control1.hidden, "Control 1 should still be visible");
+            ok(!group.hidden, "Group should still be visible");
+            ok(
+              !group.hasAttribute("data-hidden-from-search"),
+              "setting-group is not hidden from search when visible"
+            );
+          }
+
+          Services.prefs.setBoolPref(PREF_ONE, false);
+          Services.prefs.setBoolPref(PREF_TWO, false);
+
+          await waitForRenderUpdate();
+          ok(
+            control1.hidden,
+            "Control 1 should be hidden after changing pref value"
+          );
+          ok(
+            control2.hidden,
+            "Control 2 should be hidden after changing pref value"
+          );
+          ok(
+            group.hidden,
+            "Group should be hidden now that the controls are hidden"
+          );
+          is(
+            group.getAttribute("data-hidden-from-search"),
+            "true",
+            "setting-group is hidden from search when hidden"
+          );
+        }
+
         const SETTING_ONE = "setting-item-one";
         const SETTING_TWO = "setting-item-two";
         await SpecialPowers.pushPrefEnv({
@@ -144,56 +266,23 @@
           ],
         };
 
+        // Check without a groupbox
         let result = await renderTemplate(config);
         let group = result.querySelector("setting-group");
-        ok(group, "setting-group is created");
-        let [control1, control2] = group.children[0].children;
-        is(control1.hidden, true, "First setting-control should be hidden");
-        is(control2.hidden, true, "Second setting-control should be hidden");
+        info("-- assertVisibilityChanges setting-group --");
+        await assertVisibilityChanges(group);
 
-        ok(
-          group.hidden,
-          "setting-group should be hidden since its controls are hidden"
-        );
+        // Check with an initially visible groupbox
+        result = await renderTemplateInGroupbox(config);
+        group = result.querySelector("groupbox");
+        info("-- assertVisibilityChanges groupbox --");
+        await assertVisibilityChanges(group);
 
-        Services.prefs.setBoolPref(PREF_ONE, true);
-        await TestUtils.waitForCondition(
-          () => !control1.hidden,
-          "Control 1 should be visible after changing pref value"
-        );
-        await TestUtils.waitForCondition(
-          () => !group.hidden,
-          "Group should be visible since one of the controls is visible"
-        );
-        is(
-          control2.hidden,
-          true,
-          "The second setting-control should still be hidden"
-        );
-        Services.prefs.setBoolPref(PREF_TWO, true);
-        await TestUtils.waitForCondition(
-          () => !control2.hidden,
-          "Control 2 should be visible after changing pref value"
-        );
-        ok(!control1.hidden, "Control 1 should still be visible");
-        ok(!group.hidden, "Group should still be visible");
-
-        Services.prefs.setBoolPref(PREF_ONE, false);
-        Services.prefs.setBoolPref(PREF_TWO, false);
-
-        await TestUtils.waitForCondition(
-          () => control1.hidden,
-          "Control 1 should be hidden after changing pref value"
-        );
-        await TestUtils.waitForCondition(
-          () => control2.hidden,
-          "Control 2 should be hidden after changing pref value"
-        );
-
-        await TestUtils.waitForCondition(
-          () => group.hidden,
-          "Group should be hidden now that the controls are hidden"
-        );
+        // Check with a groupbox that should stay hidden
+        result = await renderTemplateInGroupbox(config, true);
+        group = result.querySelector("groupbox");
+        info("-- assertVisibilityChanges groupbox[data-hidden-from-search] --");
+        await assertVisibilityChanges(group, true);
       });
 
       add_task(async function testCommonControlProperties() {

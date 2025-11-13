@@ -51,25 +51,23 @@ export class SettingGroup extends SettingElement {
 
   async handleVisibilityChange() {
     await this.updateComplete;
-    let visibleControls = [...this.controlEls].filter(el => !el.hidden);
-    if (!visibleControls.length) {
-      this.hidden = true;
+    let hasVisibleControls = [...this.controlEls].some(el => !el.hidden);
+    this.hidden = !hasVisibleControls;
+    let groupbox = this.closest("groupbox");
+    if (hasVisibleControls) {
+      this.removeAttribute("data-hidden-from-search");
+      if (groupbox && groupbox.hasAttribute("data-hidden-by-setting-group")) {
+        groupbox.removeAttribute("data-hidden-from-search");
+        groupbox.removeAttribute("data-hidden-by-setting-group");
+        groupbox.hidden = false;
+      }
     } else {
-      this.hidden = false;
-    }
-    // FIXME: We need to replace this.closest() once the SettingGroup
-    // provides its own card wrapper/groupbox replacement element.
-    let closestGroupbox = this.closest("groupbox");
-    if (!closestGroupbox) {
-      return;
-    }
-    if (this.hidden) {
-      // Can't rely on .hidden for the toplevel groupbox because
-      // of the pane hiding/showing code potentially changing the
-      // hidden attribute.
-      closestGroupbox.style.display = "none";
-    } else {
-      closestGroupbox.style.display = "";
+      this.setAttribute("data-hidden-from-search", "true");
+      if (groupbox && !groupbox.hasAttribute("data-hidden-from-search")) {
+        groupbox.setAttribute("data-hidden-from-search", "true");
+        groupbox.setAttribute("data-hidden-by-setting-group", "");
+        groupbox.hidden = true;
+      }
     }
   }
 
