@@ -40,10 +40,12 @@ import androidx.compose.ui.semantics.collectionItemInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.compose.base.theme.surfaceDimVariant
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.WEB_EXTENSION_ITEM
@@ -289,6 +291,7 @@ internal fun MenuBadgeItem(
     description: String,
     badgeText: String,
     checked: Boolean,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -305,10 +308,16 @@ internal fun MenuBadgeItem(
 
     Row(
         modifier = modifier
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = LocalIndication.current,
-            ) { onClick() }
+            .thenConditional(
+                Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = LocalIndication.current,
+                ) { onClick() },
+                ) { enabled }
+            .thenConditional(
+                Modifier.semantics { disabled() },
+            ) { !enabled }
+            .semantics { disabled() }
             .clip(shape = ROUNDED_CORNER_SHAPE)
             .background(
                 color = MaterialTheme.colorScheme.surfaceDimVariant,

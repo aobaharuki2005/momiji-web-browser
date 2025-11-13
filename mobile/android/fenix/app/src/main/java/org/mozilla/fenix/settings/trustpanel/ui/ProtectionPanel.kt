@@ -78,6 +78,7 @@ internal fun ProtectionPanel(
     websiteInfoState: WebsiteInfoState,
     icon: Bitmap?,
     isTrackingProtectionEnabled: Boolean,
+    isGlobalTrackingProtectionEnabled: Boolean,
     isLocalPdf: Boolean,
     numberOfTrackersBlocked: Int,
     websitePermissions: List<WebsitePermission>,
@@ -88,6 +89,7 @@ internal fun ProtectionPanel(
     onAutoplayValueClick: (AutoplayValue) -> Unit,
     onToggleablePermissionClick: (WebsitePermission.Toggleable) -> Unit,
 ) {
+    val isSiteProtectionEnabled = isTrackingProtectionEnabled && isGlobalTrackingProtectionEnabled
     MenuScaffold(
         header = {
             ProtectionPanelHeader(
@@ -99,27 +101,29 @@ internal fun ProtectionPanel(
         MenuGroup {
             ProtectionPanelBanner(
                 isSecured = websiteInfoState.isSecured || isLocalPdf,
-                isTrackingProtectionEnabled = isTrackingProtectionEnabled || isLocalPdf,
+                isTrackingProtectionEnabled = isGlobalTrackingProtectionEnabled &&
+                        (isTrackingProtectionEnabled || isLocalPdf),
             )
 
             if (!isLocalPdf) {
                 MenuBadgeItem(
                     label = stringResource(id = R.string.protection_panel_etp_toggle_label),
-                    checked = isTrackingProtectionEnabled,
-                    description = if (isTrackingProtectionEnabled) {
+                    checked = isTrackingProtectionEnabled && isGlobalTrackingProtectionEnabled,
+                    description = if (isTrackingProtectionEnabled && isGlobalTrackingProtectionEnabled) {
                         stringResource(id = R.string.protection_panel_etp_toggle_enabled_description_2)
                     } else {
                         stringResource(id = R.string.protection_panel_etp_toggle_disabled_description_2)
                     },
-                    badgeText = if (isTrackingProtectionEnabled) {
+                    badgeText = if (isSiteProtectionEnabled) {
                         stringResource(id = R.string.protection_panel_etp_toggle_on)
                     } else {
                         stringResource(id = R.string.protection_panel_etp_toggle_off)
                     },
+                    enabled = (isSiteProtectionEnabled),
                     onClick = onTrackingProtectionToggleClick,
                 )
 
-                if (!isTrackingProtectionEnabled) {
+                if (!(isSiteProtectionEnabled)) {
                     MenuItem(
                         label = stringResource(id = R.string.protection_panel_etp_disabled_no_trackers_blocked),
                         beforeIconPainter = painterResource(id = iconsR.drawable.mozac_ic_shield_slash_critical_24),
@@ -440,6 +444,7 @@ private fun ProtectionPanelPreview() {
                 ),
                 icon = null,
                 isTrackingProtectionEnabled = true,
+                isGlobalTrackingProtectionEnabled = true,
                 isLocalPdf = false,
                 numberOfTrackersBlocked = 5,
                 websitePermissions = listOf(
