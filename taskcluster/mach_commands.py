@@ -19,8 +19,6 @@ from mach.decorators import Command, CommandArgument, SubCommand
 from mach.util import strtobool
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
-logger = logging.getLogger("taskcluster")
-
 
 def setup_logging(command_context, quiet=False, verbose=True):
     """
@@ -40,6 +38,7 @@ def setup_logging(command_context, quiet=False, verbose=True):
             write_interval=old.formatter.write_interval,
             write_times=old.formatter.write_times,
         )
+        logging.getLogger("taskcluster").setLevel(logging.INFO)
 
     # all of the taskgraph logging is unstructured logging
     command_context.log_manager.enable_unstructured()
