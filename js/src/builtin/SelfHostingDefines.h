@@ -25,6 +25,12 @@
 // simple Object (with null prototype) as a convenient implementation.
 #define NEW_RECORD() std_Object_create(null)
 
+/* Spec: ECMAScript Language Specification, 5.1 edition, 9.2 and 11.4.9 */
+#define TO_BOOLEAN(v) !!v
+
+/* Spec: ECMAScript Language Specification, 5.1 edition, 9.3 and 11.4.6 */
+#define TO_NUMBER(v) +v
+
 // NB: keep this in sync with the copy in vm/ArgumentsObject.h.
 #define MAX_ARGS_LENGTH (500 * 1000)
 

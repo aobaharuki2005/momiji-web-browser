@@ -278,7 +278,7 @@ function Intl_PluralRules_select(value) {
   }
 
   // Step 3.
-  var n = ToNumber(value);
+  var n = TO_NUMBER(value);
 
   // Ensure the PluralRules internals are resolved.
   getPluralRulesInternals(pluralRules);
@@ -325,10 +325,10 @@ function Intl_PluralRules_selectRange(start, end) {
   }
 
   // Step 4.
-  var x = ToNumber(start);
+  var x = TO_NUMBER(start);
 
   // Step 5.
-  var y = ToNumber(end);
+  var y = TO_NUMBER(end);
 
   // Step 6.
   return intl_SelectPluralRuleRange(pluralRules, x, y);

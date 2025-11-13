@@ -30,22 +30,6 @@
 
 /********** Abstract operations defined in ECMAScript Language Specification **********/
 
-/* Spec: ECMAScript Language Specification, 5.1 edition, 9.2 and 11.4.9 */
-function ToBoolean(v) {
-  return !!v;
-}
-
-/* Spec: ECMAScript Language Specification, 5.1 edition, 9.3 and 11.4.6 */
-function ToNumber(v) {
-  return +v;
-}
-
-// ES2017 draft rev aebf014403a3e641fb1622aec47c40f051943527
-// 7.2.10 SameValueZero ( x, y )
-function SameValueZero(x, y) {
-  return x === y || (x !== x && y !== y);
-}
-
 // ES 2017 draft (April 6, 2016) 7.3.9
 function GetMethod(V, P) {
   // Step 1.

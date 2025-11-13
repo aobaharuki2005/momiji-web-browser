@@ -1672,13 +1672,13 @@ function IteratorCloseAllForException(iters) {
 
 /**
  * CreateNumericRangeIterator (start, end, optionOrStep, type)
- * Step 18 
- * 
+ * Step 18
+ *
  * https://tc39.es/proposal-iterator.range/#sec-create-numeric-range-iterator
  */
 function IteratorRangeNext() {
   var obj = this;
-  // Step 18. Let closure be a new Abstract Closure with no parameters 
+  // Step 18. Let closure be a new Abstract Closure with no parameters
   // that captures start, end, step, inclusiveEnd, zero, one and performs the following steps when called:
 
   if (!IsObject(obj) || (obj = GuardToIteratorRange(obj)) === null) {
@@ -1728,7 +1728,7 @@ function IteratorRangeNext() {
 
   // Step 18.i.iv: If ifIncrease is true, then
   if (ifIncrease) {
-    // Step 18.i.iv.1: If inclusiveEnd is true, then 
+    // Step 18.i.iv.1: If inclusiveEnd is true, then
     if (inclusiveEnd) {
       // Step 18.i.iv.1.a: If currentYieldingValue > end, return undefined.
       if (currentYieldingValue > end) {
@@ -1773,7 +1773,7 @@ function IteratorRangeNext() {
 
 /**
  * CreateNumericRangeIterator (start, end, optionOrStep, type)
- * 
+ *
  * https://tc39.es/proposal-iterator.range/#sec-create-numeric-range-iterator
  */
 function CreateNumericRangeIterator(start, end, optionOrStep, isNumberRange) {
@@ -1836,7 +1836,7 @@ function CreateNumericRangeIterator(start, end, optionOrStep, isNumberRange) {
     step = optionOrStep.step;
 
     // Step 8.b. Set inclusiveEnd to ToBoolean(? Get(optionOrStep, "inclusive")).
-    inclusiveEnd = ToBoolean(optionOrStep.inclusiveEnd);
+    inclusiveEnd = TO_BOOLEAN(optionOrStep.inclusiveEnd);
   }
   // Step 9: Else if type is NUMBER-RANGE and optionOrStep is a Number, then
   else if (isNumberRange && typeof optionOrStep === 'number') {
