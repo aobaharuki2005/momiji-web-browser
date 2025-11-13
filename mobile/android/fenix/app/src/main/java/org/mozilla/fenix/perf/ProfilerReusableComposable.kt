@@ -111,6 +111,7 @@ fun WaitForProfilerDialog(
             Text(
                 text = stringResource(message),
                 fontWeight = FontWeight.Bold,
+                color = FirefoxTheme.colors.textPrimary,
                 fontSize = 15.sp,
                 modifier = Modifier.padding(8.dp),
             )
