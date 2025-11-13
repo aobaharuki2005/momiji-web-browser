@@ -1,0 +1,8 @@
+.pseudos {
+  &::before {
+    content: "my_before_text";
+  }
+  &::after {
+    content: "my_after_text";
+  }
+}

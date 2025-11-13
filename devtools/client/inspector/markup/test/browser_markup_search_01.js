@@ -214,6 +214,51 @@ add_task(async function () {
     markupViewContainer.clientWidth,
     "Markup view overflows horizontally"
   );
+
+  info("Search for pseudo elements");
+
+  await searchInMarkupView(inspector, "::before");
+  is(
+    inspector.selection.nodeFront.displayName,
+    "::before",
+    "The ::before element is selected"
+  );
+  checkHighlightedSearchResults(inspector, ["::before"]);
+
+  await searchInMarkupView(inspector, "::after");
+  is(
+    inspector.selection.nodeFront.displayName,
+    "::after",
+    "The ::after element is selected"
+  );
+  checkHighlightedSearchResults(inspector, ["::after"]);
+
+  await searchInMarkupView(inspector, "::marker");
+  is(
+    inspector.selection.nodeFront.displayName,
+    "::marker",
+    "The ::marker element is selected"
+  );
+  checkHighlightedSearchResults(inspector, ["::marker"]);
+
+  // Search by the `content` declaration of the ::before and ::after pseudo elements
+  await searchInMarkupView(inspector, "my_before_text");
+  is(
+    inspector.selection.nodeFront.displayName,
+    "::before",
+    "The ::before element is selected"
+  );
+  // no highlighting as the `content` text isn't displayed in the markup view
+  checkHighlightedSearchResults(inspector, []);
+
+  await searchInMarkupView(inspector, "my_after_text");
+  is(
+    inspector.selection.nodeFront.displayName,
+    "::after",
+    "The ::after element is selected"
+  );
+  // no highlighting as the `content` text isn't displayed in the markup view
+  checkHighlightedSearchResults(inspector, []);
 });
 
 function checkHighlightedSearchResults(inspector, expectedHighlights) {
