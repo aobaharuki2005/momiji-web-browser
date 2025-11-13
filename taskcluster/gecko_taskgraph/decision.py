@@ -15,6 +15,7 @@ from redo import retry
 from taskgraph import create
 from taskgraph.create import create_tasks
 from taskgraph.generator import TaskGraphGenerator
+from taskgraph.main import format_kind_graph_mermaid
 from taskgraph.parameters import Parameters
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.util import json
@@ -203,6 +204,9 @@ def taskgraph_decision(options, parameters=None):
     # write out the full graph for reference
     full_task_json = tgg.full_task_graph.to_json()
     write_artifact("full-task-graph.json", full_task_json)
+
+    # write out kind graph
+    write_artifact("kind-graph.mm", format_kind_graph_mermaid(tgg.kind_graph))
 
     # write out the public/runnable-jobs.json file
     write_artifact(
@@ -506,7 +510,8 @@ def write_artifact(filename, data):
         with gzip.open(path, "wb") as f:
             f.write(json.dumps(data).encode("utf-8"))
     else:
-        raise TypeError(f"Don't know how to write to {filename}")
+        with open(path, "w") as f:
+            f.write(data)
 
 
 def read_artifact(filename):

@@ -118,6 +118,21 @@ def taskgraph_command(command_context):
 
 @SubCommand(
     "taskgraph",
+    "kind-graph",
+    description="Generate a graph of the relationship between taskgraph kinds",
+    parser=partial(get_taskgraph_command_parser, "kind-graph"),
+)
+def taskgraph_kind_graph(command_context, **options):
+    try:
+        setup_logging(command_context)
+        return taskgraph_commands["kind-graph"].func(options)
+    except Exception:
+        traceback.print_exc()
+        sys.exit(1)
+
+
+@SubCommand(
+    "taskgraph",
     "tasks",
     description="Show all tasks in the taskgraph",
     parser=partial(get_taskgraph_command_parser, "tasks"),
