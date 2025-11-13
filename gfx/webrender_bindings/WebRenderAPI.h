@@ -615,6 +615,7 @@ class DisplayListBuilder final {
                               wr::LayoutRect aClipRect);
 
   wr::WrSpatialId DefineStickyFrame(
+      Maybe<wr::WrSpatialId> aParentSpatialId,
       const wr::LayoutRect& aContentRect, const float* aTopMargin,
       const float* aRightMargin, const float* aBottomMargin,
       const float* aLeftMargin, const StickyOffsetBounds& aVerticalBounds,

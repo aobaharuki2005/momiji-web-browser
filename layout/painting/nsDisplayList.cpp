@@ -6044,7 +6044,7 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
       prop->effect_type = wr::WrAnimationType::Transform;
     }
     wr::WrSpatialId spatialId = aBuilder.DefineStickyFrame(
-        wr::ToLayoutRect(bounds), topMargin.ptrOr(nullptr),
+        Nothing(), wr::ToLayoutRect(bounds), topMargin.ptrOr(nullptr),
         rightMargin.ptrOr(nullptr), bottomMargin.ptrOr(nullptr),
         leftMargin.ptrOr(nullptr), vBounds, hBounds, applied, spatialKey,
         prop.ptrOr(nullptr));
