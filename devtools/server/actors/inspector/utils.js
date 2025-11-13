@@ -71,6 +71,11 @@ const IMAGE_FETCHING_TIMEOUT = 500;
  *         Properly cased version of the node tag name
  */
 const getNodeDisplayName = function (rawNode) {
+  const { implementedPseudoElement } = rawNode;
+  if (implementedPseudoElement) {
+    return implementedPseudoElement;
+  }
+
   if (rawNode.nodeName && !rawNode.localName) {
     // The localName & prefix APIs have been moved from the Node interface to the Element
     // interface. Use Node.nodeName as a fallback.

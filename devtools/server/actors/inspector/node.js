@@ -25,13 +25,10 @@ loader.lazyRequireGetter(
   this,
   [
     "getShadowRootMode",
-    "isAfterPseudoElement",
     "isAnonymous",
-    "isBeforePseudoElement",
     "isDirectShadowHostChild",
     "isFrameBlockedByCSP",
     "isFrameWithChildTarget",
-    "isMarkerPseudoElement",
     "isNativeAnonymous",
     "isShadowHost",
     "isShadowRoot",
@@ -212,9 +209,7 @@ class NodeActor extends Actor {
 
       attrs: this.writeAttrs(),
       customElementLocation: this.getCustomElementLocation(),
-      isMarkerPseudoElement: isMarkerPseudoElement(this.rawNode),
-      isBeforePseudoElement: isBeforePseudoElement(this.rawNode),
-      isAfterPseudoElement: isAfterPseudoElement(this.rawNode),
+      isPseudoElement: !!this.rawNode.implementedPseudoElement,
       isAnonymous: isAnonymous(this.rawNode),
       isNativeAnonymous: isNativeAnonymous(this.rawNode),
       isShadowRoot: shadowRoot,
@@ -228,7 +223,10 @@ class NodeActor extends Actor {
       isInHTMLDocument:
         this.rawNode.ownerDocument &&
         this.rawNode.ownerDocument.contentType === "text/html",
-      traits: {},
+      traits: {
+        // @backward-compat { version 147 } Can be removed once 147 reaches release
+        hasPseudoElementNameInDisplayName: true,
+      },
     };
 
     // The event collector can be expensive, so only check for events on nodes that
@@ -239,9 +237,7 @@ class NodeActor extends Actor {
       nodeType !== Node.CDATA_SECTION_NODE &&
       nodeType !== Node.DOCUMENT_NODE &&
       nodeType !== Node.DOCUMENT_TYPE_NODE &&
-      !form.isMarkerPseudoElement &&
-      !form.isBeforePseudoElement &&
-      !form.isAfterPseudoElement
+      !form.isPseudoElement
     ) {
       form.hasEventListeners = this.hasEventListeners();
     }
@@ -335,9 +331,7 @@ class NodeActor extends Actor {
       // FIXME: We should be able to just check <slot> rather than
       // containingShadowRoot.
       this.rawNode.containingShadowRoot ||
-      isMarkerPseudoElement(this.rawNode) ||
-      isBeforePseudoElement(this.rawNode) ||
-      isAfterPseudoElement(this.rawNode)
+      !!this.rawNode.implementedPseudoElement
     ) {
       numChildren = this.walker.countChildren(this);
     }
