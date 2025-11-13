@@ -486,7 +486,9 @@ class CssLogic {
   selectorMatchesElement(domRule, idx) {
     let element = this.viewedElement;
     do {
-      if (domRule.selectorMatchesElement(idx, element)) {
+      const { bindingElement, pseudo } =
+        CssLogic.getBindingElementAndPseudo(element);
+      if (domRule.selectorMatchesElement(idx, bindingElement, pseudo)) {
         return true;
       }
 

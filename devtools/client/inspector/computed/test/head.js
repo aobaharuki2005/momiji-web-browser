@@ -67,14 +67,7 @@ function getComputedViewProperty(view, name) {
  * @return {PropertyView}
  */
 function getComputedViewPropertyView(view, name) {
-  let propView;
-  for (const propertyView of view.propertyViews) {
-    if (propertyView.propertyInfo.name === name) {
-      propView = propertyView;
-      break;
-    }
-  }
-  return propView;
+  return view.propertyViews.find(propertyView => propertyView.name === name);
 }
 
 /**
@@ -276,4 +269,71 @@ function failClipboardCheck(expectedPattern) {
   );
   info("Actual: " + escape(actual));
   info("Expected: " + escape(expectedPattern));
+}
+
+/**
+ * Check that the given property has the expected value and the expected matched selectors
+ *
+ * @param {CssComputedView} view
+ *        The instance of the computed view panel
+ * @param {Object} options
+ * @param {string} options.property
+ *        The property name to check
+ * @param {string} options.expectedComputedValue
+ *        The expected value displayed for the property
+ * @param {Object[]} options.expectedMatchedSelectors
+ *        An array of objects describing the expected matched selectors
+ * @param {string} options.expectedMatchedSelectors[].selector
+ *        The selector that should be displayed at this index
+ * @param {string} options.expectedMatchedSelectors[].value
+ *        The value that should be displayed at this index
+ * @param {boolean} options.expectedMatchedSelectors[].match
+ *        Whether the selector should match the currently selected element. Defaults to true.
+ */
+async function checkMatchedSelectorForProperty(
+  view,
+  { property, expectedComputedValue, expectedMatchedSelectors }
+) {
+  const propertyView = getComputedViewPropertyView(view, property);
+  ok(propertyView, `found PropertyView for "${property}"`);
+  const { valueNode } = propertyView;
+  is(
+    valueNode.textContent,
+    expectedComputedValue,
+    `Expected displayed computed value for "${property}"`
+  );
+
+  is(propertyView.hasMatchedSelectors, true, "hasMatchedSelectors is true");
+
+  info("Expanding the matched selectors");
+  propertyView.matchedExpanded = true;
+  await propertyView.refreshMatchedSelectors();
+
+  const selectorsEl =
+    propertyView.matchedSelectorsContainer.querySelectorAll(".rule-text");
+  is(
+    selectorsEl.length,
+    expectedMatchedSelectors.length,
+    "Expected number of selectors are displayed"
+  );
+
+  selectorsEl.forEach((selectorEl, index) => {
+    is(
+      selectorEl.querySelector(".fix-get-selection").innerText,
+      expectedMatchedSelectors[index].selector,
+      `Selector #${index} is the expected one`
+    );
+    is(
+      selectorEl.querySelector(".computed-other-property-value").innerText,
+      expectedMatchedSelectors[index].value,
+      `Selector #${index} ("${expectedMatchedSelectors[index].selector}") has the expected "${property}"`
+    );
+    const classToMatch = index === 0 ? "bestmatch" : "matched";
+    const expectedMatch = expectedMatchedSelectors[index].match ?? true;
+    is(
+      selectorEl.classList.contains(classToMatch),
+      expectedMatch,
+      `Selector #${index} ("${expectedMatchedSelectors[index].selector}") element does ${expectedMatch ? "" : "not "}have a matching class`
+    );
+  });
 }
