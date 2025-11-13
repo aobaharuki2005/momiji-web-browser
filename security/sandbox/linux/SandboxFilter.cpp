@@ -32,7 +32,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <vector>
 
 #include "PlatformMacros.h"
 #include "Sandbox.h"  // for ContentProcessSandboxParams
