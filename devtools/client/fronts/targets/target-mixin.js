@@ -215,6 +215,9 @@ function TargetMixin(parentClass) {
      * @return {Mixed}
      */
     getTrait(traitName) {
+      if (this.isDestroyedOrBeingDestroyed()) {
+        return null;
+      }
       // If the targeted actor exposes traits and has a defined value for this
       // traits, override the root actor traits
       if (this.targetForm.traits && traitName in this.targetForm.traits) {
