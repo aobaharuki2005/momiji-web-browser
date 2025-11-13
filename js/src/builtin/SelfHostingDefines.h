@@ -87,6 +87,15 @@
 // Item kind for Map/Set iterators.
 #define MAP_SET_ITERATOR_SLOT_ITEM_KIND 1
 
+/* Spec: https://tc39.es/ecma262/#sec-createarrayiterator */
+#define RETURN_ARRAY_ITERATOR(obj, kind)                                 \
+  var iteratedObject = ToObject(obj);                                    \
+  var iterator = NewArrayIterator();                                     \
+  UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_TARGET, iteratedObject); \
+  UnsafeSetReservedSlot(iterator, ITERATOR_SLOT_NEXT_INDEX, 0);          \
+  UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_ITEM_KIND, kind);  \
+  return iterator
+
 #define ITEM_KIND_KEY 0
 #define ITEM_KIND_VALUE 1
 #define ITEM_KIND_KEY_AND_VALUE 2
