@@ -77,6 +77,7 @@ import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabCloseClick as OnSyncedTabCl
  */
 private val ScaffoldFabOffsetCorrection = 4.dp
 private const val SPACER_BACKGROUND_ALPHA = 0.75f
+private val DefaultStatusBarHeight = 50.dp
 
 /**
  * Top-level UI for displaying the Tabs Tray feature.
@@ -199,7 +200,7 @@ fun TabsTray(
 
     val systemBarsInsets = WindowInsets.systemBars.asPaddingValues()
     val statusBarHeight = remember(systemBarsInsets) {
-        systemBarsInsets.calculateTopPadding()
+        systemBarsInsets.calculateTopPadding().takeIf { it > 0.dp } ?: DefaultStatusBarHeight
     }
 
     val topAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
