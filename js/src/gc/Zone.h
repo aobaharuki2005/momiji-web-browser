@@ -371,7 +371,8 @@ namespace JS {
 //   compartments. If an object needs to point to a JSObject in a different
 //   compartment, regardless of zone, it must go through a cross-compartment
 //   wrapper. Each compartment keeps track of its outgoing wrappers in a table.
-//   JSObjects find their compartment via their ObjectGroup.
+//   JSObjects find their compartment via their Realm, which is found by
+//   following their shape and base shape pointers.
 //
 // - JSStrings do not belong to any particular compartment, but they do belong
 //   to a zone. Thus, two different compartments in the same zone can point to a
@@ -387,9 +388,8 @@ namespace JS {
 // - Scripts are also compartment-local and cannot be shared. A script points to
 //   its compartment.
 //
-// - ObjectGroup and JitCode objects belong to a compartment and cannot be
-//   shared. There is no mechanism to obtain the compartment from a JitCode
-//   object.
+// - JitCode objects belong to a compartment and cannot be shared. There is no
+//   mechanism to obtain the compartment from a JitCode object.
 //
 // A zone remains alive as long as any GC things in the zone are alive. A
 // compartment remains alive as long as any JSObjects, scripts, shapes, or base

@@ -1822,9 +1822,8 @@ static void ReportRealmStats(const JS::RealmStats& realmStats,
   ZRREPORT_BYTES(realmJSPathPrefix + "realm-object"_ns, realmStats.realmObject,
                  "The JS::Realm object itself.");
 
-  ZRREPORT_BYTES(
-      realmJSPathPrefix + "realm-tables"_ns, realmStats.realmTables,
-      "Realm-wide tables storing object group information and wasm instances.");
+  ZRREPORT_BYTES(realmJSPathPrefix + "realm-tables"_ns, realmStats.realmTables,
+                 "Realm-wide tables storing wasm instances.");
 
   ZRREPORT_BYTES(realmJSPathPrefix + "inner-views"_ns,
                  realmStats.innerViewsTable,

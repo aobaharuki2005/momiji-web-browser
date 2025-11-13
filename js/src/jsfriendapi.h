@@ -79,13 +79,11 @@ extern JS_PUBLIC_API JSObject* JS_NewDeadWrapper(
     JSContext* cx, JSObject* origObject = nullptr);
 
 /*
- * Used by the cycle collector to trace through a shape or object group and
- * all cycle-participating data it reaches, using bounded stack space.
+ * Used by the cycle collector to trace through a shape and all
+ * cycle-participating data it reaches, using bounded stack space.
  */
 extern JS_PUBLIC_API void JS_TraceShapeCycleCollectorChildren(
     JS::CallbackTracer* trc, JS::GCCellPtr shape);
-extern JS_PUBLIC_API void JS_TraceObjectGroupCycleCollectorChildren(
-    JS::CallbackTracer* trc, JS::GCCellPtr group);
 
 extern JS_PUBLIC_API JSPrincipals* JS_GetScriptPrincipals(JSScript* script);
 
