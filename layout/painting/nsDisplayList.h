@@ -239,6 +239,13 @@ struct ActiveScrolledRoot {
   // return the null scroll id.
   layers::ScrollableLayerGuid::ViewID GetNearestScrollASRViewId() const;
 
+  // Return the ASR of kind ASRKind::Sticky corresponding to a sticky frame.
+  // Returns null if |aStickyFrame| is not a sticky frame, or if
+  // CreateASRForStickyFrame has not yet been called for it or its first
+  // continuation.
+  static const ActiveScrolledRoot* GetStickyASRFromFrame(
+      nsIFrame* aStickyFrame);
+
   enum class ASRKind { Root, Scroll, Sticky };
 
   RefPtr<const ActiveScrolledRoot> mParent;
