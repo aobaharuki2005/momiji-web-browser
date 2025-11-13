@@ -173,12 +173,16 @@ class ActionsHelper {
    *
    * @param {BrowsingContext} browsingContext
    *     The browsing context to dispatch the event to.
-   *
-   * @returns {Promise}
-   *     Promise that resolves when the finalization is done.
    */
-  finalizeAction(browsingContext) {
-    return this.#getActor(browsingContext).finalizeAction();
+  async finalizeAction(browsingContext) {
+    try {
+      await this.#getActor(browsingContext).finalizeAction();
+    } catch (e) {
+      // Ignore the error if the underlying browsing context is already gone.
+      if (e.name !== lazy.error.NoSuchWindowError.name) {
+        throw e;
+      }
+    }
   }
 
   /**
