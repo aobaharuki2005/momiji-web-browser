@@ -501,6 +501,10 @@ class nsWindow final : public nsIWidget {
 
   void ResumeCompositorImpl();
 
+  // Force hide this window, remove compositor etc. to avoid
+  // rendering queue blocking (see Bug 1782948).
+  void ClearRenderingQueue();
+
   bool ApplyEnterLeaveMutterWorkaround();
 
   void NotifyOcclusionState(mozilla::widget::OcclusionState aState) override;
@@ -551,6 +555,7 @@ class nsWindow final : public nsIWidget {
   GtkWidget* GetToplevelWidget() const;
   nsWindow* GetContainerWindow() const;
   Window GetX11Window();
+  void EnsureGdkWindow();
   void SetUrgencyHint(GtkWidget* top_window, bool state);
   void SetDefaultIcon(void);
   void SetWindowDecoration(BorderStyle aStyle);
@@ -595,8 +600,6 @@ class nsWindow final : public nsIWidget {
   GtkWidget* mShell = nullptr;
   MozContainer* mContainer = nullptr;
   GdkWindow* mGdkWindow = nullptr;
-  // mEGLWindow is owned by WaylandSurface or it's X11 ID.
-  void* mEGLWindow = nullptr;
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::widget::WaylandSurface> mSurface;
 #endif
@@ -704,6 +707,9 @@ class nsWindow final : public nsIWidget {
 
   // If true, draw our own window titlebar.
   bool mDrawInTitlebar = false;
+
+  // This mutex protect window visibility changes.
+  mozilla::Mutex mWindowVisibilityMutex;
 
   // This track real window visibility from OS perspective.
   // It's set by OnMap/OnUnmap which is based on Gtk events.
