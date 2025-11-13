@@ -186,14 +186,6 @@ search-extra-params:
     search-engine:
       type: string
       description: The search engine name.
-search-term-groups:
-  description: A feature allowing the grouping of URLs around the search term that it came from.
-  hasExposure: true
-  exposureDescription: ""
-  variables:
-    enabled:
-      type: boolean
-      description: "If true, the feature shows up on the homescreen and on the new tab screen."
 splash-screen:
   description: "A feature that extends splash screen duration, allowing additional data fetching time for the app's initial run."
   hasExposure: true

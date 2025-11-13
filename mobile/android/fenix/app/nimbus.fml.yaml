@@ -83,20 +83,6 @@ features:
         description: The drawable displayed in the app menu for Settings
         type: String
         default: mozac_ic_settings
-  search-term-groups:
-    description: A feature allowing the grouping of URLs around the search term that it came from.
-    variables:
-      enabled:
-        description: If true, the feature shows up on the homescreen and on the new tab screen.
-        type: Boolean
-        default: false
-    defaults:
-      - channel: nightly
-        value:
-          enabled: true
-      - channel: developer
-        value:
-          enabled: true
   query-parameter-stripping:
     description: Features for query parameter stripping.
     variables:
