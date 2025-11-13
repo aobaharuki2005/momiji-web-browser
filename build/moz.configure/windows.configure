@@ -592,6 +592,9 @@ with only_when(depends(c_compiler)(lambda c: c.type == "clang-cl")):
     set_define("_CRT_SECURE_NO_WARNINGS", True)
     set_define("_CRT_NONSTDC_NO_WARNINGS", True)
 
+    # Work around issues with newer STL and older runtimes, see bug 1994496.
+    set_define("_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR", True)
+
     set_define("HAVE_SEH_EXCEPTIONS", True)
     set_define("HAVE_IO_H", True)
 
