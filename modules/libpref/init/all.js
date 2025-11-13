@@ -3944,6 +3944,14 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
 // Enable the JSON View tool (an inspector for application/json documents).
 pref("devtools.jsonview.enabled", true);
 
+// Size profiler button in JSON View. Nightly-only until the profiler
+// front-end has been polished for the size profile use case.
+#ifdef NIGHTLY_BUILD
+  pref("devtools.jsonview.size-profiler.enabled", true);
+#else
+  pref("devtools.jsonview.size-profiler.enabled", false);
+#endif
+
 // Default theme ("auto", "dark" or "light").
 pref("devtools.theme", "auto", sticky);
 

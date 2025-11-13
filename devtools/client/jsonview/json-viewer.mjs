@@ -12,6 +12,7 @@ import TreeViewClass from "resource://devtools/client/shared/components/tree/Tre
 import { ObjectProvider } from "resource://devtools/client/shared/components/tree/ObjectProvider.mjs";
 import { JSON_NUMBER } from "resource://devtools/client/shared/components/reps/reps/constants.mjs";
 import { parseJsonLossless } from "resource://devtools/client/shared/components/reps/reps/rep-utils.mjs";
+import { createSizeProfile } from "resource://devtools/client/jsonview/json-size-profiler.mjs";
 
 const { MainTabbedArea } = createFactories(MainTabbedAreaClass);
 
@@ -230,6 +231,65 @@ input.actions = {
       maxNodes: EXPAND_ALL_MAX_NODES,
     });
     theApp.setState({ expandedNodes: input.expandedNodes });
+  },
+
+  async onProfileSize() {
+    // Get the raw JSON string
+    const jsonString = input.jsonText.textContent;
+
+    // Get profiler URL from preferences and open window immediately
+    // to avoid popup blocker (profile creation may take several seconds)
+    const origin = JSONView.profilerUrl;
+    const profilerURL = origin + "/from-post-message/";
+    const profilerWindow = window.open(profilerURL, "_blank");
+
+    if (!profilerWindow) {
+      console.error("Failed to open profiler window");
+      return;
+    }
+
+    // Extract filename from URL
+    let filename;
+    try {
+      const pathname = window.location.pathname;
+      const lastSlash = pathname.lastIndexOf("/");
+      if (lastSlash !== -1 && lastSlash < pathname.length - 1) {
+        filename = decodeURIComponent(pathname.substring(lastSlash + 1));
+      }
+    } catch (e) {
+      // Invalid URL encoding, leave filename undefined
+    }
+
+    const profile = createSizeProfile(jsonString, filename);
+
+    // Wait for profiler to be ready and send the profile
+    let isReady = false;
+    const messageHandler = function (event) {
+      if (event.origin !== origin) {
+        return;
+      }
+      if (event.data && event.data.name === "ready:response") {
+        window.removeEventListener("message", messageHandler);
+        isReady = true;
+      }
+    };
+    window.addEventListener("message", messageHandler);
+
+    // Poll until the profiler window is ready. We need to poll because the
+    // postMessage will not be received if we send it before the profiler
+    // tab has finished loading.
+    while (!isReady) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      profilerWindow.postMessage({ name: "ready:request" }, origin);
+    }
+
+    profilerWindow.postMessage(
+      {
+        name: "inject-profile",
+        profile,
+      },
+      origin
+    );
   },
 };
 
