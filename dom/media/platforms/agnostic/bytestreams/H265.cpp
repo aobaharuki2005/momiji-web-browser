@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 #include <cmath>
-#include <limits>
 
 #include "AnnexB.h"
 #include "BitReader.h"

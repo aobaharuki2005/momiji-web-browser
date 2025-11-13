@@ -7,7 +7,6 @@
 #include "ScriptLoader.h"
 
 #include <algorithm>
-#include <type_traits>
 
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"

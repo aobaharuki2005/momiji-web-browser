@@ -6,8 +6,6 @@
 
 #include "SVGPathData.h"
 
-#include <algorithm>
-
 #include "SVGArcConverter.h"
 #include "SVGContentUtils.h"
 #include "SVGGeometryElement.h"

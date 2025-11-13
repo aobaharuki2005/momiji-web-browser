@@ -11,7 +11,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <new>
-#include <utility>
 
 #include "ErrorList.h"
 #include "MainThreadUtils.h"

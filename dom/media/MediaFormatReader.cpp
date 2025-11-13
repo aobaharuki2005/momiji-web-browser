@@ -7,7 +7,6 @@
 #include "MediaFormatReader.h"
 
 #include <algorithm>
-#include <map>
 #include <queue>
 
 #include "AllocationPolicy.h"

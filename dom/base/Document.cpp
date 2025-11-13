@@ -17,10 +17,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <initializer_list>
-#include <iterator>
 #include <limits>
-#include <type_traits>
 
 #include "Attr.h"
 #include "ErrorList.h"

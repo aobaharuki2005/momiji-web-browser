@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_BrowserParent_h
 #define mozilla_dom_BrowserParent_h
 
-#include <utility>
-
 #include "LiveResizeListener.h"
 #include "Units.h"
 #include "js/TypeDecls.h"

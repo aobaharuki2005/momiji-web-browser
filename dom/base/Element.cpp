@@ -15,7 +15,6 @@
 #include <inttypes.h>
 
 #include <cstddef>
-#include <initializer_list>
 #include <utility>
 
 #include "DOMMatrix.h"

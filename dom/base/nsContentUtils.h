@@ -21,7 +21,6 @@
 #include <cstdint>
 #include <functional>
 #include <tuple>
-#include <utility>
 
 #include "ErrorList.h"
 #include "Units.h"

@@ -12,8 +12,6 @@
 
 #include "nsPlainTextSerializer.h"
 
-#include <limits>
-
 #include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Span.h"

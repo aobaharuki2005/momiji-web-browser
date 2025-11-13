@@ -5,8 +5,6 @@
 #ifndef CanvasRenderingContext2D_h
 #define CanvasRenderingContext2D_h
 
-#include <vector>
-
 #include "FilterDescription.h"
 #include "gfx2DGlue.h"
 #include "gfxFontConstants.h"

@@ -12,7 +12,6 @@
 // clang-format on
 
 #include <new>
-#include <type_traits>
 #include <utility>
 
 #include "js/StructuredClone.h"

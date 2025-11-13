@@ -22,7 +22,6 @@
 
 #include <algorithm>
 #include <numeric>
-#include <type_traits>
 
 #include "MainThreadUtils.h"
 #include "SafeRefPtr.h"

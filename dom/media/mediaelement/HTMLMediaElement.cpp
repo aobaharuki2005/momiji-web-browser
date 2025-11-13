@@ -10,7 +10,6 @@
 #include <cmath>
 #include <limits>
 #include <type_traits>
-#include <unordered_map>
 
 #include "AudioDeviceInfo.h"
 #include "AudioStreamTrack.h"

@@ -101,7 +101,6 @@
 #include "nsIObserverService.h"
 
 // input type=image
-#include <limits>
 
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "imgRequestProxy.h"
