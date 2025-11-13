@@ -12,6 +12,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/layout/StickyScrollContainer.h"
 
 namespace mozilla {
 
@@ -71,8 +72,14 @@ class ClipManager {
   wr::WrSpatialId SpatialIdAfterOverride(const wr::WrSpatialId& aSpatialId);
   wr::WrSpatialId GetSpatialId(const ActiveScrolledRoot* aASR);
 
-  Maybe<wr::WrSpatialId> DefineScrollLayers(const ActiveScrolledRoot* aASR,
+  static StickyScrollContainer* GetStickyScrollContainer(
+      const ActiveScrolledRoot* aASR);
+  Maybe<wr::WrSpatialId> DefineSpatialNodes(nsDisplayListBuilder* aBuilder,
+                                            const ActiveScrolledRoot* aASR,
                                             nsDisplayItem* aItem);
+  Maybe<wr::WrSpatialId> DefineStickyNode(
+      nsDisplayListBuilder* aBuilder, Maybe<wr::WrSpatialId> aParentSpatialId,
+      const ActiveScrolledRoot* aASR, nsDisplayItem* aItem);
 
   Maybe<wr::WrClipChainId> DefineClipChain(const DisplayItemClipChain* aChain,
                                            int32_t aAppUnitsPerDevPixel);
