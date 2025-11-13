@@ -514,7 +514,7 @@ fn prepare_interned_prim_for_render(
                 allow_subpixel,
                 frame_context.fb_config.low_quality_pinch_zoom,
                 frame_state.resource_cache,
-                frame_state.gpu_cache,
+                &mut frame_state.frame_gpu_data.f32,
                 frame_context.spatial_tree,
                 scratch,
             );
@@ -1476,7 +1476,7 @@ fn update_clip_task_for_brush(
                     &pic_state.map_local_to_pic,
                     &pic_state.map_pic_to_vis,
                     &frame_context.spatial_tree,
-                    frame_state.gpu_cache,
+                    &mut frame_state.frame_gpu_data.f32,
                     frame_state.resource_cache,
                     device_pixel_scale,
                     &dirty_rect,

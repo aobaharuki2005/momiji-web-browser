@@ -9,7 +9,6 @@ use api::units::*;
 use api::{DocumentId, IdNamespace};
 use crate::device::{TextureFilter, TextureFormatPair};
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
-use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{ImageSource, UvRectKind};
 use crate::internal_types::{
     CacheTextureId, Swizzle, SwizzleSettings, FrameStamp, FrameId,
@@ -18,6 +17,7 @@ use crate::internal_types::{
 };
 use crate::lru_cache::LRUCache;
 use crate::profiler::{self, TransactionProfile};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF};
 use crate::resource_cache::{CacheItem, CachedImageData};
 use crate::texture_pack::{
     AllocatorList, AllocId, AtlasAllocatorList, ShelfAllocator, ShelfAllocatorOptions,
@@ -102,8 +102,8 @@ pub struct CacheEntry {
     //           in the glyph cache eviction code. We could probably remove it
     //           entirely in future (or move to PictureCacheEntry).
     pub last_access: FrameStamp,
-    /// Handle to the resource rect in the GPU cache.
-    pub uv_rect_handle: GpuCacheHandle,
+    /// Address of the resource rect in the GPU cache.
+    pub uv_rect_handle: GpuBufferAddress,
     /// Image format of the data that the entry expects.
     pub input_format: ImageFormat,
     pub filter: TextureFilter,
@@ -143,7 +143,7 @@ impl CacheEntry {
             input_format: params.descriptor.format,
             filter: params.filter,
             swizzle,
-            uv_rect_handle: GpuCacheHandle::new(),
+            uv_rect_handle: GpuBufferAddress::INVALID,
             eviction_notice: None,
             uv_rect_kind: params.uv_rect_kind,
             shader: TargetShader::Default,
@@ -154,17 +154,15 @@ impl CacheEntry {
     // This ensures that the UV rect, and texture layer index
     // are up to date in the GPU cache for vertex shaders
     // to fetch from.
-    fn update_gpu_cache(&mut self, gpu_cache: &mut GpuCache) {
-        if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
-            let origin = self.details.describe();
-            let image_source = ImageSource {
-                p0: origin.to_f32(),
-                p1: (origin + self.size).to_f32(),
-                user_data: self.user_data,
-                uv_rect_kind: self.uv_rect_kind,
-            };
-            image_source.write_gpu_blocks(&mut request);
-        }
+    fn write_gpu_blocks(&mut self, gpu_buffer: &mut GpuBufferBuilderF) {
+        let origin = self.details.describe();
+        let image_source = ImageSource {
+            p0: origin.to_f32(),
+            p1: (origin + self.size).to_f32(),
+            user_data: self.user_data,
+            uv_rect_kind: self.uv_rect_kind,
+        };
+        self.uv_rect_handle = image_source.write_gpu_blocks(gpu_buffer);
     }
 
     fn evict(&self) {
@@ -756,7 +754,7 @@ impl TextureCache {
         self.now = FrameStamp::INVALID;
     }
 
-    pub fn run_compaction(&mut self, gpu_cache: &mut GpuCache) {
+    pub fn run_compaction(&mut self) {
         // Use the same order as BudgetType::VALUES so that we can index self.bytes_allocated
         // with the same index.
         let allocator_lists = [
@@ -807,8 +805,7 @@ impl TextureCache {
                 allocated_size_in_bytes: new_bytes,
             };
 
-            gpu_cache.invalidate(&entry.uv_rect_handle);
-            entry.uv_rect_handle = GpuCacheHandle::new();
+            entry.uv_rect_handle = GpuBufferAddress::INVALID;
 
             let src_rect = DeviceIntRect::from_origin_and_size(change.old_rect.min, entry.size);
             let dst_rect = DeviceIntRect::from_origin_and_size(change.new_rect.min, entry.size);
@@ -837,7 +834,7 @@ impl TextureCache {
     // Returns true if the image needs to be uploaded to the
     // texture cache (either never uploaded, or has been
     // evicted on a previous frame).
-    pub fn request(&mut self, handle: &TextureCacheHandle, gpu_cache: &mut GpuCache) -> bool {
+    pub fn request(&mut self, handle: &TextureCacheHandle, gpu_buffer: &mut GpuBufferBuilderF) -> bool {
         let now = self.now;
         let entry = match handle {
             TextureCacheHandle::Empty => None,
@@ -854,7 +851,7 @@ impl TextureCache {
             // If an image is requested that is already in the cache,
             // refresh the GPU cache data associated with this item.
             entry.last_access = now;
-            entry.update_gpu_cache(gpu_cache);
+            entry.write_gpu_blocks(gpu_buffer);
             false
         })
     }
@@ -913,7 +910,7 @@ impl TextureCache {
         data: Option<CachedImageData>,
         user_data: [f32; 4],
         mut dirty_rect: ImageDirtyRect,
-        gpu_cache: &mut GpuCache,
+        gpu_buffer: &mut GpuBufferBuilderF,
         eviction_notice: Option<&EvictionNotice>,
         uv_rect_kind: UvRectKind,
         eviction: Eviction,
@@ -953,14 +950,8 @@ impl TextureCache {
         entry.eviction_notice = eviction_notice.cloned();
         entry.uv_rect_kind = uv_rect_kind;
 
-        // Invalidate the contents of the resource rect in the GPU cache.
-        // This ensures that the update_gpu_cache below will add
-        // the new information to the GPU cache.
-        //TODO: only invalidate if the parameters change?
-        gpu_cache.invalidate(&entry.uv_rect_handle);
-
         // Upload the resource rect and texture array layer.
-        entry.update_gpu_cache(gpu_cache);
+        entry.write_gpu_blocks(gpu_buffer);
 
         // Create an update command, which the render thread processes
         // to upload the new image data into the correct location
@@ -1033,7 +1024,7 @@ impl TextureCache {
     pub fn try_get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> Option<(CacheTextureId, DeviceIntRect, Swizzle, GpuCacheHandle, [f32; 4])> {
+    ) -> Option<(CacheTextureId, DeviceIntRect, Swizzle, GpuBufferAddress, [f32; 4])> {
         let entry = self.get_entry_opt(handle)?;
         let origin = entry.details.describe();
         Some((
@@ -1053,7 +1044,7 @@ impl TextureCache {
     pub fn get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> (CacheTextureId, DeviceIntRect, Swizzle, GpuCacheHandle, [f32; 4]) {
+    ) -> (CacheTextureId, DeviceIntRect, Swizzle, GpuBufferAddress, [f32; 4]) {
         self.try_get_cache_location(handle).expect("BUG: was dropped from cache or not updated!")
     }
 
@@ -1360,7 +1351,7 @@ impl TextureCache {
                 alloc_id,
                 allocated_size_in_bytes,
             },
-            uv_rect_handle: GpuCacheHandle::new(),
+            uv_rect_handle: GpuBufferAddress::INVALID,
             input_format: params.descriptor.format,
             filter: params.filter,
             swizzle,
@@ -1665,7 +1656,6 @@ mod test_texture_cache {
         // original value.
 
         use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
-        use crate::gpu_cache::GpuCache;
         use crate::device::TextureFilter;
         use crate::gpu_types::UvRectKind;
         use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};

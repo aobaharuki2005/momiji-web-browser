@@ -8,13 +8,12 @@ use api::units::*;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
-use crate::gpu_cache::GpuCache;
 use crate::intern;
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::picture::SurfaceInfo;
 use crate::prim_store::{PrimitiveOpacity,  PrimitiveScratchBuffer};
 use crate::prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
-use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
+use crate::renderer::{GpuBufferBuilderF, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::ResourceCache;
 use crate::util::MatrixHelpers;
 use crate::prim_store::{InternablePrimitive, PrimitiveInstanceKind, LayoutPointAu};
@@ -466,7 +465,7 @@ impl TextRunPrimitive {
         allow_subpixel: bool,
         low_quality_pinch_zoom: bool,
         resource_cache: &mut ResourceCache,
-        gpu_cache: &mut GpuCache,
+        gpu_buffer: &mut GpuBufferBuilderF,
         spatial_tree: &SpatialTree,
         scratch: &mut PrimitiveScratchBuffer,
     ) {
@@ -507,7 +506,7 @@ impl TextRunPrimitive {
         resource_cache.request_glyphs(
             self.used_font.clone(),
             &scratch.glyph_keys[self.glyph_keys_range],
-            gpu_cache,
+            gpu_buffer,
         );
     }
 }
