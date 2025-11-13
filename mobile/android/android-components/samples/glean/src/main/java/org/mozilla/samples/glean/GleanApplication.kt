@@ -7,6 +7,7 @@ package org.mozilla.samples.glean
 import android.app.Application
 import android.content.Context
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.service.nimbus.Nimbus
@@ -79,6 +80,7 @@ class GleanApplication : Application() {
     private fun initNimbus(isFirstRun: Boolean) {
         RustLog.enable()
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
+        val url = getString(R.string.nimbus_default_endpoint).toUri()
         val appInfo = NimbusAppInfo(
             appName = "samples-glean",
             channel = "samples",
@@ -86,7 +88,7 @@ class GleanApplication : Application() {
         nimbus = Nimbus(
             context = this,
             appInfo = appInfo,
-            server = NimbusServerSettings(remoteSettingsService = null),
+            server = NimbusServerSettings(url),
             recordedContext = null,
         ).also { nimbus ->
             if (isFirstRun) {
