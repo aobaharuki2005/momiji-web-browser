@@ -192,11 +192,12 @@ export default class IPProtectionContentElement extends MozLitElement {
   }
 
   messageBarTemplate() {
-    // Fallback to a generic error
+    // TODO: Set messageId based on state in Bug 1997328
     return html`
       <ipprotection-message-bar
         class="vpn-top-content"
-        type=${ERRORS.GENERIC}
+        type=${this.#hasErrors ? ERRORS.GENERIC : "info"}
+        messageId="ipprotection-message-continuous-onboarding-1"
       ></ipprotection-message-bar>
     `;
   }
@@ -264,11 +265,16 @@ export default class IPProtectionContentElement extends MozLitElement {
   }
 
   render() {
-    if (this.#hasErrors && !this._messageDismissed) {
+    // TODO: Set showContinuousOnboarding based on state Bug 1997328
+    if (
+      (this.#hasErrors || this.showContinuousOnboarding) &&
+      !this._messageDismissed
+    ) {
       this._showMessageBar = true;
     }
 
     const messageBar = this._showMessageBar ? this.messageBarTemplate() : null;
+    //TODO: Check state to determine what position to add the message bar Bug 1997328
     const content = html`${messageBar}${this.mainContentTemplate()}`;
 
     // TODO: Conditionally render post-upgrade subview within #ipprotection-content-wrapper - Bug 1973813

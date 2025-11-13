@@ -14,6 +14,8 @@ import "chrome://global/content/elements/moz-message-bar.mjs";
 export default class IPProtectionMessageBarElement extends MozLitElement {
   #MESSAGE_TYPE_MAP = new Map([
     ["generic-error", () => this.genericErrorTemplate()],
+
+    ["info", () => this.infoMessageTemplate()],
   ]);
   DISMISS_EVENT = "ipprotection-message-bar:user-dismissed";
 
@@ -23,6 +25,7 @@ export default class IPProtectionMessageBarElement extends MozLitElement {
 
   static properties = {
     type: { type: String },
+    messageId: { type: String },
   };
 
   constructor() {
@@ -54,6 +57,13 @@ export default class IPProtectionMessageBarElement extends MozLitElement {
         data-l10n-id="ipprotection-message-generic-error"
         dismissable
       >
+      </moz-message-bar>
+    `;
+  }
+
+  infoMessageTemplate() {
+    return html`
+      <moz-message-bar type="info" data-l10n-id=${this.messageId} dismissable>
       </moz-message-bar>
     `;
   }
