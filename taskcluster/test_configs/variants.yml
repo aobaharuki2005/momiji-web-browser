@@ -523,6 +523,7 @@ async-event-dispatching:
     merge:
         mozharness:
             extra-options:
+                - "--setpref=remote.events.async.mouse.enabled=true"
                 - "--setpref=remote.events.async.wheel.enabled=true"
 
 vertical-tabs:
