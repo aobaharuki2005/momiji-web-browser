@@ -17,6 +17,7 @@ EXTRA_JS_MODULES.ipprotection += [
     "IPPExceptionsManager.sys.mjs",
     "IPPNetworkErrorObserver.sys.mjs",
     "IPPNimbusHelper.sys.mjs",
+    "IPPOptOutHelper.sys.mjs",
     "IPPProxyManager.sys.mjs",
     "IPProtection.sys.mjs",
     "IPProtectionHelpers.sys.mjs",

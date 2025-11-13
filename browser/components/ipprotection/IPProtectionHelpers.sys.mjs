@@ -26,6 +26,7 @@ import { IPPNimbusHelper } from "resource:///modules/ipprotection/IPPNimbusHelpe
 import { IPProtectionServerlist } from "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs";
 import { IPPSignInWatcher } from "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs";
 import { IPPStartupCache } from "resource:///modules/ipprotection/IPPStartupCache.sys.mjs";
+import { IPPOptOutHelper } from "resource:///modules/ipprotection/IPPOptOutHelper.sys.mjs";
 import { IPPVPNAddonHelper } from "resource:///modules/ipprotection/IPPVPNAddonHelper.sys.mjs";
 
 /**
@@ -86,6 +87,7 @@ const IPPHelpers = [
   new UIHelper(),
   IPPVPNAddonHelper,
   ...IPPAutoStartHelpers,
+  IPPOptOutHelper,
   IPPNimbusHelper,
 ];
 
