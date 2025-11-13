@@ -970,6 +970,8 @@ class nsDisplayListBuilder {
   ActiveScrolledRoot* AllocateActiveScrolledRoot(
       const ActiveScrolledRoot* aParent,
       ScrollContainerFrame* aScrollContainerFrame);
+  ActiveScrolledRoot* AllocateActiveScrolledRootForSticky(
+      const ActiveScrolledRoot* aParent, nsIFrame* aStickyFrame);
 
   /**
    * Allocate a new DisplayItemClipChain object in the arena. Will be cleaned

@@ -1503,6 +1503,14 @@ ActiveScrolledRoot* nsDisplayListBuilder::AllocateActiveScrolledRoot(
   return asr;
 }
 
+ActiveScrolledRoot* nsDisplayListBuilder::AllocateActiveScrolledRootForSticky(
+    const ActiveScrolledRoot* aParent, nsIFrame* aStickyFrame) {
+  RefPtr<ActiveScrolledRoot> asr = ActiveScrolledRoot::CreateASRForStickyFrame(
+      aParent, aStickyFrame, IsRetainingDisplayList());
+  mActiveScrolledRoots.AppendElement(asr);
+  return asr;
+}
+
 const DisplayItemClipChain* nsDisplayListBuilder::AllocateDisplayItemClipChain(
     const DisplayItemClip& aClip, const ActiveScrolledRoot* aASR,
     const DisplayItemClipChain* aParent) {
@@ -5880,7 +5888,7 @@ bool nsDisplayStickyPosition::CreateWebRenderCommands(
 
   Maybe<wr::SpaceAndClipChainHelper> saccHelper;
 
-  if (stickyScrollContainer) {
+  if (stickyScrollContainer && !stickyScrollContainer->ShouldFlattenAway()) {
     float auPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
 
     bool snap;
