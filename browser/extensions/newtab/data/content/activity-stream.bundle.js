@@ -2460,7 +2460,8 @@ class ContextMenuButton extends (external_React_default()).PureComponent {
       contextMenuKeyboard
     } = this.state;
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("button", {
-      "aria-haspopup": "true",
+      "aria-haspopup": "menu",
+      "aria-expanded": showContextMenu,
       "data-l10n-id": tooltip,
       "data-l10n-args": tooltipArgs ? JSON.stringify(tooltipArgs) : null,
       className: "context-menu-button icon",
