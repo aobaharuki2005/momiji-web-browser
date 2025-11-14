@@ -34,3 +34,7 @@
 #connection-toggle {
   margin-inline-end: var(--space-small);
 }
+
+#site-settings {
+  --box-group-border: none;
+}
