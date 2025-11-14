@@ -187,9 +187,19 @@ struct ActiveScrolledRoot {
   // TODO: Just have one function with an extra ASRKind parameter
   static already_AddRefed<ActiveScrolledRoot> CreateASRForFrame(
       const ActiveScrolledRoot* aParent,
-      ScrollContainerFrame* aScrollContainerFrame);
+      ScrollContainerFrame* aScrollContainerFrame
+#ifdef DEBUG
+      ,
+      const nsTArray<RefPtr<ActiveScrolledRoot>>& aActiveScrolledRoots
+#endif
+  );
   static already_AddRefed<ActiveScrolledRoot> CreateASRForStickyFrame(
-      const ActiveScrolledRoot* aParent, nsIFrame* aStickyFrame);
+      const ActiveScrolledRoot* aParent, nsIFrame* aStickyFrame
+#ifdef DEBUG
+      ,
+      const nsTArray<RefPtr<ActiveScrolledRoot>>& aActiveScrolledRoots
+#endif
+  );
 
   static const ActiveScrolledRoot* PickAncestor(
       const ActiveScrolledRoot* aOne, const ActiveScrolledRoot* aTwo) {
