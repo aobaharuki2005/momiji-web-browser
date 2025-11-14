@@ -72,8 +72,9 @@ class nsCSSProps {
     if (aProperty == eCSSPropertyExtra_variable) {
       return false;
     }
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
+    MOZ_ASSERT(
+        aProperty != eCSSProperty_UNKNOWN && aProperty < eCSSProperty_COUNT,
+        "out of range");
     return aProperty >= eCSSProperty_COUNT_no_shorthands;
   }
 
@@ -82,7 +83,8 @@ class nsCSSProps {
 
   // The relevant invariants are asserted in Document.cpp
   static mozilla::UseCounter UseCounterFor(NonCustomCSSPropertyId aProperty) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
+    MOZ_ASSERT(aProperty != eCSSProperty_UNKNOWN &&
+                   aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
     return mozilla::UseCounter(size_t(mozilla::eUseCounter_FirstCSSProperty) +
                                size_t(aProperty));
@@ -168,8 +170,9 @@ class nsCSSProps {
    * property.  nullptr is returned for internal properties.
    */
   static const char* PropertyIDLName(NonCustomCSSPropertyId aProperty) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
+    MOZ_ASSERT(
+        aProperty != eCSSProperty_UNKNOWN && aProperty < eCSSProperty_COUNT,
+        "out of range");
     return kIDLNameTable[aProperty];
   }
 
@@ -178,14 +181,16 @@ class nsCSSProps {
    * properties sorted by their IDL name.
    */
   static int32_t PropertyIDLNameSortPosition(NonCustomCSSPropertyId aProperty) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
+    MOZ_ASSERT(
+        aProperty != eCSSProperty_UNKNOWN && aProperty < eCSSProperty_COUNT,
+        "out of range");
     return kIDLNameSortPositionTable[aProperty];
   }
 
   static bool IsEnabled(NonCustomCSSPropertyId aProperty,
                         EnabledState aEnabled) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
+    MOZ_ASSERT(aProperty != eCSSProperty_UNKNOWN &&
+                   aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
     // In the child process, assert that we're not trying to parse stylesheets
     // before we've gotten all our prefs.

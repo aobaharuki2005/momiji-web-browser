@@ -174,7 +174,8 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDescID) {
 }
 
 CSSPropFlags nsCSSProps::PropFlags(NonCustomCSSPropertyId aProperty) {
-  MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
+  MOZ_ASSERT(aProperty != eCSSProperty_UNKNOWN &&
+                 aProperty < eCSSProperty_COUNT_with_aliases,
              "out of range");
   return kFlagsTable[aProperty];
 }

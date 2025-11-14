@@ -28,7 +28,7 @@ class nsILayoutHistoryState;
 class nsIURI;
 struct nsSize;
 
-enum NonCustomCSSPropertyId : int32_t;
+enum NonCustomCSSPropertyId : uint16_t;
 
 namespace mozilla {
 class EditorBase;

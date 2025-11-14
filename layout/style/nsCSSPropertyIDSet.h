@@ -41,9 +41,9 @@ class nsCSSPropertyIDSet {
   }
 
   void AssertInSetRange(NonCustomCSSPropertyId aProperty) const {
-    MOZ_DIAGNOSTIC_ASSERT(
-        0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-        "out of bounds");
+    MOZ_DIAGNOSTIC_ASSERT(aProperty != eCSSProperty_UNKNOWN &&
+                              aProperty < eCSSProperty_COUNT_no_shorthands,
+                          "out of bounds");
   }
 
   // Conversion of aProperty to |size_t| after AssertInSetRange
