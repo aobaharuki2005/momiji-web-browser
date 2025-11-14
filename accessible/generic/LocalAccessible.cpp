@@ -4089,6 +4089,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     for (auto const& data : kRelationTypeAtoms) {
       nsTArray<uint64_t> ids;
       nsStaticAtom* const relAtom = data.mAtom;
+      if (data.mValidTag && !mContent->IsHTMLElement(data.mValidTag)) {
+        continue;
+      }
 
       Relation rel;
       if (data.mType == RelationType::LABEL_FOR) {
