@@ -1191,6 +1191,10 @@ richlistitem .text-link:hover {
   font-size: var(--font-size-large);
 }
 
+#experimentalCategory-reset {
+  margin-top: var(--space-small);
+}
+
 .featureGateDescription {
   white-space: pre-wrap;
 }
