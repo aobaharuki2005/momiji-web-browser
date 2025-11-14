@@ -1,7 +1,8 @@
-commit 5c07b5224261aae30e54f69727a730956ff4ec41
+commit 2312907b9b426cb2e9ae50aff25119319ab4e2d4
 Author: Philip Chimento <pchimento@igalia.com>
-Date:   Wed Nov 5 10:55:53 2025 -0800
+Date:   Tue Nov 11 10:21:00 2025 -0800
 
-    Temporal: Remove accidental octal literals from a test
+    Intl Era Monthcode: Fix up locale frontmatter for Hijri fallback
     
-    These cause the test to fail in strict mode.
+    We don't require an en-u-ca-islamic locale to run this test, in fact
+    it's the intention that it will fall back to another Hijri calendar.

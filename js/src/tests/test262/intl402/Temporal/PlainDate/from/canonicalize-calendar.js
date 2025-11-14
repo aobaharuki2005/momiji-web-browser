@@ -5,7 +5,7 @@
 /*---
 esid: sec-temporal.plaindate.from
 description: Calendar ID is canonicalized
-features: [Temporal]
+features: [Temporal, Intl.Era-monthcode]
 ---*/
 
 [
