@@ -866,22 +866,26 @@ add_task(async function test_migration_firefoxLabsEnrollments_idempotent() {
 
   const recipes = mockLabsRecipes("true");
 
-  // Get the store into a partially migrated state (i.e., we have enrolled in at least one
-  // experiment but the migration pref has not updated).
-  {
-    const manager = NimbusTestUtils.stubs.manager();
-    await manager.store.init();
-    await manager.onStartup();
-
-    manager.enroll(recipes[0], "rs-loader", { branchSlug: "control" });
-
-    await NimbusTestUtils.saveStore(manager.store);
-
-    removePrefObservers(manager);
-    assertNoObservers(manager);
-  }
-
   const { manager, cleanup } = await setupTest({
+    storePath: await NimbusTestUtils.createStoreWith(store => {
+      // Get the store into a partially migrated state (i.e., we have enrolled in at least one
+      // experiment but the migration pref has not updated).
+      NimbusTestUtils.addEnrollmentForRecipe(recipes[0], {
+        store,
+        branchSlug: "control",
+        extra: {
+          prefs: [
+            {
+              name: prefs[0],
+              featureId: recipes[0].featureIds[0],
+              variable: "enabled",
+              branch: "user",
+              originalValue: false,
+            },
+          ],
+        },
+      });
+    }),
     experiments: recipes,
     migrations: {
       [NimbusMigrations.Phase.AFTER_REMOTE_SETTINGS_UPDATE]: [
@@ -933,7 +937,6 @@ async function testMigrateEnrollmentsToSql(primary = "jsonfile") {
       },
     },
   };
-  let storePath;
 
   const experiments = [
     NimbusTestUtils.factories.recipe.withFeatureConfig(
@@ -1041,11 +1044,7 @@ async function testMigrateEnrollmentsToSql(primary = "jsonfile") {
     ),
   ];
 
-  {
-    const store = NimbusTestUtils.stubs.store();
-
-    await store.init();
-
+  const storePath = await NimbusTestUtils.createStoreWith(store => {
     store.set(
       "inactive-1",
       NimbusTestUtils.factories.experiment.withFeatureConfig(
@@ -1194,9 +1193,7 @@ async function testMigrateEnrollmentsToSql(primary = "jsonfile") {
         }
       )
     );
-
-    storePath = await NimbusTestUtils.saveStore(store);
-  }
+  });
 
   let importMigrationError = null;
 

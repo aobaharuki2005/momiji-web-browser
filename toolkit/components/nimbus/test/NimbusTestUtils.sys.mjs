@@ -747,6 +747,22 @@ export const NimbusTestUtils = {
     } catch (e) {}
   },
 
+  /**
+   * Create a Nimbus store and return its path on disk.
+   *
+   * @param {function(store: ExperimentStore): void} A function that will be
+   * called with the store.
+   *
+   * @returns {string} The path to the Nimbus store, which can be passed to
+   * {@link NimbusTestUtils.setupTest}.
+   */
+  async createStoreWith(fn) {
+    const store = NimbusTestUtils.stubs.store();
+    await store.init();
+    await fn(store);
+    return NimbusTestUtils.saveStore(store);
+  },
+
   async deleteEnrollmentsFromProfiles(profileIds) {
     const conn = await lazy.ProfilesDatastoreService.getConnection();
     if (!conn) {

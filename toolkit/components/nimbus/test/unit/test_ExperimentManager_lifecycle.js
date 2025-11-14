@@ -24,36 +24,27 @@ const { ProfilesDatastoreService } = ChromeUtils.importESModule(
  * - should set call setExperimentActive for each active experiment
  */
 async function test_onStartup_setExperimentActive_called() {
-  let storePath;
-
-  {
-    const store = NimbusTestUtils.stubs.store();
-    await store.init();
-
-    NimbusTestUtils.addEnrollmentForRecipe(
-      NimbusTestUtils.factories.recipe("foo"),
-      { store, branchSlug: "control" }
-    );
-    NimbusTestUtils.addEnrollmentForRecipe(
-      NimbusTestUtils.factories.recipe("bar", { isRollout: true }),
-      { store }
-    );
-    NimbusTestUtils.addEnrollmentForRecipe(
-      NimbusTestUtils.factories.recipe("baz"),
-      { store, branchSlug: "control", extra: { active: false } }
-    );
-    NimbusTestUtils.addEnrollmentForRecipe(
-      NimbusTestUtils.factories.recipe("qux", { isRollout: true }),
-      { store, extra: { active: false } }
-    );
-
-    storePath = await NimbusTestUtils.saveStore(store);
-  }
-
   const { sandbox, manager, initExperimentAPI, cleanup } =
     await NimbusTestUtils.setupTest({
-      storePath,
       init: false,
+      storePath: await NimbusTestUtils.createStoreWith(store => {
+        NimbusTestUtils.addEnrollmentForRecipe(
+          NimbusTestUtils.factories.recipe("foo"),
+          { store, branchSlug: "control" }
+        );
+        NimbusTestUtils.addEnrollmentForRecipe(
+          NimbusTestUtils.factories.recipe("bar", { isRollout: true }),
+          { store }
+        );
+        NimbusTestUtils.addEnrollmentForRecipe(
+          NimbusTestUtils.factories.recipe("baz"),
+          { store, branchSlug: "control", extra: { active: false } }
+        );
+        NimbusTestUtils.addEnrollmentForRecipe(
+          NimbusTestUtils.factories.recipe("qux", { isRollout: true }),
+          { store, extra: { active: false } }
+        );
+      }),
       migrationState:
         NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
     });
@@ -97,21 +88,16 @@ add_task(async function test_onStartup_setExperimentActive_called_db() {
 async function test_startup_unenroll() {
   Services.prefs.setBoolPref("app.shield.optoutstudies.enabled", false);
 
-  let storePath;
-  {
-    const store = NimbusTestUtils.stubs.store();
-    await store.init();
-
-    NimbusTestUtils.addEnrollmentForRecipe(
-      NimbusTestUtils.factories.recipe("startup_unenroll"),
-      { store, branchSlug: "control" }
-    );
-
-    storePath = await NimbusTestUtils.saveStore(store);
-  }
-
   const { sandbox, manager, initExperimentAPI, cleanup } =
-    await NimbusTestUtils.setupTest({ storePath, init: false });
+    await NimbusTestUtils.setupTest({
+      init: false,
+      storePath: await NimbusTestUtils.createStoreWith(store => {
+        NimbusTestUtils.addEnrollmentForRecipe(
+          NimbusTestUtils.factories.recipe("startup_unenroll"),
+          { store, branchSlug: "control" }
+        );
+      }),
+    });
 
   sandbox.spy(manager, "_unenroll");
 
