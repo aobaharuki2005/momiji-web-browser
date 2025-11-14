@@ -93,6 +93,8 @@ class ServiceWorkerRegistrationDescriptor final {
 
   void SetUpdateViaCache(ServiceWorkerUpdateViaCache aUpdateViaCache);
 
+  void SetWorkerType(WorkerType aType);
+
   void SetWorkers(ServiceWorkerInfo* aInstalling, ServiceWorkerInfo* aWaiting,
                   ServiceWorkerInfo* aActive);
 

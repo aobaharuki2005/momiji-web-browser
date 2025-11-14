@@ -452,11 +452,11 @@ bool ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const {
 }
 
 void ServiceWorkerRegistrationInfo::UpdateRegistrationState() {
-  UpdateRegistrationState(mDescriptor.UpdateViaCache());
+  UpdateRegistrationState(mDescriptor.UpdateViaCache(), mDescriptor.Type());
 }
 
 void ServiceWorkerRegistrationInfo::UpdateRegistrationState(
-    ServiceWorkerUpdateViaCache aUpdateViaCache) {
+    ServiceWorkerUpdateViaCache aUpdateViaCache, WorkerType aType) {
   MOZ_ASSERT(NS_IsMainThread());
 
   TimeStamp oldest = TimeStamp::Now() - TimeDuration::FromSeconds(30);
@@ -478,6 +478,7 @@ void ServiceWorkerRegistrationInfo::UpdateRegistrationState(
   mDescriptor.SetWorkers(mInstallingWorker, mWaitingWorker, mActiveWorker);
 
   mDescriptor.SetUpdateViaCache(aUpdateViaCache);
+  mDescriptor.SetWorkerType(aType);
 
   for (RefPtr<ServiceWorkerRegistrationListener> pinnedTarget :
        mInstanceList.ForwardRange()) {
@@ -768,9 +769,9 @@ ServiceWorkerUpdateViaCache ServiceWorkerRegistrationInfo::GetUpdateViaCache()
   return mDescriptor.UpdateViaCache();
 }
 
-void ServiceWorkerRegistrationInfo::SetUpdateViaCache(
-    ServiceWorkerUpdateViaCache aUpdateViaCache) {
-  UpdateRegistrationState(aUpdateViaCache);
+void ServiceWorkerRegistrationInfo::SetOptions(
+    ServiceWorkerUpdateViaCache aUpdateViaCache, WorkerType aType) {
+  UpdateRegistrationState(aUpdateViaCache, aType);
 }
 
 int64_t ServiceWorkerRegistrationInfo::GetLastUpdateTime() const {

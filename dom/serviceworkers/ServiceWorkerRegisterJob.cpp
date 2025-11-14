@@ -36,11 +36,16 @@ void ServiceWorkerRegisterJob::AsyncExecute() {
       swm->GetRegistration(mPrincipal, mScope);
 
   if (registration) {
-    bool sameUVC = GetUpdateViaCache() == registration->GetUpdateViaCache();
-    registration->SetUpdateViaCache(GetUpdateViaCache());
+    // if registration already exists, comparing it's options to see if
+    // they have been changed
+    bool sameOptions =
+        GetUpdateViaCache() == registration->GetUpdateViaCache() &&
+        mType == registration->Type();
+
+    registration->SetOptions(GetUpdateViaCache(), mType);
 
     RefPtr<ServiceWorkerInfo> newest = registration->Newest();
-    if (newest && mScriptSpec.Equals(newest->ScriptSpec()) && sameUVC) {
+    if (newest && mScriptSpec.Equals(newest->ScriptSpec()) && sameOptions) {
       SetRegistration(registration);
       Finish(NS_OK);
       return;
