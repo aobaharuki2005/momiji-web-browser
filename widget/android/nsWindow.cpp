@@ -62,6 +62,7 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
