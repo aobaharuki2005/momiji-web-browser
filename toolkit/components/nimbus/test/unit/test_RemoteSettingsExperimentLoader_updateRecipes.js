@@ -488,7 +488,7 @@ async function test_updateRecipes_invalidFeatureAfterUpdate() {
         featureConfig
       ),
     ],
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
   const enrollment = manager.store.get("recipe");

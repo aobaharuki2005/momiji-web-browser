@@ -887,6 +887,7 @@ add_task(async function test_migration_firefoxLabsEnrollments_idempotent() {
       });
     }),
     experiments: recipes,
+    migrationState: NimbusTestUtils.migrationState.UNMIGRATED,
     migrations: {
       [NimbusMigrations.Phase.AFTER_REMOTE_SETTINGS_UPDATE]: [
         FIREFOX_LABS_MIGRATION,
@@ -1545,6 +1546,7 @@ async function testMigrateEnrollmentsToSql(primary = "jsonfile") {
     storePath,
     experiments,
     secureExperiments,
+    migrationState: NimbusTestUtils.migrationState.UNMIGRATED,
     migrations: {
       [NimbusMigrations.Phase.AFTER_STORE_INITIALIZED]: [
         IMPORT_TO_SQL_MIGRATION,

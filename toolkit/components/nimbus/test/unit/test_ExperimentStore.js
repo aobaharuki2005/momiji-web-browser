@@ -120,7 +120,7 @@ async function test_initOnUpdateEventsFire() {
   const { sandbox, initExperimentAPI, cleanup } = await setupTest({
     init: false,
     storePath,
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
   const onFeatureUpdate = sandbox.stub();
@@ -897,7 +897,7 @@ async function test_restore() {
         { store }
       );
     }),
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
   Assert.ok(store.get("experiment"));
@@ -960,7 +960,7 @@ async function test_restoreDatabaseConsistency(primary = "jsonfile") {
   const { cleanup } = await NimbusTestUtils.setupTest({
     storePath,
     clearTelemetry: true,
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
   const events = Glean.nimbusEvents.startupDatabaseConsistency

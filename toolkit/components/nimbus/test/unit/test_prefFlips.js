@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
 
 const { PrefUtils } = ChromeUtils.importESModule(
   "moz-src:///toolkit/modules/PrefUtils.sys.mjs"
@@ -2399,7 +2400,7 @@ async function test_prefFlips_restore_unenroll() {
       Services.prefs.setStringPref("test.pref.please.ignore", "test-value");
     }),
     secureExperiments: [recipe],
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
   const activeEnrollment = manager.store.getExperimentForFeature(FEATURE_ID);
@@ -2961,7 +2962,7 @@ async function test_prefFlips_restore() {
 
   const { manager, cleanup } = await setupTest({
     storePath,
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
   Assert.ok(manager.store.get("rollout-1").active, "rollout-1 is active");
@@ -3106,7 +3107,7 @@ async function test_prefFlips_restore_failure_conflict() {
 
   const { manager, cleanup } = await setupTest({
     storePath,
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
   await NimbusTestUtils.waitForActiveEnrollments(["rollout-1"]);
@@ -3201,7 +3202,7 @@ async function test_prefFlips_restore_failure_wrong_type() {
   const { manager, cleanup } = await setupTest({
     storePath,
     secureExperiments: [recipe],
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+    migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
   await NimbusTestUtils.flushStore(manager.store);

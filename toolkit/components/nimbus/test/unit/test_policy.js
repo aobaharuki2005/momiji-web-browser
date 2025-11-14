@@ -66,6 +66,7 @@ async function doTest({
         }
       }),
       experiments: RECIPES,
+      migrationState: NimbusTestUtils.migrationState.UNMIGRATED,
     });
 
   sinon.spy(loader, "updateRecipes");

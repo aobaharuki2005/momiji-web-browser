@@ -45,8 +45,7 @@ async function test_onStartup_setExperimentActive_called() {
           { store, extra: { active: false } }
         );
       }),
-      migrationState:
-        NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+      migrationState: NimbusTestUtils.migrationState.LATEST,
     });
 
   sandbox.stub(NimbusTelemetry, "setExperimentActive");
@@ -97,6 +96,7 @@ async function test_startup_unenroll() {
           { store, branchSlug: "control" }
         );
       }),
+      migrationState: NimbusTestUtils.migrationState.UNMIGRATED,
     });
 
   sandbox.spy(manager, "_unenroll");
