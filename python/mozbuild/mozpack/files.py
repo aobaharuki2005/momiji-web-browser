@@ -3,26 +3,25 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import bisect
+import codecs
 import errno
 import inspect
-import json
 import os
 import platform
 import shutil
 import stat
 import subprocess
-import tempfile
 import uuid
 from collections import OrderedDict
-from io import BytesIO
+from io import BytesIO, StringIO
 from itertools import chain, takewhile
-from pathlib import Path
 from tarfile import TarFile, TarInfo
-from tempfile import mkstemp
+from tempfile import NamedTemporaryFile, mkstemp
+
+from jsmin import JavascriptMinify
 
 import mozbuild.makeutil as makeutil
 import mozpack.path as mozpath
-from mozbuild.nodeutil import package_setup
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import FileAvoidWrite, ensure_unicode, memoize
 from mozpack.chrome.manifest import ManifestEntry, ManifestInterfaces
@@ -758,125 +757,54 @@ class MinifiedCommentStripped(BaseFile):
 
 class MinifiedJavaScript(BaseFile):
     """
-    Minify JavaScript files using Terser while preserving
-    class and function names for better debugging.
+    File class for minifying JavaScript files.
     """
 
-    TERSER_CONFIG = {
-        "parse": {
-            "ecma": 2020,
-            "module": True,
-        },
-        "compress": {
-            "unused": True,
-            "passes": 3,
-            "ecma": 2020,
-        },
-        "mangle": {
-            "keep_classnames": True,  # Preserve class names
-            "keep_fnames": True,  # Preserve function names
-        },
-        "format": {
-            "comments": "/@lic|webpackIgnore|@vite-ignore/i",
-            "ascii_only": True,
-            "ecma": 2020,
-        },
-        "sourceMap": False,
-    }
-
-    def __init__(self, file, filepath, verify_command=None):
-        """
-        Initialize with a BaseFile instance to minify.
-        """
+    def __init__(self, file, verify_command=None):
+        assert isinstance(file, BaseFile)
         self._file = file
-        self._filepath = filepath
         self._verify_command = verify_command
 
-    def _minify_with_terser(self, source_content):
-        """
-        Minify JavaScript content using Terser
-        """
-        if len(source_content) == 0:
-            return source_content
+    def open(self):
+        output = StringIO()
+        minify = JavascriptMinify(
+            codecs.getreader("utf-8")(self._file.open()), output, quote_chars="'\"`"
+        )
+        minify.minify()
+        output.seek(0)
+        output_source = output.getvalue().encode()
+        output = BytesIO(output_source)
 
-        import buildconfig
+        if not self._verify_command:
+            return output
 
-        node_path = buildconfig.substs.get("NODEJS")
-        if not node_path:
-            errors.fatal("NODEJS not found in build configuration")
+        input_source = self._file.open().read()
 
-        topsrcdir = Path(buildconfig.topsrcdir)
-
-        if os.environ.get("MOZ_AUTOMATION"):
-            fetches_terser = (
-                Path(os.environ["MOZ_FETCHES_DIR"])
-                / "terser"
-                / "node_modules"
-                / "terser"
-                / "bin"
-                / "terser"
-            )
-            if fetches_terser.exists():
-                terser_path = fetches_terser
-            else:
-                errors.fatal(f"Terser toolchain not found at {fetches_terser}.")
-        else:
-            terser_dir = topsrcdir / "tools" / "terser"
-            terser_path = terser_dir / "node_modules" / "terser" / "bin" / "terser"
-
-            if not terser_path.exists():
-                # Automatically set up node_modules if terser is not found
-                package_setup(str(terser_dir), "terser")
-
-                # Verify that terser is now available after setup
-                if not terser_path.exists():
-                    errors.fatal(
-                        f"Terser is required for JavaScript minification but could not be installed at {terser_path}. "
-                        "Package setup may have failed."
-                    )
-
-        terser_cmd = [node_path, str(terser_path)]
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            config_path = temp_path / "terser_config.json"
-            source_path = temp_path / "source.js"
-
-            config_path.write_text(json.dumps(self.TERSER_CONFIG), encoding="utf-8")
-            source_path.write_bytes(source_content)
+        with NamedTemporaryFile("wb+") as fh1, NamedTemporaryFile("wb+") as fh2:
+            fh1.write(input_source)
+            fh2.write(output_source)
+            fh1.flush()
+            fh2.flush()
 
             try:
-                result = subprocess.run(
-                    terser_cmd
-                    + [
-                        source_path,
-                        "--config-file",
-                        config_path,
-                    ],
-                    capture_output=True,
-                    check=False,
+                args = list(self._verify_command)
+                args.extend([fh1.name, fh2.name])
+                subprocess.check_output(
+                    args, stderr=subprocess.STDOUT, universal_newlines=True
                 )
+            except subprocess.CalledProcessError as e:
+                errors.warn(
+                    "JS minification verification failed for %s:"
+                    % (getattr(self._file, "path", "<unknown>"))
+                )
+                # Prefix each line with "Warning:" so mozharness doesn't
+                # think these error messages are real errors.
+                for line in e.output.splitlines():
+                    errors.warn(line)
 
-                if result.returncode == 0:
-                    return result.stdout
-                else:
-                    error_msg = result.stderr.decode("utf-8", errors="ignore")
-                    errors.error(
-                        f"Terser minification failed for {self._filepath}: {error_msg}"
-                    )
-                    return source_content
+                return self._file.open()
 
-            except subprocess.SubprocessError as e:
-                errors.error(f"Error running Terser for {self._filepath}: {e}")
-                return source_content
-
-    def open(self):
-        """
-        Return a file-like object with the minified content.
-        """
-        source_content = self._file.open().read()
-        minified = self._minify_with_terser(source_content)
-        return BytesIO(minified)
+        return output
 
 
 class BaseFinder:
@@ -969,17 +897,8 @@ class BaseFinder:
         if path.endswith((".ftl", ".properties")):
             return MinifiedCommentStripped(file)
 
-        if path.endswith((".js", ".jsm", ".mjs")):
-            # Don't minify prefs files because they use a custom parser that's stricter than JS
-            file_path = mozpath.normsep(path)
-            filename = mozpath.basename(file_path)
-            if filename.endswith("prefs.js") or "/defaults/pref" in file_path:
-                return file
-            # PDF.js files always get minified
-            if "pdfjs" in file_path:
-                return MinifiedJavaScript(file, path, self._minify_js_verify_command)
-            elif self._minify_js:
-                return MinifiedJavaScript(file, path, self._minify_js_verify_command)
+        if self._minify_js and path.endswith((".js", ".jsm", ".mjs")):
+            return MinifiedJavaScript(file, self._minify_js_verify_command)
 
         return file
 
@@ -1020,7 +939,7 @@ class FileFinder(BaseFinder):
         ignore=(),
         ignore_broken_symlinks=False,
         find_dotfiles=False,
-        **kargs,
+        **kargs
     ):
         """
         Create a FileFinder for files under the given base directory.

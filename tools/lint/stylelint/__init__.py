@@ -13,7 +13,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "eslint"))
 from eslint import prettier_utils, setup_helper
-from mozbuild.nodeutil import check_node_executables_valid, find_node_executable
+from mozbuild.nodeutil import find_node_executable
 from mozlint import result
 
 STYLELINT_ERROR_MESSAGE = """
@@ -38,7 +38,7 @@ FILE_EXT_REGEX = re.compile(r"\.[a-z0-9_]{2,10}$", re.IGNORECASE)
 def setup(root, **lintargs):
     setup_helper.set_project_root(root)
 
-    if not check_node_executables_valid():
+    if not setup_helper.check_node_executables_valid():
         return 1
 
     return setup_helper.eslint_maybe_setup()

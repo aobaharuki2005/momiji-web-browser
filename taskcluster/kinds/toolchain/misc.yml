@@ -471,21 +471,6 @@ stylelint-plugin-mozilla:
         toolchain:
             - linux64-node
 
-terser:
-    description: "npm install terser node_modules"
-    treeherder:
-        symbol: TL(terser)
-    run:
-        script: terser.sh
-        sparse-profile: null
-        resources:
-            - 'tools/terser/package.json'
-            - 'tools/terser/package-lock.json'
-        toolchain-artifact: public/build/terser.tar.zst
-    fetches:
-        toolchain:
-            - linux64-node
-
 newtab-node-modules:
     description: "npm install newtab node_modules"
     treeherder:

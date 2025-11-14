@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
+import sys
 
 import mozpack.path as mozpath
 
@@ -61,13 +62,14 @@ class NodeRunner(Layer):
 
     def verify_node_install(self):
         # check if Node is installed
-        from mozbuild.nodeutil import check_node_executables_valid
+        sys.path.append(mozpath.join(self.topsrcdir, "tools", "lint", "eslint"))
+        import setup_helper
 
         with silence():
-            node_valid = check_node_executables_valid()
+            node_valid = setup_helper.check_node_executables_valid()
         if not node_valid:
             # running again to get details printed out
-            check_node_executables_valid()
+            setup_helper.check_node_executables_valid()
             raise ValueError("Can't find Node. did you run ./mach bootstrap ?")
 
         return True
