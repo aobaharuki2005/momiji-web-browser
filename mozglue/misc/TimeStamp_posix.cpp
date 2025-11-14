@@ -171,10 +171,6 @@ int64_t BaseTimeDurationPlatformUtils::TicksFromMilliseconds(
   return result;
 }
 
-int64_t BaseTimeDurationPlatformUtils::ResolutionInTicks() {
-  return static_cast<int64_t>(sResolution);
-}
-
 static bool gInitialized = false;
 
 void TimeStamp::Startup() {
