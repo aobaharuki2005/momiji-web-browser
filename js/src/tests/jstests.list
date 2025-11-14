@@ -701,10 +701,56 @@ skip script test262/intl402/PluralRules/notation.js
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1983837
 skip script test262/staging/top-level-await/tla-hang-entry.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1998671
-skip script test262/language/statements/using/syntax/with-initializer-default-statement-list.js
-skip script test262/language/statements/using/syntax/using-for-using-of-of.js
-
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=2000201
+skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/leap-months-chinese.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/basic-hebrew.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/era-boundary-ethiopic.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/leap-months-dangi.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/leap-months-hebrew.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/since/leap-months-chinese.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/since/leap-months-dangi.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/since/leap-months-hebrew.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/until/leap-months-chinese.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/until/leap-months-dangi.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/until/leap-months-hebrew.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/add/leap-months-chinese.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/add/leap-months-dangi.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/add/basic-hebrew.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/add/era-boundary-ethiopic.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/add/leap-months-hebrew.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/leap-months-chinese.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/leap-months-dangi.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/basic-hebrew.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/era-boundary-ethiopic.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/leap-months-hebrew.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/since/leap-months-chinese.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/since/leap-months-dangi.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/since/leap-months-hebrew.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/until/leap-months-chinese.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/until/leap-months-dangi.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/until/leap-months-hebrew.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/leap-months-chinese.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/leap-months-dangi.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/era-boundary-ethiopic.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/basic-hebrew.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/leap-months-hebrew.js
+skip script test262/intl402/Temporal/PlainDate/prototype/subtract/leap-months-chinese.js
+skip script test262/intl402/Temporal/PlainDate/prototype/subtract/leap-months-dangi.js
+skip script test262/intl402/Temporal/PlainDate/prototype/subtract/basic-hebrew.js
+skip script test262/intl402/Temporal/PlainDate/prototype/subtract/era-boundary-ethiopic.js
+skip script test262/intl402/Temporal/PlainDate/prototype/subtract/leap-months-hebrew.js
+skip script test262/intl402/Temporal/PlainDate/prototype/since/leap-months-chinese.js
+skip script test262/intl402/Temporal/PlainDate/prototype/since/leap-months-dangi.js
+skip script test262/intl402/Temporal/PlainDate/prototype/since/leap-months-hebrew.js
+skip script test262/intl402/Temporal/PlainDate/prototype/until/leap-months-chinese.js
+skip script test262/intl402/Temporal/PlainDate/prototype/until/leap-months-dangi.js
+skip script test262/intl402/Temporal/PlainDate/prototype/until/leap-months-hebrew.js
+skip script test262/intl402/Temporal/PlainDate/prototype/add/leap-months-chinese.js
+skip script test262/intl402/Temporal/PlainDate/prototype/add/leap-months-dangi.js
+skip script test262/intl402/Temporal/PlainDate/prototype/add/era-boundary-ethiopic.js
+skip script test262/intl402/Temporal/PlainDate/prototype/add/basic-hebrew.js
+skip script test262/intl402/Temporal/PlainDate/prototype/add/leap-months-hebrew.js
+skip script test262/intl402/DateTimeFormat/prototype/formatToParts/era.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
