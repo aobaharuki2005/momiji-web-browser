@@ -345,9 +345,6 @@ tasks:
     webrender:
         symbol: I(webrender)
         parent: debian12-base
-    condprof:
-        symbol: I(condprof)
-        parent: ubuntu2404-test
     sentry:
         symbol: I(sentry)
         parent: debian12-base
