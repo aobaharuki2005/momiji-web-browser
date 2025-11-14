@@ -187,7 +187,7 @@ class MarkupContextMenu {
     if (
       !this.selection.isElementNode() ||
       this.selection.isRoot() ||
-      this.selection.isAnonymousNode() ||
+      this.selection.isNativeAnonymousNode() ||
       this.selection.isPseudoElementNode()
     ) {
       return;
@@ -732,7 +732,7 @@ class MarkupContextMenu {
       markupContainer && markupContainer.editor.getInfoAtNode(target);
 
     const isFragment = this.selection.isDocumentFragmentNode();
-    const isAnonymous = this.selection.isAnonymousNode();
+    const isAnonymous = this.selection.isNativeAnonymousNode();
     const isElement =
       this.selection.isElementNode() && !this.selection.isPseudoElementNode();
     const isDuplicatableElement =

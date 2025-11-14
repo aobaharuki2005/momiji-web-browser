@@ -7,9 +7,6 @@
 
 "use strict";
 
-const {
-  isNativeAnonymous,
-} = require("resource://devtools/shared/layout/utils.js");
 const Debugger = require("Debugger");
 const {
   EXCLUDED_LISTENER,
@@ -422,9 +419,7 @@ class JQueryEventCollector extends MainEventCollector {
     const jQuery = this.getJQuery(node);
     const handlers = [];
 
-    // If jQuery is not on the page, if this is an anonymous node (that includes pseudo
-    // elements), we need to return early.
-    if (!jQuery || isNativeAnonymous(node)) {
+    if (!jQuery || node.isNativeAnonymous) {
       if (checkOnly) {
         return false;
       }

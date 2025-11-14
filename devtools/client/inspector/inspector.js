@@ -1626,7 +1626,7 @@ class Inspector extends EventEmitter {
       selection.isHTMLNode() &&
       selection.isElementNode() &&
       !selection.isPseudoElementNode() &&
-      !selection.isAnonymousNode() &&
+      !selection.isNativeAnonymousNode() &&
       !invalidTagNames.includes(selection.nodeFront.nodeName.toLowerCase())
     );
   }

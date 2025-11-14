@@ -771,7 +771,7 @@ CssRuleView.prototype = {
     const shouldBeDisabled =
       !this._viewedElement ||
       !this.inspector.selection.isElementNode() ||
-      this.inspector.selection.isAnonymousNode();
+      this.inspector.selection.isNativeAnonymousNode();
     this.addRuleButton.disabled = shouldBeDisabled;
   },
 

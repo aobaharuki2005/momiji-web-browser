@@ -148,7 +148,7 @@ RuleEditor.prototype = {
 
     // Do not allow editing anonymousselectors until we can
     // detect mutations on  pseudo elements in Bug 1034110.
-    return trait && !this.rule.elementStyle.element.isAnonymous;
+    return trait && !this.rule.elementStyle.element.isNativeAnonymous;
   },
 
   _create() {

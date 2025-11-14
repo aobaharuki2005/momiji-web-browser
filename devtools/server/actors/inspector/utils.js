@@ -28,7 +28,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["isNativeAnonymous", "getAdjustedQuads"],
+  "getAdjustedQuads",
   "resource://devtools/shared/layout/utils.js",
   true
 );
@@ -194,7 +194,7 @@ function noAnonymousContentTreeWalkerFilter(node) {
   // Ignore all native anonymous content inside a non-XUL document.
   // We need to do this to skip things like form controls, scrollbars,
   // video controls, etc (see bug 1187482).
-  if (!isInXULDocument(node) && isNativeAnonymous(node)) {
+  if (!isInXULDocument(node) && node.isNativeAnonymous) {
     return nodeFilterConstants.FILTER_SKIP;
   }
 

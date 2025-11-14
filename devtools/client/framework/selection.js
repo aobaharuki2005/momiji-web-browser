@@ -277,8 +277,8 @@ class Selection extends EventEmitter {
     return this.isNode() && this.nodeFront.isPseudoElement;
   }
 
-  isAnonymousNode() {
-    return this.isNode() && this.nodeFront.isAnonymous;
+  isNativeAnonymousNode() {
+    return this.isNode() && this.nodeFront.isNativeAnonymous;
   }
 
   isAttributeNode() {

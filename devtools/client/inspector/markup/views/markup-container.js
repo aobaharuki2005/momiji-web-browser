@@ -466,7 +466,7 @@ MarkupContainer.prototype = {
 
     return (
       !this.node.isPseudoElement &&
-      !this.node.isAnonymous &&
+      !this.node.isNativeAnonymous &&
       !this.node.isDocumentElement &&
       tagName !== "body" &&
       tagName !== "head" &&

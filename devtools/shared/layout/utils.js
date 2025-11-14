@@ -421,19 +421,6 @@ function isNodeConnected(node) {
 exports.isNodeConnected = isNodeConnected;
 
 /**
- * Determine whether a node is anonymous.
- *
- * @param {DOMNode} node
- * @return {Boolean}
- *
- * FIXME(bug 1597411): Remove one of these (or both, as
- * `node.isNativeAnonymous` is quite clear).
- */
-const isAnonymous = node => node.isNativeAnonymous;
-exports.isAnonymous = isAnonymous;
-exports.isNativeAnonymous = isAnonymous;
-
-/**
  * Determine whether a node is a template element.
  *
  * @param {DOMNode} node

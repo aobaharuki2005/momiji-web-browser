@@ -256,7 +256,8 @@ StyleInspectorMenu.prototype = {
       accesskey: STYLE_INSPECTOR_L10N.getStr(addRuleAccessKey),
       click: () => this.view._onAddRule(),
       visible: this.isRuleView,
-      disabled: !this.isRuleView || this.inspector.selection.isAnonymousNode(),
+      disabled:
+        !this.isRuleView || this.inspector.selection.isNativeAnonymousNode(),
     });
     menu.append(menuitemAddRule);
 

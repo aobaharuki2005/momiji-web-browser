@@ -398,8 +398,8 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
 
     return this._form.isPseudoElement;
   }
-  get isAnonymous() {
-    return this._form.isAnonymous;
+  get isNativeAnonymous() {
+    return this._form.isNativeAnonymous;
   }
   get isInHTMLDocument() {
     return this._form.isInHTMLDocument;
