@@ -1216,6 +1216,10 @@ tab-group > tab-split-view-wrapper {
     inset-inline-end: calc(var(--tab-border-radius) / 2);
   }
 
+  &:has(tab:is([muted], [soundplaying], [activemedia-blocked])) {
+    min-width: 200px;
+  }
+
   tab-group[collapsed] &:not([hasactivetab]) {
     min-width: 0 !important;
     max-width: 0 !important;
