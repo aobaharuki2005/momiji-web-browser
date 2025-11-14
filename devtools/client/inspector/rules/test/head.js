@@ -1393,6 +1393,8 @@ function getSmallIncrementKey() {
  *        Defaults to false
  * @param {boolean|undefined} expectedElements[].declarations[].highlighted - Is the declaration
  *        highlighted by a search.
+ * @param {boolean|undefined} expectedElements[].declarations[].inactiveCSS - Is the declaration
+ *        inactive.
  * @param {string} expectedElements[].header - If we're expecting a header (Inherited from,
  *        Pseudo-elements, …), the text of said header.
  */
@@ -1404,8 +1406,7 @@ function checkRuleViewContent(view, expectedElements) {
     "All expected elements are displayed"
   );
 
-  for (let i = 0; i < expectedElements.length; i++) {
-    const expectedElement = expectedElements[i];
+  expectedElements.forEach((expectedElement, i) => {
     info(`Checking element #${i}: ${expectedElement.selector}`);
 
     const elementInView = elementsInView[i];
@@ -1421,7 +1422,7 @@ function checkRuleViewContent(view, expectedElements) {
         expectedElement.header,
         `Expected header text for element #${i}`
       );
-      continue;
+      return;
     }
 
     const selector = elementInView.querySelector(
@@ -1453,20 +1454,21 @@ function checkRuleViewContent(view, expectedElements) {
       `Element #${i} ("${selector}") is ${expectedElement.inherited ? "inherited" : "not inherited"}`
     );
 
-    const declarations = elementInView.querySelectorAll(".ruleview-property");
+    const ruleViewPropertyElements =
+      elementInView.querySelectorAll(".ruleview-property");
     is(
-      declarations.length,
+      ruleViewPropertyElements.length,
       expectedElement.declarations.length,
       `Got the expected number of declarations for expected element #${i} (${selector})`
     );
-    for (let j = 0; j < declarations.length; j++) {
-      const expectedDeclaration = expectedElement.declarations[j];
-      const ruleViewPropertyElement = declarations[j];
+    ruleViewPropertyElements.forEach((ruleViewPropertyElement, j) => {
       const [propName, propValue] = Array.from(
         ruleViewPropertyElement.querySelectorAll(
           ".ruleview-propertyname, .ruleview-propertyvalue"
         )
       );
+
+      const expectedDeclaration = expectedElement.declarations[j];
       is(
         propName.innerText,
         expectedDeclaration?.name,
@@ -1475,7 +1477,7 @@ function checkRuleViewContent(view, expectedElements) {
       if (propName.innerText !== expectedDeclaration?.name) {
         // We don't have the expected property name, don't run the other assertions to
         // avoid spamming the output
-        continue;
+        return;
       }
 
       is(
@@ -1487,6 +1489,11 @@ function checkRuleViewContent(view, expectedElements) {
         ruleViewPropertyElement.classList.contains("ruleview-overridden"),
         !!expectedDeclaration?.overridden,
         `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.overridden ? "overridden" : "not overridden"} `
+      );
+      is(
+        ruleViewPropertyElement.classList.contains("inactive-css"),
+        !!expectedDeclaration?.inactiveCSS,
+        `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.inactiveCSS ? "inactive" : "not inactive"} `
       );
       is(
         !!ruleViewPropertyElement.querySelector(
@@ -1505,8 +1512,8 @@ function checkRuleViewContent(view, expectedElements) {
         !!expectedDeclaration?.highlighted,
         `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.highlighted ? "highlighted" : "not highlighted"} `
       );
-    }
-  }
+    });
+  });
 }
 
 /**
