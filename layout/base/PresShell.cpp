@@ -5748,97 +5748,6 @@ static nsMenuPopupFrame* FindPopupFrame(nsPresContext* aRootPresContext,
       nsLayoutUtils::GetPopupFrameForPointFlags::OnlyReturnFramesWithWidgets);
 }
 
-/*
- * This finds the first view with a frame that contains the given point in a
- * postorder traversal of the view tree, assuming that the point is not in a
- * floating view.  It assumes that only floating views extend outside the bounds
- * of their parents.
- *
- * This methods should only be called if FindPopupFrame returns null.
- *
- * aPt is relative aRelativeToView with the viewport type
- * aRelativeToViewportType. aRelativeToView will always have a frame. If aView
- * has a frame then aRelativeToView will be aView. (The reason aRelativeToView
- * and aView are separate is because we need to traverse into views without
- * frames (ie the inner view of a subdocument frame) but we can only easily
- * transform between views using TransformPoint which takes frames.)
- */
-static nsView* FindViewContaining(nsView* aRelativeToView,
-                                  ViewportType aRelativeToViewportType,
-                                  nsView* aView, nsPoint aPt) {
-  MOZ_ASSERT(aRelativeToView->GetFrame());
-
-  nsIFrame* frame = aView->GetFrame();
-  if (frame) {
-    if (!frame->PresShell()->IsActive() ||
-        !frame->IsVisibleConsideringAncestors(
-            nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY)) {
-      return nullptr;
-    }
-
-    // We start out in visual coords and then if we cross the zoom boundary we
-    // become in layout coords. The zoom boundary always occurs in a document
-    // with IsRootContentDocumentCrossProcess. The root view of such a document
-    // is outside the zoom boundary and any child view must be inside the zoom
-    // boundary because we only create views for certain kinds of frames and
-    // none of them can be between the root frame and the zoom boundary.
-    bool crossingZoomBoundary = false;
-    if (aRelativeToViewportType == ViewportType::Visual) {
-      if (nsIFrame* f = aRelativeToView->GetFrame();
-          f && f->PresContext()->IsRootContentDocumentCrossProcess()) {
-        crossingZoomBoundary = true;
-      }
-    }
-
-    ViewportType nextRelativeToViewportType = aRelativeToViewportType;
-    if (crossingZoomBoundary) {
-      nextRelativeToViewportType = ViewportType::Layout;
-    }
-
-    nsLayoutUtils::TransformResult result = nsLayoutUtils::TransformPoint(
-        RelativeTo{aRelativeToView->GetFrame(), aRelativeToViewportType},
-        RelativeTo{frame, nextRelativeToViewportType}, aPt);
-    if (result != nsLayoutUtils::TRANSFORM_SUCCEEDED) {
-      return nullptr;
-    }
-
-    // Even though aPt is in visual coordinates until we cross the zoom boundary
-    // it is valid to compare it to view coords (which are in layout coords)
-    // because visual coords are the same as layout coords for every view
-    // outside of the zoom boundary except for the root view of the root content
-    // document.
-    // For the root view of the root content document, its bounds don't
-    // actually correspond to what is visible when we have a
-    // MobileViewportManager. So we skip the hit test. This is okay because the
-    // point has already been hit test: 1) if we are the root view in the
-    // process then the point comes from a real mouse event so it must have been
-    // over our widget, or 2) if we are the root of a subdocument then
-    // hittesting against the view of the subdocument frame that contains us
-    // already happened and succeeded before getting here.
-    if (!crossingZoomBoundary) {
-      if (!aView->GetBounds().Contains(aPt)) {
-        return nullptr;
-      }
-    }
-
-    aRelativeToView = aView;
-    aRelativeToViewportType = nextRelativeToViewportType;
-  }
-
-  return frame ? aView : nullptr;
-}
-
-static BrowserBridgeChild* GetChildBrowser(nsView* aView) {
-  if (!aView) {
-    return nullptr;
-  }
-  nsIFrame* frame = aView->GetFrame();
-  if (!frame || !frame->GetContent()) {
-    return nullptr;
-  }
-  return BrowserBridgeChild::GetFrom(frame->GetContent());
-}
-
 void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
   auto forgetMouseMove = MakeScopeExit([&]() {
     // Must be safe to refer `this` without grabbing it with a RefPtr since this
@@ -5954,34 +5863,25 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
   RefPtr<BrowserBridgeChild> bbc;
 
   // We either dispatch the event to a popup, or a view.
-  nsMenuPopupFrame* popupFrame = nullptr;
-  if (rootView->GetFrame()) {
-    popupFrame = FindPopupFrame(mPresContext, rootView->GetWidget(),
-                                LayoutDeviceIntPoint::FromAppUnitsToNearest(
-                                    aPointerInfo.mLastRefPointInRootDoc, APD));
-    if (popupFrame) {
-      pointShell = popupFrame->PresShell();
-      widget = popupFrame->GetWidget();
-      widgetAPD = popupFrame->PresContext()->AppUnitsPerDevPixel();
-      refpoint = aPointerInfo.mLastRefPointInRootDoc;
-      DebugOnly<nsLayoutUtils::TransformResult> result =
-          nsLayoutUtils::TransformPoint(
-              RelativeTo{rootView->GetFrame(), ViewportType::Visual},
-              RelativeTo{popupFrame, ViewportType::Layout}, refpoint);
-      MOZ_ASSERT(result == nsLayoutUtils::TRANSFORM_SUCCEEDED);
-    }
+  nsMenuPopupFrame* popupFrame =
+      FindPopupFrame(mPresContext, rootView->GetWidget(),
+                     LayoutDeviceIntPoint::FromAppUnitsToNearest(
+                         aPointerInfo.mLastRefPointInRootDoc, APD));
+  if (popupFrame) {
+    pointShell = popupFrame->PresShell();
+    widget = popupFrame->GetWidget();
+    widgetAPD = popupFrame->PresContext()->AppUnitsPerDevPixel();
+    refpoint = aPointerInfo.mLastRefPointInRootDoc;
+    DebugOnly<nsLayoutUtils::TransformResult> result =
+        nsLayoutUtils::TransformPoint(
+            RelativeTo{rootView->GetFrame(), ViewportType::Visual},
+            RelativeTo{popupFrame, ViewportType::Layout}, refpoint);
+    MOZ_ASSERT(result == nsLayoutUtils::TRANSFORM_SUCCEEDED);
   }
   if (!widget) {
     widget = rootView->GetWidget();
     widgetAPD = APD;
-    nsView* pointView = rootView;
-    if (rootView->GetFrame()) {
-      pointView = FindViewContaining(rootView, ViewportType::Visual, rootView,
-                                     aPointerInfo.mLastRefPointInRootDoc);
-    }
-    // pointView can be null in situations related to mouse capture
-    pointShell = (pointView ? pointView : rootView)->GetPresShell();
-    bbc = GetChildBrowser(pointView);
+    pointShell = this;
     refpoint = aPointerInfo.mLastRefPointInRootDoc;
   }
   NS_ASSERTION(widget, "view should have a widget here");
@@ -6018,41 +5918,20 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
   event.pointerId = aPointerId;
   event.mModifiers = PresShell::GetCurrentModifiers();
 
-  if (bbc) {
-    // If we have a BrowserBridgeChild, we're going to be dispatching this
-    // mouse event into an OOP iframe of the current document if and only if
-    // we're synthesizing a mouse move.
-    // FIXME: We may need to dispatch ePointerMove in the OOP iframe too.
-    // However, it may require to change the active pointer state in both this
-    // process and the OOP iframe process too.  Therefore, we will fire
-    // ePointerMove as a preceding pointer event of the synthesized eMouseMove
-    // in PointerEventHandler::DispatchPointerFromMouseOrTouch().
-    if (aMoveMessage == eMouseMove) {
-      event.mLayersId = bbc->GetLayersId();
-      event.convertToPointer = true;
-      bbc->SendDispatchSynthesizedMouseEvent(event);
-    }
-    return;
-  }
-
-  if (pointShell) {
-    // Since this gets run in a refresh tick there isn't an InputAPZContext on
-    // the stack from the nsIWidget. We need to simulate one with at least
-    // the correct target guid, so that the correct callback transform gets
-    // applied if this event goes to a child process. The input block id is set
-    // to 0 because this is a synthetic event which doesn't really belong to any
-    // input block. Same for the APZ response field.
-    InputAPZContext apzContext(aPointerInfo.mLastTargetGuid, 0,
-                               nsEventStatus_eIgnore);
-    AUTO_PROFILER_MARKER_DOCSHELL("DispatchSynthMouseOrPointerMove", GRAPHICS,
-                                  pointShell->GetPresContext()->GetDocShell());
-    nsEventStatus status = nsEventStatus_eIgnore;
-    if (popupFrame) {
-      pointShell->HandleEvent(popupFrame, &event, false, &status);
-    } else {
-      RefPtr<nsViewManager> viewManager = rootView->GetViewManager();
-      viewManager->DispatchEvent(&event, rootView, &status);
-    }
+  MOZ_ASSERT(pointShell);
+  // Since this gets run in a refresh tick there isn't an InputAPZContext on
+  // the stack from the nsIWidget. We need to simulate one with at least
+  // the correct target guid, so that the correct callback transform gets
+  // applied if this event goes to a child process. The input block id is set
+  // to 0 because this is a synthetic event which doesn't really belong to any
+  // input block. Same for the APZ response field.
+  InputAPZContext apzContext(aPointerInfo.mLastTargetGuid, 0,
+                             nsEventStatus_eIgnore);
+  AUTO_PROFILER_MARKER_DOCSHELL("DispatchSynthMouseOrPointerMove", GRAPHICS,
+                                pointShell->GetPresContext()->GetDocShell());
+  nsEventStatus status = nsEventStatus_eIgnore;
+  if (auto* eventFrame = popupFrame ? popupFrame : GetRootFrame()) {
+    pointShell->HandleEvent(eventFrame, &event, false, &status);
   }
 }
 
@@ -12328,6 +12207,13 @@ void PresShell::ResetVisualViewportSize() {
   }
 }
 
+void PresShell::SetNeedsWindowPropertiesSync() {
+  mNeedsWindowPropertiesSync = true;
+  if (mViewManager) {
+    mViewManager->PostPendingUpdate();
+  }
+}
+
 bool PresShell::SetVisualViewportOffset(const nsPoint& aScrollOffset,
                                         const nsPoint& aPrevLayoutScrollPos) {
   nsPoint newOffset = aScrollOffset;
@@ -12603,15 +12489,12 @@ PresShell::WindowSizeConstraints PresShell::GetWindowSizeConstraints() {
   return {minSize, maxSize};
 }
 
-void PresShell::SyncWindowProperties(bool aSync) {
-  if (XRE_IsContentProcess()) {
+void PresShell::SyncWindowProperties() {
+  if (!mNeedsWindowPropertiesSync || XRE_IsContentProcess()) {
     return;
   }
 
-  nsView* view = mViewManager->GetRootView();
-  if (!view || !view->HasWidget()) {
-    return;
-  }
+  mNeedsWindowPropertiesSync = false;
 
   RefPtr pc = mPresContext;
   if (!pc) {
@@ -12620,11 +12503,6 @@ void PresShell::SyncWindowProperties(bool aSync) {
 
   nsCOMPtr<nsIWidget> windowWidget = GetPresContextContainerWidget(pc);
   if (!windowWidget || !IsTopLevelWidget(windowWidget)) {
-    return;
-  }
-
-  if (!aSync) {
-    view->SetNeedsWindowPropertiesSync();
     return;
   }
 

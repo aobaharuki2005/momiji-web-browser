@@ -2269,6 +2269,9 @@ class nsIWidget : public nsSupportsWeakReference {
    */
   TextEventDispatcher* GetTextEventDispatcher();
 
+  // Gets the pres shell this widget is managed by.
+  mozilla::PresShell* GetPresShell() const;
+
   /**
    * GetNativeTextEventDispatcherListener() returns a
    * TextEventDispatcherListener instance which is used when the widget

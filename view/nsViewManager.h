@@ -82,18 +82,6 @@ class nsViewManager final {
   void FlushDelayedResize();
 
   /**
-   * Called to dispatch an event to the appropriate view. Often called
-   * as a result of receiving a mouse or keyboard event from the widget
-   * event system.
-   * @param aEvent event to dispatch
-   * @param aViewTarget dispatch the event to this view
-   * @param aStatus event handling status
-   */
-  MOZ_CAN_RUN_SCRIPT
-  void DispatchEvent(mozilla::WidgetGUIEvent* aEvent, nsView* aViewTarget,
-                     nsEventStatus* aStatus);
-
-  /**
    * Resize a view. In addition to setting the width and height, you can
    * set the x and y of its bounds relative to its position. Negative x and y
    * will let the view extend above and to the left of the (0,0) point in its
@@ -130,6 +118,7 @@ class nsViewManager final {
    * saves the time of the last user event.
    */
   static uint32_t GetLastUserEventTime() { return gLastUserEventTime; }
+  static void MaybeUpdateLastUserEventTime(mozilla::WidgetGUIEvent*);
 
   /**
    * Flush the accumulated dirty region to the widget and update widget
@@ -141,6 +130,10 @@ class nsViewManager final {
    * Just update widget geometry without flushing the dirty region
    */
   MOZ_CAN_RUN_SCRIPT void UpdateWidgetGeometry();
+
+  // Call this when you need to let the viewmanager know that it now has
+  // pending updates.
+  void PostPendingUpdate();
 
  private:
   static uint32_t gLastUserEventTime;
@@ -181,10 +174,6 @@ class nsViewManager final {
   MOZ_CAN_RUN_SCRIPT
   bool PaintWindow(nsIWidget* aWidget, const LayoutDeviceIntRegion& aRegion);
   MOZ_CAN_RUN_SCRIPT void DidPaintWindow();
-
-  // Call this when you need to let the viewmanager know that it now has
-  // pending updates.
-  void PostPendingUpdate();
 
   mozilla::PresShell* mPresShell;
 

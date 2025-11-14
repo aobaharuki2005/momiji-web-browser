@@ -33,8 +33,7 @@ nsView::nsView(nsViewManager* aViewManager)
     : mViewManager(aViewManager),
       mFrame(nullptr),
       mWidgetIsTopLevel(false),
-      mForcedRepaint(false),
-      mNeedsWindowPropertiesSync(false) {
+      mForcedRepaint(false) {
   MOZ_COUNT_CTOR(nsView);
 
   // Views should be transparent by default. Not being transparent is
@@ -108,20 +107,6 @@ void nsView::DestroyWidget() {
   }
 }
 
-nsView* nsView::GetViewFor(const nsIWidget* aWidget) {
-  MOZ_ASSERT(aWidget, "null widget ptr");
-
-  nsIWidgetListener* listener = aWidget->GetWidgetListener();
-  if (listener) {
-    if (nsView* view = listener->GetView()) {
-      return view;
-    }
-  }
-
-  listener = aWidget->GetAttachedWidgetListener();
-  return listener ? listener->GetView() : nullptr;
-}
-
 void nsView::Destroy() {
   this->~nsView();
   mozWritePoison(this, sizeof(*this));
@@ -193,19 +178,12 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(
 
 void nsView::SetDimensions(const nsRect& aRect) { mDimBounds = aRect; }
 
-void nsView::SetNeedsWindowPropertiesSync() {
-  mNeedsWindowPropertiesSync = true;
-  if (mViewManager) {
-    mViewManager->PostPendingUpdate();
-  }
-}
-
 // Attach to a top level widget and start receiving mirrored events.
 void nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
   MOZ_ASSERT(aWidget, "null widget ptr");
 #ifdef DEBUG
   nsIWidgetListener* parentListener = aWidget->GetWidgetListener();
-  MOZ_ASSERT(!parentListener || !parentListener->GetView(),
+  MOZ_ASSERT(!parentListener || parentListener->GetAppWindow(),
              "Expect a top level widget");
   MOZ_ASSERT(!parentListener || !parentListener->GetAsMenuPopupFrame(),
              "Expect a top level widget");
@@ -278,9 +256,9 @@ void nsView::AttachWidgetEventHandler(nsIWidget* aWidget) {
 }
 
 void nsView::DetachWidgetEventHandler(nsIWidget* aWidget) {
-  NS_ASSERTION(!aWidget->GetWidgetListener() ||
-                   aWidget->GetWidgetListener()->GetView() == this,
-               "Wrong view");
+  NS_ASSERTION(
+      !aWidget->GetWidgetListener() || aWidget->GetWidgetListener() == this,
+      "Wrong view");
   aWidget->SetWidgetListener(nullptr);
 }
 
@@ -418,11 +396,9 @@ void nsView::WillPaintWindow(nsIWidget* aWidget) {
 }
 
 bool nsView::PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion aRegion) {
-  NS_ASSERTION(this == nsView::GetViewFor(aWidget), "wrong view for widget?");
-
   RefPtr<nsViewManager> vm = mViewManager;
-  bool result = vm->PaintWindow(aWidget, aRegion);
-  return result;
+  vm->Refresh(this, aRegion);
+  return true;
 }
 
 void nsView::DidPaintWindow() {
@@ -461,19 +437,23 @@ nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent,
   MOZ_ASSERT(aEvent->mWidget, "null widget ptr");
 
   nsEventStatus result = nsEventStatus_eIgnore;
-  nsView* view;
-  if (aUseAttachedEvents) {
-    nsIWidgetListener* listener = aEvent->mWidget->GetAttachedWidgetListener();
-    view = listener ? listener->GetView() : nullptr;
-  } else {
-    view = GetViewFor(aEvent->mWidget);
+  auto* listener = [&]() -> nsIWidgetListener* {
+    if (!aUseAttachedEvents) {
+      if (auto* l = aEvent->mWidget->GetWidgetListener()) {
+        return l;
+      }
+    }
+    return aEvent->mWidget->GetAttachedWidgetListener();
+  }();
+  if (NS_WARN_IF(!listener)) {
+    return result;
   }
-
-  if (view) {
-    RefPtr<nsViewManager> vm = view->GetViewManager();
-    vm->DispatchEvent(aEvent, view, &result);
+  nsViewManager::MaybeUpdateLastUserEventTime(aEvent);
+  if (RefPtr<PresShell> ps = listener->GetPresShell()) {
+    if (nsIFrame* root = ps->GetRootFrame()) {
+      ps->HandleEvent(root, aEvent, false, &result);
+    }
   }
-
   return result;
 }
 
@@ -507,7 +487,7 @@ void nsView::SafeAreaInsetsChanged(
       });
 }
 
-bool nsView::IsPrimaryFramePaintSuppressed() {
+bool nsView::IsPrimaryFramePaintSuppressed() const {
   return StaticPrefs::layout_show_previous_page() && mFrame &&
          mFrame->PresShell()->IsPaintingSuppressed();
 }

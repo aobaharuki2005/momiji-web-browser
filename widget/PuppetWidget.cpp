@@ -995,7 +995,7 @@ nsIWidgetListener* PuppetWidget::GetCurrentWidgetListener() {
     return mAttachedWidgetListener;
   }
 
-  if (mAttachedWidgetListener->GetView()->IsPrimaryFramePaintSuppressed()) {
+  if (mAttachedWidgetListener->IsPaintSuppressed()) {
     return mPreviouslyAttachedWidgetListener;
   }
 

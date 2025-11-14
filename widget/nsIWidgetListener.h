@@ -34,25 +34,15 @@ enum nsSizeMode {
   nsSizeMode_Invalid
 };
 
-/**
- * different types of (top-level) window z-level positioning
- */
-enum nsWindowZ {
-  nsWindowZTop = 0,  // on top
-  nsWindowZBottom,   // on bottom
-  nsWindowZRelative  // just below some specified widget
-};
-
 class nsIWidgetListener {
  public:
   /**
    * If this listener is for an nsIAppWindow, return it. If this is null, then
-   * this is likely a listener for a view, which can be determined using
-   * GetView. If both methods return null, this will be an nsWebBrowser.
+   * this is likely a listener for a popup or a pres shell.
    */
   virtual nsIAppWindow* GetAppWindow() { return nullptr; }
 
-  /** If this listener is for an nsView, return it. */
+  /** If this listener is for a view, return it. */
   virtual nsView* GetView() { return nullptr; }
 
   /** If this listener is for an nsMenuPopupFrame, return it. */
@@ -162,6 +152,9 @@ class nsIWidgetListener {
    * returns false.
    */
   virtual bool ShouldNotBeVisible() { return false; }
+
+  /** Returns true if painting should be suppressed for this listener */
+  virtual bool IsPaintSuppressed() const { return false; }
 
   /** Handle an event. */
   virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,

@@ -2670,7 +2670,7 @@ ViewportFrame* nsCSSFrameConstructor::ConstructRootFrame() {
   // Bind the viewport frame to the root view
   if (nsView* rootView = mPresShell->GetViewManager()->GetRootView()) {
     viewportFrame->SetView(rootView);
-    rootView->SetNeedsWindowPropertiesSync();
+    mPresShell->SetNeedsWindowPropertiesSync();
   }
 
   // Make it an absolute container for fixed-pos elements

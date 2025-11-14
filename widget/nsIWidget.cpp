@@ -491,8 +491,8 @@ nsIFrame* nsIWidget::GetFrame() const {
   if (auto* popup = GetPopupFrame()) {
     return popup;
   }
-  if (nsView* view = nsView::GetViewFor(this)) {
-    return view->GetFrame();
+  if (auto* ps = GetPresShell()) {
+    return ps->GetRootFrame();
   }
   return nullptr;
 }
@@ -2015,6 +2015,20 @@ nsIWidget::NativeIMEContext nsIWidget::GetNativeIMEContext() {
 nsIWidget::TextEventDispatcher* nsIWidget::GetTextEventDispatcher() {
   EnsureTextEventDispatcher();
   return mTextEventDispatcher;
+}
+
+PresShell* nsIWidget::GetPresShell() const {
+  if (mWidgetListener) {
+    if (auto* ps = mWidgetListener->GetPresShell()) {
+      return ps;
+    }
+  }
+  if (mAttachedWidgetListener) {
+    if (auto* ps = mAttachedWidgetListener->GetPresShell()) {
+      return ps;
+    }
+  }
+  return nullptr;
 }
 
 void* nsIWidget::GetPseudoIMEContext() {
