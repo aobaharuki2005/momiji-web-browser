@@ -142,10 +142,6 @@ class nsIWidgetListener {
                                   const mozilla::TimeStamp& aCompositeStart,
                                   const mozilla::TimeStamp& aCompositeEnd) {}
 
-  /** Request that layout schedules a repaint on the next refresh driver tick.
-   */
-  virtual void RequestRepaint() {}
-
   /**
    * Returns true if this is a popup that should not be visible. If this
    * is a popup that is visible, not a popup or this state is unknown,

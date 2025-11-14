@@ -426,12 +426,6 @@ void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                                        aCompositeEnd);
 }
 
-void nsView::RequestRepaint() {
-  if (PresShell* presShell = mViewManager->GetPresShell()) {
-    presShell->SchedulePaint();
-  }
-}
-
 nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent,
                                   bool aUseAttachedEvents) {
   MOZ_ASSERT(aEvent->mWidget, "null widget ptr");

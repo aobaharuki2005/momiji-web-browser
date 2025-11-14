@@ -2321,10 +2321,8 @@ mozilla::widget::EventDispatcher* nsWindow::GetEventDispatcher() const {
 }
 
 void nsWindow::RedrawAll() {
-  if (mAttachedWidgetListener) {
-    mAttachedWidgetListener->RequestRepaint();
-  } else if (mWidgetListener) {
-    mWidgetListener->RequestRepaint();
+  if (auto* ps = GetPresShell()) {
+    ps->SchedulePaint();
   }
 }
 

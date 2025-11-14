@@ -268,7 +268,6 @@ class nsView final : public nsIWidgetListener {
   void DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                           const mozilla::TimeStamp& aCompositeStart,
                           const mozilla::TimeStamp& aCompositeEnd) override;
-  void RequestRepaint() override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
                             bool aUseAttachedEvents) override;
