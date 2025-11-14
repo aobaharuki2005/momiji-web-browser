@@ -125,6 +125,9 @@
       "chrome://browser/content/preferences/widgets/setting-group.mjs": [
         "browser/components/preferences/widgets/setting-group/setting-group.mjs"
       ],
+      "chrome://browser/content/preferences/widgets/setting-pane.mjs": [
+        "browser/components/preferences/widgets/setting-pane/setting-pane.mjs"
+      ],
       "chrome://browser/content/preferences/widgets/sync-device-name.mjs": [
         "browser/components/preferences/widgets/sync-device-name/sync-device-name.mjs"
       ],
@@ -248,6 +251,12 @@
       "chrome://global/content/elements/moz-fieldset.mjs": [
         "toolkit/content/widgets/moz-fieldset/moz-fieldset.mjs"
       ],
+      "chrome://global/content/elements/moz-input-folder.mjs": [
+        "toolkit/content/widgets/moz-input-folder/moz-input-folder.mjs"
+      ],
+      "chrome://global/content/elements/moz-input-search.mjs": [
+        "toolkit/content/widgets/moz-input-search/moz-input-search.mjs"
+      ],
       "chrome://global/content/elements/moz-input-text.mjs": [
         "toolkit/content/widgets/moz-input-text/moz-input-text.mjs"
       ],
@@ -256,6 +265,9 @@
       ],
       "chrome://global/content/elements/moz-message-bar.mjs": [
         "toolkit/content/widgets/moz-message-bar/moz-message-bar.mjs"
+      ],
+      "chrome://global/content/elements/moz-radio-group.mjs": [
+        "toolkit/content/widgets/moz-radio-group/moz-radio-group.mjs"
       ],
       "chrome://global/content/elements/moz-support-link.mjs": [
         "toolkit/content/widgets/moz-support-link/moz-support-link.mjs"

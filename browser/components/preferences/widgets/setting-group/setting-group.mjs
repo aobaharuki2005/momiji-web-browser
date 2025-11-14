@@ -8,8 +8,19 @@ import {
   spread,
 } from "chrome://browser/content/preferences/widgets/setting-element.mjs";
 
-/** @import { SettingControl } from "../setting-control/setting-control.mjs"; */
-/** @import {PreferencesSettingsConfig, Preferences} from "chrome://global/content/preferences/Preferences.mjs" */
+/** @import { SettingElementConfig } from "chrome://browser/content/preferences/widgets/setting-element.mjs" */
+/** @import { SettingControlConfig, SettingControlEvent } from "../setting-control/setting-control.mjs" */
+/** @import { Preferences } from "chrome://global/content/preferences/Preferences.mjs" */
+
+/**
+ * @typedef {object} SettingGroupConfigExtensions
+ * @property {SettingControlConfig[]} items Array of SettingControlConfigs to render.
+ * @property {number} [headingLevel] A heading level to create the legend as (1-6).
+ * @property {boolean} [inProgress]
+ * Hide this section unless the browser.settings-redesign.enabled or
+ * browser.settings-redesign.<groupid>.enabled prefs are true.
+ */
+/** @typedef {SettingElementConfig & SettingGroupConfigExtensions} SettingGroupConfig */
 
 const CLICK_HANDLERS = new Set([
   "dialog-button",
@@ -30,7 +41,7 @@ export class SettingGroup extends SettingElement {
     this.getSetting = undefined;
 
     /**
-     * @type {PreferencesSettingsConfig | undefined}
+     * @type {SettingGroupConfig | undefined}
      */
     this.config = undefined;
   }
@@ -51,9 +62,10 @@ export class SettingGroup extends SettingElement {
 
   async handleVisibilityChange() {
     await this.updateComplete;
+    // @ts-expect-error bug 1997478
     let hasVisibleControls = [...this.controlEls].some(el => !el.hidden);
     this.hidden = !hasVisibleControls;
-    let groupbox = this.closest("groupbox");
+    let groupbox = /** @type {XULElement} */ (this.closest("groupbox"));
     if (hasVisibleControls) {
       this.removeAttribute("data-hidden-from-search");
       if (groupbox && groupbox.hasAttribute("data-hidden-by-setting-group")) {
@@ -73,6 +85,7 @@ export class SettingGroup extends SettingElement {
 
   async getUpdateComplete() {
     let result = await super.getUpdateComplete();
+    // @ts-expect-error bug 1997478
     await Promise.all([...this.controlEls].map(el => el.updateComplete));
     return result;
   }
@@ -81,24 +94,31 @@ export class SettingGroup extends SettingElement {
    * Notify child controls when their input has fired an event. When controls
    * are nested the parent receives events for the nested controls, so this is
    * actually easier to manage here; it also registers fewer listeners.
+   *
+   * @param {SettingControlEvent<InputEvent>} e
    */
   onChange(e) {
     let inputEl = e.target;
-    let control = inputEl.control;
-    control?.onChange(inputEl);
-  }
-
-  onClick(e) {
-    if (!CLICK_HANDLERS.has(e.target.localName)) {
-      return;
-    }
-    let inputEl = e.target;
-    let control = inputEl.control;
-    control?.onClick(e);
+    inputEl.control?.onChange(inputEl);
   }
 
   /**
-   * @param {PreferencesSettingsConfig} item
+   * Notify child controls when their input has been clicked. When controls
+   * are nested the parent receives events for the nested controls, so this is
+   * actually easier to manage here; it also registers fewer listeners.
+   *
+   * @param {SettingControlEvent<MouseEvent>} e
+   */
+  onClick(e) {
+    let inputEl = e.target;
+    if (!CLICK_HANDLERS.has(inputEl.localName)) {
+      return;
+    }
+    inputEl.control?.onClick(e);
+  }
+
+  /**
+   * @param {SettingControlConfig} item
    */
   itemTemplate(item) {
     let setting = this.getSetting(item.id);

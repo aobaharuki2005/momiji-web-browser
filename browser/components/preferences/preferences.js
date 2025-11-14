@@ -16,6 +16,12 @@
 /* import-globals-from /browser/base/content/utilityOverlay.js */
 /* import-globals-from /toolkit/content/preferencesBindings.js */
 
+/** @import MozButton from "chrome://global/content/elements/moz-button.mjs" */
+/** @import {SettingConfig, SettingEmitChange} from "chrome://global/content/preferences/Setting.mjs" */
+/** @import {SettingControlConfig} from "chrome://browser/content/preferences/widgets/setting-control.mjs" */
+/** @import {SettingGroup, SettingGroupConfig} from "chrome://browser/content/preferences/widgets/setting-group.mjs" */
+/** @import {SettingPane, SettingPaneConfig} from "chrome://browser/content/preferences/widgets/setting-pane.mjs" */
+
 "use strict";
 
 var { AppConstants } = ChromeUtils.importESModule(
@@ -146,6 +152,7 @@ ChromeUtils.defineLazyGetter(this, "gSubDialog", function () {
   });
 });
 
+/** @type {Record<string, boolean>} */
 const srdSectionPrefs = {};
 XPCOMUtils.defineLazyPreferenceGetter(
   srdSectionPrefs,
@@ -154,6 +161,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+/**
+ * @param {string} section
+ */
 function srdSectionEnabled(section) {
   if (!(section in srdSectionPrefs)) {
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -166,6 +176,7 @@ function srdSectionEnabled(section) {
   return srdSectionPrefs.all || srdSectionPrefs[section];
 }
 
+/** @type {Record<string, SettingPaneConfig>} */
 const CONFIG_PANES = {
   containers2: {
     parent: "general",
@@ -228,10 +239,12 @@ function init_all() {
 
   for (let [subPane, config] of Object.entries(CONFIG_PANES)) {
     subPane = friendlyPrefCategoryNameToInternalName(subPane);
-    let settingPane = document.createElement("setting-pane");
+    let settingPane = /** @type {SettingPane} */ (
+      document.createElement("setting-pane")
+    );
     settingPane.name = subPane;
     settingPane.config = config;
-    settingPane.isSubPane = config.parent;
+    settingPane.isSubPane = !!config.parent;
     document.getElementById("mainPrefPane").append(settingPane);
     register_module(subPane, {
       init() {
@@ -318,6 +331,12 @@ function onHashChange() {
   gotoPref(null, "Hash");
 }
 
+/**
+ * @param {string} [aCategory] The pane to show, defaults to the hash of URL or general
+ * @param {"Click"|"Initial"|"Hash"} [aShowReason]
+ *   What triggered the navigation. Defaults to "Click" if aCategory is provided,
+ *   otherwise "Initial".
+ */
 async function gotoPref(
   aCategory,
   aShowReason = aCategory ? "Click" : "Initial"
@@ -326,7 +345,7 @@ async function gotoPref(
   const kDefaultCategoryInternalName = "paneGeneral";
   const kDefaultCategory = "general";
   let hash = document.location.hash;
-  let category = aCategory || hash.substr(1) || kDefaultCategoryInternalName;
+  let category = aCategory || hash.substring(1) || kDefaultCategoryInternalName;
 
   let breakIndex = category.indexOf("-");
   // Subcategories allow for selecting smaller sections of the preferences
@@ -362,8 +381,8 @@ async function gotoPref(
       element.hidden = true;
     }
 
-    item = categories.querySelector(
-      ".category[value=" + CSS.escape(category) + "]"
+    item = /** @type {HTMLElement} */ (
+      categories.querySelector(".category[value=" + CSS.escape(category) + "]")
     );
     if (!item || item.hidden) {
       unknownCategory = true;
@@ -397,8 +416,10 @@ async function gotoPref(
   gLastCategory.category = category;
   gLastCategory.subcategory = subcategory;
   if (item) {
+    // @ts-ignore MozElements.RichListBox
     categories.selectedItem = item;
   } else {
+    // @ts-ignore MozElements.RichListBox
     categories.clearSelection();
   }
   window.history.replaceState(category, document.title);
@@ -451,7 +472,10 @@ async function gotoPref(
   categoryModule.handlePrefControlledSection?.();
 
   // Record which category is shown
-  Glean.aboutpreferences["show" + aShowReason].record({ value: category });
+  let gleanId = /** @type {"showClick" | "showHash" | "showInitial"} */ (
+    "show" + aShowReason
+  );
+  Glean.aboutpreferences[gleanId].record({ value: category });
 
   document.dispatchEvent(
     new CustomEvent("paneshown", {
@@ -464,9 +488,15 @@ async function gotoPref(
   );
 }
 
+/**
+ * @param {string} aQuery
+ * @param {string} aAttribute
+ */
 function search(aQuery, aAttribute) {
   let mainPrefPane = document.getElementById("mainPrefPane");
-  let elements = mainPrefPane.children;
+  let elements = /** @type {HTMLElement[]} */ (
+    Array.from(mainPrefPane.children)
+  );
   for (let element of elements) {
     // If the "data-hidden-from-search" is "true", the
     // element will not get considered during search.
