@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.fragment.about
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
@@ -39,6 +39,8 @@ import org.mozilla.focus.ui.theme.focusTypography
 import org.mozilla.focus.utils.SupportUtils.manifestoURL
 import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
 
+private const val GECKO_EMOJI = " \uD83E\uDD8E "
+
 /**
  * A [BaseComposeFragment] responsible for displaying the [About] screen.
  */
@@ -49,15 +51,22 @@ class AboutFragment : BaseComposeFragment() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val appName = stringResource(R.string.app_name)
+        val aboutContent = stringResource(R.string.about_content, appName, "")
+        val servicesAbbreviation = stringResource(R.string.services_abbreviation)
 
-        val aboutHeader = remember {
-            getAboutHeader(context)
+        val aboutHeader = remember(servicesAbbreviation) {
+            val packageInfo =
+                context.packageManagerCompatHelper.getPackageInfoCompat(context.packageName, 0)
+
+            getAboutHeader(
+                versionName = packageInfo.versionName,
+                versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString(),
+                servicesAbbreviation = servicesAbbreviation,
+            )
         }
 
-        val content = remember {
-            val appName = context.getString(R.string.app_name)
-            val aboutContent = context.getString(R.string.about_content, appName, "")
-
+        val content = remember(aboutContent) {
             aboutContent
                 .replace("<li>", "\u2022 \u0009 ")
                 .replace("</li>", "\n")
@@ -165,19 +174,18 @@ private fun AboutContent(content: String) {
     )
 }
 
-private fun getAboutHeader(context: Context): String {
-    val gecko = " \uD83E\uDD8E "
-    val engineIndicator =
-        gecko + GeckoViewBuildConfig.MOZ_APP_VERSION + "-" + GeckoViewBuildConfig.MOZ_APP_BUILDID
-    val servicesAbbreviation = context.getString(R.string.services_abbreviation)
-    val servicesIndicator = mozilla.components.Build.APPLICATION_SERVICES_VERSION
-    val packageInfo =
-        context.packageManagerCompatHelper.getPackageInfoCompat(context.packageName, 0)
-    val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
-    val vcsHash = if (BuildConfig.VCS_HASH.isNotBlank()) ", ${BuildConfig.VCS_HASH}" else ""
+private fun getAboutHeader(
+    versionName: String?,
+    versionCode: String,
+    servicesAbbreviation: String,
+): String {
+    val servicesVersion = mozilla.components.Build.APPLICATION_SERVICES_VERSION
+    val geckoVersionInfo =
+        GECKO_EMOJI + GeckoViewBuildConfig.MOZ_APP_VERSION + "-" + GeckoViewBuildConfig.MOZ_APP_BUILDID
+    val vcsHash = BuildConfig.VCS_HASH.takeIf { it.isNotBlank() }?.let { ", $it" } ?: ""
 
     return """
-        ${packageInfo.versionName} (Build #${versionCode}$engineIndicator)$vcsHash
-        $servicesAbbreviation: $servicesIndicator
+        ${versionName ?: ""} (Build #${versionCode}$geckoVersionInfo)$vcsHash
+        $servicesAbbreviation: $servicesVersion
     """.trimIndent()
 }
