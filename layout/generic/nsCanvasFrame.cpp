@@ -347,9 +347,11 @@ void nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         }
       }
       if (bgItem) {
+        const ActiveScrolledRoot* scrollTargetASR =
+            asr ? asr->GetNearestScrollASR() : nullptr;
         thisItemList.AppendToTop(
             nsDisplayFixedPosition::CreateForFixedBackground(
-                aBuilder, this, nullptr, bgItem, i, asr));
+                aBuilder, this, nullptr, bgItem, i, scrollTargetASR));
       }
 
     } else {
