@@ -110,6 +110,7 @@
           "moz-src:///browser/components/newtab/SponsorProtection.sys.mjs",
         TabMetrics:
           "moz-src:///browser/components/tabbrowser/TabMetrics.sys.mjs",
+        TabNotes: "moz-src:///browser/components/tabbrowser/TabNotes.sys.mjs",
         TabStateFlusher:
           "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
         TaskbarTabsUtils:
