@@ -51,13 +51,6 @@ let loadUri = async uri => {
   await loaded;
 };
 
-let updateConfig = async config => {
-  await waitForIdle();
-  await SearchTestUtils.setRemoteSettingsConfig(config);
-  await Services.search.wrappedJSObject.reset();
-  await Services.search.init();
-};
-
 add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -67,8 +60,6 @@ add_setup(async function setup() {
   });
 
   registerCleanupFunction(async () => {
-    await updateConfig(null);
-    Services.search.restoreDefaultEngines();
     Services.prefs.clearUserPref(
       "browser.urlbar.quickactions.timesShownOnboardingLabel"
     );
@@ -95,7 +86,7 @@ add_task(async function test_engine_match() {
     PlacesTestUtils.waitForNotification("history-cleared");
   await PlacesUtils.history.clear();
   await promiseClearHistory;
-  await updateConfig(CONFIG);
+  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG);
   await loadUri("https://example.org/");
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -135,12 +126,10 @@ add_task(async function test_engine_match() {
   EventUtils.synthesizeKey("KEY_Enter");
 
   await onLoad;
-  await updateConfig(null);
 });
 
 add_task(async function test_actions() {
   let testActionCalled = 0;
-  await updateConfig(CONFIG);
   await loadUri("https://example.net/");
 
   ActionsProviderQuickActions.addAction("testaction", {
@@ -161,7 +150,6 @@ add_task(async function test_actions() {
 
   Assert.equal(testActionCalled, 1, "Test action was called");
 
-  await updateConfig(null);
   ActionsProviderQuickActions.removeAction("testaction");
 });
 
@@ -240,7 +228,7 @@ add_task(async function test_tab_to_search_engine() {
       },
     },
   ]);
-  await updateConfig(newConfig);
+  await SearchTestUtils.updateRemoteSettingsConfig(newConfig);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -267,19 +255,46 @@ add_task(async function test_tab_to_search_engine() {
   });
 
   await onLoad;
-  await updateConfig(null);
+  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG);
 });
 
-add_task(async function test_onboarding_default_engine() {
+add_task(async function test_dont_suggest_default_engine() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "default",
+  });
+
+  Assert.ok(
+    await hasActions(1),
+    "Default engine is suggested when it matches the query"
+  );
+
+  // Load a URI from the host of the default engine.
+  await loadUri("https://example.com/");
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "something",
+  });
+
+  Assert.ok(
+    !(await hasActions(1)),
+    "Default engine is not suggested based on current host"
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
+});
+
+add_task(async function test_onboarding() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.quickactions.timesToShowOnboardingLabel", 3]],
   });
 
-  await updateConfig(CONFIG);
-
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "default",
+    value: "non-default",
   });
 
   Assert.ok(
@@ -292,8 +307,6 @@ add_task(async function test_onboarding_default_engine() {
   await UrlbarTestUtils.promisePopupClose(window, () => {
     EventUtils.synthesizeKey("KEY_Escape");
   });
-
-  await updateConfig(null);
 });
 
 async function hasActions(index) {
@@ -303,10 +316,4 @@ async function hasActions(index) {
   let result = (await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1))
     .result;
   return result.providerName == "UrlbarProviderGlobalActions";
-}
-
-async function waitForIdle() {
-  for (let i = 0; i < 10; i++) {
-    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
-  }
 }
