@@ -210,17 +210,6 @@ class nsView final : public nsIWidgetListener {
 
   void SetNeedsWindowPropertiesSync();
 
-  /**
-   * Make aWidget direct its events to this view.
-   * The caller must call DetachWidgetEventHandler before this view
-   * is destroyed.
-   */
-  void AttachWidgetEventHandler(nsIWidget* aWidget);
-  /**
-   * Stop aWidget directing its events to this view.
-   */
-  void DetachWidgetEventHandler(nsIWidget* aWidget);
-
 #ifdef DEBUG
   /**
    * Output debug info to FILE
@@ -291,11 +280,6 @@ class nsView final : public nsIWidgetListener {
    * is relative to this view.
    */
   void SetDimensions(const nsRect& aRect);
-
-  bool IsDirty() const { return mIsDirty; }
-  void SetIsDirty(bool aDirty) { mIsDirty = aDirty; }
-
-  void AssertNoWindow();
 
   void CallOnAllRemoteChildren(
       const std::function<mozilla::CallState(mozilla::dom::BrowserParent*)>&

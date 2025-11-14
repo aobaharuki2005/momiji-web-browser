@@ -234,34 +234,6 @@ void nsView::DetachFromTopLevelWidget() {
   mWidgetIsTopLevel = false;
 }
 
-void nsView::AssertNoWindow() {
-  // XXX: it would be nice to make this a strong assert
-  if (MOZ_UNLIKELY(mWindow)) {
-    NS_ERROR("We already have a window for this view? BAD");
-    mWindow->SetWidgetListener(nullptr);
-    mWindow->Destroy();
-    mWindow = nullptr;
-  }
-}
-
-//
-// internal window creation functions
-//
-void nsView::AttachWidgetEventHandler(nsIWidget* aWidget) {
-#ifdef DEBUG
-  NS_ASSERTION(!aWidget->GetWidgetListener(), "Already have a widget listener");
-#endif
-
-  aWidget->SetWidgetListener(this);
-}
-
-void nsView::DetachWidgetEventHandler(nsIWidget* aWidget) {
-  NS_ASSERTION(
-      !aWidget->GetWidgetListener() || aWidget->GetWidgetListener() == this,
-      "Wrong view");
-  aWidget->SetWidgetListener(nullptr);
-}
-
 #ifdef DEBUG
 void nsView::List(FILE* out, int32_t aIndent) const {
   int32_t i;
