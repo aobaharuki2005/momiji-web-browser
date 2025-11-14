@@ -866,3 +866,62 @@ browser.backup:
       restore_id:
         type: string
         description: The identifier for the potential profile restore event.
+
+  restored_profile_launched:
+    type: event
+    description: >
+      Dispatched when a restore completes, after the browser restarts into the
+      restored profile (from that profile). Note that this will not be sent if
+      the new profile has telemetry disabled.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_sensitivity:
+      - interaction
+    send_in_pings:
+      - post-profile-restore
+    notification_emails:
+      - drubino@mozilla.com
+    expires: never
+    extra_keys:
+      restore_id:
+        type: string
+        description: The identifier for the potential profile restore event.
+
+  restored_profile_data:
+    type: object
+    description: >
+      Describes the backup that was restored to make the current profile. If
+      This is not a restored profile, `is_restored` will be set to `false` and
+      no other values will be set.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_sensitivity:
+      - technical
+    send_in_pings:
+      - post-profile-restore
+    notification_emails:
+      - drubino@mozilla.com
+    expires: never
+    structure:
+      type: object
+      properties:
+        is_restored:
+          type: boolean
+        backup_timestamp:
+          type: number
+        backup_app_name:
+          type: string
+        backup_app_version:
+          type: string
+        backup_build_id:
+          type: string
+        backup_os_name:
+          type: string
+        backup_os_version:
+          type: string
+        backup_legacy_client_id:
+          type: string

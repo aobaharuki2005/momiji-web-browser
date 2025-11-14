@@ -22,3 +22,17 @@ profile-restore:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
   notification_emails:
     - drubino@mozilla.com
+
+post-profile-restore:
+  description: |
+    Only used for telemetry that is sent from a profile created by restoring a
+    backup. This is in a separate ping specifically to avoid associating the
+    client id of the restored profile with the client ids of the backed up
+    profile and the profile that did the restoring.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+  notification_emails:
+    - drubino@mozilla.com

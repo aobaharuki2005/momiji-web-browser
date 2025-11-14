@@ -43,6 +43,7 @@ const BUILD_ID = "test-build-id";
 const OS_NAME = "test-os-name";
 const OS_VERSION = "test-os-version";
 const TELEMETRY_ENABLED = true;
+const LEGACY_CLIENT_ID = "legacy-client-id";
 
 add_setup(function () {
   currentProfile = setupProfile();
@@ -1101,6 +1102,7 @@ add_task(async function test_getBackupFileInfo() {
         osName: OS_NAME,
         osVersion: OS_VERSION,
         healthTelemetryEnabled: TELEMETRY_ENABLED,
+        legacyClientID: LEGACY_CLIENT_ID,
       },
       encConfig: {},
     },
@@ -1131,6 +1133,7 @@ add_task(async function test_getBackupFileInfo() {
       osName: OS_NAME,
       osVersion: OS_VERSION,
       healthTelemetryEnabled: TELEMETRY_ENABLED,
+      legacyClientID: LEGACY_CLIENT_ID,
     },
     "State should match a subset from the archive sample."
   );
@@ -1194,6 +1197,7 @@ add_task(async function test_getBackupFileInfo_error_handling() {
           osName: OS_NAME,
           osVersion: OS_VERSION,
           healthTelemetryEnabled: TELEMETRY_ENABLED,
+          legacyClientID: LEGACY_CLIENT_ID,
         },
         encConfig: {},
       },
@@ -1217,6 +1221,7 @@ add_task(async function test_getBackupFileInfo_error_handling() {
         osName: OS_NAME,
         osVersion: OS_VERSION,
         healthTelemetryEnabled: TELEMETRY_ENABLED,
+        legacyClientID: LEGACY_CLIENT_ID,
       },
       "Initial state should be set correctly"
     );
