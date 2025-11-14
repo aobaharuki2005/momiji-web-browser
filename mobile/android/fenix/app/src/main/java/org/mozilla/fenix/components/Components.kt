@@ -197,7 +197,26 @@ class Components(private val context: Context) {
     }
 
     val analytics by lazyMonitored { Analytics(context, nimbus, performance.visualCompletenessQueue) }
-    val nimbus by lazyMonitored { NimbusComponents(context) }
+
+    val remoteSettingsService = lazyMonitored {
+        RemoteSettingsService(
+            context,
+            if (context.settings().useProductionRemoteSettingsServer) {
+                RemoteSettingsServer.Prod.into()
+            } else {
+                RemoteSettingsServer.Stage.into()
+            },
+            channel = BuildConfig.BUILD_TYPE,
+            // Need to send this value separately, since `isLargeScreenSize()` is a fenix extension
+            isLargeScreenSize = context.isLargeScreenSize(),
+        )
+    }
+    val nimbus by lazyMonitored {
+        NimbusComponents(
+            context = context,
+            remoteSettingsService = remoteSettingsService.value.remoteSettingsService,
+        )
+    }
     val publicSuffixList by lazyMonitored { PublicSuffixList(context) }
     val clipboardHandler by lazyMonitored { ClipboardHandler(context) }
     val performance by lazyMonitored { PerformanceComponent() }
@@ -319,20 +338,6 @@ class Components(private val context: Context) {
         )
     } else {
         null
-    }
-
-    val remoteSettingsService = lazyMonitored {
-        RemoteSettingsService(
-            context,
-            if (context.settings().useProductionRemoteSettingsServer) {
-                RemoteSettingsServer.Prod.into()
-            } else {
-                RemoteSettingsServer.Stage.into()
-            },
-            channel = BuildConfig.BUILD_TYPE,
-            // Need to send this value separately, since `isLargeScreenSize()` is a fenix extension
-            isLargeScreenSize = context.isLargeScreenSize(),
-        )
     }
 
     val fxSuggest by lazyMonitored { FxSuggest(context, remoteSettingsService.value) }
