@@ -240,7 +240,7 @@ class Interventions {
         config.DISABLING_PREF
       );
 
-      const disablingPrefValue = await browser.aboutConfigPrefs.getPref(
+      const disablingPrefValue = browser.aboutConfigPrefs.getBoolPrefSync(
         config.DISABLING_PREF
       );
 
