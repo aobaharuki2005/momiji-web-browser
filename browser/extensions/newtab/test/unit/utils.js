@@ -118,8 +118,8 @@ export class FakensIPrefBranch {
   setBoolPref(prefName, value) {
     this.set(prefName, value);
   }
-  getBoolPref(prefName) {
-    return this.get(prefName);
+  getBoolPref(prefName, defaultValue) {
+    return this.get(prefName, defaultValue);
   }
   setIntPref(prefName, value) {
     this.set(prefName, value);

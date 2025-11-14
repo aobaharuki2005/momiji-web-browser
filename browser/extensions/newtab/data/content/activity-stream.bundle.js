@@ -11396,7 +11396,7 @@ class _Weather extends (external_React_default()).PureComponent {
     const {
       values
     } = this.props.Prefs;
-    const systemValue = values[PREF_SYSTEM_SHOW_WEATHER];
+    const systemValue = values[PREF_SYSTEM_SHOW_WEATHER] && values["feeds.weatherfeed"];
     const experimentValue = values.trainhopConfig?.weather?.enabled;
     return systemValue || experimentValue;
   }

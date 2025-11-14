@@ -21,7 +21,6 @@ const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
 // AboutHomeStartupCache needs us in "quit-application", so stay alive longer.
 // TODO: We could better have a shared async shutdown blocker?
 const TOPIC_APP_QUIT = "profile-before-change";
-const PREF_SHOULD_INITIALIZE = "browser.newtabpage.shouldInitialize";
 
 export const AboutNewTab = {
   QueryInterface: ChromeUtils.generateQI([
@@ -48,16 +47,6 @@ export const AboutNewTab = {
    */
   init() {
     if (this.initialized) {
-      return;
-    }
-
-    // For tests/automation: when false, newtab won't initialize in this session.
-    // Flipping after initialization has no effect on the current session.
-    const shouldInitialize = Services.prefs.getBoolPref(
-      PREF_SHOULD_INITIALIZE,
-      true
-    );
-    if (!shouldInitialize) {
       return;
     }
 
