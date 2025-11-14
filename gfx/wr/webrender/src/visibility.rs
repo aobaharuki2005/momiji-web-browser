@@ -13,10 +13,10 @@ use std::usize;
 use crate::clip::ClipStore;
 use crate::composite::CompositeState;
 use crate::profiler::TransactionProfile;
-use crate::renderer::GpuBufferBuilder;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::clip::{ClipChainInstance, ClipTree};
 use crate::frame_builder::FrameBuilderConfig;
+use crate::gpu_cache::GpuCache;
 use crate::picture::{PictureCompositeMode, ClusterFlags, SurfaceInfo, TileCacheInstance};
 use crate::picture::{SurfaceIndex, RasterConfig, SubSliceIndex};
 use crate::prim_store::{ClipTaskIndex, PictureIndex, PrimitiveInstanceKind};
@@ -41,7 +41,7 @@ pub struct FrameVisibilityContext<'a> {
 pub struct FrameVisibilityState<'a> {
     pub clip_store: &'a mut ClipStore,
     pub resource_cache: &'a mut ResourceCache,
-    pub frame_gpu_data: &'a mut GpuBufferBuilder,
+    pub gpu_cache: &'a mut GpuCache,
     pub data_stores: &'a mut DataStores,
     pub clip_tree: &'a mut ClipTree,
     pub composite_state: &'a mut CompositeState,
@@ -321,7 +321,7 @@ pub fn update_prim_visibility(
                     &map_local_to_picture,
                     &map_surface_to_vis,
                     &frame_context.spatial_tree,
-                    &mut frame_state.frame_gpu_data.f32,
+                    frame_state.gpu_cache,
                     frame_state.resource_cache,
                     device_pixel_scale,
                     &surface_culling_rect,
@@ -363,7 +363,7 @@ pub fn update_prim_visibility(
                         &store.color_bindings,
                         &frame_state.surface_stack,
                         &mut frame_state.composite_state,
-                        &mut frame_state.frame_gpu_data.f32,
+                        &mut frame_state.gpu_cache,
                         &mut frame_state.scratch.primitive,
                         is_root_tile_cache,
                         frame_state.surfaces,

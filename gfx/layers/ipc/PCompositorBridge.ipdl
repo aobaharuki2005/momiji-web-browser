@@ -52,6 +52,7 @@ struct FrameStats {
   TimeStamp compositeEnd;
   int32_t contentFrameTime;
   double resourceUploadTime;
+  double gpuCacheUploadTime;
   TimeStamp transactionStart;
   TimeStamp refreshStart;
   TimeStamp fwdTime;

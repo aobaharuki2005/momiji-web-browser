@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::hash;
+use crate::gpu_cache::{GpuCache, GpuCacheHandle};
+use crate::gpu_cache::GpuDataRequest;
 use crate::intern;
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferWriterF};
 use api::ComponentTransferFuncType;
 
 
@@ -108,14 +109,14 @@ impl intern::InternDebug for SFilterDataKey {}
 #[derive(MallocSizeOf)]
 pub struct SFilterDataTemplate {
     pub data: SFilterData,
-    pub gpu_buffer_address: GpuBufferAddress,
+    pub gpu_cache_handle: GpuCacheHandle,
 }
 
 impl From<SFilterDataKey> for SFilterDataTemplate {
     fn from(item: SFilterDataKey) -> Self {
         SFilterDataTemplate {
             data: item.data,
-            gpu_buffer_address: GpuBufferAddress::INVALID,
+            gpu_cache_handle: GpuCacheHandle::new(),
         }
     }
 }
@@ -128,14 +129,12 @@ impl SFilterData {
             && self.a_func == SFilterDataComponent::Identity
     }
 
-    pub fn write_gpu_blocks(&self, gpu_buffer: &mut GpuBufferBuilderF) -> GpuBufferAddress {
+    pub fn update(&self, mut request: GpuDataRequest) {
+        push_component_transfer_data(&self.r_func, &mut request);
+        push_component_transfer_data(&self.g_func, &mut request);
+        push_component_transfer_data(&self.b_func, &mut request);
+        push_component_transfer_data(&self.a_func, &mut request);
         assert!(!self.is_identity());
-        let mut writer = gpu_buffer.write_blocks(1024);
-        push_component_transfer_data(&self.r_func, &mut writer);
-        push_component_transfer_data(&self.g_func, &mut writer);
-        push_component_transfer_data(&self.b_func, &mut writer);
-        push_component_transfer_data(&self.a_func, &mut writer);
-        writer.finish()
     }
 }
 
@@ -144,11 +143,13 @@ impl SFilterDataTemplate {
     /// times per frame, by each primitive reference that refers to this interned
     /// template. The initial request call to the GPU cache ensures that work is only
     /// done if the cache entry is invalid (due to first use or eviction).
-    pub fn write_gpu_blocks(
+    pub fn update(
         &mut self,
-        gpu_buffer: &mut GpuBufferBuilderF,
+        gpu_cache: &mut GpuCache,
     ) {
-        self.gpu_buffer_address = self.data.write_gpu_blocks(gpu_buffer);
+        if let Some(request) = gpu_cache.request(&mut self.gpu_cache_handle) {
+            self.data.update(request);
+        }
     }
 }
 
@@ -165,7 +166,7 @@ impl intern::Internable for FilterDataIntern {
 
 fn push_component_transfer_data(
     func_comp: &SFilterDataComponent,
-    writer: &mut GpuBufferWriterF,
+    request: &mut GpuDataRequest,
 ) {
     match func_comp {
         SFilterDataComponent::Identity => {}
@@ -204,14 +205,14 @@ fn push_component_transfer_data(
                     }
                 }
 
-                writer.push_one(arr);
+                request.push(arr);
             }
         }
         SFilterDataComponent::Linear(a, b) => {
-            writer.push_one([*a, *b, 0.0, 0.0]);
+            request.push([*a, *b, 0.0, 0.0]);
         }
         SFilterDataComponent::Gamma(a, b, c) => {
-            writer.push_one([*a, *b, *c, 0.0]);
+            request.push([*a, *b, *c, 0.0]);
         }
     }
 }

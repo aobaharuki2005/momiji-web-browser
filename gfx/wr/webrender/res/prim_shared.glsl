@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include rect,render_task,transform,image_source
+#include rect,render_task,gpu_cache,transform
 
 #define EXTEND_MODE_CLAMP  0
 #define EXTEND_MODE_REPEAT 1
