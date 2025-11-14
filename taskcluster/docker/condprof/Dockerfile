@@ -7,9 +7,9 @@ VOLUME /builds/worker/tooltool-cache
 VOLUME /builds/worker/workspace
 
 RUN apt-get -y update && \
-    apt-get install -y python3.7 \
-      python3.7-venv \
-      python3.7-dev
+    apt-get install -y python3 \
+      python3-venv \
+      python3-dev
 
 CMD ["/bin/bash", "--login"]
 
