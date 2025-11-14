@@ -29,6 +29,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "getNodeDisplayName",
+  "resource://devtools/server/actors/inspector/utils.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "SharedCssLogic",
   "resource://devtools/shared/inspector/css-logic.js"
 );
@@ -292,21 +298,45 @@ class StyleRuleActor extends Actor {
   }
 
   /**
+   * Returns true if the pseudo element anonymous node (e.g. ::before, ::marker, …) is selected.
+   * Returns false if a non pseudo element node is selected and we're looking into its pseudo
+   * elements rules (i.e. this is for the "Pseudo-elements" section in the Rules view")
+   */
+  get isPseudoElementAnonymousNodeSelected() {
+    if (!this._pseudoElement) {
+      return false;
+    }
+
+    // `this._pseudoElement` is the returned value by getNodeDisplayName, i.e that does
+    // differ from this.pageStyle.selectedElement.implementedPseudoElement (e.g. for
+    // view transition element, it will be `::view-transition-group(root)`, while
+    // implementedPseudoElement will be `::view-transition-group`).
+    return (
+      this._pseudoElement === getNodeDisplayName(this.pageStyle.selectedElement)
+    );
+  }
+
+  /**
    * StyleRuleActor is spawned once per CSS Rule, but will be refreshed based on the
    * currently selected DOM Element, which is updated when PageStyleActor.getApplied
    * is called.
    */
   get currentlySelectedElement() {
     let { selectedElement } = this.pageStyle;
-    if (!this._pseudoElement) {
+    // If we're not handling a pseudo element, or if the pseudo element node
+    // (e.g. ::before, ::marker, …) is the one selected in the markup view, we can
+    // directly return selected element.
+    if (!this._pseudoElement || this.isPseudoElementAnonymousNodeSelected) {
       return selectedElement;
     }
 
-    // Otherwise, we can be in one of two cases:
-    // - we are selecting a pseudo element, and that pseudo element is referenced
-    //   by `selectedElement`
-    // - we are selecting the pseudo element "parent", we need to walk down the tree
-    //   from `selectedElemnt` to find the pseudo element.
+    // Otherwise we are selecting the pseudo element "parent" (binding), and we need to
+    // walk down the tree from `selectedElement` to find the pseudo element.
+
+    // FIXME: ::view-transition pseudo elements don't have a _moz_generated_content_ prefixed
+    // nodename, but have specific type and name attribute.
+    // At the moment this isn't causing any issues because we don't display the view
+    // transition rules in the pseudo element section, but this should be fixed in Bug 1998345.
     const pseudo = this._pseudoElement.replaceAll(":", "");
     const nodeName = `_moz_generated_content_${pseudo}`;
 
@@ -334,20 +364,11 @@ class StyleRuleActor extends Actor {
 
     const { selectedElement } = this.pageStyle;
 
-    // We can be in one of two cases:
-    // - we are selecting a pseudo element, and that pseudo element is referenced
-    //   by `selectedElement`
-    // - we are selecting the pseudo element "parent".
-    // implementPseudoElement returns the pseudo-element string if this element represents
-    // a pseudo-element, or null otherwise. See https://searchfox.org/mozilla-central/rev/1b90936792b2c71ef931cb1b8d6baff9d825592e/dom/webidl/Element.webidl#102-107
-    const isPseudoElementParentSelected =
-      selectedElement.implementedPseudoElement !== this._pseudoElement;
-
     return selectedElement.ownerGlobal.getComputedStyle(
       selectedElement,
       // If we are selecting the pseudo element parent, we need to pass the pseudo element
       // to getComputedStyle to actually get the computed style of the pseudo element.
-      isPseudoElementParentSelected ? this._pseudoElement : null
+      !this.isPseudoElementAnonymousNodeSelected ? this._pseudoElement : null
     );
   }
 

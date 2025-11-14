@@ -241,4 +241,164 @@ add_task(async function () {
       declarations: [{ name: "color", value: "#333" }],
     },
   ]);
+
+  info("Check rules on ::view-transition");
+  const htmlNodeFront = await getNodeFront("html", inspector);
+
+  const onMarkupMutation = inspector.once("markupmutation");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    const document = content.document;
+    const transition = document.startViewTransition(() => {
+      document.querySelector(".transition").append("updated");
+    });
+    await transition.ready;
+    await transition.updateCallbackDone;
+  });
+  await onMarkupMutation;
+
+  const htmlChildren = await inspector.markup.walker.children(htmlNodeFront);
+  const viewTransitionNodeFront = htmlChildren.nodes[2];
+
+  is(
+    viewTransitionNodeFront.getAttribute("type"),
+    ":view-transition",
+    "Got expected ::view-transition node front"
+  );
+
+  await selectNode(viewTransitionNodeFront, inspector);
+
+  checkRuleViewContent(view, [
+    {
+      selector: `::view-transition`,
+      declarations: [{ name: "color", value: `lime` }],
+    },
+    {
+      header: "Inherited from html",
+    },
+    {
+      selector: `html:active-view-transition`,
+      inherited: true,
+      declarations: [{ name: "color", value: "peachpuff", overridden: true }],
+    },
+    {
+      selector: `*`,
+      inherited: true,
+      declarations: [{ name: "cursor", value: "default" }],
+    },
+  ]);
+
+  const viewTransitionChildren = await inspector.markup.walker.children(
+    viewTransitionNodeFront
+  );
+  const viewTransitionGroupNodeFront = viewTransitionChildren.nodes[0];
+  is(
+    viewTransitionGroupNodeFront.getAttribute("type"),
+    ":view-transition-group",
+    "Got expected ::view-transition-group node front"
+  );
+
+  const viewTransitionGroupChildren = await inspector.markup.walker.children(
+    viewTransitionGroupNodeFront
+  );
+  const viewTransitionImagePairNodeFront = viewTransitionGroupChildren.nodes[0];
+  is(
+    viewTransitionImagePairNodeFront.getAttribute("type"),
+    ":view-transition-image-pair",
+    "Got expected ::view-transition-image-pair node front"
+  );
+
+  const viewTransitionImagePairChildren =
+    await inspector.markup.walker.children(viewTransitionImagePairNodeFront);
+  const [viewTransitionOldNodeFront, viewTransitionNewNodeFront] =
+    viewTransitionImagePairChildren.nodes;
+  is(
+    viewTransitionOldNodeFront.getAttribute("type"),
+    ":view-transition-old",
+    "Got expected ::view-transition-old node front"
+  );
+  is(
+    viewTransitionNewNodeFront.getAttribute("type"),
+    ":view-transition-new",
+    "Got expected ::view-transition-new node front"
+  );
+
+  info("Check rules on ::view-transition-old");
+  await selectNode(viewTransitionOldNodeFront, inspector);
+  checkRuleViewContent(view, [
+    {
+      selector: `::view-transition-old(root), ::view-transition-new(root)`,
+      declarations: [
+        { name: "animation-duration", value: `1000s` },
+        { name: "top", value: `1em` },
+        { name: "gap", value: `10px`, inactiveCSS: true },
+      ],
+    },
+    {
+      header: "Inherited from ::view-transition",
+    },
+    {
+      selector: `::view-transition`,
+      inherited: true,
+      declarations: [{ name: "color", value: `lime` }],
+    },
+    {
+      header: "Inherited from html",
+    },
+    {
+      selector: `html:active-view-transition`,
+      inherited: true,
+      declarations: [{ name: "color", value: "peachpuff", overridden: true }],
+    },
+    {
+      selector: `*`,
+      inherited: true,
+      declarations: [{ name: "cursor", value: "default" }],
+    },
+  ]);
+
+  info("Check rules on ::view-transition-new");
+  await selectNode(viewTransitionNewNodeFront, inspector);
+  checkRuleViewContent(view, [
+    {
+      selector: `::view-transition-new(root)`,
+      declarations: [
+        { name: "animation-duration", value: `3600s` },
+        { name: "color", value: `thistle` },
+      ],
+    },
+    {
+      selector: `::view-transition-old(root), ::view-transition-new(root)`,
+      declarations: [
+        { name: "animation-duration", value: `1000s`, overridden: true },
+        {
+          name: "top",
+          value: `1em`,
+          // This shouldn't be inactive. See Bug 1998357
+          inactiveCSS: true,
+        },
+        { name: "gap", value: `10px`, inactiveCSS: true },
+      ],
+    },
+    {
+      header: "Inherited from ::view-transition",
+    },
+    {
+      selector: `::view-transition`,
+      inherited: true,
+      declarations: [{ name: "color", value: `lime`, overridden: true }],
+    },
+    {
+      header: "Inherited from html",
+    },
+    {
+      selector: `html:active-view-transition`,
+      inherited: true,
+      declarations: [{ name: "color", value: "peachpuff", overridden: true }],
+    },
+    {
+      selector: `*`,
+      inherited: true,
+      declarations: [{ name: "cursor", value: "default" }],
+    },
+  ]);
 });
