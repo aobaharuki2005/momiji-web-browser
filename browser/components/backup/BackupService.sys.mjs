@@ -780,6 +780,14 @@ export class BackupService extends EventTarget {
     supportBaseLink: Services.urlFormatter.formatURLPref("app.support.baseURL"),
     recoveryInProgress: false,
     recoveryErrorCode: 0,
+    /**
+     * Every file we load successfully is going to get a restore ID which is
+     * basically the identifier for that profile restore event. If we actually
+     * do restore it, this ID will end up being propagated into the restored
+     * file and used to correlate this restore event with the profile that was
+     * restored.
+     */
+    restoreID: null,
   };
 
   /**
@@ -4262,6 +4270,13 @@ export class BackupService extends EventTarget {
    */
   async getBackupFileInfo(backupFilePath) {
     lazy.logConsole.debug(`Getting info from backup file at ${backupFilePath}`);
+
+    this.#_state.restoreID = Services.uuid.generateUUID().toString();
+    this.#_state.backupFileInfo = null;
+    this.#_state.backupFileToRestore = backupFilePath;
+    this.#_state.backupFileCoarseLocation =
+      this.classifyLocationForTelemetry(backupFilePath);
+
     try {
       let { archiveJSON, isEncrypted } =
         await this.sampleArchive(backupFilePath);
@@ -4269,25 +4284,26 @@ export class BackupService extends EventTarget {
         isEncrypted,
         date: archiveJSON?.meta?.date,
         deviceName: archiveJSON?.meta?.deviceName,
+        appName: archiveJSON?.meta?.appName,
+        appVersion: archiveJSON?.meta?.appVersion,
+        buildID: archiveJSON?.meta?.buildID,
+        osName: archiveJSON?.meta?.osName,
+        osVersion: archiveJSON?.meta?.osVersion,
+        healthTelemetryEnabled: archiveJSON?.meta?.healthTelemetryEnabled,
       };
-      this.#_state.backupFileToRestore = backupFilePath;
-      // Clear any existing recovery error from state since we've successfully got our file info
+
+      // Clear any existing recovery error from state since we've successfully
+      // got our file info. Make sure to do this last, since it will cause
+      // state change observers to fire.
       this.setRecoveryError(ERRORS.NONE);
     } catch (error) {
-      this.setRecoveryError(error.cause);
       // Nullify the file info when we catch errors that indicate the file is invalid
-      switch (error.cause) {
-        case ERRORS.FILE_SYSTEM_ERROR:
-        case ERRORS.CORRUPTED_ARCHIVE:
-        case ERRORS.UNSUPPORTED_BACKUP_VERSION:
-          this.#_state.backupFileInfo = null;
-          this.#_state.backupFileToRestore = null;
-          break;
-        default:
-          break;
-      }
+      this.#_state.backupFileInfo = null;
+      this.#_state.backupFileToRestore = null;
+
+      // Notify observers of the error last, after we have set the state.
+      this.setRecoveryError(error.cause);
     }
-    this.stateUpdate();
   }
 
   /**
