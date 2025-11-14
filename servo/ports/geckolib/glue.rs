@@ -2813,12 +2813,13 @@ where
         Some(pseudo) => {
             // We need to make sure that the requested pseudo element type
             // matches the selector pseudo element type before proceeding.
-            match selector.pseudo_element() {
-                Some(selector_pseudo) if *selector_pseudo == pseudo => {
-                    matching_mode = MatchingMode::ForStatelessPseudoElement
-                },
-                _ => return None,
-            };
+            let selector_pseudo = selector.pseudo_element()?;
+            // The element here is used to get the active view transition (for
+            // view-transition-class), so passing the originating element is fine here.
+            if !pseudo.matches(selector_pseudo, &element) {
+                return None;
+            }
+            matching_mode = MatchingMode::ForStatelessPseudoElement;
         },
         None => {
             // Do not attempt to match if a pseudo element is requested and
