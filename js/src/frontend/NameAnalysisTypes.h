@@ -390,7 +390,7 @@ class NameLocation {
 
   bool isLexical() const { return BindingKindIsLexical(bindingKind()); }
 
-  bool isConst() const { return bindingKind() == BindingKind::Const; }
+  bool isConst() const { return bindingKind() == BindingKind::Const || bindingKind() == BindingKind::Using; }
 
   bool isSynthetic() const { return bindingKind() == BindingKind::Synthetic; }
 
