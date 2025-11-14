@@ -418,7 +418,11 @@ export class FormAutofillHandler {
 
       let value = this.getFilledValueFromProfile(fieldDetail, profile);
       if (!value) {
-        this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+        // A field could have been filled by a previous fill, so only
+        // clear when in the preview state.
+        if (element.autofillState == FIELD_STATES.PREVIEW) {
+          this.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+        }
         continue;
       }
 
