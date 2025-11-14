@@ -321,7 +321,6 @@ export class IPProtectionPanel {
     doc.addEventListener("IPProtection:UserDisable", this.handleEvent);
     doc.addEventListener("IPProtection:ShowHelpPage", this.handleEvent);
     doc.addEventListener("IPProtection:SignIn", this.handleEvent);
-    doc.addEventListener("IPProtection:UserShowSiteSettings", this.handleEvent);
   }
 
   #removePanelListeners(doc) {
@@ -332,10 +331,6 @@ export class IPProtectionPanel {
     doc.removeEventListener("IPProtection:UserDisable", this.handleEvent);
     doc.removeEventListener("IPProtection:ShowHelpPage", this.handleEvent);
     doc.removeEventListener("IPProtection:SignIn", this.handleEvent);
-    doc.removeEventListener(
-      "IPProtection:UserShowSiteSettings",
-      this.handleEvent
-    );
   }
 
   #addProxyListeners() {
@@ -404,8 +399,6 @@ export class IPProtectionPanel {
         hasUpgraded: lazy.IPPEnrollAndEntitleManager.hasUpgraded,
         error: hasError ? ERRORS.GENERIC : "",
       });
-    } else if (event.type == "IPProtection:UserShowSiteSettings") {
-      // TODO: show subview for site settings (Bug 1997413)
     }
   }
 }
