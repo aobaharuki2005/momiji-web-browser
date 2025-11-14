@@ -3908,6 +3908,8 @@
   <string name="settings_search_no_results_found_message">Ոչինչ չհայտնվեց</string>
   <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
   <string name="settings_search_clear_recent_searches_message">Մաքրել բոլորը</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Վերջին որոնման արդյունքները</string>
   <!--
     Terms of use pop up prompt
 

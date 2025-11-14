@@ -1747,6 +1747,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">Emondo URL jokopyre tapykueho ñemo’ãha</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Pe jehapykueho ñemo’ã iporãvéva ojokokuaa tapykuehoha ha scripts heta ñanduti rogue oikotevẽva oikoporã hag̃ua.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Marandu’i jehecha ypy</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Mbohovái jehecha ypy</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Mondo</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -3884,6 +3890,26 @@
   <string name="review_prompt_feedback_header">Rombyasy eguereko haguére apañuái. Mba’éichapa roipytyvõkuaa %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Ehai ne remiandu</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">Jehekaha Ñemboheko</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
+  <string name="content_description_settings_search_clear_search">Embogue jehekakue</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">Eikundaha tapykuévo</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">Ndaipóri ojeheka ramóva</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">Oiko peteĩ jejavy</string>
+  <!-- Message title displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_found_message">Ndojekuaái mba’eve</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">Emboguepa</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Ojeheka ramóva rapykuere</string>
   <!--
     Terms of use pop up prompt
 
