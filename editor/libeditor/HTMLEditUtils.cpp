@@ -309,11 +309,6 @@ bool HTMLEditUtils::IsBlockElement(const nsIContent& aContent,
     // structure as far as possible.
     return IsHTMLBlockElementByDefault(aContent);
   }
-  // Both Blink and WebKit treat ruby style as a block, see IsEnclosingBlock()
-  // in Chromium or isBlock() in WebKit.
-  if (styleDisplay->IsRubyDisplayType()) {
-    return true;
-  }
   // If the outside is not inline, treat it as block.
   if (!styleDisplay->IsInlineOutsideStyle()) {
     return true;
@@ -364,8 +359,7 @@ bool HTMLEditUtils::IsInlineContent(const nsIContent& aContent,
   }
   // Different block IsBlockElement, when the display-outside is inline, it's
   // simply an inline element.
-  return styleDisplay->IsInlineOutsideStyle() ||
-         styleDisplay->IsRubyDisplayType();
+  return styleDisplay->IsInlineOutsideStyle();
 }
 
 bool HTMLEditUtils::IsFlexOrGridItem(const Element& aElement) {
