@@ -707,7 +707,6 @@ skip script test262/language/statements/await-using/syntax/await-using-invalid-a
 skip script test262/language/statements/using/syntax/using-invalid-assignment-statement-body-for-of.js
 skip script test262/language/statements/using/syntax/with-initializer-default-statement-list.js
 skip script test262/language/statements/using/syntax/using-invalid-assignment-next-expression-for.js
-skip script test262/language/statements/using/syntax/using-not-allowed-at-top-level-of-eval.js
 skip script test262/language/statements/using/syntax/using-for-using-of-of.js
 
 
