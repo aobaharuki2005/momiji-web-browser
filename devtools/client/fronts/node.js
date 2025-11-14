@@ -305,10 +305,8 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
         return "::after";
       }
     }
-    const { displayName, nodeName } = this._form;
 
-    // Keep `nodeName.toLowerCase()` for backward compatibility
-    return displayName || nodeName.toLowerCase();
+    return this._form.displayName;
   }
   get doctypeString() {
     return (
