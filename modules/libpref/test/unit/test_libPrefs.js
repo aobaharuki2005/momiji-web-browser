@@ -746,6 +746,7 @@ add_task(function test_deleteBranch_weak_observers() {
 
 /**
  * Helper function to assert that a preference exists with the expected value.
+ *
  * @param {string} prefName - The preference name
  * @param {*} expectedValue - The expected value
  * @param {string} message - The assertion message
@@ -762,6 +763,7 @@ function assertPrefExists(
 
 /**
  * Helper function to assert that a preference does not exist.
+ *
  * @param {string} prefName - The preference name
  * @param {string} message - The assertion message
  * @param {Function} [getter=getIntPref] - The preference getter function (e.g., getIntPref, getBoolPref, getCharPref)
