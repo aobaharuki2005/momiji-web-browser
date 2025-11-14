@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_temporal_Int128_h
-#define builtin_temporal_Int128_h
+#ifndef vm_Int128_h
+#define vm_Int128_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
@@ -16,7 +16,7 @@
 #include <stdint.h>
 #include <utility>
 
-namespace js::temporal {
+namespace js {
 
 class Int128;
 class Uint128;
@@ -657,10 +657,10 @@ class alignas(16) Int128 final {
 
 constexpr Uint128::operator Int128() const { return Int128{low, high}; }
 
-} /* namespace js::temporal */
+} /* namespace js */
 
 template <>
-class std::numeric_limits<js::temporal::Int128> {
+class std::numeric_limits<js::Int128> {
  public:
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = true;
@@ -675,7 +675,7 @@ class std::numeric_limits<js::temporal::Int128> {
   static constexpr bool is_iec559 = false;
   static constexpr bool is_bounded = true;
   static constexpr bool is_modulo = true;
-  static constexpr int digits = CHAR_BIT * sizeof(js::temporal::Int128) - 1;
+  static constexpr int digits = CHAR_BIT * sizeof(js::Int128) - 1;
   static constexpr int digits10 = int(digits * /* std::log10(2) */ 0.30102999);
   static constexpr int max_digits10 = 0;
   static constexpr int radix = 2;
@@ -686,25 +686,19 @@ class std::numeric_limits<js::temporal::Int128> {
   static constexpr bool traps = true;
   static constexpr bool tinyness_before = false;
 
-  static constexpr auto min() noexcept {
-    return js::temporal::Int128{1} << 127;
-  }
+  static constexpr auto min() noexcept { return js::Int128{1} << 127; }
   static constexpr auto lowest() noexcept { return min(); }
   static constexpr auto max() noexcept { return ~min(); }
-  static constexpr auto epsilon() noexcept { return js::temporal::Int128{}; }
-  static constexpr auto round_error() noexcept {
-    return js::temporal::Int128{};
-  }
-  static constexpr auto infinity() noexcept { return js::temporal::Int128{}; }
-  static constexpr auto quiet_NaN() noexcept { return js::temporal::Int128{}; }
-  static constexpr auto signaling_NaN() noexcept {
-    return js::temporal::Int128{};
-  }
-  static constexpr auto denorm_min() noexcept { return js::temporal::Int128{}; }
+  static constexpr auto epsilon() noexcept { return js::Int128{}; }
+  static constexpr auto round_error() noexcept { return js::Int128{}; }
+  static constexpr auto infinity() noexcept { return js::Int128{}; }
+  static constexpr auto quiet_NaN() noexcept { return js::Int128{}; }
+  static constexpr auto signaling_NaN() noexcept { return js::Int128{}; }
+  static constexpr auto denorm_min() noexcept { return js::Int128{}; }
 };
 
 template <>
-class std::numeric_limits<js::temporal::Uint128> {
+class std::numeric_limits<js::Uint128> {
  public:
   static constexpr bool is_specialized = true;
   static constexpr bool is_signed = false;
@@ -719,7 +713,7 @@ class std::numeric_limits<js::temporal::Uint128> {
   static constexpr bool is_iec559 = false;
   static constexpr bool is_bounded = true;
   static constexpr bool is_modulo = true;
-  static constexpr int digits = CHAR_BIT * sizeof(js::temporal::Uint128);
+  static constexpr int digits = CHAR_BIT * sizeof(js::Uint128);
   static constexpr int digits10 = int(digits * /* std::log10(2) */ 0.30102999);
   static constexpr int max_digits10 = 0;
   static constexpr int radix = 2;
@@ -730,21 +724,15 @@ class std::numeric_limits<js::temporal::Uint128> {
   static constexpr bool traps = true;
   static constexpr bool tinyness_before = false;
 
-  static constexpr auto min() noexcept { return js::temporal::Uint128{}; }
+  static constexpr auto min() noexcept { return js::Uint128{}; }
   static constexpr auto lowest() noexcept { return min(); }
-  static constexpr auto max() noexcept { return ~js::temporal::Uint128{}; }
-  static constexpr auto epsilon() noexcept { return js::temporal::Uint128{}; }
-  static constexpr auto round_error() noexcept {
-    return js::temporal::Uint128{};
-  }
-  static constexpr auto infinity() noexcept { return js::temporal::Uint128{}; }
-  static constexpr auto quiet_NaN() noexcept { return js::temporal::Uint128{}; }
-  static constexpr auto signaling_NaN() noexcept {
-    return js::temporal::Uint128{};
-  }
-  static constexpr auto denorm_min() noexcept {
-    return js::temporal::Uint128{};
-  }
+  static constexpr auto max() noexcept { return ~js::Uint128{}; }
+  static constexpr auto epsilon() noexcept { return js::Uint128{}; }
+  static constexpr auto round_error() noexcept { return js::Uint128{}; }
+  static constexpr auto infinity() noexcept { return js::Uint128{}; }
+  static constexpr auto quiet_NaN() noexcept { return js::Uint128{}; }
+  static constexpr auto signaling_NaN() noexcept { return js::Uint128{}; }
+  static constexpr auto denorm_min() noexcept { return js::Uint128{}; }
 };
 
-#endif /* builtin_temporal_Int128_h */
+#endif /* vm_Int128_h */
