@@ -33,6 +33,11 @@ static double sTicksPerMsd;
 // ----------------------------------------------------------------------------
 
 static constexpr double kMsPerSecd = 1000.0;
+// Note: Resolution used to be sampled based on a loop of QPC calls.
+// While it is true that on most systems we cannot expect to subsequently
+// sample QPC values as fast as the QPC frequency, we still will get that
+// as resolution of the sampled values, that is we have 1 tick resolution.
+static constexpr LONGLONG kResolution = 1;
 
 namespace mozilla {
 
@@ -45,10 +50,6 @@ static inline ULONGLONG PerformanceCounter() {
 
 static void InitConstants() {
   // Query the frequency from QPC and rely on it for all values.
-  // Note: The resolution used to be sampled based on a loop of QPC calls.
-  // While it is true that on most systems we cannot expect to subsequently
-  // sample QPC values as fast as the QPC frequency, we still will get that
-  // as resolution of the sampled values, that is we have 1 tick resolution.
   LARGE_INTEGER freq;
   bool hasQPC = ::QueryPerformanceFrequency(&freq);
   MOZ_RELEASE_ASSERT(hasQPC);
@@ -66,7 +67,9 @@ MFBT_API double BaseTimeDurationPlatformUtils::ToSeconds(int64_t aTicks) {
 
 MFBT_API double BaseTimeDurationPlatformUtils::ToSecondsSigDigits(
     int64_t aTicks) {
-  // We trust QueryPerformanceFrequency that all digits are significant.
+  // As we fix the resolution to 1, all digits are significant and there are
+  // no extra calculations needed. Ensure we do not change this inadvertedly.
+  static_assert(kResolution == 1);
   return ToSeconds(aTicks);
 }
 
@@ -83,6 +86,10 @@ BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds) {
   }
 
   return (int64_t)result;
+}
+
+MFBT_API int64_t BaseTimeDurationPlatformUtils::ResolutionInTicks() {
+  return static_cast<int64_t>(kResolution);
 }
 
 // Note that we init early enough during startup such that we are supposed to
