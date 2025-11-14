@@ -1144,6 +1144,14 @@ nsresult WorkerScriptLoader::FillCompileOptionsForRequest(
     aOptions->setSourceMapURL(aRequest->GetSourceMapURL().get());
   }
 
+  // disable top-level await for sw module scripts
+  const auto* workerPrivate = GetCurrentThreadWorkerPrivate();
+  if (workerPrivate &&
+      workerPrivate->IsServiceWorker() &&
+      aRequest->IsModuleRequest()) {
+    aOptions->topLevelAwait = false;
+  }
+
   return NS_OK;
 }
 

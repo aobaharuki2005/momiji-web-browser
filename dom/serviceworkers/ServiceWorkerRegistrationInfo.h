@@ -81,7 +81,7 @@ class ServiceWorkerRegistrationInfo final
   using TryToActivateCallback = std::function<void()>;
 
   ServiceWorkerRegistrationInfo(
-      const nsACString& aScope, nsIPrincipal* aPrincipal,
+      const nsACString& aScope, WorkerType aType, nsIPrincipal* aPrincipal,
       ServiceWorkerUpdateViaCache aUpdateViaCache,
       IPCNavigationPreloadState&& aNavigationPreloadState);
 
@@ -99,6 +99,8 @@ class ServiceWorkerRegistrationInfo final
   void RemoveInstance(ServiceWorkerRegistrationListener* aInstance);
 
   const nsCString& Scope() const;
+
+  WorkerType Type() const;
 
   nsIPrincipal* Principal() const;
 
