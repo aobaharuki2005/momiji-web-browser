@@ -24,15 +24,90 @@ async function testTopLeft(inspector, view) {
 
   const beforeElement = children.nodes[0];
   await selectNode(beforeElement, inspector);
-  let top = getComputedViewPropertyValue(view, "top");
-  is(top, "0px", "The computed view shows the correct top");
-  let left = getComputedViewPropertyValue(view, "left");
-  is(left, "0px", "The computed view shows the correct left");
 
-  const afterElement = children.nodes[children.nodes.length - 1];
+  info("check `top` property on #topleft::before");
+  await checkMatchedSelectorForProperty(view, {
+    property: "top",
+    expectedComputedValue: "0px",
+    expectedMatchedSelectors: [
+      {
+        selector: ".topleft::before",
+        value: "0px",
+      },
+      {
+        selector: ":where(.topleft)::before",
+        value: "10px",
+      },
+    ],
+  });
+
+  info("check `left` property on #topleft::before");
+  await checkMatchedSelectorForProperty(view, {
+    property: "left",
+    expectedComputedValue: "0px",
+    expectedMatchedSelectors: [
+      {
+        selector: ".topleft::before",
+        value: "0px",
+      },
+      {
+        selector: ":where(.topleft)::before",
+        value: "20px",
+      },
+    ],
+  });
+
+  info("check `color` property on #topleft::before");
+  await checkMatchedSelectorForProperty(view, {
+    property: "color",
+    expectedComputedValue: "rgb(0, 255, 0)",
+    expectedMatchedSelectors: [
+      {
+        selector: ":where(.topleft)::before",
+        value: "lime",
+      },
+      {
+        selector: ".topleft",
+        value: "blue",
+        match: false,
+      },
+      {
+        selector: "body",
+        value: "rgb(51, 51, 51)",
+        match: false,
+      },
+      {
+        selector: ":root",
+        value: "canvastext",
+        match: false,
+      },
+    ],
+  });
+
+  const afterElement = children.nodes.at(-1);
   await selectNode(afterElement, inspector);
-  top = getComputedViewPropertyValue(view, "top");
-  is(top, "96px", "The computed view shows the correct top");
-  left = getComputedViewPropertyValue(view, "left");
-  is(left, "96px", "The computed view shows the correct left");
+
+  info("check `top` property on #topleft::after");
+  await checkMatchedSelectorForProperty(view, {
+    property: "top",
+    expectedComputedValue: "96px",
+    expectedMatchedSelectors: [
+      {
+        selector: ".box::after",
+        value: "50%",
+      },
+    ],
+  });
+
+  info("check `left` property on #topleft::after");
+  await checkMatchedSelectorForProperty(view, {
+    property: "left",
+    expectedComputedValue: "96px",
+    expectedMatchedSelectors: [
+      {
+        selector: ".box::after",
+        value: "50%",
+      },
+    ],
+  });
 }
