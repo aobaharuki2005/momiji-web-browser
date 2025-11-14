@@ -31,6 +31,47 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
 
 /** @typedef {import("./PrefFlipsFeature.sys.mjs").PrefBranch} PrefBranch */
 
+const CannotEnrollFeatureReason = Object.freeze({
+  /**
+   * The feature does not exist.
+   */
+  DOES_NOT_EXIST: "does-not-exist",
+
+  /**
+   * There is already another experiment or recipe enrolled in features and the
+   * feature does not support co-enrollment.
+   */
+  ENROLLED_IN_FEATURE: "enrolled-in-feature",
+});
+
+/**
+ * @typedef {T[keyof T]} EnumValuesOf
+ * @template {type} T
+ */
+
+/** @typedef {EnumValuesOf<typeof CannotEnrollFeatureReason>} CannotEnrollFeatureReason */
+
+/**
+ * @typedef {object} _CanEnrollResult
+ * @property {true} ok Whether or not enrollment is possible.
+ */
+
+/**
+ * @typedef {object} _CannotEnrollResult
+ * @property {false} ok Whether or not enrollment is possible.
+ * @property {string} featureId The feature that makes enrollment not possible.
+ * @property {CannotEnrollFeatureReason} reason Why enrollment is not possible.
+ * @property {string | undefined} slug Optionally, a slug of a conflicting
+ * enrollment.
+ */
+
+/**
+ * Whether or not enrollment is possible in a given recipe.
+ *
+ * @typedef {_CanEnrollResult | _CannotEnrollResult} CanEnrollResult
+ * @property {boolean} ok
+ */
+
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
@@ -440,7 +481,8 @@ export class ExperimentManager {
         for (const recipe of this.optInRecipes) {
           if (
             (await enrollmentsCtx.checkTargeting(recipe)) &&
-            (await this.isInBucketAllocation(recipe.bucketConfig))
+            (await this.isInBucketAllocation(recipe.bucketConfig)) &&
+            (this.store.get(recipe.slug)?.active || this.canEnroll(recipe).ok)
           ) {
             filtered.push(recipe);
           }
@@ -511,6 +553,51 @@ export class ExperimentManager {
   }
 
   /**
+   * Determine if enrollment in the given recipe is possible based on its
+   * features.
+   *
+   * @param {object} recipe The recipe in question.
+   * @param {string[]} recipe.featureIds The list of featureIds that the recipe
+   * uses.
+   * @param {boolean} recipe.isRollout Whether or not the recipe is a rollout.
+   *
+   * @returns {CanEnrollResult} Whether or not we can enroll into a given recipe.
+   */
+  canEnroll({ featureIds, isRollout }) {
+    const storeLookupByFeature = isRollout
+      ? this.store.getRolloutForFeature.bind(this.store)
+      : this.store.getExperimentForFeature.bind(this.store);
+
+    for (const featureId of featureIds) {
+      const feature = lazy.NimbusFeatures[featureId];
+
+      if (!feature) {
+        return {
+          ok: false,
+          reason: CannotEnrollFeatureReason.DOES_NOT_EXIST,
+          featureId,
+        };
+      }
+
+      if (feature.allowCoenrollment) {
+        continue;
+      }
+
+      const enrollment = storeLookupByFeature(featureId);
+      if (enrollment) {
+        return {
+          ok: false,
+          reason: CannotEnrollFeatureReason.ENROLLED_IN_FEATURE,
+          featureId,
+          slug: enrollment.slug,
+        };
+      }
+    }
+
+    return { ok: true };
+  }
+
+  /**
    * Start a new experiment by enrolling the users
    *
    * @param {object} recipe
@@ -559,11 +646,6 @@ export class ExperimentManager {
       throw new Error(`An experiment with the slug "${slug}" already exists.`);
     }
 
-    let storeLookupByFeature = recipe.isRollout
-      ? this.store.getRolloutForFeature.bind(this.store)
-      : this.store.getExperimentForFeature.bind(this.store);
-    const userId = await this.getUserId(bucketConfig);
-
     let branch;
 
     if (isFirefoxLabsOptIn) {
@@ -585,46 +667,43 @@ export class ExperimentManager {
         "branchSlug only supported for recipes with isFirefoxLabsOptIn = true"
       );
     } else {
-      // recipe is not an opt in recipe hence use a ratio sampled branch
+      // Here recipe is not a Firefox Labs opt-in, so we use a ratio sampled
+      // branch.
+      const userId = await this.getUserId(bucketConfig);
       branch = await this.chooseBranch(slug, branches, userId);
     }
 
-    for (const { featureId } of branch.features) {
-      const feature = lazy.NimbusFeatures[featureId];
+    const result = this.canEnroll(recipe);
+    if (!result.canEnroll) {
+      switch (result.reason) {
+        case CannotEnrollFeatureReason.DOES_NOT_EXIST:
+          // We do not submit telemetry about this because, if validation was
+          // enabled, we would have already rejected the recipe in
+          // RemoteSettingsExperimentLoader. This will likely only happen in a
+          // test where enroll is called directly.
+          lazy.log.debug(
+            `Skipping enrollment for ${slug}: no such feature ${result.featureId}`
+          );
+          return null;
 
-      if (!feature) {
-        // We do not submit telemetry about this because, if validation was
-        // enabled, we would have already rejected the recipe in
-        // RemoteSettingsExperimentLoader. This will likely only happen in a
-        // test where enroll is called directly.
-        lazy.log.debug(
-          `Skipping enrollment for ${slug}: no such feature ${featureId}`
-        );
-        return null;
-      }
-
-      if (feature.allowCoenrollment) {
-        continue;
-      }
-
-      const existingEnrollment = storeLookupByFeature(featureId);
-      if (existingEnrollment) {
-        lazy.log.debug(
-          `Skipping enrollment for "${slug}" because there is an existing ${
-            recipe.isRollout ? "rollout" : "experiment"
-          } for this feature.`
-        );
-        lazy.NimbusTelemetry.recordEnrollmentFailure(
-          slug,
-          lazy.NimbusTelemetry.EnrollmentFailureReason.FEATURE_CONFLICT
-        );
-        lazy.NimbusTelemetry.recordEnrollmentStatus({
-          slug,
-          status: lazy.NimbusTelemetry.EnrollmentStatus.NOT_ENROLLED,
-          reason: lazy.NimbusTelemetry.EnrollmentStatusReason.FEATURE_CONFLICT,
-          conflict_slug: existingEnrollment.slug,
-        });
-        return null;
+        case CannotEnrollFeatureReason.ENROLLED_IN_FEATURE:
+          lazy.log.debug(
+            `Skipping enrollment for "${slug}" because there is an existing ${
+              recipe.isRollout ? "rollout" : "experiment"
+            } for this feature.`
+          );
+          lazy.NimbusTelemetry.recordEnrollmentFailure(
+            slug,
+            lazy.NimbusTelemetry.EnrollmentFailureReason.FEATURE_CONFLICT
+          );
+          lazy.NimbusTelemetry.recordEnrollmentStatus({
+            slug,
+            status: lazy.NimbusTelemetry.EnrollmentStatus.NOT_ENROLLED,
+            reason:
+              lazy.NimbusTelemetry.EnrollmentStatusReason.FEATURE_CONFLICT,
+            conflict_slug: result.slug,
+          });
+          return null;
       }
     }
 
