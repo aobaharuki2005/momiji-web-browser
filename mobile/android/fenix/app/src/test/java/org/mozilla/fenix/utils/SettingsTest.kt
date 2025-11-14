@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.utils
 
+import android.content.pm.PackageInfo
 import androidx.core.content.edit
 import io.mockk.every
 import io.mockk.spyk
@@ -1273,20 +1274,34 @@ class SettingsTest {
     @Test
     fun `WHEN user has accepted the ToU THEN termsOfUseAcceptedTimeInMillis returns the app installed time`() {
         val installTime = 12345L
-        settings.applicationInstalledTime = installTime
+        val settings = Settings(
+            appContext = testContext,
+            packageName = "test",
+            packageManagerCompatHelper = FakePackageManagerCompatHelper(
+                packageInfo = PackageInfo().apply { firstInstallTime = installTime },
+            ),
+        )
         settings.hasAcceptedTermsOfService = true
 
         val result = settings.termsOfUseAcceptedTimeInMillis
+
         assertEquals(installTime, result)
     }
 
     @Test
     fun `WHEN user has not accepted the ToU THEN termsOfUseAcceptedTimeInMillis returns 0L`() {
         val installTime = 12345L
-        settings.applicationInstalledTime = installTime
+        val settings = Settings(
+            appContext = testContext,
+            packageName = "test",
+            packageManagerCompatHelper = FakePackageManagerCompatHelper(
+                packageInfo = PackageInfo().apply { firstInstallTime = installTime },
+            ),
+        )
         settings.hasAcceptedTermsOfService = false
 
         val result = settings.termsOfUseAcceptedTimeInMillis
+
         assertEquals(0L, result)
     }
 

@@ -34,6 +34,8 @@ import mozilla.components.support.ktx.android.content.stringPreference
 import mozilla.components.support.ktx.android.content.stringSetPreference
 import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.utils.BrowsersCache
+import mozilla.components.support.utils.ext.PackageManagerCompatHelper
+import mozilla.components.support.utils.ext.packageManagerCompatHelper
 import org.mozilla.experiments.nimbus.NimbusEventStore
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -51,7 +53,6 @@ import org.mozilla.fenix.debugsettings.addresses.SharedPrefsAddressesDebugRegion
 import org.mozilla.fenix.ext.TALL_SCREEN_HEIGHT_DP
 import org.mozilla.fenix.ext.WIDE_SCREEN_WIDTH_DP
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getApplicationInstalledTime
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.pixelSizeFor
 import org.mozilla.fenix.home.pocket.ContentRecommendationsFeatureHelper
@@ -74,6 +75,7 @@ import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_AUDIBLE
 import org.mozilla.fenix.tabstray.DefaultTabManagementFeatureHelper
 import org.mozilla.fenix.termsofuse.TOU_VERSION
+import org.mozilla.fenix.termsofuse.getApplicationInstalledTime
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.security.InvalidParameterException
 import java.util.UUID
@@ -85,10 +87,15 @@ private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  *
  * @param appContext Reference to application context.
+ * @param packageName Package name of the application.
+ * @param packageManagerCompatHelper Helper for accessing [android.content.pm.PackageManager] methods.
  */
 @Suppress("LargeClass", "TooManyFunctions")
-class Settings(private val appContext: Context) : PreferencesHolder {
-
+class Settings(
+    private val appContext: Context,
+    private val packageName: String = appContext.packageName,
+    private val packageManagerCompatHelper: PackageManagerCompatHelper = appContext.packageManagerCompatHelper,
+) : PreferencesHolder {
     companion object {
         const val FENIX_PREFERENCES = "fenix_preferences"
 
@@ -579,19 +586,18 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var termsOfUseAcceptedTimeInMillis by longPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_terms_accepted_date),
-        default = { if (hasAcceptedTermsOfService) applicationInstalledTime else 0L },
+        default = {
+            if (hasAcceptedTermsOfService) {
+                getApplicationInstalledTime(
+                    packageManagerCompatHelper = packageManagerCompatHelper,
+                    packageName = packageName,
+                    logger = logger,
+                )
+            } else {
+                0L
+            }
+        },
     )
-
-    /**
-     * Temporary testing helper to set the date the user accepted the Terms of Use.
-     *
-     * Will be addressed in a more permanent refactor as part of
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=1993949.
-     *
-     * ⚠️ Only mutate from tests.
-     */
-    @VisibleForTesting
-    internal var applicationInstalledTime = appContext.getApplicationInstalledTime(logger)
 
     /**
      * The version of the Terms of Use that the user has accepted.
