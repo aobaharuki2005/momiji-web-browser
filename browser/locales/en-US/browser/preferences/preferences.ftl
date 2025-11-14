@@ -767,6 +767,10 @@ home-prefs-stories-header =
     .label = Stories
 home-prefs-stories-description = Personalized stories based on your activity
 
+home-prefs-stories-header2 =
+    .label = Stories
+    .description = Exceptional content curated by the { -brand-product-name } family
+
 ##
 
 home-prefs-recommended-by-learn-more = How it works

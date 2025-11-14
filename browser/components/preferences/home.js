@@ -81,6 +81,10 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
       type: "int",
     },
     {
+      id: "browser.newtabpage.activity-stream.feeds.section.topstories",
+      type: "bool",
+    },
+    {
       id: "browser.newtabpage.activity-stream.feeds.section.highlights",
       type: "bool",
     },
@@ -164,6 +168,12 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
   Preferences.addSetting({
     id: "shortcutsRows",
     pref: "browser.newtabpage.activity-stream.topSitesRows",
+  });
+
+  // Stories
+  Preferences.addSetting({
+    id: "stories",
+    pref: "browser.newtabpage.activity-stream.feeds.section.topstories",
   });
 
   // Recent activity

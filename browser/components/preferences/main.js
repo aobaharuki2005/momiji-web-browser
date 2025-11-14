@@ -1245,6 +1245,11 @@ let SETTINGS_CONFIG = {
         ],
       },
       {
+        id: "stories",
+        l10nId: "home-prefs-stories-header2",
+        control: "moz-toggle",
+      },
+      {
         id: "recentActivity",
         l10nId: "home-prefs-recent-activity-header",
         control: "moz-toggle",
