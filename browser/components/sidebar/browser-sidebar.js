@@ -856,6 +856,11 @@ var SidebarController = {
     if (!this.sidebarRevampEnabled) {
       this._state.launcherVisible = false;
       document.getElementById("sidebar-header").hidden = false;
+
+      // Ensure CPM isn't shown.
+      const cpmMenuItem = document.querySelector("#sidebar-switcher-megalist");
+      this.lastOpenedId = this.DEFAULT_SIDEBAR_ID;
+      cpmMenuItem.hidden = true;
     }
     if (!this._sidebars.get(this.lastOpenedId)) {
       this.lastOpenedId = this.DEFAULT_SIDEBAR_ID;
@@ -1074,6 +1079,13 @@ var SidebarController = {
       this.updateToolbarButton();
       return Promise.resolve();
     }
+
+    if (!this.sidebarRevampEnabled) {
+      const cpmMenuItem = document.querySelector("#sidebar-switcher-megalist");
+      this.lastOpenedId = this.DEFAULT_SIDEBAR_ID;
+      cpmMenuItem.hidden = true;
+    }
+
     return this.show(commandID, triggerNode);
   },
 
