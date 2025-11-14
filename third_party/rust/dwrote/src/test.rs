@@ -12,7 +12,8 @@ fn test_system_family_iter() {
     assert!(count > 0);
     assert!(system_fc
         .families_iter()
-        .any(|f| f.name() == "Arial"));
+        .find(|f| f.name() == "Arial")
+        .is_some());
 }
 
 #[test]
@@ -46,10 +47,10 @@ fn test_get_font_file_bytes() {
     );
     let face = arial_font.create_font_face();
     let files = face.get_files();
-    assert!(!files.is_empty());
+    assert!(files.len() > 0);
 
     let bytes = files[0].get_font_file_bytes();
-    assert!(!bytes.is_empty());
+    assert!(bytes.len() > 0);
 }
 
 #[test]
@@ -85,17 +86,13 @@ fn test_create_font_file_from_bytes() {
     );
     let face = arial_font.create_font_face();
     let files = face.get_files();
-    assert!(!files.is_empty());
+    assert!(files.len() > 0);
 
     let bytes = files[0].get_font_file_bytes();
-    assert!(!bytes.is_empty());
+    assert!(bytes.len() > 0);
 
     // now go back
-    #[allow(deprecated)]
-    let new_font = FontFile::new_from_data(Arc::new(bytes.clone()));
-    assert!(new_font.is_some());
-
-    let new_font = FontFile::new_from_buffer(Arc::new(bytes));
+    let new_font = FontFile::new_from_data(Arc::new(bytes));
     assert!(new_font.is_some());
 
     let _new_font = new_font.unwrap();
@@ -151,8 +148,8 @@ fn test_glyph_image() {
     let rp = RenderingParams::create_for_primary_monitor();
     rt.set_pixels_per_dip(device_pixel_ratio);
     rt.draw_glyph_run(
-        x,
-        y,
+        x as f32,
+        y as f32,
         DWRITE_MEASURING_MODE_NATURAL,
         &face,
         em_size,

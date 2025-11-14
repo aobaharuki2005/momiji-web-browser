@@ -2238,11 +2238,6 @@ criteria = "safe-to-deploy"
 version = "0.11.0"
 notes = "All code written or reviewed by Mozilla staff."
 
-[[audits.dwrote]]
-who = "Jonathan Kew <jfkthame@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "0.11.0 -> 0.11.5"
-
 [[audits.either]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
