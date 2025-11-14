@@ -801,3 +801,68 @@ browser.backup:
       telemetry_enabled:
         type: boolean
         description: Whether telemetry was enabled when the backup was created.
+
+  restore_started:
+    type: event
+    description: Dispatched when a file is chosen to be restored.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_sensitivity:
+      - interaction
+    send_in_pings:
+      - profile-restore
+    notification_emails:
+      - drubino@mozilla.com
+    expires: never
+    extra_keys:
+      restore_id:
+        type: string
+        description: The identifier for the potential profile restore event.
+
+  restore_failed:
+    type: event
+    description: Dispatched when a restore fails (prior to Firefox restart).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_sensitivity:
+      - technical
+    send_in_pings:
+      - profile-restore
+    notification_emails:
+      - drubino@mozilla.com
+    expires: never
+    extra_keys:
+      restore_id:
+        type: string
+        description: The identifier for the potential profile restore event.
+      error_type:
+        type: string
+        description: >
+          The reason for the failure. Possible values include, but are not
+          limited to, "UNAUTHORIZED" (bad password provided by user),
+          "CORRUPTED_ARCHIVE", and "FILE_SYSTEM_ERROR".
+
+  restore_complete:
+    type: event
+    description: >
+      Dispatched when a restore completes, just before the browser restarts into
+      the restored profile.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992809
+    data_sensitivity:
+      - interaction
+    send_in_pings:
+      - profile-restore
+    notification_emails:
+      - drubino@mozilla.com
+    expires: never
+    extra_keys:
+      restore_id:
+        type: string
+        description: The identifier for the potential profile restore event.

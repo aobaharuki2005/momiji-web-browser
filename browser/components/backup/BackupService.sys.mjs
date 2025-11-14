@@ -16,6 +16,7 @@ import {
 import {
   ERRORS,
   STEPS,
+  errorString,
 } from "chrome://browser/content/backup/backup-constants.mjs";
 import { BackupError } from "resource:///modules/backup/BackupError.mjs";
 
@@ -1167,6 +1168,10 @@ export class BackupService extends EventTarget {
     if (this.#instance) {
       return this.#instance;
     }
+
+    // If there is unsent restore telemetry, send it now.
+    GleanPings.profileRestore.submit();
+
     this.#instance = new BackupService(DefaultBackupResources);
 
     this.#instance.checkForPostRecovery();
@@ -2872,6 +2877,10 @@ export class BackupService extends EventTarget {
       return null;
     }
 
+    Glean.browserBackup.restoreStarted.record({
+      restore_id: this.#_state.restoreID,
+    });
+
     try {
       this.#_state.recoveryInProgress = true;
       this.#_state.recoveryErrorCode = 0;
@@ -2928,6 +2937,17 @@ export class BackupService extends EventTarget {
           profileRootPath,
           encState
         );
+
+        Glean.browserBackup.restoreComplete.record({
+          restore_id: this.#_state.restoreID,
+        });
+        // We are probably about to shutdown, so we want to submit this ASAP.
+        // But this will also clear out the data in this ping, which is a bit
+        // of a problem for testing. So fire off an event first that tests can
+        // listen for.
+        Services.obs.notifyObservers(null, "browser-backup-restore-complete");
+        GleanPings.profileRestore.submit();
+
         return newProfile;
       } finally {
         // If we had decrypted a backup, we would have created the temporary
@@ -2945,6 +2965,12 @@ export class BackupService extends EventTarget {
           );
         }
       }
+    } catch (ex) {
+      Glean.browserBackup.restoreFailed.record({
+        restore_id: this.#_state.restoreID,
+        error_type: errorString(ex.cause),
+      });
+      throw ex;
     } finally {
       this.#_state.recoveryInProgress = false;
       this.stateUpdate();
