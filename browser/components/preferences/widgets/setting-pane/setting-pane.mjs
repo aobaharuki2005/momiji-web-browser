@@ -19,6 +19,10 @@ export class SettingPane extends MozLitElement {
     config: { type: Object },
   };
 
+  static queries = {
+    pageHeaderEl: "moz-page-header",
+  };
+
   constructor() {
     super();
     /** @type {string} */
@@ -31,6 +35,13 @@ export class SettingPane extends MozLitElement {
 
   createRenderRoot() {
     return this;
+  }
+
+  async getUpdateComplete() {
+    let result = await super.getUpdateComplete();
+    // @ts-ignore bug 1997478
+    await this.pageHeaderEl.updateComplete;
+    return result;
   }
 
   goBack() {
