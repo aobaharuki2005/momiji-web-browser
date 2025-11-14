@@ -1146,8 +1146,7 @@ nsresult WorkerScriptLoader::FillCompileOptionsForRequest(
 
   // disable top-level await for sw module scripts
   const auto* workerPrivate = GetCurrentThreadWorkerPrivate();
-  if (workerPrivate &&
-      workerPrivate->IsServiceWorker() &&
+  if (workerPrivate && workerPrivate->IsServiceWorker() &&
       aRequest->IsModuleRequest()) {
     aOptions->topLevelAwait = false;
   }
