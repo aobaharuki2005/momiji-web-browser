@@ -13285,6 +13285,13 @@
   value: true
   mirror: always
 
+# Default buffer size for buffered stream operations. The actual value used will
+# be floored to the nearest power of two.
+- name: network.buffer.default_size
+  type: RelaxedAtomicUint32
+  value: 65536
+  mirror: always
+
 # See the full list of values in nsICookieService.idl.
 - name: network.cookie.cookieBehavior
   type: RelaxedAtomicInt32
