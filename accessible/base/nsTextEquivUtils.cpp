@@ -173,18 +173,25 @@ nsresult nsTextEquivUtils::AppendTextEquivFromContent(
 
 nsresult nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent* aContent,
                                                           nsAString* aString) {
-  if (aContent->IsText()) {
+  if (auto cssAlt = CssAltContent(aContent)) {
+    AccType type = aContent->GetPrimaryFrame()
+                       ? aContent->GetPrimaryFrame()->AccessibleType()
+                       : AccType::eNoType;
+    if (type == AccType::eNoType || type == AccType::eTextLeafType) {
+      // If this is a text leaf, or an empty content, append its alt text here.
+      // In the case of image alt contents, we will get to those with the
+      // accessible based subtree name calculation.
+      cssAlt.AppendToString(*aString);
+      return NS_OK;
+    }
+  } else if (aContent->IsText()) {
     if (aContent->TextLength() > 0) {
       nsIFrame* frame = aContent->GetPrimaryFrame();
       if (frame) {
-        if (auto cssAlt = CssAltContent(aContent)) {
-          cssAlt.AppendToString(*aString);
-        } else {
-          nsIFrame::RenderedText text = frame->GetRenderedText(
-              0, UINT32_MAX, nsIFrame::TextOffsetType::OffsetsInContentText,
-              nsIFrame::TrailingWhitespace::DontTrim);
-          aString->Append(text.mString);
-        }
+        nsIFrame::RenderedText text = frame->GetRenderedText(
+            0, UINT32_MAX, nsIFrame::TextOffsetType::OffsetsInContentText,
+            nsIFrame::TrailingWhitespace::DontTrim);
+        aString->Append(text.mString);
       } else {
         // If aContent is an object that is display: none, we have no a frame.
         aContent->GetAsText()->AppendTextTo(*aString);
