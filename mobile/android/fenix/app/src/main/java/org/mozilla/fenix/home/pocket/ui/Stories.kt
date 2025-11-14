@@ -63,6 +63,7 @@ private const val URI_PARAM_UTM_KEY = "utm_source"
 private const val POCKET_STORIES_UTM_VALUE = "pocket-newtab-android"
 private const val DEFAULT_MAX_LINES = 3
 private const val SPONSORED_MAX_LINES = 2
+private const val ACCESSIBILITY_MAX_LINES_SCALE_FACTOR = 1.2f
 
 /**
  * Displays a single [PocketRecommendedStory].
@@ -478,7 +479,7 @@ private fun maxSponsoredLines() = if (limitMaxLines()) SPONSORED_MAX_LINES else 
 
 @Composable
 @ReadOnlyComposable
-private fun limitMaxLines() = LocalConfiguration.current.fontScale <= 1.0f
+private fun limitMaxLines() = LocalConfiguration.current.fontScale <= ACCESSIBILITY_MAX_LINES_SCALE_FACTOR
 
 private class StoryProvider : PreviewParameterProvider<PocketStory> {
     override val values = FakeHomepagePreview.pocketStories(limit = 7).asSequence()
