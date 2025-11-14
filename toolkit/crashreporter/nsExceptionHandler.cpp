@@ -220,7 +220,9 @@ MOZ_RUNINIT static std::optional<xpstring> defaultMemoryReportPath = {};
 
 static const char kCrashMainID[] = "crash.main.3\n";
 
-static CrashHelperClient* gCrashHelperClient = nullptr;
+static StaticMutex gCrashHelperClientMutex;
+static CrashHelperClient* gCrashHelperClient
+    MOZ_GUARDED_BY(gCrashHelperClientMutex) = nullptr;
 static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 static mozilla::Atomic<bool> gEncounteredChildException(false);
 MOZ_CONSTINIT static nsCString gServerURL;
@@ -2099,6 +2101,7 @@ nsresult SetMinidumpPath(const nsAString& aPath) {
 #endif
 
   // Set the path used by the crash helper for out-of-process crash generation
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     set_crash_report_path(gCrashHelperClient,
                           (const BreakpadChar*)path.BeginReading());
@@ -2324,6 +2327,7 @@ nsresult UnsetExceptionHandler() {
   dumpSafetyLock = nullptr;
 
   std::set_terminate(oldTerminateHandler);
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     crash_helper_shutdown(gCrashHelperClient);
     gCrashHelperClient = nullptr;
@@ -3291,6 +3295,7 @@ static void OOPInit() {
       gExceptionHandler->dump_path().c_str());
 #endif
 
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   gCrashHelperClient = crashHelperClient;
 }
 
@@ -3321,6 +3326,7 @@ CrashPipeType GetChildNotificationPipe() {
 }
 
 UniqueFileHandle RegisterChildIPCChannel() {
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     RawAncillaryData ipc_endpoint =
         register_child_ipc_channel(gCrashHelperClient);
@@ -3397,8 +3403,11 @@ bool TakeMinidumpForChild(ProcessId childPid, nsIFile** dump,
 
   CrashReport* crash_report = nullptr;
 
-  if (gCrashHelperClient) {
-    crash_report = transfer_crash_report(gCrashHelperClient, childPid);
+  {
+    StaticMutexAutoLock lock(gCrashHelperClientMutex);
+    if (gCrashHelperClient) {
+      crash_report = transfer_crash_report(gCrashHelperClient, childPid);
+    }
   }
 
   if (!crash_report) {
@@ -3679,12 +3688,14 @@ void GetCurrentProcessAuxvInfo(DirectAuxvDumpInfo* aAuxvInfo) {
 
 void RegisterChildAuxvInfo(pid_t aChildPid,
                            const DirectAuxvDumpInfo& aAuxvInfo) {
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     register_child_auxv_info(gCrashHelperClient, aChildPid, &aAuxvInfo);
   }
 }
 
 void UnregisterChildAuxvInfo(pid_t aChildPid) {
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     unregister_child_auxv_info(gCrashHelperClient, aChildPid);
   }
