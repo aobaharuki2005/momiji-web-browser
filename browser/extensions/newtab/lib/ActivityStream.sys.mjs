@@ -982,6 +982,13 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "widgets.enabled",
+    {
+      title: "Allows users to toggle all widgets on and off at once",
+      value: false,
+    },
+  ],
+  [
     "widgets.lists.enabled",
     {
       title: "Enables the to-do lists widget",

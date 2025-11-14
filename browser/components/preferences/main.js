@@ -1195,14 +1195,21 @@ let SETTINGS_CONFIG = {
         control: "moz-toggle",
       },
       {
-        id: "lists",
-        l10nId: "home-prefs-lists-header",
+        id: "widgets",
+        l10nId: "home-prefs-widgets-header",
         control: "moz-toggle",
-      },
-      {
-        id: "timer",
-        l10nId: "home-prefs-timer-header",
-        control: "moz-toggle",
+        items: [
+          {
+            id: "lists",
+            l10nId: "home-prefs-lists-header",
+            control: "moz-checkbox",
+          },
+          {
+            id: "timer",
+            l10nId: "home-prefs-timer-header",
+            control: "moz-checkbox",
+          },
+        ],
       },
       {
         id: "shortcuts",

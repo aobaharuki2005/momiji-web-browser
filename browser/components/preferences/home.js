@@ -49,6 +49,14 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
     },
     { id: "browser.newtabpage.activity-stream.showWeather", type: "bool" },
     {
+      id: "browser.newtabpage.activity-stream.widgets.system.enabled",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.widgets.enabled",
+      type: "bool",
+    },
+    {
       id: "browser.newtabpage.activity-stream.widgets.system.lists.enabled",
       type: "bool",
     },
@@ -110,6 +118,18 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
     pref: "browser.newtabpage.activity-stream.showWeather",
     deps: ["showWeather"],
     visible: ({ showWeather }) => showWeather.value,
+  });
+
+  // Widgets: general
+  Preferences.addSetting({
+    id: "widgetsEnabled",
+    pref: "browser.newtabpage.activity-stream.widgets.system.enabled",
+  });
+  Preferences.addSetting({
+    id: "widgets",
+    pref: "browser.newtabpage.activity-stream.widgets.enabled",
+    deps: ["widgetsEnabled"],
+    visible: ({ widgetsEnabled }) => widgetsEnabled.value,
   });
 
   // Widgets: lists
