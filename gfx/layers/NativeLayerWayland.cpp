@@ -947,6 +947,7 @@ void NativeLayerWayland::Unmap() {
   mState.mMutatedVisibility = true;
   mState.mIsRendered = false;
   mState.mIsVisible = false;
+  DiscardBackbuffersLocked(surfaceLock);
   mNeedsMainThreadUpdate = MainThreadUpdate::Unmap;
 }
 
