@@ -15262,13 +15262,6 @@
   mirror: always
   rust: true
 
-# Fallback to H2 if mHttp3Connection->Fetch returns an error in
-# Http3Session::TryActivating
-- name: network.http.http3.fallback_to_h2_on_error
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Maximum number of UDP segments in a single UDP GSO send. Noop if
 # network.http.http3.use_nspr_for_io is true.
 - name: network.http.http3.max_gso_segments
