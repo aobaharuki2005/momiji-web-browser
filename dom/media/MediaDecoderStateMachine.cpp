@@ -28,7 +28,6 @@
 #include "mediasink/DecodedStream.h"
 #include "mediasink/VideoSink.h"
 #include "mozilla/Logging.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkerTypes.h"

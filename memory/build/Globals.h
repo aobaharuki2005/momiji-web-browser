@@ -11,7 +11,6 @@
 // or the page size.  Page size isn't always known at compile time so some
 // values defined here may be determined at runtime.
 
-#include "mozilla/Assertions.h"
 #include "mozilla/Literals.h"
 #include "mozilla/MathAlgorithms.h"
 

@@ -10,7 +10,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Result.h"
-#include "mozilla/Utf8.h"
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/intl/NumberPart.h"
 

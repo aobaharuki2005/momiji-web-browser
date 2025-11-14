@@ -7,7 +7,6 @@
 #include "AutoSQLiteLifetime.h"
 #include "sqlite3.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/DebugOnly.h"
 
 #ifdef MOZ_MEMORY
 #  include "mozmemory.h"

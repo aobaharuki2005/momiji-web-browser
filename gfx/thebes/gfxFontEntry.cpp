@@ -6,7 +6,6 @@
 #include "gfxFontEntry.h"
 
 #include "mozilla/FontPropertyTypes.h"
-#include "mozilla/MathAlgorithms.h"
 
 #include "mozilla/Logging.h"
 

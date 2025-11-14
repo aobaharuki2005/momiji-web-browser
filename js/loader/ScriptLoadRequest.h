@@ -15,12 +15,10 @@
 #include "mozilla/dom/CacheExpirationTime.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/LinkedList.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/PreloaderBase.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SharedSubResourceCache.h"  // mozilla::SubResourceNetworkMetadataHolder
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/Variant.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "LoadedScript.h"

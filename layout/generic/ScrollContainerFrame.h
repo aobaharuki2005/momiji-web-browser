@@ -14,7 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ScrollOrigin.h"
 #include "mozilla/ScrollTypes.h"
-#include "mozilla/TypedEnumBits.h"
 #include "mozilla/dom/WindowBinding.h"  // for mozilla::dom::ScrollBehavior
 #include "mozilla/layout/ScrollAnchorContainer.h"
 #include "nsContainerFrame.h"

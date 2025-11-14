@@ -117,7 +117,6 @@
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/net/Predictor.h"
 #include "mozilla/net/SFVService.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/NullPrincipal.h"
 #include "CacheControlParser.h"
 #include "nsMixedContentBlocker.h"

@@ -13,7 +13,6 @@
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/SharedMemoryHandle.h"
 #include "mozilla/ipc/SharedMemoryMapping.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "nsXULAppAPI.h"
 
