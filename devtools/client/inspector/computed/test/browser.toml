@@ -64,7 +64,7 @@ skip-if = [
   "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11' && opt && a11y_checks", # Bug 1858037
 ]
 
-["browser_computed_pseudo-element_01.js"]
+["browser_computed_pseudo-element.js"]
 
 ["browser_computed_refresh-on-ruleview-change.js"]
 
