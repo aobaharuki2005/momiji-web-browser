@@ -984,7 +984,11 @@ class ScrollContainerFrame : public nsContainerFrame,
   bool UsesOverlayScrollbars() const;
   bool IsLastSnappedTarget(const nsIFrame* aFrame) const;
 
-  static bool ShouldActivateAllScrollFrames();
+  // If aBuilder is non-null, returns the value cached on aBuilder. Pass null
+  // for aBuilder to get the correct value to cache on a new builder or new
+  // frame of painting, or if you need the correct value outside of paint time.
+  static bool ShouldActivateAllScrollFrames(nsDisplayListBuilder* aBuilder,
+                                            nsIFrame* aFrame);
   nsRect RestrictToRootDisplayPort(const nsRect& aDisplayportBase);
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                              nsRect* aVisibleRect, nsRect* aDirtyRect,

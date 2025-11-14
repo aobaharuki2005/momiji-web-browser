@@ -1696,6 +1696,10 @@ class nsDisplayListBuilder {
 
   bool ShouldRebuildDisplayListDueToPrefChange();
 
+  bool ShouldActivateAllScrollFrames() const {
+    return mShouldActivateAllScrollFrames;
+  }
+
   /**
    * Represents a region composed of frame/rect pairs.
    * WeakFrames are used to track whether a rect still belongs to the region.
@@ -2025,6 +2029,9 @@ class nsDisplayListBuilder {
   // over that page, we set this flag to avoid building potentially duplicate
   // display items.
   bool mAvoidBuildingDuplicateOofs = false;
+
+  // Cached copy so we don't have to get the root presshell repeatedly.
+  bool mShouldActivateAllScrollFrames = false;
 
   Maybe<layers::ScrollDirection> mCurrentScrollbarDirection;
 };
