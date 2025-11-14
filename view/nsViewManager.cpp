@@ -85,33 +85,24 @@ void nsViewManager::SetRootView(nsView* aView) {
   mRootView = aView;
 }
 
-void nsViewManager::GetWindowDimensions(nscoord* aWidth, nscoord* aHeight) {
-  if (nullptr != mRootView) {
-    if (mDelayedResize == nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
-      nsRect dim = mRootView->GetBounds();
-      *aWidth = dim.Width();
-      *aHeight = dim.Height();
-    } else {
-      *aWidth = mDelayedResize.width;
-      *aHeight = mDelayedResize.height;
-    }
-  } else {
-    *aWidth = 0;
-    *aHeight = 0;
+nsSize nsViewManager::GetWindowDimensions() const {
+  if (!mRootView) {
+    return {};
   }
+  if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
+    return mDelayedResize;
+  }
+  return mRootView->GetBounds().Size();
 }
 
-void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight) {
-  nsRect oldDim = mRootView->GetBounds();
-  nsRect newDim(0, 0, aWidth, aHeight);
-  // We care about resizes even when one dimension is already zero.
-  if (oldDim.IsEqualEdges(newDim)) {
+void nsViewManager::DoSetWindowDimensions(const nsSize& aSize) {
+  if (mRootView->GetBounds().Size() == aSize) {
     return;
   }
   // Don't resize the widget. It is already being set elsewhere.
-  mRootView->SetDimensions(newDim);
+  mRootView->SetDimensions(nsRect(nsPoint(), aSize));
   if (RefPtr<PresShell> presShell = mPresShell) {
-    presShell->ResizeReflow(aWidth, aHeight);
+    presShell->ResizeReflow(aSize);
   }
 }
 
@@ -128,35 +119,36 @@ bool nsViewManager::ShouldDelayResize() const {
   return false;
 }
 
-void nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight,
+void nsViewManager::SetWindowDimensions(const nsSize& aSize,
                                         bool aDelayResize) {
-  if (mRootView) {
-    if (!ShouldDelayResize() && !aDelayResize) {
-      if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-          mDelayedResize != nsSize(aWidth, aHeight)) {
-        // We have a delayed resize; that now obsolete size may already have
-        // been flushed to the PresContext so we need to update the PresContext
-        // with the new size because if the new size is exactly the same as the
-        // root view's current size then DoSetWindowDimensions will not
-        // request a resize reflow (which would correct it). See bug 617076.
-        mDelayedResize = nsSize(aWidth, aHeight);
-        FlushDelayedResize();
-      }
-      mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
-      DoSetWindowDimensions(aWidth, aHeight);
-    } else {
-      mDelayedResize.SizeTo(aWidth, aHeight);
-      if (mPresShell) {
-        mPresShell->SetNeedStyleFlush();
-        mPresShell->SetNeedLayoutFlush();
-      }
+  if (!mRootView) {
+    return;
+  }
+  if (!ShouldDelayResize() && !aDelayResize) {
+    if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+        mDelayedResize != aSize) {
+      // We have a delayed resize; that now obsolete size may already have
+      // been flushed to the PresContext so we need to update the PresContext
+      // with the new size because if the new size is exactly the same as the
+      // root view's current size then DoSetWindowDimensions will not
+      // request a resize reflow (which would correct it). See bug 617076.
+      mDelayedResize = aSize;
+      FlushDelayedResize();
+    }
+    mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
+    DoSetWindowDimensions(aSize);
+  } else {
+    mDelayedResize = aSize;
+    if (mPresShell) {
+      mPresShell->SetNeedStyleFlush();
+      mPresShell->SetNeedLayoutFlush();
     }
   }
 }
 
 void nsViewManager::FlushDelayedResize() {
   if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
-    DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
+    DoSetWindowDimensions(mDelayedResize);
     mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
   }
 }

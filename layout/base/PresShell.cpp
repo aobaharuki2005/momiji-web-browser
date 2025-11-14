@@ -1792,13 +1792,10 @@ void PresShell::RefreshZoomConstraintsForScreenSizeChange() {
 }
 
 void PresShell::ForceResizeReflowWithCurrentDimensions() {
-  nscoord currentWidth = 0;
-  nscoord currentHeight = 0;
-  mViewManager->GetWindowDimensions(&currentWidth, &currentHeight);
-  ResizeReflow(currentWidth, currentHeight);
+  ResizeReflow(mViewManager->GetWindowDimensions());
 }
 
-void PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
+void PresShell::ResizeReflow(const nsSize& aSize,
                              ResizeReflowOptions aOptions) {
   if (mZoomConstraintsClient) {
     // If we have a ZoomConstraintsClient and the available screen area
@@ -1816,21 +1813,21 @@ void PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
     mMobileViewportManager->RequestReflow(false);
     return;
   }
-  ResizeReflowIgnoreOverride(aWidth, aHeight, aOptions);
+  ResizeReflowIgnoreOverride(aSize, aOptions);
 }
 
-bool PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight) {
-  MOZ_ASSERT(aWidth != NS_UNCONSTRAINEDSIZE);
-  MOZ_ASSERT(aHeight != NS_UNCONSTRAINEDSIZE);
+bool PresShell::SimpleResizeReflow(const nsSize& aSize) {
+  MOZ_ASSERT(aSize.width != NS_UNCONSTRAINEDSIZE);
+  MOZ_ASSERT(aSize.height != NS_UNCONSTRAINEDSIZE);
   nsSize oldSize = mPresContext->GetVisibleArea().Size();
-  mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
+  mPresContext->SetVisibleArea(nsRect(nsPoint(), aSize));
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
     return false;
   }
   WritingMode wm = rootFrame->GetWritingMode();
-  bool isBSizeChanging =
-      wm.IsVertical() ? oldSize.width != aWidth : oldSize.height != aHeight;
+  bool isBSizeChanging = wm.IsVertical() ? oldSize.width != aSize.width
+                                         : oldSize.height != aSize.height;
   if (isBSizeChanging) {
     nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(rootFrame);
     rootFrame->SetHasBSizeChange(true);
@@ -1898,7 +1895,7 @@ void PresShell::ScheduleResizeEventIfNeeded(ResizeEventKind aKind) {
       RenderingPhase::ResizeSteps);
 }
 
-bool PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
+bool PresShell::ResizeReflowIgnoreOverride(const nsSize& aSize,
                                            ResizeReflowOptions aOptions) {
   MOZ_ASSERT(!mIsReflowing, "Shouldn't be in reflow here!");
 
@@ -1922,11 +1919,11 @@ bool PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
 
   if (!(aOptions & ResizeReflowOptions::BSizeLimit)) {
     nsSize oldSize = mPresContext->GetVisibleArea().Size();
-    if (oldSize == nsSize(aWidth, aHeight)) {
+    if (oldSize == aSize) {
       return false;
     }
 
-    bool changed = SimpleResizeReflow(aWidth, aHeight);
+    bool changed = SimpleResizeReflow(aSize);
     postResizeEventIfNeeded();
     return changed;
   }
@@ -1944,31 +1941,32 @@ bool PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
     // If we don't have a root frame yet, that means we haven't had our initial
     // reflow... If that's the case, and aWidth or aHeight is unconstrained,
     // ignore them altogether.
-    if (aHeight == NS_UNCONSTRAINEDSIZE || aWidth == NS_UNCONSTRAINEDSIZE) {
+    if (aSize.height == NS_UNCONSTRAINEDSIZE ||
+        aSize.width == NS_UNCONSTRAINEDSIZE) {
       // We can't do the work needed for SizeToContent without a root
       // frame, and we want to return before setting the visible area.
       return false;
     }
 
-    mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
+    mPresContext->SetVisibleArea(nsRect(nsPoint(), aSize));
     // There isn't anything useful we can do if the initial reflow hasn't
     // happened.
     return true;
   }
 
   WritingMode wm = rootFrame->GetWritingMode();
-  MOZ_ASSERT((wm.IsVertical() ? aHeight : aWidth) != NS_UNCONSTRAINEDSIZE,
-             "unconstrained isize not allowed");
+  MOZ_ASSERT(
+      (wm.IsVertical() ? aSize.height : aSize.width) != NS_UNCONSTRAINEDSIZE,
+      "unconstrained isize not allowed");
 
-  nscoord targetWidth = aWidth;
-  nscoord targetHeight = aHeight;
+  nsSize targetSize = aSize;
   if (wm.IsVertical()) {
-    targetWidth = NS_UNCONSTRAINEDSIZE;
+    targetSize.width = NS_UNCONSTRAINEDSIZE;
   } else {
-    targetHeight = NS_UNCONSTRAINEDSIZE;
+    targetSize.height = NS_UNCONSTRAINEDSIZE;
   }
 
-  mPresContext->SetVisibleArea(nsRect(0, 0, targetWidth, targetHeight));
+  mPresContext->SetVisibleArea(nsRect(nsPoint(), targetSize));
   // XXX Do a full invalidate at the beginning so that invalidates along
   // the way don't have region accumulation issues?
 
@@ -1991,11 +1989,11 @@ bool PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
     DoReflow(rootFrame, true, nullptr);
 
     const bool reflowAgain =
-        wm.IsVertical() ? mPresContext->GetVisibleArea().width > aWidth
-                        : mPresContext->GetVisibleArea().height > aHeight;
+        wm.IsVertical() ? mPresContext->GetVisibleArea().width > aSize.width
+                        : mPresContext->GetVisibleArea().height > aSize.height;
 
     if (reflowAgain) {
-      mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
+      mPresContext->SetVisibleArea(nsRect(nsPoint(), aSize));
       rootFrame->SetHasBSizeChange(true);
       DoReflow(rootFrame, true, nullptr);
     }

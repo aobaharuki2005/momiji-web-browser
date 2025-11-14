@@ -67,23 +67,14 @@ class nsViewManager final {
    */
   void SetRootView(nsView* aView);
 
-  /**
-   * Get the dimensions of the root window. The dimensions are in
-   * twips
-   * @param aWidth out parameter for width of window in twips
-   * @param aHeight out parameter for height of window in twips
-   */
-  void GetWindowDimensions(nscoord* aWidth, nscoord* aHeight);
+  /** Get the dimensions of the root view. */
+  nsSize GetWindowDimensions() const;
 
   /**
    * Set the dimensions of the root window.
-   * Called if the root window is resized. The dimensions are in
-   * twips
-   * @param aWidth of window in twips
-   * @param aHeight of window in twips
+   * Called if the root window is resized.
    */
-  void SetWindowDimensions(nscoord aWidth, nscoord aHeight,
-                           bool aDelayResize = false);
+  void SetWindowDimensions(const nsSize& aSize, bool aDelayResize = false);
 
   /**
    * Do any resizes that are pending.
@@ -175,8 +166,7 @@ class nsViewManager final {
   MOZ_CAN_RUN_SCRIPT
   void Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoSetWindowDimensions(const nsSize&);
   bool ShouldDelayResize() const;
 
   bool IsPainting() const { return RootViewManager()->mPainting; }
