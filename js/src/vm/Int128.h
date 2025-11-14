@@ -203,7 +203,18 @@ class alignas(16) Uint128 final {
   constexpr Uint128() = default;
   constexpr Uint128(const Uint128&) = default;
 
-  explicit constexpr Uint128(uint64_t value)
+  explicit constexpr Uint128(int value)
+      : Uint128(uint64_t(value), uint64_t(value < 0 ? -1 : 0)) {}
+  explicit constexpr Uint128(long value)
+      : Uint128(uint64_t(value), uint64_t(value < 0 ? -1 : 0)) {}
+  explicit constexpr Uint128(long long value)
+      : Uint128(uint64_t(value), uint64_t(value < 0 ? -1 : 0)) {}
+
+  explicit constexpr Uint128(unsigned int value)
+      : Uint128(uint64_t(value), uint64_t(0)) {}
+  explicit constexpr Uint128(unsigned long value)
+      : Uint128(uint64_t(value), uint64_t(0)) {}
+  explicit constexpr Uint128(unsigned long long value)
       : Uint128(uint64_t(value), uint64_t(0)) {}
 
   constexpr bool operator==(const Uint128& other) const {
@@ -456,8 +467,19 @@ class alignas(16) Int128 final {
   constexpr Int128() = default;
   constexpr Int128(const Int128&) = default;
 
-  explicit constexpr Int128(int64_t value)
-      : Int128(uint64_t(value), uint64_t(value >> 63)) {}
+  explicit constexpr Int128(int value)
+      : Int128(uint64_t(value), uint64_t(value < 0 ? -1 : 0)) {}
+  explicit constexpr Int128(long value)
+      : Int128(uint64_t(value), uint64_t(value < 0 ? -1 : 0)) {}
+  explicit constexpr Int128(long long value)
+      : Int128(uint64_t(value), uint64_t(value < 0 ? -1 : 0)) {}
+
+  explicit constexpr Int128(unsigned int value)
+      : Int128(uint64_t(value), uint64_t(0)) {}
+  explicit constexpr Int128(unsigned long value)
+      : Int128(uint64_t(value), uint64_t(0)) {}
+  explicit constexpr Int128(unsigned long long value)
+      : Int128(uint64_t(value), uint64_t(0)) {}
 
   /**
    * Return the quotient and remainder of the division.
