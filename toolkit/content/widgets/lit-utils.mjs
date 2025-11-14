@@ -263,10 +263,7 @@ export class MozBaseInputElement extends MozLitElement {
     ariaLabel: { type: String, mapped: true },
     ariaDescription: { type: String, mapped: true },
   };
-  /** @type {"inline" | "block"} */
   static inputLayout = "inline";
-  /** @type {keyof MozBaseInputElement} */
-  static activatedProperty = null;
 
   constructor() {
     super();
@@ -308,9 +305,7 @@ export class MozBaseInputElement extends MozLitElement {
     if (changedProperties.has("value")) {
       this.setFormValue(this.value);
     }
-    let activatedProperty = /** @type {typeof MozBaseInputElement} */ (
-      this.constructor
-    ).activatedProperty;
+    let activatedProperty = this.constructor.activatedProperty;
     if (
       (activatedProperty && changedProperties.has(activatedProperty)) ||
       changedProperties.has("disabled") ||

@@ -92,9 +92,6 @@
       "chrome://browser/content/ipprotection/ipprotection-signedout.mjs": [
         "browser/components/ipprotection/content/ipprotection-signedout.mjs"
       ],
-      "chrome://browser/content/ipprotection/ipprotection-status-card.mjs": [
-        "browser/components/ipprotection/content/ipprotection-status-card.mjs"
-      ],
       "chrome://browser/content/ipprotection/ipprotection-timer.mjs": [
         "browser/components/ipprotection/content/ipprotection-timer.mjs"
       ],
@@ -124,9 +121,6 @@
       ],
       "chrome://browser/content/preferences/widgets/setting-group.mjs": [
         "browser/components/preferences/widgets/setting-group/setting-group.mjs"
-      ],
-      "chrome://browser/content/preferences/widgets/setting-pane.mjs": [
-        "browser/components/preferences/widgets/setting-pane/setting-pane.mjs"
       ],
       "chrome://browser/content/preferences/widgets/sync-device-name.mjs": [
         "browser/components/preferences/widgets/sync-device-name/sync-device-name.mjs"
@@ -251,12 +245,6 @@
       "chrome://global/content/elements/moz-fieldset.mjs": [
         "toolkit/content/widgets/moz-fieldset/moz-fieldset.mjs"
       ],
-      "chrome://global/content/elements/moz-input-folder.mjs": [
-        "toolkit/content/widgets/moz-input-folder/moz-input-folder.mjs"
-      ],
-      "chrome://global/content/elements/moz-input-search.mjs": [
-        "toolkit/content/widgets/moz-input-search/moz-input-search.mjs"
-      ],
       "chrome://global/content/elements/moz-input-text.mjs": [
         "toolkit/content/widgets/moz-input-text/moz-input-text.mjs"
       ],
@@ -265,9 +253,6 @@
       ],
       "chrome://global/content/elements/moz-message-bar.mjs": [
         "toolkit/content/widgets/moz-message-bar/moz-message-bar.mjs"
-      ],
-      "chrome://global/content/elements/moz-radio-group.mjs": [
-        "toolkit/content/widgets/moz-radio-group/moz-radio-group.mjs"
       ],
       "chrome://global/content/elements/moz-support-link.mjs": [
         "toolkit/content/widgets/moz-support-link/moz-support-link.mjs"
@@ -310,9 +295,6 @@
       ],
       "chrome://global/content/ml/EngineProcess.sys.mjs": [
         "toolkit/components/ml/content/EngineProcess.sys.mjs"
-      ],
-      "chrome://global/content/ml/MLTelemetry.sys.mjs": [
-        "toolkit/components/ml/MLTelemetry.sys.mjs"
       ],
       "chrome://global/content/ml/ModelHub.sys.mjs": [
         "toolkit/components/ml/content/ModelHub.sys.mjs"
@@ -589,9 +571,6 @@
       ],
       "chrome://remote/content/shared/NetworkCacheManager.sys.mjs": [
         "remote/shared/NetworkCacheManager.sys.mjs"
-      ],
-      "chrome://remote/content/shared/NetworkDataBytes.sys.mjs": [
-        "remote/shared/NetworkDataBytes.sys.mjs"
       ],
       "chrome://remote/content/shared/NetworkDecodedBodySizeMap.sys.mjs": [
         "remote/shared/NetworkDecodedBodySizeMap.sys.mjs"
@@ -959,9 +938,6 @@
       "resource:///modules/ContentCrashHandlers.sys.mjs": [
         "browser/modules/ContentCrashHandlers.sys.mjs"
       ],
-      "resource:///modules/CustomKeys.sys.mjs": [
-        "browser/components/customkeys/CustomKeys.sys.mjs"
-      ],
       "resource:///modules/Dedupe.sys.mjs": [
         "browser/modules/Dedupe.sys.mjs"
       ],
@@ -1300,9 +1276,6 @@
       ],
       "resource:///modules/ipprotection/IPPStartupCache.sys.mjs": [
         "browser/components/ipprotection/IPPStartupCache.sys.mjs"
-      ],
-      "resource:///modules/ipprotection/IPPVPNAddonHelper.sys.mjs": [
-        "browser/components/ipprotection/IPPVPNAddonHelper.sys.mjs"
       ],
       "resource:///modules/ipprotection/IPProtection.sys.mjs": [
         "browser/components/ipprotection/IPProtection.sys.mjs"
@@ -5405,9 +5378,6 @@
       "resource://gre/modules/DAPReportController.sys.mjs": [
         "toolkit/components/dap/DAPReportController.sys.mjs"
       ],
-      "resource://gre/modules/DAPSender.sys.mjs": [
-        "toolkit/components/dap/DAPSender.sys.mjs"
-      ],
       "resource://gre/modules/DAPTelemetrySender.sys.mjs": [
         "toolkit/components/dap/DAPTelemetrySender.sys.mjs"
       ],
@@ -6571,9 +6541,6 @@
       ],
       "resource://newtab/lib/Screenshots.sys.mjs": [
         "browser/extensions/newtab/lib/Screenshots.sys.mjs"
-      ],
-      "resource://newtab/lib/SectionsLayoutManager.sys.mjs": [
-        "browser/extensions/newtab/lib/SectionsLayoutManager.sys.mjs"
       ],
       "resource://newtab/lib/SectionsManager.sys.mjs": [
         "browser/extensions/newtab/lib/SectionsManager.sys.mjs"

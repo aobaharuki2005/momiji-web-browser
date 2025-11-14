@@ -9,12 +9,9 @@
 // inside the button, which allows the text to be highlighted when the user
 // is searching.
 
-/** @import MozInputSearch from "chrome://global/content/elements/moz-input-search.mjs" */
-
-const MozButtonClass = customElements.get("button");
-class HighlightableButton extends MozButtonClass {
+const MozButton = customElements.get("button");
+class HighlightableButton extends MozButton {
   static get inheritedAttributes() {
-    // @ts-expect-error super is MozButton from toolkit/content/widgets/button.js
     return Object.assign({}, super.inheritedAttributes, {
       ".button-text": "text=label,accesskey,crop",
     });
@@ -25,14 +22,9 @@ customElements.define("highlightable-button", HighlightableButton, {
 });
 
 var gSearchResultsPane = {
-  /** @type {string} */
-  query: undefined,
   listSearchTooltips: new Set(),
   listSearchMenuitemIndicators: new Set(),
-  /** @type {MozInputSearch} */
   searchInput: null,
-  /** @type {HTMLDivElement} */
-  searchTooltipContainer: null,
   // A map of DOM Elements to a string of keywords used in search
   // XXX: We should invalidate this cache on `intl:app-locales-changed`
   searchKeywords: new WeakMap(),
@@ -57,11 +49,9 @@ var gSearchResultsPane = {
       return;
     }
     this.inited = true;
-    this.searchInput = /** @type {MozInputSearch} */ (
-      document.getElementById("searchInput")
-    );
-    this.searchTooltipContainer = /** @type {HTMLDivElement} */ (
-      document.getElementById("search-tooltip-container")
+    this.searchInput = document.getElementById("searchInput");
+    this.searchTooltipContainer = document.getElementById(
+      "search-tooltip-container"
     );
 
     window.addEventListener("resize", () => {
@@ -81,7 +71,6 @@ var gSearchResultsPane = {
     ensureScrollPadding();
   },
 
-  /** @param {InputEvent} event */
   async handleEvent(event) {
     // Ensure categories are initialized if idle callback didn't run sooo enough.
     await this.initializeCategories();
