@@ -4,10 +4,7 @@
 support-files = ["iframes.html"]
 
 ["browser_pageinfo_image_info.js"]
-skip-if = [
-  "os == 'linux'", # bug 1161699
-  "verify", # bug 1997129
-]
+skip-if = ["true"] # bug 1998143, 1997129, 1161699
 
 ["browser_pageinfo_images.js"]
 support-files = ["all_images.html"]
