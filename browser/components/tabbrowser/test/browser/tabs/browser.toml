@@ -594,6 +594,8 @@ skip-if = [
   "os == 'mac' && os_version == '10.15' && processor == 'x86_64'", # Bug 1994508
 ]
 
+["browser_tab_splitview_footer.js"]
+
 ["browser_tab_splitview_keyboard_focus.js"]
 
 ["browser_tab_tooltips.js"]

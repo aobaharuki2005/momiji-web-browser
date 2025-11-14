@@ -159,6 +159,16 @@
     }
 
     /**
+     * Reverse order of the tabs in the split view wrapper.
+     */
+    reverseTabs() {
+      const [firstTab, secondTab] = this.#tabs;
+      gBrowser.moveTabBefore(secondTab, firstTab);
+      this.#tabs = [secondTab, firstTab];
+      gBrowser.showSplitViewPanels(this.#tabs);
+    }
+
+    /**
      * Close all tabs in the split view wrapper and delete the split view.
      */
     close() {

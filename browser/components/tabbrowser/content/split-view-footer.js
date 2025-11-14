@@ -61,6 +61,17 @@
       </hbox>
       <html:img class="split-view-icon" hidden="" role="presentation"/>
       <html:span class="split-view-uri"></html:span>
+      <toolbarbutton type="menu" image="chrome://global/skin/icons/more.svg">
+        <menupopup class="split-view-footer-menu">
+          <menuitem command="splitViewCmd_separateTabs"
+                    data-l10n-id="split-view-menuitem-separate-tabs"/>
+          <menuitem command="splitViewCmd_reverseTabs"
+                    data-l10n-id="split-view-menuitem-reverse-tabs"/>
+          <menuseparator/>
+          <menuitem command="splitViewCmd_closeTabs"
+                    data-l10n-id="split-view-menuitem-close-both-tabs"/>
+        </menupopup>
+      </toolbarbutton>
     `;
 
     connectedCallback() {
