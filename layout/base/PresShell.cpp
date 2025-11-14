@@ -728,7 +728,8 @@ PresShell::PresShell(Document* aDocument)
       mInitializedWithKeyPressEventDispatchingBlacklist(false),
       mHasTriedFastUnsuppress(false),
       mProcessingReflowCommands(false),
-      mPendingDidDoReflow(false) {
+      mPendingDidDoReflow(false),
+      mHasSeenAnchorPos(false) {
   MOZ_LOG(gLog, LogLevel::Debug, ("PresShell::PresShell this=%p", this));
   MOZ_ASSERT(aDocument);
 
