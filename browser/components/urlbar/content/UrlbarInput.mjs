@@ -338,9 +338,9 @@ export class UrlbarInput extends HTMLElement {
       });
     }
 
-    // The engine name is not known yet, but update placeholder
-    // anyway to reflect value of keyword.enabled.
-    this._setPlaceholder("");
+    // The engine name is not known yet, but update placeholder anyway to
+    // reflect value of keyword.enabled or set the searchbar placeholder.
+    this._setPlaceholder(null);
 
     if (this.#isAddressbar) {
       let searchContainersPref = lazy.UrlbarPrefs.get(
@@ -4217,46 +4217,47 @@ export class UrlbarInput extends HTMLElement {
       this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
     }
 
-    if (!engineName && !source) {
-      try {
-        // This will throw before DOMContentLoaded in
-        // PrivateBrowsingUtils.privacyContextFromWindow because
-        // aWindow.docShell is null.
-        this.initPlaceHolder(true);
-      } catch (ex) {}
-      this.removeAttribute("searchmode");
-      return;
-    }
+    if (this.#isAddressbar) {
+      if (!engineName && !source) {
+        try {
+          // This will throw before DOMContentLoaded in
+          // PrivateBrowsingUtils.privacyContextFromWindow because
+          // aWindow.docShell is null.
+          this.initPlaceHolder(true);
+        } catch (ex) {}
+        this.removeAttribute("searchmode");
+        return;
+      }
 
-    if (engineName) {
-      if (this._searchModeIndicatorTitle) {
+      if (engineName) {
         // Set text content for the search mode indicator.
         this._searchModeIndicatorTitle.textContent = engineName;
-      }
-      this.document.l10n.setAttributes(
-        this.inputField,
-        isGeneralPurposeEngine
-          ? "urlbar-placeholder-search-mode-web-2"
-          : "urlbar-placeholder-search-mode-other-engine",
-        { name: engineName }
-      );
-    } else if (source) {
-      const messageIDs = {
-        actions: "urlbar-placeholder-search-mode-other-actions",
-        bookmarks: "urlbar-placeholder-search-mode-other-bookmarks",
-        engine: "urlbar-placeholder-search-mode-other-engine",
-        history: "urlbar-placeholder-search-mode-other-history",
-        tabs: "urlbar-placeholder-search-mode-other-tabs",
-      };
-      let sourceName = lazy.UrlbarUtils.getResultSourceName(source);
-      let l10nID = `urlbar-search-mode-${sourceName}`;
-      if (this._searchModeIndicatorTitle) {
+        this.document.l10n.setAttributes(
+          this.inputField,
+          isGeneralPurposeEngine
+            ? "urlbar-placeholder-search-mode-web-2"
+            : "urlbar-placeholder-search-mode-other-engine",
+          { name: engineName }
+        );
+      } else if (source) {
+        const messageIDs = {
+          actions: "urlbar-placeholder-search-mode-other-actions",
+          bookmarks: "urlbar-placeholder-search-mode-other-bookmarks",
+          engine: "urlbar-placeholder-search-mode-other-engine",
+          history: "urlbar-placeholder-search-mode-other-history",
+          tabs: "urlbar-placeholder-search-mode-other-tabs",
+        };
+        let sourceName = lazy.UrlbarUtils.getResultSourceName(source);
+        let l10nID = `urlbar-search-mode-${sourceName}`;
         this.document.l10n.setAttributes(
           this._searchModeIndicatorTitle,
           l10nID
         );
+        this.document.l10n.setAttributes(
+          this.inputField,
+          messageIDs[sourceName]
+        );
       }
-      this.document.l10n.setAttributes(this.inputField, messageIDs[sourceName]);
     }
 
     this.toggleAttribute("searchmode", true);
@@ -4385,7 +4386,7 @@ export class UrlbarInput extends HTMLElement {
     let engineName = Services.prefs.getStringPref(prefName, "");
     if (engineName || force) {
       // We can do this directly, since we know we're at DOMContentLoaded.
-      this._setPlaceholder(engineName);
+      this._setPlaceholder(engineName || null);
     }
   }
 
@@ -4492,22 +4493,21 @@ export class UrlbarInput extends HTMLElement {
       return;
     }
 
-    const engine = Services.search.getEngineByName(engineName);
-    if (!engine.isConfigEngine) {
-      // Set the engine name to an empty string for non-config-engines, which'll
-      // make sure we display the default placeholder string.
-      engineName = "";
+    let engine = Services.search.getEngineByName(engineName);
+    if (engine.isConfigEngine) {
+      this._setPlaceholder(engineName);
+    } else {
+      // Display the default placeholder string.
+      this._setPlaceholder(null);
     }
-
-    this._setPlaceholder(engineName);
   }
 
   /**
    * Sets the URLBar placeholder to either something based on the engine name,
    * or the default placeholder.
    *
-   * @param {string} engineName
-   * The name of the engine or an empty string to use the default placeholder.
+   * @param {?string} engineName
+   * The name of the engine or null to use the default placeholder.
    */
   _setPlaceholder(engineName) {
     if (!this.#isAddressbar) {
