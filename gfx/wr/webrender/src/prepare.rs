@@ -241,6 +241,10 @@ fn prepare_prim_for_render(
     let prim_instance = &mut prim_instances[prim_instance_index];
 
     if !is_passthrough {
+        fn may_need_repetition(stretch_size: LayoutSize, prim_rect: LayoutRect) -> bool {
+             stretch_size.width < prim_rect.width() ||
+                 stretch_size.height < prim_rect.height()
+        }
         // Bug 1887841: At the moment the quad shader does not support repetitions.
         // Bug 1888349: Some primitives have brush segments that aren't handled by
         // the quad infrastructure yet.
@@ -249,16 +253,19 @@ fn prepare_prim_for_render(
             PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
                 let prim_data = &data_stores.linear_grad[*data_handle];
                 !prim_data.brush_segments.is_empty()
+                    || may_need_repetition(prim_data.stretch_size, prim_data.common.prim_rect)
                     || !frame_context.fb_config.precise_linear_gradients
             }
             PrimitiveInstanceKind::RadialGradient { data_handle, .. } => {
                 let prim_data = &data_stores.radial_grad[*data_handle];
                 !prim_data.brush_segments.is_empty()
+                    || may_need_repetition(prim_data.stretch_size, prim_data.common.prim_rect)
             }
             // TODO(bug 1899546) Enable quad conic gradients with SWGL.
             PrimitiveInstanceKind::ConicGradient { data_handle, .. } if !frame_context.fb_config.is_software => {
                 let prim_data = &data_stores.conic_grad[*data_handle];
                 !prim_data.brush_segments.is_empty()
+                    || may_need_repetition(prim_data.stretch_size, prim_data.common.prim_rect)
             }
             _ => true,
         };
