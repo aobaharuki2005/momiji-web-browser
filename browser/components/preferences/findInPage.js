@@ -408,6 +408,16 @@ var gSearchResultsPane = {
   },
 
   /**
+   * Determine if the given element is an anchor tag.
+   *
+   * @param {HTMLElement} el The element.
+   * @returns {boolean} Whether or not the element is an anchor tag.
+   */
+  _isAnchor(el) {
+    return (el.prefix === null || el.prefix === "html") && el.localName === "a";
+  },
+
+  /**
    * Finding leaf nodes and checking their content for words to search,
    * It is a recursive function
    *
@@ -421,6 +431,8 @@ var gSearchResultsPane = {
     let matchesFound = false;
     if (
       nodeObject.childElementCount == 0 ||
+      (typeof nodeObject.children !== "undefined" &&
+        Array.prototype.every.call(nodeObject.children, this._isAnchor)) ||
       this.searchableNodes.has(nodeObject.localName) ||
       (nodeObject.localName?.startsWith("moz-") &&
         nodeObject.localName !== "moz-input-box")
