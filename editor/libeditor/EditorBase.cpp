@@ -2535,7 +2535,7 @@ EditorBase::InsertNodeWithTransaction(ContentNodeType& aContentToInsert,
   }
 
   return CreateNodeResultBase<ContentNodeType>(
-      &aContentToInsert, transaction->SuggestPointToPutCaret<EditorDOMPoint>());
+      aContentToInsert, transaction->SuggestPointToPutCaret<EditorDOMPoint>());
 }
 
 Result<CreateElementResult, nsresult>
@@ -2687,7 +2687,7 @@ Result<CreateElementResult, nsresult> EditorBase::InsertBRElement(
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
   return CreateElementResult(
-      newBRElement,
+      *newBRElement,
       EditorDOMPoint(newBRElement, aBRElementType == BRElementType::Normal
                                        ? InterlinePosition::StartOfNextLine
                                        : InterlinePosition::EndOfLine));
