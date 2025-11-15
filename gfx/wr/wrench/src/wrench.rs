@@ -466,10 +466,13 @@ impl Wrench {
             stretch,
         };
         let system_fc = dwrote::FontCollection::system();
+        #[allow(deprecated)]
         if let Some(font) = system_fc.get_font_from_descriptor(&desc) {
             let face = font.create_font_face();
+            #[allow(deprecated)]
             let files = face.get_files();
             if files.len() == 1 {
+                #[allow(deprecated)]
                 if let Some(path) = files[0].get_font_file_path() {
                     return self.font_key_from_native_handle(&NativeFontHandle {
                         path,
