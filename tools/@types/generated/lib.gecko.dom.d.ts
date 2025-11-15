@@ -26248,7 +26248,7 @@ interface CreateScriptURLCallback {
 }
 
 interface CustomElementConstructor {
-    (): any;
+    new (...params: any[]): HTMLElement;
 }
 
 interface CustomElementCreationCallback {
