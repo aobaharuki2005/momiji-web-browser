@@ -2713,42 +2713,13 @@ bool CanonicalBrowsingContext::SupportsLoadingInParent(
   return true;
 }
 
-bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
-                                            bool aSetNavigating) {
-  // We currently only support starting loads directly from the
-  // CanonicalBrowsingContext for top-level BCs.
-  // We currently only support starting loads directly from the
-  // CanonicalBrowsingContext for top-level BCs.
-  if (!IsTopContent() || !GetContentParent() ||
-      !StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
-    return false;
-  }
-
-  uint64_t outerWindowId = 0;
-  if (!SupportsLoadingInParent(aLoadState, &outerWindowId)) {
-    return false;
-  }
-
-  MOZ_ASSERT(!aLoadState->URI()->SchemeIs("javascript"));
-
-  MOZ_ALWAYS_SUCCEEDS(
-      SetParentInitiatedNavigationEpoch(++gParentInitiatedNavigationEpoch));
-  // Note: If successful, this will recurse into StartDocumentLoad and
-  // set mCurrentLoad to the DocumentLoadListener instance created.
-  // Ideally in the future we will only start loads from here, and we can
-  // just set this directly instead.
-  return net::DocumentLoadListener::LoadInParent(this, aLoadState,
-                                                 aSetNavigating);
-}
-
 bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
     nsDocShellLoadState* aLoadState) {
   // We currently only support starting loads directly from the
   // CanonicalBrowsingContext for top-level BCs.
   // We currently only support starting loads directly from the
   // CanonicalBrowsingContext for top-level BCs.
-  if (!IsTopContent() || !GetContentParent() ||
-      (StaticPrefs::browser_tabs_documentchannel_parent_controlled())) {
+  if (!IsTopContent() || !GetContentParent()) {
     return false;
   }
 
@@ -2765,18 +2736,6 @@ bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
 
 bool CanonicalBrowsingContext::StartDocumentLoad(
     net::DocumentLoadListener* aLoad) {
-  // If we're controlling loads from the parent, then starting a new load means
-  // that we need to cancel any existing ones.
-  if (StaticPrefs::browser_tabs_documentchannel_parent_controlled() &&
-      mCurrentLoad) {
-    // Make sure we are not loading a javascript URI.
-    MOZ_ASSERT(!aLoad->IsLoadingJSURI());
-
-    // If we want to do a download, don't cancel the current navigation.
-    if (!aLoad->IsDownload()) {
-      mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
-    }
-  }
   mCurrentLoad = aLoad;
 
   if (NS_FAILED(SetCurrentLoadIdentifier(Some(aLoad->GetLoadIdentifier())))) {
