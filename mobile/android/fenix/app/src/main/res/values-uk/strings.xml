@@ -1052,6 +1052,8 @@
   <string name="alternative_app_icon_group_gradients">Градієнти</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Інше</string>
+  <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_featured">Відібрані</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Змінити піктограму програми?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
@@ -2346,6 +2348,16 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Дозволити %1$s автоматично застосовувати винятки для запобігання збоям у роботі вебсайтів.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Також автоматично застосовувати винятки, необхідні для виправлення лише незначних проблем та забезпечення доступності зручних функцій.</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Усувати значні проблеми з сайтами (рекомендовано)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Усувати незначні проблеми з сайтами</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">Необхідно використовувати з функцією усунення значних проблем.</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Усунення проблем із сайтами</string>
+  <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Докладніше</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
@@ -2913,9 +2925,9 @@
   <!-- Label that indicates a site is displaying a local document -->
   <string name="quick_settings_sheet_local_page">Ця сторінка зберігається на вашому пристрої.</string>
   <!-- Label to clear site data -->
-  <string name="clear_site_data">Стерти файли cookie та дані сайтів</string>
+  <string name="clear_site_data">Стерти файли cookie та дані сайту</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site. %s is the domain of the site. -->
-  <string name="confirm_clear_site_data"><![CDATA[Ви дійсно хочете очистити всі файли cookie та дані сайту <b>%s</b>?]]></string>
+  <string name="confirm_clear_site_data"><![CDATA[Ви дійсно хочете стерти всі файли cookie та дані сайту <b>%s</b>?]]></string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites -->
   <string name="confirm_clear_permissions_on_all_sites">Ви впевнені, що хочете очистити всі дозволи на всіх сайтах?</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site -->
@@ -3451,9 +3463,9 @@
     Description text for a dialog confirming whether the user wants to delete all data for current site.
     %s is a placeholder for the base domain of website.
   -->
-  <string name="clear_site_data_dialog_description"><![CDATA[Вилучення файлів cookie та даних для <b>%s</b> може призвести до виходу на вебсайтах і очищення кошиків для покупок.]]></string>
+  <string name="clear_site_data_dialog_description"><![CDATA[Вилучення файлів cookie та даних для <b>%s</b> може призвести до виходу з облікового запису на вебсайтах і очищення кошиків для покупок.]]></string>
   <!-- Button text on the clear site data dialog to allow users to confirm they wish to clear the site data. -->
-  <string name="clear_site_data_dialog_positive_button_text">Очистити</string>
+  <string name="clear_site_data_dialog_positive_button_text">Стерти</string>
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Скасувати</string>
   <!-- Text for the connection security panel when the site is secure. -->
@@ -3873,6 +3885,10 @@
   <string name="settings_search_clear_recent_searches_message">Стерти все</string>
   <!-- Section header for recent search results -->
   <string name="settings_search_recent_searches_section_header">Недавні результати пошуку</string>
+  <!-- Message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_title">Нічого не знайдено</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">Можливо, спробувати інший пошук?</string>
   <!--
     Terms of use pop up prompt
 
