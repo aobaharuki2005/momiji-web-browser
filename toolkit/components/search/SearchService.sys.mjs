@@ -436,11 +436,6 @@ export class SearchService {
     });
   }
 
-  async getEnginesByExtensionID(extensionID) {
-    await this.init();
-    return this.#getEnginesByExtensionID(extensionID);
-  }
-
   async findContextualSearchEngineByHost(host) {
     await this.init();
     let settings = await this._settings.get();
@@ -2852,7 +2847,7 @@ export class SearchService {
           // There's a chance here that the WebExtension might not be
           // installed any longer, even though the engine is. We'll deal
           // with that in `checkWebExtensionEngines`.
-          let engines = await this.getEnginesByExtensionID(match[1]);
+          let engines = this.#getEnginesByExtensionID(match[1]);
           if (engines.length) {
             lazy.logConsole.debug(
               `Migrating ${engine.name} to WebExtension install`
@@ -3074,7 +3069,7 @@ export class SearchService {
    *   An Extension object containing data about the extension.
    */
   async #upgradeExtensionEngine(extension) {
-    let extensionEngines = await this.getEnginesByExtensionID(extension.id);
+    let extensionEngines = this.#getEnginesByExtensionID(extension.id);
 
     for (let engine of extensionEngines) {
       let isDefault = engine == this.defaultEngine;
