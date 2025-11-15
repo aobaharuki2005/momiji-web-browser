@@ -9184,8 +9184,16 @@ double nsWindow::FractionalScaleFactor() {
   if (mSurface) {
     auto scale = mSurface->GetScale();
     if (scale != sNoScale) {
-      LOGVERBOSE("nsWindow::FractionalScaleFactor(): fractional scale %.2f",
-                 scale);
+#  ifdef MOZ_LOGGING
+      if (LOG_ENABLED_VERBOSE()) {
+        static float lastScaleLog = 0.0;
+        if (lastScaleLog != scale) {
+          lastScaleLog = scale;
+          LOGVERBOSE("nsWindow::FractionalScaleFactor(): fractional scale %.2f",
+                     scale);
+        }
+      }
+#  endif
       return scale;
     }
   }
