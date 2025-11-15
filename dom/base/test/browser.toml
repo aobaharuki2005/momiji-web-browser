@@ -194,6 +194,13 @@ support-files = [
   "file_js_cache_imported3.mjs",
 ]
 
+["browser_script_loader_js_cache_serviceworker.js"]
+support-files = [
+  "empty.html",
+  "file_js_cache_large.js",
+  "file_js_cache_sw.js",
+]
+
 ["browser_script_loader_js_cache_sri_after_save.js"]
 support-files = [
   "empty.html",

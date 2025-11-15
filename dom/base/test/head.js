@@ -154,12 +154,36 @@ async function runJSCacheTests(tests) {
         ChromeUtils.clearResourceCache();
         Services.cache2.clear();
 
+        if (test.useServiceWorker) {
+          await SpecialPowers.spawn(browser, [], async () => {
+            const registration = await content.navigator.serviceWorker.register(
+              "file_js_cache_sw.js",
+              { scope: "./" }
+            );
+
+            const sw = registration.installing || registration.active;
+
+            await new Promise(resolve => {
+              function onStateChange() {
+                if (sw.state === "activated") {
+                  sw.removeEventListener("statechange", onStateChange);
+                  resolve();
+                }
+              }
+              sw.addEventListener("statechange", onStateChange);
+              onStateChange();
+            });
+          });
+        }
+
         for (let i = 0; i < test.items.length; i++) {
           const item = test.items[i];
           info(`start: ${test.title} (item ${i})`);
 
-          // Make sure the test starts in clean document.
-          await BrowserTestUtils.reloadTab(tab);
+          if (!test.skipReload) {
+            // Make sure the test starts in clean document.
+            await BrowserTestUtils.reloadTab(tab);
+          }
 
           if (item.clearMemory) {
             info("clear memory cache");
@@ -175,6 +199,14 @@ async function runJSCacheTests(tests) {
             jsCacheContentTask
           );
           ok(result, "Received expected events");
+        }
+
+        if (test.useServiceWorker) {
+          await SpecialPowers.spawn(browser, [], async () => {
+            const registration =
+              await content.navigator.serviceWorker.getRegistration();
+            registration.unregister();
+          });
         }
 
         ok(true, "end: " + test.title);
