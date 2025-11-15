@@ -20,8 +20,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SVGPathSegment, mSVGPathElement)
 
 //----------------------------------------------------------------------
 // Implementation
-void SVGPathSegment::AppendEndPoint(
-    const StyleCommandEndPoint<StyleCSSFloat>& point) {
+void SVGPathSegment::AppendEndPoint(const StyleEndPoint<StyleCSSFloat>& point) {
   if (point.IsToPosition()) {
     const auto& pos = point.AsToPosition();
     mValues.AppendElement(pos.horizontal);
@@ -34,9 +33,9 @@ void SVGPathSegment::AppendEndPoint(
 }
 
 void SVGPathSegment::AppendControlPoint(
-    const StyleControlPoint<StyleCSSFloat>& point) {
-  if (point.IsPosition()) {
-    const auto& pos = point.AsPosition();
+    const StyleCurveControlPoint<StyleCSSFloat>& point) {
+  if (point.IsAbsolute()) {
+    const auto& pos = point.AsAbsolute();
     mValues.AppendElement(pos.horizontal);
     mValues.AppendElement(pos.vertical);
   } else if (point.IsRelative()) {
