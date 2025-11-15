@@ -934,8 +934,11 @@ export class SearchEngine {
 
     return (
       existingSubmission.uri.equals(newSubmission.uri) &&
-      existingSubmission.postData?.data.data ==
-        newSubmission.postData?.data.data
+      // The input streams returned are `nsIStringInputStream`s which also
+      // implement `nsISupportsCString`.
+      existingSubmission.postData?.data.QueryInterface(Ci.nsISupportsCString)
+        .data ==
+        newSubmission.postData?.data.QueryInterface(Ci.nsISupportsCString).data
     );
   }
 
@@ -1623,14 +1626,30 @@ export class SearchEngine {
 class Submission {
   QueryInterface = ChromeUtils.generateQI(["nsISearchSubmission"]);
 
+  /**
+   * @param {nsIURI} uri
+   *   The URI to submit a search to.
+   * @param {nsIMIMEInputStream} [postData]
+   *   The POST data associated with a search submission.
+   */
   constructor(uri, postData = null) {
     this._uri = uri;
     this._postData = postData;
   }
 
+  /**
+   * The URI to submit a search to.
+   */
   get uri() {
     return this._uri;
   }
+
+  /**
+   * The POST data associated with a search submission, wrapped in a MIME
+   * input stream.
+   *
+   * The Mime Input Stream contains a nsIStringInputStream.
+   */
   get postData() {
     return this._postData;
   }
