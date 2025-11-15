@@ -3663,6 +3663,7 @@ interface RedirectBlockedEventInit extends EventInit {
 
 interface RegistrationOptions {
     scope?: string;
+    type?: WorkerType;
     updateViaCache?: ServiceWorkerUpdateViaCache;
 }
 
@@ -19542,7 +19543,7 @@ declare var SVGSwitchElement: {
     isInstance: IsInstance<SVGSwitchElement>;
 };
 
-interface SVGSymbolElement extends SVGElement, SVGFitToViewBox, SVGTests {
+interface SVGSymbolElement extends SVGGraphicsElement, SVGFitToViewBox, SVGTests {
     addEventListener<K extends keyof SVGElementEventMap>(type: K, listener: (this: SVGSymbolElement, ev: SVGElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
     addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
     removeEventListener<K extends keyof SVGElementEventMap>(type: K, listener: (this: SVGSymbolElement, ev: SVGElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;

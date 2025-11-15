@@ -490,7 +490,9 @@ interface nsISearchService : nsISupports
    * @param  engine
    *         The engine to remove.
    */
-  Promise removeEngine(in nsISearchEngine engine);
+  Promise removeEngine(
+    in nsISearchEngine engine,
+    [optional] in unsigned short changeReason);
 
   /**
    * Notify nsSearchService that an extension has been removed. Removes any

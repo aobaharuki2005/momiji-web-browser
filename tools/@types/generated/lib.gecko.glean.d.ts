@@ -337,6 +337,11 @@ interface GleanImpl {
     tabAssignedContainer: GleanEventWithExtras<{ from_container_id?: string, to_container_id?: string }>;
   }
 
+  browserCustomkeys: {
+    actions: Record<"change"|"clear"|"reset"|"reset_all", GleanCounter>;
+    opened: GleanCounter;
+  }
+
   downloads: {
     panelShown: GleanCounter;
     addedFileExtension: GleanEventWithExtras<{ value?: string }>;
@@ -5884,13 +5889,17 @@ interface GleanImpl {
   }
 
   firefoxAiRuntime: {
-    engineCreationFailure: GleanEventWithExtras<{ engineId?: string, error?: string, featureId?: string, modelId?: string, taskName?: string }>;
+    engineCreationFailure: GleanEventWithExtras<{ engineId?: string, error?: string, featureId?: string, flow_id?: string, modelId?: string, taskName?: string }>;
     engineCreationSuccess: Record<"about-inference"|"autofill-ml"|"default-engine"|"ml-suggest-intent"|"ml-suggest-ner"|"pdfjs"|"smart-intent"|"smart-tab-embedding-engine"|"smart-tab-topic-engine"|"webextension"|"wllamapreview", GleanTimingDistribution>;
-    engineRun: GleanEventWithExtras<{ backend?: string, cores?: string, cpu_milliseconds?: string, cpu_utilization?: string, engine_id?: string, feature_id?: string, memory_bytes?: string, model_id?: string, wall_milliseconds?: string }>;
+    engineCreationSuccessFlow: GleanEventWithExtras<{ duration?: string, engineId?: string, flow_id?: string }>;
+    engineRun: GleanEventWithExtras<{ backend?: string, cores?: string, cpu_milliseconds?: string, cpu_utilization?: string, engine_id?: string, feature_id?: string, flow_id?: string, memory_bytes?: string, model_id?: string, wall_milliseconds?: string }>;
     modelDeletion: GleanEventWithExtras<{ deletedBy?: string, error?: string, modelId?: string, modelRevision?: string }>;
     modelDownload: GleanEventWithExtras<{ duration?: string, engineId?: string, error?: string, featureId?: string, modelDownloadId?: string, modelId?: string, modelRevision?: string, step?: string, when?: string }>;
-    runInferenceFailure: GleanEventWithExtras<{ engineId?: string, featureId?: string, modelId?: string }>;
+    runInferenceFailure: GleanEventWithExtras<{ engineId?: string, featureId?: string, flow_id?: string, modelId?: string }>;
     runInferenceSuccess: Record<"about-inference"|"autofill-ml"|"default-engine"|"ml-suggest-intent"|"ml-suggest-ner"|"pdfjs"|"smart-intent"|"smart-tab-embedding-engine"|"smart-tab-topic-engine"|"webextension"|"wllamapreview", GleanTimingDistribution>;
+    runInferenceSuccessFlow: GleanEventWithExtras<{ flow_id?: string, inference_time?: string, tokenizing_time?: string }>;
+    sessionEnd: GleanEventWithExtras<{ duration?: string, feature_id?: string, flow_id?: string, status?: string }>;
+    sessionStart: GleanEventWithExtras<{ feature_id?: string, flow_id?: string, interaction?: string }>;
   }
 
   modelManagement: {
