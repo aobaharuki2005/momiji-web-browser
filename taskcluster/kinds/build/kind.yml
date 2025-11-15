@@ -37,6 +37,9 @@ task-defaults:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     use-python: default
     use-uv: true
+    fetches:
+        toolchain:
+            - terser
     run:
         mozconfig-variant:
             by-release-type:
