@@ -545,9 +545,8 @@ tasks.register("generateSDKBindings", JavaExec) {
     outputs.dir("${topobjdir}/widget/android/bindings")
 
     dependsOn project(':annotations').jar
+    dependsOn rootProject.verifyGleanVersion
 }
-
-preBuild.dependsOn(":verifyGleanVersion")
 
 apiLint {
     // TODO: Change this to `org` after hiding org.mozilla.gecko

@@ -315,5 +315,21 @@ def test_focus_build(objdir, mozconfig, run_mach):
     assert_all_task_statuses(objdir, ["UP-TO-DATE", "SKIPPED"])
 
 
+def test_android_export(objdir, mozconfig, run_mach):
+    # To ensure a consistent state, we delete the marker file
+    # to force the :verifyGleanVersion task to re-run.
+    marker_file = objdir / "gradle" / "build" / "glean" / "verifyGleanVersion.marker"
+    marker_file.unlink(missing_ok=True)
+
+    bindings_dir = Path(topsrcdir) / "widget" / "android" / "bindings"
+    inputs = list(bindings_dir.glob("*-classes.txt"))
+
+    assert_success(*run_mach(["android", "export"] + [str(f) for f in inputs]))
+    assert_ordered_task_outcomes(objdir, [(":verifyGleanVersion", "EXECUTED")])
+
+    assert_success(*run_mach(["android", "export"] + [str(f) for f in inputs]))
+    assert_ordered_task_outcomes(objdir, [(":verifyGleanVersion", "UP-TO-DATE")])
+
+
 if __name__ == "__main__":
     mozunit.main()
