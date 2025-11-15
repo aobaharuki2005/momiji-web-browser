@@ -42,6 +42,7 @@
 #include "SQLCollations.h"
 #include "FileSystemModule.h"
 #include "mozStorageHelper.h"
+#include "sqlite3_static_ext.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
