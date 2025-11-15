@@ -34,7 +34,7 @@ features = ["capture", "serialize_program", "gecko", "sw_compositor"]
 debugger = ["webrender/debugger"]
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.11.5"
+dwrote = "0.11"
 winapi = "0.3"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]

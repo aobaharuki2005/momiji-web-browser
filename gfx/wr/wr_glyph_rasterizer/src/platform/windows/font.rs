@@ -155,10 +155,8 @@ impl FontContext {
 
     fn add_font_descriptor(&mut self, font_key: &FontKey, desc: &dwrote::FontDescriptor) {
         let system_fc = dwrote::FontCollection::get_system(false);
-        #[allow(deprecated)]
         if let Some(font) = system_fc.get_font_from_descriptor(desc) {
             let face = font.create_font_face();
-            #[allow(deprecated)]
             let file = face.get_files().pop().unwrap();
             let index = face.get_index();
             self.fonts.insert(*font_key, FontFace { cached: None, file, index, face });
@@ -170,7 +168,6 @@ impl FontContext {
             return;
         }
 
-        #[allow(deprecated)]
         if let Some(file) = dwrote::FontFile::new_from_data(data) {
             if let Ok(face) = file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE) {
                 self.fonts.insert(*font_key, FontFace { cached: None, file, index, face });
@@ -370,7 +367,6 @@ impl FontContext {
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
         let face = &self.fonts.get(&font_key).unwrap().face;
-        #[allow(deprecated)]
         let indices = face.get_glyph_indices(&[ch as u32]);
         indices.first().map(|idx| *idx as u32)
     }
@@ -401,7 +397,6 @@ impl FontContext {
         let extra_width = extra_strikes as f64 * pixel_step;
 
         let face = self.get_font_face(font);
-        #[allow(deprecated)]
         face.get_design_glyph_metrics(&[key.index() as u16], false)
             .first()
             .map(|metrics| {

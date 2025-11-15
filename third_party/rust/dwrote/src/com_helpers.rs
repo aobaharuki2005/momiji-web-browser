@@ -122,6 +122,6 @@ where
     }
 
     unsafe fn destroy(thing: *mut Interface) {
-        let _ = Box::from_raw(thing as *mut ComRepr<Self, Self::Vtbl>);
+        Box::from_raw(thing as *mut ComRepr<Self, Self::Vtbl>);
     }
 }

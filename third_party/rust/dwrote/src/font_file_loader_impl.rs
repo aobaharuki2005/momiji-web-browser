@@ -22,7 +22,7 @@ use crate::com_helpers::*;
 
 struct FontFileLoader;
 
-const FontFileLoaderVtbl: &IDWriteFontFileLoaderVtbl = &IDWriteFontFileLoaderVtbl {
+const FontFileLoaderVtbl: &'static IDWriteFontFileLoaderVtbl = &IDWriteFontFileLoaderVtbl {
     parent: implement_iunknown!(static IDWriteFontFileLoader, FontFileLoader),
     CreateStreamFromKey: {
         unsafe extern "system" fn CreateStreamFromKey(
@@ -80,10 +80,10 @@ unsafe impl Sync for FontFileLoader {}
 struct FontFileStream {
     refcount: atomic::AtomicUsize,
     key: usize,
-    data: Arc<dyn AsRef<[u8]> + Sync + Send>,
+    data: Arc<Vec<u8>>,
 }
 
-const FontFileStreamVtbl: &IDWriteFontFileStreamVtbl = &IDWriteFontFileStreamVtbl {
+const FontFileStreamVtbl: &'static IDWriteFontFileStreamVtbl = &IDWriteFontFileStreamVtbl {
     parent: implement_iunknown!(IDWriteFontFileStream, FontFileStream),
     ReadFileFragment: {
         unsafe extern "system" fn ReadFileFragment(
@@ -95,12 +95,11 @@ const FontFileStreamVtbl: &IDWriteFontFileStreamVtbl = &IDWriteFontFileStreamVtb
         ) -> HRESULT {
             let this = FontFileStream::from_interface(This);
             *fragmentContext = ptr::null_mut();
-            let data = (*this.data).as_ref();
-            if (fileOffset + fragmentSize) as usize > data.len() {
+            if (fileOffset + fragmentSize) as usize > this.data.len() {
                 return E_INVALIDARG;
             }
             let index = fileOffset as usize;
-            *fragmentStart = data[index..].as_ptr() as *const c_void;
+            *fragmentStart = this.data[index..].as_ptr() as *const c_void;
             S_OK
         }
         ReadFileFragment
@@ -119,7 +118,7 @@ const FontFileStreamVtbl: &IDWriteFontFileStreamVtbl = &IDWriteFontFileStreamVtb
             fileSize: *mut UINT64,
         ) -> HRESULT {
             let this = FontFileStream::from_interface(This);
-            *fileSize = (*this.data).as_ref().len() as UINT64;
+            *fileSize = this.data.len() as UINT64;
             S_OK
         }
         GetFileSize
@@ -136,7 +135,7 @@ const FontFileStreamVtbl: &IDWriteFontFileStreamVtbl = &IDWriteFontFileStreamVtb
 };
 
 impl FontFileStream {
-    pub fn new(key: usize, data: Arc<dyn AsRef<[u8]> + Sync + Send>) -> FontFileStream {
+    pub fn new(key: usize, data: Arc<Vec<u8>>) -> FontFileStream {
         FontFileStream {
             refcount: AtomicUsize::new(1),
             key,
@@ -179,7 +178,7 @@ unsafe impl Sync for FontFileLoaderWrapper {}
 
 lazy_static! {
     static ref FONT_FILE_STREAM_MAP: Mutex<HashMap<usize, FontFileStreamPtr>> =
-        Mutex::new(HashMap::new());
+        { Mutex::new(HashMap::new()) };
     static ref FONT_FILE_LOADER: Mutex<FontFileLoaderWrapper> = {
         unsafe {
             let ffl_native = FontFileLoader::new();
@@ -191,11 +190,11 @@ lazy_static! {
     };
 }
 
-pub(crate) struct DataFontHelper;
+pub struct DataFontHelper;
 
 impl DataFontHelper {
-    pub(crate) fn register_font_buffer(
-        font_data: Arc<dyn AsRef<[u8]> + Sync + Send>,
+    pub fn register_font_data(
+        font_data: Arc<Vec<u8>>,
     ) -> (
         ComPtr<IDWriteFontFile>,
         ComPtr<IDWriteFontFileStream>,
