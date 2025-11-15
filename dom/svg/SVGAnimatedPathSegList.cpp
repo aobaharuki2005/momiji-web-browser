@@ -30,20 +30,21 @@ nsresult SVGAnimatedPathSegList::SetBaseValueString(const nsAString& aValue) {
 
 enum class PositionType { Absolute, Relative };
 
-static StyleEndPoint<float> MakeEndPoint(PositionType type, float x, float y) {
+static StyleCommandEndPoint<float> MakeEndPoint(PositionType type, float x,
+                                                float y) {
   if (type == PositionType::Absolute) {
-    return StyleEndPoint<float>::ToPosition({x, y});
+    return StyleCommandEndPoint<float>::ToPosition({x, y});
   } else {
-    return StyleEndPoint<float>::ByCoordinate({x, y});
+    return StyleCommandEndPoint<float>::ByCoordinate({x, y});
   }
 }
 
-static StyleCurveControlPoint<float> MakeControlPoint(PositionType type,
-                                                      float x, float y) {
+static StyleControlPoint<float> MakeControlPoint(PositionType type, float x,
+                                                 float y) {
   if (type == PositionType::Absolute) {
-    return StyleCurveControlPoint<float>::Absolute({x, y});
+    return StyleControlPoint<float>::Position({x, y});
   } else {
-    return StyleCurveControlPoint<float>::Relative(
+    return StyleControlPoint<float>::Relative(
         StyleRelativeControlPoint<float>{{x, y}, StyleControlReference::None});
   }
 }

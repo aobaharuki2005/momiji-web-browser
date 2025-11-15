@@ -1291,9 +1291,8 @@ inline gfx::Point StyleShapePosition<LengthPercentage>::ToGfxPoint(
 }
 
 template <>
-inline gfx::Point
-StyleCommandEndPoint<StyleShapePosition<StyleCSSFloat>,
-                     StyleCSSFloat>::ToGfxPoint(const CSSSize* aBasis) const {
+inline gfx::Point StyleCommandEndPoint<StyleCSSFloat>::ToGfxPoint(
+    const CSSSize* aBasis) const {
   if (IsToPosition()) {
     auto& pos = AsToPosition();
     return pos.ToGfxPoint();
@@ -1304,9 +1303,8 @@ StyleCommandEndPoint<StyleShapePosition<StyleCSSFloat>,
 }
 
 template <>
-inline gfx::Point StyleCommandEndPoint<
-    StyleShapePosition<LengthPercentage>,
-    LengthPercentage>::ToGfxPoint(const CSSSize* aBasis) const {
+inline gfx::Point StyleCommandEndPoint<LengthPercentage>::ToGfxPoint(
+    const CSSSize* aBasis) const {
   MOZ_ASSERT(aBasis);
   if (IsToPosition()) {
     auto& pos = AsToPosition();
@@ -1318,12 +1316,11 @@ inline gfx::Point StyleCommandEndPoint<
 }
 
 template <>
-inline gfx::Point
-StyleControlPoint<StyleShapePosition<StyleCSSFloat>, StyleCSSFloat>::ToGfxPoint(
+inline gfx::Point StyleControlPoint<StyleCSSFloat>::ToGfxPoint(
     const gfx::Point aStatePos, const gfx::Point aEndPoint,
     const bool isRelativeEndPoint, const CSSSize* aBasis) const {
-  if (IsAbsolute()) {
-    auto& pos = AsAbsolute();
+  if (IsPosition()) {
+    auto& pos = AsPosition();
     return pos.ToGfxPoint();
   }
 
@@ -1344,15 +1341,12 @@ StyleControlPoint<StyleShapePosition<StyleCSSFloat>, StyleCSSFloat>::ToGfxPoint(
 }
 
 template <>
-inline gfx::Point
-StyleControlPoint<StyleShapePosition<LengthPercentage>,
-                  LengthPercentage>::ToGfxPoint(const gfx::Point aStatePos,
-                                                const gfx::Point aEndPoint,
-                                                const bool isRelativeEndPoint,
-                                                const CSSSize* aBasis) const {
+inline gfx::Point StyleControlPoint<LengthPercentage>::ToGfxPoint(
+    const gfx::Point aStatePos, const gfx::Point aEndPoint,
+    const bool isRelativeEndPoint, const CSSSize* aBasis) const {
   MOZ_ASSERT(aBasis);
-  if (IsAbsolute()) {
-    auto& pos = AsAbsolute();
+  if (IsPosition()) {
+    auto& pos = AsPosition();
     return pos.ToGfxPoint(aBasis);
   }
 
