@@ -718,6 +718,7 @@ skip script test262/intl402/Temporal/PlainDateTime/prototype/add/leap-months-dan
 skip script test262/intl402/Temporal/PlainDateTime/prototype/add/basic-hebrew.js
 skip script test262/intl402/Temporal/PlainDateTime/prototype/add/era-boundary-ethiopic.js
 skip script test262/intl402/Temporal/PlainDateTime/prototype/add/leap-months-hebrew.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/add/basic-islamic-umalqura.js
 skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/leap-months-chinese.js
 skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/leap-months-dangi.js
 skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/basic-hebrew.js
