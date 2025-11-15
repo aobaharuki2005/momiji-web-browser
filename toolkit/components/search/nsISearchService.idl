@@ -440,13 +440,6 @@ interface nsISearchService : nsISupports
   Promise getAppProvidedEngines();
 
   /**
-   * Returns an array of search engines installed by a given extension.
-   *
-   * @returns an array of nsISearchEngine objects.
-   */
-  Promise getEnginesByExtensionID(in AString extensionID);
-
-  /**
    * Returns an engine definition if it's search url matches the host provided.
    *
    * @param   host

@@ -11689,7 +11689,6 @@ interface nsISearchService extends nsISupports, Enums<typeof nsISearchService_Op
   getEngines(): Promise<any>;
   getVisibleEngines(): Promise<any>;
   getAppProvidedEngines(): Promise<any>;
-  getEnginesByExtensionID(extensionID: string): Promise<any>;
   findContextualSearchEngineByHost(host: string): Promise<any>;
   shouldShowInstallPrompt(engine: any): Promise<any>;
   addSearchEngine(engine: any): Promise<any>;
