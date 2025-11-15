@@ -225,13 +225,6 @@ def main():
             minify_js=args.minify_js,
             ignore_broken_symlinks=args.ignore_broken_symlinks,
         )
-        if args.js_binary:
-            finder_args["minify_js_verify_command"] = [
-                args.js_binary,
-                os.path.join(
-                    os.path.abspath(os.path.dirname(__file__)), "js-compare-ast.js"
-                ),
-            ]
         finder = PackagerFileFinder(args.source, find_executables=True, **finder_args)
         if "NO_PKG_FILES" in os.environ:
             sinkformatter = NoPkgFilesRemover(formatter, args.manifest is not None)
