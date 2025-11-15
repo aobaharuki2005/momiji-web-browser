@@ -181,7 +181,8 @@ class DeclarationBlock final {
 
   void GetPropertyValueById(NonCustomCSSPropertyId aPropId,
                             nsACString& aValue) const {
-    Servo_DeclarationBlock_GetPropertyValueById(mRaw, aPropId, &aValue);
+    Servo_DeclarationBlock_GetPropertyValueByNonCustomId(mRaw, aPropId,
+                                                         &aValue);
   }
 
   bool GetPropertyIsImportant(const nsACString& aProperty) const {

@@ -287,7 +287,7 @@ class ReadOnlyInspectorDeclaration final : public nsDOMCSSDeclaration {
     Servo_DeclarationBlock_GetPropertyValue(mRaw, &aPropName, &aValue);
   }
   void GetPropertyValue(NonCustomCSSPropertyId aId, nsACString& aValue) final {
-    Servo_DeclarationBlock_GetPropertyValueById(mRaw, aId, &aValue);
+    Servo_DeclarationBlock_GetPropertyValueByNonCustomId(mRaw, aId, &aValue);
   }
   void IndexedGetter(uint32_t aIndex, bool& aFound,
                      nsACString& aPropName) final {

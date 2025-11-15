@@ -5356,14 +5356,14 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyValue(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyValueById(
+pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyValueByNonCustomId(
     declarations: &LockedDeclarationBlock,
-    property: NonCustomCSSPropertyId,
+    property_id: NonCustomCSSPropertyId,
     value: &mut nsACString,
 ) {
     get_property_value(
         declarations,
-        get_property_id_from_noncustomcsspropertyid!(property, ()),
+        get_property_id_from_noncustomcsspropertyid!(property_id, ()),
         value,
     )
 }
