@@ -407,10 +407,9 @@ export var SearchUtils = {
    * This is implemented here as it is used in searchengine-devtools as well as
    * the search service.
    *
-   * @template {SearchEngine} T
    * @param {object} options
    *   The options for this function.
-   * @param {T[]} options.engines
+   * @param {SearchEngine[]} options.engines
    *   An array of engine objects to sort. These should have the `name` and
    *   `orderHint` fields as top-level properties.
    * @param {SearchEngine} options.appDefaultEngine
@@ -419,7 +418,7 @@ export var SearchUtils = {
    *   The application private default engine, if any.
    * @param {string} [options.locale]
    *   The current application locale, or the locale to use for the sorting.
-   * @returns {T[]}
+   * @returns {SearchEngine[]}
    *   The sorted array of engine objects.
    */
   sortEnginesByDefaults({
@@ -428,7 +427,7 @@ export var SearchUtils = {
     appPrivateDefaultEngine,
     locale = Services.locale.appLocaleAsBCP47,
   }) {
-    /** @type {T[]} */
+    /** @type {SearchEngine[]} */
     const sortedEngines = [];
     /** @type {Set<string>} */
     const addedEngines = new Set();

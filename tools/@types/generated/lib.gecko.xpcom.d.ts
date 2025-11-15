@@ -11689,11 +11689,12 @@ interface nsISearchService extends nsISupports, Enums<typeof nsISearchService_Op
   getEngines(): Promise<any>;
   getVisibleEngines(): Promise<any>;
   getAppProvidedEngines(): Promise<any>;
+  getEnginesByExtensionID(extensionID: string): Promise<any>;
   findContextualSearchEngineByHost(host: string): Promise<any>;
   shouldShowInstallPrompt(engine: any): Promise<any>;
   addSearchEngine(engine: any): Promise<any>;
   moveEngine(engine: nsISearchEngine, newIndex: i32): Promise<any>;
-  removeEngine(engine: nsISearchEngine, changeReason: u16): Promise<any>;
+  removeEngine(engine: nsISearchEngine): Promise<any>;
   removeWebExtensionEngine(id: string): Promise<any>;
   readonly appDefaultEngine: nsISearchEngine;
   readonly appPrivateDefaultEngine: nsISearchEngine;

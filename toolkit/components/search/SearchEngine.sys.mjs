@@ -556,38 +556,24 @@ export class SearchEngine {
   _loadPath = null;
 
   /**
-   * The engine's name.
+   *The engine's name.
    *
    * @type {string}
    */
   _name = null;
-  /**
-   * @type {?string}
-   *   The name of the charset used to submit the search terms.
-   */
+  // The name of the charset used to submit the search terms.
   _queryCharset = null;
-  /**
-   * Set to true once the engine has been added to the store, and the initial
-   * notification sent. This allows to skip sending notifications during
-   * initialization.
-   */
+  // Set to true once the engine has been added to the store, and the initial
+  // notification sent. This allows to skip sending notifications during
+  // initialization.
   _engineAddedToStore = false;
-  /**
-   * @type {string[]}
-   *   The aliases coming from the engine definition (via webextension keyword
-   *   field for example).
-   */
+  // The aliases coming from the engine definition (via webextension
+  // keyword field for example).
   _definedAliases = [];
-  /**
-   * @type {EngineURL[]}
-   *   The urls associated with this engine.
-   */
+  // The urls associated with this engine.
   _urls = [];
-  /**
-   * @type {string}
-   *   The known public suffix of the search url, cached in memory to avoid
-   *   repeated look-ups.
-   */
+  // The known public suffix of the search url, cached in memory to avoid
+  // repeated look-ups.
   _searchUrlPublicSuffix = null;
   /**
    * The unique id of the Search Engine.
@@ -629,7 +615,7 @@ export class SearchEngine {
    * this Engine that has the given type string.  (This corresponds to the
    * "type" attribute in the "Url" node in the OpenSearch spec.)
    *
-   * @param {Values<typeof lazy.SearchUtils.URL_TYPE>} type
+   * @param {string} type
    *   The type to match the EngineURL's type attribute.
    * @param {string} [rel]
    *   Only return URLs that with this rel value.
@@ -928,14 +914,6 @@ export class SearchEngine {
     }
   }
 
-  /**
-   * Checks to see if the search url matches the manifest details.
-   *
-   * @param {object} details
-   * @param {string} details.search_url
-   * @param {string} details.search_url_get_params
-   * @param {string} details.search_url_post_params
-   */
   checkSearchUrlMatchesManifest(details) {
     let existingUrl = this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
 
@@ -956,11 +934,8 @@ export class SearchEngine {
 
     return (
       existingSubmission.uri.equals(newSubmission.uri) &&
-      // The input streams returned are `nsIStringInputStream`s which also
-      // implement `nsISupportsCString`.
-      existingSubmission.postData?.data.QueryInterface(Ci.nsISupportsCString)
-        .data ==
-        newSubmission.postData?.data.QueryInterface(Ci.nsISupportsCString).data
+      existingSubmission.postData?.data.data ==
+        newSubmission.postData?.data.data
     );
   }
 
@@ -1114,24 +1089,6 @@ export class SearchEngine {
     return json;
   }
 
-  /**
-   * Gets an attribute from the engine.
-   *
-   * @param {string} name
-   * @returns {any}
-   */
-  getAttr(name) {
-    return this._metaData[name] || undefined;
-  }
-
-  /**
-   * Sets an attribute on the engine.
-   *
-   * @param {string} name
-   * @param {any} val
-   * @param {boolean} sendNotification
-   *   Whether to send a notification if the attribute has changed.
-   */
   setAttr(name, val, sendNotification = false) {
     // Cache whether the attribute actually changes so we don't lose that info
     // when updating `_metaData`.
@@ -1145,11 +1102,10 @@ export class SearchEngine {
     }
   }
 
-  /**
-   * Clears an attribute on the engine.
-   *
-   * @param {string} name
-   */
+  getAttr(name) {
+    return this._metaData[name] || undefined;
+  }
+
   clearAttr(name) {
     delete this._metaData[name];
   }
@@ -1204,12 +1160,6 @@ export class SearchEngine {
     return this.getAttr("alias") || "";
   }
 
-  /**
-   * Set the user-defined alias. When not an empty string, this should be a
-   * unique identifier.
-   *
-   * @type {string}
-   */
   set alias(val) {
     var value = val ? val.trim() : "";
     this.setAttr("alias", value, true);
@@ -1245,37 +1195,18 @@ export class SearchEngine {
     return `other-${this.name}`;
   }
 
-  /**
-   * Whether the engine is hidden from the user.
-   *
-   * @returns {boolean}
-   */
   get hidden() {
     return this.getAttr("hidden") || false;
   }
 
-  /**
-   * @param {boolean} val
-   *   Whether the engine should be hidden from the user.
-   */
   set hidden(val) {
     var value = !!val;
     this.setAttr("hidden", value, true);
   }
 
-  /**
-   * Whether the associated one off button should be hidden from the user.
-   *
-   * @returns {boolean}
-   */
   get hideOneOffButton() {
     return this.getAttr("hideOneOffButton") || false;
   }
-
-  /**
-   * @param {boolean} val
-   *   Whether the engine should be hidden from the user.
-   */
   set hideOneOffButton(val) {
     const value = !!val;
     this.setAttr("hideOneOffButton", value, true);
@@ -1329,20 +1260,14 @@ export class SearchEngine {
     return this.getAttr("overriddenBy");
   }
 
-  /**
-   * Whether or not this engine is a "general" search engine, e.g. is it for
-   * generally searching the web, or does it have a specific purpose like
-   * shopping.
-   */
   get isGeneralPurposeEngine() {
     return false;
   }
 
-  /**
-   * The display name of the search engine.
-   *
-   * This is a unique identifier, but the `id` should be used for most operations.
-   */
+  get _hasUpdates() {
+    return false;
+  }
+
   get name() {
     return this._name;
   }
@@ -1354,9 +1279,6 @@ export class SearchEngine {
     return this._loadPath;
   }
 
-  /**
-   * The query character set to use for encoding searces for this engine.
-   */
   get queryCharset() {
     return this._queryCharset || lazy.SearchUtils.DEFAULT_QUERY_CHARSET;
   }
@@ -1371,7 +1293,7 @@ export class SearchEngine {
    * @param {Values<typeof lazy.SearchUtils.URL_TYPE>} [responseType]
    *   The MIME type that we'd like to receive in response
    *   to this submission.  If null, will default to "text/html".
-   * @returns {?nsISearchSubmission}
+   * @returns {nsISearchSubmission|null}
    *   The submission data. If no appropriate submission can be determined for
    *   the request type, this may be null.
    */
@@ -1503,14 +1425,6 @@ export class SearchEngine {
     return uriParams.get(termsParameterName) ?? "";
   }
 
-  /**
-   * Returns the name of the parameter used for the search terms for a submission
-   * URL of type `SearchUtils.URL_TYPE.SEARCH`.
-   *
-   * @returns {string}
-   *   The name of the parameter, or empty string if no parameter can be found
-   *   or is not supported (e.g. POST).
-   */
   get searchUrlQueryParamName() {
     return (
       this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH).searchTermParamName ||
@@ -1518,13 +1432,6 @@ export class SearchEngine {
     );
   }
 
-  /**
-   * Returns the public suffix for the submission URL of type
-   * `SearchUtils.URL_TYPE.SEARCH`.
-   *
-   * @returns {string}
-   *   The public suffix, or empty string if one cannot be found.
-   */
   get searchUrlPublicSuffix() {
     if (this._searchUrlPublicSuffix != null) {
       return this._searchUrlPublicSuffix;
@@ -1535,21 +1442,12 @@ export class SearchEngine {
     return (this._searchUrlPublicSuffix = searchURLPublicSuffix);
   }
 
-  /**
-   * Determines whether the engine can return responses in the given
-   * MIME type. Returns true if the engine spec has a URL with the
-   * given responseType, false otherwise.
-   *
-   * @param {Values<typeof lazy.SearchUtils.URL_TYPE>} type
-   *   The MIME type to check for.
-   */
+  // from nsISearchEngine
   supportsResponseType(type) {
     return this.getURLOfType(type) != null;
   }
 
-  /**
-   * The domain from which search results are returned for this engine.
-   */
+  // from nsISearchEngine
   get searchUrlDomain() {
     let url = this.getURLOfType(lazy.SearchUtils.URL_TYPE.SEARCH);
     if (url) {
@@ -1693,9 +1591,6 @@ export class SearchEngine {
     }
   }
 
-  /**
-   * The unique identifier of the search engine.
-   */
   get id() {
     return this.#id;
   }
@@ -1728,30 +1623,14 @@ export class SearchEngine {
 class Submission {
   QueryInterface = ChromeUtils.generateQI(["nsISearchSubmission"]);
 
-  /**
-   * @param {nsIURI} uri
-   *   The URI to submit a search to.
-   * @param {nsIMIMEInputStream} [postData]
-   *   The POST data associated with a search submission.
-   */
   constructor(uri, postData = null) {
     this._uri = uri;
     this._postData = postData;
   }
 
-  /**
-   * The URI to submit a search to.
-   */
   get uri() {
     return this._uri;
   }
-
-  /**
-   * The POST data associated with a search submission, wrapped in a MIME
-   * input stream.
-   *
-   * The Mime Input Stream contains a nsIStringInputStream.
-   */
   get postData() {
     return this._postData;
   }
