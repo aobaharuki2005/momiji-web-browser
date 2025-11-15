@@ -273,6 +273,21 @@ let JSWINDOWACTORS = {
     messageManagerGroups: ["browsers"],
   },
 
+  CanonicalURL: {
+    parent: {
+      esModuleURI: "resource:///actors/CanonicalURLParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource:///actors/CanonicalURLChild.sys.mjs",
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    enablePreference: "browser.tabs.notes.enabled",
+    matches: ["http://*/*", "https://*/*"],
+    messageManagerGroups: ["browsers"],
+  },
+
   ClickHandler: {
     parent: {
       esModuleURI: "resource:///actors/ClickHandlerParent.sys.mjs",
