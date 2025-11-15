@@ -200,8 +200,6 @@
   <string name="browser_menu_manage_extensions">Sefrek isiɣzaf</string>
   <!-- Browser menu group that contains additional settings in collapsed state -->
   <string name="browser_menu_more_settings">Ugar</string>
-  <!-- Browser menu group that contains additional settings in expanded state -->
-  <string name="browser_menu_less_settings" moz:removedIn="144" tools:ignore="UnusedResources">Ddaw</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -703,7 +701,6 @@
   <string name="preferences_https_only_title">Askar HTTPS-Only</string>
   <!-- Preference title for using the screen lock to hide tabs in private browsing -->
   <string name="preferences_pbm_lock_screen_title">Seqdec asekkeṛ n ugdil i tuffra n waccaren deg tunigin tusligt</string>
-  <string name="preferences_pbm_lock_screen_summary_2" tools:ignore="UnusedResources" moz:removedIn="144">Wali accaren s udsil-ik⋅im umḍin, PIN neɣtukksa n usekkeṛ s wudem.</string>
   <!-- Label for cookie banner section in quick settings panel. -->
   <string name="cookie_banner_blocker">Amsewḥel n yiɣarracen n yinagan n tuqqna</string>
   <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
@@ -815,7 +812,7 @@
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Nadi ticraḍ n yisebtar</string>
   <!-- Preference title for switch preference to show shortcuts when searching -->
-  <string name="preferences_show_shortcuts">Sken inegzumen</string>
+  <string name="preferences_show_shortcuts" tools:ignore="UnusedResources" moz:removedIn="147">Sken inegzumen</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Nadi accaren yemtawin</string>
   <!-- Preference for account settings -->
@@ -939,10 +936,6 @@
     Content description for various wallpapers. %1$s is the name of the wallpaper.
   -->
   <string name="wallpapers_item_name_content_description">Aferdis n tugna n ugilal: %1$s</string>
-  <!-- Snackbar message for when wallpaper is selected -->
-  <string name="wallpaper_updated_snackbar_message" tools:ignore="UnusedResources" moz:removedIn="144">Tugna n ugilal tettwaleqqem!</string>
-  <!-- Snackbar label for action to view selected wallpaper -->
-  <string name="wallpaper_updated_snackbar_action" tools:ignore="UnusedResources" moz:removedIn="144">Wali</string>
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Tegguma ad d-trader tugna n ugilal</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
@@ -1001,14 +994,10 @@
   <string name="alternative_app_icon_option_gradient_northern_lights">Tiftilin n ugafa</string>
   <!-- Title for the "Retro 2004" themed alternative app icon variant in the icon picker screen. This app icon uses the classic Firefox logo from 2004. -->
   <string name="alternative_app_icon_option_retro_2004">Retro 2004</string>
-  <!-- Title for the "Retro 2017" themed alternative app icon variant in the icon picker screen. This app icon uses the Firefox logo from 2017, with a more modernized design. -->
-  <string name="alternative_app_icon_option_retro_2017" tools:ignore="UnusedResources" moz:removedIn="144">Retro 2017</string>
   <!-- Title for the "Minimal" themed alternative app icon variant in the icon picker screen. The app icon presents a simplified, flat and monochrome version of the Firefox logo. -->
   <string name="alternative_app_icon_option_minimal">Adday</string>
   <!-- Title for the "Pride" themed alternative app icon variant in the icon picker screen. The app icon incorporates a rainbow color scheme in support of the LGBTQ+ community. -->
   <string name="alternative_app_icon_option_pride">Zzux</string>
-  <!-- Title for the "Cute" themed alternative app icon variant in the icon picker screen. The app icon features a playful design with an adorable aesthetic. -->
-  <string name="alternative_app_icon_option_cute" tools:ignore="UnusedResources" moz:removedIn="144">Sser</string>
   <!-- Title for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
   <string name="alternative_app_icon_option_momo">Momo</string>
   <!-- Subtitle for the "Momo" themed alternative app icon variant in the icon picker screen. The app icon was created by artist @heyheymomodraws and features a unique hand-drawn style with a friendly fox. -->
@@ -1020,11 +1009,9 @@
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Tafesna n yini</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other">Wayeḍ</string>
+  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Wayeḍ</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Beddel tignit n usnas?</string>
-  <!-- Dialog button text for confirming the app restart to apply the selected icon -->
-  <string name="restart_warning_dialog_button_positive" tools:ignore="UnusedResources" moz:removedIn="144">Ales asenker tura</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Senfel tignit</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -1659,19 +1646,13 @@
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
   <string name="webcompat_reporter_label_description">Seglem ugur( d afrayan)</string>
   <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
-  <string name="webcompat_reporter_send_more_info" moz:removedIn="144" tools:ignore="UnusedResources">Azen ugur n talɣut</string>
-  <!-- The button text for navigating away from the feature to provide more information on the broken site's bug report. -->
   <string name="webcompat_reporter_add_more_info">Azen ugur n telɣut</string>
   <!-- The button text for the cancel button to leave the Web Compat Reporter feature. -->
   <string name="webcompat_reporter_cancel">Sefsex</string>
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">Azen</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
-  <string name="webcompat_reporter_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Aneqqisik yettwazen</string>
-  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text_2">Aneqqis yettwazen</string>
-  <!-- Button text for closing or dismissing the snackbar shown after successfully submitting a WebCompat report. -->
-  <string name="webcompat_reporter_dismiss_success_snackbar_text" moz:removedIn="144" tools:ignore="UnusedResources">Mdel</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -1960,11 +1941,7 @@
   -->
   <string name="create_collection_save_to_collection_tab_selected">%d n yiccer yettwafren</string>
   <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
-  <string name="create_collection_tabs_saved_new_collection" tools:ignore="UnusedResources" moz:removedIn="144">Tagrumma tettwasekles!</string>
-  <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
   <string name="create_collection_tabs_saved_new_collection_2">Tagrumma tettwasekles</string>
-  <!-- Text shown in snackbar when one tab has been saved in a collection -->
-  <string name="create_collection_tab_saved" tools:ignore="UnusedResources" moz:removedIn="144">Iccer yettwaselkes!</string>
   <!-- Text shown in snackbar when one tab has been saved in a collection -->
   <string name="create_collection_tab_saved_2">Iccer yettwaselkes</string>
   <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -2102,8 +2079,6 @@
   <string name="snackbar_tabs_closed">Medlen iccaren</string>
   <!-- Text shown in snackbar when user closes multiple inactive tabs. %1$s will be replaced with the number of tabs closed. -->
   <string name="snackbar_num_tabs_closed">Accaren imedlen: %1$s</string>
-  <!-- Text shown in snackbar when user bookmarks a list of tabs. %s is the name of the folder the bookmark was saved into. -->
-  <string name="snackbar_message_bookmarks_saved_in" tools:ignore="UnusedResources" moz:removedIn="144">Ticraḍ n yisebtar ttwaskelsent deg “%s”!</string>
   <!-- Text shown in snackbar when user adds a site to shortcuts -->
   <string name="snackbar_added_to_shortcuts">Yettwarna ɣer yinegzumen!</string>
   <!-- Text shown in snackbar when user closes a private tab -->
@@ -2112,8 +2087,6 @@
   <string name="snackbar_private_data_deleted">Isefka n tunigin tusligt ttwakksen</string>
   <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
   <string name="snackbar_deleted_undo">UƔAL</string>
-  <!-- Text shown in snackbar when user removes a top site -->
-  <string name="snackbar_top_site_removed" moz:removedIn="144" tools:ignore="UnusedResources">Asmel yettwakkes</string>
   <!--
     QR code scanner prompt which appears after scanning a code, but before navigating to it
     %1$s is the name of the app (for example "Firefox"), %2$s is the URL or text scanned
@@ -2217,11 +2190,7 @@
 
     Text shown in snackbar when multiple tabs have been sent to device
   -->
-  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ttwaznen iccaren!</string>
-  <!-- Text shown in snackbar when multiple tabs have been sent to device -->
   <string name="sync_sent_tabs_snackbar_2">Ttwaznen iccaren</string>
-  <!-- Text shown in snackbar when one tab has been sent to device -->
-  <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ittwazen iccer!</string>
   <!-- Text shown in snackbar when one tab has been sent to device -->
   <string name="sync_sent_tab_snackbar_2">Ittwazen iccer</string>
   <!-- Text shown in snackbar when sharing tabs failed -->
@@ -3328,8 +3297,6 @@
   <string name="clear_site_data_dialog_positive_button_text">Sfeḍ</string>
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Sefsex</string>
-  <!-- Snackbar title shown when the site data has been cleared. -->
-  <string name="clear_site_data_snackbar" moz:removedIn="144" tools:ignore="UnusedResources">Inagan n tuqqna d yisefka n usmel yettwakkes</string>
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">Tuqqna taɣelsant</string>
   <!-- Text for the connection security panel when the site is not secure. -->
