@@ -341,17 +341,10 @@ void ViewportFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
 
 void ViewportFrame::SetView(nsView* aView) {
   MOZ_ASSERT(!mView, "Should not swap views");
-  if (aView) {
-    aView->SetFrame(this);
-  }
   mView = aView;
 }
 
 void ViewportFrame::Destroy(DestroyContext& aContext) {
-  // Prevent event dispatch during destruction.
-  if (mView) {
-    mView->SetFrame(nullptr);
-  }
   if (PresShell()->IsDestroying()) {
     PresShell::ClearMouseCapture(this);
   }
@@ -510,8 +503,7 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
   FinishAndStoreOverflow(&aDesiredSize);
 
   if (mView) {
-    mView->GetViewManager()->ResizeView(
-        mView, nsRect(nsPoint(), aDesiredSize.PhysicalSize()));
+    mView->GetViewManager()->ResizeView(mView, aDesiredSize.PhysicalSize());
   }
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);

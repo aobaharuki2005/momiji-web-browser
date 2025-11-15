@@ -82,15 +82,11 @@ class nsViewManager final {
   void FlushDelayedResize();
 
   /**
-   * Resize a view. In addition to setting the width and height, you can
-   * set the x and y of its bounds relative to its position. Negative x and y
-   * will let the view extend above and to the left of the (0,0) point in its
-   * coordinate system.
-   * The view manager generates the appropriate dirty regions.
+   * Resize a view.
    * @param aView view to move
-   * @param the new bounds relative to the current position
+   * @param aSize the new size
    */
-  void ResizeView(nsView* aView, const nsRect& aRect);
+  void ResizeView(nsView* aView, const nsSize& aSize);
 
   /**
    * Set the presshell associated with this manager

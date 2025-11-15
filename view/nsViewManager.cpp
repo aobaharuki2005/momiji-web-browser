@@ -71,8 +71,7 @@ nsViewManager::~nsViewManager() {
 }
 nsView* nsViewManager::CreateView(const nsSize& aSize) {
   auto* v = new nsView(this);
-  nsRect dim(nsPoint(), aSize);
-  v->SetDimensions(dim);
+  v->SetSize(aSize);
   return v;
 }
 
@@ -92,15 +91,15 @@ nsSize nsViewManager::GetWindowDimensions() const {
   if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
     return mDelayedResize;
   }
-  return mRootView->GetBounds().Size();
+  return mRootView->GetSize();
 }
 
 void nsViewManager::DoSetWindowDimensions(const nsSize& aSize) {
-  if (mRootView->GetBounds().Size() == aSize) {
+  if (mRootView->GetSize() == aSize) {
     return;
   }
   // Don't resize the widget. It is already being set elsewhere.
-  mRootView->SetDimensions(nsRect(nsPoint(), aSize));
+  mRootView->SetSize(aSize);
   if (RefPtr<PresShell> presShell = mPresShell) {
     presShell->ResizeReflow(aSize);
   }
@@ -203,9 +202,6 @@ void nsViewManager::Refresh(nsView* aView,
     nsAutoScriptBlocker scriptBlocker;
     SetPainting(true);
 
-    MOZ_ASSERT(!aView->GetFrame() || !aView->GetFrame()->GetParent(),
-               "Frame should be a display root");
-
     if (RefPtr<PresShell> presShell = mPresShell) {
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -216,7 +212,7 @@ void nsViewManager::Refresh(nsView* aView,
       if (!renderer->NeedsWidgetInvalidation()) {
         renderer->FlushRendering(wr::RenderReasons::WIDGET);
       } else {
-        presShell->SyncPaintFallback(aView->GetFrame(), renderer);
+        presShell->SyncPaintFallback(presShell->GetRootFrame(), renderer);
       }
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -363,13 +359,9 @@ void nsViewManager::MaybeUpdateLastUserEventTime(WidgetGUIEvent* aEvent) {
   }
 }
 
-void nsViewManager::ResizeView(nsView* aView, const nsRect& aRect) {
+void nsViewManager::ResizeView(nsView* aView, const nsSize& aSize) {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
-
-  nsRect oldDimensions = aView->GetBounds();
-  if (!oldDimensions.IsEqualEdges(aRect)) {
-    aView->SetDimensions(aRect);
-  }
+  aView->SetSize(aSize);
 
   // Note that if layout resizes the view and the view has a custom clip
   // region set, then we expect layout to update the clip region too. Thus

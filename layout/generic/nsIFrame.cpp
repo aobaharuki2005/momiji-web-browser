@@ -943,7 +943,6 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
   }
 
   if (nsView* view = GetView()) {
-    view->SetFrame(nullptr);
     view->Destroy();
   }
 

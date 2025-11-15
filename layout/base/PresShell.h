@@ -2178,13 +2178,6 @@ class PresShell final : public nsStubDocumentObserver,
   already_AddRefed<PresShell> GetParentPresShellForEventHandling();
 
   /**
-   * Return a frame for a view which is the closest ancestor view which has
-   * a frame.  I.e., if the closest ancestor view does not have a frame,
-   * this returns a frame for the next closest ancestor view.
-   */
-  [[nodiscard]] nsIFrame* GetClosestAncestorFrameForAncestorView() const;
-
-  /**
    * EventHandler is implementation of PresShell::HandleEvent().
    */
   class MOZ_STACK_CLASS EventHandler final {

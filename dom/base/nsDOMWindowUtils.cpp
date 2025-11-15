@@ -428,7 +428,7 @@ nsDOMWindowUtils::UpdateLayerTree() {
     if (nsView* view = vm->GetRootView()) {
       nsAutoScriptBlocker scriptBlocker;
       presShell->PaintAndRequestComposite(
-          view->GetFrame(), view->GetWidget()->GetWindowRenderer(),
+          presShell->GetRootFrame(), view->GetWidget()->GetWindowRenderer(),
           PaintFlags::PaintSyncDecodeImages);
       presShell->GetWindowRenderer()->WaitOnTransactionProcessed();
     }

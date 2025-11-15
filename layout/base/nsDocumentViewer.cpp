@@ -1916,8 +1916,7 @@ nsDocumentViewer::SetBoundsWithFlags(const LayoutDeviceIntRect& aBounds,
     int32_t p2a = mPresContext->AppUnitsPerDevPixel();
     const nsSize size = LayoutDeviceSize::ToAppUnits(mBounds.Size(), p2a);
     nsView* rootView = mViewManager->GetRootView();
-    if (boundsChanged && rootView) {
-      nsRect viewDims = rootView->GetBounds();
+    if (boundsChanged && rootView && rootView->GetSize() == size) {
       // If the view/frame tree and prescontext visible area already has the new
       // size but we did not, then it's likely that we got reflowed in response
       // to a call to GetContentSize. Thus there is a disconnect between the
@@ -1927,16 +1926,14 @@ nsDocumentViewer::SetBoundsWithFlags(const LayoutDeviceIntRect& aBounds,
       // if they are the same as the new size it won't do anything, but we still
       // need to invalidate because what we want to draw to the screen has
       // changed.
-      if (viewDims.Size() == size) {
-        if (nsIFrame* f = rootView->GetFrame()) {
-          f->InvalidateFrame();
+      if (nsIFrame* f = mPresShell->GetRootFrame()) {
+        f->InvalidateFrame();
 
-          // Forcibly refresh the viewport sizes even if the view size is not
-          // changed since it is possible that the |mBounds| change means that
-          // the software keyboard appeared/disappeared. In such cases we might
-          // need to fire visual viewport events.
-          mPresShell->RefreshViewportSize();
-        }
+        // Forcibly refresh the viewport sizes even if the view size is not
+        // changed since it is possible that the |mBounds| change means that
+        // the software keyboard appeared/disappeared. In such cases we might
+        // need to fire visual viewport events.
+        mPresShell->RefreshViewportSize();
       }
     }
 
@@ -2212,7 +2209,7 @@ void nsDocumentViewer::MakeWindow(const nsSize& aSize) {
 void nsDocumentViewer::DetachFromTopLevelWidget() {
   if (mViewManager) {
     nsView* oldView = mViewManager->GetRootView();
-    if (oldView && oldView->IsAttachedToTopLevel()) {
+    if (oldView && oldView->HasWidget()) {
       oldView->DetachFromTopLevelWidget();
     }
   }

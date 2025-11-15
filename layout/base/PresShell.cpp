@@ -5875,7 +5875,7 @@ void PresShell::ProcessSynthMouseOrPointerMoveEvent(
     refpoint = aPointerInfo.mLastRefPointInRootDoc;
     DebugOnly<nsLayoutUtils::TransformResult> result =
         nsLayoutUtils::TransformPoint(
-            RelativeTo{rootView->GetFrame(), ViewportType::Visual},
+            RelativeTo{GetRootFrame(), ViewportType::Visual},
             RelativeTo{popupFrame, ViewportType::Layout}, refpoint);
     MOZ_ASSERT(result == nsLayoutUtils::TRANSFORM_SUCCEEDED);
   }
@@ -7018,15 +7018,6 @@ void PresShell::nsSynthMouseMoveEvent::Revoke() {
   }
 }
 
-nsIFrame* PresShell::GetClosestAncestorFrameForAncestorView() const {
-  nsViewManager* vm = GetViewManager();
-  if (!vm) {
-    return nullptr;
-  }
-  nsView* view = vm->GetRootView();
-  return view ? view->GetFrame() : nullptr;
-}
-
 static CallState FlushThrottledStyles(Document& aDocument) {
   PresShell* presShell = aDocument.GetPresShell();
   if (presShell && presShell->IsVisible()) {
@@ -7210,8 +7201,7 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
         if (MOZ_UNLIKELY(IsDestroying())) {
           return NS_OK;
         }
-        nsIFrame* const newFrameForPresShell =
-            GetClosestAncestorFrameForAncestorView();
+        nsIFrame* const newFrameForPresShell = GetRootFrame();
         if (MOZ_UNLIKELY(!newFrameForPresShell)) {
           return NS_OK;
         }
@@ -8184,8 +8174,7 @@ void PresShell::EventHandler::MaybeSynthesizeCompatMouseEventsForTouchEnd(
     if (MOZ_UNLIKELY(presShell->IsDestroying())) {
       break;
     }
-    nsIFrame* const frameForPresShell =
-        presShell->GetClosestAncestorFrameForAncestorView();
+    nsIFrame* const frameForPresShell = presShell->GetRootFrame();
     if (!frameForPresShell) {
       break;
     }
@@ -8370,7 +8359,7 @@ nsIFrame* PresShell::EventHandler::GetFrameForHandlingEventWith(
   }
 
   // Otherwise, use nearest ancestor frame which includes the PresShell.
-  return retargetPresShell->GetClosestAncestorFrameForAncestorView();
+  return retargetPresShell->GetRootFrame();
 }
 
 bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
@@ -8581,8 +8570,7 @@ void PresShell::EventHandler::MaybeFlushThrottledStyles(
     // FIXME: aWeakFrameForPresShell may be target content's frame if aGUIEvent
     // of the caller is a touch event.  So, we need to use different computation
     // for such cases.
-    aWeakFrameForPresShell =
-        mPresShell->GetClosestAncestorFrameForAncestorView();
+    aWeakFrameForPresShell = mPresShell->GetRootFrame();
   }
 }
 
