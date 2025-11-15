@@ -36,6 +36,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GeckoTrace.h"
 #include "mozilla/Logging.h"
+#include "mozilla/MacroForEach.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"

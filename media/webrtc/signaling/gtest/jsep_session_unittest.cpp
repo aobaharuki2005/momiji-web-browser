@@ -11,6 +11,7 @@
 #include "ssl.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/RefPtr.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gmock/gmock.h"

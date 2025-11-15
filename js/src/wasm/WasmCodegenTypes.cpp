@@ -18,7 +18,6 @@
 
 #include "wasm/WasmCodegenTypes.h"
 
-#include "mozilla/PodOperations.h"
 #include "wasm/WasmExprType.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmSummarizeInsn.h"

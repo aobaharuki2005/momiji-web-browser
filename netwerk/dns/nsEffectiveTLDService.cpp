@@ -10,7 +10,10 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/TextUtils.h"
 
 #include "MainThreadUtils.h"
 #include "nsContentUtils.h"

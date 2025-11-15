@@ -13,6 +13,8 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "js/AllocPolicy.h"
 #include "js/StructuredClone.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/BufferList.h"
 #include "mozilla/mozalloc.h"
 class PickleIterator;
 

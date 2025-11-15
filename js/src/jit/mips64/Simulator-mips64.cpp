@@ -31,6 +31,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Likely.h"
 
 #include <float.h>
 #include <limits>

@@ -9,6 +9,7 @@
 #include "PreloaderBase.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ScriptLoader.h"

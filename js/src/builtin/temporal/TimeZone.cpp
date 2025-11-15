@@ -10,6 +10,7 @@
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Range.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 

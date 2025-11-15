@@ -11,6 +11,7 @@
 
 #include "ErrorList.h"
 #include "SnappyUtils.h"
+#include "mozilla/Assertions.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
 #include "nsTStringRepr.h"

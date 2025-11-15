@@ -13,6 +13,7 @@
 #include "gfxQuaternion.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ServoBindings.h"  // StyleLockedDeclarationBlock

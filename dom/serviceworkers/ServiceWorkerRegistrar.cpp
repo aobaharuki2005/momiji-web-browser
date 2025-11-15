@@ -12,6 +12,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"

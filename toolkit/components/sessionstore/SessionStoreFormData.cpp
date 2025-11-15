@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SessionStoreFormData.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BrowserSessionStoreBinding.h"
 #include "mozilla/dom/BrowsingContext.h"

@@ -9,6 +9,7 @@
 #include "builtin/intl/Segmenter.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
 #include "jspubtd.h"

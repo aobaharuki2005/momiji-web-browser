@@ -7,7 +7,9 @@
 
 #include "nsDeviceContext.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Likely.h"
 #include "mozilla/Poison.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"

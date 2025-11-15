@@ -15,6 +15,7 @@
 #include "UtfConvert.h"
 
 #include "json/json.h"
+#include "mozilla/HelperMacros.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 // There is little logging or error handling in this file, because the file and

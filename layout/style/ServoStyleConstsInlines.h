@@ -15,7 +15,6 @@
 #include "MainThreadUtils.h"
 #include "mozilla/AspectRatio.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/WorkerCommon.h"

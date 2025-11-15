@@ -18,6 +18,8 @@
 #include "mozilla/IOInterposer.h"
 #include "mozilla/ipc/UtilityProcessChild.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MemoryChecking.h"
+#include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/Printf.h"

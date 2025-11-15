@@ -20,6 +20,7 @@
 #include "prio.h"
 #include "prprf.h"
 #include "mozilla/gtest/MozAssertions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Printf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"

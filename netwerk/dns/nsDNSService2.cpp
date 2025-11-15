@@ -44,6 +44,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/TextUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::net;

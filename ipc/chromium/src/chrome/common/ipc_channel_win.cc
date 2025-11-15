@@ -22,6 +22,7 @@
 #include "chrome/common/ipc_channel_utils.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/LateWriteChecks.h"
 #include "mozilla/RandomNum.h"
 #include "nsThreadUtils.h"

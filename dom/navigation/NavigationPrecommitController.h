@@ -8,6 +8,7 @@
 #define DOM_NAVIGATIONPRECOMMITCONTROLLER_H_
 
 #include "js/TypeDecls.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"

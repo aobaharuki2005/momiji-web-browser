@@ -34,6 +34,7 @@
 #endif
 #include "mozilla/Components.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/FStream.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"

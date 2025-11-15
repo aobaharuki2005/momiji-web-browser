@@ -8,6 +8,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/ScopeExit.h"

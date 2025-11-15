@@ -8,6 +8,7 @@
 #include "sqlite3.h"
 #include "sqlite3_static_ext.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/DebugOnly.h"
 
 #ifdef MOZ_MEMORY
 #  include "mozmemory.h"

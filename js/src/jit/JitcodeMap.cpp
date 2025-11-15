@@ -7,6 +7,7 @@
 #include "jit/JitcodeMap.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
 #include "gc/Marking.h"

@@ -6,8 +6,6 @@
 
 #include "vm/ErrorReporting.h"
 
-#include "mozilla/PodOperations.h"
-
 #include <stdarg.h>
 #include <utility>
 

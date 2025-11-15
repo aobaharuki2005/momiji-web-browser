@@ -23,6 +23,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Hal.h"
+#include "mozilla/MacroForEach.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/RefPtr.h"

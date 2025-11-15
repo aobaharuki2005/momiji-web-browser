@@ -38,6 +38,7 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
 

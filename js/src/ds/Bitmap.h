@@ -9,6 +9,7 @@
 
 #include "mozilla/Array.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 
 #include <algorithm>

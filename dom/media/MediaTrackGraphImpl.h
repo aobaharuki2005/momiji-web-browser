@@ -15,6 +15,7 @@
 #include "MediaEventSource.h"
 #include "MediaTrackGraph.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
