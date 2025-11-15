@@ -1447,18 +1447,45 @@ void CodeGenerator::visitDivI(LDivI* ins) {
 void CodeGenerator::visitModPowTwoI(LModPowTwoI* ins) {
   Register lhs = ToRegister(ins->input());
   int32_t shift = ins->shift();
+  bool canBeNegative =
+      !ins->mir()->isUnsigned() && ins->mir()->canBeNegativeDividend();
+
+  if (shift == 0) {
+    if (canBeNegative && !ins->mir()->isTruncated()) {
+      bailoutTest32(Assembler::Signed, lhs, lhs, ins->snapshot());
+    }
+    masm.xorl(lhs, lhs);
+    return;
+  }
+
+  auto clearHighBits = [&]() {
+    switch (shift) {
+      case 16:
+        masm.movzwl(lhs, lhs);
+        break;
+      case 8:
+        if (AllocatableGeneralRegisterSet(Registers::SingleByteRegs).has(lhs)) {
+          masm.movzbl(lhs, lhs);
+          break;
+        }
+        [[fallthrough]];
+      default:
+        masm.andl(Imm32((uint32_t(1) << shift) - 1), lhs);
+        break;
+    }
+  };
 
   Label negative;
 
-  if (!ins->mir()->isUnsigned() && ins->mir()->canBeNegativeDividend()) {
+  if (canBeNegative) {
     // Switch based on sign of the lhs.
     // Positive numbers are just a bitmask
     masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
   }
 
-  masm.andl(Imm32((uint32_t(1) << shift) - 1), lhs);
+  clearHighBits();
 
-  if (!ins->mir()->isUnsigned() && ins->mir()->canBeNegativeDividend()) {
+  if (canBeNegative) {
     Label done;
     masm.jump(&done);
 
@@ -1472,7 +1499,7 @@ void CodeGenerator::visitModPowTwoI(LModPowTwoI* ins) {
     // The negl instruction overflows if lhs == INT32_MIN, but this is also not
     // a problem: shift is at most 31, and so the andl also always returns 0.
     masm.negl(lhs);
-    masm.andl(Imm32((uint32_t(1) << shift) - 1), lhs);
+    clearHighBits();
     masm.negl(lhs);
 
     // Since a%b has the same sign as b, and a is negative in this branch,
