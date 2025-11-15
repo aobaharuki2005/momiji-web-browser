@@ -36,7 +36,8 @@ h3.device-header {
   display: grid;
   align-items: center;
   cursor: inherit;
-  font-size: var(--font-size-small);
+  font-weight: var(--fxview-card-header-font-weight);
+  font-size: 1em;
   grid-template-columns: min-content 1fr;
   gap: 0 16px;
   margin: 0;
