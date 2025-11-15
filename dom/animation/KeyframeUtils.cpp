@@ -12,7 +12,7 @@
 #include "js/ForOfIterator.h"  // For JS::ForOfIterator
 #include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetProperty, JS_GetPropertyById
 #include "jsapi.h"                  // For most JSAPI
-#include "mozilla/AnimatedPropertyID.h"
+#include "mozilla/CSSPropertyId.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ServoBindingTypes.h"
@@ -62,7 +62,7 @@ enum class ListAllowance { eDisallow, eAllow };
 struct PropertyValuesPair {
   PropertyValuesPair() : mProperty(eCSSProperty_UNKNOWN) {}
 
-  AnimatedPropertyID mProperty;
+  CSSPropertyId mProperty;
   nsTArray<nsCString> mValues;
 };
 
@@ -71,7 +71,7 @@ struct PropertyValuesPair {
  * BaseKeyframe or BasePropertyIndexedKeyframe object.
  */
 struct AdditionalProperty {
-  AnimatedPropertyID mProperty;
+  CSSPropertyId mProperty;
   size_t mJsidIndex = 0;  // Index into |ids| in GetPropertyValuesPairs.
 
   struct PropertyComparator {
@@ -114,7 +114,7 @@ struct KeyframeValueEntry {
   KeyframeValueEntry()
       : mProperty(eCSSProperty_UNKNOWN), mOffset(), mComposite() {}
 
-  AnimatedPropertyID mProperty;
+  CSSPropertyId mProperty;
   AnimationValue mValue;
 
   float mOffset;
@@ -198,7 +198,7 @@ static bool AppendValueAsString(JSContext* aCx, nsTArray<nsCString>& aValues,
                                 JS::Handle<JS::Value> aValue);
 
 static Maybe<PropertyValuePair> MakePropertyValuePair(
-    const AnimatedPropertyID& aProperty, const nsACString& aStringValue,
+    const CSSPropertyId& aProperty, const nsACString& aStringValue,
     dom::Document* aDocument);
 
 static bool HasValidOffsets(const nsTArray<Keyframe>& aKeyframes);
@@ -349,7 +349,7 @@ nsTArray<AnimationProperty> KeyframeUtils::GetAnimationPropertiesFromKeyframes(
 }
 
 /* static */
-bool KeyframeUtils::IsAnimatableProperty(const AnimatedPropertyID& aProperty) {
+bool KeyframeUtils::IsAnimatableProperty(const CSSPropertyId& aProperty) {
   // Regardless of the backend type, treat the 'display' property as not
   // animatable. (Servo will report it as being animatable, since it is
   // in fact animatable by SMIL.)
@@ -571,11 +571,10 @@ static bool GetPropertyValuesPairs(JSContext* aCx,
 
     // TODO(zrhoffman, bug 1811897) Add test coverage for removing the `--`
     // prefix here.
-    AnimatedPropertyID property =
-        propertyId == eCSSPropertyExtra_variable
-            ? AnimatedPropertyID(
-                  NS_Atomize(Substring(propName, 2, propName.Length() - 2)))
-            : AnimatedPropertyID(propertyId);
+    CSSPropertyId property = propertyId == eCSSPropertyExtra_variable
+                                 ? CSSPropertyId(NS_Atomize(Substring(
+                                       propName, 2, propName.Length() - 2)))
+                                 : CSSPropertyId(propertyId);
 
     if (KeyframeUtils::IsAnimatableProperty(property)) {
       properties.AppendElement(AdditionalProperty{std::move(property), i});
@@ -658,8 +657,8 @@ static bool AppendValueAsString(JSContext* aCx, nsTArray<nsCString>& aValues,
 }
 
 static void ReportInvalidPropertyValueToConsole(
-    const AnimatedPropertyID& aProperty,
-    const nsACString& aInvalidPropertyValue, dom::Document* aDoc) {
+    const CSSPropertyId& aProperty, const nsACString& aInvalidPropertyValue,
+    dom::Document* aDoc) {
   AutoTArray<nsString, 2> params;
   params.AppendElement(NS_ConvertUTF8toUTF16(aInvalidPropertyValue));
   aProperty.ToString(*params.AppendElement());
@@ -679,7 +678,7 @@ static void ReportInvalidPropertyValueToConsole(
  *   an invalid property value.
  */
 static Maybe<PropertyValuePair> MakePropertyValuePair(
-    const AnimatedPropertyID& aProperty, const nsACString& aStringValue,
+    const CSSPropertyId& aProperty, const nsACString& aStringValue,
     dom::Document* aDocument) {
   MOZ_ASSERT(aDocument);
   Maybe<PropertyValuePair> result;
@@ -861,7 +860,7 @@ static void BuildSegmentsFromValueEntries(
   // care to identify properties that lack a value at offset 0.0/1.0 and drops
   // those properties from |aResult|.
 
-  AnimatedPropertyID lastProperty(eCSSProperty_UNKNOWN);
+  CSSPropertyId lastProperty(eCSSProperty_UNKNOWN);
   AnimationProperty* animationProperty = nullptr;
 
   size_t i = 0, n = aEntries.Length();

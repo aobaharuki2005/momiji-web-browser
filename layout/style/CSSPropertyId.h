@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_AnimatedPropertyID_h
-#define mozilla_AnimatedPropertyID_h
+#ifndef mozilla_CSSPropertyId_h
+#define mozilla_CSSPropertyId_h
 
 #include "NonCustomCSSPropertyId.h"
 #include "mozilla/HashFunctions.h"
@@ -15,15 +15,14 @@
 
 namespace mozilla {
 
-struct AnimatedPropertyID {
-  explicit AnimatedPropertyID(NonCustomCSSPropertyId aProperty)
-      : mId(aProperty) {
+struct CSSPropertyId {
+  explicit CSSPropertyId(NonCustomCSSPropertyId aProperty) : mId(aProperty) {
     MOZ_ASSERT(aProperty != eCSSPropertyExtra_variable,
-               "Cannot create an AnimatedPropertyID from only a "
+               "Cannot create an CSSPropertyId from only a "
                "eCSSPropertyExtra_variable.");
   }
 
-  explicit AnimatedPropertyID(RefPtr<nsAtom> aCustomName)
+  explicit CSSPropertyId(RefPtr<nsAtom> aCustomName)
       : mId(eCSSPropertyExtra_variable), mCustomName(std::move(aCustomName)) {
     MOZ_ASSERT(mCustomName, "Null custom property name");
   }
@@ -32,10 +31,10 @@ struct AnimatedPropertyID {
   RefPtr<nsAtom> mCustomName;
 
   bool IsCustom() const { return mId == eCSSPropertyExtra_variable; }
-  bool operator==(const AnimatedPropertyID& aOther) const {
+  bool operator==(const CSSPropertyId& aOther) const {
     return mId == aOther.mId && mCustomName == aOther.mCustomName;
   }
-  bool operator!=(const AnimatedPropertyID& aOther) const {
+  bool operator!=(const CSSPropertyId& aOther) const {
     return !(*this == aOther);
   }
 
@@ -73,17 +72,17 @@ struct AnimatedPropertyID {
     return AddToHash(hash, mId);
   }
 
-  AnimatedPropertyID ToPhysical(const ComputedStyle& aStyle) const {
+  CSSPropertyId ToPhysical(const ComputedStyle& aStyle) const {
     if (IsCustom()) {
       return *this;
     }
-    return AnimatedPropertyID{nsCSSProps::Physicalize(mId, aStyle)};
+    return CSSPropertyId{nsCSSProps::Physicalize(mId, aStyle)};
   }
 };
 
 // MOZ_DBG support for AnimatedPropertyId
 inline std::ostream& operator<<(std::ostream& aOut,
-                                const AnimatedPropertyID& aProperty) {
+                                const CSSPropertyId& aProperty) {
   if (aProperty.IsCustom()) {
     return aOut << nsAtomCString(aProperty.mCustomName);
   }
@@ -92,4 +91,4 @@ inline std::ostream& operator<<(std::ostream& aOut,
 
 }  // namespace mozilla
 
-#endif  // mozilla_AnimatedPropertyID_h
+#endif  // mozilla_CSSPropertyId_h

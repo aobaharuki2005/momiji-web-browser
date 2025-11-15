@@ -10,7 +10,7 @@
 #define mozilla_StyleAnimationValue_h_
 
 #include "NonCustomCSSPropertyId.h"
-#include "mozilla/AnimatedPropertyID.h"
+#include "mozilla/CSSPropertyId.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoStyleConsts.h"  // Servo_AnimationValue_Dump
@@ -84,12 +84,12 @@ struct AnimationValue {
   mozilla::gfx::MatrixScales GetScaleValue(const nsIFrame* aFrame) const;
 
   // Uncompute this AnimationValue and then serialize it.
-  void SerializeSpecifiedValue(const AnimatedPropertyID& aProperty,
+  void SerializeSpecifiedValue(const CSSPropertyId& aProperty,
                                const StylePerDocumentStyleData* aRawData,
                                nsACString& aString) const;
 
   // Check if |*this| and |aToValue| can be interpolated.
-  bool IsInterpolableWith(const AnimatedPropertyID& aProperty,
+  bool IsInterpolableWith(const CSSPropertyId& aProperty,
                           const AnimationValue& aToValue) const;
 
   // Compute the distance between *this and aOther.
@@ -98,7 +98,7 @@ struct AnimationValue {
   // Create an AnimaitonValue from a string. This method flushes style, so we
   // should use this carefully. Now, it is only used by
   // nsDOMWindowUtils::ComputeAnimationDistance.
-  static AnimationValue FromString(AnimatedPropertyID& aProperty,
+  static AnimationValue FromString(CSSPropertyId& aProperty,
                                    const nsACString& aValue,
                                    dom::Element* aElement);
 
@@ -122,7 +122,7 @@ inline std::ostream& operator<<(std::ostream& aOut,
 }
 
 struct PropertyStyleAnimationValuePair {
-  AnimatedPropertyID mProperty;
+  CSSPropertyId mProperty;
   AnimationValue mValue;
 };
 }  // namespace mozilla

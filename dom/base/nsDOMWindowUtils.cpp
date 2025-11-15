@@ -102,7 +102,7 @@
 // #include "nsWidgetsCID.h"
 #include "HTMLCanvasElement.h"
 #include "HTMLImageElement.h"
-#include "mozilla/AnimatedPropertyID.h"
+#include "mozilla/CSSPropertyId.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/IMEContentObserver.h"
@@ -3263,9 +3263,9 @@ nsDOMWindowUtils::ComputeAnimationDistance(Element* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  AnimatedPropertyID property = propertyId == eCSSPropertyExtra_variable
-                                    ? AnimatedPropertyID(NS_Atomize(aProperty))
-                                    : AnimatedPropertyID(propertyId);
+  CSSPropertyId property = propertyId == eCSSPropertyExtra_variable
+                               ? CSSPropertyId(NS_Atomize(aProperty))
+                               : CSSPropertyId(propertyId);
 
   AnimationValue v1 = AnimationValue::FromString(
       property, NS_ConvertUTF16toUTF8(aValue1), aElement);
@@ -3295,11 +3295,10 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
       nsCSSProps::IsShorthand(propertyId)) {
     return NS_ERROR_INVALID_ARG;
   }
-  AnimatedPropertyID property =
-      propertyId == eCSSPropertyExtra_variable
-          ? AnimatedPropertyID(
-                NS_Atomize(Substring(aProperty, 2, aProperty.Length() - 2)))
-          : AnimatedPropertyID(propertyId);
+  CSSPropertyId property = propertyId == eCSSPropertyExtra_variable
+                               ? CSSPropertyId(NS_Atomize(Substring(
+                                     aProperty, 2, aProperty.Length() - 2)))
+                               : CSSPropertyId(propertyId);
 
   switch (aFlushType) {
     case FLUSH_NONE:

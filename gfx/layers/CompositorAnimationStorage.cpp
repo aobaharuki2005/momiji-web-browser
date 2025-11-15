@@ -63,7 +63,7 @@ already_AddRefed<StyleAnimationValue> AnimatedValue::AsAnimationValue(
         // Linear search. It's likely that the length of the array is one in
         // most common case, so it shouldn't have much performance impact.
         for (const auto& value : Transform().mAnimationValues) {
-          AnimatedPropertyID property(eCSSProperty_UNKNOWN);
+          CSSPropertyId property(eCSSProperty_UNKNOWN);
           Servo_AnimationValue_GetPropertyId(value, &property);
           if (property.mId == aProperty) {
             result = value;

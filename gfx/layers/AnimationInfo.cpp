@@ -598,7 +598,7 @@ bool AnimationInfo::AddAnimationsForProperty(
     dom::KeyframeEffect* keyframeEffect = anim->GetEffect()->AsKeyframeEffect();
     const AnimationProperty* property =
         keyframeEffect->GetEffectiveAnimationOfProperty(
-            AnimatedPropertyID(aProperty), *aEffects);
+            CSSPropertyId(aProperty), *aEffects);
     if (!property) {
       continue;
     }

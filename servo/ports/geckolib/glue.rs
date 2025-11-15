@@ -651,7 +651,7 @@ pub extern "C" fn Servo_ComposeAnimationSegment(
 pub extern "C" fn Servo_AnimationCompose(
     value_map: &mut AnimationValueMap,
     base_values: &structs::RawServoAnimationValueTable,
-    css_property: &structs::AnimatedPropertyID,
+    css_property: &structs::CSSPropertyId,
     segment: &structs::AnimationPropertySegment,
     last_segment: &structs::AnimationPropertySegment,
     computed_timing: &structs::ComputedTiming,
@@ -661,7 +661,7 @@ pub extern "C" fn Servo_AnimationCompose(
     use style::gecko_bindings::bindings::Gecko_GetPositionInSegment;
     use style::gecko_bindings::bindings::Gecko_GetProgressFromComputedTiming;
 
-    let property = match OwnedPropertyDeclarationId::from_gecko_animated_property_id(css_property) {
+    let property = match OwnedPropertyDeclarationId::from_gecko_css_property_id(css_property) {
         Some(property) if property.as_borrowed().is_animatable() => property,
         _ => return,
     };
@@ -727,9 +727,9 @@ macro_rules! get_property_id_from_noncustomcsspropertyid {
     }};
 }
 
-macro_rules! get_property_id_from_animatedpropertyid {
+macro_rules! get_property_id_from_csspropertyid {
     ($property_id: ident, $ret: expr) => {{
-        match PropertyId::from_gecko_animated_property_id($property_id) {
+        match PropertyId::from_gecko_css_property_id($property_id) {
             Some(property_id) => property_id,
             None => {
                 return $ret;
@@ -741,7 +741,7 @@ macro_rules! get_property_id_from_animatedpropertyid {
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValue_Serialize(
     value: &AnimationValue,
-    property: &structs::AnimatedPropertyID,
+    property: &structs::CSSPropertyId,
     raw_data: &PerDocumentStyleData,
     buffer: &mut nsACString,
 ) {
@@ -749,7 +749,7 @@ pub extern "C" fn Servo_AnimationValue_Serialize(
     let data = raw_data.borrow();
     let rv = PropertyDeclarationBlock::with_one(uncomputed_value, Importance::Normal)
         .single_value_to_css(
-            &get_property_id_from_animatedpropertyid!(property, ()),
+            &get_property_id_from_csspropertyid!(property, ()),
             buffer,
             None,
             &data.stylist,
@@ -1120,9 +1120,9 @@ pub unsafe extern "C" fn Servo_AnimationValueMap_Drop(value_map: *mut AnimationV
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValueMap_GetValue(
     value_map: &AnimationValueMap,
-    property_id: &structs::AnimatedPropertyID,
+    property_id: &structs::CSSPropertyId,
 ) -> Strong<AnimationValue> {
-    let property = match OwnedPropertyDeclarationId::from_gecko_animated_property_id(property_id) {
+    let property = match OwnedPropertyDeclarationId::from_gecko_css_property_id(property_id) {
         Some(property) => property,
         None => return Strong::null(),
     };
@@ -1209,7 +1209,7 @@ fn is_transitionable(prop: PropertyDeclarationId, behavior: computed::Transition
 pub extern "C" fn Servo_ComputedValues_ShouldTransition(
     old: &ComputedValues,
     new: &ComputedValues,
-    prop: &structs::AnimatedPropertyID,
+    prop: &structs::CSSPropertyId,
     behavior: computed::TransitionBehavior,
     old_transition_end_value: Option<&AnimationValue>,
     current_start_value: Option<&AnimationValue>,
@@ -1218,7 +1218,7 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
     start: &mut structs::RefPtr<AnimationValue>,
     end: &mut structs::RefPtr<AnimationValue>,
 ) -> ShouldTransitionResult {
-    let Some(prop) = OwnedPropertyDeclarationId::from_gecko_animated_property_id(prop) else {
+    let Some(prop) = OwnedPropertyDeclarationId::from_gecko_css_property_id(prop) else {
         return Default::default();
     };
     let prop = prop.as_borrowed();
@@ -1298,10 +1298,10 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
 #[no_mangle]
 pub extern "C" fn Servo_ComputedValues_TransitionValueMatches(
     style: &ComputedValues,
-    prop: &structs::AnimatedPropertyID,
+    prop: &structs::CSSPropertyId,
     transition_value: &AnimationValue,
 ) -> bool {
-    let Some(prop) = OwnedPropertyDeclarationId::from_gecko_animated_property_id(prop) else {
+    let Some(prop) = OwnedPropertyDeclarationId::from_gecko_css_property_id(prop) else {
         return false;
     };
     // Note: the running transitions should be transitionable, so it is always allow-discrete.
@@ -1318,9 +1318,9 @@ pub extern "C" fn Servo_ComputedValues_TransitionValueMatches(
 #[no_mangle]
 pub extern "C" fn Servo_ComputedValues_ExtractAnimationValue(
     computed_values: &ComputedValues,
-    property_id: &structs::AnimatedPropertyID,
+    property_id: &structs::CSSPropertyId,
 ) -> Strong<AnimationValue> {
-    let property = match OwnedPropertyDeclarationId::from_gecko_animated_property_id(property_id) {
+    let property = match OwnedPropertyDeclarationId::from_gecko_css_property_id(property_id) {
         Some(property) => property,
         None => return Strong::null(),
     };
@@ -1453,8 +1453,8 @@ pub unsafe extern "C" fn Servo_Property_GetCSSValuesForProperty(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_Property_IsAnimatable(prop: &structs::AnimatedPropertyID) -> bool {
-    PropertyId::from_gecko_animated_property_id(prop).map_or(false, |p| p.is_animatable())
+pub extern "C" fn Servo_Property_IsAnimatable(prop: &structs::CSSPropertyId) -> bool {
+    PropertyId::from_gecko_css_property_id(prop).map_or(false, |p| p.is_animatable())
 }
 
 #[no_mangle]
@@ -5012,7 +5012,7 @@ fn parse_property_into(
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_ParseProperty(
-    property: &structs::AnimatedPropertyID,
+    property: &structs::CSSPropertyId,
     value: &nsACString,
     data: *mut URLExtraData,
     parsing_mode: ParsingMode,
@@ -5020,7 +5020,7 @@ pub unsafe extern "C" fn Servo_ParseProperty(
     loader: *mut Loader,
     rule_type: CssRuleType,
 ) -> Strong<LockedDeclarationBlock> {
-    let id = get_property_id_from_animatedpropertyid!(property, Strong::null());
+    let id = get_property_id_from_csspropertyid!(property, Strong::null());
     let mut declarations = SourcePropertyDeclaration::default();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data);
     let data = UrlExtraData::from_ptr_ref(&data);
@@ -5257,12 +5257,12 @@ pub extern "C" fn Servo_DeclarationBlock_GetCssText(
 #[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SerializeOneValue(
     decls: &LockedDeclarationBlock,
-    property_id: &structs::AnimatedPropertyID,
+    property_id: &structs::CSSPropertyId,
     buffer: &mut nsACString,
     computed_values: Option<&ComputedValues>,
     data: &PerDocumentStyleData,
 ) {
-    let property_id = get_property_id_from_animatedpropertyid!(property_id, ());
+    let property_id = get_property_id_from_csspropertyid!(property_id, ());
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -6909,7 +6909,7 @@ pub extern "C" fn Servo_ReparentStyle(
 #[cfg(feature = "gecko_debug")]
 fn simulate_compute_values_failure(property: &PropertyValuePair) -> bool {
     let p = &property.mProperty;
-    let id = get_property_id_from_animatedpropertyid!(p, false);
+    let id = get_property_id_from_csspropertyid!(p, false);
     id.as_shorthand().is_ok() && property.mSimulateComputeValuesFailure
 }
 
@@ -6962,7 +6962,7 @@ impl<'a> PrioritizedPropertyIter<'a> {
             .iter()
             .enumerate()
             .map(|(index, pair)| {
-                let property = PropertyId::from_gecko_animated_property_id(&pair.mProperty)
+                let property = PropertyId::from_gecko_css_property_id(&pair.mProperty)
                     .unwrap_or(PropertyId::NonCustom(ShorthandId::All.into()));
                 PropertyAndIndex { property, index }
             })
@@ -7053,11 +7053,10 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
             );
             let priority = CascadePriority::same_tree_author_normal_at_root_layer();
             for property in &mut iter {
-                let is_custom =
-                    match PropertyId::from_gecko_animated_property_id(&property.mProperty) {
-                        Some(PropertyId::Custom(..)) => true,
-                        _ => false,
-                    };
+                let is_custom = match PropertyId::from_gecko_css_property_id(&property.mProperty) {
+                    Some(PropertyId::Custom(..)) => true,
+                    _ => false,
+                };
                 if !is_custom {
                     break; // Custom props are guaranteed to sort earlier.
                 }
@@ -7107,7 +7106,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                     seen.insert(property);
 
                     animation_values.push(structs::PropertyStyleAnimationValuePair {
-                        mProperty: property.to_gecko_animated_property_id(),
+                        mProperty: property.to_gecko_css_property_id(),
                         mValue: structs::AnimationValue {
                             mServo: value.map_or(structs::RefPtr::null(), |v| {
                                 structs::RefPtr::from_arc(Arc::new(v))
@@ -7119,7 +7118,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
 
             if property.mServoDeclarationBlock.mRawPtr.is_null() {
                 if let Some(prop) =
-                    OwnedPropertyDeclarationId::from_gecko_animated_property_id(&property.mProperty)
+                    OwnedPropertyDeclarationId::from_gecko_css_property_id(&property.mProperty)
                 {
                     maybe_append_animation_value(prop.as_borrowed(), None);
                 }
@@ -7178,9 +7177,9 @@ pub extern "C" fn Servo_GetAnimationValues(
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValue_GetPropertyId(
     value: &AnimationValue,
-    property_id: &mut structs::AnimatedPropertyID,
+    property_id: &mut structs::CSSPropertyId,
 ) {
-    *property_id = value.id().to_gecko_animated_property_id();
+    *property_id = value.id().to_gecko_css_property_id();
 }
 
 #[no_mangle]
@@ -7270,7 +7269,7 @@ enum Offset {
 
 fn property_value_pair_for(id: &PropertyDeclarationId) -> structs::PropertyValuePair {
     structs::PropertyValuePair {
-        mProperty: id.to_gecko_animated_property_id(),
+        mProperty: id.to_gecko_css_property_id(),
         mServoDeclarationBlock: structs::RefPtr::null(),
         #[cfg(feature = "gecko_debug")]
         mSimulateComputeValuesFailure: false,

@@ -22,7 +22,7 @@ class RefPtr;
 
 namespace mozilla {
 
-struct AnimatedPropertyID;
+struct CSSPropertyId;
 class ServoStyleSet;
 struct URLExtraData;
 struct StyleAbsoluteColor;
@@ -137,7 +137,7 @@ class ServoCSSParser {
       const ParsingEnvironment& aParsingEnvironment,
       const StyleParsingMode& aParsingMode);
   static already_AddRefed<StyleLockedDeclarationBlock> ParseProperty(
-      const AnimatedPropertyID& aProperty, const nsACString& aValue,
+      const CSSPropertyId& aProperty, const nsACString& aValue,
       const ParsingEnvironment& aParsingEnvironment,
       const StyleParsingMode& aParsingMode);
 

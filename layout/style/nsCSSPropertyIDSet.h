@@ -16,7 +16,7 @@
 // For COMPOSITOR_ANIMATABLE_PROPERTY_LIST and
 // COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH
 #include "NonCustomCSSPropertyId.h"
-#include "mozilla/AnimatedPropertyID.h"
+#include "mozilla/CSSPropertyId.h"
 #include "mozilla/CompositorAnimatableProperties.h"
 #include "nsCSSProps.h"  // For operator<< for NonCustomCSSPropertyId
 
@@ -62,7 +62,7 @@ class nsCSSPropertyIDSet {
         ~(property_set_type(1) << (p % kBitsInChunk));
   }
 
-  bool HasProperty(const mozilla::AnimatedPropertyID& aProperty) const {
+  bool HasProperty(const mozilla::CSSPropertyId& aProperty) const {
     return !aProperty.IsCustom() && HasProperty(aProperty.mId);
   }
 

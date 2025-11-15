@@ -10,7 +10,7 @@
 
 #include <utility>
 
-#include "mozilla/AnimatedPropertyID.h"
+#include "mozilla/CSSPropertyId.h"
 #include "mozilla/SMILCSSValueType.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/ServoBindings.h"
@@ -63,7 +63,7 @@ SMILValue SMILCSSProperty::GetBaseValue() const {
   }
 
   AnimationValue computedValue;
-  AnimatedPropertyID property(mPropId);
+  CSSPropertyId property(mPropId);
   MOZ_ASSERT(!property.IsCustom(),
              "Cannot animate custom properties with SMIL");
   computedValue.mServo =

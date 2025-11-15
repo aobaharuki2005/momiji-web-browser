@@ -100,10 +100,10 @@ class StyleParserState;
 template <typename T>
 struct StyleForgottenArcSlicePtr;
 
-struct AnimatedPropertyID;
 struct AnimationPropertySegment;
 struct AspectRatio;
 struct ComputedTiming;
+struct CSSPropertyId;
 struct URLExtraData;
 
 enum HalfCorner : uint8_t;

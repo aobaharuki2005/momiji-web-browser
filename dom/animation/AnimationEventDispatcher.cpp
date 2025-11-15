@@ -164,7 +164,7 @@ void AnimationEventInfo::MaybeAddMarker() const {
     }
     nsAutoCString properties;
     nsAutoCString oncompositor;
-    for (const AnimatedPropertyID& property : propertySet) {
+    for (const CSSPropertyId& property : propertySet) {
       if (!properties.IsEmpty()) {
         properties.AppendLiteral(", ");
         oncompositor.AppendLiteral(", ");

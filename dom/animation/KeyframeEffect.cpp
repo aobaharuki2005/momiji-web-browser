@@ -288,7 +288,7 @@ void KeyframeEffect::ReplaceTransitionStartValue(AnimationValue&& aStartValue) {
 
   // Check that the value we are about to substitute in is actually for the
   // same property.
-  AnimatedPropertyID property(eCSSProperty_UNKNOWN);
+  CSSPropertyId property(eCSSProperty_UNKNOWN);
   Servo_AnimationValue_GetPropertyId(aStartValue.mServo, &property);
   if (property != mProperties[0].mProperty) {
     return;
@@ -300,13 +300,13 @@ void KeyframeEffect::ReplaceTransitionStartValue(AnimationValue&& aStartValue) {
 }
 
 static bool IsEffectiveProperty(const EffectSet& aEffects,
-                                const AnimatedPropertyID& aProperty) {
+                                const CSSPropertyId& aProperty) {
   return !aEffects.PropertiesWithImportantRules().HasProperty(aProperty) ||
          !aEffects.PropertiesForAnimationsLevel().HasProperty(aProperty);
 }
 
 const AnimationProperty* KeyframeEffect::GetEffectiveAnimationOfProperty(
-    const AnimatedPropertyID& aProperty, const EffectSet& aEffects) const {
+    const CSSPropertyId& aProperty, const EffectSet& aEffects) const {
   MOZ_ASSERT(mTarget && &aEffects == EffectSet::Get(mTarget));
 
   for (const AnimationProperty& property : mProperties) {
@@ -1124,7 +1124,7 @@ void KeyframeEffect::SetPseudoElement(const nsAString& aPseudoElement,
 }
 
 static void CreatePropertyValue(
-    const AnimatedPropertyID& aProperty, float aOffset,
+    const CSSPropertyId& aProperty, float aOffset,
     const Maybe<StyleComputedTimingFunction>& aTimingFunction,
     const AnimationValue& aValue, dom::CompositeOperation aComposite,
     const StylePerDocumentStyleData* aRawData,
