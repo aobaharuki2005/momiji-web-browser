@@ -175,14 +175,6 @@ support-files = [
   "redirect.sjs",
   "lorem_script.js",
   "file_blob_response_worker.js",
-  "file_js_cache_cleanup.js",
-  "file_js_cache.html",
-  "file_js_cache_with_sri.html",
-  "file_js_cache.js",
-  "file_js_cache_save_after_load.html",
-  "file_js_cache_save_after_load.js",
-  "file_js_cache_syntax_error.html",
-  "file_js_cache_syntax_error.js",
   "!/dom/security/test/cors/file_CrossSiteXHR_server.sjs",
   "!/dom/notification/test/mochitest/MockAlertsService.js",
   "!/dom/notification/test/mochitest/NotificationTest.js",
@@ -404,10 +396,6 @@ skip-if = [
 # distinct scopes from other SW tests, it's not expected that loss of "verify"
 # coverage will cause problems since the test only potentially interferes with
 # itself, not other tests.
-
-["test_script_loader_intercepted_js_cache.html"]
-disabled = "https://bugzilla.mozilla.org/show_bug.cgi?id=1853173"
-skip-if = ["true"]
 
 ["test_self_update_worker.html"]
 skip-if = ["true"]
