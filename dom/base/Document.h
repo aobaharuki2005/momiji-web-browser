@@ -3769,10 +3769,10 @@ class Document : public nsINode,
   // effect once per document, and so is called during document destruction.
   void ReportDocumentUseCounters();
 
-  // Report the names of the HTMLDocument/HTMLFormElement properties that had
+  // Report the names of the HTMLDocument properties that had
   // been shadowed using ID/name, and which were subsequently accessed
   // ("DOM clobbering"). This data is collected by the corresponding NamedGetter
-  // methods and limited to 10 unique entries.
+  // method and limited to 10 unique entries.
   void ReportShadowedProperties();
 
   // Reports largest contentful paint via telemetry. We want the most up to
@@ -5662,10 +5662,6 @@ class Document : public nsINode,
   // Used by the shadowed_html_document_property_access telemetry probe to
   // collected shadowed HTMLDocument properties. (Limited to 10 entries)
   nsTArray<nsString> mShadowedHTMLDocumentProperties;
-
-  // Used by the shadowed_html_form_element_property_access telemetry probe to
-  // collected shadowed HTMLFormElement properties. (Limited to 10 entries)
-  nsTArray<nsString> mShadowedHTMLFormElementProperties;
 
   // Collection of data used by the pageload event.
   PageloadEventData mPageloadEventData;

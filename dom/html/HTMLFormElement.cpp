@@ -1448,11 +1448,6 @@ already_AddRefed<nsISupports> HTMLFormElement::NamedGetter(
     const nsAString& aName, bool& aFound) {
   if (nsCOMPtr<nsISupports> result = ResolveName(aName)) {
     aFound = true;
-
-    if (HTMLFormElement_Binding::InterfaceHasProperty(aName)) {
-      OwnerDoc()->CollectShadowedHTMLFormElementProperty(aName);
-    }
-
     return result.forget();
   }
 

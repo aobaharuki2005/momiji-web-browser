@@ -17395,7 +17395,7 @@ class CGDescriptor(CGThing):
         if descriptor.needsMissingPropUseCounters:
             cgThings.append(CGCountMaybeMissingProperty(descriptor))
 
-        if descriptor.interface.identifier.name in ("HTMLDocument", "HTMLFormElement"):
+        if descriptor.interface.identifier.name == "HTMLDocument":
             cgThings.append(CGInterfaceHasProperty(descriptor))
 
         # CGDOMProxyJSClass/CGDOMJSClass need GetProtoObjectHandle, but we don't
