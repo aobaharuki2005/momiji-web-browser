@@ -1900,7 +1900,7 @@ void FragmentOrElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup) {
     }
   }
 
-  DebugOnly<nsresult> rv = docEncoder->NativeInit(doc, contentType, flags);
+  DebugOnly<nsresult> rv = docEncoder->Init(doc, contentType, flags);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (aIncludeSelf) {

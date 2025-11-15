@@ -1515,7 +1515,7 @@ already_AddRefed<nsIDocumentEncoder> EditorBase::GetAndInitDocEncoder(
   RefPtr<Document> doc = GetDocument();
   NS_ASSERTION(doc, "Need a document");
 
-  nsresult rv = docEncoder->NativeInit(
+  nsresult rv = docEncoder->Init(
       doc, aFormatType,
       aDocumentEncoderFlags | nsIDocumentEncoder::RequiresReinitAfterOutput);
   if (NS_FAILED(rv)) {

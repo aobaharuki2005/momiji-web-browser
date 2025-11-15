@@ -726,13 +726,9 @@ nsDocumentEncoder::~nsDocumentEncoder() = default;
 NS_IMETHODIMP
 nsDocumentEncoder::Init(Document* aDocument, const nsAString& aMimeType,
                         uint32_t aFlags) {
-  return NativeInit(aDocument, aMimeType, aFlags);
-}
-
-NS_IMETHODIMP
-nsDocumentEncoder::NativeInit(Document* aDocument, const nsAString& aMimeType,
-                              uint32_t aFlags) {
-  if (!aDocument) return NS_ERROR_INVALID_ARG;
+  if (!aDocument) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   Initialize(!mMimeType.Equals(aMimeType),
              GetAllowRangeCrossShadowBoundary(aFlags));
