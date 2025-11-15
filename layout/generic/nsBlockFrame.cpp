@@ -47,6 +47,7 @@
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
 #include "nsError.h"
+#include "nsFirstLetterFrame.h"
 #include "nsFlexContainerFrame.h"
 #include "nsFloatManager.h"
 #include "nsFontMetrics.h"
@@ -6577,7 +6578,10 @@ void nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
 }
 
 void nsBlockFrame::DoRemoveFloats(DestroyContext& aContext, nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame->IsFloating(),
+  // Note: nsFloatingFirstLetterFrame might lose its floating style after
+  // nsBlockFrame::UpdateFirstLetterStyle().
+  MOZ_ASSERT(aFrame->IsFloating() || static_cast<nsFloatingFirstLetterFrame*>(
+                                         do_QueryFrame(aFrame)),
              "DoRemoveFloats() can only remove float elements!");
 
   // The containing block is always the parent of aFrame.
