@@ -5369,6 +5369,19 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyValueByNonCustomId(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyValueById(
+    declarations: &LockedDeclarationBlock,
+    property_id: &structs::CSSPropertyId,
+    value: &mut nsACString,
+) {
+    get_property_value(
+        declarations,
+        get_property_id_from_csspropertyid!(property_id, ()),
+        value,
+    )
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_DeclarationBlock_GetPropertyIsImportant(
     declarations: &LockedDeclarationBlock,
     property: &nsACString,
