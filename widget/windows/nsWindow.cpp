@@ -2828,25 +2828,6 @@ void nsWindow::SetCustomTitlebar(bool aCustomTitlebar) {
 
   mCustomNonClient = aCustomTitlebar;
 
-  // Because of bug 1993474, we want to properly set the WS_BORDER style
-  // when the titlebar is turned on or off.
-  //
-  // The documentation for window styles says that most styles can't be
-  // modified after the window is created. Testing shows that WS_BORDER
-  // seems to be OK, but make sure this is the only style we try to change
-  // here.
-  const LONG_PTR actualStyle = ::GetWindowLongPtrW(mWnd, GWL_STYLE);
-  LONG_PTR newStyle = actualStyle;
-  if (mCustomNonClient) {
-    newStyle &= ~WS_BORDER;
-  } else {
-    newStyle |= WS_BORDER;
-  }
-  if (newStyle != actualStyle) {
-    VERIFY_WINDOW_STYLE(newStyle);
-    ::SetWindowLongPtrW(mWnd, GWL_STYLE, newStyle);
-  }
-
   // Force a reflow of content based on the new client dimensions.
   if (mCustomNonClient) {
     UpdateNonClientMargins();
