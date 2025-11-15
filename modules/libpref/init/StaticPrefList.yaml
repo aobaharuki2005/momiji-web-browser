@@ -877,11 +877,6 @@
   value: false
   mirror: always
 
-- name: apz.windows.use_direct_manipulation
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: apz.windows.check_for_pan_gesture_conversion
   type: RelaxedAtomicBool
   value: true
