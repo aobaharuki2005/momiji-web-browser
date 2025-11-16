@@ -2311,7 +2311,7 @@
   <!-- Text shown for settings option for sign with email -->
   <string name="sign_in_with_email">대신 이메일 사용</string>
   <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here. -->
-  <string name="sign_in_create_account_text" tools:ignore="BrandUsage"><![CDATA[계정이 없습니까? 기기 간에 Firefox를 동기화하려면 <u>하나를 만드세요</u>.]]></string>
+  <string name="sign_in_create_account_text" tools:ignore="BrandUsage"><![CDATA[계정이 없습니까? 여러 기기 간에 Firefox를 동기화하려면 <u>계정을 만드세요</u>.]]></string>
   <!-- Text shown in confirmation dialog to sign out of account. %s is the name of the app (for example "Firefox"). -->
   <string name="sign_out_confirmation_message_2">%s가 계정과의 동기화를 중단하지만 이 기기의 사용자 탐색 데이터는 삭제하지 않습니다.</string>
   <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
