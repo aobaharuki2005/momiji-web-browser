@@ -8,8 +8,11 @@
 #define mozilla_CSSPropertyId_h
 
 #include "NonCustomCSSPropertyId.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindings.h"
+#include "nsAtom.h"
 #include "nsCSSProps.h"
 #include "nsString.h"
 
@@ -22,9 +25,38 @@ struct CSSPropertyId {
                "eCSSPropertyExtra_variable.");
   }
 
+ private:
   explicit CSSPropertyId(RefPtr<nsAtom> aCustomName)
       : mId(eCSSPropertyExtra_variable), mCustomName(std::move(aCustomName)) {
     MOZ_ASSERT(mCustomName, "Null custom property name");
+  }
+
+ public:
+  // Callers are expected to pass a custom name atom with the leading "--"
+  // already stripped. The remaining ident may legally start with "-"
+  // (or even "--"), so we cannot assert anything about its prefix here.
+  static CSSPropertyId FromCustomName(RefPtr<nsAtom> aCustomName) {
+    return CSSPropertyId(aCustomName);
+  }
+
+  static CSSPropertyId FromCustomProperty(const nsACString& aCustomProperty) {
+    MOZ_ASSERT(StringBeginsWith(aCustomProperty, "--"_ns));
+
+    // TODO(zrhoffman, bug 1811897) Add test coverage for removing the `--`
+    // prefix here.
+    RefPtr<nsAtom> atom =
+        NS_Atomize(Substring(aCustomProperty, 2, aCustomProperty.Length() - 2));
+
+    return FromCustomName(atom);
+  }
+
+  static CSSPropertyId FromIdOrCustomProperty(
+      NonCustomCSSPropertyId aId, const nsACString& aCustomProperty) {
+    if (aId != eCSSPropertyExtra_variable) {
+      return CSSPropertyId(aId);
+    }
+
+    return FromCustomProperty(aCustomProperty);
   }
 
   NonCustomCSSPropertyId mId = eCSSProperty_UNKNOWN;

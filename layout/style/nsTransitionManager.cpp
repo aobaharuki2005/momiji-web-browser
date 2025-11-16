@@ -65,7 +65,8 @@ static void ExpandTransitionProperty(const StyleTransitionProperty& aProperty,
     case StyleTransitionProperty::Tag::Unsupported:
       break;
     case StyleTransitionProperty::Tag::Custom: {
-      CSSPropertyId property(aProperty.AsCustom().AsAtom());
+      auto property =
+          CSSPropertyId::FromCustomName(aProperty.AsCustom().AsAtom());
       aHandler(property);
       break;
     }
