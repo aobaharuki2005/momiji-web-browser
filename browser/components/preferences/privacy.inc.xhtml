@@ -581,7 +581,246 @@
 
 <!-- Permissions -->
 <groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions">
-  <html:setting-group groupid="permissions"></html:setting-group>
+  <label class="search-header" hidden="true"><html:h2 data-l10n-id="permissions-header"/></label>
+
+  <!-- The hbox around the buttons is to compute the search tooltip position properly -->
+  <vbox>
+    <hbox id="locationSettingsRow" align="center" role="group" aria-labelledby="locationPermissionsLabel">
+      <hbox flex="1">
+        <image class="geo-icon permission-icon" />
+        <label id="locationPermissionsLabel" data-l10n-id="permissions-location"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="locationSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-location-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-location-window2.title,
+                  permissions-site-location-desc,
+                  permissions-site-location-disable-label,
+                  permissions-site-location-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+
+    <hbox id="cameraSettingsRow" align="center" role="group" aria-labelledby="cameraPermissionsLabel">
+      <hbox flex="1">
+        <image class="camera-icon permission-icon" />
+        <label id="cameraPermissionsLabel" data-l10n-id="permissions-camera"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="cameraSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-camera-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-camera-window2.title,
+                  permissions-site-camera-desc,
+                  permissions-site-camera-disable-label,
+                  permissions-site-camera-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+
+     <hbox id="localHostSettingsRow" align="center" role="group" aria-labelledby="localHostPermissionsLabel">
+      <hbox flex="1">
+        <image class="localhost-icon permission-icon" />
+        <label id="localHostPermissionsLabel" data-l10n-id="permissions-localhost"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="localHostSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-localhost-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-localhost-window.title,
+                  permissions-site-localhost-desc,
+                  permissions-site-localhost-disable-label,
+                  permissions-site-localhost-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+
+    <hbox id="localNetworkSettingsRow" align="center" role="group" aria-labelledby="localNetworkPermissionsLabel">
+      <hbox flex="1">
+        <image class="local-network-icon permission-icon" />
+        <label id="localNetworkPermissionsLabel" data-l10n-id="permissions-local-network"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="localNetworkSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-local-network-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-local-network-window.title,
+                  permissions-site-local-network-desc,
+                  permissions-site-local-network-disable-label,
+                  permissions-site-local-network-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+
+    <hbox id="microphoneSettingsRow" align="center" role="group" aria-labelledby="microphonePermissionsLabel">
+      <hbox flex="1">
+        <image class="microphone-icon permission-icon" />
+        <label id="microphonePermissionsLabel" data-l10n-id="permissions-microphone"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="microphoneSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-microphone-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-microphone-window2.title,
+                  permissions-site-microphone-desc,
+                  permissions-site-microphone-disable-label,
+                  permissions-site-microphone-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+
+    <hbox id="speakerSettingsRow" align="center" role="group" aria-labelledby="speakerPermissionsLabel">
+      <hbox flex="1">
+        <image class="speaker-icon permission-icon" />
+        <label id="speakerPermissionsLabel" data-l10n-id="permissions-speaker"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="speakerSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-speaker-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-speaker-window.title,
+                  permissions-site-speaker-desc,
+                " />
+      </hbox>
+    </hbox>
+
+    <hbox id="notificationSettingsRow" align="center" role="group" aria-labelledby="notificationPermissionsLabel">
+      <hbox flex="1">
+        <image class="desktop-notification-icon permission-icon" />
+        <label id="notificationPermissionsLabel"
+               class="tail-with-learn-more"
+               data-l10n-id="permissions-notification"/>
+        <html:a is="moz-support-link"
+                id="notificationPermissionsLearnMore"
+                class="learnMore"
+                data-l10n-id="permissions-notification-link"
+                support-page="push"
+        />
+      </hbox>
+      <hbox pack="end">
+        <button id="notificationSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-notification-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-notification-window2.title,
+                  permissions-site-notification-desc,
+                  permissions-site-notification-disable-label,
+                  permissions-site-notification-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+
+    <vbox id="notificationsDoNotDisturbBox" hidden="true">
+      <checkbox id="notificationsDoNotDisturb" class="indent"/>
+    </vbox>
+
+    <hbox id="autoplaySettingsRow" align="center" role="group" aria-labelledby="autoplayPermissionsLabel">
+      <hbox flex="1">
+        <image class="autoplay-icon permission-icon" />
+        <label id="autoplayPermissionsLabel"
+               data-l10n-id="permissions-autoplay"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="autoplaySettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-autoplay-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-autoplay-window2.title,
+                  permissions-site-autoplay-desc,
+                " />
+      </hbox>
+    </hbox>
+
+    <hbox id="xrSettingsRow" align="center" role="group" aria-labelledby="xrPermissionsLabel">
+      <hbox flex="1">
+        <image class="xr-icon permission-icon" />
+        <label id="xrPermissionsLabel" data-l10n-id="permissions-xr"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="xrSettingsButton"
+                is="highlightable-button"
+                class="accessory-button"
+                data-l10n-id="permissions-xr-settings"
+                search-l10n-ids="
+                  permissions-remove.label,
+                  permissions-remove-all.label,
+                  permissions-site-xr-window2.title,
+                  permissions-site-xr-desc,
+                  permissions-site-xr-disable-label,
+                  permissions-site-xr-disable-desc,
+                " />
+      </hbox>
+    </hbox>
+  </vbox>
+
+  <separator />
+
+  <hbox data-subcategory="permissions-block-popups">
+    <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
+              data-l10n-id="permissions-block-popups2"
+              flex="1" />
+    <button id="popupPolicyButton"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="permissions-block-popups-exceptions-button"
+            data-l10n-attrs="searchkeywords"
+            search-l10n-ids="
+              permissions-address,
+              permissions-exceptions-popup-window3.title,
+              permissions-exceptions-popup-desc2,
+            " />
+  </hbox>
+
+  <hbox id="addonInstallBox">
+    <checkbox id="warnAddonInstall"
+              data-l10n-id="permissions-addon-install-warning"
+              preference="xpinstall.whitelist.required"
+              flex="1" />
+    <button id="addonExceptions"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="permissions-addon-exceptions"
+            search-l10n-ids="
+              permissions-address,
+              permissions-allow.label,
+              permissions-remove.label,
+              permissions-remove-all.label,
+              permissions-exceptions-addons-window2.title,
+              permissions-exceptions-addons-desc,
+            " />
+  </hbox>
+
 </groupbox>
 
 <!-- Firefox Data Collection and Use -->

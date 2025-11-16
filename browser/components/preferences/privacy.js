@@ -283,9 +283,6 @@ Preferences.addAll([
 
   // Local Network Access
   { id: "network.lna.blocking", type: "bool" },
-
-  // Permissions
-  { id: "media.setsinkid.enabled", type: "bool" },
 ]);
 
 if (Services.prefs.getBoolPref("privacy.ui.status_card", false)) {
@@ -2105,104 +2102,6 @@ Preferences.addSetting({
   },
 });
 
-Preferences.addSetting({
-  id: "permissionBox",
-});
-Preferences.addSetting({
-  id: "popupPolicy",
-  pref: "dom.disable_open_during_load",
-});
-Preferences.addSetting({
-  id: "popupPolicyButton",
-  deps: ["popupPolicy"],
-  onUserClick: () => gPrivacyPane.showPopupExceptions(),
-  disabled: ({ popupPolicy }) => {
-    return !popupPolicy.value || popupPolicy.locked;
-  },
-});
-Preferences.addSetting({
-  id: "warnAddonInstall",
-  pref: "xpinstall.whitelist.required",
-});
-Preferences.addSetting({
-  id: "addonExceptions",
-  deps: ["warnAddonInstall"],
-  onUserClick: () => gPrivacyPane.showAddonExceptions(),
-  disabled: ({ warnAddonInstall }) => {
-    return !warnAddonInstall.value || warnAddonInstall.locked;
-  },
-});
-Preferences.addSetting({
-  id: "notificationsDoNotDisturb",
-  get: () => {
-    return AlertsServiceDND?.manualDoNotDisturb ?? false;
-  },
-  set: value => {
-    if (AlertsServiceDND) {
-      AlertsServiceDND.manualDoNotDisturb = value;
-    }
-  },
-  visible: () => {
-    return AlertsServiceDND != undefined;
-  },
-});
-Preferences.addSetting({
-  id: "locationSettingsButton",
-  onUserClick: () => gPrivacyPane.showLocationExceptions(),
-});
-Preferences.addSetting({
-  id: "cameraSettingsButton",
-  onUserClick: () => gPrivacyPane.showCameraExceptions(),
-});
-Preferences.addSetting({
-  id: "enabledLNA",
-  pref: "network.lna.blocking",
-});
-Preferences.addSetting({
-  id: "localNetworkSettingsButton",
-  onUserClick: () => gPrivacyPane.showLocalNetworkExceptions(),
-  deps: ["enabledLNA"],
-  visible: deps => {
-    return deps.enabledLNA.value;
-  },
-});
-Preferences.addSetting({
-  id: "localHostSettingsButton",
-  onUserClick: () => gPrivacyPane.showLocalHostExceptions(),
-  deps: ["enabledLNA"],
-  visible: deps => {
-    return deps.enabledLNA.value;
-  },
-});
-Preferences.addSetting({
-  id: "microphoneSettingsButton",
-  onUserClick: () => gPrivacyPane.showMicrophoneExceptions(),
-});
-Preferences.addSetting({
-  id: "enabledSpeakerControl",
-  pref: "media.setsinkid.enabled",
-});
-Preferences.addSetting({
-  id: "speakerSettingsButton",
-  onUserClick: () => gPrivacyPane.showSpeakerExceptions(),
-  deps: ["enabledSpeakerControl"],
-  visible: ({ enabledSpeakerControl }) => {
-    return enabledSpeakerControl.value;
-  },
-});
-Preferences.addSetting({
-  id: "notificationSettingsButton",
-  onUserClick: () => gPrivacyPane.showNotificationExceptions(),
-});
-Preferences.addSetting({
-  id: "autoplaySettingsButton",
-  onUserClick: () => gPrivacyPane.showAutoplayMediaExceptions(),
-});
-Preferences.addSetting({
-  id: "xrSettingsButton",
-  onUserClick: () => gPrivacyPane.showXRExceptions(),
-});
-
 function setEventListener(aId, aEventType, aCallback) {
   document
     .getElementById(aId)
@@ -2761,7 +2660,6 @@ var gPrivacyPane = {
     initSettingGroup("certificates");
     initSettingGroup("ipprotection");
     initSettingGroup("history");
-    initSettingGroup("permissions");
 
     /* Initialize Content Blocking */
     this.initContentBlocking();
@@ -2832,6 +2730,11 @@ var gPrivacyPane = {
       gPrivacyPane.changeMasterPassword
     );
     setEventListener("showPasswords", "command", gPrivacyPane.showPasswords);
+    setEventListener(
+      "addonExceptions",
+      "command",
+      gPrivacyPane.showAddonExceptions
+    );
 
     this._pane = document.getElementById("panePrivacy");
 
@@ -2841,6 +2744,64 @@ var gPrivacyPane = {
     this._initOSAuthentication();
 
     this.initListenersForExtensionControllingPasswordManager();
+
+    setEventListener(
+      "autoplaySettingsButton",
+      "command",
+      gPrivacyPane.showAutoplayMediaExceptions
+    );
+    setEventListener(
+      "notificationSettingsButton",
+      "command",
+      gPrivacyPane.showNotificationExceptions
+    );
+    setEventListener(
+      "locationSettingsButton",
+      "command",
+      gPrivacyPane.showLocationExceptions
+    );
+    setEventListener(
+      "localHostSettingsButton",
+      "command",
+      gPrivacyPane.showLocalHostExceptions
+    );
+    setEventListener(
+      "localNetworkSettingsButton",
+      "command",
+      gPrivacyPane.showLocalNetworkExceptions
+    );
+    setEventListener(
+      "xrSettingsButton",
+      "command",
+      gPrivacyPane.showXRExceptions
+    );
+    setEventListener(
+      "cameraSettingsButton",
+      "command",
+      gPrivacyPane.showCameraExceptions
+    );
+    setEventListener(
+      "microphoneSettingsButton",
+      "command",
+      gPrivacyPane.showMicrophoneExceptions
+    );
+    document.getElementById("speakerSettingsRow").hidden =
+      !Services.prefs.getBoolPref("media.setsinkid.enabled", false);
+    setEventListener(
+      "speakerSettingsButton",
+      "command",
+      gPrivacyPane.showSpeakerExceptions
+    );
+    setEventListener(
+      "popupPolicyButton",
+      "command",
+      gPrivacyPane.showPopupExceptions
+    );
+    setEventListener(
+      "notificationsDoNotDisturb",
+      "command",
+      gPrivacyPane.toggleDoNotDisturbNotifications
+    );
 
     setSyncFromPrefListener("contentBlockingBlockCookiesCheckbox", () =>
       this.readBlockCookies()
@@ -2934,6 +2895,12 @@ var gPrivacyPane = {
     this.initDoH();
 
     this.initWebAuthn();
+
+    Preferences.get("network.lna.blocking").on(
+      "change",
+      this.setUpLocalNetworkAccessPermissionUI
+    );
+    this.setUpLocalNetworkAccessPermissionUI();
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "privacy-pane-loaded");
@@ -3633,6 +3600,10 @@ var gPrivacyPane = {
     return sanitizeOnShutdownPrefsArray.some(
       pref => Preferences.get(pref).value
     );
+  },
+
+  toggleDoNotDisturbNotifications(event) {
+    AlertsServiceDND.manualDoNotDisturb = event.target.checked;
   },
 
   /**
@@ -4367,6 +4338,20 @@ var gPrivacyPane = {
   },
 
   /**
+   * Enables/disables the add-ons Exceptions button depending on whether
+   * or not add-on installation warnings are displayed.
+   */
+  readWarnAddonInstall() {
+    var warn = Preferences.get("xpinstall.whitelist.required");
+    var exceptions = document.getElementById("addonExceptions");
+
+    exceptions.disabled = !warn.value || warn.locked;
+
+    // don't override the preference value
+    return undefined;
+  },
+
+  /**
    * Displays the exceptions lists for add-on installation warnings.
    */
   showAddonExceptions() {
@@ -4574,6 +4559,12 @@ var gPrivacyPane = {
       SelectableProfileService.off("enableChanged", listener)
     );
     this.updateProfilesPrivacyInfo();
+  },
+
+  setUpLocalNetworkAccessPermissionUI() {
+    const isLNADisabled = !Preferences.get("network.lna.blocking").value;
+    document.getElementById("localHostSettingsRow").hidden = isLNADisabled;
+    document.getElementById("localNetworkSettingsRow").hidden = isLNADisabled;
   },
 
   updateProfilesPrivacyInfo() {
