@@ -8646,7 +8646,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider, isMember=False):
         if not isMember and typeNeedsRooting(returnType):
             rooter = CGGeneric(
                 "RecordRooter<%s> resultRooter(cx, &result);\n"
-                % ("nsString, " + result.define())
+                % (recordKeyType(returnType) + ", " + result.define())
             )
         else:
             rooter = None
