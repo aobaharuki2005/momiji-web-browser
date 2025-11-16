@@ -24,7 +24,6 @@
 #include "gfxUtils.h"
 #include "imgIContainer.h"
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/HashFunctions.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/SVGImageContext.h"

@@ -10,9 +10,7 @@
 #include <functional>
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 

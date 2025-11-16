@@ -8,7 +8,6 @@
 #define AnchorPositioningUtils_h__
 
 #include "WritingModes.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "nsRect.h"
 #include "nsTHashMap.h"

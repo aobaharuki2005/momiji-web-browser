@@ -23,7 +23,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"

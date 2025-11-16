@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "mozilla/RefPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/TiedFields.h"
 #include "mozilla/TimeStamp.h"
