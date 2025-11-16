@@ -795,6 +795,27 @@ ignorefile-test:
             - '.gitignore'
             - '.hgignore'
 
+
+c-includes:
+    description: Remove unused mfbt includes from the codebase
+    treeherder:
+        symbol: cpp(includes)
+    run:
+        mach: lint -l includes -f treeherder -f json:/builds/worker/mozlint.json .
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.cxx'
+            - '**/*.h'
+            - '**/*.hpp'
+            - '**/*.m'
+            - '**/*.mm'
+            - 'tools/lint/includes.yml'
+            - 'tools/lint/includes/**'
+            - 'mfbt/api.yml'
+
 gecko-trace:
     description: Check that all `gecko-trace.yaml` files are correct
     treeherder:
