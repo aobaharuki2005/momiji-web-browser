@@ -752,6 +752,17 @@ skip script test262/intl402/Temporal/PlainDate/prototype/add/era-boundary-ethiop
 skip script test262/intl402/Temporal/PlainDate/prototype/add/basic-hebrew.js
 skip script test262/intl402/Temporal/PlainDate/prototype/add/leap-months-hebrew.js
 skip script test262/intl402/DateTimeFormat/prototype/formatToParts/era.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/constrain-day-islamic-umalqura.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/basic-islamic-umalqura.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/constrain-day-islamic-umalqura.js
+skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/basic-islamic-umalqura.js
+skip script test262/intl402/Temporal/PlainDate/prototype/subtract/constrain-day-islamic-umalqura.js
+skip script test262/intl402/Temporal/PlainDate/prototype/subtract/basic-islamic-umalqura.js
+skip script test262/intl402/Temporal/PlainDate/prototype/add/basic-islamic-umalqura.js
+skip script test262/intl402/Temporal/PlainDate/prototype/add/constrain-day-islamic-umalqura.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/constrain-day-islamic-umalqura.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/basic-islamic-umalqura.js
+skip script test262/intl402/Temporal/PlainDateTime/prototype/add/constrain-day-islamic-umalqura.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
