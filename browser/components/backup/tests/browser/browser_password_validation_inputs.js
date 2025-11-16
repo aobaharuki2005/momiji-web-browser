@@ -10,13 +10,13 @@ const SCHEDULED_BACKUPS_ENABLED_PREF = "browser.backup.scheduled.enabled";
  * as expected.
  */
 add_task(async function password_validation() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
+  });
+
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
     let sandbox = sinon.createSandbox();
     let settings = browser.contentDocument.querySelector("backup-settings");
-
-    await SpecialPowers.pushPrefEnv({
-      set: [[SCHEDULED_BACKUPS_ENABLED_PREF, true]],
-    });
 
     settings.backupServiceState.encryptionEnabled = true;
     await settings.requestUpdate();
@@ -141,7 +141,8 @@ add_task(async function password_validation() {
     );
 
     Assert.ok(true, "Password rules tooltip should be hidden");
-    await SpecialPowers.popPrefEnv();
     sandbox.restore();
   });
+
+  await SpecialPowers.popPrefEnv();
 });

@@ -7,7 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ERRORS: "chrome://browser/content/backup/backup-constants.mjs",
 });
 
-const bs = new BackupService({ FakeBackupResource1 });
+let bs;
 const correctPassword = "correcthorsebatterystaple";
 const incorrectPassword = "Tr0ub4dor&3";
 let testBackupDirPath;
@@ -16,6 +16,7 @@ let testBackupPath;
 add_setup(async function () {
   setupProfile();
 
+  bs = new BackupService({ FakeBackupResource1 });
   let sandbox = sinon.createSandbox();
   let fakeManifestEntry = { fake: "test" };
   sandbox

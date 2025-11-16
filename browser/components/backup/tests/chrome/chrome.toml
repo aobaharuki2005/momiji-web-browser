@@ -3,6 +3,7 @@ prefs = [
     "browser.backup.scheduled.enabled=false",
     "browser.backup.archive.enabled=true",
     "browser.backup.restore.enabled=true",
+    "privacy.sanitize.sanitizeOnShutdown=false"
 ]
 support-files = ["head.js"]
 

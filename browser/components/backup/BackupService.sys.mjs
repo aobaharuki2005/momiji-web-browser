@@ -193,9 +193,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "backupErrorCode",
   BACKUP_ERROR_CODE_PREF_NAME,
-  ERRORS.NONE,
+  0,
   function onUpdateBackupErrorCode(_pref, _prevVal, newVal) {
-    let bs = BackupService.init();
+    let bs = BackupService.get();
     if (bs) {
       bs.onUpdateBackupErrorCode(newVal);
     }
