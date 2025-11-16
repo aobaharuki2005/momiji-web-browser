@@ -202,7 +202,10 @@ export class YelpSuggestions extends SuggestProvider {
     let payload = {
       url: url.toString(),
       originalUrl: suggestion.url,
-      bottomTextL10n: { id: "firefox-suggest-yelp-bottom-text" },
+      bottomTextL10n: {
+        id: "firefox-suggest-yelp-bottom-text",
+        cacheable: true,
+      },
       iconBlob: suggestion.icon_blob,
     };
     let payloadHighlights = {};

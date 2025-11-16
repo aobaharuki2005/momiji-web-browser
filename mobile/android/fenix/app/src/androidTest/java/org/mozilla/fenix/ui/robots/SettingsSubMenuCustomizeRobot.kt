@@ -176,7 +176,7 @@ class SettingsSubMenuCustomizeRobot {
         verifyAppIconOptionIsDisplayed(
             composeTestRule,
             // Other section
-            R.string.alternative_app_icon_group_other,
+            R.string.alternative_app_icon_group_featured,
             R.string.alternative_app_icon_option_retro_2004,
             R.string.alternative_app_icon_option_pixelated,
             R.string.alternative_app_icon_option_cuddling,

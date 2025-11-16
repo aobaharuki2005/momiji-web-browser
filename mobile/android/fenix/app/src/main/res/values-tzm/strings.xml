@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+<resources>
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Uslig %s</string>
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
@@ -291,14 +291,6 @@
   <string name="delete_browsing_data_on_quit_action">Ffeɣ</string>
   <!-- Text for the allow button for the data deletion dialog -->
   <string name="delete_browsing_data_prompt_allow">Kkes</string>
-  <!--
-    Onboarding theme
-
-    Text shown in snackbar when multiple tabs have been sent to device
-  -->
-  <string name="sync_sent_tabs_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ttwaznen iseksal!</string>
-  <!-- Text shown in snackbar when one tab has been sent to device -->
-  <string name="sync_sent_tab_snackbar" tools:ignore="UnusedResources" moz:removedIn="144">Ittwazen useksel!</string>
   <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
   <string name="enhanced_tracking_protection_allowed">Ittusureg</string>
   <!-- About page link text to open know your rights link -->

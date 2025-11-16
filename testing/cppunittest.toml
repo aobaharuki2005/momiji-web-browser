@@ -159,6 +159,9 @@ run-if = ["os == 'win'"]
 
 ["TestSegmentedVector"]
 
+["TestSharedMappingCommit"]
+run-if = ["os == 'win'"]
+
 ["TestSmallPointerArray"]
 
 ["TestSplayTree"]

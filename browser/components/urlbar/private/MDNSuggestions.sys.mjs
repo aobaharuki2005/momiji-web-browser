@@ -62,7 +62,10 @@ export class MDNSuggestions extends SuggestProvider {
       title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
       description: suggestion.description,
       shouldShowUrl: true,
-      bottomTextL10n: { id: "firefox-suggest-mdn-bottom-text" },
+      bottomTextL10n: {
+        id: "firefox-suggest-mdn-bottom-text",
+        cacheable: true,
+      },
     };
 
     return new lazy.UrlbarResult({

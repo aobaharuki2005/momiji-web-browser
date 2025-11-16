@@ -6,7 +6,6 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.content.res.Configuration
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -15,17 +14,17 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.TextView
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.ui.graphics.toArgb
 import androidx.core.widget.ImageViewCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
-import mozilla.components.compose.base.theme.AcornColors
-import mozilla.components.compose.base.theme.darkColorPalette
-import mozilla.components.compose.base.theme.lightColorPalette
+import com.google.android.material.color.MaterialColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
+import com.google.android.material.R as materialR
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -72,6 +71,15 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         )
     }
 
+    @ColorInt
+    private var colorTertiary: Int = 0
+
+    @ColorInt
+    private var colorOnSurface: Int = 0
+
+    @ColorInt
+    private var colorOnSurfaceVariant: Int = 0
+
     init {
         layoutResource = R.layout.preference_toolbar_shortcut
         isSelectable = false
@@ -86,6 +94,10 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         val selectedContainer = holder.findViewById(R.id.selected_container) as LinearLayout
         val optionsContainer = holder.findViewById(R.id.options_container) as LinearLayout
         val separator = holder.findViewById(R.id.separator) as View
+
+        colorTertiary = holder.itemView.getMaterialColor(materialR.attr.colorTertiary)
+        colorOnSurface = holder.itemView.getMaterialColor(materialR.attr.colorOnSurface)
+        colorOnSurfaceVariant = holder.itemView.getMaterialColor(materialR.attr.colorOnSurfaceVariant)
 
         val selected = options.firstOrNull { it.key == selectedKey } ?: options.first()
 
@@ -140,16 +152,14 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         radio.isChecked = isChecked
         radio.isEnabled = true
 
-        val colors = getPalette(context)
-
         label.setTextColor(
-            (if (isChecked) colors.textAccentDisabled else colors.textPrimary).toArgb(),
+            if (isChecked) colorTertiary else colorOnSurface,
         )
 
         ImageViewCompat.setImageTintList(
             icon,
             ColorStateList.valueOf(
-                (if (isChecked) colors.iconAccentViolet else colors.iconPrimary).toArgb(),
+                if (isChecked) colorTertiary else colorOnSurface,
             ),
         )
 
@@ -158,7 +168,7 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
                 intArrayOf(android.R.attr.state_checked),
                 intArrayOf(-android.R.attr.state_checked),
             ),
-            intArrayOf(colors.formSelected.toArgb(), colors.formDefault.toArgb()),
+            intArrayOf(colorTertiary, colorOnSurfaceVariant),
         )
 
         if (isEnabled) {
@@ -173,17 +183,8 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         return row
     }
 
-    /**
-     * Get the color palette based on the current browsing mode.
-     *
-     * N.B: This logic was taken from [Theme.getTheme] in FirefoxTheme, however we cannot use it
-     * directly because those functions are annotated to be Composable and refactoring that can be
-     * done in a follow-up when needed. This needs to be done less hacky.
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=1993265
-     */
-    private fun getPalette(context: Context): AcornColors {
-        val uiMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        return if (uiMode == Configuration.UI_MODE_NIGHT_YES) darkColorPalette else lightColorPalette
+    private fun View.getMaterialColor(@AttrRes attr: Int): Int {
+        return MaterialColors.getColor(this, attr)
     }
 
     private data class Option(
