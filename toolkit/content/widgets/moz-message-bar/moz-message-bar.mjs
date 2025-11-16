@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, ifDefined, when } from "../vendor/lit.all.mjs";
+import { html, ifDefined } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-button.mjs";
@@ -54,7 +54,6 @@ export default class MozMessageBar extends MozLitElement {
     closeButton: "moz-button.close",
     messageEl: ".message",
     supportLinkSlot: "slot[name=support-link]",
-    supportLinkHolder: ".link",
   };
 
   static properties = {
@@ -62,7 +61,6 @@ export default class MozMessageBar extends MozLitElement {
     heading: { type: String, fluent: true },
     message: { type: String, fluent: true },
     dismissable: { type: Boolean },
-    supportPage: { type: String },
     messageL10nId: { type: String },
     messageL10nArgs: { type: String },
   };
@@ -111,13 +109,6 @@ export default class MozMessageBar extends MozLitElement {
      * @type {string | undefined}
      */
     this.heading = undefined;
-
-    /**
-     * The support page stub.
-     *
-     * @type {string | undefined}
-     */
-    this.supportPage = undefined;
   }
 
   onActionSlotchange() {
@@ -128,7 +119,7 @@ export default class MozMessageBar extends MozLitElement {
   onLinkSlotChange() {
     this.messageEl.classList.toggle(
       "has-link-after",
-      !!this.supportLinkEls.length || !!this.supportPage
+      !!this.supportLinkEls.length
     );
   }
 
@@ -143,25 +134,7 @@ export default class MozMessageBar extends MozLitElement {
   }
 
   get supportLinkEls() {
-    if (this.supportPage) {
-      return this.supportLinkHolder.children;
-    }
     return this.supportLinkSlot.assignedElements();
-  }
-
-  supportLinkTemplate() {
-    if (this.supportPage) {
-      return html`<a
-        is="moz-support-link"
-        support-page=${this.supportPage}
-        part="support-link"
-        aria-describedby="heading message"
-      ></a>`;
-    }
-    return html`<slot
-      name="support-link"
-      @slotchange=${this.onLinkSlotChange}
-    ></slot>`;
   }
 
   iconTemplate() {
@@ -219,12 +192,7 @@ export default class MozMessageBar extends MozLitElement {
               <div>
                 <slot name="message">
                   <span
-                    id="message"
-                    class=${when(
-                      this.supportPage,
-                      () => "message has-link-after",
-                      () => "message"
-                    )}
+                    class="message"
                     data-l10n-id=${ifDefined(this.messageL10nId)}
                     data-l10n-args=${ifDefined(
                       JSON.stringify(this.messageL10nArgs)
@@ -233,7 +201,12 @@ export default class MozMessageBar extends MozLitElement {
                     ${this.message}
                   </span>
                 </slot>
-                <span class="link"> ${this.supportLinkTemplate()} </span>
+                <span class="link">
+                  <slot
+                    name="support-link"
+                    @slotchange=${this.onLinkSlotChange}
+                  ></slot>
+                </span>
               </div>
             </div>
           </div>

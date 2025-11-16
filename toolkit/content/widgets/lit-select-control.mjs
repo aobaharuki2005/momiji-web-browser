@@ -285,6 +285,12 @@ export class SelectControlBaseElement extends MozLitElement {
     });
   }
 
+  // Re-dispatch change event so it's re-targeted to the custom element.
+  handleChange(event) {
+    event.stopPropagation();
+    this.dispatchEvent(new Event(event.type, event));
+  }
+
   handleSlotChange() {
     this.#childElements = null;
     this.#focusedIndex = undefined;

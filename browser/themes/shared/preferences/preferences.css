@@ -1489,7 +1489,3 @@ setting-group[groupid="home"] {
     font-size: var(--font-size-small);
   }
 }
-
-#dohProviderSelect {
-  --select-max-width: 235px;
-}
