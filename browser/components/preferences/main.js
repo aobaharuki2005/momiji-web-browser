@@ -1849,6 +1849,152 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
+  permissions: {
+    id: "permissions",
+    l10nId: "permissions-header2",
+    headingLevel: 2,
+    items: [
+      {
+        id: "permissionBox",
+        control: "moz-box-group",
+        controlAttrs: {
+          type: "list",
+        },
+        items: [
+          {
+            id: "locationSettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-location2",
+            controlAttrs: {
+              ".iconSrc": "chrome://browser/skin/notification-icons/geo.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-location-window2.title,permissions-site-location-desc,permissions-site-location-disable-label,permissions-site-location-disable-desc",
+            },
+          },
+          {
+            id: "cameraSettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-camera2",
+            controlAttrs: {
+              ".iconSrc": "chrome://browser/skin/notification-icons/camera.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-camera-window2.title,permissions-site-camera-desc,permissions-site-camera-disable-label,permissions-site-camera-disable-desc,",
+            },
+          },
+          {
+            id: "localHostSettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-localhost2",
+            controlAttrs: {
+              ".iconSrc":
+                "chrome://browser/skin/notification-icons/local-host.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-localhost-window.title,permissions-site-localhost-desc,permissions-site-localhost-disable-label,permissions-site-localhost-disable-desc,",
+            },
+          },
+          {
+            id: "localNetworkSettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-local-network2",
+            controlAttrs: {
+              ".iconSrc":
+                "chrome://browser/skin/notification-icons/local-network.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-local-network-window.title,permissions-site-local-network-desc,permissions-site-local-network-disable-label,permissions-site-local-network-disable-desc,",
+            },
+          },
+          {
+            id: "microphoneSettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-microphone2",
+            controlAttrs: {
+              ".iconSrc":
+                "chrome://browser/skin/notification-icons/microphone.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-microphone-window2.title,permissions-site-microphone-desc,permissions-site-microphone-disable-label,permissions-site-microphone-disable-desc,",
+            },
+          },
+          {
+            id: "speakerSettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-speaker2",
+            controlAttrs: {
+              ".iconSrc":
+                "chrome://browser/skin/notification-icons/speaker.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-speaker-window.title,permissions-site-speaker-desc,",
+            },
+          },
+          {
+            id: "notificationSettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-notification2",
+            controlAttrs: {
+              ".iconSrc":
+                "chrome://browser/skin/notification-icons/desktop-notification.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-notification-window2.title,permissions-site-notification-desc,permissions-site-notification-disable-label,permissions-site-notification-disable-desc,",
+            },
+          },
+          {
+            id: "autoplaySettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-autoplay2",
+            controlAttrs: {
+              ".iconSrc":
+                "chrome://browser/skin/notification-icons/autoplay-media.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-autoplay-window2.title,permissions-site-autoplay-desc,",
+            },
+          },
+          {
+            id: "xrSettingsButton",
+            control: "moz-box-button",
+            l10nId: "permissions-xr2",
+            controlAttrs: {
+              ".iconSrc": "chrome://browser/skin/notification-icons/xr.svg",
+              "search-l10n-ids":
+                "permissions-remove.label,permissions-remove-all.label,permissions-site-xr-window2.title,permissions-site-xr-desc,permissions-site-xr-disable-label,permissions-site-xr-disable-desc,",
+            },
+          },
+        ],
+      },
+      {
+        id: "popupPolicy",
+        l10nId: "permissions-block-popups2",
+        items: [
+          {
+            id: "popupPolicyButton",
+            l10nId: "permissions-block-popups-exceptions-button2",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids":
+                "permissions-address,permissions-exceptions-popup-window3.title,permissions-exceptions-popup-desc2",
+            },
+          },
+        ],
+      },
+      {
+        id: "warnAddonInstall",
+        l10nId: "permissions-addon-install-warning2",
+        items: [
+          {
+            id: "addonExceptions",
+            l10nId: "permissions-addon-exceptions2",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids":
+                "permissions-address,permissions-allow.label,permissions-remove.label,permissions-remove-all.label,permissions-exceptions-addons-window2.title,permissions-exceptions-addons-desc",
+            },
+          },
+        ],
+      },
+      {
+        id: "notificationsDoNotDisturb",
+        l10nId: "permissions-notification-pause",
+      },
+    ],
+  },
 };
 
 /**

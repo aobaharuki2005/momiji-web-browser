@@ -704,3 +704,17 @@ async function updateCheckBox(win, id, value) {
   // Toggle the state.
   await EventUtils.synthesizeMouseAtCenter(checkbox, {}, checkbox.ownerGlobal);
 }
+
+function waitForSettingChange(setting) {
+  return new Promise(resolve => {
+    setting.on("change", function handler() {
+      setting.off("change", handler);
+      resolve();
+    });
+  });
+}
+
+async function waitForSettingControlChange(control) {
+  await waitForSettingChange(control.setting);
+  await new Promise(resolve => requestAnimationFrame(resolve));
+}
