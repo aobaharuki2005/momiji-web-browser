@@ -5438,6 +5438,7 @@ var gCSSProperties = {
     domProp: "counterIncrement",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     initial_values: ["none"],
     other_values: [
       "foo 1",
@@ -5462,6 +5463,7 @@ var gCSSProperties = {
     domProp: "counterReset",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     initial_values: ["none"],
     other_values: [
       "foo 1",
@@ -5485,6 +5487,7 @@ var gCSSProperties = {
     domProp: "counterSet",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     initial_values: ["none"],
     other_values: [
       "foo 1",
@@ -7529,6 +7532,7 @@ var gCSSProperties = {
     domProp: "quotes",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
+    applies_to_marker: true,
     initial_values: ["auto"],
     other_values: [
       "none",
