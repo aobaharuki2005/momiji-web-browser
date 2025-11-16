@@ -114,7 +114,7 @@ export class SettingElement extends MozLitElement {
       "data-subcategory": config.subcategory,
       ...config.controlAttrs,
     };
-    if (config.supportPage) {
+    if (config.supportPage != undefined) {
       result[".supportPage"] = config.supportPage;
     }
     if (config.l10nId) {

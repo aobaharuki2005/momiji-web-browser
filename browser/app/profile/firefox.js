@@ -2822,6 +2822,9 @@ pref("browser.screenshots.dir", "");
 // DoH Rollout: whether to clear the mode value at shutdown.
 pref("doh-rollout.clearModeOnShutdown", false);
 
+// DoH UI: default the fallback checkbox to on.
+pref("network.trr_ui.fallback_was_checked", true);
+
 // Normandy client preferences
 pref("app.normandy.api_url", "https://normandy.cdn.mozilla.net/api/v1");
 pref("app.normandy.dev_mode", false);
