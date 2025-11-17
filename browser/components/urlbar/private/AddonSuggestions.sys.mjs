@@ -78,11 +78,6 @@ export class AddonSuggestions extends SuggestProvider {
       return null;
     }
 
-    if (suggestion.source == "rust") {
-      suggestion.icon = suggestion.iconUrl;
-      delete suggestion.iconUrl;
-    }
-
     // Set UTM params unless they're already defined. This allows remote
     // settings or Merino to override them if need be.
     let url = new URL(suggestion.url);
@@ -96,6 +91,8 @@ export class AddonSuggestions extends SuggestProvider {
       url: url.href,
       originalUrl: suggestion.url,
       shouldShowUrl: true,
+      // Rust uses `iconUrl` but Merino uses `icon`.
+      icon: suggestion.iconUrl ?? suggestion.icon,
       title: suggestion.title,
       description: suggestion.description,
       bottomTextL10n: {

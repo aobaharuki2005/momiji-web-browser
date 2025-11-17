@@ -900,14 +900,14 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetInclusiveNextCharPoint(
     // following block boundary.
     nsIContent* const leafContent = HTMLEditUtils::GetFirstLeafContent(
         *child, {LeafNodeType::LeafNodeOrChildBlock}, blockInlineCheck);
+    if (!leafContent) {
+      return EditorRawDOMPoint(child, 0);
+    }
     if (HTMLEditUtils::IsBlockElement(
             *leafContent,
             UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
         HTMLEditUtils::IsVisibleElementEvenIfLeafNode(*leafContent)) {
       return EditorRawDOMPoint();
-    }
-    if (!leafContent) {
-      return EditorRawDOMPoint(child, 0);
     }
     return EditorRawDOMPoint(leafContent, 0);
   }();
@@ -1028,14 +1028,14 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetPreviousCharPoint(
     // following block boundary.
     nsIContent* const leafContent = HTMLEditUtils::GetLastLeafContent(
         *previousChild, {LeafNodeType::LeafNodeOrChildBlock}, blockInlineCheck);
+    if (!leafContent) {
+      return EditorRawDOMPoint::AtEndOf(*previousChild);
+    }
     if (HTMLEditUtils::IsBlockElement(
             *leafContent,
             UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
         HTMLEditUtils::IsVisibleElementEvenIfLeafNode(*leafContent)) {
       return EditorRawDOMPoint();
-    }
-    if (!leafContent) {
-      return EditorRawDOMPoint::AtEndOf(*previousChild);
     }
     return EditorRawDOMPoint::AtEndOf(*leafContent);
   }();

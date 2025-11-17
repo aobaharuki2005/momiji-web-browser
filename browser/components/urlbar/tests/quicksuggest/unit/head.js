@@ -210,10 +210,16 @@ async function doDismissOneTest({
     "quicksuggest-dismissals-changed"
   );
 
+  let actualResult = await getActualResult({
+    providers,
+    query: queriesForDismissals[0].query,
+    expectedResult: result,
+  });
+
   triggerCommand({
-    result,
     command,
     feature,
+    result: actualResult,
     expectedCountsByCall: {
       removeResult: 1,
     },
@@ -227,7 +233,7 @@ async function doDismissOneTest({
     "canClearDismissedSuggestions should return true after triggering command"
   );
   Assert.ok(
-    await QuickSuggest.isResultDismissed(result),
+    await QuickSuggest.isResultDismissed(actualResult),
     "The result should be dismissed"
   );
 
@@ -330,10 +336,16 @@ async function doDismissAllTest({
     "quicksuggest-dismissals-changed"
   );
 
+  let actualResult = await getActualResult({
+    providers,
+    query: queries[0].query,
+    expectedResult: result,
+  });
+
   triggerCommand({
-    result,
     command,
     feature,
+    result: actualResult,
     expectedCountsByCall: {
       removeResult: 1,
     },
@@ -396,6 +408,44 @@ async function doDismissAllTest({
       matches: expectedResults,
     });
   }
+}
+
+/**
+ * Does a search, asserts an actual result exists that matches the given result,
+ * and returns it.
+ *
+ * @param {object} options
+ *   Options object.
+ * @param {SuggestFeature} options.query
+ *   The search string.
+ * @param {UrlbarResult} options.expectedResult
+ *   The expected result.
+ * @param {string[]} [options.providers]
+ *   The providers to query.
+ */
+async function getActualResult({
+  query,
+  expectedResult,
+  providers = [UrlbarProviderQuickSuggest.name],
+}) {
+  info("Doing search to get an actual result: " + JSON.stringify(query));
+  let context = createContext(query, {
+    providers,
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [expectedResult],
+  });
+
+  let actualResult = context.results.find(
+    r =>
+      r.providerName == UrlbarProviderQuickSuggest.name &&
+      r.payload.provider == expectedResult.payload.provider
+  );
+  Assert.ok(actualResult, "Search should have returned a matching result");
+
+  return actualResult;
 }
 
 /**

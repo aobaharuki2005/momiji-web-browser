@@ -3871,6 +3871,8 @@
   <string name="settings_search_title">搜索设置</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
   <string name="content_description_settings_search_clear_search">清除搜索</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">无近期搜索记录</string>
   <!-- Message when error happens with Settings Search -->
   <string name="settings_search_error_message">出错了</string>
   <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
