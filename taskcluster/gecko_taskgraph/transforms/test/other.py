@@ -1071,6 +1071,54 @@ def set_profile(config, tasks):
 
 
 @transforms.add
+def add_gecko_profile_symbolication_deps(config, tasks):
+    """Add symbolication dependencies when profiling raptor, talos, or mochitest tests"""
+
+    try_task_config = config.params.get("try_task_config", {})
+    gecko_profile = try_task_config.get("gecko-profile", False)
+    env = try_task_config.get("env", {})
+    startup_profile = env.get("MOZ_PROFILER_STARTUP") == "1"
+
+    for task in tasks:
+
+        if (gecko_profile and task["suite"] in ["talos", "raptor"]) or (
+            startup_profile and "mochitest" in task["suite"]
+        ):
+
+            fetches = task.setdefault("fetches", {})
+            fetch_toolchains = fetches.setdefault("toolchain", [])
+            fetch_toolchains.append("symbolicator-cli")
+
+            test_platform = task["test-platform"]
+
+            if "macosx" in test_platform and "aarch64" in test_platform:
+                fetch_toolchains.append("macosx64-aarch64-samply")
+            elif "macosx" in test_platform:
+                fetch_toolchains.append("macosx64-samply")
+            elif "win" in test_platform:
+                fetch_toolchains.append("win64-samply")
+            else:
+                fetch_toolchains.append("linux64-samply")
+
+            # Add node as a dependency for talos and mochitest tasks if needed.
+            # node is used to run symbolicator-cli, our profile symbolication tool
+            if task["suite"] == "talos" or "mochitest" in task["suite"]:
+                if "macosx" in test_platform and "aarch64" in test_platform:
+                    node_toolchain = "macosx64-aarch64-node"
+                elif "macosx" in test_platform:
+                    node_toolchain = "macosx64-node"
+                elif "win" in test_platform:
+                    node_toolchain = "win64-node"
+                else:
+                    node_toolchain = "linux64-node"
+
+                if node_toolchain not in fetch_toolchains:
+                    fetch_toolchains.append(node_toolchain)
+
+        yield task
+
+
+@transforms.add
 def set_tag(config, tasks):
     """Set test for a specific tag."""
     tag = None
