@@ -124,8 +124,8 @@ void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
 
   // Step 2.
 
-  NonCustomCSSPropertyId propId = nsCSSProps::LookupProperty(aProperty);
-  if (propId == eCSSProperty_UNKNOWN) {
+  NonCustomCSSPropertyId id = nsCSSProps::LookupProperty(aProperty);
+  if (id == eCSSProperty_UNKNOWN) {
     aRv.ThrowTypeError("Invalid property: "_ns + aProperty);
     return;
   }
@@ -155,12 +155,14 @@ void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
   }
 
   if (result.IsUnsupported()) {
+    auto propertyId = CSSPropertyId::FromIdOrCustomProperty(id, aProperty);
+
     auto rawBlock = result.AsUnsupported();
 
     auto block = MakeRefPtr<DeclarationBlock>(rawBlock.Consume());
 
     auto unsupportedValue =
-        MakeRefPtr<CSSUnsupportedValue>(mParent, aProperty, std::move(block));
+        MakeRefPtr<CSSUnsupportedValue>(mParent, propertyId, std::move(block));
 
     aRetVal.SetAsCSSStyleValue() = std::move(unsupportedValue);
     return;

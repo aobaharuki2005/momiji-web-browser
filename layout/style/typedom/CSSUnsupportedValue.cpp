@@ -12,14 +12,14 @@
 namespace mozilla::dom {
 
 CSSUnsupportedValue::CSSUnsupportedValue(nsCOMPtr<nsISupports> aParent,
-                                         const nsACString& aProperty,
+                                         const CSSPropertyId& aPropertyId,
                                          RefPtr<DeclarationBlock> aDeclarations)
     : CSSStyleValue(std::move(aParent), ValueType::Unsupported),
-      mProperty(aProperty),
+      mPropertyId(aPropertyId),
       mDeclarations(std::move(aDeclarations)) {}
 
 void CSSUnsupportedValue::GetValue(nsACString& aRetVal) const {
-  mDeclarations->GetPropertyValue(mProperty, aRetVal);
+  mDeclarations->GetPropertyValueById(mPropertyId, aRetVal);
 }
 
 CSSUnsupportedValue& CSSStyleValue::GetAsCSSUnsupportedValue() {

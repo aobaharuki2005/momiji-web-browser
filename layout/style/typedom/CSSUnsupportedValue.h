@@ -7,9 +7,9 @@
 #ifndef LAYOUT_STYLE_TYPEDOM_CSSUNSUPPORTEDVALUE_H_
 #define LAYOUT_STYLE_TYPEDOM_CSSUNSUPPORTEDVALUE_H_
 
+#include "mozilla/CSSPropertyId.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CSSStyleValue.h"
-#include "nsString.h"
 
 template <class T>
 class nsCOMPtr;
@@ -30,7 +30,7 @@ namespace dom {
 class CSSUnsupportedValue final : public CSSStyleValue {
  public:
   CSSUnsupportedValue(nsCOMPtr<nsISupports> aParent,
-                      const nsACString& aProperty,
+                      const CSSPropertyId& aPropertyId,
                       RefPtr<DeclarationBlock> aDeclarations);
 
   void GetValue(nsACString& aRetVal) const;
@@ -38,7 +38,7 @@ class CSSUnsupportedValue final : public CSSStyleValue {
  private:
   virtual ~CSSUnsupportedValue() = default;
 
-  nsCString mProperty;
+  CSSPropertyId mPropertyId;
   RefPtr<DeclarationBlock> mDeclarations;
 };
 
