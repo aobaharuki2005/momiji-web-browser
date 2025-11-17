@@ -44,7 +44,6 @@ import mozilla.components.feature.top.sites.DefaultTopSitesStorage
 import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSitesUseCases
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -242,7 +241,7 @@ class DefaultBrowserToolbarMenuControllerTest {
     @Test
     fun `WHEN open in Fenix menu item is pressed THEN menu item is handled correctly`() = runTest {
         val customTab = createCustomTab("https://mozilla.org")
-        browserStore.dispatch(CustomTabListAction.AddCustomTabAction(customTab)).joinBlocking()
+        browserStore.dispatch(CustomTabListAction.AddCustomTabAction(customTab))
         val controller = createController(
             scope = this,
             store = browserStore,

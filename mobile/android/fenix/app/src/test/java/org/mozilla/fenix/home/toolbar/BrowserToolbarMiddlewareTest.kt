@@ -48,7 +48,6 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarMenuItem.B
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
 import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainLooperTestRule
@@ -235,7 +234,7 @@ class BrowserToolbarMiddlewareTest {
             screenWidthDp = 700
         }
         every { mockContext.resources.configuration } returns configuration
-        appStore.dispatch(AppAction.OrientationChange(Landscape)).joinBlocking()
+        appStore.dispatch(AppAction.OrientationChange(Landscape))
         mainLooperRule.idle()
 
         navigationActions = toolbarStore.state.displayState.navigationActions
@@ -342,7 +341,7 @@ class BrowserToolbarMiddlewareTest {
             screenWidthDp = 700
         }
         every { mockContext.resources.configuration } returns configuration
-        appStore.dispatch(AppAction.OrientationChange(Landscape)).joinBlocking()
+        appStore.dispatch(AppAction.OrientationChange(Landscape))
         mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
@@ -371,7 +370,7 @@ class BrowserToolbarMiddlewareTest {
             screenWidthDp = 400
         }
         every { mockContext.resources.configuration } returns configuration
-        appStore.dispatch(AppAction.OrientationChange(Portrait)).joinBlocking()
+        appStore.dispatch(AppAction.OrientationChange(Portrait))
         mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
@@ -404,7 +403,7 @@ class BrowserToolbarMiddlewareTest {
             screenWidthDp = 700
         }
         every { mockContext.resources.configuration } returns configuration
-        appStore.dispatch(AppAction.OrientationChange(Portrait)).joinBlocking()
+        appStore.dispatch(AppAction.OrientationChange(Portrait))
         mainLooperRule.idle()
 
         navigationActions = toolbarStore.state.displayState.navigationActions
@@ -432,8 +431,8 @@ class BrowserToolbarMiddlewareTest {
 
         val newNormalTab = createTab("test.com", private = false)
         val newPrivateTab = createTab("test.com", private = true)
-        browserStore.dispatch(AddTabAction(newNormalTab)).joinBlocking()
-        browserStore.dispatch(AddTabAction(newPrivateTab)).joinBlocking()
+        browserStore.dispatch(AddTabAction(newNormalTab))
+        browserStore.dispatch(AddTabAction(newPrivateTab))
         mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
@@ -463,7 +462,7 @@ class BrowserToolbarMiddlewareTest {
         var tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
         assertEqualsToolbarButton(expectedToolbarButton(1, true), tabCounterButton)
 
-        browserStore.dispatch(RemoveTabAction(initialPrivateTab.id)).joinBlocking()
+        browserStore.dispatch(RemoveTabAction(initialPrivateTab.id))
         mainLooperRule.idle()
 
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
@@ -674,7 +673,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
         val newSearchEngine = SearchEngine("test", "Test", mock(), type = APPLICATION)
 
-        appStore.dispatch(SearchEngineSelected(newSearchEngine, true)).joinBlocking()
+        appStore.dispatch(SearchEngineSelected(newSearchEngine, true))
         shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing the search engine update
 
         assertSearchSelectorEquals(
@@ -697,7 +696,7 @@ class BrowserToolbarMiddlewareTest {
         val middleware = BrowserToolbarMiddleware(appStore, browserStore, mockk(), mockk())
         val toolbarStore = buildStore(middleware)
 
-        browserStore.dispatch(ApplicationSearchEnginesLoaded(listOf(otherSearchEngine))).joinBlocking()
+        browserStore.dispatch(ApplicationSearchEnginesLoaded(listOf(otherSearchEngine)))
 
         assertNotEquals(
             appStore.state.searchState.selectedSearchEngine?.searchEngine,
@@ -771,7 +770,7 @@ class BrowserToolbarMiddlewareTest {
             AppAction.MenuNotification.AddMenuNotification(
                 SupportedMenuNotifications.Downloads,
             ),
-        ).joinBlocking()
+        )
         mainLooperRule.idle()
         val updatedMenuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
         assertEquals(expectedMenuButton(true), updatedMenuButton)
@@ -795,7 +794,7 @@ class BrowserToolbarMiddlewareTest {
             AppAction.MenuNotification.RemoveMenuNotification(
                 SupportedMenuNotifications.Downloads,
             ),
-        ).joinBlocking()
+        )
         mainLooperRule.idle()
         val updatedMenuButton = toolbarStore.state.displayState.browserActionsEnd[1] as ActionButtonRes
         assertEquals(expectedMenuButton(), updatedMenuButton)

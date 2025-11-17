@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.library.history.state.bindings
 
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -27,7 +26,7 @@ class MenuBindingTest {
         )
 
         binding.start()
-        store.dispatch(HistoryFragmentAction.FinishSync).joinBlocking()
+        store.dispatch(HistoryFragmentAction.FinishSync)
 
         assertTrue(menuInvalidated)
     }

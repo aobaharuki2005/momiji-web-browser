@@ -32,7 +32,6 @@ import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -192,7 +191,7 @@ class ReaderViewFeatureTest {
         val readerViewFeature = spy(ReaderViewFeature(testContext, engine, store, mock()))
         readerViewFeature.start()
 
-        store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(tab.id, true)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(tab.id, true))
 
         val tabCaptor = argumentCaptor<TabSessionState>()
         verify(readerViewFeature).checkReaderState(tabCaptor.capture())
@@ -207,7 +206,7 @@ class ReaderViewFeatureTest {
         val readerViewFeature = spy(ReaderViewFeature(testContext, engine, store, mock()))
         readerViewFeature.start()
 
-        store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true))
         val tabCaptor = argumentCaptor<TabSessionState>()
         verify(readerViewFeature).connectReaderViewContentScript(tabCaptor.capture())
         assertEquals(tab.id, tabCaptor.value.id)
@@ -227,24 +226,24 @@ class ReaderViewFeatureTest {
         readerViewFeature.start()
         assertTrue(readerViewStatusChanges.isEmpty())
 
-        store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
-        store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, true)).joinBlocking()
+        store.dispatch(TabListAction.SelectTabAction(tab.id))
+        store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, true))
         assertEquals(1, readerViewStatusChanges.size)
         assertEquals(Pair(true, false), readerViewStatusChanges[0])
 
-        store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, true)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, true))
         assertEquals(2, readerViewStatusChanges.size)
         assertEquals(Pair(true, true), readerViewStatusChanges[1])
 
-        store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, true)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, true))
         // No change -> No notification should have been sent
         assertEquals(2, readerViewStatusChanges.size)
 
-        store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, false)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, false))
         assertEquals(3, readerViewStatusChanges.size)
         assertEquals(Pair(true, false), readerViewStatusChanges[2])
 
-        store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, false)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, false))
         assertEquals(4, readerViewStatusChanges.size)
         assertEquals(Pair(false, false), readerViewStatusChanges[3])
     }
@@ -321,9 +320,9 @@ class ReaderViewFeatureTest {
         val tab = createTab("https://www.mozilla.org", id = "test-tab", readerState = ReaderState(active = true))
         val store = BrowserStore(initialState = BrowserState(tabs = listOf(tab)))
         val readerViewFeature = ReaderViewFeature(testContext, engine, store, mock())
-        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
-        store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
-        store.dispatch(ContentAction.UpdateBackNavigationStateAction(tab.id, true)).joinBlocking()
+        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession))
+        store.dispatch(TabListAction.SelectTabAction(tab.id))
+        store.dispatch(ContentAction.UpdateBackNavigationStateAction(tab.id, true))
 
         readerViewFeature.hideReaderView()
         verify(engineSession).goBack(false)
@@ -445,8 +444,8 @@ class ReaderViewFeatureTest {
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(BrowserState(tabs = listOf(tab)))
-        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
-        store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
+        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession))
+        store.dispatch(TabListAction.SelectTabAction(tab.id))
 
         val controlsView: ReaderViewControlsView = mock()
         val view: View = mock()
@@ -455,7 +454,7 @@ class ReaderViewFeatureTest {
         val readerViewFeature = spy(ReaderViewFeature(testContext, engine, store, controlsView))
         assertFalse(readerViewFeature.onBackPressed())
 
-        store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, true)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, true))
         whenever(view.visibility).thenReturn(View.VISIBLE)
         assertTrue(readerViewFeature.onBackPressed())
         verify(readerViewFeature, never()).hideReaderView(any())
@@ -501,7 +500,7 @@ class ReaderViewFeatureTest {
         val messageHandler = argumentCaptor<MessageHandler>()
         val message = argumentCaptor<JSONObject>()
         readerViewFeature.start()
-        store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true))
         verify(controller).registerContentMessageHandler(
             eq(engineSession),
             messageHandler.capture(),
@@ -557,7 +556,7 @@ class ReaderViewFeatureTest {
         val message = argumentCaptor<JSONObject>()
         readerViewFeature.start()
 
-        store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true)).joinBlocking()
+        store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true))
         verify(controller).registerContentMessageHandler(
             eq(engineSession),
             messageHandler.capture(),
@@ -586,8 +585,8 @@ class ReaderViewFeatureTest {
         val engine: Engine = mock()
 
         val store = BrowserStore(BrowserState(tabs = listOf(tab)))
-        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
-        store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
+        store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession))
+        store.dispatch(TabListAction.SelectTabAction(tab.id))
 
         val ext: WebExtension = mock()
         contentPort?.let {

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.bindings
 
 import mozilla.components.browser.state.state.createTab
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Rule
@@ -52,7 +51,7 @@ class InactiveTabsBindingTest {
             tabsTrayStore = tabsTrayStore,
         )
         binding.start()
-        appStore.dispatch(AppAction.UpdateInactiveExpanded(true)).joinBlocking()
+        appStore.dispatch(AppAction.UpdateInactiveExpanded(true))
 
         verify(tabsTrayStore).dispatch(TabsTrayAction.UpdateInactiveExpanded(true))
     }

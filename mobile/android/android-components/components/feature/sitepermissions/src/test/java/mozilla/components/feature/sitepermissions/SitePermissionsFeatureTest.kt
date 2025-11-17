@@ -63,7 +63,6 @@ import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -187,7 +186,7 @@ class SitePermissionsFeatureTest {
         verify(sitePermissionFeature).setupLoadingCollector()
 
         // when
-        mockStore.dispatch(ContentAction.UpdateLoadingStateAction(SESSION_ID, true)).joinBlocking()
+        mockStore.dispatch(ContentAction.UpdateLoadingStateAction(SESSION_ID, true))
 
         // then
         verify(mockStore).dispatch(
@@ -205,7 +204,7 @@ class SitePermissionsFeatureTest {
         sitePermissionFeature.stop()
 
         // when
-        mockStore.dispatch(ContentAction.UpdateLoadingStateAction(SESSION_ID, true)).joinBlocking()
+        mockStore.dispatch(ContentAction.UpdateLoadingStateAction(SESSION_ID, true))
 
         verify(mockStorage).clearTemporaryPermissions()
 

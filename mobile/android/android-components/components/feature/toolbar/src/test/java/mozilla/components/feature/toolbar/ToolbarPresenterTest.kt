@@ -126,7 +126,7 @@ class ToolbarPresenterTest {
                     issuer = "Mozilla",
                 ),
             ),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -172,7 +172,7 @@ class ToolbarPresenterTest {
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
 
-        store.dispatch(TabListAction.RemoveTabAction("tab1")).joinBlocking()
+        store.dispatch(TabListAction.RemoveTabAction("tab1"))
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -209,7 +209,7 @@ class ToolbarPresenterTest {
                 sessionId = "tab1",
                 searchTerms = "Hello World",
             ),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -240,7 +240,7 @@ class ToolbarPresenterTest {
 
         store.dispatch(
             ContentAction.UpdateProgressAction("tab1", 75),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -250,7 +250,7 @@ class ToolbarPresenterTest {
 
         store.dispatch(
             ContentAction.UpdateProgressAction("tab1", 90),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -287,7 +287,7 @@ class ToolbarPresenterTest {
 
         dispatcher.scheduler.advanceUntilIdle()
 
-        store.dispatch(TabListAction.RemoveTabAction("tab2")).joinBlocking()
+        store.dispatch(TabListAction.RemoveTabAction("tab2"))
 
         verify(toolbarPresenter.renderer).start()
         verify(toolbarPresenter.renderer).post("https://www.mozilla.org")
@@ -350,7 +350,7 @@ class ToolbarPresenterTest {
         verifyNoMoreInteractions(toolbarPresenter.renderer)
         verifyNoMoreInteractions(toolbar)
 
-        store.dispatch(TabListAction.SelectTabAction("tab2")).joinBlocking()
+        store.dispatch(TabListAction.SelectTabAction("tab2"))
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -396,21 +396,18 @@ class ToolbarPresenterTest {
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
 
         store.dispatch(TrackingProtectionAction.ToggleAction("tab", true))
-            .joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
 
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
 
         store.dispatch(TrackingProtectionAction.TrackerBlockedAction("tab", mock()))
-            .joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
 
         verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.ON_TRACKERS_BLOCKED
 
         store.dispatch(TrackingProtectionAction.ToggleExclusionListAction("tab", true))
-            .joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -448,20 +445,19 @@ class ToolbarPresenterTest {
 
         verify(toolbar).highlight = Toolbar.Highlight.NONE
 
-        store.dispatch(NotificationChangedAction("tab", true)).joinBlocking()
+        store.dispatch(NotificationChangedAction("tab", true))
 
         dispatcher.scheduler.advanceUntilIdle()
 
         verify(toolbar).highlight = Toolbar.Highlight.PERMISSIONS_CHANGED
 
         store.dispatch(TrackingProtectionAction.ToggleExclusionListAction("tab", true))
-            .joinBlocking()
 
         dispatcher.scheduler.advanceUntilIdle()
 
         verify(toolbar, times(2)).highlight = Toolbar.Highlight.PERMISSIONS_CHANGED
 
-        store.dispatch(UpdatePermissionHighlightsStateAction.Reset("tab")).joinBlocking()
+        store.dispatch(UpdatePermissionHighlightsStateAction.Reset("tab"))
 
         dispatcher.scheduler.advanceUntilIdle()
 

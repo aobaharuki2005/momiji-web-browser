@@ -521,7 +521,7 @@ class BrowserToolbarSearchMiddlewareTest {
             SearchSelectorItemClicked(
                 fakeSearchState().applicationSearchEngines.first { it.id == TABS_SEARCH_ENGINE_ID },
             ),
-        ).joinBlocking()
+        )
         shadowOf(Looper.getMainLooper()).idle()
         coVerify(exactly = 0) {
             middleware.fetchAutocomplete(
@@ -576,7 +576,7 @@ class BrowserToolbarSearchMiddlewareTest {
             SearchSelectorItemClicked(
                 fakeSearchState().applicationSearchEngines.first { it.id == BOOKMARKS_SEARCH_ENGINE_ID },
             ),
-        ).joinBlocking()
+        )
         shadowOf(Looper.getMainLooper()).idle()
         coVerify(exactly = 0) {
             middleware.fetchAutocomplete(
@@ -628,7 +628,7 @@ class BrowserToolbarSearchMiddlewareTest {
             SearchSelectorItemClicked(
                 fakeSearchState().applicationSearchEngines.first { it.id == HISTORY_SEARCH_ENGINE_ID },
             ),
-        ).joinBlocking()
+        )
 
         coVerify(exactly = 0) {
             middleware.fetchAutocomplete(
@@ -672,7 +672,7 @@ class BrowserToolbarSearchMiddlewareTest {
         configureAutocompleteProvidersInComponents()
         val store = buildStore(middleware)
 
-        store.dispatch(SearchSelectorItemClicked(mockk(relaxed = true))).joinBlocking()
+        store.dispatch(SearchSelectorItemClicked(mockk(relaxed = true)))
         store.dispatch(EnterEditMode)
         shadowOf(Looper.getMainLooper()).idle()
 
@@ -695,7 +695,7 @@ class BrowserToolbarSearchMiddlewareTest {
         store.dispatch(EnterEditMode)
         val newSearchEngines = fakeSearchState().applicationSearchEngines
 
-        browserStore.dispatch(ApplicationSearchEnginesLoaded(newSearchEngines)).joinBlocking()
+        browserStore.dispatch(ApplicationSearchEnginesLoaded(newSearchEngines))
         shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing the search engines update
 
         assertSearchSelectorEquals(
@@ -719,7 +719,7 @@ class BrowserToolbarSearchMiddlewareTest {
         store.dispatch(EnterEditMode)
         val newSearchEngines = fakeSearchState().applicationSearchEngines
 
-        browserStore.dispatch(ApplicationSearchEnginesLoaded(newSearchEngines)).joinBlocking()
+        browserStore.dispatch(ApplicationSearchEnginesLoaded(newSearchEngines))
         shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing the search engines update
 
         assertSearchSelectorEquals(
@@ -818,7 +818,7 @@ class BrowserToolbarSearchMiddlewareTest {
 
         assertNull(Events.enteredUrl.testGetValue())
 
-        store.dispatch(CommitUrl("moz://a")).joinBlocking()
+        store.dispatch(CommitUrl("moz://a"))
 
         verifyOrder {
             navController.navigate(NavGraphDirections.actionGlobalBrowser())
@@ -876,7 +876,7 @@ class BrowserToolbarSearchMiddlewareTest {
 
         assertNull(Events.enteredUrl.testGetValue())
 
-        store.dispatch(CommitUrl(url)).joinBlocking()
+        store.dispatch(CommitUrl(url))
 
         verifyOrder {
             navController.navigate(NavGraphDirections.actionGlobalBrowser())
@@ -983,8 +983,8 @@ class BrowserToolbarSearchMiddlewareTest {
         store.dispatch(EnterEditMode)
         val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
 
-        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent).joinBlocking()
-        appStore.dispatch(QrScannerInputAvailable("mozilla.test")).joinBlocking()
+        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
+        appStore.dispatch(QrScannerInputAvailable("mozilla.test"))
         shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
 
         assertEquals("mozilla.test", store.state.editState.query.current)
@@ -1017,8 +1017,8 @@ class BrowserToolbarSearchMiddlewareTest {
         store.dispatch(EnterEditMode)
         val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
 
-        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent).joinBlocking()
-        appStore.dispatch(QrScannerInputAvailable("test.mozilla")).joinBlocking()
+        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
+        appStore.dispatch(QrScannerInputAvailable("test.mozilla"))
         shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
 
         assertEquals("test.mozilla", store.state.editState.query.current)
@@ -1056,8 +1056,8 @@ class BrowserToolbarSearchMiddlewareTest {
         store.dispatch(EnterEditMode)
         val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
 
-        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent).joinBlocking()
-        appStore.dispatch(QrScannerInputAvailable("test.com")).joinBlocking()
+        store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
+        appStore.dispatch(QrScannerInputAvailable("test.com"))
         shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
 
         assertEquals("test.com", store.state.editState.query.current)

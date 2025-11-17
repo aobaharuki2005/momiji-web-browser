@@ -13,8 +13,6 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.Middleware
-import mozilla.components.support.test.ext.joinBlocking
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -62,8 +60,6 @@ class HomepageThumbnailsTest {
     fun `capture thumbnail when homepage is opened`() {
         thumbnails.start()
 
-        store.waitUntilIdle()
-
         captureActionsMiddleware.assertLastAction(ContentAction.UpdateThumbnailAction::class) {
             assertEquals(tabId, this.tabId)
             assertEquals(bitmap, this.bitmap)
@@ -78,8 +74,6 @@ class HomepageThumbnailsTest {
         }
         feature.start()
 
-        store.waitUntilIdle()
-
         captureActionsMiddleware.assertNotDispatched(ContentAction.UpdateThumbnailAction::class)
     }
 
@@ -92,21 +86,17 @@ class HomepageThumbnailsTest {
         }
         feature.start()
 
-        store.waitUntilIdle()
-
         store.dispatch(
             TabListAction.AddTabAction(
                 createTab(homepageUrl, id = "1"),
             ),
-        ).joinBlocking()
+        )
 
         store.dispatch(
             TabListAction.SelectTabAction(
             tabId = "1",
         ),
-        ).joinBlocking()
-
-        store.waitUntilIdle()
+        )
 
         captureActionsMiddleware.assertLastAction(ContentAction.UpdateThumbnailAction::class) {
             assertEquals("1", it.sessionId)
@@ -116,15 +106,13 @@ class HomepageThumbnailsTest {
             TabListAction.AddTabAction(
                 createTab(homepageUrl, id = "2"),
             ),
-        ).joinBlocking()
+        )
 
         store.dispatch(
             TabListAction.SelectTabAction(
             "2",
         ),
-        ).joinBlocking()
-
-        store.waitUntilIdle()
+        )
 
         captureActionsMiddleware.assertLastAction(ContentAction.UpdateThumbnailAction::class) {
             assertEquals("2", it.sessionId)
@@ -134,15 +122,13 @@ class HomepageThumbnailsTest {
             TabListAction.AddTabAction(
                 createTab("www.google.com", id = "3"),
             ),
-        ).joinBlocking()
+        )
 
         store.dispatch(
             TabListAction.SelectTabAction(
             tabId = "3",
         ),
-        ).joinBlocking()
-
-        store.waitUntilIdle()
+        )
 
         captureActionsMiddleware.assertLastAction(ContentAction.UpdateThumbnailAction::class) {
             assertEquals("2", it.sessionId)
@@ -152,15 +138,13 @@ class HomepageThumbnailsTest {
             TabListAction.AddTabAction(
                 createTab(homepageUrl, id = "4"),
             ),
-        ).joinBlocking()
+        )
 
         store.dispatch(
             TabListAction.SelectTabAction(
                 tabId = "4",
             ),
-        ).joinBlocking()
-
-        store.waitUntilIdle()
+        )
 
         captureActionsMiddleware.assertLastAction(ContentAction.UpdateThumbnailAction::class) {
             assertEquals("4", it.sessionId)
@@ -180,9 +164,7 @@ class HomepageThumbnailsTest {
             TabListAction.AddTabAction(
                 createTab(homepageUrl, id = "1"),
             ),
-        ).joinBlocking()
-
-        store.waitUntilIdle()
+        )
 
         captureActionsMiddleware.assertNotDispatched(ContentAction.UpdateThumbnailAction::class)
     }
@@ -191,8 +173,6 @@ class HomepageThumbnailsTest {
     fun `feature never captures thumbnail if there is no callback to create bitmap`() {
         thumbnails = HomepageThumbnails(testContext, store, homepageUrl)
         thumbnails.start()
-
-        store.waitUntilIdle()
 
         captureActionsMiddleware.assertNotDispatched(ContentAction.UpdateThumbnailAction::class)
     }
@@ -215,8 +195,6 @@ class HomepageThumbnailsTest {
 
         feature.start()
 
-        store.waitUntilIdle()
-
         captureActionsMiddleware.assertNotDispatched(ContentAction.UpdateThumbnailAction::class)
     }
 
@@ -225,8 +203,6 @@ class HomepageThumbnailsTest {
         thumbnails.testLowMemory = true
 
         thumbnails.start()
-
-        store.waitUntilIdle()
 
         captureActionsMiddleware.assertNotDispatched(ContentAction.UpdateThumbnailAction::class)
     }

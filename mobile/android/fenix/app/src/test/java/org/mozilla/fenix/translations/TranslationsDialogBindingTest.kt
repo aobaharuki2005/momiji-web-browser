@@ -92,14 +92,14 @@ class TranslationsDialogBindingTest {
                 TranslationsAction.SetSupportedLanguagesAction(
                     supportedLanguages = supportLanguages,
                 ),
-            ).joinBlocking()
+            )
 
             browserStore.dispatch(
                 TranslationsAction.TranslateStateChangeAction(
                     tabId = tabId,
                     translationEngineState = translationEngineState,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateFromSelectedLanguage(
@@ -155,7 +155,7 @@ class TranslationsDialogBindingTest {
                     toLanguage = spanishLanguage.code,
                     null,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateTranslationInProgress(
@@ -200,7 +200,7 @@ class TranslationsDialogBindingTest {
                 TranslationsAction.SetSupportedLanguagesAction(
                     supportedLanguages = supportedLanguages,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateTranslateFromLanguages(
@@ -244,7 +244,7 @@ class TranslationsDialogBindingTest {
                     tabId = tab.id,
                     operation = TranslationOperation.TRANSLATE,
                 ),
-            ).joinBlocking()
+            )
 
             // Simulate success response post-translate
             val detectedLanguages = DetectedLanguages(
@@ -269,7 +269,7 @@ class TranslationsDialogBindingTest {
                     tabId = tabId,
                     translationEngineState = translationEngineState,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateTranslated(
@@ -320,7 +320,7 @@ class TranslationsDialogBindingTest {
                     operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
                     translationError = fetchError,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateTranslationError(fetchError),
@@ -357,7 +357,7 @@ class TranslationsDialogBindingTest {
                 TranslationsAction.EngineExceptionAction(
                     error = fetchError,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore, never()).dispatch(
                 TranslationsDialogAction.UpdateTranslationError(fetchError),
@@ -396,7 +396,7 @@ class TranslationsDialogBindingTest {
                     operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
                     translationError = sessionError,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateTranslationError(sessionError),
@@ -407,7 +407,7 @@ class TranslationsDialogBindingTest {
                 TranslationsAction.EngineExceptionAction(
                     error = engineError,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore, never()).dispatch(
                 TranslationsDialogAction.UpdateTranslationError(engineError),
@@ -451,7 +451,7 @@ class TranslationsDialogBindingTest {
                     tabId = tab.id,
                     translationSize = translationDownloadSize,
                 ),
-            ).joinBlocking()
+            )
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateDownloadTranslationDownloadSize(translationDownloadSize),

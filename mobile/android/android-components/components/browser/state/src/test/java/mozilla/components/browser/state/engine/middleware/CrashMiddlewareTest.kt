@@ -12,7 +12,6 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
@@ -59,13 +58,13 @@ class CrashMiddlewareTest {
             CrashAction.SessionCrashedAction(
                 "tab1",
             ),
-        ).joinBlocking()
+        )
 
         store.dispatch(
             CrashAction.SessionCrashedAction(
                 "tab3",
             ),
-        ).joinBlocking()
+        )
 
         assertTrue(store.state.tabs[0].engineState.crashed)
         assertFalse(store.state.tabs[1].engineState.crashed)
@@ -76,7 +75,7 @@ class CrashMiddlewareTest {
             CrashAction.RestoreCrashedSessionAction(
                 "tab1",
             ),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -89,7 +88,7 @@ class CrashMiddlewareTest {
             CrashAction.RestoreCrashedSessionAction(
                 "tab2",
             ),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -98,7 +97,7 @@ class CrashMiddlewareTest {
             CrashAction.RestoreCrashedSessionAction(
                 "unknown",
             ),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -129,7 +128,7 @@ class CrashMiddlewareTest {
             CrashAction.SessionCrashedAction(
                 "tab1",
             ),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -139,7 +138,7 @@ class CrashMiddlewareTest {
             CrashAction.RestoreCrashedSessionAction(
                 "tab1",
             ),
-        ).joinBlocking()
+        )
 
         dispatcher.scheduler.advanceUntilIdle()
 

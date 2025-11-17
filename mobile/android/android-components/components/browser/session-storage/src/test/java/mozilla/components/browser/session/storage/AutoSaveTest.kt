@@ -17,7 +17,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -103,7 +102,7 @@ class AutoSaveTest {
                 TabListAction.AddTabAction(
                     createTab("https://www.mozilla.org"),
                 ),
-            ).joinBlocking()
+            )
 
             dispatcher.scheduler.advanceUntilIdle()
 
@@ -139,7 +138,7 @@ class AutoSaveTest {
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
-            store.dispatch(TabListAction.RemoveTabAction("mozilla")).joinBlocking()
+            store.dispatch(TabListAction.RemoveTabAction("mozilla"))
 
             dispatcher.scheduler.advanceUntilIdle()
 
@@ -175,7 +174,7 @@ class AutoSaveTest {
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
-            store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
+            store.dispatch(TabListAction.RemoveAllNormalTabsAction)
 
             dispatcher.scheduler.advanceUntilIdle()
 
@@ -208,7 +207,7 @@ class AutoSaveTest {
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
-            store.dispatch(TabListAction.RemoveTabAction("firefox")).joinBlocking()
+            store.dispatch(TabListAction.RemoveTabAction("firefox"))
             dispatcher.scheduler.advanceUntilIdle()
 
             autoSave.saveJob?.join()
@@ -243,7 +242,7 @@ class AutoSaveTest {
             assertNull(autoSave.saveJob)
             verify(sessionStorage, never()).save(any())
 
-            store.dispatch(TabListAction.SelectTabAction("mozilla")).joinBlocking()
+            store.dispatch(TabListAction.SelectTabAction("mozilla"))
 
             dispatcher.scheduler.advanceUntilIdle()
 
@@ -278,7 +277,7 @@ class AutoSaveTest {
                     sessionId = "mozilla",
                     loading = true,
                 ),
-            ).joinBlocking()
+            )
 
             dispatcher.scheduler.advanceUntilIdle()
 
@@ -290,7 +289,7 @@ class AutoSaveTest {
                     sessionId = "mozilla",
                     loading = false,
                 ),
-            ).joinBlocking()
+            )
 
             dispatcher.scheduler.advanceUntilIdle()
 

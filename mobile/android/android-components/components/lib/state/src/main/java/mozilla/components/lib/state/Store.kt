@@ -6,7 +6,6 @@ package mozilla.components.lib.state
 
 import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
 import mozilla.components.lib.state.internal.ReducerChainBuilder
 import java.lang.ref.WeakReference
 import java.util.Collections
@@ -68,20 +67,13 @@ open class Store<S : State, A : Action>(
      * Invocations are serialized by synchronizing on `this@Store`,
      * preventing concurrent modification of the underlying store.
      * Long running reducers and/or middlewares can and will impact all consumers.
+     *
+     * @return Unit. Previously this returned a new Job that was launched here, but this no longer happens.
      */
-    fun dispatch(action: A): Job {
+    fun dispatch(action: A) =
         synchronized(this@Store) {
             reducerChainBuilder.get(this@Store).invoke(action)
         }
-        // see https://bugzilla.mozilla.org/show_bug.cgi?id=1980348
-        // previously, we launched a new coroutine here.
-        // this `Job()` is a dummy implementation for now to avoiding having to change the api.
-        // the aspiration is to remove this, simplify the api and delete a load of joining code.
-        val job = Job().also {
-            it.complete()
-        }
-        return job
-    }
 
     /**
      * Transitions from the current [State] to the passed in [state] and notifies all observers.

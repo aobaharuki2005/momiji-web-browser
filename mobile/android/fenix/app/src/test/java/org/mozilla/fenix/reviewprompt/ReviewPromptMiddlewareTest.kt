@@ -5,7 +5,6 @@
 package org.mozilla.fenix.reviewprompt
 
 import mozilla.components.support.test.assertUnused
-import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -67,7 +66,7 @@ class ReviewPromptMiddlewareTest {
             yield(true)
         }
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertTrue(mainCriteriaChecked)
         assertTrue(subCriteriaChecked)
@@ -94,7 +93,7 @@ class ReviewPromptMiddlewareTest {
             yield(true)
         }
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertFalse(mainCriteriaChecked)
         assertFalse(subCriteriaChecked)
@@ -106,7 +105,7 @@ class ReviewPromptMiddlewareTest {
         mainCriteria = sequenceOf(true)
         subCriteria = sequenceOf(false, true, false)
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertTrue(store.state.reviewPrompt is ReviewPromptState.Eligible)
     }
@@ -121,7 +120,7 @@ class ReviewPromptMiddlewareTest {
             yield(true)
         }
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertFalse(continuedPastFirstSatisfied)
     }
@@ -131,7 +130,7 @@ class ReviewPromptMiddlewareTest {
         mainCriteria = emptySequence()
         subCriteria = sequenceOf(false, true, false)
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertTrue(store.state.reviewPrompt is ReviewPromptState.Eligible)
     }
@@ -141,7 +140,7 @@ class ReviewPromptMiddlewareTest {
         mainCriteria = sequenceOf(true)
         subCriteria = sequenceOf(false)
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(
             AppState(reviewPrompt = ReviewPromptState.NotEligible),
@@ -154,7 +153,7 @@ class ReviewPromptMiddlewareTest {
         mainCriteria = sequenceOf(true)
         subCriteria = emptySequence()
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(
             AppState(reviewPrompt = ReviewPromptState.NotEligible),
@@ -167,7 +166,7 @@ class ReviewPromptMiddlewareTest {
         mainCriteria = sequenceOf(true, false, true)
         subCriteria = sequenceOf(true)
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(
             AppState(reviewPrompt = ReviewPromptState.NotEligible),
@@ -188,7 +187,7 @@ class ReviewPromptMiddlewareTest {
             yield(false)
         }
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertFalse(continuedPastFirstNotSatisfied)
     }
@@ -207,17 +206,17 @@ class ReviewPromptMiddlewareTest {
 
     @Test
     fun `GIVEN review prompt shown WHEN check requested THEN does nothing`() {
-        store.dispatch(ReviewPromptAction.ReviewPromptShown).joinBlocking()
+        store.dispatch(ReviewPromptAction.ReviewPromptShown)
         val expectedState = store.state
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(expectedState, store.state)
     }
 
     @Test
     fun `WHEN review prompt shown THEN an event is recorded`() {
-        store.dispatch(ReviewPromptAction.ReviewPromptShown).joinBlocking()
+        store.dispatch(ReviewPromptAction.ReviewPromptShown)
 
         eventStore.assertSingleEventEquals("review_prompt_shown")
     }
@@ -243,7 +242,7 @@ class ReviewPromptMiddlewareTest {
         mainCriteria = sequenceOf(true)
         subCriteria = sequenceOf(true)
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(
             AppState(reviewPrompt = ReviewPromptState.Eligible(Type.Custom)),
@@ -257,7 +256,7 @@ class ReviewPromptMiddlewareTest {
         mainCriteria = sequenceOf(true)
         subCriteria = sequenceOf(true)
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(
             AppState(reviewPrompt = ReviewPromptState.Eligible(Type.PlayStore)),
@@ -271,7 +270,7 @@ class ReviewPromptMiddlewareTest {
         isTelemetryEnabled = true
         legacyCriteria = sequenceOf(true)
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(
             AppState(reviewPrompt = ReviewPromptState.Eligible(Type.Custom)),
@@ -285,7 +284,7 @@ class ReviewPromptMiddlewareTest {
         isTelemetryEnabled = false
         legacyCriteria = sequenceOf(true)
 
-        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt).joinBlocking()
+        store.dispatch(ReviewPromptAction.CheckIfEligibleForReviewPrompt)
 
         assertEquals(
             AppState(reviewPrompt = ReviewPromptState.Eligible(Type.PlayStore)),
@@ -367,10 +366,10 @@ class ReviewPromptMiddlewareTest {
 
     private fun assertNoOp(action: ReviewPromptAction) {
         val withoutMiddleware = AppStore()
-        withoutMiddleware.dispatch(action).joinBlocking()
+        withoutMiddleware.dispatch(action)
         val expectedState = withoutMiddleware.state
 
-        store.dispatch(action).joinBlocking()
+        store.dispatch(action)
 
         assertEquals(
             expectedState,

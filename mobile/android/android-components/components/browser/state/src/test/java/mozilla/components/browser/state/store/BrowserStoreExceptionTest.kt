@@ -12,7 +12,6 @@ import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.toRecoverableTab
-import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -28,29 +27,28 @@ class BrowserStoreExceptionTest {
         val parent = createTab("https://www.mozilla.org")
         val child = createTab("https://www.firefox.com", parent = parent)
 
-        store.dispatch(TabListAction.AddTabAction(child)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(child))
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `AddTabAction - Exception is thrown if tab already exists`() {
         val store = BrowserStore()
         val tab1 = createTab("https://www.mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
-        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab1))
+        store.dispatch(TabListAction.AddTabAction(tab1))
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `RestoreTabAction - Exception is thrown if tab already exists`() {
         val store = BrowserStore()
         val tab1 = createTab("https://www.mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab1)).joinBlocking()
-
+        store.dispatch(TabListAction.AddTabAction(tab1))
         store.dispatch(
             TabListAction.RestoreAction(
                 listOf(tab1.toRecoverableTab()),
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING,
             ),
-        ).joinBlocking()
+        )
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -69,7 +67,7 @@ class BrowserStoreExceptionTest {
                     createTab(id = "a", url = "https://www.example.org"),
                 ),
             ),
-        ).joinBlocking()
+        )
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -92,7 +90,7 @@ class BrowserStoreExceptionTest {
             TabListAction.AddMultipleTabsAction(
                 tabs = listOf(tab1, tab2),
             ),
-        ).joinBlocking()
+        )
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -115,7 +113,7 @@ class BrowserStoreExceptionTest {
                 partition = partitionId,
                 group = testGroup,
             ),
-        ).joinBlocking()
+        )
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -129,7 +127,7 @@ class BrowserStoreExceptionTest {
                 partition = partition,
                 group = testGroup,
             ),
-        ).joinBlocking()
+        )
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -146,7 +144,6 @@ class BrowserStoreExceptionTest {
 
         val tab = createTab(id = "tab1", url = "https://firefox.com")
         store.dispatch(TabGroupAction.AddTabAction(tabPartition.id, tabGroup.id, tab.id))
-            .joinBlocking()
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -165,6 +162,6 @@ class BrowserStoreExceptionTest {
 
         store.dispatch(
             TabGroupAction.AddTabsAction(tabPartition.id, tabGroup.id, listOf(tab1.id, tab2.id)),
-        ).joinBlocking()
+        )
     }
 }

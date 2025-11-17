@@ -20,7 +20,6 @@ import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPair
 import mozilla.components.concept.engine.translate.TranslationSupport
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Rule
@@ -110,14 +109,14 @@ class TranslationsBindingTest {
             TranslationsAction.SetSupportedLanguagesAction(
                 supportedLanguages = supportLanguages,
             ),
-        ).joinBlocking()
+        )
 
         browserStore.dispatch(
             TranslationsAction.TranslateStateChangeAction(
                 tabId = tabId,
                 translationEngineState = translationEngineState,
             ),
-        ).joinBlocking()
+        )
 
         browserStore.dispatch(
             TranslationsAction.TranslateAction(
@@ -126,7 +125,7 @@ class TranslationsBindingTest {
                 toLanguage = spanishLanguage.code,
                 options = null,
             ),
-        ).joinBlocking()
+        )
 
         verify(onTranslationsActionUpdated).invoke(expectedTranslationStatus)
         verify(browserScreenStore).dispatch(
@@ -165,7 +164,7 @@ class TranslationsBindingTest {
             TranslationsAction.TranslateExpectedAction(
                 tabId = tabId,
             ),
-        ).joinBlocking()
+        )
 
         verify(onTranslationsActionUpdated).invoke(expectedTranslationStatus)
         verify(browserScreenStore).dispatch(
@@ -229,7 +228,7 @@ class TranslationsBindingTest {
                 tabId = tab.id,
                 isOfferTranslate = true,
             ),
-        ).joinBlocking()
+        )
 
         verify(onShowTranslationsDialog).invoke()
     }
@@ -268,7 +267,7 @@ class TranslationsBindingTest {
                 tabId = tab.id,
                 isOfferTranslate = true,
             ),
-        ).joinBlocking()
+        )
 
         verify(onShowTranslationsDialog, never()).invoke()
         verify(binding).recordTranslationStartTelemetry()
@@ -331,7 +330,7 @@ class TranslationsBindingTest {
                 tabId = tab.id,
                 isOfferTranslate = false,
             ),
-        ).joinBlocking()
+        )
 
         verify(onShowTranslationsDialog, never()).invoke()
         verify(binding, never()).recordTranslationStartTelemetry()
@@ -363,14 +362,14 @@ class TranslationsBindingTest {
             TranslationsAction.TranslateExpectedAction(
                 tabId = tabId,
             ),
-        ).joinBlocking()
+        )
 
         browserStore.dispatch(
             TranslationsAction.TranslateOfferAction(
                 tabId = tab.id,
                 isOfferTranslate = false,
             ),
-        ).joinBlocking()
+        )
 
         browserStore.dispatch(
             TranslationsAction.TranslateExceptionAction(
@@ -378,7 +377,7 @@ class TranslationsBindingTest {
                 TranslationOperation.TRANSLATE,
                 TranslationError.CouldNotTranslateError(null),
             ),
-        ).joinBlocking()
+        )
 
         verify(onShowTranslationsDialog).invoke()
         verify(binding, never()).recordTranslationStartTelemetry()
