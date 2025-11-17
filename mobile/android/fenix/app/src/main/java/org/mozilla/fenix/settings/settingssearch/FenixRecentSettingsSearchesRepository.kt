@@ -39,6 +39,7 @@ class FenixRecentSettingsSearchesRepository(
                     title = protoItem.title,
                     summary = protoItem.summary,
                     breadcrumbs = protoItem.breadcrumbsList,
+                    categoryHeader = "",
                     preferenceFileInformation = prefInfo,
                 )
             }

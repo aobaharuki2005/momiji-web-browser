@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -49,45 +50,56 @@ fun SettingsSearchResultItem(
             highlight = defaultSpanStyle,
         )
     }
-    val displaySummary = remember(item.title, query) {
-        highlightQueryMatchingText(
-            text = item.summary,
-            query = query,
-            highlight = defaultSpanStyle,
-        )
+    val displaySubtitle = if (shouldShowSummary(item)) {
+        AnnotatedString(item.summary)
+    } else {
+        val breadcrumbString = buildString {
+            append(stringResource(item.preferenceFileInformation.topBreadcrumbResourceId))
+            if (item.preferenceFileInformation.secondaryBreadcrumbResourceId != 0) {
+                append(" > ")
+                append(stringResource(item.preferenceFileInformation.secondaryBreadcrumbResourceId))
+            }
+        }
+        AnnotatedString(breadcrumbString)
     }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(64.dp)
             .clickable(onClick = onClick)
-            .padding(16.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp),
     ) {
-        if (item.breadcrumbs.isNotEmpty()) {
-            Text(
-                text = item.breadcrumbs.joinToString(" > "),
-                style = FirefoxTheme.typography.caption,
-                color = FirefoxTheme.colors.textSecondary,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
         Text(
             text = displayTitle,
             style = FirefoxTheme.typography.subtitle1,
+            maxLines = 1,
             color = FirefoxTheme.colors.textPrimary,
         )
-        if (displaySummary.isNotBlank()) {
+        if (displaySubtitle.isNotBlank()) {
             Text(
-                text = displaySummary,
+                text = displaySubtitle,
                 style = FirefoxTheme.typography.caption,
                 color = FirefoxTheme.colors.textSecondary,
-                modifier = Modifier.padding(top = 4.dp),
             )
         } else {
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
+}
+
+/**
+ * Whether the summary should be shown.
+ *
+ * @param item [SettingsSearchItem] to check.
+ */
+internal fun shouldShowSummary(
+    item: SettingsSearchItem,
+): Boolean {
+    return (
+            item.preferenceFileInformation == PreferenceFileInformation.GeneralPreferences &&
+            item.summary.isNotBlank()
+            )
 }
 
 /**
@@ -145,6 +157,7 @@ private class SettingsSearchResultItemParameterProvider : PreviewParameterProvid
                 summary = "Set your preferred search engine for browsing.",
                 preferenceKey = "search_engine_main",
                 breadcrumbs = listOf("Search", "Default Search Engine"),
+                categoryHeader = "General",
                 preferenceFileInformation = PreferenceFileInformation.SearchSettingsPreferences,
             ),
             SettingsSearchItem(
@@ -152,6 +165,7 @@ private class SettingsSearchResultItemParameterProvider : PreviewParameterProvid
                 summary = "", // Empty or blank summary
                 preferenceKey = "advanced_stuff",
                 breadcrumbs = listOf("Developer", "Experiments"),
+                categoryHeader = "Advanced",
                 preferenceFileInformation = PreferenceFileInformation.GeneralPreferences,
             ),
         )

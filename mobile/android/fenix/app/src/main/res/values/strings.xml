@@ -3520,7 +3520,7 @@
 
     <!-- Settings Search Strings -->
     <!-- Title of Settings Search. "Search" is a verb here-->
-    <string name="settings_search_title">Search Settings</string>
+    <string name="settings_search_title">Search settings</string>
     <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
     <string name="content_description_settings_search_clear_search">Clear Search</string>
     <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->

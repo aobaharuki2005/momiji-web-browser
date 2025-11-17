@@ -50,8 +50,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
 
         return withContext(Dispatchers.Default) {
             settings.distinctBy { it.preferenceKey }.filter { item ->
-                item.title.contains(trimmedQuery, ignoreCase = true) ||
-                        item.summary.contains(trimmedQuery, ignoreCase = true)
+                item.title.contains(trimmedQuery, ignoreCase = true)
             }
         }
     }
@@ -201,6 +200,8 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             }
         }
 
+        val categoryHeader = context.getString(preferenceFileInformation.categoryHeaderResourceId)
+
         if (key == null || title == null) return null
 
         return SettingsSearchItem(
@@ -208,6 +209,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             title = title,
             summary = summary,
             breadcrumbs = breadcrumbs.toList(),
+            categoryHeader = categoryHeader,
             preferenceFileInformation = preferenceFileInformation,
         )
     }
@@ -245,11 +247,14 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             }
         }
 
+        val categoryHeader = context.getString(preferenceFileInformation.categoryHeaderResourceId)
+
         return SettingsSearchItem(
             preferenceKey = key ?: "",
             title = title ?: "",
             summary = summary,
             breadcrumbs = breadcrumbs.toList(),
+            categoryHeader = categoryHeader,
             preferenceFileInformation = preferenceFileInformation,
         )
     }
