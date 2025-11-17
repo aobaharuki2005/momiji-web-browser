@@ -8,7 +8,7 @@ import android.content.Context
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.UiStore
+import mozilla.components.lib.state.Store
 import org.mozilla.fenix.browser.store.BrowserScreenAction.CancelPrivateDownloadsOnPrivateTabsClosedAccepted
 import org.mozilla.fenix.browser.store.BrowserScreenAction.ClosingLastPrivateTab
 import org.mozilla.fenix.browser.store.BrowserScreenAction.CustomTabColorsUpdated
@@ -18,7 +18,7 @@ import org.mozilla.fenix.browser.store.BrowserScreenAction.PageTranslationStatus
 import org.mozilla.fenix.browser.store.BrowserScreenAction.ReaderModeStatusUpdated
 
 /**
- * [UiStore] for the browser screen.
+ * [Store] for the browser screen.
  *
  * @param initialState The initial state of the store.
  * @param middleware The middlewares to be applied to this store.
@@ -26,7 +26,7 @@ import org.mozilla.fenix.browser.store.BrowserScreenAction.ReaderModeStatusUpdat
 class BrowserScreenStore(
     initialState: BrowserScreenState = BrowserScreenState(),
     middleware: List<Middleware<BrowserScreenState, BrowserScreenAction>> = emptyList(),
-) : UiStore<BrowserScreenState, BrowserScreenAction>(
+) : Store<BrowserScreenState, BrowserScreenAction>(
     initialState = initialState,
     reducer = ::reduce,
     middleware = middleware,

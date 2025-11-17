@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
-import mozilla.components.lib.state.UiStore
+import mozilla.components.lib.state.Store
 import org.mozilla.fenix.R
 
 /**
@@ -212,13 +212,13 @@ private fun reduce(
 }
 
 /**
- * A [UiStore] that holds the [WebCompatReporterState] for the WebCompat Reporter and reduces
+ * A [Store] that holds the [WebCompatReporterState] for the WebCompat Reporter and reduces
  * [WebCompatReporterAction]s dispatched to the store.
  */
 class WebCompatReporterStore(
     initialState: WebCompatReporterState = WebCompatReporterState(),
     middleware: List<Middleware<WebCompatReporterState, WebCompatReporterAction>> = listOf(),
-) : UiStore<WebCompatReporterState, WebCompatReporterAction>(
+) : Store<WebCompatReporterState, WebCompatReporterAction>(
     initialState,
     ::reduce,
     middleware,

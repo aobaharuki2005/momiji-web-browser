@@ -14,15 +14,15 @@ import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.UiStore
+import mozilla.components.lib.state.Store
 
 /**
- * [UiStore] for maintaining the state of the browser toolbar.
+ * [Store] for maintaining the state of the browser toolbar.
  */
 open class BrowserToolbarStore(
     initialState: BrowserToolbarState = BrowserToolbarState(),
     middleware: List<Middleware<BrowserToolbarState, BrowserToolbarAction>> = emptyList(),
-) : UiStore<BrowserToolbarState, BrowserToolbarAction>(
+) : Store<BrowserToolbarState, BrowserToolbarAction>(
     initialState = initialState,
     reducer = ::reduce,
     middleware = middleware,

@@ -6,7 +6,7 @@ package org.mozilla.fenix.settings.settingssearch
 
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
-import mozilla.components.lib.state.UiStore
+import mozilla.components.lib.state.Store
 
 /**
  * Store for the settings search screen.
@@ -17,7 +17,7 @@ import mozilla.components.lib.state.UiStore
 class SettingsSearchStore(
     initialState: SettingsSearchState = SettingsSearchState.Default(emptyList()),
     middleware: List<Middleware<SettingsSearchState, SettingsSearchAction>> = emptyList(),
-) : UiStore<SettingsSearchState, SettingsSearchAction>(
+) : Store<SettingsSearchState, SettingsSearchAction>(
     initialState = initialState,
     reducer = ::reduce,
     middleware = middleware,

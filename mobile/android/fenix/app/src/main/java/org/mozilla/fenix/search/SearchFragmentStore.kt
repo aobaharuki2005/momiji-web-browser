@@ -19,7 +19,6 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
-import mozilla.components.lib.state.UiStore
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.automotive.isAndroidAutomotiveAvailable
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -39,7 +38,7 @@ import org.mozilla.fenix.utils.Settings
 class SearchFragmentStore(
     initialState: SearchFragmentState,
     middleware: List<Middleware<SearchFragmentState, SearchFragmentAction>> = emptyList(),
-) : UiStore<SearchFragmentState, SearchFragmentAction>(
+) : Store<SearchFragmentState, SearchFragmentAction>(
     initialState = initialState,
     reducer = ::searchStateReducer,
     middleware = middleware,

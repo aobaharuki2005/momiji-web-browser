@@ -8,7 +8,7 @@ import android.content.Context
 import androidx.navigation.NavController
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Reducer
-import mozilla.components.lib.state.UiStore
+import mozilla.components.lib.state.Store
 import org.mozilla.fenix.HomeActivity
 
 /**
@@ -42,7 +42,7 @@ internal class BookmarksStore(
     middleware: List<Middleware<BookmarksState, BookmarksAction>> = listOf(),
     val lifecycleHolder: LifecycleHolder? = null,
     bookmarkToLoad: String? = null,
-) : UiStore<BookmarksState, BookmarksAction>(
+) : Store<BookmarksState, BookmarksAction>(
     initialState = initialState,
     reducer = reducer,
     middleware = middleware,

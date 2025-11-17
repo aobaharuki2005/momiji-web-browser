@@ -6,7 +6,7 @@ package org.mozilla.fenix.settings.logins.ui
 
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Reducer
-import mozilla.components.lib.state.UiStore
+import mozilla.components.lib.state.Store
 import org.mozilla.fenix.lifecycle.LifecycleHolder
 
 /**
@@ -22,7 +22,7 @@ internal class LoginsStore(
     reducer: Reducer<LoginsState, LoginsAction> = ::loginsReducer,
     middleware: List<Middleware<LoginsState, LoginsAction>> = listOf(),
     val lifecycleHolder: LifecycleHolder? = null,
-) : UiStore<LoginsState, LoginsAction>(
+) : Store<LoginsState, LoginsAction>(
     initialState = initialState,
     reducer = reducer,
     middleware = middleware,
