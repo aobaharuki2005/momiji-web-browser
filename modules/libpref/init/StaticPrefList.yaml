@@ -7713,7 +7713,7 @@
 - name: gfx.webrender.layer-compositor
   type: bool
 #if defined(XP_WIN)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false
 #endif
