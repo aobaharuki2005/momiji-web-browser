@@ -77,6 +77,15 @@ interface PackageManagerWrapper {
      * @see [PackageManager.getApplicationInfo].
      */
     fun getApplicationInfo(packageName: String, flags: Int): ApplicationInfo
+
+    /**
+     * Returns a list of all installed packages.
+     *
+     * @param flags Optional flags to modify the data returned.
+     *
+     * @return A list of [PackageInfo] objects, one for each installed package.
+     */
+    fun getInstalledPackages(flags: Int): List<PackageInfo>
 }
 
 /**
@@ -131,4 +140,7 @@ class DefaultPackageManagerWrapper(
         packageName: String,
         flags: Int,
     ): ApplicationInfo = packageManager.getApplicationInfo(packageName, flags)
+
+    override fun getInstalledPackages(flags: Int): List<PackageInfo> =
+        packageManager.getInstalledPackages(flags)
 }

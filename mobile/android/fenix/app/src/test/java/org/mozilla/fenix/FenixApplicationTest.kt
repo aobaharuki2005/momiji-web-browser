@@ -21,8 +21,8 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.BrowsersCache
+import mozilla.components.support.utils.ext.packageManagerWrapper
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -83,7 +83,7 @@ class FenixApplicationTest {
 
         every { testContext.components.core } returns mockk(relaxed = true)
         every { testContext.components.distributionIdManager } returns DistributionIdManager(
-            context = testContext,
+            packageManager = testContext.packageManagerWrapper,
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(browserStore),
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,

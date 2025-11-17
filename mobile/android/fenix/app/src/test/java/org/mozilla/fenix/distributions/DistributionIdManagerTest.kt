@@ -7,6 +7,7 @@ package org.mozilla.fenix.distributions
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.ext.packageManagerWrapper
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -61,7 +62,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN a device is made by vivo AND the vivo distribution file is found THEN the proper id is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -80,7 +81,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN a device is not made by vivo AND the vivo distribution file is found THEN the proper id is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -96,7 +97,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN a device is made by vivo AND the vivo distribution file is not found THEN the proper id is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -115,7 +116,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the device is not vivo AND the channel is not mozilla online THEN the proper id is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -130,7 +131,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is digital_tubrine AND the DT app is installed THEN the proper ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -147,7 +148,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is not digital_tubrine AND the DT app is installed THEN the proper ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -164,7 +165,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is not digital_tubrine AND the DT app is not installed THEN the proper ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -181,7 +182,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is null AND the DT app is installed THEN the proper ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -198,7 +199,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is null AND the DT app is not installed THEN the proper ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -215,7 +216,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the distribution is not default or mozilla online THEN the distribution is from a deal`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -247,7 +248,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the distribution is vivo THEN the marketing screen should be skipped`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -279,7 +280,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is aura THEN the proper distribution ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -295,7 +296,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is DT AND a DT USA package is installed THEN the proper distribution ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -312,7 +313,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is not DT AND a DT USA package is installed THEN the proper distribution ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -329,7 +330,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the provider is DT and telefonica and USA packages are not installed THEN the proper distribution ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -345,7 +346,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the new default provider fails to detect DT telefonica THEN the legacy provider detects it`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -362,7 +363,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the new default provider fails to detect DT USA THEN the legacy provider detects it`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -379,7 +380,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the new default provider fails to detect DT ROW THEN the legacy provider detects it`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -395,7 +396,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT telefonica is installed AND provider is DT and legacy provider is DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -415,7 +416,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT telefonica is installed AND provider is not DT and legacy provider is DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -435,7 +436,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT telefonica is installed AND provider is DT and legacy provider is not DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -455,7 +456,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT telefonica is installed AND provider is not DT and legacy provider is not DT THEN the metrics are not sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -476,7 +477,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT USA is installed AND provider is DT and legacy provider is DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -496,7 +497,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT USA is installed AND provider is not DT and legacy provider is DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -516,7 +517,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT USA is installed AND provider is DT and legacy provider is not DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -536,7 +537,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT USA is installed AND provider is not DT and legacy provider is not DT THEN the metrics are not sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -557,7 +558,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT ROW is installed AND provider is DT and legacy provider is DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -576,7 +577,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT ROW is installed AND provider is not DT and legacy provider is DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -595,7 +596,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT ROW is installed AND provider is DT and legacy provider is not DT THEN the proper metrics are sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -614,7 +615,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN DT ROW is installed AND provider is not DT and legacy provider is not DT THEN the metrics are not sent`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -634,7 +635,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the play install referrer response has a vivo india campaign THEN the distribution ID is updated`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -659,7 +660,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the play install referrer response has a xiaomi campaign THEN the distribution ID is updated`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -684,7 +685,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN the play install referrer response does not have a distribution campaign THEN the distribution ID is not updated`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -709,7 +710,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN there is a saved ID THEN the saved ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
@@ -726,7 +727,7 @@ class DistributionIdManagerTest {
     @Test
     fun `WHEN there is not a saved ID THEN a non blank ID is returned`() {
         val subject = DistributionIdManager(
-            testContext,
+            packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,

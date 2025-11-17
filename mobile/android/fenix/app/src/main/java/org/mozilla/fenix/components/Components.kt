@@ -28,6 +28,7 @@ import mozilla.components.support.remotesettings.RemoteSettingsService
 import mozilla.components.support.remotesettings.into
 import mozilla.components.support.utils.BuildManufacturerChecker
 import mozilla.components.support.utils.ClipboardHandler
+import mozilla.components.support.utils.ext.packageManagerWrapper
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -344,7 +345,7 @@ class Components(private val context: Context) {
 
     val distributionIdManager by lazyMonitored {
         DistributionIdManager(
-            context = context,
+            packageManager = context.packageManagerWrapper,
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(core.store),
             distributionProviderChecker = DefaultDistributionProviderChecker(context),
             legacyDistributionProviderChecker = LegacyDistributionProviderChecker(context),

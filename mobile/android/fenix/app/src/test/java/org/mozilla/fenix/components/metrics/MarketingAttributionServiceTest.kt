@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.ext.packageManagerWrapper
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -48,7 +49,7 @@ internal class MarketingAttributionServiceTest {
     }
 
     val distributionIdManager = DistributionIdManager(
-        testContext,
+        packageManager = testContext.packageManagerWrapper,
         testBrowserStoreProvider,
         distributionProviderChecker = testDistributionProviderChecker,
         legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,

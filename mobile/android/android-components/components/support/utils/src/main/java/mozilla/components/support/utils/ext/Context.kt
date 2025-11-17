@@ -28,6 +28,9 @@ const val DEFAULT_BROWSER_APP_OPTION = "default_browser"
 const val ACTION_MANAGE_DEFAULT_APPS_SETTINGS_HUAWEI = "com.android.settings.PREFERRED_SETTINGS"
 private val logger = Logger("navigateToDefaultBrowserAppsSettings")
 
+val Context.packageManagerWrapper: PackageManagerWrapper
+    get() = DefaultPackageManagerWrapper(packageManager)
+
 /**
  * The default [PackageManagerCompatHelper] for this [Context].
  *

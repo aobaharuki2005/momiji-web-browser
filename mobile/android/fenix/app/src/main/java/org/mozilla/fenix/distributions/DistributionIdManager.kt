@@ -4,11 +4,11 @@
 
 package org.mozilla.fenix.distributions
 
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.utils.ext.PackageManagerWrapper
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Partnerships
 import org.mozilla.fenix.components.metrics.UTMParams
@@ -37,7 +37,7 @@ private val logger = Logger(DistributionIdManager::class.simpleName)
 /**
  * Class used to manage distribution Ids for distribution deals with third parties
  *
- * @param context application context
+ * @param packageManager device package manager for checking installed packages
  * @param browserStoreProvider used to update and fetch the stored distribution Id
  * @param distributionProviderChecker used for checking content providers for a distribution provider
  * @param legacyDistributionProviderChecker used for checking content providers for a distribution provider
@@ -47,14 +47,14 @@ private val logger = Logger(DistributionIdManager::class.simpleName)
  * @param isDtUsaInstalled checks if one of the DT USA carrier apps is installed on the device
  */
 class DistributionIdManager(
-    private val context: Context,
+    private val packageManager: PackageManagerWrapper,
     private val browserStoreProvider: DistributionBrowserStoreProvider,
     private val distributionProviderChecker: DistributionProviderChecker,
     private val legacyDistributionProviderChecker: DistributionProviderChecker,
     private val distributionSettings: DistributionSettings,
     private val appPreinstalledOnVivoDevice: () -> Boolean = { wasAppPreinstalledOnVivoDevice() },
-    private val isDtTelefonicaInstalled: () -> Boolean = { isDtTelefonicaInstalled(context) },
-    private val isDtUsaInstalled: () -> Boolean = { isDtUsaInstalled(context) },
+    private val isDtTelefonicaInstalled: () -> Boolean = { isDtTelefonicaInstalled(packageManager) },
+    private val isDtUsaInstalled: () -> Boolean = { isDtUsaInstalled(packageManager) },
 ) {
 
     private var distribution: Distribution? = null
@@ -234,16 +234,16 @@ private fun wasAppPreinstalledOnVivoDevice(): Boolean {
 /**
  * Checks if the Digital Turbine Telefonica app exists on the device
  */
-private fun isDtTelefonicaInstalled(context: Context): Boolean {
-    val packages = context.packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+private fun isDtTelefonicaInstalled(packageManager: PackageManagerWrapper): Boolean {
+    val packages = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
     return packages.any { it.packageName == DT_TELEFONICA_PACKAGE }
 }
 
 /**
  * Checks if one of the Digital Turbine USA apps exist on the device
  */
-private fun isDtUsaInstalled(context: Context): Boolean {
-    val packages = context.packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+private fun isDtUsaInstalled(packageManager: PackageManagerWrapper): Boolean {
+    val packages = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
     return packages.any {
         val packageName = it.packageName.lowercase()
         packageName == DT_VERIZON_PACKAGE ||
