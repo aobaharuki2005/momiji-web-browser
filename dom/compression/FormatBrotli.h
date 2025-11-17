@@ -10,11 +10,42 @@
 #include "BaseAlgorithms.h"
 
 struct BrotliDecoderStateStruct;
+struct BrotliEncoderStateStruct;
 
 // See the brotli manual
 // https://searchfox.org/firefox-main/source/modules/brotli/include/brotli/decode.h
 
 namespace mozilla::dom::compression {
+
+class BrotliCompressionStreamAlgorithms : public CompressionStreamAlgorithms {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BrotliCompressionStreamAlgorithms,
+                                           CompressionStreamAlgorithms)
+
+  static Result<already_AddRefed<BrotliCompressionStreamAlgorithms>, nsresult>
+  Create();
+
+ private:
+  BrotliCompressionStreamAlgorithms() = default;
+
+  [[nodiscard]] nsresult Init();
+
+  // Shared by:
+  // https://wicg.github.io/compression/#compress-and-enqueue-a-chunk
+  // https://wicg.github.io/compression/#compress-flush-and-enqueue
+  void Compress(JSContext* aCx, Span<const uint8_t> aInput,
+                JS::MutableHandleVector<JSObject*> aOutput, Flush aFlush,
+                ErrorResult& aRv) override;
+
+  ~BrotliCompressionStreamAlgorithms() = default;
+
+  struct BrotliDeleter {
+    void operator()(BrotliEncoderStateStruct* aState);
+  };
+
+  std::unique_ptr<BrotliEncoderStateStruct, BrotliDeleter> mState;
+};
 
 class BrotliDecompressionStreamAlgorithms
     : public DecompressionStreamAlgorithms {

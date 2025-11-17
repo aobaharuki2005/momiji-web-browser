@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/CompressionStream.h"
 
+#include "FormatBrotli.h"
 #include "FormatZlib.h"
 #include "js/TypeDecls.h"
 #include "mozilla/dom/CompressionStreamBinding.h"
@@ -28,6 +29,23 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CompressionStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+/*
+ * Constructs either a ZLibDecompressionStreamAlgorithms or a
+ * BrotliDecompressionStreamAlgorithms, based on the CompressionFormat.
+ */
+static Result<already_AddRefed<CompressionStreamAlgorithms>, nsresult>
+CreateCompressionStreamAlgorithms(CompressionFormat aFormat) {
+  if (aFormat == CompressionFormat::Brotli) {
+    RefPtr<CompressionStreamAlgorithms> brotliAlgos =
+        MOZ_TRY(BrotliCompressionStreamAlgorithms::Create());
+    return brotliAlgos.forget();
+  }
+
+  RefPtr<CompressionStreamAlgorithms> zlibAlgos =
+      MOZ_TRY(ZLibCompressionStreamAlgorithms::Create(aFormat));
+  return zlibAlgos.forget();
+}
+
 CompressionStream::CompressionStream(nsISupports* aGlobal,
                                      TransformStream& aStream)
     : mGlobal(aGlobal), mStream(&aStream) {}
@@ -42,12 +60,6 @@ JSObject* CompressionStream::WrapObject(JSContext* aCx,
 // https://wicg.github.io/compression/#dom-compressionstream-compressionstream
 already_AddRefed<CompressionStream> CompressionStream::Constructor(
     const GlobalObject& aGlobal, CompressionFormat aFormat, ErrorResult& aRv) {
-  if (aFormat == CompressionFormat::Brotli) {
-    aRv.ThrowTypeError(
-        "'brotli' (value of argument 1) is not a valid value for enumeration "
-        "CompressionFormat.");
-    return nullptr;
-  }
   if (aFormat == CompressionFormat::Zstd) {
     aRv.ThrowTypeError(
         "'zstd' (value of argument 1) is not a valid value for enumeration "
@@ -66,7 +78,7 @@ already_AddRefed<CompressionStream> CompressionStream::Constructor(
   // Step 6: Set up this's transform with transformAlgorithm set to
   // transformAlgorithm and flushAlgorithm set to flushAlgorithm.
   Result<already_AddRefed<CompressionStreamAlgorithms>, nsresult> algorithms =
-      ZLibCompressionStreamAlgorithms::Create(aFormat);
+      CreateCompressionStreamAlgorithms(aFormat);
   if (algorithms.isErr()) {
     aRv.ThrowUnknownError("Not enough memory");
     return nullptr;
