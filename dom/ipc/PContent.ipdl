@@ -53,6 +53,7 @@ include WindowGlobalTypes;
 include IPCBlob;
 include IPCStream;
 include IPCTransferable;
+include JSIPCValue;
 include PPrintingTypes;
 include PTabContext;
 include ProtocolTypes;
@@ -582,7 +583,7 @@ both:
     async PWebBrowserPersistDocument(nullable PBrowser aBrowser,
                                      MaybeDiscardedBrowsingContext aContext);
 
-    async RawMessage(JSActorMessageMeta aMetadata, UniquePtr<ClonedMessageData> aData,
+    async RawMessage(JSActorMessageMeta aMetadata, JSIPCValue aData,
                      UniquePtr<ClonedMessageData> aStack);
 
 child:

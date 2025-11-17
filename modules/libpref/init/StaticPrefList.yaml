@@ -3452,6 +3452,14 @@
   mirror: always
 #endif
 
+# This controls whether JS IPC messages are sent from child to parent using
+# the typeable JSIPCValue encoding, or simply sent using structured cloning.
+# This being true is necessary to type check messages.
+- name: dom.jsipc.send_typed
+  type: bool
+  value: false
+  mirror: always
+
 # Support for input type=month, type=week. By default, disabled.
 - name: dom.forms.datetime.others
   type: bool

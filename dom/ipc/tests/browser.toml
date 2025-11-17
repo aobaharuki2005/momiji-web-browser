@@ -74,6 +74,8 @@ skip-if = [
   "win11_2009 && opt", # Bug 1890386
 ]
 
+["browser_jsat_serialize.js"]
+
 ["browser_layers_unloaded_while_interruptingJS.js"]
 
 ["browser_memory_distribution_telemetry.js"]

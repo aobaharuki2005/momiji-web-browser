@@ -765,8 +765,7 @@ class ContentChild final : public PContentChild,
       const uint32_t aStopFlags);
 
   mozilla::ipc::IPCResult RecvRawMessage(
-      const JSActorMessageMeta& aMeta,
-      const UniquePtr<ClonedMessageData>& aData,
+      const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
       const UniquePtr<ClonedMessageData>& aStack);
 
   already_AddRefed<JSActor> InitJSActor(JS::Handle<JSObject*> aMaybeActor,

@@ -13,6 +13,7 @@
 #include "js/Class.h"
 #include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin
 #include "js/GCAPI.h"
+#include "js/GCVector.h"
 #include "js/HeapAPI.h"
 #include "js/Object.h"           // JS::GetClass
 #include "js/shadow/Function.h"  // JS::shadow::Function
@@ -426,6 +427,18 @@ JS_PUBLIC_API bool GetPropertyKeys(JSContext* cx, JS::HandleObject obj,
 
 JS_PUBLIC_API bool AppendUnique(JSContext* cx, JS::MutableHandleIdVector base,
                                 JS::HandleIdVector others);
+
+/**
+ * Direct embedder access for retrieving a copy of all entries in a Set or Map
+ * object.
+ */
+JS_PUBLIC_API bool GetSetObjectKeys(
+    JSContext* cx, JS::HandleObject obj,
+    JS::MutableHandle<JS::GCVector<JS::Value>> keys);
+
+JS_PUBLIC_API bool GetMapObjectKeysAndValuesInterleaved(
+    JSContext* cx, JS::HandleObject obj,
+    JS::MutableHandle<JS::GCVector<JS::Value>> entries);
 
 /**
  * Determine whether the given string is an array index in the sense of
