@@ -71,7 +71,6 @@ private fun reduce(state: SettingsSearchState, action: SettingsSearchAction): Se
         is SettingsSearchAction.Init,
         is SettingsSearchAction.ResultItemClicked,
         is SettingsSearchAction.EnvironmentCleared,
-        is SettingsSearchAction.EnvironmentRehydrated,
              -> state
     }
 }
