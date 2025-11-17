@@ -45,7 +45,7 @@ use nserror::{
     NS_ERROR_FILE_ALREADY_EXISTS, NS_ERROR_ILLEGAL_VALUE, NS_ERROR_INVALID_ARG,
     NS_ERROR_NET_HTTP3_PROTOCOL_ERROR, NS_ERROR_NET_INTERRUPT, NS_ERROR_NET_RESET,
     NS_ERROR_NET_TIMEOUT, NS_ERROR_NOT_AVAILABLE, NS_ERROR_NOT_CONNECTED, NS_ERROR_OUT_OF_MEMORY,
-    NS_ERROR_SOCKET_ADDRESS_IN_USE, NS_ERROR_UNEXPECTED, NS_OK,
+    NS_ERROR_SOCKET_ADDRESS_IN_USE, NS_ERROR_UNEXPECTED, NS_OK, NS_ERROR_DOM_INVALID_HEADER_VALUE,
 };
 use nsstring::{nsACString, nsCString};
 use thin_vec::ThinVec;
@@ -1146,7 +1146,9 @@ fn parse_headers(headers: &nsACString) -> Result<Vec<Header>, nsresult> {
     // They need to be split into (String, String) pairs.
     match str::from_utf8(headers) {
         Err(_) => {
-            return Err(NS_ERROR_INVALID_ARG);
+            // Header names are checked for UTF8 in Necko
+            // Values aren't necessaryly UTF-8 - Should be fixed in bug 1999659
+            return Err(NS_ERROR_DOM_INVALID_HEADER_VALUE);
         }
         Ok(h) => {
             for elem in h.split("\r\n").skip(1) {
