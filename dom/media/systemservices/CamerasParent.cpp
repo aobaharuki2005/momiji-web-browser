@@ -396,6 +396,9 @@ std::unique_ptr<AggregateCapturer> AggregateCapturer::Create(
     CamerasParent* aParent) {
   MOZ_ASSERT(aVideoCaptureThread->IsOnCurrentThread());
   int captureId = aEngine->CreateVideoCapture(aUniqueId.get(), aWindowId);
+  if (captureId < 0) {
+    return nullptr;
+  }
   auto capturer = WrapUnique(
       new AggregateCapturer(aVideoCaptureThread, aCapEng, aEngine, aUniqueId,
                             captureId, std::move(aCapabilities)));
@@ -1087,8 +1090,7 @@ ipc::IPCResult CamerasParent::RecvAllocateCapture(
   LOG("CamerasParent(%p)::%s: Verifying permissions", this, __func__);
 
   using Promise1 = MozPromise<bool, bool, true>;
-  using Data = std::tuple<int, int>;
-  using Promise2 = MozPromise<Data, bool, true>;
+  using Promise2 = MozPromise<Maybe<int>, bool, true>;
   InvokeAsync(
       GetMainThreadSerialEventTarget(), __func__,
       [aWindowID] {
@@ -1116,8 +1118,7 @@ ipc::IPCResult CamerasParent::RecvAllocateCapture(
             VideoEngine* engine = EnsureInitialized(aCapEngine);
             if (!engine) {
               return Promise2::CreateAndResolve(
-                  std::make_tuple(-1, -1),
-                  "CamerasParent::RecvAllocateCapture no engine");
+                  Nothing(), "CamerasParent::RecvAllocateCapture no engine");
             }
             bool allowed = aValue.ResolveValue();
             if (!allowed && IsWindowCapturing(aWindowID, unique_id)) {
@@ -1126,8 +1127,7 @@ ipc::IPCResult CamerasParent::RecvAllocateCapture(
             }
             if (!allowed) {
               return Promise2::CreateAndResolve(
-                  std::make_tuple(-1, -1),
-                  "CamerasParent::RecvAllocateCapture");
+                  Nothing(), "CamerasParent::RecvAllocateCapture");
             }
 
             nsTArray<webrtc::VideoCaptureCapability> capabilities;
@@ -1138,34 +1138,27 @@ ipc::IPCResult CamerasParent::RecvAllocateCapture(
 
             auto created = GetOrCreateCapturer(aCapEngine, aWindowID, unique_id,
                                                std::move(capabilities));
-            int error = -1;
-            engine->WithEntry(created.mCapturer->mCaptureId,
-                              [&](VideoEngine::CaptureEntry& cap) {
-                                if (cap.VideoCapture()) {
-                                  error = 0;
-                                }
-                              });
             return Promise2::CreateAndResolve(
-                std::make_tuple(created.mStreamId, error),
+                created.mCapturer ? Some(created.mStreamId) : Nothing(),
                 "CamerasParent::RecvAllocateCapture");
           })
       ->Then(
           mPBackgroundEventTarget, __func__,
           [this, self = RefPtr(this)](Promise2::ResolveOrRejectValue&& aValue) {
-            const auto [captureId, error] = aValue.ResolveValue();
+            const Maybe<int> captureId = aValue.ResolveValue();
             if (mDestroyed) {
               LOG("RecvAllocateCapture: child not alive");
               return;
             }
 
-            if (error != 0) {
+            if (!captureId) {
               (void)SendReplyFailure();
-              LOG("RecvAllocateCapture: WithEntry error");
+              LOG("RecvAllocateCapture: failed to create capturer");
               return;
             }
 
-            LOG("Allocated device nr %d", captureId);
-            (void)SendReplyAllocateCapture(captureId);
+            LOG("Allocated device nr %d", *captureId);
+            (void)SendReplyAllocateCapture(*captureId);
           });
   return IPC_OK();
 }
@@ -1353,9 +1346,13 @@ auto CamerasParent::GetOrCreateCapturer(
       return {.mCapturer = capturer.get(), .mStreamId = streamId};
     }
   }
-  NotNull capturer = mCapturers->AppendElement(
+  std::unique_ptr aggregate =
       AggregateCapturer::Create(mVideoCaptureThread, aEngine, engine, aUniqueId,
-                                aWindowId, std::move(aCapabilities), this));
+                                aWindowId, std::move(aCapabilities), this);
+  if (!aggregate) {
+    return {};
+  }
+  NotNull capturer = mCapturers->AppendElement(std::move(aggregate));
   ensureShmemPool(capturer->get()->mCaptureId);
   return {.mCapturer = capturer->get(),
           .mStreamId = capturer->get()->mCaptureId};

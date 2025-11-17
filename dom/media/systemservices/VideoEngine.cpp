@@ -51,27 +51,43 @@ int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8,
   LOG(("%s", __PRETTY_FUNCTION__));
   MOZ_ASSERT(aDeviceUniqueIdUTF8);
 
-  int32_t id = GenerateId();
-  LOG(("CaptureDeviceType=%s id=%d", EnumValueToString(mCaptureDevType), id));
-
   for (auto& it : mSharedCapturers) {
     if (it.second.VideoCapture() &&
         it.second.VideoCapture()->CurrentDeviceName() &&
         strcmp(it.second.VideoCapture()->CurrentDeviceName(),
                aDeviceUniqueIdUTF8) == 0) {
+      int32_t id = GenerateId();
+      LOG(("%sVideoEngine::%s(device=\"%s\", window=%" PRIu64
+           "): Reusing capturer with id %d. stream id=%d",
+           EnumValueToString(mCaptureDevType), __func__, aDeviceUniqueIdUTF8,
+           aWindowID, it.first, id));
       mIdToCapturerMap.emplace(id, CaptureHandle{.mCaptureEntryNum = it.first,
                                                  .mWindowID = aWindowID});
       return id;
     }
   }
 
-  CaptureEntry entry = {-1, nullptr, nullptr};
+  int32_t id = GenerateId();
 
   VideoCaptureFactory::CreateVideoCaptureResult capturer =
       mVideoCaptureFactory->CreateVideoCapture(id, aDeviceUniqueIdUTF8,
                                                mCaptureDevType);
-  entry =
+
+  if (!capturer.mCapturer) {
+    LOG(("%sVideoEngine::%s(device=\"%s\", window=%" PRIu64
+         "): Creating video capturer for id %d failed.",
+         EnumValueToString(mCaptureDevType), __func__, aDeviceUniqueIdUTF8,
+         aWindowID, id));
+    return -1;
+  }
+
+  auto entry =
       CaptureEntry(id, std::move(capturer.mCapturer), capturer.mDesktopImpl);
+
+  LOG(("%sVideoEngine::%s(device=\"%s\", window=%" PRIu64
+       "): Created new video capturer for id %d.",
+       EnumValueToString(mCaptureDevType), __func__, aDeviceUniqueIdUTF8,
+       aWindowID, id));
 
   mSharedCapturers.emplace(id, std::move(entry));
   mIdToCapturerMap.emplace(
