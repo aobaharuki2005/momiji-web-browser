@@ -103,7 +103,8 @@ internal fun shouldShowSummary(
 }
 
 /**
- * Highlights the query matching text.
+ * Highlights the query matching text.  Only the first instance of the matching text.
+ * Works with even with mismatched capitalization.
  *
  * @param text Text to highlight.
  * @param query Query to highlight.
@@ -114,36 +115,24 @@ internal fun highlightQueryMatchingText(
     query: String,
     highlight: SpanStyle,
 ): AnnotatedString {
-    val tokens = query.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
-    if (tokens.isEmpty()) return AnnotatedString(text)
+    val trimmedQuery = query.trim()
+    if (trimmedQuery.isBlank()) {
+        return AnnotatedString(text)
+    }
 
-    // Build one regex that matches *any* token — even inside words
-    // For example: "data privacy" → matches "metadata", "data-saving", "privacy-aware"
-    val pattern = tokens.joinToString("|") { Regex.escape(it) }
-    val regex = Regex(pattern, RegexOption.IGNORE_CASE)
+    var match = Regex.escape(trimmedQuery).toRegex(RegexOption.IGNORE_CASE).find(text)
 
-    // Find all match ranges
-    val matches = regex.findAll(text).map { it.range }.toList()
-    if (matches.isEmpty()) return AnnotatedString(text)
-
-    // Merge overlapping or adjacent ranges
-    val merged = matches.sortedBy { it.first }.fold(mutableListOf<IntRange>()) { acc, range ->
-        if (acc.isEmpty()) {
-            acc += range
-        } else {
-            val last = acc.last()
-            if (range.first <= last.last + 1) {
-                acc[acc.lastIndex] = (last.first..maxOf(last.last, range.last))
-            } else {
-                acc += range
-            }
+    if (match == null) {
+        val tokens = trimmedQuery.split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (tokens.isNotEmpty()) {
+            val pattern = tokens.joinToString("|") { Regex.escape(it) }
+            match = Regex(pattern, RegexOption.IGNORE_CASE).find(text)
         }
-        acc
     }
 
     return buildAnnotatedString {
         append(text)
-        merged.forEach { range ->
+        match?.range?.let { range ->
             addStyle(highlight, range.first, range.last + 1)
         }
     }
