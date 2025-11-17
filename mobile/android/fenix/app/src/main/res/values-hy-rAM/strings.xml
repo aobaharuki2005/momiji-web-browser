@@ -1052,6 +1052,8 @@
   <string name="alternative_app_icon_group_gradients">Սահանցումներ</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Այլ</string>
+  <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_featured">Յուրահատկություններ</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Փոխե՞լ հավելվածի պատկերակը։</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
@@ -2346,6 +2348,16 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Թույլատրել %1$s-ին ինքնաբար գործադրել կայքի խոշոր խափանումներից խուսափելու համար անհրաժեշտ բացառությունները։</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Նաև ինքնաբար գործադրել բացառությունները, որոնք անհրաժեշտ են միայն աննշան խնդիրները շտկելու և հարմարության գործառույթները հասանելի դարձնելու համար։</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Ուղղել կայքի հիմնական խնդիրները (խորհուրդ է տրվում)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Ուղղել կայքի մանր խնդիրները</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">Պետք է օգտագործվի հիմնական խնդիրների լուծումների հետ միասին։</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Ուղղել կայքի խնդիրները</string>
+  <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Իմանալ ավելին</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
@@ -3873,6 +3885,10 @@
   <string name="settings_search_clear_recent_searches_message">Մաքրել բոլորը</string>
   <!-- Section header for recent search results -->
   <string name="settings_search_recent_searches_section_header">Վերջին որոնման արդյունքները</string>
+  <!-- Message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_title">Ոչինչ չհայտնվեց</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">Գուցե փորձեք այլ որոնում կատարե՞լ։</string>
   <!--
     Terms of use pop up prompt
 
