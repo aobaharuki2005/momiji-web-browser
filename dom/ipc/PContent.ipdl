@@ -627,6 +627,8 @@ child:
                               FileDescriptor? DMDFile)
         returns (uint32_t aGeneration);
 
+    async DecodeImage(nsIURI aURI, ImageIntSize aSize) returns (nsresult rv, IPCImage? image);
+
 #if defined(XP_WIN)
     /**
      * Used by third-party modules telemetry (aka "untrusted modules" telemetry)
@@ -1793,7 +1795,7 @@ parent:
       returns(int32_t? requestedIndex);
 
     async NavigationTraverse(MaybeDiscardedBrowsingContext aContext, nsID aKey,
-                             uint64_t aHistoryEpoch, bool aUserActivation, 
+                             uint64_t aHistoryEpoch, bool aUserActivation,
                              bool aCheckForCancelation)
       returns(nsresult result);
 

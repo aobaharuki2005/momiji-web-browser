@@ -5,11 +5,20 @@
 
 #include "RemoteImageProtocolHandler.h"
 
+#include "gfxDrawable.h"
+#include "ImageOps.h"
+#include "imgITools.h"
+#include "nsContentUtils.h"
+#include "nsIPipe.h"
 #include "nsIURI.h"
+#include "nsMimeTypes.h"
 #include "nsNetUtil.h"
+#include "nsStreamUtils.h"
 #include "nsURLHelper.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/gfx/2D.h"
 
 namespace mozilla::image {
 
@@ -51,6 +60,95 @@ static UniqueContentParentKeepAlive GetLaunchingContentParentForDecode(
       /* aGroup */ nullptr,
       /* aPriority */ hal::PROCESS_PRIORITY_FOREGROUND,
       /* aPreferUsed */ true);
+}
+
+static nsresult EncodeImage(const dom::IPCImage& aImage,
+                            nsIAsyncOutputStream* aOutputStream) {
+  // TODO(Bug 1997538): Use the internal image/icon format for the
+  // moz-remote-image: protocol
+  nsresult rv;
+  nsCOMPtr<imgITools> imgTools =
+      do_GetService("@mozilla.org/image/tools;1", &rv);
+  MOZ_TRY(rv);
+
+  RefPtr<gfx::DataSourceSurface> surface =
+      nsContentUtils::IPCImageToSurface(aImage);
+  if (!surface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<gfxDrawable> drawable =
+      new gfxSurfaceDrawable(surface, surface->GetSize());
+  nsCOMPtr<imgIContainer> imgContainer =
+      image::ImageOps::CreateFromDrawable(drawable);
+
+  nsCOMPtr<nsIInputStream> stream;
+  MOZ_TRY(imgTools->EncodeImage(imgContainer, nsLiteralCString(IMAGE_PNG),
+                                u"png-zlib-level=0"_ns,
+                                getter_AddRefs(stream)));
+
+  nsCOMPtr<nsIEventTarget> target =
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+  MOZ_TRY(rv);
+
+  return NS_AsyncCopy(stream, aOutputStream, target);
+}
+
+static void AsyncReEncodeImage(nsIURI* aRemoteURI, ImageIntSize aSize,
+                               const Maybe<ContentParentId> aContentParentId,
+                               nsIAsyncOutputStream* aOutputStream) {
+  UniqueContentParentKeepAlive cp =
+      GetLaunchingContentParentForDecode(aContentParentId);
+  if (NS_WARN_IF(!cp)) {
+    aOutputStream->CloseWithStatus(NS_ERROR_FAILURE);
+    return;
+  }
+
+  cp->WaitForLaunchAsync()
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [remoteURI = nsCOMPtr{aRemoteURI},
+           aSize](UniqueContentParentKeepAlive&& aCp) {
+            return aCp->SendDecodeImage(WrapNotNull(remoteURI), aSize);
+          },
+          [](nsresult aError) {
+            return ContentParent::DecodeImagePromise::CreateAndReject(
+                ipc::ResponseRejectReason::SendError, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [cp = std::move(cp), outputStream = nsCOMPtr{aOutputStream},
+           aSize](const std::tuple<nsresult, mozilla::Maybe<dom::IPCImage>>&
+                      aResult) {
+            nsresult rv = std::get<0>(aResult);
+            const mozilla::Maybe<dom::IPCImage>& image = std::get<1>(aResult);
+
+            if (NS_FAILED(rv)) {
+              outputStream->CloseWithStatus(rv);
+              return;
+            }
+
+            if (image.isNothing()) {
+              outputStream->CloseWithStatus(NS_ERROR_UNEXPECTED);
+              return;
+            }
+
+            // Make sure the image size matches if a specific size was
+            // requested.
+            if (aSize.Width() && aSize.Height() && image->size() != aSize) {
+              outputStream->CloseWithStatus(NS_ERROR_UNEXPECTED);
+              return;
+            }
+
+            rv = EncodeImage(*image, outputStream);
+            if (NS_FAILED(rv)) {
+              outputStream->CloseWithStatus(rv);
+            }
+          },
+          [outputStream =
+               nsCOMPtr{aOutputStream}](mozilla::ipc::ResponseRejectReason) {
+            outputStream->CloseWithStatus(NS_ERROR_FAILURE);
+          });
 }
 
 // Parse out the relevant parts of the moz-remote-image URL
@@ -104,12 +202,29 @@ static nsresult ParseURI(nsIURI* aURI, nsIURI** aRemoteURI, ImageIntSize* aSize,
 NS_IMETHODIMP RemoteImageProtocolHandler::NewChannel(nsIURI* aURI,
                                                      nsILoadInfo* aLoadInfo,
                                                      nsIChannel** aOutChannel) {
+  if (!aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsCOMPtr<nsIURI> remoteURI;
   ImageIntSize size;
   Maybe<ContentParentId> contentParentId;
   MOZ_TRY(ParseURI(aURI, getter_AddRefs(remoteURI), &size, contentParentId));
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIAsyncInputStream> pipeIn;
+  nsCOMPtr<nsIAsyncOutputStream> pipeOut;
+  NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true, true);
+
+  nsCOMPtr<nsIChannel> channel;
+  MOZ_TRY(NS_NewInputStreamChannelInternal(
+      getter_AddRefs(channel), aURI, pipeIn.forget(),
+      /* aContentType */ nsLiteralCString(IMAGE_PNG),
+      /* aContentCharset */ ""_ns, aLoadInfo));
+
+  AsyncReEncodeImage(remoteURI, size, contentParentId, pipeOut);
+
+  channel.forget(aOutChannel);
+  return NS_OK;
 }
 
 }  // namespace mozilla::image

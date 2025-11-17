@@ -491,6 +491,10 @@ class ContentChild final : public PContentChild,
       const bool& minimizeMemoryUsage, const Maybe<FileDescriptor>& DMDFile,
       const RequestMemoryReportResolver& aResolver);
 
+  mozilla::ipc::IPCResult RecvDecodeImage(NotNull<nsIURI*> aURI,
+                                          const ImageIntSize& aSize,
+                                          DecodeImageResolver&& aResolver);
+
 #if defined(XP_WIN)
   mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
       GetUntrustedModulesDataResolver&& aResolver);
