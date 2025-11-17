@@ -176,8 +176,96 @@ function srdSectionEnabled(section) {
   return srdSectionPrefs.all || srdSectionPrefs[section];
 }
 
-/** @type {Record<string, SettingPaneConfig>} */
-const CONFIG_PANES = {
+var SettingPaneManager = {
+  /** @type {Map<string, SettingPaneConfig>} */
+  _data: new Map(),
+
+  /**
+   * @param {string} id
+   */
+  get(id) {
+    if (!this._data.has(id)) {
+      throw new Error(`Setting pane "${id}" not found`);
+    }
+    return this._data.get(id);
+  },
+
+  /**
+   * @param {string} id
+   * @param {SettingPaneConfig} config
+   */
+  registerPane(id, config) {
+    if (this._data.has(id)) {
+      throw new Error(`Setting pane "${id}" already registered`);
+    }
+    this._data.set(id, config);
+    let subPane = friendlyPrefCategoryNameToInternalName(id);
+    let settingPane = /** @type {SettingPane} */ (
+      document.createElement("setting-pane")
+    );
+    settingPane.name = subPane;
+    settingPane.config = config;
+    settingPane.isSubPane = !!config.parent;
+    document.getElementById("mainPrefPane").append(settingPane);
+    register_module(subPane, {
+      init() {
+        settingPane.init();
+      },
+    });
+  },
+
+  /**
+   * @param {Record<string, SettingPaneConfig>} paneConfigs
+   */
+  registerPanes(paneConfigs) {
+    for (let id in paneConfigs) {
+      this.registerPane(id, paneConfigs[id]);
+    }
+  },
+};
+
+var SettingGroupManager = {
+  /** @type {Map<string, SettingGroupConfig>} */
+  _data: new Map(),
+
+  /**
+   * @param {string} id
+   */
+  get(id) {
+    if (!this._data.has(id)) {
+      throw new Error(`Setting group "${id}" not found`);
+    }
+    return this._data.get(id);
+  },
+
+  /**
+   * @param {string} id
+   * @param {SettingGroupConfig} config
+   */
+  registerGroup(id, config) {
+    if (this._data.has(id)) {
+      throw new Error(`Setting group "${id}" already registered`);
+    }
+    this._data.set(id, config);
+  },
+
+  /**
+   * @param {Record<string, SettingGroupConfig>} groupConfigs
+   */
+  registerGroups(groupConfigs) {
+    for (let id in groupConfigs) {
+      this.registerGroup(id, groupConfigs[id]);
+    }
+  },
+};
+
+/**
+ * Register initial config-based setting panes here. If you need to register a
+ * pane elsewhere, use {@link SettingPaneManager['registerPane']}.
+ *
+ * @type {Record<string, SettingPaneConfig>}
+ */
+const CONFIG_PANES = Object.freeze({
   containers2: {
     parent: "general",
     l10nId: "containers-section-header",
@@ -188,7 +276,7 @@ const CONFIG_PANES = {
     l10nId: "preferences-doh-header2",
     groupIds: ["dnsOverHttpsAdvanced"],
   },
-};
+});
 
 var gLastCategory = { category: undefined, subcategory: undefined };
 const gXULDOMParser = new DOMParser();
@@ -242,20 +330,8 @@ function init_all() {
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
 
-  for (let [subPane, config] of Object.entries(CONFIG_PANES)) {
-    subPane = friendlyPrefCategoryNameToInternalName(subPane);
-    let settingPane = /** @type {SettingPane} */ (
-      document.createElement("setting-pane")
-    );
-    settingPane.name = subPane;
-    settingPane.config = config;
-    settingPane.isSubPane = !!config.parent;
-    document.getElementById("mainPrefPane").append(settingPane);
-    register_module(subPane, {
-      init() {
-        settingPane.init();
-      },
-    });
+  for (let [id, config] of Object.entries(CONFIG_PANES)) {
+    SettingPaneManager.registerPane(id, config);
   }
 
   if (Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")) {

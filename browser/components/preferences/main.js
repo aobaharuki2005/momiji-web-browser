@@ -1127,8 +1127,7 @@ Preferences.addSetting({
   },
 });
 
-/** @type {Record<string, SettingGroupConfig>} */
-let SETTINGS_CONFIG = {
+SettingGroupManager.registerGroups({
   containers: {
     // This section is marked as in progress for testing purposes
     inProgress: true,
@@ -2103,7 +2102,7 @@ let SETTINGS_CONFIG = {
       },
     ],
   },
-};
+});
 
 /**
  * @param {string} id - ID of {@link SettingGroup} custom element.
@@ -2111,7 +2110,7 @@ let SETTINGS_CONFIG = {
 function initSettingGroup(id) {
   /** @type {SettingGroup} */
   let group = document.querySelector(`setting-group[groupid=${id}]`);
-  const config = SETTINGS_CONFIG[id];
+  const config = SettingGroupManager.get(id);
   if (group && config) {
     if (config.inProgress && !srdSectionEnabled(id)) {
       group.remove();
