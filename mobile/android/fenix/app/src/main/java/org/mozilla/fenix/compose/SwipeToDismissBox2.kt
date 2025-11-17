@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.abs
@@ -329,7 +330,9 @@ private fun SwipeToDismissBoxPreview() {
             SnackbarHost(
                 hostState = snackbarState,
                 modifier = Modifier.align(Alignment.BottomCenter),
-            )
+            ) {
+                Snackbar(snackbarData = it)
+            }
         }
     }
 }

@@ -56,6 +56,7 @@ import mozilla.components.compose.base.button.FloatingActionButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.modifier.thenConditional
+import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.text.Text
 import mozilla.components.lib.state.ext.observeAsState
@@ -210,7 +211,9 @@ fun DownloadsScreen(
             SnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.imePadding(),
-            )
+            ) {
+                Snackbar(snackbarData = it)
+            }
         },
     ) { paddingValues ->
         DownloadsScreenContent(
@@ -748,7 +751,9 @@ private fun DownloadsScreenPreviews(
             )
             SnackbarHost(
                 hostState = snackbarHostState,
-            )
+            ) {
+                Snackbar(snackbarData = it)
+            }
         }
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.utils.inComposePreview
 import mozilla.components.support.ktx.android.content.appName
@@ -134,7 +135,9 @@ private fun DebugDrawerHomePreview() {
             SnackbarHost(
                 hostState = snackbarState,
                 modifier = Modifier.align(Alignment.BottomCenter),
-            )
+            ) {
+                Snackbar(snackbarData = it)
+            }
         }
     }
 }

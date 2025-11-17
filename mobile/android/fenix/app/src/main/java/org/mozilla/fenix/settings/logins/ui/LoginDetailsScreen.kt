@@ -45,6 +45,7 @@ import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
+import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.textfield.TextFieldColors
@@ -82,7 +83,9 @@ internal fun LoginDetailsScreen(store: LoginsStore) {
             SnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.imePadding(),
-            )
+            ) {
+                Snackbar(snackbarData = it)
+            }
         },
     ) { paddingValues ->
         Column(

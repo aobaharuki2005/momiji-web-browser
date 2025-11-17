@@ -254,7 +254,9 @@ private fun SnackbarHostPreview() {
             SnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.align(Alignment.BottomCenter),
-            )
+            ) {
+                Snackbar(snackbarData = it)
+            }
         }
     }
 }

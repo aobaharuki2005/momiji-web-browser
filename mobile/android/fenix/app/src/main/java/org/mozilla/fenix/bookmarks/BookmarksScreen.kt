@@ -99,6 +99,7 @@ import mozilla.components.compose.base.button.FloatingActionButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
+import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
@@ -345,7 +346,9 @@ private fun BookmarksList(
                 SnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier.align(Alignment.BottomCenter),
-                )
+                ) {
+                    Snackbar(snackbarData = it)
+                }
             }
         },
         floatingActionButton = {
