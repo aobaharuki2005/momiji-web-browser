@@ -641,7 +641,6 @@ class nsWindow final : public nsIWidget {
   static HWND WindowAtMouse();
   static bool IsTopLevelMouseExit(HWND aWnd);
   LayoutDeviceIntRegion GetRegionToPaint(const PAINTSTRUCT& ps, HDC aDC) const;
-  nsIWidgetListener* GetPaintListener();
 
   void CreateCompositor() override;
   void DestroyCompositor() override;

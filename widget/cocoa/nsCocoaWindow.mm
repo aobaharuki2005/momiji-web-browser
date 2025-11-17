@@ -6,7 +6,6 @@
 
 #include "nsCocoaWindow.h"
 
-#include "mozilla/EventForwards.h"
 #include "nsArrayUtils.h"
 #include "MOZDynamicCursor.h"
 #include "nsIAppStartup.h"

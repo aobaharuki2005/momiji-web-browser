@@ -474,24 +474,6 @@ void SharedSurfacesAnimation::HoldSurfaceForRecycling(
   aEntry.mPendingRelease.AppendElement(aSurface);
 }
 
-// This will get the widget listener that handles painting. Generally, this is
-// the attached widget listener (or previously attached if the attached is paint
-// suppressed). Otherwise it is the widget listener. There should be a function
-// in nsIWidget that does this for us but there isn't yet.
-static nsIWidgetListener* GetPaintWidgetListener(nsIWidget* aWidget) {
-  if (auto* attached = aWidget->GetAttachedWidgetListener()) {
-    if (attached->IsPaintSuppressed()) {
-      if (auto* previouslyAttached =
-              aWidget->GetPreviouslyAttachedWidgetListener()) {
-        return previouslyAttached;
-      }
-    }
-    return attached;
-  }
-
-  return aWidget->GetWidgetListener();
-}
-
 nsresult SharedSurfacesAnimation::SetCurrentFrame(
     SourceSurfaceSharedData* aSurface, const gfx::IntRect& aDirtyRect) {
   MOZ_ASSERT(aSurface);
@@ -521,9 +503,11 @@ nsresult SharedSurfacesAnimation::SetCurrentFrame(
     // Only root compositor bridge childs record if they are paused, so check
     // the refresh driver.
     if (auto* widget = entry.mManager->LayerManager()->GetWidget()) {
-      nsIWidgetListener* wl = GetPaintWidgetListener(widget);
+      nsIWidgetListener* wl = widget->GetPaintListener();
       // Note call to wl->GetView() to make sure this is view type widget
       // listener even though we don't use the view in this code.
+      // FIXME(emilio): Do popups do the right thing here? Maybe we should not
+      // check for GetView()?
       if (wl && wl->GetView() && wl->GetPresShell()) {
         if (auto* rd = wl->GetPresShell()->GetRefreshDriver()) {
           if (rd->IsThrottled()) {

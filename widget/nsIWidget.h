@@ -556,17 +556,24 @@ class nsIWidget : public nsSupportsWeakReference {
    * aUseAttachedEvents if true, events are sent to the attached listener
    * instead of the normal listener.
    */
-  virtual void AttachViewToTopLevel(bool aUseAttachedEvents);
+  void AttachViewToTopLevel(bool aUseAttachedEvents);
 
   /**
    * Accessor functions to get and set the attached listener. Used by
    * nsView in connection with AttachViewToTopLevel above.
    */
-  virtual void SetAttachedWidgetListener(nsIWidgetListener* aListener);
-  virtual nsIWidgetListener* GetAttachedWidgetListener() const;
-  virtual void SetPreviouslyAttachedWidgetListener(
-      nsIWidgetListener* aListener);
-  virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener();
+  void SetAttachedWidgetListener(nsIWidgetListener* aListener) {
+    mAttachedWidgetListener = aListener;
+  }
+  nsIWidgetListener* GetAttachedWidgetListener() const {
+    return mAttachedWidgetListener;
+  }
+  void SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) {
+    mPreviouslyAttachedWidgetListener = aListener;
+  }
+  nsIWidgetListener* GetPreviouslyAttachedWidgetListener() {
+    return mPreviouslyAttachedWidgetListener;
+  }
 
   /**
    * Notifies the root widget of a non-blank paint.
@@ -577,8 +584,13 @@ class nsIWidget : public nsSupportsWeakReference {
    * Accessor functions to get and set the listener which handles various
    * actions for the widget.
    */
-  virtual nsIWidgetListener* GetWidgetListener() const;
-  virtual void SetWidgetListener(nsIWidgetListener* alistener);
+  nsIWidgetListener* GetWidgetListener() const { return mWidgetListener; }
+  void SetWidgetListener(nsIWidgetListener* aListener) {
+    mWidgetListener = aListener;
+  }
+
+  /** Returns the listener used for painting */
+  nsIWidgetListener* GetPaintListener() const;
 
   /**
    * Close and destroy the internal native window.

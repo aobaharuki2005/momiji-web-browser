@@ -615,10 +615,6 @@ void nsWindow::DispatchResized() {
   }
 }
 
-nsIWidgetListener* nsWindow::GetListener() {
-  return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
-}
-
 void nsWindow::OnDestroy() {
   if (mOnDestroyCalled) {
     return;
@@ -4129,8 +4125,8 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   }
 #endif
 
-  if (!GetListener()) {
-    LOG("quit, !GetListener()");
+  if (!GetPaintListener()) {
+    LOG("quit, !GetPaintListener()");
     return FALSE;
   }
 
@@ -4155,7 +4151,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   // Dispatch WillPaintWindow notification to allow scripts etc. to run
   // before we paint. It also spins event loop which may show/hide the window
   // so we may have new renderer etc.
-  GetListener()->WillPaintWindow(this);
+  GetPaintListener()->WillPaintWindow(this);
 
   // If the window has been destroyed during the will paint notification,
   // there is nothing left to do.
@@ -4166,7 +4162,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
 
   // Re-get all rendering components since the will paint notification
   // might have killed it.
-  nsIWidgetListener* listener = GetListener();
+  nsIWidgetListener* listener = GetPaintListener();
   if (!listener) {
     LOG("quit, !listener");
     return FALSE;
@@ -4198,7 +4194,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
 
     // Re-get the listener since the will paint notification might have
     // killed it.
-    listener = GetListener();
+    listener = GetPaintListener();
     if (!listener) {
       return TRUE;
     }
@@ -4250,7 +4246,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
 
       // Re-get the listener since the will paint notification might have
       // killed it.
-      listener = GetListener();
+      listener = GetPaintListener();
       if (!listener) {
         return TRUE;
       }

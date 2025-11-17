@@ -535,14 +535,6 @@ LayoutDeviceIntRect nsIWidget::MaybeRoundToDisplayPixels(
 //
 //-------------------------------------------------------------------------
 
-nsIWidgetListener* nsIWidget::GetWidgetListener() const {
-  return mWidgetListener;
-}
-
-void nsIWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener) {
-  mWidgetListener = aWidgetListener;
-}
-
 already_AddRefed<nsIWidget> nsIWidget::CreateChild(
     const LayoutDeviceIntRect& aRect, const widget::InitData& aInitData) {
   MOZ_ASSERT(aInitData.mWindowType == WindowType::Popup,
@@ -586,23 +578,6 @@ void nsIWidget::AttachViewToTopLevel(bool aUseAttachedEvents) {
                "Can't attach to window of that type");
 
   mUseAttachedEvents = aUseAttachedEvents;
-}
-
-nsIWidgetListener* nsIWidget::GetAttachedWidgetListener() const {
-  return mAttachedWidgetListener;
-}
-
-nsIWidgetListener* nsIWidget::GetPreviouslyAttachedWidgetListener() {
-  return mPreviouslyAttachedWidgetListener;
-}
-
-void nsIWidget::SetPreviouslyAttachedWidgetListener(
-    nsIWidgetListener* aListener) {
-  mPreviouslyAttachedWidgetListener = aListener;
-}
-
-void nsIWidget::SetAttachedWidgetListener(nsIWidgetListener* aListener) {
-  mAttachedWidgetListener = aListener;
 }
 
 //-------------------------------------------------------------------------
@@ -2032,6 +2007,14 @@ PresShell* nsIWidget::GetPresShell() const {
     }
   }
   return nullptr;
+}
+
+nsIWidgetListener* nsIWidget::GetPaintListener() const {
+  if (mPreviouslyAttachedWidgetListener && mAttachedWidgetListener &&
+      mAttachedWidgetListener->IsPaintSuppressed()) {
+    return mPreviouslyAttachedWidgetListener;
+  }
+  return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
 }
 
 void* nsIWidget::GetPseudoIMEContext() {

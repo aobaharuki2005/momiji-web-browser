@@ -112,11 +112,6 @@ LayoutDeviceIntRegion nsWindow::GetRegionToPaint(const PAINTSTRUCT& ps,
   return fullRegion;
 }
 
-nsIWidgetListener* nsWindow::GetPaintListener() {
-  if (mDestroyCalled) return nullptr;
-  return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
-}
-
 void nsWindow::ForcePresent() {
   if (mResizeState != RESIZING) {
     if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
