@@ -77,6 +77,8 @@ class SplashScreenManagerTest {
             override suspend fun run() {
                 delay(operationTime)
             }
+
+            override fun dispose() {}
         }
         var result: SplashScreenManagerResult? = null
         val splashScreenManager = buildSplashScreen(
@@ -105,6 +107,8 @@ class SplashScreenManagerTest {
             override suspend fun run() {
                 delay(operationTime)
             }
+
+            override fun dispose() {}
         }
         var result: SplashScreenManagerResult? = null
         val splashScreenManager = buildSplashScreen(
@@ -120,6 +124,74 @@ class SplashScreenManagerTest {
         Assert.assertTrue(result is SplashScreenManagerResult.TimeoutExceeded)
     }
 
+    @Test
+    fun `WHEN splash screen times out THEN the operation is disposed`() = runTest {
+        val operationTime = 11_000L
+        val splashScreenTimeout = 2_500L
+        val slowOperation = object : SplashScreenOperation {
+            var disposed: Boolean = false
+            override val type: String
+                get() = "so slow much trouble"
+            override val dataFetched: Boolean
+                get() = false
+
+            override suspend fun run() {
+                delay(operationTime)
+            }
+
+            override fun dispose() {
+                disposed = true
+            }
+        }
+        var result: SplashScreenManagerResult? = null
+        val splashScreenManager = buildSplashScreen(
+            splashScreenOperation = slowOperation,
+            splashScreenTimeout = splashScreenTimeout,
+            onSplashScreenFinished = { result = it },
+        )
+
+        splashScreenManager.showSplashScreen()
+
+        Assert.assertNull(result)
+        this.testScheduler.advanceUntilIdle()
+        Assert.assertTrue(result is SplashScreenManagerResult.TimeoutExceeded)
+        Assert.assertTrue(slowOperation.disposed)
+    }
+
+    @Test
+    fun `WHEN an operation finishes THEN the operation is disposed`() = runTest {
+        val operationTime = 400L
+        val splashScreenTimeout = 2_500L
+        val slowOperation = object : SplashScreenOperation {
+            var disposed: Boolean = false
+            override val type: String
+                get() = "so slow much trouble"
+            override val dataFetched: Boolean
+                get() = false
+
+            override suspend fun run() {
+                delay(operationTime)
+            }
+
+            override fun dispose() {
+                disposed = true
+            }
+        }
+        var result: SplashScreenManagerResult? = null
+        val splashScreenManager = buildSplashScreen(
+            splashScreenOperation = slowOperation,
+            splashScreenTimeout = splashScreenTimeout,
+            onSplashScreenFinished = { result = it },
+        )
+
+        splashScreenManager.showSplashScreen()
+
+        Assert.assertNull(result)
+        this.testScheduler.advanceUntilIdle()
+        Assert.assertTrue(result is SplashScreenManagerResult.OperationFinished)
+        Assert.assertTrue(slowOperation.disposed)
+    }
+
     private fun TestScope.buildSplashScreen(
         splashScreenOperation: SplashScreenOperation = object : SplashScreenOperation {
             override val type: String
@@ -130,6 +202,8 @@ class SplashScreenManagerTest {
             override suspend fun run() {
                 delay(2_400)
             }
+
+            override fun dispose() {}
         },
         splashScreenTimeout: Long = 2_500,
         showSplashScreen: (SplashScreen.KeepOnScreenCondition) -> Unit = { _ -> },
