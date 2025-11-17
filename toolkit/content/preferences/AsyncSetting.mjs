@@ -6,21 +6,25 @@ const { EventEmitter } = ChromeUtils.importESModule(
   "resource://gre/modules/EventEmitter.sys.mjs"
 );
 
+/** @import { SettingControlConfig } from "chrome://browser/content/preferences/widgets/setting-control.mjs" */
+/** @import { SettingConfig, SettingValue } from "./Setting.mjs" */
+
 /**
  * This is the interface for the async setting classes to implement.
  *
  * For the actual implementation see AsyncSettingMixin.
  */
 export class AsyncSetting extends EventEmitter {
-  /** @type {string} */
   static id = "";
 
-  /** @type {Object} */
+  /** @type {SettingConfig['controllingExtensionInfo']} */
   static controllingExtensionInfo;
 
+  /** @type {SettingValue} */
   defaultValue = "";
   defaultDisabled = false;
   defaultVisible = true;
+  /** @type {Partial<SettingControlConfig>} */
   defaultGetControlConfig = {};
 
   /**
@@ -35,7 +39,7 @@ export class AsyncSetting extends EventEmitter {
    * Setup any external listeners that are required for managing this
    * setting's state. When the state needs to update the Setting.emitChange method should be called.
    *
-   * @returns {Function | void} Teardown function to clean up external listeners.
+   * @returns {ReturnType<SettingConfig['setup']>} Teardown function to clean up external listeners.
    */
   setup() {}
 
@@ -43,7 +47,7 @@ export class AsyncSetting extends EventEmitter {
    * Get the value of this setting.
    *
    * @abstract
-   * @returns {Promise<boolean | number | string | void>}
+   * @returns {Promise<SettingValue>}
    */
   async get() {}
 
@@ -51,10 +55,11 @@ export class AsyncSetting extends EventEmitter {
    * Set the value of this setting.
    *
    * @abstract
-   * @param value {any} The value from the input that triggered the update.
+   * @param {SettingValue} value The value from the input that triggered the update.
    * @returns {Promise<void>}
    */
-  async set() {}
+  // eslint-disable-next-line no-unused-vars
+  async set(value) {}
 
   /**
    * Whether the control should be disabled.
@@ -78,7 +83,7 @@ export class AsyncSetting extends EventEmitter {
    * Override the initial control config. This will be spread into the
    * initial config, with this object taking precedence.
    *
-   * @returns {Promise<Object>}
+   * @returns {Promise<Partial<SettingControlConfig>>}
    */
   async getControlConfig() {
     return {};
@@ -88,15 +93,25 @@ export class AsyncSetting extends EventEmitter {
    * Callback fired after a user has changed the setting's value. Useful for
    * recording telemetry.
    *
-   * @param value {any}
-   * @returns {Promise<void>}
+   * @param {SettingValue} value
    */
-  async onUserChange() {}
+  // eslint-disable-next-line no-unused-vars
+  onUserChange(value) {}
+
+  /**
+   * Callback fired after a user has clicked a setting's control.
+   *
+   * @param {MouseEvent} event
+   */
+  // eslint-disable-next-line no-unused-vars
+  onUserClick(event) {}
 }
 
 /**
  * Wraps an AsyncSetting and adds caching of values to provide a synchronous
  * API to the Setting class.
+ *
+ * @implements {SettingConfig}
  */
 export class AsyncSettingHandler {
   /** @type {AsyncSetting} */
@@ -105,41 +120,48 @@ export class AsyncSettingHandler {
   /** @type {Function} */
   #emitChange;
 
-  /** @type {import("./Setting.mjs").PreferenceSettingDepsMap} */
-  deps;
-
-  /** @type {Setting} */
-  setting;
+  /** @type {string} */
+  pref;
 
   /**
-   * @param {AsyncSetting} asyncSetting
+   * Dependencies are not supported on AsyncSettings, but we include an empty
+   * array for consistency with {@link SettingConfig}.
+   *
+   * @type {string[]}
    */
-  constructor(asyncSetting) {
-    this.asyncSetting = asyncSetting;
+  deps = [];
+
+  /** @type {SettingConfig['controllingExtensionInfo']} */
+  controllingExtensionInfo;
+
+  /**
+   * @param {string} id
+   * @param {typeof AsyncSetting} AsyncSettingClass
+   */
+  constructor(id, AsyncSettingClass) {
+    this.asyncSetting = new AsyncSettingClass();
+    this.id = id;
+    this.controllingExtensionInfo = AsyncSettingClass.controllingExtensionInfo;
     this.#emitChange = () => {};
 
     // Initialize cached values with defaults
-    this.cachedValue = asyncSetting.defaultValue;
-    this.cachedDisabled = asyncSetting.defaultDisabled;
-    this.cachedVisible = asyncSetting.defaultVisible;
-    this.cachedGetControlConfig = asyncSetting.defaultGetControlConfig;
+    this.cachedValue = this.asyncSetting.defaultValue;
+    this.cachedDisabled = this.asyncSetting.defaultDisabled;
+    this.cachedVisible = this.asyncSetting.defaultVisible;
+    this.cachedGetControlConfig = this.asyncSetting.defaultGetControlConfig;
 
     // Listen for change events from the async setting
     this.asyncSetting.on("change", () => this.refresh());
   }
 
   /**
-   * @param emitChange {Function}
-   * @param deps {Record<string, Setting>}
-   * @param setting {Setting}
-   * @returns {Function | void}
+   * @param {() => any} emitChange
+   * @returns {ReturnType<SettingConfig['setup']>}
    */
-  setup(emitChange, deps, setting) {
+  setup(emitChange) {
     let teardown = this.asyncSetting.setup();
 
     this.#emitChange = emitChange;
-    this.deps = deps;
-    this.setting = setting;
 
     this.refresh();
     return teardown;
@@ -164,14 +186,14 @@ export class AsyncSettingHandler {
   }
 
   /**
-   * @returns {boolean | number | string | void}
+   * @returns {SettingValue}
    */
   get() {
     return this.cachedValue;
   }
 
   /**
-   * @param value {any}
+   * @param {any} value
    * @returns {Promise<void>}
    */
   set(value) {
@@ -193,8 +215,8 @@ export class AsyncSettingHandler {
   }
 
   /**
-   * @param config {Object}
-   * @returns {Object}
+   * @param {SettingControlConfig} config
+   * @returns {SettingControlConfig}
    */
   getControlConfig(config) {
     return {
@@ -204,10 +226,16 @@ export class AsyncSettingHandler {
   }
 
   /**
-   * @param value {any}
-   * @returns {Promise<void>}
+   * @param {SettingValue} value
    */
   onUserChange(value) {
     return this.asyncSetting.onUserChange(value);
+  }
+
+  /**
+   * @param {MouseEvent} event
+   */
+  onUserClick(event) {
+    this.asyncSetting.onUserClick(event);
   }
 }

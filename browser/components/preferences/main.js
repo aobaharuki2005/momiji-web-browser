@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/** @import MozButton from "chrome://global/content/elements/moz-button.mjs"; */
-/** @import { SettingGroup } from "./widgets/setting-group/setting-group.mjs" */
-/** @import { PreferencesSettingsConfig } from "chrome://global/content/preferences/Preferences.mjs" */
-
 /* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
 /* import-globals-from /toolkit/mozapps/preferences/fontbuilder.js */
@@ -228,104 +224,122 @@ Preferences.addSetting({
   pref: "browser.privatebrowsing.autostart",
 });
 
-Preferences.addSetting({
-  id: "launchOnLoginApproved",
-  _getLaunchOnLoginApprovedCachedValue: true,
-  get() {
-    return this._getLaunchOnLoginApprovedCachedValue;
-  },
-  // Check for a launch on login registry key
-  // This accounts for if a user manually changes it in the registry
-  // Disabling in Task Manager works outside of just deleting the registry key
-  // in HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
-  // but it is not possible to change it back to enabled as the disabled value is just a random
-  // hexadecimal number
-  async setup() {
-    if (AppConstants.platform !== "win") {
-      /**
-       * WindowsLaunchOnLogin isnt available if not on windows
-       * but this setup function still fires, so must prevent
-       * WindowsLaunchOnLogin.getLaunchOnLoginApproved
-       * below from executing unnecessarily.
-       */
-      return;
-    }
-    this._getLaunchOnLoginApprovedCachedValue =
-      await WindowsLaunchOnLogin.getLaunchOnLoginApproved();
-  },
-});
+Preferences.addSetting(
+  /** @type {{ _getLaunchOnLoginApprovedCachedValue: boolean } & SettingConfig} */ ({
+    id: "launchOnLoginApproved",
+    _getLaunchOnLoginApprovedCachedValue: true,
+    get() {
+      return this._getLaunchOnLoginApprovedCachedValue;
+    },
+    // Check for a launch on login registry key
+    // This accounts for if a user manually changes it in the registry
+    // Disabling in Task Manager works outside of just deleting the registry key
+    // in HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
+    // but it is not possible to change it back to enabled as the disabled value is just a random
+    // hexadecimal number
+    setup() {
+      if (AppConstants.platform !== "win") {
+        /**
+         * WindowsLaunchOnLogin isnt available if not on windows
+         * but this setup function still fires, so must prevent
+         * WindowsLaunchOnLogin.getLaunchOnLoginApproved
+         * below from executing unnecessarily.
+         */
+        return;
+      }
+      // @ts-ignore bug 1996860
+      WindowsLaunchOnLogin.getLaunchOnLoginApproved().then(val => {
+        this._getLaunchOnLoginApprovedCachedValue = val;
+      });
+    },
+  })
+);
 
 Preferences.addSetting({
   id: "windowsLaunchOnLoginEnabled",
   pref: "browser.startup.windowsLaunchOnLogin.enabled",
 });
 
-Preferences.addSetting({
-  id: "windowsLaunchOnLogin",
-  deps: ["launchOnLoginApproved", "windowsLaunchOnLoginEnabled"],
-  _getLaunchOnLoginEnabledValue: false,
-  get startWithLastProfile() {
-    return Cc["@mozilla.org/toolkit/profile-service;1"].getService(
-      Ci.nsIToolkitProfileService
-    ).startWithLastProfile;
-  },
-  get() {
-    return this._getLaunchOnLoginEnabledValue;
-  },
-  async setup(emitChange) {
-    if (AppConstants.platform !== "win") {
-      /**
-       * WindowsLaunchOnLogin isnt available if not on windows
-       * but this setup function still fires, so must prevent
-       * WindowsLaunchOnLogin.getLaunchOnLoginEnabled
-       * below from executing unnecessarily.
-       */
-      return;
-    }
+Preferences.addSetting(
+  /** @type {{_getLaunchOnLoginEnabledValue: boolean, startWithLastProfile: boolean} & SettingConfig} */ ({
+    id: "windowsLaunchOnLogin",
+    deps: ["launchOnLoginApproved", "windowsLaunchOnLoginEnabled"],
+    _getLaunchOnLoginEnabledValue: false,
+    get startWithLastProfile() {
+      return Cc["@mozilla.org/toolkit/profile-service;1"].getService(
+        Ci.nsIToolkitProfileService
+      ).startWithLastProfile;
+    },
+    get() {
+      return this._getLaunchOnLoginEnabledValue;
+    },
+    setup(emitChange) {
+      if (AppConstants.platform !== "win") {
+        /**
+         * WindowsLaunchOnLogin isnt available if not on windows
+         * but this setup function still fires, so must prevent
+         * WindowsLaunchOnLogin.getLaunchOnLoginEnabled
+         * below from executing unnecessarily.
+         */
+        return;
+      }
 
-    let getLaunchOnLoginEnabledValue;
-    if (!this.startWithLastProfile) {
-      getLaunchOnLoginEnabledValue = false;
-    } else {
-      getLaunchOnLoginEnabledValue =
-        await WindowsLaunchOnLogin.getLaunchOnLoginEnabled();
-    }
-    if (getLaunchOnLoginEnabledValue !== this._getLaunchOnLoginEnabledValue) {
-      this._getLaunchOnLoginEnabledValue = getLaunchOnLoginEnabledValue;
-      emitChange();
-    }
-  },
-  visible: ({ windowsLaunchOnLoginEnabled }) => {
-    let isVisible =
-      AppConstants.platform === "win" && windowsLaunchOnLoginEnabled.value;
-    if (isVisible) {
-      NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
-        once: true,
-      });
-    }
-    return isVisible;
-  },
-  disabled({ launchOnLoginApproved }) {
-    return !this.startWithLastProfile || !launchOnLoginApproved.value;
-  },
-  onUserChange(checked) {
-    if (checked) {
-      // windowsLaunchOnLogin has been checked: create registry key or shortcut
-      // The shortcut is created with the same AUMID as Firefox itself. However,
-      // this is not set during browser tests and the fallback of checking the
-      // registry fails. As such we pass an arbitrary AUMID for the purpose
-      // of testing.
-      WindowsLaunchOnLogin.createLaunchOnLogin();
-      Services.prefs.setBoolPref(
-        "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
-        true
-      );
-    } else {
-      // windowsLaunchOnLogin has been unchecked: delete registry key and shortcut
-      WindowsLaunchOnLogin.removeLaunchOnLogin();
-    }
-  },
-});
+      /** @type {boolean} */
+      let getLaunchOnLoginEnabledValue;
+      let maybeEmitChange = () => {
+        if (
+          getLaunchOnLoginEnabledValue !== this._getLaunchOnLoginEnabledValue
+        ) {
+          this._getLaunchOnLoginEnabledValue = getLaunchOnLoginEnabledValue;
+          emitChange();
+        }
+      };
+      if (!this.startWithLastProfile) {
+        getLaunchOnLoginEnabledValue = false;
+        maybeEmitChange();
+      } else {
+        // @ts-ignore bug 1996860
+        WindowsLaunchOnLogin.getLaunchOnLoginEnabled().then(val => {
+          getLaunchOnLoginEnabledValue = val;
+          maybeEmitChange();
+        });
+      }
+    },
+    visible: ({ windowsLaunchOnLoginEnabled }) => {
+      let isVisible =
+        AppConstants.platform === "win" && windowsLaunchOnLoginEnabled.value;
+      if (isVisible) {
+        // @ts-ignore bug 1996860
+        NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
+          once: true,
+        });
+      }
+      return isVisible;
+    },
+    disabled({ launchOnLoginApproved }) {
+      return !this.startWithLastProfile || !launchOnLoginApproved.value;
+    },
+    onUserChange(checked) {
+      if (checked) {
+        // windowsLaunchOnLogin has been checked: create registry key or shortcut
+        // The shortcut is created with the same AUMID as Firefox itself. However,
+        // this is not set during browser tests and the fallback of checking the
+        // registry fails. As such we pass an arbitrary AUMID for the purpose
+        // of testing.
+        // @ts-ignore bug 1996860
+        WindowsLaunchOnLogin.createLaunchOnLogin();
+        Services.prefs.setBoolPref(
+          "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
+          true
+        );
+      } else {
+        // windowsLaunchOnLogin has been unchecked: delete registry key and shortcut
+        // @ts-ignore bug 1996860
+        WindowsLaunchOnLogin.removeLaunchOnLogin();
+      }
+    },
+  })
+);
 
 Preferences.addSetting({
   id: "windowsLaunchOnLoginDisabledProfileBox",
@@ -393,6 +407,7 @@ Preferences.addSetting({
     if (checked) {
       // We need to restore the blank homepage setting in our other pref
       if (startupPref.value === gMainPane.STARTUP_PREF_BLANK) {
+        // @ts-ignore bug 1996860
         HomePage.safeSet("about:blank");
       }
       newValue = gMainPane.STARTUP_PREF_RESTORE_SESSION;
@@ -431,51 +446,56 @@ Preferences.addSetting({
   id: "useCursorNavigation",
   pref: "accessibility.browsewithcaret",
 });
-Preferences.addSetting({
-  id: "useFullKeyboardNavigation",
-  pref: "accessibility.tabfocus",
-  visible: () => AppConstants.platform == "macosx",
-  /**
-   * Returns true if any full keyboard nav is enabled and false otherwise, caching
-   * the current value to enable proper pref restoration if the checkbox is
-   * never changed.
-   *
-   * accessibility.tabfocus
-   * - an integer controlling the focusability of:
-   *     1  text controls
-   *     2  form elements
-   *     4  links
-   *     7  all of the above
-   */
-  get(prefVal) {
-    this._storedFullKeyboardNavigation = prefVal;
-    return prefVal == 7;
-  },
-  /**
-   * Returns the value of the full keyboard nav preference represented by UI,
-   * preserving the preference's "hidden" value if the preference is
-   * unchanged and represents a value not strictly allowed in UI.
-   */
-  set(checked) {
-    if (checked) {
-      return 7;
-    }
-    if (this._storedFullKeyboardNavigation != 7) {
-      // 1/2/4 values set via about:config should persist
-      return this._storedFullKeyboardNavigation;
-    }
-    // When the checkbox is unchecked, default to just text controls.
-    return 1;
-  },
-});
+Preferences.addSetting(
+  /** @type {{ _storedFullKeyboardNavigation: number } & SettingConfig} */ ({
+    _storedFullKeyboardNavigation: -1,
+    id: "useFullKeyboardNavigation",
+    pref: "accessibility.tabfocus",
+    visible: () => AppConstants.platform == "macosx",
+    /**
+     * Returns true if any full keyboard nav is enabled and false otherwise, caching
+     * the current value to enable proper pref restoration if the checkbox is
+     * never changed.
+     *
+     * accessibility.tabfocus
+     * - an integer controlling the focusability of:
+     *     1  text controls
+     *     2  form elements
+     *     4  links
+     *     7  all of the above
+     */
+    get(prefVal) {
+      this._storedFullKeyboardNavigation = prefVal;
+      return prefVal == 7;
+    },
+    /**
+     * Returns the value of the full keyboard nav preference represented by UI,
+     * preserving the preference's "hidden" value if the preference is
+     * unchanged and represents a value not strictly allowed in UI.
+     */
+    set(checked) {
+      if (checked) {
+        return 7;
+      }
+      if (this._storedFullKeyboardNavigation != 7) {
+        // 1/2/4 values set via about:config should persist
+        return this._storedFullKeyboardNavigation;
+      }
+      // When the checkbox is unchecked, default to just text controls.
+      return 1;
+    },
+  })
+);
 Preferences.addSetting({
   id: "linkPreviewEnabled",
   pref: "browser.ml.linkPreview.enabled",
+  // @ts-ignore bug 1996860
   visible: () => LinkPreview.canShowPreferences,
 });
 Preferences.addSetting({
   id: "linkPreviewKeyPoints",
   pref: "browser.ml.linkPreview.optin",
+  // @ts-ignore bug 1996860
   visible: () => LinkPreview.canShowKeyPoints,
 });
 Preferences.addSetting({
@@ -532,38 +552,46 @@ Preferences.addSetting({
   },
 });
 
-Preferences.addSetting({
-  id: "web-appearance-chooser",
-  themeNames: ["dark", "light", "auto"],
-  pref: "layout.css.prefers-color-scheme.content-override",
-  setup(emitChange) {
-    Services.obs.addObserver(emitChange, "look-and-feel-changed");
-    return () =>
-      Services.obs.removeObserver(emitChange, "look-and-feel-changed");
-  },
-  get(val, _, setting) {
-    return this.themeNames[val] || this.themeNames[setting.pref.defaultValue];
-  },
-  set(val) {
-    return this.themeNames.indexOf(val);
-  },
-  getControlConfig(config) {
-    // Set the auto theme image to the light/dark that matches.
-    let systemThemeIndex = Services.appinfo.contentThemeDerivedColorSchemeIsDark
-      ? 2
-      : 1;
-    config.options[0].controlAttrs = {
-      ...config.options[0].controlAttrs,
-      imagesrc: config.options[systemThemeIndex].controlAttrs.imagesrc,
-    };
-    return config;
-  },
-});
+Preferences.addSetting(
+  /** @type {{ themeNames: string[] } & SettingConfig}} */ ({
+    id: "web-appearance-chooser",
+    themeNames: ["dark", "light", "auto"],
+    pref: "layout.css.prefers-color-scheme.content-override",
+    setup(emitChange) {
+      Services.obs.addObserver(emitChange, "look-and-feel-changed");
+      return () =>
+        Services.obs.removeObserver(emitChange, "look-and-feel-changed");
+    },
+    get(val, _, setting) {
+      return (
+        this.themeNames[val] ||
+        this.themeNames[/** @type {number} */ (setting.pref.defaultValue)]
+      );
+    },
+    /** @param {string} val */
+    set(val) {
+      return this.themeNames.indexOf(val);
+    },
+    getControlConfig(config) {
+      // Set the auto theme image to the light/dark that matches.
+      let systemThemeIndex = Services.appinfo
+        .contentThemeDerivedColorSchemeIsDark
+        ? 2
+        : 1;
+      config.options[0].controlAttrs = {
+        ...config.options[0].controlAttrs,
+        imagesrc: config.options[systemThemeIndex].controlAttrs.imagesrc,
+      };
+      return config;
+    },
+  })
+);
 
 Preferences.addSetting({
   id: "web-appearance-manage-themes-link",
   onUserClick: e => {
     e.preventDefault();
+    // @ts-ignore topChromeWindow global
     window.browsingContext.topChromeWindow.BrowserAddonUI.openAddonsMgr(
       "addons://list/theme"
     );
@@ -893,7 +921,11 @@ const DefaultBrowserHelper = {
    * @type {typeof import('../shell/ShellService.sys.mjs').ShellService | undefined}
    */
   get shellSvc() {
-    return AppConstants.HAVE_SHELL_SERVICE && getShellService();
+    return (
+      AppConstants.HAVE_SHELL_SERVICE &&
+      // @ts-ignore from utilityOverlay.js
+      getShellService()
+    );
   },
 
   /**
@@ -1017,7 +1049,7 @@ Preferences.addSetting({
    * browser is already the default browser.
    */
   visible: () => DefaultBrowserHelper.canCheck,
-  disabled: (deps, setting) =>
+  disabled: (_, setting) =>
     !DefaultBrowserHelper.canCheck ||
     setting.locked ||
     DefaultBrowserHelper.isBrowserDefault,
@@ -1095,9 +1127,7 @@ Preferences.addSetting({
   },
 });
 
-/**
- * @type {Record<string, PreferencesSettingsConfig>} SettingConfig
- */
+/** @type {Record<string, SettingGroupConfig>} */
 let SETTINGS_CONFIG = {
   containers: {
     // This section is marked as in progress for testing purposes
@@ -2799,7 +2829,7 @@ var gMainPane = {
        * The fully initialized state.
        *
        * @param {Object} supportedLanguages
-       * @param {Array<{ langTag: string, displayName: string}} languageList
+       * @param {Array<{ langTag: string, displayName: string}>} languageList
        * @param {Map<string, DownloadPhase>} downloadPhases
        */
       constructor(supportedLanguages, languageList, downloadPhases) {
@@ -2835,8 +2865,8 @@ var gMainPane = {
       /**
        * Determine the download phase of each language file.
        *
-       * @param {Array<{ langTag: string, displayName: string}} languageList.
-       * @returns {Map<string, DownloadPhase>} Map the language tag to whether it is downloaded.
+       * @param {Array<{ langTag: string, displayName: string}>} languageList
+       * @returns {Promise<Map<string, DownloadPhase>>} Map the language tag to whether it is downloaded.
        */
       static async createDownloadPhases(languageList) {
         const downloadPhases = new Map();
@@ -3109,7 +3139,7 @@ var gMainPane = {
           case "loading":
             downloadButton.hidden = false;
             deleteButton.hidden = true;
-            downloadButton.setAttribute("disabled", true);
+            downloadButton.setAttribute("disabled", "true");
             break;
         }
       }
@@ -3533,7 +3563,7 @@ var gMainPane = {
    * The search mode is only available from the menu to change the primary browser
    * language.
    *
-   * @param {{ search: boolean }}
+   * @param {{ search: boolean }} search
    */
   showBrowserLanguagesSubDialog({ search }) {
     // Record the telemetry event with an id to associate related actions.
