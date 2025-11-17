@@ -32,8 +32,12 @@
 
 /* stylelint-disable-next-line media-query-no-invalid */
 @media -moz-pref("browser.urlbar.searchModeSwitcher.featureGate") or -moz-pref("browser.urlbar.scotchBonnet.enableOverride") {
-  #identity-box[pageproxystate="invalid"] {
-    display: none;
+  #identity-box {
+    margin-inline-end: 0;
+
+    &[pageproxystate="invalid"] {
+      display: none;
+    }
   }
 }
 
@@ -295,7 +299,7 @@
 @media -moz-pref("browser.urlbar.trustPanel.featureGate") {
   #tracking-protection-icon-container,
   /* Keep displaying the moz-extension or chrome UI chicklet */
-  #identity-box[pageproxystate="valid"]:not(.chromeUI, .extensionPage) {
+  #identity-box[pageproxystate="valid"]:not(.chromeUI, .extensionPage) #identity-icon-box {
     display: none;
   }
 
