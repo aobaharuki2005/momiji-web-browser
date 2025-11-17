@@ -30,6 +30,7 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
@@ -42,7 +43,6 @@ import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.compose.snackbar.Snackbar
 import org.mozilla.fenix.compose.snackbar.SnackbarState
@@ -144,20 +144,18 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.account_settings_preferences, rootKey)
 
-        accountSettingsStore = StoreProvider.get(this) {
-            AccountSettingsFragmentStore(
-                AccountSettingsFragmentState(
-                    lastSyncedDate = if (getLastSynced(requireContext()) == 0L) {
-                        LastSyncTime.Never
-                    } else {
-                        LastSyncTime.Success(getLastSynced(requireContext()))
-                    },
-                    deviceName = requireComponents.backgroundServices.defaultDeviceName(
-                        requireContext(),
-                    ),
+        accountSettingsStore = fragmentStore(
+            AccountSettingsFragmentState(
+                lastSyncedDate = if (getLastSynced(requireContext()) == 0L) {
+                    LastSyncTime.Never
+                } else {
+                    LastSyncTime.Success(getLastSynced(requireContext()))
+                },
+                deviceName = requireComponents.backgroundServices.defaultDeviceName(
+                    requireContext(),
                 ),
-            )
-        }
+            ),
+        ) { AccountSettingsFragmentStore(it) }.value
 
         accountManager = requireComponents.backgroundServices.accountManager
         accountManager.register(accountStateObserver, this, true)
