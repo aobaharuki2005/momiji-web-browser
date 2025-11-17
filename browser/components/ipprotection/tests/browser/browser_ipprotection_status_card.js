@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
- * Tests UI updates to the status card in the panel after enable/disable.
+ * Tests UI updates to the status card in the panel after enable/disables.
  */
 add_task(async function test_status_card_in_panel() {
   const l10nIdOn = "ipprotection-connection-status-on";
@@ -47,27 +47,27 @@ add_task(async function test_status_card_in_panel() {
     l10nIdOff,
     "Status card connection toggle data-l10n-id should be correct by default"
   );
-  Assert.equal(
-    statusCard?.statusGroupEl.description,
-    "",
-    "Time string should be empty"
+
+  let descriptionMetadata = statusCard?.statusGroupEl.description;
+
+  Assert.ok(
+    descriptionMetadata.values.length,
+    "Ensure there are elements loaded in the description slot"
   );
-  Assert.ok(statusCard.locationEl, "Location details should be present");
 
-  let flag =
-    statusCard.locationEl?.shadowRoot.querySelector("ipprotection-flag");
-
-  Assert.ok(flag, "Flag component should be present");
-
-  let animationLoadedPromise = BrowserTestUtils.waitForMutationCondition(
-    statusCard.shadowRoot,
-    { childList: true, subtree: true },
-    () => statusCard.animationEl
+  let locationNameFilter = descriptionMetadata.values.filter(
+    locationName => locationName === mockLocation.name
   );
-  let timerUpdatedPromise = BrowserTestUtils.waitForMutationCondition(
-    statusCard.shadowRoot,
-    { childList: true, subtree: true },
-    () => JSON.parse(statusCard.statusGroupEl.dataset.l10nArgs).time != ""
+  Assert.ok(locationNameFilter.length, "Found location in status card");
+
+  // We can't check the time value directly, so instead see if the lit timerDirective is loaded in the component.
+  // Assert that there's no timerDirective, so that we know the timer is not running.
+  let timerDirectiveFilter = descriptionMetadata.values.filter(
+    value => value._$litDirective$?.name == "TimerDirective"
+  );
+  Assert.ok(
+    !timerDirectiveFilter.length,
+    "Timer should not be loaded in description meta data"
   );
 
   // Set state as if protection is enabled
@@ -80,54 +80,22 @@ add_task(async function test_status_card_in_panel() {
 
   content.requestUpdate();
 
-  await Promise.all([
-    content.updateComplete,
-    timerUpdatedPromise,
-    animationLoadedPromise,
-  ]);
+  await content.updateComplete;
 
   Assert.equal(
     statusCard?.statusGroupEl.getAttribute("data-l10n-id"),
     l10nIdOn,
     "Status card connection toggle data-l10n-id should be correct when protection is enabled"
   );
-  Assert.ok(statusCard.animationEl, "Status card animation should be present");
 
-  let animationUnloadedPromise = BrowserTestUtils.waitForMutationCondition(
-    statusCard.shadowRoot,
-    { childList: true, subtree: true },
-    () => !statusCard.animationEl
-  );
-  let timerStoppedPromise = BrowserTestUtils.waitForMutationCondition(
-    statusCard.shadowRoot,
-    { childList: true, subtree: true },
-    () => JSON.parse(statusCard?.statusGroupEl.dataset.l10nArgs).time === ""
-  );
-
-  //   // Set state as if protection is disabled
-  await setPanelState({
-    isSignedOut: false,
-    protectionEnabledSince: enabledSince,
-    location: mockLocation,
-    isProtectionEnabled: false,
-  });
-
-  content.requestUpdate();
-
-  await Promise.all([
-    content.updateComplete,
-    animationUnloadedPromise,
-    timerStoppedPromise,
-  ]);
-
-  Assert.equal(
-    statusCard?.statusGroupEl.getAttribute("data-l10n-id"),
-    l10nIdOff,
-    "Status card connection toggle data-l10n-id should be correct when protection is disabled"
+  // Now check the timerDirective again and see if it's loaded. If found, then the timer is running.
+  descriptionMetadata = statusCard?.statusGroupEl.description;
+  timerDirectiveFilter = descriptionMetadata.values.filter(
+    value => value._$litDirective$?.name == "TimerDirective"
   );
   Assert.ok(
-    !statusCard.animationEl,
-    "Status card animation should not be present"
+    timerDirectiveFilter.length,
+    "Timer should be loaded now in description meta data"
   );
 
   await closePanel();

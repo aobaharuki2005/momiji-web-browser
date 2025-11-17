@@ -12,8 +12,6 @@ import {
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-header.mjs";
 // eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/ipprotection/ipprotection-flag.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-message-bar.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
@@ -224,16 +222,6 @@ export default class IPProtectionContentElement extends MozLitElement {
         .messageLinkl10nId=${ifDefined(messageLinkl10nId)}
       ></ipprotection-message-bar>
     `;
-  }
-
-  descriptionTemplate() {
-    return this.state.location
-      ? html`
-          <ipprotection-flag
-            .location=${this.state.location}
-          ></ipprotection-flag>
-        `
-      : null;
   }
 
   statusCardTemplate() {
