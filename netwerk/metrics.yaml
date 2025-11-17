@@ -605,14 +605,12 @@ networking:
     notification_emails:
       - vgosu@mozilla.com
       - necko@mozilla.com
-    expires: 148
+    expires: never
     labels:
       - regular
       - private
       - https_regular
       - https_private
-
-
 
   http_onstart_suspend_total_time:
     type: timing_distribution
