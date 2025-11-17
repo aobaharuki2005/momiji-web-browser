@@ -9,6 +9,8 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/MozPromise.h"
 #include "nsIProtocolHandler.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
