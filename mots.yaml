@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-11-06T19:13:23.782316+00:00'
+updated_at: '2025-11-17T16:30:56.137888+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -69,10 +69,6 @@ people:
     bmo_id: 636965
     name: Shane Hughes
     nick: aminomancer
-  - &amy
-    bmo_id: 622155
-    name: Amy Churchwell
-    nick: amy
   - &anba
     bmo_id: 339940
     name: André Bargull
@@ -474,6 +470,10 @@ people:
     bmo_id: 623993
     name: Iain Ireland
     nick: iain
+  - &ini
+    bmo_id: 741020
+    name: Irene Ni
+    nick: ini
   - &issammani
     bmo_id: 708367
     name: Issam Mani
@@ -865,6 +865,10 @@ people:
     bmo_id: 651777
     name: Erik Nordin
     nick: nordzilla
+  - &npypchenko
+    bmo_id: 731746
+    name: Nina Pypchenko
+    nick: npypchenko
   - &nrishel
     bmo_id: 697005
     name: Nick Rishel
@@ -917,6 +921,10 @@ people:
     bmo_id: 444787
     name: Daniel Thorn
     nick: relud
+  - &rhamoui
+    bmo_id: 690143
+    name: Reem Hamoui
+    nick: rhamoui
   - &rhunt
     bmo_id: 573202
     name: Ryan Hunt
@@ -3526,7 +3534,7 @@ modules:
         meta:
           peers_emeritus:
             - Tim Nguyen
-            - *amy
+            - Amy Churchwell
           components:
             - Firefox::Theme
             - Toolkit::Themes
@@ -3720,12 +3728,16 @@ modules:
           peers_emeritus:
             - *k88hudson
             - *aoprea
+            - Amy Churchwell
         owners:
           - *thecount
         peers:
-          - *amy
-          - *nbarrett
+          - *ini
           - *maxx
+          - *mconley
+          - *nbarrett
+          - *npypchenko
+          - *rhamoui
         machine_name: new_tab_page
 
       - name: Password Manager
@@ -4633,5 +4645,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: e27b32239a127b334a155bb8abffb2b429236d5b
-  export: 1d6764c9e1e0c2e0500f5b50903f9c68a098a0ad
+  config: cfb3fce3f5f17682ce93b06b7bdca3f585eaaec5
+  export: 63226cccbcfa7f0d59349143a71ab4639e623650
