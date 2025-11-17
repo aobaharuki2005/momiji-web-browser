@@ -315,7 +315,7 @@ class GeckoChildProcessHost : public SupportsWeakPtr,
   static StaticMutex sMutex;
 };
 
-nsCOMPtr<nsISerialEventTarget> GetIPCLauncher();
+nsCOMPtr<nsIEventTarget> GetIPCLauncher();
 
 } /* namespace ipc */
 } /* namespace mozilla */
