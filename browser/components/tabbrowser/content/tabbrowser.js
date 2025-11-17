@@ -9821,7 +9821,7 @@ var TabContextMenu = {
 
     SharingUtils.updateShareURLMenuItem(
       this.contextTab.linkedBrowser,
-      document.getElementById("context_sendTabToDevice")
+      document.getElementById("context_moveTabOptions")
     );
   },
 

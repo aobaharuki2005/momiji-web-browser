@@ -1111,10 +1111,12 @@ var gSync = {
     this.enableSendTabIfValidTab();
 
     if (!this.getSendTabTargets().length) {
-      PanelMultiView.getViewNode(
-        document,
-        "PanelUI-fxa-menu-sendtab-button"
-      ).hidden = true;
+      for (const id of [
+        "PanelUI-fxa-menu-sendtab-button",
+        "PanelUI-fxa-menu-sendtab-separator",
+      ]) {
+        PanelMultiView.getViewNode(document, id).hidden = true;
+      }
     }
 
     if (anchor.getAttribute("open") == "true") {
@@ -1368,10 +1370,12 @@ var gSync = {
       t => !!BrowserUtils.getShareableURL(t.linkedBrowser.currentURI)
     );
 
-    PanelMultiView.getViewNode(
-      document,
-      "PanelUI-fxa-menu-sendtab-button"
-    ).hidden = !canSendAllURIs;
+    for (const id of [
+      "PanelUI-fxa-menu-sendtab-button",
+      "PanelUI-fxa-menu-sendtab-separator",
+    ]) {
+      PanelMultiView.getViewNode(document, id).hidden = !canSendAllURIs;
+    }
   },
 
   // This is mis-named - it can be used to record any FxA UI telemetry, whether from
@@ -1997,6 +2001,10 @@ var gSync = {
 
     let sendTabsToDevice = document.getElementById("context_sendTabToDevice");
     sendTabsToDevice.disabled = !enabled;
+    let sendTabToDeviceSeparator = document.getElementById(
+      "context_sendTabToDeviceSeparator"
+    );
+    sendTabToDeviceSeparator.disabled = !enabled;
 
     if (hideItems || !hasASendableURI) {
       sendTabsToDevice.hidden = true;
@@ -2045,10 +2053,12 @@ var gSync = {
       "context-sendpagetodevice",
       !hideItems && showSendPage
     );
-    contextMenu.showItem(
+    for (const id of [
       "context-sendlinktodevice",
-      !hideItems && showSendLink
-    );
+      "context-sep-sendlinktodevice",
+    ]) {
+      contextMenu.showItem(id, !hideItems && showSendLink);
+    }
 
     if (!showSendLink && !showSendPage) {
       return false;

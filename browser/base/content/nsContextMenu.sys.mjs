@@ -1087,19 +1087,10 @@ export class nsContextMenu {
     let disabledAttr = this.#canStripParams() ? null : true;
     this.setItemAttr("context-stripOnShareLink", "disabled", disabledAttr);
 
-    let copyLinkSeparator = this.document.getElementById(
-      "context-sep-copylink"
+    let sendLinkSeparator = this.document.getElementById(
+      "context-sep-sendlinktodevice"
     );
-    // Show "Copy Link", "Copy" and "Copy Clean Link" with no divider, and "copy link" and "Send link to Device" with no divider between.
-    // Other cases will show a divider.
-    copyLinkSeparator.toggleAttribute(
-      "ensureHidden",
-      this.onLink &&
-        !this.onMailtoLink &&
-        !this.onTelLink &&
-        !this.onImage &&
-        this.syncItemsShown
-    );
+    sendLinkSeparator.toggleAttribute("ensureHidden", !this.syncItemsShown);
 
     this.showItem("context-copyvideourl", this.onVideo);
     this.showItem("context-copyaudiourl", this.onAudio);

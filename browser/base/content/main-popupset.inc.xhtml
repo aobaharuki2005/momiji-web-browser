@@ -78,12 +78,6 @@
         <menuseparator id="moveTabSeparator" hidden="true"/>
       </menupopup>
     </menu>
-    <menu id="context_sendTabToDevice"
-          class="sync-ui-item"
-          data-lazy-l10n-id="tab-context-send-tabs-to-device"
-          data-l10n-args='{"tabCount": 1}'>
-      <menupopup id="context_sendTabToDevicePopupMenu"/>
-    </menu>
     <menu id="context_reopenInContainer"
           data-lazy-l10n-id="tab-context-open-in-new-container-tab"
           hidden="true">
@@ -91,6 +85,13 @@
     </menu>
     <menuitem id="context_selectAllTabs" data-lazy-l10n-id="select-all-tabs"/>
     <menuseparator/>
+    <menu id="context_sendTabToDevice"
+          class="sync-ui-item"
+          data-lazy-l10n-id="tab-context-send-to-device"
+          data-l10n-args='{"tabCount": 1}'>
+      <menupopup id="context_sendTabToDevicePopupMenu" class="sync-ui-item"/>
+    </menu>
+    <menuseparator id="context_sendTabToDeviceSeparator"/>
     <menuitem id="context_closeTab"
               data-lazy-l10n-id="tab-context-close-n-tabs"
               data-l10n-args='{"tabCount": 1}'/>
