@@ -42,6 +42,12 @@ JSObject* CompressionStream::WrapObject(JSContext* aCx,
 // https://wicg.github.io/compression/#dom-compressionstream-compressionstream
 already_AddRefed<CompressionStream> CompressionStream::Constructor(
     const GlobalObject& aGlobal, CompressionFormat aFormat, ErrorResult& aRv) {
+  if (aFormat == CompressionFormat::Brotli) {
+    aRv.ThrowTypeError(
+        "'brotli' (value of argument 1) is not a valid value for enumeration "
+        "CompressionFormat.");
+    return nullptr;
+  }
   if (aFormat == CompressionFormat::Zstd) {
     aRv.ThrowTypeError(
         "'zstd' (value of argument 1) is not a valid value for enumeration "
