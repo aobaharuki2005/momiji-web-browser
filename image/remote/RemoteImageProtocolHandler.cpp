@@ -9,10 +9,14 @@
 #include "nsNetUtil.h"
 #include "nsURLHelper.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/ContentProcessManager.h"
 
 namespace mozilla::image {
 
+using mozilla::dom::ContentParent;
 using mozilla::dom::ContentParentId;
+using mozilla::dom::ContentProcessManager;
+using mozilla::dom::UniqueContentParentKeepAlive;
 
 StaticRefPtr<RemoteImageProtocolHandler> RemoteImageProtocolHandler::sSingleton;
 
@@ -28,6 +32,25 @@ NS_IMETHODIMP RemoteImageProtocolHandler::AllowPort(int32_t, const char*,
                                                     bool* aAllow) {
   *aAllow = false;
   return NS_OK;
+}
+
+static UniqueContentParentKeepAlive GetLaunchingContentParentForDecode(
+    const Maybe<ContentParentId>& aContentParentId) {
+  if (aContentParentId.isSome()) {
+    if (ContentProcessManager* cpm = ContentProcessManager::GetSingleton()) {
+      if (ContentParent* cp = cpm->GetContentProcessById(*aContentParentId)) {
+        return cp->TryAddKeepAlive(/* aBrowserId */ 0);
+      }
+    }
+  }
+
+  // We use the extension process as a fallback, because
+  // it is usually running, and should be OK to parse images.
+  return ContentParent::GetNewOrUsedLaunchingBrowserProcess(
+      EXTENSION_REMOTE_TYPE,
+      /* aGroup */ nullptr,
+      /* aPriority */ hal::PROCESS_PRIORITY_FOREGROUND,
+      /* aPreferUsed */ true);
 }
 
 // Parse out the relevant parts of the moz-remote-image URL
