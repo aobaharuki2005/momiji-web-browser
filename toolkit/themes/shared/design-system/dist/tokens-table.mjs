@@ -495,6 +495,13 @@ export const tokensTable = {
     },
     {
       value: {
+        default: "var(--color-accent-primary)",
+        forcedColors: "SelectedItem",
+      },
+      name: "--border-color-selected",
+    },
+    {
+      value: {
         default: "transparent",
         prefersContrast: "var(--button-text-color)",
         forcedColors: "var(--border-color-interactive)",
@@ -1204,6 +1211,10 @@ export const variableLookupTable = {
   "border-color-interactive-disabled": {
     default: "var(--border-color-interactive)",
     forcedColors: "GrayText",
+  },
+  "border-color-selected": {
+    default: "var(--color-accent-primary)",
+    forcedColors: "SelectedItem",
   },
   "border-radius-circle": "9999px",
   "border-radius-xsmall": "2px",

@@ -154,6 +154,12 @@
             "forcedColors": "GrayText"
           }
         }
+      },
+      "selected": {
+        "value": {
+          "default": "{color.accent.primary.@base}",
+          "forcedColors": "SelectedItem"
+        }
       }
     },
     "radius": {

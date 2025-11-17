@@ -79,6 +79,11 @@
     "dark": "{Theme$border/color/interactive}",
     "forcedColors": "{HCM Theme$GrayText}"
   },
+  "border/color/selected": {
+    "light": "{Theme$color/accent/primary}",
+    "dark": "{Theme$color/accent/primary}",
+    "forcedColors": "{HCM Theme$SelectedItem}"
+  },
   "button/background/color": {
     "light": "color-mix(in srgb, currentColor 7%, transparent)",
     "dark": "color-mix(in srgb, currentColor 7%, transparent)",
