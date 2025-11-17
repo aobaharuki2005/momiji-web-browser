@@ -43,6 +43,10 @@ class WaylandSurface final {
   void SetLoggingWidget(void* aWidget) { mLoggingWidget = aWidget; }
 #endif
 
+  void ReadyToDrawFrameCallbackHandler(struct wl_callback* aCallback);
+  void AddOrFireReadyToDrawCallback(const std::function<void(void)>& aDrawCB);
+  void ClearReadyToDrawCallbacks();
+
   void FrameCallbackHandler(struct wl_callback* aCallback, uint32_t aTime,
                             bool aRoutedFromChildSurface);
 
@@ -74,12 +78,11 @@ class WaylandSurface final {
   bool SetEGLWindowSize(LayoutDeviceIntSize aSize);
   bool HasEGLWindow() const { return !!mEGLWindow; }
 
+  // Read to draw means we got frame callback from parent surface
+  // where we attached to.
+  bool IsReadyToDraw() const { return mIsReadyToDraw; }
   // Mapped means we have all internals created.
   bool IsMapped() const { return mIsMapped; }
-
-  // We've got first frame callback so we're really visible now.
-  bool IsVisible() const { return mIsVisible; }
-
   // Indicate that Wayland surface uses Gdk resources which
   // need to be released on main thread by GdkCleanUpLocked().
   // It may be called after Unmap() to make sure
@@ -118,6 +121,10 @@ class WaylandSurface final {
   // is updated according to buffer size.
   bool CreateViewportLocked(const WaylandSurfaceLock& aProofOfLock,
                             bool aFollowsSizeChanges);
+
+  void AddReadyToDrawCallbackLocked(
+      const WaylandSurfaceLock& aProofOfLock,
+      const std::function<void(void)>& aInitialDrawCB);
 
   // Attach WaylandBuffer which shows WaylandBuffer content
   // on screen.
@@ -274,7 +281,8 @@ class WaylandSurface final {
   bool MapLocked(const WaylandSurfaceLock& aProofOfLock,
                  wl_surface* aParentWLSurface,
                  WaylandSurfaceLock* aParentWaylandSurfaceLock,
-                 gfx::IntPoint aSubsurfacePosition, bool aSubsurfaceDesync);
+                 gfx::IntPoint aSubsurfacePosition, bool aSubsurfaceDesync,
+                 bool aUseReadyToDrawCallback = true);
 
   void SetSizeLocked(const WaylandSurfaceLock& aProofOfLock,
                      gfx::IntSize aSizeScaled, gfx::IntSize aUnscaledSize);
@@ -296,18 +304,21 @@ class WaylandSurface final {
   bool HasEmulatedFrameCallbackLocked(
       const WaylandSurfaceLock& aProofOfLock) const;
 
+  void ClearReadyToDrawCallbacksLocked(const WaylandSurfaceLock& aProofOfLock);
+
   void ClearScaleLocked(const WaylandSurfaceLock& aProofOfLock);
 
   // Weak ref to owning widget (nsWindow or NativeLayerWayland),
   // used for diagnostics/logging only.
   void* mLoggingWidget = nullptr;
 
-  // mIsMapped means we're supposed to be visible
-  // (or not if Wayland compositor decides so).
+  // WaylandSurface mapped - we have valid wl_surface where we can paint to.
   mozilla::Atomic<bool, mozilla::Relaxed> mIsMapped{false};
 
-  // mIsVisible means we're really visible as we've got frame callback.
-  mozilla::Atomic<bool, mozilla::Relaxed> mIsVisible{false};
+  // Wayland shows only subsurfaces of visible parent surfaces.
+  // mIsReadyToDraw means our parent wl_surface has content so
+  // this WaylandSurface can be visible on screen and get get frame callback.
+  mozilla::Atomic<bool, mozilla::Relaxed> mIsReadyToDraw{false};
 
   // We used Gdk functions which needs clean up in main thread.
   mozilla::Atomic<bool, mozilla::Relaxed> mIsPendingGdkCleanup{false};
@@ -373,6 +384,11 @@ class WaylandSurface final {
   // Surface flip state on X/Y asix
   bool mBufferTransformFlippedX = false;
   bool mBufferTransformFlippedY = false;
+
+  // Frame callback registered to parent surface. When we get it we know
+  // parent surface is ready and we can paint.
+  wl_callback* mReadyToDrawFrameCallback = nullptr;
+  std::vector<std::function<void(void)>> mReadyToDrawCallbacks;
 
   // Frame callbacks of this surface
   wl_callback* mFrameCallback = nullptr;
