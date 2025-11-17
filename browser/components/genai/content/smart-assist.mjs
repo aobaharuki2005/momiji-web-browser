@@ -14,6 +14,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SmartAssistEngine:
     "moz-src:///browser/components/genai/SmartAssistEngine.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
 
 const FULL_PAGE_URL = "chrome://browser/content/genai/smartAssistPage.html";
@@ -226,6 +228,25 @@ export class SmartAssist extends MozLitElement {
     this._applyNewTabOverride(isChecked);
   }
 
+  /**
+   * Initiates the Firefox Account sign-in flow for MLPA authentication.
+   */
+
+  _signIn() {
+    lazy.SpecialMessageActions.handleAction(
+      {
+        type: "FXA_SIGNIN_FLOW",
+        data: {
+          entrypoint: "ai-window",
+          extraParams: {
+            service: "ai-window",
+          },
+        },
+      },
+      window.browsingContext.topChromeWindow.gBrowser.selectedBrowser
+    );
+  }
+
   render() {
     const iconSrc = this.showLog
       ? "chrome://global/skin/icons/arrow-down.svg"
@@ -315,7 +336,17 @@ export class SmartAssist extends MozLitElement {
           >
             ${this.inputAction.label}
           </moz-button>
+          <hr/>
+          <h3>The following Elements are for testing purposes</h3>
 
+          <p>Sign in for MLPA authentication.</p>
+          <moz-button
+            type="primary"
+            size="small"
+            @click=${this._signIn}
+          >
+            Sign in
+          </moz-button>
           <!-- Footer - New Tab Override -->
           ${
             this.mode === "sidebar"
