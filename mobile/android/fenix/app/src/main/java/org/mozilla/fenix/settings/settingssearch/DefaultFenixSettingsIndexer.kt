@@ -19,7 +19,6 @@ import java.io.IOException
  */
 class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexer {
     private val settings: MutableList<SettingsSearchItem> = mutableListOf()
-    private val breadcrumbs: MutableList<String> = mutableListOf()
 
     /**
      * Index all settings.
@@ -28,9 +27,7 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
         settings.clear()
 
         for (preferenceFileInformation in preferenceFileInformationList) {
-            breadcrumbs.clear()
             val settingFileParser = getXmlParserForFile(preferenceFileInformation.xmlResourceId)
-            breadcrumbs.add(context.getString(preferenceFileInformation.topBreadcrumbResourceId))
             if (settingFileParser != null) {
                 parseXmlFile(settingFileParser, preferenceFileInformation)
             }
@@ -82,7 +79,6 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
                     XmlResourceParser.START_TAG -> {
                         when (parser.name) {
                             PREFERENCE_CATEGORY_TAG -> {
-                                addCategoryToBreadcrumbs(parser)
                                 categoryItem = createCategoryItem(
                                     parser,
                                     preferenceFileInformation,
@@ -129,9 +125,6 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
                             PREFERENCE_CATEGORY_TAG -> {
                                 categoryItem = null
                                 categoryItemAdded = false
-                                if (breadcrumbs.isNotEmpty()) {
-                                    breadcrumbs.removeLastOrNull()
-                                }
                             }
                         }
                     }
@@ -142,24 +135,6 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             println("Error: I/O exception while parsing ${e.message}")
         } finally {
             parser.close()
-        }
-    }
-
-    private fun addCategoryToBreadcrumbs(
-        parser: XmlResourceParser,
-    ) {
-        for (i in 0 until parser.attributeCount) {
-            val attributeName = parser.getAttributeName(i)
-            val attributeValue = parser.getAttributeValue(i)
-
-            when (attributeName) {
-                TITLE_ATTRIBUTE_NAME -> {
-                    val categoryName = getStringResource(attributeValue.substring(1))
-                    if (categoryName.isNotBlank()) {
-                        breadcrumbs.add(categoryName)
-                    }
-                }
-            }
         }
     }
 
@@ -208,7 +183,6 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             preferenceKey = key,
             title = title,
             summary = summary,
-            breadcrumbs = breadcrumbs.toList(),
             categoryHeader = categoryHeader,
             preferenceFileInformation = preferenceFileInformation,
         )
@@ -253,7 +227,6 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             preferenceKey = key ?: "",
             title = title ?: "",
             summary = summary,
-            breadcrumbs = breadcrumbs.toList(),
             categoryHeader = categoryHeader,
             preferenceFileInformation = preferenceFileInformation,
         )
