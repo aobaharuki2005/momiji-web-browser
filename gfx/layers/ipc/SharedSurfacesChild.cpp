@@ -503,16 +503,9 @@ nsresult SharedSurfacesAnimation::SetCurrentFrame(
     // Only root compositor bridge childs record if they are paused, so check
     // the refresh driver.
     if (auto* widget = entry.mManager->LayerManager()->GetWidget()) {
-      nsIWidgetListener* wl = widget->GetPaintListener();
-      // Note call to wl->GetView() to make sure this is view type widget
-      // listener even though we don't use the view in this code.
-      // FIXME(emilio): Do popups do the right thing here? Maybe we should not
-      // check for GetView()?
-      if (wl && wl->GetView() && wl->GetPresShell()) {
-        if (auto* rd = wl->GetPresShell()->GetRefreshDriver()) {
-          if (rd->IsThrottled()) {
-            continue;
-          }
+      if (auto* ps = widget->GetPresShell()) {
+        if (auto* rd = ps->GetRefreshDriver(); rd && rd->IsThrottled()) {
+          continue;
         }
       }
     }
