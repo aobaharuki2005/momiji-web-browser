@@ -326,6 +326,7 @@ export class FxviewTabListBase extends MozLitElement {
           lazy.virtualListEnabledPref,
           () => html`
             <virtual-list
+              .itemHeightEstimate=${FXVIEW_ROW_HEIGHT_PX}
               .activeIndex=${this.activeIndex}
               .items=${this.tabItems}
               .template=${this.itemTemplate}
@@ -813,12 +814,27 @@ export class VirtualList extends MozLitElement {
     template: { type: Function },
     activeIndex: { type: Number },
     itemOffset: { type: Number },
-    maxRenderCountEstimate: { type: Number, state: true },
+
+    // For fixed-height lists, set `itemHeightEstimate` to the fixed height.
+    // For variable-height lists, set `itemHeightEstimate` to the minimum possible item height,
+    // and provide a `heightCalculator` function to compute the total height of the list.
+    // In variable-height lists, sublists are still divided based on a fixed number of items,
+    // determined by the minimum possible item height.
     itemHeightEstimate: { type: Number, state: true },
+    heightCalculator: { type: Function },
+
+    // Minimum number of items to render in each sublist. Used only if the
+    // height-based calculation yields fewer items.
+    minimalRenderCount: { type: Number },
+
+    maxRenderCountEstimate: { type: Number, state: true },
     isAlwaysVisible: { type: Boolean },
     isVisible: { type: Boolean, state: true },
     isSubList: { type: Boolean },
     pinnedTabsIndexOffset: { type: Number },
+
+    // Used to force re-rendering of list items
+    version: { type: Number },
   };
 
   createRenderRoot() {
@@ -832,13 +848,15 @@ export class VirtualList extends MozLitElement {
     this.pinnedTabsIndexOffset = 0;
     this.items = [];
     this.subListItems = [];
-    this.itemHeightEstimate = FXVIEW_ROW_HEIGHT_PX;
-    this.maxRenderCountEstimate = Math.max(
-      40,
-      2 * Math.ceil(window.innerHeight / this.itemHeightEstimate)
-    );
+
+    this.itemHeightEstimate = 0;
+    this.heightCalculator = items => this.itemHeightEstimate * items.length;
+    this.minimalRenderCount = 40;
+    this.maxRenderCountEstimate = this.minimalRenderCount;
     this.isSubList = false;
     this.isVisible = false;
+    this.version = 0;
+
     this.intersectionObserver = new IntersectionObserver(
       ([entry]) => {
         this.isVisible = entry.isIntersecting;
@@ -859,6 +877,18 @@ export class VirtualList extends MozLitElement {
         );
       }
     });
+
+    this.parentChildAddedObserver = new MutationObserver(mutations => {
+      for (const m of mutations) {
+        if (m.type != "childList") {
+          return;
+        }
+        if (this.children.length == this.subListItems.length) {
+          this.waitForSublistUpdated();
+          this.parentChildAddedObserver.disconnect();
+        }
+      }
+    });
   }
 
   disconnectedCallback() {
@@ -866,6 +896,20 @@ export class VirtualList extends MozLitElement {
     this.intersectionObserver.disconnect();
     this.childResizeObserver.disconnect();
     this.selfResizeObserver.disconnect();
+    this.parentChildAddedObserver.disconnect();
+  }
+
+  async waitForSublistUpdated() {
+    if (this.isSubList) {
+      return;
+    }
+    await Promise.all([...this.children].map(e => e.updateComplete));
+    this.dispatchEvent(
+      new CustomEvent("virtual-list-ready", {
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   triggerIntersectionObserver() {
@@ -902,7 +946,7 @@ export class VirtualList extends MozLitElement {
 
   recalculateAfterWindowResize() {
     this.maxRenderCountEstimate = Math.max(
-      40,
+      this.minimalRenderCount,
       2 * Math.ceil(window.innerHeight / this.itemHeightEstimate)
     );
   }
@@ -910,6 +954,18 @@ export class VirtualList extends MozLitElement {
   firstUpdated() {
     this.intersectionObserver.observe(this);
     this.selfResizeObserver.observe(this);
+
+    if (!this.isSubList) {
+      if (
+        this.subListItems.length &&
+        this.children.length == this.subListItems.length
+      ) {
+        this.waitForSublistUpdated();
+      } else {
+        this.parentChildAddedObserver.observe(this, { childList: true });
+      }
+    }
+
     if (this.isSubList && this.children[0]) {
       this.childResizeObserver.observe(this.children[0]);
     }
@@ -919,6 +975,14 @@ export class VirtualList extends MozLitElement {
     this.updateListHeight(changedProperties);
     if (changedProperties.has("items") && !this.isSubList) {
       this.triggerIntersectionObserver();
+    } else if (
+      changedProperties.has("itemHeightEstimate") ||
+      changedProperties.has("minimalRenderCount")
+    ) {
+      this.maxRenderCountEstimate = Math.max(
+        this.minimalRenderCount,
+        2 * Math.ceil(window.innerHeight / this.itemHeightEstimate)
+      );
     }
   }
 
@@ -930,7 +994,7 @@ export class VirtualList extends MozLitElement {
       this.style.height =
         this.isAlwaysVisible || this.isVisible
           ? "auto"
-          : `${this.items.length * this.itemHeightEstimate}px`;
+          : `${this.heightCalculator(this.items)}px`;
     }
   }
 
@@ -941,8 +1005,11 @@ export class VirtualList extends MozLitElement {
   subListTemplate = (data, i) => {
     return html`<virtual-list
       .template=${this.template}
+      .version=${this.version}
       .items=${data}
       .itemHeightEstimate=${this.itemHeightEstimate}
+      .heightCalculator=${this.heightCalculator}
+      .minimalRenderCount=${this.minimalRenderCount}
       .itemOffset=${i * this.maxRenderCountEstimate +
       this.pinnedTabsIndexOffset}
       .isAlwaysVisible=${i ==
