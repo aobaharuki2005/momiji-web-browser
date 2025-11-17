@@ -67,30 +67,6 @@ class StoreProviderTest {
     }
 
     @Test
-    fun `WHEN store is created lazily THEN createStore is only invoked on access`() {
-        val fragment = createAddedTestFragment { Fragment() }
-
-        var createCalled = false
-        val createStore: (CoroutineScope) -> Store<BasicState, Action> = {
-            createCalled = true
-            basicStore
-        }
-
-        val store by fragment.lazyStore(createStore)
-        // The store is not created yet.
-        assertFalse(createCalled)
-
-        assertEquals(basicStore, store)
-        // The store is only created when it's used.
-        assertTrue(createCalled)
-
-        // The store is not created again.
-        createCalled = false
-        fragment.lazyStore(createStore).value
-        assertFalse(createCalled)
-    }
-
-    @Test
     fun `GIVEN different stores are persisted WHEN requesting them THEN get their unique instances`() {
         val fragment = createAddedTestFragment { Fragment() }
         var createACalled = false

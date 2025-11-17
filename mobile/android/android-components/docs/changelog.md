@@ -16,6 +16,7 @@ permalink: /changelog/
   * 🆕 New `verticalScrollPosition` and `verticalScrollDelta` APIs exposing the current scroll position and delta of the webpage [Bug 1990215](https://bugzilla.mozilla.org/show_bug.cgi?id=1990215).
 * **lib-state**
   * 🆕 New `fragmentStore`, `activityStore`, `composableStore` and `navBackStackStore` APIs available to build a new Store and persist its State in a ViewModel ensuring that it survives Activity recreations. These APIs supersede the existing ones and avoid the possibility of memory leaks. [Bug 1996676](https://bugzilla.mozilla.org/show_bug.cgi?id=1996676).
+  * ⚠️ **Breaking change**: The `lazyStore` API was removed in favor of the new `fragmentStore`, `activityStore` and `composableStore` APIs. [Bug 1996676](https://bugzilla.mozilla.org/show_bug.cgi?id=1996676).
 
 # 146.0
 

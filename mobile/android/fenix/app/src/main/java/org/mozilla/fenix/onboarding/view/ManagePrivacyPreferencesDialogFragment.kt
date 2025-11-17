@@ -9,7 +9,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.compose.content
-import org.mozilla.fenix.components.lazyStore
+import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.ManagePrivacyPreferencesDialog
 import org.mozilla.fenix.onboarding.store.DefaultPrivacyPreferencesRepository
@@ -28,15 +28,18 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 class ManagePrivacyPreferencesDialogFragment : DialogFragment() {
 
-    private val store by lazyStore {
-        val repository = DefaultPrivacyPreferencesRepository(
-            settings = requireContext().settings(),
-        )
+    private val repository = DefaultPrivacyPreferencesRepository(
+        settings = requireContext().settings(),
+    )
+
+    private val store by fragmentStore(
+        PrivacyPreferencesState(
+            crashReportingEnabled = repository.getPreference(PreferenceType.CrashReporting),
+            usageDataEnabled = repository.getPreference(PreferenceType.UsageData),
+        ),
+    ) {
         PrivacyPreferencesStore(
-            initialState = PrivacyPreferencesState(
-                crashReportingEnabled = repository.getPreference(PreferenceType.CrashReporting),
-                usageDataEnabled = repository.getPreference(PreferenceType.UsageData),
-            ),
+            initialState = it,
             middlewares = listOf(
                 PrivacyPreferencesMiddleware(repository),
                 PrivacyPreferencesTelemetryMiddleware(),
