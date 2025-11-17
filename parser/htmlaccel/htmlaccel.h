@@ -231,6 +231,10 @@ const uint8x16_t SURROGATE_MASK = {0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8,
 const uint8x16_t SURROGATE_MATCH = {0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8,
                                     0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8,
                                     0xD8, 0xD8, 0xD8, 0xD8};
+const uint8x16_t HYPHENS = {'-', '-', '-', '-', '-', '-', '-', '-',
+                            '-', '-', '-', '-', '-', '-', '-', '-'};
+const uint8x16_t RSQBS = {']', ']', ']', ']', ']', ']', ']', ']',
+                          ']', ']', ']', ']', ']', ']', ']', ']'};
 
 // The approach here supports disallowing up to 16 different
 // characters that 1) are in the Latin1 range, i.e. U+00FF or
@@ -262,12 +266,36 @@ const uint8x16_t LT_GT_AMP_NBSP = {0xA0, 2, 1, 1, 1,   1, '&', 1,
 /// quote.
 const uint8x16_t LT_GT_AMP_NBSP_QUOT = {0xA0, 2, '"', 1, 1,   1, '&', 1,
                                         1,    1, 1,   1, '<', 1, '>', 1};
+/// Disallow U+0000, less-than, and carriage return.
+const uint8x16_t ZERO_LT_CR = {0, 2, 1, 1, 1,   1,    1, 1,
+                               1, 1, 1, 1, '<', '\r', 1, 1};
+/// Disallow U+0000, less-than, carriage return, and line feed.
+const uint8x16_t ZERO_LT_CR_LF = {0, 2, 1,    1, 1,   1,    1, 1,
+                                  1, 1, '\n', 1, '<', '\r', 1, 1};
+/// Disallow U+0000, single quote, ampersand, and carriage return.
+const uint8x16_t ZERO_APOS_AMP_CR = {0, 2, 1, 1, 1, 1,    '&', '\'',
+                                     1, 1, 1, 1, 1, '\r', 1,   1};
+/// Disallow U+0000, single quote, ampersand, carriage return, and line feed.
+const uint8x16_t ZERO_APOS_AMP_CR_LF = {0, 2, 1,    1, 1, 1,    '&', '\'',
+                                        1, 1, '\n', 1, 1, '\r', 1,   1};
+/// Disallow U+0000, double quote, ampersand, and carriage return.
+const uint8x16_t ZERO_QUOT_AMP_CR = {0, 2, '"', 1, 1, 1,    '&', 1,
+                                     1, 1, 1,   1, 1, '\r', 1,   1};
+/// Disallow U+0000, single quote, ampersand, carriage return, and line feed.
+const uint8x16_t ZERO_QUOT_AMP_CR_LF = {0, 2, '"',  1, 1, 1,    '&', 1,
+                                        1, 1, '\n', 1, 1, '\r', 1,   1};
+/// Disallow U+0000 and carriage return.
+const uint8x16_t ZERO_CR = {0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, '\r', 1, 1};
+/// Disallow U+0000, carriage return, and line feed.
+const uint8x16_t ZERO_CR_LF = {0, 2, 1,    1, 1, 1,    1, 1,
+                               1, 1, '\n', 1, 1, '\r', 1, 1};
 
 /// Compute a 16-lane mask for for 16 UTF-16 code units, where a lane
 /// is 0x00 if OK to skip and 0xFF in not OK to skip.
 MOZ_ALWAYS_INLINE_EVEN_DEBUG uint8x16_t
 StrideToMask(const char16_t* aArr /* len = 16 */, uint8x16_t aTable,
-             bool aAllowSurrogates) {
+             bool aAllowSurrogates = true, bool aAllowHyphen = true,
+             bool aAllowRightSquareBracket = true) {
   uint8x16_t first;
   uint8x16_t second;
   // memcpy generates a single unaligned load instruction with both ISAs.
@@ -287,6 +315,12 @@ StrideToMask(const char16_t* aArr /* len = 16 */, uint8x16_t aTable,
   uint8x16_t high_half_matches = high_halves == ALL_ZEROS;
   uint8x16_t low_half_matches =
       low_halves == TableLookup(aTable, low_halves & NIBBLE_MASK);
+  if (!aAllowHyphen) {  // Assumed to be constant-propagated
+    low_half_matches |= low_halves == HYPHENS;
+  }
+  if (!aAllowRightSquareBracket) {  // Assumed to be constant-propagated
+    low_half_matches |= low_halves == RSQBS;
+  }
   uint8x16_t ret = low_half_matches & high_half_matches;
   if (!aAllowSurrogates) {  // Assumed to be constant-propagated
     ret |= (high_halves & SURROGATE_MASK) == SURROGATE_MATCH;
@@ -296,10 +330,12 @@ StrideToMask(const char16_t* aArr /* len = 16 */, uint8x16_t aTable,
 
 /// Compute a 16-lane mask for for 16 Latin1 code units, where a lane
 /// is 0x00 if OK to skip and 0xFF in not OK to skip.
-/// `aAllowSurrogates` exist for signature compatibility with the UTF-16
-/// case and is unused.
-MOZ_ALWAYS_INLINE_EVEN_DEBUG uint8x16_t StrideToMask(
-    const char* aArr /* len = 16 */, uint8x16_t aTable, bool aAllowSurrogates) {
+/// The boolean arguments exist for signature compatibility with the UTF-16
+/// case and are unused in the Latin1 case.
+MOZ_ALWAYS_INLINE_EVEN_DEBUG uint8x16_t
+StrideToMask(const char* aArr /* len = 16 */, uint8x16_t aTable,
+             bool aAllowSurrogates = true, bool aAllowHyphen = true,
+             bool aAllowRightSquareBracket = true) {
   uint8x16_t stride;
   // memcpy generates a single unaligned load instruction with both ISAs.
   memcpy(&stride, aArr, 16);
@@ -308,13 +344,14 @@ MOZ_ALWAYS_INLINE_EVEN_DEBUG uint8x16_t StrideToMask(
 }
 
 template <typename CharT>
-MOZ_ALWAYS_INLINE_EVEN_DEBUG size_t AccelerateTextNode(const CharT* aInput,
-                                                       const CharT* aEnd,
-                                                       uint8x16_t aTable,
-                                                       bool aAllowSurrogates) {
+MOZ_ALWAYS_INLINE_EVEN_DEBUG size_t
+AccelerateTextNode(const CharT* aInput, const CharT* aEnd, uint8x16_t aTable,
+                   bool aAllowSurrogates = true, bool aAllowHyphen = true,
+                   bool aAllowRightSquareBracket = true) {
   const CharT* current = aInput;
   while (aEnd - current >= 16) {
-    uint8x16_t mask = StrideToMask(current, aTable, aAllowSurrogates);
+    uint8x16_t mask = StrideToMask(current, aTable, aAllowSurrogates,
+                                   aAllowHyphen, aAllowRightSquareBracket);
 #if defined(__aarch64__)
     uint8_t max = vmaxvq_u8(mask & INVERTED_ADVANCES);
     if (max != 0) {
@@ -343,8 +380,7 @@ MOZ_ALWAYS_INLINE_EVEN_DEBUG uint32_t CountEscaped(const CharT* aInput,
   const CharT* current = aInput;
   while (aEnd - current >= 16) {
     uint8x16_t mask = StrideToMask(
-        current, aCountDoubleQuote ? LT_GT_AMP_NBSP_QUOT : LT_GT_AMP_NBSP,
-        true);
+        current, aCountDoubleQuote ? LT_GT_AMP_NBSP_QUOT : LT_GT_AMP_NBSP);
 #if defined(__aarch64__)
     // Reduce on each iteration to avoid branching for overflow avoidance
     // on each iteration.
@@ -369,7 +405,7 @@ MOZ_ALWAYS_INLINE_EVEN_DEBUG bool ContainsMarkup(const char16_t* aInput,
                                                  const char16_t* aEnd) {
   const char16_t* current = aInput;
   while (aEnd - current >= 16) {
-    uint8x16_t mask = StrideToMask(current, ZERO_LT_AMP_CR, true);
+    uint8x16_t mask = StrideToMask(current, ZERO_LT_AMP_CR);
 #if defined(__aarch64__)
     uint8_t max = vmaxvq_u8(mask);
     if (max != 0) {

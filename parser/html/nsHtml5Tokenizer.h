@@ -449,91 +449,49 @@ class nsHtml5Tokenizer {
           for (;;) {
             if (reconsume) {
               reconsume = false;
-              switch (c) {
-                case '&': {
-                  flushChars(buf, pos);
-                  MOZ_ASSERT(!charRefBufLen,
-                             "charRefBufLen not reset after previous use!");
-                  appendCharRefBuf(c);
-                  setAdditionalAndRememberAmpersandLocation('\0');
-                  returnState = state;
-                  state = P::transition(
-                      mViewSource.get(),
-                      nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE, reconsume,
-                      pos);
-                  NS_HTML5_CONTINUE(stateloop);
-                }
-                case '<': {
-                  flushChars(buf, pos);
-                  state =
-                      P::transition(mViewSource.get(),
-                                    nsHtml5Tokenizer::TAG_OPEN, reconsume, pos);
-                  NS_HTML5_BREAK(dataloop);
-                }
-                case '\0': {
-                  maybeEmitReplacementCharacter(buf, pos);
-                  break;
-                }
-                case '\r': {
-                  emitCarriageReturn<P>(buf, pos);
-                  NS_HTML5_BREAK(stateloop);
-                }
-                case '\n': {
-                  P::silentLineFeed(this);
-                  [[fallthrough]];
-                }
-                default: {
-                  break;
-                }
-              }
-            }
-          datamiddle:
-            for (;;) {
+            } else {
               ++pos;
               pos += P::accelerateAdvancementData(this, buf, pos, endPos);
-              for (;;) {
-                if (pos == endPos) {
-                  NS_HTML5_BREAK(stateloop);
-                }
-                c = P::checkChar(this, buf, pos);
-                switch (c) {
-                  case '&': {
-                    flushChars(buf, pos);
-                    MOZ_ASSERT(!charRefBufLen,
-                               "charRefBufLen not reset after previous use!");
-                    appendCharRefBuf(c);
-                    setAdditionalAndRememberAmpersandLocation('\0');
-                    returnState = state;
-                    state = P::transition(
-                        mViewSource.get(),
-                        nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE,
-                        reconsume, pos);
-                    NS_HTML5_CONTINUE(stateloop);
-                  }
-                  case '<': {
-                    flushChars(buf, pos);
-                    state = P::transition(mViewSource.get(),
-                                          nsHtml5Tokenizer::TAG_OPEN, reconsume,
-                                          pos);
-                    NS_HTML5_BREAK(dataloop);
-                  }
-                  case '\0': {
-                    maybeEmitReplacementCharacter(buf, pos);
-                    NS_HTML5_CONTINUE(datamiddle);
-                  }
-                  case '\r': {
-                    emitCarriageReturn<P>(buf, pos);
-                    NS_HTML5_BREAK(stateloop);
-                  }
-                  case '\n': {
-                    P::silentLineFeed(this);
-                    NS_HTML5_CONTINUE(datamiddle);
-                  }
-                  default: {
-                    ++pos;
-                    continue;
-                  }
-                }
+              if (pos == endPos) {
+                NS_HTML5_BREAK(stateloop);
+              }
+              c = P::checkChar(this, buf, pos);
+            }
+            switch (c) {
+              case '&': {
+                flushChars(buf, pos);
+                MOZ_ASSERT(!charRefBufLen,
+                           "charRefBufLen not reset after previous use!");
+                appendCharRefBuf(c);
+                setAdditionalAndRememberAmpersandLocation('\0');
+                returnState = state;
+                state =
+                    P::transition(mViewSource.get(),
+                                  nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE,
+                                  reconsume, pos);
+                NS_HTML5_CONTINUE(stateloop);
+              }
+              case '<': {
+                flushChars(buf, pos);
+                state =
+                    P::transition(mViewSource.get(), nsHtml5Tokenizer::TAG_OPEN,
+                                  reconsume, pos);
+                NS_HTML5_BREAK(dataloop);
+              }
+              case '\0': {
+                maybeEmitReplacementCharacter(buf, pos);
+                continue;
+              }
+              case '\r': {
+                emitCarriageReturn<P>(buf, pos);
+                NS_HTML5_BREAK(stateloop);
+              }
+              case '\n': {
+                P::silentLineFeed(this);
+                [[fallthrough]];
+              }
+              default: {
+                continue;
               }
             }
           }
@@ -922,7 +880,10 @@ class nsHtml5Tokenizer {
             if (reconsume) {
               reconsume = false;
             } else {
-              if (++pos == endPos) {
+              ++pos;
+              pos += P::accelerateAdvancementAttributeValueDoubleQuoted(
+                  this, buf, pos, endPos);
+              if (pos == endPos) {
                 NS_HTML5_BREAK(stateloop);
               }
               c = P::checkChar(this, buf, pos);
@@ -1347,7 +1308,9 @@ class nsHtml5Tokenizer {
         }
         case COMMENT: {
           for (;;) {
-            if (++pos == endPos) {
+            ++pos;
+            pos += P::accelerateAdvancementComment(this, buf, pos, endPos);
+            if (pos == endPos) {
               NS_HTML5_BREAK(stateloop);
             }
             c = P::checkChar(this, buf, pos);
@@ -1886,7 +1849,10 @@ class nsHtml5Tokenizer {
             if (reconsume) {
               reconsume = false;
             } else {
-              if (++pos == endPos) {
+              ++pos;
+              pos +=
+                  P::accelerateAdvancementCdataSection(this, buf, pos, endPos);
+              if (pos == endPos) {
                 NS_HTML5_BREAK(stateloop);
               }
               c = P::checkChar(this, buf, pos);
@@ -1981,7 +1947,10 @@ class nsHtml5Tokenizer {
             if (reconsume) {
               reconsume = false;
             } else {
-              if (++pos == endPos) {
+              ++pos;
+              pos += P::accelerateAdvancementAttributeValueSingleQuoted(
+                  this, buf, pos, endPos);
+              if (pos == endPos) {
                 NS_HTML5_BREAK(stateloop);
               }
               c = P::checkChar(this, buf, pos);
@@ -2454,7 +2423,9 @@ class nsHtml5Tokenizer {
             if (reconsume) {
               reconsume = false;
             } else {
-              if (++pos == endPos) {
+              ++pos;
+              pos += P::accelerateAdvancementPlaintext(this, buf, pos, endPos);
+              if (pos == endPos) {
                 NS_HTML5_BREAK(stateloop);
               }
               c = P::checkChar(this, buf, pos);
@@ -2552,95 +2523,51 @@ class nsHtml5Tokenizer {
           for (;;) {
             if (reconsume) {
               reconsume = false;
-              switch (c) {
-                case '&': {
-                  flushChars(buf, pos);
-                  MOZ_ASSERT(!charRefBufLen,
-                             "charRefBufLen not reset after previous use!");
-                  appendCharRefBuf(c);
-                  setAdditionalAndRememberAmpersandLocation('\0');
-                  returnState = state;
-                  state = P::transition(
-                      mViewSource.get(),
-                      nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE, reconsume,
-                      pos);
-                  NS_HTML5_CONTINUE(stateloop);
-                }
-                case '<': {
-                  flushChars(buf, pos);
-                  returnState = state;
-                  state = P::transition(
-                      mViewSource.get(),
-                      nsHtml5Tokenizer::RAWTEXT_RCDATA_LESS_THAN_SIGN,
-                      reconsume, pos);
-                  NS_HTML5_CONTINUE(stateloop);
-                }
-                case '\0': {
-                  maybeEmitReplacementCharacter(buf, pos);
-                  break;
-                }
-                case '\r': {
-                  emitCarriageReturn<P>(buf, pos);
-                  NS_HTML5_BREAK(stateloop);
-                }
-                case '\n': {
-                  P::silentLineFeed(this);
-                  [[fallthrough]];
-                }
-                default: {
-                  break;
-                }
-              }
-            }
-          rcdatamiddle:
-            for (;;) {
+            } else {
               ++pos;
               pos += P::accelerateAdvancementData(this, buf, pos, endPos);
-              for (;;) {
-                if (pos == endPos) {
-                  NS_HTML5_BREAK(stateloop);
-                }
-                c = P::checkChar(this, buf, pos);
-                switch (c) {
-                  case '&': {
-                    flushChars(buf, pos);
-                    MOZ_ASSERT(!charRefBufLen,
-                               "charRefBufLen not reset after previous use!");
-                    appendCharRefBuf(c);
-                    setAdditionalAndRememberAmpersandLocation('\0');
-                    returnState = state;
-                    state = P::transition(
-                        mViewSource.get(),
-                        nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE,
-                        reconsume, pos);
-                    NS_HTML5_CONTINUE(stateloop);
-                  }
-                  case '<': {
-                    flushChars(buf, pos);
-                    returnState = state;
-                    state = P::transition(
-                        mViewSource.get(),
-                        nsHtml5Tokenizer::RAWTEXT_RCDATA_LESS_THAN_SIGN,
-                        reconsume, pos);
-                    NS_HTML5_CONTINUE(stateloop);
-                  }
-                  case '\0': {
-                    maybeEmitReplacementCharacter(buf, pos);
-                    NS_HTML5_CONTINUE(rcdatamiddle);
-                  }
-                  case '\r': {
-                    emitCarriageReturn<P>(buf, pos);
-                    NS_HTML5_BREAK(stateloop);
-                  }
-                  case '\n': {
-                    P::silentLineFeed(this);
-                    NS_HTML5_CONTINUE(rcdatamiddle);
-                  }
-                  default: {
-                    ++pos;
-                    continue;
-                  }
-                }
+              if (pos == endPos) {
+                NS_HTML5_BREAK(stateloop);
+              }
+              c = P::checkChar(this, buf, pos);
+            }
+            switch (c) {
+              case '&': {
+                flushChars(buf, pos);
+                MOZ_ASSERT(!charRefBufLen,
+                           "charRefBufLen not reset after previous use!");
+                appendCharRefBuf(c);
+                setAdditionalAndRememberAmpersandLocation('\0');
+                returnState = state;
+                state =
+                    P::transition(mViewSource.get(),
+                                  nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE,
+                                  reconsume, pos);
+                NS_HTML5_CONTINUE(stateloop);
+              }
+              case '<': {
+                flushChars(buf, pos);
+                returnState = state;
+                state = P::transition(
+                    mViewSource.get(),
+                    nsHtml5Tokenizer::RAWTEXT_RCDATA_LESS_THAN_SIGN, reconsume,
+                    pos);
+                NS_HTML5_CONTINUE(stateloop);
+              }
+              case '\0': {
+                emitReplacementCharacter(buf, pos);
+                continue;
+              }
+              case '\r': {
+                emitCarriageReturn<P>(buf, pos);
+                NS_HTML5_BREAK(stateloop);
+              }
+              case '\n': {
+                P::silentLineFeed(this);
+                [[fallthrough]];
+              }
+              default: {
+                continue;
               }
             }
           }
@@ -2650,7 +2577,9 @@ class nsHtml5Tokenizer {
             if (reconsume) {
               reconsume = false;
             } else {
-              if (++pos == endPos) {
+              ++pos;
+              pos += P::accelerateAdvancementRawtext(this, buf, pos, endPos);
+              if (pos == endPos) {
                 NS_HTML5_BREAK(stateloop);
               }
               c = P::checkChar(this, buf, pos);
@@ -2901,7 +2830,9 @@ class nsHtml5Tokenizer {
             if (reconsume) {
               reconsume = false;
             } else {
-              if (++pos == endPos) {
+              ++pos;
+              pos += P::accelerateAdvancementRawtext(this, buf, pos, endPos);
+              if (pos == endPos) {
                 NS_HTML5_BREAK(stateloop);
               }
               c = P::checkChar(this, buf, pos);
@@ -3083,7 +3014,10 @@ class nsHtml5Tokenizer {
             if (reconsume) {
               reconsume = false;
             } else {
-              if (++pos == endPos) {
+              ++pos;
+              pos += P::accelerateAdvancementScriptDataEscaped(this, buf, pos,
+                                                               endPos);
+              if (pos == endPos) {
                 NS_HTML5_BREAK(stateloop);
               }
               c = P::checkChar(this, buf, pos);
