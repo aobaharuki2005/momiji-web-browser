@@ -109,7 +109,7 @@
 }
 
 .privacy-detailedoption {
-  border-color: var(--in-content-box-border-color);
+  border-color: var(--border-color);
 }
 
 .privacy-detailedoption.disabled {
