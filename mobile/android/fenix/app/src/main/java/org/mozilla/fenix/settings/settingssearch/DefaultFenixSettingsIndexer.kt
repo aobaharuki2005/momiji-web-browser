@@ -10,6 +10,7 @@ import android.content.res.Resources
 import android.content.res.XmlResourceParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.mozilla.fenix.R
 import java.io.IOException
 
 /**
@@ -262,10 +263,15 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             val resourceId = context.resources.getIdentifier(
                 resourceName, "string", context.packageName,
             )
-            if (resourceId != 0) {
-                context.getString(resourceId)
+            if (resourceId == 0) {
+                return ""
+            }
+
+            if (stringsWithRequiredFormatting.contains(resourceId)) {
+                val appName = context.getString(R.string.app_name)
+                context.getString(resourceId, appName)
             } else {
-                ""
+                context.getString(resourceId)
             }
         } catch (e: Resources.NotFoundException) {
             ""
@@ -311,6 +317,17 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
             PreferenceFileInformation.TabsPreferences,
             PreferenceFileInformation.TrackingProtectionPreferences,
             PreferenceFileInformation.SaveLoginsPreferences,
+        )
+
+        /**
+         * List of strings that require format args.
+         *
+         * All of them require the app name.
+         */
+        val stringsWithRequiredFormatting = listOf(
+            R.string.preferences_downloads_settings_clean_up_files_title,
+            R.string.preferences_show_nonsponsored_suggestions,
+            R.string.preferences_about,
         )
     }
 }
