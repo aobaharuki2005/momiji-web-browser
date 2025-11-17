@@ -69,8 +69,6 @@ support-files = [
 
 ["browser_resources_network_event_stacktraces.js"]
 
-["browser_resources_network_event_stacktraces_keepalive.js"]
-
 ["browser_resources_network_events.js"]
 
 ["browser_resources_network_events_cache.js"]

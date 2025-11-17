@@ -159,11 +159,6 @@ function getChannelBrowsingContextID(channel) {
   if (channel.loadInfo.browsingContextID) {
     return channel.loadInfo.browsingContextID;
   }
-
-  if (channel.loadInfo.workerAssociatedBrowsingContextID) {
-    return channel.loadInfo.workerAssociatedBrowsingContextID;
-  }
-
   // At least WebSocket channel aren't having a browsingContextID set on their loadInfo
   // We fallback on top frame element, which works, but will be wrong for WebSocket
   // in same-process iframes...
