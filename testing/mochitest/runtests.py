@@ -2965,7 +2965,7 @@ toolbar#nav-bar {
                     "thread": None,
                     "pid": None,
                     "source": "mochitest",
-                    "time": int(time.time()) * 1000,
+                    "time": int(time.time() * 1000),
                     "test": self.lastTestSeen,
                     "message": "Application shut down (without crashing) in the middle of a test!",
                 }
@@ -2990,7 +2990,7 @@ toolbar#nav-bar {
                         "thread": None,
                         "pid": None,
                         "source": "mochitest",
-                        "time": int(time.time()) * 1000,
+                        "time": int(time.time() * 1000),
                         "test": self.lastTestSeen,
                         "message": msg,
                     }
@@ -3056,7 +3056,7 @@ toolbar#nav-bar {
                     "thread": None,
                     "pid": None,
                     "source": "mochitest",
-                    "time": int(time.time()) * 1000,
+                    "time": int(time.time() * 1000),
                     "test": self.lastTestSeen,
                     "message": "application terminated with exit code %s" % status,
                 }
@@ -4012,7 +4012,7 @@ toolbar#nav-bar {
             "thread": None,
             "pid": None,
             "source": "mochitest",
-            "time": int(time.time()) * 1000,
+            "time": int(time.time() * 1000),
             "test": self.lastTestSeen,
             "message": "application timed out after %d seconds with no output"
             % int(timeout),
@@ -4227,7 +4227,7 @@ toolbar#nav-bar {
                         "thread": None,
                         "pid": None,
                         "source": "mochitest",
-                        "time": int(time.time()) * 1000,
+                        "time": int(time.time() * 1000),
                         "test": message["test"],
                         "message": message["msg"],
                     }
