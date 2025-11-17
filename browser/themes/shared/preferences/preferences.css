@@ -170,7 +170,7 @@ radio {
 
 .spotlight {
   background-color: color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
-  outline: var(--color-accent-primary) 1px dotted;
+  outline: var(--border-color-selected) 1px dotted;
   animation: fade-out 0.5s ease-out 2s forwards;
   /* Show the border to spotlight the components in high-contrast mode. */
   border: 1px solid transparent;
