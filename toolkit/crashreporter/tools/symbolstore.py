@@ -327,7 +327,7 @@ def TryGetGitRepoInfoFromHg(srcdir):
             "hg", "-R", srcdir, "log", "-r", rev, "-T", "{extras.git_commit}"
         )
         if git_commit:
-            git_root = "https://github.com/mozilla/firefox"
+            git_root = "https://github.com/mozilla-firefox/firefox"
             return GitRepoInfo(srcdir, git_commit, git_root)
     return None
 
