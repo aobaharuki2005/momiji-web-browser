@@ -17,7 +17,6 @@
   preview/credentialChooser.ftl                    (../../toolkit/components/credentialmanagement/credentialChooser.ftl)
   browser                                          (%browser/**/*.ftl)
   preview/smartTabGroups.ftl                       (../locales-preview/smartTabGroups.ftl)
-  preview/termsOfUse.ftl                           (../locales-preview/termsOfUse.ftl)
   preview/ipProtection.ftl                         (../locales-preview/ipProtection.ftl)
   preview/privacyPreferences.ftl                   (../locales-preview/privacyPreferences.ftl)
 

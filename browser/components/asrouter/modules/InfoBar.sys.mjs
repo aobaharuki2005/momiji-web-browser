@@ -23,7 +23,6 @@ const FTL_FILES = [
   "browser/defaultBrowserNotification.ftl",
   "browser/profiles.ftl",
   "browser/termsofuse.ftl",
-  "preview/termsOfUse.ftl",
 ];
 
 class InfoBarNotification {
