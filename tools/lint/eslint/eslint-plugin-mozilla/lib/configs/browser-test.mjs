@@ -51,7 +51,6 @@ export default {
     record: "readonly",
     registerCleanupFunction: "readonly",
     requestLongerTimeout: "readonly",
-    setExpectedFailuresForSelfTest: "readonly",
     stringContains: "readonly",
     stringMatches: "readonly",
     testSignal: "readonly",
