@@ -1510,8 +1510,14 @@ nsresult Http3Session::TryActivating(
       return NS_ERROR_HTTP2_FALLBACK_TO_HTTP1;
     }
 
-    // Ignore this error. This may happen if some events are not handled yet.
-    return NS_OK;
+    // Previously we always returned NS_OK here, which caused the
+    // transaction to wait until the quic connection timed out
+    // after which it was retried without quic.
+    if (StaticPrefs::network_http_http3_fallback_to_h2_on_error()) {
+      return NS_ERROR_HTTP2_FALLBACK_TO_HTTP1;
+    }
+
+    return rv;
   }
 
   LOG(("Http3Session::TryActivating streamId=0x%" PRIx64
