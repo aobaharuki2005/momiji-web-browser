@@ -62,6 +62,21 @@ ipprotection-connection-time = { $time }
 ipprotection-location-title =
   .title = Location selected based on fastest server
 
+ipprotection-site-settings-control =
+  .label = Website settings
+
+# Variables:
+#   $sitename (String) - The name of the site that we're currently on (eg. example.com)
+ipprotection-site-settings-button-vpn-off =
+  .label = { $sitename }
+  .description = VPN is off
+
+# Variables:
+#   $sitename (String) - The name of the site that we're currently on (eg. example.com)
+ipprotection-site-settings-button-vpn-on =
+  .label = { $sitename }
+  .description = VPN is on
+
 # When VPN is toggled on
 ipprotection-toggle-active =
   .aria-label = Turn VPN off
