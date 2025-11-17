@@ -17,6 +17,7 @@
 #include "mozilla/dom/CSSStyleValue.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/StylePropertyMapReadOnlyBinding.h"
+#include "nsCSSProps.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsQueryObject.h"
@@ -47,7 +48,6 @@ struct DeclarationTraits<InlineStyleDeclarations> {
     }
 
     if (!block->GetPropertyTypedValue(aProperty, result)) {
-      aRv.ThrowTypeError("Invalid CSS property");
       return result;
     }
 
@@ -74,7 +74,6 @@ struct DeclarationTraits<ComputedStyleDeclarations> {
     }
 
     if (!style->GetPropertyTypedValue(aProperty, result)) {
-      aRv.ThrowTypeError("Invalid CSS property");
       return result;
     }
 
@@ -120,6 +119,14 @@ void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
   RefPtr<Element> element = do_QueryObject(mParent);
   if (!element) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
+  }
+
+  // Step 2.
+
+  NonCustomCSSPropertyId propId = nsCSSProps::LookupProperty(aProperty);
+  if (propId == eCSSProperty_UNKNOWN) {
+    aRv.ThrowTypeError("Invalid property: "_ns + aProperty);
     return;
   }
 
