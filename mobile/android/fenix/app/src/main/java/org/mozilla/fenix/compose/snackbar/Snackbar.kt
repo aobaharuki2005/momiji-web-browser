@@ -120,7 +120,13 @@ class Snackbar private constructor(
                 contentView.setContent {
                     FirefoxTheme {
                         Snackbar(
-                            snackbarData = snackbarState.copy(action = action).toSnackbarData(),
+                            snackbarData = snackbarState.copy(
+                                action = action,
+                                onDismiss = {
+                                    snackbar.dismiss()
+                                    snackbarState.onDismiss()
+                                },
+                            ).toSnackbarData(),
                         )
                     }
                 }
