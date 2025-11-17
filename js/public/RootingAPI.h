@@ -1159,7 +1159,7 @@ template <typename T>
 class MOZ_RAII Rooted : public detail::RootedTraits<T>::StackBase,
                         public js::RootedOperations<T, Rooted<T>> {
   // Intentionally store a pointer into the stack.
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 12)
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ >= 12
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wdangling-pointer"
 #endif
@@ -1168,7 +1168,7 @@ class MOZ_RAII Rooted : public detail::RootedTraits<T>::StackBase,
     this->prev = *this->stack;
     *this->stack = this;
   }
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 12)
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ >= 12
 #  pragma GCC diagnostic pop
 #endif
 
