@@ -36,6 +36,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.menu.Orientation
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
@@ -51,7 +52,6 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.lifecycle.LifecycleHolder
 import org.mozilla.fenix.settings.biometric.DefaultBiometricUtils
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
@@ -154,22 +154,20 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
         if (requireContext().settings().enableComposeLogins) {
             return ComposeView(requireContext()).apply {
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-                val buildStore = { navController: NavHostController ->
-                    val store = StoreProvider.get(this@SavedLoginsFragment) {
-                        val lifecycleHolder = LifecycleHolder(
-                            context = requireContext(),
-                            navController = this@SavedLoginsFragment.findNavController(),
-                            composeNavController = navController,
-                            homeActivity = (requireActivity() as HomeActivity),
-                        )
+                val buildStore = { composeNavController: NavHostController ->
+                    val homeActivity = (requireActivity() as HomeActivity)
+                    val navController = findNavController()
 
-                        LoginsStore(
-                            initialState = LoginsState.default.copy(
-                                sortOrder = LoginsSortOrder.fromString(
-                                    value = requireContext().settings().loginsListSortOrder,
-                                    default = LoginsSortOrder.Alphabetical,
-                                ),
+                    val store by fragmentStore(
+                        LoginsState.default.copy(
+                            sortOrder = LoginsSortOrder.fromString(
+                                value = requireContext().settings().loginsListSortOrder,
+                                default = LoginsSortOrder.Alphabetical,
                             ),
+                        ),
+                    ) {
+                        LoginsStore(
+                            initialState = it,
                             middleware = listOf(
                                 LogMiddleware(
                                     tag = "LoginsStore",
@@ -177,15 +175,15 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
                                 ),
                                 LoginsMiddleware(
                                     loginsStorage = requireContext().components.core.passwordsStorage,
-                                    getNavController = { lifecycleHolder.composeNavController },
-                                    exitLogins = { lifecycleHolder.navController.popBackStack() },
+                                    getNavController = { composeNavController },
+                                    exitLogins = { navController.popBackStack() },
                                     persistLoginsSortOrder = {
                                         DefaultSavedLoginsStorage(
-                                            lifecycleHolder.context.settings(),
+                                            context.settings(),
                                         ).savedLoginsSortOrder = it
                                     },
                                     openTab = { url, openInNewTab ->
-                                        lifecycleHolder.homeActivity.openToBrowserAndLoad(
+                                        homeActivity.openToBrowserAndLoad(
                                             searchTermOrURL = url,
                                             newTab = openInNewTab,
                                             from = BrowserDirection.FromSavedLoginsFragment,
@@ -194,18 +192,10 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
                                             ),
                                         )
                                     },
-                                    clipboardManager = lifecycleHolder.homeActivity.getSystemService(),
+                                    clipboardManager = homeActivity.getSystemService(),
                                 ),
                             ),
-                            lifecycleHolder = lifecycleHolder,
                         )
-                    }
-
-                    store.lifecycleHolder?.apply {
-                        this.navController = this@SavedLoginsFragment.findNavController()
-                        this.composeNavController = navController
-                        this.homeActivity = (requireActivity() as HomeActivity)
-                        this.context = requireContext()
                     }
 
                     store
