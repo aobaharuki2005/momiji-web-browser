@@ -264,11 +264,7 @@ class IPPProxyManagerSingleton extends EventTarget {
 
     lazy.logConsole.debug("Server:", server?.hostname);
 
-    this.#connection.initialize(
-      this.#pass.asBearerToken(),
-      server.hostname,
-      server.port
-    );
+    this.#connection.initialize(this.#pass.asBearerToken(), server);
 
     this.usageObserver.start();
     this.usageObserver.addIsolationKey(this.#connection.isolationKey);

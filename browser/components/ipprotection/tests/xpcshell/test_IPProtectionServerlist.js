@@ -13,16 +13,40 @@ const TEST_SERVER_1 = {
   hostname: "test1.example.com",
   port: 443,
   quarantined: false,
+  protocols: [
+    {
+      name: "connect",
+      host: "test1.example.com",
+      port: 8443,
+      scheme: "https",
+    },
+  ],
 };
 const TEST_SERVER_2 = {
   hostname: "test2.example.com",
   port: 443,
   quarantined: false,
+  protocols: [
+    {
+      name: "connect",
+      host: "test2.example.com",
+      port: 8443,
+      scheme: "https",
+    },
+  ],
 };
 const TEST_SERVER_QUARANTINED = {
   hostname: "quarantined.example.com",
   port: 443,
   quarantined: true,
+  protocols: [
+    {
+      name: "connect",
+      host: "quarantined.example.com",
+      port: 8443,
+      scheme: "https",
+    },
+  ],
 };
 
 const TEST_US_CITY = {
@@ -66,7 +90,7 @@ add_setup(async function () {
 add_task(async function test_getDefaultLocation() {
   const { country, city } = IPProtectionServerlist.getDefaultLocation();
   Assert.equal(country.code, "US", "The default country should be US");
-  Assert.deepEqual(city, TEST_US_CITY, "The correct city should be returned");
+  Assert.deepEqual(city, TEST_US_CITY, "The default city should be returned");
 });
 
 add_task(async function test_selectServer() {

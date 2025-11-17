@@ -33,6 +33,10 @@ const { NimbusTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
 
+const { Server } = ChromeUtils.importESModule(
+  "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs"
+);
+
 ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -209,8 +213,19 @@ async function withProxyServer(testFn, handler) {
 
   server.start(-1);
   await testFn({
-    host: `localhost`,
-    port: server.identity.primaryPort,
+    server: new Server({
+      hostname: "localhost",
+      port: server.identity.primaryPort,
+      quarantined: false,
+      protocols: [
+        {
+          name: "connect",
+          host: "localhost",
+          scheme: "http",
+          port: server.identity.primaryPort,
+        },
+      ],
+    }),
     type: "http",
     gotConnection: promise,
   });

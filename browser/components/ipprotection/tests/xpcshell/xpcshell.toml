@@ -1,5 +1,7 @@
 [DEFAULT]
-run-if = ["os != 'android'"]
+run-if = [
+  "os != 'android'",
+]
 head = "head.js"
 firefox-appdir = "browser"
 prefs = [
@@ -8,6 +10,8 @@ prefs = [
 ]
 
 ["test_GuardianClient.js"]
+
+["test_IPPChannelFilter.js"]
 
 ["test_IPPExceptionsManager.js"]
 
