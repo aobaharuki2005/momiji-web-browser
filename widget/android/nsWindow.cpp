@@ -2624,21 +2624,6 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
   return p;
 }
 
-nsresult nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
-                                 nsEventStatus& aStatus) {
-  aStatus = DispatchEvent(aEvent);
-  return NS_OK;
-}
-
-nsEventStatus nsWindow::DispatchEvent(WidgetGUIEvent* aEvent) {
-  if (mAttachedWidgetListener) {
-    return mAttachedWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
-  } else if (mWidgetListener) {
-    return mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
-  }
-  return nsEventStatus_eIgnore;
-}
-
 nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
   AssertIsOnMainThread();
 
@@ -2961,8 +2946,7 @@ void nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent) {
     WidgetMouseEvent hittest(true, eMouseHitTest, this,
                              WidgetMouseEvent::eReal);
     hittest.mRefPoint = aEvent.mTouches[0]->mRefPoint;
-    nsEventStatus status;
-    DispatchEvent(&hittest, status);
+    DispatchEvent(&hittest);
   }
 }
 

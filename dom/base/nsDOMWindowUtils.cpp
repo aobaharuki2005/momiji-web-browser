@@ -770,9 +770,7 @@ nsDOMWindowUtils::SendWheelEvent(float aX, float aY, double aDeltaX,
       StaticPrefs::test_events_async_enabled()) {
     widget->DispatchInputEvent(&wheelEvent);
   } else {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsresult rv = widget->DispatchEvent(&wheelEvent, status);
-    NS_ENSURE_SUCCESS(rv, rv);
+    widget->DispatchEvent(&wheelEvent);
   }
 
   // The callback ID may be cleared when the event also needs to be dispatched
@@ -942,7 +940,7 @@ nsresult nsDOMWindowUtils::SendTouchEventCommon(
              StaticPrefs::test_events_async_enabled()) {
     status = widget->DispatchInputEvent(&event).mContentStatus;
   } else {
-    MOZ_TRY(widget->DispatchEvent(&event, status));
+    status = widget->DispatchEvent(&event);
   }
   if (aPreventDefault) {
     *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
@@ -1469,8 +1467,8 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType, float aX,
   event.mRefPoint =
       nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
 
-  nsEventStatus status;
-  return widget->DispatchEvent(&event, status);
+  widget->DispatchEvent(&event);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2526,9 +2524,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType, int64_t aOffset,
       break;
   }
 
-  nsEventStatus status;
-  nsresult rv = targetWidget->DispatchEvent(&queryEvent, status);
-  NS_ENSURE_SUCCESS(rv, rv);
+  targetWidget->DispatchEvent(&queryEvent);
 
   auto* result = new nsQueryContentEventResult(std::move(queryEvent));
   result->SetEventResult(widget);
@@ -2557,9 +2553,7 @@ nsDOMWindowUtils::SendSelectionSetEvent(uint32_t aOffset, uint32_t aLength,
   selectionEvent.mUseNativeLineBreak =
       !(aAdditionalFlags & SELECTION_SET_FLAG_USE_XP_LINE_BREAK);
 
-  nsEventStatus status;
-  nsresult rv = widget->DispatchEvent(&selectionEvent, status);
-  NS_ENSURE_SUCCESS(rv, rv);
+  widget->DispatchEvent(&selectionEvent);
 
   *aResult = selectionEvent.mSucceeded;
   return NS_OK;
@@ -2612,8 +2606,8 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
     event.mTransferable = aTransferable;
   }
 
-  nsEventStatus status;
-  return widget->DispatchEvent(&event, status);
+  widget->DispatchEvent(&event);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

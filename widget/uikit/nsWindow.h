@@ -84,8 +84,6 @@ class nsWindow final : public nsIWidget {
   nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }
 
   void Invalidate(const LayoutDeviceIntRect& aRect) override;
-  nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                         nsEventStatus& aStatus) override;
 
   void WillPaintWindow();
   bool PaintWindow(LayoutDeviceIntRegion aRegion);

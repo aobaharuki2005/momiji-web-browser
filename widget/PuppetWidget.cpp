@@ -227,8 +227,7 @@ void PuppetWidget::InitEvent(WidgetGUIEvent& aEvent,
   }
 }
 
-nsresult PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent,
-                                     nsEventStatus& aStatus) {
+nsEventStatus PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent) {
 #ifdef DEBUG
   debug_DumpEvent(stdout, aEvent->mWidget, aEvent, "PuppetWidget", 0);
 #endif
@@ -237,8 +236,7 @@ nsresult PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent,
                  aEvent->mFlags.mIsSynthesizedForTests ||
                  aEvent->AsKeyboardEvent()->AreAllEditCommandsInitialized(),
              "Non-sysnthesized keyboard events should have edit commands for "
-             "all types "
-             "before dispatched");
+             "all types before dispatched");
 
   if (aEvent->mClass == eCompositionEventClass) {
     // If we've already requested to commit/cancel the latest composition,
@@ -248,8 +246,7 @@ nsresult PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent,
     // discard all unnecessary composition events here.
     if (mIgnoreCompositionEvents) {
       if (aEvent->mMessage != eCompositionStart) {
-        aStatus = nsEventStatus_eIgnore;
-        return NS_OK;
+        return nsEventStatus_eIgnore;
       }
       // Now, we receive new eCompositionStart.  Let's restart to handle
       // composition in this process.
@@ -301,21 +298,14 @@ nsresult PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent,
     }
   }
 
-  aStatus = nsEventStatus_eIgnore;
-
-  if (GetCurrentWidgetListener()) {
-    aStatus =
-        GetCurrentWidgetListener()->HandleEvent(aEvent, mUseAttachedEvents);
-  }
-
-  return NS_OK;
+  return nsIWidget::DispatchEvent(aEvent);
 }
 
 nsIWidget::ContentAndAPZEventStatus PuppetWidget::DispatchInputEvent(
     WidgetInputEvent* aEvent) {
   ContentAndAPZEventStatus status;
   if (!AsyncPanZoomEnabled()) {
-    DispatchEvent(aEvent, status.mContentStatus);
+    status.mContentStatus = DispatchEvent(aEvent);
     return status;
   }
 
@@ -616,8 +606,7 @@ nsresult PuppetWidget::RequestIMEToCommitComposition(bool aCancel) {
   WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommit, this);
   InitEvent(compositionCommitEvent, nullptr);
   compositionCommitEvent.mData = committedString;
-  nsEventStatus status = nsEventStatus_eIgnore;
-  DispatchEvent(&compositionCommitEvent, status);
+  DispatchEvent(&compositionCommitEvent);
 
 #ifdef DEBUG
   RefPtr<TextComposition> currentComposition =

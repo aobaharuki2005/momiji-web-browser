@@ -252,9 +252,8 @@ Maybe<WritingMode> TextEventDispatcher::MaybeQueryWritingModeAtSelection()
 
   WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
                                                  mWidget);
-  nsEventStatus status = nsEventStatus_eIgnore;
-  const_cast<TextEventDispatcher*>(this)->DispatchEvent(
-      mWidget, querySelectedTextEvent, status);
+  const_cast<TextEventDispatcher*>(this)->DispatchEvent(mWidget,
+                                                        querySelectedTextEvent);
   if (!querySelectedTextEvent.FoundSelection()) {
     return Nothing();
   }
@@ -262,22 +261,20 @@ Maybe<WritingMode> TextEventDispatcher::MaybeQueryWritingModeAtSelection()
   return Some(querySelectedTextEvent.mReply->mWritingMode);
 }
 
-nsresult TextEventDispatcher::DispatchEvent(nsIWidget* aWidget,
-                                            WidgetGUIEvent& aEvent,
-                                            nsEventStatus& aStatus) {
+nsEventStatus TextEventDispatcher::DispatchEvent(nsIWidget* aWidget,
+                                                 WidgetGUIEvent& aEvent) {
   MOZ_ASSERT(!aEvent.AsInputEvent(), "Use DispatchInputEvent()");
 
   RefPtr<TextEventDispatcher> kungFuDeathGrip(this);
   nsCOMPtr<nsIWidget> widget(aWidget);
   mDispatchingEvent++;
-  nsresult rv = widget->DispatchEvent(&aEvent, aStatus);
+  auto status = widget->DispatchEvent(&aEvent);
   mDispatchingEvent--;
-  return rv;
+  return status;
 }
 
-nsresult TextEventDispatcher::DispatchInputEvent(nsIWidget* aWidget,
-                                                 WidgetInputEvent& aEvent,
-                                                 nsEventStatus& aStatus) {
+nsEventStatus TextEventDispatcher::DispatchInputEvent(
+    nsIWidget* aWidget, WidgetInputEvent& aEvent) {
   RefPtr<TextEventDispatcher> kungFuDeathGrip(this);
   nsCOMPtr<nsIWidget> widget(aWidget);
   mDispatchingEvent++;
@@ -286,15 +283,13 @@ nsresult TextEventDispatcher::DispatchInputEvent(nsIWidget* aWidget,
   // sends the event to the parent process first since APZ needs to handle it
   // first.  However, some callers (e.g., keyboard apps on B2G and tests
   // expecting synchronous dispatch) don't want this to do that.
-  nsresult rv = NS_OK;
-  if (ShouldSendInputEventToAPZ()) {
-    aStatus = widget->DispatchInputEvent(&aEvent).mContentStatus;
-  } else {
-    rv = widget->DispatchEvent(&aEvent, aStatus);
-  }
+  nsEventStatus status =
+      ShouldSendInputEventToAPZ()
+          ? widget->DispatchInputEvent(&aEvent).mContentStatus
+          : widget->DispatchEvent(&aEvent);
 
   mDispatchingEvent--;
-  return rv;
+  return status;
 }
 
 nsresult TextEventDispatcher::StartComposition(
@@ -319,11 +314,7 @@ nsresult TextEventDispatcher::StartComposition(
   if (aEventTime) {
     compositionStartEvent.AssignEventTime(*aEventTime);
   }
-  rv = DispatchEvent(mWidget, compositionStartEvent, aStatus);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  DispatchEvent(mWidget, compositionStartEvent);
   return NS_OK;
 }
 
@@ -409,11 +400,7 @@ nsresult TextEventDispatcher::CommitComposition(
     compositionCommitEvent.mData.ReplaceSubstring(u"\r\n"_ns, u"\n"_ns);
     compositionCommitEvent.mData.ReplaceSubstring(u"\r"_ns, u"\n"_ns);
   }
-  rv = DispatchEvent(widget, compositionCommitEvent, aStatus);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  aStatus = DispatchEvent(widget, compositionCommitEvent);
   return NS_OK;
 }
 
@@ -778,7 +765,7 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
     keyEvent.InitAllEditCommands(mWritingMode);
   }
 
-  DispatchInputEvent(mWidget, keyEvent, aStatus);
+  aStatus = DispatchInputEvent(mWidget, keyEvent);
   return true;
 }
 
@@ -1043,11 +1030,7 @@ nsresult TextEventDispatcher::PendingComposition::Flush(
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
     return NS_OK;
   }
-  rv = aDispatcher->DispatchEvent(widget, compChangeEvent, aStatus);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  aStatus = aDispatcher->DispatchEvent(widget, compChangeEvent);
   return NS_OK;
 }
 

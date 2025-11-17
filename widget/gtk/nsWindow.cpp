@@ -619,21 +619,7 @@ nsIWidgetListener* nsWindow::GetListener() {
   return mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
 }
 
-nsresult nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
-                                 nsEventStatus& aStatus) {
-#ifdef DEBUG
-  debug_DumpEvent(stdout, aEvent->mWidget, aEvent, "something", 0);
-#endif
-  aStatus = nsEventStatus_eIgnore;
-  nsIWidgetListener* listener = GetListener();
-  if (listener) {
-    aStatus = listener->HandleEvent(aEvent, mUseAttachedEvents);
-  }
-
-  return NS_OK;
-}
-
-void nsWindow::OnDestroy(void) {
+void nsWindow::OnDestroy() {
   if (mOnDestroyCalled) {
     return;
   }
@@ -5250,17 +5236,15 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
 }
 
 bool nsWindow::DispatchCommandEvent(nsAtom* aCommand) {
-  nsEventStatus status;
   WidgetCommandEvent appCommandEvent(true, aCommand, this);
-  DispatchEvent(&appCommandEvent, status);
-  return TRUE;
+  DispatchEvent(&appCommandEvent);
+  return true;
 }
 
 bool nsWindow::DispatchContentCommandEvent(EventMessage aMsg) {
-  nsEventStatus status;
   WidgetContentCommandEvent event(true, aMsg, this);
-  DispatchEvent(&event, status);
-  return TRUE;
+  DispatchEvent(&event);
+  return true;
 }
 
 WidgetEventTime nsWindow::GetWidgetEventTime(guint32 aEventTime) {

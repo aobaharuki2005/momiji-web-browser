@@ -1494,8 +1494,7 @@ class nsIWidget : public nsSupportsWeakReference {
   /**
    * Dispatches an event to the widget
    */
-  virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* event,
-                                 nsEventStatus& aStatus) = 0;
+  virtual nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent*);
 
   /**
    * Dispatches an event to APZ only.

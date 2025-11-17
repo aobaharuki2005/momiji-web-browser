@@ -130,8 +130,7 @@ class PuppetWidget final : public nsIWidget,
   void InitEvent(WidgetGUIEvent& aEvent,
                  LayoutDeviceIntPoint* aPoint = nullptr);
 
-  nsresult DispatchEvent(WidgetGUIEvent* aEvent,
-                         nsEventStatus& aStatus) override;
+  nsEventStatus DispatchEvent(WidgetGUIEvent* aEvent) override;
   ContentAndAPZEventStatus DispatchInputEvent(
       WidgetInputEvent* aEvent) override;
   void SetConfirmedTargetAPZC(

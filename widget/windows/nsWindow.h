@@ -237,8 +237,6 @@ class nsWindow final : public nsIWidget {
   void SetIcon(const nsAString& aIconSpec) override;
   LayoutDeviceIntPoint WidgetToScreenOffset() override;
   LayoutDeviceIntMargin NormalSizeModeClientToWindowMargin() override;
-  nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                         nsEventStatus& aStatus) override;
   void EnableDragDrop(bool aEnable) override;
   void CaptureMouse(bool aCapture);
   void CaptureRollupEvents(bool aDoCapture) override;

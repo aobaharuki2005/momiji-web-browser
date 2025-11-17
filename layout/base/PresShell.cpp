@@ -10819,8 +10819,7 @@ void PresShell::DelayedInputEvent::Dispatch() {
     return;
   }
   nsCOMPtr<nsIWidget> widget = mEvent->mWidget;
-  nsEventStatus status;
-  widget->DispatchEvent(mEvent, status);
+  widget->DispatchEvent(mEvent);
 }
 
 PresShell::DelayedMouseEvent::DelayedMouseEvent(WidgetMouseEvent* aEvent) {

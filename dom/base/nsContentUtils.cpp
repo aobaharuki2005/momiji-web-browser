@@ -9630,10 +9630,7 @@ Result<bool, nsresult> nsContentUtils::SynthesizeMouseEvent(
              StaticPrefs::test_events_async_enabled()) {
     status = aWidget->DispatchInputEvent(&mouseOrPointerEvent).mContentStatus;
   } else {
-    nsresult rv = aWidget->DispatchEvent(&mouseOrPointerEvent, status);
-    if (NS_FAILED(rv)) {
-      return Err(rv);
-    }
+    aWidget->DispatchEvent(&mouseOrPointerEvent);
   }
 
   // The callback ID may be cleared when the event also needs to be dispatched

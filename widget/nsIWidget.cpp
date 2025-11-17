@@ -676,6 +676,16 @@ LayoutDeviceIntSize nsIWidget::NormalSizeModeClientToWindowSizeDifference() {
   return {margin.LeftRight(), margin.TopBottom()};
 }
 
+nsEventStatus nsIWidget::DispatchEvent(WidgetGUIEvent* aEvent) {
+  if (mAttachedWidgetListener) {
+    return mAttachedWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+  }
+  if (mWidgetListener) {
+    return mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+  }
+  return nsEventStatus_eIgnore;
+}
+
 RefPtr<mozilla::VsyncDispatcher> nsIWidget::GetVsyncDispatcher() {
   return nullptr;
 }
@@ -1142,9 +1152,8 @@ nsEventStatus nsIWidget::ProcessUntransformedAPZEvent(
   // Make a copy of the original event for the APZCCallbackHelper helpers that
   // we call later, because the event passed to DispatchEvent can get mutated in
   // ways that we don't want (i.e. touch points can get stripped out).
-  nsEventStatus status;
   UniquePtr<WidgetEvent> original(aEvent->Duplicate());
-  DispatchEvent(aEvent, status);
+  nsEventStatus status = DispatchEvent(aEvent);
 
   if (mAPZC && !InputAPZContext::WasRoutedToChildProcess() &&
       !InputAPZContext::WasDropped() && inputBlockId) {
@@ -1295,9 +1304,7 @@ void nsIWidget::DispatchTouchInput(MultiTouchInput& aInput) {
     ProcessUntransformedAPZEvent(&event, result);
   } else {
     WidgetTouchEvent event = aInput.ToWidgetEvent(this);
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    DispatchEvent(&event);
   }
 }
 
@@ -1315,8 +1322,7 @@ void nsIWidget::DispatchPanGestureInput(PanGestureInput& aInput) {
     ProcessUntransformedAPZEvent(&event, result);
   } else {
     WidgetWheelEvent event = aInput.ToWidgetEvent(this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    DispatchEvent(&event);
   }
 }
 
@@ -1333,8 +1339,7 @@ void nsIWidget::DispatchPinchGestureInput(PinchGestureInput& aInput) {
     ProcessUntransformedAPZEvent(&event, result);
   } else {
     WidgetWheelEvent event = aInput.ToWidgetEvent(this);
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    DispatchEvent(&event);
   }
 }
 
@@ -1403,7 +1408,7 @@ nsIWidget::ContentAndAPZEventStatus nsIWidget::DispatchInputEvent(
     }
   }
 
-  DispatchEvent(aEvent, status.mContentStatus);
+  status.mContentStatus = DispatchEvent(aEvent);
   return status;
 }
 
@@ -1430,9 +1435,7 @@ void nsIWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) {
 }
 
 bool nsIWidget::DispatchWindowEvent(WidgetGUIEvent& event) {
-  nsEventStatus status;
-  DispatchEvent(&event, status);
-  return ConvertStatus(status);
+  return ConvertStatus(DispatchEvent(&event));
 }
 
 Document* nsIWidget::GetDocument() const {
@@ -2418,8 +2421,7 @@ bool nsIWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
 
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
   event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
-  nsEventStatus status;
-  DispatchEvent(&event, status);
+  DispatchEvent(&event);
   if (swipeInfo.wantsSwipe) {
     if (context.WasRoutedToChildProcess()) {
       // We don't know whether this event can start a swipe, so we need
