@@ -1313,6 +1313,8 @@ skip-if = [
 
 ["test_named_frames.html"]
 
+["test_navigate_window_open_aboutblank.html"]
+
 ["test_navigatorPrefOverride.html"]
 
 ["test_navigator_cookieEnabled.html"]
