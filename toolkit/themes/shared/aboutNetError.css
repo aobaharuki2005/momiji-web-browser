@@ -120,7 +120,7 @@ button:disabled {
 
 #certificateErrorDebugInformation {
   background-color: var(--background-color-box-info) !important;
-  border-top: 1px solid var(--in-content-border-color);
+  border-top: 1px solid var(--border-color);
   width: 100%;
   padding: 1em 3%;
   box-sizing: border-box;

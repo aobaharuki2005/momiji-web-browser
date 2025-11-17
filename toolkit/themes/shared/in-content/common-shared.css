@@ -23,7 +23,6 @@
   --in-content-item-hover-text: var(--text-color);
 
   --in-content-border-invalid: light-dark(var(--red-50), rgb(255, 132, 139));
-  --in-content-border-color: light-dark(#d7d7db, rgba(249, 249, 250, 0.2));
 
   --in-content-table-background: light-dark(#f8f8fa, rgb(35, 34, 43));
   --in-content-table-border-color: var(--in-content-box-border-color);
@@ -82,7 +81,6 @@
      * In theory, we shouldn't be conveying invalid state just with a colour
      * change... */
     --in-content-border-invalid: ThreeDShadow;
-    --in-content-border-color: CanvasText;
 
     --in-content-table-border-color: ThreeDDarkShadow;
     --in-content-table-background: -moz-Dialog;
@@ -109,7 +107,7 @@ html|body {
 
 html|hr {
   border-style: solid none none none;
-  border-color: var(--in-content-border-color);
+  border-color: var(--border-color);
 }
 
 .main-content {
@@ -138,7 +136,7 @@ xul|tab {
   &:where(:hover) {
     background-color: var(--button-background-color-hover);
     color: var(--button-text-color-hover);
-    border-bottom-color: var(--in-content-border-color);
+    border-bottom-color: var(--border-color);
 
     @media (forced-colors) {
       border-bottom-color: currentColor;

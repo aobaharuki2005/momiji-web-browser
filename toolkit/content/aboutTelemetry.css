@@ -303,7 +303,7 @@ table {
 
 td {
   padding-bottom: 0.25em;
-  border-bottom: 1px solid var(--in-content-border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 tr:not(:first-child):hover {
