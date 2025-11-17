@@ -335,6 +335,8 @@
     %2$s is the name of the language which the page was translated to. (For example: French)
   -->
   <string name="browser_toolbar_translated_successfully">Старонка перакладзена з %1$s на %2$s.</string>
+  <!-- Content description for the translate toolbar action that opens the translations dialog. -->
+  <string name="translation_toolbar_expand_action">Адкрыць аркуш перакладаў</string>
   <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
   <string name="translation_toolbar_close_action">Адхіліць паведамленне</string>
   <!--
@@ -540,6 +542,8 @@
   <string name="onboarding_customize_theme_light_option">Светлая</string>
   <!-- Onboarding theme selection card label for 'System auto' option, used by Nimbus experiments. -->
   <string name="onboarding_customize_theme_system_option">Сістэмная аўтаматычная</string>
+  <!-- Action label for options that can be selected. Talkback will append this to say "Double tap to select". -->
+  <string name="onboarding_customize_theme_a11y_action_label_select">выбраць</string>
   <!--
     Search Widget
 
@@ -1004,10 +1008,21 @@
   <string name="exceptions_empty_message_description">Выключэнні дазваляюць адключыць функцыю аховы ад сачэння для абраных сайтаў.</string>
   <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
   <string name="exceptions_empty_message_learn_more_link">Даведацца больш</string>
+  <!-- Preference switch for usage and technical learn more link in new compose -->
+  <string name="preference_usage_data_learn_more_2">Даведацца больш пра тэхнічныя дадзеныя</string>
   <!-- Preference switch for daily usage ping data collection -->
   <string name="preferences_daily_usage_ping_title">Пінг штодзённага выкарыстання</string>
   <string name="preferences_daily_usage_ping_description">Гэта дапамагае Mozilla ацэньваць актыўных карыстальнікаў.</string>
   <string name="preferences_daily_usage_ping_learn_more">Падрабязней пра пінг штодзённага выкарыстання</string>
+  <!-- Title for the crash reporting option in the privacy preferences dialog shown during onboarding. -->
+  <string name="crash_reporting_snack_bar_message">Справаздача адпраўлена</string>
+  <!-- Text for sumo link to learn more about crash reports in data collection screen -->
+  <string name="preferences_crashes_learn_more">Падрабязней пра справаздачы аб збоях</string>
+  <!-- Title Headers for data collection settings screen -->
+  <string name="crash_reports_data_category">Cправаздачы аб збоях</string>
+  <string name="studies_data_category">Даследаванні</string>
+  <string name="technical_data_category">Тэхнічныя дадзеныя</string>
+  <string name="crash_reporting_description">Справаздачы аб збоях дазваляюць нам дыягнаставаць і\u00a0выпраўляць праблемы з\u00a0браўзерам. Справаздачы могуць уключаць асабістыя або канфідэнцыяльныя звесткі.</string>
   <!-- Section title for campaign measurement in data collections screen -->
   <string name="preferences_marketing_data_title">Вымярэнне кампаніі</string>
   <!-- Title for studies preferences -->
@@ -1044,6 +1059,8 @@
   <string name="preference_simple_toolbar">Просты</string>
   <!-- Preference for using expanded toolbar -->
   <string name="preference_expanded_toolbar">Разгорнуты</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Адкрыць новую картку</string>
   <!-- Share shortcut in toolbar customization -->
   <string name="toolbar_customize_shortcut_share">Падзяліцца</string>
   <!-- Add bookmark shortcut in toolbar customization -->
@@ -1428,6 +1445,12 @@
   <string name="webcompat_reporter_send">Даслаць</string>
   <!-- Broken site reason text for site is slow -->
   <string name="webcompat_reporter_reason_slow2">Сайт марудны</string>
+  <!-- Broken site reason text for missing content -->
+  <string name="webcompat_reporter_reason_content2">Адсутнічае змесціва</string>
+  <!-- Broken site reason text for can’t sign in or register -->
+  <string name="webcompat_reporter_reason_account2">Не магу ўвайсці або зарэгістравацца</string>
+  <!-- Broken site reason text for site asked to turn off ad blocker -->
+  <string name="webcompat_reporter_reason_turn_off_adblocker">Сайт запытаў адключыць блакаванне рэкламы</string>
   <!-- Broken site reason text for something else -->
   <string name="webcompat_reporter_reason_other">Нешта іншае</string>
   <!--
@@ -1482,6 +1505,10 @@
   <string name="bookmark_menu_open_all_in_private_tabs_button">Адкрыць усё ў прыватных картках</string>
   <!-- Bookmark overflow menu delete button -->
   <string name="bookmark_menu_delete_button">Выдаліць</string>
+  <!-- Label for button to sort bookmarks by newest in the bookmark sorting overflow menu. -->
+  <string name="bookmark_sort_menu_newest">Размеркаваць па найноўшых</string>
+  <!-- Label for button to sort bookmarks by oldest in the bookmark sorting overflow menu. -->
+  <string name="bookmark_sort_menu_oldest">Размеркаваць па старэйшых</string>
   <!--
     Bookmark multi select title in app bar
     %1$d is the number of bookmarks selected
@@ -1522,6 +1549,8 @@
   <string name="bookmark_search_button_content_description">Шукаць у закладках</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">Закрыць закладкі</string>
+  <!-- Title for the bookmark list empty state -->
+  <string name="bookmark_empty_list_title">Пакуль няма закладак</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Новая папка</string>
   <!--
