@@ -29,7 +29,7 @@ class DownloadUIStore(
  * The DownloadState Reducer.
  */
 @Suppress("LongMethod")
-fun downloadStateReducer(
+private fun downloadStateReducer(
     state: DownloadUIState,
     action: DownloadUIAction,
 ): DownloadUIState {

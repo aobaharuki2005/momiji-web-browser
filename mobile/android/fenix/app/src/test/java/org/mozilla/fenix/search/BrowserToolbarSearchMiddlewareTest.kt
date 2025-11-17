@@ -4,10 +4,8 @@
 
 package org.mozilla.fenix.search
 
+import android.content.Context
 import android.os.Looper
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle.State.RESUMED
-import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.Runs
@@ -20,7 +18,9 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.state.action.AwesomeBarAction.EngagementFinished
 import mozilla.components.browser.state.action.SearchAction.ApplicationSearchEnginesLoaded
@@ -40,8 +40,6 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.Ent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ExitEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
-import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
-import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -49,17 +47,16 @@ import mozilla.components.concept.toolbar.AutocompleteProvider
 import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.feature.awesomebar.provider.SessionAutocompleteProvider
 import mozilla.components.feature.syncedtabs.SyncedTabsAutocompleteProvider
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainLooperTestRule
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -85,9 +82,7 @@ import org.mozilla.fenix.components.appstate.search.SelectedSearchEngine
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
-import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
-import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.ClearSearchClicked
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.QrScannerClicked
 import org.mozilla.fenix.search.EditPageEndActionsInteractions.VoiceSearchButtonClicked
@@ -116,38 +111,20 @@ class BrowserToolbarSearchMiddlewareTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
+    @get:Rule
+    val mainLooperRule = MainLooperTestRule()
+
     val appStore = AppStore()
     val browserStore: BrowserStore = mockk(relaxed = true) {
         every { state.search } returns fakeSearchState()
     }
     val components: Components = mockk()
     val settings: Settings = mockk(relaxed = true)
-    val lifecycleOwner: LifecycleOwner = TestLifecycleOwner(RESUMED)
     val navController: NavController = mockk {
         every { navigate(any<NavDirections>()) } just Runs
         every { navigate(any<Int>()) } just Runs
     }
     val browsingModeManager: BrowsingModeManager = mockk()
-    private lateinit var fragment: Fragment
-
-    @Before
-    fun setup() {
-        fragment = spyk(Fragment()).apply {
-            every { context } returns testContext
-        }
-        every { fragment.getViewLifecycleOwner() } returns lifecycleOwner
-    }
-
-    @Test
-    fun `GIVEN an environment was already set WHEN it is cleared THEN reset it to null`() {
-        val (middleware, store) = buildMiddlewareAndAddToStore()
-
-        assertNotNull(middleware.environment)
-
-        store.dispatch(EnvironmentCleared)
-
-        assertNull(middleware.environment)
-    }
 
     @Test
     fun `WHEN the toolbar enters in edit mode THEN a new search selector button is added`() {
@@ -332,7 +309,7 @@ class BrowserToolbarSearchMiddlewareTest {
         }
         every { components.core.engine } returns engine
         configureAutocompleteProvidersInComponents()
-        val middleware = spyk(buildMiddleware(appStore, browserStore, components, settings))
+        val middleware = spyk(buildMiddleware())
         every { middleware.isSpeechRecognitionAvailable() } returns true
         val store = buildStore(middleware)
         val autocompleteProvidersSlot = slot<List<AutocompleteProvider>>()
@@ -383,7 +360,7 @@ class BrowserToolbarSearchMiddlewareTest {
         }
         every { components.core.engine } returns engine
         configureAutocompleteProvidersInComponents()
-        val middleware = spyk(buildMiddleware(appStore, browserStore, components, settings))
+        val middleware = spyk(buildMiddleware())
         val store = buildStore(middleware)
         val autocompleteProvidersSlot = slot<List<AutocompleteProvider>>()
 
@@ -426,7 +403,7 @@ class BrowserToolbarSearchMiddlewareTest {
         }
         every { components.core.engine } returns engine
         configureAutocompleteProvidersInComponents()
-        val middleware = spyk(buildMiddleware(appStore, browserStore, components, settings))
+        val middleware = spyk(buildMiddleware())
         val store = buildStore(middleware)
         val autocompleteProvidersSlot = slot<List<AutocompleteProvider>>()
 
@@ -470,7 +447,7 @@ class BrowserToolbarSearchMiddlewareTest {
         }
         every { components.core.engine } returns engine
         configureAutocompleteProvidersInComponents()
-        val middleware = spyk(buildMiddleware(appStore, browserStore, components, settings))
+        val middleware = spyk(buildMiddleware())
         val store = buildStore(middleware)
         val autocompleteProvidersSlot = slot<List<AutocompleteProvider>>()
 
@@ -715,12 +692,12 @@ class BrowserToolbarSearchMiddlewareTest {
             ),
         )
         val browserStore = BrowserStore()
-        val (_, store) = buildMiddlewareAndAddToStore(appStore, browserStore)
+        val (_, store) = buildMiddlewareAndAddToStore(testContext, appStore, browserStore)
         store.dispatch(EnterEditMode)
         val newSearchEngines = fakeSearchState().applicationSearchEngines
 
         browserStore.dispatch(ApplicationSearchEnginesLoaded(newSearchEngines))
-        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing the search engines update
+        mainLooperRule.idle()
 
         assertSearchSelectorEquals(
             expectedSearchSelector(selectedSearchEngine, newSearchEngines),
@@ -985,7 +962,7 @@ class BrowserToolbarSearchMiddlewareTest {
 
         store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
         appStore.dispatch(QrScannerInputAvailable("mozilla.test"))
-        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
+        mainLooperRule.idle()
 
         assertEquals("mozilla.test", store.state.editState.query.current)
         appStoreActionsCaptor.assertLastAction(QrScannerInputConsumed::class)
@@ -1019,7 +996,7 @@ class BrowserToolbarSearchMiddlewareTest {
 
         store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
         appStore.dispatch(QrScannerInputAvailable("test.mozilla"))
-        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
+        mainLooperRule.idle()
 
         assertEquals("test.mozilla", store.state.editState.query.current)
         appStoreActionsCaptor.assertLastAction(QrScannerInputConsumed::class)
@@ -1058,7 +1035,7 @@ class BrowserToolbarSearchMiddlewareTest {
 
         store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
         appStore.dispatch(QrScannerInputAvailable("test.com"))
-        shadowOf(Looper.getMainLooper()).idle() // wait for observing and processing qr scan result
+        mainLooperRule.idle()
 
         assertEquals("test.com", store.state.editState.query.current)
         appStoreActionsCaptor.assertLastAction(QrScannerInputConsumed::class)
@@ -1120,41 +1097,56 @@ class BrowserToolbarSearchMiddlewareTest {
     )
 
     private fun buildMiddlewareAndAddToStore(
+        uiContext: Context = testContext,
         appStore: AppStore = this.appStore,
         browserStore: BrowserStore = this.browserStore,
         components: Components = this.components,
-        settings: Settings = this.settings,
         navController: NavController = this.navController,
         browsingModeManager: BrowsingModeManager = this.browsingModeManager,
+        settings: Settings = this.settings,
+        scope: CoroutineScope = MainScope(),
     ): Pair<BrowserToolbarSearchMiddleware, BrowserToolbarStore> {
-        val middleware = buildMiddleware(appStore, browserStore, components, settings)
-        val store = buildStore(middleware, navController, browsingModeManager)
+        val middleware = buildMiddleware(
+            uiContext = uiContext,
+            appStore = appStore,
+            browserStore = browserStore,
+            components = components,
+            navController = navController,
+            browsingModeManager = browsingModeManager,
+            settings = settings,
+            scope = scope,
+        )
+        val store = buildStore(middleware)
 
         return middleware to store
     }
 
     private fun buildStore(
         middleware: BrowserToolbarSearchMiddleware = buildMiddleware(),
-        navController: NavController = this.navController,
-        browsingModeManager: BrowsingModeManager = this.browsingModeManager,
     ) = BrowserToolbarStore(
-            middleware = listOf(middleware),
-        ).also {
-            it.dispatch(
-                EnvironmentRehydrated(
-                    BrowserToolbarEnvironment(
-                        testContext, fragment, navController, browsingModeManager,
-                    ),
-                ),
-            )
-        }
+        middleware = listOf(middleware),
+    )
 
     private fun buildMiddleware(
+        uiContext: Context = testContext,
         appStore: AppStore = this.appStore,
         browserStore: BrowserStore = this.browserStore,
         components: Components = this.components,
+        navController: NavController = this.navController,
+        browsingModeManager: BrowsingModeManager = this.browsingModeManager,
         settings: Settings = this.settings,
-    ) = BrowserToolbarSearchMiddleware(appStore, browserStore, components, settings, Dispatchers.Main)
+        scope: CoroutineScope = MainScope(),
+    ) = BrowserToolbarSearchMiddleware(
+        uiContext = uiContext,
+        appStore = appStore,
+        browserStore = browserStore,
+        components = components,
+        navController = navController,
+        browsingModeManager = browsingModeManager,
+        settings = settings,
+        scope = scope,
+        autocompleteDispatcher = Dispatchers.Main,
+    )
 
     private fun configureAutocompleteProvidersInComponents() {
         val autocompleteSuggestion = AutocompleteResult(

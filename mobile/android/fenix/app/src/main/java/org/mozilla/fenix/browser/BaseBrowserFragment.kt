@@ -1391,7 +1391,7 @@ abstract class BaseBrowserFragment :
         store: BrowserStore,
         readerModeController: DefaultReaderModeController,
     ): BrowserToolbarComposable {
-        val toolbarStore = buildToolbarStore(activity, readerModeController)
+        val toolbarStore by buildToolbarStore(activity, readerModeController)
 
         browserNavigationBar =
              BrowserNavigationBar(
@@ -1479,13 +1479,13 @@ abstract class BaseBrowserFragment :
         modifier: Modifier,
     ) = AwesomeBarComposable(
         activity = activity,
+        fragment = this,
         modifier = modifier,
         components = requireComponents,
         appStore = requireComponents.appStore,
         browserStore = requireComponents.core.store,
         toolbarStore = toolbarStore,
         navController = findNavController(),
-        lifecycleOwner = this,
         showScrimWhenNoSuggestions = true,
     ).also {
         awesomeBarComposable = it

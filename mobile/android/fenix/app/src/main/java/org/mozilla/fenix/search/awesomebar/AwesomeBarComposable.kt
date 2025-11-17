@@ -25,8 +25,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.coroutineScope
 import androidx.navigation.NavController
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.store.BrowserStore
@@ -38,12 +37,12 @@ import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.settings
@@ -64,13 +63,13 @@ private const val MATERIAL_DESIGN_SCRIM = "#52000000"
  * Wrapper over a [Composable] to show search suggestions, responsible for its setup.
  *
  * @param activity [HomeActivity] providing the ability to open URLs and querying the current browsing mode.
+ * @param fragment [Fragment] to the lifecycle of which long running operations and objects will be tied to.
  * @param modifier [Modifier] to be applied to the [Composable].
  * @param components [Components] for accessing other functionalities of the application.
  * @param appStore [AppStore] for accessing the current application state.
  * @param browserStore [BrowserStore] for accessing the current browser state.
  * @param toolbarStore [BrowserToolbarStore] for accessing the current toolbar state.
  * @param navController [NavController] for navigating to other destinations in the application.
- * @param lifecycleOwner [Fragment] for controlling the lifetime of long running operations.
  * @param tabId [String] Id of the current tab for which a new search was started.
  * @param showScrimWhenNoSuggestions Whether to show a scrim when no suggestions are available.
  * @param searchAccessPoint Where search was started from.
@@ -78,18 +77,18 @@ private const val MATERIAL_DESIGN_SCRIM = "#52000000"
 @Suppress("LongParameterList")
 class AwesomeBarComposable(
     private val activity: HomeActivity,
+    private val fragment: Fragment,
     private val modifier: Modifier,
     private val components: Components,
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
     private val toolbarStore: BrowserToolbarStore,
     private val navController: NavController,
-    private val lifecycleOwner: Fragment,
     private val tabId: String? = null,
     private val showScrimWhenNoSuggestions: Boolean = false,
     private val searchAccessPoint: MetricsUtils.Source = MetricsUtils.Source.NONE,
 ) {
-    private val searchStore = initializeSearchStore()
+    private val searchStore by initializeSearchStore()
 
     /**
      * [Composable] fully integrated with [BrowserStore] and [BrowserToolbarStore]
@@ -254,19 +253,32 @@ class AwesomeBarComposable(
         }
     }
 
-    private fun initializeSearchStore() = StoreProvider.get(lifecycleOwner) {
+    private fun initializeSearchStore() = fragment.fragmentStore(
+        createInitialSearchFragmentState(
+            activity = activity,
+            components = components,
+            tabId = tabId,
+            pastedText = null,
+            searchAccessPoint = searchAccessPoint,
+        ),
+    ) {
+        val lifecycleScope = fragment.viewLifecycleOwner.lifecycle.coroutineScope
+
         SearchFragmentStore(
-            initialState = createInitialSearchFragmentState(
-                activity = activity,
-                components = components,
-                tabId = tabId,
-                pastedText = null,
-                searchAccessPoint = searchAccessPoint,
-            ),
+            initialState = it,
             middleware = listOf(
-                BrowserToolbarToFenixSearchMapperMiddleware(toolbarStore, browserStore),
-                BrowserStoreToFenixSearchMapperMiddleware(browserStore),
+                BrowserToolbarToFenixSearchMapperMiddleware(
+                    toolbarStore = toolbarStore,
+                    browsingModeManager = activity.browsingModeManager,
+                    scope = lifecycleScope,
+                    browserStore = browserStore,
+                ),
+                BrowserStoreToFenixSearchMapperMiddleware(
+                    browserStore = browserStore,
+                    scope = lifecycleScope,
+                ),
                 FenixSearchMiddleware(
+                    uiContext = activity,
                     engine = components.core.engine,
                     useCases = components.useCases,
                     nimbusComponents = components.nimbus,
@@ -274,27 +286,11 @@ class AwesomeBarComposable(
                     appStore = appStore,
                     browserStore = browserStore,
                     toolbarStore = toolbarStore,
-                ),
-            ),
-        )
-    }.also {
-        it.dispatch(
-            SearchFragmentAction.EnvironmentRehydrated(
-                SearchFragmentStore.Environment(
-                    context = activity,
-                    viewLifecycleOwner = lifecycleOwner.viewLifecycleOwner,
-                    browsingModeManager = activity.browsingModeManager,
                     navController = navController,
+                    browsingModeManager = activity.browsingModeManager,
+                    scope = lifecycleScope,
                 ),
             ),
-        )
-
-        lifecycleOwner.viewLifecycleOwner.lifecycle.addObserver(
-            object : DefaultLifecycleObserver {
-                override fun onDestroy(owner: LifecycleOwner) {
-                    it.dispatch(SearchFragmentAction.EnvironmentCleared)
-                }
-            },
         )
     }
 }

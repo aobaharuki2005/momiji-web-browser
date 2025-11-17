@@ -26,7 +26,6 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.search.SearchFragmentAction.Init
-import org.mozilla.fenix.search.SearchFragmentStore.Environment
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -425,16 +424,6 @@ sealed class SearchFragmentAction : Action {
     ) : SearchFragmentAction()
 
     /**
-     * Signals a new valid [Environment] has been set.
-     */
-    data class EnvironmentRehydrated(val environment: Environment) : SearchFragmentAction()
-
-    /**
-     * Signals the current [Environment] is not valid anymore.
-     */
-    data object EnvironmentCleared : SearchFragmentAction()
-
-    /**
      * Action indicating the user allowed to show suggestions in private mode.
      */
     data object PrivateSuggestionsCardAccepted : SearchFragmentAction()
@@ -630,8 +619,6 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             state.copy(searchStartedForCurrentUrl = action.searchStartedForCurrentUrl)
         }
 
-        is SearchFragmentAction.EnvironmentRehydrated,
-        is SearchFragmentAction.EnvironmentCleared,
         is SearchFragmentAction.SuggestionClicked,
         is SearchFragmentAction.PrivateSuggestionsCardAccepted,
         is SearchFragmentAction.SuggestionSelected,
