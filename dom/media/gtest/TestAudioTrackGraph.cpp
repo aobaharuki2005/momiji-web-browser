@@ -2759,6 +2759,9 @@ TEST(TestAudioTrackGraph, ClockDriftExpectation)
   DispatchFunction([&] {
     createInputProcessing(nullptr, &processingTrack1, &inputProcessing1);
   });
+  RefPtr<SmartMockCubebStream> primaryStream =
+      WaitFor(cubeb->StreamInitEvent());
+  EXPECT_GT(primaryStream->OutputChannels(), 0U);
   // Non-native input
   const auto* nonNativeInputDeviceID = CubebUtils::AudioDeviceID(1);
   RefPtr<AudioProcessingTrack> processingTrack2;
@@ -2769,18 +2772,10 @@ TEST(TestAudioTrackGraph, ClockDriftExpectation)
     processingTrack2->AddAudioOutput(nullptr, nullptr, rate);
   });
 
-  RefPtr<SmartMockCubebStream> primaryStream;
-  RefPtr<SmartMockCubebStream> nonNativeInputStream;
-  WaitUntil(cubeb->StreamInitEvent(),
-            [&](RefPtr<SmartMockCubebStream>&& stream) {
-              if (stream->OutputChannels() > 0) {
-                primaryStream = std::move(stream);
-                return false;
-              }
-              nonNativeInputStream = std::move(stream);
-              return true;
-            });
+  RefPtr<SmartMockCubebStream> nonNativeInputStream =
+      WaitFor(cubeb->StreamInitEvent());
   EXPECT_EQ(nonNativeInputStream->GetInputDeviceID(), nonNativeInputDeviceID);
+  EXPECT_EQ(nonNativeInputStream->OutputChannels(), 0U);
 
   // Wait until non-native input signal reaches the output, when input
   // processing has run and so has been configured.
