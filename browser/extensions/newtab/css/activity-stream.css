@@ -2935,7 +2935,6 @@ main section {
   flex-wrap: nowrap;
   align-items: stretch;
   border-radius: var(--border-radius-medium);
-  overflow: hidden;
 }
 .weatherCard:hover ~ .weatherSponsorText, .weatherCard:focus-within ~ .weatherSponsorText {
   visibility: visible;
@@ -2945,9 +2944,6 @@ main section {
 }
 .weatherCard:has(.staticWeatherInfo):hover ~ .weatherSponsorText {
   visibility: hidden;
-}
-.weatherCard:focus-within {
-  overflow: visible;
 }
 .weatherCard:hover {
   box-shadow: var(--box-shadow-card);
