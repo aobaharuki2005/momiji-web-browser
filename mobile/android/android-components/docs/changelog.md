@@ -5,6 +5,11 @@ permalink: /changelog/
 ---
 
 # 147.0 (In Development)
+* **lib-state**
+    * ⚠️ **Breaking change**: Removed thread marshalling from Stores [Bug 1980348](https://bugzilla.mozilla.org/show_bug.cgi?id=1980348).
+        * `Store.dispatch` is now invoked on the calling thread.
+        * `Store.dispatch` no longer spawns a new `Job` (it now returns `Unit`).
+    * ⚠️ **Breaking change**: Removed UIStore [Bug 1980350](https://bugzilla.mozilla.org/show_bug.cgi?id=1980350)
 * **ui-widgets**
   * 🆕 New `EngineViewScrollingDataBehavior` meant to only be used to animate a bottom toolbar/banner in sync with the current webpage [Bug 1991654](https://bugzilla.mozilla.org/show_bug.cgi?id=1991654).
 * **concept-engine** and **browser-engine-gecko**
