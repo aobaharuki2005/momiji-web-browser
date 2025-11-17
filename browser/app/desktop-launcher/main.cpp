@@ -62,8 +62,12 @@ int wmain() {
   bool download_completed = false;
   // If that doesn't work, we try to download the installer.
   std::optional<std::wstring> tempfileName = get_tempfile_name();
+  // If we do create a fileSink, it needs to live until the
+  // ExecuteAndWaitForIdle calls return to ensure that other processes cannot
+  // delete or rename it.
+  std::unique_ptr<FileSink> fileSink;
   if (tempfileName.has_value()) {
-    std::unique_ptr<FileSink> fileSink = std::make_unique<FileSink>();
+    fileSink = std::make_unique<FileSink>();
     if (fileSink->open(tempfileName.value())) {
       ErrCode rc = download_firefox(fileSink.get());
       if (rc == ErrCode::OK) {
@@ -74,7 +78,8 @@ int wmain() {
   }
   // If the installer successfully downloaded, try to launch it
   if (download_completed) {
-    if (ExecuteAndWaitForIdle(tempfileName.value(), STUB_INSTALLER_ARGS)) {
+    if (fileSink->freeze() &&
+        ExecuteAndWaitForIdle(tempfileName.value(), STUB_INSTALLER_ARGS)) {
       std::wcout << L"Firefox installer launched" << std::endl;
       return 0;
     }
