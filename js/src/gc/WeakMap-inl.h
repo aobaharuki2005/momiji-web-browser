@@ -239,13 +239,20 @@ bool WeakMap<K, V, AP>::markEntry(GCMarker* marker, gc::CellColor mapColor,
       // the key is marked. If the key has a delegate, also add an edge to
       // ensure the key is marked if the delegate is marked.
 
+      // Nursery values are added to the store buffer when writing them into
+      // the entry (via HeapPtr), so they will always get tenured. There's no
+      // need for a key->value ephemeron to keep them alive via the WeakMap.
       gc::TenuredCell* tenuredValue = nullptr;
       if (cellValue && cellValue->isTenured()) {
         tenuredValue = &cellValue->asTenured();
       }
 
-      if (!this->addEphemeronEdgesForEntry(AsMarkColor(mapColor), keyCell,
-                                           delegate, tenuredValue)) {
+      // Nursery key is treated as black, so cannot be less marked than the map.
+      MOZ_ASSERT(keyCell->isTenured());
+
+      if (!this->addEphemeronEdgesForEntry(AsMarkColor(mapColor),
+                                           &keyCell->asTenured(), delegate,
+                                           tenuredValue)) {
         marker->abortLinearWeakMarking();
       }
     }

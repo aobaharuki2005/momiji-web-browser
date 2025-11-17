@@ -188,11 +188,11 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // value getting marked. Insert the necessary edges into the appropriate
   // zone's gcEphemeronEdges or gcNurseryEphemeronEdges tables.
   [[nodiscard]] bool addEphemeronEdgesForEntry(gc::MarkColor mapColor,
-                                               gc::Cell* key,
+                                               gc::TenuredCell* key,
                                                gc::Cell* delegate,
                                                gc::TenuredCell* value);
-  [[nodiscard]] bool addEphemeronEdge(gc::MarkColor color, gc::Cell* src,
-                                      gc::Cell* dst);
+  [[nodiscard]] bool addEphemeronEdge(gc::MarkColor color, gc::TenuredCell* src,
+                                      gc::TenuredCell* dst);
 
   gc::CellColor mapColor() const { return gc::CellColor(uint32_t(mapColor_)); }
   void setMapColor(gc::CellColor newColor) { mapColor_ = uint32_t(newColor); }
