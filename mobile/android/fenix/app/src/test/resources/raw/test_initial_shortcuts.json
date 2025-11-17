@@ -40,6 +40,22 @@
       "order": 4,
       "schema": 1,
       "last_modified": 1
+    },
+    {
+      "id": "6",
+      "url": "https://www.example6.com/",
+      "order": 5,
+      "schema": 1,
+      "include_experiments": ["firefox-jp-guide-default-site"],
+      "last_modified": 1
+    },
+    {
+      "id": "7",
+      "url": "https://www.example7.com/",
+      "order": 6,
+      "schema": 1,
+      "include_experiments": ["test"],
+      "last_modified": 1
     }
   ]
 }
