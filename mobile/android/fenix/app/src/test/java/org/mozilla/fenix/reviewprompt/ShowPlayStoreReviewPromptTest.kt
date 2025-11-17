@@ -9,7 +9,6 @@ import androidx.navigation.NavDirections
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.coVerify
 import io.mockk.mockk
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -62,7 +61,6 @@ class ShowPlayStoreReviewPromptTest {
             )
 
             feature.start()
-            appStore.waitUntilIdle()
 
             coVerify(exactly = 0) {
                 promptController.tryPromptReview(mockActivity)
@@ -96,7 +94,6 @@ class ShowPlayStoreReviewPromptTest {
             )
 
             feature.start()
-            appStore.waitUntilIdle()
 
             coVerify(exactly = 0) {
                 promptController.tryPromptReview(mockActivity)
@@ -124,7 +121,6 @@ class ShowPlayStoreReviewPromptTest {
             )
 
             feature.start()
-            appStore.waitUntilIdle()
 
             coVerify(exactly = 0) {
                 promptController.tryPromptReview(mockActivity)
@@ -150,7 +146,6 @@ class ShowPlayStoreReviewPromptTest {
         )
 
         feature.start()
-        appStore.waitUntilIdle()
 
         coVerify(exactly = 1) {
             promptController.tryPromptReview(mockActivity)

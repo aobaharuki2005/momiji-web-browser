@@ -8,7 +8,6 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.app.links.AppLinksUseCases
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Before
@@ -64,7 +63,6 @@ class ExternalAppLinkStatusBindingTest {
         browserStore.dispatch(
             TabListAction.SelectTabAction(tabId = "nonExternal"),
         )
-        browserStore.waitUntilIdle()
         verify {
             appStore.dispatch(
                 AppAction.MenuNotification.AddMenuNotification(
@@ -96,7 +94,6 @@ class ExternalAppLinkStatusBindingTest {
         browserStore.dispatch(
             TabListAction.SelectTabAction(tabId = "external"),
         )
-        browserStore.waitUntilIdle()
         verify {
             appStore.dispatch(
                 AppAction.MenuNotification.RemoveMenuNotification(

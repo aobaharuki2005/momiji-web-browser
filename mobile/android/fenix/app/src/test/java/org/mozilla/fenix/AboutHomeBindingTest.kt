@@ -13,7 +13,6 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -69,9 +68,6 @@ class AboutHomeBindingTest {
             ),
         )
 
-        // Wait for ContentAction.UpdateUrlAction
-        browserStore.waitUntilIdle()
-
         assertEquals(ABOUT_HOME_URL, tab.content.url)
 
         verify(navController).navigate(NavGraphDirections.actionGlobalHome())
@@ -96,9 +92,6 @@ class AboutHomeBindingTest {
                 url = ABOUT_HOME_URL,
             ),
         )
-
-        // Wait for ContentAction.UpdateUrlAction
-        browserStore.waitUntilIdle()
 
         assertEquals(ABOUT_HOME_URL, tab.content.url)
 
@@ -125,9 +118,6 @@ class AboutHomeBindingTest {
             ),
         )
 
-        // Wait for ContentAction.UpdateUrlAction
-        browserStore.waitUntilIdle()
-
         assertEquals(ABOUT_HOME_URL, tab.content.url)
 
         verify(navController, never()).navigate(NavGraphDirections.actionGlobalHome())
@@ -149,9 +139,6 @@ class AboutHomeBindingTest {
                 url = newUrl,
             ),
         )
-
-        // Wait for ContentAction.UpdateUrlAction
-        browserStore.waitUntilIdle()
 
         assertEquals(newUrl, tab.content.url)
 

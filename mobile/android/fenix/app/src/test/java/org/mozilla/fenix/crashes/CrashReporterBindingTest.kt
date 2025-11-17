@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.mockk
 import mozilla.components.lib.crash.store.CrashAction
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
@@ -40,7 +39,6 @@ class CrashReporterBindingTest {
         binding.start()
 
         appStore.dispatch(AppAction.CrashActionWrapper(CrashAction.ShowPrompt()))
-        appStore.waitUntilIdle()
         assertTrue(onReportingCalled)
     }
 
@@ -60,7 +58,6 @@ class CrashReporterBindingTest {
         binding.start()
 
         appStore.dispatch(AppAction.CrashActionWrapper(CrashAction.ShowPrompt(listOf("1", "2"))))
-        appStore.waitUntilIdle()
         assertTrue(onReportingCalled)
     }
 }

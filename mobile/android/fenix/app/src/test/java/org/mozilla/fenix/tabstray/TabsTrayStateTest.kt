@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.text.Text
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -32,7 +31,6 @@ class TabsTrayStateTest {
     @Test
     fun `WHEN entering select mode THEN isSelected extension method returns true`() {
         store.dispatch(TabsTrayAction.EnterSelectMode)
-        store.waitUntilIdle()
 
         assertTrue(store.state.mode.isSelect())
     }
@@ -40,7 +38,6 @@ class TabsTrayStateTest {
     @Test
     fun `WHEN entering normal mode THEN isSelected extension method returns false`() {
         store.dispatch(TabsTrayAction.ExitSelectMode)
-        store.waitUntilIdle()
 
         assertFalse(store.state.mode.isSelect())
     }

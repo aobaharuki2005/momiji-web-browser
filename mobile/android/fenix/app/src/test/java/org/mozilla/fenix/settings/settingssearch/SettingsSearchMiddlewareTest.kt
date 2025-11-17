@@ -17,7 +17,6 @@ import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -73,9 +72,8 @@ class SettingsSearchMiddlewareTest {
                 ),
             ),
         )
-        store.waitUntilIdle()
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
-        store.waitUntilIdle()
+        assert(store.state is SettingsSearchState.NoSearchResults)
         assert(store.state.searchQuery == query)
         assert(store.state.searchResults.isEmpty())
     }
@@ -97,7 +95,6 @@ class SettingsSearchMiddlewareTest {
             ),
         )
         store.dispatch(SettingsSearchAction.SearchQueryUpdated(query))
-        store.waitUntilIdle()
         assert(store.state is SettingsSearchState.SearchInProgress)
         assert(store.state.searchQuery == query)
     }
@@ -121,7 +118,6 @@ class SettingsSearchMiddlewareTest {
         )
 
         store.dispatch(SettingsSearchAction.ResultItemClicked(testItem))
-        store.waitUntilIdle()
 
         coVerify { recentSearchesRepository.addRecentSearchItem(testItem) }
         verify { navController.navigate(testItem.preferenceFileInformation.fragmentId, any()) }
@@ -144,7 +140,6 @@ class SettingsSearchMiddlewareTest {
         )
 
         store.dispatch(SettingsSearchAction.RecentSearchesUpdated(updatedRecents))
-        store.waitUntilIdle()
 
         assert(store.state.recentSearches == updatedRecents)
     }
@@ -165,7 +160,6 @@ class SettingsSearchMiddlewareTest {
         )
 
         store.dispatch(SettingsSearchAction.ClearRecentSearchesClicked)
-        store.waitUntilIdle()
 
         assert(store.state.recentSearches.isEmpty())
     }

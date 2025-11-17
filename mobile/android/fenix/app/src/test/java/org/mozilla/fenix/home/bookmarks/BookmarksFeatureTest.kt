@@ -10,7 +10,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -60,7 +59,6 @@ class BookmarksFeatureTest {
             feature.start()
 
             advanceUntilIdle()
-            appStore.waitUntilIdle()
 
             coVerify {
                 bookmarksUseCases.retrieveRecentBookmarks()

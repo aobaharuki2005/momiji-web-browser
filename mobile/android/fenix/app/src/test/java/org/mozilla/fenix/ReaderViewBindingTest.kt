@@ -5,7 +5,6 @@
 package org.mozilla.fenix
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -45,11 +44,6 @@ class ReaderViewBindingTest {
 
         appStore.dispatch(ReaderViewAction.ReaderViewStarted)
 
-        // Wait for ReaderViewAction.ReaderViewStarted
-        appStore.waitUntilIdle()
-        // Wait for ReaderViewAction.Reset
-        appStore.waitUntilIdle()
-
         verify(readerModeController).showReaderView()
 
         assertEquals(ReaderViewState.None, appStore.state.readerViewState)
@@ -69,11 +63,6 @@ class ReaderViewBindingTest {
 
         appStore.dispatch(ReaderViewAction.ReaderViewDismissed)
 
-        // Wait for ReaderViewAction.ReaderViewDismissed
-        appStore.waitUntilIdle()
-        // Wait for ReaderViewAction.Reset
-        appStore.waitUntilIdle()
-
         verify(readerModeController).hideReaderView()
 
         assertEquals(ReaderViewState.None, appStore.state.readerViewState)
@@ -92,11 +81,6 @@ class ReaderViewBindingTest {
         binding.start()
 
         appStore.dispatch(ReaderViewAction.ReaderViewControlsShown)
-
-        // Wait for ReaderViewAction.ReaderViewControlsShown
-        appStore.waitUntilIdle()
-        // Wait for ReaderViewAction.Reset
-        appStore.waitUntilIdle()
 
         verify(readerModeController).showControls()
 

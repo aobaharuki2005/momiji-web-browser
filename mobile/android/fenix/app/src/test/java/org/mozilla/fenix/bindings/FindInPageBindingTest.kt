@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.bindings
 
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertFalse
@@ -31,11 +30,6 @@ class FindInPageBindingTest {
         binding.start()
 
         appStore.dispatch(FindInPageAction.FindInPageStarted)
-
-        // Wait for FindInPageAction.FindInPageStarted
-        appStore.waitUntilIdle()
-        // Wait for FindInPageAction.FindInPageShown
-        appStore.waitUntilIdle()
 
         assertFalse(appStore.state.showFindInPage)
 

@@ -12,7 +12,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
 import org.junit.Rule
@@ -52,7 +51,6 @@ class SecureTabsTrayBindingTest {
 
         secureTabsTrayBinding.start()
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.PrivateTabs))
-        tabsTrayStore.waitUntilIdle()
 
         verify { fragment.secure() }
         verify { window.addFlags(WindowManager.LayoutParams.FLAG_SECURE) }
@@ -71,7 +69,6 @@ class SecureTabsTrayBindingTest {
 
         secureTabsTrayBinding.start()
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.PrivateTabs))
-        tabsTrayStore.waitUntilIdle()
 
         verify { fragment.removeSecure() }
         verify { window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
@@ -91,7 +88,6 @@ class SecureTabsTrayBindingTest {
 
         secureTabsTrayBinding.start()
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.PrivateTabs))
-        tabsTrayStore.waitUntilIdle()
 
         verify { fragment.removeSecure() }
         verify { window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
@@ -110,7 +106,6 @@ class SecureTabsTrayBindingTest {
 
         secureTabsTrayBinding.start()
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.NormalTabs))
-        tabsTrayStore.waitUntilIdle()
 
         verify { fragment.removeSecure() }
         verify { window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
@@ -129,7 +124,6 @@ class SecureTabsTrayBindingTest {
 
         secureTabsTrayBinding.start()
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.NormalTabs))
-        tabsTrayStore.waitUntilIdle()
 
         verify(exactly = 0) { fragment.removeSecure() }
         verify(exactly = 0) { window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }

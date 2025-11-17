@@ -32,7 +32,6 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -173,7 +172,6 @@ class ContextMenuCandidateTest {
         assertEquals("1", store.state.tabs.first().contextId)
 
         openInNewTab.action.invoke(store.state.tabs.first(), HitResult.UNKNOWN("https://firefox.com"))
-        store.waitUntilIdle()
 
         assertEquals(2, store.state.tabs.size)
         assertEquals("https://firefox.com", store.state.tabs.last().content.url)
@@ -206,7 +204,6 @@ class ContextMenuCandidateTest {
         assertFalse(snackbarDelegate.hasShownSnackbar)
 
         openInNewTab.action.invoke(store.state.tabs.first(), HitResult.UNKNOWN("https://firefox.com"))
-        store.waitUntilIdle()
 
         assertEquals(2, store.state.tabs.size)
         assertTrue(snackbarDelegate.hasShownSnackbar)
@@ -242,12 +239,10 @@ class ContextMenuCandidateTest {
         assertFalse(snackbarDelegate.hasShownSnackbar)
 
         openInNewTab.action.invoke(store.state.tabs.first(), HitResult.UNKNOWN("https://firefox.com"))
-        store.waitUntilIdle()
 
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
 
         snackbarDelegate.lastActionListener!!.invoke(mock())
-        store.waitUntilIdle()
 
         assertEquals("https://firefox.com", store.state.selectedTab!!.content.url)
     }
@@ -282,7 +277,6 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"),
         )
-        store.waitUntilIdle()
 
         assertEquals("https://www.mozilla_uri.org", store.state.tabs.last().content.url)
     }
@@ -316,7 +310,6 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.UNKNOWN("https://www.mozilla.org"),
         )
-        store.waitUntilIdle()
 
         middleware.assertLastAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals("https://www.mozilla.org", action.url)
@@ -442,7 +435,6 @@ class ContextMenuCandidateTest {
         assertFalse(snackbarDelegate.hasShownSnackbar)
 
         openInPrivateTab.action.invoke(store.state.tabs.first(), HitResult.UNKNOWN("https://firefox.com"))
-        store.waitUntilIdle()
 
         assertEquals(2, store.state.tabs.size)
         assertTrue(snackbarDelegate.hasShownSnackbar)
@@ -478,13 +470,11 @@ class ContextMenuCandidateTest {
         assertFalse(snackbarDelegate.hasShownSnackbar)
 
         openInPrivateTab.action.invoke(store.state.tabs.first(), HitResult.UNKNOWN("https://firefox.com"))
-        store.waitUntilIdle()
 
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
         assertEquals(2, store.state.tabs.size)
 
         snackbarDelegate.lastActionListener!!.invoke(mock())
-        store.waitUntilIdle()
 
         assertEquals("https://firefox.com", store.state.selectedTab!!.content.url)
     }
@@ -517,7 +507,6 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.IMAGE_SRC("https://www.mozilla_src.org", "https://www.mozilla_uri.org"),
         )
-        store.waitUntilIdle()
         assertEquals("https://www.mozilla_uri.org", store.state.tabs.last().content.url)
     }
 
@@ -593,8 +582,6 @@ class ContextMenuCandidateTest {
             HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
 
-        store.waitUntilIdle()
-
         assertEquals(2, store.state.tabs.size)
         assertFalse(store.state.tabs.last().content.private)
         assertEquals("https://firefox.com", store.state.tabs.last().content.url)
@@ -606,7 +593,6 @@ class ContextMenuCandidateTest {
         assertEquals("https://www.mozilla.org", store.state.selectedTab!!.content.url)
 
         snackbarDelegate.lastActionListener!!.invoke(mock())
-        store.waitUntilIdle()
 
         assertEquals("https://firefox.com", store.state.selectedTab!!.content.url)
     }
@@ -669,7 +655,6 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
-        store.waitUntilIdle()
 
         assertEquals(2, store.state.tabs.size)
         assertTrue(store.state.tabs.last().content.private)
@@ -707,7 +692,6 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
         )
-        store.waitUntilIdle()
 
         assertEquals(2, store.state.tabs.size)
         assertEquals("https://firefox.com", store.state.tabs.last().content.url)
@@ -778,8 +762,6 @@ class ContextMenuCandidateTest {
                 "https://firefox.com",
             ),
         )
-
-        store.waitUntilIdle()
 
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(
@@ -888,8 +870,6 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.AUDIO("https://developer.mozilla.org/media/examples/t-rex-roar.mp3"),
         )
-
-        store.waitUntilIdle()
 
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(
@@ -1030,8 +1010,6 @@ class ContextMenuCandidateTest {
                 "https://www.mozilla.org/en-US/privacy-policy.pdf",
             ),
         )
-
-        store.waitUntilIdle()
 
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(

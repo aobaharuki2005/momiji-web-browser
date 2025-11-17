@@ -22,7 +22,6 @@ import mozilla.components.feature.intent.ext.EXTRA_SESSION_ID
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.support.test.any
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -60,8 +59,6 @@ class CustomTabIntentProcessorTest {
         whenever(intent.putExtra(any<String>(), any<String>())).thenReturn(intent)
 
         handler.process(intent)
-
-        store.waitUntilIdle()
 
         var customTabId: String? = null
 
@@ -113,8 +110,6 @@ class CustomTabIntentProcessorTest {
 
         handler.process(intent)
 
-        store.waitUntilIdle()
-
         var customTabId: String? = null
 
         middleware.assertFirstAction(CustomTabListAction.AddCustomTabAction::class) { action ->
@@ -159,8 +154,6 @@ class CustomTabIntentProcessorTest {
         whenever(intent.putExtra(any<String>(), any<String>())).thenReturn(intent)
 
         handler.process(intent)
-
-        store.waitUntilIdle()
 
         var customTabId: String? = null
 

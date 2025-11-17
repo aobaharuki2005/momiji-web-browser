@@ -19,7 +19,6 @@ import mozilla.components.service.fxa.manager.SCOPE_PROFILE
 import mozilla.components.support.test.any
 import mozilla.components.support.test.coMock
 import mozilla.components.support.test.eq
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
@@ -80,7 +79,6 @@ class SyncStoreSupportTest {
     fun `GIVEN sync observer WHEN onStarted observed THEN sync status updated`() {
         syncObserver.onStarted()
 
-        store.waitUntilIdle()
         assertEquals(SyncStatus.Started, store.state.status)
     }
 
@@ -88,7 +86,6 @@ class SyncStoreSupportTest {
     fun `GIVEN sync observer WHEN onIdle observed THEN sync status updated`() {
         syncObserver.onIdle()
 
-        store.waitUntilIdle()
         assertEquals(SyncStatus.Idle, store.state.status)
     }
 
@@ -96,7 +93,6 @@ class SyncStoreSupportTest {
     fun `GIVEN sync observer WHEN onError observed THEN sync status updated`() {
         syncObserver.onError(Exception())
 
-        store.waitUntilIdle()
         assertEquals(SyncStatus.Error, store.state.status)
     }
 
@@ -135,7 +131,6 @@ class SyncStoreSupportTest {
             "id",
             "token",
         )
-        store.waitUntilIdle()
         assertEquals(expected, store.state.account)
         assertEquals(AccountState.Authenticated, store.state.accountState)
     }
@@ -150,7 +145,6 @@ class SyncStoreSupportTest {
 
         accountObserver.onAuthenticated(account, AuthType.Existing)
 
-        store.waitUntilIdle()
         assertNull(store.state.account)
         assertEquals(AccountState.NotAuthenticated, store.state.accountState)
     }
@@ -165,7 +159,6 @@ class SyncStoreSupportTest {
 
         accountObserver.onLoggedOut()
 
-        store.waitUntilIdle()
         assertEquals(SyncStatus.LoggedOut, store.state.status)
         assertNull(store.state.account)
         assertEquals(AccountState.NotAuthenticated, store.state.accountState)
@@ -177,7 +170,6 @@ class SyncStoreSupportTest {
 
         accountObserver.onAuthenticationProblems()
 
-        store.waitUntilIdle()
         assertEquals(AccountState.AuthenticationProblem, store.state.accountState)
     }
 
@@ -188,7 +180,6 @@ class SyncStoreSupportTest {
 
         accountObserver.onFlowError(AuthFlowError.FailedToBeginAuth)
 
-        store.waitUntilIdle()
         assertNull(store.state.account)
         assertEquals(AccountState.NotAuthenticated, store.state.accountState)
     }
@@ -197,12 +188,9 @@ class SyncStoreSupportTest {
     fun `GIVEN account observer WHEN onProfileUpdated then update the account state`() = runTest {
         // Prerequisite is having a non-null account already.
         store.dispatch(SyncAction.UpdateAccount(Account(null, null, null, null, null, null)))
-        store.waitUntilIdle()
 
         val profile = generateProfile()
         accountObserver.onProfileUpdated(profile)
-
-        store.waitUntilIdle()
 
         assertEquals(profile.uid, store.state.account!!.uid)
         assertEquals(profile.avatar, store.state.account!!.avatar)
@@ -231,14 +219,12 @@ class SyncStoreSupportTest {
 
         accountObserver.onReady(authenticatedAccount = authenticatedAccount)
 
-        store.waitUntilIdle()
         assertEquals(initialState, store.state)
 
         `when`(authenticatedAccount.checkAuthorizationStatus(eq(SCOPE_PROFILE))).thenReturn(true)
 
         accountObserver.onReady(authenticatedAccount = authenticatedAccount)
 
-        store.waitUntilIdle()
         assertEquals(initialState, store.state)
     }
 
@@ -255,7 +241,6 @@ class SyncStoreSupportTest {
 
         accountObserver.onReady(account)
 
-        store.waitUntilIdle()
         assertNull(store.state.account)
         assertEquals(AccountState.NotAuthenticated, store.state.accountState)
     }
@@ -265,7 +250,6 @@ class SyncStoreSupportTest {
         val constellation = mock<ConstellationState>()
         constellationObserver.onDevicesUpdate(constellation)
 
-        store.waitUntilIdle()
         assertEquals(constellation, store.state.constellationState)
     }
 
