@@ -1216,14 +1216,18 @@
 
 .searchmode-switcher-dropmarker {
   @media (prefers-reduced-motion: no-preference) {
-    transition: 120ms transform ease-out;
+    transition: 300ms transform ease-in-out;
   }
 
   .urlbar[searchmode] & {
     display: none;
   }
   .searchmode-switcher[open] > & {
-    transform: rotate(180deg);
+    transform: rotate(-180deg);
+
+    &:-moz-locale-dir(rtl) {
+      transform: rotate(180deg);
+    }
   }
 }
 
