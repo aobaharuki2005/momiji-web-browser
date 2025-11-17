@@ -780,7 +780,7 @@ void GCMarker::markImplicitEdges(T* markedThing) {
   MOZ_ASSERT(!zone->isGCSweeping());
 
   auto& ephemeronTable = zone->gcEphemeronEdges();
-  auto p = ephemeronTable.lookup(markedThing);
+  auto p = ephemeronTable.lookup(&markedThing->asTenured());
   if (!p) {
     return;
   }
@@ -2232,7 +2232,6 @@ void GCMarker::start() {
 static void ClearEphemeronEdges(JSRuntime* rt) {
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
     zone->gcEphemeronEdges().clearAndCompact();
-    zone->gcNurseryEphemeronEdges().clearAndCompact();
   }
 }
 
@@ -2398,8 +2397,6 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
   if (!isGCMarking()) {
     return IncrementalProgress::Finished;
   }
-
-  MOZ_ASSERT(gcNurseryEphemeronEdges().count() == 0);
 
   for (auto r = gcEphemeronEdges().all(); !r.empty(); r.popFront()) {
     Cell* src = r.front().key();

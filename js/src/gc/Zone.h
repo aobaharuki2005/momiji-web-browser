@@ -478,11 +478,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
       weakCaches_;
 
   // Mapping from not yet marked keys to a vector of all values that the key
-  // maps to in any live weak map. Separate tables for nursery and tenured
-  // keys.
+  // maps to in any live weak map.
   js::MainThreadOrGCTaskData<js::gc::EphemeronEdgeTable> gcEphemeronEdges_;
-  js::MainThreadOrGCTaskData<js::gc::EphemeronEdgeTable>
-      gcNurseryEphemeronEdges_;
 
   js::MainThreadData<js::UniquePtr<js::RegExpZone>> regExps_;
 
@@ -858,13 +855,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::gc::EphemeronEdgeTable& gcEphemeronEdges() {
     return gcEphemeronEdges_.ref();
   }
-  js::gc::EphemeronEdgeTable& gcNurseryEphemeronEdges() {
-    return gcNurseryEphemeronEdges_.ref();
-  }
-
-  js::gc::EphemeronEdgeTable& gcEphemeronEdges(const js::gc::Cell* cell) {
-    return cell->isTenured() ? gcEphemeronEdges() : gcNurseryEphemeronEdges();
-  }
 
   // Perform all pending weakmap entry marking for this zone after
   // transitioning to weak marking mode.
@@ -976,8 +966,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::jit::JitZone* createJitZone(JSContext* cx);
 
   bool isQueuedForBackgroundSweep() { return isOnList(); }
-
-  void sweepEphemeronTablesAfterMinorGC();
 
   js::gc::FinalizationObservers* finalizationObservers() {
     return finalizationObservers_.ref().get();

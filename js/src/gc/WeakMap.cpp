@@ -25,8 +25,6 @@ WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
 
 void WeakMapBase::unmarkZone(JS::Zone* zone) {
   zone->gcEphemeronEdges().clearAndCompact();
-  MOZ_ASSERT(zone->gcNurseryEphemeronEdges().count() == 0);
-
   for (WeakMapBase* m : zone->gcWeakMapList()) {
     m->setMapColor(CellColor::White);
   }
@@ -98,7 +96,7 @@ bool WeakMapBase::addEphemeronEdge(MarkColor color, gc::TenuredCell* src,
                                    gc::TenuredCell* dst) {
   // Add an implicit edge from |src| to |dst|.
 
-  auto& edgeTable = src->zone()->gcEphemeronEdges(src);
+  auto& edgeTable = src->zone()->gcEphemeronEdges();
   auto p = edgeTable.lookupForAdd(src);
   if (!p) {
     if (!edgeTable.add(p, src, EphemeronEdgeVector())) {
