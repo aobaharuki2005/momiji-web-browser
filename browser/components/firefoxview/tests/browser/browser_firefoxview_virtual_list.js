@@ -53,8 +53,8 @@ add_task(async function test_max_render_count_on_win_resize() {
     await TestUtils.waitForCondition(
       () =>
         rootVirtualList.updateComplete &&
-        rootVirtualList.maxRenderCountEstimate == initialMaxRenderCount,
-      `Max render count ${rootVirtualList.maxRenderCountEstimate} is not equal to the initial max render count ${initialMaxRenderCount}`
+        rootVirtualList.maxRenderCountEstimate < initialMaxRenderCount,
+      `Max render count ${rootVirtualList.maxRenderCountEstimate} is not less than initial max render count ${initialMaxRenderCount}`
     );
     const newMaxRenderCount = rootVirtualList.maxRenderCountEstimate;
 
