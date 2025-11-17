@@ -80,19 +80,34 @@ class AppLinksFeature(
     override fun start() {
         scope = store.flowScoped { flow ->
             flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(sessionId) }
-                .distinctUntilChangedBy {
-                    it.content.appIntent
+                // monitor either appIntent OR url changes
+                .distinctUntilChangedBy { session ->
+                    val content = session.content
+                    content.appIntent to content.url
                 }
                 .collect { sessionState ->
-                    sessionState.content.appIntent?.let {
+                    val content = sessionState.content
+                    val intent = content.appIntent
+                    val url = content.url
+
+                    if (intent != null) {
                         handleAppIntent(
                             sessionState = sessionState,
-                            url = it.url,
-                            appIntent = it.appIntent,
-                            fallbackUrl = it.fallbackUrl,
-                            appName = it.appName,
+                            url = intent.url,
+                            appIntent = intent.appIntent,
+                            fallbackUrl = intent.fallbackUrl,
+                            appName = intent.appName,
                         )
+
+                        // Clear the consumed app intent so we don't re-handle it
                         store.dispatch(ContentAction.ConsumeAppIntentAction(sessionState.id))
+                    } else {
+                        // No appIntent present, but url changed, remove the external application prompt
+                        findPreviousDialogFragment()?.let {
+                            if (it.triggerUrl != url) {
+                                fragmentManager?.beginTransaction()?.remove(it)?.commit()
+                            }
+                        }
                     }
                 }
         }
@@ -198,7 +213,13 @@ class AppLinksFeature(
             return
         }
 
-        getOrCreateDialog(isPrivate, isWallet, url, appName).apply {
+        getOrCreateDialog(
+            isPrivate = isPrivate,
+            isWallet = isWallet,
+            triggerUrl = sessionState.content.url,
+            url = url,
+            targetAppName = appName,
+        ).apply {
             onConfirmRedirect = { isCheckboxTicked ->
                 if (isCheckboxTicked) {
                     alwaysOpenCheckboxAction?.invoke()
@@ -215,6 +236,7 @@ class AppLinksFeature(
     internal fun getOrCreateDialog(
         isPrivate: Boolean,
         isWallet: Boolean,
+        triggerUrl: String?,
         url: String,
         targetAppName: String?,
     ): RedirectDialogFragment {
@@ -254,6 +276,7 @@ class AppLinksFeature(
             dialogMessageString = dialogMessage,
             showCheckbox = if (isPrivate || isWallet) false else alwaysOpenCheckboxAction != null,
             maxSuccessiveDialogMillisLimit = MAX_SUCCESSIVE_DIALOG_MILLIS_LIMIT,
+            triggerUrl = triggerUrl,
         )
     }
 
