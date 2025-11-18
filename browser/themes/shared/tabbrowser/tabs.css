@@ -2510,12 +2510,12 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
 }
 
 #tab-group-suggestion-button {
-  --button-border-color-ghost: var(--border-color-selected);
+  --button-border-color-ghost: var(--color-accent-primary);
   color: var(--color-accent-primary);
   width: 100%;
 
   &:hover {
-    --button-border-color-ghost-hover: var(--border-color-selected);
+    --button-border-color-ghost-hover: var(--color-accent-primary);
   }
 }
 

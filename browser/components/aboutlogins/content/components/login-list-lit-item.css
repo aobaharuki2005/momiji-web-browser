@@ -22,12 +22,12 @@
 }
 
 .list-item.keyboard-selected {
-  border-inline-start-color: var(--border-color);
+  border-inline-start-color: var(--in-content-border-color);
   background-color: var(--button-background-color-hover);
 }
 
 .list-item.selected {
-  border-inline-start-color: var(--border-color-selected);
+  border-inline-start-color: var(--color-accent-primary);
   background-color: var(--background-color-canvas);
 }
 

@@ -24,7 +24,6 @@
     --border-color-interactive-hover: var(--border-color-interactive);
     --border-color-interactive-active: var(--border-color-interactive);
     --border-color-interactive-disabled: var(--border-color-interactive);
-    --border-color-selected: var(--color-accent-primary);
     --border-color-transparent: transparent;
     --border-radius-circle: 9999px;
     --border-radius-xsmall: 2px;
@@ -374,7 +373,6 @@
       --border-color-interactive-hover: SelectedItem;
       --border-color-interactive-active: ButtonText;
       --border-color-interactive-disabled: GrayText;
-      --border-color-selected: SelectedItem;
 
       /** Button **/
       --button-background-color: ButtonFace; /* TODO Bug 1821203 - Gray use needs to be consolidated */

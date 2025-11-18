@@ -75,7 +75,7 @@
 }
 
 #selection-size {
-  border: var(--border-width) solid var(--border-color);
+  border: var(--border-width) solid var(--in-content-border-color);
   box-shadow: var(--box-shadow-popup);
 }
 

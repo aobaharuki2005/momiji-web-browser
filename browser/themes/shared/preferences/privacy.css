@@ -109,7 +109,7 @@
 }
 
 .privacy-detailedoption {
-  border-color: var(--border-color);
+  border-color: var(--in-content-box-border-color);
 }
 
 .privacy-detailedoption.disabled {
@@ -192,12 +192,12 @@
 }
 
 .privacy-detailedoption.selected {
-  border-color: var(--border-color-selected);
+  border-color: var(--color-accent-primary);
 }
 
 @media (forced-colors) {
   .privacy-detailedoption.selected {
-    outline: 2px solid var(--border-color-selected);
+    outline: 2px solid var(--color-accent-primary);
   }
 }
 

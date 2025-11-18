@@ -170,7 +170,7 @@ radio {
 
 .spotlight {
   background-color: color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
-  outline: var(--border-color-selected) 1px dotted;
+  outline: var(--color-accent-primary) 1px dotted;
   animation: fade-out 0.5s ease-out 2s forwards;
   /* Show the border to spotlight the components in high-contrast mode. */
   border: 1px solid transparent;
@@ -201,7 +201,7 @@ radio {
 
 .subcategory:not([hidden]) ~ .subcategory {
   padding-top: var(--space-xxlarge);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--in-content-border-color);
 }
 
 /* Category List */
@@ -624,7 +624,7 @@ html|dialog,
 
 .dialogTitleBar {
   padding: 0.4em 0.2em;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--in-content-border-color);
 }
 
 .dialogTitle {
@@ -759,7 +759,7 @@ html|dialog,
 }
 
 .separator {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
 #fxaGroup {
@@ -791,7 +791,7 @@ html|dialog,
 
 .sync-group {
   margin-block: var(--space-large);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--in-content-border-color);
 }
 
 .sync-configured {
@@ -919,8 +919,7 @@ dialog > .sync-engines-list + hbox {
     content: "";
     width: 1px;
     height: 100%;
-    /* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
-    background-color: var(--border-color);
+    background-color: var(--in-content-border-color);
     top: 0;
     inset-inline-end: 0;
     position: absolute;
@@ -1395,14 +1394,14 @@ setting-group[groupid="home"] {
   height: 220px;
   overflow: auto;
   background-color: var(--background-color-box);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--in-content-box-border-color);
   border-radius: var(--border-radius-small);
   resize: vertical;
   margin: 4px 0;
 }
 
 .translations-manage-language:first-child {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--in-content-box-border-color);
   padding: 8px;
   margin-bottom: 8px;
 }
