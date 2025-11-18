@@ -1387,8 +1387,10 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
                  static_cast<uint64_t>(crashTime - inactiveStateStart));
   }
 
-  double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
-                        .ToSecondsSigDigits();
+  // ToSeconds preserves the full precision of the TimeDuration. It is assumed
+  // that visualizations of this value will format/truncate it to their needs.
+  double uptimeTS =
+      (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation()).ToSeconds();
   char uptimeTSString[64] = {};
   SimpleNoCLibDtoA(uptimeTS, uptimeTSString, sizeof(uptimeTSString));
   writer.Write(Annotation::UptimeTS, uptimeTSString);
@@ -2557,8 +2559,10 @@ static void AddCommonAnnotations(AnnotationTable& aAnnotations) {
     aAnnotations[Annotation::LastInteractionDuration] = inactiveDuration;
   }
 
-  double uptimeTS = (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation())
-                        .ToSecondsSigDigits();
+  // ToSeconds preserves the full precision of the TimeDuration. It is assumed
+  // that visualizations of this value will format/truncate it to their needs.
+  double uptimeTS =
+      (TimeStamp::NowLoRes() - TimeStamp::ProcessCreation()).ToSeconds();
   nsAutoCString uptimeStr;
   uptimeStr.AppendFloat(uptimeTS);
   aAnnotations[Annotation::UptimeTS] = uptimeStr;
