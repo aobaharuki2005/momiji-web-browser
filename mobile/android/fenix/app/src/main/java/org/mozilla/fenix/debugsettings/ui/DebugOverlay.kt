@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
@@ -119,8 +120,8 @@ fun DebugOverlay(
         ) {
             Row {
                 ModalDrawerSheet(
-                    drawerContainerColor = FirefoxTheme.colors.layer1,
                     drawerState = drawerState,
+                    drawerContainerColor = MaterialTheme.colorScheme.surface,
                 ) {
                     DebugDrawer(
                         navController = navController,
@@ -151,7 +152,6 @@ private fun DebugOverlayPreview() {
                 content = {
                     Text(
                         text = "Tool $index",
-                        color = FirefoxTheme.colors.textPrimary,
                         style = FirefoxTheme.typography.headline6,
                     )
                 },
