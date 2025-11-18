@@ -96,12 +96,12 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
     this.maybeEnrollAndEntitle();
   }
 
-  maybeEnrollAndEntitle() {
+  maybeEnrollAndEntitle(forceRefetch = false) {
     if (this.#runningPromise) {
       return this.#runningPromise;
     }
 
-    if (this.#entitlement) {
+    if (this.#entitlement && !forceRefetch) {
       return Promise.resolve({ isEnrolledAndEntitled: true });
     }
 
@@ -109,6 +109,8 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
       const data =
         await IPPEnrollAndEntitleManagerSingleton.#maybeEnrollAndEntitle();
       if (!data.entitlement) {
+        // Unset the entitlement if not available.
+        this.#setEntitlement(null);
         return { isEnrolledAndEntitled: false, error: data.error };
       }
 
@@ -221,8 +223,7 @@ class IPPEnrollAndEntitleManagerSingleton extends EventTarget {
   }
 
   async refetchEntitlement() {
-    this.#setEntitlement(null);
-    await this.maybeEnrollAndEntitle();
+    await this.maybeEnrollAndEntitle(true);
   }
 
   resetEntitlement() {
