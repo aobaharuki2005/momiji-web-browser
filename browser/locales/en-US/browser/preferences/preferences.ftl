@@ -1219,6 +1219,8 @@ autofill-payment-methods-header =
 autofill-payment-methods-checkbox-message-2 =
     .label = Save and autofill payment info
     .accesskey = p
+autofill-payment-methods-manage-payments-title =
+    .heading = Manage payment methods
 autofill-payment-methods-manage-payments-button =
     .label = Manage payment methods
     .accesskey = m
@@ -1227,6 +1229,13 @@ autofill-reauth-payment-methods-checkbox-2 =
     .label = Require device sign in to autofill and manage payments methods
     .accesskey = o
 
+autofill-payment-methods-add-button = Add new payment method
+payments-list-header =
+  .label = Payment methods
+payments-list-item-label = <strong>Payment methods</strong>
+payments-remove-payment-prompt-title = Remove this payment method?
+payments-remove-payment-prompt-confirm-button = Remove
+payments-remove-payment-prompt-cancel-button = Cancel
 autofill-addresses-title = Addresses and more
 autofill-addresses-header =
     .aria-label = Addresses and more
@@ -1236,6 +1245,15 @@ autofill-addresses-checkbox-message =
 autofill-addresses-manage-addresses-button =
     .label = Manage addresses and more
     .accesskey = M
+
+# These values are displayed for each credit card record listed on the Manage Payment methods
+# settings page.
+# Variables:
+#   $cardNumber (string) - The obscured credit card number (for example: 2423 *********)
+#   $expDate (string) - The obscured expiry date of the credit card (for example: XX/2027)
+payment-moz-box-item =
+  .label = { $cardNumber }
+  .description = { $expDate }
 
 ## Privacy Section - History
 

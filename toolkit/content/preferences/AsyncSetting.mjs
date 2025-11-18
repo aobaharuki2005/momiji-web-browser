@@ -31,9 +31,9 @@ export class AsyncSetting extends EventEmitter {
    * Emit a change event to notify listeners that the setting's data has
    * changed and should be updated.
    */
-  emitChange() {
+  emitChange = () => {
     this.emit("change");
-  }
+  };
 
   /**
    * Setup any external listeners that are required for managing this
