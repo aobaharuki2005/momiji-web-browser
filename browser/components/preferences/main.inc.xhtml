@@ -439,15 +439,10 @@
 
 <!-- DRM Content -->
 <groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
-  <label><html:h2 data-l10n-id="drm-content-header"/></label>
-  <hbox align="center">
-    <checkbox id="playDRMContent" preference="media.eme.enabled"
-              class="tail-with-learn-more" data-l10n-id="play-drm-content" />
-    <html:a is="moz-support-link"
-      data-l10n-id="play-drm-content-learn-more"
-      support-page="drm-content"
-    />
-  </hbox>
+  <label class="section-heading">
+    <html:h2 data-l10n-id="drm-content-header"/>
+  </label>
+  <html:setting-group groupid="drm" />
 </groupbox>
 
 <hbox id="updatesCategory"

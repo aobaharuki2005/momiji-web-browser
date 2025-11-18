@@ -534,6 +534,23 @@ Preferences.addSetting({
     AppConstants.MOZ_WIDGET_GTK,
 });
 Preferences.addSetting({
+  id: "playDRMContent",
+  pref: "media.eme.enabled",
+  visible: () => {
+    if (!Services.prefs.getBoolPref("browser.eme.ui.enabled", false)) {
+      return false;
+    }
+    if (AppConstants.platform == "win") {
+      try {
+        return parseFloat(Services.sysinfo.get("version")) >= 6;
+      } catch (ex) {
+        return false;
+      }
+    }
+    return true;
+  },
+});
+Preferences.addSetting({
   id: "cfrRecommendations",
   pref: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
 });
@@ -1459,6 +1476,16 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  drm: {
+    subcategory: "drm",
+    items: [
+      {
+        id: "playDRMContent",
+        l10nId: "play-drm-content",
+        supportPage: "drm-content",
+      },
+    ],
+  },
   browsing: {
     l10nId: "browsing-group-label",
     items: [
@@ -2357,6 +2384,7 @@ var gMainPane = {
     // Initialize settings groups from the config object.
     initSettingGroup("appearance");
     initSettingGroup("downloads");
+    initSettingGroup("drm");
     initSettingGroup("browsing");
     initSettingGroup("zoom");
     initSettingGroup("performance");
@@ -2521,19 +2549,6 @@ var gMainPane = {
       fxtranslationRow.hidden = false;
     }
 
-    let emeUIEnabled = Services.prefs.getBoolPref("browser.eme.ui.enabled");
-    // Force-disable/hide on WinXP:
-    if (navigator.platform.toLowerCase().startsWith("win")) {
-      emeUIEnabled =
-        emeUIEnabled && parseFloat(Services.sysinfo.get("version")) >= 6;
-    }
-    if (!emeUIEnabled) {
-      // Don't want to rely on .hidden for the toplevel groupbox because
-      // of the pane hiding/showing code potentially interfering:
-      document
-        .getElementById("drmGroup")
-        .setAttribute("style", "display: none !important");
-    }
     // Initialize the Firefox Updates section.
     let version = AppConstants.MOZ_APP_VERSION_DISPLAY;
 
