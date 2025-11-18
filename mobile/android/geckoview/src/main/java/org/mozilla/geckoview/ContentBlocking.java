@@ -94,7 +94,7 @@ public class ContentBlocking {
           .reportMalwareMistakeUrl("https://%LOCALE%.malware-error.mozilla.com/?url=")
           .advisoryUrl("https://developers.google.com/safe-browsing/v4/advisory")
           .advisoryName("Google Safe Browsing")
-          .enabled(BuildConfig.NIGHTLY_BUILD)
+          .enabled(true)
           .build();
 
   /** Protected constructor - this class shouldn't be instantiated. */
