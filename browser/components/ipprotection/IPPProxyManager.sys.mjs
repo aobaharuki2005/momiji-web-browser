@@ -450,6 +450,7 @@ class IPPProxyManagerSingleton extends EventTarget {
 
     this.#setState(IPPProxyStates.ERROR);
     lazy.logConsole.error(errorContext || error);
+    Glean.ipprotection.error.record({ source: "ProxyManager" });
   }
 
   #setState(state) {
