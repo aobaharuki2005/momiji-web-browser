@@ -13,7 +13,6 @@
 #include <cstring>
 #include <ctime>
 #include <new>
-#include <type_traits>
 #include <utility>
 #include <mutex>
 

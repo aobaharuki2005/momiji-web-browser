@@ -33,7 +33,6 @@
 #endif
 
 #include <string.h>
-#include <vector>
 #include <cstdlib>
 
 #ifdef XP_LINUX

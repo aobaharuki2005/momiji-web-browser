@@ -6,7 +6,6 @@
 
 #include "Telemetry.h"
 
-#include <algorithm>
 #include <prio.h>
 #include <prproces.h>
 #if defined(XP_UNIX) && !defined(XP_DARWIN)
