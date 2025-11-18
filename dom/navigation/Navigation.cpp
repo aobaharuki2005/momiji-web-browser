@@ -921,6 +921,9 @@ bool Navigation::FireTraverseNavigateEvent(
   // in #fire-a-traverse-navigate-event have been moved to after step 25 in
   // #inner-navigate-event-firing-algorithm in our implementation.
 
+  // Work around for https://github.com/whatwg/html/issues/11802
+  InnerInformAboutAbortingNavigation(aCx);
+
   // Step 5
   RefPtr<NavigationHistoryEntry> destinationNHE =
       FindNavigationHistoryEntry(aDestinationSessionHistoryInfo);
@@ -1016,6 +1019,7 @@ bool Navigation::FireDownloadRequestNavigateEvent(
   // in #fire-a-download-request-navigate-event have been moved to after step
   // 25 in #inner-navigate-event-firing-algorithm in our implementation.
 
+  // Work around for https://github.com/whatwg/html/issues/11802
   InnerInformAboutAbortingNavigation(aCx);
 
   // Step 3 to step 7
