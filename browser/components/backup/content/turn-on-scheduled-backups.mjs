@@ -364,7 +364,7 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     // - other unknown errors
     if (
       (this._showPasswordOptions && !this._passwordsMatch) ||
-      (this._newPath == "" && this.defaultLabel == "") ||
+      (!this._newPath && !this.defaultLabel) ||
       this.enableBackupErrorCode != ERRORS.NONE
     ) {
       this.disableSubmit = true;
