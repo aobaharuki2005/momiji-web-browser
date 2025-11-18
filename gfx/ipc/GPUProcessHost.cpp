@@ -79,6 +79,7 @@ bool GPUProcessHost::Launch(geckoargs::ChildProcessArgs aExtraOpts) {
 }
 
 bool GPUProcessHost::WaitForLaunch() {
+  MOZ_ASSERT(mLaunchPhase != LaunchPhase::Unlaunched);
   if (mLaunchPhase == LaunchPhase::Complete) {
     return !!mGPUChild;
   }
@@ -140,30 +141,39 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
     DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mGPUChild.get());
     MOZ_ASSERT(rv);
 
-    mGPUChild->Init()->Then(
-        GetCurrentSerialEventTarget(), __func__,
-        [this, liveToken = mLiveToken](
-            const GPUChild::InitPromiseType::ResolveOrRejectValue&) {
-          if (*liveToken) {
-            this->OnAsyncInitComplete();
-          }
-        });
+    nsTArray<RefPtr<GPUChild::InitPromiseType>> initPromises;
+    initPromises.AppendElement(mGPUChild->Init());
 
 #ifdef MOZ_WIDGET_ANDROID
-    nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
+    nsCOMPtr<nsISerialEventTarget> launcherThread(GetIPCLauncher());
     MOZ_ASSERT(launcherThread);
-    layers::SynchronousTask task(
-        "GeckoProcessManager::GetCompositorSurfaceManager");
-
-    launcherThread->Dispatch(NS_NewRunnableFunction(
-        "GeckoProcessManager::GetCompositorSurfaceManager", [&]() {
-          layers::AutoCompleteTask complete(&task);
-          mCompositorSurfaceManager =
-              java::GeckoProcessManager::GetCompositorSurfaceManager();
-        }));
-
-    task.Wait();
+    RefPtr<GPUChild::InitPromiseType> csmPromise =
+        InvokeAsync(
+            launcherThread, __func__,
+            [] {
+              java::CompositorSurfaceManager::LocalRef csm =
+                  java::GeckoProcessManager::GetCompositorSurfaceManager();
+              return MozPromise<java::CompositorSurfaceManager::GlobalRef, Ok,
+                                true>::CreateAndResolve(csm, __func__);
+            })
+            ->Map(GetCurrentSerialEventTarget(), __func__,
+                  [this, liveToken = mLiveToken](
+                      java::CompositorSurfaceManager::GlobalRef&& aCsm) {
+                    if (*liveToken) {
+                      mCompositorSurfaceManager = aCsm;
+                    }
+                    return Ok{};
+                  });
+    initPromises.AppendElement(csmPromise);
 #endif
+
+    GPUChild::InitPromiseType::All(GetCurrentSerialEventTarget(), initPromises)
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [this, liveToken = mLiveToken]() {
+                 if (*liveToken) {
+                   this->OnAsyncInitComplete();
+                 }
+               });
   } else {
     mLaunchPhase = LaunchPhase::Complete;
     if (mListener) {
@@ -186,6 +196,24 @@ bool GPUProcessHost::CompleteInitSynchronously() {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Connected);
 
   const bool result = mGPUChild->EnsureGPUReady();
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (!mCompositorSurfaceManager) {
+    layers::SynchronousTask task(
+        "GeckoProcessManager::GetCompositorSurfaceManager");
+
+    nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
+    MOZ_ASSERT(launcherThread);
+    launcherThread->Dispatch(NS_NewRunnableFunction(
+        "GeckoProcessManager::GetCompositorSurfaceManager", [&]() {
+          layers::AutoCompleteTask complete(&task);
+          mCompositorSurfaceManager =
+              java::GeckoProcessManager::GetCompositorSurfaceManager();
+        }));
+
+    task.Wait();
+  }
+#endif
 
   mLaunchPhase = LaunchPhase::Complete;
   if (mListener) {
