@@ -21,3 +21,16 @@ exports.preventDefaultAndStopPropagation = function (event) {
     }
   }
 };
+
+/**
+ * Returns true if the pointer event can perform drag.
+ *
+ * We want to handle a drag during a button is pressed.  So, we can ignore
+ * pointer events which are caused by other devices.
+ *
+ * @param {PointerEvent} event
+ * @returns {boolean}
+ */
+exports.canPointerEventDrag = function (event) {
+  return event.pointerType == "mouse" || event.pointerType == "pen";
+};

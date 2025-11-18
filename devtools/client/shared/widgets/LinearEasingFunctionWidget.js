@@ -11,6 +11,9 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const { InspectorCSSParserWrapper } = require("devtools/shared/css/lexer");
 const { throttle } = require("devtools/shared/throttle");
+const {
+  canPointerEventDrag,
+} = require("resource://devtools/client/shared/events.js");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -189,9 +192,7 @@ class LinearEasingFunctionWidget extends EventEmitter {
    */
   #onPointerDown(event) {
     if (
-      // We want to handle a drag during a mouse button is pressed.  So, we can
-      // ignore pointer events which are caused by other devices.
-      event.pointerType != "mouse" ||
+      !canPointerEventDrag(event) ||
       !event.target.classList.contains(
         LinearEasingFunctionWidget.CONTROL_POINTS_CLASSNAME
       )
