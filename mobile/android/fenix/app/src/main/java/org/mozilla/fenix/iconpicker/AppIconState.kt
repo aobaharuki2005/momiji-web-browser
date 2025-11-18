@@ -13,12 +13,14 @@ import mozilla.components.lib.state.State
  * @property userSelectedAppIcon The icon the user has selected in the picker, if any.
  * @property groupedIconOptions A map of all available app icons.
  * @property snackbarState The current snackbar state.
+ * @property warningDialogState The current warning dialog state.
  */
 data class AppIconState(
     val currentAppIcon: AppIcon = AppIcon.AppDefault,
     val userSelectedAppIcon: AppIcon? = null,
     val groupedIconOptions: Map<IconGroupTitle, List<AppIcon>> = mapOf(),
     val snackbarState: AppIconSnackbarState = AppIconSnackbarState.None,
+    val warningDialogState: AppIconWarningDialog = AppIconWarningDialog.None,
 ) : State
 
 /**
@@ -34,4 +36,19 @@ sealed class AppIconSnackbarState {
      * Display a snackbar of the app icon update failure.
      */
     data object ApplyingNewIconError : AppIconSnackbarState()
+}
+
+/**
+ * The state of the app reset warning dialog
+ */
+sealed class AppIconWarningDialog {
+    /**
+     * No dialog to display.
+     */
+    data object None : AppIconWarningDialog()
+
+    /**
+     * The dialog is visible.
+     */
+    data class Presenting(val newIcon: AppIcon) : AppIconWarningDialog()
 }
