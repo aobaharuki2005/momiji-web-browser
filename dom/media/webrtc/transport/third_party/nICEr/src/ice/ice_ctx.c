@@ -871,7 +871,7 @@ int nr_ice_set_target_for_default_local_address_lookup(nr_ice_ctx *ctx, const ch
     int stun_addr_ct;
 
     if (!ctx->local_addrs) {
-      if((r=nr_stun_find_local_addresses(stun_addrs,MAXADDRS,&stun_addr_ct))) {
+      if((r=nr_stun_get_addrs(stun_addrs,MAXADDRS,&stun_addr_ct))) {
         ABORT(r);
       }
       if((r=nr_ice_set_local_addresses(ctx,stun_addrs,stun_addr_ct))) {
