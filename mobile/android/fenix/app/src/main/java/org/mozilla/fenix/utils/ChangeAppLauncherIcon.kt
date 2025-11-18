@@ -73,6 +73,8 @@ private fun userHasAlternativeAppIconSet(
  * @param appAlias The currently used app alias.
  * @param newAppAlias The app alias we are updating to.
  * @param updateShortcuts A function that attempts to update the pinned shortcuts to use the [newAppAlias].
+ *
+ * @returns `true` if the app icon was successfully updated, otherwise `false`
  */
 fun changeAppLauncherIcon(
     packageManager: PackageManager,
@@ -82,10 +84,11 @@ fun changeAppLauncherIcon(
     newAppAlias: ComponentName,
     updateShortcuts: (ShortcutManagerWrapper, ShortcutsUpdater, ComponentName) -> Boolean =
             ::updateShortcutsComponentName,
-) {
+): Boolean {
     newAppAlias.setEnabledStateTo(packageManager, true)
 
-    if (updateShortcuts(shortcutManager, shortcutInfo, newAppAlias)) {
+    val updated = updateShortcuts(shortcutManager, shortcutInfo, newAppAlias)
+    if (updated) {
         logger.info("Successfully attempted to update the app icon to the alternative.")
         appAlias.setEnabledStateTo(packageManager, false)
     } else {
@@ -93,6 +96,7 @@ fun changeAppLauncherIcon(
         // If we can't successfully update the user shortcuts, then re-disable the app alias component.
         newAppAlias.setEnabledStateTo(packageManager, false)
     }
+    return updated
 }
 
 private fun resetAppIconsToDefault(

@@ -12,9 +12,26 @@ import mozilla.components.lib.state.State
  * @property currentAppIcon The icon currently being used by the application.
  * @property userSelectedAppIcon The icon the user has selected in the picker, if any.
  * @property groupedIconOptions A map of all available app icons.
+ * @property snackbarState The current snackbar state.
  */
 data class AppIconState(
     val currentAppIcon: AppIcon = AppIcon.AppDefault,
     val userSelectedAppIcon: AppIcon? = null,
     val groupedIconOptions: Map<IconGroupTitle, List<AppIcon>> = mapOf(),
+    val snackbarState: AppIconSnackbarState = AppIconSnackbarState.None,
 ) : State
+
+/**
+ * The state of the snackbar to display.
+ */
+sealed class AppIconSnackbarState {
+    /**
+     * There is no snackbar to display.
+     */
+    data object None : AppIconSnackbarState()
+
+    /**
+     * Display a snackbar of the app icon update failure.
+     */
+    data object ApplyingNewIconError : AppIconSnackbarState()
+}

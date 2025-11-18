@@ -9,10 +9,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,9 +27,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,19 +49,24 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.TextButton
+import mozilla.components.compose.base.snackbar.Snackbar
+import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.iconpicker.AppIcon
-import org.mozilla.fenix.iconpicker.AppIconAction
+import org.mozilla.fenix.iconpicker.AppIconSnackbarState
 import org.mozilla.fenix.iconpicker.AppIconState
 import org.mozilla.fenix.iconpicker.AppIconStore
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.iconpicker.DefaultPackageManagerWrapper
 import org.mozilla.fenix.iconpicker.IconBackground
 import org.mozilla.fenix.iconpicker.IconGroupTitle
+import org.mozilla.fenix.iconpicker.SystemAction
+import org.mozilla.fenix.iconpicker.UserAction
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val ListItemHeight = 56.dp
@@ -75,11 +89,77 @@ fun AppIconSelection(
 ) {
     val state by store.observeAsState(store.state) { it }
     val selectedIcon = state.userSelectedAppIcon ?: state.currentAppIcon
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
+    val errorSnackbarMessage = stringResource(R.string.shortcuts_update_error)
+    LaunchedEffect(state.snackbarState) {
+        when (state.snackbarState) {
+            AppIconSnackbarState.None -> return@LaunchedEffect
+            AppIconSnackbarState.ApplyingNewIconError -> scope.launch {
+                snackbarHostState.displaySnackbar(
+                    message = errorSnackbarMessage,
+                    onDismissPerformed = {
+                        store.dispatch(SystemAction.SnackbarDismissed)
+                    },
+                )
+            }
+        }
+    }
+
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { snackbarData ->
+                    Snackbar(snackbarData = snackbarData)
+                },
+                modifier = Modifier.imePadding(),
+            )
+        },
+        contentWindowInsets = WindowInsets(), // empty insets, activity toolbar is handled by the host fragment
+    ) { paddingValues ->
+        AppIconList(
+            paddingValues = paddingValues,
+            selectedIcon = selectedIcon,
+            groupedIcons = state.groupedIconOptions,
+            onIconSelected = { icon -> store.dispatch(UserAction.Selected(icon)) },
+        )
+    }
+
+    state.userSelectedAppIcon?.let {
+        RestartWarningDialog(
+            onConfirmClicked = {
+                store.dispatch(
+                    UserAction.Confirmed(
+                        oldIcon = state.currentAppIcon,
+                        newIcon = it,
+                    ),
+                )
+            },
+            onDismissClicked = {
+                store.dispatch(UserAction.Dismissed)
+            },
+            onDismissed = {
+                store.dispatch(SystemAction.DialogDismissed)
+            },
+        )
+    }
+}
+
+@Composable
+private fun AppIconList(
+    paddingValues: PaddingValues,
+    selectedIcon: AppIcon,
+    groupedIcons: Map<IconGroupTitle, List<AppIcon>>,
+    onIconSelected: (AppIcon) -> Unit,
+) {
     LazyColumn(
-        modifier = Modifier.background(color = FirefoxTheme.colors.layer1),
+        modifier = Modifier
+            .padding(paddingValues)
+            .background(color = FirefoxTheme.colors.layer1),
     ) {
-        state.groupedIconOptions.forEach { (header, icons) ->
+        groupedIcons.forEach { (header, icons) ->
             item(contentType = { header::class }) {
                 AppIconGroupHeader(header)
             }
@@ -95,7 +175,7 @@ fun AppIconSelection(
                     selected = iconSelected,
                     onClick = {
                         if (!iconSelected) {
-                            store.dispatch(AppIconAction.SelectAppIcon(icon))
+                            onIconSelected(icon)
                         }
                     },
                 )
@@ -107,17 +187,6 @@ fun AppIconSelection(
                 HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
             }
         }
-    }
-
-    state.userSelectedAppIcon?.let {
-        RestartWarningDialog(
-            onConfirm = {
-                store.dispatch(AppIconAction.ApplyAppIcon(it, state.currentAppIcon))
-            },
-            onDismiss = {
-                store.dispatch(AppIconAction.ResetSelection)
-            },
-        )
     }
 }
 
@@ -242,8 +311,9 @@ fun AppIcon(
 
 @Composable
 private fun RestartWarningDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
+    onConfirmClicked: () -> Unit,
+    onDismissClicked: () -> Unit,
+    onDismissed: () -> Unit,
 ) {
     AlertDialog(
         title = {
@@ -263,17 +333,17 @@ private fun RestartWarningDialog(
                 style = FirefoxTheme.typography.body2,
             )
         },
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = { onDismissed() },
         confirmButton = {
             TextButton(
                 text = stringResource(id = R.string.restart_warning_dialog_button_positive_2),
-                onClick = { onConfirm() },
+                onClick = { onConfirmClicked() },
             )
         },
         dismissButton = {
             TextButton(
                 text = stringResource(id = R.string.restart_warning_dialog_button_negative),
-                onClick = { onDismiss() },
+                onClick = { onDismissClicked() },
             )
         },
     )
@@ -319,8 +389,9 @@ private fun AppIconOptionWithSubtitlePreview() {
 private fun RestartWarningDialogPreview() {
     FirefoxTheme {
         RestartWarningDialog(
-            onConfirm = {},
-            onDismiss = {},
+            onConfirmClicked = {},
+            onDismissClicked = {},
+            onDismissed = {},
         )
     }
 }
