@@ -9434,8 +9434,15 @@ static void MaybeConvertToReplaceLoad(nsDocShellLoadState* aLoadState,
                                                            *aExtantDocument))
                     ? "needs completely loaded document"
                     : "navigation must be a replace");
-    aLoadState->SetLoadType(MaybeAddLoadFlags(
-        aLoadState->LoadType(), nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY));
+    // There is no replace variant for LOAD_LINK, so we convert it to
+    // LOAD_NORMAL_REPLACE just like in nsDocShell::OnNewURI.
+    if (aLoadState->LoadType() == LOAD_LINK) {
+      aLoadState->SetLoadType(LOAD_NORMAL_REPLACE);
+    } else {
+      aLoadState->SetLoadType(
+          MaybeAddLoadFlags(aLoadState->LoadType(),
+                            nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY));
+    }
     aLoadState->SetHistoryBehavior(NavigationHistoryBehavior::Replace);
   } else {
     aLoadState->SetHistoryBehavior(NavigationHistoryBehavior::Push);
