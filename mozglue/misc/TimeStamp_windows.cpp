@@ -64,12 +64,6 @@ MFBT_API double BaseTimeDurationPlatformUtils::ToSeconds(int64_t aTicks) {
   return double(aTicks) / sTicksPerSecd;
 }
 
-MFBT_API double BaseTimeDurationPlatformUtils::ToSecondsSigDigits(
-    int64_t aTicks) {
-  // We trust QueryPerformanceFrequency that all digits are significant.
-  return ToSeconds(aTicks);
-}
-
 MFBT_API int64_t
 BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds) {
   double result = sTicksPerMsd * aMilliseconds;

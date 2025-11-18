@@ -34,7 +34,6 @@ class TimeStampTests;
 class BaseTimeDurationPlatformUtils {
  public:
   static MFBT_API double ToSeconds(int64_t aTicks);
-  static MFBT_API double ToSecondsSigDigits(int64_t aTicks);
   static MFBT_API int64_t TicksFromMilliseconds(double aMilliseconds);
 };
 
@@ -71,6 +70,8 @@ class BaseTimeDuration {
     return *this;
   }
 
+  // ToSeconds returns the (fractional) number of seconds of the duration
+  // with the maximum representable precision.
   double ToSeconds() const {
     if (mValue == INT64_MAX) {
       return PositiveInfinity<double>();
@@ -80,19 +81,11 @@ class BaseTimeDuration {
     }
     return BaseTimeDurationPlatformUtils::ToSeconds(mValue);
   }
-  // Return a duration value that includes digits of time we think to
-  // be significant.  This method should be used when displaying a
-  // time to humans.
-  double ToSecondsSigDigits() const {
-    if (mValue == INT64_MAX) {
-      return PositiveInfinity<double>();
-    }
-    if (mValue == INT64_MIN) {
-      return NegativeInfinity<double>();
-    }
-    return BaseTimeDurationPlatformUtils::ToSecondsSigDigits(mValue);
-  }
+  // ToMilliseconds returns the (fractional) number of milliseconds of the
+  // duration with the maximum representable precision.
   double ToMilliseconds() const { return ToSeconds() * 1000.0; }
+  // ToMicroseconds returns the (fractional) number of microseconds of the
+  // duration with the maximum representable precision.
   double ToMicroseconds() const { return ToMilliseconds() * 1000.0; }
 
   // Using a double here is safe enough; with 53 bits we can represent
