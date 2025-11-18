@@ -17146,7 +17146,13 @@ bool CodeGenerator::generateWasm(wasm::CallIndirectId callIndirectId,
     // need to check for interrupts.
     MOZ_ASSERT(omitOverRecursedInterruptCheck());
   } else {
-    masm.wasmReserveStackChecked(frameSize(), entryTrapSiteDesc);
+    auto* ool = new (alloc())
+        LambdaOutOfLineCode([this, entryTrapSiteDesc](OutOfLineCode& ool) {
+          masm.wasmTrap(wasm::Trap::StackOverflow, entryTrapSiteDesc);
+          return true;
+        });
+    addOutOfLineCode(ool, (const BytecodeSite*)nullptr);
+    masm.wasmReserveStackChecked(frameSize(), ool->entry());
 
     if (!omitOverRecursedInterruptCheck()) {
       wasm::StackMap* functionEntryStackMap = nullptr;

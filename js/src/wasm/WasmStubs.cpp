@@ -1894,7 +1894,8 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
       sizeof(Frame),  // pushed by prologue
       StackArgBytesForWasmABI(funcType) + sizeOfInstanceSlot);
 
-  masm.wasmReserveStackChecked(framePushed, TrapSiteDesc());
+  Label stackOverflowTrap;
+  masm.wasmReserveStackChecked(framePushed, &stackOverflowTrap);
 
   MOZ_ASSERT(masm.framePushed() == framePushed);
 
@@ -1941,6 +1942,11 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
   masm.switchToWasmInstanceRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
 
   GenerateFunctionEpilogue(masm, framePushed, offsets);
+
+  // Emit the stack overflow trap as OOL code.
+  masm.bind(&stackOverflowTrap);
+  masm.wasmTrap(wasm::Trap::StackOverflow, wasm::TrapSiteDesc());
+
   return FinishOffsets(masm, offsets);
 }
 

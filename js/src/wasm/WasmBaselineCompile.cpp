@@ -245,7 +245,6 @@ class OutOfLineResumableTrap : public OutOfLineCode {
     masm->wasmTrap(trap_, desc_);
     if (stackMap_ && !stackMaps_->add(masm->currentOffset(), stackMap_)) {
       masm->setOOM();
-      return;
     }
     masm->jump(rejoin());
   }
@@ -574,9 +573,6 @@ bool BaseCompiler::beginFunction() {
 
   // Generate a stack-overflow check and its associated stackmap.
 
-  fr.checkStack(ABINonArgReg0,
-                TrapSiteDesc(BytecodeOffset(func_.lineOrBytecode)));
-
   ExitStubMapVector extras;
   StackMap* functionEntryStackMap;
   if (!stackMapGenerator_.generateStackmapEntriesForTrapExit(args, &extras) ||
@@ -586,15 +582,25 @@ bool BaseCompiler::beginFunction() {
     return false;
   }
 
-  OutOfLineCode* ool = addOutOfLineCode(new (alloc_) OutOfLineResumableTrap(
-      Trap::CheckInterrupt, trapSiteDesc(), functionEntryStackMap, stackMaps_));
-  if (!ool) {
+  OutOfLineCode* oolStackOverflowTrap =
+      addOutOfLineCode(new (alloc_) OutOfLineAbortingTrap(
+          Trap::StackOverflow,
+          TrapSiteDesc(BytecodeOffset(func_.lineOrBytecode))));
+  if (!oolStackOverflowTrap) {
+    return false;
+  }
+  fr.checkStack(ABINonArgReg0, oolStackOverflowTrap->entry());
+
+  OutOfLineCode* oolInterruptTrap = addOutOfLineCode(
+      new (alloc_) OutOfLineResumableTrap(Trap::CheckInterrupt, trapSiteDesc(),
+                                          functionEntryStackMap, stackMaps_));
+  if (!oolInterruptTrap) {
     return false;
   }
   masm.branch32(Assembler::NotEqual,
                 Address(InstanceReg, wasm::Instance::offsetOfInterrupt()),
-                Imm32(0), ool->entry());
-  masm.bind(ool->rejoin());
+                Imm32(0), oolInterruptTrap->entry());
+  masm.bind(oolInterruptTrap->rejoin());
 
   size_t reservedBytes = fr.fixedAllocSize() - masm.framePushed();
   MOZ_ASSERT(0 == (reservedBytes % sizeof(void*)));

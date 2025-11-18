@@ -3707,11 +3707,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadWasmPinnedRegsFromInstance(
       const wasm::MaybeTrapSiteDesc& trapSiteDesc);
 
-  // Returns a pair: the offset of the undefined (trapping) instruction, and
-  // the number of extra bytes of stack allocated prior to the trap
-  // instruction proper.
-  std::pair<CodeOffset, uint32_t> wasmReserveStackChecked(
-      uint32_t amount, const wasm::TrapSiteDesc& trapSiteDesc);
+  // Branches to the fail label if the stack would overflow the current stack
+  // limit. Returns the number of extra bytes of stack allocated prior to
+  // branching to the fail label.
+  uint32_t wasmReserveStackChecked(uint32_t amount, Label* fail);
 
   // Emit a bounds check against the wasm heap limit, jumping to 'ok' if 'cond'
   // holds; this can be the label either of the access or of the trap.  The

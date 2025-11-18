@@ -5835,40 +5835,28 @@ void MacroAssembler::wasmTrap(wasm::Trap trap,
   append(trap, wasm::TrapMachineInsn::OfficialUD, fco.get(), trapSiteDesc);
 }
 
-std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
-    uint32_t amount, const wasm::TrapSiteDesc& trapSiteDesc) {
+uint32_t MacroAssembler::wasmReserveStackChecked(uint32_t amount, Label* fail) {
   if (amount > MAX_UNCHECKED_LEAF_FRAME_SIZE) {
     // The frame is large.  Don't bump sp until after the stack limit check so
     // that the trap handler isn't called with a wild sp.
-    Label ok;
     Register scratch = ABINonArgReg0;
     moveStackPtrTo(scratch);
-
-    Label trap;
-    branchPtr(Assembler::Below, scratch, Imm32(amount), &trap);
+    branchPtr(Assembler::Below, scratch, Imm32(amount), fail);
     subPtr(Imm32(amount), scratch);
-    branchPtr(Assembler::Below,
+    branchPtr(Assembler::AboveOrEqual,
               Address(InstanceReg, wasm::Instance::offsetOfStackLimit()),
-              scratch, &ok);
-
-    bind(&trap);
-    wasmTrap(wasm::Trap::StackOverflow, trapSiteDesc);
-    CodeOffset trapInsnOffset = CodeOffset(currentOffset());
-
-    bind(&ok);
+              scratch, fail);
     reserveStack(amount);
-    return std::pair<CodeOffset, uint32_t>(trapInsnOffset, 0);
+    // The stack amount was reserved after branching to the fail label.
+    return 0;
   }
 
   reserveStack(amount);
-  Label ok;
-  branchStackPtrRhs(Assembler::Below,
+  branchStackPtrRhs(Assembler::AboveOrEqual,
                     Address(InstanceReg, wasm::Instance::offsetOfStackLimit()),
-                    &ok);
-  wasmTrap(wasm::Trap::StackOverflow, trapSiteDesc);
-  CodeOffset trapInsnOffset = CodeOffset(currentOffset());
-  bind(&ok);
-  return std::pair<CodeOffset, uint32_t>(trapInsnOffset, amount);
+                    fail);
+  // The stack amount was reserved before branching to the fail label.
+  return amount;
 }
 
 static void MoveDataBlock(MacroAssembler& masm, Register base, int32_t from,
