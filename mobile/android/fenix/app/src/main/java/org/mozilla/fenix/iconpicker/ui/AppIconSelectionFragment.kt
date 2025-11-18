@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.iconpicker.AppIconMiddleware
 import org.mozilla.fenix.iconpicker.AppIconRepository
@@ -78,6 +79,7 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
                 shortcutInfo = ShortcutsUpdaterDefault(this),
                 appAlias = ComponentName(this, "$packageName.${currentIcon.aliasSuffix}"),
                 newAppAlias = ComponentName(this, "$packageName.${newIcon.aliasSuffix}"),
+                crashReporter = components.analytics.crashReporter,
             )
         }
     }

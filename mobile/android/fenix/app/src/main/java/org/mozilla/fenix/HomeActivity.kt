@@ -773,6 +773,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                     appAlias = ComponentName(this, "$packageName.App"),
                     alternativeAppAlias = ComponentName(this, "$packageName.AlternativeApp"),
                     resetToDefault = FxNimbus.features.alternativeAppLauncherIcon.value().resetToDefault,
+                    crashReporter = components.analytics.crashReporter,
                 )
             }
         }
