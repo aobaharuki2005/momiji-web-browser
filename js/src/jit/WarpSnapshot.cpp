@@ -207,6 +207,15 @@ void WarpCacheIR::dumpData(GenericPrinter& out) const {
   WarpCacheIRBase::dumpData(out);
 }
 
+void WarpCacheIRWithShapeList::dumpData(GenericPrinter& out) const {
+  WarpCacheIRBase::dumpData(out);
+  uint32_t index = 0;
+  for (Shape* shape : shapes_.shapes()) {
+    out.printf("    shape %u: 0x%p\n", index, shape);
+    index++;
+  }
+}
+
 void WarpInlinedCall::dumpData(GenericPrinter& out) const {
   out.printf("    scriptSnapshot: 0x%p\n", scriptSnapshot_);
   out.printf("    info: 0x%p\n", info_);
@@ -430,6 +439,19 @@ void WarpCacheIRBase::traceData(JSTracer* trc) {
 }
 
 void WarpCacheIR::traceData(JSTracer* trc) { WarpCacheIRBase::traceData(trc); }
+
+void ShapeListSnapshot::trace(JSTracer* trc) const {
+  for (auto& shape : shapes_) {
+    if (shape) {
+      TraceOffthreadGCPtr(trc, shape, "warp-shape-list-shape");
+    }
+  }
+}
+
+void WarpCacheIRWithShapeList::traceData(JSTracer* trc) {
+  WarpCacheIRBase::traceData(trc);
+  shapes_.trace(trc);
+}
 
 void WarpInlinedCall::traceData(JSTracer* trc) {
   // Note: scriptSnapshot_ is traced through WarpSnapshot.

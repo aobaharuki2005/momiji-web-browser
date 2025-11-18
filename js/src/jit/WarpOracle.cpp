@@ -22,6 +22,7 @@
 #include "jit/JitSpewer.h"
 #include "jit/JitZone.h"
 #include "jit/MIRGenerator.h"
+#include "jit/ShapeList.h"
 #include "jit/TrialInlining.h"
 #include "jit/TypeData.h"
 #include "jit/WarpBuilder.h"
@@ -1103,6 +1104,9 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   const CacheIRStubInfo* stubInfo = stub->stubInfo();
   const uint8_t* stubData = stub->stubDataStart();
 
+  // List of shapes for a GuardMultipleShapes op with a small number of shapes.
+  mozilla::Maybe<ShapeListSnapshot> shapeList;
+
   // Only create a snapshot if all opcodes are supported by the transpiler.
   CacheIRReader reader(stubInfo);
   bool hasInvalidFuseGuard = false;
@@ -1204,6 +1208,21 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
         }
         break;
       }
+      case CacheOp::GuardMultipleShapes: {
+        auto args = reader.argsForGuardMultipleShapes();
+        JSObject* shapes = stubInfo->getStubField<StubField::Type::JSObject>(
+            stub, args.shapesOffset);
+        auto* shapesObject = &shapes->as<ShapeListObject>();
+        MOZ_ASSERT(shapeList.isNothing());
+        size_t numShapes = shapesObject->length();
+        if (ShapeListSnapshot::shouldSnapshot(numShapes)) {
+          shapeList.emplace();
+          for (size_t i = 0; i < numShapes; i++) {
+            shapeList->init(i, shapesObject->get(i));
+          }
+        }
+        break;
+      }
       default:
         reader.skip(opInfo.argLength);
         break;
@@ -1256,9 +1275,17 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     }
   }
 
-  if (!AddOpSnapshot<WarpCacheIR>(alloc_, snapshots, offset, jitCode, stubInfo,
-                                  stubDataCopy)) {
-    return abort(AbortReason::Alloc);
+  if (shapeList.isSome()) {
+    if (!AddOpSnapshot<WarpCacheIRWithShapeList>(alloc_, snapshots, offset,
+                                                 jitCode, stubInfo,
+                                                 stubDataCopy, *shapeList)) {
+      return abort(AbortReason::Alloc);
+    }
+  } else {
+    if (!AddOpSnapshot<WarpCacheIR>(alloc_, snapshots, offset, jitCode,
+                                    stubInfo, stubDataCopy)) {
+      return abort(AbortReason::Alloc);
+    }
   }
 
   fallbackStub->setUsedByTranspiler();

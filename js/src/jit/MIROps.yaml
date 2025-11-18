@@ -2203,6 +2203,9 @@
   alias_set: custom
   generate_lir: true
 
+# This is the equivalent of the GuardMultipleShapes CacheIR op. Because it
+# stores a pointer to the ShapeListObject, we don't need to recompile Ion code
+# when a new shape is added to the list.
 - name: GuardMultipleShapes
   operands:
     object: Object
@@ -2214,6 +2217,23 @@
   alias_set: custom
   generate_lir: true
   lir_temps: 4
+
+# Similar to GuardMultipleShapes but used when the list had a small number of
+# shapes. These shapes have been copied to the ShapeListSnapshot and are
+# available at compile-time. This lets us perform more MIR optimizations, but
+# we need to recompile when a new shape is added to the list.
+- name: GuardShapeList
+  operands:
+    object: Object
+  arguments:
+    shapeList: const ShapeListSnapshot*
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: custom
+  alias_set: custom
+  generate_lir: true
+  lir_temps: 2
 
 - name: GuardProto
   gen_boilerplate: false

@@ -5789,6 +5789,23 @@ void LIRGenerator::visitGuardMultipleShapes(MGuardMultipleShapes* ins) {
   }
 }
 
+void LIRGenerator::visitGuardShapeList(MGuardShapeList* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  if (JitOptions.spectreObjectMitigations) {
+    auto* lir = new (alloc())
+        LGuardShapeList(useRegisterAtStart(ins->object()), temp(), temp());
+    assignSnapshot(lir, ins->bailoutKind());
+    defineReuseInput(lir, ins, 0);
+  } else {
+    auto* lir = new (alloc()) LGuardShapeList(useRegister(ins->object()),
+                                              temp(), LDefinition::BogusTemp());
+    assignSnapshot(lir, ins->bailoutKind());
+    add(lir, ins);
+    redefine(ins, ins->object());
+  }
+}
+
 void LIRGenerator::visitGuardProto(MGuardProto* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->expected()->type() == MIRType::Object);

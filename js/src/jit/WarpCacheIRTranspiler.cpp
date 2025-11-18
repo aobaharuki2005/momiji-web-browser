@@ -512,11 +512,19 @@ bool WarpCacheIRTranspiler::emitGuardObjectFuseProperty(
 bool WarpCacheIRTranspiler::emitGuardMultipleShapes(ObjOperandId objId,
                                                     uint32_t shapesOffset) {
   MDefinition* def = getOperand(objId);
-  MInstruction* shapeList = objectStubField(shapesOffset);
 
-  auto* ins = MGuardMultipleShapes::New(alloc(), def, shapeList);
-  if (builder_->info().inlineScriptTree()->hasSharedICScript()) {
-    ins->setBailoutKind(BailoutKind::MonomorphicInlinedStubFolding);
+  // Use MGuardShapeList if we snapshotted the list of shapes on the main
+  // thread.
+  MInstruction* ins;
+  if (cacheIRSnapshot_->is<WarpCacheIRWithShapeList>()) {
+    auto* shapes = cacheIRSnapshot_->as<WarpCacheIRWithShapeList>()->shapes();
+    ins = MGuardShapeList::New(alloc(), def, shapes);
+  } else {
+    MInstruction* shapeList = objectStubField(shapesOffset);
+    ins = MGuardMultipleShapes::New(alloc(), def, shapeList);
+    if (builder_->info().inlineScriptTree()->hasSharedICScript()) {
+      ins->setBailoutKind(BailoutKind::MonomorphicInlinedStubFolding);
+    }
   }
   add(ins);
 

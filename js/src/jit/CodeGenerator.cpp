@@ -19,6 +19,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SIMD.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <type_traits>
@@ -4497,6 +4498,44 @@ void CodeGenerator::visitGuardMultipleShapes(LGuardMultipleShapes* guard) {
   masm.loadPtr(Address(shapeList, NativeObject::offsetOfElements()), temp);
   masm.branchTestObjShapeList(Assembler::NotEqual, obj, temp, temp2, temp3,
                               spectre, &bail);
+  bailoutFrom(&bail, guard->snapshot());
+}
+
+void CodeGenerator::visitGuardShapeList(LGuardShapeList* guard) {
+  Register obj = ToRegister(guard->object());
+  Register temp = ToRegister(guard->temp0());
+  Register spectre = ToTempRegisterOrInvalid(guard->temp1());
+
+  Label done, bail;
+  masm.loadObjShapeUnsafe(obj, temp);
+
+  // Count the number of branches to emit.
+  const auto& shapes = guard->mir()->shapeList()->shapes();
+  size_t branchesLeft = std::count_if(shapes.begin(), shapes.end(),
+                                      [](Shape* s) { return s != nullptr; });
+  MOZ_RELEASE_ASSERT(branchesLeft > 0);
+
+  for (Shape* shape : shapes) {
+    if (!shape) {
+      continue;
+    }
+    if (branchesLeft > 1) {
+      masm.branchPtr(Assembler::Equal, temp, ImmGCPtr(shape), &done);
+      if (spectre != InvalidReg) {
+        masm.spectreMovePtr(Assembler::Equal, spectre, obj);
+      }
+    } else {
+      // This is the last branch so invert the condition and jump to |bail|.
+      masm.branchPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), &bail);
+      if (spectre != InvalidReg) {
+        masm.spectreMovePtr(Assembler::NotEqual, spectre, obj);
+      }
+    }
+    branchesLeft--;
+  }
+  MOZ_ASSERT(branchesLeft == 0);
+
+  masm.bind(&done);
   bailoutFrom(&bail, guard->snapshot());
 }
 
