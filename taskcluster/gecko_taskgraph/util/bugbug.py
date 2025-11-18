@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+import hashlib
 import os
 import pathlib
 import sys
@@ -55,18 +56,14 @@ def get_session():
     return requests_retry_session(retries=5, session=s)
 
 
-def _next_indexed_path(base_path):
+def _perfherder_artifact_path(base_path, perfherder_data):
     base_dir = base_path.parent
     stem = base_path.stem
-    pattern = f"{stem}-*.json"
-    max_index = 1
-    for file in base_dir.glob(pattern):
-        try:
-            index = int(file.stem.replace(stem + "-", ""))
-            max_index = max(max_index, index + 1)
-        except ValueError:
-            continue
-    return base_dir / f"{stem}-{max_index}.json"
+    sequence = int(time.monotonic() * 1000)
+    payload = json.dumps(perfherder_data, sort_keys=True).encode("utf-8")
+    digest = hashlib.sha1(payload).hexdigest()[:8]
+
+    return base_dir / f"{stem}-{sequence}-{digest}.json"
 
 
 def _write_perfherder_data(lower_is_better):
@@ -97,7 +94,7 @@ def _write_perfherder_data(lower_is_better):
             return
 
         upload_path.parent.mkdir(parents=True, exist_ok=True)
-        target = _next_indexed_path(upload_path)
+        target = _perfherder_artifact_path(upload_path, perfherder_data)
         with target.open("w", encoding="utf-8") as f:
             json.dump(perfherder_data, f)
 
