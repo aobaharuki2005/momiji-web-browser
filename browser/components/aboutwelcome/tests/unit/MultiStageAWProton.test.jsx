@@ -829,8 +829,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
     it("should render action buttons after tiles by default when no position is configured", async () => {
       const SCREEN_PROPS = {
         content: {
-          title: "test title",
-          position: "center",
+          title: "Test title",
           primary_button: { label: "Confirm and continue" },
           tiles_header: { title: "Title" },
           tiles: {
@@ -860,7 +859,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
         content: {
           title: "Test title",
           subtitle: "Test subtitle",
-          position: "center",
           action_buttons_position: "after_subtitle",
           primary_button: { label: "Get started" },
         },
@@ -886,7 +884,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
       const SCREEN_PROPS = {
         content: {
           title: "Welcome to Firefox",
-          position: "center",
           action_buttons_position: "after_supporting_content",
           above_button_content: [
             {
@@ -897,19 +894,17 @@ describe("MultiStageAboutWelcomeProton module", () => {
             },
           ],
           primary_button: { label: "Confirm and continue" },
-          tiles_header: {
-            title: {
-              string_id: "preonboarding-manage-data-header-button-title",
-            },
-          },
+          tiles_container: { position: "after_supporting_content" },
           tiles: {
             type: "multiselect",
             data: [
-              { id: "checkbox-1", label: "Interaction data" },
-              { id: "checkbox-2", label: "Crash data" },
+              { id: "checkbox-1", label: "Checkbox 1" },
+              { id: "checkbox-2", label: "Checkbox 2" },
             ],
           },
         },
+        setScreenMultiSelects: sinon.stub(),
+        setActiveMultiSelect: sinon.stub(),
       };
 
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
@@ -926,8 +921,97 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
       const afterButtonsEl = nextEl.nextElementSibling;
       assert.isTrue(
-        afterButtonsEl.classList.contains("content-tiles-header"),
-        "Next element after action buttons should be content-tiles-header"
+        afterButtonsEl.classList.contains("content-tile"),
+        "Next element after action buttons should be content tile"
+      );
+    });
+
+    it("should render tiles before 'above_button_content' by default", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "Test title",
+          primary_button: { label: "Continue" },
+          above_button_content: [
+            {
+              type: "text",
+              text: { string_id: "tou-existing-user-spotlight-body" },
+              font_styles: "legal",
+              link_keys: ["terms-of-use", "privacy-notice", "learn-more"],
+            },
+          ],
+          tiles: {
+            type: "multiselect",
+            data: [
+              { id: "checkbox-1", label: "Checkbox 1" },
+              { id: "checkbox-2", label: "Checkbox 2" },
+            ],
+          },
+        },
+        setScreenMultiSelects: sinon.stub(),
+        setActiveMultiSelect: sinon.stub(),
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+
+      const tilesEl = wrapper.find(".content-tile");
+      assert.isTrue(tilesEl.exists(), "Content tiles found");
+
+      const legalParagraphEl = wrapper.find(".legal-paragraph");
+      assert.isTrue(
+        legalParagraphEl.exists(),
+        "above_button_content legal paragraph element found"
+      );
+
+      assert.isTrue(
+        tilesEl
+          .getDOMNode()
+          .nextElementSibling.classList.contains("legal-paragraph"),
+        "the next element after tiles should be legal paragraph (above_button_content)"
+      );
+    });
+
+    it("should render tiles after 'above_button_content' when configured", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "Test title",
+          primary_button: { label: "Continue" },
+          above_button_content: [
+            {
+              type: "text",
+              text: { string_id: "tou-existing-user-spotlight-body" },
+              font_styles: "legal",
+              link_keys: ["terms-of-use", "privacy-notice", "learn-more"],
+            },
+          ],
+          tiles_container: { position: "after_supporting_content" },
+          tiles: {
+            type: "multiselect",
+            data: [
+              { id: "checkbox-1", label: "Checkbox 1" },
+              { id: "checkbox-2", label: "Checkbox 2" },
+            ],
+          },
+        },
+        setScreenMultiSelects: sinon.stub(),
+        setActiveMultiSelect: sinon.stub(),
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+
+      const tilesEl = wrapper.find(".content-tile");
+      assert.isTrue(tilesEl.exists(), "Content tiles found");
+
+      const legalParagraphEl = wrapper.find(".legal-paragraph");
+      assert.isTrue(
+        legalParagraphEl.exists(),
+        "above_button_content legal paragraph element found"
+      );
+
+      assert.isTrue(
+        legalParagraphEl
+          .getDOMNode()
+          .nextElementSibling.classList.contains("content-tile"),
+        "the next element after legal paragraph (above_button_content) should be tiles"
       );
     });
   });
@@ -1211,7 +1295,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
     const SCREEN_PROP = {
       content: {
         title: "test title",
-        contentTilesContainer: {
+        tiles_container: {
           style: {
             flexDirection: "row",
             marginBlock: "16px",
