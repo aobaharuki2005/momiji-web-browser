@@ -148,9 +148,6 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   [[nodiscard]] static bool findSweepGroupEdgesForZone(JS::Zone* atomsZone,
                                                        JS::Zone* mapZone);
 
-  // Sweep the marked weak maps in a zone, updating moved keys.
-  static void sweepZoneAfterMinorGC(JS::Zone* zone);
-
   // Trace all weak map bindings. Used by the cycle collector.
   static void traceAllMappings(WeakMapTracer* tracer);
 
@@ -183,6 +180,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Trace any keys and values that are in the nursery. Return false if any
   // remain in the nursery.
   virtual bool traceNurseryEntriesOnMinorGC(JSTracer* trc) = 0;
+  virtual bool sweepAfterMinorGC() = 0;
 
   // We have a key that, if it or its delegate is marked, may lead to a WeakMap
   // value getting marked. Insert the necessary edges into the appropriate
@@ -516,6 +514,7 @@ class WeakMap : public WeakMapBase {
   void traceMappings(WeakMapTracer* tracer) override;
 
   bool traceNurseryEntriesOnMinorGC(JSTracer* trc) override;
+  bool sweepAfterMinorGC() override;
 };
 
 } /* namespace js */

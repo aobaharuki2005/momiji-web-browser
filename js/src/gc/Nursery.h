@@ -42,6 +42,7 @@
   _(CheckHashTables, "ckTbls")                \
   _(MarkRuntime, "mkRntm")                    \
   _(MarkDebugger, "mkDbgr")                   \
+  _(TraceWeakMaps, "trWkMp")                  \
   _(SweepCaches, "swpCch")                    \
   _(CollectToObjFP, "colObj")                 \
   _(CollectToStrFP, "colStr")                 \
@@ -499,6 +500,7 @@ class Nursery {
   void sweepMapAndSetObjects();
 
   void traceWeakMaps(gc::TenuringTracer& trc);
+  void sweepWeakMaps();
 
   void sweepStringsWithBuffer();
 

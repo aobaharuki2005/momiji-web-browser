@@ -1713,7 +1713,11 @@ void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
   }
   endProfile(ProfileKey::MarkDebugger);
 
+  // This should happen after debugger marking as this also marks weak map
+  // entries.
+  startProfile(ProfileKey::TraceWeakMaps);
   traceWeakMaps(mover);
+  endProfile(ProfileKey::TraceWeakMaps);
 }
 
 bool js::Nursery::shouldTenureEverything(JS::GCReason reason) {
@@ -2064,6 +2068,8 @@ void js::Nursery::sweep() {
   }
 
   sweepMapAndSetObjects();
+
+  sweepWeakMaps();
 
   runtime()->caches().sweepAfterMinorGC(&trc);
 }
@@ -2596,10 +2602,21 @@ void js::Nursery::sweepMapAndSetObjects() {
 }
 
 void Nursery::traceWeakMaps(TenuringTracer& trc) {
-  // Conservatively assume all weak map keys and values are live.
   MOZ_ASSERT(trc.weakMapAction() == JS::WeakMapTraceAction::TraceKeysAndValues);
   weakMapsWithNurseryEntries_.eraseIf(
       [&](WeakMapBase* wm) { return wm->traceNurseryEntriesOnMinorGC(&trc); });
+}
+
+void js::Nursery::sweepWeakMaps() {
+  // This sweeps all weak maps that contain nursery keys to remove entries for
+  // keys that have not survived. Nursery values in weak maps are always
+  // promoted.
+
+  // Don't update retained size for weak maps here.
+  AutoSetThreadGCUse setUse(runtime()->gcContext(), GCUse::Unspecified);
+
+  weakMapsWithNurseryEntries_.eraseIf(
+      [&](WeakMapBase* wm) { return wm->sweepAfterMinorGC(); });
 }
 
 void js::Nursery::joinSweepTask() { sweepTask->join(); }

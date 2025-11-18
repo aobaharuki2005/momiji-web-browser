@@ -102,13 +102,19 @@ void WeakMap<K, V, AP>::assertMapIsSameZoneWithValue(const BarrieredValue& v) {
 #endif
 }
 
+// Initial length chosen to give minimum table capacity on creation.
+//
+// Using the default initial length instead means we will often reallocate the
+// table on sweep because it's too big for the number of entries.
+static constexpr size_t InitialWeakMapLength = 0;
+
 template <class K, class V, class AP>
 WeakMap<K, V, AP>::WeakMap(JSContext* cx, JSObject* memOf)
     : WeakMap(cx->zone(), memOf) {}
 
 template <class K, class V, class AP>
 WeakMap<K, V, AP>::WeakMap(JS::Zone* zone, JSObject* memOf)
-    : WeakMapBase(memOf, zone), map_(zone) {
+    : WeakMapBase(memOf, zone), map_(zone, InitialWeakMapLength) {
   static_assert(std::is_same_v<typename RemoveBarrier<K>::Type, K>);
   static_assert(std::is_same_v<typename RemoveBarrier<V>::Type, V>);
 
@@ -382,6 +388,7 @@ void WeakMap<K, V, AP>::addNurseryKey(const K& key) {
   if (nurseryKeys.length() >= map().count() / 2) {
     // Don't bother recording every key if there a lot of them. We will scan the
     // map instead.
+    nurseryKeys.clear();
     nurseryKeysValid = false;
     return;
   }
@@ -393,6 +400,10 @@ void WeakMap<K, V, AP>::addNurseryKey(const K& key) {
 
 template <class K, class V, class AP>
 bool WeakMap<K, V, AP>::traceNurseryEntriesOnMinorGC(JSTracer* trc) {
+  // Called on minor GC to trace nursery keys that have delegates and nursery
+  // values. Nursery keys without delegates are swept at the end of minor GC if
+  // they do not survive.
+
   MOZ_ASSERT(hasNurseryEntries);
 
   using Entry = typename Map::Entry;
@@ -402,7 +413,10 @@ bool WeakMap<K, V, AP>::traceNurseryEntriesOnMinorGC(JSTracer* trc) {
     bool hasNurseryValue = !JS::GCPolicy<V>::isTenured(entry.value());
 
     MOZ_ASSERT(key == entry.key());
-    TraceManuallyBarrieredEdge(trc, &key, "WeakMap nursery key");
+    JSObject* delegate = gc::detail::GetDelegate(gc::MaybeForwarded(key));
+    if (delegate) {
+      TraceManuallyBarrieredEdge(trc, &key, "WeakMap nursery key");
+    }
     bool hasNurseryKey = !JS::GCPolicy<K>::isTenured(key);
     bool keyUpdated = key != entry.key();
 
@@ -413,7 +427,19 @@ bool WeakMap<K, V, AP>::traceNurseryEntriesOnMinorGC(JSTracer* trc) {
     nurseryKeys.mutableEraseIf([&](K& key) {
       auto ptr = lookupUnbarriered(key);
       if (!ptr) {
-        return true;
+        if (!gc::IsForwarded(key)) {
+          return true;
+        }
+
+        // WeakMap::trace might have marked the key in the table already so if
+        // the key was forwarded try looking up the forwarded key too.
+        //
+        // TODO: Try to update cached nursery information there instead.
+        key = gc::Forwarded(key);
+        ptr = lookupUnbarriered(key);
+        if (!ptr) {
+          return true;
+        }
       }
 
       auto [keyUpdated, hasNurseryKeyOrValue] = traceEntry(key, *ptr);
@@ -425,7 +451,7 @@ bool WeakMap<K, V, AP>::traceNurseryEntriesOnMinorGC(JSTracer* trc) {
       return !hasNurseryKeyOrValue;
     });
   } else {
-    nurseryKeys.clear();
+    MOZ_ASSERT(nurseryKeys.empty());
     nurseryKeysValid = true;
 
     for (Enum e(*this); !e.empty(); e.popFront()) {
@@ -446,6 +472,132 @@ bool WeakMap<K, V, AP>::traceNurseryEntriesOnMinorGC(JSTracer* trc) {
   }
 
   hasNurseryEntries = !nurseryKeysValid || !nurseryKeys.empty();
+
+#ifdef DEBUG
+  bool foundNurseryEntries = false;
+  for (Enum e(*this); !e.empty(); e.popFront()) {
+    if (!JS::GCPolicy<K>::isTenured(e.front().key()) ||
+        !JS::GCPolicy<V>::isTenured(e.front().value())) {
+      foundNurseryEntries = true;
+    }
+  }
+  MOZ_ASSERT_IF(foundNurseryEntries, hasNurseryEntries);
+#endif
+
+  return !hasNurseryEntries;
+}
+
+template <class K, class V, class AP>
+bool WeakMap<K, V, AP>::sweepAfterMinorGC() {
+#ifdef DEBUG
+  MOZ_ASSERT(hasNurseryEntries);
+  bool foundNurseryEntries = false;
+  for (Enum e(*this); !e.empty(); e.popFront()) {
+    if (!JS::GCPolicy<K>::isTenured(e.front().key()) ||
+        !JS::GCPolicy<V>::isTenured(e.front().value())) {
+      foundNurseryEntries = true;
+    }
+  }
+  MOZ_ASSERT(foundNurseryEntries);
+#endif
+
+  using Entry = typename Map::Entry;
+  using Result = std::tuple<bool /* shouldRemove */, bool /* keyUpdated */,
+                            bool /* hasNurseryKeyOrValue */>;
+  auto sweepEntry = [](K& key, const Entry& entry) -> Result {
+    bool hasNurseryValue = !JS::GCPolicy<V>::isTenured(entry.value());
+    MOZ_ASSERT(!gc::IsForwarded(entry.value().get()));
+
+    gc::Cell* keyCell = gc::ToMarkable(key);
+    if (!gc::InCollectedNurseryRegion(keyCell)) {
+      bool hasNurseryKey = !JS::GCPolicy<K>::isTenured(key);
+      return {false, false, hasNurseryKey || hasNurseryValue};
+    }
+
+    if (!gc::IsForwarded(key)) {
+      return {true, false, false};
+    }
+
+    key = gc::Forwarded(key);
+    MOZ_ASSERT(key != entry.key());
+
+    bool hasNurseryKey = !JS::GCPolicy<K>::isTenured(key);
+
+    return {false, true, hasNurseryKey || hasNurseryValue};
+  };
+
+  if (nurseryKeysValid) {
+    nurseryKeys.mutableEraseIf([&](K& key) {
+      auto ptr = lookupUnbarriered(key);
+      if (!ptr) {
+        if (!gc::IsForwarded(key)) {
+          return true;
+        }
+
+        // WeakMap::trace might have marked the key in the table already so if
+        // the key was forwarded try looking up the forwarded key too.
+        //
+        // TODO: Try to update cached nursery information there instead.
+        key = gc::Forwarded(key);
+        ptr = lookupUnbarriered(key);
+        if (!ptr) {
+          return true;
+        }
+      }
+
+      auto [shouldRemove, keyUpdated, hasNurseryKeyOrValue] =
+          sweepEntry(key, *ptr);
+      if (shouldRemove) {
+        map().remove(ptr);
+        return true;
+      }
+
+      if (keyUpdated) {
+        map().rekeyAs(ptr->key(), key, key);
+      }
+
+      return !hasNurseryKeyOrValue;
+    });
+  } else {
+    MOZ_ASSERT(nurseryKeys.empty());
+    nurseryKeysValid = true;
+
+    for (Enum e(*this); !e.empty(); e.popFront()) {
+      Entry& entry = e.front();
+
+      K key = entry.key();
+      auto [shouldRemove, keyUpdated, hasNurseryKeyOrValue] =
+          sweepEntry(key, entry);
+
+      if (shouldRemove) {
+        e.removeFront();
+        continue;
+      }
+
+      if (keyUpdated) {
+        entry.mutableKey() = key;
+        e.rekeyFront(key);
+      }
+
+      if (hasNurseryKeyOrValue) {
+        addNurseryKey(key);
+      }
+    }
+  }
+
+  hasNurseryEntries = !nurseryKeysValid || !nurseryKeys.empty();
+
+#ifdef DEBUG
+  foundNurseryEntries = false;
+  for (Enum e(*this); !e.empty(); e.popFront()) {
+    if (!JS::GCPolicy<K>::isTenured(e.front().key()) ||
+        !JS::GCPolicy<V>::isTenured(e.front().value())) {
+      foundNurseryEntries = true;
+    }
+  }
+  MOZ_ASSERT_IF(foundNurseryEntries, hasNurseryEntries);
+#endif
+
   return !hasNurseryEntries;
 }
 
