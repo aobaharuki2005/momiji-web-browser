@@ -23,12 +23,13 @@ except ImportError:
 
 CB_PBM_PREF = "network.cookie.cookieBehavior.pbmode"
 CB_PREF = "network.cookie.cookieBehavior"
-INTERVENTIONS_PREF = "extensions.webcompat.enable_interventions"
+INJECTIONS_PREF = "extensions.webcompat.perform_injections"
 NOTIFICATIONS_PERMISSIONS_PREF = "permissions.default.desktop-notification"
 PBM_PREF = "browser.privatebrowsing.autostart"
 PIP_OVERRIDES_PREF = "extensions.webcompat.enable_picture_in_picture_overrides"
 SHIMS_PREF = "extensions.webcompat.enable_shims"
 STRICT_ETP_PREF = "privacy.trackingprotection.enabled"
+UA_OVERRIDES_PREF = "extensions.webcompat.perform_ua_overrides"
 SYSTEM_ADDON_UPDATES_PREF = "extensions.systemAddon.update.enabled"
 DOWNLOAD_TO_TEMP_PREF = "browser.download.start_downloads_in_tmp_dir"
 DELETE_DOWNLOADS_PREF = "browser.helperApps.deleteTempFileOnExit"
@@ -88,7 +89,8 @@ class FirefoxWebDriver(WebDriver):
 
         if "use_interventions" in test_config:
             value = test_config["use_interventions"]
-            prefs[INTERVENTIONS_PREF] = value
+            prefs[INJECTIONS_PREF] = value
+            prefs[UA_OVERRIDES_PREF] = value
             prefs[PIP_OVERRIDES_PREF] = value
 
         if "use_pbm" in test_config:

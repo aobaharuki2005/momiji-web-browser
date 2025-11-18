@@ -128,9 +128,8 @@ const WebCompatExtension = new (class WebCompatExtension {
   }
 
   getCheckableGlobalPrefs() {
-    return this.#run(async function () {
-      return content.wrappedJSObject.browser.aboutConfigPrefs.getCheckableGlobalPrefs();
-    });
+    return this.extension.experimentAPIManager.global.aboutConfigPrefs
+      .ALLOWED_GLOBAL_PREFS;
   }
 
   async updateShims(_shims) {
@@ -493,7 +492,4 @@ async function generateTestShims() {
       unblocksOnOptIn: ["*://itisatracker.org/*"],
     },
   ]);
-  registerCleanupFunction(async () => {
-    await WebCompatExtension.resetInterventionsAndShimsToDefaults();
-  });
 }

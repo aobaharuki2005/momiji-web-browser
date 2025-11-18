@@ -29,8 +29,7 @@ async function setupTestIntervention(interventions) {
 add_task(async function test_pref_check() {
   await WebCompatExtension.started();
 
-  const checkableGlobalPrefs =
-    await WebCompatExtension.getCheckableGlobalPrefs();
+  const checkableGlobalPrefs = WebCompatExtension.getCheckableGlobalPrefs();
   ok(
     checkableGlobalPrefs.includes("webcompat.test.pref1"),
     "allowed to access pref webcompat.test.pref1"

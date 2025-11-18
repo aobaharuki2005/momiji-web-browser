@@ -24,14 +24,17 @@
     ],
     "functions": [
       {
-        "name": "getCheckableGlobalPrefs",
+        "name": "getBranch",
         "type": "function",
-        "description": "Lists the global prefs the addon may read",
-        "parameters": [],
-        "returns": {
-          "type": "array",
-          "description": "the list of pref names."
-        }
+        "description": "Get all child prefs for a branch",
+        "parameters": [
+          {
+            "name": "branchName",
+            "type": "string",
+            "description": "The branch name"
+          }
+        ],
+        "async": true
       },
       {
         "name": "getPref",
@@ -42,17 +45,30 @@
             "name": "name",
             "type": "string",
             "description": "The preference name"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "getBoolPrefSync",
+        "type": "function",
+        "description": "Get a webcompat preference's boolean value synchronously",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The preference name"
           },
           {
             "name": "defaultValue",
             "type": "boolean",
             "optional": true,
-            "description": "Default value to return if the pref is not set"
+            "description": "Default value to return if the pref is not set (defaults to false if omitted)"
           }
         ],
         "returns": {
-          "type": "object",
-          "description": "returns the value of a pref."
+          "type": "boolean",
+          "description": "returns the value of a boolean pref."
         }
       },
       {
@@ -70,7 +86,8 @@
             "type": "any",
             "description": "The new value"
           }
-        ]
+        ],
+        "async": true
       }
     ]
   }

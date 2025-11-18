@@ -63,8 +63,7 @@ function check_valid_array(a, key, id) {
 add_task(async function test_json_data() {
   const addon = await AddonManager.getAddonByID("webcompat@mozilla.org");
   const addonURI = addon.getResourceURI();
-  const checkableGlobalPrefs =
-    await WebCompatExtension.getCheckableGlobalPrefs();
+  const checkableGlobalPrefs = WebCompatExtension.getCheckableGlobalPrefs();
 
   const exports = {};
   Services.scriptloader.loadSubScript(
