@@ -3750,7 +3750,7 @@
   <!-- Subtitle for a setup checklist with 3 steps when the first task is completed. -->
   <string name="setup_checklist_subtitle_3_steps_first_step">Страхотно начало! Завършихте 1 от общо 3 стъпки.</string>
   <!-- Subtitle for a setup checklist with 3 steps when two of the tasks are completed. -->
-  <string name="setup_checklist_subtitle_3_steps_second_step">Почти е готов! Две стъпки са завършени и остава 1 до края.</string>
+  <string name="setup_checklist_subtitle_3_steps_second_step">Почти е готово! Две стъпки са завършени и остава 1 до края.</string>
   <!-- Subtitle for a setup checklist with 3 steps completed state. %1$s is the name of the app (for example "Firefox"). -->
   <string name="setup_checklist_subtitle_3_steps_completed_state">Завършихте всичките 3 стъпки. Насладете се на скоростта, поверителността и сигурността на %1$s.</string>
   <!--
