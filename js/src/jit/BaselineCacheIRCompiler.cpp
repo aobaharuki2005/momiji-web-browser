@@ -20,6 +20,7 @@
 #include "jit/Linker.h"
 #include "jit/MoveEmitter.h"
 #include "jit/RegExpStubConstants.h"
+#include "jit/ShapeList.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
@@ -2035,90 +2036,6 @@ static void ResetEnteredCounts(const ICEntry* icEntry) {
   }
 }
 
-static const uint32_t MaxFoldedShapes = 16;
-
-const JSClass ShapeListObject::class_ = {
-    "JIT ShapeList",
-    0,
-    &classOps_,
-};
-
-const JSClassOps ShapeListObject::classOps_ = {
-    nullptr,                 // addProperty
-    nullptr,                 // delProperty
-    nullptr,                 // enumerate
-    nullptr,                 // newEnumerate
-    nullptr,                 // resolve
-    nullptr,                 // mayResolve
-    nullptr,                 // finalize
-    nullptr,                 // call
-    nullptr,                 // construct
-    ShapeListObject::trace,  // trace
-};
-
-/* static */ ShapeListObject* ShapeListObject::create(JSContext* cx) {
-  NativeObject* obj = NewTenuredObjectWithGivenProto(cx, &class_, nullptr);
-  if (!obj) {
-    return nullptr;
-  }
-
-  // Register this object so the GC can sweep its weak pointers.
-  if (!cx->zone()->registerObjectWithWeakPointers(obj)) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  return &obj->as<ShapeListObject>();
-}
-
-Shape* ShapeListObject::get(uint32_t index) const {
-  Shape* shape = getUnbarriered(index);
-  gc::ReadBarrier(shape);
-  return shape;
-}
-
-Shape* ShapeListObject::getUnbarriered(uint32_t index) const {
-  Value value = ListObject::get(index);
-  return static_cast<Shape*>(value.toPrivate());
-}
-
-void ShapeListObject::trace(JSTracer* trc, JSObject* obj) {
-  if (trc->traceWeakEdges()) {
-    obj->as<ShapeListObject>().traceWeak(trc);
-  }
-}
-
-bool ShapeListObject::traceWeak(JSTracer* trc) {
-  uint32_t length = getDenseInitializedLength();
-  if (length == 0) {
-    return false;  // Object may be uninitialized.
-  }
-
-  const HeapSlot* src = elements_;
-  const HeapSlot* end = src + length;
-  HeapSlot* dst = elements_;
-  while (src != end) {
-    Shape* shape = static_cast<Shape*>(src->toPrivate());
-    MOZ_ASSERT(shape->is<Shape>());
-    if (TraceManuallyBarrieredWeakEdge(trc, &shape, "ShapeListObject shape")) {
-      dst->unbarrieredSet(PrivateValue(shape));
-      dst++;
-    }
-    src++;
-  }
-
-  MOZ_ASSERT(dst <= end);
-  uint32_t newLength = dst - elements_;
-  setDenseInitializedLength(newLength);
-
-  if (length != newLength) {
-    JitSpew(JitSpew_StubFolding, "Cleared %u/%u shapes from %p",
-            length - newLength, length, this);
-  }
-
-  return length != 0;
-}
-
 bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
                               JSScript* script, ICScript* icScript) {
   ICEntry* icEntry = icScript->icEntryForStub(fallback);
@@ -2422,7 +2339,7 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
 
   // Limit the maximum number of shapes we will add before giving up.
   // If we give up, transition the stub.
-  if (foldedShapes->length() == MaxFoldedShapes) {
+  if (foldedShapes->length() == ShapeListObject::MaxLength) {
     MOZ_ASSERT(fallback->state().mode() != ICState::Mode::Generic);
     fallback->state().forceTransition();
     fallback->discardStubs(cx->zone(), icEntry);
