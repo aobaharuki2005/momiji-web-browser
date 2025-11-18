@@ -42,13 +42,6 @@ bool nsIFrame::IsLegacyWebkitBox() const {
   return HasAnyStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_WEBKIT_BOX);
 }
 
-bool nsIFrame::IsMasonry(mozilla::LogicalAxis aAxis) const {
-  MOZ_DIAGNOSTIC_ASSERT(IsGridContainerFrame());
-  return HasAnyStateBits(aAxis == mozilla::LogicalAxis::Block
-                             ? NS_STATE_GRID_IS_ROW_MASONRY
-                             : NS_STATE_GRID_IS_COL_MASONRY);
-}
-
 bool nsIFrame::IsMasonry(mozilla::WritingMode aWM,
                          mozilla::LogicalAxis aAxis) const {
   MOZ_DIAGNOSTIC_ASSERT(IsGridContainerFrame());
