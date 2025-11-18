@@ -4720,10 +4720,19 @@ class nsIFrame : public nsQueryFrame {
   inline bool IsLegacyWebkitBox() const;
 
   /**
-   * Return true if this frame has masonry layout in aAxis.
+   * Return true if this frame has masonry layout in aAxis (in this frame's own
+   * writing mode).
    * @note only valid to call on nsGridContainerFrames
    */
   inline bool IsMasonry(mozilla::LogicalAxis aAxis) const;
+
+  /**
+   * Return true if this frame has masonry layout in aAxis (in the writing
+   * mode aWM).
+   * @note only valid to call on nsGridContainerFrames
+   */
+  inline bool IsMasonry(mozilla::WritingMode aWM,
+                        mozilla::LogicalAxis aAxis) const;
 
   /**
    * @return true if this frame is used as a table caption.

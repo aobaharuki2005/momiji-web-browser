@@ -49,6 +49,17 @@ bool nsIFrame::IsMasonry(mozilla::LogicalAxis aAxis) const {
                              : NS_STATE_GRID_IS_COL_MASONRY);
 }
 
+bool nsIFrame::IsMasonry(mozilla::WritingMode aWM,
+                         mozilla::LogicalAxis aAxis) const {
+  MOZ_DIAGNOSTIC_ASSERT(IsGridContainerFrame());
+  const auto axisInOurWM = aWM.IsOrthogonalTo(GetWritingMode())
+                               ? mozilla::GetOrthogonalAxis(aAxis)
+                               : aAxis;
+  return HasAnyStateBits(axisInOurWM == mozilla::LogicalAxis::Block
+                             ? NS_STATE_GRID_IS_ROW_MASONRY
+                             : NS_STATE_GRID_IS_COL_MASONRY);
+}
+
 bool nsIFrame::IsTableCaption() const {
   return StyleDisplay()->mDisplay == mozilla::StyleDisplay::TableCaption &&
          GetParent()->Style()->GetPseudoType() ==

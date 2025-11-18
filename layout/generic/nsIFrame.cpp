@@ -6682,8 +6682,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
     bool mayUseAspectRatio = aspectRatio && !isAutoBSize;
     if (!aFlags.contains(ComputeSizeFlag::ShrinkWrap) &&
         !StyleMargin()->HasInlineAxisAuto(aWM, anchorResolutionParams) &&
-        !alignCB->IsMasonry(isOrthogonal ? LogicalAxis::Block
-                                         : LogicalAxis::Inline)) {
+        !alignCB->IsMasonry(aWM, LogicalAxis::Inline)) {
       auto inlineAxisAlignment =
           isOrthogonal ? StylePosition()->UsedAlignSelf(alignCB->Style())._0
                        : StylePosition()->UsedJustifySelf(alignCB->Style())._0;
@@ -6883,8 +6882,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   } else if (MOZ_UNLIKELY(isGridItem) && styleBSize->IsAuto() &&
              !aFlags.contains(ComputeSizeFlag::IsGridMeasuringReflow) &&
              !IsTrueOverflowContainer() &&
-             !alignCB->IsMasonry(isOrthogonal ? LogicalAxis::Inline
-                                              : LogicalAxis::Block)) {
+             !alignCB->IsMasonry(aWM, LogicalAxis::Block)) {
     auto cbSize = aCBSize.BSize(aWM);
     if (cbSize != NS_UNCONSTRAINEDSIZE) {
       // 'auto' block-size for grid-level box - fill the CB for 'stretch' /

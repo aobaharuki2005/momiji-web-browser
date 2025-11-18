@@ -10650,7 +10650,7 @@ bool nsGridContainerFrame::GridItemShouldStretch(const nsIFrame* aChild,
 
   const auto cbwm = GetWritingMode();
   const bool isOrthogonal = wm.IsOrthogonalTo(cbwm);
-  if (IsMasonry(isOrthogonal ? GetOrthogonalAxis(aAxis) : aAxis)) {
+  if (IsMasonry(wm, aAxis)) {
     // The child is in the container's masonry-axis.
     // AlignJustifyTracksInMasonryAxis will stretch it, so we don't report that
     // here.
