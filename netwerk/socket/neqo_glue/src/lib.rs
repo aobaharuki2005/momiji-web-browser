@@ -423,6 +423,8 @@ impl NeqoHttp3Conn {
         let pmtud_enabled =
             // Check if PMTUD is explicitly enabled,
             pmtud_enabled
+            // or enabled via pref,
+            || static_prefs::pref!("network.http.http3.pmtud")
             // but disable PMTUD if NSPR is used (socket == None) or
             // transmitted UDP datagrams might get fragmented by the IP layer.
             && socket.as_ref().map_or(false, |s| !s.may_fragment());
