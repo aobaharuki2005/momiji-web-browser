@@ -45,7 +45,6 @@
               './src/util/libekr/r_memory.c',
               './src/util/libekr/r_memory.h',
               './src/util/libekr/r_replace.c',
-              './src/util/libekr/r_thread.h',
               './src/util/libekr/r_time.c',
               './src/util/libekr/r_time.h',
               './src/util/libekr/r_types.h',
