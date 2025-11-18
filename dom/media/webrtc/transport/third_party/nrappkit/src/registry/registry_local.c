@@ -102,35 +102,25 @@ typedef struct nr_array_registry_node_ {
 static int nr_reg_local_init(nr_registry_module *me);
 static int nr_reg_local_get_char(NR_registry name, char *data);
 static int nr_reg_local_get_uchar(NR_registry name, UCHAR *data);
-static int nr_reg_local_get_int2(NR_registry name, INT2 *data);
 static int nr_reg_local_get_uint2(NR_registry name, UINT2 *data);
 static int nr_reg_local_get_int4(NR_registry name, INT4 *data);
 static int nr_reg_local_get_uint4(NR_registry name, UINT4 *data);
-static int nr_reg_local_get_int8(NR_registry name, INT8 *data);
 static int nr_reg_local_get_uint8(NR_registry name, UINT8 *data);
 static int nr_reg_local_get_double(NR_registry name, double *data);
 static int nr_reg_local_get_registry(NR_registry name, NR_registry data);
 static int nr_reg_local_get_bytes(NR_registry name, UCHAR *data, size_t size, size_t *length);
 static int nr_reg_local_get_string(NR_registry name, char *data, size_t size);
 static int nr_reg_local_get_length(NR_registry name, size_t *len);
-static int nr_reg_local_get_type(NR_registry name, NR_registry_type type);
 static int nr_reg_local_set_char(NR_registry name, char data);
 static int nr_reg_local_set_uchar(NR_registry name, UCHAR data);
-static int nr_reg_local_set_int2(NR_registry name, INT2 data);
-static int nr_reg_local_set_uint2(NR_registry name, UINT2 data);
 static int nr_reg_local_set_int4(NR_registry name, INT4 data);
 static int nr_reg_local_set_uint4(NR_registry name, UINT4 data);
-static int nr_reg_local_set_int8(NR_registry name, INT8 data);
-static int nr_reg_local_set_uint8(NR_registry name, UINT8 data);
-static int nr_reg_local_set_double(NR_registry name, double data);
 static int nr_reg_local_set_registry(NR_registry name);
 static int nr_reg_local_set_bytes(NR_registry name, UCHAR *data, size_t length);
 static int nr_reg_local_set_string(NR_registry name, char *data);
 static int nr_reg_local_del(NR_registry name);
 static int nr_reg_local_get_child_count(NR_registry parent, size_t *count);
 static int nr_reg_local_get_children(NR_registry parent, NR_registry *data, size_t size, size_t *length);
-static int nr_reg_local_fin(NR_registry name);
-static int nr_reg_local_dump(int sorted);
 static int nr_reg_insert_node(char *name, void *node);
 static int nr_reg_change_node(char *name, void *node, void *old);
 static int nr_reg_get(char *name, int type, void *out);
@@ -160,7 +150,6 @@ static int nr_reg_local_iter(NR_registry prefix, int (*action)(void *ptr, r_asso
 static int nr_reg_local_iter_delete(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node);
 static int nr_reg_local_find_children(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node);
 static int nr_reg_local_count_children(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node);
-static int nr_reg_local_dump_print(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node);
 
 
 
@@ -280,29 +269,6 @@ nr_reg_local_count_children(void *ptr, r_assoc_iterator *iter, char *prefix, cha
   }
 
   return 0;
-}
-
-int
-nr_reg_local_dump_print(void *ptr, r_assoc_iterator *iter, char *prefix, char *name, nr_registry_node *node)
-{
-    int _status;
-    int freeit = 0;
-    char *data = 0;
-
-    /* only print leaf nodes */
-    if (node->type != NR_REG_TYPE_REGISTRY) {
-      data = nr_reg_alloc_node_data(name, node, &freeit);
-      if (ptr)
-        fprintf((FILE*)ptr, "%s: %s\n", name, data);
-      else
-        r_log(NR_LOG_REGISTRY, LOG_INFO, "%s: %s", name, data);
-      if (freeit)
-        RFREE(data);
-    }
-
-    _status=0;
-  //abort:
-    return(_status);
 }
 
 
@@ -874,11 +840,9 @@ func(NR_registry name, type *out)                                   \
 
 NRREGLOCALGET(nr_reg_local_get_char,     NR_REG_TYPE_CHAR,     char)
 NRREGLOCALGET(nr_reg_local_get_uchar,    NR_REG_TYPE_UCHAR,    UCHAR)
-NRREGLOCALGET(nr_reg_local_get_int2,     NR_REG_TYPE_INT2,     INT2)
 NRREGLOCALGET(nr_reg_local_get_uint2,    NR_REG_TYPE_UINT2,    UINT2)
 NRREGLOCALGET(nr_reg_local_get_int4,     NR_REG_TYPE_INT4,     INT4)
 NRREGLOCALGET(nr_reg_local_get_uint4,    NR_REG_TYPE_UINT4,    UINT4)
-NRREGLOCALGET(nr_reg_local_get_int8,     NR_REG_TYPE_INT8,     INT8)
 NRREGLOCALGET(nr_reg_local_get_uint8,    NR_REG_TYPE_UINT8,    UINT8)
 NRREGLOCALGET(nr_reg_local_get_double,   NR_REG_TYPE_DOUBLE,   double)
 
@@ -933,30 +897,6 @@ nr_reg_local_get_length(NR_registry name, size_t *length)
     return(_status);
 }
 
-int
-nr_reg_local_get_type(NR_registry name, NR_registry_type type)
-{
-    int r, _status;
-    nr_registry_node *node = 0;
-    char *str = 0;
-
-    if ((r=nr_reg_is_valid(name)))
-      ABORT(r);
-
-    if ((r=r_assoc_fetch(nr_registry, name, strlen(name)+1, (void*)&node)))
-      ABORT(r);
-
-    str = nr_reg_type_name(node->type);
-    if (! str)
-        ABORT(R_BAD_ARGS);
-
-    strncpy(type, str, sizeof(NR_registry_type));
-
-    _status=0;
-  abort:
-    return(_status);
-}
-
 
 #define NRREGLOCALSET(func, TYPE, type)                         \
 int                                                             \
@@ -967,13 +907,8 @@ func(NR_registry name, type data)                               \
 
 NRREGLOCALSET(nr_reg_local_set_char,     NR_REG_TYPE_CHAR,     char)
 NRREGLOCALSET(nr_reg_local_set_uchar,    NR_REG_TYPE_UCHAR,    UCHAR)
-NRREGLOCALSET(nr_reg_local_set_int2,     NR_REG_TYPE_INT2,     INT2)
-NRREGLOCALSET(nr_reg_local_set_uint2,    NR_REG_TYPE_UINT2,    UINT2)
 NRREGLOCALSET(nr_reg_local_set_int4,     NR_REG_TYPE_INT4,     INT4)
 NRREGLOCALSET(nr_reg_local_set_uint4,    NR_REG_TYPE_UINT4,    UINT4)
-NRREGLOCALSET(nr_reg_local_set_int8,     NR_REG_TYPE_INT8,     INT8)
-NRREGLOCALSET(nr_reg_local_set_uint8,    NR_REG_TYPE_UINT8,    UINT8)
-NRREGLOCALSET(nr_reg_local_set_double,   NR_REG_TYPE_DOUBLE,   double)
 
 int
 nr_reg_local_set_registry(NR_registry name)
@@ -1081,67 +1016,31 @@ nr_reg_local_get_children(NR_registry parent, NR_registry *data, size_t size, si
     return(_status);
 }
 
-int
-nr_reg_local_fin(NR_registry name)
-{
-    int r, _status;
-
-    if ((r=nr_reg_raise_event(name, NR_REG_CB_ACTION_FINAL)))
-      ABORT(r);
-
-    _status=0;
-  abort:
-    return(_status);
-}
-
-int
-nr_reg_local_dump(int sorted)
-{
-    int r, _status;
-
-    if ((r=nr_reg_local_iter(NR_TOP_LEVEL_REGISTRY, nr_reg_local_dump_print, 0)))
-      ABORT(r);
-
-    _status=0;
-  abort:
-    return(_status);
-}
-
 
 
 static nr_registry_module_vtbl nr_reg_local_vtbl = {
     nr_reg_local_init,
     nr_reg_local_get_char,
     nr_reg_local_get_uchar,
-    nr_reg_local_get_int2,
     nr_reg_local_get_uint2,
     nr_reg_local_get_int4,
     nr_reg_local_get_uint4,
-    nr_reg_local_get_int8,
     nr_reg_local_get_uint8,
     nr_reg_local_get_double,
     nr_reg_local_get_registry,
     nr_reg_local_get_bytes,
     nr_reg_local_get_string,
     nr_reg_local_get_length,
-    nr_reg_local_get_type,
     nr_reg_local_set_char,
     nr_reg_local_set_uchar,
-    nr_reg_local_set_int2,
-    nr_reg_local_set_uint2,
     nr_reg_local_set_int4,
     nr_reg_local_set_uint4,
-    nr_reg_local_set_int8,
-    nr_reg_local_set_uint8,
-    nr_reg_local_set_double,
     nr_reg_local_set_registry,
     nr_reg_local_set_bytes,
     nr_reg_local_set_string,
     nr_reg_local_del,
     nr_reg_local_get_child_count,
-    nr_reg_local_get_children,
-    nr_reg_local_fin,
-    nr_reg_local_dump
+    nr_reg_local_get_children
 };
 
 static nr_registry_module nr_reg_local_module = { 0, &nr_reg_local_vtbl };
