@@ -298,6 +298,7 @@ export const presets = {
     interval: 1,
     features: ["screenshots", "js", "stackwalk", "nostacksampling", "tracing"],
     threads: ["GeckoMain", "DOM Worker"],
+    mozLogs: "console: 5, PageMessages: 5",
     duration: 0,
     profilerViewMode: "active-tab",
     l10nIds: {
@@ -539,6 +540,7 @@ export function getRecordingSettingsFromPreset(
       supportedFeatures.includes(feature)
     ),
     threads: preset.threads,
+    mozLogs: preset.mozLogs,
     objdirs,
     duration: preset.duration,
   };
