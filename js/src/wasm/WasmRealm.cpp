@@ -132,7 +132,7 @@ void wasm::InterruptRunningCode(JSContext* cx) {
 void wasm::ResetInterruptState(JSContext* cx) {
   auto runtimeInstances = cx->runtime()->wasmInstances.lock();
   for (Instance* instance : runtimeInstances.get()) {
-    instance->resetInterrupt(cx);
+    instance->resetInterrupt();
   }
 }
 

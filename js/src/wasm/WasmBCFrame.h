@@ -1383,15 +1383,14 @@ struct StackMapGenerator {
   [[nodiscard]] bool generateStackmapEntriesForTrapExit(
       const ArgTypeVector& args, ExitStubMapVector* extras);
 
-  // Creates a stackmap associated with the instruction denoted by
-  // |assemblerOffset|, incorporating pointers from the current operand
+  // Creates a stackmap incorporating pointers from the current operand
   // stack |stk|, incorporating possible extra pointers in |extra| at the
   // lower addressed end, and possibly with the associated frame having a
   // DebugFrame that must be traced, as indicated by |debugFrameWithLiveRefs|.
   [[nodiscard]] bool createStackMap(
       const char* who, const ExitStubMapVector& extras,
-      uint32_t assemblerOffset,
-      HasDebugFrameWithLiveRefs debugFrameWithLiveRefs, const StkVector& stk);
+      HasDebugFrameWithLiveRefs debugFrameWithLiveRefs, const StkVector& stk,
+      wasm::StackMap** result);
 };
 
 }  // namespace wasm

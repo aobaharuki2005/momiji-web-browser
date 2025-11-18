@@ -119,10 +119,8 @@ class alignas(16) Instance {
   // The tag object of the pending exception.
   GCPtr<AnyRef> pendingExceptionTag_;
 
-  // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
-  // but can be racily set to trigger immediate trap as an opportunity to
-  // CheckForInterrupt without an additional branch.
-  mozilla::Atomic<JS::NativeStackLimit, mozilla::Relaxed> stackLimit_;
+  // Equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript).
+  JS::NativeStackLimit stackLimit_;
 
   // Set to 1 when wasm should call CheckForInterrupt.
   mozilla::Atomic<uint32_t, mozilla::Relaxed> interrupt_;
@@ -395,7 +393,7 @@ class alignas(16) Instance {
 
   void setInterrupt();
   bool isInterrupted() const;
-  void resetInterrupt(JSContext* cx);
+  void resetInterrupt();
 
   void setTemporaryStackLimit(JS::NativeStackLimit limit);
   void resetTemporaryStackLimit(JSContext* cx);

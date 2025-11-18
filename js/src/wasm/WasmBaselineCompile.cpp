@@ -216,6 +216,41 @@ class OutOfLineCode : public TempObject {
   virtual void generate(MacroAssembler* masm) = 0;
 };
 
+class OutOfLineAbortingTrap : public OutOfLineCode {
+  Trap trap_;
+  TrapSiteDesc desc_;
+
+ public:
+  OutOfLineAbortingTrap(Trap trap, const TrapSiteDesc& desc)
+      : trap_(trap), desc_(desc) {}
+
+  virtual void generate(MacroAssembler* masm) override {
+    masm->wasmTrap(trap_, desc_);
+    MOZ_ASSERT(!rejoin()->bound());
+  }
+};
+
+class OutOfLineResumableTrap : public OutOfLineCode {
+  Trap trap_;
+  TrapSiteDesc desc_;
+  wasm::StackMap* stackMap_;
+  wasm::StackMaps* stackMaps_;
+
+ public:
+  OutOfLineResumableTrap(Trap trap, const TrapSiteDesc& desc,
+                         wasm::StackMap* stackMap, wasm::StackMaps* stackMaps)
+      : trap_(trap), desc_(desc), stackMap_(stackMap), stackMaps_(stackMaps) {}
+
+  virtual void generate(MacroAssembler* masm) override {
+    masm->wasmTrap(trap_, desc_);
+    if (stackMap_ && !stackMaps_->add(masm->currentOffset(), stackMap_)) {
+      masm->setOOM();
+      return;
+    }
+    masm->jump(rejoin());
+  }
+};
+
 OutOfLineCode* BaseCompiler::addOutOfLineCode(OutOfLineCode* ool) {
   if (!ool || !outOfLine_.append(ool)) {
     return nullptr;
@@ -543,13 +578,23 @@ bool BaseCompiler::beginFunction() {
                 TrapSiteDesc(BytecodeOffset(func_.lineOrBytecode)));
 
   ExitStubMapVector extras;
-  if (!stackMapGenerator_.generateStackmapEntriesForTrapExit(args, &extras)) {
+  StackMap* functionEntryStackMap;
+  if (!stackMapGenerator_.generateStackmapEntriesForTrapExit(args, &extras) ||
+      !stackMapGenerator_.createStackMap("stack check", extras,
+                                         HasDebugFrameWithLiveRefs::No, stk_,
+                                         &functionEntryStackMap)) {
     return false;
   }
-  if (!createStackMap("stack check", extras, masm.currentOffset(),
-                      HasDebugFrameWithLiveRefs::No)) {
+
+  OutOfLineCode* ool = addOutOfLineCode(new (alloc_) OutOfLineResumableTrap(
+      Trap::CheckInterrupt, trapSiteDesc(), functionEntryStackMap, stackMaps_));
+  if (!ool) {
     return false;
   }
+  masm.branch32(Assembler::NotEqual,
+                Address(InstanceReg, wasm::Instance::offsetOfInterrupt()),
+                Imm32(0), ool->entry());
+  masm.bind(ool->rejoin());
 
   size_t reservedBytes = fr.fixedAllocSize() - masm.framePushed();
   MOZ_ASSERT(0 == (reservedBytes % sizeof(void*)));
@@ -2013,20 +2058,6 @@ CodeOffset BaseCompiler::callSymbolic(SymbolicAddress callee,
 }
 
 // Precondition: sync()
-
-class OutOfLineAbortingTrap : public OutOfLineCode {
-  Trap trap_;
-  TrapSiteDesc desc_;
-
- public:
-  OutOfLineAbortingTrap(Trap trap, const TrapSiteDesc& desc)
-      : trap_(trap), desc_(desc) {}
-
-  virtual void generate(MacroAssembler* masm) override {
-    masm->wasmTrap(trap_, desc_);
-    MOZ_ASSERT(!rejoin()->bound());
-  }
-};
 
 static ReturnCallAdjustmentInfo BuildReturnCallAdjustmentInfo(
     const FuncType& callerType, const FuncType& calleeType) {
@@ -12305,6 +12336,7 @@ BaseCompiler::BaseCompiler(const CodeMetadata& codeMeta,
       decoder_(decoder),
       iter_(codeMeta, decoder, locals),
       fr(*masm),
+      stackMaps_(stackMaps),
       stackMapGenerator_(stackMaps, trapExitLayout, trapExitLayoutNumWords,
                          *masm),
       deadCode_(false),

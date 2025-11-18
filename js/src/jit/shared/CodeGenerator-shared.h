@@ -418,7 +418,8 @@ class CodeGeneratorShared : public LElementVisitor {
  public:
   void visitOutOfLineTruncateSlow(OutOfLineTruncateSlow* ool);
 
-  bool omitOverRecursedCheck() const;
+  bool omitOverRecursedStackCheck() const;
+  bool omitOverRecursedInterruptCheck() const;
 
  public:
   bool isGlobalObject(JSObject* object);

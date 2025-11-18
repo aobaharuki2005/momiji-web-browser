@@ -1869,40 +1869,6 @@ static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register instance,
   GenPrintf(DebugChannel::Import, masm, "\n");
 }
 
-static bool AddStackCheckForImportFunctionEntry(jit::MacroAssembler& masm,
-                                                unsigned reserve,
-                                                const FuncType& funcType,
-                                                StackMaps* stackMaps) {
-  std::pair<CodeOffset, uint32_t> pair =
-      masm.wasmReserveStackChecked(reserve, TrapSiteDesc());
-
-  // Attempt to create stack maps for masm.wasmReserveStackChecked.
-  ArgTypeVector argTypes(funcType);
-  RegisterOffsets trapExitLayout;
-  size_t trapExitLayoutNumWords;
-  GenerateTrapExitRegisterOffsets(&trapExitLayout, &trapExitLayoutNumWords);
-  CodeOffset trapInsnOffset = pair.first;
-  size_t nBytesReservedBeforeTrap = pair.second;
-  size_t nInboundStackArgBytes =
-      StackArgAreaSizeUnaligned(argTypes, ABIKind::Wasm);
-  wasm::StackMap* stackMap = nullptr;
-  if (!CreateStackMapForFunctionEntryTrap(
-          argTypes, trapExitLayout, trapExitLayoutNumWords,
-          nBytesReservedBeforeTrap, nInboundStackArgBytes, *stackMaps,
-          &stackMap)) {
-    return false;
-  }
-
-  // In debug builds, we'll always have a stack map, even if there are no
-  // refs to track.
-  MOZ_ASSERT(stackMap);
-  if (stackMap) {
-    return stackMaps->finalize(trapInsnOffset.offset(), stackMap);
-  }
-
-  return true;
-}
-
 // Generate a wrapper function with the standard intra-wasm call ABI which
 // simply calls an import. This wrapper function allows any import to be treated
 // like a normal wasm function for the purposes of exports and table calls. In
@@ -1928,10 +1894,7 @@ static bool GenerateImportFunction(jit::MacroAssembler& masm,
       sizeof(Frame),  // pushed by prologue
       StackArgBytesForWasmABI(funcType) + sizeOfInstanceSlot);
 
-  if (!AddStackCheckForImportFunctionEntry(masm, framePushed, funcType,
-                                           stackMaps)) {
-    return false;
-  }
+  masm.wasmReserveStackChecked(framePushed, TrapSiteDesc());
 
   MOZ_ASSERT(masm.framePushed() == framePushed);
 
