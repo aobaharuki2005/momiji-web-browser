@@ -746,9 +746,9 @@ windows-rs:
         local-fetch: true
     fetch:
         type: static-url
-        url: https://crates.io/api/v1/crates/windows/0.58.0/download
-        sha256: dd04d41d93c4992d421894c18c8b43496aa748dd4c081bac0dc93eb0489272b6
-        size: 9744521
+        url: https://crates.io/api/v1/crates/windows/0.62.2/download
+        sha256: 527fadee13e0c05939a6a05d5bd6eec6cd2e3dbd648b9f8e447c6518133d8580
+        size: 9360572
         artifact-name: windows-rs.tar.zst
         strip-components: 1
         add-prefix: windows-rs/

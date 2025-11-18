@@ -248,7 +248,7 @@ firefox-on-glean = { path = "toolkit/components/glean/api" }
 icu_capi = { path = "intl/icu_capi" }
 icu_segmenter_data = { path = "intl/icu_segmenter_data" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
-midir = { git = "https://github.com/mozilla/midir.git", rev = "0cc61b81b26088bb8d6e593caf96879879ab814b" }
+midir = { git = "https://github.com/mozilla/midir.git", rev = "54759f681f3b523e120d047adec2bb1a97152017" }
 # Allow webrender to have a versioned dependency on the older crate on crates.io
 # in order to build standalone.
 malloc_size_of_derive = { path = "xpcom/rust/malloc_size_of_derive" }
@@ -292,3 +292,8 @@ libcrux-traits = { path = "build/rust/libcrux-traits" }
 # Patch `hashlink` 0.10.0 to include a `hashbrown` range dependency of 0.15 <= ver <= 0.16: <https://github.com/erichdongubler-contrib/hashlink/pull/6>
 # This technically breaks `hashbrown::DefaultHashBuilder: Copy`, but it's not something we use.
 hashlink = { git = "https://github.com/erichdongubler-contrib/hashlink", rev = "76dc47a12af5829c1e8bf4834e38b410dec2aeff" }
+
+[patch."https://github.com/mozilla/neqo"]
+neqo-common = { git = "https://github.com/erichdongubler-mozilla/neqo", rev = "5bfb65919fb5804ec1dd68cc93e014cb9c830d94" }
+neqo-udp = { git = "https://github.com/erichdongubler-mozilla/neqo", rev = "5bfb65919fb5804ec1dd68cc93e014cb9c830d94" }
+mtu = { git = "https://github.com/erichdongubler-mozilla/neqo", rev = "5bfb65919fb5804ec1dd68cc93e014cb9c830d94" }
