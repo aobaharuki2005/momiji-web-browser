@@ -55,9 +55,6 @@ nr_is_stun_message(UCHAR *buf, size_t len)
 {
    const UINT4 cookie = htonl(NR_STUN_MAGIC_COOKIE);
    const UINT4 cookie2 = htonl(NR_STUN_MAGIC_COOKIE2);
-#if 0
-   nr_stun_message msg;
-#endif
    UINT2 type;
    nr_stun_encoded_attribute* attr;
    unsigned int attrLen;
@@ -135,25 +132,6 @@ nr_is_stun_message(UCHAR *buf, size_t len)
 
    /* the fingerprint is in the right place and looks sane, so we can be quite
     * sure we've got a STUN message */
-
-#if 0
-/* nevermind this check ... there's a reasonable chance that a NAT has modified
- * the message (and thus the fingerprint check will fail), but it's still an
- * otherwise-perfectly-good STUN message, so skip the check since we're going
- * to return "true" whether the check succeeds or fails */
-
-   if (nr_stun_parse_attr_UINT4(buf + (len - 4), attrLen, &msg.fingerprint))
-       return 2;
-
-
-   if (nr_stun_compute_fingerprint(buf, len - 8, &computedFingerprint))
-       return 2;
-
-   if (msg.fingerprint.number != computedFingerprint)
-       return 2;
-
-   /* and the fingerprint is good, so it's gotta be a STUN message */
-#endif
 
    return 3;
 }
