@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React, { useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, batch } from "react-redux";
 import { Lists } from "./Lists/Lists";
 import { FocusTimer } from "./FocusTimer/FocusTimer";
 import { MessageWrapper } from "content-src/components/MessageWrapper/MessageWrapper";
@@ -89,6 +89,17 @@ function Widgets() {
     // Update the ref to track current state
     prevTimerEnabledRef.current = isTimerEnabled;
   }, [timerEnabled, timerData, dispatch, timerType]);
+  // Sends a dispatch to disable all widgets
+  const handleHideAllWidgets = e => {
+    // TODO: Need safe way to iterate through all widgets
+    // Handle both click events and keyboard events (Enter/Space)
+    if (!e.key || e.key === "Enter" || e.key === " ") {
+      batch(() => {
+        dispatch(ac.SetPref(PREF_WIDGETS_LISTS_ENABLED, false));
+        dispatch(ac.SetPref(PREF_WIDGETS_TIMER_ENABLED, false));
+      });
+    }
+  };
 
   function handleUserInteraction(widgetName) {
     const prefName = `widgets.${widgetName}.interaction`;
@@ -106,7 +117,19 @@ function Widgets() {
   return (
     <div className="widgets-wrapper">
       <div className="widgets-section-container">
-        <h1 data-l10n-id="newtab-widget-section-title"></h1>
+        <div className="widgets-title-container">
+          <h1 data-l10n-id="newtab-widget-section-title"></h1>
+
+          <moz-button
+            id="hide-all-widgets-button"
+            type="icon ghost"
+            size="small"
+            data-l10n-id="newtab-widget-section-hide-all-button"
+            iconsrc="chrome://global/skin/icons/close.svg"
+            onClick={handleHideAllWidgets}
+            onKeyDown={handleHideAllWidgets}
+          />
+        </div>
         <div className="widgets-container">
           {listsEnabled && (
             <Lists

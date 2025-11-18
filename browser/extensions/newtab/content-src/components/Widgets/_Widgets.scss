@@ -17,7 +17,6 @@
   padding-inline: var(--space-large);
   background-color: var(--button-background-color);
   border-radius: var(--border-radius-large);
-
   // Bug 1908010 - This overwrites the design system color because of a
   // known transparency issue with color-mix syntax when a wallpaper is set
   .lightWallpaper &,
@@ -26,6 +25,17 @@
 
     @media (prefers-contrast) {
       background-color: var(--background-color-box);
+    }
+  }
+
+  .widgets-title-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-medium);
+
+    h1 {
+      margin-inline-end: auto;
     }
   }
 
