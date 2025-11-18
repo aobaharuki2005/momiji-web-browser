@@ -253,3 +253,27 @@ addAccessibleTask(
   },
   { topLevel: true, chrome: true }
 );
+
+/*
+ * Test labels that use ARIA naming in different ways.
+ */
+addAccessibleTask(
+  `<div id="label1">bye <a href="#" aria-labelledby="btn1">world</a></div>
+   <button aria-labelledby="label1" id="btn1">hello</button>
+   <div id="label2">bye <a href="#" aria-label="mars">world</a></div>
+   <button aria-labelledby="label2" id="btn2">hello</button>
+   <div id="label3" aria-label="mars">bye</div>
+   <button aria-labelledby="label3" id="btn3">hello</button>`,
+  async function testSomeInterestingLabels(browser, docAcc) {
+    const btn1 = findAccessibleChildByID(docAcc, "btn1");
+    const btn2 = findAccessibleChildByID(docAcc, "btn2");
+    const btn3 = findAccessibleChildByID(docAcc, "btn3");
+    // A button whose label subtree references the button
+    testName(btn1, "bye world");
+    // A button whose label subtree has an explicit aria-label
+    testName(btn2, "bye mars");
+    // A button whose label has an explicit aria-label of its own
+    testName(btn3, "mars");
+  },
+  { topLevel: true, chrome: true }
+);
