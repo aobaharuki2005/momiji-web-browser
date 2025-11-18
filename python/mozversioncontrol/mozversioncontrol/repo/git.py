@@ -720,7 +720,8 @@ class GitRepository(Repository):
             "From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001",
             f"From: {name} <{email}>",
             f"Date: {formatted_date}",
-            f"Subject: {message}" "\n---\n",
+            f"Subject: {message}",
+            "\n---\n",
             diff,
         ]
 
