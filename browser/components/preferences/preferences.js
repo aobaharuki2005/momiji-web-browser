@@ -276,11 +276,6 @@ const CONFIG_PANES = Object.freeze({
     l10nId: "preferences-doh-header2",
     groupIds: ["dnsOverHttpsAdvanced"],
   },
-  managePayments: {
-    parent: "privacy",
-    l10nId: "autofill-payment-methods-manage-payments-title",
-    groupIds: ["managePayments"],
-  },
 });
 
 var gLastCategory = { category: undefined, subcategory: undefined };
