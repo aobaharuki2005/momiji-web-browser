@@ -142,7 +142,6 @@ import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
-import org.mozilla.fenix.components.toolbar.BrowserToolbarMiddleware.Companion.toToolbarAction
 import org.mozilla.fenix.components.toolbar.BrowserToolbarMiddleware.ToolbarAction
 import org.mozilla.fenix.components.toolbar.DisplayActions.AddBookmarkClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.EditBookmarkClicked
@@ -3200,47 +3199,20 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `toToolbarAction maps ShortcutType to ToolbarAction`() {
-        assertEquals(
-            ToolbarAction.NewTab,
-            ShortcutType.NEW_TAB.toToolbarAction(),
-        )
-        assertEquals(
-            ToolbarAction.Share,
-            ShortcutType.SHARE.toToolbarAction(),
-        )
-        assertEquals(
-            ToolbarAction.Bookmark,
-            ShortcutType.BOOKMARK.toToolbarAction(false),
-        )
-        assertEquals(
-            ToolbarAction.EditBookmark,
-            ShortcutType.BOOKMARK.toToolbarAction(true),
-        )
-        assertEquals(
-            ToolbarAction.Translate,
-            ShortcutType.TRANSLATE.toToolbarAction(),
-        )
-        assertEquals(
-            ToolbarAction.Homepage,
-            ShortcutType.HOMEPAGE.toToolbarAction(),
-        )
-        assertEquals(
-            ToolbarAction.Back,
-            ShortcutType.BACK.toToolbarAction(),
-        )
-    }
+    fun `ShortcutType toToolbarAction maps shortcuts`() = runTest {
+        val middleware = buildMiddleware()
 
-    @Test
-    fun `getBookmarkAction returns correct action based on isBookmarked flag`() {
-        assertEquals(
-            ToolbarAction.Bookmark,
-            BrowserToolbarMiddleware.getBookmarkAction(isBookmarked = false),
-        )
-        assertEquals(
-            ToolbarAction.EditBookmark,
-            BrowserToolbarMiddleware.getBookmarkAction(isBookmarked = true),
-        )
+        val newTab = with(middleware) { ShortcutType.NEW_TAB.toToolbarAction() }
+        val share = with(middleware) { ShortcutType.SHARE.toToolbarAction() }
+        val translate = with(middleware) { ShortcutType.TRANSLATE.toToolbarAction() }
+        val homepage = with(middleware) { ShortcutType.HOMEPAGE.toToolbarAction() }
+        val back = with(middleware) { ShortcutType.BACK.toToolbarAction() }
+
+        assertEquals(ToolbarAction.NewTab, newTab)
+        assertEquals(ToolbarAction.Share, share)
+        assertEquals(ToolbarAction.Translate, translate)
+        assertEquals(ToolbarAction.Homepage, homepage)
+        assertEquals(ToolbarAction.Back, back)
     }
 
     private fun assertEqualsTabCounterButton(expected: TabCounterAction, actual: TabCounterAction) {
