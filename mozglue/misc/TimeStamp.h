@@ -36,7 +36,6 @@ class BaseTimeDurationPlatformUtils {
   static MFBT_API double ToSeconds(int64_t aTicks);
   static MFBT_API double ToSecondsSigDigits(int64_t aTicks);
   static MFBT_API int64_t TicksFromMilliseconds(double aMilliseconds);
-  static MFBT_API int64_t ResolutionInTicks();
 };
 
 /**
@@ -235,14 +234,6 @@ class BaseTimeDuration {
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const BaseTimeDuration& aDuration) {
     return aStream << aDuration.ToMilliseconds() << " ms";
-  }
-
-  // Return a best guess at the system's current timing resolution,
-  // which might be variable.  BaseTimeDurations below this order of
-  // magnitude are meaningless, and those at the same order of
-  // magnitude or just above are suspect.
-  static BaseTimeDuration Resolution() {
-    return FromTicks(BaseTimeDurationPlatformUtils::ResolutionInTicks());
   }
 
   // We could define additional operators here:
