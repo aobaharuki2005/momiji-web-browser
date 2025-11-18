@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -138,7 +139,7 @@ private fun getAttr(resId: Int): Int {
 @PreviewLightDark
 private fun HomepageHeaderPreview() {
     FirefoxTheme {
-        Row(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
+        Surface {
             HomepageHeader(
                 browsingMode = BrowsingMode.Normal,
                 browsingModeChanged = {},
@@ -151,7 +152,7 @@ private fun HomepageHeaderPreview() {
 @Preview
 private fun PrivateHomepageHeaderPreview() {
     FirefoxTheme(theme = Theme.Private) {
-        Row(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
+        Surface {
             HomepageHeader(
                 browsingMode = BrowsingMode.Private,
                 browsingModeChanged = {},
