@@ -1418,20 +1418,6 @@ static bool MaybeRunShellTasks(JSContext* cx) {
   return ranTasks;
 }
 
-static bool EnqueueJob(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (!IsFunctionObject(args.get(0))) {
-    JS_ReportErrorASCII(cx, "EnqueueJob's first argument must be a function");
-    return false;
-  }
-
-  args.rval().setUndefined();
-
-  RootedObject job(cx, &args[0].toObject());
-  return js::EnqueueJob(cx, job);
-}
-
 static void RunShellJobs(JSContext* cx) {
   ShellContext* sc = GetShellContext(cx);
   if (sc->quitting) {
@@ -10528,10 +10514,6 @@ JS_FN_HELP("createUserArrayBuffer", CreateUserArrayBuffer, 1, 0,
 "stackPointerInfo()",
 "  Return an int32 value which corresponds to the offset of the latest stack\n"
 "  pointer, such that one can take the differences of 2 to estimate a frame-size."),
-
-    JS_FN_HELP("enqueueJob", EnqueueJob, 1, 0,
-"enqueueJob(fn)",
-"  Enqueue 'fn' on the shell's job queue."),
 
     JS_FN_HELP("globalOfFirstJobInQueue", GlobalOfFirstJobInQueue, 0, 0,
 "globalOfFirstJobInQueue()",

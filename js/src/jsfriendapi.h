@@ -211,14 +211,6 @@ extern JS_PUBLIC_API JSObject* GetJobsInInternalJobQueue(JSContext* cx);
 #endif
 
 /**
- * Enqueue |job| on the internal job queue.
- *
- * This is useful in tests for creating situations where a call occurs with no
- * other JavaScript on the stack.
- */
-extern JS_PUBLIC_API bool EnqueueJob(JSContext* cx, JS::HandleObject job);
-
-/**
  * Instruct the runtime to stop draining the internal job queue.
  *
  * Useful if the embedding is in the process of quitting in reaction to a

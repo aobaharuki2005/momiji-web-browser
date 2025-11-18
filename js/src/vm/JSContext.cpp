@@ -837,11 +837,6 @@ JS_PUBLIC_API JSObject* js::GetJobsInInternalJobQueue(JSContext* cx) {
 }
 #endif
 
-JS_PUBLIC_API bool js::EnqueueJob(JSContext* cx, JS::HandleObject job) {
-  MOZ_ASSERT(cx->jobQueue);
-  return cx->jobQueue->enqueuePromiseJob(cx, nullptr, job, nullptr, nullptr);
-}
-
 JS_PUBLIC_API void js::StopDrainingJobQueue(JSContext* cx) {
   MOZ_ASSERT(cx->internalJobQueue.ref());
   cx->internalJobQueue->interrupt();
