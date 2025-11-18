@@ -590,9 +590,9 @@ static void ReleaseValue(T* aPropertyValue) {
     return nsQueryFrame::class##_id;                                           \
   }
 
-#define NS_IMPL_FRAMEARENA_HELPERS(class)                              \
-  void* class ::operator new(size_t sz, mozilla::PresShell * aShell) { \
-    return aShell->AllocateFrame(nsQueryFrame::class##_id, sz);        \
+#define NS_IMPL_FRAMEARENA_HELPERS(class)                             \
+  void* class ::operator new(size_t sz, mozilla::PresShell* aShell) { \
+    return aShell->AllocateFrame(nsQueryFrame::class##_id, sz);       \
   }
 
 #define NS_DECL_ABSTRACT_FRAME(class)                                         \
