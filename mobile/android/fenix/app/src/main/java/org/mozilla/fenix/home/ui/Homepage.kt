@@ -114,7 +114,7 @@ internal fun Homepage(
                 browsingModeChanged = interactor::onPrivateModeButtonClicked,
             )
         } else {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         if (state.firstFrameDrawn) {
