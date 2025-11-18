@@ -27,9 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,9 +42,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.TextButton
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.iconpicker.AppIcon
+import org.mozilla.fenix.iconpicker.AppIconAction
+import org.mozilla.fenix.iconpicker.AppIconState
+import org.mozilla.fenix.iconpicker.AppIconStore
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.iconpicker.DefaultPackageManagerWrapper
 import org.mozilla.fenix.iconpicker.IconBackground
@@ -66,24 +67,19 @@ private val GroupSpacerHeight = 8.dp
 /**
  * A composable that displays a list of app icon options.
  *
- * @param currentAppIcon The currently selected app icon alias.
- * @param groupedIconOptions Icons are displayed in sections under their respective titles.
- * @param onAppIconSelected A callback invoked when the user has confirmed an alternative icon to be
- * applied (they get informed about the required restart providing an opportunity to back out).
+ * @param store A store for managing the app icon selection screen state.
  */
 @Composable
 fun AppIconSelection(
-    currentAppIcon: AppIcon,
-    groupedIconOptions: Map<IconGroupTitle, List<AppIcon>>,
-    onAppIconSelected: (AppIcon) -> Unit,
+    store: AppIconStore,
 ) {
-    var currentAppIcon by remember { mutableStateOf(currentAppIcon) }
-    var selectedAppIcon by remember { mutableStateOf<AppIcon?>(null) }
+    val state by store.observeAsState(store.state) { it }
+    val selectedIcon = state.userSelectedAppIcon ?: state.currentAppIcon
 
     LazyColumn(
         modifier = Modifier.background(color = FirefoxTheme.colors.layer1),
     ) {
-        groupedIconOptions.forEach { (header, icons) ->
+        state.groupedIconOptions.forEach { (header, icons) ->
             item(contentType = { header::class }) {
                 AppIconGroupHeader(header)
             }
@@ -92,14 +88,14 @@ fun AppIconSelection(
                 items = icons,
                 contentType = { item -> item::class },
             ) { icon ->
-                val iconSelected = icon == currentAppIcon
+                val iconSelected = icon == selectedIcon
 
                 AppIconOption(
                     appIcon = icon,
                     selected = iconSelected,
                     onClick = {
                         if (!iconSelected) {
-                            selectedAppIcon = icon
+                            store.dispatch(AppIconAction.SelectAppIcon(icon))
                         }
                     },
                 )
@@ -113,15 +109,13 @@ fun AppIconSelection(
         }
     }
 
-    selectedAppIcon?.let {
+    state.userSelectedAppIcon?.let {
         RestartWarningDialog(
             onConfirm = {
-                currentAppIcon = it
-                onAppIconSelected(it)
-                selectedAppIcon = null
+                store.dispatch(AppIconAction.ApplyAppIcon(it, state.currentAppIcon))
             },
             onDismiss = {
-                selectedAppIcon = null
+                store.dispatch(AppIconAction.ResetSelection)
             },
         )
     }
@@ -290,12 +284,16 @@ private fun RestartWarningDialog(
 private fun AppIconSelectionPreview() {
     FirefoxTheme {
         AppIconSelection(
-            currentAppIcon = AppIcon.AppDefault,
-            groupedIconOptions = DefaultAppIconRepository(
-                packageManager = DefaultPackageManagerWrapper(LocalContext.current.packageManager),
-                packageName = LocalContext.current.packageName,
-            ).groupedAppIcons,
-            onAppIconSelected = {},
+            store = AppIconStore(
+                initialState = AppIconState(
+                    currentAppIcon = AppIcon.AppDefault,
+                    userSelectedAppIcon = null,
+                    groupedIconOptions = DefaultAppIconRepository(
+                        packageManager = DefaultPackageManagerWrapper(LocalContext.current.packageManager),
+                        packageName = LocalContext.current.packageName,
+                    ).groupedAppIcons,
+                ),
+            ),
         )
     }
 }
