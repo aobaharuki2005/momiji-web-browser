@@ -1783,13 +1783,8 @@ export class UrlbarView {
         name: "result-menu",
         classList: ["urlbarView-button-menu"],
         l10n: result.showFeedbackMenu
-          ? {
-              id: "urlbar-result-menu-button-feedback",
-              cacheable: true,
-            }
-          : {
-              id: "urlbar-result-menu-button",
-            },
+          ? { id: "urlbar-result-menu-button-feedback" }
+          : { id: "urlbar-result-menu-button" },
         attributes: lazy.UrlbarPrefs.get("resultMenu.keyboardAccessible")
           ? null
           : {

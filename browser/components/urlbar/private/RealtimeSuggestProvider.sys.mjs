@@ -101,14 +101,12 @@ export class RealtimeSuggestProvider extends SuggestProvider {
   get optInTitleL10n() {
     return {
       id: `urlbar-result-${this.realtimeTypeForFtl}-opt-in-title`,
-      cacheable: true,
     };
   }
 
   get optInDescriptionL10n() {
     return {
       id: `urlbar-result-${this.realtimeTypeForFtl}-opt-in-description`,
-      cacheable: true,
       parseMarkup: true,
     };
   }
@@ -382,14 +380,12 @@ export class RealtimeSuggestProvider extends SuggestProvider {
           command: "dismiss",
           l10n: {
             id: "urlbar-result-realtime-opt-in-dismiss",
-            cacheable: true,
           },
         }
       : {
           command: "not_now",
           l10n: {
             id: "urlbar-result-realtime-opt-in-not-now",
-            cacheable: true,
           },
         };
 
@@ -410,7 +406,6 @@ export class RealtimeSuggestProvider extends SuggestProvider {
             command: "opt_in",
             l10n: {
               id: "urlbar-result-realtime-opt-in-allow",
-              cacheable: true,
             },
             input: queryContext.searchString,
             attributes: {
