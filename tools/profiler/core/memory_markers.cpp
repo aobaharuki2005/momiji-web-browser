@@ -68,14 +68,11 @@ class GeckoProfilerMallocCallbacks : public MallocProfilerCallbacks {
                        ArenaPurgeResult aResult) override {
     const char* result = nullptr;
     switch (aResult) {
-      case ReachedThreshold:
-        result = "Reached dirty page threshold";
+      case ReachedThresholdOrBusy:
+        result = "Can't find enough dirty memory to purge";
         break;
       case NotDone:
         result = "Purge exited early (eg caller set a time budget)";
-        break;
-      case Busy:
-        result = "Last chunk is busy being purged on another thread";
         break;
       case Dying:
         result = "Arena is being destroyed";

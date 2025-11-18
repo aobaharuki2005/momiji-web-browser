@@ -1897,7 +1897,7 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
 
     if (!ShouldContinuePurge(aCond)) {
       mIsPurgePending = false;
-      return ReachedThreshold;
+      return ReachedThresholdOrBusy;
     }
 
     // Take a single chunk and attempt to purge some of its dirty pages.  The
@@ -1920,16 +1920,17 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
       chunk = mChunksDirty.Last();
     }
     if (!chunk) {
-      // There are chunks with dirty pages (because mNumDirty > 0 above) but
-      // they're not in mChunksDirty.  That can happen if they're busy being
-      // purged by other threads.
       // We have to clear the flag to preserve the invariant that if Purge()
       // returns anything other than NotDone then the flag is clear. If there's
       // more purging work to do in other chunks then either other calls to
       // Purge() (in other threads) will handle it or we rely on
       // ShouldStartPurge() returning true at some point in the future.
       mIsPurgePending = false;
-      return Busy;
+
+      // There are chunks with dirty pages (because mNumDirty > 0 above) but
+      // they're not in mChunksDirty, they might not have enough dirty pages.
+      // Or maybe they're busy being purged by other threads.
+      return ReachedThresholdOrBusy;
     }
     MOZ_ASSERT(chunk->mNumDirty > 0);
 
@@ -1984,7 +1985,7 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
       }
       // There's nothing else to do here, our caller may execute Purge() again
       // if continue_purge_arena is true.
-      return continue_purge_arena ? NotDone : ReachedThreshold;
+      return continue_purge_arena ? NotDone : ReachedThresholdOrBusy;
     }
 
 #ifdef MALLOC_DECOMMIT
@@ -2033,7 +2034,7 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
     purged_once = true;
   }
 
-  return continue_purge_arena ? NotDone : ReachedThreshold;
+  return continue_purge_arena ? NotDone : ReachedThresholdOrBusy;
 }
 
 ArenaPurgeResult arena_t::PurgeLoop(PurgeCondition aCond, const char* aCaller,
