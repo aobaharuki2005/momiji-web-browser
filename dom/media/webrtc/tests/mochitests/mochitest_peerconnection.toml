@@ -239,7 +239,10 @@ scheme = "http"
 ["test_peerConnection_glean.html"]
 
 ["test_peerConnection_iceCandidateSelection.html"]
-skip-if = ["os == 'android'"] # websockets don't work on android (bug 1266217)
+skip-if = [
+  "os == 'android'", # websockets don't work on android (bug 1266217)
+  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && opt && socketprocess_e10s", # Bug 1937254
+  ]
 scheme = "http"
 
 ["test_peerConnection_iceFailure.html"]
