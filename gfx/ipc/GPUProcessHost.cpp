@@ -34,11 +34,11 @@ using namespace ipc;
 GPUProcessHost::GPUProcessHost(Listener* aListener)
     : GeckoChildProcessHost(GeckoProcessType_GPU),
       mListener(aListener),
+      mTaskFactory(this),
       mLaunchPhase(LaunchPhase::Unlaunched),
       mProcessToken(0),
       mShutdownRequested(false),
-      mChannelClosed(false),
-      mLiveToken(new media::Refcountable<bool>(true)) {
+      mChannelClosed(false) {
   MOZ_COUNT_CTOR(GPUProcessHost);
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
@@ -79,7 +79,6 @@ bool GPUProcessHost::Launch(geckoargs::ChildProcessArgs aExtraOpts) {
 }
 
 bool GPUProcessHost::WaitForLaunch() {
-  MOZ_ASSERT(mLaunchPhase != LaunchPhase::Unlaunched);
   if (mLaunchPhase == LaunchPhase::Complete) {
     return !!mGPUChild;
   }
@@ -95,22 +94,12 @@ bool GPUProcessHost::WaitForLaunch() {
     timeoutMs = 0;
   }
 
-  if (mLaunchPhase == LaunchPhase::Waiting) {
-    // Our caller expects the connection to be finished by the time we return,
-    // so we immediately set up the IPDL actor and fire callbacks. The IO thread
-    // will still dispatch a notification to the main thread - we'll just ignore
-    // it.
-    bool result = GeckoChildProcessHost::WaitUntilConnected(timeoutMs);
-    InitAfterConnect(result);
-    if (!result) {
-      return false;
-    }
-  }
-  MOZ_ASSERT(mLaunchPhase == LaunchPhase::Connected);
-  // Our caller expects post-connection initialization tasks, such as ensuring
-  // the GPUChild is initialized, to be finished by the time we return, so
-  // finish these tasks synchronously now.
-  return CompleteInitSynchronously();
+  // Our caller expects the connection to be finished after we return, so we
+  // immediately set up the IPDL actor and fire callbacks. The IO thread will
+  // still dispatch a notification to the main thread - we'll just ignore it.
+  bool result = GeckoChildProcessHost::WaitUntilConnected(timeoutMs);
+  InitAfterConnect(result);
+  return result;
 }
 
 void GPUProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
@@ -118,12 +107,27 @@ void GPUProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
 
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "GPUProcessHost::OnChannelConnected", [this, liveToken = mLiveToken]() {
-        if (*mLiveToken && mLaunchPhase == LaunchPhase::Waiting) {
-          InitAfterConnect(true);
-        }
-      }));
+  // Post a task to the main thread. Take the lock because mTaskFactory is not
+  // thread-safe.
+  RefPtr<Runnable> runnable;
+  {
+    MonitorAutoLock lock(mMonitor);
+    runnable =
+        mTaskFactory.NewRunnableMethod(&GPUProcessHost::OnChannelConnectedTask);
+  }
+  NS_DispatchToMainThread(runnable);
+}
+
+void GPUProcessHost::OnChannelConnectedTask() {
+  if (mLaunchPhase == LaunchPhase::Waiting) {
+    InitAfterConnect(true);
+  }
+}
+
+void GPUProcessHost::OnChannelErrorTask() {
+  if (mLaunchPhase == LaunchPhase::Waiting) {
+    InitAfterConnect(false);
+  }
 }
 
 static uint64_t sProcessTokenCounter = 0;
@@ -132,78 +136,23 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Waiting);
   MOZ_ASSERT(!mGPUChild);
 
+  mLaunchPhase = LaunchPhase::Complete;
   mPrefSerializer = nullptr;
 
   if (aSucceeded) {
-    mLaunchPhase = LaunchPhase::Connected;
     mProcessToken = ++sProcessTokenCounter;
     mGPUChild = MakeRefPtr<GPUChild>(this);
     DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mGPUChild.get());
     MOZ_ASSERT(rv);
 
-    nsTArray<RefPtr<GPUChild::InitPromiseType>> initPromises;
-    initPromises.AppendElement(mGPUChild->Init());
+    mGPUChild->Init();
 
 #ifdef MOZ_WIDGET_ANDROID
-    nsCOMPtr<nsISerialEventTarget> launcherThread(GetIPCLauncher());
+    nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
     MOZ_ASSERT(launcherThread);
-    RefPtr<GPUChild::InitPromiseType> csmPromise =
-        InvokeAsync(
-            launcherThread, __func__,
-            [] {
-              java::CompositorSurfaceManager::LocalRef csm =
-                  java::GeckoProcessManager::GetCompositorSurfaceManager();
-              return MozPromise<java::CompositorSurfaceManager::GlobalRef, Ok,
-                                true>::CreateAndResolve(csm, __func__);
-            })
-            ->Map(GetCurrentSerialEventTarget(), __func__,
-                  [this, liveToken = mLiveToken](
-                      java::CompositorSurfaceManager::GlobalRef&& aCsm) {
-                    if (*liveToken) {
-                      mCompositorSurfaceManager = aCsm;
-                    }
-                    return Ok{};
-                  });
-    initPromises.AppendElement(csmPromise);
-#endif
-
-    GPUChild::InitPromiseType::All(GetCurrentSerialEventTarget(), initPromises)
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [this, liveToken = mLiveToken]() {
-                 if (*liveToken) {
-                   this->OnAsyncInitComplete();
-                 }
-               });
-  } else {
-    mLaunchPhase = LaunchPhase::Complete;
-    if (mListener) {
-      mListener->OnProcessLaunchComplete(this);
-    }
-  }
-}
-
-void GPUProcessHost::OnAsyncInitComplete() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mLaunchPhase == LaunchPhase::Connected) {
-    mLaunchPhase = LaunchPhase::Complete;
-    if (mListener) {
-      mListener->OnProcessLaunchComplete(this);
-    }
-  }
-}
-
-bool GPUProcessHost::CompleteInitSynchronously() {
-  MOZ_ASSERT(mLaunchPhase == LaunchPhase::Connected);
-
-  const bool result = mGPUChild->EnsureGPUReady();
-
-#ifdef MOZ_WIDGET_ANDROID
-  if (!mCompositorSurfaceManager) {
     layers::SynchronousTask task(
         "GeckoProcessManager::GetCompositorSurfaceManager");
 
-    nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
-    MOZ_ASSERT(launcherThread);
     launcherThread->Dispatch(NS_NewRunnableFunction(
         "GeckoProcessManager::GetCompositorSurfaceManager", [&]() {
           layers::AutoCompleteTask complete(&task);
@@ -212,15 +161,12 @@ bool GPUProcessHost::CompleteInitSynchronously() {
         }));
 
     task.Wait();
-  }
 #endif
+  }
 
-  mLaunchPhase = LaunchPhase::Complete;
   if (mListener) {
     mListener->OnProcessLaunchComplete(this);
   }
-
-  return result;
 }
 
 void GPUProcessHost::Shutdown(bool aUnexpectedShutdown) {
@@ -306,12 +252,14 @@ void GPUProcessHost::KillProcess(bool aGenerateMinidump) {
 void GPUProcessHost::CrashProcess() { mGPUChild->SendCrashProcess(); }
 
 void GPUProcessHost::DestroyProcess() {
-  MOZ_ASSERT(NS_IsMainThread());
+  // Cancel all tasks. We don't want anything triggering after our caller
+  // expects this to go away.
+  {
+    MonitorAutoLock lock(mMonitor);
+    mTaskFactory.RevokeAll();
+  }
 
-  // Any pending tasks will be cancelled from now on.
-  *mLiveToken = false;
-
-  NS_DispatchToMainThread(
+  GetCurrentSerialEventTarget()->Dispatch(
       NS_NewRunnableFunction("DestroyProcessRunnable", [this] { Destroy(); }));
 }
 
