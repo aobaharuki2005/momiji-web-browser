@@ -705,6 +705,10 @@ class GitRepository(Repository):
         Generate a git format-patch style patch of all uncommitted changes in
         the working directory.
         """
+        diff = self._run("diff", "--no-color", "HEAD")
+        if not diff.strip():
+            return ""
+
         if not date:
             date = datetime.now()
 
@@ -717,7 +721,7 @@ class GitRepository(Repository):
             f"From: {name} <{email}>",
             f"Date: {formatted_date}",
             f"Subject: {message}" "\n---\n",
-            self._run("diff", "--no-color", "HEAD"),
+            diff,
         ]
 
         return "\n".join(patch)
