@@ -2071,7 +2071,13 @@ const JSClassOps ShapeListObject::classOps_ = {
   return &obj->as<ShapeListObject>();
 }
 
-Shape* ShapeListObject::get(uint32_t index) {
+Shape* ShapeListObject::get(uint32_t index) const {
+  Shape* shape = getUnbarriered(index);
+  gc::ReadBarrier(shape);
+  return shape;
+}
+
+Shape* ShapeListObject::getUnbarriered(uint32_t index) const {
   Value value = ListObject::get(index);
   return static_cast<Shape*>(value.toPrivate());
 }
@@ -2377,9 +2383,10 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
         // The assert verifies this property by checking the first element has
         // the same realm (and since everything in the list has the same realm,
         // checking the first element suffices)
+        Realm* shapesRealm = foldedShapes->realm();
         MOZ_ASSERT_IF(!foldedShapes->isEmpty(),
-                      foldedShapes->get(0)->realm() == foldedShapes->realm());
-        if (foldedShapes->realm() != shape->realm()) {
+                      foldedShapes->getUnbarriered(0)->realm() == shapesRealm);
+        if (shapesRealm != shape->realm()) {
           return false;
         }
 

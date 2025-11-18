@@ -179,7 +179,9 @@ class ShapeListObject : public ListObject {
   static ShapeListObject* create(JSContext* cx);
   static void trace(JSTracer* trc, JSObject* obj);
 
-  Shape* get(uint32_t index);
+  Shape* get(uint32_t index) const;
+  Shape* getUnbarriered(uint32_t index) const;
+
   bool traceWeak(JSTracer* trc);
 };
 
