@@ -387,9 +387,7 @@ class SuggestAutoComplete {
   /**
    * Handles the session being reset.
    */
-  resetSession() {
-    this.#suggestionController?.resetSession();
-  }
+  resetSession() {}
 
   #suggestionController;
 

@@ -6713,12 +6713,6 @@ interface GleanImpl {
     successfulRequests: Record<string, GleanCounter>;
   }
 
-  searchSuggestionsOhttp: {
-    enabled: GleanBoolean;
-    latency: Record<string, GleanTimingDistribution>;
-    requestCounter: GleanDualLabeledCounter;
-  }
-
   legacyTelemetry: {
     clientId: GleanUuid;
     profileGroupId: GleanUuid;

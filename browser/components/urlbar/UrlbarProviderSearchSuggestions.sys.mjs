@@ -300,20 +300,6 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
   }
 
   /**
-   * Called when a search session concludes regardless of how it ends -
-   * whether through engagement or abandonment or otherwise. This is
-   * called for all providers who have implemented this method.
-   *
-   * @param {UrlbarQueryContext} _queryContext
-   *    The current query context.
-   * @param {UrlbarController} _controller
-   *    The associated controller.
-   */
-  onSearchSessionEnd(_queryContext, _controller) {
-    this.#suggestionsController?.resetSession();
-  }
-
-  /**
    * Gets the provider's priority.
    *
    * @param {UrlbarQueryContext} queryContext The query context object

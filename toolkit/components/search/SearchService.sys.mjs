@@ -1620,11 +1620,6 @@ export class SearchService {
       onUpdate: () =>
         this._maybeReloadEngines(Ci.nsISearchService.CHANGE_REASON_EXPERIMENT),
     },
-    suggestOhttpEnabled: {
-      pref: "browser.search.suggest.ohttp.enabled",
-      default: false,
-      onUpdate: this.#recordPreferencesTelemetry.bind(this),
-    },
   });
 
   /**
@@ -1735,7 +1730,6 @@ export class SearchService {
     Glean.searchService.startupTime.stopAndAccumulate(timerId);
 
     this.#recordDefaultEngineTelemetryData();
-    this.#recordPreferencesTelemetry();
 
     Services.obs.notifyObservers(
       null,
@@ -3676,15 +3670,6 @@ export class SearchService {
     } else {
       Glean.searchEngineDefault.changed.record(extraArgs);
     }
-  }
-
-  /**
-   * Records in telemetry any user preferences that we monitor.
-   */
-  #recordPreferencesTelemetry() {
-    Glean.searchSuggestionsOhttp.enabled.set(
-      this.#lazyPrefs.suggestOhttpEnabled
-    );
   }
 
   /**
