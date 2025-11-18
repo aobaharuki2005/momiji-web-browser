@@ -72,8 +72,6 @@
               './src/log/r_log.h',
 
               # Registry
-              './src/registry/c2ru.c',
-              './src/registry/c2ru.h',
               './src/registry/registry.c',
               './src/registry/registry.h',
               './src/registry/registry_int.h',
