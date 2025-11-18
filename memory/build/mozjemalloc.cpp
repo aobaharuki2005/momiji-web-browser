@@ -1924,10 +1924,10 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
       // they're not in mChunksDirty.  That can happen if they're busy being
       // purged by other threads.
       // We have to clear the flag to preserve the invariant that if Purge()
-      // returns false the flag is clear, if there's more purging work to do in
-      // other chunks then either other calls to Purge() (in other threads) will
-      // handle it or we rely on ShouldStartPurge() returning true at some point
-      // in the future.
+      // returns anything other than NotDone then the flag is clear. If there's
+      // more purging work to do in other chunks then either other calls to
+      // Purge() (in other threads) will handle it or we rely on
+      // ShouldStartPurge() returning true at some point in the future.
       mIsPurgePending = false;
       return Busy;
     }
