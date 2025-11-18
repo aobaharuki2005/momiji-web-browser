@@ -251,7 +251,7 @@ td:first-of-type {
 }
 
 .hcm-theme {
-  background-color: #000000;
+  background-color: black;
   color: var(--color-white);
 }
 
@@ -371,5 +371,5 @@ td:first-of-type {
 }
 
 .hcm-theme .shadow-preview {
-  background: #000000;
+  background: black;
 }

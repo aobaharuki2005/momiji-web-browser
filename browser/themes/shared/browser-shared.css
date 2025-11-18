@@ -699,7 +699,7 @@ menupopup::part(drop-indicator) {
 }
 
 #widget-overflow .webextension-popup-browser {
-  background: #fff;
+  background: white;
 
   /* height set via JS can be lower than the stack min-height,
      ensure the browser takes up at least that min-height */

@@ -767,7 +767,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 .progress-bar::-moz-progress-bar {
-  background: #ffffff;
+  background: white;
   border-radius: 0 var(--border-radius-small) var(--border-radius-small) 0;
 }
 
