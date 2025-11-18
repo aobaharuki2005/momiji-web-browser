@@ -76,14 +76,19 @@ class WarpOpSnapshot : public TempObject,
   Kind kind() const { return kind_; }
 
   template <typename T>
+  bool is() const {
+    return kind_ == T::ThisKind;
+  }
+
+  template <typename T>
   const T* as() const {
-    MOZ_ASSERT(kind_ == T::ThisKind);
+    MOZ_ASSERT(is<T>());
     return static_cast<const T*>(this);
   }
 
   template <typename T>
   T* as() {
-    MOZ_ASSERT(kind_ == T::ThisKind);
+    MOZ_ASSERT(is<T>());
     return static_cast<T*>(this);
   }
 
@@ -214,8 +219,7 @@ class WarpBailout : public WarpOpSnapshot {
 #endif
 };
 
-// Information from a Baseline IC stub.
-class WarpCacheIR : public WarpOpSnapshot {
+class WarpCacheIRBase : public WarpOpSnapshot {
   // Baseline stub code. Stored here to keep the CacheIRStubInfo alive.
   OffthreadGCPtr<JitCode*> stubCode_;
   const CacheIRStubInfo* stubInfo_;
@@ -223,18 +227,33 @@ class WarpCacheIR : public WarpOpSnapshot {
   // Copied Baseline stub data. Allocated in the same LifoAlloc.
   const uint8_t* stubData_;
 
+ protected:
+  WarpCacheIRBase(Kind kind, uint32_t offset, JitCode* stubCode,
+                  const CacheIRStubInfo* stubInfo, const uint8_t* stubData)
+      : WarpOpSnapshot(kind, offset),
+        stubCode_(stubCode),
+        stubInfo_(stubInfo),
+        stubData_(stubData) {}
+
+  void traceData(JSTracer* trc);
+
+#ifdef JS_JITSPEW
+  void dumpData(GenericPrinter& out) const;
+#endif
+
+ public:
+  const CacheIRStubInfo* stubInfo() const { return stubInfo_; }
+  const uint8_t* stubData() const { return stubData_; }
+};
+
+// Information from a Baseline IC stub.
+class WarpCacheIR : public WarpCacheIRBase {
  public:
   static constexpr Kind ThisKind = Kind::WarpCacheIR;
 
   WarpCacheIR(uint32_t offset, JitCode* stubCode,
               const CacheIRStubInfo* stubInfo, const uint8_t* stubData)
-      : WarpOpSnapshot(ThisKind, offset),
-        stubCode_(stubCode),
-        stubInfo_(stubInfo),
-        stubData_(stubData) {}
-
-  const CacheIRStubInfo* stubInfo() const { return stubInfo_; }
-  const uint8_t* stubData() const { return stubData_; }
+      : WarpCacheIRBase(ThisKind, offset, stubCode, stubInfo, stubData) {}
 
   void traceData(JSTracer* trc);
 

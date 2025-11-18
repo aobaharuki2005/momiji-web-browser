@@ -41,6 +41,7 @@ using namespace js::jit;
 class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   WarpBuilder* builder_;
   BytecodeLocation loc_;
+  const WarpCacheIRBase* cacheIRSnapshot_;
   const CacheIRStubInfo* stubInfo_;
   const uint8_t* stubData_;
 
@@ -326,11 +327,13 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
 
  public:
   WarpCacheIRTranspiler(WarpBuilder* builder, BytecodeLocation loc,
-                        CallInfo* callInfo, const WarpCacheIR* cacheIRSnapshot)
+                        CallInfo* callInfo,
+                        const WarpCacheIRBase* cacheIRSnapshot)
       : WarpBuilderShared(builder->snapshot(), builder->mirGen(),
                           builder->currentBlock()),
         builder_(builder),
         loc_(loc),
+        cacheIRSnapshot_(cacheIRSnapshot),
         stubInfo_(cacheIRSnapshot->stubInfo()),
         stubData_(cacheIRSnapshot->stubData()),
         callInfo_(callInfo) {}
@@ -7236,7 +7239,7 @@ static void MaybeSetImplicitlyUsed(uint32_t numInstructionIdsBefore,
 }
 
 bool jit::TranspileCacheIRToMIR(WarpBuilder* builder, BytecodeLocation loc,
-                                const WarpCacheIR* cacheIRSnapshot,
+                                const WarpCacheIRBase* cacheIRSnapshot,
                                 std::initializer_list<MDefinition*> inputs,
                                 CallInfo* maybeCallInfo) {
   uint32_t numInstructionIdsBefore =
