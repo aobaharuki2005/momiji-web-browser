@@ -14,11 +14,14 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/BytecodeAnalysis.h"
+#include "jit/CacheIRCompiler.h"
 #include "jit/IonScript.h"
 #include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
 #include "jit/ScriptFromCalleeToken.h"
+#include "jit/ShapeList.h"
 #include "jit/TrialInlining.h"
+#include "jit/WarpSnapshot.h"
 #include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin
 #include "vm/BytecodeUtil.h"
 #include "vm/Compartment.h"
@@ -976,13 +979,46 @@ JitScript* ICScript::outerJitScript() {
 //    changes from 0.
 // 4. The hash will change if the failure count of the fallback stub
 //    changes from 0.
+// 5. The hash will change if the set of shapes stored in ShapeListSnapshot
+//    is changed by stub folding or GC (the shapes in ShapeListObject are weak
+//    pointers).
 HashNumber ICScript::hash() {
   HashNumber h = 0;
   for (size_t i = 0; i < numICEntries(); i++) {
     ICStub* stub = icEntry(i).firstStub();
+    ICFallbackStub* fallback = fallbackStub(i);
 
     // Hash the address of the first stub.
     h = mozilla::AddToHash(h, stub);
+
+    // Hash shapes snapshotted in ShapeListSnapshot for GuardMultipleShapes.
+    if (!stub->isFallback() && fallback->mayHaveFoldedStub()) {
+      const CacheIRStubInfo* stubInfo = stub->toCacheIRStub()->stubInfo();
+      CacheIRReader reader(stubInfo);
+      while (reader.more()) {
+        CacheOp op = reader.readOp();
+        switch (op) {
+          case CacheOp::GuardMultipleShapes: {
+            auto args = reader.argsForGuardMultipleShapes();
+            JSObject* shapes =
+                stubInfo->getStubField<StubField::Type::JSObject>(
+                    stub->toCacheIRStub(), args.shapesOffset);
+            auto* shapesObject = &shapes->as<ShapeListObject>();
+            size_t numShapes = shapesObject->length();
+            if (ShapeListSnapshot::shouldSnapshot(numShapes)) {
+              for (size_t i = 0; i < numShapes; i++) {
+                Shape* shape = shapesObject->getUnbarriered(i);
+                h = mozilla::AddToHash(h, shape);
+              }
+            }
+            break;
+          }
+          default:
+            reader.skip(CacheIROpInfos[size_t(op)].argLength);
+            break;
+        }
+      }
+    }
 
     // Hash whether subsequent stubs have entry count 0.
     if (!stub->isFallback()) {
