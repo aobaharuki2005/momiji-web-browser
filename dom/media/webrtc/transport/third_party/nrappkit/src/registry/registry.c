@@ -53,11 +53,11 @@
 #include <openssl/ssl.h>
 #endif
 #include <ctype.h>
+#include <csi_platform.h>
 #include "registry.h"
 #include "registry_int.h"
 #include "registry_vtbl.h"
 #include "r_assoc.h"
-#include "nr_common.h"
 #include "r_log.h"
 #include "r_errors.h"
 #include "r_macros.h"

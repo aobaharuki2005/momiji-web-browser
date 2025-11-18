@@ -48,7 +48,7 @@
 #ifdef OPENSSL
 #include <openssl/evp.h>
 #endif
-#include "nr_common.h"
+#include <csi_platform.h>
 #include "r_common.h"
 #include "registry.h"
 #include "util.h"
