@@ -428,12 +428,6 @@ var ctrlTab = {
     }
   },
 
-  _mouseOverFocus: function ctrlTab_mouseOverFocus(aPreview) {
-    if (this._trackMouseOver) {
-      aPreview.focus();
-    }
-  },
-
   pick: function ctrlTab_pick(aPreview) {
     if (!this.tabCount) {
       return;
@@ -496,7 +490,6 @@ var ctrlTab = {
     );
     this.canvasHeight = Math.round(this.canvasWidth * tabPreviews.aspectRatio);
     this.updatePreviews();
-    this._trackMouseOver = false;
     this._selectedIndex = 1;
     gBrowser.warmupTab(this.selected._tab);
 
@@ -546,18 +539,6 @@ var ctrlTab = {
   setupGUI: function ctrlTab_setupGUI() {
     this.selected.focus();
     this._selectedIndex = -1;
-
-    // Wait for two animation frames before tracking mouse movement as we might
-    // get a synthetic mousemove event when a Ctrl-Tab item happens to be under
-    // the mouse pointer initially as the panel opens, which we don't want to
-    // interpret as the user selecting that item.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (this.isOpen) {
-          this._trackMouseOver = true;
-        }
-      });
-    });
   },
 
   suspendGUI: function ctrlTab_suspendGUI() {
@@ -725,7 +706,11 @@ var ctrlTab = {
         }
         break;
       case "mouseover":
-        this._mouseOverFocus(event.currentTarget);
+        // relatedTarget is the element the mouse came from. It is null when we
+        // get a synthetic mouse event.
+        if (event.relatedTarget) {
+          event.currentTarget.focus();
+        }
         break;
       case "command":
         this.pick(event.currentTarget);
