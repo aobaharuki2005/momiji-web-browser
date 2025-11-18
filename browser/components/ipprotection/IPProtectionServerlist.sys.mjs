@@ -186,6 +186,7 @@ class Country {
 class IPProtectionServerlistSingleton {
   #list = null;
   #runningPromise = null;
+  #bucket = null;
 
   constructor() {
     this.handleEvent = this.#handleEvent.bind(this);
@@ -201,7 +202,11 @@ class IPProtectionServerlistSingleton {
     );
   }
 
-  async initOnStartupCompleted() {}
+  async initOnStartupCompleted() {
+    this.bucket.on("sync", async () => {
+      await this.maybeFetchList(true);
+    });
+  }
 
   uninit() {
     lazy.IPProtectionService.removeEventListener(
@@ -216,8 +221,8 @@ class IPProtectionServerlistSingleton {
     }
   }
 
-  maybeFetchList() {
-    if (this.#list.length !== 0) {
+  maybeFetchList(forceUpdate = false) {
+    if (this.#list.length !== 0 && !forceUpdate) {
       return Promise.resolve();
     }
 
@@ -226,9 +231,8 @@ class IPProtectionServerlistSingleton {
     }
 
     const fetchList = async () => {
-      const bucket = lazy.RemoteSettings("vpn-serverlist");
       this.#list = IPProtectionServerlistSingleton.#dataToList(
-        await bucket.get()
+        await this.bucket.get()
       );
 
       lazy.IPPStartupCache.storeLocationList(this.#list);
@@ -285,6 +289,13 @@ class IPProtectionServerlistSingleton {
 
   get hasList() {
     return this.#list.length !== 0;
+  }
+
+  get bucket() {
+    if (!this.#bucket) {
+      this.#bucket = lazy.RemoteSettings("vpn-serverlist");
+    }
+    return this.#bucket;
   }
 
   static #dataToList(list) {
