@@ -561,17 +561,6 @@ newtab-trending-searches-dismiss = Hide trending searches
 
 ## Strings for task / to-do list productivity widget
 
-newtab-widget-section-title = Widgets
-# Tooltip for hide all widgets button
-newtab-widget-section-hide-all-button =
-    .title = Hide widgets
-    .aria-label = Hide all widgets
-newtab-widget-section-maximize =
-    .title = Expand widgets
-    .aria-label = Expand all widgets to full size
-newtab-widget-section-minimize =
-    .title = Minimize widgets
-    .aria-label = Collapse all widgets to compact size
 newtab-widget-lists-name-label-default =
     .label = Task list
 newtab-widget-lists-name-placeholder-default =

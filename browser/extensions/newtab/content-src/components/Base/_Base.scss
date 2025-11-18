@@ -76,8 +76,7 @@ main {
     padding-block-end: 0;
 
     .ds-card {
-      // Note: This differs when the Sections layout is enabled
-      width: var(--newtab-card-grid-layout-width);
+      width: 296px;
     }
 
     .ds-card-grid:not(.ds-section-grid) {
