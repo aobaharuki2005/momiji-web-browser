@@ -213,6 +213,10 @@ add_task(async function test_sidebar_context_menu() {
     document.getElementById("sidebar-context-menu-manage-extension").hidden,
     "Manage extension button is hidden"
   );
+  ok(
+    document.getElementById("sidebar-context-menu-unpin-extension").hidden,
+    "Remove extension from Sidebar button is hidden"
+  );
   contextMenu.hidePopup();
 
   await Promise.all([
