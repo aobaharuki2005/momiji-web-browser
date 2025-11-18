@@ -323,11 +323,6 @@ pref("media.navigator.permission.device", true);
 // this is to preserve battery and data (bug 1540573)
 pref("media.throttle-cellular-regardless-of-download-rate", true);
 
-// The maximum number of queued frames to send to the compositor.
-// On Android, it needs to be throttled because SurfaceTexture contains only one
-// (the most recent) image data. (bug 1299068)
-pref("media.video-queue.send-to-compositor-size", 1);
-
 // Increase necko buffer sizes for Android (bug 560591)
 pref("network.buffer.cache.size",  16384);
 

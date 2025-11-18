@@ -12272,6 +12272,36 @@
   value: true
   mirror: always
 
+# The target number of decoded video frames to maintain in
+# MediaDecoderStateMachine's mVideoQueue for hardware video decoding. Hardware
+# decoding is fast, so a small queue size is used to lower frame latency.
+- name: media.video-queue.hw-accel-size
+  type: RelaxedAtomicInt32
+  value: 3
+  mirror: always
+
+# The target number of decoded video frames to maintain in
+# MediaDecoderStateMachine's mVideoQueue for software video decoding. Software
+# decoding is slower, so a larger queue is used to lower chances of
+# dropping late frames.
+- name: media.video-queue.default-size
+  type: RelaxedAtomicInt32
+  value: 10
+  mirror: always
+
+# The maximum number of queued frames to send to the compositor.
+- name: media.video-queue.send-to-compositor-size
+  type: RelaxedAtomicInt32
+#ifdef ANDROID
+# On Android, it needs to be throttled because SurfaceTexture contains only one
+# (the most recent) image data. See bug 1299068.
+  value: 1
+#else
+# Send all of them.
+  value: 9999
+#endif
+  mirror: always
+
 # Opus
 - name: media.opus.enabled
   type: RelaxedAtomicBool
