@@ -53,8 +53,7 @@
 #include <registry.h>
 #include <time.h>
 
-
-#include "nr_common.h"
+#include <csi_platform.h>
 
 
 #define LOGGING_DEFAULT_LEVEL  5

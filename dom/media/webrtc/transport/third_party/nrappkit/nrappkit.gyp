@@ -26,7 +26,6 @@
 
           'sources' : [
               # Shared
-              './src/share/nr_common.h',
                './src/port/generic/include'
 
               # libekr
