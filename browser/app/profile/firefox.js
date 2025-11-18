@@ -3517,6 +3517,8 @@ pref("browser.ipProtection.userEnabled", false);
 pref("browser.ipProtection.variant", "");
 // Pref to track number of times the VPN panel is opened
 pref("browser.ipProtection.panelOpenCount", 0);
+// Pref to enable support for site exceptions
+pref("browser.ipProtection.features.siteExceptions", false);
 pref("browser.ipProtection.exceptionsMode", "all");
 pref("browser.ipProtection.domainExclusions", "");
 pref("browser.ipProtection.domainInclusions", "");
