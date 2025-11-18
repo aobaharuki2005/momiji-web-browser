@@ -18,7 +18,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -84,8 +83,7 @@ class GleanDebugToolsFragment : Fragment() {
                         title = {
                             Text(
                                 text = stringResource(R.string.glean_debug_tools_title),
-                                color = FirefoxTheme.colors.textPrimary,
-                                style = FirefoxTheme.typography.headline6,
+                                style = FirefoxTheme.typography.headline5,
                             )
                         },
                         navigationIcon = {
@@ -96,7 +94,6 @@ class GleanDebugToolsFragment : Fragment() {
                                     contentDescription = stringResource(
                                         R.string.bookmark_navigate_back_button_content_description,
                                     ),
-                                    tint = FirefoxTheme.colors.iconPrimary,
                                 )
                             }
                         },
@@ -104,10 +101,8 @@ class GleanDebugToolsFragment : Fragment() {
                             top = 0.dp,
                             bottom = 0.dp,
                         ),
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = FirefoxTheme.colors.layer1),
                     )
                 },
-                containerColor = FirefoxTheme.colors.layer1,
             ) { paddingValues ->
                 GleanDebugToolsScreen(
                     gleanDebugToolsStore = store,
