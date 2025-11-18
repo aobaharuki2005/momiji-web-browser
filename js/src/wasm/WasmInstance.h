@@ -119,15 +119,8 @@ class alignas(16) Instance {
   // The tag object of the pending exception.
   GCPtr<AnyRef> pendingExceptionTag_;
 
-  // Equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript).
-  JS::NativeStackLimit stackLimit_;
-
   // Set to 1 when wasm should call CheckForInterrupt.
   mozilla::Atomic<uint32_t, mozilla::Relaxed> interrupt_;
-
-  // Boolean value set to true when instance code is executed on a suspendable
-  // stack. Aligned to int32_t to be used on JIT code.
-  int32_t onSuspendableStack_;
 
   // The address of the realm()->zone()->needsIncrementalBarrier(). This is
   // specific to this instance and not a process wide field, and so it cannot
@@ -314,14 +307,8 @@ class alignas(16) Instance {
   static constexpr size_t offsetOfPendingExceptionTag() {
     return offsetof(Instance, pendingExceptionTag_);
   }
-  static constexpr size_t offsetOfStackLimit() {
-    return offsetof(Instance, stackLimit_);
-  }
   static constexpr size_t offsetOfInterrupt() {
     return offsetof(Instance, interrupt_);
-  }
-  static constexpr size_t offsetOfOnSuspendableStack() {
-    return offsetof(Instance, onSuspendableStack_);
   }
   static constexpr size_t offsetOfAllocSites() {
     return offsetof(Instance, allocSites_);
@@ -394,9 +381,6 @@ class alignas(16) Instance {
   void setInterrupt();
   bool isInterrupted() const;
   void resetInterrupt();
-
-  void setTemporaryStackLimit(JS::NativeStackLimit limit);
-  void resetTemporaryStackLimit(JSContext* cx);
 
   void setAllocationMetadataBuilder(
       const js::AllocationMetadataBuilder* allocationMetadataBuilder) {

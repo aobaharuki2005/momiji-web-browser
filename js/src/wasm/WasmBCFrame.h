@@ -539,11 +539,13 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
   // Note the platform scratch register may be used by branchPtr(), so
   // generally tmp must be something else.
 
-  void checkStack(Register tmp, Label* stackOverflowTrap) {
-    stackAddOffset_ = masm.sub32FromStackPtrWithPatch(tmp);
+  void checkStack(Register tmp1, Register tmp2, Label* stackOverflowTrap) {
+    masm.loadPtr(Address(InstanceReg, wasm::Instance::offsetOfCx()), tmp2);
+    stackAddOffset_ = masm.sub32FromStackPtrWithPatch(tmp1);
     masm.branchPtr(Assembler::AboveOrEqual,
-                   Address(InstanceReg, wasm::Instance::offsetOfStackLimit()),
-                   tmp, stackOverflowTrap);
+                   Address(tmp2, JSContext::offsetOfWasm() +
+                                     wasm::Context::offsetOfStackLimit()),
+                   tmp1, stackOverflowTrap);
   }
 
   void patchCheckStack() {

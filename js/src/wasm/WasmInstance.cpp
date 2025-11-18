@@ -2374,7 +2374,6 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
                    const SharedCode& code, SharedTableVector&& tables,
                    UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
-      onSuspendableStack_(false),
       allocSites_(nullptr),
       jsJitExceptionHandler_(
           cx->runtime()->jitRuntime()->getExceptionTail().value),
@@ -2434,7 +2433,6 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   cx_ = cx;
   valueBoxClass_ = AnyRef::valueBoxClass();
   interrupt_ = false;
-  stackLimit_ = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
   jumpTable_ = code_->tieringJumpTable();
   debugFilter_ = nullptr;
   callRefMetrics_ = nullptr;
@@ -2832,16 +2830,6 @@ void Instance::setInterrupt() { interrupt_ = true; }
 bool Instance::isInterrupted() const { return interrupt_; }
 
 void Instance::resetInterrupt() { interrupt_ = false; }
-
-void Instance::setTemporaryStackLimit(JS::NativeStackLimit limit) {
-  stackLimit_ = limit;
-  onSuspendableStack_ = true;
-}
-
-void Instance::resetTemporaryStackLimit(JSContext* cx) {
-  stackLimit_ = cx->stackLimitForJitCode(JS::StackForUntrustedScript);
-  onSuspendableStack_ = false;
-}
 
 int32_t Instance::computeInitialHotnessCounter(uint32_t funcIndex,
                                                size_t codeSectionSize) {

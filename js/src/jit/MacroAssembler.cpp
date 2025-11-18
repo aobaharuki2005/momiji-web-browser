@@ -5836,16 +5836,20 @@ void MacroAssembler::wasmTrap(wasm::Trap trap,
 }
 
 uint32_t MacroAssembler::wasmReserveStackChecked(uint32_t amount, Label* fail) {
+  Register scratch1 = ABINonArgReg0;
+  Register scratch2 = ABINonArgReg1;
+  loadPtr(Address(InstanceReg, wasm::Instance::offsetOfCx()), scratch2);
+
   if (amount > MAX_UNCHECKED_LEAF_FRAME_SIZE) {
     // The frame is large.  Don't bump sp until after the stack limit check so
     // that the trap handler isn't called with a wild sp.
-    Register scratch = ABINonArgReg0;
-    moveStackPtrTo(scratch);
-    branchPtr(Assembler::Below, scratch, Imm32(amount), fail);
-    subPtr(Imm32(amount), scratch);
+    moveStackPtrTo(scratch1);
+    branchPtr(Assembler::Below, scratch1, Imm32(amount), fail);
+    subPtr(Imm32(amount), scratch1);
     branchPtr(Assembler::AboveOrEqual,
-              Address(InstanceReg, wasm::Instance::offsetOfStackLimit()),
-              scratch, fail);
+              Address(scratch2, JSContext::offsetOfWasm() +
+                                    wasm::Context::offsetOfStackLimit()),
+              scratch1, fail);
     reserveStack(amount);
     // The stack amount was reserved after branching to the fail label.
     return 0;
@@ -5853,7 +5857,8 @@ uint32_t MacroAssembler::wasmReserveStackChecked(uint32_t amount, Label* fail) {
 
   reserveStack(amount);
   branchStackPtrRhs(Assembler::AboveOrEqual,
-                    Address(InstanceReg, wasm::Instance::offsetOfStackLimit()),
+                    Address(scratch2, JSContext::offsetOfWasm() +
+                                          wasm::Context::offsetOfStackLimit()),
                     fail);
   // The stack amount was reserved before branching to the fail label.
   return amount;

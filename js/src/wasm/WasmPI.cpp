@@ -52,6 +52,11 @@
 #endif
 
 #ifdef XP_WIN
+// We only need the `windows.h` header, but this file can get unified built
+// with WasmSignalHandlers.cpp, which requires `winternal.h` to be included
+// before the `windows.h` header, and so we must include it here for that case.
+#  include <winternl.h>  // must include before util/WindowsWrapper.h's `#undef`s
+
 #  include "util/WindowsWrapper.h"
 #endif
 
@@ -433,7 +438,7 @@ void SuspenderObject::trace(JSTracer* trc, JSObject* obj) {
 
 void SuspenderObject::setMoribund(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
-  ResetInstanceStackLimits(cx);
+  cx->wasm().leaveSuspendableStack(cx);
 #  if defined(_WIN32)
   data()->restoreTIBStackFields();
 #  endif
@@ -448,7 +453,7 @@ void SuspenderObject::setMoribund(JSContext* cx) {
 
 void SuspenderObject::setActive(JSContext* cx) {
   data()->setState(SuspenderState::Active);
-  UpdateInstanceStackLimitsForSuspendableStack(cx, getStackMemoryLimit());
+  cx->wasm().enterSuspendableStack(getStackMemoryLimit());
 #  if defined(_WIN32)
   data()->updateTIBStackFields();
 #  endif
@@ -456,7 +461,7 @@ void SuspenderObject::setActive(JSContext* cx) {
 
 void SuspenderObject::setSuspended(JSContext* cx) {
   data()->setState(SuspenderState::Suspended);
-  ResetInstanceStackLimits(cx);
+  cx->wasm().leaveSuspendableStack(cx);
 #  if defined(_WIN32)
   data()->restoreTIBStackFields();
 #  endif

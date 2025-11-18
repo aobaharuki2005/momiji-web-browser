@@ -589,7 +589,7 @@ bool BaseCompiler::beginFunction() {
   if (!oolStackOverflowTrap) {
     return false;
   }
-  fr.checkStack(ABINonArgReg0, oolStackOverflowTrap->entry());
+  fr.checkStack(ABINonArgReg0, ABINonArgReg1, oolStackOverflowTrap->entry());
 
   OutOfLineCode* oolInterruptTrap = addOutOfLineCode(
       new (alloc_) OutOfLineResumableTrap(Trap::CheckInterrupt, trapSiteDesc(),

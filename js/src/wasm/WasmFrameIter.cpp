@@ -1000,15 +1000,18 @@ void wasm::GenerateJitExitPrologue(MacroAssembler& masm,
   {
 #  if defined(JS_CODEGEN_ARM64)
     AutoForbidPoolsAndNops afp(&masm,
-                               /* number of instructions in scope = */ 2);
+                               /* number of instructions in scope = */ 3);
 #  endif
     offsets->begin = masm.currentOffset();
     Label fallback;
     masm.bind(&fallback, BufferOffset(fallbackOffset));
 
     const Register scratch = ABINonArgReg0;
-    masm.load32(Address(InstanceReg, Instance::offsetOfOnSuspendableStack()),
-                scratch);
+    masm.loadPtr(Address(InstanceReg, Instance::offsetOfCx()), scratch);
+    masm.load32(
+        Address(scratch, JSContext::offsetOfWasm() +
+                             wasm::Context::offsetOfOnSuspendableStack()),
+        scratch);
     masm.branchTest32(Assembler::NonZero, scratch, scratch, &fallback);
   }
 
