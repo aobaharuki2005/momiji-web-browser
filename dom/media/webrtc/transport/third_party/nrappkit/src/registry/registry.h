@@ -114,7 +114,6 @@ int NR_reg_alloc_string(NR_registry name, char **data);
 #define NR_REG_CB_ACTION_DELETE   (1<<2)
 #define NR_REG_CB_ACTION_FINAL    (1<<6)
 int NR_reg_register_callback(NR_registry name, char action, void (*cb)(void *cb_arg, char action, NR_registry name), void *cb_arg);
-int NR_reg_unregister_callback(NR_registry name, char action, void (*cb)(void *cb_arg, char action, NR_registry name));
 
 int NR_reg_make_registry(NR_registry parent, char *child, NR_registry out);
 

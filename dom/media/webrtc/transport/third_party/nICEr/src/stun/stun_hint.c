@@ -211,22 +211,6 @@ nr_is_stun_response_message(UCHAR *buf, size_t len)
 }
 
 int
-nr_has_stun_cookie(UCHAR *buf, size_t len)
-{
-   static UINT4 cookie;
-
-   cookie = htonl(NR_STUN_MAGIC_COOKIE);
-
-   if (sizeof(nr_stun_message_header) > len)
-       return 0;
-
-   if (memcmp(&cookie, &buf[4], sizeof(UINT4)))
-       return 0;
-
-   return 1;
-}
-
-int
 nr_stun_message_length(UCHAR *buf, int buf_len, int *msg_len)
 {
   nr_stun_message_header *hdr;
