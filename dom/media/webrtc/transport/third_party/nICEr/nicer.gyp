@@ -61,8 +61,6 @@
                 # Net
                 "./src/net/nr_resolver.c",
                 "./src/net/nr_resolver.h",
-                "./src/net/nr_socket_wrapper.c",
-                "./src/net/nr_socket_wrapper.h",
                 "./src/net/nr_socket.c",
                 "./src/net/nr_socket.h",
                 "./src/net/nr_socket_local.h",

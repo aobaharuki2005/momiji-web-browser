@@ -44,7 +44,6 @@ extern "C" {
 #include "nr_socket.h"
 #include "nr_resolver.h"
 #include "nr_interface_prioritizer.h"
-#include "nr_socket_wrapper.h"
 #include "stun_client_ctx.h"
 #include "stun_server_ctx.h"
 #include "turn_client_ctx.h"
