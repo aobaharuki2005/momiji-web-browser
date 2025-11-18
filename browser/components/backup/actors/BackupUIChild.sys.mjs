@@ -138,12 +138,6 @@ export class BackupUIChild extends JSWindowActorChild {
       this.sendAsyncMessage("ShowBackupLocation");
     } else if (event.type == "BackupUI:EditBackupLocation") {
       this.sendAsyncMessage("EditBackupLocation");
-    } else if (event.type == "BackupUI:ErrorBarDismissed") {
-      this.sendAsyncMessage("ErrorBarDismissed");
-    } else if (event.type == "BackupUI:SetEmbeddedComponentPersistentData") {
-      this.sendAsyncMessage("SetEmbeddedComponentPersistentData", event.detail);
-    } else if (event.type == "BackupUI:FlushEmbeddedComponentPersistentData") {
-      this.sendAsyncMessage("FlushEmbeddedComponentPersistentData");
     }
   }
 

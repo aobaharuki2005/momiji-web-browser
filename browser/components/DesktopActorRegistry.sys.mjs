@@ -238,11 +238,6 @@ let JSWINDOWACTORS = {
         "BackupUI:RerunEncryption": { wantUntrusted: true },
         "BackupUI:ShowBackupLocation": { wantUntrusted: true },
         "BackupUI:EditBackupLocation": { wantUntrusted: true },
-        "BackupUI:ErrorBarDismissed": { wantUntrusted: true },
-        "BackupUI:SetEmbeddedComponentPersistentData": { wantUntrusted: true },
-        "BackupUI:FlushEmbeddedComponentPersistentData": {
-          wantUntrusted: true,
-        },
       },
     },
     includeChrome: true,

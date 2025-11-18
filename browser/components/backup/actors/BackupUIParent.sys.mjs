@@ -18,8 +18,6 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   });
 });
 
-const BACKUP_ERROR_CODE_PREF_NAME = "browser.backup.errorCode";
-
 /**
  * A JSWindowActor that is responsible for marshalling information between
  * the BackupService singleton and any registered UI widgets that need to
@@ -51,7 +49,6 @@ export class BackupUIParent extends JSWindowActorParent {
    */
   actorCreated() {
     this.#bs.addEventListener("BackupService:StateUpdate", this);
-    Services.obs.addObserver(this.sendState, "backup-service-status-updated");
     // Note that loadEncryptionState is an async function.
     // This function is no-op if the encryption state was already loaded.
     this.#bs.loadEncryptionState();
@@ -62,10 +59,6 @@ export class BackupUIParent extends JSWindowActorParent {
    */
   didDestroy() {
     this.#bs.removeEventListener("BackupService:StateUpdate", this);
-    Services.obs.removeObserver(
-      this.sendState,
-      "backup-service-status-updated"
-    );
   }
 
   /**
@@ -270,12 +263,6 @@ export class BackupUIParent extends JSWindowActorParent {
           e
         );
       }
-    } else if (message.name == "ErrorBarDismissed") {
-      Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, lazy.ERRORS.NONE);
-    } else if (message.name == "SetEmbeddedComponentPersistentData") {
-      this.#bs.setEmbeddedComponentPersistentData(message.data);
-    } else if (message.name == "FlushEmbeddedComponentPersistentData") {
-      this.#bs.setEmbeddedComponentPersistentData({});
     }
 
     return null;

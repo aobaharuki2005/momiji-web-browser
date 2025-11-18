@@ -189,19 +189,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   5
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "backupErrorCode",
-  BACKUP_ERROR_CODE_PREF_NAME,
-  0,
-  function onUpdateBackupErrorCode(_pref, _prevVal, newVal) {
-    let bs = BackupService.get();
-    if (bs) {
-      bs.onUpdateBackupErrorCode(newVal);
-    }
-  }
-);
-
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "idleService",
@@ -775,19 +762,6 @@ export class BackupService extends EventTarget {
   }
 
   /**
-   * Sets the persisted options between screens for embedded components.
-   * This is specifically used in the Spotlight onboarding experience.
-   *
-   * This data is flushed upon creating a backup or exiting the backup flow.
-   *
-   * @param {object} data - data to persist between screens.
-   */
-  setEmbeddedComponentPersistentData(data) {
-    this.#_state.embeddedComponentPersistentData = { ...data };
-    this.stateUpdate();
-  }
-
-  /**
    * An object holding the current state of the BackupService instance, for
    * the purposes of representing it in the user interface. Ideally, this would
    * be named #state instead of #_state, but sphinx-js seems to be fairly
@@ -808,6 +782,7 @@ export class BackupService extends EventTarget {
     lastBackupFileName: "",
     supportBaseLink: Services.urlFormatter.formatURLPref("app.support.baseURL"),
     recoveryInProgress: false,
+    recoveryErrorCode: 0,
     /**
      * Every file we load successfully is going to get a restore ID which is
      * basically the identifier for that profile restore event. If we actually
@@ -816,12 +791,6 @@ export class BackupService extends EventTarget {
      * restored.
      */
     restoreID: null,
-    recoveryErrorCode: ERRORS.NONE,
-    backupErrorCode: lazy.backupErrorCode,
-    archiveEnabledStatus: this.archiveEnabledStatus.enabled,
-    restoreEnabledStatus: this.restoreEnabledStatus.enabled,
-    /** Utilized by the spotlight to persist information between screens */
-    embeddedComponentPersistentData: {},
   };
 
   /**
@@ -1727,7 +1696,6 @@ export class BackupService extends EventTarget {
             })
           );
 
-          this.stateUpdate();
           throw e;
         } finally {
           this.#backupInProgress = false;
@@ -3557,20 +3525,6 @@ export class BackupService extends EventTarget {
   }
 
   /**
-   * Updates backupErrorCode in the backup service state. Should be called every time
-   * the value for browser.backup.errorCode changes.
-   *
-   * @param {number} newErrorCode
-   *    Any of the ERROR code's from backup-constants.mjs
-   */
-  onUpdateBackupErrorCode(newErrorCode) {
-    lazy.logConsole.debug(`Updating backup error code to ${newErrorCode}`);
-
-    this.#_state.backupErrorCode = newErrorCode;
-    this.stateUpdate();
-  }
-
-  /**
    * Returns the moz-icon URL of a file. To get the moz-icon URL, the
    * file path is convered to a fileURI. If there is a problem retreiving
    * the moz-icon due to an invalid file path, return null instead.
@@ -3606,9 +3560,6 @@ export class BackupService extends EventTarget {
     if (shouldEnableScheduledBackups) {
       // reset the error states when reenabling backup
       Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
-
-      // flush the embedded component's persistent data
-      this.setEmbeddedComponentPersistentData({});
     } else {
       // set user-disabled pref if backup is being disabled
       Services.prefs.setBoolPref(
@@ -4139,11 +4090,6 @@ export class BackupService extends EventTarget {
    * 2. If archive is disabled, clean up any backup files
    */
   #handleStatusChange() {
-    // Update the BackupService state before notifying observers about the
-    // state change
-    this.#_state.archiveEnabledStatus = this.archiveEnabledStatus.enabled;
-    this.#_state.restoreEnabledStatus = this.restoreEnabledStatus.enabled;
-
     this.#notifyStatusObservers();
 
     if (!this.archiveEnabledStatus.enabled) {
