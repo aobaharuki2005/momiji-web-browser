@@ -84,6 +84,8 @@
   skin/classic/global/icons/error.svg                      (../../shared/icons/error.svg)
   skin/classic/global/icons/experiments.svg                (../../shared/icons/experiments.svg)
   skin/classic/global/icons/folder.svg                     (../../shared/icons/folder.svg)
+  skin/classic/global/icons/fullscreen.svg                 (../../shared/icons/fullscreen.svg)
+  skin/classic/global/icons/fullscreen-exit.svg            (../../shared/icons/fullscreen-exit.svg)
   skin/classic/global/icons/heart.svg                      (../../shared/icons/heart.svg)
   skin/classic/global/icons/help.svg                       (../../shared/icons/help.svg)
   skin/classic/global/icons/highlights.svg                 (../../shared/icons/highlights.svg)

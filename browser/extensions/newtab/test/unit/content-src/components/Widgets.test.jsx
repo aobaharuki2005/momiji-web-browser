@@ -172,7 +172,7 @@ describe("<Widgets>", () => {
       // Get the onClick handler and call it
       const onClickHandler = hideButton.prop("onClick");
       assert.ok(onClickHandler, "onClick handler should exist");
-      onClickHandler({});
+      onClickHandler({ preventDefault: () => {} });
 
       const allCalls = store.dispatch.getCalls();
       const setPrefCalls = allCalls.filter(
@@ -211,7 +211,7 @@ describe("<Widgets>", () => {
       const hideButton = wrapper.find("#hide-all-widgets-button");
 
       // Trigger onKeyDown handler directly with Enter key
-      hideButton.prop("onKeyDown")({ key: "Enter" });
+      hideButton.prop("onKeyDown")({ key: "Enter", preventDefault: () => {} });
 
       const setPrefCalls = store.dispatch
         .getCalls()
@@ -249,7 +249,7 @@ describe("<Widgets>", () => {
       const hideButton = wrapper.find("#hide-all-widgets-button");
 
       // Trigger onKeyDown handler directly with Space key
-      hideButton.prop("onKeyDown")({ key: " " });
+      hideButton.prop("onKeyDown")({ key: " ", preventDefault: () => {} });
 
       const setPrefCalls = store.dispatch
         .getCalls()

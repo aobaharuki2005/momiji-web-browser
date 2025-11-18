@@ -89,17 +89,25 @@ function Widgets() {
     // Update the ref to track current state
     prevTimerEnabledRef.current = isTimerEnabled;
   }, [timerEnabled, timerData, dispatch, timerType]);
+
   // Sends a dispatch to disable all widgets
-  const handleHideAllWidgets = e => {
-    // TODO: Need safe way to iterate through all widgets
-    // Handle both click events and keyboard events (Enter/Space)
-    if (!e.key || e.key === "Enter" || e.key === " ") {
+  function handleHideAllWidgetsClick(e) {
+    e.preventDefault();
+    batch(() => {
+      dispatch(ac.SetPref(PREF_WIDGETS_LISTS_ENABLED, false));
+      dispatch(ac.SetPref(PREF_WIDGETS_TIMER_ENABLED, false));
+    });
+  }
+
+  function handleHideAllWidgetsKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
       batch(() => {
         dispatch(ac.SetPref(PREF_WIDGETS_LISTS_ENABLED, false));
         dispatch(ac.SetPref(PREF_WIDGETS_TIMER_ENABLED, false));
       });
     }
-  };
+  }
 
   function handleUserInteraction(widgetName) {
     const prefName = `widgets.${widgetName}.interaction`;
@@ -126,8 +134,8 @@ function Widgets() {
             size="small"
             data-l10n-id="newtab-widget-section-hide-all-button"
             iconsrc="chrome://global/skin/icons/close.svg"
-            onClick={handleHideAllWidgets}
-            onKeyDown={handleHideAllWidgets}
+            onClick={handleHideAllWidgetsClick}
+            onKeyDown={handleHideAllWidgetsKeyDown}
           />
         </div>
         <div className="widgets-container">
