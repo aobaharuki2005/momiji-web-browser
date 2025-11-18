@@ -12,12 +12,6 @@ webidl Node;
 webidl Range;
 webidl Selection;
 
-%{ C++
-class nsINode;
-
-%}
-[ptr] native nsINodePtr(nsINode);
-
 [scriptable, uuid(3d9371d8-a2ad-403e-8b0e-8885ad3562e3)]
 interface nsIDocumentEncoderNodeFixup : nsISupports
 {
