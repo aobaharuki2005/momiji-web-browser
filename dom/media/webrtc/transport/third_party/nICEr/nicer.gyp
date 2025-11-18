@@ -19,10 +19,8 @@
               # nrappkit
               '../nrappkit/src/event',
               '../nrappkit/src/log',
-              '../nrappkit/src/plugin',
               '../nrappkit/src/registry',
               '../nrappkit/src/share',
-              '../nrappkit/src/stats',
               '../nrappkit/src/util',
               '../nrappkit/src/util/libekr',
               '../nrappkit/src/port/generic/include',
