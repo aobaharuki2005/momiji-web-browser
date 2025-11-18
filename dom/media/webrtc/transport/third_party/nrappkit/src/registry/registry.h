@@ -131,9 +131,6 @@ int NR_reg_fin(NR_registry name);
 
 int NR_reg_get_child_count(NR_registry parent, unsigned int *count);
 int NR_reg_get_child_registry(NR_registry parent, unsigned int i, NR_registry child);
-int NR_reg_get2_child_count(NR_registry base, NR_registry name, unsigned int *count);
-int NR_reg_get2_child_registry(NR_registry base, NR_registry name, unsigned int i, NR_registry child);
-int NR_reg_get_children(NR_registry parent, NR_registry children[], size_t size, size_t *length);
 
 int NR_reg_dump(void);
 

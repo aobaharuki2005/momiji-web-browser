@@ -61,7 +61,6 @@
 #include "r_log.h"
 #include "r_errors.h"
 #include "r_macros.h"
-#include "c2ru.h"
 
 /* vtbl used to switch hit between local and remote invocations */
 static nr_registry_module *reg_vtbl = 0;
@@ -247,12 +246,6 @@ NR_reg_get_child_registry(NR_registry parent, unsigned int i, NR_registry child)
   abort:
     RFREE(children);
     return(_status);
-}
-
-int
-NR_reg_get_children(NR_registry parent, NR_registry *children, size_t size, size_t *length)
-{
-    return reg_vtbl->vtbl->get_children(parent, children, size, length);
 }
 
 int
@@ -520,41 +513,6 @@ NR_reg_make_child_registry(NR_registry parent, NR_registry descendant, unsigned 
   abort:
     return(_status);
 }
-
-int
-NR_reg_get2_child_count(NR_registry base, NR_registry name, unsigned int *count)
-  {
-    int r, _status;
-    NR_registry registry;
-
-    if ((r=nr_c2ru_make_registry(base, name, registry)))
-      ABORT(r);
-
-    if (r=NR_reg_get_child_count(registry,count))
-      ABORT(r);
-
-    _status=0;
-  abort:
-    return(_status);
-  }
-
-int
-NR_reg_get2_child_registry(NR_registry base, NR_registry name, unsigned int i, NR_registry child)
-  {
-    int r, _status;
-    NR_registry registry;
-
-    if ((r=nr_c2ru_make_registry(base, name, registry)))
-      ABORT(r);
-
-    if (r=NR_reg_get_child_registry(registry, i, child))
-      ABORT(r);
-
-    _status=0;
-  abort:
-    return(_status);
-  }
-
 
 /* requires parent already in legal form */
 int
