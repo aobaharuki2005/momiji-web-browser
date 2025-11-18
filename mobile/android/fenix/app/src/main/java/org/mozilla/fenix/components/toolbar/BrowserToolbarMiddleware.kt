@@ -1052,8 +1052,12 @@ class BrowserToolbarMiddleware(
                 it.snackbarState is SnackbarState.BookmarkAdded ||
                         it.snackbarState is SnackbarState.BookmarkDeleted
             }.collect { isBookmarked ->
-                updateEndBrowserActions(context)
-                updateNavigationActions(context)
+                if (ShortcutType.fromValue(settings.toolbarSimpleShortcutKey) == ShortcutType.BOOKMARK) {
+                    updateEndBrowserActions(context)
+                }
+                if (ShortcutType.fromValue(settings.toolbarExpandedShortcutKey) == ShortcutType.BOOKMARK) {
+                    updateNavigationActions(context)
+                }
             }
         }
     }
