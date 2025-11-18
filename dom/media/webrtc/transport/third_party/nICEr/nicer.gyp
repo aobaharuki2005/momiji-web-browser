@@ -72,8 +72,6 @@
                 "./src/net/nr_socket_multi_tcp.h",
                 "./src/net/transport_addr.c",
                 "./src/net/transport_addr.h",
-                "./src/net/transport_addr_reg.c",
-                "./src/net/transport_addr_reg.h",
                 "./src/net/local_addr.c",
                 "./src/net/local_addr.h",
                 "./src/net/nr_interface_prioritizer.c",
