@@ -1006,7 +1006,6 @@ interface nsIAutoCompleteController extends nsISupports {
   searchString: string;
   setInitiallySelectedIndex(index: i32): void;
   resetInternalState(): void;
-  resetSession(): void;
 }
 
 // https://searchfox.org/mozilla-central/source/toolkit/components/autocomplete/nsIAutoCompleteInput.idl
@@ -1092,7 +1091,6 @@ interface nsIAutoCompleteResult extends nsISupports {
 interface nsIAutoCompleteSearch extends nsISupports {
   startSearch(searchString: string, searchParam: string, previousResult: nsIAutoCompleteResult, listener: nsIAutoCompleteObserver): void;
   stopSearch(): void;
-  resetSession(): void;
 }
 
 interface nsIAutoCompleteObserver extends nsISupports {

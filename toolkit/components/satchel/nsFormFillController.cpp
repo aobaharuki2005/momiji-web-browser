@@ -685,9 +685,6 @@ nsFormFillController::StopSearch() {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFormFillController::ResetSession() { return NS_OK; }
-
 ////////////////////////////////////////////////////////////////////////
 //// nsIFormFillCompleteObserver
 
