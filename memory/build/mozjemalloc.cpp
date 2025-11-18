@@ -299,29 +299,22 @@ struct ArenaAvailTreeTrait : public ArenaChunkMapLink {
   }
 };
 
-struct ArenaDirtyChunkTrait {
-  static RedBlackTreeNode<arena_chunk_t>& GetTreeNode(arena_chunk_t* aThis) {
-    return aThis->mLinkDirty;
-  }
+namespace mozilla {
 
-  static inline Order Compare(arena_chunk_t* aNode, arena_chunk_t* aOther) {
-    MOZ_ASSERT(aNode);
-    MOZ_ASSERT(aOther);
-    return CompareAddr(aNode, aOther);
+struct DirtyChunkListTrait {
+  static DoublyLinkedListElement<arena_chunk_t>& Get(arena_chunk_t* aThis) {
+    return aThis->mChunksDirtyElim;
   }
 };
 
 #ifdef MALLOC_DOUBLE_PURGE
-namespace mozilla {
-
-template <>
-struct GetDoublyLinkedListElement<arena_chunk_t> {
+struct MadvisedChunkListTrait {
   static DoublyLinkedListElement<arena_chunk_t>& Get(arena_chunk_t* aThis) {
     return aThis->mChunksMavisedElim;
   }
 };
-}  // namespace mozilla
 #endif
+}  // namespace mozilla
 
 enum class purge_action_t {
   None,
@@ -498,14 +491,20 @@ struct arena_t {
   }
 
  private:
-  // Tree of dirty-page-containing chunks this arena manages.
-  RedBlackTree<arena_chunk_t, ArenaDirtyChunkTrait> mChunksDirty
+  // Queue of dirty-page-containing chunks this arena manages.  Generally it is
+  // operated in FIFO order, chunks are purged from the beginning of the list
+  // and newly-dirtied chunks are placed at the end.  We assume that this makes
+  // finding larger runs of dirty pages easier, it probably doesn't affect the
+  // chance that a new allocation has a page fault since that is controlled by
+  // the order of mAvailRuns.
+  DoublyLinkedList<arena_chunk_t, DirtyChunkListTrait> mChunksDirty
       MOZ_GUARDED_BY(mLock);
 
 #ifdef MALLOC_DOUBLE_PURGE
   // Head of a linked list of MADV_FREE'd-page-containing chunks this
   // arena manages.
-  DoublyLinkedList<arena_chunk_t> mChunksMAdvised MOZ_GUARDED_BY(mLock);
+  DoublyLinkedList<arena_chunk_t, MadvisedChunkListTrait> mChunksMAdvised
+      MOZ_GUARDED_BY(mLock);
 #endif
 
   // In order to avoid rapid chunk allocation/deallocation when an arena
@@ -1596,7 +1595,7 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
   }
 
   if (chunk->mNumDirty == 0 && old_ndirty > 0 && !chunk->mIsPurging) {
-    mChunksDirty.Remove(chunk);
+    mChunksDirty.remove(chunk);
   }
   return true;
 }
@@ -1677,7 +1676,7 @@ bool arena_t::RemoveChunk(arena_chunk_t* aChunk) {
 
   if (aChunk->mNumDirty > 0) {
     MOZ_ASSERT(aChunk->mArena == this);
-    mChunksDirty.Remove(aChunk);
+    mChunksDirty.remove(aChunk);
     mNumDirty -= aChunk->mNumDirty;
     mStats.committed -= aChunk->mNumDirty;
   }
@@ -1874,7 +1873,7 @@ size_t arena_t::ExtraCommitPages(size_t aReqPages, size_t aRemainingPages) {
 #endif
 
 ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
-  arena_chunk_t* chunk;
+  arena_chunk_t* chunk = nullptr;
 
   // The first critical section will find a chunk and mark dirty pages in it as
   // busy.
@@ -1888,8 +1887,8 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
 
 #ifdef MOZ_DEBUG
     size_t ndirty = 0;
-    for (auto* chunk : mChunksDirty.iter()) {
-      ndirty += chunk->mNumDirty;
+    for (auto& chunk : mChunksDirty) {
+      ndirty += chunk.mNumDirty;
     }
     // Not all dirty chunks are in mChunksDirty as others might be being Purged.
     MOZ_ASSERT(ndirty <= mNumDirty);
@@ -1916,8 +1915,11 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
       // is only used if there's no run in mRunsAvail suitable.  mRunsAvail
       // never contains runs from the spare chunk.
       chunk = mSpare;
+      mChunksDirty.remove(chunk);
     } else {
-      chunk = mChunksDirty.Last();
+      if (!mChunksDirty.isEmpty()) {
+        chunk = mChunksDirty.popFront();
+      }
     }
     if (!chunk) {
       // We have to clear the flag to preserve the invariant that if Purge()
@@ -1937,7 +1939,6 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
     // Mark the chunk as busy so it won't be deleted and remove it from
     // mChunksDirty so we're the only thread purging it.
     MOZ_ASSERT(!chunk->mIsPurging);
-    mChunksDirty.Remove(chunk);
     chunk->mIsPurging = true;
     aStats.chunks++;
   }  // MaybeMutexAutoLock
@@ -2317,7 +2318,9 @@ void arena_t::PurgeInfo::FinishPurgingInChunk(bool aAddToMAdvised) {
   }
 
   if (mChunk->mNumDirty != 0) {
-    mArena.mChunksDirty.Insert(mChunk);
+    // Put the semi-processed chunk on the front of the queue so that it is
+    // the first chunk processed next time.
+    mArena.mChunksDirty.pushFront(mChunk);
   }
 
 #ifdef MALLOC_DOUBLE_PURGE
@@ -2428,7 +2431,7 @@ arena_chunk_t* arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
 
   if (aDirty) {
     if (chunk->mNumDirty == 0 && !chunk->mIsPurging) {
-      mChunksDirty.Insert(chunk);
+      mChunksDirty.pushBack(chunk);
     }
     chunk->mNumDirty += run_pages;
     mNumDirty += run_pages;
