@@ -455,16 +455,6 @@ export class SearchSuggestionController {
         );
       }
       context.gleanTimerId = 0;
-
-      if (context.engine.isConfigEngine) {
-        if (context.aborted) {
-          Glean.searchSuggestions.abortedRequests[context.engine.id].add();
-        } else if (context.errorWasReceived) {
-          Glean.searchSuggestions.failedRequests[context.engine.id].add();
-        } else {
-          Glean.searchSuggestions.successfulRequests[context.engine.id].add();
-        }
-      }
     }
   }
 

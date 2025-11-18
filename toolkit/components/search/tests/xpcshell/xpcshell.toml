@@ -192,11 +192,6 @@ support-files = [
 
 ["test_searchSuggest_private.js"]
 
-["test_searchSuggestionCountTelemetry.js"]
-skip-if = [
-  "appname == 'thunderbird'",
-]
-
 ["test_searchTermFromResult.js"]
 
 ["test_searchUrlDomain.js"]
