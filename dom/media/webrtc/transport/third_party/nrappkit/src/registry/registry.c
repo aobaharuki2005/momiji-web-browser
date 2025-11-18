@@ -127,11 +127,9 @@ func(NR_registry name, type *out)                                   \
 
 NRREGGET(NR_reg_get_char,     get_char,     char)
 NRREGGET(NR_reg_get_uchar,    get_uchar,    UCHAR)
-NRREGGET(NR_reg_get_int2,     get_int2,     INT2)
 NRREGGET(NR_reg_get_uint2,    get_uint2,    UINT2)
 NRREGGET(NR_reg_get_int4,     get_int4,     INT4)
 NRREGGET(NR_reg_get_uint4,    get_uint4,    UINT4)
-NRREGGET(NR_reg_get_int8,     get_int8,     INT8)
 NRREGGET(NR_reg_get_uint8,    get_uint8,    UINT8)
 NRREGGET(NR_reg_get_double,   get_double,   double)
 
@@ -159,12 +157,6 @@ NR_reg_get_length(NR_registry name, size_t *length)
     return reg_vtbl->vtbl->get_length(name, length);
 }
 
-int
-NR_reg_get_type(NR_registry name, NR_registry_type type)
-{
-    return reg_vtbl->vtbl->get_type(name, type);
-}
-
 #define NRREGSET(func, method, type)                            \
 int                                                             \
 func(NR_registry name, type data)                               \
@@ -174,13 +166,8 @@ func(NR_registry name, type data)                               \
 
 NRREGSET(NR_reg_set_char,     set_char,     char)
 NRREGSET(NR_reg_set_uchar,    set_uchar,    UCHAR)
-NRREGSET(NR_reg_set_int2,     set_int2,     INT2)
-NRREGSET(NR_reg_set_uint2,    set_uint2,    UINT2)
 NRREGSET(NR_reg_set_int4,     set_int4,     INT4)
 NRREGSET(NR_reg_set_uint4,    set_uint4,    UINT4)
-NRREGSET(NR_reg_set_int8,     set_int8,     INT8)
-NRREGSET(NR_reg_set_uint8,    set_uint8,    UINT8)
-NRREGSET(NR_reg_set_double,   set_double,   double)
 NRREGSET(NR_reg_set_string,   set_string,   char*)
 
 int
@@ -200,12 +187,6 @@ int
 NR_reg_del(NR_registry name)
 {
     return reg_vtbl->vtbl->del(name);
-}
-
-int
-NR_reg_fin(NR_registry name)
-{
-    return reg_vtbl->vtbl->fin(name);
 }
 
 int
@@ -245,19 +226,6 @@ NR_reg_get_child_registry(NR_registry parent, unsigned int i, NR_registry child)
     _status=0;
   abort:
     RFREE(children);
-    return(_status);
-}
-
-int
-NR_reg_dump()
-{
-    int r, _status;
-
-    if ((r=reg_vtbl->vtbl->dump(0)))
-      ABORT(r);
-
-    _status=0;
-  abort:
     return(_status);
 }
 
@@ -388,49 +356,9 @@ abort:                                                               \
 
 NRGET2(NR_reg_get2_char,     char,    NR_reg_get_char)
 NRGET2(NR_reg_get2_uchar,    UCHAR,   NR_reg_get_uchar)
-NRGET2(NR_reg_get2_int2,     INT2,    NR_reg_get_int2)
 NRGET2(NR_reg_get2_uint2,    UINT2,   NR_reg_get_uint2)
-NRGET2(NR_reg_get2_int4,     INT4,    NR_reg_get_int4)
-NRGET2(NR_reg_get2_uint4,    UINT4,   NR_reg_get_uint4)
-NRGET2(NR_reg_get2_int8,     INT8,    NR_reg_get_int8)
-NRGET2(NR_reg_get2_uint8,    UINT8,   NR_reg_get_uint8)
-NRGET2(NR_reg_get2_double,   double,  NR_reg_get_double)
 NRGET2(NR_reg_alloc2_string,   char*,   NR_reg_alloc_string)
 NRGET2(NR_reg_alloc2_data,     Data,    NR_reg_alloc_data)
-
-int
-NR_reg_get2_bytes(NR_registry parent, char *child, UCHAR *out, size_t size, size_t *length)
-{
-    int r, _status;
-    NR_registry registry;
-
-    if ((r=NR_reg_make_registry(parent, child, registry)))
-      ABORT(r);
-
-    if ((r=NR_reg_get_bytes(registry, out, size, length)))
-      ABORT(r);
-
-    _status = 0;
-abort:
-    return (_status);
-}
-
-int
-NR_reg_get2_string(NR_registry parent, char *child, char *out, size_t size)
-{
-    int r, _status;
-    NR_registry registry;
-
-    if ((r=NR_reg_make_registry(parent, child, registry)))
-      ABORT(r);
-
-    if ((r=NR_reg_get_string(registry, out, size)))
-      ABORT(r);
-
-    _status = 0;
-abort:
-    return (_status);
-}
 
 /* More convenience functions: the same as their parents but they
    take a prefix and a suffix */
@@ -453,66 +381,8 @@ abort:                                                               \
   return (_status);                                                  \
 }
 
-NRSET2(NR_reg_set2_char,     char,    NR_reg_set_char)
 NRSET2(NR_reg_set2_uchar,    UCHAR,   NR_reg_set_uchar)
-NRSET2(NR_reg_set2_int2,     INT2,    NR_reg_set_int2)
-NRSET2(NR_reg_set2_uint2,    UINT2,   NR_reg_set_uint2)
-NRSET2(NR_reg_set2_int4,     INT4,    NR_reg_set_int4)
-NRSET2(NR_reg_set2_uint4,    UINT4,   NR_reg_set_uint4)
-NRSET2(NR_reg_set2_int8,     INT8,    NR_reg_set_int8)
-NRSET2(NR_reg_set2_uint8,    UINT8,   NR_reg_set_uint8)
-NRSET2(NR_reg_set2_double,   double,  NR_reg_set_double)
 NRSET2(NR_reg_set2_string,   char*,   NR_reg_set_string)
-
-int
-NR_reg_set2_bytes(NR_registry prefix, char *name, UCHAR *data, size_t length)
-{
-    int r, _status;
-    NR_registry registry;
-
-    if ((r = NR_reg_make_registry(prefix, name, registry)))
-      ABORT(r);
-
-    if ((r = NR_reg_set_bytes(registry, data, length)))
-      ABORT(r);
-
-    _status = 0;
-abort:
-    return (_status);
-}
-
-
-int
-NR_reg_make_child_registry(NR_registry parent, NR_registry descendant, unsigned int generation, NR_registry child)
-{
-    int _status;
-    size_t length;
-
-    length = strlen(parent);
-
-    if (strncasecmp(parent, descendant, length))
-        ABORT(R_BAD_ARGS);
-
-    while (descendant[length] != '\0') {
-        if (descendant[length] == '.') {
-            if (generation == 0)
-                break;
-
-            --generation;
-        }
-
-        ++length;
-        if (length >= sizeof(NR_registry))
-            ABORT(R_BAD_ARGS);
-    }
-
-    strncpy(child, descendant, length);
-    child[length] = '\0';
-
-    _status=0;
-  abort:
-    return(_status);
-}
 
 /* requires parent already in legal form */
 int
