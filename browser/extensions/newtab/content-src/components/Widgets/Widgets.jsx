@@ -14,6 +14,8 @@ const PREF_WIDGETS_LISTS_ENABLED = "widgets.lists.enabled";
 const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
 const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
 const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
+const PREF_WIDGETS_MAXIMIZED = "widgets.maximized";
+const PREF_WIDGETS_SYSTEM_MAXIMIZED = "widgets.system.maximized";
 
 // resets timer to default values (exported for testing)
 // In practice, this logic runs inside a useEffect when
@@ -52,6 +54,7 @@ function Widgets() {
   const { messageData } = useSelector(state => state.Messages);
   const timerType = useSelector(state => state.TimerWidget.timerType);
   const timerData = useSelector(state => state.TimerWidget);
+  const isMaximized = prefs[PREF_WIDGETS_MAXIMIZED];
   const dispatch = useDispatch();
 
   const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
@@ -109,6 +112,19 @@ function Widgets() {
     }
   }
 
+  // Toggles the maximized state of widgets
+  function handleToggleMaximizeClick(e) {
+    e.preventDefault();
+    dispatch(ac.SetPref(PREF_WIDGETS_MAXIMIZED, !isMaximized));
+  }
+
+  function handleToggleMaximizeKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      dispatch(ac.SetPref(PREF_WIDGETS_MAXIMIZED, !isMaximized));
+    }
+  }
+
   function handleUserInteraction(widgetName) {
     const prefName = `widgets.${widgetName}.interaction`;
     const hasInteracted = prefs[prefName];
@@ -127,7 +143,22 @@ function Widgets() {
       <div className="widgets-section-container">
         <div className="widgets-title-container">
           <h1 data-l10n-id="newtab-widget-section-title"></h1>
-
+          {prefs[PREF_WIDGETS_SYSTEM_MAXIMIZED] && (
+            <moz-button
+              id="toggle-widgets-size-button"
+              type="icon ghost"
+              size="small"
+              // Toggle the icon and hover text
+              data-l10n-id={
+                isMaximized
+                  ? "newtab-widget-section-maximize"
+                  : "newtab-widget-section-minimize"
+              }
+              iconsrc={`chrome://global/skin/icons/${isMaximized ? "fullscreen" : "fullscreen-exit"}.svg`}
+              onClick={handleToggleMaximizeClick}
+              onKeyDown={handleToggleMaximizeKeyDown}
+            />
+          )}
           <moz-button
             id="hide-all-widgets-button"
             type="icon ghost"
@@ -138,17 +169,21 @@ function Widgets() {
             onKeyDown={handleHideAllWidgetsKeyDown}
           />
         </div>
-        <div className="widgets-container">
+        <div
+          className={`widgets-container ${isMaximized ? "is-maximized" : ""}`}
+        >
           {listsEnabled && (
             <Lists
               dispatch={dispatch}
               handleUserInteraction={handleUserInteraction}
+              isMaximized={isMaximized}
             />
           )}
           {timerEnabled && (
             <FocusTimer
               dispatch={dispatch}
               handleUserInteraction={handleUserInteraction}
+              isMaximized={isMaximized}
             />
           )}
         </div>
