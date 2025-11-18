@@ -2206,7 +2206,7 @@ bool arena_t::PurgeInfo::ScanForFirstDirtyPage() {
 
     mFreeRunInd = run_idx;
     mFreeRunLen = run_pages;
-
+    mDirtyInd = 0;
     // Scan for dirty pages.
     for (size_t page_idx = run_idx; page_idx < run_idx + run_pages;
          page_idx++) {
@@ -2215,17 +2215,24 @@ bool arena_t::PurgeInfo::ScanForFirstDirtyPage() {
       // the dirty list.
       MOZ_ASSERT((page_bits & CHUNK_MAP_BUSY) == 0);
 
+      // gPagesPerRealPage is a power of two, use a bitmask to check if page_idx
+      // is a multiple.
+      if ((page_idx & (gPagesPerRealPage - 1)) == 0) {
+        // A system call can be aligned here.
+        mDirtyInd = page_idx;
+      }
+
       if (page_bits & CHUNK_MAP_DIRTY) {
         MOZ_ASSERT((page_bits & CHUNK_MAP_FRESH_MADVISED_OR_DECOMMITTED) == 0);
         MOZ_ASSERT(mChunk->mDirtyRunHint <= run_idx);
         mChunk->mDirtyRunHint = run_idx;
 
-        if ((page_idx & (gPagesPerRealPage - 1)) == 0) {
-          mDirtyInd = page_idx;
+        if (mDirtyInd) {
           return true;
         }
 
-        // This dirty page isn't aligned and can't be purged.
+        // This dirty page occurs before a page we can align on,
+        // so it can't be purged.
         mPurgeStats.pages_unpurgable++;
       }
     }
@@ -2238,17 +2245,24 @@ bool arena_t::PurgeInfo::ScanForLastDirtyPage() {
   mDirtyLen = 0;
   for (size_t i = FreeRunLastInd(); i >= mDirtyInd; i--) {
     size_t& bits = mChunk->mPageMap[i].bits;
-    if (bits & CHUNK_MAP_DIRTY) {
-      // We must not find any busy pages because this chunk shouldn't be in the
-      // dirty list.
-      MOZ_ASSERT(!(bits & CHUNK_MAP_BUSY));
+    // We must not find any busy pages because this chunk shouldn't be in the
+    // dirty list.
+    MOZ_ASSERT(!(bits & CHUNK_MAP_BUSY));
 
-      if ((i & (gPagesPerRealPage - 1)) == gPagesPerRealPage - 1) {
-        mDirtyLen = i - mDirtyInd + 1;
+    // gPagesPerRealPage is a power of two, use a bitmask to check if page_idx
+    // is a multiple minus one.
+    if ((i & (gPagesPerRealPage - 1)) == gPagesPerRealPage - 1) {
+      // A system call can be aligned here.
+      mDirtyLen = i - mDirtyInd + 1;
+    }
+
+    if (bits & CHUNK_MAP_DIRTY) {
+      if (mDirtyLen) {
         return true;
       }
 
-      // This dirty page's end isn't aligned with a real page's end.
+      // This dirty page occurs after a page we can align on,
+      // so it can't be purged.
       mPurgeStats.pages_unpurgable++;
     }
   }
