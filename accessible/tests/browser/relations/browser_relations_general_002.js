@@ -155,7 +155,8 @@ addAccessibleTask(
   `
   <input id="d"></input>
   <label id="l">
-    <select id="s">
+    <select id="s"></select>
+  </label>
   `,
   async function (browser, accDoc) {
     const label = findAccessibleChildByID(accDoc, "l");
