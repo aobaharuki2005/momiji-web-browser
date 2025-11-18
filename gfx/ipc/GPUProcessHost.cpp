@@ -34,11 +34,11 @@ using namespace ipc;
 GPUProcessHost::GPUProcessHost(Listener* aListener)
     : GeckoChildProcessHost(GeckoProcessType_GPU),
       mListener(aListener),
-      mTaskFactory(this),
       mLaunchPhase(LaunchPhase::Unlaunched),
       mProcessToken(0),
       mShutdownRequested(false),
-      mChannelClosed(false) {
+      mChannelClosed(false),
+      mLiveToken(new media::Refcountable<bool>(true)) {
   MOZ_COUNT_CTOR(GPUProcessHost);
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
@@ -107,27 +107,12 @@ void GPUProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
 
-  // Post a task to the main thread. Take the lock because mTaskFactory is not
-  // thread-safe.
-  RefPtr<Runnable> runnable;
-  {
-    MonitorAutoLock lock(mMonitor);
-    runnable =
-        mTaskFactory.NewRunnableMethod(&GPUProcessHost::OnChannelConnectedTask);
-  }
-  NS_DispatchToMainThread(runnable);
-}
-
-void GPUProcessHost::OnChannelConnectedTask() {
-  if (mLaunchPhase == LaunchPhase::Waiting) {
-    InitAfterConnect(true);
-  }
-}
-
-void GPUProcessHost::OnChannelErrorTask() {
-  if (mLaunchPhase == LaunchPhase::Waiting) {
-    InitAfterConnect(false);
-  }
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "GPUProcessHost::OnChannelConnected", [this, liveToken = mLiveToken]() {
+        if (*mLiveToken && mLaunchPhase == LaunchPhase::Waiting) {
+          InitAfterConnect(true);
+        }
+      }));
 }
 
 static uint64_t sProcessTokenCounter = 0;
@@ -252,14 +237,12 @@ void GPUProcessHost::KillProcess(bool aGenerateMinidump) {
 void GPUProcessHost::CrashProcess() { mGPUChild->SendCrashProcess(); }
 
 void GPUProcessHost::DestroyProcess() {
-  // Cancel all tasks. We don't want anything triggering after our caller
-  // expects this to go away.
-  {
-    MonitorAutoLock lock(mMonitor);
-    mTaskFactory.RevokeAll();
-  }
+  MOZ_ASSERT(NS_IsMainThread());
 
-  GetCurrentSerialEventTarget()->Dispatch(
+  // Any pending tasks will be cancelled from now on.
+  *mLiveToken = false;
+
+  NS_DispatchToMainThread(
       NS_NewRunnableFunction("DestroyProcessRunnable", [this] { Destroy(); }));
 }
 
