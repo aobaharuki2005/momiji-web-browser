@@ -1475,25 +1475,17 @@ void gfxFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 // user font cache. (Fonts that are part of the platform font list accumulate
 // their sizes to the font list's reporter using the AddSizeOf... methods
 // above.)
-size_t gfxFontEntry::ComputedSizeOfExcludingThis(
-    MallocSizeOf aMallocSizeOf) const {
+size_t gfxFontEntry::ComputedSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
   FontListSizes s = {0};
   AddSizeOfExcludingThis(aMallocSizeOf, &s);
 
   // When reporting memory used for the main platform font list,
   // where we're typically summing the totals for a few hundred font faces,
   // we report the fields of FontListSizes separately.
-  // But for downloaded user fonts, the actual resource data (added below)
-  // will dominate, and the minor overhead of these pieces isn't worth
-  // splitting out for an individual font.
-  size_t result = s.mFontListSize + s.mFontTableCacheSize + s.mCharMapsSize;
-
-  if (mIsDataUserFont) {
-    MOZ_ASSERT(mComputedSizeOfUserFont > 0, "user font with no data?");
-    result += mComputedSizeOfUserFont;
-  }
-
-  return result;
+  // But for downloaded user fonts, the actual resource data (added by the
+  // subclass) will dominate, and the minor overhead of these pieces isn't
+  // worth splitting out for an individual font.
+  return s.mFontListSize + s.mFontTableCacheSize + s.mCharMapsSize;
 }
 
 //////////////////////////////////////////////////////////////////////////////

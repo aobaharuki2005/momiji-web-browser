@@ -9,6 +9,7 @@
 
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
+#include "gfxDWriteCommon.h"
 #include "nsUnicharUtils.h"
 #include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
@@ -907,6 +908,15 @@ void gfxDWriteFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
   AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
+size_t gfxDWriteFontEntry::ComputedSizeOfExcludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) {
+  size_t result = gfxFontEntry::ComputedSizeOfExcludingThis(aMallocSizeOf);
+  if (mFontFileStream) {
+    result += mFontFileStream->SizeOfExcludingThis(aMallocSizeOf);
+  }
+  return result;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // gfxDWriteFontList
 
@@ -973,7 +983,7 @@ gfxFontEntry* gfxDWriteFontList::MakePlatformFont(
     const nsACString& aFontName, WeightRange aWeightForEntry,
     StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry,
     const uint8_t* aFontData, uint32_t aLength) {
-  RefPtr<IDWriteFontFileStream> fontFileStream;
+  RefPtr<gfxDWriteFontFileStream> fontFileStream;
   RefPtr<IDWriteFontFile> fontFile;
   HRESULT hr = gfxDWriteFontFileLoader::CreateCustomFontFile(
       aFontData, aLength, getter_AddRefs(fontFile),
