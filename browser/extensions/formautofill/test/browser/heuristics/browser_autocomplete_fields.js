@@ -81,4 +81,39 @@ add_heuristic_tests([
       },
     ],
   },
+  {
+    description:
+      "Form containing fields with unused and invalid autocomplete attributes.",
+    fixtureData: `<form>
+                  <div>
+                    <input autocomplete="postalCode">
+                    <label>Postleitzahl*</label>
+                  </div>
+                  <div>
+                    <input autocomplete="street-address">
+                    <label>Strasse*</label>
+                  </div>
+                  <div>
+                    <input autocomplete="town">
+                    <label>Ort*</label>
+                  </div>
+                  <div>
+                    <input autocomplete="address-level4">
+                    <label>Adresszusatz</label>
+                  </div>
+                 </form>`,
+    expectedResult: [
+      {
+        default: {
+          reason: "regex-heuristic",
+        },
+        fields: [
+          { fieldName: "postal-code" },
+          { fieldName: "street-address", reason: "autocomplete" },
+          { fieldName: "address-level2" },
+          { fieldName: "address-line2" },
+        ],
+      },
+    ],
+  },
 ]);
