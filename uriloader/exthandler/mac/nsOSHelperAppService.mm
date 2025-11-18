@@ -100,12 +100,17 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(
                                               encoding:NSUTF8StringEncoding];
   schemeString = [schemeString stringByAppendingString:@"://"];
   if (!schemeString) {
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
-  NSURL* url = [[NSWorkspace sharedWorkspace]
-      URLForApplicationToOpenURL:[NSURL URLWithString:schemeString]];
-  *aHandlerExists = !!url;
+  NSURL* schemeURL = [NSURL URLWithString:schemeString];
+  if (!schemeURL) {
+    return NS_OK;
+  }
+
+  NSURL* appURL =
+      [[NSWorkspace sharedWorkspace] URLForApplicationToOpenURL:schemeURL];
+  *aHandlerExists = !!appURL;
 
   return NS_OK;
 
