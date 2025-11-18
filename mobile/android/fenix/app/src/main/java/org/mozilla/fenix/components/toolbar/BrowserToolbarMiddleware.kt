@@ -1021,9 +1021,13 @@ class BrowserToolbarMiddleware(
                     it.selectedTab?.content?.canGoForward,
                 )
             }.collect {
-                updateEndBrowserActions(context)
-                updateNavigationActions(context)
                 updateStartBrowserActions(context)
+                if (ShortcutType.fromValue(settings.toolbarSimpleShortcutKey) == ShortcutType.BACK) {
+                    updateEndBrowserActions(context)
+                }
+                if (ShortcutType.fromValue(settings.toolbarExpandedShortcutKey) == ShortcutType.BACK) {
+                    updateNavigationActions(context)
+                }
             }
         }
     }
