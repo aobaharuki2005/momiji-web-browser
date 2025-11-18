@@ -9,53 +9,53 @@ import org.junit.Test
 
 class AppIconReducerTest {
    @Test
-   fun `GIVEN SelectAppIcon action WHEN reducer is called THEN state is updated with the selected icon`() {
+   fun `GIVEN Selected user action WHEN reducer is called THEN state is updated with the selected icon`() {
        val initialState = AppIconState()
        val newIcon = AppIcon.AppRetro2004
 
        assertEquals(null, initialState.userSelectedAppIcon)
 
-       val result = appIconReducer(initialState, AppIconAction.SelectAppIcon(newIcon))
+       val result = appIconReducer(initialState, UserAction.Selected(newIcon))
 
        assertEquals(newIcon, result.userSelectedAppIcon)
    }
 
     @Test
-    fun `GIVEN SelectAppIcon action WHEN reducer is called THEN the current icon is not changed`() {
+    fun `GIVEN Selected user action WHEN reducer is called THEN the current icon is not changed`() {
         val initialState = AppIconState()
         val newIcon = AppIcon.AppRetro2004
 
         assertEquals(AppIcon.AppDefault, initialState.currentAppIcon)
 
-        val result = appIconReducer(initialState, AppIconAction.SelectAppIcon(newIcon))
+        val result = appIconReducer(initialState, UserAction.Selected(newIcon))
 
         assertEquals(AppIcon.AppDefault, result.currentAppIcon)
     }
 
     @Test
-    fun `GIVEN ResetSelection action WHEN reducer is called THEN state resets the user selected icon to null`() {
+    fun `GIVEN Dismissed user action WHEN reducer is called THEN state resets the user selected icon to null`() {
         val initialState = AppIconState(userSelectedAppIcon = AppIcon.AppRetro2004)
 
         assertEquals(AppIcon.AppRetro2004, initialState.userSelectedAppIcon)
 
-        val result = appIconReducer(initialState, AppIconAction.ResetSelection)
+        val result = appIconReducer(initialState, UserAction.Dismissed)
 
         assertEquals(null, result.userSelectedAppIcon)
     }
 
     @Test
-    fun `GIVEN ResetSelection action WHEN reducer is called THEN the current icon is not changed`() {
+    fun `GIVEN Dismissed user action WHEN reducer is called THEN the current icon is not changed`() {
         val initialState = AppIconState()
 
         assertEquals(AppIcon.AppDefault, initialState.currentAppIcon)
 
-        val result = appIconReducer(initialState, AppIconAction.ResetSelection)
+        val result = appIconReducer(initialState, UserAction.Dismissed)
 
         assertEquals(AppIcon.AppDefault, result.currentAppIcon)
     }
 
     @Test
-    fun `GIVEN ApplyAppIcon action WHEN reducer is called THEN the new icon becomes the new current and user selected icon resets`() {
+    fun `GIVEN Applied user action WHEN reducer is called THEN the new icon becomes the new current and the user selected icon resets to null`() {
         val newIcon = AppIcon.AppRetro2004
         val currentIcon = AppIcon.AppDefault
         val initialState = AppIconState(
@@ -66,7 +66,7 @@ class AppIconReducerTest {
         assertEquals(currentIcon, initialState.currentAppIcon)
         assertEquals(newIcon, initialState.userSelectedAppIcon)
 
-        val result = appIconReducer(initialState, AppIconAction.ApplyAppIcon(newIcon = newIcon, currentIcon = currentIcon))
+        val result = appIconReducer(initialState, SystemAction.Applied(newIcon = newIcon))
 
         assertEquals(newIcon, result.currentAppIcon)
         assertEquals(null, result.userSelectedAppIcon)

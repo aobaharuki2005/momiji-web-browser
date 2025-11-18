@@ -24,12 +24,23 @@ class AppIconMiddleware(
         next(action)
 
         when (action) {
-            is AppIconAction.ApplyAppIcon -> updateAppIcon(
-                new = action.newIcon,
-                old = action.currentIcon,
-            )
+            is UserAction.Confirmed -> {
+                if (updateAppIcon(old = action.newIcon, new = action.oldIcon)) {
+                    context.dispatch(SystemAction.Applied(action.newIcon))
+                } else {
+                    context.dispatch(SystemAction.UpdateFailed)
+                }
+            }
 
-            is AppIconAction.SelectAppIcon, AppIconAction.ResetSelection -> Unit
+            is SystemAction.Applied,
+            is SystemAction.DialogDismissed,
+            is SystemAction.SnackbarDismissed,
+            is SystemAction.UpdateFailed,
+            is UserAction.Dismissed,
+            is UserAction.Selected,
+                -> {
+                // no-op
+            }
         }
     }
 }
@@ -37,6 +48,6 @@ class AppIconMiddleware(
 /**
  * An interface for applying a new app icon.
  */
-fun interface AppIconUpdater : (AppIcon, AppIcon) -> Unit {
-    override fun invoke(new: AppIcon, old: AppIcon)
+fun interface AppIconUpdater : (AppIcon, AppIcon) -> Boolean {
+    override fun invoke(old: AppIcon, new: AppIcon): Boolean
 }

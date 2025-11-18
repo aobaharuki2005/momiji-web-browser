@@ -67,9 +67,9 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
     private fun updateAppIcon(
         currentAliasSuffix: String,
         newAliasSuffix: String,
-    ) {
+    ): Boolean {
         with(requireContext()) {
-            changeAppLauncherIcon(
+            return changeAppLauncherIcon(
                 packageManager = packageManager,
                 shortcutManager = ShortcutManagerWrapperDefault(this),
                 shortcutInfo = ShortcutsUpdaterDefault(this),

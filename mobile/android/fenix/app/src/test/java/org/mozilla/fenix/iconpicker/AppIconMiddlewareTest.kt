@@ -7,6 +7,7 @@ package org.mozilla.fenix.iconpicker
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -14,7 +15,7 @@ import org.junit.runner.RunWith
 class AppIconMiddlewareTest {
 
     @Test
-    fun `WHEN the store receives an ApplyAppIcon action THEN the middleware calls the updateAppIcon interface with the correct data from the action`() {
+    fun `WHEN the store receives UserAction Confirmed THEN the middleware calls the updateAppIcon interface with the correct data from the action`() {
         val currentIcon = AppIcon.AppDefault
         val newIcon = AppIcon.AppRetro2004
         var updatedCurrentIcon: AppIcon? = null
@@ -22,6 +23,7 @@ class AppIconMiddlewareTest {
         val middleware = AppIconMiddleware { newIcon, currentIcon ->
             updatedNewIcon = newIcon
             updatedCurrentIcon = currentIcon
+            true
         }
         val store = AppIconStore(
            initialState = AppIconState(
@@ -32,9 +34,59 @@ class AppIconMiddlewareTest {
             middleware = listOf(middleware),
         )
 
-        store.dispatch(AppIconAction.ApplyAppIcon(newIcon = newIcon, currentIcon = currentIcon)).joinBlocking()
+        store.dispatch(UserAction.Confirmed(newIcon = newIcon, oldIcon = currentIcon)).joinBlocking()
 
         assertEquals(currentIcon, updatedCurrentIcon)
         assertEquals(newIcon, updatedNewIcon)
+    }
+
+    @Test
+    fun `WHEN updateAppIcon call is successful THEN the middleware dispatches the Applied system action to the store`() {
+        val currentIcon = AppIcon.AppDefault
+        val newIcon = AppIcon.AppRetro2004
+        val middleware = AppIconMiddleware { newIcon, currentIcon -> true }
+        val result = mutableListOf<AppIconAction>()
+        val store = AppIconStore(
+            initialState = AppIconState(
+                currentAppIcon = currentIcon,
+            ),
+            reducer = { state, action ->
+                result.add(action)
+                state
+            },
+            middleware = listOf(middleware),
+        )
+
+        assertTrue(result.isEmpty())
+
+        val confirmAction = UserAction.Confirmed(newIcon = newIcon, oldIcon = currentIcon)
+        store.dispatch(confirmAction).joinBlocking()
+
+        assertEquals(listOf(confirmAction, SystemAction.Applied(newIcon)), result)
+    }
+
+    @Test
+    fun `WHEN updateAppIcon call returns with an a failure THEN the middleware dispatches the UpdateFailed system action to the store`() {
+        val currentIcon = AppIcon.AppDefault
+        val newIcon = AppIcon.AppRetro2004
+        val middleware = AppIconMiddleware { newIcon, currentIcon -> false }
+        val result = mutableListOf<AppIconAction>()
+        val store = AppIconStore(
+            initialState = AppIconState(
+                currentAppIcon = currentIcon,
+            ),
+            reducer = { state, action ->
+                result.add(action)
+                state
+            },
+            middleware = listOf(middleware),
+        )
+
+        assertTrue(result.isEmpty())
+
+        val confirmAction = UserAction.Confirmed(newIcon = newIcon, oldIcon = currentIcon)
+        store.dispatch(confirmAction).joinBlocking()
+
+        assertEquals(listOf(confirmAction, SystemAction.UpdateFailed), result)
     }
 }
