@@ -370,9 +370,8 @@ class BrowserToolbarMiddleware(
         val isTallWindow = environment.fragment.isTallWindow()
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
         val useCustomPrimary = settings.shouldShowToolbarCustomization && shouldUseExpandedToolbar
-        val primarySlotAction = mapShortcutToAction(
-            settings.toolbarExpandedShortcutKey,
-        ).takeIf { useCustomPrimary } ?: HomeToolbarAction.FakeBookmark
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcutKey)
+            ?.toHomeToolbarAction().takeIf { useCustomPrimary } ?: HomeToolbarAction.FakeBookmark
 
         return listOf(
             HomeToolbarActionConfig(primarySlotAction) {
@@ -580,14 +579,13 @@ class BrowserToolbarMiddleware(
 
     companion object {
         @VisibleForTesting
-        internal fun mapShortcutToAction(
-            key: String,
-        ): HomeToolbarAction = when (key) {
+        internal fun ShortcutType.toHomeToolbarAction() = when (this) {
+            ShortcutType.NEW_TAB -> HomeToolbarAction.NewTab
+            ShortcutType.SHARE -> HomeToolbarAction.FakeShare
             ShortcutType.BOOKMARK -> HomeToolbarAction.FakeBookmark
             ShortcutType.TRANSLATE -> HomeToolbarAction.FakeTranslate
             ShortcutType.HOMEPAGE -> HomeToolbarAction.FakeHomepage
             ShortcutType.BACK -> HomeToolbarAction.FakeBack
-            else -> HomeToolbarAction.FakeBookmark
         }
     }
 }

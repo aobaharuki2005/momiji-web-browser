@@ -747,8 +747,9 @@ class BrowserToolbarMiddleware(
     private fun buildEndPageActions(): List<Action> {
         val isWideScreen = environment?.fragment?.isWideWindow() == true
         val tabStripEnabled = settings.isTabStripEnabled
-        val translateShortcutEnabled = settings.toolbarSimpleShortcutKey == ShortcutType.TRANSLATE
-        val shareShortcutEnabled = settings.toolbarSimpleShortcutKey == ShortcutType.SHARE
+        val simpleShortcut = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey)
+        val translateShortcutEnabled = simpleShortcut == ShortcutType.TRANSLATE
+        val shareShortcutEnabled = simpleShortcut == ShortcutType.SHARE
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.ReaderMode) {
@@ -775,11 +776,8 @@ class BrowserToolbarMiddleware(
         val tabStripEnabled = settings.isTabStripEnabled
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
         val useCustomPrimary = settings.shouldShowToolbarCustomization
-        val primarySlotAction = mapShortcutToAction(
-            settings.toolbarSimpleShortcutKey,
-            ToolbarAction.NewTab,
-            isBookmarked,
-        ).takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey)
+            ?.toToolbarAction(isBookmarked).takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
 
         val configs = listOf(
             ToolbarActionConfig(primarySlotAction) {
@@ -819,11 +817,8 @@ class BrowserToolbarMiddleware(
         val isTallWindow = environment.fragment.isTallWindow()
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
         val useCustomPrimary = settings.shouldShowToolbarCustomization
-        val primarySlotAction = mapShortcutToAction(
-            settings.toolbarExpandedShortcutKey,
-            getBookmarkAction(isBookmarked),
-            isBookmarked,
-        ).takeIf { useCustomPrimary } ?: getBookmarkAction(isBookmarked)
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcutKey)
+            ?.toToolbarAction(isBookmarked).takeIf { useCustomPrimary } ?: getBookmarkAction(isBookmarked)
 
         return listOf(
             ToolbarActionConfig(primarySlotAction) { shouldUseExpandedToolbar && isTallWindow && !isWideWindow },
@@ -1026,10 +1021,10 @@ class BrowserToolbarMiddleware(
             distinctUntilChangedBy { it.pageTranslationStatus }
             .collect {
                 updateEndPageActions(context)
-                if (settings.toolbarSimpleShortcutKey == ShortcutType.TRANSLATE) {
+                if (ShortcutType.fromValue(settings.toolbarSimpleShortcutKey) == ShortcutType.TRANSLATE) {
                     updateEndBrowserActions(context)
                 }
-                if (settings.toolbarExpandedShortcutKey == ShortcutType.TRANSLATE) {
+                if (ShortcutType.fromValue(settings.toolbarExpandedShortcutKey) == ShortcutType.TRANSLATE) {
                     updateNavigationActions(context)
                 }
             }
@@ -1331,18 +1326,13 @@ class BrowserToolbarMiddleware(
 
         @VisibleForTesting
         @JvmStatic
-        internal fun mapShortcutToAction(
-            key: String,
-            default: ToolbarAction,
-            isBookmarked: Boolean = false,
-        ): ToolbarAction = when (key) {
+        internal fun ShortcutType.toToolbarAction(isBookmarked: Boolean = false) = when (this) {
             ShortcutType.NEW_TAB -> ToolbarAction.NewTab
             ShortcutType.SHARE -> ToolbarAction.Share
             ShortcutType.BOOKMARK -> getBookmarkAction(isBookmarked)
             ShortcutType.TRANSLATE -> ToolbarAction.Translate
             ShortcutType.HOMEPAGE -> ToolbarAction.Homepage
             ShortcutType.BACK -> ToolbarAction.Back
-            else -> default
         }
     }
 }

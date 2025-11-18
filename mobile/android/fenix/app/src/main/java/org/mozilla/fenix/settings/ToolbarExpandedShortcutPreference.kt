@@ -16,7 +16,7 @@ internal class ToolbarExpandedShortcutPreference @JvmOverloads constructor(
 
     override val options: List<ShortcutOption> = expandedShortcutOptions
 
-    override fun readSelectedKey(): String? = context.settings().toolbarExpandedShortcutKey
+    override fun readSelectedKey(): String = context.settings().toolbarExpandedShortcutKey
 
     override fun writeSelectedKey(key: String) {
         context.settings().toolbarExpandedShortcutKey = key

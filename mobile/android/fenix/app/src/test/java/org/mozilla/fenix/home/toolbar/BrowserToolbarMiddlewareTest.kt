@@ -85,7 +85,7 @@ import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixGleanTestRule
-import org.mozilla.fenix.home.toolbar.BrowserToolbarMiddleware.Companion.mapShortcutToAction
+import org.mozilla.fenix.home.toolbar.BrowserToolbarMiddleware.Companion.toHomeToolbarAction
 import org.mozilla.fenix.home.toolbar.BrowserToolbarMiddleware.HomeToolbarAction
 import org.mozilla.fenix.home.toolbar.DisplayActions.FakeClicked
 import org.mozilla.fenix.home.toolbar.DisplayActions.MenuClicked
@@ -125,7 +125,7 @@ class BrowserToolbarMiddlewareTest {
         every { testContext.settings().isTabStripEnabled } returns false
         every { testContext.settings().tabManagerEnhancementsEnabled } returns false
         every { testContext.settings().shouldShowToolbarCustomization } returns false
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BOOKMARK
+        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BOOKMARK.value
 
         fragment = spyk(Fragment()).apply {
             every { context } returns mockContext
@@ -819,7 +819,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN expanded toolbar use translate shortcut WHEN initializing toolbar THEN show DISABLED Translate in navigation actions`() = runTest {
         every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.TRANSLATE
+        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.TRANSLATE.value
 
         val middleware = BrowserToolbarMiddleware(
             appStore,
@@ -837,7 +837,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN expanded toolbar use homepage shortcut WHEN initializing toolbar THEN show DISABLED Homepage in navigation actions`() = runTest {
         every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.HOMEPAGE
+        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.HOMEPAGE.value
 
         val middleware = BrowserToolbarMiddleware(
             appStore,
@@ -855,7 +855,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN expanded toolbar use back shortcut WHEN initializing toolbar THEN show DISABLED Back in navigation actions`() = runTest {
         every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BACK
+        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BACK.value
 
         val middleware = BrowserToolbarMiddleware(
             appStore,
@@ -870,26 +870,30 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `mapShortcutToAction maps keys to actions and falls back to fake bookmark action`() {
+    fun `toHomeToolbarAction maps ShortcutType to HomeToolbarAction`() {
+        assertEquals(
+            HomeToolbarAction.NewTab,
+            ShortcutType.NEW_TAB.toHomeToolbarAction(),
+        )
+        assertEquals(
+            HomeToolbarAction.FakeShare,
+            ShortcutType.SHARE.toHomeToolbarAction(),
+        )
         assertEquals(
             HomeToolbarAction.FakeBookmark,
-            mapShortcutToAction(key = ShortcutType.BOOKMARK),
+            ShortcutType.BOOKMARK.toHomeToolbarAction(),
         )
         assertEquals(
             HomeToolbarAction.FakeTranslate,
-            mapShortcutToAction(key = ShortcutType.TRANSLATE),
+            ShortcutType.TRANSLATE.toHomeToolbarAction(),
         )
         assertEquals(
             HomeToolbarAction.FakeHomepage,
-            mapShortcutToAction(key = ShortcutType.HOMEPAGE),
+            ShortcutType.HOMEPAGE.toHomeToolbarAction(),
         )
         assertEquals(
             HomeToolbarAction.FakeBack,
-            mapShortcutToAction(key = ShortcutType.BACK),
-        )
-        assertEquals(
-            HomeToolbarAction.FakeBookmark,
-            mapShortcutToAction(key = "does_not_exist"),
+            ShortcutType.BACK.toHomeToolbarAction(),
         )
     }
 

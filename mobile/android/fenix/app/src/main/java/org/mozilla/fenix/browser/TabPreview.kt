@@ -528,11 +528,8 @@ class TabPreview @JvmOverloads constructor(
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
         val useCustomPrimary = settings.shouldShowToolbarCustomization
-        val primarySlotAction = mapShortcutToAction(
-            settings.toolbarSimpleShortcutKey,
-            ToolbarAction.NewTab,
-            isBookmarked,
-        ).takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey)
+            ?.toToolbarAction(isBookmarked).takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
 
         return listOf(
             ToolbarActionConfig(primarySlotAction) {
@@ -567,11 +564,8 @@ class TabPreview @JvmOverloads constructor(
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
         val useCustomPrimary = settings.shouldShowToolbarCustomization
-        val primarySlotAction = mapShortcutToAction(
-            settings.toolbarExpandedShortcutKey,
-            getBookmarkAction(isBookmarked),
-            isBookmarked,
-        ).takeIf { useCustomPrimary } ?: getBookmarkAction(isBookmarked)
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcutKey)
+            ?.toToolbarAction(isBookmarked).takeIf { useCustomPrimary } ?: getBookmarkAction(isBookmarked)
 
         return listOf(
             ToolbarActionConfig(primarySlotAction) { shouldUseExpandedToolbar && isTallWindow && !isWideWindow },
@@ -623,18 +617,13 @@ class TabPreview @JvmOverloads constructor(
                 false -> ToolbarAction.Bookmark
             }
 
-        private fun mapShortcutToAction(
-            key: String,
-            default: ToolbarAction,
-            isBookmarked: Boolean = false,
-        ): ToolbarAction = when (key) {
+        private fun ShortcutType.toToolbarAction(isBookmarked: Boolean) = when (this) {
             ShortcutType.NEW_TAB -> ToolbarAction.NewTab
             ShortcutType.SHARE -> ToolbarAction.Share
             ShortcutType.BOOKMARK -> getBookmarkAction(isBookmarked)
             ShortcutType.TRANSLATE -> ToolbarAction.Translate
             ShortcutType.HOMEPAGE -> ToolbarAction.Homepage
             ShortcutType.BACK -> ToolbarAction.Back
-            else -> default
         }
     }
 }

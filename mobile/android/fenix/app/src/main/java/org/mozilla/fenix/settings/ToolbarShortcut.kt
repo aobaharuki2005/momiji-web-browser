@@ -10,16 +10,25 @@ import org.mozilla.fenix.R
 import mozilla.components.ui.icons.R as iconsR
 
 /**
- * String keys used to persist and map the selected toolbar shortcut option.
- * These values are stored in preferences and also used to resolve the UI/action.
+ * Keys used to persist and map the selected toolbar shortcut option.
+ * These string values are stored in preferences and also used to resolve the UI/action.
  */
-object ShortcutType {
-    const val NEW_TAB = "new_tab"
-    const val SHARE = "share"
-    const val BOOKMARK = "bookmark"
-    const val TRANSLATE = "translate"
-    const val HOMEPAGE = "homepage"
-    const val BACK = "back"
+enum class ShortcutType(val value: String) {
+    NEW_TAB("new_tab"),
+    SHARE("share"),
+    BOOKMARK("bookmark"),
+    TRANSLATE("translate"),
+    HOMEPAGE("homepage"),
+    BACK("back"),
+    ;
+
+    companion object {
+        /**
+         * Returns the [ShortcutType] for the given string [value], or null if no matching type is found.
+         */
+        fun fromValue(value: String): ShortcutType? =
+            entries.find { it.value == value }
+    }
 }
 
 internal enum class ShortcutAvailability {
@@ -28,7 +37,7 @@ internal enum class ShortcutAvailability {
 }
 
 internal data class ShortcutOption(
-    val key: String,
+    val key: ShortcutType,
     @param:DrawableRes val icon: Int,
     @param:StringRes val label: Int,
     val availability: Set<ShortcutAvailability>,

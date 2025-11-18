@@ -16,7 +16,7 @@ internal class ToolbarSimpleShortcutPreference @JvmOverloads constructor(
 
     override val options: List<ShortcutOption> = simpleShortcutOptions
 
-    override fun readSelectedKey(): String? = context.settings().toolbarSimpleShortcutKey
+    override fun readSelectedKey(): String = context.settings().toolbarSimpleShortcutKey
 
     override fun writeSelectedKey(key: String) {
         context.settings().toolbarSimpleShortcutKey = key

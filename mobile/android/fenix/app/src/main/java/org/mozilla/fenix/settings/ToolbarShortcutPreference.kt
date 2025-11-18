@@ -47,7 +47,7 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
     }
 
     protected abstract val options: List<ShortcutOption>
-    protected abstract fun readSelectedKey(): String?
+    protected abstract fun readSelectedKey(): String
     protected abstract fun writeSelectedKey(key: String)
     protected abstract fun toolbarShortcutPreview(): Int
 
@@ -66,7 +66,9 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
         preview.setImageResource(toolbarShortcutPreview())
 
         val selectedKey = readSelectedKey()
-        val selected = options.firstOrNull { it.key == selectedKey } ?: options.first()
+        val selected = options.firstOrNull {
+            it.key == ShortcutType.fromValue(selectedKey)
+        } ?: options.first()
         selectedContainer.removeAllViews()
         selectedContainer.addView(
             makeRow(
@@ -88,7 +90,7 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
                     isChecked = false,
                     isEnabled = true,
                 ) { newlySelected ->
-                    writeSelectedKey(newlySelected.key)
+                    writeSelectedKey(newlySelected.key.value)
                     notifyChanged()
                 },
             )
