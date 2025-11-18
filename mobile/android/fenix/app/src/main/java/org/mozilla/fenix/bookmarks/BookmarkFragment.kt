@@ -15,7 +15,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.NavHostController
@@ -23,18 +24,21 @@ import androidx.navigation.fragment.findNavController
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
+import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
+import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.compose.browser.toolbar.store.Mode
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.QrScanFenixFeature
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.nav
@@ -47,6 +51,7 @@ import org.mozilla.fenix.search.BrowserToolbarSearchMiddleware
 import org.mozilla.fenix.search.BrowserToolbarSearchStatusSyncMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.FenixSearchMiddleware
+import org.mozilla.fenix.search.SearchFragmentAction
 import org.mozilla.fenix.search.SearchFragmentState
 import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.search.createInitialSearchFragmentState
@@ -84,20 +89,22 @@ class BookmarkFragment : Fragment() {
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 val toolbarStore = buildToolbarStore()
                 val searchStore = buildSearchStore(toolbarStore)
-                val buildStore = { composeNavController: NavHostController ->
-                    val homeActivity = (requireActivity() as HomeActivity)
-                    val navController = this@BookmarkFragment.findNavController()
+                val buildStore = { navController: NavHostController ->
+                    val store = StoreProvider.get(this@BookmarkFragment) {
+                        val lifecycleHolder = LifecycleHolder(
+                            context = requireContext(),
+                            navController = this@BookmarkFragment.findNavController(),
+                            composeNavController = navController,
+                            homeActivity = (requireActivity() as HomeActivity),
+                        )
 
-                    val store by fragmentStore(
-                        BookmarksState.default.copy(
-                            sortOrder = BookmarksListSortOrder.fromString(
-                                value = requireContext().settings().bookmarkListSortOrder,
-                                default = BookmarksListSortOrder.Alphabetical(true),
-                            ),
-                        ),
-                    ) {
                         BookmarksStore(
-                            initialState = it,
+                            initialState = BookmarksState.default.copy(
+                                sortOrder = BookmarksListSortOrder.fromString(
+                                    value = requireContext().settings().bookmarkListSortOrder,
+                                    default = BookmarksListSortOrder.Alphabetical(true),
+                                ),
+                            ),
                             middleware = listOf(
                                 // NB: Order matters — this middleware must be first to intercept actions
                                 // related to private mode and trigger verification before any other middleware runs.
@@ -120,24 +127,24 @@ class BookmarkFragment : Fragment() {
                                         false
                                     } else {
                                         val wasPreviousAppDestinationHome =
-                                            navController
+                                            lifecycleHolder.navController
                                                 .previousBackStackEntry?.destination?.id == R.id.homeFragment
                                         val browsingMode =
-                                            homeActivity.browsingModeManager.mode
+                                            lifecycleHolder.homeActivity.browsingModeManager.mode
                                         wasPreviousAppDestinationHome || browsingMode.isPrivate
                                     },
-                                    getNavController = { composeNavController },
-                                    exitBookmarks = { navController.popBackStack() },
+                                    getNavController = { lifecycleHolder.composeNavController },
+                                    exitBookmarks = { lifecycleHolder.navController.popBackStack() },
                                     navigateToBrowser = {
-                                        navController.navigate(R.id.browserFragment)
+                                        lifecycleHolder.navController.navigate(R.id.browserFragment)
                                     },
                                     navigateToSearch = {
-                                        navController.navigate(
+                                        lifecycleHolder.navController.navigate(
                                             NavGraphDirections.actionGlobalSearchDialog(sessionId = null),
                                         )
                                     },
                                     navigateToSignIntoSync = {
-                                        navController
+                                        lifecycleHolder.navController
                                             .navigate(
                                                 BookmarkFragmentDirections.actionGlobalTurnOnSync(
                                                     entrypoint = FenixFxAEntryPoint.BookmarkView,
@@ -145,7 +152,7 @@ class BookmarkFragment : Fragment() {
                                             )
                                     },
                                     shareBookmarks = { bookmarks ->
-                                        navController.nav(
+                                        lifecycleHolder.navController.nav(
                                             R.id.bookmarkFragment,
                                             BookmarkFragmentDirections.actionGlobalShareFragment(
                                                 data = bookmarks.asShareDataArray(),
@@ -155,16 +162,16 @@ class BookmarkFragment : Fragment() {
                                     showTabsTray = ::showTabTray,
                                     resolveFolderTitle = {
                                         friendlyRootTitle(
-                                            context = context,
+                                            context = lifecycleHolder.context,
                                             node = it,
-                                            rootTitles = composeRootTitles(context),
+                                            rootTitles = composeRootTitles(lifecycleHolder.context),
                                         ) ?: ""
                                     },
                                     getBrowsingMode = {
-                                        homeActivity.browsingModeManager.mode
+                                        lifecycleHolder.homeActivity.browsingModeManager.mode
                                     },
                                     saveBookmarkSortOrder = {
-                                        context.settings().bookmarkListSortOrder =
+                                        lifecycleHolder.context.settings().bookmarkListSortOrder =
                                             it.asString
                                     },
                                     lastSavedFolderCache = context.settings().lastSavedFolderCache,
@@ -175,7 +182,15 @@ class BookmarkFragment : Fragment() {
                                     },
                                 ),
                             ),
+                            lifecycleHolder = lifecycleHolder,
                         )
+                    }
+
+                    store.lifecycleHolder?.apply {
+                        this.navController = this@BookmarkFragment.findNavController()
+                        this.composeNavController = navController
+                        this.homeActivity = (requireActivity() as HomeActivity)
+                        this.context = requireContext()
                     }
 
                     store
@@ -209,30 +224,39 @@ class BookmarkFragment : Fragment() {
             // Default empty store. This is not used without the composable toolbar.
             BrowserToolbarStore(BrowserToolbarState(mode = Mode.EDIT))
         }
-        else -> fragmentStore(BrowserToolbarState(mode = Mode.EDIT)) {
-            val lifecycleScope = viewLifecycleOwner.lifecycle.coroutineScope
-
+        else -> StoreProvider.get(this) {
             BrowserToolbarStore(
-                initialState = it,
+                initialState = BrowserToolbarState(mode = Mode.EDIT),
                 middleware = listOf(
-                    BrowserToolbarSearchStatusSyncMiddleware(
-                        appStore = requireComponents.appStore,
-                        browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
-                        scope = lifecycleScope,
-                    ),
+                    BrowserToolbarSearchStatusSyncMiddleware(requireComponents.appStore),
                     BrowserToolbarSearchMiddleware(
-                        uiContext = requireActivity(),
                         appStore = requireComponents.appStore,
                         browserStore = requireComponents.core.store,
                         components = requireComponents,
-                        navController = findNavController(),
-                        browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
                         settings = requireComponents.settings,
-                        scope = lifecycleScope,
                     ),
                 ),
             )
-        }.value
+        }.also {
+            it.dispatch(
+                EnvironmentRehydrated(
+                    BrowserToolbarEnvironment(
+                        context = requireContext(),
+                        fragment = this,
+                        navController = findNavController(),
+                        browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
+                    ),
+                ),
+            )
+
+            viewLifecycleOwner.lifecycle.addObserver(
+                object : DefaultLifecycleObserver {
+                    override fun onDestroy(owner: LifecycleOwner) {
+                        it.dispatch(EnvironmentCleared)
+                    }
+                },
+            )
+        }
     }
 
     private fun buildSearchStore(
@@ -242,31 +266,19 @@ class BookmarkFragment : Fragment() {
             // Default empty store. This is not used without the composable toolbar.
             SearchFragmentStore(SearchFragmentState.EMPTY)
         }
-        else -> fragmentStore(
-            createInitialSearchFragmentState(
-                activity = requireActivity() as HomeActivity,
-                components = requireComponents,
-                tabId = null,
-                pastedText = null,
-                searchAccessPoint = MetricsUtils.Source.NONE,
-            ),
-        ) {
-            val lifecycleScope = viewLifecycleOwner.lifecycle.coroutineScope
-
+        else -> StoreProvider.get(this) {
             SearchFragmentStore(
-                initialState = it,
+                initialState = createInitialSearchFragmentState(
+                    activity = requireActivity() as HomeActivity,
+                    components = requireComponents,
+                    tabId = null,
+                    pastedText = null,
+                    searchAccessPoint = MetricsUtils.Source.NONE,
+                ),
                 middleware = listOf(
-                    BrowserToolbarToFenixSearchMapperMiddleware(
-                        toolbarStore = toolbarStore,
-                        browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
-                        scope = lifecycleScope,
-                    ),
-                    BrowserStoreToFenixSearchMapperMiddleware(
-                        browserStore = requireComponents.core.store,
-                        scope = lifecycleScope,
-                    ),
+                    BrowserToolbarToFenixSearchMapperMiddleware(toolbarStore),
+                    BrowserStoreToFenixSearchMapperMiddleware(requireComponents.core.store),
                     FenixSearchMiddleware(
-                        uiContext = requireActivity(),
                         engine = requireComponents.core.engine,
                         useCases = requireComponents.useCases,
                         nimbusComponents = requireComponents.nimbus,
@@ -274,13 +286,29 @@ class BookmarkFragment : Fragment() {
                         appStore = requireComponents.appStore,
                         browserStore = requireComponents.core.store,
                         toolbarStore = toolbarStore,
-                        navController = this@BookmarkFragment.findNavController(),
-                        browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
-                        scope = lifecycleScope,
                     ),
                 ),
             )
-        }.value
+        }.also {
+            it.dispatch(
+                SearchFragmentAction.EnvironmentRehydrated(
+                    SearchFragmentStore.Environment(
+                        context = requireContext(),
+                        viewLifecycleOwner = viewLifecycleOwner,
+                        browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
+                        navController = findNavController(),
+                    ),
+                ),
+            )
+
+            viewLifecycleOwner.lifecycle.addObserver(
+                object : DefaultLifecycleObserver {
+                    override fun onDestroy(owner: LifecycleOwner) {
+                        it.dispatch(SearchFragmentAction.EnvironmentCleared)
+                    }
+                },
+            )
+        }
     }
 
     override fun onResume() {

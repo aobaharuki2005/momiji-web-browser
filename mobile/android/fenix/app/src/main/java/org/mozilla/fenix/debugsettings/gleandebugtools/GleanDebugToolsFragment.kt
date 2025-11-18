@@ -27,9 +27,9 @@ import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import androidx.navigation.fragment.findNavController
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.telemetry.glean.Glean
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.debugsettings.gleandebugtools.ui.GleanDebugToolsScreen
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -40,14 +40,12 @@ import mozilla.components.ui.icons.R as iconsR
  */
 class GleanDebugToolsFragment : Fragment() {
 
-    private val store by fragmentStore(
-        GleanDebugToolsState(
-            logPingsToConsoleEnabled = Glean.getLogPings(),
-            debugViewTag = Glean.getDebugViewTag() ?: "",
-        ),
-    ) {
+    private val store by lazyStore {
         GleanDebugToolsStore(
-            initialState = it,
+            initialState = GleanDebugToolsState(
+                logPingsToConsoleEnabled = Glean.getLogPings(),
+                debugViewTag = Glean.getDebugViewTag() ?: "",
+            ),
             middlewares = listOf(
                 GleanDebugToolsMiddleware(
                     gleanDebugToolsStorage = DefaultGleanDebugToolsStorage(),

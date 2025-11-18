@@ -4,17 +4,25 @@
 
 package org.mozilla.fenix.search
 
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
+import io.mockk.spyk
 import kotlinx.coroutines.test.runTest
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.EnterEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ExitEditMode
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
+import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
+import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainLooperTestRule
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +31,8 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchEnded
 import org.mozilla.fenix.components.appstate.AppAction.SearchAction.SearchStarted
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
+import org.mozilla.fenix.helpers.lifecycle.TestLifecycleOwner
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -32,7 +42,26 @@ class BrowserToolbarSearchStatusSyncMiddlewareTest {
     val mainLooperRule = MainLooperTestRule()
 
     private val appStore = AppStore()
+    private val lifecycleOwner: LifecycleOwner = TestLifecycleOwner(Lifecycle.State.RESUMED)
     private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
+    private lateinit var fragment: Fragment
+
+    @Before
+    fun setup() {
+        fragment = spyk(Fragment())
+        every { fragment.getViewLifecycleOwner() } returns lifecycleOwner
+    }
+
+    @Test
+    fun `GIVEN an environment was already set WHEN it is cleared THEN reset it to null`() {
+        val (middleware, toolbarStore) = buildMiddlewareAndAddToSearchStore()
+
+        assertNotNull(middleware.environment)
+
+        toolbarStore.dispatch(EnvironmentCleared)
+
+        assertNull(middleware.environment)
+    }
 
     @Test
     fun `WHEN the toolbar exits search mode THEN synchronize search being ended for the application`() = runTest {
@@ -105,19 +134,26 @@ class BrowserToolbarSearchStatusSyncMiddlewareTest {
 
     private fun buildMiddlewareAndAddToSearchStore(
         appStore: AppStore = this.appStore,
-        browsingModeManager: BrowsingModeManager = this.browsingModeManager,
-        scope: CoroutineScope = MainScope(),
     ): Pair<BrowserToolbarSearchStatusSyncMiddleware, BrowserToolbarStore> {
-        val middleware = buildMiddleware(appStore, browsingModeManager, scope)
+        val middleware = buildMiddleware(appStore)
         val toolbarStore = BrowserToolbarStore(
             middleware = listOf(middleware),
-        )
+        ).also {
+            it.dispatch(
+                EnvironmentRehydrated(
+                    BrowserToolbarEnvironment(
+                        context = testContext,
+                        navController = mockk(),
+                        fragment = fragment,
+                        browsingModeManager = browsingModeManager,
+                    ),
+                ),
+            )
+        }
         return middleware to toolbarStore
     }
 
     private fun buildMiddleware(
         appStore: AppStore = this.appStore,
-        browsingModeManager: BrowsingModeManager = this.browsingModeManager,
-        scope: CoroutineScope = MainScope(),
-    ) = BrowserToolbarSearchStatusSyncMiddleware(appStore, browsingModeManager, scope)
+    ) = BrowserToolbarSearchStatusSyncMiddleware(appStore)
 }

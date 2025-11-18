@@ -11,9 +11,9 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
-import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.navigation.fragment.findNavController
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -49,18 +49,34 @@ class SettingsSearchFragment : Fragment() {
     private fun buildSettingsSearchStore(): SettingsSearchStore {
         val recentSettingsSearchesRepository = FenixRecentSettingsSearchesRepository(requireContext())
 
-        return fragmentStore(SettingsSearchState.Default(emptyList()) as SettingsSearchState) {
+        return StoreProvider.get(this) {
             SettingsSearchStore(
                 initialState = SettingsSearchState.Default(emptyList()),
                 middleware = listOf(
                     SettingsSearchMiddleware(
                         fenixSettingsIndexer = requireContext().components.settingsIndexer,
-                        navController = findNavController(),
-                        recentSettingsSearchesRepository = recentSettingsSearchesRepository,
-                        scope = viewLifecycleOwner.lifecycle.coroutineScope,
                     ),
                 ),
             )
-        }.value
+        }.also {
+            it.dispatch(
+                SettingsSearchAction.EnvironmentRehydrated(
+                    environment = SettingsSearchEnvironment(
+                        fragment = this,
+                        navController = findNavController(),
+                        context = requireContext(),
+                        recentSettingsSearchesRepository = recentSettingsSearchesRepository,
+                    ),
+                ),
+            )
+
+            viewLifecycleOwner.lifecycle.addObserver(
+                object : DefaultLifecycleObserver {
+                    override fun onDestroy(owner: androidx.lifecycle.LifecycleOwner) {
+                        it.dispatch(SettingsSearchAction.EnvironmentCleared)
+                    }
+                },
+            )
+        }
     }
 }

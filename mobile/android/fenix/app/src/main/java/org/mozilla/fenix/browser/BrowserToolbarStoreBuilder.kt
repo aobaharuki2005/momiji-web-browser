@@ -6,8 +6,8 @@ package org.mozilla.fenix.browser
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.coroutineScope
 import androidx.navigation.NavController
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -17,19 +17,21 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteractio
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.DisplayState
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
+import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
+import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.components.toolbar.BrowserToolbarMiddleware
 import org.mozilla.fenix.components.toolbar.BrowserToolbarTelemetryMiddleware
 import org.mozilla.fenix.components.toolbar.CustomTabBrowserToolbarMiddleware
+import org.mozilla.fenix.components.toolbar.CustomTabToolbarEnvironment
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.isTallWindow
-import org.mozilla.fenix.ext.isWideWindow
 import org.mozilla.fenix.search.BrowserToolbarSearchMiddleware
 import org.mozilla.fenix.search.BrowserToolbarSearchStatusSyncMiddleware
 import org.mozilla.fenix.utils.Settings
@@ -71,68 +73,46 @@ object BrowserToolbarStoreBuilder {
         readerModeController: ReaderModeController,
         settings: Settings,
         customTabSession: CustomTabSessionState? = null,
-    ) = fragment.fragmentStore(
-        BrowserToolbarState(
-            displayState = DisplayState(
-                pageOrigin = PageOrigin(
-                    hint = R.string.search_hint,
-                    title = null,
-                    url = null,
-                    onClick = object : BrowserToolbarEvent {},
+    ) = StoreProvider.get(fragment) {
+        BrowserToolbarStore(
+            initialState = BrowserToolbarState(
+                displayState = DisplayState(
+                    pageOrigin = PageOrigin(
+                        hint = R.string.search_hint,
+                        title = null,
+                        url = null,
+                        onClick = object : BrowserToolbarEvent {},
+                    ),
                 ),
             ),
-        ),
-    ) {
-        val lifecycleScope = fragment.viewLifecycleOwner.lifecycle.coroutineScope
-
-        BrowserToolbarStore(
-            initialState = it,
             middleware = when (customTabSession) {
                 null -> listOf(
                     BrowserToolbarMiddleware(
-                        uiContext = activity,
                         appStore = appStore,
                         browserScreenStore = browserScreenStore,
                         browserStore = browserStore,
                         permissionsStorage = components.core.geckoSitePermissionsStorage,
                         cookieBannersStorage = components.core.cookieBannersStorage,
-                        bookmarksStorage = activity.components.core.bookmarksStorage,
                         trackingProtectionUseCases = components.useCases.trackingProtectionUseCases,
                         useCases = components.useCases,
                         nimbusComponents = components.nimbus,
                         clipboard = activity.components.clipboardHandler,
                         publicSuffixList = components.publicSuffixList,
                         settings = settings,
-                        navController = navController,
-                        browsingModeManager = browsingModeManager,
-                        readerModeController = readerModeController,
-                        browserAnimator = browserAnimator,
-                        thumbnailsFeature = thumbnailsFeature,
-                        isWideScreen = { fragment.isWideWindow() },
-                        isTallScreen = { fragment.isTallWindow() },
-                        scope = lifecycleScope,
+                        bookmarksStorage = activity.components.core.bookmarksStorage,
                     ),
-                    BrowserToolbarSearchStatusSyncMiddleware(
-                        appStore = appStore,
-                        browsingModeManager = browsingModeManager,
-                        scope = lifecycleScope,
-                    ),
+                    BrowserToolbarSearchStatusSyncMiddleware(appStore),
                     BrowserToolbarSearchMiddleware(
-                        uiContext = activity,
                         appStore = appStore,
                         browserStore = browserStore,
                         components = components,
-                        navController = navController,
-                        browsingModeManager = browsingModeManager,
                         settings = settings,
-                        scope = lifecycleScope,
                     ),
                     BrowserToolbarTelemetryMiddleware(),
                 )
 
                 else -> listOf(
                     CustomTabBrowserToolbarMiddleware(
-                        uiContext = activity,
                         requireNotNull(customTabSession).id,
                         browserStore = browserStore,
                         appStore = appStore,
@@ -142,12 +122,39 @@ object BrowserToolbarStoreBuilder {
                         trackingProtectionUseCases = components.useCases.trackingProtectionUseCases,
                         publicSuffixList = components.publicSuffixList,
                         clipboard = activity.components.clipboardHandler,
-                        navController = navController,
-                        closeTabDelegate = { activity.finishAndRemoveTask() },
                         settings = settings,
-                        scope = lifecycleScope,
                     ),
                 )
+            },
+        )
+    }.also {
+        it.dispatch(
+            EnvironmentRehydrated(
+                when (customTabSession) {
+                    null -> BrowserToolbarEnvironment(
+                        context = activity,
+                        fragment = fragment,
+                        navController = navController,
+                        browsingModeManager = browsingModeManager,
+                        browserAnimator = browserAnimator,
+                        thumbnailsFeature = thumbnailsFeature,
+                        readerModeController = readerModeController,
+                    )
+                    else -> CustomTabToolbarEnvironment(
+                        context = activity,
+                        viewLifecycleOwner = fragment.viewLifecycleOwner,
+                        navController = navController,
+                        closeTabDelegate = { activity.finishAndRemoveTask() },
+                    )
+                },
+            ),
+        )
+
+        fragment.viewLifecycleOwner.lifecycle.addObserver(
+            object : DefaultLifecycleObserver {
+                override fun onDestroy(owner: LifecycleOwner) {
+                    it.dispatch(EnvironmentCleared)
+                }
             },
         )
     }

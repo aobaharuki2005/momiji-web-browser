@@ -19,7 +19,7 @@ import mozilla.components.lib.state.Store
 /**
  * [Store] for maintaining the state of the browser toolbar.
  */
-class BrowserToolbarStore(
+open class BrowserToolbarStore(
     initialState: BrowserToolbarState = BrowserToolbarState(),
     middleware: List<Middleware<BrowserToolbarState, BrowserToolbarAction>> = emptyList(),
 ) : Store<BrowserToolbarState, BrowserToolbarAction>(
@@ -140,6 +140,8 @@ private fun reduce(state: BrowserToolbarState, action: BrowserToolbarAction): Br
             ),
         )
 
+        is EnvironmentRehydrated,
+        is EnvironmentCleared,
         is BrowserToolbarEvent,
             -> {
             // no-op

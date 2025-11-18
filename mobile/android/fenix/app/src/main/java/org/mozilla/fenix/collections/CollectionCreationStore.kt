@@ -58,8 +58,6 @@ fun createInitialCollectionCreationState(
     selectedTabIds: Array<String>?,
     selectedTabCollectionId: Long,
 ): CollectionCreationState {
-    println("Mugurel: create initial state")
-
     val tabs = browserState.getTabs(tabIds, publicSuffixList)
     val selectedTabs = if (selectedTabIds != null) {
         browserState.getTabs(selectedTabIds, publicSuffixList).toSet()

@@ -15,8 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.autofill.AddressStructure
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import org.mozilla.fenix.SecureFragment
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.settings.address.store.AddressEnvironment
@@ -24,6 +24,7 @@ import org.mozilla.fenix.settings.address.store.AddressMiddleware
 import org.mozilla.fenix.settings.address.store.AddressState
 import org.mozilla.fenix.settings.address.store.AddressStore
 import org.mozilla.fenix.settings.address.store.AddressStructureMiddleware
+import org.mozilla.fenix.settings.address.store.EnvironmentRehydrated
 import org.mozilla.fenix.settings.address.ui.edit.EditAddressScreen
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.coroutines.resume
@@ -41,12 +42,18 @@ class AddressEditorFragment : SecureFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ) = content {
-        val store = fragmentStore(
-            AddressState.initial(
-                region = requireComponents.core.store.state.search.region,
-                address = args.address,
-            ),
-        ) {
+        val store = StoreProvider.get(this) {
+            AddressStore(
+                initialState = AddressState.initial(
+                    region = requireComponents.core.store.state.search.region,
+                    address = args.address,
+                ),
+                middleware = listOf(
+                    AddressMiddleware(scope = viewLifecycleOwner.lifecycleScope),
+                    AddressStructureMiddleware(scope = viewLifecycleOwner.lifecycleScope),
+                ),
+            )
+        }.also {
             val storage = requireComponents.core.autofillStorage
             val engine = requireComponents.core.engine
             val crashReporter = requireComponents.analytics.crashReporter
@@ -58,23 +65,10 @@ class AddressEditorFragment : SecureFragment() {
                 getAddressStructure = engine::getAddressStructure,
                 submitCaughtException = crashReporter::submitCaughtException,
             )
-
-            AddressStore(
-                initialState = it,
-                middleware = listOf(
-                    AddressMiddleware(
-                        environment = environment,
-                        scope = viewLifecycleOwner.lifecycleScope,
-                    ),
-                    AddressStructureMiddleware(
-                        environment = environment,
-                        scope = viewLifecycleOwner.lifecycleScope,
-                    ),
-                ),
-            )
+            it.dispatch(EnvironmentRehydrated(environment))
         }
         FirefoxTheme {
-            EditAddressScreen(store.value)
+            EditAddressScreen(store)
         }
     }
 

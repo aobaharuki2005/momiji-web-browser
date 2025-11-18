@@ -13,15 +13,13 @@ import androidx.fragment.compose.content
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.launch
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvider
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.webcompat.WEB_COMPAT_REPORTER_SUMO_URL
@@ -38,27 +36,19 @@ class WebCompatReporterFragment : Fragment() {
 
     private val args by navArgs<WebCompatReporterFragmentArgs>()
 
-    private lateinit var webCompatReporterStore: WebCompatReporterStore
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        webCompatReporterStore = fragmentStore(
-            WebCompatReporterState(
+    private val webCompatReporterStore by lazyStore { viewModelScope ->
+        WebCompatReporterStore(
+            initialState = WebCompatReporterState(
                 tabUrl = args.tabUrl,
                 enteredUrl = args.tabUrl,
             ),
-        ) {
-            WebCompatReporterStore(
-                initialState = it,
-                middleware = WebCompatReporterMiddlewareProvider.provideMiddleware(
-                    browserStore = requireComponents.core.store,
-                    appStore = requireComponents.appStore,
-                    scope = storeProvider.viewModelScope,
-                    nimbusApi = requireComponents.nimbus.sdk,
-                ),
-            )
-        }.value
+            middleware = WebCompatReporterMiddlewareProvider.provideMiddleware(
+                browserStore = requireComponents.core.store,
+                appStore = requireComponents.appStore,
+                scope = viewModelScope,
+                nimbusApi = requireComponents.nimbus.sdk,
+            ),
+        )
     }
 
     override fun onCreateView(

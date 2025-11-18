@@ -16,15 +16,15 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import mozilla.components.lib.state.ext.observeAsState
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.composableStore
+import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.biometric.ui.state.BiometricAuthenticationState
 import org.mozilla.fenix.settings.biometric.ui.state.SecureScreenAction
 import org.mozilla.fenix.settings.biometric.ui.state.SecureScreenAction.AuthenticationFlowAction
 import org.mozilla.fenix.settings.biometric.ui.state.SecureScreenAction.LifecycleAction
 import org.mozilla.fenix.settings.biometric.ui.state.SecureScreenAction.UnlockScreenAction
-import org.mozilla.fenix.settings.biometric.ui.state.SecureScreenState
 import org.mozilla.fenix.settings.biometric.ui.state.SecureScreenStore
 import org.mozilla.fenix.settings.logins.ui.BiometricAuthenticationDialog
 
@@ -177,6 +177,8 @@ private fun Window.lock() = addFlags(WindowManager.LayoutParams.FLAG_SECURE)
 private fun Window.unlock() = clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
 
 @Composable
-private fun provideStore() = composableStore(SecureScreenState.Initial) {
-    SecureScreenStore(it)
-}.value
+private fun provideStore(): SecureScreenStore {
+    return LocalViewModelStoreOwner.current?.lazyStore {
+        SecureScreenStore()
+    }?.value ?: throw IllegalStateException("Expected LocalViewModelStoreOwner to be provided")
+}

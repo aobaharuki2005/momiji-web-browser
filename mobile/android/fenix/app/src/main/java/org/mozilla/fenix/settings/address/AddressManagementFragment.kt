@@ -16,10 +16,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.observeAsComposableState
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Addresses
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.address.controller.DefaultAddressManagementController
@@ -44,9 +44,9 @@ class AddressManagementFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        store = fragmentStore(AutofillFragmentState()) {
-            AutofillFragmentStore(it)
-        }.value
+        store = StoreProvider.get(this) {
+            AutofillFragmentStore(AutofillFragmentState())
+        }
 
         interactor = DefaultAddressManagementInteractor(
             controller = DefaultAddressManagementController(

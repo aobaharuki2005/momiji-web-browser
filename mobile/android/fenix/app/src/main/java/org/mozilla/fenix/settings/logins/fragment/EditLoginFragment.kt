@@ -25,13 +25,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.textfield.TextInputLayout
 import mozilla.components.lib.state.ext.consumeFrom
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.navBackStackStore
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.R
 import org.mozilla.fenix.biometricauthentication.AuthenticationStatus
 import org.mozilla.fenix.biometricauthentication.BiometricAuthenticationManager
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentEditLoginBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.registerForActivityResult
@@ -53,6 +53,7 @@ import org.mozilla.fenix.settings.logins.togglePasswordReveal
 class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
 
     private val args by navArgs<EditLoginFragmentArgs>()
+    private lateinit var loginsFragmentStore: LoginsFragmentStore
     private lateinit var interactor: EditLoginInteractor
     private lateinit var oldLogin: SavedLogin
 
@@ -88,9 +89,11 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
 
         oldLogin = args.savedLoginItem
 
-        val loginsFragmentStore by findNavController().getBackStackEntry(R.id.savedLogins)
-            .navBackStackStore(createInitialLoginsListState(requireContext().settings())) {
-                LoginsFragmentStore(it)
+        loginsFragmentStore =
+            StoreProvider.get(findNavController().getBackStackEntry(R.id.savedLogins)) {
+                LoginsFragmentStore(
+                    createInitialLoginsListState(requireContext().settings()),
+                )
             }
 
         interactor = EditLoginInteractor(

@@ -43,7 +43,6 @@ import mozilla.components.feature.accounts.push.CloseTabsUseCases
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.lib.state.ext.observeAsState
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.setSystemBarsBackground
 import mozilla.telemetry.glean.private.NoExtras
@@ -52,6 +51,7 @@ import org.mozilla.fenix.GleanMetrics.PrivateBrowsingLocked
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.actualInactiveTabs
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getBottomToolbarHeight
@@ -146,24 +146,22 @@ class TabManagementFragment : DialogFragment() {
             },
         )
 
-        tabsTrayStore = fragmentStore(
-            TabsTrayState(
-                selectedPage = initialPage,
-                mode = initialMode,
-                inactiveTabs = inactiveTabs,
-                inactiveTabsExpanded = initialInactiveExpanded,
-                normalTabs = normalTabs,
-                privateTabs = requireComponents.core.store.state.privateTabs,
-                selectedTabId = requireComponents.core.store.state.selectedTabId,
-            ),
-        ) {
+        tabsTrayStore = StoreProvider.get(this) {
             TabsTrayStore(
-                initialState = it,
+                initialState = TabsTrayState(
+                    selectedPage = initialPage,
+                    mode = initialMode,
+                    inactiveTabs = inactiveTabs,
+                    inactiveTabsExpanded = initialInactiveExpanded,
+                    normalTabs = normalTabs,
+                    privateTabs = requireComponents.core.store.state.privateTabs,
+                    selectedTabId = requireComponents.core.store.state.selectedTabId,
+                ),
                 middlewares = listOf(
                     TabsTrayTelemetryMiddleware(requireComponents.nimbus.events),
                 ),
             )
-        }.value
+        }
 
         tabManagerController = DefaultTabManagerController(
             accountManager = requireComponents.backgroundServices.accountManager,

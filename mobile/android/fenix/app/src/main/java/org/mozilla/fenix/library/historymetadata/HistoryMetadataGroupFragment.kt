@@ -28,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlin.toShortUrl
 import mozilla.components.ui.widgets.withCenterAlignedButtons
@@ -36,6 +35,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentHistoryMetadataGroupBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -86,13 +86,15 @@ class HistoryMetadataGroupFragment :
         _binding = FragmentHistoryMetadataGroupBinding.inflate(inflater, container, false)
 
         val historyItems = args.historyMetadataItems.filterIsInstance<History.Metadata>()
-        historyMetadataGroupStore = fragmentStore(
-            HistoryMetadataGroupFragmentState(
-                items = historyItems,
-                pendingDeletionItems = requireContext().components.appStore.state.pendingDeletionHistoryItems,
-                isEmpty = historyItems.isEmpty(),
-            ),
-        ) { HistoryMetadataGroupFragmentStore(it) }.value
+        historyMetadataGroupStore = StoreProvider.get(this) {
+            HistoryMetadataGroupFragmentStore(
+                HistoryMetadataGroupFragmentState(
+                    items = historyItems,
+                    pendingDeletionItems = requireContext().components.appStore.state.pendingDeletionHistoryItems,
+                    isEmpty = historyItems.isEmpty(),
+                ),
+            )
+        }
 
         interactor = DefaultHistoryMetadataGroupInteractor(
             controller = DefaultHistoryMetadataGroupController(

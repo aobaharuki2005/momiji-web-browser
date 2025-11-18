@@ -14,14 +14,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.fragment.compose.content
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsState
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvider
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.reviewprompt.CustomReviewPromptAction.LeaveFeedbackButtonClicked
 import org.mozilla.fenix.reviewprompt.CustomReviewPromptAction.NegativePrePromptButtonClicked
@@ -33,11 +31,11 @@ import com.google.android.material.R as materialR
 
 /** A bottom sheet fragment for displaying [CustomReviewPrompt]. */
 class CustomReviewPromptBottomSheetFragment : BottomSheetDialogFragment() {
-    private val store by fragmentStore(CustomReviewPromptState.PrePrompt) {
+    private val store by lazyStore { viewModelScope ->
         CustomReviewPromptStore(
-            initialState = it,
+            initialState = CustomReviewPromptState.PrePrompt,
             middleware = listOf(
-                CustomReviewPromptNavigationMiddleware(storeProvider.viewModelScope),
+                CustomReviewPromptNavigationMiddleware(viewModelScope),
                 CustomReviewPromptTelemetryMiddleware(),
             ),
         )

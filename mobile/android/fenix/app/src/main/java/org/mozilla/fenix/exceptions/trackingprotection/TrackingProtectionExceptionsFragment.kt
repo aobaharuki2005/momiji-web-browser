@@ -10,9 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import mozilla.components.lib.state.ext.consumeFrom
-import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentExceptionsBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
@@ -42,9 +42,11 @@ class TrackingProtectionExceptionsFragment : Fragment() {
             container,
             false,
         )
-        exceptionsStore = fragmentStore(ExceptionsFragmentState(items = emptyList())) {
-            ExceptionsFragmentStore(it)
-        }.value
+        exceptionsStore = StoreProvider.get(this) {
+            ExceptionsFragmentStore(
+                ExceptionsFragmentState(items = emptyList()),
+            )
+        }
         exceptionsInteractor = DefaultTrackingProtectionExceptionsInteractor(
             activity = activity as HomeActivity,
             exceptionsStore = exceptionsStore,

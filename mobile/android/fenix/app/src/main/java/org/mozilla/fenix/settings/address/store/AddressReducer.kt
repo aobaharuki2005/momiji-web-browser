@@ -47,7 +47,7 @@ fun addressReducer(state: AddressState, action: AddressAction): AddressState {
             }
         }
         is DeleteDialogAction.DeleteTapped, ViewAppeared,
-        is BackTapped, CancelTapped, SaveTapped,
+        is EnvironmentRehydrated, BackTapped, CancelTapped, SaveTapped,
             -> state
     }
 }
