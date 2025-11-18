@@ -810,6 +810,9 @@ home-prefs-support-firefox-header =
 home-prefs-mission-message = Our sponsors support our mission to build a better web
 home-prefs-mission-message-learn-more-link = Find out how
 
+home-prefs-mission-message2 =
+    .message = Our sponsors support our mission to build a better web.
+
 home-prefs-manage-topics-link = Manage topics
 home-prefs-choose-wallpaper-link = Choose a wallpaper
 

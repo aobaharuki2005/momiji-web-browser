@@ -1279,6 +1279,38 @@ SettingGroupManager.registerGroups({
         control: "moz-toggle",
       },
       {
+        id: "supportFirefox",
+        l10nId: "home-prefs-support-firefox-header",
+        control: "moz-toggle",
+        items: [
+          {
+            id: "sponsoredShortcuts",
+            l10nId: "home-prefs-shortcuts-by-option-sponsored",
+          },
+          {
+            id: "sponsoredStories",
+            l10nId: "home-prefs-recommended-by-option-sponsored-stories",
+          },
+          {
+            id: "supportFirefoxPromo",
+            l10nId: "home-prefs-mission-message2",
+            control: "moz-promo",
+            options: [
+              {
+                control: "a",
+                l10nId: "home-prefs-mission-message-learn-more-link",
+                controlAttrs: {
+                  is: "moz-support-link",
+                  slot: "support-link",
+                  "support-page": "sponsor-privacy",
+                  "utm-content": "inproduct",
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
         id: "recentActivity",
         l10nId: "home-prefs-recent-activity-header",
         control: "moz-toggle",

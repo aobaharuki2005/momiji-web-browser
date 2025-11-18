@@ -81,7 +81,23 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
       type: "int",
     },
     {
+      id: "browser.newtabpage.activity-stream.feeds.system.topstories",
+      type: "bool",
+    },
+    {
       id: "browser.newtabpage.activity-stream.feeds.section.topstories",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.showSponsoredCheckboxes",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.showSponsoredTopSites",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.showSponsored",
       type: "bool",
     },
     {
@@ -174,6 +190,49 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
   Preferences.addSetting({
     id: "stories",
     pref: "browser.newtabpage.activity-stream.feeds.section.topstories",
+  });
+
+  // Dependency prefs for sponsored stories visibility
+  Preferences.addSetting({
+    id: "systemTopstories",
+    pref: "browser.newtabpage.activity-stream.feeds.system.topstories",
+  });
+  Preferences.addSetting({
+    id: "sectionTopstories",
+    pref: "browser.newtabpage.activity-stream.feeds.section.topstories",
+  });
+
+  // Support Firefox: sponsored content
+  Preferences.addSetting({
+    id: "supportFirefox",
+    pref: "browser.newtabpage.activity-stream.showSponsoredCheckboxes",
+    deps: ["sponsoredShortcuts", "sponsoredStories"],
+    onUserChange(value, { sponsoredShortcuts, sponsoredStories }) {
+      // When supportFirefox changes, automatically update child preferences to match
+      sponsoredShortcuts.value = !!value;
+      sponsoredStories.value = !!value;
+    },
+  });
+  Preferences.addSetting({
+    id: "topsitesEnabled",
+    pref: "browser.newtabpage.activity-stream.feeds.topsites",
+  });
+  Preferences.addSetting({
+    id: "sponsoredShortcuts",
+    pref: "browser.newtabpage.activity-stream.showSponsoredTopSites",
+    deps: ["topsitesEnabled"],
+    disabled: ({ topsitesEnabled }) => !topsitesEnabled.value,
+  });
+  Preferences.addSetting({
+    id: "sponsoredStories",
+    pref: "browser.newtabpage.activity-stream.showSponsored",
+    deps: ["systemTopstories", "sectionTopstories"],
+    visible: ({ systemTopstories }) => !!systemTopstories.value,
+    disabled: ({ sectionTopstories }) => !sectionTopstories.value,
+  });
+  Preferences.addSetting({
+    id: "supportFirefoxPromo",
+    deps: ["supportFirefox"],
   });
 
   // Recent activity
