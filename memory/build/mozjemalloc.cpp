@@ -1594,7 +1594,8 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
     chunk->mPageMap[run_ind].bits |= aSize;
   }
 
-  if (chunk->mNumDirty == 0 && old_ndirty > 0 && !chunk->mIsPurging) {
+  if (chunk->mNumDirty == 0 && old_ndirty > 0 && !chunk->mIsPurging &&
+      mChunksDirty.ElementProbablyInList(chunk)) {
     mChunksDirty.remove(chunk);
   }
   return true;
@@ -1676,7 +1677,9 @@ bool arena_t::RemoveChunk(arena_chunk_t* aChunk) {
 
   if (aChunk->mNumDirty > 0) {
     MOZ_ASSERT(aChunk->mArena == this);
-    mChunksDirty.remove(aChunk);
+    if (mChunksDirty.ElementProbablyInList(aChunk)) {
+      mChunksDirty.remove(aChunk);
+    }
     mNumDirty -= aChunk->mNumDirty;
     mStats.committed -= aChunk->mNumDirty;
   }
@@ -1890,7 +1893,8 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
     for (auto& chunk : mChunksDirty) {
       ndirty += chunk.mNumDirty;
     }
-    // Not all dirty chunks are in mChunksDirty as others might be being Purged.
+    // Not all dirty chunks are in mChunksDirty as some may not have enough
+    // dirty pages for purging or might currently be being purged.
     MOZ_ASSERT(ndirty <= mNumDirty);
 #endif
 
@@ -1908,7 +1912,8 @@ ArenaPurgeResult arena_t::Purge(PurgeCondition aCond, PurgeStats& aStats) {
     // means it may return before the arena meets its dirty page count target,
     // the return value is used by the caller to call Purge() again where it
     // will take the next chunk with dirty pages.
-    if (mSpare && mSpare->mNumDirty && !mSpare->mIsPurging) {
+    if (mSpare && mSpare->mNumDirty && !mSpare->mIsPurging &&
+        mChunksDirty.ElementProbablyInList(mSpare)) {
       // If the spare chunk has dirty pages then try to purge these first.
       //
       // They're unlikely to be used in the near future because the spare chunk
@@ -2303,12 +2308,7 @@ void arena_t::PurgeInfo::FinishPurgingInChunk(bool aAddToMAdvised) {
 
   if (mChunk->mDying) {
     // Another thread tried to delete this chunk while we weren't holding
-    // the lock.  Now it's our responsibility to finish deleting it.  First
-    // clear its dirty pages so that RemoveChunk() doesn't try to remove it
-    // from mChunksDirty because it won't be there.
-    mArena.mNumDirty -= mChunk->mNumDirty;
-    mArena.mStats.committed -= mChunk->mNumDirty;
-    mChunk->mNumDirty = 0;
+    // the lock.  Now it's our responsibility to finish deleting it.
 
     DebugOnly<bool> release_chunk = mArena.RemoveChunk(mChunk);
     // RemoveChunk() can't return false because mIsPurging was false
@@ -2430,7 +2430,11 @@ arena_chunk_t* arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
   }
 
   if (aDirty) {
-    if (chunk->mNumDirty == 0 && !chunk->mIsPurging) {
+    // One of the reasons we check mIsPurging here is so that we don't add a
+    // chunk that's currently in the middle of purging to the list, which could
+    // start a concurrent purge.
+    if (!chunk->mIsPurging &&
+        (chunk->mNumDirty == 0 || !mChunksDirty.ElementProbablyInList(chunk))) {
       mChunksDirty.pushBack(chunk);
     }
     chunk->mNumDirty += run_pages;
