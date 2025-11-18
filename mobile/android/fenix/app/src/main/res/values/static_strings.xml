@@ -165,6 +165,9 @@
     <string name="profiler_filter_networking_explain">Preset for investigating networking bugs in Firefox</string>
     <string name="profiler_filter_debug">Debug</string>
     <string name="profiler_filter_debug_explain">Preset for debugging. High overhead, do not use for performance work but use for focusing on understanding browser behavior.</string>
+    <string name="profiler_filter_web_compat">Web Compat</string>
+    <string name="profiler_filter_web_compat_explain">Recommended preset for debugging web compatibility issues in websites, rather than tracking performance.</string>
+
     <string name="profiler_start_dialog_started">Profiler started</string>
     <string name="profiler_start_cancel">Cancel</string>
     <string name="profiler_gathering">Gathering the profile</string>

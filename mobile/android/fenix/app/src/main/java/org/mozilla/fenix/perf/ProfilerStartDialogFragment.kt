@@ -141,6 +141,7 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                     ProfilerSettings.Media -> stringResource(R.string.profiler_filter_media)
                     ProfilerSettings.Networking -> stringResource(R.string.profiler_filter_networking)
                     ProfilerSettings.Debug -> stringResource(R.string.profiler_filter_debug)
+                    ProfilerSettings.WebCompat -> stringResource(R.string.profiler_filter_web_compat)
                 }
                 val settingDesc = when (setting) {
                     ProfilerSettings.Firefox -> stringResource(R.string.profiler_filter_firefox_explain)
@@ -148,6 +149,7 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                     ProfilerSettings.Media -> stringResource(R.string.profiler_filter_media_explain)
                     ProfilerSettings.Networking -> stringResource(R.string.profiler_filter_networking_explain)
                     ProfilerSettings.Debug -> stringResource(R.string.profiler_filter_debug_explain)
+                    ProfilerSettings.WebCompat -> stringResource(R.string.profiler_filter_web_compat_explain)
                 }
 
                 ProfilerLabeledRadioButton(

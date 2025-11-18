@@ -114,6 +114,20 @@ private val debug_threads = arrayOf(
     "*",
 )
 
+private val web_compat_features = arrayOf(
+    "java",
+    "screenshots",
+    "js",
+    "stackwalk",
+    "nostacksampling",
+    "tracing",
+)
+
+private val web_compat_threads = arrayOf(
+    "GeckoMain",
+    "DOM Worker",
+)
+
 /**
  * Profiler settings enum for grouping features and settings together
  */
@@ -123,6 +137,7 @@ enum class ProfilerSettings(val threads: Array<String>, val features: Array<Stri
     Media(media_threads, media_features),
     Networking(networking_threads, networking_features),
     Debug(debug_threads, debug_features),
+    WebCompat(web_compat_threads, web_compat_features),
     ;
 
     init {
