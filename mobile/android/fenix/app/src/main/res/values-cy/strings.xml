@@ -1053,7 +1053,7 @@
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Arall</string>
   <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_featured">Sylw</string>
+  <string name="alternative_app_icon_group_featured">Nodweddion</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Newid eicon yr ap?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
@@ -2351,7 +2351,7 @@
   <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Datrys problemau mawr gwefan (argymell)</string>
   <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
-  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Datrys problemau bach gwefan (argymell)</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Datrys problemau bach gwefan</string>
   <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">Rhaid ei ddefnyddio gydag atebion ar gyfer materion mawr.</string>
   <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
@@ -3888,7 +3888,7 @@
   <!-- Message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_title">Daeth dim i\'r golwg</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
-  <string name="settings_search_no_results_message">Efallai rhoi cynnig ar chwiliad gwahanol?</string>
+  <string name="settings_search_no_results_message">Efallai rhoi cynnig ar chwilio gwahanol?</string>
   <!--
     Terms of use pop up prompt
 
