@@ -395,8 +395,8 @@ static bool pages_purge(void* addr, size_t length, bool force_zero) {
   return true;
 }
 
-// pages_trim, chunk_alloc_mmap_slow and chunk_alloc_mmap were cherry-picked
-// from upstream jemalloc 3.4.1 to fix Mozilla bug 956501.
+// pages_trim, pages_mmap_aligned_slow and pages_mmap_aligned were
+// cherry-picked from upstream jemalloc 3.4.1 to fix Mozilla bug 956501.
 
 static void* pages_trim(void* addr, size_t alloc_size, size_t leadsize,
                         size_t size) {
@@ -432,7 +432,7 @@ static void* pages_trim(void* addr, size_t alloc_size, size_t leadsize,
 #endif
 }
 
-static void* chunk_alloc_mmap_slow(size_t size, size_t alignment) {
+static void* pages_mmap_aligned_slow(size_t size, size_t alignment) {
   void *ret, *pages;
   size_t alloc_size, leadsize;
 
@@ -455,7 +455,7 @@ static void* chunk_alloc_mmap_slow(size_t size, size_t alignment) {
   return ret;
 }
 
-static void* chunk_alloc_mmap(size_t size, size_t alignment) {
+static void* pages_mmap_aligned(size_t size, size_t alignment) {
   void* ret;
   size_t offset;
 
@@ -476,7 +476,7 @@ static void* chunk_alloc_mmap(size_t size, size_t alignment) {
   offset = ALIGNMENT_ADDR2OFFSET(ret, alignment);
   if (offset != 0) {
     pages_unmap(ret, size);
-    return chunk_alloc_mmap_slow(size, alignment);
+    return pages_mmap_aligned_slow(size, alignment);
   }
 
   MOZ_ASSERT(ret);
@@ -727,7 +727,7 @@ void* chunk_alloc(size_t aSize, size_t aAlignment, bool aBase) {
     ret = chunk_recycle(aSize, aAlignment);
   }
   if (!ret) {
-    ret = chunk_alloc_mmap(aSize, aAlignment);
+    ret = pages_mmap_aligned(aSize, aAlignment);
   }
   if (ret && !aBase) {
     if (!gChunkRTree.Set(ret, ret)) {
