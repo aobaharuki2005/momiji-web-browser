@@ -5,8 +5,9 @@
 package org.mozilla.fenix.browser
 
 import android.content.Context
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.view.View
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -15,11 +16,7 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.spyk
-import io.mockk.unmockkObject
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import io.mockk.verifyOrder
 import mozilla.components.browser.state.action.RestoreCompleteAction
@@ -30,15 +27,14 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -46,10 +42,8 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.FenixOnboarding
-import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
 
@@ -63,6 +57,8 @@ class BrowserFragmentTest {
     private lateinit var homeActivity: HomeActivity
     private lateinit var fenixApplication: FenixApplication
     private lateinit var context: Context
+
+    private lateinit var resources: Resources
     private lateinit var lifecycleOwner: MockedLifecycleOwner
     private lateinit var navController: NavController
     private lateinit var onboarding: FenixOnboarding
@@ -73,12 +69,16 @@ class BrowserFragmentTest {
 
     @Before
     fun setup() {
-        mockkStatic("org.mozilla.fenix.ext.FragmentKt")
-        context = mockk(relaxed = true)
+        context = spyk(testContext)
+        resources = spyk(testContext.resources)
+        every { context.resources } returns resources
+
         fenixApplication = mockk(relaxed = true)
         every { context.application } returns fenixApplication
 
         homeActivity = mockk(relaxed = true)
+        every { homeActivity.resources } returns testContext.resources
+
         view = mockk(relaxed = true)
         lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
         navController = mockk(relaxed = true)
@@ -103,14 +103,6 @@ class BrowserFragmentTest {
         testTab = createTab(url = "https://mozilla.org")
         store = BrowserStore()
         every { context.components.core.store } returns store
-
-        mockkObject(FeatureFlags)
-    }
-
-    @After
-    fun tearDown() {
-        unmockkObject(FeatureFlags)
-        unmockkStatic("org.mozilla.fenix.ext.FragmentKt")
     }
 
     @Test
@@ -342,19 +334,10 @@ class BrowserFragmentTest {
 
         browserFragment._browserToolbarView = browserToolbarView
 
-        mockkObject(ThemeManager.Companion)
-        every { ThemeManager.resolveAttribute(any(), context) } returns mockk(relaxed = true)
-
-        mockkStatic(AppCompatResources::class)
-        every { AppCompatResources.getDrawable(context, any()) } returns mockk()
-
         browserFragment.onConfigurationChanged(mockk(relaxed = true))
         verify(exactly = 1) { browserFragment.onUpdateToolbarForConfigurationChange(any()) }
         verify(exactly = 1) { browserFragment.updateTabletToolbarActions(any()) }
         verify(exactly = 1) { browserFragment.reinitializeEngineView() }
-
-        unmockkObject(ThemeManager.Companion)
-        unmockkStatic(AppCompatResources::class)
     }
 
     @Test
@@ -364,18 +347,9 @@ class BrowserFragmentTest {
         every { browserFragment.reinitializeEngineView() } just Runs
         browserFragment._browserToolbarView = browserToolbarView
 
-        mockkObject(ThemeManager.Companion)
-        every { ThemeManager.resolveAttribute(any(), context) } returns mockk(relaxed = true)
-
-        mockkStatic(AppCompatResources::class)
-        every { AppCompatResources.getDrawable(context, any()) } returns mockk()
-
         browserFragment.onConfigurationChanged(mockk(relaxed = true))
 
         verify(exactly = 1) { browserToolbarView.dismissMenu() }
-
-        unmockkObject(ThemeManager.Companion)
-        unmockkStatic(AppCompatResources::class)
     }
 
     @Test
@@ -389,22 +363,19 @@ class BrowserFragmentTest {
         every { browserToolbarView.updateMenuVisibility(any()) } just Runs
         every { browserFragment.reinitializeEngineView() } just Runs
 
-        mockkObject(ThemeManager.Companion)
-        every { ThemeManager.resolveAttribute(any(), context) } returns mockk(relaxed = true)
+        every { resources.configuration } returns Configuration().apply {
+            smallestScreenWidthDp = 900
+        }
 
-        mockkStatic(AppCompatResources::class)
-        every { AppCompatResources.getDrawable(context, any()) } returns mockk()
-
-        every { browserFragment.isLargeWindow() } returns true
         browserFragment.onConfigurationChanged(mockk(relaxed = true))
         verify(exactly = 3) { browserToolbar.addNavigationAction(any()) }
 
-        every { browserFragment.isLargeWindow() } returns false
+        every { resources.configuration } returns Configuration().apply {
+            smallestScreenWidthDp = 400
+        }
+
         browserFragment.onConfigurationChanged(mockk(relaxed = true))
         verify(exactly = 3) { browserToolbar.removeNavigationAction(any()) }
-
-        unmockkObject(ThemeManager.Companion)
-        unmockkStatic(AppCompatResources::class)
     }
 
     @Test
@@ -418,21 +389,15 @@ class BrowserFragmentTest {
         every { browserToolbarView.updateMenuVisibility(any()) } just Runs
         every { browserFragment.reinitializeEngineView() } just Runs
 
-        mockkObject(ThemeManager.Companion)
-        every { ThemeManager.resolveAttribute(any(), context) } returns mockk(relaxed = true)
+        every { resources.configuration } returns Configuration().apply {
+            smallestScreenWidthDp = 900
+        }
 
-        mockkStatic(AppCompatResources::class)
-        every { AppCompatResources.getDrawable(context, any()) } returns mockk()
-
-        every { browserFragment.isLargeWindow() } returns true
         browserFragment.onConfigurationChanged(mockk(relaxed = true))
         verify(exactly = 3) { browserToolbar.addNavigationAction(any()) }
 
         browserFragment.onConfigurationChanged(mockk(relaxed = true))
         verify(exactly = 3) { browserToolbar.addNavigationAction(any()) }
-
-        unmockkObject(ThemeManager.Companion)
-        unmockkStatic(AppCompatResources::class)
     }
 
     @Test
@@ -446,13 +411,9 @@ class BrowserFragmentTest {
         every { browserToolbarView.updateMenuVisibility(any()) } just Runs
         every { browserFragment.reinitializeEngineView() } just Runs
 
-        mockkObject(ThemeManager.Companion)
-        every { ThemeManager.resolveAttribute(any(), context) } returns mockk(relaxed = true)
-
-        mockkStatic(AppCompatResources::class)
-        every { AppCompatResources.getDrawable(context, any()) } returns mockk()
-
-        every { browserFragment.isLargeWindow() } returns false
+        every { resources.configuration } returns Configuration().apply {
+            smallestScreenWidthDp = 300
+        }
         browserFragment.onConfigurationChanged(mockk(relaxed = true))
         verify(exactly = 0) { browserToolbar.addNavigationAction(any()) }
         verify(exactly = 0) { browserToolbar.removeNavigationAction(any()) }
@@ -460,9 +421,6 @@ class BrowserFragmentTest {
         browserFragment.onConfigurationChanged(mockk(relaxed = true))
         verify(exactly = 0) { browserToolbar.addNavigationAction(any()) }
         verify(exactly = 0) { browserToolbar.removeNavigationAction(any()) }
-
-        unmockkObject(ThemeManager.Companion)
-        unmockkStatic(AppCompatResources::class)
     }
 
     private fun addAndSelectTab(tab: TabSessionState) {
@@ -490,8 +448,6 @@ class BrowserFragmentTest {
 
     @Test
     fun `GIVEN device is not a tablet WHEN updating toolbar actions THEN only leading action is added and no actions are removed`() {
-        mockThemeManagerAndAppCompatResources()
-
         browserFragment.updateBrowserToolbarLeadingAndNavigationActions(
             context = context,
             isTablet = false,
@@ -501,14 +457,10 @@ class BrowserFragmentTest {
         verify(exactly = 0) { browserFragment.addTabletActions(any()) }
         verify(exactly = 0) { browserFragment.addNavigationActions(any()) }
         verify(exactly = 0) { browserFragment.removeNavigationActions() }
-
-        unmockThemeManagerAndAppCompatResources()
     }
 
     @Test
     fun `GIVEN device is a tablet WHEN updating toolbar actions THEN leading and navigation actions are added in order`() {
-        mockThemeManagerAndAppCompatResources()
-
         browserFragment.updateBrowserToolbarLeadingAndNavigationActions(
             context = context,
             isTablet = true,
@@ -518,20 +470,5 @@ class BrowserFragmentTest {
             browserFragment.addHomeAction(any())
             browserFragment.addNavigationActions(any())
         }
-
-        unmockThemeManagerAndAppCompatResources()
-    }
-
-    private fun mockThemeManagerAndAppCompatResources() {
-        mockkObject(ThemeManager.Companion)
-        every { ThemeManager.resolveAttribute(any(), context) } returns mockk(relaxed = true)
-
-        mockkStatic(AppCompatResources::class)
-        every { AppCompatResources.getDrawable(context, any()) } returns mockk()
-    }
-
-    private fun unmockThemeManagerAndAppCompatResources() {
-        unmockkObject(ThemeManager.Companion)
-        unmockkStatic(AppCompatResources::class)
     }
 }
