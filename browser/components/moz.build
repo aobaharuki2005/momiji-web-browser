@@ -30,6 +30,7 @@ DIRS += [
     "about",
     "aboutlogins",
     "aboutwelcome",
+    "aiwindow",
     "asrouter",
     "attribution",
     "backup",

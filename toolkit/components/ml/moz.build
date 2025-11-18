@@ -10,7 +10,7 @@ if CONFIG["ONNX_RUNTIME"]:
 JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "Machine Learning")
+    BUG_COMPONENT = ("Core", "Machine Learning: On Device")
 
 DIRS += ["actors"]
 
