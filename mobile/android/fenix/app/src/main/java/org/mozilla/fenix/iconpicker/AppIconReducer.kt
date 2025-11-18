@@ -14,9 +14,16 @@ internal fun appIconReducer(state: AppIconState, action: AppIconAction) = when (
 
 private fun AppIconState.handleUserAction(action: UserAction): AppIconState {
     return when (action) {
-        is UserAction.Selected -> this.copy(userSelectedAppIcon = action.appIcon)
+        is UserAction.Selected -> this.copy(
+            userSelectedAppIcon = action.appIcon,
+            warningDialogState = AppIconWarningDialog.Presenting(newIcon = action.appIcon),
+        )
+
         is UserAction.Confirmed -> this
-        is UserAction.Dismissed -> this.copy(userSelectedAppIcon = null)
+        is UserAction.Dismissed -> this.copy(
+            userSelectedAppIcon = null,
+            warningDialogState = AppIconWarningDialog.None,
+        )
     }
 }
 
@@ -25,12 +32,17 @@ private fun AppIconState.handleSystemAction(action: SystemAction): AppIconState 
         is SystemAction.Applied -> this.copy(
             currentAppIcon = action.newIcon,
             userSelectedAppIcon = null,
+            warningDialogState = AppIconWarningDialog.None,
         )
-        SystemAction.DialogDismissed -> this.copy(userSelectedAppIcon = null)
+        SystemAction.DialogDismissed -> this.copy(
+            userSelectedAppIcon = null,
+            warningDialogState = AppIconWarningDialog.None,
+        )
         SystemAction.SnackbarDismissed -> this.copy(snackbarState = AppIconSnackbarState.None)
         SystemAction.UpdateFailed -> this.copy(
             userSelectedAppIcon = null,
             snackbarState = AppIconSnackbarState.ApplyingNewIconError,
+            warningDialogState = AppIconWarningDialog.None,
         )
         is SystemAction.EnvironmentRehydrated -> this
     }

@@ -61,6 +61,7 @@ import org.mozilla.fenix.iconpicker.AppIcon
 import org.mozilla.fenix.iconpicker.AppIconSnackbarState
 import org.mozilla.fenix.iconpicker.AppIconState
 import org.mozilla.fenix.iconpicker.AppIconStore
+import org.mozilla.fenix.iconpicker.AppIconWarningDialog
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.iconpicker.DefaultPackageManagerWrapper
 import org.mozilla.fenix.iconpicker.IconBackground
@@ -127,13 +128,13 @@ fun AppIconSelection(
         )
     }
 
-    state.userSelectedAppIcon?.let {
-        RestartWarningDialog(
+    when (val warning = state.warningDialogState) {
+        is AppIconWarningDialog.Presenting -> RestartWarningDialog(
             onConfirmClicked = {
                 store.dispatch(
                     UserAction.Confirmed(
                         oldIcon = state.currentAppIcon,
-                        newIcon = it,
+                        newIcon = warning.newIcon,
                     ),
                 )
             },
@@ -144,6 +145,7 @@ fun AppIconSelection(
                 store.dispatch(SystemAction.DialogDismissed)
             },
         )
+        else -> Unit
     }
 }
 
