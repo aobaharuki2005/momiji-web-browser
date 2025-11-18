@@ -113,7 +113,6 @@
     <ID>ForbiddenSuppress:ProtectionPanel.kt$@Suppress("LongParameterList", "LongMethod", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:RecentSyncedTab.kt$@Suppress("LongMethod", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:RecentTabs.kt$@Suppress("LongMethod")</ID>
-    <ID>ForbiddenSuppress:RecentTabs.kt$@file:Suppress("MagicNumber", "TooManyFunctions")</ID>
     <ID>ForbiddenSuppress:RecentlyVisited.kt$@Suppress("CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:RegionTools.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:ReorderableGrid.kt$@Suppress("MagicNumber")</ID>
