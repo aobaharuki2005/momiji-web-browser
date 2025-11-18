@@ -209,6 +209,7 @@ export default [
       "dom/security/test/sec-fetch/test_iframe_src_metaRedirect.html",
       "dom/security/test/sec-fetch/test_iframe_srcdoc_metaRedirect.html",
       "dom/security/test/sec-fetch/test_iframe_window_open_metaRedirect.html",
+      "dom/security/test/sec-fetch/test_noreferrer_popup.html",
       "dom/security/test/sec-fetch/test_trustworthy_loopback.html",
       "dom/security/test/sec-fetch/test_websocket.html",
       "dom/security/test/sec-fetch/test_window_open_popupBlockerEnabled.html",
