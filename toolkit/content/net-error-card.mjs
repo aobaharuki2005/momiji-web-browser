@@ -124,6 +124,22 @@ export class NetErrorCard extends MozLitElement {
       this.hostname += ":" + port;
     }
 
+    // We show an offline support page in case of a system-wide error,
+    // when a user cannot connect to the internet and access the SUMO website.
+    // For example, clock error, which causes certerrors across the web or
+    // a security software conflict where the user is unable to connect
+    // to the internet.
+    // The URL that prompts us to show an offline support page should have the following
+    // format: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/supportPageSlug",
+    // so we can extract the support page slug.
+    let baseURL = RPMGetFormatURLPref("app.support.baseURL");
+    if (document.location.href.startsWith(baseURL)) {
+      let supportPageSlug = document.location.pathname.split("/").pop();
+      RPMSendAsyncMessage("DisplayOfflineSupportPage", {
+        supportPageSlug,
+      });
+    }
+
     if (getCSSClass() == "expertBadCert") {
       this.toggleAdvancedShowing();
     }

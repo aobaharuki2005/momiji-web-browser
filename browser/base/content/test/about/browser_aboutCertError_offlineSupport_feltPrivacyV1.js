@@ -13,7 +13,7 @@ add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.wait300msAfterTabSwitch", true],
-      ["security.certerrors.felt-privacy-v1", false],
+      ["security.certerrors.felt-privacy-v1", true],
     ],
   });
 });
@@ -35,13 +35,37 @@ add_task(async function testOfflineSupportPage() {
     async expectedURL => {
       let doc = content.document;
 
-      let learnMoreLink = doc.getElementById("learnMoreLink");
+      const netErrorCard = doc.querySelector("net-error-card").wrappedJSObject;
+      await netErrorCard.getUpdateComplete();
+
+      netErrorCard.advancedButton.scrollIntoView();
+      EventUtils.synthesizeMouseAtCenter(
+        netErrorCard.advancedButton,
+        {},
+        content
+      );
+
+      await ContentTaskUtils.waitForCondition(
+        () => ContentTaskUtils.isVisible(netErrorCard.advancedContainer),
+        "Advanced container is visible"
+      );
+      Assert.ok(
+        netErrorCard.advancedShowing,
+        "Advanced showing attribute should be true"
+      );
+      Assert.ok(ContentTaskUtils.isVisible(netErrorCard.advancedContainer));
+
+      let learnMoreLink = netErrorCard.learnMoreLink;
+      Assert.ok(learnMoreLink, '"Learn More" link exists.');
+
       let supportPageURL = learnMoreLink.getAttribute("href");
       Assert.equal(
         supportPageURL,
         expectedURL + "time-errors",
         "Correct support page URL has been set"
       );
+      learnMoreLink.scrollIntoView();
+      Assert.ok(ContentTaskUtils.isVisible(learnMoreLink));
       await EventUtils.synthesizeMouseAtCenter(learnMoreLink, {}, content);
     }
   );
