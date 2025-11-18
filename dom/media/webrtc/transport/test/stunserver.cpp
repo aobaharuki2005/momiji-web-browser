@@ -266,7 +266,7 @@ int TestStunServer::Initialize(int address_family) {
   int r;
   int i;
 
-  r = nr_stun_find_local_addresses(addrs, max_addrs, &addr_ct);
+  r = nr_stun_get_addrs(addrs, max_addrs, &addr_ct);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't retrieve addresses");
     return R_INTERNAL;
