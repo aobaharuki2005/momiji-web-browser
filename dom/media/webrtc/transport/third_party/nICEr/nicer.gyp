@@ -108,8 +108,6 @@
                 "./src/stun/turn_client_ctx.h",
 
                 # Util
-                "./src/util/cb_args.c",
-                "./src/util/cb_args.h",
                 "./src/util/ice_util.c",
                 "./src/util/ice_util.h",
 
