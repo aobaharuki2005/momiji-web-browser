@@ -431,7 +431,7 @@ fun Stories(
 @Suppress("MagicNumber")
 @Composable
 @Preview
-private fun StoriesPreview() {
+private fun StoriesWithCategoriesPreview() {
     FirefoxTheme {
         Box(
             Modifier
@@ -465,6 +465,36 @@ private fun StoriesPreview() {
                     onCategoryClick = {},
                 )
             }
+        }
+    }
+}
+
+@Suppress("MagicNumber")
+@Composable
+@Preview
+private fun StoriesPreview() {
+    FirefoxTheme {
+        Box(
+            Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .systemBarsPadding()
+                .padding(top = 32.dp),
+        ) {
+            Stories(
+                stories = listOf(
+                    FakeHomepagePreview.pocketRecommendedStory(15),
+                    FakeHomepagePreview.pocketSponsoredStory(15),
+                    FakeHomepagePreview.contentRecommendation(15),
+                    FakeHomepagePreview.sponsoredContent(15),
+                    FakeHomepagePreview.pocketRecommendedStory(1),
+                    FakeHomepagePreview.pocketSponsoredStory(1),
+                    FakeHomepagePreview.contentRecommendation(1),
+                    FakeHomepagePreview.sponsoredContent(1),
+                ),
+                contentPadding = 0.dp,
+                onStoryShown = { _, _ -> },
+                onStoryClicked = { _, _ -> },
+            )
         }
     }
 }
