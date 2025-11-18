@@ -12,10 +12,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import androidx.navigation.fragment.findNavController
 import mozilla.components.support.base.feature.UserInteractionHandler
-import org.mozilla.fenix.GleanMetrics.AppIconSelection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.iconpicker.AppIconMiddleware
 import org.mozilla.fenix.iconpicker.AppIconRepository
+import org.mozilla.fenix.iconpicker.AppIconState
+import org.mozilla.fenix.iconpicker.AppIconStore
 import org.mozilla.fenix.iconpicker.DefaultAppIconRepository
 import org.mozilla.fenix.iconpicker.DefaultPackageManagerWrapper
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -42,23 +44,22 @@ class AppIconSelectionFragment : Fragment(), UserInteractionHandler {
     ) = content {
         FirefoxTheme {
             AppIconSelection(
-                currentAppIcon = appIconRepository.selectedAppIcon,
-                groupedIconOptions = appIconRepository.groupedAppIcons,
-                onAppIconSelected = { selectedAppIcon ->
-                    val currentAliasSuffix = appIconRepository.selectedAppIcon.aliasSuffix
-
-                    AppIconSelection.appIconSelectionConfirmed.record(
-                        extra = AppIconSelection.AppIconSelectionConfirmedExtra(
-                            oldIcon = currentAliasSuffix,
-                            newIcon = selectedAppIcon.aliasSuffix,
+                store = AppIconStore(
+                    initialState = AppIconState(
+                        currentAppIcon = appIconRepository.selectedAppIcon,
+                        groupedIconOptions = appIconRepository.groupedAppIcons,
+                    ),
+                    middleware = listOf(
+                        AppIconMiddleware(
+                            updateAppIcon = { newIcon, currentIcon ->
+                                updateAppIcon(
+                                    currentAliasSuffix = currentIcon.aliasSuffix,
+                                    newAliasSuffix = newIcon.aliasSuffix,
+                                )
+                            },
                         ),
-                    )
-
-                    updateAppIcon(
-                        currentAliasSuffix = currentAliasSuffix,
-                        newAliasSuffix = selectedAppIcon.aliasSuffix,
-                    )
-                },
+                    ),
+                ),
             )
         }
     }
