@@ -275,7 +275,8 @@ void GPUParent::NotifyDisableRemoteCanvas() {
 mozilla::ipc::IPCResult GPUParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
     nsTArray<LayerTreeIdMapping>&& aMappings,
-    nsTArray<GfxInfoFeatureStatus>&& aFeatures, uint32_t aWrNamespace) {
+    nsTArray<GfxInfoFeatureStatus>&& aFeatures, uint32_t aWrNamespace,
+    InitResolver&& aInitResolver) {
   gfxVars::ApplyUpdate(vars);
 
   // Inherit device preferences.
@@ -396,7 +397,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   // Send a message to the UI process that we're done.
   GPUDeviceData data;
   RecvGetDeviceStatus(&data);
-  (void)SendInitComplete(data);
+  aInitResolver(data);
 
   // Dispatch a task to background thread to determine the media codec supported
   // result, and propagate it back to the chrome process on the main thread.

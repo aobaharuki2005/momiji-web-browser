@@ -94,12 +94,22 @@ bool GPUProcessHost::WaitForLaunch() {
     timeoutMs = 0;
   }
 
-  // Our caller expects the connection to be finished after we return, so we
-  // immediately set up the IPDL actor and fire callbacks. The IO thread will
-  // still dispatch a notification to the main thread - we'll just ignore it.
-  bool result = GeckoChildProcessHost::WaitUntilConnected(timeoutMs);
-  InitAfterConnect(result);
-  return result;
+  if (mLaunchPhase == LaunchPhase::Waiting) {
+    // Our caller expects the connection to be finished by the time we return,
+    // so we immediately set up the IPDL actor and fire callbacks. The IO thread
+    // will still dispatch a notification to the main thread - we'll just ignore
+    // it.
+    bool result = GeckoChildProcessHost::WaitUntilConnected(timeoutMs);
+    InitAfterConnect(result);
+    if (!result) {
+      return false;
+    }
+  }
+  MOZ_ASSERT(mLaunchPhase == LaunchPhase::Connected);
+  // Our caller expects post-connection initialization tasks, such as ensuring
+  // the GPUChild is initialized, to be finished by the time we return, so
+  // finish these tasks synchronously now.
+  return CompleteInitSynchronously();
 }
 
 void GPUProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
@@ -121,16 +131,23 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Waiting);
   MOZ_ASSERT(!mGPUChild);
 
-  mLaunchPhase = LaunchPhase::Complete;
   mPrefSerializer = nullptr;
 
   if (aSucceeded) {
+    mLaunchPhase = LaunchPhase::Connected;
     mProcessToken = ++sProcessTokenCounter;
     mGPUChild = MakeRefPtr<GPUChild>(this);
     DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mGPUChild.get());
     MOZ_ASSERT(rv);
 
-    mGPUChild->Init();
+    mGPUChild->Init()->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [this, liveToken = mLiveToken](
+            const GPUChild::InitPromiseType::ResolveOrRejectValue&) {
+          if (*liveToken) {
+            this->OnAsyncInitComplete();
+          }
+        });
 
 #ifdef MOZ_WIDGET_ANDROID
     nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
@@ -147,11 +164,35 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
 
     task.Wait();
 #endif
+  } else {
+    mLaunchPhase = LaunchPhase::Complete;
+    if (mListener) {
+      mListener->OnProcessLaunchComplete(this);
+    }
   }
+}
 
+void GPUProcessHost::OnAsyncInitComplete() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mLaunchPhase == LaunchPhase::Connected) {
+    mLaunchPhase = LaunchPhase::Complete;
+    if (mListener) {
+      mListener->OnProcessLaunchComplete(this);
+    }
+  }
+}
+
+bool GPUProcessHost::CompleteInitSynchronously() {
+  MOZ_ASSERT(mLaunchPhase == LaunchPhase::Connected);
+
+  const bool result = mGPUChild->EnsureGPUReady();
+
+  mLaunchPhase = LaunchPhase::Complete;
   if (mListener) {
     mListener->OnProcessLaunchComplete(this);
   }
+
+  return result;
 }
 
 void GPUProcessHost::Shutdown(bool aUnexpectedShutdown) {
