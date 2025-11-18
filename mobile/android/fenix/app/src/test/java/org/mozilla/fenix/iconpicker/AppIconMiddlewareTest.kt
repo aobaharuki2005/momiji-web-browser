@@ -89,4 +89,22 @@ class AppIconMiddlewareTest {
 
         assertEquals(listOf(confirmAction, SystemAction.UpdateFailed), result)
     }
+
+    @Test
+    fun `GIVEN EnvironmentRehydrated system action WHEN middleware is called THEN the new app icon updater replaces the old one`() {
+        val initialUpdater = AppIconUpdater { _, _ -> false }
+        val middleware = AppIconMiddleware(initialUpdater)
+        val store = AppIconStore(
+            initialState = AppIconState(),
+            reducer = { state, _ ->
+                state
+            },
+            middleware = listOf(middleware),
+        )
+        val newUpdater = AppIconUpdater { _, _ -> false }
+
+        store.dispatch(SystemAction.EnvironmentRehydrated(newUpdater))
+
+        assertEquals(newUpdater, middleware.updateAppIcon)
+    }
 }

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.iconpicker
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 
@@ -13,7 +14,8 @@ import mozilla.components.lib.state.MiddlewareContext
  * @property updateAppIcon A interface that updates the main activity alias with the newly selected one.
  */
 class AppIconMiddleware(
-    val updateAppIcon: AppIconUpdater,
+    @get:VisibleForTesting
+    internal var updateAppIcon: AppIconUpdater,
 ) : Middleware<AppIconState, AppIconAction> {
 
     override fun invoke(
@@ -32,12 +34,17 @@ class AppIconMiddleware(
                 }
             }
 
+            is SystemAction.EnvironmentRehydrated -> {
+                updateAppIcon = action.appIconUpdater
+            }
+
+            is UserAction.Dismissed,
+            is UserAction.Selected,
             is SystemAction.Applied,
             is SystemAction.DialogDismissed,
             is SystemAction.SnackbarDismissed,
             is SystemAction.UpdateFailed,
-            is UserAction.Dismissed,
-            is UserAction.Selected,
+
                 -> {
                 // no-op
             }
