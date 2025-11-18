@@ -1109,10 +1109,17 @@ privacy-header = Browser Privacy
 pane-privacy-passwords-header = Passwords
     .searchkeywords = logins
 
+forms-passwords-header =
+    .label = Passwords
+    .aria-label = Passwords
+
 # Checkbox to control whether UI is shown to users to save or fill logins/passwords.
 forms-ask-to-save-passwords =
     .label = Ask to save passwords
     .accesskey = A
+forms-manage-password-exceptions =
+    .label = Manage password exceptions
+    .accesskey = M
 forms-exceptions =
     .label = Exceptions…
     .accesskey = x
@@ -1132,12 +1139,32 @@ relay-integration-learn-more-link = Learn more
 forms-fill-usernames-and-passwords =
     .label = Fill usernames and passwords automatically
     .accesskey = F
+forms-fill-usernames-and-passwords-2 =
+    .label = Save and autofill usernames and passwords
+    .accesskey = f
 forms-saved-passwords =
     .label = Saved passwords
     .accesskey = d
+forms-saved-passwords-2 =
+    .label = Manage saved passwords
+    .accesskey = d
+forms-saved-passwords-searchkeywords = Logins for the following sites are stored on your computer
+
+# Header for additional protections when managing password settings.
+forms-additional-protections-header =
+    .label = Additional protections
 forms-primary-pw-use =
-    .label = Use a Primary Password
+    .label = Use a primary password
     .accesskey = U
+forms-primary-pw-set =
+    .label = Set primary password
+forms-primary-pw-on =
+    .label = Primary password is ON
+forms-primary-pw-change-2 =
+    .label = Change primary password
+# Label for button to disable primary password.
+forms-primary-pw-turn-off =
+    .label = Turn it off
 # This operation requires the user to authenticate with the operating system (device sign-in)
 forms-os-reauth =
     .label = Require device sign in to fill and manage passwords

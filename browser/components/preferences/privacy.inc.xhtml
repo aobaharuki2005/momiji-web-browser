@@ -426,7 +426,7 @@
 </groupbox>
 
 <!-- Passwords -->
-<groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" data-subcategory="logins" hidden="true">
+<groupbox data-srd-groupid="passwords" id="passwordsGroup" orient="vertical" data-category="panePrivacy" data-subcategory="logins" hidden="true">
   <label><html:h2 data-l10n-id="pane-privacy-passwords-header" data-l10n-attrs="searchkeywords"/></label>
 
   <vbox id="passwordSettings">
@@ -554,6 +554,8 @@
   <label id="fips-title" hidden="true" data-l10n-id="forms-primary-pw-fips-title"></label>
   <label id="fips-desc" hidden="true" data-l10n-id="forms-master-pw-fips-desc"></label>
 </groupbox>
+
+<html:setting-group groupid="passwords" hidden="true" data-category="panePrivacy" />
 
 <!-- The form autofill section is inserted in to this box
      after the form autofill extension has initialized. -->

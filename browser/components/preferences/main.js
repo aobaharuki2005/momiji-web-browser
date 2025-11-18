@@ -1843,6 +1843,111 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  passwords: {
+    inProgress: true,
+    id: "passwordsGroup",
+    l10nId: "forms-passwords-header",
+    headingLevel: 2,
+    items: [
+      {
+        id: "savePasswords",
+        l10nId: "forms-ask-to-save-passwords",
+        items: [
+          {
+            id: "managePasswordExceptions",
+            l10nId: "forms-manage-password-exceptions",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids":
+                "permissions-address,permissions-exceptions-saved-passwords-window.title,permissions-exceptions-saved-passwords-desc,",
+            },
+          },
+          {
+            id: "fillUsernameAndPasswords",
+            l10nId: "forms-fill-usernames-and-passwords-2",
+            controlAttrs: {
+              "search-l10n-ids": "forms-saved-passwords-searchkeywords",
+            },
+          },
+          {
+            id: "suggestStrongPasswords",
+            l10nId: "forms-suggest-passwords",
+            supportPage: "how-generate-secure-password-firefox",
+          },
+        ],
+      },
+      {
+        id: "requireOSAuthForPasswords",
+        l10nId: "forms-os-reauth",
+      },
+      {
+        id: "manageSavedPasswords",
+        l10nId: "forms-saved-passwords-2",
+        control: "moz-box-button",
+      },
+      {
+        id: "additionalProtectionsGroup",
+        l10nId: "forms-additional-protections-header",
+        control: "moz-fieldset",
+        controlAttrs: {
+          headingLevel: 2,
+        },
+        items: [
+          {
+            id: "primaryPasswordNotSet",
+            control: "moz-box-group",
+            items: [
+              {
+                id: "usePrimaryPassword",
+                l10nId: "forms-primary-pw-use",
+                control: "moz-box-item",
+                supportPage: "primary-password-stored-logins",
+              },
+              {
+                id: "addPrimaryPassword",
+                l10nId: "forms-primary-pw-set",
+                control: "moz-box-button",
+              },
+            ],
+          },
+          {
+            id: "primaryPasswordSet",
+            control: "moz-box-group",
+            items: [
+              {
+                id: "statusPrimaryPassword",
+                l10nId: "forms-primary-pw-on",
+                control: "moz-box-item",
+                controlAttrs: {
+                  iconsrc: "chrome://global/skin/icons/check-filled.svg",
+                },
+                options: [
+                  {
+                    id: "turnOffPrimaryPassword",
+                    l10nId: "forms-primary-pw-turn-off",
+                    control: "moz-button",
+                    controlAttrs: {
+                      slot: "actions",
+                    },
+                  },
+                ],
+              },
+              {
+                id: "changePrimaryPassword",
+                l10nId: "forms-primary-pw-change-2",
+                control: "moz-box-button",
+              },
+            ],
+          },
+          {
+            id: "breachAlerts",
+            l10nId: "forms-breach-alerts",
+            supportPage: "lockwise-alerts",
+          },
+        ],
+      },
+    ],
+  },
   history: {
     items: [
       {

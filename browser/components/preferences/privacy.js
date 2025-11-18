@@ -210,6 +210,7 @@ Preferences.addAll([
 
   // Popups
   { id: "dom.disable_open_during_load", type: "bool" },
+
   // Passwords
   { id: "signon.rememberSignons", type: "bool" },
   { id: "signon.generation.enabled", type: "bool" },
@@ -628,6 +629,144 @@ if (Services.prefs.getBoolPref("privacy.ui.status_card", false)) {
     })
   );
 }
+
+Preferences.addSetting({
+  id: "savePasswords",
+  pref: "signon.rememberSignons",
+  controllingExtensionInfo: {
+    storeId: "services.passwordSavingEnabled",
+    l10nId: "extension-controlling-password-saving",
+  },
+});
+
+Preferences.addSetting({
+  id: "managePasswordExceptions",
+  onUserClick: () => {
+    gPrivacyPane.showPasswordExceptions();
+  },
+});
+
+Preferences.addSetting({
+  id: "fillUsernameAndPasswords",
+  pref: "signon.autofillForms",
+});
+
+Preferences.addSetting({
+  id: "suggestStrongPasswords",
+  pref: "signon.generation.enabled",
+  visible: () => Services.prefs.getBoolPref("signon.generation.available"),
+});
+
+Preferences.addSetting({
+  id: "requireOSAuthForPasswords",
+  visible: () => OSKeyStore.canReauth(),
+  get: () => LoginHelper.getOSAuthEnabled(),
+  async set(checked) {
+    const [messageText, captionText] = await Promise.all([
+      lazy.AboutLoginsL10n.formatValue("about-logins-os-auth-dialog-message"),
+      lazy.AboutLoginsL10n.formatValue("about-logins-os-auth-dialog-caption"),
+    ]);
+
+    await LoginHelper.trySetOSAuthEnabled(
+      window,
+      checked,
+      messageText,
+      captionText
+    );
+
+    // Trigger change event to keep checkbox UI in sync with pref value
+    Services.obs.notifyObservers(null, "PasswordsOSAuthEnabledChange");
+  },
+  setup: emitChange => {
+    Services.obs.addObserver(emitChange, "PasswordsOSAuthEnabledChange");
+    return () =>
+      Services.obs.removeObserver(emitChange, "PasswordsOSAuthEnabledChange");
+  },
+});
+
+Preferences.addSetting({
+  id: "manageSavedPasswords",
+  onUserClick: ({ target }) => {
+    target.ownerGlobal.gPrivacyPane.showPasswords();
+  },
+});
+
+Preferences.addSetting({
+  id: "additionalProtectionsGroup",
+});
+
+Preferences.addSetting({
+  id: "primaryPasswordNotSet",
+  setup(emitChange) {
+    const topic = "passwordmgr-primary-pw-changed";
+    Services.obs.addObserver(emitChange, topic);
+    return () => Services.obs.removeObserver(emitChange, topic);
+  },
+  visible: () => {
+    return !LoginHelper.isPrimaryPasswordSet();
+  },
+});
+
+Preferences.addSetting({
+  id: "usePrimaryPassword",
+  deps: ["primaryPasswordNotSet"],
+});
+
+Preferences.addSetting({
+  id: "addPrimaryPassword",
+  deps: ["primaryPasswordNotSet"],
+  onUserClick: ({ target }) => {
+    target.ownerGlobal.gPrivacyPane.changeMasterPassword();
+  },
+  disabled: () => {
+    return !Services.policies.isAllowed("createMasterPassword");
+  },
+});
+
+Preferences.addSetting({
+  id: "primaryPasswordSet",
+  setup(emitChange) {
+    const topic = "passwordmgr-primary-pw-changed";
+    Services.obs.addObserver(emitChange, topic);
+    return () => Services.obs.removeObserver(emitChange, topic);
+  },
+  visible: () => {
+    return LoginHelper.isPrimaryPasswordSet();
+  },
+});
+
+Preferences.addSetting({
+  id: "statusPrimaryPassword",
+  deps: ["primaryPasswordSet"],
+  onUserClick: e => {
+    if (e.target.localName == "moz-button") {
+      e.target.ownerGlobal.gPrivacyPane._removeMasterPassword();
+    }
+  },
+  getControlConfig(config) {
+    config.options[0].controlAttrs = {
+      ...config.options[0].controlAttrs,
+      ...(!Services.policies.isAllowed("removeMasterPassword")
+        ? { disabled: "" }
+        : {}),
+    };
+    return config;
+  },
+});
+
+Preferences.addSetting({
+  id: "changePrimaryPassword",
+  deps: ["primaryPasswordSet"],
+  onUserClick: ({ target }) => {
+    target.ownerGlobal.gPrivacyPane.changeMasterPassword();
+  },
+});
+
+Preferences.addSetting({
+  id: "breachAlerts",
+  pref: "signon.management.page.breach-alerts.enabled",
+});
+
 /**
  * This class is used to create Settings that are used to warn the user about
  * potential misconfigurations. It should be passed into Preferences.addSetting
@@ -3285,6 +3424,9 @@ var gPrivacyPane = {
     this._initMasterPasswordUI();
     this._initOSAuthentication();
 
+    // Init passwords settings group
+    initSettingGroup("passwords");
+
     this.initListenersForExtensionControllingPasswordManager();
 
     setSyncFromPrefListener("contentBlockingBlockCookiesCheckbox", () =>
@@ -4590,7 +4732,10 @@ var gPrivacyPane = {
       this._initMasterPasswordUI();
     } else {
       gSubDialog.open("chrome://mozapps/content/preferences/removemp.xhtml", {
-        closingCallback: this._initMasterPasswordUI.bind(this),
+        closingCallback: () => {
+          Services.obs.notifyObservers(null, "passwordmgr-primary-pw-changed");
+          this._initMasterPasswordUI();
+        },
       });
     }
   },
@@ -4639,7 +4784,10 @@ var gPrivacyPane = {
 
     gSubDialog.open("chrome://mozapps/content/preferences/changemp.xhtml", {
       features: "resizable=no",
-      closingCallback: this._initMasterPasswordUI.bind(this),
+      closingCallback: () => {
+        Services.obs.notifyObservers(null, "passwordmgr-primary-pw-changed");
+        this._initMasterPasswordUI();
+      },
     });
   },
 

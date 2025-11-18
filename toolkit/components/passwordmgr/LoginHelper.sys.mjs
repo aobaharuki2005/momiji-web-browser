@@ -1571,6 +1571,33 @@ export const LoginHelper = {
     Services.prefs.lockPref(prefName);
   },
 
+  async trySetOSAuthEnabled(win, checked, messageText, captionText) {
+    // Calling OSKeyStore.ensureLoggedIn() instead of LoginHelper.verifyOSAuth()
+    // since we want to authenticate user each time this setting is changed.
+
+    // Note on Glean collection: because OSKeyStore.ensureLoggedIn() is not wrapped in
+    // verifyOSAuth(), it will be documenting "success" for unsupported platforms
+    // and won't record "fail_error", only "fail_user_canceled"
+    let isAuthorized = (
+      await lazy.OSKeyStore.ensureLoggedIn(messageText, captionText, win, false)
+    ).authenticated;
+
+    Glean.pwmgr.promptShownOsReauth.record({
+      trigger: "toggle_pref_os_auth",
+      result: isAuthorized ? "success" : "fail_user_canceled",
+    });
+
+    if (!isAuthorized) {
+      return;
+    }
+
+    // If osReauthCheckbox is checked enable osauth.
+    LoginHelper.setOSAuthEnabled(checked);
+    Glean.pwmgr.requireOsReauthToggle.record({
+      toggle_state: checked,
+    });
+  },
+
   async verifyUserOSAuth(
     prefName,
     promptMessage,

@@ -334,3 +334,7 @@
 #openWindowsPasskeySettings {
   margin-block-start: 2em;
 }
+
+#statusPrimaryPassword {
+  --box-icon-fill: var(--icon-color-success);
+}
