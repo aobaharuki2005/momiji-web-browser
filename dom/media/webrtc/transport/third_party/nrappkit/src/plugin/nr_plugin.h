@@ -1,8 +1,7 @@
 /**
-   util.h
+   nr_plugin.h
 
 
-   Copyright (C) 2001-2003, Network Resonance, Inc.
    Copyright (C) 2006, Network Resonance, Inc.
    All Rights Reserved
 
@@ -33,31 +32,26 @@
    POSSIBILITY OF SUCH DAMAGE.
 
 
-   ekr@rtfm.com  Wed Dec 26 17:20:23 2001
+   ekr@networkresonance.com  Mon Jun 19 18:18:54 2006
  */
 
 
-#ifndef _util_h
-#define _util_h
+#ifndef _nr_plugin_h
+#define _nr_plugin_h
 
-#include "registry.h"
+typedef int (NR_plugin_hook)(void);
 
-int nr_get_filename(char *base,char *name, char **namep);
-void nr_errprintf_log(const char *fmt,...);
-void nr_errprintf_log2(void *ignore, const char *fmt,...);
-extern int nr_util_default_log_facility;
+typedef struct NR_plugin_hook_def_ {
+     char *type;
+     NR_plugin_hook *func;
+} NR_plugin_hook_def;
 
-int nr_read_data(int fd,char *buf,int len);
-int nr_drop_privileges(char *username);
-int nr_hex_ascii_dump(Data *data);
-int nr_fwrite_all(FILE *fp,UCHAR *buf,int len);
-int nr_sha1_file(char *filename,UCHAR *out);
-int nr_bin2hex(UCHAR *in,int len,UCHAR *out);
-int nr_rm_tree(char *path);
-int nr_write_pid_file(char *pid_filename);
-
-int nr_reg_uint4_fetch_and_check(NR_registry key, UINT4 min, UINT4 max, int log_fac, int die, UINT4 *val);
-int nr_reg_uint8_fetch_and_check(NR_registry key, UINT8 min, UINT8 max, int log_fac, int die, UINT8 *val);
+typedef struct NR_plugin_def_ {
+     int api_version; // Should be 1
+     char *name;
+     char *version;
+     NR_plugin_hook_def *hooks;
+} NR_plugin_def;
 
 #endif
 

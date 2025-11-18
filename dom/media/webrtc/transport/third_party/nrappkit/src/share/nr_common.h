@@ -1,8 +1,7 @@
 /**
-   util.h
+   nr_common.h
 
 
-   Copyright (C) 2001-2003, Network Resonance, Inc.
    Copyright (C) 2006, Network Resonance, Inc.
    All Rights Reserved
 
@@ -32,32 +31,78 @@
    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
    POSSIBILITY OF SUCH DAMAGE.
 
-
-   ekr@rtfm.com  Wed Dec 26 17:20:23 2001
  */
 
 
-#ifndef _util_h
-#define _util_h
+#ifndef _nr_common_h
+#define _nr_common_h
+
+#include <csi_platform.h>
+
+#ifdef USE_MPATROL
+#define USEDEBUG 1
+#include <mpatrol.h>
+#endif
+
+#ifdef USE_DMALLOC
+#include <dmalloc.h>
+#endif
+
+#include <string.h>
+#include <time.h>
+
+#ifdef WIN32
+#include <winsock2.h>
+#include <errno.h>
+#else
+#include <sys/errno.h>
+#endif
+
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+
+#include <sys/types.h>
+#include <sys/queue.h>
+#include <r_log.h>
+
+extern int NR_LOG_REASSD;
 
 #include "registry.h"
+#include "nrstats.h"
 
-int nr_get_filename(char *base,char *name, char **namep);
-void nr_errprintf_log(const char *fmt,...);
-void nr_errprintf_log2(void *ignore, const char *fmt,...);
-extern int nr_util_default_log_facility;
+typedef struct nr_captured_packet_ {
+     UCHAR cap_interface;       /* 1 for primary, 2 for secondary */
+     struct timeval ts;     /* The time this packet was captured */
+     UINT4 len;             /* The length of the packet */
+     UINT8 packet_number;   /* The listener's packet index */
+} nr_captured_packet;
 
-int nr_read_data(int fd,char *buf,int len);
-int nr_drop_privileges(char *username);
-int nr_hex_ascii_dump(Data *data);
-int nr_fwrite_all(FILE *fp,UCHAR *buf,int len);
-int nr_sha1_file(char *filename,UCHAR *out);
-int nr_bin2hex(UCHAR *in,int len,UCHAR *out);
-int nr_rm_tree(char *path);
-int nr_write_pid_file(char *pid_filename);
+#ifndef NR_ROOT_PATH
+#define NR_ROOT_PATH "/usr/local/ctc/"
+#endif
 
-int nr_reg_uint4_fetch_and_check(NR_registry key, UINT4 min, UINT4 max, int log_fac, int die, UINT4 *val);
-int nr_reg_uint8_fetch_and_check(NR_registry key, UINT8 min, UINT8 max, int log_fac, int die, UINT8 *val);
+#define NR_ARCHIVE_DIR NR_ROOT_PATH  "archive/"
+#define NR_TEMP_DIR NR_ROOT_PATH  "tmp/"
+#define NR_ARCHIVE_STATEFILE NR_ROOT_PATH  "archive/state"
+#define NR_CAPTURED_PID_FILENAME  NR_ROOT_PATH "captured.pid"
+#define NR_REASSD_PID_FILENAME  NR_ROOT_PATH "reassd.pid"
+#define NR_MODE_FILENAME  NR_ROOT_PATH "mode.txt"
+
+char *nr_revision_number(void);
+
+
+
+
+/* Memory buckets for CTC memory types */
+#define NR_MEM_TCP       1
+#define NR_MEM_HTTP      2
+#define NR_MEM_DELIVERY  3
+#define NR_MEM_OUT_HM    4
+#define NR_MEM_OUT_SSL   5
+#define NR_MEM_SSL       7
+#define NR_MEM_COMMON    8
+#define NR_MEM_CODEC     9
 
 #endif
 

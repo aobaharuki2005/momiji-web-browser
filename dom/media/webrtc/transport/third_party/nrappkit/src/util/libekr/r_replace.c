@@ -1,5 +1,5 @@
 /**
-   r_time.h
+   r_replace.c
 
 
    Copyright (C) 2002-2003, Network Resonance, Inc.
@@ -36,7 +36,7 @@
  */
 
 /**
-   r_time.h
+   r_replace.c
 
 
    Copyright (C) 1999-2000 RTFM, Inc.
@@ -74,36 +74,34 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY SUCH DAMAGE.
 
-   $Id: r_time.h,v 1.4 2007/06/26 22:37:57 adamcain Exp $
+   $Id: r_replace.c,v 1.2 2006/08/16 19:39:17 adamcain Exp $
 
 
-   ekr@rtfm.com  Thu Mar  4 08:45:41 1999
+   ekr@rtfm.com  Sun Oct  1 11:18:49 2000
  */
 
+#include  "r_common.h"
 
-#ifndef _r_time_h
-#define _r_time_h
+#ifndef HAVE_STRDUP
 
-#include <csi_platform.h>
+char *strdup(str)
+  char *str;
+  {
+    int len=strlen(str);
+    char *n = 0;
 
-#ifndef WIN32
-#include <sys/time.h>
-#include <time.h>
+    if(!(n=(char *)malloc(len+1)))
+      return(0);
+
+    memcpy(n,str,len+1);
+
+    return(n);
+  }
 #endif
 
-int r_timeval_diff(struct timeval *t1,struct timeval *t0, struct timeval *diff);
-int r_timeval_add(struct timeval *t1,struct timeval *t2, struct timeval *sum);
-int r_timeval_cmp(struct timeval *t1,struct timeval *t2);
 
-UINT8 r_timeval2int(struct timeval *tv);
-int r_int2timeval(UINT8 t,struct timeval *tv);
-UINT8 r_gettimeint(void);
-
-/* t1-t0 in microseconds */
-int r_timeval_diff_usec(struct timeval *t1, struct timeval *t0, INT8 *diff);
-
-/* t1-t0 in milliseconds */
-int r_timeval_diff_ms(struct timeval *t1, struct timeval *t0, INT8 *diff);
-
+#ifdef SUPPLY_ATEXIT
+int atexit(void (*func)(void)){
+  ;
+}
 #endif
-

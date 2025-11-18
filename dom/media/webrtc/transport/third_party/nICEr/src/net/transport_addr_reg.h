@@ -32,28 +32,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-#ifndef _stun_util_h
-#define _stun_util_h
+#ifndef _transport_addr_reg_h
+#define _transport_addr_reg_h
 
-#include "stun.h"
-#include "local_addr.h"
+#include "registry.h"
 
-extern int NR_LOG_STUN;
-
-int nr_stun_startup(void);
-
-int nr_stun_xor_mapped_address(UINT4 magicCookie, UINT12 transactionId, nr_transport_addr *from, nr_transport_addr *to);
-
-int nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count);
-
-int nr_stun_different_transaction(UCHAR *msg, size_t len, nr_stun_message *req);
-
-char* nr_stun_msg_type(int type);
-
-int nr_random_alphanum(char *alphanum, int size);
-
-// accumulate a count without worrying about rollover
-void nr_accumulate_count(UINT2* orig_count, UINT2 add_count);
+int nr_reg_get_transport_addr(NR_registry prefix, int keep, nr_transport_addr *addr);
+int nr_reg_set_transport_addr(NR_registry prefix, int keep, nr_transport_addr *addr);
+int nr_reg_get_transport_addr2(NR_registry prefix, char *name, int keep, nr_transport_addr *addr);
+int nr_reg_set_transport_addr2(NR_registry prefix, char *name, int keep, nr_transport_addr *addr);
 
 #endif
 

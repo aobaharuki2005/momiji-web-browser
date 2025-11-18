@@ -40,9 +40,7 @@
 
 #include <string.h>
 #include <stddef.h>
-#include <sys/queue.h>
-#include <csi_platform.h>
-#include <r_log.h>
+#include "nr_common.h"
 #include "p_buf.h"
 
 

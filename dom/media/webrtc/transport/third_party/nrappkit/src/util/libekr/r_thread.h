@@ -1,8 +1,8 @@
 /**
-   util.h
+   r_thread.h
 
 
-   Copyright (C) 2001-2003, Network Resonance, Inc.
+   Copyright (C) 1999, RTFM, Inc.
    Copyright (C) 2006, Network Resonance, Inc.
    All Rights Reserved
 
@@ -33,31 +33,36 @@
    POSSIBILITY OF SUCH DAMAGE.
 
 
-   ekr@rtfm.com  Wed Dec 26 17:20:23 2001
+   ekr@rtfm.com  Tue Feb 23 14:58:36 1999
  */
 
 
-#ifndef _util_h
-#define _util_h
+#ifndef _r_thread_h
+#define _r_thread_h
 
-#include "registry.h"
+typedef void *r_thread;
+typedef void *r_rwlock;
+typedef void * r_cond;
 
-int nr_get_filename(char *base,char *name, char **namep);
-void nr_errprintf_log(const char *fmt,...);
-void nr_errprintf_log2(void *ignore, const char *fmt,...);
-extern int nr_util_default_log_facility;
+int r_thread_fork (void (*func)(void *),void *arg,
+  r_thread *tid);
+int r_thread_destroy (r_thread tid);
+int r_thread_yield (void);
+int r_thread_exit (void);
+int r_thread_wait_last (void);
+int r_thread_self (void);
 
-int nr_read_data(int fd,char *buf,int len);
-int nr_drop_privileges(char *username);
-int nr_hex_ascii_dump(Data *data);
-int nr_fwrite_all(FILE *fp,UCHAR *buf,int len);
-int nr_sha1_file(char *filename,UCHAR *out);
-int nr_bin2hex(UCHAR *in,int len,UCHAR *out);
-int nr_rm_tree(char *path);
-int nr_write_pid_file(char *pid_filename);
+int r_rwlock_create (r_rwlock **lockp);
+int r_rwlock_destroy (r_rwlock **lock);
+int r_rwlock_lock (r_rwlock *lock,int action);
 
-int nr_reg_uint4_fetch_and_check(NR_registry key, UINT4 min, UINT4 max, int log_fac, int die, UINT4 *val);
-int nr_reg_uint8_fetch_and_check(NR_registry key, UINT8 min, UINT8 max, int log_fac, int die, UINT8 *val);
+int r_cond_init (r_cond *cond);
+int r_cond_wait (r_cond cond);
+int r_cond_signal (r_cond cond);
+
+#define R_RWLOCK_UNLOCK 0
+#define R_RWLOCK_RLOCK 1
+#define R_RWLOCK_WLOCK 2
 
 #endif
 

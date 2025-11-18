@@ -1,3 +1,13 @@
+#if 0
+#define NR_LOG_REGISTRY BLAHBLAH()
+#define LOG_REGISTRY BLAHBLAH()
+static int BLAHBLAH() {
+int blahblah;
+r_log_register("registry",&blahblah);
+return blahblah;
+}
+#endif
+
 /*
  *
  *    registry_int.h

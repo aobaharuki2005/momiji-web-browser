@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "stun.h"
 #include "nr_socket_local.h"
 #include "nr_socket_turn.h"
+#include "nr_socket_wrapper.h"
 #include "nr_socket_buffered_stun.h"
 #include "nr_socket_multi_tcp.h"
 #include "ice_reg.h"

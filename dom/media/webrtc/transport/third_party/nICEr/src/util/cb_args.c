@@ -30,30 +30,28 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdarg.h>
+#include "nr_api.h"
+#include "cb_args.h"
+
+void **nr_pack_cb_args(int ct,...)
+  {
+    void **vlist;
+    va_list ap;
+    int i;
+
+    va_start(ap,ct);
+    if(!(vlist=RCALLOC(sizeof(void *)*ct+1)))
+      abort();
+
+    for(i=0;i<ct;i++){
+      vlist[i]=va_arg(ap, void *);
+    }
+
+    va_end(ap);
+
+    return(vlist);
+  }
 
 
-#ifndef _stun_util_h
-#define _stun_util_h
-
-#include "stun.h"
-#include "local_addr.h"
-
-extern int NR_LOG_STUN;
-
-int nr_stun_startup(void);
-
-int nr_stun_xor_mapped_address(UINT4 magicCookie, UINT12 transactionId, nr_transport_addr *from, nr_transport_addr *to);
-
-int nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count);
-
-int nr_stun_different_transaction(UCHAR *msg, size_t len, nr_stun_message *req);
-
-char* nr_stun_msg_type(int type);
-
-int nr_random_alphanum(char *alphanum, int size);
-
-// accumulate a count without worrying about rollover
-void nr_accumulate_count(UINT2* orig_count, UINT2 add_count);
-
-#endif
 

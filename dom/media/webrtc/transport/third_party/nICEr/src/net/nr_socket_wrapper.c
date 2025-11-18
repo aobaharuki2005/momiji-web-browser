@@ -1,5 +1,7 @@
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
+Copyright (c) 2013, Mozilla
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -13,9 +15,10 @@ met:
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
 
-* Neither the name of Adobe Systems, Network Resonance nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+* Neither the name of Adobe Systems, Network Resonance, Mozilla nor
+  the names of its contributors may be used to endorse or promote
+  products derived from this software without specific prior written
+  permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -30,30 +33,52 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <nr_api.h>
+#include "nr_socket_wrapper.h"
 
+#include <assert.h>
 
-#ifndef _stun_util_h
-#define _stun_util_h
+int nr_socket_wrapper_factory_create_int(void *obj, nr_socket_wrapper_factory_vtbl *vtbl,
+                                         nr_socket_wrapper_factory **wrapperp)
+{
+  int _status;
+  nr_socket_wrapper_factory *wrapper=0;
 
-#include "stun.h"
-#include "local_addr.h"
+  if (!(wrapper=RCALLOC(sizeof(nr_socket_wrapper_factory))))
+    ABORT(R_NO_MEMORY);
 
-extern int NR_LOG_STUN;
+  wrapper->obj=obj;
+  wrapper->vtbl=vtbl;
 
-int nr_stun_startup(void);
+  *wrapperp=wrapper;
+  _status=0;
+abort:
+  return(_status);
+}
 
-int nr_stun_xor_mapped_address(UINT4 magicCookie, UINT12 transactionId, nr_transport_addr *from, nr_transport_addr *to);
+int nr_socket_wrapper_factory_wrap(nr_socket_wrapper_factory *wrapper,
+                                   nr_socket *inner,
+                                   nr_socket **socketp)
+{
+  return wrapper->vtbl->wrap(wrapper->obj, inner, socketp);
+}
 
-int nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count);
+int nr_socket_wrapper_factory_destroy(nr_socket_wrapper_factory **wrapperp)
+{
+  nr_socket_wrapper_factory *wrapper;
 
-int nr_stun_different_transaction(UCHAR *msg, size_t len, nr_stun_message *req);
+  if (!wrapperp || !*wrapperp)
+    return 0;
 
-char* nr_stun_msg_type(int type);
+  wrapper = *wrapperp;
+  *wrapperp = 0;
 
-int nr_random_alphanum(char *alphanum, int size);
+  assert(wrapper->vtbl);
+  if (wrapper->vtbl)
+    wrapper->vtbl->destroy(&wrapper->obj);
 
-// accumulate a count without worrying about rollover
-void nr_accumulate_count(UINT2* orig_count, UINT2 add_count);
+  RFREE(wrapper);
 
-#endif
+  return 0;
+}
 

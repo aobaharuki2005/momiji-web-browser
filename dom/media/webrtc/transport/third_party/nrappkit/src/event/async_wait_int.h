@@ -1,8 +1,8 @@
 /**
-   util.h
+   async_wait_int.h
 
 
-   Copyright (C) 2001-2003, Network Resonance, Inc.
+   Copyright (C) 2004, Network Resonance, Inc.
    Copyright (C) 2006, Network Resonance, Inc.
    All Rights Reserved
 
@@ -33,31 +33,30 @@
    POSSIBILITY OF SUCH DAMAGE.
 
 
-   ekr@rtfm.com  Wed Dec 26 17:20:23 2001
+   ekr@rtfm.com  Sun Feb 22 19:16:01 2004
  */
 
 
-#ifndef _util_h
-#define _util_h
+#ifndef _async_wait_int_h
+#define _async_wait_int_h
 
-#include "registry.h"
 
-int nr_get_filename(char *base,char *name, char **namep);
-void nr_errprintf_log(const char *fmt,...);
-void nr_errprintf_log2(void *ignore, const char *fmt,...);
-extern int nr_util_default_log_facility;
+typedef struct callback_ {
+     NR_async_cb cb;
+     void *arg;
+     int how;
+     int resource;
+     void *backptr;
 
-int nr_read_data(int fd,char *buf,int len);
-int nr_drop_privileges(char *username);
-int nr_hex_ascii_dump(Data *data);
-int nr_fwrite_all(FILE *fp,UCHAR *buf,int len);
-int nr_sha1_file(char *filename,UCHAR *out);
-int nr_bin2hex(UCHAR *in,int len,UCHAR *out);
-int nr_rm_tree(char *path);
-int nr_write_pid_file(char *pid_filename);
+     char *func;
+     int free_func;
+     int line;
+     TAILQ_ENTRY(callback_) entry;
+} callback;
 
-int nr_reg_uint4_fetch_and_check(NR_registry key, UINT4 min, UINT4 max, int log_fac, int die, UINT4 *val);
-int nr_reg_uint8_fetch_and_check(NR_registry key, UINT8 min, UINT8 max, int log_fac, int die, UINT8 *val);
+int nr_async_create_cb(NR_async_cb cb,void *arg,int how,
+  int resource,char *func,int line,callback **cbp);
+int nr_async_destroy_cb(callback **cbp);
 
 #endif
 
