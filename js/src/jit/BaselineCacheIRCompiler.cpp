@@ -2559,17 +2559,28 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
             outerScript->lineno(), outerScript->column().oneOriginValue());
 
     // Instead of adding a new stub, we have added a new case to an existing
-    // folded stub. We do not have to invalidate Warp, because the
-    // ShapeListObject that stores the cases is shared between baseline and
-    // Warp. Reset the entered count for the fallback stub so that we can still
-    // transpile, and reset the bailout counter if we have already been
-    // transpiled.
+    // folded stub. For invalidating Warp code, there are two cases to consider:
+    //
+    // (1) If we used MGuardShapeList, we need to invalidate Warp code because
+    //     it bakes in the old shape list.
+    //
+    // (2) If we used MGuardMultipleShapes, we do not need to invalidate Warp,
+    //     because the ShapeListObject that stores the cases is shared between
+    //     Baseline and Warp.
+    //
+    // If we have stub folding bailout data stored in the JitZone for this
+    // script, this must be case (2). In this case we reset the bailout counter
+    // if we have already been transpiled.
+    //
+    // In both cases we reset the entered count for the fallback stub so that we
+    // can still transpile.
     stub->resetEnteredCount();
     JSScript* owningScript = nullptr;
+    bool hadGuardMultipleShapesBailout = false;
     if (cx->zone()->jitZone()->hasStubFoldingBailoutData(outerScript)) {
-      owningScript = cx->zone()->jitZone()->stubFoldingBailoutParent();
-      JitSpew(JitSpew_StubFolding,
-              "Found stub folding bailout parent: %s:%u:%u",
+      owningScript = cx->zone()->jitZone()->stubFoldingBailoutOuter();
+      hadGuardMultipleShapesBailout = true;
+      JitSpew(JitSpew_StubFolding, "Found stub folding bailout outer: %s:%u:%u",
               owningScript->filename(), owningScript->lineno(),
               owningScript->column().oneOriginValue());
     } else {
@@ -2578,14 +2589,15 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
                          : outerScript;
     }
     cx->zone()->jitZone()->clearStubFoldingBailoutData();
-    if (stub->usedByTranspiler()) {
+    if (stub->usedByTranspiler() && hadGuardMultipleShapesBailout) {
       if (owningScript->hasIonScript()) {
         owningScript->ionScript()->resetNumFixableBailouts();
       } else if (owningScript->hasJitScript()) {
         owningScript->jitScript()->clearFailedICHash();
       }
     } else {
-      // Update the last IC counter if this is not a bailout from Ion.
+      // Update the last IC counter if this is not a GuardMultipleShapes bailout
+      // from Ion.
       owningScript->updateLastICStubCounter();
     }
     return ICAttachResult::Attached;

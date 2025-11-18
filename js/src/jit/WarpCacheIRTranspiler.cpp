@@ -522,9 +522,7 @@ bool WarpCacheIRTranspiler::emitGuardMultipleShapes(ObjOperandId objId,
   } else {
     MInstruction* shapeList = objectStubField(shapesOffset);
     ins = MGuardMultipleShapes::New(alloc(), def, shapeList);
-    if (builder_->info().inlineScriptTree()->hasSharedICScript()) {
-      ins->setBailoutKind(BailoutKind::MonomorphicInlinedStubFolding);
-    }
+    ins->setBailoutKind(BailoutKind::StubFoldingGuardMultipleShapes);
   }
   add(ins);
 
