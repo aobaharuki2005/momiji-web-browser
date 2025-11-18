@@ -291,7 +291,10 @@ export const SpecialMessageActions = {
     // only prefs created on the fly are allowed. This is to ensure that adding
     // the abililty to set any in-tree prefs with this feature undergoes code
     // review.
-    const allowedSetOnImpressionPrefs = [];
+    const allowedSetOnImpressionPrefs = [
+      "termsofuse.firstAcceptedDate",
+      "termsofuse.acceptedDate",
+    ];
 
     const allowedPrefsList = onImpression
       ? allowedSetOnImpressionPrefs
