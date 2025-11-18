@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.logins.ui
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -282,11 +283,13 @@ private fun LoginDetailsUsername(
                     .size(48.dp),
                 onClick = {
                     store.dispatch(DetailLoginAction.CopyUsernameClicked(username))
-                    showTextCopiedSnackbar(
-                        message = usernameSnackbarText,
-                        coroutineScope = coroutineScope,
-                        snackbarHostState = snackbarHostState,
-                    )
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                        showTextCopiedSnackbar(
+                            message = usernameSnackbarText,
+                            coroutineScope = coroutineScope,
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
                 },
                 contentDescription = stringResource(R.string.saved_login_copy_username),
             ) {
@@ -339,11 +342,13 @@ private fun LoginDetailsPassword(
                     .size(48.dp),
                 onClick = {
                     store.dispatch(DetailLoginAction.CopyPasswordClicked(password))
-                    showTextCopiedSnackbar(
-                        message = passwordSnackbarText,
-                        coroutineScope = coroutineScope,
-                        snackbarHostState = snackbarHostState,
-                    )
+                    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+                        showTextCopiedSnackbar(
+                            message = passwordSnackbarText,
+                            coroutineScope = coroutineScope,
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
                 },
                 contentDescription = stringResource(R.string.saved_logins_copy_password),
             ) {
