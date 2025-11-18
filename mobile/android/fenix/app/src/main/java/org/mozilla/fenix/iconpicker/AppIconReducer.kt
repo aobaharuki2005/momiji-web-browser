@@ -32,5 +32,6 @@ private fun AppIconState.handleSystemAction(action: SystemAction): AppIconState 
             userSelectedAppIcon = null,
             snackbarState = AppIconSnackbarState.ApplyingNewIconError,
         )
+        is SystemAction.EnvironmentRehydrated -> this
     }
 }

@@ -62,4 +62,11 @@ sealed interface SystemAction : AppIconAction {
      * The app icon update error snackbar was dismissed.
      */
     data object SnackbarDismissed : SystemAction
+
+    /**
+     * Signals a context update. For example, due to config change.
+     *
+     * @property appIconUpdater an interface used by [AppIconMiddleware] for changing the app icon.
+     */
+    data class EnvironmentRehydrated(val appIconUpdater: AppIconUpdater) : SystemAction
 }
