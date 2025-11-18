@@ -61,7 +61,6 @@
               # Events
               './src/event/async_timer.h',
               './src/event/async_wait.h',
-              './src/event/async_wait_int.h',
 
               # Logging
               './src/log/r_log.c',
