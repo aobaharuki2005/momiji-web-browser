@@ -39,8 +39,6 @@
                 # Crypto
                 "./src/crypto/nr_crypto.c",
                 "./src/crypto/nr_crypto.h",
-                #"./src/crypto/nr_crypto_openssl.c",
-                #"./src/crypto/nr_crypto_openssl.h",
 
                 # ICE
                 "./src/ice/ice_candidate.c",
@@ -69,7 +67,6 @@
                 "./src/net/nr_socket_wrapper.h",
                 "./src/net/nr_socket.c",
                 "./src/net/nr_socket.h",
-                #"./src/net/nr_socket_local.c",
                 "./src/net/nr_socket_local.h",
                 "./src/net/nr_socket_multi_tcp.c",
                 "./src/net/nr_socket_multi_tcp.h",
