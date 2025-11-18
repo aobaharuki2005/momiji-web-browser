@@ -1400,7 +1400,7 @@ void BaselineCacheIRCompiler::emitAtomizeString(Register str, Register temp,
     LiveRegisterSet save = liveVolatileRegs();
     masm.PushRegsInMask(save);
 
-    using Fn = JSAtom* (*)(JSContext* cx, JSString* str);
+    using Fn = JSAtom* (*)(JSContext * cx, JSString * str);
     masm.setupUnalignedABICall(temp);
     masm.loadJSContext(temp);
     masm.passABIArg(temp);
