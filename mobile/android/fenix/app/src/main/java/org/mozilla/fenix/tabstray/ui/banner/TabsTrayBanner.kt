@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -68,6 +69,10 @@ import mozilla.components.ui.icons.R as iconsR
 private const val TAB_COUNT_SHOW_CFR = 6
 private val RowHeight = 48.dp
 private val TabIndicatorRoundedCornerDp = 100.dp
+
+// Reflects TopAppBarTitleInset private val value in AppBar code
+// https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/AppBar.kt;l=3487?q=TopAppBarTitleInset&sq
+private val TopAppBarTitleInset = 16.dp
 
 /**
  * Top-level UI for displaying the banner in [TabsTray].
@@ -256,7 +261,13 @@ private fun TabPageBanner(
 
     CenterAlignedTopAppBar(
         title = {
-            Column {
+            Column(
+                // The TopAppBarTitleInset value is used here to offset the padding, making sure
+                // that the content of the TopAppBar is aligned correctly. This extra padding
+                // compensates for the inherent padding added by the CenterAlignedTopAppBar.
+                // Without this, the content of the TopAppBar becomes misaligned.
+                modifier = Modifier.padding(end = TopAppBarTitleInset),
+            ) {
                 Spacer(
                     modifier = Modifier
                         .height(statusBarHeight)
