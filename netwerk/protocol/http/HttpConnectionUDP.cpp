@@ -619,6 +619,9 @@ void HttpConnectionUDP::Close(nsresult reason, bool aIsShutdown) {
     socket->Close();
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(!mHttp3Session || mHttp3Session->IsClosed(),
+                        "Http3Session should already be closed");
+
   for (const auto& trans : mQueuedHttpConnectTransaction) {
     trans->Close(reason);
   }
@@ -718,7 +721,7 @@ nsresult HttpConnectionUDP::OnHeadersAvailable(nsAHttpTransaction* trans,
     // response headers so that it will be ready to receive the new response.
     if (mIsReused &&
         ((PR_IntervalNow() - mHttp3Session->LastWriteTime()) < k1000ms)) {
-      Close(NS_ERROR_NET_RESET);
+      CloseTransaction(mHttp3Session, NS_ERROR_NET_RESET);
       *reset = true;
       return NS_OK;
     }
