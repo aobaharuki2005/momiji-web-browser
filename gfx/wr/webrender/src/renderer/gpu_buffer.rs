@@ -129,6 +129,19 @@ impl Into<GpuBufferBlockF> for LayoutRect {
     }
 }
 
+impl Into<GpuBufferBlockF> for crate::quad::LayoutOrDeviceRect {
+    fn into(self) -> GpuBufferBlockF {
+        GpuBufferBlockF {
+            data: [
+                self.min.x,
+                self.min.y,
+                self.max.x,
+                self.max.y,
+            ],
+        }
+    }
+}
+
 impl Into<GpuBufferBlockF> for ScaleOffset {
     fn into(self) -> GpuBufferBlockF {
         GpuBufferBlockF {
