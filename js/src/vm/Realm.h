@@ -215,13 +215,18 @@ class PropertyIteratorObject;
 
 struct IteratorHashPolicy {
   struct Lookup {
-    Shape** shapes;
-    size_t numShapes;
+    Shape* objShape;
+    Shape** protoShapes;
+    size_t numProtoShapes;
     HashNumber shapesHash;
 
-    Lookup(Shape** shapes, size_t numShapes, HashNumber shapesHash)
-        : shapes(shapes), numShapes(numShapes), shapesHash(shapesHash) {
-      MOZ_ASSERT(numShapes > 0);
+    Lookup(Shape* objShape, Shape** protoShapes, size_t numProtoShapes,
+           HashNumber shapesHash)
+        : objShape(objShape),
+          protoShapes(protoShapes),
+          numProtoShapes(numProtoShapes),
+          shapesHash(shapesHash) {
+      MOZ_ASSERT(objShape);
     }
   };
   static HashNumber hash(const Lookup& lookup) { return lookup.shapesHash; }
