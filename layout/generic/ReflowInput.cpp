@@ -2219,8 +2219,23 @@ void ReflowInput::InitConstraints(
                 mComputeSizeFlags, aBorder, aPadding, mStyleDisplay);
 
     // For calculating the size of this box, we use its own writing mode
-    const auto blockSize =
+    auto blockSize =
         mStylePosition->BSize(wm, AnchorPosResolutionParams::From(this));
+    if (blockSize->BehavesLikeStretchOnBlockAxis()) {
+      // Resolve 'stretch' to either 'auto' or the stretched bsize, depending
+      // on whether our containing block has a definite bsize.
+      // TODO(dholbert): remove this in bug 2000035.
+      if (NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
+        blockSize = AnchorResolvedSizeHelper::Auto();
+      } else {
+        nscoord stretchBSize = nsLayoutUtils::ComputeStretchBSize(
+            cbSize.BSize(wm), ComputedLogicalMargin(wm).BStartEnd(wm),
+            ComputedLogicalBorderPadding(wm).BStartEnd(wm),
+            mStylePosition->mBoxSizing);
+        blockSize = AnchorResolvedSizeHelper::LengthPercentage(
+            StyleLengthPercentage::FromAppUnits(stretchBSize));
+      }
+    }
     bool isAutoBSize = blockSize->BehavesLikeInitialValueOnBlockAxis();
 
     // Check for a percentage based block size and a containing block
