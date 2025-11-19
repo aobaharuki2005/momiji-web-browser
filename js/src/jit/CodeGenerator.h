@@ -172,6 +172,14 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void visitPostWriteBarrierCommon(LPostBarrierType* lir, OutOfLineCode* ool);
   template <class LPostBarrierType>
   void visitPostWriteBarrierCommonV(LPostBarrierType* lir, OutOfLineCode* ool);
+  void visitLoadSlotByIteratorIndexCommon(Register object,
+                                          Register indexScratch,
+                                          Register kindScratch,
+                                          ValueOperand result);
+  void visitStoreSlotByIteratorIndexCommon(Register object,
+                                           Register indexScratch,
+                                           Register kindScratch,
+                                           ValueOperand value);
 
   void emitCallInvokeFunction(LInstruction* call, Register callereg,
                               bool isConstructing, bool ignoresReturnValue,

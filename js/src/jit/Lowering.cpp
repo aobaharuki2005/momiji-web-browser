@@ -6271,6 +6271,24 @@ void LIRGenerator::visitStoreSlotByIteratorIndex(
   add(lir, ins);
 }
 
+#ifndef JS_CODEGEN_X86
+void LIRGenerator::visitLoadSlotByIteratorIndexIndexed(
+    MLoadSlotByIteratorIndexIndexed* ins) {
+  auto* lir = new (alloc()) LLoadSlotByIteratorIndexIndexed(
+      useRegister(ins->object()), useRegister(ins->iterator()),
+      useRegister(ins->index()), temp(), temp());
+  defineBox(lir, ins);
+}
+
+void LIRGenerator::visitStoreSlotByIteratorIndexIndexed(
+    MStoreSlotByIteratorIndexIndexed* ins) {
+  auto* lir = new (alloc()) LStoreSlotByIteratorIndexIndexed(
+      useRegister(ins->object()), useRegister(ins->iterator()),
+      useRegister(ins->index()), useBox(ins->value()), temp(), temp());
+  add(lir, ins);
+}
+#endif
+
 void LIRGenerator::visitIteratorHasIndices(MIteratorHasIndices* ins) {
   MOZ_ASSERT(ins->hasOneUse());
   emitAtUses(ins);
