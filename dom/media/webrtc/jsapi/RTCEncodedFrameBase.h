@@ -68,6 +68,7 @@ class RTCEncodedFrameBase : public nsISupports, public nsWrapperCache {
 
  protected:
   virtual ~RTCEncodedFrameBase();
+  void DetachData();
 
   // forbid copy/move to protect mState
   RTCEncodedFrameBase(const RTCEncodedFrameBase&) = delete;
