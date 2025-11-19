@@ -72,7 +72,8 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
 #if defined(MOZ_WIDGET_GTK)
   static nsresult GetLegacyOrXDGEnvValue(const char* aHomeDir,
                                          const char* aEnvName,
-                                         nsCString aSubdir, nsIFile** aFile);
+                                         nsCString aSubdir, nsIFile** aFile,
+                                         bool* aWasFromEnv);
   static nsresult GetLegacyOrXDGCachePath(const char* aHomeDir,
                                           nsIFile** aFile);
   static nsresult GetLegacyOrXDGHomePath(const char* aHomeDir, nsIFile** aFile,
@@ -86,6 +87,13 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   static nsresult GetLegacyOrXDGConfigHome(const char* aHomeDir,
                                            nsIFile** aFile);
 
+  enum legacyOrXDGHomeTelemetry {
+    empty,
+    legacyExists,
+    legacyForced,
+    xdgDefault,
+    xdgConfigHome
+  };
 #endif  // defined(MOZ_WIDGET_GTK)
 
   /* make sure you clone it, if you need to do stuff to it */

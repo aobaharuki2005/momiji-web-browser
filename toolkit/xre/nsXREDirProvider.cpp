@@ -51,6 +51,7 @@
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/glean/ToolkitProfileMetrics.h"
 #include "mozilla/glean/ToolkitXreMetrics.h"
 #include "mozilla/Try.h"
 #include "mozilla/Utf8.h"
@@ -100,6 +101,11 @@ nsIFile* gDataDirHomeLocal = nullptr;
 nsIFile* gDataDirHome = nullptr;
 MOZ_CONSTINIT nsCOMPtr<nsIFile> gDataDirProfileLocal{};
 MOZ_CONSTINIT nsCOMPtr<nsIFile> gDataDirProfile{};
+
+#if defined(MOZ_WIDGET_GTK)
+nsXREDirProvider::legacyOrXDGHomeTelemetry gXdgTelemetry =
+    nsXREDirProvider::legacyOrXDGHomeTelemetry::empty;
+#endif  // defined(MOZ_WIDGET_GTK)
 
 // These are required to allow nsXREDirProvider to be usable in xpcshell tests.
 // where gAppData is null.
@@ -228,6 +234,33 @@ nsresult nsXREDirProvider::GetUserProfilesRootDir(nsIFile** aResult) {
     if (NS_FAILED(tmp)) {
       rv = tmp;
     }
+
+#if defined(MOZ_WIDGET_GTK)
+    switch (gXdgTelemetry) {
+      case legacyOrXDGHomeTelemetry::legacyExists:
+        mozilla::glean::profiles::creation_place.Get("legacy_exists"_ns).Add(1);
+        break;
+      case legacyOrXDGHomeTelemetry::legacyForced:
+        mozilla::glean::profiles::creation_place.Get("legacy_forced"_ns).Add(1);
+        break;
+      case legacyOrXDGHomeTelemetry::xdgDefault:
+        mozilla::glean::profiles::creation_place.Get("xdg_default"_ns).Add(1);
+        break;
+      case legacyOrXDGHomeTelemetry::xdgConfigHome:
+        mozilla::glean::profiles::creation_place.Get("xdg_config"_ns).Add(1);
+        break;
+      default: {
+        nsAutoCString nativePath;
+        nsresult rv_conv = file->GetNativePath(nativePath);
+        if (NS_SUCCEEDED(rv_conv)) {
+          NS_WARNING(nsPrintfCString(
+                         "Recording no telemetry value with profile path %s",
+                         nativePath.get())
+                         .get());
+        }
+      } break;
+    }
+#endif  // defined(MOZ_WIDGET_GTK)
   }
   file.swap(*aResult);
   return rv;
@@ -1356,11 +1389,19 @@ bool nsXREDirProvider::LegacyHomeExists(nsIFile** aFile) {
   return exists;
 }
 
+void MaybeRecordXdgTelemetry(
+    nsXREDirProvider::legacyOrXDGHomeTelemetry aValue) {
+  if (gXdgTelemetry == nsXREDirProvider::legacyOrXDGHomeTelemetry::empty) {
+    gXdgTelemetry = aValue;
+  }
+}
+
 /* static */
 nsresult nsXREDirProvider::GetLegacyOrXDGEnvValue(const char* aHomeDir,
                                                   const char* aEnvName,
                                                   nsCString aSubdir,
-                                                  nsIFile** aFile) {
+                                                  nsIFile** aFile,
+                                                  bool* aWasFromEnv) {
   nsCOMPtr<nsIFile> localDir;
   nsresult rv = NS_OK;
 
@@ -1368,6 +1409,9 @@ nsresult nsXREDirProvider::GetLegacyOrXDGEnvValue(const char* aHomeDir,
   if (envValue && *envValue) {
     rv = NS_NewNativeLocalFile(nsDependentCString(envValue),
                                getter_AddRefs(localDir));
+    if (aWasFromEnv) {
+      *aWasFromEnv = true;
+    }
   }
 
   // Explicitly check for rv failure because in case we get passed an env
@@ -1380,6 +1424,9 @@ nsresult nsXREDirProvider::GetLegacyOrXDGEnvValue(const char* aHomeDir,
     MOZ_TRY(NS_NewNativeLocalFile(nsDependentCString(aHomeDir),
                                   getter_AddRefs(localDir)));
     MOZ_TRY(localDir->AppendNative(aSubdir));
+    if (aWasFromEnv) {
+      *aWasFromEnv = false;
+    }
   }
 
   localDir.forget(aFile);
@@ -1389,7 +1436,8 @@ nsresult nsXREDirProvider::GetLegacyOrXDGEnvValue(const char* aHomeDir,
 /* static */
 nsresult nsXREDirProvider::GetLegacyOrXDGCachePath(const char* aHomeDir,
                                                    nsIFile** aFile) {
-  return GetLegacyOrXDGEnvValue(aHomeDir, "XDG_CACHE_HOME", ".cache"_ns, aFile);
+  return GetLegacyOrXDGEnvValue(aHomeDir, "XDG_CACHE_HOME", ".cache"_ns, aFile,
+                                nullptr);
 }
 
 /*
@@ -1398,8 +1446,15 @@ nsresult nsXREDirProvider::GetLegacyOrXDGCachePath(const char* aHomeDir,
 /* static */
 nsresult nsXREDirProvider::GetLegacyOrXDGConfigHome(const char* aHomeDir,
                                                     nsIFile** aFile) {
-  return GetLegacyOrXDGEnvValue(aHomeDir, "XDG_CONFIG_HOME", ".config"_ns,
-                                aFile);
+  bool wasFromEnv = false;
+  nsresult rv = GetLegacyOrXDGEnvValue(aHomeDir, "XDG_CONFIG_HOME",
+                                       ".config"_ns, aFile, &wasFromEnv);
+  if (NS_SUCCEEDED(rv) && wasFromEnv) {
+    MaybeRecordXdgTelemetry(legacyOrXDGHomeTelemetry::xdgConfigHome);
+  } else {
+    MaybeRecordXdgTelemetry(legacyOrXDGHomeTelemetry::xdgDefault);
+  }
+  return rv;
 }
 
 // Attempt to construct the HOME path depending on XDG or legacy status.
@@ -1411,6 +1466,11 @@ nsresult nsXREDirProvider::GetLegacyOrXDGHomePath(const char* aHomeDir,
 
   bool exists = LegacyHomeExists(getter_AddRefs(parentDir));
   if (exists || IsForceLegacyHome() || aForceLegacy) {
+    if (exists) {
+      MaybeRecordXdgTelemetry(legacyOrXDGHomeTelemetry::legacyExists);
+    } else {
+      MaybeRecordXdgTelemetry(legacyOrXDGHomeTelemetry::legacyForced);
+    }
     parentDir.forget(aFile);
     return NS_OK;
   }
