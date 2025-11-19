@@ -275,7 +275,6 @@ fun TabsTray(
             )
         },
         floatingActionButtonPosition = FabPosition.EndOverlay,
-        containerColor = MaterialTheme.colorScheme.surface,
     ) { paddingValues ->
         Box {
             HorizontalPager(

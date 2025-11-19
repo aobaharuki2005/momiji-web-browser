@@ -368,7 +368,6 @@ private fun BookmarksList(
                 BookmarksListTopBar(store = store)
             }
         },
-        containerColor = MaterialTheme.colorScheme.surface,
     ) { paddingValues ->
         if (state.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -926,7 +925,6 @@ private fun SelectFolderScreen(
         topBar = {
             SelectFolderTopBar(store = store)
         },
-        containerColor = MaterialTheme.colorScheme.surface,
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -1390,7 +1388,6 @@ private fun EditFolderScreen(
                 onDeleteClick = { store.dispatch(EditFolderAction.DeleteClicked) },
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface,
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -1478,7 +1475,6 @@ private fun AddFolderScreen(
     val state by store.observeAsState(store.state.bookmarksAddFolderState) { it.bookmarksAddFolderState }
     Scaffold(
         topBar = { AddFolderTopBar(onBackClick = { store.dispatch(BackClicked) }) },
-        containerColor = MaterialTheme.colorScheme.surface,
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -1566,7 +1562,6 @@ private fun EditBookmarkScreen(
                 onDeleteClicked = { store.dispatch(EditBookmarkAction.DeleteClicked) },
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface,
     ) { paddingValues ->
         Box(
             modifier = Modifier

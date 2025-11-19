@@ -87,7 +87,6 @@ fun StoriesScreen(
                 scrollBehavior = scrollBehavior,
             )
         },
-        containerColor = MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
