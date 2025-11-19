@@ -84,6 +84,10 @@ document.addEventListener(
         case "context_bookmarkTab":
           PlacesCommandHook.bookmarkTabs([TabContextMenu.contextTab]);
           break;
+        case "context_addNote":
+        case "context_editNote":
+          gBrowser.tabNoteMenu.openPanel(TabContextMenu.contextTab);
+          break;
         case "context_moveToStart":
           gBrowser.moveTabsToStart(TabContextMenu.contextTab);
           break;

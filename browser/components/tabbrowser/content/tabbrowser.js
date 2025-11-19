@@ -94,6 +94,7 @@
     init() {
       this.tabContainer = document.getElementById("tabbrowser-tabs");
       this.tabGroupMenu = document.getElementById("tab-group-editor");
+      this.tabNoteMenu = document.getElementById("tab-note-menu");
       this.tabbox = document.getElementById("tabbrowser-tabbox");
       this.tabpanels = document.getElementById("tabbrowser-tabpanels");
       this.pinnedTabsContainer = document.getElementById(
@@ -158,6 +159,12 @@
         this,
         "_tabGroupsEnabled",
         "browser.tabs.groups.enabled",
+        false
+      );
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_tabNotesEnabled",
+        "browser.tabs.notes.enabled",
         false
       );
       XPCOMUtils.defineLazyPreferenceGetter(
@@ -9681,6 +9688,18 @@ var TabContextMenu = {
       contextUngroupTab.hidden = true;
       contextMoveSplitViewToNewGroup.hidden = true;
       contextUngroupSplitView.hidden = true;
+    }
+
+    let contextAddNote = document.getElementById("context_addNote");
+    let contextEditNote = document.getElementById("context_editNote");
+    if (gBrowser._tabNotesEnabled) {
+      let noteURL = this.contextTab.linkedBrowser.currentURI.spec;
+      let hasNote = gBrowser.TabNotes.has(noteURL);
+      contextAddNote.hidden = hasNote;
+      contextEditNote.hidden = !hasNote;
+    } else {
+      contextAddNote.hidden = true;
+      contextEditNote.hidden = true;
     }
 
     // Split View

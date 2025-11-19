@@ -381,6 +381,25 @@ tab-group-context-open-saved-group-in-this-window =
 tab-group-context-open-saved-group-in-new-window =
     .label = Open Group in New Window
 
+## Tab Notes
+
+tab-context-add-note =
+    .label = Add Note
+    .accesskey = A
+tab-context-edit-note =
+    .label = Edit Note
+    .accesskey = E
+tab-note-editor-title-create = Add note
+tab-note-editor-title-edit = Edit note
+tab-note-editor-text-field =
+    .placeholder = What do you want to remember about this tab?
+tab-note-editor-button-cancel =
+    .label = Cancel
+    .accesskey = C
+tab-note-editor-button-save =
+    .label = Save
+    .accesskey = S
+
 ## Split View
 
 # Split view tabs display their respective contents side by side
