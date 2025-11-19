@@ -556,7 +556,7 @@ void NrIceCtx::InitializeGlobals(const GlobalConfig& aConfig) {
   RLogConnector::CreateInstance();
   // Initialize the crypto callbacks and logging stuff
   if (!initialized) {
-    NR_reg_init(NR_REG_MODE_LOCAL);
+    NR_reg_init();
     nr_crypto_vtbl = &nr_ice_crypto_nss_vtbl;
     initialized = true;
 

@@ -73,10 +73,10 @@ int NR_LOG_REGISTRY=0;
 NR_registry NR_TOP_LEVEL_REGISTRY = "";
 
 int
-NR_reg_init(void *mode)
+NR_reg_init()
 {
     int r, _status;
-    nr_registry_module *module = (nr_registry_module*)mode;
+    nr_registry_module *module = (nr_registry_module*)NR_REG_MODE_LOCAL;
 #ifdef SANITY_CHECKS
     NR_registry registry;
 #endif

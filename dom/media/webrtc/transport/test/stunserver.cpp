@@ -341,7 +341,7 @@ int TestStunServer::Initialize(int address_family) {
 }
 
 UniquePtr<TestStunServer> TestStunServer::Create(int address_family) {
-  NR_reg_init(NR_REG_MODE_LOCAL);
+  NR_reg_init();
 
   UniquePtr<TestStunServer> server(new TestStunServer());
 
@@ -623,7 +623,7 @@ void TestStunTcpServer::accept_cb(NR_SOCKET s, int how, void* cb_arg) {
 }
 
 UniquePtr<TestStunTcpServer> TestStunTcpServer::Create(int address_family) {
-  NR_reg_init(NR_REG_MODE_LOCAL);
+  NR_reg_init();
 
   UniquePtr<TestStunTcpServer> server(new TestStunTcpServer());
 
