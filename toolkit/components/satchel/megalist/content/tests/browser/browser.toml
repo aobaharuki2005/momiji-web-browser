@@ -1,7 +1,6 @@
 [DEFAULT]
 prefs = [
   "sidebar.revamp=true",
-  "signon.management.page.os-auth.locked.enabled=true",
 ]
 
 support-files = [
