@@ -137,8 +137,7 @@ export class UrlbarInput extends HTMLElement {
                       data-l10n-id="urlbar-placeholder"/>
         </moz-input-box>
         <moz-urlbar-slot name="revert-button"> </moz-urlbar-slot>
-        <image id="urlbar-go-button"
-               class="urlbar-icon urlbar-go-button"
+        <image class="urlbar-icon urlbar-go-button"
                role="button"
                data-l10n-id="urlbar-go-button"/>
         <moz-urlbar-slot name="page-actions" hidden=""> </moz-urlbar-slot>
@@ -4640,29 +4639,35 @@ export class UrlbarInput extends HTMLElement {
   }
 
   _on_click(event) {
-    if (
-      event.target == this.inputField ||
-      event.target == this._inputContainer
-    ) {
-      this._maybeSelectAll();
-      this.#maybeUntrimUrl();
-    }
+    switch (event.target) {
+      case this.inputField:
+      case this._inputContainer:
+        this._maybeSelectAll();
+        this.#maybeUntrimUrl();
+        break;
 
-    if (event.target == this._searchModeIndicatorClose && event.button != 2) {
-      this.searchMode = null;
-      if (this.view.oneOffSearchButtons) {
-        this.view.oneOffSearchButtons.selectedButton = null;
-      }
-      if (this.view.isOpen) {
-        this.startQuery({
-          event,
-        });
-      }
-    }
+      case this._searchModeIndicatorClose:
+        if (event.button != 2) {
+          this.searchMode = null;
+          if (this.view.oneOffSearchButtons) {
+            this.view.oneOffSearchButtons.selectedButton = null;
+          }
+          if (this.view.isOpen) {
+            this.startQuery({
+              event,
+            });
+          }
+        }
+        break;
 
-    if (event.target == this._revertButton) {
-      this.handleRevert();
-      this.select();
+      case this._revertButton:
+        this.handleRevert();
+        this.select();
+        break;
+
+      case this.goButton:
+        this.handleCommand(event);
+        break;
     }
   }
 

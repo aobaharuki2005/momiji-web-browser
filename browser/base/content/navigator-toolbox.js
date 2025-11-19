@@ -183,7 +183,6 @@ document.addEventListener(
         #back-button,
         #forward-button,
         #reload-button ,
-        #urlbar-go-button,
         #reader-mode-button,
         #picture-in-picture-button,
         #urlbar-zoom-button,
@@ -213,10 +212,6 @@ document.addEventListener(
         case "forward-button":
         case "reload-button":
           checkForMiddleClick(element, event);
-          break;
-
-        case "urlbar-go-button":
-          gURLBar.handleCommand(event);
           break;
 
         case "reader-mode-button":
