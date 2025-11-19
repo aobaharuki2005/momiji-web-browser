@@ -2240,6 +2240,9 @@ pref("browser.ml.smartAssist.endpoint", "");
 pref("browser.ml.smartAssist.model", "");
 pref("browser.ml.smartAssist.overrideNewTab", false);
 
+// AI Window Feature
+pref("browser.aiwindow.enabled", false);
+
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
