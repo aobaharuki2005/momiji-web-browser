@@ -408,6 +408,60 @@
           "Rendered moz-box-button as the first nested control item"
         );
       });
+
+      add_task(async function testMozSupportLink() {
+        await SpecialPowers.pushPrefEnv({
+          set: [["app.support.baseURL", "https://support.example.com/"]],
+        });
+        Preferences.addSetting({
+          id: "testMozSupportLink",
+          get: () => true,
+        });
+        let itemConfig = {
+          id: "testMozSupportLink",
+          options: [
+            {
+              control: "a",
+              controlAttrs: {
+                href: "https://example.com/",
+                ".textContent": "Link text",
+                slot: "support-link",
+              },
+            },
+            {
+              control: "a",
+              controlAttrs: {
+                slot: "support-link",
+                is: "moz-support-link",
+                "support-page": "get-help",
+              },
+            },
+          ],
+        };
+        let control = await renderTemplate(itemConfig);
+        let [anchor, mozSupportLink] = control.controlEl.shadowRoot
+          .querySelector('slot[name="support-link"]')
+          .assignedNodes();
+
+        function assertLinkProperties(el, { href, text }) {
+          ok(el, "Got a link element");
+          is(el.href, href, "href is correct");
+          is(el.innerText, text, "text is correct");
+        }
+
+        assertLinkProperties(anchor, {
+          href: "https://example.com/",
+          text: "Link text",
+        });
+        assertLinkProperties(mozSupportLink, {
+          href: "https://support.example.com/get-help",
+          text: "Learn more",
+        });
+        ok(
+          mozSupportLink instanceof customElements.get("moz-support-link"),
+          "moz-support-link is a MozSupportLink"
+        );
+      });
     </script>
   </head>
   <body>
