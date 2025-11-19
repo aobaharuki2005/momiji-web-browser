@@ -546,31 +546,23 @@
     /**
      * add tabs to the group
      *
-     * @param {MozTabbrowserTab[] | MozSplitViewWrapper} tabsOrSplitViews
+     * @param {MozTabbrowserTab[]} tabs
      * @param {TabMetricsContext} [metricsContext]
      *   Optional context to record for metrics purposes.
      */
-    addTabs(tabsOrSplitViews, metricsContext = null) {
-      for (let tabOrSplitView of tabsOrSplitViews) {
-        if (gBrowser.isSplitViewWrapper(tabOrSplitView)) {
-          gBrowser.moveSplitViewToExistingGroup(
-            tabOrSplitView,
-            this,
-            metricsContext
-          );
-        } else {
-          if (tabOrSplitView.pinned) {
-            tabOrSplitView.ownerGlobal.gBrowser.unpinTab(tabOrSplitView);
-          }
-          let tabToMove =
-            this.ownerGlobal === tabOrSplitView.ownerGlobal
-              ? tabOrSplitView
-              : gBrowser.adoptTab(tabOrSplitView, {
-                  tabIndex: gBrowser.tabs.at(-1)._tPos + 1,
-                  selectTab: tabOrSplitView.selected,
-                });
-          gBrowser.moveTabToExistingGroup(tabToMove, this, metricsContext);
+    addTabs(tabs, metricsContext) {
+      for (let tab of tabs) {
+        if (tab.pinned) {
+          tab.ownerGlobal.gBrowser.unpinTab(tab);
         }
+        let tabToMove =
+          this.ownerGlobal === tab.ownerGlobal
+            ? tab
+            : gBrowser.adoptTab(tab, {
+                tabIndex: gBrowser.tabs.at(-1)._tPos + 1,
+                selectTab: tab.selected,
+              });
+        gBrowser.moveTabToGroup(tabToMove, this, metricsContext);
       }
       this.#lastAddedTo = Date.now();
     }

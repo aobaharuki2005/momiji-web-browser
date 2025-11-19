@@ -24,12 +24,6 @@ document.addEventListener(
         case "context_ungroupTab":
           TabContextMenu.ungroupTabs();
           break;
-        case "context_moveSplitViewToNewGroup":
-          TabContextMenu.moveSplitViewToNewGroup();
-          break;
-        case "context_ungroupSplitView":
-          TabContextMenu.ungroupSplitViews();
-          break;
         case "context_moveTabToSplitView":
           TabContextMenu.moveTabsToSplitView();
           break;

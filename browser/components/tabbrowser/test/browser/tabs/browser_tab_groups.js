@@ -42,25 +42,6 @@ add_task(async function test_tabGroupCreateAndAddTab() {
   await removeTabGroup(group);
 });
 
-add_task(async function test_tabGroupCreateAndAddSplitView() {
-  let tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  let tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank");
-
-  let splitview = gBrowser.addTabSplitView([tab1, tab2]);
-
-  Assert.ok(splitview.splitViewId, "split view has id");
-  Assert.ok(
-    splitview.tabs.includes(tab1) && splitview.tabs.includes(tab2),
-    "tab1 and tab2 are in split view"
-  );
-
-  let group = gBrowser.addTabGroup([splitview]);
-
-  Assert.equal(group.tabs.length, 2, "group has 2 tabs");
-
-  await removeTabGroup(group);
-});
-
 add_task(async function test_tabGroupCreateAndAddTabAtPosition() {
   let tabs = createManyTabs(10);
   let tabToGroup = tabs[5];
@@ -176,7 +157,7 @@ add_task(async function test_tabGroupCollapseAndExpand() {
   group.collapsed = true;
   Assert.ok(group.collapsed, "group is collapsed via API");
 
-  gBrowser.moveTabToExistingGroup(tab2, group);
+  gBrowser.moveTabToGroup(tab2, group);
   Assert.ok(
     group.collapsed,
     "group stays collapsed after moving inactive tab into group"
