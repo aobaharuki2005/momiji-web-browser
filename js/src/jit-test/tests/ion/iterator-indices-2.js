@@ -6,6 +6,16 @@ function test(obj, expected) {
   assertEq(actual, expected);
 }
 
+function test2(obj, expected) {
+  var count = 0;
+  for (var s of Object.keys(obj)) {
+    if (obj.hasOwnProperty(s)) {
+      count++;
+    }
+  }
+  assertEq(count, expected);
+}
+
 var arr = [];
 for (var i = 0; i < 20; i++) {
   var obj = {};
@@ -20,4 +30,5 @@ with ({}) {}
 for (var i = 0; i < 2000; i++) {
   var idx = i % arr.length;
   test(arr[idx], idx);
+  test2(arr[idx], idx);
 }

@@ -18535,7 +18535,8 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
     // do a VM call to replace the cached iterator with a fresh iterator
     // including indices.
     masm.branchTest32(Assembler::NonZero, iterFlagsAddr,
-                  Imm32(NativeIterator::Flags::IndicesSupported), ool->entry());
+                      Imm32(NativeIterator::Flags::IndicesSupported),
+                      ool->entry());
   }
 
   if (!lir->mir()->skipRegistration()) {
@@ -18607,49 +18608,131 @@ void CodeGenerator::visitIteratorHasIndicesAndBranch(
   }
 }
 
-void CodeGenerator::visitLoadSlotByIteratorIndex(
-    LLoadSlotByIteratorIndex* lir) {
-  Register object = ToRegister(lir->object());
-  Register iterator = ToRegister(lir->iterator());
-  Register temp = ToRegister(lir->temp0());
-  Register temp2 = ToRegister(lir->temp1());
-  ValueOperand result = ToOutValue(lir);
-
-  masm.extractCurrentIndexAndKindFromIterator(iterator, temp, temp2);
-
+void CodeGenerator::visitLoadSlotByIteratorIndexCommon(Register object,
+                                                       Register indexScratch,
+                                                       Register kindScratch,
+                                                       ValueOperand result) {
   Label notDynamicSlot, notFixedSlot, done;
-  masm.branch32(Assembler::NotEqual, temp2,
+  masm.branch32(Assembler::NotEqual, kindScratch,
                 Imm32(uint32_t(PropertyIndex::Kind::DynamicSlot)),
                 &notDynamicSlot);
-  masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
-  masm.loadValue(BaseValueIndex(temp2, temp), result);
+  masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), kindScratch);
+  masm.loadValue(BaseValueIndex(kindScratch, indexScratch), result);
   masm.jump(&done);
 
   masm.bind(&notDynamicSlot);
-  masm.branch32(Assembler::NotEqual, temp2,
+  masm.branch32(Assembler::NotEqual, kindScratch,
                 Imm32(uint32_t(PropertyIndex::Kind::FixedSlot)), &notFixedSlot);
   // Fixed slot
-  masm.loadValue(BaseValueIndex(object, temp, sizeof(NativeObject)), result);
+  masm.loadValue(BaseValueIndex(object, indexScratch, sizeof(NativeObject)),
+                 result);
   masm.jump(&done);
   masm.bind(&notFixedSlot);
 
 #ifdef DEBUG
   Label kindOkay;
-  masm.branch32(Assembler::Equal, temp2,
+  masm.branch32(Assembler::Equal, kindScratch,
                 Imm32(uint32_t(PropertyIndex::Kind::Element)), &kindOkay);
   masm.assumeUnreachable("Invalid PropertyIndex::Kind");
   masm.bind(&kindOkay);
 #endif
 
   // Dense element
-  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), temp2);
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), kindScratch);
   Label indexOkay;
-  Address initLength(temp2, ObjectElements::offsetOfInitializedLength());
-  masm.branch32(Assembler::Above, initLength, temp, &indexOkay);
+  Address initLength(kindScratch, ObjectElements::offsetOfInitializedLength());
+  masm.branch32(Assembler::Above, initLength, indexScratch, &indexOkay);
   masm.assumeUnreachable("Dense element out of bounds");
   masm.bind(&indexOkay);
 
-  masm.loadValue(BaseObjectElementIndex(temp2, temp), result);
+  masm.loadValue(BaseObjectElementIndex(kindScratch, indexScratch), result);
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitLoadSlotByIteratorIndex(
+    LLoadSlotByIteratorIndex* lir) {
+  Register object = ToRegister(lir->object());
+  Register iterator = ToRegister(lir->iterator());
+  Register indexScratch = ToRegister(lir->temp0());
+  Register kindScratch = ToRegister(lir->temp1());
+  ValueOperand result = ToOutValue(lir);
+
+  masm.extractCurrentIndexAndKindFromIterator(iterator, indexScratch,
+                                              kindScratch);
+
+  visitLoadSlotByIteratorIndexCommon(object, indexScratch, kindScratch, result);
+}
+
+#ifndef JS_CODEGEN_X86
+void CodeGenerator::visitLoadSlotByIteratorIndexIndexed(
+    LLoadSlotByIteratorIndexIndexed* lir) {
+  Register object = ToRegister(lir->object());
+  Register iterator = ToRegister(lir->iterator());
+  Register index = ToRegister(lir->index());
+  Register indexScratch = ToRegister(lir->temp0());
+  Register kindScratch = ToRegister(lir->temp1());
+  ValueOperand result = ToOutValue(lir);
+
+  masm.extractIndexAndKindFromIteratorByIterIndex(iterator, index, kindScratch,
+                                                  indexScratch);
+
+  visitLoadSlotByIteratorIndexCommon(object, indexScratch, kindScratch, result);
+}
+#endif
+
+void CodeGenerator::visitStoreSlotByIteratorIndexCommon(Register object,
+                                                        Register indexScratch,
+                                                        Register kindScratch,
+                                                        ValueOperand value) {
+  Label notDynamicSlot, notFixedSlot, done, doStore;
+  masm.branch32(Assembler::NotEqual, kindScratch,
+                Imm32(uint32_t(PropertyIndex::Kind::DynamicSlot)),
+                &notDynamicSlot);
+  masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), kindScratch);
+  masm.computeEffectiveAddress(BaseValueIndex(kindScratch, indexScratch),
+                               indexScratch);
+  masm.jump(&doStore);
+
+  masm.bind(&notDynamicSlot);
+  masm.branch32(Assembler::NotEqual, kindScratch,
+                Imm32(uint32_t(PropertyIndex::Kind::FixedSlot)), &notFixedSlot);
+  // Fixed slot
+  masm.computeEffectiveAddress(
+      BaseValueIndex(object, indexScratch, sizeof(NativeObject)), indexScratch);
+  masm.jump(&doStore);
+  masm.bind(&notFixedSlot);
+
+#ifdef DEBUG
+  Label kindOkay;
+  masm.branch32(Assembler::Equal, kindScratch,
+                Imm32(uint32_t(PropertyIndex::Kind::Element)), &kindOkay);
+  masm.assumeUnreachable("Invalid PropertyIndex::Kind");
+  masm.bind(&kindOkay);
+#endif
+
+  // Dense element
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), kindScratch);
+  Label indexOkay;
+  Address initLength(kindScratch, ObjectElements::offsetOfInitializedLength());
+  masm.branch32(Assembler::Above, initLength, indexScratch, &indexOkay);
+  masm.assumeUnreachable("Dense element out of bounds");
+  masm.bind(&indexOkay);
+
+  BaseObjectElementIndex elementAddress(kindScratch, indexScratch);
+  masm.computeEffectiveAddress(elementAddress, indexScratch);
+
+  masm.bind(&doStore);
+  Address storeAddress(indexScratch, 0);
+  emitPreBarrier(storeAddress);
+  masm.storeValue(value, storeAddress);
+
+  masm.branchPtrInNurseryChunk(Assembler::Equal, object, kindScratch, &done);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, kindScratch, &done);
+
+  saveVolatile(kindScratch);
+  emitPostWriteBarrier(object);
+  restoreVolatile(kindScratch);
+
   masm.bind(&done);
 }
 
@@ -18658,61 +18741,31 @@ void CodeGenerator::visitStoreSlotByIteratorIndex(
   Register object = ToRegister(lir->object());
   Register iterator = ToRegister(lir->iterator());
   ValueOperand value = ToValue(lir->value());
-  Register temp = ToRegister(lir->temp0());
-  Register temp2 = ToRegister(lir->temp1());
+  Register indexScratch = ToRegister(lir->temp0());
+  Register kindScratch = ToRegister(lir->temp1());
 
-  masm.extractCurrentIndexAndKindFromIterator(iterator, temp, temp2);
+  masm.extractCurrentIndexAndKindFromIterator(iterator, indexScratch,
+                                              kindScratch);
 
-  Label notDynamicSlot, notFixedSlot, done, doStore;
-  masm.branch32(Assembler::NotEqual, temp2,
-                Imm32(uint32_t(PropertyIndex::Kind::DynamicSlot)),
-                &notDynamicSlot);
-  masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
-  masm.computeEffectiveAddress(BaseValueIndex(temp2, temp), temp);
-  masm.jump(&doStore);
-
-  masm.bind(&notDynamicSlot);
-  masm.branch32(Assembler::NotEqual, temp2,
-                Imm32(uint32_t(PropertyIndex::Kind::FixedSlot)), &notFixedSlot);
-  // Fixed slot
-  masm.computeEffectiveAddress(
-      BaseValueIndex(object, temp, sizeof(NativeObject)), temp);
-  masm.jump(&doStore);
-  masm.bind(&notFixedSlot);
-
-#ifdef DEBUG
-  Label kindOkay;
-  masm.branch32(Assembler::Equal, temp2,
-                Imm32(uint32_t(PropertyIndex::Kind::Element)), &kindOkay);
-  masm.assumeUnreachable("Invalid PropertyIndex::Kind");
-  masm.bind(&kindOkay);
-#endif
-
-  // Dense element
-  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), temp2);
-  Label indexOkay;
-  Address initLength(temp2, ObjectElements::offsetOfInitializedLength());
-  masm.branch32(Assembler::Above, initLength, temp, &indexOkay);
-  masm.assumeUnreachable("Dense element out of bounds");
-  masm.bind(&indexOkay);
-
-  BaseObjectElementIndex elementAddress(temp2, temp);
-  masm.computeEffectiveAddress(elementAddress, temp);
-
-  masm.bind(&doStore);
-  Address storeAddress(temp, 0);
-  emitPreBarrier(storeAddress);
-  masm.storeValue(value, storeAddress);
-
-  masm.branchPtrInNurseryChunk(Assembler::Equal, object, temp2, &done);
-  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp2, &done);
-
-  saveVolatile(temp2);
-  emitPostWriteBarrier(object);
-  restoreVolatile(temp2);
-
-  masm.bind(&done);
+  visitStoreSlotByIteratorIndexCommon(object, indexScratch, kindScratch, value);
 }
+
+#ifndef JS_CODEGEN_X86
+void CodeGenerator::visitStoreSlotByIteratorIndexIndexed(
+    LStoreSlotByIteratorIndexIndexed* lir) {
+  Register object = ToRegister(lir->object());
+  Register iterator = ToRegister(lir->iterator());
+  Register index = ToRegister(lir->index());
+  ValueOperand value = ToValue(lir->value());
+  Register indexScratch = ToRegister(lir->temp0());
+  Register kindScratch = ToRegister(lir->temp1());
+
+  masm.extractIndexAndKindFromIteratorByIterIndex(iterator, index, kindScratch,
+                                                  indexScratch);
+
+  visitStoreSlotByIteratorIndexCommon(object, indexScratch, kindScratch, value);
+}
+#endif
 
 void CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins) {
   LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();

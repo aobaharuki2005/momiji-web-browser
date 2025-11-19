@@ -5135,12 +5135,24 @@ bool jit::MakeLoopsContiguous(MIRGraph& graph) {
   return true;
 }
 
-static MDefinition* SkipUnbox(MDefinition* ins) {
+static MDefinition* SkipIterObjectUnbox(MDefinition* ins) {
+  if (ins->isGuardIsNotProxy()) {
+    ins = ins->toGuardIsNotProxy()->input();
+  }
   if (ins->isUnbox()) {
-    return ins->toUnbox()->input();
+    ins = ins->toUnbox()->input();
   }
   return ins;
 }
+
+#ifndef JS_CODEGEN_X86
+static MDefinition* SkipBox(MDefinition* ins) {
+  if (ins->isBox()) {
+    return ins->toBox()->input();
+  }
+  return ins;
+}
+#endif
 
 bool jit::OptimizeIteratorIndices(const MIRGenerator* mir, MIRGraph& graph) {
   bool changed = false;
@@ -5189,8 +5201,8 @@ bool jit::OptimizeIteratorIndices(const MIRGenerator* mir, MIRGraph& graph) {
       // Given the following structure (that occurs inside for-in loops):
       //   obj: some object
       //   iter: ObjectToIterator <obj>
-      //   iterNext: IteratorMore <iter>
-      //   access: HasProp/GetElem <obj> <iterNext>
+      //   iterLoad: IteratorMore <iter> | LoadIteratorElement <iter, index>
+      //   access: HasProp/GetElem <obj> <iterLoad>
       // If the iterator object has an indices array, we can speed up the
       // property access:
       // 1. If the property access is a HasProp looking for own properties,
@@ -5200,17 +5212,42 @@ bool jit::OptimizeIteratorIndices(const MIRGenerator* mir, MIRGraph& graph) {
       // 2. If the property access is a GetProp, then we can use the contents
       //    of the indices array to find the correct property faster than
       //    the megamorphic cache.
-      if (!idVal->isIteratorMore()) {
-        continue;
-      }
-      auto* iterNext = idVal->toIteratorMore();
+      // 3. If the property access is a SetProp, then we can use the contents
+      //    of the indices array to find the correct slots faster than the
+      //    megamorphic cache.
 
-      if (!iterNext->iterator()->isObjectToIterator()) {
-        continue;
-      }
+      MObjectToIterator* iter = nullptr;
+#ifndef JS_CODEGEN_X86
+      MDefinition* iterElementIndex = nullptr;
+#endif
+      if (idVal->isIteratorMore()) {
+        auto* iterNext = idVal->toIteratorMore();
 
-      MObjectToIterator* iter = iterNext->iterator()->toObjectToIterator();
-      if (SkipUnbox(iter->object()) != SkipUnbox(receiver)) {
+        if (!iterNext->iterator()->isObjectToIterator()) {
+          continue;
+        }
+
+        iter = iterNext->iterator()->toObjectToIterator();
+        if (SkipIterObjectUnbox(iter->object()) !=
+            SkipIterObjectUnbox(receiver)) {
+          continue;
+        }
+#ifndef JS_CODEGEN_X86
+      } else if (SkipBox(idVal)->isLoadIteratorElement()) {
+        auto* iterLoad = SkipBox(idVal)->toLoadIteratorElement();
+
+        if (!iterLoad->iter()->isObjectToIterator()) {
+          continue;
+        }
+
+        iter = iterLoad->iter()->toObjectToIterator();
+        if (SkipIterObjectUnbox(iter->object()) !=
+            SkipIterObjectUnbox(receiver)) {
+          continue;
+        }
+        iterElementIndex = iterLoad->index();
+#endif
+      } else {
         continue;
       }
 
@@ -5223,13 +5260,33 @@ bool jit::OptimizeIteratorIndices(const MIRGenerator* mir, MIRGraph& graph) {
       } else if (ins->isMegamorphicLoadSlotByValue() ||
                  ins->isGetPropertyCache()) {
         MOZ_ASSERT(!setValue);
+#ifndef JS_CODEGEN_X86
+        if (iterElementIndex) {
+          replacement = MLoadSlotByIteratorIndexIndexed::New(
+              graph.alloc(), receiver, iter, iterElementIndex);
+        } else {
+          replacement =
+              MLoadSlotByIteratorIndex::New(graph.alloc(), receiver, iter);
+        }
+#else
         replacement =
             MLoadSlotByIteratorIndex::New(graph.alloc(), receiver, iter);
+#endif
       } else {
         MOZ_ASSERT(ins->isMegamorphicSetElement() || ins->isSetPropertyCache());
         MOZ_ASSERT(setValue);
+#ifndef JS_CODEGEN_X86
+        if (iterElementIndex) {
+          replacement = MStoreSlotByIteratorIndexIndexed::New(
+              graph.alloc(), receiver, iter, iterElementIndex, setValue);
+        } else {
+          replacement = MStoreSlotByIteratorIndex::New(graph.alloc(), receiver,
+                                                       iter, setValue);
+        }
+#else
         replacement = MStoreSlotByIteratorIndex::New(graph.alloc(), receiver,
                                                      iter, setValue);
+#endif
       }
 
       if (!block->wrapInstructionInFastpath(ins, replacement, indicesCheck)) {

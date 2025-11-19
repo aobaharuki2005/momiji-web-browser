@@ -3280,6 +3280,45 @@ void MacroAssembler::extractCurrentIndexAndKindFromIterator(Register iterator,
   and32(Imm32(PropertyIndex::IndexMask), outIndex);
 }
 
+void MacroAssembler::extractIndexAndKindFromIteratorByIterIndex(
+    Register iterator, Register inIndex, Register outKind, Register outIndex) {
+  // Load iterator object
+  Address nativeIterAddr(iterator,
+                         PropertyIteratorObject::offsetOfIteratorSlot());
+  loadPrivate(nativeIterAddr, outIndex);
+
+  // Load the property count into outKind.
+  load32(Address(outIndex, NativeIterator::offsetOfPropertyCount()), outKind);
+
+  // We need two bits of wiggle room in a u32 here for the logic below.
+  static_assert(NativeIterator::PropCountLimit <= 1 << 30);
+
+  // Shift up the property count on 64 bit. Ultimately we want
+  // sizeof(IteratorProperty) * count + sizeof(PropertyIndex) * cursor.
+  // If we shift up our count to be on the same scale as cursor right now,
+  // we can do this all with one register.
+  static_assert(sizeof(IteratorProperty) == sizeof(PropertyIndex) ||
+                sizeof(IteratorProperty) == sizeof(PropertyIndex) * 2);
+  if constexpr (sizeof(IteratorProperty) > sizeof(PropertyIndex)) {
+    lshift32(Imm32(1), outKind);
+  }
+
+  // Add the index
+  add32(inIndex, outKind);
+
+  // outKind holds the offset in u32's to our PropertyIndex, so just multiply
+  // by four and add it to the offset of the first property
+  load32(BaseIndex(outIndex, outKind, Scale::TimesFour,
+                   NativeIterator::offsetOfFirstProperty()),
+         outIndex);
+
+  // Extract kind.
+  rshift32(Imm32(PropertyIndex::KindShift), outIndex, outKind);
+
+  // Extract index.
+  and32(Imm32(PropertyIndex::IndexMask), outIndex);
+}
+
 template <typename IdType>
 void MacroAssembler::emitMegamorphicCachedSetSlot(
     IdType id, Register obj, Register scratch1,
