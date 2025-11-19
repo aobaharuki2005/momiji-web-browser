@@ -142,6 +142,24 @@
         font-weight: var(--font-weight-semibold);
         gap: var(--space-xs);
       }
+
+      .visit-link::after {
+        content: "";
+        background-image: url("chrome://browser/skin/forward.svg");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        display: inline-block;
+        fill: currentColor;
+        height: 16px;
+        margin-inline-start: 8px;
+        -moz-context-properties: fill;
+        width: 16px;
+      }
+
+      &:dir(rtl) .visit-link::after {
+        transform: scaleX(-1);
+      }
     }
 
     > hr {

@@ -343,12 +343,6 @@ class LinkPreviewCard extends MozLitElement {
                     class="visit-link"
                   >
                     <span data-l10n-id="link-preview-visit-link"></span>
-                    <img
-                      class="icon"
-                      xmlns="http://www.w3.org/1999/xhtml"
-                      role="presentation"
-                      src="chrome://global/skin/icons/open-in-new.svg"
-                    />
                   </a>
                 </div>
               `
