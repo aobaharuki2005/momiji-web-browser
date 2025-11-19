@@ -40,6 +40,8 @@ const BACKUP_DEBUG_INFO_PREF_NAME = "browser.backup.backup-debug-info";
 const MAXIMUM_NUMBER_OF_UNREMOVABLE_STAGING_ITEMS_PREF_NAME =
   "browser.backup.max-num-unremovable-staging-items";
 const CREATED_MANAGED_PROFILES_PREF_NAME = "browser.profiles.created";
+const RESTORED_BACKUP_METADATA_PREF_NAME =
+  "browser.backup.restored-backup-metadata";
 
 const SCHEMAS = Object.freeze({
   BACKUP_MANIFEST: 1,
@@ -1226,6 +1228,37 @@ export class BackupService extends EventTarget {
         });
       }
     }, BackupService.REGENERATION_DEBOUNCE_RATE_MS);
+    this.#postRecoveryPromise.then(() => {
+      const payload = {
+        is_restored:
+          !!Services.prefs.getIntPref(
+            "browser.backup.profile-restoration-date",
+            0
+          ) &&
+          !Services.prefs.getBoolPref("browser.profiles.profile-copied", false),
+      };
+      if (payload.is_restored) {
+        let backupMetadata = {};
+        try {
+          backupMetadata = JSON.parse(
+            Services.prefs.getStringPref(
+              RESTORED_BACKUP_METADATA_PREF_NAME,
+              "{}"
+            )
+          );
+        } catch {}
+        payload.backup_timestamp = backupMetadata.date
+          ? new Date(backupMetadata.date).getTime()
+          : null;
+        payload.backup_app_name = backupMetadata.appName || null;
+        payload.backup_app_version = backupMetadata.appVersion || null;
+        payload.backup_build_id = backupMetadata.buildID || null;
+        payload.backup_os_name = backupMetadata.osName || null;
+        payload.backup_os_version = backupMetadata.osVersion || null;
+        payload.backup_legacy_client_id = backupMetadata.legacyClientID || null;
+      }
+      Glean.browserBackup.restoredProfileData.set(payload);
+    });
   }
 
   /**
@@ -3218,6 +3251,24 @@ export class BackupService extends EventTarget {
         profile.rootDir.path
       );
 
+      try {
+        postRecovery.backupServiceInternal = {
+          // Indicates that this is not a result of a profile copy (which uses the
+          // same mechanism, but doesn't go through this function).
+          isProfileRestore: true,
+          restoreID: this.#_state.restoreID,
+          backupMetadata: {
+            date: this.#_state.backupFileInfo.date,
+            appName: this.#_state.backupFileInfo.appName,
+            appVersion: this.#_state.backupFileInfo.appVersion,
+            buildID: this.#_state.backupFileInfo.buildID,
+            osName: this.#_state.backupFileInfo.osName,
+            osVersion: this.#_state.backupFileInfo.osVersion,
+            legacyClientID: this.#_state.backupFileInfo.legacyClientID,
+          },
+        };
+      } catch {}
+
       await this.#maybeWriteEncryptedStateObject(
         encState,
         profile.rootDir.path
@@ -3384,17 +3435,39 @@ export class BackupService extends EventTarget {
       let postRecovery = await IOUtils.readJSON(postRecoveryFile);
       for (let resourceKey in postRecovery) {
         let postRecoveryEntry = postRecovery[resourceKey];
-        let resourceClass = this.#resources.get(resourceKey);
-        if (!resourceClass) {
-          lazy.logConsole.error(
-            `Invalid resource for post-recovery step: ${resourceKey}`
+        if (
+          resourceKey == "backupServiceInternal" &&
+          postRecoveryEntry.isProfileRestore
+        ) {
+          Services.prefs.setStringPref(
+            RESTORED_BACKUP_METADATA_PREF_NAME,
+            JSON.stringify(postRecoveryEntry.backupMetadata)
           );
-          continue;
-        }
+          Glean.browserBackup.restoredProfileLaunched.record({
+            restore_id: postRecoveryEntry.restoreID,
+          });
+          // This will clear out the data in this ping, which is a bit of a problem
+          // for testing. So fire off an event first that tests can listen for.
+          Services.obs.notifyObservers(
+            null,
+            "browser-backup-restored-profile-telemetry-set"
+          );
+          GleanPings.postProfileRestore.submit();
+        } else {
+          let resourceClass = this.#resources.get(resourceKey);
+          if (!resourceClass) {
+            lazy.logConsole.error(
+              `Invalid resource for post-recovery step: ${resourceKey}`
+            );
+            continue;
+          }
 
-        lazy.logConsole.debug(`Running post-recovery step for ${resourceKey}`);
-        await new resourceClass().postRecovery(postRecoveryEntry);
-        lazy.logConsole.debug(`Done post-recovery step for ${resourceKey}`);
+          lazy.logConsole.debug(
+            `Running post-recovery step for ${resourceKey}`
+          );
+          await new resourceClass().postRecovery(postRecoveryEntry);
+          lazy.logConsole.debug(`Done post-recovery step for ${resourceKey}`);
+        }
       }
     } finally {
       await IOUtils.remove(postRecoveryFile, {
@@ -4316,6 +4389,7 @@ export class BackupService extends EventTarget {
         osName: archiveJSON?.meta?.osName,
         osVersion: archiveJSON?.meta?.osVersion,
         healthTelemetryEnabled: archiveJSON?.meta?.healthTelemetryEnabled,
+        legacyClientID: archiveJSON?.meta?.legacyClientID,
       };
 
       // Clear any existing recovery error from state since we've successfully

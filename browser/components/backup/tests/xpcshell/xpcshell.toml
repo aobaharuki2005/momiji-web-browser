@@ -42,6 +42,8 @@ support-files = [
 
 ["test_BackupService_finalizeSingleFileArchive.js"]
 
+["test_BackupService_internalPostRecovery.js"]
+
 ["test_BackupService_onedrive.js"]
 run-if = ["os == 'win'"]
 run-sequentially = ["true"] # Mock Windows registry interferes with normal operations
