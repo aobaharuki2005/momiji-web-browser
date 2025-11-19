@@ -116,9 +116,6 @@ class HTMLContentSink : public nsContentSink, public nsIHTMLContentSink {
 
   RefPtr<nsHTMLDocument> mHTMLDocument;
 
-  // The maximum length of a text run
-  int32_t mMaxTextRun;
-
   RefPtr<nsGenericHTMLElement> mRoot;
   RefPtr<nsGenericHTMLElement> mBody;
   RefPtr<nsGenericHTMLElement> mHead;
@@ -528,12 +525,9 @@ nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aResult, Document* aDoc,
   return NS_OK;
 }
 
-HTMLContentSink::HTMLContentSink()
-    : mMaxTextRun(0),
-      mCurrentContext(nullptr),
-      mHeadContext(nullptr),
-      mHaveSeenHead(false),
-      mNotifiedRootInsertion(false) {}
+HTMLContentSink::HTMLContentSink() mCurrentContext(nullptr),
+    mHeadContext(nullptr), mHaveSeenHead(false),
+    mNotifiedRootInsertion(false) {}
 
 HTMLContentSink::~HTMLContentSink() {
   if (mNotificationTimer) {
@@ -587,10 +581,6 @@ nsresult HTMLContentSink::Init(Document* aDoc, nsIURI* aURI,
   mHTMLDocument = aDoc->AsHTMLDocument();
 
   NS_ASSERTION(mDocShell, "oops no docshell!");
-
-  // Changed from 8192 to greatly improve page loading performance on
-  // large pages.  See bugzilla bug 77540.
-  mMaxTextRun = Preferences::GetInt("content.maxtextrun", 8191);
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(
