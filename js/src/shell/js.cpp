@@ -12958,7 +12958,7 @@ bool InitOptionParser(OptionParser& op) {
           "Don't compile very large scripts (default: on, off to disable)") ||
       !op.addIntOption('\0', "ion-warmup-threshold", "COUNT",
                        "Wait for COUNT calls or iterations before compiling "
-                       "at the normal optimization level (default: 1000)",
+                       "at the normal optimization level (default: 1500)",
                        -1) ||
       !op.addStringOption(
           '\0', "ion-regalloc", "[mode]",
