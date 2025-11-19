@@ -445,11 +445,10 @@ fn prepare_interned_prim_for_render(
                     }),
                     false,
                     RenderTaskParent::Surface,
-                    frame_state.gpu_cache,
                     &mut frame_state.frame_gpu_data.f32,
                     frame_state.rg_builder,
                     &mut frame_state.surface_builder,
-                    &mut |rg_builder, _, _| {
+                    &mut |rg_builder, _| {
                         rg_builder.add().init(RenderTask::new_dynamic(
                             task_size,
                             RenderTaskKind::new_line_decoration(
@@ -597,11 +596,10 @@ fn prepare_interned_prim_for_render(
                     Some(cache_key),
                     false,          // TODO(gw): We don't calculate opacity for borders yet!
                     RenderTaskParent::Surface,
-                    frame_state.gpu_cache,
                     &mut frame_state.frame_gpu_data.f32,
                     frame_state.rg_builder,
                     &mut frame_state.surface_builder,
-                    &mut |rg_builder, _, _| {
+                    &mut |rg_builder, _| {
                         rg_builder.add().init(RenderTask::new_dynamic(
                             cache_size,
                             RenderTaskKind::new_border_segment(
@@ -1557,7 +1555,6 @@ pub fn update_clip_task(
             instance.vis.clip_chain.clips_range,
             root_spatial_node_index,
             frame_state.clip_store,
-            frame_state.gpu_cache,
             &mut frame_state.frame_gpu_data.f32,
             frame_state.resource_cache,
             frame_state.rg_builder,
@@ -1623,7 +1620,6 @@ pub fn update_brush_segment_clip_task(
         clip_chain.clips_range,
         root_spatial_node_index,
         frame_state.clip_store,
-        frame_state.gpu_cache,
         &mut frame_state.frame_gpu_data.f32,
         frame_state.resource_cache,
         frame_state.rg_builder,

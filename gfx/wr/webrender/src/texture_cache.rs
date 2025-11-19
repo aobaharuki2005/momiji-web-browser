@@ -550,11 +550,9 @@ impl TextureCacheConfig {
 /// frame in which they are requested, and may be evicted. The API supports
 /// querying whether an entry is still available.
 ///
-/// The TextureCache is different from the GpuCache in that the former stores
-/// images, whereas the latter stores data and parameters for use in the shaders.
-/// This means that the texture cache can be visualized, which is a good way to
-/// understand how it works. Enabling gfx.webrender.debug.texture-cache shows a
-/// live view of its contents in Firefox.
+/// The texture cache can be visualized, which is a good way to understand how
+/// it works. Enabling gfx.webrender.debug.texture-cache shows a live view of
+/// its contents in Firefox.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCache {
@@ -1649,6 +1647,8 @@ impl TextureCacheUpdate {
 
 #[cfg(test)]
 mod test_texture_cache {
+    use crate::renderer::GpuBufferBuilderF;
+
     #[test]
     fn check_allocation_size_balance() {
         // Allocate some glyphs, observe the total allocation size, and free
@@ -1658,11 +1658,13 @@ mod test_texture_cache {
         use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction, TargetShader};
         use crate::device::TextureFilter;
         use crate::gpu_types::UvRectKind;
+        use crate::frame_allocator::FrameMemory;
         use api::{ImageDescriptor, ImageDescriptorFlags, ImageFormat, DirtyRect};
         use api::units::*;
         use euclid::size2;
         let mut texture_cache = TextureCache::new_for_testing(2048, ImageFormat::BGRA8);
-        let mut gpu_cache = GpuCache::new_for_testing();
+        let memory = FrameMemory::fallback();
+        let mut gpu_buffer = GpuBufferBuilderF::new(&memory);
 
         let sizes: &[DeviceIntSize] = &[
             size2(23, 27),
@@ -1683,7 +1685,7 @@ mod test_texture_cache {
 
         let handles: Vec<TextureCacheHandle> = sizes.iter().map(|size| {
             let mut texture_cache_handle = TextureCacheHandle::invalid();
-            texture_cache.request(&texture_cache_handle, &mut gpu_cache);
+            texture_cache.request(&texture_cache_handle, &mut gpu_buffer);
             texture_cache.update(
                 &mut texture_cache_handle,
                 ImageDescriptor {
@@ -1697,7 +1699,7 @@ mod test_texture_cache {
                 None,
                 [0.0; 4],
                 DirtyRect::All,
-                &mut gpu_cache,
+                &mut gpu_buffer,
                 None,
                 UvRectKind::Rect,
                 Eviction::Manual,

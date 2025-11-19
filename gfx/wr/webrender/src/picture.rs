@@ -116,7 +116,6 @@ use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, FilterGraphOp, FilterGraphNode, Filter, FrameId};
 use crate::internal_types::{PlaneSplitterIndex, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
-use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{UvRectKind, ZBufferId, BlurEdgeMode};
 use peek_poke::{PeekPoke, poke_into_vec, peek_from_slice, ensure_red_zone};
 use plane_split::{Clipper, Polygon};
@@ -6131,7 +6130,7 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             false,
-                            &mut|rg_builder, _, _| {
+                            &mut|rg_builder, _| {
                                 RenderTask::new_blur(
                                     blur_std_deviation,
                                     picture_task_id,
@@ -6308,7 +6307,7 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             is_opaque,
-                            &mut|rg_builder, _, _| {
+                            &mut|rg_builder, _| {
                                 rg_builder.add().init(
                                     RenderTask::new_dynamic(
                                         task_size,
@@ -6347,7 +6346,7 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             is_opaque,
-                            &mut|rg_builder, _, _| {
+                            &mut|rg_builder, _| {
                                 rg_builder.add().init(
                                     RenderTask::new_dynamic(
                                         surface_rects.task_size,
@@ -6386,7 +6385,7 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             is_opaque,
-                            &mut|rg_builder, _, _| {
+                            &mut|rg_builder, _| {
                                 rg_builder.add().init(
                                     RenderTask::new_dynamic(
                                         surface_rects.task_size,
@@ -6426,7 +6425,7 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             is_opaque,
-                            &mut|rg_builder, _, _| {
+                            &mut|rg_builder, _| {
                                 rg_builder.add().init(
                                     RenderTask::new_dynamic(
                                         surface_rects.task_size,
@@ -6471,7 +6470,7 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             is_opaque,
-                            &mut|rg_builder, _, _| {
+                            &mut|rg_builder, _| {
                                 rg_builder.add().init(
                                     RenderTask::new_dynamic(
                                         surface_rects.task_size,
@@ -6530,7 +6529,7 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             is_opaque,
-                            &mut|rg_builder, _, _| {
+                            &mut|rg_builder, _| {
                                 RenderTask::new_svg_filter(
                                     primitives,
                                     filter_datas,
@@ -6605,7 +6604,7 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             false,
-                            &mut|rg_builder, gpu_buffer, _| {
+                            &mut|rg_builder, gpu_buffer| {
                                 RenderTask::new_svg_filter_graph(
                                     filters,
                                     rg_builder,
@@ -6770,7 +6769,7 @@ impl PicturePrimitive {
             PicturePrimitive::resolve_split_planes(
                 splitter,
                 list,
-                &mut frame_state.gpu_cache,
+                &mut frame_state.frame_gpu_data.f32,
                 &frame_context.spatial_tree,
             );
 
@@ -6879,7 +6878,7 @@ impl PicturePrimitive {
     fn resolve_split_planes(
         splitter: &mut PlaneSplitter,
         ordered: &mut Vec<OrderedPictureChild>,
-        gpu_cache: &mut GpuCache,
+        gpu_buffer: &mut GpuBufferBuilderF,
         spatial_tree: &SpatialTree,
     ) {
         ordered.clear();
@@ -7243,7 +7242,7 @@ impl PicturePrimitive {
             }
         };
 
-        // TODO(gw): Almost all of the Picture types below use extra_gpu_cache_data
+        // TODO(gw): Almost all of the Picture types below use extra_gpu_data
         //           to store the same type of data. The exception is the filter
         //           with a ColorMatrix, which stores the color matrix here. It's
         //           probably worth tidying this code up to be a bit more consistent.
@@ -8614,7 +8613,7 @@ fn request_render_task(
     snapshot: &Option<SnapshotInfo>,
     surface_rects: &SurfaceAllocInfo,
     is_opaque: bool,
-    f: &mut dyn FnMut(&mut RenderTaskGraphBuilder, &mut GpuBufferBuilderF, &mut GpuCache) -> RenderTaskId,
+    f: &mut dyn FnMut(&mut RenderTaskGraphBuilder, &mut GpuBufferBuilderF) -> RenderTaskId,
 ) -> RenderTaskId {
 
     let task_id = match snapshot {
@@ -8628,7 +8627,6 @@ fn request_render_task(
                 surface_rects.task_size,
                 frame_state.rg_builder,
                 &mut frame_state.frame_gpu_data.f32,
-                frame_state.gpu_cache,
                 is_opaque,
                 &adjustment,
                 f
@@ -8651,7 +8649,6 @@ fn request_render_task(
             f(
                 frame_state.rg_builder,
                 &mut frame_state.frame_gpu_data.f32,
-                frame_state.gpu_cache
             )
         }
     };

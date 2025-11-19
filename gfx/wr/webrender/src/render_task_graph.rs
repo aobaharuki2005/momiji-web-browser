@@ -1094,19 +1094,20 @@ impl RenderTaskGraphBuilder {
         total_surface_count: usize,
         unique_surfaces: &[(i32, i32, ImageFormat)],
     ) {
-        use crate::internal_types::FrameStamp;
+        use crate::{internal_types::FrameStamp, renderer::{GpuBufferBuilderF, GpuBufferBuilderI}};
         use api::{DocumentId, IdNamespace};
 
         let mut rc = ResourceCache::new_for_testing();
-        let mut gc =  GpuCache::new();
 
         let mut frame_stamp = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         frame_stamp.advance();
-        gc.prepare_for_frames();
-        gc.begin_frame(frame_stamp);
 
         let frame_memory = FrameMemory::fallback();
-        let g = self.end_frame(&mut rc, &mut gc, &mut frame_memory.new_vec(), 2048, &frame_memory);
+        let mut gpu_buffers = GpuBufferBuilder {
+            f32: GpuBufferBuilderF::new(&frame_memory),
+            i32: GpuBufferBuilderI::new(&frame_memory),
+        };
+        let g = self.end_frame(&mut rc, &mut gpu_buffers, &mut frame_memory.new_vec(), 2048, &frame_memory);
         g.print();
 
         assert_eq!(g.passes.len(), pass_count);

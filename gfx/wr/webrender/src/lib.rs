@@ -102,7 +102,6 @@ mod filterdata;
 mod frame_builder;
 mod freelist;
 mod glyph_cache;
-mod gpu_cache;
 mod gpu_types;
 mod hit_test;
 mod internal_types;
