@@ -1,0 +1,61 @@
+From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
+Date: Wed, 10 Sep 2025 12:47:04 +0200
+Subject: (cherry-pick-branch-heads/7390) [M141] Do not hide inbound-rtp if
+ media is received.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This condition neglected the fact that if Insertable Streams API is used
+we can have frames or samples despite packets never being received.
+
+This CL fixes this unintended regression.
+
+# Ignore unrelated compile issues on ios webrtc bots
+NOTRY=True
+
+(cherry picked from commit c15949eda5a00122e2f3b5a643e15781049b9927)
+
+Bug: chromium:444048024, chromium:444384230
+Change-Id: Ie6e17a3bc96701476787f5898446f3f706715d15
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408884
+Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
+Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+Auto-Submit: Henrik Boström <hbos@webrtc.org>
+Commit-Queue: Henrik Boström <hbos@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#45616}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/409020
+Cr-Commit-Position: refs/branch-heads/7390@{#2}
+Cr-Branched-From: 2f553bf8d573c90176d51559b76dfc836996c8f5-refs/heads/main@{#45520}
+---
+ pc/rtc_stats_collector.cc | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
+index 8686143e68..8d6cc22426 100644
+--- a/pc/rtc_stats_collector.cc
++++ b/pc/rtc_stats_collector.cc
+@@ -1754,7 +1754,10 @@ void RTCStatsCollector::ProduceAudioRTPStreamStats_n(
+     if (!voice_receiver_info.connected()) {
+       continue;  // The SSRC is not known yet.
+     }
+-    if (spec_lifetime && voice_receiver_info.packets_received == 0) {
++    // Check both packets received and samples received to handle the Insertable
++    // Streams use case of receiving media without receiving packets.
++    if (spec_lifetime && voice_receiver_info.packets_received == 0 &&
++        voice_receiver_info.total_samples_received == 0) {
+       // The SSRC is known despite not receiving any packets. This happens if
+       // SSRC is signalled in the SDP which we should not rely on for getStats.
+       continue;
+@@ -1868,7 +1871,10 @@ void RTCStatsCollector::ProduceVideoRTPStreamStats_n(
+     if (!video_receiver_info.connected()) {
+       continue;  // The SSRC is not known yet.
+     }
+-    if (spec_lifetime && video_receiver_info.packets_received == 0) {
++    // Check both packets received and frames received to handle the Insertable
++    // Streams use case of receiving media without receiving packets.
++    if (spec_lifetime && video_receiver_info.packets_received == 0 &&
++        video_receiver_info.frames_received == 0) {
+       // The SSRC is known despite not receiving any packets. This happens if
+       // SSRC is signalled in the SDP which we should not rely on for getStats.
+       continue;
