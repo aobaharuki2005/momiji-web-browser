@@ -86,6 +86,7 @@
     <string name="pref_key_terms_accepted_date" translatable="false">pref_key_terms_accepted_date</string>
     <string name="pref_key_terms_accepted_version" translatable="false">pref_key_terms_accepted_version</string>
     <string name="pref_key_terms_prompt_enabled" translatable="false">pref_key_terms_prompt_enabled</string>
+    <string name="pref_key_terms_prompt_drag_handle_enabled" translatable="false">pref_key_terms_prompt_drag_handle_enabled</string>
     <string name="pref_key_terms_prompt_displayed_count" translatable="false">pref_key_terms_prompt_displayed_count</string>
     <string name="pref_key_terms_last_prompt_time" translatable="false">pref_key_terms_last_prompt_time</string>
     <string name="pref_key_terms_postponed" translatable="false">pref_key_terms_postponed</string>

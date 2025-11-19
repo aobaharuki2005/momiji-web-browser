@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
@@ -43,6 +44,7 @@ private val sheetMaxWidth = 450.dp
 /**
  * The terms of service prompt.
  *
+ * @param showDragHandle If the user should see and be able to use a drag handle to dismiss the prompt.
  * @param onDismiss The callback to invoke when the prompt is dismissed.
  * @param onDismissRequest The callback to invoke when the user clicks outside of the bottom sheet,
  * after sheet animates to Hidden. See [ModalBottomSheet].
@@ -55,6 +57,7 @@ private val sheetMaxWidth = 450.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TermsOfUseBottomSheet(
+    showDragHandle: Boolean = true,
     onDismiss: () -> Unit,
     onDismissRequest: () -> Unit,
     onAcceptClicked: () -> Unit,
@@ -72,6 +75,7 @@ fun TermsOfUseBottomSheet(
     }
 
     BottomSheet(
+        showDragHandle = showDragHandle,
         sheetState = sheetState,
         onDismiss = onDismiss,
         onDismissRequest = onDismissRequest,
@@ -86,6 +90,7 @@ fun TermsOfUseBottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomSheet(
+    showDragHandle: Boolean,
     sheetState: SheetState,
     onDismiss: () -> Unit = {},
     onDismissRequest: () -> Unit = {},
@@ -96,6 +101,12 @@ private fun BottomSheet(
     onLearnMoreClicked: () -> Unit = {},
 ) {
     ModalBottomSheet(
+        sheetGesturesEnabled = showDragHandle,
+        dragHandle = if (showDragHandle) {
+            { BottomSheetDefaults.DragHandle() }
+        } else {
+            null
+        },
         onDismissRequest = { onDismissRequest() },
         sheetMaxWidth = sheetMaxWidth,
         sheetState = sheetState,
@@ -105,6 +116,7 @@ private fun BottomSheet(
         ),
     ) {
         BottomSheetContent(
+            showDragHandle = showDragHandle,
             sheetState = sheetState,
             onDismiss = onDismiss,
             onAcceptClicked = onAcceptClicked,
@@ -119,6 +131,7 @@ private fun BottomSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomSheetContent(
+    showDragHandle: Boolean,
     sheetState: SheetState,
     onDismiss: () -> Unit,
     onAcceptClicked: () -> Unit = {},
@@ -135,6 +148,10 @@ private fun BottomSheetContent(
             .verticalScroll(scrollState)
             .padding(horizontal = 32.dp),
     ) {
+        if (!showDragHandle) {
+            Spacer(Modifier.size(16.dp))
+        }
+
         Image(
             painter = painterResource(id = R.drawable.ic_firefox),
             contentDescription = null,
@@ -254,7 +271,24 @@ private fun TermsOfUseBottomSheetMobilePortraitPreview() {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     FirefoxTheme {
-        BottomSheet(sheetState = sheetState)
+        BottomSheet(
+            showDragHandle = true,
+            sheetState = sheetState,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@PreviewLightDark
+@Composable
+private fun TermsOfUseBottomSheetMobilePortraitNoHandlePreview() {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    FirefoxTheme {
+        BottomSheet(
+            showDragHandle = false,
+            sheetState = sheetState,
+        )
     }
 }
 
@@ -272,7 +306,10 @@ private fun TermsOfUseBottomSheetMobileLandscapePreview() {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     FirefoxTheme {
-        BottomSheet(sheetState = sheetState)
+        BottomSheet(
+            showDragHandle = true,
+            sheetState = sheetState,
+        )
     }
 }
 
@@ -290,7 +327,10 @@ private fun TermsOfUseBottomSheetTabletPortraitPreview() {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     FirefoxTheme {
-        BottomSheet(sheetState = sheetState)
+        BottomSheet(
+            showDragHandle = true,
+            sheetState = sheetState,
+        )
     }
 }
 
@@ -304,6 +344,9 @@ private fun TermsOfUseBottomSheetTabletLandscapePreview() {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     FirefoxTheme {
-        BottomSheet(sheetState = sheetState)
+        BottomSheet(
+            showDragHandle = true,
+            sheetState = sheetState,
+        )
     }
 }

@@ -654,6 +654,10 @@ features:
         description: The maximum number of times to show the prompt.
         type: Int
         default: 2
+      enable-drag-to-dismiss:
+        description: Whether to show a drag handle on the prompt and allows users to use it to dismiss the prompt.
+        type: Boolean
+        default: true
 
   tab-strip:
     description: Enables tab strip.

@@ -617,6 +617,15 @@ class Settings(
     )
 
     /**
+     * Returns true if the nimbus flag for showing the terms of use drag handle is true.
+     */
+    var shouldShowTermsOfUsePromptDragHandle by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_terms_prompt_drag_handle_enabled),
+        default = { FxNimbus.features.termsOfUsePrompt.value().enableDragToDismiss },
+        featureFlag = true,
+    )
+
+    /**
      * The maximum number of times the Terms of Use prompt should be displayed.
      *
      * Use a function to ensure the most up-to-date Nimbus value is retrieved.
