@@ -290,6 +290,26 @@ async function testCreateBackupHelper(sandbox, taskFn) {
   // make our current profile default
   profileSvc.defaultProfile = currentProfile;
 
+  await bs.getBackupFileInfo(backupFilePath);
+  const restoreID = bs.state.restoreID;
+
+  // Intercept the telemetry that we want to check for before it gets submitted
+  // and cleared out.
+  let restoreStartedEvents;
+  let restoreCompleteEvents;
+  let restoreCompleteCallback = () => {
+    Services.obs.removeObserver(
+      restoreCompleteCallback,
+      "browser-backup-restore-complete"
+    );
+    restoreStartedEvents = Glean.browserBackup.restoreStarted.testGetValue();
+    restoreCompleteEvents = Glean.browserBackup.restoreComplete.testGetValue();
+  };
+  Services.obs.addObserver(
+    restoreCompleteCallback,
+    "browser-backup-restore-complete"
+  );
+
   let recoveredProfile = await bs.recoverFromBackupArchive(
     backupFilePath,
     null,
@@ -313,6 +333,28 @@ async function testCreateBackupHelper(sandbox, taskFn) {
     profileSvc.defaultProfile,
     recoveredProfile,
     "The new profile should now be the default"
+  );
+
+  Assert.equal(
+    restoreStartedEvents.length,
+    1,
+    "Should be a single restore start event after we start restoring a profile"
+  );
+  Assert.deepEqual(
+    restoreStartedEvents[0].extra,
+    { restore_id: restoreID },
+    "Restore start event should have the right data"
+  );
+
+  Assert.equal(
+    restoreCompleteEvents.length,
+    1,
+    "Should be a single restore complete event after we start restoring a profile"
+  );
+  Assert.deepEqual(
+    restoreCompleteEvents[0].extra,
+    { restore_id: restoreID },
+    "Restore complete event should have the right data"
   );
 
   // Check that resources were recovered from highest to lowest backup priority.
