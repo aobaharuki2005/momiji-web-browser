@@ -515,6 +515,13 @@ class WritingMode {
   }
 
   /**
+   * Convert aAxis in current writing mode to the axis in aToMode.
+   */
+  LogicalAxis ConvertAxisTo(LogicalAxis aAxis, WritingMode aToMode) const {
+    return IsOrthogonalTo(aToMode) ? GetOrthogonalAxis(aAxis) : aAxis;
+  }
+
+  /**
    * Returns true if this WritingMode's aLogicalAxis has the same physical
    * start side as the parallel axis of WritingMode |aOther|.
    *
@@ -530,9 +537,7 @@ class WritingMode {
 
     // Figure out which of aOther's axes is parallel to |this| WritingMode's
     // aLogicalAxis, and get its physical start side as well.
-    LogicalAxis otherWMAxis = aOther.IsOrthogonalTo(*this)
-                                  ? GetOrthogonalAxis(aLogicalAxis)
-                                  : aLogicalAxis;
+    const LogicalAxis otherWMAxis = ConvertAxisTo(aLogicalAxis, aOther);
     mozilla::Side otherWMStartSide =
         aOther.PhysicalSide(MakeLogicalSide(otherWMAxis, LogicalEdge::Start));
 

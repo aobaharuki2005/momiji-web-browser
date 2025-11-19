@@ -1137,9 +1137,7 @@ struct nsGridContainerFrame::GridItemInfo {
         mArea.LineRangeForAxis(aContainerAxis).Extent() == 1,
         "Should not be called with grid items that span multiple tracks.");
     const LogicalAxis itemAxis =
-        aContainerWM.IsOrthogonalTo(mFrame->GetWritingMode())
-            ? GetOrthogonalAxis(aContainerAxis)
-            : aContainerAxis;
+        aContainerWM.ConvertAxisTo(aContainerAxis, mFrame->GetWritingMode());
     const auto* styleFrame = mFrame->IsTableWrapperFrame()
                                  ? mFrame->PrincipalChildList().FirstChild()
                                  : mFrame;
@@ -4392,10 +4390,9 @@ static void AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
                                            &baselineAdjust);
   }
 
-  bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
-  LogicalAxis axis = isOrthogonal ? LogicalAxis::Inline : LogicalAxis::Block;
-  AlignJustifySelf(aAlignSelf, axis, flags, baselineAdjust, aCBSize, aRI, aSize,
-                   aPos);
+  const auto bAxisInChildWM = aCBWM.ConvertAxisTo(LogicalAxis::Block, childWM);
+  AlignJustifySelf(aAlignSelf, bAxisInChildWM, flags, baselineAdjust, aCBSize,
+                   aRI, aSize, aPos);
 }
 
 static void JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
@@ -4438,10 +4435,9 @@ static void JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
                                              &baselineAdjust);
   }
 
-  bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
-  LogicalAxis axis = isOrthogonal ? LogicalAxis::Block : LogicalAxis::Inline;
-  AlignJustifySelf(aJustifySelf, axis, flags, baselineAdjust, aCBSize, aRI,
-                   aSize, aPos);
+  const auto iAxisInChildWM = aCBWM.ConvertAxisTo(LogicalAxis::Inline, childWM);
+  AlignJustifySelf(aJustifySelf, iAxisInChildWM, flags, baselineAdjust, aCBSize,
+                   aRI, aSize, aPos);
 }
 
 static StyleAlignFlags GetAlignJustifyValue(StyleAlignFlags aAlignment,
@@ -5870,9 +5866,8 @@ static nscoord ContentContribution(const GridItemInfo& aGridItem,
     // subtracted by the non-subgrid ancestor grid container's gap.
     // Note that this can also be negative since it's considered a margin.
     if (itemEdgeBits != ItemState::eEdgeBits) {
-      auto subgridAxis = gridWM.IsOrthogonalTo(subgridFrame->GetWritingMode())
-                             ? GetOrthogonalAxis(aAxis)
-                             : aAxis;
+      const auto subgridAxis =
+          gridWM.ConvertAxisTo(aAxis, subgridFrame->GetWritingMode());
       auto& gapStyle = subgridAxis == LogicalAxis::Block
                            ? subgridFrame->StylePosition()->mRowGap
                            : subgridFrame->StylePosition()->mColumnGap;
@@ -5936,10 +5931,8 @@ static nscoord ContentContribution(const GridItemInfo& aGridItem,
           subgridFrame->SetProperty(UsedTrackSizes::Prop(), uts);
         }
         // The grid-item's inline-axis as expressed in the subgrid's WM.
-        auto subgridAxis =
-            childWM.IsOrthogonalTo(subgridFrame->GetWritingMode())
-                ? LogicalAxis::Block
-                : LogicalAxis::Inline;
+        const auto subgridAxis = childWM.ConvertAxisTo(
+            LogicalAxis::Inline, subgridFrame->GetWritingMode());
         uts->ResolveTrackSizesForAxis(subgridFrame, subgridAxis, *rc);
         if (uts->mCanResolveLineRangeSize[subgridAxis]) {
           auto* subgrid =
@@ -6054,9 +6047,7 @@ struct CachedIntrinsicSizes {
       const WritingMode cbwm = aGridRI.mWM;
       auto styleSize = stylePos->Size(aAxis, cbwm, anchorResolutionParams);
       const LogicalAxis axisInItemWM =
-          cbwm.IsOrthogonalTo(child->GetWritingMode())
-              ? GetOrthogonalAxis(aAxis)
-              : aAxis;
+          cbwm.ConvertAxisTo(aAxis, child->GetWritingMode());
       // FIXME: Bug 567039: moz-fit-content and -moz-available are not
       // supported for block size dimension on sizing properties (e.g. height),
       // so we treat it as `auto`.
@@ -6112,9 +6103,7 @@ struct CachedIntrinsicSizes {
         const auto anchorResolutionParams =
             AnchorPosResolutionParams::From(child);
         const LogicalAxis axisInItemWM =
-            containerWM.IsOrthogonalTo(child->GetWritingMode())
-                ? GetOrthogonalAxis(aAxis)
-                : aAxis;
+            containerWM.ConvertAxisTo(aAxis, child->GetWritingMode());
 #ifdef DEBUG
         // The caller must handle this case separately.
         // See EnsureContributions.
@@ -7848,17 +7837,19 @@ LogicalSize nsGridContainerFrame::GridReflowInput::PercentageBasisFor(
         // and thus may have been transposed.  The range values in a non-
         // subgridded axis still has its original values in subgridFrame's
         // coordinates though.
-        auto rangeAxis = subgridWM.IsOrthogonalTo(mWM) ? LogicalAxis::Block
-                                                       : LogicalAxis::Inline;
-        const auto& range = aGridItem.mArea.LineRangeForAxis(rangeAxis);
+        const auto subgridIAxisInGridWM =
+            subgridWM.ConvertAxisTo(LogicalAxis::Inline, mWM);
+        const auto& range =
+            aGridItem.mArea.LineRangeForAxis(subgridIAxisInGridWM);
         cbSize.ISize(subgridWM) =
             range.ToLength(uts->mTrackPlans[LogicalAxis::Inline]);
       }
       if (!subgridFrame->IsRowSubgrid() &&
           uts->mCanResolveLineRangeSize[LogicalAxis::Block]) {
-        auto rangeAxis = subgridWM.IsOrthogonalTo(mWM) ? LogicalAxis::Inline
-                                                       : LogicalAxis::Block;
-        const auto& range = aGridItem.mArea.LineRangeForAxis(rangeAxis);
+        const auto subgridBAxisInGridWM =
+            subgridWM.ConvertAxisTo(LogicalAxis::Block, mWM);
+        const auto& range =
+            aGridItem.mArea.LineRangeForAxis(subgridBAxisInGridWM);
         cbSize.BSize(subgridWM) =
             range.ToLength(uts->mTrackPlans[LogicalAxis::Block]);
       }
@@ -8054,7 +8045,6 @@ void nsGridContainerFrame::ReflowInFlowChild(
   nscoord toFragmentainerEnd;
   // The part of the child's grid area that's in previous container fragments.
   nscoord consumedGridAreaBSize = 0;
-  const bool isOrthogonal = wm.IsOrthogonalTo(childWM);
   if (MOZ_LIKELY(isGridItem)) {
     MOZ_ASSERT(aGridItemInfo->mFrame == aChild);
     const GridArea& area = aGridItemInfo->mArea;
@@ -8107,6 +8097,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
         aChild->RemoveProperty(aProp);
       }
     };
+    const bool isOrthogonal = wm.IsOrthogonalTo(childWM);
     SetProp(LogicalAxis::Block,
             isOrthogonal ? IBaselinePadProperty() : BBaselinePadProperty());
     SetProp(LogicalAxis::Inline,
@@ -8134,8 +8125,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
   // Setup the ClampMarginBoxMinSize reflow flags and property, if needed.
   ComputeSizeFlags csFlags;
   if (aGridItemInfo) {
-    const auto childIAxisInWM =
-        isOrthogonal ? LogicalAxis::Block : LogicalAxis::Inline;
+    const auto childIAxisInWM = childWM.ConvertAxisTo(LogicalAxis::Inline, wm);
     // Clamp during reflow if we're stretching in that axis.
     if (GridItemShouldStretch(aChild, LogicalAxis::Inline)) {
       if (aGridItemInfo->mState[childIAxisInWM] &
@@ -8664,8 +8654,7 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
     }
     if (isColMasonry) {
       auto childWM = child->GetWritingMode();
-      auto childAxis = !childWM.IsOrthogonalTo(wm) ? LogicalAxis::Inline
-                                                   : LogicalAxis::Block;
+      const auto childAxis = wm.ConvertAxisTo(LogicalAxis::Inline, childWM);
       auto normalPos = child->GetLogicalNormalPosition(wm, aContainerSize);
       auto sz =
           childAxis == LogicalAxis::Block ? child->BSize() : child->ISize();
@@ -10344,7 +10333,7 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
   nsGridContainerFrame* grid = do_QueryFrame(child);
   auto childWM = child->GetWritingMode();
   bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
-  const LogicalAxis childAxis = isOrthogonal ? GetOrthogonalAxis(aAxis) : aAxis;
+  const LogicalAxis childAxis = aCBWM.ConvertAxisTo(aAxis, childWM);
   nscoord baseline;
   nscoord start;
   nscoord size;

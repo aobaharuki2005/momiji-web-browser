@@ -556,10 +556,7 @@ static nscoord OffsetToAlignedStaticPos(
 
   // Find what axis aAbsPosCBAxis corresponds to, in placeholder's parent's
   // writing-mode.
-  LogicalAxis pcAxis =
-      (pcWM.IsOrthogonalTo(aAbsPosCBWM) ? GetOrthogonalAxis(aAbsPosCBAxis)
-                                        : aAbsPosCBAxis);
-
+  const LogicalAxis pcAxis = aAbsPosCBWM.ConvertAxisTo(aAbsPosCBAxis, pcWM);
   const LogicalSize alignAreaSize = [&]() {
     if (!aNonAutoAlignParams) {
       const bool placeholderContainerIsContainingBlock =
@@ -666,10 +663,7 @@ static nscoord OffsetToAlignedStaticPos(
   // represent the child's size and the desired axis in that writing mode:
   LogicalSize kidSizeInOwnWM =
       aKidSizeInAbsPosCBWM.ConvertTo(kidWM, aAbsPosCBWM);
-  LogicalAxis kidAxis =
-      (kidWM.IsOrthogonalTo(aAbsPosCBWM) ? GetOrthogonalAxis(aAbsPosCBAxis)
-                                         : aAbsPosCBAxis);
-
+  const LogicalAxis kidAxis = aAbsPosCBWM.ConvertAxisTo(aAbsPosCBAxis, kidWM);
   nscoord offset = CSSAlignUtils::AlignJustifySelf(
       alignConst, kidAxis, flags, baselineAdjust, alignAreaSizeInAxis,
       aKidReflowInput, kidSizeInOwnWM);
