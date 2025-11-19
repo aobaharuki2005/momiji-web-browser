@@ -147,7 +147,7 @@ modules/woff2/
 modules/xz-embedded/
 modules/zlib/
 mozglue/misc/decimal/
-mozglue/static/lz4/.*
+mozglue/static/lz4/
 mozglue/tests/glibc_printf_tests/
 netwerk/sctp/src/
 netwerk/srtp/src/
