@@ -408,6 +408,7 @@ const AVAILABLE_SHIMS = [
       "kfoxtv.com",
       "thenationaldesk.com",
       "foxbaltimore.com",
+      "local12.com",
     ],
     matches: [
       "*://www.googletagservices.com/tag/js/gpt.js*",
