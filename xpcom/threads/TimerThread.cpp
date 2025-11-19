@@ -720,13 +720,9 @@ TimeStamp TimerThread::ComputeWakeupTimeFromTimers() const {
     MOZ_ASSERT(bundleWakeup <= cutoffTime);
   }
 
-#if !defined(XP_WIN)
-  // Due to the fact that, on Windows, each TimeStamp object holds two distinct
-  // "values", this assert is not valid there. See bug 1829983 for the details.
   MOZ_ASSERT(bundleWakeup - mTimers[0].mTimeout <=
              ComputeAcceptableFiringDelay(mTimers[0].mDelay, minTimerDelay,
                                           maxTimerDelay));
-#endif
 
   return bundleWakeup;
 }
