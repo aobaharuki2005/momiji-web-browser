@@ -1013,6 +1013,9 @@ static void MOZ_CAN_RUN_SCRIPT RunMicroTask(
 
   JS::RootedField<JSObject*, 0> callbackGlobal(
       roots, aMicroTask.get().GetExecutionGlobalFromJSMicroTask(aCx));
+  if (!callbackGlobal) {
+    return;
+  }
   JS::RootedField<JSObject*, 1> hostDefinedData(
       roots, aMicroTask.get().MaybeGetHostDefinedDataFromJSMicroTask());
   JS::RootedField<JSObject*, 2> allocStack(

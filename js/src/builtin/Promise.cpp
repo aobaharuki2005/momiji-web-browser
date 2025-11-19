@@ -7756,6 +7756,10 @@ JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedGlobalFromJSMicroTask(
 JS_PUBLIC_API JSObject* JS::GetExecutionGlobalFromJSMicroTask(
     JS::JSMicroTask* entry) {
   JSObject* unwrapped = UncheckedUnwrap(entry);
+  if (JS_IsDeadWrapper(unwrapped)) {
+    return nullptr;
+  }
+
   if (unwrapped->is<PromiseReactionRecord>()) {
     // Use the stored equeue representative (which may need to be unwrapped)
     JSObject* enqueueGlobalRepresentative =
@@ -7763,13 +7767,9 @@ JS_PUBLIC_API JSObject* JS::GetExecutionGlobalFromJSMicroTask(
     JSObject* unwrappedRepresentative =
         UncheckedUnwrap(enqueueGlobalRepresentative);
 
-    // We shouldn't lose the representative object as the global should remain
-    // alive while this job is pending; the global should be entrained because
-    // it will either be the global of the PromiseReactionRecord (which)
-    // should have been kept alive by being in the queue or rooted, or
-    // it should be the global of the handler function, which should
-    // be entrained by the PromiseReactionRecord.
-    MOZ_RELEASE_ASSERT(!JS_IsDeadWrapper(unwrappedRepresentative));
+    if (JS_IsDeadWrapper(unwrappedRepresentative)) {
+      return nullptr;
+    }
 
     return &unwrappedRepresentative->nonCCWGlobal();
   }

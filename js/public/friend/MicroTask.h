@@ -42,9 +42,12 @@ namespace JS {
 // run by calling RunJSMicroTask, while in the realm specified by the
 // global returned by GetExecutionGlobalFromJSMicroTask, e.g
 //
-//    AutoRealm ar(cx, JS::GetExecutionGlobalFromJSMicroTask(job));
-//    if (!JS::RunJSMicroTask(cx, job)) {
-//      ...
+//    JSObject* global = JS::GetExecutionGlobalFromJSMicroTask(job);
+//    if (global) {
+//      AutoRealm ar(cx, global);
+//      if (!JS::RunJSMicroTask(cx, job)) {
+//        ...
+//      }
 //    }
 
 // A MicroTask is a JS::Value. Using this MicroTask system allows
@@ -126,7 +129,8 @@ JS_PUBLIC_API bool HasRegularMicroTasks(JSContext* cx);
 // Returns the length of the regular microtask queue.
 JS_PUBLIC_API size_t GetRegularMicroTaskCount(JSContext* cx);
 
-// This is the global associated with the realm RunJSMicroTask expects to be in.
+// This is the global associated with the realm RunJSMicroTask expects to be
+// in.  Returns nullptr if a dead wrapper is found.
 JS_PUBLIC_API JSObject* GetExecutionGlobalFromJSMicroTask(JSMicroTask* entry);
 
 // To handle cases where the queue needs to be set aside for some reason
