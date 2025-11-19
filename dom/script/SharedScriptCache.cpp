@@ -24,12 +24,14 @@ namespace mozilla::dom {
 
 ScriptHashKey::ScriptHashKey(
     ScriptLoader* aLoader, const JS::loader::ScriptLoadRequest* aRequest,
+    mozilla::dom::ReferrerPolicy aReferrerPolicy,
     const JS::loader::ScriptFetchOptions* aFetchOptions,
     const nsCOMPtr<nsIURI> aURI)
     : PLDHashEntryHdr(),
       mKind(aRequest->mKind),
       mCORSMode(aFetchOptions->mCORSMode),
       mIsLinkRelPreload(aRequest->GetScriptLoadContext()->IsPreload()),
+      mReferrerPolicy(aReferrerPolicy),
       mURI(aURI),
       mLoaderPrincipal(aLoader->LoaderPrincipal()),
       mPartitionPrincipal(aLoader->PartitionedPrincipal()),
@@ -47,14 +49,19 @@ ScriptHashKey::ScriptHashKey(
 ScriptHashKey::ScriptHashKey(ScriptLoader* aLoader,
                              const JS::loader::ScriptLoadRequest* aRequest,
                              const JS::loader::LoadedScript* aLoadedScript)
-    : ScriptHashKey(aLoader, aRequest, aLoadedScript->GetFetchOptions(),
-                    aLoadedScript->GetURI()) {}
+    : ScriptHashKey(aLoader, aRequest, aLoadedScript->ReferrerPolicy(),
+                    aLoadedScript->GetFetchOptions(), aLoadedScript->GetURI()) {
+}
 
 ScriptHashKey::ScriptHashKey(const ScriptLoadData& aLoadData)
     : ScriptHashKey(aLoadData.CacheKey()) {}
 
 bool ScriptHashKey::KeyEquals(const ScriptHashKey& aKey) const {
   if (mKind != aKey.mKind) {
+    return false;
+  }
+
+  if (mReferrerPolicy != aKey.mReferrerPolicy) {
     return false;
   }
 

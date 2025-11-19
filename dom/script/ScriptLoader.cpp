@@ -1183,7 +1183,7 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
   //       which constructs LoadedScript.
   //       aRequest->FetchOptions() and aRequest->URI() are backed by
   //       LoadedScript, and we cannot use them here.
-  ScriptHashKey key(this, aRequest, aFetchOptions, aURI);
+  ScriptHashKey key(this, aRequest, aReferrerPolicy, aFetchOptions, aURI);
   auto cacheResult = mCache->Lookup(*this, key, /* aSyncLoad = */ true);
   if (cacheResult.mState != CachedSubResourceState::Complete) {
     aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions, aURI);
@@ -4104,8 +4104,8 @@ nsresult ScriptLoader::OnStreamComplete(
         if (aRequest->HasDirtyCache()) {
           // This request found a dirty cache.
           // Validate the cache with the response's cache ID.
-          ScriptHashKey key(this, aRequest, aRequest->FetchOptions(),
-                            aRequest->URI());
+          ScriptHashKey key(this, aRequest, aRequest->ReferrerPolicy(),
+                            aRequest->FetchOptions(), aRequest->URI());
           auto cacheResult = mCache->Lookup(*this, key, /* aSyncLoad = */ true);
           if (cacheResult.mState == CachedSubResourceState::Complete &&
               cacheResult.mCompleteValue->CacheEntryId() == id) {
