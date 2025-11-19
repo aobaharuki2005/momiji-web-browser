@@ -1811,6 +1811,13 @@ var gProtectionsHandler = {
       false
     );
 
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "trustPanelEnabledPref",
+      "browser.urlbar.trustPanel.featureGate",
+      false
+    );
+
     for (let blocker of Object.values(this.blockers)) {
       if (blocker.init) {
         blocker.init();
@@ -2862,6 +2869,9 @@ var gProtectionsHandler = {
    *                   telemetry purposes.
    */
   showProtectionsPopup(options = {}) {
+    if (this.trustPanelEnabledPref) {
+      return;
+    }
     const { event, toast, openingReason } = options;
 
     this._initializePopup();

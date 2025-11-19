@@ -50,6 +50,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "httpsOnlyModeEnabledPBM",
   "dom.security.https_only_mode_pbm"
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "popupClickjackDelay",
+  "security.notification_enable_delay",
+  500
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "smartblockEmbedsEnabledPref",
+  "extensions.webcompat.smartblockEmbeds.enabled",
+  false
+);
 
 const ETP_ENABLED_ASSETS = {
   label: "trustpanel-etp-label-enabled",
@@ -65,6 +77,37 @@ const ETP_DISABLED_ASSETS = {
   innerDescription: "trustpanel-description-disabled",
 };
 
+const SMARTBLOCK_EMBED_INFO = [
+  {
+    matchPatterns: ["https://itisatracker.org/*"],
+    shimId: "EmbedTestShim",
+    displayName: "Test",
+  },
+  {
+    matchPatterns: [
+      "https://www.instagram.com/*",
+      "https://platform.instagram.com/*",
+    ],
+    shimId: "InstagramEmbed",
+    displayName: "Instagram",
+  },
+  {
+    matchPatterns: ["https://www.tiktok.com/*"],
+    shimId: "TiktokEmbed",
+    displayName: "Tiktok",
+  },
+  {
+    matchPatterns: ["https://platform.twitter.com/*"],
+    shimId: "TwitterEmbed",
+    displayName: "X",
+  },
+  {
+    matchPatterns: ["https://*.disqus.com/*"],
+    shimId: "DisqusEmbed",
+    displayName: "Disqus",
+  },
+];
+
 class TrustPanel {
   #state = null;
   #secInfo = null;
@@ -75,6 +118,9 @@ class TrustPanel {
   #isSecureInternalUI = null;
 
   #lastEvent = null;
+
+  #popupToggleDelayTimer = null;
+  #openingReason = null;
 
   #blockers = {
     SocialTracking,
@@ -90,6 +136,9 @@ class TrustPanel {
         blocker.init();
       }
     }
+
+    // Add an observer to listen to requests to open the protections panel
+    Services.obs.addObserver(this, "smartblock:open-protections-panel");
   }
 
   uninit() {
@@ -98,6 +147,8 @@ class TrustPanel {
         blocker.uninit();
       }
     }
+
+    Services.obs.removeObserver(this, "smartblock:open-protections-panel");
   }
 
   get #popup() {
@@ -191,16 +242,20 @@ class TrustPanel {
       document
         .getElementById("trustpanel-popup-security-httpsonlymode-menulist")
         .addEventListener("command", () => this.#changeHttpsOnlyPermission());
+
+      this.#popup.addEventListener("popupshown", this);
     }
   }
 
-  showPopup() {
+  showPopup(opts = {}) {
     this.#initializePopup();
     this.#updatePopup();
+    this.#openingReason = opts.reason;
 
     let anchor = document.getElementById("trust-icon-container");
-    let opts = { position: "bottomleft topleft" };
-    PanelMultiView.openPopup(this.#popup, anchor, opts);
+    PanelMultiView.openPopup(this.#popup, anchor, {
+      position: "bottomleft topleft",
+    });
   }
 
   async #hidePopup() {
@@ -278,9 +333,11 @@ class TrustPanel {
     let host = window.gIdentityHandler.getHostForDisplay();
     this.host = host;
 
-    let favicon = await PlacesUtils.favicons.getFaviconForPage(this.#uri);
-    document.getElementById("trustpanel-popup-icon").src =
-      favicon?.uri.spec ?? "";
+    if (this.#uri) {
+      let favicon = await PlacesUtils.favicons.getFaviconForPage(this.#uri);
+      document.getElementById("trustpanel-popup-icon").src =
+        favicon?.uri.spec ?? "";
+    }
 
     let toggle = document.getElementById("trustpanel-toggle");
     toggle.toggleAttribute("pressed", this.#trackingProtectionEnabled);
@@ -332,7 +389,7 @@ class TrustPanel {
     if (!this.anyDetected) {
       document.getElementById("trustpanel-blocker-section").hidden = true;
     } else {
-      let count = 0;
+      let count = this.#fetchSmartBlocked().length;
       let blocked = [];
       let detected = [];
 
@@ -344,6 +401,7 @@ class TrustPanel {
           detected.push(blocker);
         }
       }
+
       document.l10n.setArgs(
         document.getElementById("trustpanel-blocker-section-header"),
         { count }
@@ -354,6 +412,10 @@ class TrustPanel {
       document
         .getElementById("trustpanel-blocker-section")
         .removeAttribute("hidden");
+
+      document
+        .getElementById("trustpanel-smartblock-section")
+        .toggleAttribute("hidden", !this.#addSmartblockEmbedToggles());
     }
   }
 
@@ -529,7 +591,7 @@ class TrustPanel {
   }
 
   #isInternalSecurePage(uri) {
-    if (uri.schemeIs("about")) {
+    if (uri && uri.schemeIs("about")) {
       let module = E10SUtils.getAboutModule(uri);
       if (module) {
         let flags = module.getURIFlags(uri);
@@ -1082,6 +1144,230 @@ class TrustPanel {
       // security delay on a potential error page following this reload.
       gBrowser.selectedBrowser.focus();
     }
+  }
+
+  /**
+   * Adds the toggles into the smartblock toggle container. Clears existing toggles first, then
+   * searches through the contentBlockingLog for smartblock-compatible content.
+   *
+   * @returns {boolean} true if a smartblock compatible resource is blocked or shimmed, false otherwise
+   */
+  #addSmartblockEmbedToggles() {
+    if (!smartblockEmbedsEnabledPref) {
+      // Do not insert toggles if feature is disabled.
+      return false;
+    }
+
+    let container = document.getElementById(
+      "trustpanel-smartblock-toggle-container"
+    );
+    container.replaceChildren();
+
+    // check that there is an allowed or replaced flag present
+    let contentBlockingEvents =
+      gBrowser.selectedBrowser.getContentBlockingEvents();
+
+    // In the future, we should add a flag specifically for smartblock embeds so that
+    // these checks do not trigger when a non-embed-related shim is shimming
+    // a smartblock compatible site, see Bug 1926461
+    let somethingAllowedOrReplaced =
+      contentBlockingEvents &
+        Ci.nsIWebProgressListener.STATE_ALLOWED_TRACKING_CONTENT ||
+      contentBlockingEvents &
+        Ci.nsIWebProgressListener.STATE_REPLACED_TRACKING_CONTENT;
+
+    if (!somethingAllowedOrReplaced) {
+      // return early if there is no content that is allowed or replaced
+      return false;
+    }
+
+    let blocked = this.#fetchSmartBlocked();
+    if (!blocked.length) {
+      return false;
+    }
+
+    // search through content log for compatible blocked origins
+    for (let { shimAllowed, shimInfo } of blocked) {
+      const { shimId, displayName } = shimInfo;
+
+      // check that a toggle doesn't already exist
+      let existingToggle = document.getElementById(
+        `trustpanel-smartblock-${shimId.toLowerCase()}-toggle`
+      );
+      if (existingToggle) {
+        // make sure toggle state is allowed if ANY of the sites are allowed
+        if (shimAllowed) {
+          existingToggle.setAttribute("pressed", true);
+        }
+        // skip adding a new toggle
+        continue;
+      }
+
+      // create the toggle element
+      let toggle = document.createElement("moz-toggle");
+      toggle.setAttribute(
+        "id",
+        `trustpanel-smartblock-${shimId.toLowerCase()}-toggle`
+      );
+      toggle.setAttribute("data-l10n-attrs", "label");
+      document.l10n.setAttributes(
+        toggle,
+        "protections-panel-smartblock-blocking-toggle",
+        {
+          trackername: displayName,
+        }
+      );
+
+      // set toggle to correct position
+      toggle.toggleAttribute("pressed", !!shimAllowed);
+
+      // add functionality to toggle
+      toggle.addEventListener("toggle", event => {
+        if (event.target.pressed) {
+          this.#sendUnblockMessageToSmartblock(shimId);
+        } else {
+          this.#sendReblockMessageToSmartblock(shimId);
+        }
+        PanelMultiView.hidePopup(this.#popup);
+      });
+
+      container.insertAdjacentElement("beforeend", toggle);
+    }
+    return true;
+  }
+
+  #fetchSmartBlocked() {
+    let blocked = [];
+    let contentBlockingLog = JSON.parse(
+      gBrowser.selectedBrowser.getContentBlockingLog()
+    );
+    // search through content log for compatible blocked origins
+    for (let [origin, actions] of Object.entries(contentBlockingLog)) {
+      let shimAllowed = actions.some(
+        ([flag]) =>
+          (flag & Ci.nsIWebProgressListener.STATE_ALLOWED_TRACKING_CONTENT) != 0
+      );
+
+      let shimDetected = actions.some(
+        ([flag]) =>
+          (flag & Ci.nsIWebProgressListener.STATE_REPLACED_TRACKING_CONTENT) !=
+          0
+      );
+
+      if (!shimAllowed && !shimDetected) {
+        // origin is not being shimmed or allowed
+        continue;
+      }
+
+      let shimInfo = SMARTBLOCK_EMBED_INFO.find(element => {
+        let matchPatternSet = new MatchPatternSet(element.matchPatterns);
+        return matchPatternSet.matches(origin);
+      });
+      if (!shimInfo) {
+        // origin not relevant to smartblock
+        continue;
+      }
+
+      blocked.push({ shimAllowed, shimInfo });
+    }
+    return blocked;
+  }
+
+  async observe(subject, topic) {
+    switch (topic) {
+      case "smartblock:open-protections-panel": {
+        if (gBrowser.selectedBrowser.browserId !== subject.browserId) {
+          break;
+        }
+        this.#initializePopup();
+        let multiview = document.getElementById("trustpanel-popup-multiView");
+        // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=1999928
+        // This currently opens as a standalone panel, we would like to open
+        // the panel with a back button and title the same way as if it
+        // were accessed via the urlbar icon.
+        let initialMainViewId = multiview.getAttribute("mainViewId");
+        this.#popup.addEventListener(
+          "popuphidden",
+          () => {
+            multiview.setAttribute("mainViewId", initialMainViewId);
+          },
+          { once: true }
+        );
+        multiview.setAttribute("mainViewId", "trustpanel-blockerView");
+        this.showPopup({ reason: "embedPlaceholderButton" });
+        break;
+      }
+    }
+  }
+
+  // We handle focus here when the panel is shown.
+  handleEvent(event) {
+    switch (event.type) {
+      case "popupshown":
+        this.onPopupShown(event);
+        break;
+    }
+  }
+
+  onPopupShown() {
+    // Disable the toggles for a short time after opening via SmartBlock placeholder button
+    // to prevent clickjacking.
+    if (this.#openingReason == "embedPlaceholderButton") {
+      this.#disablePopupToggles();
+      this.#popupToggleDelayTimer = setTimeout(() => {
+        this.#enablePopupToggles();
+      }, popupClickjackDelay);
+    }
+  }
+
+  /**
+   * Sends a message to webcompat extension to unblock content and remove placeholders
+   *
+   * @param {String} shimId - the id of the shim blocking the content
+   */
+  #sendUnblockMessageToSmartblock(shimId) {
+    Services.obs.notifyObservers(
+      gBrowser.selectedTab,
+      "smartblock:unblock-embed",
+      shimId
+    );
+  }
+
+  /**
+   * Sends a message to webcompat extension to reblock content
+   *
+   * @param {String} shimId - the id of the shim blocking the content
+   */
+  #sendReblockMessageToSmartblock(shimId) {
+    Services.obs.notifyObservers(
+      gBrowser.selectedTab,
+      "smartblock:reblock-embed",
+      shimId
+    );
+  }
+
+  #resetToggleSecDelay() {
+    clearTimeout(this.#popupToggleDelayTimer);
+    this.#popupToggleDelayTimer = setTimeout(() => {
+      this.#enablePopupToggles();
+    }, popupClickjackDelay);
+  }
+
+  #disablePopupToggles() {
+    // Disables all toggles in the protections panel
+    this.#popup.querySelectorAll("moz-toggle").forEach(toggle => {
+      toggle.setAttribute("disabled", true);
+      toggle.addEventListener("pointerdown", this.#resetToggleReference);
+    });
+  }
+
+  #resetToggleReference = this.#resetToggleSecDelay.bind(this);
+  #enablePopupToggles() {
+    // Enables all toggles in the protections panel
+    this.#popup.querySelectorAll("moz-toggle").forEach(toggle => {
+      toggle.removeAttribute("disabled");
+      toggle.removeEventListener("pointerdown", this.#resetToggleReference);
+    });
   }
 
   #updateAttribute(elem, attr, value) {

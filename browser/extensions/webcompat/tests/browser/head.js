@@ -293,8 +293,14 @@ async function testShimDoesNotRun(
   await BrowserTestUtils.removeTab(tab);
 }
 
+function panelId() {
+  return Services.prefs.getBoolPref("browser.urlbar.trustPanel.featureGate")
+    ? "trustpanel-popup"
+    : "protections-popup";
+}
+
 async function closeProtectionsPanel(win = window) {
-  let protectionsPopup = win.document.getElementById("protections-popup");
+  let protectionsPopup = win.document.getElementById(panelId());
   if (!protectionsPopup) {
     return;
   }
@@ -312,10 +318,14 @@ async function openProtectionsPanel(win = window) {
     win,
     "popupshown",
     true,
-    e => e.target.id == "protections-popup"
+    e => e.target.id == panelId()
   );
 
-  win.gProtectionsHandler.showProtectionsPopup();
+  if (Services.prefs.getBoolPref("browser.urlbar.trustPanel.featureGate")) {
+    win.gTrustPanelHandler.showPopup();
+  } else {
+    win.gProtectionsHandler.showProtectionsPopup();
+  }
 
   await popupShownPromise;
 }
@@ -343,7 +353,7 @@ async function clickOnPagePlaceholder(tab) {
     window,
     "popupshown",
     true,
-    e => e.target.id == "protections-popup"
+    e => e.target.id == panelId()
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
