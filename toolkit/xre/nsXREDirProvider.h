@@ -69,6 +69,25 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
 
   static nsresult GetUserDataDirectory(nsIFile** aFile, bool aLocal);
 
+#if defined(MOZ_WIDGET_GTK)
+  static nsresult GetLegacyOrXDGEnvValue(const char* aHomeDir,
+                                         const char* aEnvName,
+                                         nsCString aSubdir, nsIFile** aFile);
+  static nsresult GetLegacyOrXDGCachePath(const char* aHomeDir,
+                                          nsIFile** aFile);
+  static nsresult GetLegacyOrXDGHomePath(const char* aHomeDir, nsIFile** aFile,
+                                         bool aForceLegacy = false);
+  static nsresult AppendFromAppData(nsIFile* aFile, bool aIsDotted);
+
+  static bool IsForceLegacyHome();
+
+  static bool LegacyHomeExists(nsIFile** aFile);
+
+  static nsresult GetLegacyOrXDGConfigHome(const char* aHomeDir,
+                                           nsIFile** aFile);
+
+#endif  // defined(MOZ_WIDGET_GTK)
+
   /* make sure you clone it, if you need to do stuff to it */
   nsIFile* GetGREDir() { return mGREDir; }
   nsIFile* GetGREBinDir() { return mGREBinDir; }
@@ -117,7 +136,13 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
  private:
   nsresult GetFilesInternal(const char* aProperty,
                             nsISimpleEnumerator** aResult);
-  static nsresult GetUserDataDirectoryHome(nsIFile** aFile, bool aLocal);
+
+  // aForceLegacy will only act on !aLocal and make sure the path returned
+  // is directly under $HOME. Useful for UserNativeManifests and
+  // SysUserExtensionDir to keep legacy behavior with XDG support active.
+  static nsresult GetUserDataDirectoryHome(nsIFile** aFile, bool aLocal,
+                                           bool aForceLegacy = false);
+  static nsresult GetNativeUserManifestsDirectory(nsIFile** aFile);
   static nsresult GetSysUserExtensionsDirectory(nsIFile** aFile);
 #if defined(XP_UNIX) || defined(XP_MACOSX)
   static nsresult GetSystemExtensionsDirectory(nsIFile** aFile);

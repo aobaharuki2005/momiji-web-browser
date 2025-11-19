@@ -40,3 +40,4 @@ avoid-dot-mozilla-without-xdg:
         - toolkit/moz.configure
         - toolkit/xre/nsXREDirProvider.cpp
         - toolkit/tests/gtest/TestXREAppDir.cpp
+        - xpcom/io/nsAppFileLocationProvider.cpp
