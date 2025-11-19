@@ -13609,6 +13609,10 @@ function Widgets() {
   return /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "widgets-section-container"
+  }, /*#__PURE__*/external_React_default().createElement("h1", {
+    "data-l10n-id": "newtab-widget-section-title"
+  }), /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-container"
   }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, {
     dispatch: dispatch,
@@ -13616,7 +13620,7 @@ function Widgets() {
   }), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, {
     dispatch: dispatch,
     handleUserInteraction: handleUserInteraction
-  })), messageData?.content?.messageType === "WidgetMessage" && /*#__PURE__*/external_React_default().createElement(MessageWrapper, {
+  }))), messageData?.content?.messageType === "WidgetMessage" && /*#__PURE__*/external_React_default().createElement(MessageWrapper, {
     dispatch: dispatch
   }, /*#__PURE__*/external_React_default().createElement(WidgetsFeatureHighlight, {
     dispatch: dispatch

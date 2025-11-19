@@ -105,19 +105,22 @@ function Widgets() {
 
   return (
     <div className="widgets-wrapper">
-      <div className="widgets-container">
-        {listsEnabled && (
-          <Lists
-            dispatch={dispatch}
-            handleUserInteraction={handleUserInteraction}
-          />
-        )}
-        {timerEnabled && (
-          <FocusTimer
-            dispatch={dispatch}
-            handleUserInteraction={handleUserInteraction}
-          />
-        )}
+      <div className="widgets-section-container">
+        <h1 data-l10n-id="newtab-widget-section-title"></h1>
+        <div className="widgets-container">
+          {listsEnabled && (
+            <Lists
+              dispatch={dispatch}
+              handleUserInteraction={handleUserInteraction}
+            />
+          )}
+          {timerEnabled && (
+            <FocusTimer
+              dispatch={dispatch}
+              handleUserInteraction={handleUserInteraction}
+            />
+          )}
+        </div>
       </div>
       {messageData?.content?.messageType === "WidgetMessage" && (
         <MessageWrapper dispatch={dispatch}>
