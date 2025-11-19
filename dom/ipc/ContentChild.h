@@ -253,6 +253,8 @@ class ContentChild final : public PContentChild,
       const Maybe<OriginAttributesPattern>& aPattern,
       const Maybe<nsCString>& aURL);
 
+  mozilla::ipc::IPCResult RecvInvalidateScriptCache();
+
   mozilla::ipc::IPCResult RecvClearImageCache(
       const Maybe<bool>& aPrivateLoader, const Maybe<bool>& aChrome,
       const Maybe<RefPtr<nsIPrincipal>>& aPrincipal,

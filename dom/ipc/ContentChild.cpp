@@ -2151,6 +2151,11 @@ mozilla::ipc::IPCResult ContentChild::RecvClearScriptCache(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvInvalidateScriptCache() {
+  SharedScriptCache::Invalidate();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvClearImageCache(
     const Maybe<bool>& aPrivateLoader, const Maybe<bool>& aChrome,
     const Maybe<RefPtr<nsIPrincipal>>& aPrincipal,

@@ -201,6 +201,8 @@ class SharedScriptCache final
   void EncodeAndCompress();
   void SaveToDiskCache();
 
+  void InvalidateInProcess();
+
   // This has to be static because it's also called for loaders that don't have
   // a sheet cache (loaders that are not owned by a document).
   static void LoadCompleted(SharedScriptCache*, ScriptLoadData&);
@@ -210,6 +212,8 @@ class SharedScriptCache final
                     const Maybe<nsCString>& aSchemelessSite = Nothing(),
                     const Maybe<OriginAttributesPattern>& aPattern = Nothing(),
                     const Maybe<nsCString>& aURL = Nothing());
+
+  static void Invalidate();
 
   static void PrepareForLastCC();
 

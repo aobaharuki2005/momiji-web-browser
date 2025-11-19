@@ -688,6 +688,8 @@ child:
                            OriginAttributesPattern? aPattern,
                            nsCString? aURL);
 
+    async InvalidateScriptCache();
+
     async SetOffline(bool offline);
     async SetConnectivity(bool connectivity);
     async SetCaptivePortalState(int32_t aState);

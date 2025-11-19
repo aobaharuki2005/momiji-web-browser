@@ -139,6 +139,7 @@ SharedScriptCache::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
+/* static */
 void SharedScriptCache::Clear(const Maybe<bool>& aChrome,
                               const Maybe<nsCOMPtr<nsIPrincipal>>& aPrincipal,
                               const Maybe<nsCString>& aSchemelessSite,
@@ -156,6 +157,31 @@ void SharedScriptCache::Clear(const Maybe<bool>& aChrome,
   if (sSingleton) {
     sSingleton->ClearInProcess(aChrome, aPrincipal, aSchemelessSite, aPattern,
                                aURL);
+  }
+}
+
+/* static */
+void SharedScriptCache::Invalidate() {
+  using ContentParent = dom::ContentParent;
+
+  if (XRE_IsParentProcess()) {
+    for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+      (void)cp->SendInvalidateScriptCache();
+    }
+  }
+
+  if (sSingleton) {
+    sSingleton->InvalidateInProcess();
+  }
+}
+
+void SharedScriptCache::InvalidateInProcess() {
+  for (auto iter = mComplete.Iter(); !iter.Done(); iter.Next()) {
+    if (!iter.Data().mResource->HasCacheEntryId()) {
+      iter.Remove();
+    } else {
+      iter.Data().mResource->SetDirty();
+    }
   }
 }
 
