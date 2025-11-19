@@ -2596,11 +2596,9 @@ ENameValueFlag LocalAccessible::ARIAName(nsString& aName) const {
     return eNameOK;
   }
   // aria-labelledby now takes precedence over aria-label
-  nsresult rv = nsTextEquivUtils::GetTextEquivFromIDRefs(
-      this, nsGkAtoms::aria_labelledby, aName);
-  if (NS_SUCCEEDED(rv)) {
-    aName.CompressWhitespace();
-  }
+  nsTextEquivUtils::GetTextEquivFromIDRefs(this, nsGkAtoms::aria_labelledby,
+                                           aName);
+  aName.CompressWhitespace();
 
   if (!aName.IsEmpty()) {
     return eNameFromRelations;
@@ -2618,11 +2616,9 @@ ENameValueFlag LocalAccessible::ARIAName(nsString& aName) const {
 // LocalAccessible protected
 bool LocalAccessible::ARIADescription(nsString& aDescription) const {
   // aria-describedby takes precedence over aria-description
-  nsresult rv = nsTextEquivUtils::GetTextEquivFromIDRefs(
-      this, nsGkAtoms::aria_describedby, aDescription);
-  if (NS_SUCCEEDED(rv)) {
-    aDescription.CompressWhitespace();
-  }
+  nsTextEquivUtils::GetTextEquivFromIDRefs(this, nsGkAtoms::aria_describedby,
+                                           aDescription);
+  aDescription.CompressWhitespace();
 
   if (aDescription.IsEmpty() && mContent->IsElement() &&
       nsAccUtils::GetARIAAttr(mContent->AsElement(),
