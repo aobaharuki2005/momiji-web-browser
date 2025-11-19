@@ -45,7 +45,7 @@
 typedef struct nr_registry_module_ nr_registry_module;
 
 typedef struct nr_registry_module_vtbl_ {
-    int (*init)(nr_registry_module*);
+    int (*init)(void);
 
     int (*get_char)(NR_registry name, char *out);
     int (*get_uchar)(NR_registry name, UCHAR *out);

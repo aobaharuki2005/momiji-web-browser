@@ -92,7 +92,7 @@ NR_reg_init(void *mode)
 
     reg_vtbl = module;
 
-    if ((r=reg_vtbl->vtbl->init(mode)))
+    if ((r=reg_vtbl->vtbl->init()))
         ABORT(r);
 
 #ifdef SANITY_CHECKS

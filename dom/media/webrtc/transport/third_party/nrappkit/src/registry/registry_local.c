@@ -99,7 +99,7 @@ typedef struct nr_array_registry_node_ {
     } array;
 } nr_array_registry_node;
 
-static int nr_reg_local_init(nr_registry_module *me);
+static int nr_reg_local_init(void);
 static int nr_reg_local_get_char(NR_registry name, char *data);
 static int nr_reg_local_get_uchar(NR_registry name, UCHAR *data);
 static int nr_reg_local_get_uint2(NR_registry name, UINT2 *data);
@@ -810,7 +810,7 @@ nr_reg_compute_length(char *name, nr_registry_node *in, size_t *length)
 /* VTBL METHODS */
 
 int
-nr_reg_local_init(nr_registry_module *me)
+nr_reg_local_init(void)
 {
     int r, _status;
 
