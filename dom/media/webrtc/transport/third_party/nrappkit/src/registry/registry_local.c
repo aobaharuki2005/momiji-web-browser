@@ -99,28 +99,6 @@ typedef struct nr_array_registry_node_ {
     } array;
 } nr_array_registry_node;
 
-static int nr_reg_local_init(void);
-static int nr_reg_local_get_char(NR_registry name, char *data);
-static int nr_reg_local_get_uchar(NR_registry name, UCHAR *data);
-static int nr_reg_local_get_uint2(NR_registry name, UINT2 *data);
-static int nr_reg_local_get_int4(NR_registry name, INT4 *data);
-static int nr_reg_local_get_uint4(NR_registry name, UINT4 *data);
-static int nr_reg_local_get_uint8(NR_registry name, UINT8 *data);
-static int nr_reg_local_get_double(NR_registry name, double *data);
-static int nr_reg_local_get_registry(NR_registry name, NR_registry data);
-static int nr_reg_local_get_bytes(NR_registry name, UCHAR *data, size_t size, size_t *length);
-static int nr_reg_local_get_string(NR_registry name, char *data, size_t size);
-static int nr_reg_local_get_length(NR_registry name, size_t *len);
-static int nr_reg_local_set_char(NR_registry name, char data);
-static int nr_reg_local_set_uchar(NR_registry name, UCHAR data);
-static int nr_reg_local_set_int4(NR_registry name, INT4 data);
-static int nr_reg_local_set_uint4(NR_registry name, UINT4 data);
-static int nr_reg_local_set_registry(NR_registry name);
-static int nr_reg_local_set_bytes(NR_registry name, UCHAR *data, size_t length);
-static int nr_reg_local_set_string(NR_registry name, char *data);
-static int nr_reg_local_del(NR_registry name);
-static int nr_reg_local_get_child_count(NR_registry parent, size_t *count);
-static int nr_reg_local_get_children(NR_registry parent, NR_registry *data, size_t size, size_t *length);
 static int nr_reg_insert_node(char *name, void *node);
 static int nr_reg_change_node(char *name, void *node, void *old);
 static int nr_reg_get(char *name, int type, void *out);

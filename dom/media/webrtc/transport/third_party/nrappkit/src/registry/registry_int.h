@@ -84,4 +84,27 @@ int nr_reg_get_client(CLIENT **client);
 #define CALLBACK_SERVER_PORT     8082
 #define CALLBACK_SERVER_BACKLOG  32
 
+int nr_reg_local_init(void);
+int nr_reg_local_get_char(NR_registry name, char *data);
+int nr_reg_local_get_uchar(NR_registry name, UCHAR *data);
+int nr_reg_local_get_uint2(NR_registry name, UINT2 *data);
+int nr_reg_local_get_int4(NR_registry name, INT4 *data);
+int nr_reg_local_get_uint4(NR_registry name, UINT4 *data);
+int nr_reg_local_get_uint8(NR_registry name, UINT8 *data);
+int nr_reg_local_get_double(NR_registry name, double *data);
+int nr_reg_local_get_registry(NR_registry name, NR_registry data);
+int nr_reg_local_get_bytes(NR_registry name, UCHAR *data, size_t size, size_t *length);
+int nr_reg_local_get_string(NR_registry name, char *data, size_t size);
+int nr_reg_local_get_length(NR_registry name, size_t *len);
+int nr_reg_local_set_char(NR_registry name, char data);
+int nr_reg_local_set_uchar(NR_registry name, UCHAR data);
+int nr_reg_local_set_int4(NR_registry name, INT4 data);
+int nr_reg_local_set_uint4(NR_registry name, UINT4 data);
+int nr_reg_local_set_string(NR_registry name, char *data);
+int nr_reg_local_set_registry(NR_registry name);
+int nr_reg_local_set_bytes(NR_registry name, UCHAR *data, size_t length);
+int nr_reg_local_del(NR_registry name);
+int nr_reg_local_get_child_count(NR_registry parent, size_t *count);
+int nr_reg_local_get_children(NR_registry parent, NR_registry *data, size_t size, size_t *length);
+
 #endif
