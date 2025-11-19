@@ -314,10 +314,11 @@ ENameValueFlag HTMLTableAccessible::NativeName(nsString& aName) const {
   if (caption) {
     nsIContent* captionContent = caption->GetContent();
     if (captionContent) {
-      nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent,
-                                                   &aName);
+      bool usedHiddenContent = nsTextEquivUtils::AppendTextEquivFromContent(
+          this, captionContent, &aName);
+      aName.CompressWhitespace();
       if (!aName.IsEmpty()) {
-        return eNameFromRelations;
+        return usedHiddenContent ? eNameOK : eNameFromRelations;
       }
     }
   }

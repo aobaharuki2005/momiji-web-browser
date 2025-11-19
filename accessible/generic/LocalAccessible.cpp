@@ -2596,12 +2596,12 @@ ENameValueFlag LocalAccessible::ARIAName(nsString& aName) const {
     return eNameOK;
   }
   // aria-labelledby now takes precedence over aria-label
-  nsTextEquivUtils::GetTextEquivFromIDRefs(this, nsGkAtoms::aria_labelledby,
-                                           aName);
+  bool usedHiddenContent = nsTextEquivUtils::GetTextEquivFromIDRefs(
+      this, nsGkAtoms::aria_labelledby, aName);
   aName.CompressWhitespace();
 
   if (!aName.IsEmpty()) {
-    return eNameFromRelations;
+    return usedHiddenContent ? eNameOK : eNameFromRelations;
   }
 
   if (mContent->IsElement() &&
@@ -2663,14 +2663,15 @@ ENameValueFlag LocalAccessible::NativeName(nsString& aName) const {
   if (mContent->IsHTMLElement()) {
     LocalAccessible* label = nullptr;
     HTMLLabelIterator iter(Document(), this);
+    bool usedHiddenContent = false;
     while ((label = iter.Next())) {
-      nsTextEquivUtils::AppendTextEquivFromContent(this, label->GetContent(),
-                                                   &aName);
+      usedHiddenContent |= nsTextEquivUtils::AppendTextEquivFromContent(
+          this, label->GetContent(), &aName);
       aName.CompressWhitespace();
     }
 
     if (!aName.IsEmpty()) {
-      return eNameFromRelations;
+      return usedHiddenContent ? eNameOK : eNameFromRelations;
     }
 
     NameFromAssociatedXULLabel(mDoc, mContent, aName);
