@@ -762,6 +762,19 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * Sets the persisted options between screens for embedded components.
+   * This is specifically used in the Spotlight onboarding experience.
+   *
+   * This data is flushed upon creating a backup or exiting the backup flow.
+   *
+   * @param {object} data - data to persist between screens.
+   */
+  setEmbeddedComponentPersistentData(data) {
+    this.#_state.embeddedComponentPersistentData = { ...data };
+    this.stateUpdate();
+  }
+
+  /**
    * An object holding the current state of the BackupService instance, for
    * the purposes of representing it in the user interface. Ideally, this would
    * be named #state instead of #_state, but sphinx-js seems to be fairly
@@ -791,6 +804,8 @@ export class BackupService extends EventTarget {
      * restored.
      */
     restoreID: null,
+    /** Utilized by the spotlight to persist information between screens */
+    embeddedComponentPersistentData: {},
   };
 
   /**
@@ -3560,6 +3575,9 @@ export class BackupService extends EventTarget {
     if (shouldEnableScheduledBackups) {
       // reset the error states when reenabling backup
       Services.prefs.setIntPref(BACKUP_ERROR_CODE_PREF_NAME, ERRORS.NONE);
+
+      // flush the embedded component's persistent data
+      this.setEmbeddedComponentPersistentData({});
     } else {
       // set user-disabled pref if backup is being disabled
       Services.prefs.setBoolPref(

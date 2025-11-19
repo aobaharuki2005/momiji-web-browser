@@ -151,6 +151,20 @@ export default class TurnOnScheduledBackups extends MozLitElement {
       this._newPath = path;
       this._newLabel = filename;
       this._newIconURL = iconURL;
+
+      if (this.embeddedFxBackupOptIn) {
+        // Let's set a persistent path
+        this.dispatchEvent(
+          new CustomEvent("BackupUI:SetEmbeddedComponentPersistentData", {
+            bubbles: true,
+            detail: {
+              path,
+              label: filename,
+              iconURL,
+            },
+          })
+        );
+      }
     } else if (event.type == "ValidPasswordsDetected") {
       let { password } = event.detail;
       this._passwordsMatch = true;
@@ -199,17 +213,22 @@ export default class TurnOnScheduledBackups extends MozLitElement {
       detail.password = this._inputPassValue;
     }
 
-    if (
-      this.embeddedFxBackupOptIn &&
-      this.backupIsEncrypted &&
-      !detail.password
-    ) {
-      // We're in the embedded component and we haven't set a password yet when
-      // one is expected, let's not do a confirm action yet!
-      this.dispatchEvent(
-        new CustomEvent("SpotlightOnboardingAdvanceScreens", { bubbles: true })
-      );
-      return;
+    if (this.embeddedFxBackupOptIn && this.backupIsEncrypted) {
+      if (!detail.password) {
+        // We're in the embedded component and we haven't set a password yet
+        // when one is expected, let's not do a confirm action yet!
+        this.dispatchEvent(
+          new CustomEvent("SpotlightOnboardingAdvanceScreens", {
+            bubbles: true,
+          })
+        );
+        return;
+      }
+
+      // The persistent data will take precedence over the default path
+      detail.parentDirPath =
+        this.backupServiceState?.embeddedComponentPersistentData?.path ||
+        detail.parentDirPath;
     }
 
     this.dispatchEvent(
@@ -258,6 +277,17 @@ export default class TurnOnScheduledBackups extends MozLitElement {
       const passwordElement = this.passwordOptionsExpandedEl;
       passwordElement.reset();
     }
+
+    if (
+      this.embeddedFxBackupOptIn &&
+      this.backupServiceState?.embeddedComponentPersistentData
+    ) {
+      this.dispatchEvent(
+        new CustomEvent("BackupUI:FlushEmbeddedComponentPersistentData", {
+          bubbles: true,
+        })
+      );
+    }
   }
 
   defaultFilePathInputTemplate() {
@@ -285,9 +315,19 @@ export default class TurnOnScheduledBackups extends MozLitElement {
     `;
   }
 
+  /**
+   * Note: We also consider the embeddedComponentPersistentData since we might be in the
+   *    Spotlight where we need this persistent data between screens. This state property should
+   *    not be set if we are not in the Spotlight.
+   */
   customFilePathInputTemplate() {
-    let filename = this._newLabel;
-    let iconURL = this._newIconURL || this.#placeholderIconURL;
+    let filename =
+      this._newLabel ||
+      this.backupServiceState?.embeddedComponentPersistentData?.label;
+    let iconURL =
+      this._newIconURL ||
+      this.backupServiceState?.embeddedComponentPersistentData?.iconURL ||
+      this.#placeholderIconURL;
 
     return html`
       <input
@@ -322,7 +362,8 @@ export default class TurnOnScheduledBackups extends MozLitElement {
             "turn-on-scheduled-backups-location-label"}
           ></label>
           <div id="backup-location-filepicker">
-            ${!this._newPath
+            ${!this._newPath &&
+            !this.backupServiceState?.embeddedComponentPersistentData?.path
               ? this.defaultFilePathInputTemplate()
               : this.customFilePathInputTemplate()}
             <moz-button
