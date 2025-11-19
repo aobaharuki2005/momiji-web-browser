@@ -242,6 +242,7 @@ let JSWINDOWACTORS = {
         "BackupUI:FlushEmbeddedComponentPersistentData": {
           wantUntrusted: true,
         },
+        "BackupUI:ErrorBarDismissed": { wantUntrusted: true },
       },
     },
     includeChrome: true,

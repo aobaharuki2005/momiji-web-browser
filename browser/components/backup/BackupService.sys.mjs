@@ -189,6 +189,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
   5
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "backupErrorCode",
+  BACKUP_ERROR_CODE_PREF_NAME,
+  ERRORS.NONE,
+  function onUpdateBackupErrorCode(_pref, _prevVal, newVal) {
+    let bs = BackupService.init();
+    if (bs) {
+      bs.onUpdateBackupErrorCode(newVal);
+    }
+  }
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "idleService",
@@ -795,7 +808,6 @@ export class BackupService extends EventTarget {
     lastBackupFileName: "",
     supportBaseLink: Services.urlFormatter.formatURLPref("app.support.baseURL"),
     recoveryInProgress: false,
-    recoveryErrorCode: 0,
     /**
      * Every file we load successfully is going to get a restore ID which is
      * basically the identifier for that profile restore event. If we actually
@@ -806,6 +818,10 @@ export class BackupService extends EventTarget {
     restoreID: null,
     /** Utilized by the spotlight to persist information between screens */
     embeddedComponentPersistentData: {},
+    recoveryErrorCode: ERRORS.NONE,
+    backupErrorCode: lazy.backupErrorCode,
+    archiveEnabledStatus: this.archiveEnabledStatus.enabled,
+    restoreEnabledStatus: this.restoreEnabledStatus.enabled,
   };
 
   /**
@@ -1711,6 +1727,7 @@ export class BackupService extends EventTarget {
             })
           );
 
+          this.stateUpdate();
           throw e;
         } finally {
           this.#backupInProgress = false;
@@ -3540,6 +3557,20 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * Updates backupErrorCode in the backup service state. Should be called every time
+   * the value for browser.backup.errorCode changes.
+   *
+   * @param {number} newErrorCode
+   *    Any of the ERROR code's from backup-constants.mjs
+   */
+  onUpdateBackupErrorCode(newErrorCode) {
+    lazy.logConsole.debug(`Updating backup error code to ${newErrorCode}`);
+
+    this.#_state.backupErrorCode = newErrorCode;
+    this.stateUpdate();
+  }
+
+  /**
    * Returns the moz-icon URL of a file. To get the moz-icon URL, the
    * file path is convered to a fileURI. If there is a problem retreiving
    * the moz-icon due to an invalid file path, return null instead.
@@ -4108,6 +4139,11 @@ export class BackupService extends EventTarget {
    * 2. If archive is disabled, clean up any backup files
    */
   #handleStatusChange() {
+    // Update the BackupService state before notifying observers about the
+    // state change
+    this.#_state.archiveEnabledStatus = this.archiveEnabledStatus.enabled;
+    this.#_state.restoreEnabledStatus = this.restoreEnabledStatus.enabled;
+
     this.#notifyStatusObservers();
 
     if (!this.archiveEnabledStatus.enabled) {
