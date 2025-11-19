@@ -95,8 +95,6 @@ const NIMBUS_VARIABLE_MAX_SPONSORED = "topSitesMaxSponsored";
 //considered for Top Sites.
 const NIMBUS_VARIABLE_ADDITIONAL_TILES =
   "topSitesUseAdditionalTilesFromContile";
-// Nimbus variable to enable the SOV feature for sponsored tiles.
-const NIMBUS_VARIABLE_CONTILE_SOV_ENABLED = "topSitesContileSovEnabled";
 // Nimbu variable for the total number of sponsor topsite that come from Contile
 // The default will be `CONTILE_MAX_NUM_SPONSORED` if variable is unspecified.
 const NIMBUS_VARIABLE_CONTILE_MAX_NUM_SPONSORED = "topSitesContileMaxSponsored";
@@ -1594,13 +1592,7 @@ export class TopSitesFeed {
   _mergeSponsoredLinks(sponsoredLinks) {
     const { positions: allocatedPositions, ready: sovReady } =
       this.store.getState().TopSites.sov || {};
-    if (
-      !this._contile.sov ||
-      !sovReady ||
-      !lazy.NimbusFeatures.pocketNewtab.getVariable(
-        NIMBUS_VARIABLE_CONTILE_SOV_ENABLED
-      )
-    ) {
+    if (!this._contile.sov || !sovReady) {
       return Object.values(sponsoredLinks).flat();
     }
 

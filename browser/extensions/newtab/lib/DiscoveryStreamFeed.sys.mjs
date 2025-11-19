@@ -74,19 +74,14 @@ const PREF_SPOCS_ENDPOINT_QUERY = "discoverystream.spocs-endpoint-query";
 const PREF_REGION_BASIC_LAYOUT = "discoverystream.region-basic-layout";
 const PREF_USER_TOPSTORIES = "feeds.section.topstories";
 const PREF_SYSTEM_TOPSTORIES = "feeds.system.topstories";
-const PREF_SYSTEM_TOPSITES = "feeds.system.topsites";
 const PREF_UNIFIED_ADS_BLOCKED_LIST = "unifiedAds.blockedAds";
 const PREF_UNIFIED_ADS_SPOCS_ENABLED = "unifiedAds.spocs.enabled";
 const PREF_UNIFIED_ADS_ADSFEED_ENABLED = "unifiedAds.adsFeed.enabled";
 const PREF_UNIFIED_ADS_ENDPOINT = "unifiedAds.endpoint";
 const PREF_UNIFIED_ADS_OHTTP = "unifiedAds.ohttp.enabled";
-const PREF_USER_TOPSITES = "feeds.topsites";
 const PREF_SPOCS_CLEAR_ENDPOINT = "discoverystream.endpointSpocsClear";
 const PREF_SHOW_SPONSORED = "showSponsored";
 const PREF_SYSTEM_SHOW_SPONSORED = "system.showSponsored";
-const PREF_SHOW_SPONSORED_TOPSITES = "showSponsoredTopSites";
-// Nimbus variable to enable the SOV feature for sponsored tiles.
-const NIMBUS_VARIABLE_CONTILE_SOV_ENABLED = "topSitesContileSovEnabled";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
 const PREF_FLIGHT_BLOCKS = "discoverystream.flight.blocks";
 const PREF_SELECTED_TOPICS = "discoverystream.topicSelection.selectedTopics";
@@ -236,12 +231,6 @@ export class DiscoveryStreamFeed {
     return this._doLocalInferredRerank;
   }
 
-  get showSpocs() {
-    // High level overall sponsored check, if one of these is true,
-    // we know we need some sort of spoc control setup.
-    return this.showSponsoredStories || this.showSponsoredTopsites;
-  }
-
   get showSponsoredStories() {
     // Combine user-set sponsored opt-out with Mozilla-set config
     return (
@@ -250,28 +239,11 @@ export class DiscoveryStreamFeed {
     );
   }
 
-  get showSponsoredTopsites() {
-    const placements = this.getPlacements();
-    // Combine user-set sponsored opt-out with placement data
-    return !!(
-      this.store.getState().Prefs.values[PREF_SHOW_SPONSORED_TOPSITES] &&
-      placements.find(placement => placement.name === "sponsored-topsites")
-    );
-  }
-
   get showStories() {
     // Combine user-set stories opt-out with Mozilla-set config
     return (
       this.store.getState().Prefs.values[PREF_SYSTEM_TOPSTORIES] &&
       this.store.getState().Prefs.values[PREF_USER_TOPSTORIES]
-    );
-  }
-
-  get showTopsites() {
-    // Combine user-set topsites opt-out with Mozilla-set config
-    return (
-      this.store.getState().Prefs.values[PREF_SYSTEM_TOPSITES] &&
-      this.store.getState().Prefs.values[PREF_USER_TOPSITES]
     );
   }
 
@@ -601,7 +573,9 @@ export class DiscoveryStreamFeed {
     const { feeds } = cachedData;
 
     return {
-      spocs: this.showSpocs && this.isExpired({ cachedData, key: "spocs" }),
+      spocs:
+        this.showSponsoredStories &&
+        this.isExpired({ cachedData, key: "spocs" }),
       feeds:
         this.showStories &&
         (!feeds ||
@@ -621,22 +595,7 @@ export class DiscoveryStreamFeed {
         // If we find a valid placement, we set it to this value.
         let placement;
 
-        // We need to check to see if this placement is on or not.
-        // If this placement has a prefs array, check against that.
-        if (component.spocs.prefs) {
-          // Check every pref in the array to see if this placement is turned on.
-          if (
-            component.spocs.prefs.length &&
-            component.spocs.prefs.every(
-              p => this.store.getState().Prefs.values[p]
-            )
-          ) {
-            // This placement is on.
-            placement = component.placement;
-          }
-        } else if (this.showSponsoredStories) {
-          // If we do not have a prefs array, use old check.
-          // This is because Pocket spocs uses an old non pref method.
+        if (this.showSponsoredStories) {
           placement = component.placement;
         }
 
@@ -718,27 +677,7 @@ export class DiscoveryStreamFeed {
       this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
 
     const pocketConfig = this.store.getState().Prefs.values?.pocketConfig || {};
-
-    // The Unified Ads API does not support the spoc topsite placement.
-    const unifiedAdsEnabled =
-      this.store.getState().Prefs.values[PREF_UNIFIED_ADS_SPOCS_ENABLED];
-    const spocTopsitesPlacementEnabled =
-      pocketConfig.spocTopsitesPlacementEnabled && !unifiedAdsEnabled;
-
-    // const layoutExperiment =
-    // this.store.getState().Prefs.values[PREF_LAYOUT_EXPERIMENT_A] ||
-    // this.store.getState().Prefs.values[PREF_LAYOUT_EXPERIMENT_B];
-
-    // let items = isBasicLayout ? 3 : 21;
-    let items = isBasicLayout ? 4 : 24;
-    // if (
-    //   pocketConfig.fourCardLayout ||
-    //   pocketConfig.hybridLayout ||
-    //   layoutExperiment
-    // ) {
-    //   items = isBasicLayout ? 4 : 24;
-    // }
-
+    const items = isBasicLayout ? 4 : 24;
     const ctaButtonSponsors = pocketConfig.ctaButtonSponsors
       ?.split(",")
       .map(s => s.trim().toLowerCase());
@@ -777,24 +716,14 @@ export class DiscoveryStreamFeed {
 
     const spocAdTypes = prepConfArr(pocketConfig.spocAdTypes);
     const spocZoneIds = prepConfArr(pocketConfig.spocZoneIds);
-    const spocTopsitesAdTypes = prepConfArr(pocketConfig.spocTopsitesAdTypes);
-    const spocTopsitesZoneIds = prepConfArr(pocketConfig.spocTopsitesZoneIds);
     const { spocSiteId } = pocketConfig;
     let spocPlacementData;
-    let spocTopsitesPlacementData;
     let spocsUrl;
 
     if (spocAdTypes?.length && spocZoneIds?.length) {
       spocPlacementData = {
         ad_types: spocAdTypes,
         zone_ids: spocZoneIds,
-      };
-    }
-
-    if (spocTopsitesAdTypes?.length && spocTopsitesZoneIds?.length) {
-      spocTopsitesPlacementData = {
-        ad_types: spocTopsitesAdTypes,
-        zone_ids: spocTopsitesZoneIds,
       };
     }
 
@@ -813,13 +742,8 @@ export class DiscoveryStreamFeed {
       feedUrl,
       items,
       spocPlacementData,
-      spocTopsitesPlacementEnabled,
-      spocTopsitesPlacementData,
       spocPositions: this.parseGridPositions(
         this.store.getState().Prefs.values[PREF_SPOC_POSITIONS]?.split(`,`)
-      ),
-      spocTopsitesPositions: this.parseGridPositions(
-        pocketConfig.spocTopsitesPositions?.split(`,`)
       ),
       widgetPositions: this.parseGridPositions(
         pocketConfig.widgetPositions?.split(`,`)
@@ -1224,14 +1148,7 @@ export class DiscoveryStreamFeed {
     // Currently the order of this is important.
     // We need to check this after updatePlacements is called,
     // because some of the spoc logic depends on the result of placement updates.
-    if (
-      !(
-        (this.showSponsoredStories ||
-          (this.showTopsites && this.showSponsoredTopsites)) &&
-        (this.showSponsoredTopsites ||
-          (this.showStories && this.showSponsoredStories))
-      )
-    ) {
+    if (!this.showSponsoredStories) {
       // Ensure we delete any remote data potentially related to spocs.
       this.clearSpocs();
     }
@@ -1254,44 +1171,10 @@ export class DiscoveryStreamFeed {
     let unifiedAdsPlacements = [];
 
     if (
-      this.showSpocs &&
+      this.showSponsoredStories &&
       placements?.length &&
       this.isExpired({ cachedData, key: "spocs", isStartup })
     ) {
-      // We optimistically set this to true, because if SOV is not ready, we fetch them.
-      let useTopsitesPlacement = true;
-
-      // If SOV is turned off or not available, we optimistically fetch sponsored topsites.
-      if (
-        lazy.NimbusFeatures.pocketNewtab.getVariable(
-          NIMBUS_VARIABLE_CONTILE_SOV_ENABLED
-        ) &&
-        !unifiedAdsEnabled
-      ) {
-        let { positions, ready } = this.store.getState().TopSites.sov;
-        if (ready) {
-          // We don't need to await here, because we don't need it now.
-          this.cache.set("sov", positions);
-        } else {
-          // If SOV is not available, and there is a SOV cache, use it.
-          positions = cachedData.sov;
-        }
-
-        if (positions?.length) {
-          // If SOV is ready and turned on, we can check if we need moz-sales position.
-          useTopsitesPlacement = positions.some(
-            allocation => allocation.assignedPartner === "moz-sales"
-          );
-        }
-      }
-
-      // We can filter out the topsite placement from the fetch.
-      if (!useTopsitesPlacement || unifiedAdsEnabled) {
-        placements = placements.filter(
-          placement => placement.name !== "sponsored-topsites"
-        );
-      }
-
       if (placements?.length) {
         const headers = new Headers();
         headers.append("content-type", "application/json");
@@ -2219,16 +2102,13 @@ export class DiscoveryStreamFeed {
       : this.store.dispatch;
 
     this.loadLayout(dispatch, isStartup);
-    if (this.showStories || this.showTopsites) {
+    if (this.showStories) {
       const spocsStartupCacheEnabled =
         this.store.getState().Prefs.values[PREF_SPOCS_STARTUP_CACHE_ENABLED];
       const promises = [];
 
       // We don't want to make spoc requests during system tick if on demand is on.
       if (!(this.spocsOnDemand && isSystemTick)) {
-        // We could potentially have either or both sponsored topsites or stories.
-        // We only make one fetch, and control which to request when we fetch.
-        // So for now we only care if we need to make this request at all.
         const spocsPromise = this.loadSpocs(
           dispatch,
           isStartup && spocsStartupCacheEnabled
@@ -2237,15 +2117,10 @@ export class DiscoveryStreamFeed {
         );
         promises.push(spocsPromise);
       }
-      if (this.showStories) {
-        const storiesPromise = this.loadComponentFeeds(
-          dispatch,
-          isStartup
-        ).catch(error =>
-          console.error("Error trying to load component feeds:", error)
-        );
-        promises.push(storiesPromise);
-      }
+      const storiesPromise = this.loadComponentFeeds(dispatch, isStartup).catch(
+        error => console.error("Error trying to load component feeds:", error)
+      );
+      promises.push(storiesPromise);
       await Promise.all(promises);
       // We don't need to check onDemand here,
       // even though _maybeUpdateCachedData fetches spocs.
@@ -2311,7 +2186,6 @@ export class DiscoveryStreamFeed {
   async resetContentCache() {
     await this.cache.set("feeds", {});
     await this.cache.set("spocs", {});
-    await this.cache.set("sov", {});
     await this.cache.set("recsImpressions", {});
   }
 
@@ -2652,26 +2526,9 @@ export class DiscoveryStreamFeed {
         await this.resetContentFeed();
         this.refreshAll({ updateOpenTabs: true });
         break;
-      case PREF_USER_TOPSITES:
-      case PREF_SYSTEM_TOPSITES:
-        if (
-          !(
-            this.showTopsites ||
-            (this.showStories && this.showSponsoredStories)
-          )
-        ) {
-          // Ensure we delete any remote data potentially related to spocs.
-          this.clearSpocs();
-        }
-        break;
       case PREF_USER_TOPSTORIES:
       case PREF_SYSTEM_TOPSTORIES:
-        if (
-          !(
-            this.showStories ||
-            (this.showTopsites && this.showSponsoredTopsites)
-          )
-        ) {
+        if (!this.showStories) {
           // Ensure we delete any remote data potentially related to spocs.
           this.clearSpocs();
         }
@@ -2679,9 +2536,8 @@ export class DiscoveryStreamFeed {
           this.enableStories();
         }
         break;
-      // Check if spocs was disabled. Remove them if they were.
-      case PREF_SHOW_SPONSORED:
-      case PREF_SHOW_SPONSORED_TOPSITES: {
+      // Remove spocs if turned off.
+      case PREF_SHOW_SPONSORED: {
         await this.updateOrRemoveSpocs();
         break;
       }
@@ -2815,7 +2671,7 @@ export class DiscoveryStreamFeed {
         }
         break;
       case at.DISCOVERY_STREAM_SPOC_IMPRESSION:
-        if (this.showSpocs) {
+        if (this.showSponsoredStories) {
           this.recordFlightImpression(action.data.flightId);
 
           // Apply frequency capping to SPOCs in the redux store, only update the
@@ -2894,7 +2750,7 @@ export class DiscoveryStreamFeed {
 
         await this.cache.set("feeds", feeds);
 
-        if (this.showSpocs) {
+        if (this.showSponsoredStories) {
           let blockedItems = [];
           const spocsState = this.store.getState().DiscoveryStream.spocs;
 
@@ -3013,10 +2869,7 @@ export class DiscoveryStreamFeed {
      `feedUrl` Where to fetch stories from.
      `items` How many items to include in the primary card grid.
      `spocPositions` Changes the position of spoc cards.
-     `spocTopsitesPositions` Changes the position of spoc topsites.
      `spocPlacementData` Used to set the spoc content.
-     `spocTopsitesPlacementEnabled` Tuns on and off the sponsored topsites placement.
-     `spocTopsitesPlacementData` Used to set spoc content for topsites.
      `hybridLayout` Changes cards to smaller more compact cards only for specific breakpoints.
      `hideCardBackground` Removes Pocket card background and borders.
      `fourCardLayout` Enable four Pocket cards per row.
@@ -3030,10 +2883,7 @@ getHardcodedLayout = ({
   feedUrl,
   items = 21,
   spocPositions = [1, 5, 7, 11, 18, 20],
-  spocTopsitesPositions = [1],
   spocPlacementData = { ad_types: [3617], zone_ids: [217758, 217995] },
-  spocTopsitesPlacementEnabled = false,
-  spocTopsitesPlacementData = { ad_types: [3120], zone_ids: [280143] },
   widgetPositions = [],
   widgetData = [],
   hybridLayout = false,
@@ -3060,22 +2910,6 @@ getHardcodedLayout = ({
               id: "newtab-section-header-topsites",
             },
           },
-          ...(spocTopsitesPlacementEnabled && spocTopsitesPlacementData
-            ? {
-                placement: {
-                  name: "sponsored-topsites",
-                  ad_types: spocTopsitesPlacementData.ad_types,
-                  zone_ids: spocTopsitesPlacementData.zone_ids,
-                },
-                spocs: {
-                  probability: 1,
-                  prefs: [PREF_SHOW_SPONSORED_TOPSITES],
-                  positions: spocTopsitesPositions.map(position => {
-                    return { index: position };
-                  }),
-                },
-              }
-            : {}),
           properties: {},
         },
         {
