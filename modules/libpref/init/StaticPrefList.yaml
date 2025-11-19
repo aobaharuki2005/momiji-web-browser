@@ -19019,11 +19019,6 @@
   value: false
   mirror: always
 
-- name: widget.window-transforms.disabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # When looking for a recent window (for example, when a link is clicked
 # on from an external application), whether to prefer windows on the
 # current virtual desktop (aka workspace). For now this only applies on Windows.
@@ -19055,6 +19050,11 @@
   mirror: always
 
 - name: widget.macos.titlebar-blend-mode.behind-window
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: widget.macos.window-transforms.disabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
