@@ -115,6 +115,11 @@
 #endif
   </commandset>
 #include ../../components/places/content/placesCommands.inc.xhtml
+  <commandset id="splitViewCommands">
+    <command id="splitViewCmd_separateTabs"/>
+    <command id="splitViewCmd_reverseTabs"/>
+    <command id="splitViewCmd_closeTabs"/>
+  </commandset>
 
   <keyset id="mainKeyset">
     <key id="key_newNavigator"
