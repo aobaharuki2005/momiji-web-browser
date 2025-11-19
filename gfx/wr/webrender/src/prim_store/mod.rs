@@ -21,7 +21,7 @@ use crate::debug_colors;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use glyph_rasterizer::GlyphKey;
-use crate::gpu_types::{BrushFlags, QuadSegment};
+use crate::gpu_types::{BrushFlags, BrushSegmentGpuData, QuadSegment};
 use crate::intern;
 use crate::picture::PicturePrimitive;
 use crate::render_task_graph::RenderTaskId;
@@ -766,6 +766,17 @@ impl BrushSegment {
             extra_data,
             brush_flags,
         }
+    }
+
+    pub fn gpu_data(&self) -> BrushSegmentGpuData {
+        BrushSegmentGpuData {
+            local_rect: self.local_rect,
+            extra_data: self.extra_data,
+        }
+    }
+
+    pub fn write_gpu_blocks(&self, writer: &mut GpuBufferWriterF) {
+        writer.push(&self.gpu_data());
     }
 }
 

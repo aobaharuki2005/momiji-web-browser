@@ -116,7 +116,7 @@ use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, FilterGraphOp, FilterGraphNode, Filter, FrameId};
 use crate::internal_types::{PlaneSplitterIndex, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
-use crate::gpu_types::{BlurEdgeMode, ImageBrushPrimitiveData, UvRectKind, ZBufferId};
+use crate::gpu_types::{BlurEdgeMode, BrushSegmentGpuData, ImageBrushPrimitiveData, UvRectKind, ZBufferId};
 use peek_poke::{PeekPoke, poke_into_vec, peek_from_slice, ensure_red_zone};
 use plane_split::{Clipper, Polygon};
 use crate::prim_store::{PrimitiveTemplateKind, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
@@ -7279,9 +7279,10 @@ impl PicturePrimitive {
                         stretch_size: shadow_rect.size(),
                     });
 
-                    // segment rect / extra data
-                    writer.push_one(shadow_rect);
-                    writer.push_one([0.0, 0.0, 0.0, 0.0]);
+                    writer.push(&BrushSegmentGpuData {
+                        local_rect: shadow_rect,
+                        extra_data: [0.0; 4],
+                    });
 
                     *extra_handle = writer.finish();
                 }
