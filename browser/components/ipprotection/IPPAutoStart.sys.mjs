@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
 });
 
+const AUTOSTART_FEATURE_ENABLE_PREF = "browser.ipProtection.features.autoStart";
 const AUTOSTART_PREF = "browser.ipProtection.autoStartEnabled";
 
 /**
@@ -40,6 +41,13 @@ class IPPAutoStartSingleton {
           this.uninit();
         }
       }
+    );
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "autoStartFeatureEnablePref",
+      AUTOSTART_FEATURE_ENABLE_PREF,
+      false
     );
   }
 
@@ -72,7 +80,11 @@ class IPPAutoStartSingleton {
   get autoStart() {
     // We activate the auto-start feature only if the pref is true and we have
     // the serverlist already.
-    return this.autoStartPref && lazy.IPProtectionServerlist.hasList;
+    return (
+      this.autoStartFeatureEnablePref &&
+      this.autoStartPref &&
+      lazy.IPProtectionServerlist.hasList
+    );
   }
 
   #handleEvent(_event) {
