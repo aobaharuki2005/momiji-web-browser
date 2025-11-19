@@ -3262,13 +3262,13 @@ static bool CheckArguments(FunctionValidatorShared& f, ParseNode** stmtIter,
       return false;
     }
 
+    if (argTypes->length() > MaxParams) {
+      return f.fail(stmt, "too many parameters");
+    }
+
     if (!f.addLocal(argpn, name, type)) {
       return false;
     }
-  }
-
-  if (argTypes->length() > MaxParams) {
-    return f.fail(stmt, "too many parameters");
   }
 
   *stmtIter = stmt;
