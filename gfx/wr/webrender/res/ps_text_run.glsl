@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared
+#include shared,prim_shared,gpu_buffer
 
 flat varying mediump vec4 v_color;
 flat varying mediump vec3 v_mask_swizzle;
@@ -60,7 +60,7 @@ struct GlyphResource {
 };
 
 GlyphResource fetch_glyph_resource(int address) {
-    vec4 data[2] = fetch_from_gpu_cache_2(address);
+    vec4 data[2] = fetch_from_gpu_buffer_2f(address);
     return GlyphResource(data[0], data[1].xy, data[1].z);
 }
 

@@ -165,7 +165,7 @@ impl RenderTaskCache {
         size: DeviceIntSize,
         render_task: &mut RenderTask,
         entry: &mut RenderTaskCacheEntry,
-        gpu_cache: &mut GpuCache,
+        gpu_buffer: &mut GpuBufferBuilderF,
         texture_cache: &mut TextureCache,
     ) {
         // Find out what size to alloc in the texture cache.
@@ -199,7 +199,7 @@ impl RenderTaskCache {
             None,
             entry.user_data.unwrap_or([0.0; 4]),
             DirtyRect::All,
-            gpu_cache,
+            gpu_buffer,
             None,
             render_task.uv_rect_kind(),
             Eviction::Auto,
@@ -309,7 +309,7 @@ impl RenderTaskCache {
         cache_entry.frame_id = self.frame_id;
 
         // Check if this texture cache handle is valid.
-        if texture_cache.request(&cache_entry.handle, gpu_cache) {
+        if texture_cache.request(&cache_entry.handle, gpu_buffer_builder) {
             // Invoke user closure to get render task chain
             // to draw this into the texture cache.
             let render_task_id = f(rg_builder, gpu_buffer_builder, gpu_cache);
@@ -328,7 +328,7 @@ impl RenderTaskCache {
                 task_size,
                 render_task,
                 cache_entry,
-                gpu_cache,
+                gpu_buffer_builder,
                 texture_cache,
             );
         }

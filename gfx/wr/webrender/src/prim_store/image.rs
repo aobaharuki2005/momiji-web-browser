@@ -10,9 +10,10 @@ use api::{
 use api::units::*;
 use euclid::point2;
 use crate::composite::CompositorSurfaceKind;
+use crate::renderer::GpuBufferBuilderF;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
-use crate::gpu_cache::{GpuCache, GpuDataRequest};
+use crate::gpu_cache::{GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{
@@ -192,7 +193,7 @@ impl ImageData {
 
                 let mut size = frame_state.resource_cache.request_image(
                     request,
-                    frame_state.gpu_cache,
+                    &mut frame_state.frame_gpu_data.f32,
                 );
 
                 let mut task_id = frame_state.rg_builder.add().init(
@@ -357,7 +358,7 @@ impl ImageData {
                         let request = request.with_tile(tile.offset);
                         let size = frame_state.resource_cache.request_image(
                             request,
-                            frame_state.gpu_cache,
+                            &mut frame_state.frame_gpu_data.f32,
                         );
 
                         let task_id = frame_state.rg_builder.add().init(
@@ -673,7 +674,7 @@ impl YuvImageData {
 
             let size = frame_state.resource_cache.request_image(
                 request,
-                frame_state.gpu_cache,
+                &mut frame_state.frame_gpu_data.f32,
             );
 
             let task_id = frame_state.rg_builder.add().init(
@@ -698,7 +699,7 @@ impl YuvImageData {
     pub fn request_resources(
         &mut self,
         resource_cache: &mut ResourceCache,
-        gpu_cache: &mut GpuCache,
+        gpu_buffer: &mut GpuBufferBuilderF,
     ) {
         let channel_num = self.format.get_plane_num();
         debug_assert!(channel_num <= 3);
@@ -709,7 +710,7 @@ impl YuvImageData {
                     rendering: self.image_rendering,
                     tile: None,
                 },
-                gpu_cache,
+                gpu_buffer,
             );
         }
     }

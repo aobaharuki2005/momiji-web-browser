@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include gpu_buffer
+
 #define COMPONENT_TRANSFER_IDENTITY 0
 #define COMPONENT_TRANSFER_TABLE 1
 #define COMPONENT_TRANSFER_DISCRETE 2
@@ -154,7 +156,7 @@ vec4 ComponentTransfer(vec4 colora, vec4 vfuncs, highp int table_address) {
             case COMPONENT_TRANSFER_DISCRETE: {
                 // fetch value from lookup table
                 k = int(floor(colora[i]*255.0 + 0.5));
-                texel = fetch_from_gpu_cache_1(table_address + offset + k/4);
+                texel = fetch_from_gpu_buffer_1f(table_address + offset + k/4);
                 colora[i] = clamp(texel[k % 4], 0.0, 1.0);
                 // offset plus 256/4 blocks
                 offset = offset + 64;
@@ -162,7 +164,7 @@ vec4 ComponentTransfer(vec4 colora, vec4 vfuncs, highp int table_address) {
             }
             case COMPONENT_TRANSFER_LINEAR: {
                 // fetch the two values for use in the linear equation
-                texel = fetch_from_gpu_cache_1(table_address + offset);
+                texel = fetch_from_gpu_buffer_1f(table_address + offset);
                 colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
                 // offset plus 1 block
                 offset = offset + 1;
@@ -170,7 +172,7 @@ vec4 ComponentTransfer(vec4 colora, vec4 vfuncs, highp int table_address) {
             }
             case COMPONENT_TRANSFER_GAMMA: {
                 // fetch the three values for use in the gamma equation
-                texel = fetch_from_gpu_cache_1(table_address + offset);
+                texel = fetch_from_gpu_buffer_1f(table_address + offset);
                 colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
                 // offset plus 1 block
                 offset = offset + 1;
