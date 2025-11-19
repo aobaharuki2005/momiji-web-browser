@@ -12149,7 +12149,8 @@ const PREF_WIDGETS_LISTS_BADGE_ENABLED = "widgets.lists.badge.enabled";
 const PREF_WIDGETS_LISTS_BADGE_LABEL = "widgets.lists.badge.label";
 function Lists({
   dispatch,
-  handleUserInteraction
+  handleUserInteraction,
+  isMaximized
 }) {
   const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
   const {
@@ -12614,7 +12615,7 @@ function Lists({
   const badgeEnabled = (nimbusBadgeEnabled || nimbusBadgeTrainhopEnabled) ?? prefs[PREF_WIDGETS_LISTS_BADGE_ENABLED] ?? false;
   const badgeLabel = (nimbusBadgeLabel || nimbusBadgeTrainhopLabel) ?? prefs[PREF_WIDGETS_LISTS_BADGE_LABEL] ?? "";
   return /*#__PURE__*/external_React_default().createElement("article", {
-    className: "lists",
+    className: `lists ${isMaximized ? "is-maximized" : ""}`,
     ref: el => {
       listsRef.current = [el];
     }
@@ -13015,7 +13016,8 @@ const getClipPath = progress => {
 };
 const FocusTimer = ({
   dispatch,
-  handleUserInteraction
+  handleUserInteraction,
+  isMaximized
 }) => {
   const [timeLeft, setTimeLeft] = (0,external_React_namespaceObject.useState)(0);
   // calculated value for the progress circle; 1 = 100%
@@ -13365,7 +13367,7 @@ const FocusTimer = ({
     handleTimerInteraction();
   }
   return timerData ? /*#__PURE__*/external_React_default().createElement("article", {
-    className: "focus-timer",
+    className: `focus-timer ${isMaximized ? "is-maximized" : ""}`,
     ref: el => {
       timerRef.current = [el];
     }
@@ -13536,6 +13538,8 @@ const PREF_WIDGETS_LISTS_ENABLED = "widgets.lists.enabled";
 const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
 const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
 const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
+const PREF_WIDGETS_MAXIMIZED = "widgets.maximized";
+const PREF_WIDGETS_SYSTEM_MAXIMIZED = "widgets.system.maximized";
 
 // resets timer to default values (exported for testing)
 // In practice, this logic runs inside a useEffect when
@@ -13571,6 +13575,7 @@ function Widgets() {
   } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Messages);
   const timerType = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget.timerType);
   const timerData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.TimerWidget);
+  const isMaximized = prefs[PREF_WIDGETS_MAXIMIZED];
   const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
   const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
   const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
@@ -13613,6 +13618,18 @@ function Widgets() {
       });
     }
   }
+
+  // Toggles the maximized state of widgets
+  function handleToggleMaximizeClick(e) {
+    e.preventDefault();
+    dispatch(actionCreators.SetPref(PREF_WIDGETS_MAXIMIZED, !isMaximized));
+  }
+  function handleToggleMaximizeKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      dispatch(actionCreators.SetPref(PREF_WIDGETS_MAXIMIZED, !isMaximized));
+    }
+  }
   function handleUserInteraction(widgetName) {
     const prefName = `widgets.${widgetName}.interaction`;
     const hasInteracted = prefs[prefName];
@@ -13632,6 +13649,16 @@ function Widgets() {
     className: "widgets-title-container"
   }, /*#__PURE__*/external_React_default().createElement("h1", {
     "data-l10n-id": "newtab-widget-section-title"
+  }), prefs[PREF_WIDGETS_SYSTEM_MAXIMIZED] && /*#__PURE__*/external_React_default().createElement("moz-button", {
+    id: "toggle-widgets-size-button",
+    type: "icon ghost",
+    size: "small"
+    // Toggle the icon and hover text
+    ,
+    "data-l10n-id": isMaximized ? "newtab-widget-section-maximize" : "newtab-widget-section-minimize",
+    iconsrc: `chrome://browser/skin/${isMaximized ? "fullscreen" : "fullscreen-exit"}.svg`,
+    onClick: handleToggleMaximizeClick,
+    onKeyDown: handleToggleMaximizeKeyDown
   }), /*#__PURE__*/external_React_default().createElement("moz-button", {
     id: "hide-all-widgets-button",
     type: "icon ghost",
@@ -13641,13 +13668,15 @@ function Widgets() {
     onClick: handleHideAllWidgetsClick,
     onKeyDown: handleHideAllWidgetsKeyDown
   })), /*#__PURE__*/external_React_default().createElement("div", {
-    className: "widgets-container"
+    className: `widgets-container ${isMaximized ? "is-maximized" : ""}`
   }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, {
     dispatch: dispatch,
-    handleUserInteraction: handleUserInteraction
+    handleUserInteraction: handleUserInteraction,
+    isMaximized: isMaximized
   }), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, {
     dispatch: dispatch,
-    handleUserInteraction: handleUserInteraction
+    handleUserInteraction: handleUserInteraction,
+    isMaximized: isMaximized
   }))), messageData?.content?.messageType === "WidgetMessage" && /*#__PURE__*/external_React_default().createElement(MessageWrapper, {
     dispatch: dispatch
   }, /*#__PURE__*/external_React_default().createElement(WidgetsFeatureHighlight, {
