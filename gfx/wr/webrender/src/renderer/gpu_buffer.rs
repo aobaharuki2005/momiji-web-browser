@@ -30,7 +30,7 @@ pub type GpuBufferI = GpuBuffer<GpuBufferBlockI>;
 pub type GpuBufferBuilderI = GpuBufferBuilderImpl<GpuBufferBlockI>;
 
 pub type GpuBufferWriterF<'l> = GpuBufferWriter<'l, GpuBufferBlockF>;
-//pub type GpuBufferWriterI<'l> = GpuBufferWriter<'l, GpuBufferBlockI>;
+pub type GpuBufferWriterI<'l> = GpuBufferWriter<'l, GpuBufferBlockI>;
 
 unsafe impl Texel for GpuBufferBlockF {
     fn image_format() -> ImageFormat { ImageFormat::RGBAF32 }
@@ -241,10 +241,10 @@ pub trait GpuBufferDataF {
     fn write(&self, writer: &mut GpuBufferWriterF);
 }
 
-//pub trait GpuBufferDataI {
-//    const NUM_BLOCKS: usize;
-//    fn write(&self, writer: &mut GpuBufferWriterI);
-//}
+pub trait GpuBufferDataI {
+    const NUM_BLOCKS: usize;
+    fn write(&self, writer: &mut GpuBufferWriterI);
+}
 
 impl GpuBufferDataF for [f32; 4] {
     const NUM_BLOCKS: usize = 1;
@@ -253,12 +253,12 @@ impl GpuBufferDataF for [f32; 4] {
     }
 }
 
-//impl GpuBufferDataI for [i32; 4] {
-//    const NUM_BLOCKS: usize = 1;
-//    fn write(&self, writer: &mut GpuBufferWriterI) {
-//        writer.push_one(*self);
-//    }
-//}
+impl GpuBufferDataI for [i32; 4] {
+    const NUM_BLOCKS: usize = 1;
+    fn write(&self, writer: &mut GpuBufferWriterI) {
+        writer.push_one(*self);
+    }
+}
 
 /// Record a patch to the GPU buffer for a render task
 struct DeferredBlock {
@@ -327,11 +327,11 @@ impl<'a> GpuBufferWriterF<'a> {
     }
 }
 
-//impl<'a> GpuBufferWriterI<'a> {
-//    pub fn push<Data: GpuBufferDataI>(&mut self, data: &Data) {
-//        data.write(self);
-//    }
-//}
+impl<'a> GpuBufferWriterI<'a> {
+    pub fn push<Data: GpuBufferDataI>(&mut self, data: &Data) {
+        data.write(self);
+    }
+}
 
 impl<'a, T> Drop for GpuBufferWriter<'a, T> {
     fn drop(&mut self) {

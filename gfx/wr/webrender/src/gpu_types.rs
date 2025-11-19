@@ -6,6 +6,7 @@ use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvRangedColorSpace};
 use api::units::*;
 use euclid::HomogeneousVector;
 use crate::composite::{CompositeFeatures, CompositorClip};
+use crate::pattern::PatternShaderInput;
 use crate::quad::LayoutOrDeviceRect;
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
@@ -13,7 +14,7 @@ use crate::internal_types::{FastHashMap, FrameVec, FrameMemory};
 use crate::prim_store::{ClipData, VECS_PER_SEGMENT};
 use crate::render_task::RenderTaskAddress;
 use crate::render_task_graph::RenderTaskId;
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferWriterF, GpuBufferDataF, ShaderColorMode};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferDataF, GpuBufferDataI, GpuBufferWriterF, GpuBufferWriterI, ShaderColorMode};
 use std::i32;
 use crate::util::{MatrixHelpers, ScaleOffset, TransformedRectKind};
 use glyph_rasterizer::SubpixelDirection;
@@ -644,6 +645,25 @@ impl From<QuadInstance> for PrimitiveInstanceData {
                 instance.dst_task_address.0,
             ],
         }
+    }
+}
+
+/// Matches QuadHeader in ps_quad.glsl
+pub struct QuadHeader {
+    pub transform_id: TransformPaletteId,
+    pub z_id: ZBufferId,
+    pub pattern_input: PatternShaderInput,
+}
+
+impl GpuBufferDataI for QuadHeader {
+    const NUM_BLOCKS: usize = 1;
+    fn write(&self, writer: &mut GpuBufferWriterI) {
+        writer.push_one([
+            self.transform_id.0 as i32,
+            self.z_id.0,
+            self.pattern_input.0,
+            self.pattern_input.1,
+        ]);
     }
 }
 
