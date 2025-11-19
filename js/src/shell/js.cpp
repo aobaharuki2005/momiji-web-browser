@@ -1479,7 +1479,8 @@ static bool GlobalOfFirstJobInQueue(JSContext* cx, unsigned argc, Value* vp) {
     MOZ_ASSERT(job);
     RootedObject global(cx, JS::GetExecutionGlobalFromJSMicroTask(job));
     if (!global) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEAD_OBJECT);
       return false;
     }
     MOZ_ASSERT(global);
