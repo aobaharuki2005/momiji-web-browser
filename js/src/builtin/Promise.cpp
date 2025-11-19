@@ -7642,14 +7642,15 @@ JS_PUBLIC_API bool JS::RunJSMicroTask(JSContext* cx,
                                       Handle<JS::JSMicroTask*> entry) {
 #ifdef DEBUG
   JSObject* global = JS::GetExecutionGlobalFromJSMicroTask(entry);
-  MOZ_ASSERT(global == cx->global());
+  MOZ_ASSERT_IF(global, global == cx->global());
 #endif
 
   RootedObject task(cx, entry);
-  MOZ_ASSERT(!JS_IsDeadWrapper(task));
-
   RootedObject unwrappedTask(cx, UncheckedUnwrap(entry));
-  MOZ_ASSERT(unwrappedTask);
+  if (JS_IsDeadWrapper(unwrappedTask)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+    return false;
+  }
 
   if (unwrappedTask->is<PromiseReactionRecord>()) {
     // Note: We don't store a callback for promise reaction records because they
