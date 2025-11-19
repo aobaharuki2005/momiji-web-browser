@@ -13595,6 +13595,24 @@ function Widgets() {
     // Update the ref to track current state
     prevTimerEnabledRef.current = isTimerEnabled;
   }, [timerEnabled, timerData, dispatch, timerType]);
+
+  // Sends a dispatch to disable all widgets
+  function handleHideAllWidgetsClick(e) {
+    e.preventDefault();
+    (0,external_ReactRedux_namespaceObject.batch)(() => {
+      dispatch(actionCreators.SetPref(PREF_WIDGETS_LISTS_ENABLED, false));
+      dispatch(actionCreators.SetPref(PREF_WIDGETS_TIMER_ENABLED, false));
+    });
+  }
+  function handleHideAllWidgetsKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      (0,external_ReactRedux_namespaceObject.batch)(() => {
+        dispatch(actionCreators.SetPref(PREF_WIDGETS_LISTS_ENABLED, false));
+        dispatch(actionCreators.SetPref(PREF_WIDGETS_TIMER_ENABLED, false));
+      });
+    }
+  }
   function handleUserInteraction(widgetName) {
     const prefName = `widgets.${widgetName}.interaction`;
     const hasInteracted = prefs[prefName];
@@ -13610,9 +13628,19 @@ function Widgets() {
     className: "widgets-wrapper"
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-section-container"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "widgets-title-container"
   }, /*#__PURE__*/external_React_default().createElement("h1", {
     "data-l10n-id": "newtab-widget-section-title"
-  }), /*#__PURE__*/external_React_default().createElement("div", {
+  }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+    id: "hide-all-widgets-button",
+    type: "icon ghost",
+    size: "small",
+    "data-l10n-id": "newtab-widget-section-hide-all-button",
+    iconsrc: "chrome://global/skin/icons/close.svg",
+    onClick: handleHideAllWidgetsClick,
+    onKeyDown: handleHideAllWidgetsKeyDown
+  })), /*#__PURE__*/external_React_default().createElement("div", {
     className: "widgets-container"
   }, listsEnabled && /*#__PURE__*/external_React_default().createElement(Lists, {
     dispatch: dispatch,

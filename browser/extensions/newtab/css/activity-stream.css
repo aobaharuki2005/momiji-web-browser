@@ -4386,6 +4386,15 @@ dialog:dir(rtl)::after {
     background-color: var(--background-color-box);
   }
 }
+.widgets-section-container .widgets-title-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-medium);
+}
+.widgets-section-container .widgets-title-container h1 {
+  margin-inline-end: auto;
+}
 @media (min-width: 1122px) {
   .widgets-section-container {
     padding-block-end: var(--space-xlarge);
