@@ -1131,22 +1131,26 @@ class SelectableProfileServiceClass extends EventEmitter {
    * @param {nsIFile} profileDir The root dir of the newly created profile
    */
   async createProfileInitialFiles(profileDir) {
-    let timesJsonFilePath = await IOUtils.createUniqueFile(
-      profileDir.path,
-      "times.json",
-      0o700
-    );
+    let timesJsonFilePath = PathUtils.join(profileDir.path, "times.json");
 
     await IOUtils.writeJSON(timesJsonFilePath, {
       created: Date.now(),
       firstUse: null,
     });
 
-    let prefsJsFilePath = await IOUtils.createUniqueFile(
-      profileDir.path,
-      "prefs.js",
-      0o600
-    );
+    await IOUtils.setPermissions(timesJsonFilePath, 0o600);
+
+    await this.updateProfilePrefs(profileDir);
+  }
+
+  /**
+   * Create or update the prefs.js file in the given profile directory with
+   * all shared prefs from the database.
+   *
+   * @param {nsIFile} profileDir The root dir of the profile to update prefs for
+   */
+  async updateProfilePrefs(profileDir) {
+    let prefsJsFilePath = PathUtils.join(profileDir.path, "prefs.js");
 
     const sharedPrefs = await this.getAllDBPrefs();
 
@@ -1171,8 +1175,12 @@ class SelectableProfileServiceClass extends EventEmitter {
     const LINEBREAK = AppConstants.platform === "win" ? "\r\n" : "\n";
     await IOUtils.writeUTF8(
       prefsJsFilePath,
-      Services.prefs.prefsJsPreamble + prefsJs.join(LINEBREAK) + LINEBREAK
+      Services.prefs.prefsJsPreamble + prefsJs.join(LINEBREAK) + LINEBREAK,
+      // If the file already exists then appending the prefs to the end serves to overwrite them.
+      { mode: "appendOrCreate" }
     );
+
+    await IOUtils.setPermissions(prefsJsFilePath, 0o600);
   }
 
   /**
@@ -1200,28 +1208,35 @@ class SelectableProfileServiceClass extends EventEmitter {
    * If path is not included, new profile directories will be created.
    *
    * @param {nsIFile} existingProfilePath Optional. The path of an existing profile.
+   * @param {string} profileName Optional. The name for the profile. If not provided,
+   *                 a default name will be generated.
    *
    * @returns {SelectableProfile} The newly created profile object.
    */
-  async #createProfile(existingProfilePath) {
-    let nextProfileNumber = Math.max(
-      0,
-      ...(await this.getAllProfiles()).map(p => p.id)
-    );
-    let [defaultName, originalName] =
-      await lazy.profilesLocalization.formatMessages([
-        { id: "default-profile-name", args: { number: nextProfileNumber } },
-        { id: "original-profile-name" },
-      ]);
+  async #createProfile(existingProfilePath, profileName) {
+    let name;
+    if (profileName) {
+      name = profileName;
+    } else {
+      let nextProfileNumber = Math.max(
+        0,
+        ...(await this.getAllProfiles()).map(p => p.id)
+      );
+      let [defaultName, originalName] =
+        await lazy.profilesLocalization.formatMessages([
+          { id: "default-profile-name", args: { number: nextProfileNumber } },
+          { id: "original-profile-name" },
+        ]);
+
+      name = nextProfileNumber == 0 ? originalName.value : defaultName.value;
+    }
 
     let window = Services.wm.getMostRecentBrowserWindow();
     let isDark = window?.matchMedia("(-moz-system-dark-theme)").matches;
 
     let randomIndex = Math.floor(Math.random() * this.#defaultAvatars.length);
     let profileData = {
-      // The original toolkit profile is added first and is assigned a
-      // different name.
-      name: nextProfileNumber == 0 ? originalName.value : defaultName.value,
+      name,
       avatar: this.#defaultAvatars[randomIndex],
       themeId: DEFAULT_THEME_ID,
       themeFg: isDark ? "rgb(255,255,255)" : "rgb(21,20,26)",
@@ -1459,6 +1474,29 @@ class SelectableProfileServiceClass extends EventEmitter {
     if (launchProfile) {
       this.launchInstance(profile, ["about:newprofile"]);
     }
+    return profile;
+  }
+
+  /**
+   * Import an existing profile directory into the selectable profiles system.
+   * This adds the profile to the datastore without creating new directories,
+   * and launches the profile in a new instance.
+   *
+   * If the user has never created a SelectableProfile before, the currently
+   * running toolkit profile will be added to the datastore along with the
+   * imported profile.
+   *
+   * @param {string} aProfileName The name for the imported profile
+   * @param {nsIFile} aProfileDir The existing profile directory to import
+   *
+   * @returns {SelectableProfile} The newly imported profile object.
+   */
+  async importProfile(aProfileName, aProfileDir) {
+    await this.maybeSetupDataStore();
+
+    let profile = await this.#createProfile(aProfileDir, aProfileName);
+    await this.updateProfilePrefs(aProfileDir);
+    this.launchInstance(profile, ["about:editprofile"]);
     return profile;
   }
 
