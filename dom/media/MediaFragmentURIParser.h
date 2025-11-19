@@ -3,12 +3,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#if !defined(nsMediaFragmentURIParser_h__)
-#  define nsMediaFragmentURIParser_h__
+#if !defined(MediaFragmentURIParser_h__)
+#  define MediaFragmentURIParser_h__
 
 #  include "mozilla/Maybe.h"
-#  include "nsStringFwd.h"
 #  include "nsRect.h"
+#  include "nsStringFwd.h"
 
 class nsIURI;
 
@@ -22,20 +22,19 @@ class nsIURI;
 // c) If the values are valid, obtain them using e.g. GetStartTime().
 
 namespace mozilla {
-namespace net {
 
 enum ClipUnit {
   eClipUnit_Pixel,
   eClipUnit_Percent,
 };
 
-class nsMediaFragmentURIParser {
+class MediaFragmentURIParser {
  public:
   // Create a parser with the provided URI.
-  explicit nsMediaFragmentURIParser(nsIURI* aURI);
+  explicit MediaFragmentURIParser(nsIURI* aURI);
 
   // Create a parser with the provided URI reference portion.
-  explicit nsMediaFragmentURIParser(nsCString& aRef);
+  explicit MediaFragmentURIParser(nsCString& aRef);
 
   // True if a valid temporal media fragment indicated a start time.
   bool HasStartTime() const { return mStart.isSome(); }
@@ -93,7 +92,6 @@ class nsMediaFragmentURIParser {
   ClipUnit mClipUnit;
 };
 
-}  // namespace net
 }  // namespace mozilla
 
 #endif

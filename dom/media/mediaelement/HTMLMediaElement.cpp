@@ -59,6 +59,7 @@
 #include "mozilla/EMEUtils.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/MediaFragmentURIParser.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SVGObserverUtils.h"
@@ -123,7 +124,6 @@
 #include "nsITimer.h"
 #include "nsJSUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsMediaFragmentURIParser.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsNodeInfoManager.h"
@@ -161,7 +161,6 @@ extern mozilla::LazyLogModule gAutoplayPermissionLog;
 #define LOG_EVENT(type, msg) MOZ_LOG(gMediaElementEventsLog, type, msg)
 
 using namespace mozilla::layers;
-using mozilla::net::nsMediaFragmentURIParser;
 using namespace mozilla::dom::HTMLMediaElement_Binding;
 
 namespace mozilla::dom {
@@ -5833,7 +5832,7 @@ void HTMLMediaElement::ProcessMediaFragmentURI() {
     mFragmentStart = mFragmentEnd = -1.0;
     return;
   }
-  nsMediaFragmentURIParser parser(mLoadingSrc);
+  MediaFragmentURIParser parser(mLoadingSrc);
 
   if (mDecoder && parser.HasEndTime()) {
     mFragmentEnd = parser.GetEndTime();

@@ -267,16 +267,13 @@ if CONFIG["FUZZING"]:
 if CONFIG["FUZZING_INTERFACES"] and CONFIG["LIBFUZZER"]:
     include("/tools/fuzzing/libfuzzer-flags.mozbuild")
     SOURCES += [
-        "nsMediaFragmentURIParser.cpp",
         "nsURLHelper.cpp",
         "nsURLParsers.cpp",
     ]
-    SOURCES["nsMediaFragmentURIParser.cpp"].flags += libfuzzer_flags
     SOURCES["nsURLHelper.cpp"].flags += libfuzzer_flags
     SOURCES["nsURLParsers.cpp"].flags += libfuzzer_flags
 else:
     UNIFIED_SOURCES += [
-        "nsMediaFragmentURIParser.cpp",
         "nsURLHelper.cpp",
         "nsURLParsers.cpp",
     ]
