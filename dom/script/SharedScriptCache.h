@@ -127,13 +127,6 @@ class ScriptHashKey : public PLDHashEntryHdr {
   // charset attribute for classic script.
   // module always use UTF-8.
   nsString mHintCharset;
-
-  // TODO: Reflect URL classifier data source.
-  // mozilla::dom::ContentType
-  //   maybe implicit
-  // top-level document's host
-  //   maybe part of principal?
-  //   what if it's inside frame in different host?
 };
 
 class ScriptLoadData final
