@@ -98,13 +98,14 @@ add_task(async function test_keyboard_navigation() {
     toolButtons[0].getAttribute("view"),
     "Sidebar is showing the first tool."
   );
+  // Moz-button is passing an "aria-pressed" attribute to the actual buttonEl:
   is(
-    toolButtons[0].getAttribute("aria-pressed"),
+    toolButtons[0].buttonEl.getAttribute("aria-pressed"),
     "true",
     "aria-pressed is true for the active tool button."
   );
   is(
-    toolButtons[1].getAttribute("aria-pressed"),
+    toolButtons[1].buttonEl.getAttribute("aria-pressed"),
     "false",
     "aria-pressed is false for the inactive tool button."
   );
@@ -114,7 +115,7 @@ add_task(async function test_keyboard_navigation() {
   await sidebar.updateComplete;
   ok(!sidebar.open, "Sidebar is closed.");
   is(
-    toolButtons[0].getAttribute("aria-pressed"),
+    toolButtons[0].buttonEl.getAttribute("aria-pressed"),
     "false",
     "Tool is no longer active, aria-pressed becomes false."
   );
