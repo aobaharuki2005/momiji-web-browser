@@ -5045,6 +5045,13 @@ export class UrlbarInput extends HTMLElement {
       this._setValue(value, { valueIsTyped: true });
       this.userTypedValue = value;
 
+      // Since we prevent the default paste event, we have to ensure the
+      // pageproxystate is updated. The paste event replaces the actual current
+      // page's URL with user-typed content, so we should set pageproxystate to
+      // invalid.
+      if (this.getAttribute("pageproxystate") == "valid") {
+        this.setPageProxyState("invalid");
+      }
       this.toggleAttribute("usertyping", this._untrimmedValue);
 
       // Fix up cursor/selection:
