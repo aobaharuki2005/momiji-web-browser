@@ -57,6 +57,11 @@ export default class TurnOnScheduledBackups extends MozLitElement {
       reflect: true,
       attribute: "hide-secondary-button",
     },
+    backupIsEncrypted: {
+      type: Boolean,
+      reflect: true,
+      attribute: "backup-is-encrypted",
+    },
     filePathLabelL10nId: {
       type: String,
       reflect: true,
@@ -192,6 +197,19 @@ export default class TurnOnScheduledBackups extends MozLitElement {
 
     if (this._showPasswordOptions && this._passwordsMatch) {
       detail.password = this._inputPassValue;
+    }
+
+    if (
+      this.embeddedFxBackupOptIn &&
+      this.backupIsEncrypted &&
+      !detail.password
+    ) {
+      // We're in the embedded component and we haven't set a password yet when
+      // one is expected, let's not do a confirm action yet!
+      this.dispatchEvent(
+        new CustomEvent("SpotlightOnboardingAdvanceScreens", { bubbles: true })
+      );
+      return;
     }
 
     this.dispatchEvent(

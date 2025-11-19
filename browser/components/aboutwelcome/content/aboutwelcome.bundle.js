@@ -3432,7 +3432,7 @@ const EmbeddedFxBackupOptIn = ({
     const {
       current
     } = backupRef;
-    const handleBackupEvent = () => {
+    const handleEnableScheduledBackups = () => {
       handleAction({
         currentTarget: {
           value: "tile_button"
@@ -3441,6 +3441,17 @@ const EmbeddedFxBackupOptIn = ({
           navigate: true
         },
         source: "backup_enabled"
+      });
+    };
+    const handleAdvanceScreens = () => {
+      handleAction({
+        currentTarget: {
+          value: "tile_button"
+        },
+        action: {
+          navigate: true
+        },
+        source: "advance_screens"
       });
     };
     const handleStateUpdate = ({
@@ -3462,10 +3473,12 @@ const EmbeddedFxBackupOptIn = ({
       current.supportBaseLink = state.supportBaseLink;
     };
     current?.addEventListener("BackupUI:StateWasUpdated", handleStateUpdate);
-    current?.addEventListener("BackupUI:EnableScheduledBackups", handleBackupEvent);
+    current?.addEventListener("BackupUI:EnableScheduledBackups", handleEnableScheduledBackups);
+    current?.addEventListener("SpotlightOnboardingAdvanceScreens", handleAdvanceScreens);
     return () => {
-      current?.removeEventListener("BackupUI:EnableScheduledBackups", handleBackupEvent);
+      current?.removeEventListener("BackupUI:EnableScheduledBackups", handleEnableScheduledBackups);
       current?.removeEventListener("BackupUI:StateWasUpdated", handleStateUpdate);
+      current?.removeEventListener("SpotlightOnboardingAdvanceScreens", handleAdvanceScreens);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -3476,6 +3489,7 @@ const EmbeddedFxBackupOptIn = ({
     "hide-secondary-button": !isEncryptedBackup || hide_secondary_button ? "" : undefined,
     "hide-file-path-chooser": isEncryptedBackup && !hide_password_input ? "" : undefined,
     "embedded-fx-backup-opt-in": "",
+    "backup-is-encrypted": isEncryptedBackup ? "" : undefined,
     "file-path-label-l10n-id": file_path_label,
     "turn-on-backup-header-l10n-id": turn_on_backup_header,
     "create-password-label-l10n-id": create_password_label,
