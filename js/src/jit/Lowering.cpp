@@ -5040,6 +5040,10 @@ void LIRGenerator::visitObjectKeys(MObjectKeys* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitObjectKeysFromIterator(MObjectKeysFromIterator* ins) {
+  MOZ_CRASH("ObjectKeysFromIterator is purely for recovery purposes.");
+}
+
 void LIRGenerator::visitObjectKeysLength(MObjectKeysLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::Int32);
@@ -6363,6 +6367,24 @@ void LIRGenerator::visitCloseIterCache(MCloseIterCache* ins) {
       new (alloc()) LCloseIterCache(useRegister(ins->iter()), temp());
   add(lir, ins);
   assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitLoadIteratorElement(MLoadIteratorElement* ins) {
+  MOZ_ASSERT(ins->iter()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->type() == MIRType::String);
+
+  auto* lir = new (alloc()) LLoadIteratorElement(
+      useRegister(ins->iter()), useRegisterOrConstant(ins->index()));
+  define(lir, ins);
+}
+
+void LIRGenerator::visitIteratorLength(MIteratorLength* ins) {
+  MOZ_ASSERT(ins->iter()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LIteratorLength(useRegister(ins->iter()));
+  define(lir, ins);
 }
 
 void LIRGenerator::visitOptimizeGetIteratorCache(

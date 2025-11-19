@@ -16652,6 +16652,24 @@ void CodeGenerator::visitIteratorMore(LIteratorMore* lir) {
   masm.iteratorMore(obj, output, temp);
 }
 
+void CodeGenerator::visitIteratorLength(LIteratorLength* lir) {
+  Register obj = ToRegister(lir->iter());
+  Register output = ToRegister(lir->output());
+  masm.iteratorLength(obj, output);
+}
+
+void CodeGenerator::visitLoadIteratorElement(LLoadIteratorElement* lir) {
+  Register obj = ToRegister(lir->iter());
+  Register output = ToRegister(lir->output());
+  if (lir->index()->isConstant()) {
+    int32_t index = ToInt32(lir->index());
+    masm.iteratorLoadElement(obj, index, output);
+  } else {
+    Register index = ToRegister(lir->index());
+    masm.iteratorLoadElement(obj, index, output);
+  }
+}
+
 void CodeGenerator::visitIsNoIterAndBranch(LIsNoIterAndBranch* lir) {
   ValueOperand input = ToValue(lir->input());
   Label* ifTrue = getJumpLabelForBranch(lir->ifTrue());
@@ -18470,14 +18488,39 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
   Register temp3 = ToRegister(lir->temp2());
 
   using Fn = PropertyIteratorObject* (*)(JSContext*, HandleObject);
-  OutOfLineCode* ool = (lir->mir()->wantsIndices())
-                           ? oolCallVM<Fn, GetIteratorWithIndices>(
-                                 lir, ArgList(obj), StoreRegisterTo(iterObj))
-                           : oolCallVM<Fn, GetIterator>(
-                                 lir, ArgList(obj), StoreRegisterTo(iterObj));
+  OutOfLineCode* ool = nullptr;
+
+  if (lir->mir()->skipRegistration()) {
+    if (lir->mir()->wantsIndices()) {
+      ool = oolCallVM<Fn, GetIteratorWithIndicesUnregistered>(
+          lir, ArgList(obj), StoreRegisterTo(iterObj));
+    } else {
+      ool = oolCallVM<Fn, GetIteratorUnregistered>(lir, ArgList(obj),
+                                                   StoreRegisterTo(iterObj));
+    }
+  } else {
+    if (lir->mir()->wantsIndices()) {
+      ool = oolCallVM<Fn, GetIteratorWithIndices>(lir, ArgList(obj),
+                                                  StoreRegisterTo(iterObj));
+    } else {
+      ool = oolCallVM<Fn, GetIterator>(lir, ArgList(obj),
+                                       StoreRegisterTo(iterObj));
+    }
+  }
+
+#ifdef DEBUG
+  if (!lir->mir()->getAliasSet().isStore()) {
+    MOZ_ASSERT(lir->mir()->skipRegistration());
+    Label done;
+    masm.branchTestObjectIsProxy(false, obj, temp, &done);
+    masm.assumeUnreachable("ObjectToIterator on a proxy must be a store.");
+    masm.bind(&done);
+  }
+#endif
 
   masm.maybeLoadIteratorFromShape(obj, iterObj, temp, temp2, temp3,
-                                  ool->entry());
+                                  ool->entry(),
+                                  !lir->mir()->skipRegistration());
 
   Register nativeIter = temp;
   masm.loadPrivate(
@@ -18492,36 +18535,38 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
     // do a VM call to replace the cached iterator with a fresh iterator
     // including indices.
     masm.branchTest32(Assembler::NonZero, iterFlagsAddr,
-                      Imm32(NativeIterator::Flags::IndicesSupported),
-                      ool->entry());
+                  Imm32(NativeIterator::Flags::IndicesSupported), ool->entry());
   }
 
-  masm.storePtr(
-      obj, Address(nativeIter, NativeIterator::offsetOfObjectBeingIterated()));
-  masm.or32(Imm32(NativeIterator::Flags::Active), iterFlagsAddr);
+  if (!lir->mir()->skipRegistration()) {
+    masm.storePtr(obj, Address(nativeIter,
+                               NativeIterator::offsetOfObjectBeingIterated()));
+    masm.or32(Imm32(NativeIterator::Flags::Active), iterFlagsAddr);
 
-  Register enumeratorsAddr = temp2;
-  masm.movePtr(ImmPtr(lir->mir()->enumeratorsAddr()), enumeratorsAddr);
-  masm.registerIterator(enumeratorsAddr, nativeIter, temp3);
+    Register enumeratorsAddr = temp2;
+    masm.movePtr(ImmPtr(lir->mir()->enumeratorsAddr()), enumeratorsAddr);
+    masm.registerIterator(enumeratorsAddr, nativeIter, temp3);
 
-  // Generate post-write barrier for storing to |iterObj->objectBeingIterated_|.
-  // We already know that |iterObj| is tenured, so we only have to check |obj|.
-  Label skipBarrier;
-  masm.branchPtrInNurseryChunk(Assembler::NotEqual, obj, temp2, &skipBarrier);
-  {
-    LiveRegisterSet save = liveVolatileRegs(lir);
-    save.takeUnchecked(temp);
-    save.takeUnchecked(temp2);
-    save.takeUnchecked(temp3);
-    if (iterObj.volatile_()) {
-      save.addUnchecked(iterObj);
+    // Generate post-write barrier for storing to
+    // |iterObj->objectBeingIterated_|. We already know that |iterObj| is
+    // tenured, so we only have to check |obj|.
+    Label skipBarrier;
+    masm.branchPtrInNurseryChunk(Assembler::NotEqual, obj, temp2, &skipBarrier);
+    {
+      LiveRegisterSet save = liveVolatileRegs(lir);
+      save.takeUnchecked(temp);
+      save.takeUnchecked(temp2);
+      save.takeUnchecked(temp3);
+      if (iterObj.volatile_()) {
+        save.addUnchecked(iterObj);
+      }
+
+      masm.PushRegsInMask(save);
+      emitPostWriteBarrier(iterObj);
+      masm.PopRegsInMask(save);
     }
-
-    masm.PushRegsInMask(save);
-    emitPostWriteBarrier(iterObj);
-    masm.PopRegsInMask(save);
+    masm.bind(&skipBarrier);
   }
-  masm.bind(&skipBarrier);
 
   masm.bind(ool->rejoin());
 }

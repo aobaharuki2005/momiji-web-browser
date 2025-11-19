@@ -5397,11 +5397,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void maybeLoadIteratorFromShape(Register obj, Register dest, Register temp,
                                   Register temp2, Register temp3,
-                                  Label* failure);
+                                  Label* failure, bool exclusive);
 
   void iteratorMore(Register obj, ValueOperand output, Register temp);
   void iteratorClose(Register obj, Register temp1, Register temp2,
                      Register temp3);
+  void iteratorLength(Register obj, Register output);
+  void iteratorLoadElement(Register obj, Register index, Register output);
+  void iteratorLoadElement(Register obj, int32_t index, Register output);
   void registerIterator(Register enumeratorsList, Register iter, Register temp);
 
   void prepareOOBStoreElement(Register object, Register index,

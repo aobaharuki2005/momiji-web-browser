@@ -6340,7 +6340,7 @@ bool CacheIRCompiler::emitObjectToIteratorResult(
 
   Label callVM, done;
   masm.maybeLoadIteratorFromShape(obj, iterObj, scratch, scratch2, scratch3,
-                                  &callVM);
+                                  &callVM, /* exclusive = */ true);
 
   masm.loadPrivate(
       Address(iterObj, PropertyIteratorObject::offsetOfIteratorSlot()),
@@ -6434,7 +6434,8 @@ bool CacheIRCompiler::emitObjectCreateResult(uint32_t templateObjectOffset) {
   return true;
 }
 
-bool CacheIRCompiler::emitObjectKeysResult(ObjOperandId objId) {
+bool CacheIRCompiler::emitObjectKeysResult(ObjOperandId objId,
+                                           uint32_t resultShapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoCallVM callvm(masm, this, allocator);
