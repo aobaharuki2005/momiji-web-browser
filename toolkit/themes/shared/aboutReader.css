@@ -964,6 +964,7 @@ div[name="customtheme"] {
  * must be added to CLASSES_TO_PRESERVE in ReaderMode.sys.mjs, so that
  * Readability.js doesn't strip them out */
 
+/* Variables in .container are for user customization and should not be replaced with design tokens */
 .container {
   margin: 0 auto;
   font-size: var(--font-size);
@@ -972,7 +973,8 @@ div[name="customtheme"] {
   text-align: var(--text-alignment);
   word-spacing: var(--word-spacing);
   letter-spacing: var(--letter-spacing);
-  font-weight: normal;
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-font-weight-tokens */
+  font-weight: var(--font-weight);
 
   .header {
     text-align: var(--text-alignment);
