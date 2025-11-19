@@ -75,18 +75,18 @@ class PerformanceEventTiming final
   void SetDuration(const DOMHighResTimeStamp aDuration) {
     // Round the duration to the nearest 8ms.
     // https://w3c.github.io/event-timing/#set-event-timing-entry-duration
-    mDuration = std::round(aDuration / 8) * 8;
+    mDuration = Some(std::round(aDuration / 8) * 8);
   }
 
   // nsRFPService::ReduceTimePrecisionAsMSecs might causes
   // some memory overhead, using the raw timestamp internally
   // to avoid calling in unnecessarily.
-  DOMHighResTimeStamp RawDuration() const { return mDuration; }
+  Maybe<DOMHighResTimeStamp> RawDuration() const { return mDuration; }
 
   DOMHighResTimeStamp Duration() const override {
     if (mCachedDuration.isNothing()) {
       mCachedDuration.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
-          mDuration, mPerformance->GetRandomTimelineSeed(),
+          mDuration.valueOr(0), mPerformance->GetRandomTimelineSeed(),
           mPerformance->GetRTPCallerType()));
     }
     return mCachedDuration.value();
@@ -136,7 +136,7 @@ class PerformanceEventTiming final
   DOMHighResTimeStamp mStartTime;
   mutable Maybe<DOMHighResTimeStamp> mCachedStartTime;
 
-  DOMHighResTimeStamp mDuration;
+  Maybe<DOMHighResTimeStamp> mDuration;
   mutable Maybe<DOMHighResTimeStamp> mCachedDuration;
 
   bool mCancelable;
