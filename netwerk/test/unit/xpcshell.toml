@@ -1420,6 +1420,10 @@ run-sequentially = ["true"] # node server exceptions dont replay well
 run-if = ["!socketprocess_networking"] # confirmation state isn't passed cross-process
 skip-if = ["appname == 'thunderbird'"] # bug 1760097
 
+["test_trr_connection_cycle.js"]
+run-sequentially = ["true"] # node server exceptions dont replay well
+run-if = ["!socketprocess_networking"] # confirmation state isn't passed cross-process
+
 ["test_trr_decoding.js"]
 
 ["test_trr_domain.js"]
