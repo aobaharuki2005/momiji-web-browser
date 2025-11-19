@@ -12,6 +12,7 @@ use euclid::approxeq::ApproxEq;
 use euclid::{point2, vec2, size2};
 use api::{ExtendMode, GradientStop, LineOrientation, PremultipliedColorF, ColorF, ColorU};
 use api::units::*;
+use crate::gpu_types::ImageBrushPrimitiveData;
 use crate::pattern::{Pattern, PatternBuilder, PatternBuilderContext, PatternBuilderState, PatternKind, PatternShaderInput, PatternTextureInput};
 use crate::prim_store::gradient::{gpu_gradient_stops_blocks, write_gpu_gradient_stops_tree, write_gpu_gradient_stops_linear, GradientKind};
 use crate::scene_building::IsVisible;
@@ -498,15 +499,11 @@ impl LinearGradientTemplate {
 
         // Write_prim_gpu_blocks
         if self.cached {
-            // We are using the image brush.
-            writer.push_one(PremultipliedColorF::WHITE);
-            writer.push_one(PremultipliedColorF::WHITE);
-            writer.push_one([
-                self.stretch_size.width,
-                self.stretch_size.height,
-                0.0,
-                0.0,
-            ]);
+            writer.push(&ImageBrushPrimitiveData {
+                color: PremultipliedColorF::WHITE,
+                background_color: PremultipliedColorF::WHITE,
+                stretch_size: self.stretch_size,
+            });
         } else {
             // We are using the gradient brush.
             writer.push_one([

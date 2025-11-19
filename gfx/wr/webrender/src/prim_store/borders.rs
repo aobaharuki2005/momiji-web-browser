@@ -6,6 +6,7 @@ use api::{NormalBorder, PremultipliedColorF, Shadow, RasterSpace};
 use api::units::*;
 use crate::border::create_border_segments;
 use crate::border::NormalBorderAu;
+use crate::gpu_types::ImageBrushPrimitiveData;
 use crate::renderer::GpuBufferWriterF;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
@@ -79,14 +80,11 @@ impl NormalBorderData {
         // Border primitives currently used for
         // image borders, and run through the
         // normal brush_image shader.
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one([
-            prim_size.width,
-            prim_size.height,
-            0.0,
-            0.0,
-        ]);
+        writer.push(&ImageBrushPrimitiveData {
+            color: PremultipliedColorF::WHITE,
+            background_color: PremultipliedColorF::WHITE,
+            stretch_size: prim_size,
+        });
     }
 
     fn write_segment_gpu_blocks(
@@ -279,14 +277,11 @@ impl ImageBorderData {
         // Border primitives currently used for
         // image borders, and run through the
         // normal brush_image shader.
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one([
-            prim_size.width,
-            prim_size.height,
-            0.0,
-            0.0,
-        ]);
+        writer.push(&ImageBrushPrimitiveData {
+            color: PremultipliedColorF::WHITE,
+            background_color: PremultipliedColorF::WHITE,
+            stretch_size: *prim_size,
+        });
     }
 
     fn write_segment_gpu_blocks(
