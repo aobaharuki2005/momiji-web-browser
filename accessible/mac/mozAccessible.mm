@@ -1130,6 +1130,8 @@ static bool ProvidesTitle(const Accessible* aAccessible, nsString& aName) {
       mIsLiveRegion = false;
       break;
     case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
+      // Don't want to passively activate the cache because a name changed.
+      CacheDomainActivationBlocker cacheBlocker;
       nsAutoString nameNotUsed;
       if (ProvidesTitle(mGeckoAccessible, nameNotUsed)) {
         [self moxPostNotification:NSAccessibilityTitleChangedNotification];

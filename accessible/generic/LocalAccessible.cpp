@@ -3392,7 +3392,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   // always their text. Text gets handled below.
   if (aCacheDomain & CacheDomain::NameAndDescription && !IsText()) {
     nsString name;
-    int32_t nameFlag = Name(name);
+    int32_t nameFlag = DirectName(name);
     if (nameFlag != eNameOK) {
       fields->SetAttribute(CacheKey::NameValueFlag, nameFlag);
     } else if (IsUpdatePush(CacheDomain::NameAndDescription)) {
@@ -3415,6 +3415,21 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(CacheKey::Name, std::move(name));
     } else if (IsUpdatePush(CacheDomain::NameAndDescription)) {
       fields->SetAttribute(CacheKey::Name, DeleteEntry());
+    }
+
+    nsString tooltip;
+    if (Tooltip(tooltip)) {
+      fields->SetAttribute(CacheKey::Tooltip, std::move(tooltip));
+    } else if (IsUpdatePush(CacheDomain::NameAndDescription)) {
+      fields->SetAttribute(CacheKey::Tooltip, DeleteEntry());
+    }
+
+    nsString cssAltContent;
+    if (auto cssAlt = CssAltContent(mContent)) {
+      cssAlt.AppendToString(cssAltContent);
+      fields->SetAttribute(CacheKey::CssAltContent, std::move(cssAltContent));
+    } else if (IsUpdatePush(CacheDomain::NameAndDescription)) {
+      fields->SetAttribute(CacheKey::CssAltContent, DeleteEntry());
     }
 
     nsString description;
