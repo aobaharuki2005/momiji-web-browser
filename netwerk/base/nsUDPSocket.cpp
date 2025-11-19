@@ -1222,8 +1222,6 @@ void nsUDPSocket::EnableWritePoll() {
   mPollFlags = (PR_POLL_WRITE | PR_POLL_READ | PR_POLL_EXCEPT);
 }
 
-bool nsUDPSocket::IsSocketClosed() { return !!mFD; }
-
 NS_IMETHODIMP
 nsUDPSocket::SendBinaryStream(const nsACString& aHost, uint16_t aPort,
                               nsIInputStream* aStream) {

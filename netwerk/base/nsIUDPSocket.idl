@@ -273,13 +273,6 @@ interface nsIUDPSocket : nsISupports
       */
     [noscript, notxpcom] void enableWritePoll();
 
-     /**
-      * isSocketClosed
-      *
-      * @return true when the socket is already closed.
-      */
-    [noscript, notxpcom] boolean isSocketClosed();
-
     /**
      * addOutputBytes
      *

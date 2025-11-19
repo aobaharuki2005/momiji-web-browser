@@ -439,11 +439,6 @@ nsresult Http3Session::ProcessInput(nsIUDPSocket* socket) {
   LOG(("Http3Session::ProcessInput writer=%p [this=%p state=%d]",
        mUdpConn.get(), this, mState));
 
-  if (!socket || socket->IsSocketClosed()) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "UDP socket should still be open");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   if (mUseNSPRForIO) {
     while (true) {
       nsTArray<uint8_t> data;
@@ -1095,11 +1090,6 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
 
   LOG(("Http3Session::ProcessOutput reader=%p, [this=%p]", mUdpConn.get(),
        this));
-
-  if (!socket || socket->IsSocketClosed()) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "UDP socket should still be open");
-    return NS_ERROR_UNEXPECTED;
-  }
 
   if (mUseNSPRForIO) {
     mSocket = socket;
