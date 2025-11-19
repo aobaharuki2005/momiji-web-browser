@@ -189,6 +189,10 @@ async function runJSCacheTests(tests) {
             info("clear memory cache");
             ChromeUtils.clearResourceCache();
           }
+          if (item.invalidateMemory) {
+            info("invalidate memory cache");
+            ChromeUtils.invalidateResourceCache();
+          }
           if (item.clearDisk) {
             info("clear disk cache");
             Services.cache2.clear();
