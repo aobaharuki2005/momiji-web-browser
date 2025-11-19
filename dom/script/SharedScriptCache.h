@@ -41,7 +41,6 @@ class ScriptHashKey : public PLDHashEntryHdr {
       : PLDHashEntryHdr(),
         mKind(aKey.mKind),
         mCORSMode(aKey.mCORSMode),
-        mIsLinkRelPreload(aKey.mIsLinkRelPreload),
         mReferrerPolicy(aKey.mReferrerPolicy),
         mURI(aKey.mURI),
         mLoaderPrincipal(aKey.mLoaderPrincipal),
@@ -58,7 +57,6 @@ class ScriptHashKey : public PLDHashEntryHdr {
       : PLDHashEntryHdr(),
         mKind(std::move(aKey.mKind)),
         mCORSMode(std::move(aKey.mCORSMode)),
-        mIsLinkRelPreload(std::move(aKey.mIsLinkRelPreload)),
         mReferrerPolicy(std::move(aKey.mReferrerPolicy)),
         mURI(std::move(aKey.mURI)),
         mLoaderPrincipal(std::move(aKey.mLoaderPrincipal)),
@@ -105,7 +103,6 @@ class ScriptHashKey : public PLDHashEntryHdr {
  protected:
   const JS::loader::ScriptKind mKind;
   const CORSMode mCORSMode;
-  const bool mIsLinkRelPreload;
   const mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
   const nsCOMPtr<nsIURI> mURI;

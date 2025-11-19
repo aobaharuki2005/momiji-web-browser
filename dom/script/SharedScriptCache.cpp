@@ -30,7 +30,6 @@ ScriptHashKey::ScriptHashKey(
     : PLDHashEntryHdr(),
       mKind(aRequest->mKind),
       mCORSMode(aFetchOptions->mCORSMode),
-      mIsLinkRelPreload(aRequest->GetScriptLoadContext()->IsPreload()),
       mReferrerPolicy(aReferrerPolicy),
       mURI(aURI),
       mLoaderPrincipal(aLoader->LoaderPrincipal()),
