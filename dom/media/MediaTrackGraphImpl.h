@@ -355,11 +355,14 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   void UpdateGraph(GraphTime aEndBlockingDecisions);
 
-  void SwapMessageQueues() {
-    MonitorAutoLock lock(mMonitor);
+  void SwapMessageQueues() MOZ_REQUIRES(mMonitor) {
     MOZ_ASSERT(OnGraphThreadOrNotRunning());
+    mMonitor.AssertCurrentThreadOwns();
     MOZ_ASSERT(mFrontMessageQueue.IsEmpty());
     mFrontMessageQueue.SwapElements(mBackMessageQueue);
+    if (!mFrontMessageQueue.IsEmpty()) {
+      EnsureNextIteration();
+    }
   }
   /**
    * Do all the processing and play the audio and video, from
