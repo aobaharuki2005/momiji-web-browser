@@ -232,8 +232,9 @@ struct NativeIterator : public NativeIteratorListNode {
   const GCPtr<JSObject*> iterObj_ = {};
   const GCPtr<Shape*> objShape_ = {};
   uint32_t propertyCount_ = 0;
-  uint32_t propertyCursor_;  // initialized by constructor
-  HashNumber shapesHash_;    // initialized by constructor
+  uint32_t propertyCursor_;    // initialized by constructor
+  uint32_t ownPropertyCount_;  // initialized by constructor
+  HashNumber shapesHash_;      // initialized by constructor
   uint16_t protoShapeCount_ = 0;
   uint8_t flags_ = 0;
 
@@ -327,7 +328,7 @@ struct NativeIterator : public NativeIteratorListNode {
   NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
                  Handle<JSObject*> objBeingIterated, HandleIdVector props,
                  bool supportsIndices, PropertyIndexVector* indices,
-                 uint32_t numShapes, bool* hadError);
+                 uint32_t numShapes, uint32_t ownPropertyCount, bool* hadError);
 
   JSObject* objectBeingIterated() const { return objectBeingIterated_; }
 
@@ -442,6 +443,8 @@ struct NativeIterator : public NativeIteratorListNode {
   }
 
   size_t numKeys() const { return propertyCount_; }
+
+  size_t ownPropertyCount() const { return ownPropertyCount_; }
 
   size_t allocatedPropertyCount() const {
     // propertyCursor_ holds the number of allocated properties until
@@ -617,6 +620,10 @@ struct NativeIterator : public NativeIteratorListNode {
 
   static constexpr size_t offsetOfPropertyCount() {
     return offsetof(NativeIterator, propertyCount_);
+  }
+
+  static constexpr size_t offsetOfOwnPropertyCount() {
+    return offsetof(NativeIterator, ownPropertyCount_);
   }
 
   static constexpr size_t offsetOfFlags() {
