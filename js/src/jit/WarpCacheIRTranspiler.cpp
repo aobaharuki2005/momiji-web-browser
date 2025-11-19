@@ -4328,12 +4328,10 @@ bool WarpCacheIRTranspiler::emitArrayJoinResult(ObjOperandId objId,
   return resumeAfter(join);
 }
 
-bool WarpCacheIRTranspiler::emitObjectKeysResult(ObjOperandId objId,
-                                                 uint32_t resultShapeOffset) {
+bool WarpCacheIRTranspiler::emitObjectKeysResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
-  Shape* resultShape = shapeStubField(resultShapeOffset);
 
-  auto* join = MObjectKeys::New(alloc(), obj, resultShape);
+  auto* join = MObjectKeys::New(alloc(), obj);
   addEffectful(join);
 
   pushResult(join);

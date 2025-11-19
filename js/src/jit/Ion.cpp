@@ -1084,21 +1084,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
-  if (!JitOptions.disableRecoverIns &&
-      mir->optimizationInfo().scalarReplacementEnabled() &&
-      !JitOptions.disableObjectKeysScalarReplacement) {
-    JitSpewCont(JitSpew_Escape, "\n");
-    if (!ReplaceObjectKeys(mir, graph)) {
-      return false;
-    }
-    mir->spewPass("Replace ObjectKeys");
-    AssertGraphCoherency(graph);
-
-    if (mir->shouldCancel("Replace ObjectKeys")) {
-      return false;
-    }
-  }
-
   if (!mir->compilingWasm() && !JitOptions.disableIteratorIndices) {
     if (!OptimizeIteratorIndices(mir, graph)) {
       return false;

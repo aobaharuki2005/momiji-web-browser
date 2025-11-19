@@ -10463,15 +10463,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectKeys() {
   // Guard against proxies.
   writer.guardIsNotProxy(argObjId);
 
-  Shape* expectedObjKeysShape =
-      GlobalObject::getArrayShapeWithDefaultProto(cx_);
-  if (!expectedObjKeysShape) {
-    cx_->recoverFromOutOfMemory();
-    return AttachDecision::NoAction;
-  }
-
   // Compute the keys array.
-  writer.objectKeysResult(argObjId, expectedObjKeysShape);
+  writer.objectKeysResult(argObjId);
 
   writer.returnFromIC();
 

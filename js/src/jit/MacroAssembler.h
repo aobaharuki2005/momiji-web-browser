@@ -221,6 +221,8 @@ namespace js {
 class StaticStrings;
 class FixedLengthTypedArrayObject;
 
+enum class NativeIteratorIndices : uint32_t;
+
 namespace wasm {
 class CalleeDesc;
 class CallSiteDesc;
@@ -1112,7 +1114,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // explicitly requested. Instead use branch(Add|Sub|Mul|Neg) to test for
   // condition flags after performing arithmetic operations.
 
-  inline void add32(const Address& src, Register dest) PER_SHARED_ARCH;
   inline void add32(Register src, Register dest) PER_SHARED_ARCH;
   inline void add32(Imm32 imm, Register dest) PER_SHARED_ARCH;
   inline void add32(Imm32 imm, Register src, Register dest) PER_SHARED_ARCH;
@@ -5394,17 +5395,16 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                                 Label* label);
 
   void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
+  void branchNativeIteratorIndices(Condition cond, Register ni, Register temp,
+                                   NativeIteratorIndices kind, Label* label);
 
   void maybeLoadIteratorFromShape(Register obj, Register dest, Register temp,
                                   Register temp2, Register temp3,
-                                  Label* failure, bool exclusive);
+                                  Label* failure);
 
   void iteratorMore(Register obj, ValueOperand output, Register temp);
   void iteratorClose(Register obj, Register temp1, Register temp2,
                      Register temp3);
-  void iteratorLength(Register obj, Register output);
-  void iteratorLoadElement(Register obj, Register index, Register output);
-  void iteratorLoadElement(Register obj, int32_t index, Register output);
   void registerIterator(Register enumeratorsList, Register iter, Register temp);
 
   void prepareOOBStoreElement(Register object, Register index,
@@ -5723,10 +5723,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void extractCurrentIndexAndKindFromIterator(Register iterator,
                                               Register outIndex,
                                               Register outKind);
-  void extractIndexAndKindFromIteratorByIterIndex(Register iterator,
-                                                  Register inOutIndex,
-                                                  Register outKind,
-                                                  Register scratch);
 
   template <typename IdType>
 #ifdef JS_CODEGEN_X86
