@@ -58,8 +58,6 @@ typedef char NR_registry_type[NR_REG_MAX_TYPE_LEN];
 
 extern NR_registry NR_TOP_LEVEL_REGISTRY;
 
-extern void *NR_REG_MODE_LOCAL;
-
 int NR_reg_init(void);
 
 int NR_reg_initted(void);

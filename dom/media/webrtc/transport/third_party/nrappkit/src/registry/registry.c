@@ -56,14 +56,12 @@
 #include <csi_platform.h>
 #include "registry.h"
 #include "registry_int.h"
-#include "registry_vtbl.h"
 #include "r_assoc.h"
 #include "r_log.h"
 #include "r_errors.h"
 #include "r_macros.h"
 
-/* vtbl used to switch hit between local and remote invocations */
-static nr_registry_module *reg_vtbl = 0;
+static int reg_initted = 0;
 
 /* must be in the order the types are numbered */
 static char *typenames[] = { "char", "UCHAR", "INT2", "UINT2", "INT4", "UINT4", "INT8", "UINT8", "double", "Data", "string", "registry" };
@@ -76,23 +74,17 @@ int
 NR_reg_init()
 {
     int r, _status;
-    nr_registry_module *module = (nr_registry_module*)NR_REG_MODE_LOCAL;
 #ifdef SANITY_CHECKS
     NR_registry registry;
 #endif
 
-    if (reg_vtbl) {
-        if (reg_vtbl != module) {
-          r_log(LOG_GENERIC,LOG_ERR,"Can't reinitialize registry in different mode");
-          ABORT(R_INTERNAL);
-        }
-
+    if (reg_initted) {
         return(0);
     }
 
-    reg_vtbl = module;
+    reg_initted = 1;
 
-    if ((r=reg_vtbl->vtbl->init()))
+    if ((r=nr_reg_local_init()))
         ABORT(r);
 
 #ifdef SANITY_CHECKS
@@ -115,85 +107,85 @@ NR_reg_init()
 int
 NR_reg_initted(void)
 {
-    return reg_vtbl!=0;
+    return reg_initted!=0;
 }
 
 #define NRREGGET(func, method, type)                                \
 int                                                                 \
 func(NR_registry name, type *out)                                   \
 {                                                                   \
-    return reg_vtbl->vtbl->method(name, out);                             \
+    return method(name, out);                             \
 }
 
-NRREGGET(NR_reg_get_char,     get_char,     char)
-NRREGGET(NR_reg_get_uchar,    get_uchar,    UCHAR)
-NRREGGET(NR_reg_get_uint2,    get_uint2,    UINT2)
-NRREGGET(NR_reg_get_int4,     get_int4,     INT4)
-NRREGGET(NR_reg_get_uint4,    get_uint4,    UINT4)
-NRREGGET(NR_reg_get_uint8,    get_uint8,    UINT8)
-NRREGGET(NR_reg_get_double,   get_double,   double)
+NRREGGET(NR_reg_get_char,     nr_reg_local_get_char,     char)
+NRREGGET(NR_reg_get_uchar,    nr_reg_local_get_uchar,    UCHAR)
+NRREGGET(NR_reg_get_uint2,    nr_reg_local_get_uint2,    UINT2)
+NRREGGET(NR_reg_get_int4,     nr_reg_local_get_int4,     INT4)
+NRREGGET(NR_reg_get_uint4,    nr_reg_local_get_uint4,    UINT4)
+NRREGGET(NR_reg_get_uint8,    nr_reg_local_get_uint8,    UINT8)
+NRREGGET(NR_reg_get_double,   nr_reg_local_get_double,   double)
 
 int
 NR_reg_get_registry(NR_registry name, NR_registry out)
 {
-    return reg_vtbl->vtbl->get_registry(name, out);
+    return nr_reg_local_get_registry(name, out);
 }
 
 int
 NR_reg_get_bytes(NR_registry name, UCHAR *out, size_t size, size_t *length)
 {
-    return reg_vtbl->vtbl->get_bytes(name, out, size, length);
+    return nr_reg_local_get_bytes(name, out, size, length);
 }
 
 int
 NR_reg_get_string(NR_registry name, char *out, size_t size)
 {
-    return reg_vtbl->vtbl->get_string(name, out, size);
+    return nr_reg_local_get_string(name, out, size);
 }
 
 int
 NR_reg_get_length(NR_registry name, size_t *length)
 {
-    return reg_vtbl->vtbl->get_length(name, length);
+    return nr_reg_local_get_length(name, length);
 }
 
 #define NRREGSET(func, method, type)                            \
 int                                                             \
 func(NR_registry name, type data)                               \
 {                                                               \
-    return reg_vtbl->vtbl->method(name, data);                        \
+    return method(name, data);                        \
 }
 
-NRREGSET(NR_reg_set_char,     set_char,     char)
-NRREGSET(NR_reg_set_uchar,    set_uchar,    UCHAR)
-NRREGSET(NR_reg_set_int4,     set_int4,     INT4)
-NRREGSET(NR_reg_set_uint4,    set_uint4,    UINT4)
-NRREGSET(NR_reg_set_string,   set_string,   char*)
+NRREGSET(NR_reg_set_char,     nr_reg_local_set_char,     char)
+NRREGSET(NR_reg_set_uchar,    nr_reg_local_set_uchar,    UCHAR)
+NRREGSET(NR_reg_set_int4,     nr_reg_local_set_int4,     INT4)
+NRREGSET(NR_reg_set_uint4,    nr_reg_local_set_uint4,    UINT4)
+NRREGSET(NR_reg_set_string,   nr_reg_local_set_string,   char*)
 
 int
 NR_reg_set_registry(NR_registry name)
 {
-    return reg_vtbl->vtbl->set_registry(name);
+    return nr_reg_local_set_registry(name);
 }
 
 int
 NR_reg_set_bytes(NR_registry name, unsigned char *data, size_t length)
 {
-    return reg_vtbl->vtbl->set_bytes(name, data, length);
+    return nr_reg_local_set_bytes(name, data, length);
 }
 
 
 int
 NR_reg_del(NR_registry name)
 {
-    return reg_vtbl->vtbl->del(name);
+    return nr_reg_local_del(name);
 }
 
 int
 NR_reg_get_child_count(NR_registry parent, unsigned int *count)
 {
     assert(sizeof(count) == sizeof(size_t));
-    return reg_vtbl->vtbl->get_child_count(parent, (size_t*)count);
+    return nr_reg_local_get_child_count(parent, (size_t*)count);
 }
 
 int
@@ -203,7 +195,7 @@ NR_reg_get_child_registry(NR_registry parent, unsigned int i, NR_registry child)
     size_t count;
     NR_registry *children=0;
 
-    if ((r=reg_vtbl->vtbl->get_child_count(parent, &count)))
+    if ((r=nr_reg_local_get_child_count(parent, &count)))
       ABORT(r);
 
     if (i >= count)
@@ -214,7 +206,7 @@ NR_reg_get_child_registry(NR_registry parent, unsigned int i, NR_registry child)
         if (!children)
             ABORT(R_NO_MEMORY);
 
-        if ((r=reg_vtbl->vtbl->get_children(parent, children, count, &count)))
+        if ((r=nr_reg_local_get_children(parent, children, count, &count)))
             ABORT(r);
 
         if (i >= count)

@@ -57,7 +57,6 @@
 #include <csi_platform.h>
 #include "registry.h"
 #include "registry_int.h"
-#include "registry_vtbl.h"
 #include "r_assoc.h"
 #include "r_log.h"
 #include "r_errors.h"
@@ -785,8 +784,6 @@ nr_reg_compute_length(char *name, nr_registry_node *in, size_t *length)
 }
 
 
-/* VTBL METHODS */
-
 int
 nr_reg_local_init(void)
 {
@@ -993,36 +990,3 @@ nr_reg_local_get_children(NR_registry parent, NR_registry *data, size_t size, si
   abort:
     return(_status);
 }
-
-
-
-static nr_registry_module_vtbl nr_reg_local_vtbl = {
-    nr_reg_local_init,
-    nr_reg_local_get_char,
-    nr_reg_local_get_uchar,
-    nr_reg_local_get_uint2,
-    nr_reg_local_get_int4,
-    nr_reg_local_get_uint4,
-    nr_reg_local_get_uint8,
-    nr_reg_local_get_double,
-    nr_reg_local_get_registry,
-    nr_reg_local_get_bytes,
-    nr_reg_local_get_string,
-    nr_reg_local_get_length,
-    nr_reg_local_set_char,
-    nr_reg_local_set_uchar,
-    nr_reg_local_set_int4,
-    nr_reg_local_set_uint4,
-    nr_reg_local_set_registry,
-    nr_reg_local_set_bytes,
-    nr_reg_local_set_string,
-    nr_reg_local_del,
-    nr_reg_local_get_child_count,
-    nr_reg_local_get_children
-};
-
-static nr_registry_module nr_reg_local_module = { 0, &nr_reg_local_vtbl };
-
-void *NR_REG_MODE_LOCAL = &nr_reg_local_module;
-
-

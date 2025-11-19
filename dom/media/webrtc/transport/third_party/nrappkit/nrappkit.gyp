@@ -71,7 +71,6 @@
               './src/registry/registry.h',
               './src/registry/registry_int.h',
               './src/registry/registry_local.c',
-              './src/registry/registry_vtbl.h',
               './src/registry/registrycb.c',
           ],
 
