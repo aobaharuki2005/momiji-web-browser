@@ -28,12 +28,12 @@ ScriptHashKey::ScriptHashKey(
     const JS::loader::ScriptFetchOptions* aFetchOptions,
     const nsCOMPtr<nsIURI> aURI)
     : PLDHashEntryHdr(),
+      mURI(aURI),
+      mPartitionPrincipal(aLoader->PartitionedPrincipal()),
+      mLoaderPrincipal(aLoader->LoaderPrincipal()),
       mKind(aRequest->mKind),
       mCORSMode(aFetchOptions->mCORSMode),
       mReferrerPolicy(aReferrerPolicy),
-      mURI(aURI),
-      mLoaderPrincipal(aLoader->LoaderPrincipal()),
-      mPartitionPrincipal(aLoader->PartitionedPrincipal()),
       mSRIMetadata(aRequest->mIntegrity),
       mNonce(aFetchOptions->mNonce) {
   if (mKind == JS::loader::ScriptKind::eClassic) {
@@ -56,14 +56,6 @@ ScriptHashKey::ScriptHashKey(const ScriptLoadData& aLoadData)
     : ScriptHashKey(aLoadData.CacheKey()) {}
 
 bool ScriptHashKey::KeyEquals(const ScriptHashKey& aKey) const {
-  if (mKind != aKey.mKind) {
-    return false;
-  }
-
-  if (mReferrerPolicy != aKey.mReferrerPolicy) {
-    return false;
-  }
-
   {
     bool eq;
     if (NS_FAILED(mURI->Equals(aKey.mURI, &eq)) || !eq) {
@@ -75,7 +67,23 @@ bool ScriptHashKey::KeyEquals(const ScriptHashKey& aKey) const {
     return false;
   }
 
+  // NOTE: mLoaderPrincipal is only for the SharedSubResourceCache logic,
+  //       not for comparison here.
+
+  if (mKind != aKey.mKind) {
+    return false;
+  }
+
   if (mCORSMode != aKey.mCORSMode) {
+    return false;
+  }
+
+  if (mReferrerPolicy != aKey.mReferrerPolicy) {
+    return false;
+  }
+
+  if (!mSRIMetadata.CanTrustBeDelegatedTo(aKey.mSRIMetadata) ||
+      !aKey.mSRIMetadata.CanTrustBeDelegatedTo(mSRIMetadata)) {
     return false;
   }
 
@@ -88,11 +96,6 @@ bool ScriptHashKey::KeyEquals(const ScriptHashKey& aKey) const {
     if (mHintCharset != aKey.mHintCharset) {
       return false;
     }
-  }
-
-  if (!mSRIMetadata.CanTrustBeDelegatedTo(aKey.mSRIMetadata) ||
-      !aKey.mSRIMetadata.CanTrustBeDelegatedTo(mSRIMetadata)) {
-    return false;
   }
 
   return true;
