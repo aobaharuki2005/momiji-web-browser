@@ -419,7 +419,7 @@
 
     .urlbarView-row:not([selected]) > .urlbarView-row-buttons > & {
       /* If the row is not selected, use the accent color instead. */
-      outline-color: var(--color-accent-primary);
+      outline-color: var(--border-color-selected);
     }
   }
 
@@ -504,7 +504,7 @@
   &:is([selected], [primary]) {
     color: var(--button-text-color-primary);
     background-color: var(--color-accent-primary);
-    outline-color: var(--color-accent-primary);
+    outline-color: var(--border-color-selected);
     outline-offset: var(--focus-outline-offset);
 
     &:hover {
