@@ -1028,6 +1028,32 @@ nsresult nsXREDirProvider::SetUserDataProfileDirectory(nsCOMPtr<nsIFile>& aFile,
   return NS_OK;
 }
 
+/* static */
+nsresult nsXREDirProvider::ClearUserDataProfileDirectoryFromGTest(
+    nsIFile** aLocal, nsIFile** aGlobal) {
+  if (gDataDirProfileLocal) {
+    gDataDirProfileLocal->Clone(aLocal);
+    gDataDirProfileLocal = nullptr;
+  }
+
+  if (gDataDirProfile) {
+    gDataDirProfile->Clone(aGlobal);
+    gDataDirProfile = nullptr;
+  }
+
+  return NS_OK;
+}
+
+/* static */
+nsresult nsXREDirProvider::RestoreUserDataProfileDirectoryFromGTest(
+    nsCOMPtr<nsIFile>& aLocal, nsCOMPtr<nsIFile>& aGlobal) {
+  gDataDirProfileLocal = aLocal;
+  gDataDirProfile = aGlobal;
+
+  return NS_OK;
+}
+
+// Return the home directory that will contain user data
 nsresult nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile,
                                                     bool aLocal) {
   // Copied from nsAppFileLocationProvider (more or less)
