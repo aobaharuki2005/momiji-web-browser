@@ -5712,14 +5712,6 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!args[0].isString()) {
-    const char* typeName = InformalValueTypeName(args[0]);
-    JS_ReportErrorASCII(cx, "expected string to compile, got %s", typeName);
-    return false;
-  }
-
-  JSString* scriptContents = args[0].toString();
-
   UniqueChars filename;
   CompileOptions options(cx);
   JS::ModuleType moduleType = JS::ModuleType::JavaScript;
@@ -5738,7 +5730,8 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
 
     options.setFileAndLine(filename.get(), 1);
 
-    // The 2nd argument is the module type string. "js" or "json" is expected.
+    // The 2nd argument is the module type string. "js", "json" or "bytes" is
+    // expected.
     if (args.length() == 3) {
       if (!args[2].isString()) {
         const char* typeName = InformalValueTypeName(args[2]);
@@ -5753,8 +5746,11 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
       }
       if (JS_LinearStringEqualsLiteral(linearStr, "json")) {
         moduleType = JS::ModuleType::JSON;
+      } else if (JS_LinearStringEqualsLiteral(linearStr, "bytes")) {
+        moduleType = JS::ModuleType::Bytes;
       } else if (!JS_LinearStringEqualsLiteral(linearStr, "js")) {
-        JS_ReportErrorASCII(cx, "moduleType string ('js' or 'json') expected");
+        JS_ReportErrorASCII(
+            cx, "moduleType string ('js' or 'json' or 'bytes') expected");
         return false;
       }
     }
@@ -5762,23 +5758,62 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
     options.setFileAndLine("<string>", 1);
   }
 
-  AutoStableStringChars linearChars(cx);
-  if (!linearChars.initTwoByte(cx, scriptContents)) {
-    return false;
-  }
-
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
-    return false;
-  }
-
   RootedObject module(cx);
-  if (moduleType == JS::ModuleType::JSON) {
-    module = JS::CompileJsonModule(cx, options, srcBuf);
-  } else {
-    options.setModule();
-    module = JS::CompileModule(cx, options, srcBuf);
+  switch (moduleType) {
+    case JS::ModuleType::JavaScript:
+    case JS::ModuleType::JSON: {
+      if (!args[0].isString()) {
+        const char* typeName = InformalValueTypeName(args[0]);
+        JS_ReportErrorASCII(cx, "expected string to compile, got %s", typeName);
+        return false;
+      }
+
+      JSString* scriptContents = args[0].toString();
+
+      AutoStableStringChars linearChars(cx);
+      if (!linearChars.initTwoByte(cx, scriptContents)) {
+        return false;
+      }
+
+      JS::SourceText<char16_t> srcBuf;
+      if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
+        return false;
+      }
+
+      if (moduleType == JS::ModuleType::JSON) {
+        module = JS::CompileJsonModule(cx, options, srcBuf);
+      } else {
+        options.setModule();
+        module = JS::CompileModule(cx, options, srcBuf);
+      }
+
+      break;
+    }
+
+    case JS::ModuleType::Bytes: {
+      if (!args[0].isObject() ||
+          !JS::IsArrayBufferObject(&args[0].toObject())) {
+        const char* typeName = InformalValueTypeName(args[0]);
+        JS_ReportErrorASCII(cx, "expected ArrayBuffer for bytes module, got %s",
+                            typeName);
+        return false;
+      }
+
+      /*
+       * NOTE: The spec requires checking that the ArrayBuffer is immutable.
+       * Immutable ArrayBuffers (see bug 1952253) are still only a Stage 2.7
+       * proposal. This check will be added in a future update.
+       */
+      module = JS::CreateDefaultExportSyntheticModule(cx, args[0]);
+      break;
+    }
+
+    case JS::ModuleType::CSS:
+    case JS::ModuleType::Unknown:
+      JS_ReportErrorASCII(cx, "Unsupported module type in parseModule");
+      return false;
   }
+
   if (!module) {
     return false;
   }
@@ -10200,9 +10235,9 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Sleep for dt seconds."),
 
     JS_FN_HELP("parseModule", ParseModule, 3, 0,
-"parseModule(code, 'filename', 'js' | 'json')",
+"parseModule(code, 'filename', 'js' | 'json' | 'bytes')",
 "  Parses source text as a JS module ('js', this is the default) or a JSON"
-" module ('json') and returns a ModuleObject wrapper object."),
+" module ('json') or bytes module ('bytes') and returns a ModuleObject wrapper object."),
 
     JS_FN_HELP("instantiateModuleStencil", InstantiateModuleStencil, 1, 0,
 "instantiateModuleStencil(stencil, [options])",
