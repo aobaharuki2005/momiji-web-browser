@@ -72,7 +72,3 @@ profiles-opendir =
         [windows] Open Folder
        *[other] Open Directory
     }
-
-profiles-migrate-button = Move to profile menu
-profiles-migrate-failed-title = Migration Failed
-profiles-migrate-failed-message = There was an error while attempting to migrate this profile.
