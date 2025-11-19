@@ -15,7 +15,7 @@ use crate::gpu_types::{BrushFlags, BrushInstance, ImageSource, PrimitiveHeaders,
 use crate::gpu_types::SplitCompositeInstance;
 use crate::gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use crate::gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
-use crate::gpu_types::{ImageBrushData, get_shader_opacity, BoxShadowData, MaskInstance};
+use crate::gpu_types::{ImageBrushUserData, get_shader_opacity, BoxShadowData, MaskInstance};
 use crate::gpu_types::{ClipMaskInstanceCommon, ClipMaskInstanceRect, ClipMaskInstanceBoxShadow};
 use crate::internal_types::{FastHashMap, Filter, FrameAllocator, FrameMemory, FrameVec, Swizzle, TextureSource};
 use crate::picture::{Picture3DContext, PictureCompositeMode, calculate_screen_uv};
@@ -1112,7 +1112,7 @@ impl BatchBuilder {
                                         textures,
                                     );
 
-                                    let prim_user_data = ImageBrushData {
+                                    let prim_user_data = ImageBrushUserData {
                                         color_mode: ShaderColorMode::Image,
                                         alpha_type: AlphaType::PremultipliedAlpha,
                                         raster_space: RasterizationSpace::Screen,
@@ -1166,7 +1166,7 @@ impl BatchBuilder {
                                             local_rect: shadow_rect,
                                             specific_prim_address: shadow_prim_address.as_int(),
                                             z: z_id,
-                                            user_data: ImageBrushData {
+                                            user_data: ImageBrushUserData {
                                                 color_mode: ShaderColorMode::Alpha,
                                                 alpha_type: AlphaType::PremultipliedAlpha,
                                                 raster_space: RasterizationSpace::Screen,
@@ -1193,7 +1193,7 @@ impl BatchBuilder {
                                     // Update z_id for the content
                                     z_id = z_generator.next();
 
-                                    let prim_user_data = ImageBrushData {
+                                    let prim_user_data = ImageBrushUserData {
                                         color_mode: ShaderColorMode::Image,
                                         alpha_type: AlphaType::PremultipliedAlpha,
                                         raster_space: RasterizationSpace::Screen,
@@ -1329,7 +1329,7 @@ impl BatchBuilder {
                                 textures,
                             );
 
-                            let prim_user_data = ImageBrushData {
+                            let prim_user_data = ImageBrushUserData {
                                 color_mode: match key.blend_mode {
                                     BlendMode::MultiplyDualSource => ShaderColorMode::MultiplyDualSource,
                                     _ => ShaderColorMode::Image,
@@ -1479,7 +1479,7 @@ impl BatchBuilder {
                                     let batch_params = BrushBatchParameters::shared(
                                         BrushBatchKind::Image(ImageBufferKind::Texture2D),
                                         textures,
-                                        ImageBrushData {
+                                        ImageBrushUserData {
                                             color_mode: ShaderColorMode::Image,
                                             alpha_type: AlphaType::PremultipliedAlpha,
                                             raster_space: RasterizationSpace::Screen,
@@ -1532,7 +1532,7 @@ impl BatchBuilder {
                                 textures,
                             );
 
-                            let prim_user_data = ImageBrushData {
+                            let prim_user_data = ImageBrushUserData {
                                 color_mode: ShaderColorMode::Image,
                                 alpha_type: AlphaType::PremultipliedAlpha,
                                 raster_space: RasterizationSpace::Screen,
@@ -1551,7 +1551,7 @@ impl BatchBuilder {
                                 textures,
                             );
 
-                            let prim_user_data = ImageBrushData {
+                            let prim_user_data = ImageBrushUserData {
                                 color_mode: ShaderColorMode::Image,
                                 alpha_type: AlphaType::PremultipliedAlpha,
                                 raster_space: RasterizationSpace::Screen,
@@ -1660,7 +1660,7 @@ impl BatchBuilder {
 
             let textures = TextureSet::prim_textured(texture_source);
 
-            let prim_user_data = ImageBrushData {
+            let prim_user_data = ImageBrushUserData {
                 color_mode: ShaderColorMode::Image,
                 alpha_type: AlphaType::PremultipliedAlpha,
                 raster_space: RasterizationSpace::Local,
@@ -1820,7 +1820,7 @@ impl BatchBuilder {
 
                 let batch_params = BrushBatchParameters::instanced(
                     BrushBatchKind::Image(image_buffer_kind),
-                    ImageBrushData {
+                    ImageBrushUserData {
                         color_mode: ShaderColorMode::Image,
                         alpha_type: AlphaType::PremultipliedAlpha,
                         raster_space: RasterizationSpace::Local,
@@ -2091,7 +2091,7 @@ impl BatchBuilder {
                         (
                             BrushBatchKind::Image(texture.image_buffer_kind()),
                             textures,
-                            ImageBrushData {
+                            ImageBrushUserData {
                                 color_mode: ShaderColorMode::Image,
                                 alpha_type: AlphaType::PremultipliedAlpha,
                                 raster_space: RasterizationSpace::Local,
@@ -2282,7 +2282,7 @@ impl BatchBuilder {
 
                 let image_data = &ctx.data_stores.image[data_handle].kind;
                 let image_instance = &ctx.prim_store.images[image_instance_index];
-                let prim_user_data = ImageBrushData {
+                let prim_user_data = ImageBrushUserData {
                     color_mode: ShaderColorMode::Image,
                     alpha_type: image_data.alpha_type,
                     raster_space: RasterizationSpace::Local,
@@ -2544,7 +2544,7 @@ impl BatchBuilder {
 
                 let prim_header = PrimitiveHeader {
                     specific_prim_address: ctx.globals.default_image_data.as_int(),
-                    user_data: ImageBrushData {
+                    user_data: ImageBrushUserData {
                         color_mode: ShaderColorMode::Image,
                         alpha_type: AlphaType::PremultipliedAlpha,
                         raster_space: RasterizationSpace::Screen,

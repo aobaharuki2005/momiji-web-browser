@@ -764,14 +764,14 @@ impl From<BrushInstance> for PrimitiveInstanceData {
 
 /// Convenience structure to encode into the image brush's user data.
 #[derive(Copy, Clone, Debug)]
-pub struct ImageBrushData {
+pub struct ImageBrushUserData {
     pub color_mode: ShaderColorMode,
     pub alpha_type: AlphaType,
     pub raster_space: RasterizationSpace,
     pub opacity: f32,
 }
 
-impl ImageBrushData {
+impl ImageBrushUserData {
     #[inline]
     pub fn encode(&self) -> [i32; 4] {
         [
