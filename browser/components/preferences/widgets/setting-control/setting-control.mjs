@@ -379,11 +379,16 @@ export class SettingControl extends SettingElement {
       let optionTag = opt.control
         ? unsafeStatic(opt.control)
         : KNOWN_OPTIONS.get(control);
+      let spreadValues = spread(this.getOptionPropertyMapping(opt));
       let children =
         "items" in opt ? this.itemsTemplate(opt) : this.optionsTemplate(opt);
-      return staticHtml`<${optionTag}
-          ${spread(this.getOptionPropertyMapping(opt))}
-        >${children}</${optionTag}>`;
+      if (opt.control == "a" && opt.controlAttrs?.is == "moz-support-link") {
+        // The `is` attribute must be set when the element is first added to the
+        // DOM. We need to mark that up manually, since `spread()` uses
+        // `el.setAttribute()` to set attributes it receives.
+        return html`<a is="moz-support-link" ${spreadValues}>${children}</a>`;
+      }
+      return staticHtml`<${optionTag} ${spreadValues}>${children}</${optionTag}>`;
     });
   }
 
