@@ -2517,7 +2517,7 @@ bool CacheIRCompiler::emitIdToStringOrSymbol(ValOperandId resultId,
   LiveRegisterSet volatileRegs = liveVolatileRegs();
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = JSLinearString* (*)(JSContext* cx, int32_t i);
+  using Fn = JSLinearString* (*)(JSContext * cx, int32_t i);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
@@ -2943,7 +2943,7 @@ bool CacheIRCompiler::emitStringToAtom(StringOperandId stringId) {
   LiveRegisterSet save = liveVolatileRegs();
   masm.PushRegsInMask(save);
 
-  using Fn = JSAtom* (*)(JSContext* cx, JSString* str);
+  using Fn = JSAtom* (*)(JSContext * cx, JSString * str);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
@@ -3881,7 +3881,7 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
     bool requestMinorGC = initialHeap == gc::Heap::Default;
 
     masm.PushRegsInMask(liveSet);
-    using Fn = void* (*)(JSContext* cx, bool requestMinorGC);
+    using Fn = void* (*)(JSContext * cx, bool requestMinorGC);
     masm.setupUnalignedABICall(temp);
     masm.loadJSContext(temp);
     masm.passABIArg(temp);
@@ -8361,7 +8361,7 @@ bool CacheIRCompiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
     LiveRegisterSet save = liveVolatileRegs();
     masm.PushRegsInMask(save);
 
-    using Fn = JSString* (*)(JSObject* obj, JSRuntime* rt);
+    using Fn = JSString* (*)(JSObject * obj, JSRuntime * rt);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
     masm.movePtr(ImmPtr(cx_->runtime()), scratch);
@@ -9154,7 +9154,7 @@ bool CacheIRCompiler::emitWrapResult() {
   LiveRegisterSet save = liveVolatileRegs();
   masm.PushRegsInMask(save);
 
-  using Fn = JSObject* (*)(JSContext* cx, JSObject* obj);
+  using Fn = JSObject* (*)(JSContext * cx, JSObject * obj);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
@@ -10024,7 +10024,7 @@ bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
     volatileRegs.takeUnchecked(result);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = JSLinearString* (*)(JSContext* cx, int32_t i);
+    using Fn = JSLinearString* (*)(JSContext * cx, int32_t i);
     masm.setupUnalignedABICall(result);
     masm.loadJSContext(result);
     masm.passABIArg(result);
@@ -10059,7 +10059,7 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   volatileRegs.takeUnchecked(result);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = JSString* (*)(JSContext* cx, double d);
+  using Fn = JSString* (*)(JSContext * cx, double d);
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
@@ -10429,7 +10429,7 @@ bool CacheIRCompiler::emitCallSubstringKernelResult(StringOperandId strId,
   masm.Push(begin);
   masm.Push(str);
 
-  using Fn = JSString* (*)(JSContext* cx, HandleString str, int32_t begin,
+  using Fn = JSString* (*)(JSContext * cx, HandleString str, int32_t begin,
                            int32_t len);
   callvm.call<Fn, SubstringKernel>();
   return true;
