@@ -51,6 +51,8 @@ skip-if = [
 ["browser_menubar_profiles.js"]
 head = "../unit/head.js head.js"
 
+["browser_migrate.js"]
+
 ["browser_moveTabToProfile.js"]
 
 ["browser_notify_changes.js"]
