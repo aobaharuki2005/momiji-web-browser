@@ -13025,6 +13025,9 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "disable-main-thread-denormals",
                         "Disable Denormals on the main thread only, to "
                         "emulate WebAudio worklets.") ||
+      !op.addStringOption('\0', "object-keys-scalar-replacement", "on/off",
+                          "Replace Object.keys with a NativeIterators "
+                          "(default: on)") ||
       !op.addBoolOption('\0', "baseline",
                         "Enable baseline compiler (default)") ||
       !op.addBoolOption('\0', "no-baseline", "Disable baseline compiler") ||
@@ -13987,6 +13990,16 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
 #else
     // Do nothing on other architecture.
 #endif
+  }
+
+  if (const char* str = op.getStringOption("object-keys-scalar-replacement")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableObjectKeysScalarReplacement = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableObjectKeysScalarReplacement = true;
+    } else {
+      return OptionFailure("object-keys-scalar-replacement", str);
+    }
   }
 
   int32_t warmUpThreshold = op.getIntOption("ion-warmup-threshold");

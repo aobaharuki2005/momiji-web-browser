@@ -735,8 +735,9 @@ JS_PUBLIC_API bool js::GetPropertyKeys(JSContext* cx, HandleObject obj,
   return enumerator.snapshot(cx);
 }
 
-static inline void RegisterEnumerator(JSContext* cx, NativeIterator* ni) {
-  MOZ_ASSERT(ni->objectBeingIterated());
+static inline void RegisterEnumerator(JSContext* cx, NativeIterator* ni,
+                                      HandleObject obj) {
+  ni->initObjectBeingIterated(*obj);
 
   // Register non-escaping native enumerators (for-in) with the current
   // context.
@@ -853,7 +854,7 @@ NativeIterator::NativeIterator(JSContext* cx,
                                HandleIdVector props, bool supportsIndices,
                                PropertyIndexVector* indices, uint32_t numShapes,
                                uint32_t ownPropertyCount, bool* hadError)
-    : objectBeingIterated_(objBeingIterated),
+    : objectBeingIterated_(nullptr),
       iterObj_(propIter),
       objShape_(numShapes > 0 ? objBeingIterated->shape() : nullptr),
       // This holds the allocated property count until we're done with
@@ -1009,7 +1010,8 @@ static bool CanStoreInIteratorCache(JSObject* obj) {
 }
 
 static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInShapeIteratorCache(
-    JSContext* cx, JSObject* obj, uint32_t* cacheableProtoChainLength) {
+    JSContext* cx, JSObject* obj, uint32_t* cacheableProtoChainLength,
+    bool exclusive) {
   if (!obj->shape()->cache().isIterator() ||
       !CanCompareIterableObjectToCache(obj)) {
     return nullptr;
@@ -1017,7 +1019,7 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInShapeIteratorCache(
   PropertyIteratorObject* iterobj = obj->shape()->cache().toIterator();
   NativeIterator* ni = iterobj->getNativeIterator();
   MOZ_ASSERT(ni->objShape() == obj->shape());
-  if (!ni->isReusable()) {
+  if (exclusive && !ni->isReusable()) {
     return nullptr;
   }
 
@@ -1040,11 +1042,12 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInShapeIteratorCache(
 }
 
 static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
-    JSContext* cx, JSObject* obj, uint32_t* cacheableProtoChainLength) {
+    JSContext* cx, JSObject* obj, uint32_t* cacheableProtoChainLength,
+    bool exclusive) {
   MOZ_ASSERT(*cacheableProtoChainLength == 0);
 
-  if (PropertyIteratorObject* shapeCached =
-          LookupInShapeIteratorCache(cx, obj, cacheableProtoChainLength)) {
+  if (PropertyIteratorObject* shapeCached = LookupInShapeIteratorCache(
+          cx, obj, cacheableProtoChainLength, exclusive)) {
     return shapeCached;
   }
 
@@ -1082,7 +1085,7 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
   MOZ_ASSERT(iterobj->compartment() == cx->compartment());
 
   NativeIterator* ni = iterobj->getNativeIterator();
-  if (!ni->isReusable()) {
+  if (exclusive && !ni->isReusable()) {
     return nullptr;
   }
 
@@ -1185,7 +1188,7 @@ static bool IndicesAreValid(NativeObject* obj, NativeIterator* ni) {
 }
 #endif
 
-template <bool WantIndices>
+template <bool WantIndices, bool SkipRegistration>
 static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
                                                HandleObject obj) {
   MOZ_ASSERT(!obj->is<PropertyIteratorObject>());
@@ -1193,15 +1196,16 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
              "We may end up allocating shapes in the wrong zone!");
 
   uint32_t cacheableProtoChainLength = 0;
-  if (PropertyIteratorObject* iterobj =
-          LookupInIteratorCache(cx, obj, &cacheableProtoChainLength)) {
+  if (PropertyIteratorObject* iterobj = LookupInIteratorCache(
+          cx, obj, &cacheableProtoChainLength, !SkipRegistration)) {
     NativeIterator* ni = iterobj->getNativeIterator();
     bool recreateWithIndices = WantIndices && ni->indicesSupported();
     if (!recreateWithIndices) {
       MOZ_ASSERT_IF(WantIndices && ni->indicesAvailable(),
                     IndicesAreValid(&obj->as<NativeObject>(), ni));
-      ni->initObjectBeingIterated(*obj);
-      RegisterEnumerator(cx, ni);
+      if (!SkipRegistration) {
+        RegisterEnumerator(cx, ni, obj);
+      }
       return iterobj;
     }
   }
@@ -1244,9 +1248,11 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
   //
   // In debug builds, AssertDenseElementsNotIterated is used to check the flag
   // is set correctly.
-  if (obj->is<NativeObject>() &&
-      obj->as<NativeObject>().getDenseInitializedLength() > 0) {
-    obj->as<NativeObject>().markDenseElementsMaybeInIteration();
+  if (!SkipRegistration) {
+    if (obj->is<NativeObject>() &&
+        obj->as<NativeObject>().getDenseInitializedLength() > 0) {
+      obj->as<NativeObject>().markDenseElementsMaybeInIteration();
+    }
   }
 
   PropertyIndexVector* indicesPtr =
@@ -1257,7 +1263,9 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
   if (!iterobj) {
     return nullptr;
   }
-  RegisterEnumerator(cx, iterobj->getNativeIterator());
+  if (!SkipRegistration) {
+    RegisterEnumerator(cx, iterobj->getNativeIterator(), obj);
+  }
 
   cx->check(iterobj);
   MOZ_ASSERT_IF(
@@ -1283,24 +1291,34 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
 }
 
 PropertyIteratorObject* js::GetIterator(JSContext* cx, HandleObject obj) {
-  return GetIteratorImpl<false>(cx, obj);
+  return GetIteratorImpl<false, false>(cx, obj);
 }
 
 PropertyIteratorObject* js::GetIteratorWithIndices(JSContext* cx,
                                                    HandleObject obj) {
-  return GetIteratorImpl<true>(cx, obj);
+  return GetIteratorImpl<true, false>(cx, obj);
+}
+
+PropertyIteratorObject* js::GetIteratorUnregistered(JSContext* cx,
+                                                    HandleObject obj) {
+  return GetIteratorImpl<false, true>(cx, obj);
+}
+
+PropertyIteratorObject* js::GetIteratorWithIndicesUnregistered(
+    JSContext* cx, HandleObject obj) {
+  return GetIteratorImpl<true, true>(cx, obj);
 }
 
 PropertyIteratorObject* js::LookupInIteratorCache(JSContext* cx,
                                                   HandleObject obj) {
   uint32_t dummy = 0;
-  return LookupInIteratorCache(cx, obj, &dummy);
+  return LookupInIteratorCache(cx, obj, &dummy, true);
 }
 
 PropertyIteratorObject* js::LookupInShapeIteratorCache(JSContext* cx,
                                                        HandleObject obj) {
   uint32_t dummy = 0;
-  return LookupInShapeIteratorCache(cx, obj, &dummy);
+  return LookupInShapeIteratorCache(cx, obj, &dummy, true);
 }
 
 // ES 2017 draft 7.4.7.

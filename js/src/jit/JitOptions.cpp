@@ -132,6 +132,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Whether the Baseline Interpreter is enabled.
   SET_DEFAULT(baselineInterpreter, true);
 
+  // Whether replacing Object.keys with NativeIterators is globally disabled.
+  SET_DEFAULT(disableObjectKeysScalarReplacement, false);
+
 #ifdef ENABLE_PORTABLE_BASELINE_INTERP
   // Whether the Portable Baseline Interpreter is enabled.
   SET_DEFAULT(portableBaselineInterpreter, false);

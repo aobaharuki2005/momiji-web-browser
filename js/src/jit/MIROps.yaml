@@ -2073,13 +2073,16 @@
 - name: ObjectKeys
   operands:
     object: Object
+  arguments:
+    resultShape: Shape*
   result_type: Object
-
-  # We can recover Object.keys on bailout as long as the object is not escaped
-  # or that the object is not mutated by any aliased calls in-between the
-  # instruction and the recovered location, as the recovered keys array might be
-  # different.
   can_recover: custom
+
+- name: ObjectKeysFromIterator
+  operands:
+    iterator: Object
+  result_type: Object
+  can_recover: true
 
 # Used to fold Object.keys(obj).length into a single operation.
 #
@@ -2796,6 +2799,20 @@
 
 - name: ObjectToIterator
   gen_boilerplate: false
+
+- name: IteratorLength
+  operands:
+    iter: Object
+  result_type: Int32
+  generate_lir: true
+
+- name: LoadIteratorElement
+  operands:
+    iter: Object
+    index: Int32
+  result_type: String
+  alias_set: none
+  generate_lir: true
 
 - name: ValueToIterator
   operands:

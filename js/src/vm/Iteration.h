@@ -709,6 +709,11 @@ PropertyIteratorObject* LookupInShapeIteratorCache(JSContext* cx,
 PropertyIteratorObject* GetIterator(JSContext* cx, HandleObject obj);
 PropertyIteratorObject* GetIteratorWithIndices(JSContext* cx, HandleObject obj);
 
+PropertyIteratorObject* GetIteratorUnregistered(JSContext* cx,
+                                                HandleObject obj);
+PropertyIteratorObject* GetIteratorWithIndicesUnregistered(JSContext* cx,
+                                                           HandleObject obj);
+
 PropertyIteratorObject* ValueToIterator(JSContext* cx, HandleValue vp);
 
 void CloseIterator(JSObject* obj);
