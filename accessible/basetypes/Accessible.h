@@ -705,12 +705,11 @@ class Accessible {
   }
 
   /**
-   * Returns the nearest ancestor in the document which is not a generic
-   * element.
+   * Returns the nearest ancestor which is not a generic element.
    */
   Accessible* GetNonGenericParent() const {
     for (Accessible* parent = Parent(); parent; parent = parent->Parent()) {
-      if (parent->IsDoc() || !parent->IsGeneric()) {
+      if (!parent->IsGeneric()) {
         return parent;
       }
     }
