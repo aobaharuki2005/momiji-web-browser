@@ -168,12 +168,18 @@ class ScriptLoadRequest : public nsISupports,
   // the script data from cached script.
   void CacheEntryFound(LoadedScript* aLoadedScript);
 
+  void CacheEntryRevived(LoadedScript* aLoadedScript);
+
   // Convert a CheckingCache ScriptLoadRequest into a Fetching one, by creating
   // a new LoadedScript which is matching the ScriptKind provided when
   // constructing this ScriptLoadRequest.
   void NoCacheEntryFound(mozilla::dom::ReferrerPolicy aReferrerPolicy,
                          ScriptFetchOptions* aFetchOptions, nsIURI* aURI);
 
+ private:
+  void SetCacheEntry(LoadedScript* aLoadedScript);
+
+ public:
   bool PassedConditionForDiskCache() const {
     return mDiskCachingPlan == CachingPlan::PassedCondition;
   }
@@ -255,6 +261,9 @@ class ScriptLoadRequest : public nsISupports,
     mHasSourceMapURL_ = true;
   }
 
+  bool HasDirtyCache() const { return mHasDirtyCache_; }
+  void SetHasDirtyCache() { mHasDirtyCache_ = true; }
+
  public:
   // Fields.
 
@@ -272,6 +281,13 @@ class ScriptLoadRequest : public nsISupports,
   // Do not access directly.
   // Use HasSourceMapURL(), SetSourceMapURL(), and GetSourceMapURL().
   bool mHasSourceMapURL_ : 1;
+
+  // Set to true if this response is found in the in-memory cache, but the
+  // cache is marked as dirty, and needs validation.
+  //
+  // This request should go to necko, and when the response is received,
+  // the cache should be either revived or evicted.
+  bool mHasDirtyCache_ : 1;
 
   enum class CachingPlan : uint8_t {
     // This is not yet considered for caching.

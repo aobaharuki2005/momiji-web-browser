@@ -299,6 +299,34 @@ class LoadedScript : public nsIMemoryReporter {
   void SetBaseURLFromChannelAndOriginalURI(nsIChannel* aChannel,
                                            nsIURI* aOriginalURI);
 
+  bool IsDirty() const { return mIsDirty; }
+  void SetDirty() {
+    MOZ_ASSERT(HasCacheEntryId());
+    mIsDirty = true;
+  }
+  void UnsetDirty() {
+    MOZ_ASSERT(HasCacheEntryId());
+    mIsDirty = false;
+  }
+
+  bool HasCacheEntryId() const { return mCacheEntryId != InvalidCacheEntryId; }
+  uint64_t CacheEntryId() const {
+    MOZ_ASSERT(HasCacheEntryId());
+    return mCacheEntryId;
+  }
+  void SetCacheEntryId(uint64_t aId) {
+    mCacheEntryId = aId;
+
+    // mCacheEntryId is 48bits.  Verify no overflow happened.
+    MOZ_ASSERT(mCacheEntryId == aId);
+  }
+
+  void AddFetchCount() {
+    if (mFetchCount < UINT8_MAX) {
+      mFetchCount++;
+    }
+  }
+
  public:
   // Fields.
 
@@ -325,6 +353,32 @@ class LoadedScript : public nsIMemoryReporter {
   uint32_t mBytecodeOffset;
 
  private:
+  static constexpr uint64_t InvalidCacheEntryId = 0;
+
+  // The cache entry ID of this script.
+  //
+  // 0 if the response doesn't have the corresponding cache entry,
+  // or any other failure happened.
+  //
+  // This value comes from mozilla::net::CacheEntry::mCacheEntryId,
+  // which comes from mozilla::net::CacheEntry::GetNextId.
+  // It generates sequential IDs from 1 (thus 0 is treated as invalid value),
+  // and the ID is valid within single browser session.
+  //
+  // In order to pack this field with mIsDirty below, we use shorter bits than
+  // the original mozilla::net::CacheEntry::mCacheEntryId type (uint64_t).
+  //
+  // As long as the per-session sequential ID is the sole source of this value,
+  // 48 bits should be sufficient.  1000 new IDs per second for 365 days
+  // becomes 0x7_57b1_2c00, which is 35 bits.
+  uint64_t mCacheEntryId : 48;
+
+  // Set to true in the following situation:
+  //   * this is cached in SharedScriptCache
+  //   * A behavior around the network request is modified, and
+  //     the cache needs validation on the necko side
+  bool mIsDirty : 1;
+
   RefPtr<ScriptFetchOptions> mFetchOptions;
   nsCOMPtr<nsIURI> mURI;
 

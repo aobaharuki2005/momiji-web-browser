@@ -1195,6 +1195,20 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
     return;
   }
 
+  if (cacheResult.mCompleteValue->IsDirty()) {
+    // The cache entry needs revalidation.
+    // Fetch from necko and validate in ScriptLoader::OnStreamComplete.
+    TRACE_FOR_TEST(aRequest, "memorycache:dirty:hit");
+    aRequest->SetHasDirtyCache();
+    aRequest->NoCacheEntryFound(aReferrerPolicy, aFetchOptions, aURI);
+    LOG(
+        ("ScriptLoader (%p): Created LoadedScript (%p) for "
+         "ScriptLoadRequest(%p) because of dirty flag %s.",
+         this, aRequest->getLoadedScript(), aRequest,
+         aRequest->URI()->GetSpecOrDefault().get()));
+    return;
+  }
+
   if (aRequestType == ScriptLoadRequestType::External) {
     // NOTE: The preload case checks the same after the
     //       LookupPreloadRequest call.
@@ -1224,9 +1238,7 @@ void ScriptLoader::TryUseCache(ReferrerPolicy aReferrerPolicy,
        aRequest->URI()->GetSpecOrDefault().get()));
   TRACE_FOR_TEST(aRequest, "load:memorycache");
 
-  if (cacheResult.mCompleteValue->mFetchCount < UINT8_MAX) {
-    cacheResult.mCompleteValue->mFetchCount++;
-  }
+  cacheResult.mCompleteValue->AddFetchCount();
   return;
 }
 
@@ -2022,6 +2034,11 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
 
   // Don't off-thread compile inline scripts.
   if (aRequest->GetScriptLoadContext()->mIsInline) {
+    return NS_OK;
+  }
+
+  if (aRequest->IsCachedStencil()) {
+    // This is a revived cache.
     return NS_OK;
   }
 
@@ -4072,16 +4089,56 @@ nsresult ScriptLoader::OnStreamComplete(
   nsresult rv = VerifySRI(aRequest, aLoader, aSRIStatus, aSRIDataVerifier);
 
   if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIRequest> channelRequest;
+    aLoader->GetRequest(getter_AddRefs(channelRequest));
+
+    nsCOMPtr<nsICacheInfoChannel> cacheInfo = do_QueryInterface(channelRequest);
+
+    if (cacheInfo) {
+      uint64_t id;
+      nsresult rv = cacheInfo->GetCacheEntryId(&id);
+      if (NS_SUCCEEDED(rv)) {
+        LOG(("ScriptLoadRequest (%p): cacheEntryId = %zx", aRequest,
+             size_t(id)));
+
+        if (aRequest->HasDirtyCache()) {
+          // This request found a dirty cache.
+          // Validate the cache with the response's cache ID.
+          ScriptHashKey key(this, aRequest, aRequest->FetchOptions(),
+                            aRequest->URI());
+          auto cacheResult = mCache->Lookup(*this, key, /* aSyncLoad = */ true);
+          if (cacheResult.mState == CachedSubResourceState::Complete &&
+              cacheResult.mCompleteValue->CacheEntryId() == id) {
+            cacheResult.mCompleteValue->UnsetDirty();
+            // This keeps the request as "fetching" state.
+            // PrepareLoadedRequest below will set it to "ready" state.
+            //
+            // Off-thread compilation is skipped for the revived cache.
+            // See AttemptOffThreadScriptCompile.
+            //
+            // Main thread compilation is skipped in the same way as
+            // non-dirty cache.
+            aRequest->CacheEntryRevived(cacheResult.mCompleteValue);
+
+            cacheResult.mCompleteValue->AddFetchCount();
+
+            TRACE_FOR_TEST(aRequest, "memorycache:dirty:revived");
+          } else {
+            mCache->Evict(key);
+            TRACE_FOR_TEST(aRequest, "memorycache:dirty:evicted");
+          }
+        }
+
+        aRequest->getLoadedScript()->SetCacheEntryId(id);
+      }
+    }
+
     // If we are loading from source, store the cache info channel and
     // save the computed SRI hash or a dummy SRI hash in case we are going to
     // save the bytecode of this script in the cache.
     if (aRequest->IsSource() &&
         StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
-      nsCOMPtr<nsIRequest> channelRequest;
-      aLoader->GetRequest(getter_AddRefs(channelRequest));
-
-      aRequest->getLoadedScript()->mCacheInfo =
-          do_QueryInterface(channelRequest);
+      aRequest->getLoadedScript()->mCacheInfo = cacheInfo;
       LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", aRequest,
            aRequest->getLoadedScript()->mCacheInfo.get()));
 
