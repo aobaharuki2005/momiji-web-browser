@@ -263,6 +263,10 @@ export class BackupUIParent extends JSWindowActorParent {
           e
         );
       }
+    } else if (message.name == "SetEmbeddedComponentPersistentData") {
+      this.#bs.setEmbeddedComponentPersistentData(message.data);
+    } else if (message.name == "FlushEmbeddedComponentPersistentData") {
+      this.#bs.setEmbeddedComponentPersistentData({});
     }
 
     return null;
