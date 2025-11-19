@@ -454,6 +454,10 @@ class PresShell final : public nsStubDocumentObserver,
   // popup).
   nsIWidget* GetNearestWidget() const;
 
+  // Return the widget that we're painting into, if we're responsible to paint
+  // into a widget.
+  nsIWidget* GetOwnWidget() const;
+
   // Get the current frame of our embedder, if it's in our same process.
   nsSubDocumentFrame* GetInProcessEmbedderFrame() const;
   void SetInProcessEmbedderFrame(nsSubDocumentFrame*);
