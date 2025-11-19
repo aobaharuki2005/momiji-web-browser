@@ -185,19 +185,19 @@ class AnimationPlayerActor extends Actor {
   }
 
   isCssAnimation(player = this.player) {
-    return player instanceof this.window.CSSAnimation;
+    return this.window.CSSAnimation.isInstance(player);
   }
 
   isCssTransition(player = this.player) {
-    return player instanceof this.window.CSSTransition;
+    return this.window.CSSTransition.isInstance(player);
   }
 
   isScriptAnimation(player = this.player) {
     return (
-      player instanceof this.window.Animation &&
+      this.window.Animation.isInstance(player) &&
       !(
-        player instanceof this.window.CSSAnimation ||
-        player instanceof this.window.CSSTransition
+        this.window.CSSAnimation.isInstance(player) ||
+        this.window.CSSTransition.isInstance(player)
       )
     );
   }
