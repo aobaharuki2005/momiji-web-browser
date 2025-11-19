@@ -7698,9 +7698,11 @@ inline bool JSObject::is<MicroTaskEntry>() const {
 
 JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedDataFromJSMicroTask(
     JS::JSMicroTask* entry) {
-  MOZ_ASSERT(!JS_IsDeadWrapper(entry));
   JSObject* task = CheckedUnwrapStatic(entry);
   if (!task) {
+    return nullptr;
+  }
+  if (JS_IsDeadWrapper(task)) {
     return nullptr;
   }
 
@@ -7712,14 +7714,15 @@ JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedDataFromJSMicroTask(
     return nullptr;
   }
 
-  MOZ_ASSERT(!JS_IsDeadWrapper(maybeHostDefined));
+  if (JS_IsDeadWrapper(maybeHostDefined)) {
+    return nullptr;
+  }
   return CheckedUnwrapStatic(maybeHostDefined);
 }
 
 JS_PUBLIC_API JSObject* JS::MaybeGetAllocationSiteFromJSMicroTask(
     JS::JSMicroTask* entry) {
   JSObject* task = UncheckedUnwrap(entry);
-  MOZ_ASSERT(task);
   if (JS_IsDeadWrapper(task)) {
     return nullptr;
   };
@@ -7741,14 +7744,22 @@ JS_PUBLIC_API JSObject* JS::MaybeGetAllocationSiteFromJSMicroTask(
 JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedGlobalFromJSMicroTask(
     JSMicroTask* entry) {
   JSObject* task = UncheckedUnwrap(entry);
+  if (JS_IsDeadWrapper(task)) {
+    return nullptr;
+  }
+
   MOZ_ASSERT(task->is<MicroTaskEntry>());
 
   JSObject* maybeWrappedHostDefinedRepresentative =
       task->as<MicroTaskEntry>().hostDefinedGlobalRepresentative();
 
   if (maybeWrappedHostDefinedRepresentative) {
-    return &UncheckedUnwrap(maybeWrappedHostDefinedRepresentative)
-                ->nonCCWGlobal();
+    JSObject* unwrapped =
+        UncheckedUnwrap(maybeWrappedHostDefinedRepresentative);
+    if (JS_IsDeadWrapper(unwrapped)) {
+      return nullptr;
+    }
+    return &unwrapped->nonCCWGlobal();
   }
 
   return nullptr;
@@ -7787,9 +7798,9 @@ JS_PUBLIC_API JSObject* JS::GetExecutionGlobalFromJSMicroTask(
 JS_PUBLIC_API JSObject* JS::MaybeGetPromiseFromJSMicroTask(
     JS::JSMicroTask* entry) {
   JSObject* unwrapped = UncheckedUnwrap(entry);
-
-  // We don't expect to ever lose the record a job points to.
-  MOZ_RELEASE_ASSERT(!JS_IsDeadWrapper(unwrapped));
+  if (JS_IsDeadWrapper(unwrapped)) {
+    return nullptr;
+  }
 
   if (unwrapped->is<MicroTaskEntry>()) {
     return unwrapped->as<MicroTaskEntry>().promise();
