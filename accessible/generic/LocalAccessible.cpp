@@ -2596,12 +2596,12 @@ ENameValueFlag LocalAccessible::ARIAName(nsString& aName) const {
     return eNameOK;
   }
   // aria-labelledby now takes precedence over aria-label
-  bool usedHiddenContent = nsTextEquivUtils::GetTextEquivFromIDRefs(
+  bool notSimpleRelation = nsTextEquivUtils::GetTextEquivFromIDRefs(
       this, nsGkAtoms::aria_labelledby, aName);
   aName.CompressWhitespace();
 
   if (!aName.IsEmpty()) {
-    return usedHiddenContent ? eNameOK : eNameFromRelations;
+    return notSimpleRelation ? eNameOK : eNameFromRelations;
   }
 
   if (mContent->IsElement() &&
@@ -2663,15 +2663,15 @@ ENameValueFlag LocalAccessible::NativeName(nsString& aName) const {
   if (mContent->IsHTMLElement()) {
     LocalAccessible* label = nullptr;
     HTMLLabelIterator iter(Document(), this);
-    bool usedHiddenContent = false;
+    bool notSimpleRelation = false;
     while ((label = iter.Next())) {
-      usedHiddenContent |= nsTextEquivUtils::AppendTextEquivFromContent(
+      notSimpleRelation |= nsTextEquivUtils::AppendTextEquivFromContent(
           this, label->GetContent(), &aName);
       aName.CompressWhitespace();
     }
 
     if (!aName.IsEmpty()) {
-      return usedHiddenContent ? eNameOK : eNameFromRelations;
+      return notSimpleRelation ? eNameOK : eNameFromRelations;
     }
 
     NameFromAssociatedXULLabel(mDoc, mContent, aName);
@@ -3389,12 +3389,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   // always their text. Text gets handled below.
   if (aCacheDomain & CacheDomain::NameAndDescription && !IsText()) {
     nsString name;
-    int32_t nameFlag = DirectName(name);
-    if (nameFlag != eNameOK) {
-      fields->SetAttribute(CacheKey::NameValueFlag, nameFlag);
-    } else if (IsUpdatePush(CacheDomain::NameAndDescription)) {
-      fields->SetAttribute(CacheKey::NameValueFlag, DeleteEntry());
-    }
+    ENameValueFlag nameFlag = DirectName(name);
 
     if (IsTextField()) {
       MOZ_ASSERT(mContent);
@@ -3408,7 +3403,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       }
     }
 
-    if (!name.IsEmpty()) {
+    if (nameFlag != eNameFromRelations && !name.IsEmpty()) {
       fields->SetAttribute(CacheKey::Name, std::move(name));
     } else if (IsUpdatePush(CacheDomain::NameAndDescription)) {
       fields->SetAttribute(CacheKey::Name, DeleteEntry());

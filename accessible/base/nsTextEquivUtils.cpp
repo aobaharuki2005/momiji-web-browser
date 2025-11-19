@@ -96,6 +96,44 @@ nsresult nsTextEquivUtils::GetNameFromSubtree(const Accessible* aAccessible,
   return NS_OK;
 }
 
+void nsTextEquivUtils::GetTextEquivFromAccIterable(
+    const Accessible* aAccessible, AccIterable* aIter, nsAString& aTextEquiv) {
+  if (GetReferencedAccs().Contains(aAccessible)) {
+    // We got here when trying to resolve a dependant label or description,
+    // early out.
+    return;
+  }
+  // Remember the initiating accessible so we know when we've returned to it.
+  if (GetReferencedAccs().IsEmpty()) {
+    sInitiatorAcc = aAccessible;
+  }
+  // This method doesn't allow self-referencing accessibles, so add the
+  // initiator to the referenced accs hash.
+  GetReferencedAccs().Insert(aAccessible);
+
+  aTextEquiv.Truncate();
+
+  while (Accessible* acc = aIter->Next()) {
+    if (!aTextEquiv.IsEmpty()) aTextEquiv += ' ';
+
+    if (GetReferencedAccs().Contains(acc)) {
+      continue;
+    }
+    GetReferencedAccs().Insert(acc);
+
+    AppendFromAccessible(acc, &aTextEquiv);
+  }
+
+  if (aAccessible == sInitiatorAcc) {
+    // This is the top-level initiator, clear the hash.
+    GetReferencedAccs().Clear();
+    sInitiatorAcc = nullptr;
+  } else {
+    // This is not the top-level initiator, just remove the calling accessible.
+    GetReferencedAccs().Remove(aAccessible);
+  }
+}
+
 bool nsTextEquivUtils::GetTextEquivFromIDRefs(
     const LocalAccessible* aAccessible, nsAtom* aIDRefsAttr,
     nsAString& aTextEquiv) {
