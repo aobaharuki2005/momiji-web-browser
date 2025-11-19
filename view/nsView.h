@@ -229,8 +229,7 @@ class nsView final : public nsIWidgetListener {
                           const mozilla::TimeStamp& aCompositeStart,
                           const mozilla::TimeStamp& aCompositeEnd) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
-                            bool aUseAttachedEvents) override;
+  nsEventStatus HandleEvent(mozilla::WidgetGUIEvent*) override;
   void SafeAreaInsetsChanged(const mozilla::LayoutDeviceIntMargin&) override;
 
   virtual ~nsView();

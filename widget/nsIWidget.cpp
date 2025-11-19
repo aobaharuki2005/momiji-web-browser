@@ -310,7 +310,6 @@ nsIWidget::nsIWidget(BorderStyle aBorderStyle)
       mPopupType(PopupType::Any),
       mHasRemoteContent(false),
       mUpdateCursor(true),
-      mUseAttachedEvents(false),
       mIMEHasFocus(false),
       mIMEHasQuit(false),
       mIsFullyOccluded(false),
@@ -570,16 +569,6 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChild(
   return widget.forget();
 }
 
-// Attach a view to our widget which we'll send events to.
-void nsIWidget::AttachViewToTopLevel(bool aUseAttachedEvents) {
-  NS_ASSERTION(mWindowType == WindowType::TopLevel ||
-                   mWindowType == WindowType::Dialog ||
-                   mWindowType == WindowType::Invisible,
-               "Can't attach to window of that type");
-
-  mUseAttachedEvents = aUseAttachedEvents;
-}
-
 //-------------------------------------------------------------------------
 //
 // Close this nsIWidget
@@ -653,10 +642,10 @@ LayoutDeviceIntSize nsIWidget::NormalSizeModeClientToWindowSizeDifference() {
 
 nsEventStatus nsIWidget::DispatchEvent(WidgetGUIEvent* aEvent) {
   if (mAttachedWidgetListener) {
-    return mAttachedWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+    return mAttachedWidgetListener->HandleEvent(aEvent);
   }
   if (mWidgetListener) {
-    return mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+    return mWidgetListener->HandleEvent(aEvent);
   }
   return nsEventStatus_eIgnore;
 }

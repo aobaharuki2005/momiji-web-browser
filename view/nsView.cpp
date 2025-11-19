@@ -173,10 +173,6 @@ void nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
     }
   }
 
-  // Note, the previous device context will be released. Detaching
-  // will not restore the old one.
-  aWidget->AttachViewToTopLevel(!nsIWidget::UsePuppetWidgets());
-
   mWindow = aWidget;
 
   mWindow->SetAttachedWidgetListener(this);
@@ -367,24 +363,12 @@ void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                                        aCompositeEnd);
 }
 
-nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent,
-                                  bool aUseAttachedEvents) {
+nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent) {
   MOZ_ASSERT(aEvent->mWidget, "null widget ptr");
 
   nsEventStatus result = nsEventStatus_eIgnore;
-  auto* listener = [&]() -> nsIWidgetListener* {
-    if (!aUseAttachedEvents) {
-      if (auto* l = aEvent->mWidget->GetWidgetListener()) {
-        return l;
-      }
-    }
-    return aEvent->mWidget->GetAttachedWidgetListener();
-  }();
-  if (NS_WARN_IF(!listener)) {
-    return result;
-  }
   nsViewManager::MaybeUpdateLastUserEventTime(aEvent);
-  if (RefPtr<PresShell> ps = listener->GetPresShell()) {
+  if (RefPtr<PresShell> ps = GetPresShell()) {
     if (nsIFrame* root = ps->GetRootFrame()) {
       ps->HandleEvent(root, aEvent, false, &result);
     }

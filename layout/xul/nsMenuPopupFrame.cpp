@@ -2565,8 +2565,7 @@ bool nsMenuPopupFrame::RequestWindowClose(nsIWidget* aWidget) {
   return false;
 }
 
-nsEventStatus nsMenuPopupFrame::HandleEvent(mozilla::WidgetGUIEvent* aEvent,
-                                            bool aUseAttachedEvents) {
+nsEventStatus nsMenuPopupFrame::HandleEvent(mozilla::WidgetGUIEvent* aEvent) {
   MOZ_ASSERT(aEvent->mWidget);
   MOZ_ASSERT(aEvent->mWidget == mWidget);
   nsEventStatus status = nsEventStatus_eIgnore;

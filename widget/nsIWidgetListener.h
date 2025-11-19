@@ -153,8 +153,7 @@ class nsIWidgetListener {
   virtual bool IsPaintSuppressed() const { return false; }
 
   /** Handle an event. */
-  virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
-                                    bool aUseAttachedEvents) {
+  virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent) {
     return nsEventStatus_eIgnore;
   }
 

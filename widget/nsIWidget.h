@@ -543,24 +543,7 @@ class nsIWidget : public nsSupportsWeakReference {
                                           const InitData&);
 
   /**
-   * Attach to a top level widget.
-   *
-   * In cases where a top level chrome widget is being used as a content
-   * container, attach a secondary listener and update the device
-   * context. The primary widget listener will continue to be called for
-   * notifications relating to the top-level window, whereas other
-   * notifications such as painting and events will instead be called via
-   * the attached listener. SetAttachedWidgetListener should be used to
-   * assign the attached listener.
-   *
-   * aUseAttachedEvents if true, events are sent to the attached listener
-   * instead of the normal listener.
-   */
-  void AttachViewToTopLevel(bool aUseAttachedEvents);
-
-  /**
-   * Accessor functions to get and set the attached listener. Used by
-   * nsView in connection with AttachViewToTopLevel above.
+   * Accessor functions to get and set the attached listener.
    */
   void SetAttachedWidgetListener(nsIWidgetListener* aListener) {
     mAttachedWidgetListener = aListener;
@@ -2445,7 +2428,6 @@ class nsIWidget : public nsSupportsWeakReference {
   mozilla::Maybe<FullscreenSavedState> mSavedBounds;
 
   bool mUpdateCursor;
-  bool mUseAttachedEvents;
   bool mIMEHasFocus;
   bool mIMEHasQuit;
   // if the window is fully occluded (rendering may be paused in response)
