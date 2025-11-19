@@ -94,3 +94,23 @@ add_task(async function test_notsecure_label() {
 
   await BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_blob_secure() {
+  const tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: "https://example.com",
+    waitForLoad: true,
+  });
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    let blob = new Blob(["<h2>hey!</h2>"], { type: "text/html" });
+    content.document.location = URL.createObjectURL(blob);
+  });
+
+  Assert.ok(
+    !BrowserTestUtils.isVisible(urlbarLabel(window)),
+    "Not showing Not Secure label"
+  );
+
+  await BrowserTestUtils.removeTab(tab);
+});

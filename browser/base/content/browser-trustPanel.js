@@ -71,7 +71,6 @@ class TrustPanel {
   #uri = null;
   #uriHasHost = null;
   #pageExtensionPolicy = null;
-  #isURILoadedFromFile = null;
   #isSecureContext = null;
   #isSecureInternalUI = null;
 
@@ -227,7 +226,6 @@ class TrustPanel {
 
     this.#secInfo = gBrowser.securityUI.secInfo;
     this.#pageExtensionPolicy = WebExtensionPolicy.getByURI(uri);
-    this.#isURILoadedFromFile = uri.schemeIs("file");
     this.#isSecureContext = this.#getIsSecureContext();
 
     this.#isSecureInternalUI = false;
@@ -266,11 +264,7 @@ class TrustPanel {
 
   async #updatePopup() {
     let secureConnection = this.#isSecurePage();
-
-    let connection = "not-secure";
-    if (secureConnection || this.#isInternalSecurePage(this.#uri)) {
-      connection = "secure";
-    }
+    let connection = secureConnection ? "secure" : "not-secure";
 
     this.#popup.setAttribute("connection", connection);
     this.#popup.setAttribute(
@@ -529,7 +523,8 @@ class TrustPanel {
   #isSecurePage() {
     return (
       this.#state & Ci.nsIWebProgressListener.STATE_IS_SECURE ||
-      this.#isInternalSecurePage(this.#uri)
+      this.#isInternalSecurePage(this.#uri) ||
+      this.#isPotentiallyTrustworthy
     );
   }
 
@@ -778,6 +773,10 @@ class TrustPanel {
   get #isAboutBlockedPage() {
     let { documentURI } = gBrowser.selectedBrowser;
     return documentURI?.scheme == "about" && documentURI.filePath == "blocked";
+  }
+
+  get #isURILoadedFromFile() {
+    return this.#uri.schemeIs("file");
   }
 
   #supplementalText() {
