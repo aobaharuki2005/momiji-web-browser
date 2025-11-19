@@ -663,29 +663,27 @@ export class UrlbarInput extends HTMLElement {
   /**
    * Sets the URI to display in the location bar.
    *
-   * @param {nsIURI} [uri]
+   * @param {object} [options]
+   * @param {?nsIURI} [options.uri]
    *        If this is unspecified, the current URI will be used.
-   * @param {boolean} [dueToTabSwitch]
-   *        True if this is being called due to switching tabs and false
-   *        otherwise.
-   * @param {boolean} [dueToSessionRestore]
-   *        True if this is being called due to session restore and false
-   *        otherwise.
-   * @param {boolean} [hideSearchTerms]
+   * @param {boolean} [options.dueToTabSwitch=false]
+   *        Whether this is being called due to switching tabs.
+   * @param {boolean} [options.dueToSessionRestore=false]
+   *        Whether this is being called due to session restore.
+   * @param {boolean} [options.hideSearchTerms=false]
    *        True if userTypedValue should not be overidden by search terms
    *        and false otherwise.
-   * @param {boolean} [isSameDocument]
-   *        True if the caller of setURI loaded a new document and false
-   *        otherwise (e.g. the location change was from an anchor scroll
-   *        or a pushState event).
+   * @param {boolean} [options.isSameDocument=false]
+   *        Whether the caller loaded a new document or not (e.g. location
+   *        change from an anchor scroll or a pushState event).
    */
-  setURI(
+  setURI({
     uri = null,
     dueToTabSwitch = false,
     dueToSessionRestore = false,
     hideSearchTerms = false,
-    isSameDocument = false
-  ) {
+    isSameDocument = false,
+  } = {}) {
     if (!this.#isAddressbar) {
       throw new Error(
         "Cannot set URI for UrlbarInput that is not an address bar"
@@ -1227,7 +1225,10 @@ export class UrlbarInput extends HTMLElement {
     // Nullify search mode before setURI so it won't try to restore it.
     this.searchMode = null;
     if (this.#isAddressbar) {
-      this.setURI(null, true, false, true);
+      this.setURI({
+        dueToTabSwitch: true,
+        hideSearchTerms: true,
+      });
     } else {
       this.value = "";
     }
@@ -5424,7 +5425,7 @@ export class UrlbarInput extends HTMLElement {
         // url until an onLocationChange happens.
         // See the handling in `setURI` for further details.
         this.userTypedValue = null;
-        this.setURI(null, true);
+        this.setURI({ dueToTabSwitch: true });
       }
     }
   }

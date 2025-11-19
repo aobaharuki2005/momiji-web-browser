@@ -109,7 +109,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
       );
       // if the user clears the url bar we again fall back to the location of the prompt if we trigger setURI by a tab switch
       gBrowser.selectedBrowser.userTypedValue = "";
-      gURLBar.setURI(null, true);
+      gURLBar.setURI({ dueToTabSwitch: true });
       Assert.equal(
         window.gURLBar.value,
         UrlbarTestUtils.trimURL(AUTH_URL),
@@ -168,7 +168,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
   await onDialogClosed;
   // Due to bug 1812014, the url bar will be clear if we have set its value to "" while the prompt was open
   // so we trigger a tab switch again to have the uri displayed to be able to check its value
-  gURLBar.setURI(null, true);
+  gURLBar.setURI({ dueToTabSwitch: true });
   Assert.equal(
     window.gURLBar.value,
     UrlbarTestUtils.trimURL(crossDomain ? CROSS_DOMAIN_URL : SAME_DOMAIN_URL),
