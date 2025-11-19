@@ -8,23 +8,12 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "ProfileService",
   "@mozilla.org/toolkit/profile-service;1",
   Ci.nsIToolkitProfileService
 );
-
-ChromeUtils.defineESModuleGetters(this, {
-  // Use of this must be gated on AppConstants.MOZ_SELECTABLE_PROFILES
-  SelectableProfileService:
-    // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
-    "resource:///modules/profiles/SelectableProfileService.sys.mjs",
-});
 
 async function flush() {
   try {
@@ -95,7 +84,6 @@ function rebuildProfileList() {
       isDefault: profile == defaultProfile,
       isCurrentProfile,
       isInUse,
-      storeID: profile.storeID,
     });
   }
 }
@@ -206,22 +194,6 @@ function display(profileData) {
     div.appendChild(runButton);
   }
 
-  if (
-    AppConstants.MOZ_SELECTABLE_PROFILES &&
-    SelectableProfileService.isEnabled &&
-    !profileData.isInUse &&
-    !profileData.isCurrentProfile &&
-    !profileData.storeID
-  ) {
-    let migrateButton = document.createElement("button");
-    document.l10n.setAttributes(migrateButton, "profiles-migrate-button");
-    migrateButton.onclick = function () {
-      migrateProfile(profileData.profile);
-    };
-
-    div.appendChild(migrateButton);
-  }
-
   let sep = document.createElement("hr");
   div.appendChild(sep);
 }
@@ -273,31 +245,6 @@ async function renameProfile(profile) {
   }
 }
 
-function maybeReassignDefaultProfile(profile) {
-  if (
-    ProfileService.defaultProfile &&
-    ProfileService.defaultProfile != profile
-  ) {
-    return;
-  }
-
-  for (let p of ProfileService.profiles) {
-    if (profile == p) {
-      continue;
-    }
-
-    try {
-      ProfileService.defaultProfile = p;
-    } catch (e) {
-      // This can happen on dev-edition if a non-default profile is in use.
-      // In such a case the next time that dev-edition is started it will
-      // find no default profile and just create a new one.
-    }
-
-    break;
-  }
-}
-
 async function removeProfile(profile) {
   let deleteFiles = false;
 
@@ -334,6 +281,32 @@ async function removeProfile(profile) {
     }
   }
 
+  // If we are deleting the default profile we must choose a different one.
+  let isDefault = false;
+  try {
+    isDefault = ProfileService.defaultProfile == profile;
+  } catch (e) {}
+
+  if (isDefault) {
+    for (let p of ProfileService.profiles) {
+      if (profile == p) {
+        continue;
+      }
+
+      if (isDefault) {
+        try {
+          ProfileService.defaultProfile = p;
+        } catch (e) {
+          // This can happen on dev-edition if a non-default profile is in use.
+          // In such a case the next time that dev-edition is started it will
+          // find no default profile and just create a new one.
+        }
+      }
+
+      break;
+    }
+  }
+
   try {
     profile.removeInBackground(deleteFiles);
   } catch (e) {
@@ -346,55 +319,7 @@ async function removeProfile(profile) {
     return;
   }
 
-  // If we are deleting the default profile we must choose a different one.
-  maybeReassignDefaultProfile(profile);
-
   flush();
-}
-
-async function migrateProfile(profile) {
-  let out = {};
-
-  let tabDialogBox =
-    window.browsingContext.topChromeWindow.gBrowser.getTabDialogBox(
-      window.browsingContext.embedderElement
-    );
-
-  let { closedPromise } = tabDialogBox.open(
-    "chrome://mozapps/content/profile/profileMigrate.xhtml",
-    {
-      features: "resizable=no",
-      modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
-    },
-    profile.name,
-    out
-  );
-
-  await closedPromise;
-
-  if (out.button != "accept") {
-    return;
-  }
-
-  try {
-    profile.remove(false);
-
-    // If we are deleting the default profile we must choose a different one.
-    maybeReassignDefaultProfile(profile);
-
-    await SelectableProfileService.importProfile(profile.name, profile.rootDir);
-
-    flush();
-  } catch (e) {
-    console.error("Profile migration failed:", e);
-
-    let [errorTitle, errorMsg] = await document.l10n.formatValues([
-      { id: "profiles-migrate-failed-title" },
-      { id: "profiles-migrate-failed-message" },
-    ]);
-
-    Services.prompt.alert(window, errorTitle, errorMsg);
-  }
 }
 
 async function defaultProfile(profile) {

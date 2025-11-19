@@ -18,7 +18,6 @@ class MockProfile {
   // eslint-disable-next-line no-unused-private-class-members
   #service = null;
   #storeID = null;
-  #locked = false;
 
   constructor(service) {
     this.#service = service;
@@ -27,27 +26,6 @@ class MockProfile {
     this.localDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
     this.#storeID = null;
     this.showProfileSelector = false;
-  }
-
-  lock() {
-    if (this.#locked) {
-      throw Components.Exception("Profile already locked", Cr.NS_ERROR_FAILURE);
-    }
-    this.#locked = true;
-
-    return {
-      unlock: () => {
-        this.#locked = false;
-      },
-    };
-  }
-
-  remove() {
-    if (this.#service.defaultProfile == this) {
-      this.#service.defaultProfile = null;
-    }
-
-    this.#service.profiles = this.#service.profiles.filter(p => p != this);
   }
 
   get storeID() {
@@ -65,8 +43,6 @@ class MockProfile {
 class MockProfileService {
   constructor() {
     this.currentProfile = new MockProfile(this);
-    this.defaultProfile = this.currentProfile;
-    this.profiles = [this.currentProfile];
   }
 
   async asyncFlush() {}
