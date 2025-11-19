@@ -619,7 +619,7 @@ private fun BookmarksListTopBar(
             title = {
                 Text(
                     color = textColor,
-                    style = FirefoxTheme.typography.headline6,
+                    style = FirefoxTheme.typography.headline5,
                     text = if (selectedItems.isNotEmpty()) {
                         val total = selectedItems.size + (recursiveCount ?: 0)
                         stringResource(R.string.bookmarks_multi_select_title, total)
@@ -1010,7 +1010,7 @@ private fun SelectFolderTopBar(store: BookmarksStore) {
         title = {
             Text(
                 text = stringResource(R.string.bookmark_select_folder_fragment_label),
-                style = FirefoxTheme.typography.headline6,
+                style = FirefoxTheme.typography.headline5,
             )
         },
         navigationIcon = {
@@ -1144,18 +1144,21 @@ private fun EmptyList(
         Column(
             modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Image(
                 painter = painterResource(state.drawableId()),
                 contentDescription = null,
             )
 
+            Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static200))
+
             Text(
                 text = stringResource(R.string.bookmark_empty_list_title),
                 color = MaterialTheme.colorScheme.onSurface,
-                style = FirefoxTheme.typography.headline7,
+                style = FirefoxTheme.typography.headline6,
             )
+
+            Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static100))
 
             Text(
                 text = stringResource(state.descriptionId()),
@@ -1165,6 +1168,8 @@ private fun EmptyList(
             )
 
             if (state is EmptyListState.NotAuthenticated) {
+                Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static300))
+
                 FilledButton(
                     text = stringResource(R.string.bookmark_empty_list_guest_cta),
                     onClick = { dispatcher(SignIntoSyncClicked) },
@@ -1439,7 +1444,7 @@ private fun EditFolderTopBar(
         title = {
             Text(
                 text = stringResource(R.string.edit_bookmark_folder_fragment_title),
-                style = FirefoxTheme.typography.headline6,
+                style = FirefoxTheme.typography.headline5,
             )
         },
         navigationIcon = {
@@ -1527,7 +1532,7 @@ private fun AddFolderTopBar(onBackClick: () -> Unit) {
         title = {
             Text(
                 text = stringResource(R.string.bookmark_add_folder),
-                style = FirefoxTheme.typography.headline6,
+                style = FirefoxTheme.typography.headline5,
             )
         },
         navigationIcon = {
@@ -1711,7 +1716,7 @@ private fun EditBookmarkTopBar(
         title = {
             Text(
                 text = stringResource(R.string.edit_bookmark_fragment_title),
-                style = FirefoxTheme.typography.headline6,
+                style = FirefoxTheme.typography.headline5,
             )
         },
         navigationIcon = {
