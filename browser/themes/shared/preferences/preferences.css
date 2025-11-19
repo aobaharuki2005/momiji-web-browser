@@ -201,7 +201,7 @@ radio {
 
 .subcategory:not([hidden]) ~ .subcategory {
   padding-top: var(--space-xxlarge);
-  border-top: 1px solid var(--in-content-border-color);
+  border-top: 1px solid var(--border-color);
 }
 
 /* Category List */
@@ -624,7 +624,7 @@ html|dialog,
 
 .dialogTitleBar {
   padding: 0.4em 0.2em;
-  border-bottom: 1px solid var(--in-content-border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .dialogTitle {
@@ -791,7 +791,7 @@ html|dialog,
 
 .sync-group {
   margin-block: var(--space-large);
-  border: 1px solid var(--in-content-border-color);
+  border: 1px solid var(--border-color);
 }
 
 .sync-configured {
@@ -919,7 +919,8 @@ dialog > .sync-engines-list + hbox {
     content: "";
     width: 1px;
     height: 100%;
-    background-color: var(--in-content-border-color);
+    /* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
+    background-color: var(--border-color);
     top: 0;
     inset-inline-end: 0;
     position: absolute;

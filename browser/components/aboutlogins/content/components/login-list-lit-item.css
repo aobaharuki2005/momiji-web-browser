@@ -22,7 +22,7 @@
 }
 
 .list-item.keyboard-selected {
-  border-inline-start-color: var(--in-content-border-color);
+  border-inline-start-color: var(--border-color);
   background-color: var(--button-background-color-hover);
 }
 
