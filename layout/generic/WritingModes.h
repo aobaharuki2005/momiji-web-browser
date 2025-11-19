@@ -2329,9 +2329,20 @@ inline AnchorResolvedMargin nsStyleMargin::GetMargin(
 }
 
 inline mozilla::StyleAlignFlags nsStylePosition::UsedSelfAlignment(
-    mozilla::LogicalAxis aAxis, const mozilla::ComputedStyle* aParent) const {
-  return aAxis == mozilla::LogicalAxis::Block ? UsedAlignSelf(aParent)._0
-                                              : UsedJustifySelf(aParent)._0;
+    LogicalAxis aAlignContainerAxis,
+    const ComputedStyle* aAlignContainerStyle) const {
+  return aAlignContainerAxis == LogicalAxis::Block
+             ? UsedAlignSelf(aAlignContainerStyle)._0
+             : UsedJustifySelf(aAlignContainerStyle)._0;
+}
+
+inline mozilla::StyleAlignFlags nsStylePosition::UsedSelfAlignment(
+    WritingMode aAlignSubjectWM, LogicalAxis aAlignSubjectAxis,
+    WritingMode aAlignContainerWM,
+    const ComputedStyle* aAlignContainerStyle) const {
+  const auto alignContainerAxis =
+      aAlignSubjectWM.ConvertAxisTo(aAlignSubjectAxis, aAlignContainerWM);
+  return UsedSelfAlignment(alignContainerAxis, aAlignContainerStyle);
 }
 
 inline mozilla::StyleContentDistribution nsStylePosition::UsedContentAlignment(

@@ -950,12 +950,32 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   StyleSelfAlignment UsedJustifySelf(const ComputedStyle*) const;
 
   /**
-   * Return the used value for 'justify/align-self' in aAxis given our parent
-   * ComputedStyle aParent (or null for the root).
+   * Return the used value for 'justify/align-self' for the axis in the
+   * alignment container's writing mode.
+   *
+   * @param aAlignContainerStyle the computed style of the alignment container,
+   *        or null for the root.
+   *
    * (defined in WritingModes.h since we need the full WritingMode type)
    */
   inline mozilla::StyleAlignFlags UsedSelfAlignment(
-      LogicalAxis aAxis, const mozilla::ComputedStyle* aParent) const;
+      LogicalAxis aAlignContainerAxis,
+      const mozilla::ComputedStyle* aAlignContainerStyle) const;
+
+  /**
+   * Return the used value for 'justify/align-self' for the axis in the
+   * alignment subject's writing mode.
+   *
+   * @param aAlignSubjectAxis the axis in aAlignSubjectWM.
+   * @param aAlignContainerStyle the computed style of the alignment container,
+   *        or null for the root.
+   *
+   * (defined in WritingModes.h since we need the full WritingMode type)
+   */
+  inline mozilla::StyleAlignFlags UsedSelfAlignment(
+      WritingMode aAlignSubjectWM, LogicalAxis aAlignSubjectAxis,
+      WritingMode aAlignContainerWM,
+      const ComputedStyle* aAlignContainerStyle) const;
 
   /**
    * Return the used value for 'justify/align-content' in aAxis.

@@ -2038,7 +2038,6 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   FillCB inlineFillCB = FillCB::No;  // fill CB behavior in the inline axis
   FillCB blockFillCB = FillCB::No;   // fill CB behavior in the block axis
 
-  const bool isOrthogonal = aWM.IsOrthogonalTo(parentFrame->GetWritingMode());
   const LogicalSize fallbackIntrinsicSize(aWM, kFallbackIntrinsicSize);
   const Maybe<nscoord>& maybeIntrinsicISize = aIntrinsicSize.ISize(aWM);
   const bool hasIntrinsicISize = maybeIntrinsicISize.isSome();
@@ -2063,9 +2062,9 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     if (cbSize != NS_UNCONSTRAINEDSIZE) {
       if (!StyleMargin()->HasInlineAxisAuto(
               aWM, AnchorPosResolutionParams::From(this))) {
-        auto inlineAxisAlignment =
-            isOrthogonal ? stylePos->UsedAlignSelf(GetParent()->Style())._0
-                         : stylePos->UsedJustifySelf(GetParent()->Style())._0;
+        auto inlineAxisAlignment = stylePos->UsedSelfAlignment(
+            aWM, LogicalAxis::Inline, parentFrame->GetWritingMode(),
+            parentFrame->Style());
         if (inlineAxisAlignment == StyleAlignFlags::STRETCH) {
           inlineFillCB = FillCB::Stretch;
         }
@@ -2125,9 +2124,9 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
     if (cbSize != NS_UNCONSTRAINEDSIZE) {
       if (!StyleMargin()->HasBlockAxisAuto(
               aWM, AnchorPosResolutionParams::From(this))) {
-        auto blockAxisAlignment =
-            !isOrthogonal ? stylePos->UsedAlignSelf(GetParent()->Style())._0
-                          : stylePos->UsedJustifySelf(GetParent()->Style())._0;
+        auto blockAxisAlignment = stylePos->UsedSelfAlignment(
+            aWM, LogicalAxis::Block, parentFrame->GetWritingMode(),
+            parentFrame->Style());
         if (blockAxisAlignment == StyleAlignFlags::STRETCH) {
           blockFillCB = FillCB::Stretch;
         }
@@ -2491,10 +2490,7 @@ StyleAlignFlags nsContainerFrame::CSSAlignmentForAbsPosChild(
   // For computing the static position of an absolutely positioned box,
   // `auto` takes from parent's `align-items`.
   StyleAlignFlags alignment =
-      (aLogicalAxis == LogicalAxis::Inline)
-          ? aChildRI.mStylePosition->UsedJustifySelf(Style())._0
-          : aChildRI.mStylePosition->UsedAlignSelf(Style())._0;
-
+      aChildRI.mStylePosition->UsedSelfAlignment(aLogicalAxis, Style());
   return MapCSSAlignment(alignment, aChildRI, aLogicalAxis, GetWritingMode());
 }
 
@@ -2508,9 +2504,7 @@ nsContainerFrame::CSSAlignmentForAbsPosChildWithinContainingBlock(
   // When determining the position of absolutely-positioned boxes,
   // `auto` behaves as `normal`.
   StyleAlignFlags alignment =
-      (aLogicalAxis == LogicalAxis::Inline)
-          ? aChildRI.mStylePosition->UsedJustifySelf(nullptr)._0
-          : aChildRI.mStylePosition->UsedAlignSelf(nullptr)._0;
+      aChildRI.mStylePosition->UsedSelfAlignment(aLogicalAxis, nullptr);
 
   // Check if position-area is set - if so, it determines the default alignment
   // https://drafts.csswg.org/css-anchor-position/#position-area-alignment
