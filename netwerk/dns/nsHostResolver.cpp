@@ -1381,6 +1381,9 @@ bool nsHostResolver::MaybeRetryTRRLookup(
   MOZ_ASSERT(!aAddrRec->mResolving);
   if (!StaticPrefs::network_trr_retry_on_recoverable_errors()) {
     LOG(("nsHostResolver::MaybeRetryTRRLookup retrying with native"));
+
+    // Trigger a confirmation retry, in order to cycle connection if needed
+    TRRService::Get()->RetryTRRConfirm();
     return NS_SUCCEEDED(NativeLookup(aAddrRec, aLock));
   }
 

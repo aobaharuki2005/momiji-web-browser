@@ -14756,7 +14756,7 @@
 # If true, retry TRR for recoverable errors once.
 - name: network.trr.retry_on_recoverable_errors
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # If true, don't fallback to native DNS upon network errors.
