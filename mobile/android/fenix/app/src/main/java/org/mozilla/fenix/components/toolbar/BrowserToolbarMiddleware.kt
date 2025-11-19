@@ -832,32 +832,41 @@ class BrowserToolbarMiddleware(
         )
     }
 
-    private fun buildTabCounterMenu(source: Source) =
+    private fun buildTabCounterMenu(source: Source, toolbarPosition: ToolbarPosition) =
         CombinedEventAndMenu(TabCounterLongClicked(source)) {
-        listOf(
-            BrowserToolbarMenuButton(
-                icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
-                text = StringResText(tabcounterR.string.mozac_browser_menu_new_tab),
-                contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_tab),
-                onClick = AddNewTab(source),
-            ),
+            val list = listOf(
+                BrowserToolbarMenuButton(
+                    icon = DrawableResIcon(iconsR.drawable.mozac_ic_plus_24),
+                    text = StringResText(tabcounterR.string.mozac_browser_menu_new_tab),
+                    contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_tab),
+                    onClick = AddNewTab(source),
+                ),
 
-            BrowserToolbarMenuButton(
-                icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
-                text = StringResText(tabcounterR.string.mozac_browser_menu_new_private_tab),
-                contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_private_tab),
-                onClick = AddNewPrivateTab(source),
-            ),
+                BrowserToolbarMenuButton(
+                    icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
+                    text = StringResText(tabcounterR.string.mozac_browser_menu_new_private_tab),
+                    contentDescription =
+                        StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_private_tab),
+                    onClick = AddNewPrivateTab(source),
+                ),
 
-            BrowserToolbarMenuDivider,
+                BrowserToolbarMenuDivider,
 
-            BrowserToolbarMenuButton(
-                icon = DrawableResIcon(iconsR.drawable.mozac_ic_cross_24),
-                text = StringResText(tabcounterR.string.mozac_close_tab),
-                contentDescription = StringResContentDescription(tabcounterR.string.mozac_close_tab),
-                onClick = CloseCurrentTab,
-            ),
-        )
+                BrowserToolbarMenuButton(
+                    icon = DrawableResIcon(iconsR.drawable.mozac_ic_cross_24),
+                    text = StringResText(tabcounterR.string.mozac_close_tab),
+                    contentDescription = StringResContentDescription(tabcounterR.string.mozac_close_tab),
+                    onClick = CloseCurrentTab,
+                ),
+            )
+            when (toolbarPosition) {
+                ToolbarPosition.TOP -> {
+                    list
+                }
+                ToolbarPosition.BOTTOM -> {
+                    list.reversed()
+                }
+            }
     }
 
     private fun buildProgressBar(progress: Int = 0) = ProgressBarConfig(progress)
@@ -1227,7 +1236,7 @@ class BrowserToolbarMiddleware(
                 contentDescription = tabCounterDescription,
                 showPrivacyMask = isInPrivateMode,
                 onClick = TabCounterClicked(source),
-                onLongClick = buildTabCounterMenu(source),
+                onLongClick = buildTabCounterMenu(source, settings.toolbarPosition),
             )
         }
 

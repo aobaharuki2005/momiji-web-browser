@@ -238,6 +238,7 @@ class BrowserToolbarMiddlewareTest {
             screenWidthDp = 400
         }
         every { mockContext.resources.configuration } returns configuration
+        every { settings.toolbarPosition } returns ToolbarPosition.TOP
     }
 
     @Test
@@ -251,7 +252,6 @@ class BrowserToolbarMiddlewareTest {
     @Test
     fun `WHEN initializing the toolbar THEN add browser end actions`() = runTest {
         val toolbarStore = buildStore()
-
         val toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
         assertEquals(3, toolbarBrowserActions.size)
         val newTabButton = toolbarBrowserActions[0]
@@ -259,6 +259,20 @@ class BrowserToolbarMiddlewareTest {
         val menuButton = toolbarBrowserActions[2]
         assertEquals(expectedNewTabButton(), newTabButton)
         assertEqualsTabCounterButton(expectedTabCounterButton(), tabCounterButton)
+        assertEquals(expectedMenuButton(), menuButton)
+    }
+
+    @Test
+    fun `WHEN initializing the toolbar on bottom THEN add browser end actions`() = runTest {
+        every { settings.toolbarPosition } returns ToolbarPosition.BOTTOM
+        val toolbarStore = buildStore()
+        val toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
+        assertEquals(3, toolbarBrowserActions.size)
+        val newTabButton = toolbarBrowserActions[0]
+        val tabCounterButton = toolbarBrowserActions[1] as TabCounterAction
+        val menuButton = toolbarBrowserActions[2]
+        assertEquals(expectedNewTabButton(), newTabButton)
+        assertEqualsTabCounterButton(expectedBottomTabCounterButton(), tabCounterButton)
         assertEquals(expectedMenuButton(), menuButton)
     }
 
@@ -3358,6 +3372,24 @@ class BrowserToolbarMiddlewareTest {
             }
         },
     )
+
+    fun expectedBottomTabCounterButton(
+        tabCount: Int = 0,
+        isPrivate: Boolean = false,
+        shouldUseBottomToolbar: Boolean = false,
+        source: Source = Source.AddressBar,
+    ) = expectedTabCounterButton(
+        tabCount = tabCount,
+        isPrivate = isPrivate,
+        shouldUseBottomToolbar = shouldUseBottomToolbar,
+        source = source,
+    ).run {
+        copy(
+            onLongClick = (onLongClick as CombinedEventAndMenu).copy(
+                menu = BrowserToolbarMenu { (onLongClick as CombinedEventAndMenu).menu.items().reversed() },
+            ),
+        )
+    }
 
     private fun expectedNewTabButton(source: Source = Source.AddressBar) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_plus_24,
