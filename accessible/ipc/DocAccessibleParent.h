@@ -233,7 +233,12 @@ class DocAccessibleParent : public RemoteAccessible,
   // Accessible
   virtual Accessible* Parent() const override {
     if (IsTopLevel()) {
-      return OuterDocOfRemoteBrowser();
+      if (NS_IsMainThread()) {
+        return OuterDocOfRemoteBrowser();
+      } else {
+        MOZ_ASSERT_UNREACHABLE("Getting local parent off main thread!");
+        return nullptr;
+      }
     }
     return RemoteParent();
   }
