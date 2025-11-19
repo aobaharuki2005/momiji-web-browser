@@ -860,7 +860,7 @@ add_task(async function tabGroupPanelUpdatesTests() {
   newTab = await addTabTo(gBrowser, "about:robots");
 
   let tabGroupedEvent = BrowserTestUtils.waitForEvent(group, "TabGrouped");
-  gBrowser.moveTabToGroup(newTab, group);
+  gBrowser.moveTabToExistingGroup(newTab, group);
   await tabGroupedEvent;
 
   Assert.equal(panelContent.children.length, 2, "Panel has two tabs");

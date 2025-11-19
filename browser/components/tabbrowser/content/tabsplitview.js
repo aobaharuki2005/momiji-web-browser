@@ -22,6 +22,15 @@
     }
 
     /**
+     * @returns {MozTabbrowserGroup}
+     */
+    get group() {
+      return gBrowser.isTabGroup(this.parentElement)
+        ? this.parentElement
+        : null;
+    }
+
+    /**
      * @param {boolean} val
      */
     set hasActiveTab(val) {

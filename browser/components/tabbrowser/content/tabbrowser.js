@@ -3316,7 +3316,7 @@
      * Adds a new tab group.
      *
      * @param {object[]} tabs
-     *   The set of tabs to include in the group.
+     *   The set of tabs or split view to include in the group.
      * @param {object} [options]
      * @param {string} [options.id]
      *   Optionally assign an ID to the tab group. Useful when rebuilding an
@@ -3346,7 +3346,7 @@
      *   Defaults to "unknown".
      */
     addTabGroup(
-      tabs,
+      tabsAndSplitViews,
       {
         id = null,
         color = null,
@@ -3357,8 +3357,17 @@
         telemetryUserCreateSource = "unknown",
       } = {}
     ) {
-      if (!tabs?.length) {
-        throw new Error("Cannot create tab group with zero tabs");
+      if (
+        !tabsAndSplitViews?.length ||
+        tabsAndSplitViews.some(
+          tabOrSplitView =>
+            !this.isTab(tabOrSplitView) &&
+            !this.isSplitViewWrapper(tabOrSplitView)
+        )
+      ) {
+        throw new Error(
+          "Cannot create tab group with zero tabs or split views"
+        );
       }
 
       if (!color) {
@@ -3383,7 +3392,7 @@
         group,
         insertBefore?.group ?? insertBefore
       );
-      group.addTabs(tabs);
+      group.addTabs(tabsAndSplitViews);
 
       // Bail out if the group is empty at this point. This can happen if all
       // provided tabs are pinned and therefore cannot be grouped.
@@ -3503,6 +3512,19 @@
 
       this.#handleTabMove(tab, () =>
         gBrowser.tabContainer.insertBefore(tab, tab.group.nextElementSibling)
+      );
+    }
+
+    ungroupSplitView(splitView) {
+      if (!this.isSplitViewWrapper(splitView)) {
+        return;
+      }
+
+      this.#handleTabMove(splitView, () =>
+        gBrowser.tabContainer.insertBefore(
+          splitView,
+          splitView.tabs[0].group.nextElementSibling
+        )
       );
     }
 
@@ -6616,7 +6638,7 @@
      * @param {MozTabbrowserTabGroup} aGroup
      * @param {TabMetricsContext} [metricsContext]
      */
-    moveTabToGroup(aTab, aGroup, metricsContext) {
+    moveTabToExistingGroup(aTab, aGroup, metricsContext) {
       if (!this.isTab(aTab)) {
         throw new Error("Can only move a tab into a tab group");
       }
@@ -6645,6 +6667,32 @@
         );
         this.removeFromMultiSelectedTabs(aTab);
         this.tabContainer._notifyBackgroundTab(aTab);
+      }
+    }
+
+    /**
+     *
+     * @param {MozSplitViewWrapper} aSplitView
+     * @param {MozTabbrowserTabGroup} aGroup
+     * @param {TabMetricsContext} [metricsContext]
+     */
+    moveSplitViewToExistingGroup(aSplitView, aGroup, metricsContext = null) {
+      if (!this.isSplitViewWrapper(aSplitView)) {
+        throw new Error("Can only move a split view into a tab group");
+      }
+      if (aSplitView.group && aSplitView.group.id === aGroup.id) {
+        return;
+      }
+
+      let splitViewTabs = aSplitView.tabs;
+      this.#handleTabMove(
+        aSplitView,
+        () => aGroup.appendChild(aSplitView),
+        metricsContext
+      );
+      for (const splitViewTab of splitViewTabs) {
+        this.removeFromMultiSelectedTabs(splitViewTab);
+        this.tabContainer._notifyBackgroundTab(splitViewTab);
       }
     }
 
@@ -6710,7 +6758,7 @@
     }
 
     /**
-     * @param {MozTabbrowserTab|MozTabbrowserTabGroup} element
+     * @param {MozTabbrowserTab|MozTabbrowserTabGroup|MozTabSplitViewWrapper} element
      * @param {function():void} moveActionCallback
      * @param {TabMetricsContext} [metricsContext]
      */
@@ -9414,6 +9462,7 @@ var TabContextMenu = {
       }
     });
   },
+  // eslint-disable-next-line complexity
   updateContextMenu(aPopupMenu) {
     let triggerTab =
       aPopupMenu.triggerNode &&
@@ -9427,15 +9476,24 @@ var TabContextMenu = {
       ? gBrowser.selectedTabs
       : [this.contextTab];
 
+    let splitViews = new Set();
     // bug1973996: This call is not guaranteed to complete
     // before the saved groups menu is populated
     for (let tab of this.contextTabs) {
       gBrowser.TabStateFlusher.flush(tab.linkedBrowser);
+
+      // Add unique split views for count info below
+      if (tab.splitview) {
+        splitViews.add(tab.splitview);
+      }
     }
 
     let disabled = gBrowser.tabs.length == 1;
     let tabCountInfo = JSON.stringify({
       tabCount: this.contextTabs.length,
+    });
+    let splitViewCountInfo = JSON.stringify({
+      splitViewCount: splitViews.size,
     });
 
     var menuItems = aPopupMenu.getElementsByAttribute(
@@ -9486,6 +9544,15 @@ var TabContextMenu = {
       "context_moveTabToGroup"
     );
     let contextUngroupTab = document.getElementById("context_ungroupTab");
+    let contextMoveSplitViewToNewGroup = document.getElementById(
+      "context_moveSplitViewToNewGroup"
+    );
+    let contextUngroupSplitView = document.getElementById(
+      "context_ungroupSplitView"
+    );
+    let isAllSplitViewTabs = this.contextTabs.every(
+      contextTab => contextTab.splitview
+    );
 
     if (gBrowser._tabGroupsEnabled) {
       let selectedGroupCount = new Set(
@@ -9520,13 +9587,43 @@ var TabContextMenu = {
       }
 
       if (!openGroupsToMoveTo.length && !savedGroupsToMoveTo.length) {
-        contextMoveTabToGroup.hidden = true;
-        contextMoveTabToNewGroup.hidden = false;
-        contextMoveTabToNewGroup.setAttribute("data-l10n-args", tabCountInfo);
+        if (isAllSplitViewTabs) {
+          contextMoveTabToGroup.hidden = true;
+          contextMoveTabToNewGroup.hidden = true;
+          contextMoveSplitViewToNewGroup.hidden = false;
+          contextMoveSplitViewToNewGroup.setAttribute(
+            "data-l10n-args",
+            splitViewCountInfo
+          );
+        } else {
+          contextMoveTabToGroup.hidden = true;
+          contextMoveSplitViewToNewGroup.hidden = true;
+          contextMoveTabToNewGroup.hidden = false;
+          contextMoveTabToNewGroup.setAttribute("data-l10n-args", tabCountInfo);
+        }
       } else {
-        contextMoveTabToNewGroup.hidden = true;
-        contextMoveTabToGroup.hidden = false;
-        contextMoveTabToGroup.setAttribute("data-l10n-args", tabCountInfo);
+        if (isAllSplitViewTabs) {
+          contextMoveTabToNewGroup.hidden = true;
+          contextMoveSplitViewToNewGroup.hidden = true;
+          contextMoveTabToGroup.hidden = false;
+          contextMoveTabToGroup.setAttribute(
+            "data-l10n-id",
+            "tab-context-move-split-view-to-group"
+          );
+          contextMoveTabToGroup.setAttribute(
+            "data-l10n-args",
+            splitViewCountInfo
+          );
+        } else {
+          contextMoveTabToNewGroup.hidden = true;
+          contextMoveSplitViewToNewGroup.hidden = true;
+          contextMoveTabToGroup.hidden = false;
+          contextMoveTabToGroup.setAttribute(
+            "data-l10n-id",
+            "tab-context-move-tab-to-group"
+          );
+          contextMoveTabToGroup.setAttribute("data-l10n-args", tabCountInfo);
+        }
 
         const openGroupsMenu = contextMoveTabToGroup.querySelector("menupopup");
         openGroupsMenu
@@ -9566,15 +9663,24 @@ var TabContextMenu = {
         }
       }
 
-      contextUngroupTab.hidden = !selectedGroupCount;
       let groupInfo = JSON.stringify({
         groupCount: selectedGroupCount,
       });
-      contextUngroupTab.setAttribute("data-l10n-args", groupInfo);
+      if (isAllSplitViewTabs) {
+        contextUngroupSplitView.hidden = !selectedGroupCount;
+        contextUngroupTab.hidden = true;
+        contextUngroupSplitView.setAttribute("data-l10n-args", groupInfo);
+      } else {
+        contextUngroupTab.hidden = !selectedGroupCount;
+        contextUngroupSplitView.hidden = true;
+        contextUngroupTab.setAttribute("data-l10n-args", groupInfo);
+      }
     } else {
       contextMoveTabToNewGroup.hidden = true;
       contextMoveTabToGroup.hidden = true;
       contextUngroupTab.hidden = true;
+      contextMoveSplitViewToNewGroup.hidden = true;
+      contextUngroupSplitView.hidden = true;
     }
 
     // Split View
@@ -10003,6 +10109,38 @@ var TabContextMenu = {
     gTabsPanel.hideAllTabsPanel();
   },
 
+  moveSplitViewToNewGroup() {
+    let insertBefore = this.contextTab;
+    if (insertBefore._tPos < gBrowser.pinnedTabCount) {
+      insertBefore = gBrowser.tabs[gBrowser.pinnedTabCount];
+    } else if (this.contextTab.group) {
+      insertBefore = this.contextTab.group;
+    } else if (this.contextTab.splitview) {
+      insertBefore = this.contextTab.splitview;
+    }
+    let tabsAndSplitViews = [];
+    for (const contextTab of this.contextTabs) {
+      if (contextTab.splitView) {
+        if (!tabsAndSplitViews.includes(contextTab.splitView)) {
+          tabsAndSplitViews.push(contextTab.splitView);
+        }
+      } else {
+        tabsAndSplitViews.push(contextTab);
+      }
+    }
+    gBrowser.addTabGroup(tabsAndSplitViews, {
+      insertBefore,
+      isUserTriggered: true,
+      telemetryUserCreateSource: "tab_menu",
+    });
+    gBrowser.selectedTab = this.contextTabs[0];
+
+    // When using the tab context menu to create a group from the all tabs
+    // panel, make sure we close that panel so that it doesn't obscure the tab
+    // group creation panel.
+    gTabsPanel.hideAllTabsPanel();
+  },
+
   /**
    * @param {MozTabbrowserTabGroup} group
    */
@@ -10030,6 +10168,16 @@ var TabContextMenu = {
   ungroupTabs() {
     for (let i = this.contextTabs.length - 1; i >= 0; i--) {
       gBrowser.ungroupTab(this.contextTabs[i]);
+    }
+  },
+
+  ungroupSplitViews() {
+    let splitViews = new Set();
+    for (const tab of this.contextTabs) {
+      if (!splitViews.has(tab.splitview)) {
+        splitViews.add(tab.splitview);
+        gBrowser.ungroupSplitView(tab.splitview);
+      }
     }
   },
 
