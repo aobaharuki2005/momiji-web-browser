@@ -4,20 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM: Networking")
+Library("FuzzingURLPattern")
 
-EXPORTS.mozilla.dom += [
-    "URLPattern.h",
+SOURCES += [
+    "FuzzURLPattern.cpp",
 ]
 
-if CONFIG["FUZZING"]:
-    if CONFIG["FUZZING_INTERFACES"]:
-        TEST_DIRS += ["fuzztest"]
+LOCAL_INCLUDES += [
+    "/dom/base",
+    "/dom/ipc",
+    "/dom/urlpattern",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
 
 # Add libFuzzer configuration directives
 include("/tools/fuzzing/libfuzzer-config.mozbuild")
 
-UNIFIED_SOURCES += ["URLPattern.cpp"]
-
-FINAL_LIBRARY = "xul"
+FINAL_LIBRARY = "xul-gtest"
