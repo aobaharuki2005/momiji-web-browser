@@ -326,7 +326,7 @@ add_task(async function () {
   await selectNode(viewTransitionOldNodeFront, inspector);
   checkRuleViewContent(view, [
     {
-      selector: `::view-transition-old(root), ::view-transition-new(root)`,
+      selector: `::view-transition-old(root), ~~::view-transition-new(root)~~`,
       declarations: [
         { name: "animation-duration", value: `1000s` },
         { name: "top", value: `1em` },
@@ -367,7 +367,7 @@ add_task(async function () {
       ],
     },
     {
-      selector: `::view-transition-old(root), ::view-transition-new(root)`,
+      selector: `~~::view-transition-old(root)~~, ::view-transition-new(root)`,
       declarations: [
         { name: "animation-duration", value: `1000s`, overridden: true },
         {

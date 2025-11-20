@@ -55,7 +55,7 @@ add_task(async function () {
   await checkRuleViewContent(view, [
     { selector: `element`, ancestorRulesData: null, declarations: [] },
     {
-      selector: `:scope, [data-test="scoped-inline-style"]`,
+      selector: `:scope, ~~[data-test="scoped-inline-style"]~~`,
       ancestorRulesData: ["@scope {"],
       declarations: [{ name: "border", value: "1px solid aqua" }],
     },
@@ -65,7 +65,7 @@ add_task(async function () {
   await checkRuleViewContent(view, [
     { selector: `element`, ancestorRulesData: null, declarations: [] },
     {
-      selector: `div, [data-test="scoped-inline-style"]`,
+      selector: `div, ~~[data-test="scoped-inline-style"]~~`,
       ancestorRulesData: ["@scope {"],
       declarations: [{ name: "background", value: "tomato" }],
     },
@@ -75,7 +75,7 @@ add_task(async function () {
   await checkRuleViewContent(view, [
     { selector: `element`, ancestorRulesData: null, declarations: [] },
     {
-      selector: `:scope, [data-test="nested-scoped-inline-style"]`,
+      selector: `:scope, ~~[data-test="nested-scoped-inline-style"]~~`,
       ancestorRulesData: ["@scope {", "  @scope (:scope section) {"],
       declarations: [
         { name: "background", value: "gold" },
@@ -89,17 +89,17 @@ add_task(async function () {
   await checkRuleViewContent(view, [
     { selector: `element`, ancestorRulesData: null, declarations: [] },
     {
-      selector: `div, [data-test="start-and-end-inherit"]`,
+      selector: `div, ~~[data-test="start-and-end-inherit"]~~`,
       ancestorRulesData: ["@scope (aside) to (.limit) {"],
       declarations: [{ name: "color", value: "salmon" }],
     },
     {
-      selector: `div, [data-test="start-and-end"]`,
+      selector: `div, ~~[data-test="start-and-end"]~~`,
       ancestorRulesData: ["@scope (aside) to (.limit) {"],
       declarations: [{ name: "outline", value: "2px solid gold" }],
     },
     {
-      selector: `div, [data-test="start-no-end"]`,
+      selector: `div, ~~[data-test="start-no-end"]~~`,
       ancestorRulesData: ["@scope (aside) {"],
       declarations: [{ name: "box-shadow", value: "60px -16px teal" }],
     },
@@ -120,7 +120,7 @@ add_task(async function () {
       header: "Inherited from div#b",
     },
     {
-      selector: `div, [data-test="start-and-end-inherit"]`,
+      selector: `div, ~~[data-test="start-and-end-inherit"]~~`,
       ancestorRulesData: ["@scope (aside) to (.limit) {"],
       inherited: true,
       declarations: [{ name: "color", value: "salmon", overridden: true }],
@@ -131,7 +131,7 @@ add_task(async function () {
   await checkRuleViewContent(view, [
     { selector: `element`, ancestorRulesData: null, declarations: [] },
     {
-      selector: `div, [data-test="start-no-end"]`,
+      selector: `div, ~~[data-test="start-no-end"]~~`,
       ancestorRulesData: ["@scope (aside) {"],
       declarations: [{ name: "box-shadow", value: "60px -16px teal" }],
     },
@@ -139,7 +139,7 @@ add_task(async function () {
       header: "Inherited from div#b",
     },
     {
-      selector: `div, [data-test="start-and-end-inherit"]`,
+      selector: `div, ~~[data-test="start-and-end-inherit"]~~`,
       ancestorRulesData: ["@scope (aside) to (.limit) {"],
       inherited: true,
       declarations: [{ name: "color", value: "salmon" }],
@@ -153,7 +153,7 @@ add_task(async function () {
       header: "Inherited from div#b",
     },
     {
-      selector: `div, [data-test="start-and-end-inherit"]`,
+      selector: `div, ~~[data-test="start-and-end-inherit"]~~`,
       ancestorRulesData: ["@scope (aside) to (.limit) {"],
       inherited: true,
       declarations: [{ name: "color", value: "salmon" }],

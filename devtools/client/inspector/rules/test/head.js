@@ -1369,7 +1369,8 @@ function getSmallIncrementKey() {
  *
  * @param {RuleView} view
  * @param {object[]} expectedElements
- * @param {string} expectedElements[].selector - The expected selector of the rule.
+ * @param {string} expectedElements[].selector - The expected selector of the rule. Wrap
+ *        unmatched selector with `~~` characters (e.g. "div, ~~unmatched~~")
  * @param {string[]|null} expectedElements[].ancestorRulesData - An array of the parent
  *        selectors of the rule, with their indentations and the opening brace.
  *        e.g. for the following rule `html { body { span {} } }`, for the `span` rule,
@@ -1425,10 +1426,25 @@ function checkRuleViewContent(view, expectedElements) {
       return;
     }
 
-    const selector = elementInView.querySelector(
-      ".ruleview-selectors-container"
-    ).innerText;
-    is(selector, expectedElement.selector, `Expected selector for ${selector}`);
+    const selector = [
+      ...elementInView.querySelectorAll(
+        // Get the selector parts (.ruleview-selector), as well as the `element` "fake" selector
+        ".ruleview-selectors-container .ruleview-selector, .ruleview-selectors-container.alternative-selector"
+      ),
+    ]
+      .map(selectorEl => {
+        let selectorPart = selectorEl.textContent;
+        if (selectorEl.classList.contains("unmatched")) {
+          selectorPart = `~~${selectorPart}~~`;
+        }
+        return selectorPart;
+      })
+      .join(", ");
+    is(
+      selector,
+      expectedElement.selector,
+      `Expected selector for element #${i}`
+    );
 
     const ancestorData = elementInView.querySelector(
       `.ruleview-rule-ancestor-data`

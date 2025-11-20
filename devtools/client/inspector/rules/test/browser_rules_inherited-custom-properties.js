@@ -63,12 +63,12 @@ add_task(async function () {
     },
     { header: "Inherited from main" },
     {
-      selector: `main, [test="unregistered"]`,
+      selector: `main, ~~[test="unregistered"]~~`,
       inherited: true,
       declarations: [{ name: "--myvar", value: "brown" }],
     },
     {
-      selector: `main, [test="inherit"]`,
+      selector: `main, ~~[test="inherit"]~~`,
       inherited: true,
       declarations: [{ name: "--inherit", value: "red" }],
     },
