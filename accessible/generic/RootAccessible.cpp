@@ -64,11 +64,11 @@ RootAccessible::~RootAccessible() {}
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible
 
-ENameValueFlag RootAccessible::DirectName(nsString& aName) const {
+ENameValueFlag RootAccessible::Name(nsString& aName) const {
   aName.Truncate();
 
   if (ARIARoleMap()) {
-    LocalAccessible::DirectName(aName);
+    LocalAccessible::Name(aName);
     if (!aName.IsEmpty()) return eNameOK;
   }
 

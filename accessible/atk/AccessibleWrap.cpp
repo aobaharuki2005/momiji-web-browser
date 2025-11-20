@@ -964,8 +964,6 @@ void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
       g_signal_emit_by_name(wrapper, "text-attributes-changed");
       break;
     case nsIAccessibleEvent::EVENT_NAME_CHANGE: {
-      // Don't want to passively activate the cache because a name changed.
-      CacheDomainActivationBlocker cacheBlocker;
       nsAutoString newName;
       aTarget->Name(newName);
       MaybeFireNameChange(wrapper, newName);

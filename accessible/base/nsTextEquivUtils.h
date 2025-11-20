@@ -16,8 +16,7 @@ class nsIContent;
 namespace mozilla {
 namespace a11y {
 class LocalAccessible;
-class AccIterable;
-}  // namespace a11y
+}
 }  // namespace mozilla
 
 /**
@@ -52,7 +51,6 @@ class nsTextEquivUtils {
  public:
   typedef mozilla::a11y::LocalAccessible LocalAccessible;
   typedef mozilla::a11y::Accessible Accessible;
-  typedef mozilla::a11y::AccIterable AccIterable;
 
   /**
    * Determines if the accessible has a given name rule.
@@ -61,7 +59,10 @@ class nsTextEquivUtils {
    * @param aRule       [in] a given name rule
    * @return true if the accessible has the rule
    */
-  static bool HasNameRule(const Accessible* aAccessible, ETextEquivRule aRule);
+  static inline bool HasNameRule(Accessible* aAccessible,
+                                 ETextEquivRule aRule) {
+    return (GetRoleRule(aAccessible->Role()) & aRule) == aRule;
+  }
 
   /**
    * Calculates the name from the given accessible's subtree, if allowed.
@@ -69,7 +70,7 @@ class nsTextEquivUtils {
    * @param aAccessible [in] the given accessible
    * @param aName       [out] accessible name
    */
-  static nsresult GetNameFromSubtree(const Accessible* aAccessible,
+  static nsresult GetNameFromSubtree(const LocalAccessible* aAccessible,
                                      nsAString& aName);
 
   /**
@@ -93,16 +94,10 @@ class nsTextEquivUtils {
    * @param aAccessible  [in] the accessible text equivalent is computed for
    * @param aIDRefsAttr  [in] IDRefs attribute on DOM node of the accessible
    * @param aTextEquiv   [out] result text equivalent
-   * @return true if either hidden content was used to compute the text
-   * equivalent, or if the initiator accessible itself was used.
    */
-  static bool GetTextEquivFromIDRefs(const LocalAccessible* aAccessible,
-                                     nsAtom* aIDRefsAttr,
-                                     nsAString& aTextEquiv);
-
-  static void GetTextEquivFromAccIterable(const Accessible* aAccessible,
-                                          AccIterable* aIter,
-                                          nsAString& aTextEquiv);
+  static nsresult GetTextEquivFromIDRefs(const LocalAccessible* aAccessible,
+                                         nsAtom* aIDRefsAttr,
+                                         nsAString& aTextEquiv);
 
   /**
    * Calculates the text equivalent from the given content - and its subtree, if
@@ -114,12 +109,10 @@ class nsTextEquivUtils {
    * @param aContent       [in] the given content the text equivalent is
    *                       computed from
    * @param aString        [in, out] the string
-   * @return true if either hidden content was used to compute the text
-   * equivalent, or if the initiator accessible itself was used.
    */
-  static bool AppendTextEquivFromContent(const LocalAccessible* aInitiatorAcc,
-                                         nsIContent* aContent,
-                                         nsAString* aString);
+  static nsresult AppendTextEquivFromContent(
+      const LocalAccessible* aInitiatorAcc, nsIContent* aContent,
+      nsAString* aString);
 
   /**
    * Calculates the text equivalent from the given text content (may be text
@@ -141,13 +134,6 @@ class nsTextEquivUtils {
   static nsresult AppendFromDOMChildren(nsIContent* aContent,
                                         nsAString* aString);
 
-  /**
-   * Calculates the text equivalent from the given accessible - and its subtree,
-   * if allowed. Then, appends the calculated text to the given string.
-   */
-  static nsresult AppendFromAccessible(Accessible* aAccessible,
-                                       nsAString* aString);
-
  private:
   /**
    * Iterates the given accessible's children and calculates the text equivalent
@@ -155,6 +141,13 @@ class nsTextEquivUtils {
    */
   static nsresult AppendFromAccessibleChildren(const Accessible* aAccessible,
                                                nsAString* aString);
+
+  /**
+   * Calculates the text equivalent from the given accessible - and its subtree,
+   * if allowed. Then, appends the calculated text to the given string.
+   */
+  static nsresult AppendFromAccessible(Accessible* aAccessible,
+                                       nsAString* aString);
 
   /**
    * Calculates the text equivalent from the value of the given accessible.
