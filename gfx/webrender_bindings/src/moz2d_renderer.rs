@@ -762,10 +762,27 @@ impl Moz2dBlobImageHandler {
     fn prepare_request(&self, blob: &[u8], resources: &dyn BlobImageResources) {
         #[cfg(target_os = "windows")]
         fn process_native_font_handle(key: FontKey, handle: &NativeFontHandle) {
-            let file = dwrote::FontFile::new_from_path(&handle.path).unwrap();
-            let face = file
-                .create_face(handle.index, dwrote::DWRITE_FONT_SIMULATIONS_NONE)
+            if let Some(file) = dwrote::FontFile::new_from_path(&handle.path) {
+                if let Ok(face) = file.create_face(handle.index, dwrote::DWRITE_FONT_SIMULATIONS_NONE) {
+                    unsafe { AddNativeFontHandle(key, face.as_ptr() as *mut c_void, 0) };
+                    return;
+                }
+            }
+            // Failed to open the font file? Try to set up a fallback font so that
+            // we don't simply crash, although text will be garbage.
+            let desc = dwrote::FontDescriptor {
+                family_name: "Arial".to_string(),
+                weight: dwrote::FontWeight::Regular,
+                stretch: dwrote::FontStretch::Normal,
+                style: dwrote::FontStyle::Normal,
+            };
+            // If the returned font is None, give up.
+            // (TODO: try other font names? get an arbitrary font by index?)
+            let font = dwrote::FontCollection::system()
+                .font_from_descriptor(&desc)
+                .unwrap()
                 .unwrap();
+            let face = font.create_font_face();
             unsafe { AddNativeFontHandle(key, face.as_ptr() as *mut c_void, 0) };
         }
 
