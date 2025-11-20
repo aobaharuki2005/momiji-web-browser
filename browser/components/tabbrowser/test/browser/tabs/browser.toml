@@ -581,6 +581,9 @@ tags = "vertical-tabs"
 tags = "vertical-tabs"
 
 ["browser_tab_notes.js"]
+prefs = [
+  "browser.tabs.notes.enabled=true",
+]
 
 ["browser_tab_play.js"]
 tags = "vertical-tabs"
