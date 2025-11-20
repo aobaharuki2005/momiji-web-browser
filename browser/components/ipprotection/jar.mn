@@ -12,6 +12,8 @@ browser.jar:
     content/browser/ipprotection/ipprotection-header.mjs (content/ipprotection-header.mjs)
     content/browser/ipprotection/ipprotection-message-bar.mjs (content/ipprotection-message-bar.mjs)
     content/browser/ipprotection/ipprotection-signedout.mjs (content/ipprotection-signedout.mjs)
+    content/browser/ipprotection/ipprotection-site-settings-control.css (content/ipprotection-site-settings-control.css)
+    content/browser/ipprotection/ipprotection-site-settings-control.mjs (content/ipprotection-site-settings-control.mjs)
     content/browser/ipprotection/ipprotection-status-card.css (content/ipprotection-status-card.css)
     content/browser/ipprotection/ipprotection-status-card.mjs (content/ipprotection-status-card.mjs)
     content/browser/ipprotection/ipprotection-timer.mjs (content/ipprotection-timer.mjs)
