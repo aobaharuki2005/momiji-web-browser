@@ -204,7 +204,8 @@ template <typename T>
 static void CheckMarkedThing(GCMarker* gcMarker, T* thing) {
   Zone* zone = thing->zoneFromAnyThread();
 
-  MOZ_ASSERT(zone->shouldMarkInZone(gcMarker->markColor()));
+  MOZ_ASSERT(zone->shouldMarkInZone(gcMarker->markColor()) ||
+             zone->isAtomsZone());
 
   MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
                 zone->isCollectingFromAnyThread() || zone->isAtomsZone());
@@ -336,6 +337,30 @@ static bool ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src,
          ShouldTraceCrossCompartment(trc, src, val.toGCThing(), name);
 }
 
+template <typename T>
+static inline bool ShouldMark(GCMarker* gcmarker, T* thing) {
+  // We may encounter nursery things during normal marking since we don't
+  // collect the nursery at the start of every GC slice.
+  if (!thing->isTenured()) {
+    return false;
+  }
+
+  // Allow marking symbols even if we're not collecting the atoms zone. This is
+  // necessary to unmark gray symbols during an incremental GC. Failing to do
+  // this will break our promise to the cycle collector that there are no black
+  // to gray edges.
+  if (std::is_same_v<T, JS::Symbol> &&
+      gcmarker->markColor() == MarkColor::Black) {
+    return true;
+  }
+
+  // Otherwise don't mark things outside a collected zone if we are in a
+  // per-zone GC. Don't mark permanent shared things owned by other runtimes (we
+  // will never observe their zone being collected).
+  Zone* zone = thing->asTenured().zoneFromAnyThread();
+  return zone->shouldMarkInZone(gcmarker->markColor());
+}
+
 #ifdef DEBUG
 
 template <typename T>
@@ -344,9 +369,6 @@ void js::gc::AssertShouldMarkInZone(GCMarker* marker, T* thing) {
     return;
   }
 
-  // This allows marking atoms even if we're not collecting the atoms zone. This
-  // is necessary to unmark gray atoms during an incremental GC. Failing to do
-  // this will break our invariant about not having black to gray edges.
   Zone* zone = thing->zone();
   MOZ_ASSERT(zone->shouldMarkInZone(marker->markColor()) ||
              zone->isAtomsZone());
@@ -808,21 +830,6 @@ template void GCMarker::markImplicitEdges(JS::Symbol*);
 
 }  // namespace js
 
-template <typename T>
-static inline bool ShouldMark(GCMarker* gcmarker, T* thing) {
-  // We may encounter nursery things during normal marking since we don't
-  // collect the nursery at the start of every GC slice.
-  if (!thing->isTenured()) {
-    return false;
-  }
-
-  // Don't mark things outside a zone if we are in a per-zone GC. Don't mark
-  // permanent shared things owned by other runtimes (we will never observe
-  // their zone being collected).
-  Zone* zone = thing->asTenured().zoneFromAnyThread();
-  return zone->shouldMarkInZone(gcmarker->markColor());
-}
-
 template <uint32_t opts>
 MarkingTracerT<opts>::MarkingTracerT(JSRuntime* runtime, GCMarker* marker)
     : GenericTracerImpl<MarkingTracerT<opts>>(
@@ -852,7 +859,8 @@ void MarkingTracerT<opts>::onEdge(T** thingp, const char* name) {
     return;
   }
 
-  MOZ_ASSERT(!IsOwnedByOtherRuntime(this->runtime(), thing));
+  MOZ_ASSERT_IF(IsOwnedByOtherRuntime(this->runtime(), thing),
+                thing->isMarkedBlack());
 
 #ifdef DEBUG
   CheckMarkedThing(marker, thing);
