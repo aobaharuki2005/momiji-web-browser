@@ -81,7 +81,6 @@ IPDL_SOURCES = [
     "PInputChannelThrottleQueue.ipdl",
     "PProxyAutoConfig.ipdl",
     "PProxyConfigLookup.ipdl",
-    "PSimpleChannel.ipdl",
     "PSocketProcessBackground.ipdl",
 ]
 

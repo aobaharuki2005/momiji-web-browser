@@ -26,7 +26,6 @@
 #  include "mozilla/net/GeckoViewContentChannelParent.h"
 #endif
 #include "mozilla/net/DocumentChannelParent.h"
-#include "mozilla/net/SimpleChannelParent.h"
 #include "mozilla/net/AltDataOutputStreamParent.h"
 #include "mozilla/net/FileChannelParent.h"
 #include "mozilla/net/DNSRequestParent.h"
@@ -427,25 +426,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvPGeckoViewContentChannelConstructor(
   return IPC_OK();
 }
 #endif
-
-PSimpleChannelParent* NeckoParent::AllocPSimpleChannelParent(
-    const uint32_t& channelId) {
-  RefPtr<SimpleChannelParent> p = new SimpleChannelParent();
-  return p.forget().take();
-}
-
-bool NeckoParent::DeallocPSimpleChannelParent(PSimpleChannelParent* actor) {
-  RefPtr<SimpleChannelParent> p =
-      dont_AddRef(actor).downcast<SimpleChannelParent>();
-  return true;
-}
-
-mozilla::ipc::IPCResult NeckoParent::RecvPSimpleChannelConstructor(
-    PSimpleChannelParent* actor, const uint32_t& channelId) {
-  SimpleChannelParent* p = static_cast<SimpleChannelParent*>(actor);
-  MOZ_ALWAYS_TRUE(p->Init(channelId));
-  return IPC_OK();
-}
 
 already_AddRefed<PFileChannelParent> NeckoParent::AllocPFileChannelParent() {
   RefPtr<FileChannelParent> p = new FileChannelParent();

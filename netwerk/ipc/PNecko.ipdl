@@ -22,7 +22,6 @@ include protocol PTCPServerSocket;
 include protocol PUDPSocket;
 include protocol PDNSRequest;
 include protocol PDataChannel;
-include protocol PSimpleChannel;
 include protocol PTransportProvider;
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
@@ -67,7 +66,6 @@ namespace net {
 #ifdef MOZ_WIDGET_ANDROID
   manages PGeckoViewContentChannel;
 #endif
-  manages PSimpleChannel;
   manages PFileChannel;
   manages PTransportProvider;
   manages PAltDataOutputStream;
@@ -130,7 +128,6 @@ parent:
 #ifdef MOZ_WIDGET_GTK
   async PGIOChannel(nullable PBrowser browser, SerializedLoadContext loadContext, GIOChannelCreationArgs args);
 #endif
-  async PSimpleChannel(uint32_t channelId);
   async PFileChannel();
 
 #ifdef MOZ_WIDGET_ANDROID

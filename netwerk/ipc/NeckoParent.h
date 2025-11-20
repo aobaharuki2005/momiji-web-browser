@@ -166,11 +166,6 @@ class NeckoParent : public PNeckoParent {
       const SerializedLoadContext& aSerialized,
       const GeckoViewContentChannelArgs& args) override;
 #  endif
-  PSimpleChannelParent* AllocPSimpleChannelParent(const uint32_t& channelId);
-  bool DeallocPSimpleChannelParent(PSimpleChannelParent* actor);
-
-  virtual mozilla::ipc::IPCResult RecvPSimpleChannelConstructor(
-      PSimpleChannelParent* aActor, const uint32_t& channelId) override;
 
   already_AddRefed<PFileChannelParent> AllocPFileChannelParent();
 

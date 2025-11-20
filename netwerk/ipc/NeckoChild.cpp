@@ -190,17 +190,6 @@ bool NeckoChild::DeallocPWebSocketEventListenerChild(
   return true;
 }
 
-PSimpleChannelChild* NeckoChild::AllocPSimpleChannelChild(
-    const uint32_t& channelId) {
-  MOZ_ASSERT_UNREACHABLE("Should never get here");
-  return nullptr;
-}
-
-bool NeckoChild::DeallocPSimpleChannelChild(PSimpleChannelChild* child) {
-  static_cast<SimpleChannelChild*>(child)->Release();
-  return true;
-}
-
 PTCPSocketChild* NeckoChild::AllocPTCPSocketChild(const nsAString& host,
                                                   const uint16_t& port) {
   TCPSocketChild* p = new TCPSocketChild(host, port, nullptr);
