@@ -382,7 +382,7 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN expanded toolbar with tabstrip and tall window WHEN changing to short window THEN show menu`() = runTest {
+    fun `GIVEN expanded toolbar with tabstrip and tall window WHEN changing to short window THEN show tab counter and menu`() = runTest {
         every { testContext.settings().shouldUseExpandedToolbar } returns true
         every { testContext.settings().isTabStripEnabled } returns true
         configuration = Configuration().apply {
@@ -409,8 +409,10 @@ class BrowserToolbarMiddlewareTest {
         navigationActions = toolbarStore.state.displayState.navigationActions
         assertEquals(0, navigationActions.size)
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
-        assertEquals(1, toolbarBrowserActions.size)
-        val menuButton = toolbarBrowserActions[0] as ActionButtonRes
+        assertEquals(2, toolbarBrowserActions.size)
+        val tabCounterButton = toolbarBrowserActions[0] as TabCounterAction
+        val menuButton = toolbarBrowserActions[1] as ActionButtonRes
+        assertEqualsToolbarButton(expectedToolbarButton(), tabCounterButton)
         assertEquals(expectedMenuButton(), menuButton)
     }
 

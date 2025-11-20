@@ -1566,13 +1566,17 @@ class BrowserToolbarMiddlewareTest {
             navController = navController,
         )
 
-        assertEquals(1, toolbarStore.state.displayState.browserActionsEnd.size)
-        val toolbarButton = toolbarStore.state.displayState.browserActionsEnd[0]
-        assertNotEquals(expectedShareButton(), toolbarButton)
+        assertEquals(3, toolbarStore.state.displayState.browserActionsEnd.size)
+        val newTabButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        val tabCounterButton = toolbarStore.state.displayState.browserActionsEnd[1] as TabCounterAction
+        val menuButton = toolbarStore.state.displayState.browserActionsEnd[2] as ActionButtonRes
+        assertEquals(expectedNewTabButton(), newTabButton)
+        assertEqualsTabCounterButton(expectedTabCounterButton(), tabCounterButton)
+        assertEquals(expectedMenuButton(), menuButton)
     }
 
     @Test
-    fun `GIVEN expanded toolbar with tabstrip and tall window WHEN changing to short window THEN show menu`() = runTest {
+    fun `GIVEN expanded toolbar with tabstrip and tall window WHEN changing to short window THEN show new tab, tab counter and menu`() = runTest {
         every { settings.isTabStripEnabled } returns true
         every { settings.shouldUseExpandedToolbar } returns true
         configuration = Configuration().apply {
@@ -1604,8 +1608,12 @@ class BrowserToolbarMiddlewareTest {
         navigationActions = toolbarStore.state.displayState.navigationActions
         assertEquals(0, navigationActions.size)
         toolbarBrowserActions = toolbarStore.state.displayState.browserActionsEnd
-        assertEquals(1, toolbarBrowserActions.size)
-        val menuButton = toolbarBrowserActions[0] as ActionButtonRes
+        assertEquals(3, toolbarBrowserActions.size)
+        val newTabButton = toolbarBrowserActions[0] as ActionButtonRes
+        val tabCounterButton = toolbarBrowserActions[1] as TabCounterAction
+        val menuButton = toolbarBrowserActions[2] as ActionButtonRes
+        assertEquals(expectedNewTabButton(), newTabButton)
+        assertEqualsTabCounterButton(expectedTabCounterButton(), tabCounterButton)
         assertEquals(expectedMenuButton(), menuButton)
     }
 
@@ -2922,7 +2930,6 @@ class BrowserToolbarMiddlewareTest {
             screenWidthDp = 700
         }
         every { mockContext.resources.configuration } returns configuration
-        every { settings.isTabStripEnabled } returns false
         every { settings.toolbarSimpleShortcutKey } returns ShortcutType.TRANSLATE.value
         val browserScreenStore = buildBrowserScreenStore()
         val middleware = buildMiddleware(appStore, browserScreenStore, browserStore)
@@ -3121,6 +3128,27 @@ class BrowserToolbarMiddlewareTest {
 
         val backButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
         assertEquals(expectedGoBackButton(), backButton)
+    }
+
+    @Test
+    fun `GIVEN simple toolbar use share shortcut AND wide window with tabstrip enabled WHEN initializing toolbar THEN only show one Share in end browser actions`() {
+        configuration = Configuration().apply {
+            screenHeightDp = 400
+            screenWidthDp = 700
+        }
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.isTabStripEnabled } returns true
+        every { settings.toolbarSimpleShortcutKey } returns ShortcutType.SHARE.value
+
+        val toolbarStore = buildStore()
+
+        assertEquals(3, toolbarStore.state.displayState.browserActionsEnd.size)
+        val shareButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
+        val tabCounterButton = toolbarStore.state.displayState.browserActionsEnd[1] as TabCounterAction
+        val menuButton = toolbarStore.state.displayState.browserActionsEnd[2] as ActionButtonRes
+        assertEquals(expectedShareButton(), shareButton)
+        assertEqualsTabCounterButton(expectedTabCounterButton(), tabCounterButton)
+        assertNotEquals(expectedShareButton(), menuButton)
     }
 
     @Test

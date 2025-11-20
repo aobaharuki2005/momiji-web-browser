@@ -100,9 +100,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getBottomToolbarHeight
 import org.mozilla.fenix.ext.getTopToolbarHeight
 import org.mozilla.fenix.ext.hideToolbar
-import org.mozilla.fenix.ext.isTallWindow
 import org.mozilla.fenix.ext.isToolbarAtBottom
-import org.mozilla.fenix.ext.isWideWindow
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.recordEventInNimbus
 import org.mozilla.fenix.ext.requireComponents
@@ -1072,9 +1070,9 @@ class HomeFragment : Fragment() {
         FirefoxTheme {
             TabStrip(
                 isSelectDisabled = isSelectDisabled,
-                // Show action buttons only if the navigation bar (which has the same buttons) is not showing.
+                // Show action buttons only if composable toolbar is not enabled.
                 showActionButtons =
-                    context?.settings()?.shouldUseExpandedToolbar == false || !isTallWindow() || isWideWindow(),
+                    context?.settings()?.shouldUseComposableToolbar == false,
                 onAddTabClick = {
                     if (requireContext().settings().enableHomepageAsNewTab) {
                         requireComponents.useCases.fenixBrowserUseCases.addNewHomepageTab(

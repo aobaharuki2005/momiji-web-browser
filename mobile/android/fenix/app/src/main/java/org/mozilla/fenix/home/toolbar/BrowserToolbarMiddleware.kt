@@ -326,12 +326,11 @@ class BrowserToolbarMiddleware(
     private fun buildEndBrowserActions(): List<Action> {
         val isWideWindow = environment?.fragment?.isWideWindow() == true
         val isTallWindow = environment?.fragment?.isTallWindow() == true
-        val tabStripEnabled = environment?.context?.settings()?.isTabStripEnabled == true
         val shouldUseExpandedToolbar = environment?.context?.settings()?.shouldUseExpandedToolbar == true
 
         return listOf(
             HomeToolbarActionConfig(HomeToolbarAction.TabCounter) {
-                !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow)
+                !shouldUseExpandedToolbar || !isTallWindow || isWideWindow
             },
             HomeToolbarActionConfig(HomeToolbarAction.Menu) {
                 !shouldUseExpandedToolbar || !isTallWindow || isWideWindow

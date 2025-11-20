@@ -487,10 +487,11 @@ class TabPreview @JvmOverloads constructor(
         val settings = context.settings()
         val isWideScreen = context.isWideWindow()
         val tabStripEnabled = settings.isTabStripEnabled
+        val shareShortcutEnabled = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey) == ShortcutType.SHARE
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.Share) {
-                isWideScreen && !tabStripEnabled
+                isWideScreen && !tabStripEnabled && !shareShortcutEnabled
             },
         ).filter { config ->
             config.isVisible()
@@ -525,15 +526,16 @@ class TabPreview @JvmOverloads constructor(
             ?.toToolbarAction(tab).takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
 
         return listOf(
+            ToolbarActionConfig(ToolbarAction.Share) {
+                tabStripEnabled && isWideWindow && (!shouldUseExpandedToolbar || !isTallWindow) &&
+                        primarySlotAction == ToolbarAction.Share
+            },
             ToolbarActionConfig(primarySlotAction) {
-                !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow) &&
+                (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow) &&
                         tab?.content?.url != ABOUT_HOME_URL
             },
             ToolbarActionConfig(ToolbarAction.TabCounter) {
-                !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow)
-            },
-            ToolbarActionConfig(ToolbarAction.Share) {
-                tabStripEnabled && isWideWindow && (!shouldUseExpandedToolbar || !isTallWindow)
+                !shouldUseExpandedToolbar || !isTallWindow || isWideWindow
             },
             ToolbarActionConfig(ToolbarAction.Menu) {
                 !shouldUseExpandedToolbar || !isTallWindow || isWideWindow

@@ -749,7 +749,7 @@ class BrowserToolbarMiddleware(
             ToolbarActionConfig(ToolbarAction.Translate) {
                 browserScreenStore.state.pageTranslationStatus.isTranslationPossible &&
                     isWideScreen && FxNimbus.features.translations.value().mainFlowToolbarEnabled &&
-                        !(translateShortcutEnabled && !tabStripEnabled)
+                        !translateShortcutEnabled
             },
             ToolbarActionConfig(ToolbarAction.Share) {
                 isWideScreen && !tabStripEnabled && !shareShortcutEnabled
@@ -771,14 +771,15 @@ class BrowserToolbarMiddleware(
             ?.toToolbarAction().takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
 
         val configs = listOf(
+            ToolbarActionConfig(ToolbarAction.Share) {
+                tabStripEnabled && isWideWindow && (!shouldUseExpandedToolbar || !isTallWindow) &&
+                        primarySlotAction != ToolbarAction.Share
+            },
             ToolbarActionConfig(primarySlotAction) {
-                !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow)
+                !shouldUseExpandedToolbar || !isTallWindow || isWideWindow
             },
             ToolbarActionConfig(ToolbarAction.TabCounter) {
-                !tabStripEnabled && (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow)
-            },
-            ToolbarActionConfig(ToolbarAction.Share) {
-                tabStripEnabled && isWideWindow && (!shouldUseExpandedToolbar || !isTallWindow)
+                !shouldUseExpandedToolbar || !isTallWindow || isWideWindow
             },
             ToolbarActionConfig(ToolbarAction.Menu) {
                 !shouldUseExpandedToolbar || !isTallWindow || isWideWindow
