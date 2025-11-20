@@ -9299,47 +9299,45 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aGridRI,
   aDesiredSize.mOverflowAreas.UnionWith(ocBounds);
   aStatus.MergeCompletionStatusFrom(ocStatus);
 
-  if (IsAbsoluteContainer()) {
-    const nsFrameList& children = GetChildList(GetAbsoluteListID());
-    if (!children.IsEmpty()) {
-      // 'gridOrigin' is the origin of the grid (the start of the first track),
-      // with respect to the grid container's padding-box (CB).
-      LogicalMargin pad(aGridRI.mReflowInput->ComputedLogicalPadding(wm));
-      const LogicalPoint gridOrigin(wm, pad.IStart(wm), pad.BStart(wm));
-      const LogicalRect gridCB(wm, 0, 0,
-                               aContentArea.ISize(wm) + pad.IStartEnd(wm),
-                               bSize + pad.BStartEnd(wm));
-      const nsSize gridCBPhysicalSize = gridCB.Size(wm).GetPhysicalSize(wm);
-      size_t i = 0;
-      for (nsIFrame* child : children) {
-        MOZ_ASSERT(i < aGridRI.mAbsPosItems.Length());
-        MOZ_ASSERT(aGridRI.mAbsPosItems[i].mFrame == child);
-        GridArea& area = aGridRI.mAbsPosItems[i].mArea;
-        LogicalRect itemCB =
-            aGridRI.ContainingBlockForAbsPos(area, gridOrigin, gridCB);
-        // AbsoluteContainingBlock::Reflow uses physical coordinates.
-        nsRect* cb = child->GetProperty(GridItemContainingBlockRect());
-        if (!cb) {
-          cb = new nsRect;
-          child->SetProperty(GridItemContainingBlockRect(), cb);
-        }
-        *cb = itemCB.GetPhysicalRect(wm, gridCBPhysicalSize);
-        ++i;
+  AbsoluteContainingBlock* absoluteContainer =
+      IsAbsoluteContainer() ? GetAbsoluteContainingBlock() : nullptr;
+  if (absoluteContainer && absoluteContainer->HasAbsoluteFrames()) {
+    // 'gridOrigin' is the origin of the grid (the start of the first track),
+    // with respect to the grid container's padding-box (CB).
+    LogicalMargin pad(aGridRI.mReflowInput->ComputedLogicalPadding(wm));
+    const LogicalPoint gridOrigin(wm, pad.IStart(wm), pad.BStart(wm));
+    const LogicalRect gridCB(wm, 0, 0,
+                             aContentArea.ISize(wm) + pad.IStartEnd(wm),
+                             bSize + pad.BStartEnd(wm));
+    const nsSize gridCBPhysicalSize = gridCB.Size(wm).GetPhysicalSize(wm);
+    size_t i = 0;
+    for (nsIFrame* child : absoluteContainer->GetChildList()) {
+      MOZ_ASSERT(i < aGridRI.mAbsPosItems.Length());
+      MOZ_ASSERT(aGridRI.mAbsPosItems[i].mFrame == child);
+      GridArea& area = aGridRI.mAbsPosItems[i].mArea;
+      LogicalRect itemCB =
+          aGridRI.ContainingBlockForAbsPos(area, gridOrigin, gridCB);
+      // AbsoluteContainingBlock::Reflow uses physical coordinates.
+      nsRect* cb = child->GetProperty(GridItemContainingBlockRect());
+      if (!cb) {
+        cb = new nsRect;
+        child->SetProperty(GridItemContainingBlockRect(), cb);
       }
-      // We pass a dummy rect as CB because each child has its own CB rect.
-      // The IsGridContainerCB flag tells AbsoluteContainingBlock::Reflow to
-      // use those instead.
-      nsRect dummyRect;
-      // XXX: To optimize the performance, set the flags only when the CB width
-      // or height actually changes.
-      AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation,
-                              AbsPosReflowFlag::CBWidthChanged,
-                              AbsPosReflowFlag::CBHeightChanged,
-                              AbsPosReflowFlag::IsGridContainerCB};
-      GetAbsoluteContainingBlock()->Reflow(
-          this, PresContext(), *aGridRI.mReflowInput, aStatus, dummyRect, flags,
-          &aDesiredSize.mOverflowAreas);
+      *cb = itemCB.GetPhysicalRect(wm, gridCBPhysicalSize);
+      ++i;
     }
+    // We pass a dummy rect as CB because each child has its own CB rect.
+    // The IsGridContainerCB flag tells AbsoluteContainingBlock::Reflow to
+    // use those instead.
+    nsRect dummyRect;
+    // XXX: To optimize the performance, set the flags only when the CB width
+    // or height actually changes.
+    AbsPosReflowFlags flags{
+        AbsPosReflowFlag::AllowFragmentation, AbsPosReflowFlag::CBWidthChanged,
+        AbsPosReflowFlag::CBHeightChanged, AbsPosReflowFlag::IsGridContainerCB};
+    absoluteContainer->Reflow(this, PresContext(), *aGridRI.mReflowInput,
+                              aStatus, dummyRect, flags,
+                              &aDesiredSize.mOverflowAreas);
   }
   return bSize;
 }
