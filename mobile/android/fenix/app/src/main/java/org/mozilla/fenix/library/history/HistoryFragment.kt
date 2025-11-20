@@ -100,7 +100,6 @@ import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.QrScanFenixFeature
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.VoiceSearchFeature
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
@@ -196,16 +195,16 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     ): View {
         _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         val view = binding.root
-        historyStore = StoreProvider.get(this) {
+        historyStore = fragmentStore(HistoryFragmentState.initial) {
             HistoryFragmentStore(
-                initialState = HistoryFragmentState.initial,
+                initialState = it,
                 middleware = listOf(
                     HistoryTelemetryMiddleware(
                         isInPrivateMode = requireComponents.appStore.state.mode == BrowsingMode.Private,
                     ),
                 ),
             )
-        }
+        }.value
         searchStore = buildSearchStore(toolbarStore).value
 
         _historyView = HistoryView(

@@ -36,6 +36,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.observe
+import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvider
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
@@ -44,7 +45,6 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentTrackingProtectionBinding
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -89,9 +89,9 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         val view = inflateRootView(container)
         val tab = store.state.findTabOrCustomTab(provideCurrentTabId())
 
-        protectionsStore = StoreProvider.get(this) {
+        protectionsStore = storeProvider.get { restoredState ->
             ProtectionsStore(
-                ProtectionsState(
+                restoredState ?: ProtectionsState(
                     tab = tab,
                     url = args.url,
                     isTrackingProtectionEnabled = args.trackingProtectionEnabled,

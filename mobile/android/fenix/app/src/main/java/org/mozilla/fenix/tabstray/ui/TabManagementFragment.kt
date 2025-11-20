@@ -43,6 +43,7 @@ import mozilla.components.feature.accounts.push.CloseTabsUseCases
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.lib.state.ext.observeAsState
+import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvider
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.setSystemBarsBackground
 import mozilla.telemetry.glean.private.NoExtras
@@ -51,7 +52,6 @@ import org.mozilla.fenix.GleanMetrics.PrivateBrowsingLocked
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.actualInactiveTabs
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getBottomToolbarHeight
@@ -120,6 +120,29 @@ class TabManagementFragment : DialogFragment() {
         super.onCreate(savedInstanceState)
         recordBreadcrumb("TabManagementFragment onCreate")
 
+        enablePbmPinLauncher = registerForActivityResult(
+            onSuccess = {
+                PrivateBrowsingLocked.authSuccess.record()
+                PrivateBrowsingLocked.featureEnabled.record()
+                requireContext().settings().privateBrowsingModeLocked = true
+            },
+            onFailure = {
+                PrivateBrowsingLocked.authFailure.record()
+            },
+        )
+
+        setStyle(STYLE_NO_TITLE, R.style.TabManagerDialogStyle)
+    }
+
+    @Suppress("LongMethod", "CognitiveComplexMethod")
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View? {
+        // Remove the window dimming so the Toolbar UI from Home/Browser is still visible during the transition
+        dialog?.window?.setDimAmount(0f)
+
         val args by navArgs<TabManagementFragmentArgs>()
         args.accessPoint.takeIf { it != TabsTrayAccessPoint.None }?.let {
             TabsTray.accessPoint[it.name.lowercase()].add()
@@ -135,20 +158,9 @@ class TabManagementFragment : DialogFragment() {
         val inactiveTabs = requireComponents.core.store.state.actualInactiveTabs(requireContext().settings())
         val normalTabs = requireComponents.core.store.state.normalTabs - inactiveTabs.toSet()
 
-        enablePbmPinLauncher = registerForActivityResult(
-            onSuccess = {
-                PrivateBrowsingLocked.authSuccess.record()
-                PrivateBrowsingLocked.featureEnabled.record()
-                requireContext().settings().privateBrowsingModeLocked = true
-            },
-            onFailure = {
-                PrivateBrowsingLocked.authFailure.record()
-            },
-        )
-
-        tabsTrayStore = StoreProvider.get(this) {
+        tabsTrayStore = storeProvider.get { restoredState ->
             TabsTrayStore(
-                initialState = TabsTrayState(
+                initialState = restoredState ?: TabsTrayState(
                     selectedPage = initialPage,
                     mode = initialMode,
                     inactiveTabs = inactiveTabs,
@@ -191,18 +203,6 @@ class TabManagementFragment : DialogFragment() {
         tabManagerInteractor = DefaultTabManagerInteractor(
             controller = tabManagerController,
         )
-
-        setStyle(STYLE_NO_TITLE, R.style.TabManagerDialogStyle)
-    }
-
-    @Suppress("LongMethod", "CognitiveComplexMethod")
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View? {
-        // Remove the window dimming so the Toolbar UI from Home/Browser is still visible during the transition
-        dialog?.window?.setDimAmount(0f)
 
         return content {
             val page by tabsTrayStore.observeAsState(tabsTrayStore.state.selectedPage) { it.selectedPage }
