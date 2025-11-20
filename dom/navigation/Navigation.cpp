@@ -939,7 +939,7 @@ bool Navigation::FireTraverseNavigateEvent(
           .andThen([](auto& aDocShell) {
             return ToMaybeRef(aDocShell.GetActiveSessionHistoryInfo());
           })
-          .map([aDestinationSessionHistoryInfo](auto& aSessionHistoryInfo) {
+          .map([&aDestinationSessionHistoryInfo](auto& aSessionHistoryInfo) {
             return aDestinationSessionHistoryInfo.SharesDocumentWith(
                 aSessionHistoryInfo);
           })
