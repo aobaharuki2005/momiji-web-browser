@@ -33,6 +33,9 @@
         <ignore path="**/values-*/strings.xml" />
     </issue>
 
+    <!-- Correctness: checks with increased severity -->
+    <issue id="ModifierParameter" severity="error" />
+
     <!-- Ignore support library lint bug: https://code.google.com/p/android/issues/detail?id=227098
          (Present in 25.3.1, despite claims of being fixed in 23) -->
     <issue id="InconsistentLayout">

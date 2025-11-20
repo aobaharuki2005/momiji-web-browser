@@ -94,5 +94,6 @@
     <issue id="VectorPath" severity="ignore" />
 
     <!-- Correctness: checks with increased severity -->
+    <issue id="ModifierParameter" severity="error" />
     <issue id="PrivateResource" severity="error" />
 </lint>
