@@ -82,13 +82,19 @@ function recordMigrationStatus(
   numberOfLoginsToMigrate,
   numberOfLoginsMigrated
 ) {
+  const had_errors = numberOfLoginsMigrated < numberOfLoginsToMigrate;
+
   Glean.pwmgr.rustMigrationStatus.record({
     run_id: runId,
     duration_ms: duration,
     number_of_logins_to_migrate: numberOfLoginsToMigrate,
     number_of_logins_migrated: numberOfLoginsMigrated,
-    had_errors: numberOfLoginsMigrated < numberOfLoginsToMigrate,
+    had_errors,
   });
+
+  if (had_errors) {
+    Services.prefs.setBoolPref("signon.rustMirror.poisoned", true);
+  }
 }
 
 function recordMigrationFailure(runId, error) {
@@ -334,6 +340,7 @@ export class LoginManagerRustMirror {
 
       this.#logger.log("Migration complete.");
     } catch (e) {
+      Services.prefs.setBoolPref("signon.rustMirror.poisoned", true);
       this.#logger.error("migration error:", e);
     } finally {
       const duration = Date.now() - t0;

@@ -291,18 +291,23 @@ add_task(async function test_migration_is_idempotent() {
 add_task(async function test_migration_partial_failure() {
   // ensure mirror is off
   await SpecialPowers.pushPrefEnv({
-    set: [["signon.rustMirror.enabled", false]],
+    set: [
+      ["signon.rustMirror.enabled", false],
+      ["signon.rustMirror.poisoned", false],
+    ],
   });
 
   const rustStorage = new LoginManagerRustStorage();
   // Save the first (valid) login into Rust for real, then simulate results
-  sinon.stub(rustStorage, "addLoginsAsync").callsFake(async (logins, _cont) => {
-    await rustStorage.addWithMeta(logins[0]);
-    return [
-      { login: {}, error: null }, // row 0 success
-      { login: null, error: { message: "row failed" } }, // row 1 failure
-    ];
-  });
+  sinon
+    .stub(LoginManagerRustStorage.prototype, "addLoginsAsync")
+    .callsFake(async (logins, _cont) => {
+      await rustStorage.addWithMeta(logins[0]);
+      return [
+        { login: {}, error: null }, // row 0 success
+        { login: null, error: { message: "row failed" } }, // row 1 failure
+      ];
+    });
 
   const login_ok = LoginTestUtils.testData.formLogin({
     username: "test-user-ok",
@@ -327,6 +332,12 @@ add_task(async function test_migration_partial_failure() {
   const rustLogins = await rustStorage.getAllLogins();
   Assert.equal(rustLogins.length, 1, "only valid login migrated");
 
+  Assert.equal(
+    Services.prefs.getBoolPref("signon.rustMirror.poisoned", false),
+    true,
+    "poisoned pref is set to true on partial migration failure"
+  );
+
   sinon.restore();
   LoginTestUtils.clearData();
   rustStorage.removeAllLogins();
@@ -340,7 +351,10 @@ add_task(async function test_migration_partial_failure() {
 add_task(async function test_migration_rejects_when_bulk_add_rejects() {
   // turn mirror off
   await SpecialPowers.pushPrefEnv({
-    set: [["signon.rustMirror.enabled", false]],
+    set: [
+      ["signon.rustMirror.enabled", false],
+      ["signon.rustMirror.poisoned", false],
+    ],
   });
 
   const rustStorage = new LoginManagerRustStorage();
@@ -370,6 +384,12 @@ add_task(async function test_migration_rejects_when_bulk_add_rejects() {
     false
   );
   Assert.equal(newPrefValue, true, "pref has not been reset");
+
+  Assert.equal(
+    Services.prefs.getBoolPref("signon.rustMirror.poisoned", false),
+    true,
+    "poisoned pref is set to true on hard migration failure"
+  );
 
   sinon.restore();
   LoginTestUtils.clearData();
