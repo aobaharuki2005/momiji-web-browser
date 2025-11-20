@@ -2376,6 +2376,13 @@ pref("browser.translations.newSettingsUI.enable", false);
 // engine https://browser.mt/.
 pref("browser.translations.select.enable", true);
 
+// Enable the Translations QuickAction in the URL bar.
+#ifdef NIGHTLY_BUILD
+  pref("browser.translations.quickAction.enabled", true);
+#else
+  pref("browser.translations.quickAction.enabled", false);
+#endif
+
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
 pref("toolkit.telemetry.archive.enabled", true);

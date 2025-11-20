@@ -324,6 +324,10 @@ quickactions-cmd-restart = restart
 quickactions-screenshot3 = Take a screenshot
 quickactions-cmd-screenshot2 = screenshot, take a screenshot
 
+# Opens about:translations
+quickactions-translate = Translate
+quickactions-cmd-translate = translate
+
 # Opens about:preferences
 quickactions-settings2 = Manage settings
 # "manage" should match the corresponding command, which is “Manage settings” in English.
