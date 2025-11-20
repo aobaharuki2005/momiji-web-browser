@@ -4,11 +4,9 @@
 
 package org.mozilla.fenix.settings.datachoices
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,19 +15,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.lib.crash.store.CrashReportOption
@@ -38,8 +35,11 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.list.RadioButtonListItem
+import org.mozilla.fenix.compose.list.SwitchListItem
+import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.compose.settings.SettingsSectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 /**
  * Composable function that renders the Data Choices settings screen.
@@ -65,18 +65,21 @@ internal fun DataChoicesScreen(
     val learnMoreDailyUsage: () -> Unit = { store.dispatch(LearnMore.UsagePingLearnMoreClicked) }
     val learnMoreCrashReport: () -> Unit = { store.dispatch(LearnMore.CrashLearnMoreClicked) }
     val learnMoreMarketingData: () -> Unit = { store.dispatch(LearnMore.MeasurementDataLearnMoreClicked) }
-    DataChoicesUi(
-        state = state,
-        onStudiesClick = onStudiesClick,
-        onTelemetryToggle = onTelemetryToggle,
-        onUsagePingToggle = onUsagePingToggle,
-        onMarketingDataToggled = onMarketingDataToggled,
-        onCrashOptionSelected = onCrashOptionSelected,
-        learnMoreTechnicalData = learnMoreTechnicalData,
-        learnMoreDailyUsage = learnMoreDailyUsage,
-        learnMoreCrashReport = learnMoreCrashReport,
-        learnMoreMarketingData = learnMoreMarketingData,
-    )
+
+    Surface {
+        DataChoicesUi(
+            state = state,
+            onStudiesClick = onStudiesClick,
+            onTelemetryToggle = onTelemetryToggle,
+            onUsagePingToggle = onUsagePingToggle,
+            onMarketingDataToggled = onMarketingDataToggled,
+            onCrashOptionSelected = onCrashOptionSelected,
+            learnMoreTechnicalData = learnMoreTechnicalData,
+            learnMoreDailyUsage = learnMoreDailyUsage,
+            learnMoreCrashReport = learnMoreCrashReport,
+            learnMoreMarketingData = learnMoreMarketingData,
+        )
+    }
 }
 
 @Suppress("LongParameterList")
@@ -96,10 +99,8 @@ internal fun DataChoicesUi(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FirefoxTheme.colors.layer1)
             .verticalScroll(rememberScrollState())
-            .padding(top = 10.dp, bottom = 38.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(top = 8.dp, bottom = 38.dp),
     ) {
         // Technical Data Section
         TogglePreferenceSection(
@@ -112,7 +113,7 @@ internal fun DataChoicesUi(
             onLearnMoreClicked = learnMoreTechnicalData,
         )
 
-        HorizontalDivider()
+        HorizontalDivider(modifier = Modifier.padding(top = 16.dp, bottom = 24.dp))
 
         StudiesSection(
             studiesEnabled = state.studiesEnabled,
@@ -120,7 +121,7 @@ internal fun DataChoicesUi(
             onClick = onStudiesClick,
         )
 
-        HorizontalDivider()
+        HorizontalDivider(modifier = Modifier.padding(top = 16.dp, bottom = 24.dp))
 
         // Usage Data Section
         TogglePreferenceSection(
@@ -133,7 +134,7 @@ internal fun DataChoicesUi(
             onLearnMoreClicked = learnMoreDailyUsage,
         )
 
-        HorizontalDivider()
+        HorizontalDivider(modifier = Modifier.padding(top = 16.dp, bottom = 24.dp))
 
         // Crash reports section
         CrashReportsSection(
@@ -143,7 +144,7 @@ internal fun DataChoicesUi(
             onLearnMoreClicked = learnMoreCrashReport,
         )
 
-        HorizontalDivider()
+        HorizontalDivider(modifier = Modifier.padding(top = 16.dp, bottom = 24.dp))
 
         // Campaign measurement Section
         TogglePreferenceSection(
@@ -173,22 +174,21 @@ private fun CrashReportsSection(
     onOptionSelected: (CrashReportOption) -> Unit,
     onLearnMoreClicked: () -> Unit,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .fillMaxWidth(),
-    ) {
+    Column {
         SettingsSectionHeader(
             text = stringResource(R.string.crash_reports_data_category),
-            modifier = Modifier
-                .padding(horizontal = 16.dp),
-            )
+            modifier = Modifier.padding(horizontal = FirefoxTheme.layout.space.dynamic200),
+        )
 
-        SectionBodyText(
-            stringResource(R.string.crash_reporting_description),
-            Modifier
-                .padding(horizontal = 16.dp),
-            )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(R.string.crash_reporting_description),
+            modifier = Modifier.padding(horizontal = FirefoxTheme.layout.space.dynamic200),
+            style = FirefoxTheme.typography.body2,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -203,24 +203,16 @@ private fun CrashReportsSection(
                             testTagsAsResourceId = true
                         },
                     maxLabelLines = 1,
-                    description = null,
                     maxDescriptionLines = 1,
                     onClick = { onOptionSelected(crashReportOption) },
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         LearnMoreLink(onLearnMoreClicked, learnMoreText)
     }
-}
-
-@Composable
-private fun SectionBodyText(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        style = FirefoxTheme.typography.body2,
-        color = FirefoxTheme.colors.textSecondary,
-        modifier = modifier,
-    )
 }
 
 /**
@@ -246,56 +238,27 @@ private fun TogglePreferenceSection(
     onLearnMoreClicked: () -> Unit,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(FirefoxTheme.colors.layer1),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         SettingsSectionHeader(
             text = categoryTitle,
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = FirefoxTheme.layout.space.dynamic200),
         )
 
-        // Section Body
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    onClick = { onToggleChanged() },
-                )
-                .padding(horizontal = 16.dp),
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f),
-            ) {
-                Text(
-                    text = preferenceTitle,
-                    color = FirefoxTheme.colors.textPrimary,
-                    style = FirefoxTheme.typography.subtitle1,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                SectionBodyText(preferenceSummary)
-            }
+        Spacer(modifier = Modifier.height(16.dp))
 
-            Switch(
-                checked = isToggled,
-                onCheckedChange = { onToggleChanged() },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = FirefoxTheme.colors.formOn,
-                    checkedTrackColor = FirefoxTheme.colors.formSurface,
-                    uncheckedThumbColor = FirefoxTheme.colors.formOff,
-                    uncheckedTrackColor = FirefoxTheme.colors.formSurface,
-                ),
-                modifier = Modifier
-                    .semantics {
-                        testTag = "data.collection.$preferenceTitle.toggle"
-                        testTagsAsResourceId = true
-                    },
-            )
-        }
+        SwitchListItem(
+            label = preferenceTitle,
+            checked = isToggled,
+            maxLabelLines = Int.MAX_VALUE,
+            description = preferenceSummary,
+            maxDescriptionLines = Int.MAX_VALUE,
+            showSwitchAfter = true,
+            onClick = { onToggleChanged() },
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         LearnMoreLink(onLearnMoreClicked, learnMoreText)
     }
 }
@@ -318,36 +281,19 @@ private fun StudiesSection(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(FirefoxTheme.colors.layer1),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         SettingsSectionHeader(
             text = stringResource(R.string.studies_data_category),
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = FirefoxTheme.layout.space.dynamic200),
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(if (sectionEnabled) Modifier.clickable(onClick = onClick) else Modifier)
-                .padding(horizontal = 16.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.studies_title),
-                style = FirefoxTheme.typography.subtitle1,
-                color = if (sectionEnabled) { FirefoxTheme.colors.textPrimary } else {
-                    FirefoxTheme.colors.textDisabled
-                },
-            )
-            Text(
-                text = stringResource(if (studiesEnabled) R.string.studies_on else R.string.studies_off),
-                style = FirefoxTheme.typography.body2,
-                color = if (sectionEnabled) { FirefoxTheme.colors.textSecondary } else {
-                    FirefoxTheme.colors.textDisabled
-                },
-            )
-        }
+        TextListItem(
+            label = stringResource(R.string.studies_title),
+            description = stringResource(if (studiesEnabled) R.string.studies_on else R.string.studies_off),
+            enabled = sectionEnabled,
+            onClick = onClick,
+        )
     }
 }
 
@@ -366,24 +312,17 @@ private fun LearnMoreLink(onLearnMoreClicked: () -> Unit, learnMoreText: String)
             onLearnMoreClicked()
         },
     )
+
     Column(
         modifier = Modifier
             .clickable(onClick = { onLearnMoreClicked() })
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(top = 16.dp),
+            .padding(horizontal = FirefoxTheme.layout.space.dynamic200),
     ) {
         LinkText(
             text = learnMoreText,
             linkTextStates = listOf(learnMoreState),
-            style = FirefoxTheme.typography.subtitle1.copy(
-                color = FirefoxTheme.colors.textPrimary,
-                textDecoration = TextDecoration.Underline,
-            ),
-            linkTextColor = FirefoxTheme.colors.textPrimary,
             linkTextDecoration = TextDecoration.Underline,
-            textAlign = TextAlign.Center,
-            shouldApplyAccessibleSize = false,
         )
     }
 }
@@ -395,6 +334,48 @@ private fun DataChoicesPreview() {
         DataChoicesScreen(
             store = DataChoicesStore(
                 initialState = DataChoicesState(),
+            ),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun DataChoicesPrivatePreview() {
+    FirefoxTheme(theme = Theme.Private) {
+        DataChoicesScreen(
+            store = DataChoicesStore(
+                initialState = DataChoicesState(),
+            ),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun DataChoicesTelemetryDisabledPreview() {
+    FirefoxTheme {
+        DataChoicesScreen(
+            store = DataChoicesStore(
+                initialState = DataChoicesState(
+                    studiesEnabled = false,
+                    telemetryEnabled = false,
+                ),
+            ),
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun DataChoicesTelemetryDisabledPrivatePreview() {
+    FirefoxTheme(theme = Theme.Private) {
+        DataChoicesScreen(
+            store = DataChoicesStore(
+                initialState = DataChoicesState(
+                    studiesEnabled = false,
+                    telemetryEnabled = false,
+                ),
             ),
         )
     }
