@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -38,7 +39,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.list.RadioButtonListItem
-import org.mozilla.fenix.compose.settings.SettingsSectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -172,13 +172,13 @@ private fun CrashReportsSection(
     selectedOption: CrashReportOption = CrashReportOption.Ask,
     onOptionSelected: (CrashReportOption) -> Unit,
     onLearnMoreClicked: () -> Unit,
-) {
+    ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier
             .fillMaxWidth(),
     ) {
-        SettingsSectionHeader(
+        TitleText(
             text = stringResource(R.string.crash_reports_data_category),
             modifier = Modifier
                 .padding(horizontal = 16.dp),
@@ -211,6 +211,16 @@ private fun CrashReportsSection(
         }
         LearnMoreLink(onLearnMoreClicked, learnMoreText)
     }
+}
+
+@Composable
+private fun TitleText(text: String, modifier: Modifier) {
+    Text(
+        text = text,
+        style = FirefoxTheme.typography.body2,
+        color = MaterialTheme.colorScheme.tertiary,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -251,10 +261,7 @@ private fun TogglePreferenceSection(
             .fillMaxWidth()
             .background(FirefoxTheme.colors.layer1),
     ) {
-        SettingsSectionHeader(
-            text = categoryTitle,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
+        TitleText(categoryTitle, Modifier.padding(horizontal = 16.dp))
 
         // Section Body
         Row(
@@ -322,9 +329,9 @@ private fun StudiesSection(
             .fillMaxWidth()
             .background(FirefoxTheme.colors.layer1),
     ) {
-        SettingsSectionHeader(
-            text = stringResource(R.string.studies_data_category),
-            modifier = Modifier.padding(horizontal = 16.dp),
+        TitleText(
+            stringResource(R.string.studies_data_category),
+            Modifier.padding(horizontal = 16.dp),
         )
 
         Column(

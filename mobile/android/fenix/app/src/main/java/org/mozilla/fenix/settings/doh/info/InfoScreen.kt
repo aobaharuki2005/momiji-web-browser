@@ -5,22 +5,19 @@
 package org.mozilla.fenix.settings.doh.info
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import org.mozilla.fenix.R
@@ -28,7 +25,6 @@ import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 /**
  * Composable function that displays the info screen of DoH settings.
@@ -59,24 +55,24 @@ internal fun InfoScreen(
         bulletText to sumoTopic
     }
 
-    Surface {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            Title(
-                title = title,
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FirefoxTheme.colors.layer1),
+    ) {
+        Title(
+            title = title,
+        )
 
-            bulletPoints.forEach { (text, url) ->
-                val learnMoreUrl = url?.let {
-                    SupportUtils.getGenericSumoURLForTopic(it)
-                }
-                BulletTextWithOptionalLink(
-                    text = text,
-                    learnMoreUrl = learnMoreUrl,
-                    onLearnMoreClicked = onLearnMoreClicked,
-                )
+        bulletPoints.forEach { (text, url) ->
+            val learnMoreUrl = url?.let {
+                SupportUtils.getGenericSumoURLForTopic(it)
             }
+            BulletTextWithOptionalLink(
+                text = text,
+                learnMoreUrl = learnMoreUrl,
+                onLearnMoreClicked = onLearnMoreClicked,
+            )
         }
     }
 }
@@ -96,7 +92,7 @@ private fun Title(
     ) {
         Text(
             text = title,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.tertiary,
             style = FirefoxTheme.typography.headline8,
         )
     }
@@ -108,8 +104,8 @@ private fun BulletTextWithOptionalLink(
     onLearnMoreClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
     learnMoreUrl: String? = null,
-    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    style: TextStyle = FirefoxTheme.typography.body2, // Follows the same TextStyle of LinkText
+    color: Color = FirefoxTheme.colors.textPrimary,
+    style: TextStyle = FirefoxTheme.typography.subtitle1,
 ) {
     Row(
         modifier = modifier
@@ -120,33 +116,44 @@ private fun BulletTextWithOptionalLink(
                 bottom = 6.dp,
             ),
     ) {
-        CompositionLocalProvider(LocalContentColor provides color) {
+        Text(
+            text = "•",
+            modifier = Modifier.padding(end = 8.dp),
+            color = color,
+        )
+
+        if (learnMoreUrl == null) {
             Text(
-                text = "•",
-                modifier = Modifier.padding(end = 8.dp),
+                text = text,
+                color = color,
                 style = style,
             )
-
-            if (learnMoreUrl == null) {
-                Text(
-                    text = text,
-                    style = style,
-                )
-            } else {
-                LinkText(
-                    text = text,
-                    linkTextStates = listOf(
-                        LinkTextState(
-                            text = stringResource(R.string.preference_doh_learn_more),
-                            url = learnMoreUrl,
-                            onClick = { onLearnMoreClicked(it) },
-                        ),
+        } else {
+            LinkText(
+                text = text,
+                linkTextStates = listOf(
+                    LinkTextState(
+                        text = stringResource(R.string.preference_doh_learn_more),
+                        url = learnMoreUrl,
+                        onClick = { onLearnMoreClicked(it) },
                     ),
-                    linkTextDecoration = TextDecoration.Underline,
-                    style = style,
-                )
-            }
+                ),
+                linkTextDecoration = TextDecoration.Underline,
+                style = style.copy(
+                    color = color,
+                ),
+            )
         }
+    }
+}
+
+@Composable
+@FlexibleWindowLightDarkPreview
+private fun InfoScreenPreview() {
+    FirefoxTheme {
+        InfoScreen(
+            infoScreenTopic = InfoScreenTopic.DEFAULT,
+        )
     }
 }
 
@@ -205,24 +212,4 @@ internal enum class InfoScreenTopic(
             BulletPoint(R.string.preference_doh_max_protection_info_3) to null,
         ),
     ),
-}
-
-@Composable
-@FlexibleWindowLightDarkPreview
-private fun InfoScreenPreview() {
-    FirefoxTheme {
-        InfoScreen(
-            infoScreenTopic = InfoScreenTopic.DEFAULT,
-        )
-    }
-}
-
-@Composable
-@Preview
-private fun InfoScreenPrivatePreview() {
-    FirefoxTheme(theme = Theme.Private) {
-        InfoScreen(
-            infoScreenTopic = InfoScreenTopic.DEFAULT,
-        )
-    }
 }
