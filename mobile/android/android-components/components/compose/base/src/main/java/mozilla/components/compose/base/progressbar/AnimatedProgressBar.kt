@@ -14,11 +14,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -93,7 +94,7 @@ fun AnimatedProgressBar(
         view.announceProgressForAccessibility(progress)
     }
 
-    val backgroundColor = AcornTheme.colors.layer1
+    val backgroundColor = MaterialTheme.colorScheme.surface
     val trackBrush = remember(trackColor) {
         SolidColor(trackColor ?: backgroundColor.lighten(LIGHTEN_TRACK_COLOR_FACTOR))
     }
@@ -216,25 +217,26 @@ private fun View.announceProgressForAccessibility(progress: Int) {
 @Suppress("MagicNumber")
 private fun AnimatedProgressBarPreview() {
     AcornTheme {
-        Column(
-            modifier = Modifier
-                .background(AcornTheme.colors.layer1)
-                .height(60.dp)
-                .fillMaxWidth(),
-        ) {
-            AnimatedProgressBar(25)
+        Surface {
+            Column(
+                modifier = Modifier
+                    .height(60.dp)
+                    .fillMaxWidth(),
+            ) {
+                AnimatedProgressBar(25)
 
-            HorizontalDivider(thickness = 20.dp)
+                HorizontalDivider(thickness = 20.dp)
 
-            AnimatedProgressBar(50)
+                AnimatedProgressBar(50)
 
-            HorizontalDivider(thickness = 20.dp)
+                HorizontalDivider(thickness = 20.dp)
 
-            AnimatedProgressBar(75)
+                AnimatedProgressBar(75)
 
-            HorizontalDivider(thickness = 20.dp)
+                HorizontalDivider(thickness = 20.dp)
 
-            AnimatedProgressBar(99)
+                AnimatedProgressBar(99)
+            }
         }
     }
 }
@@ -245,25 +247,26 @@ private fun AnimatedProgressBarPreview() {
 @Suppress("MagicNumber")
 private fun AnimatedProgressBarRTLPreview() {
     AcornTheme {
-        Column(
-            modifier = Modifier
-                .background(AcornTheme.colors.layer1)
-                .height(60.dp)
-                .fillMaxWidth(),
-        ) {
-            AnimatedProgressBar(25)
+        Surface {
+            Column(
+                modifier = Modifier
+                    .height(60.dp)
+                    .fillMaxWidth(),
+            ) {
+                AnimatedProgressBar(25)
 
-            HorizontalDivider(thickness = 20.dp)
+                HorizontalDivider(thickness = 20.dp)
 
-            AnimatedProgressBar(50)
+                AnimatedProgressBar(50)
 
-            HorizontalDivider(thickness = 20.dp)
+                HorizontalDivider(thickness = 20.dp)
 
-            AnimatedProgressBar(75)
+                AnimatedProgressBar(75)
 
-            HorizontalDivider(thickness = 20.dp)
+                HorizontalDivider(thickness = 20.dp)
 
-            AnimatedProgressBar(99)
+                AnimatedProgressBar(99)
+            }
         }
     }
 }
