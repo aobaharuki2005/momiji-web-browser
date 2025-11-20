@@ -76,7 +76,6 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
-import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
@@ -503,13 +502,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                                         text = searchState.query,
                                         providers = searchState.searchSuggestionsProviders,
                                         orientation = AwesomeBarOrientation.TOP,
-                                        colors = AwesomeBarDefaults.colors(
-                                            background = Color.Transparent,
-                                            title = FirefoxTheme.colors.textPrimary,
-                                            description = FirefoxTheme.colors.textSecondary,
-                                            autocompleteIcon = FirefoxTheme.colors.textSecondary,
-                                            groupTitle = FirefoxTheme.colors.textSecondary,
-                                        ),
                                         onSuggestionClicked = { suggestion ->
                                             searchStore.dispatch(SuggestionClicked(suggestion))
                                         },

@@ -248,7 +248,7 @@ private fun BookmarksList(
 ) {
     val state by store.observeAsState(store.state) { it }
     val searchState = searchStore.observeAsComposableState { it }.value
-    val awesomebarBackground = MaterialTheme.colorScheme.surface
+    val awesomebarBackground = AwesomeBarDefaults.colors().background
     val awesomebarScrim by remember(searchState.query) {
         derivedStateOf {
             when (searchState.query.isNotEmpty()) {
@@ -555,13 +555,6 @@ private fun BookmarksList(
                         text = searchState.query,
                         providers = searchState.searchSuggestionsProviders,
                         orientation = AwesomeBarOrientation.TOP,
-                        colors = AwesomeBarDefaults.colors(
-                            background = Color.Transparent,
-                            title = FirefoxTheme.colors.textPrimary,
-                            description = FirefoxTheme.colors.textSecondary,
-                            autocompleteIcon = FirefoxTheme.colors.textSecondary,
-                            groupTitle = FirefoxTheme.colors.textSecondary,
-                        ),
                         onSuggestionClicked = { suggestion ->
                             searchStore.dispatch(SuggestionClicked(suggestion))
                         },

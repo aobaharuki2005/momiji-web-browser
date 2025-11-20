@@ -32,7 +32,6 @@ import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
-import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
@@ -56,7 +55,6 @@ import org.mozilla.fenix.search.SearchFragmentAction.SuggestionSelected
 import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.search.createInitialSearchFragmentState
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.theme.FirefoxTheme
 
 private const val MATERIAL_DESIGN_SCRIM = "#52000000"
 
@@ -200,13 +198,6 @@ class AwesomeBarComposable(
                         text = state.query,
                         providers = state.searchSuggestionsProviders,
                         orientation = orientation,
-                        colors = AwesomeBarDefaults.colors(
-                            background = Color.Transparent,
-                            title = FirefoxTheme.colors.textPrimary,
-                            description = FirefoxTheme.colors.textSecondary,
-                            autocompleteIcon = FirefoxTheme.colors.textSecondary,
-                            groupTitle = FirefoxTheme.colors.textSecondary,
-                        ),
                         onSuggestionClicked = { suggestion ->
                             searchStore.dispatch(SuggestionClicked(suggestion))
                         },
