@@ -21,9 +21,9 @@ namespace internal {
 
 template <typename T>
 T* NewArray(size_t size) {
-  static_assert(std::is_pod<T>::value, "");
+  static_assert(std::is_trivially_copyable_v<T>);
   js::AutoEnterOOMUnsafeRegion oomUnsafe;
-  T* result = static_cast<T*>(js_malloc(size * sizeof(T)));
+  T* result = js_pod_malloc<T>(size);
   if (!result) {
     oomUnsafe.crash("Irregexp NewArray");
   }
@@ -32,6 +32,7 @@ T* NewArray(size_t size) {
 
 template <typename T>
 void DeleteArray(T* array) {
+  static_assert(std::is_trivially_destructible_v<T>);
   js_free(array);
 }
 
