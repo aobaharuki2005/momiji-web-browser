@@ -2128,11 +2128,13 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
   }
 
   auto IsQuirky = [](const StyleSize& aSize) -> bool {
-    return aSize.ConvertsToPercentage();
+    return aSize.ConvertsToPercentage() ||
+           aSize.BehavesLikeStretchOnBlockAxis();
   };
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
-  // an element in quirks mode gets a containing block based on looking for a
-  // parent with a non-auto height if the element has a percent height.
+  // In quirks mode, if an element has a percent height (or a 'stretch' height,
+  // which is kinda like a special version of 100%), then it gets its
+  // containing block by looking for an ancestor with a non-auto height.
   // Note: We don't emulate this quirk for percents in calc(), or in vertical
   // writing modes, or if the containing block is a flex or grid item.
   if (!wm.IsVertical() && NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
