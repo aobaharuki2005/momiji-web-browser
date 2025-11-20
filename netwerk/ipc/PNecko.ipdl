@@ -23,7 +23,6 @@ include protocol PUDPSocket;
 include protocol PDNSRequest;
 include protocol PTransportProvider;
 include protocol PStunAddrsRequest;
-include protocol PFileChannel;
 include protocol PWebrtcTCPSocket;
 include protocol PSocketProcessBridge;
 include protocol PDocumentChannel;
@@ -64,7 +63,6 @@ namespace net {
 #ifdef MOZ_WIDGET_ANDROID
   manages PGeckoViewContentChannel;
 #endif
-  manages PFileChannel;
   manages PTransportProvider;
   manages PAltDataOutputStream;
   manages PStunAddrsRequest;
@@ -121,13 +119,18 @@ parent:
 #ifdef MOZ_WIDGET_GTK
   async PGIOChannel(nullable PBrowser browser, SerializedLoadContext loadContext, GIOChannelCreationArgs args);
 #endif
-  async PFileChannel();
 
 #ifdef MOZ_WIDGET_ANDROID
   async PGeckoViewContentChannel(nullable PBrowser browser,
                                  SerializedLoadContext loadContext,
                                  GeckoViewContentChannelArgs args);
 #endif
+
+  /**
+   * When a nsFileChannel is opened within the content process, we notify
+   * "file-channel-opened" in the parent process using this IPC message.
+   */
+  async NotifyFileChannelOpened(FileChannelInfo info);
 
   async RequestContextLoadBegin(uint64_t rcid);
   async RequestContextAfterDOMContentLoaded(uint64_t rcid);

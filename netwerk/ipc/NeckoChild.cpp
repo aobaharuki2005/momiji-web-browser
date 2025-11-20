@@ -15,7 +15,6 @@
 #ifdef MOZ_WIDGET_GTK
 #  include "mozilla/net/GIOChannelChild.h"
 #endif
-#include "mozilla/net/FileChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
 #include "mozilla/net/WebSocketEventListenerChild.h"
 #include "mozilla/net/DNSRequestChild.h"

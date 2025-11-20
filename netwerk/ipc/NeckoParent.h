@@ -162,10 +162,8 @@ class NeckoParent : public PNeckoParent {
       const GeckoViewContentChannelArgs& args) override;
 #  endif
 
-  already_AddRefed<PFileChannelParent> AllocPFileChannelParent();
-
-  virtual mozilla::ipc::IPCResult RecvPFileChannelConstructor(
-      PFileChannelParent* aActor) override;
+  mozilla::ipc::IPCResult RecvNotifyFileChannelOpened(
+      const FileChannelInfo& aInfo);
 
   PTransportProviderParent* AllocPTransportProviderParent();
   bool DeallocPTransportProviderParent(PTransportProviderParent* aActor);

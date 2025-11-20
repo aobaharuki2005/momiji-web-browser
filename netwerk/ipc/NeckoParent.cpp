@@ -26,7 +26,6 @@
 #endif
 #include "mozilla/net/DocumentChannelParent.h"
 #include "mozilla/net/AltDataOutputStreamParent.h"
-#include "mozilla/net/FileChannelParent.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/net/RemoteStreamGetter.h"
@@ -56,6 +55,7 @@
 #include "nsINetworkPredictor.h"
 #include "nsINetworkPredictorVerifier.h"
 #include "nsISpeculativeConnect.h"
+#include "nsFileChannel.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
 #include "nsIOService.h"
@@ -412,13 +412,10 @@ mozilla::ipc::IPCResult NeckoParent::RecvPGeckoViewContentChannelConstructor(
 }
 #endif
 
-already_AddRefed<PFileChannelParent> NeckoParent::AllocPFileChannelParent() {
-  RefPtr<FileChannelParent> p = new FileChannelParent();
-  return p.forget();
-}
-
-mozilla::ipc::IPCResult NeckoParent::RecvPFileChannelConstructor(
-    PFileChannelParent* actor) {
+mozilla::ipc::IPCResult NeckoParent::RecvNotifyFileChannelOpened(
+    const FileChannelInfo& aInfo) {
+  nsFileChannel::DoNotifyFileChannelOpened(
+      ContentParent::Cast(Manager())->GetRemoteType(), aInfo);
   return IPC_OK();
 }
 
