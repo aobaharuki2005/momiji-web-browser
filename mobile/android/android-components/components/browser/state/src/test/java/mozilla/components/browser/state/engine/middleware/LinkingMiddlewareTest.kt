@@ -4,6 +4,9 @@
 
 package mozilla.components.browser.state.engine.middleware
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
@@ -13,12 +16,9 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.anyString
@@ -26,10 +26,8 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class LinkingMiddlewareTest {
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
-    private val dispatcher = coroutinesTestRule.testDispatcher
-    private val scope = coroutinesTestRule.scope
+    private val testDispatcher = StandardTestDispatcher()
+    private val scope = CoroutineScope(testDispatcher)
 
     @Test
     fun `loads URL after linking`() {
@@ -44,7 +42,7 @@ class LinkingMiddlewareTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession))
 
-        dispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(engineSession).loadUrl(tab.content.url)
     }
@@ -70,7 +68,7 @@ class LinkingMiddlewareTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession))
 
-        dispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(engineSession).loadUrl(
             url = tab.content.url,
@@ -101,7 +99,7 @@ class LinkingMiddlewareTest {
             EngineAction.LinkEngineSessionAction(child.id, childEngineSession, includeParent = true),
         )
 
-        dispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(childEngineSession).loadUrl(child.content.url, parentEngineSession)
     }
@@ -125,7 +123,7 @@ class LinkingMiddlewareTest {
         val childEngineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction(child.id, childEngineSession))
 
-        dispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(childEngineSession).loadUrl(child.content.url)
     }
@@ -143,7 +141,7 @@ class LinkingMiddlewareTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession, skipLoading = true))
 
-        dispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(engineSession, never()).loadUrl(tab.content.url)
     }
@@ -160,13 +158,13 @@ class LinkingMiddlewareTest {
         val engineSession: EngineSession = mock()
         store.dispatch(EngineAction.LinkEngineSessionAction("invalid", engineSession))
 
-        dispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(engineSession, never()).loadUrl(anyString(), any(), any(), any(), any(), anyBoolean())
     }
 
     @Test
-    fun `registers engine observer after linking`() = runTestOnMain {
+    fun `registers engine observer after linking`() = runTest {
         val tab1 = createTab("https://www.mozilla.org", id = "1")
         val tab2 = createTab("https://www.mozilla.org", id = "2")
 
@@ -193,7 +191,7 @@ class LinkingMiddlewareTest {
     }
 
     @Test
-    fun `unregisters engine observer before unlinking`() = runTestOnMain {
+    fun `unregisters engine observer before unlinking`() = runTest {
         val tab1 = createTab("https://www.mozilla.org", id = "1")
         val tab2 = createTab("https://www.mozilla.org", id = "2")
 
@@ -216,7 +214,7 @@ class LinkingMiddlewareTest {
     }
 
     @Test
-    fun `registers engine observer when tab is added with engine session`() = runTestOnMain {
+    fun `registers engine observer when tab is added with engine session`() = runTest {
         val engineSession: EngineSession = mock()
         val tab1 = createTab("https://www.mozilla.org", id = "1")
         val tab2 = createTab("https://www.mozilla.org", id = "2", engineSession = engineSession)
