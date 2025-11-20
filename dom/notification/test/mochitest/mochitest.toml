@@ -34,8 +34,6 @@ support-files = ["blank.html"]
 ["test_notification_crossorigin_iframe_nested_glean.html"]
 support-files = ["blank.html"]
 
-["test_notification_euc_kr.html"]
-
 ["test_notification_insecure_context.html"]
 # This test needs to be run on HTTP (not HTTPS).
 skip-if = [

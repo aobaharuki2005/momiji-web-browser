@@ -10,7 +10,6 @@
 
 #include "Navigator.h"
 #include "NotificationUtils.h"
-#include "mozilla/Encoding.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -565,8 +564,8 @@ uint32_t Notification::MaxActions(const GlobalObject& aGlobal) {
 }
 
 nsresult Notification::ResolveIconURL(nsIGlobalObject* aGlobal,
-                                      const nsAString& aIconUrl,
-                                      nsString& aDecodedUrl) {
+                                      const nsACString& aIconUrl,
+                                      nsString& aResolvedUrl) {
   nsresult rv = NS_OK;
 
   if (aIconUrl.IsEmpty()) {
@@ -578,69 +577,15 @@ nsresult Notification::ResolveIconURL(nsIGlobalObject* aGlobal,
     return rv;
   }
 
-  auto encoding = UTF_8_ENCODING;
-
-  // TODO(krosylight): Ultimately we can use UTF8String for icon definition of
-  // Web IDL when we remove this.
-  if (!StaticPrefs::dom_webnotifications_icon_encoding_utf8_enabled()) {
-    if (nsCOMPtr<nsPIDOMWindowInner> window = aGlobal->GetAsInnerWindow()) {
-      if (RefPtr<Document> doc = window->GetExtantDoc()) {
-        encoding = doc->GetDocumentCharacterSet();
-      } else {
-        NS_WARNING("No document found for main thread notification!");
-        return NS_ERROR_FAILURE;
-      }
-    }
-  }
-
   nsCOMPtr<nsIURI> srcUri;
-  rv = NS_NewURI(getter_AddRefs(srcUri), aIconUrl, encoding, baseUri);
+  rv = NS_NewURI(getter_AddRefs(srcUri), aIconUrl, nullptr, baseUri);
   if (NS_SUCCEEDED(rv)) {
     nsAutoCString src;
     srcUri->GetSpec(src);
     // XXX(krosylight): We should be able to pass UTF8 as-is, or ideally the URI
     // object itself.
-    CopyUTF8toUTF16(src, aDecodedUrl);
+    CopyUTF8toUTF16(src, aResolvedUrl);
   }
-
-  // TODO(krosylight): We should be able to remove the following when removing
-  // the non-UTF8 branch above.
-  if (encoding == UTF_8_ENCODING) {
-    return rv;
-  }
-
-  // If it was not UTF8, let's try UTF8 and see whether the result differs. If
-  // no difference is found then we can just use UTF8 everywhere.
-  // See: https://github.com/whatwg/notifications/issues/209
-  glean::web_notification::IconUrlEncodingLabel label =
-      glean::web_notification::IconUrlEncodingLabel::eNeitherWay;
-
-  nsCOMPtr<nsIURI> srcUriUtf8;
-  nsresult rvUtf8 =
-      NS_NewURI(getter_AddRefs(srcUriUtf8), aIconUrl, UTF_8_ENCODING, baseUri);
-
-  if (NS_SUCCEEDED(rv)) {
-    if (NS_SUCCEEDED(rvUtf8)) {
-      bool equals = false;
-      if (NS_SUCCEEDED(srcUri->Equals(srcUriUtf8, &equals))) {
-        if (equals) {
-          // Okay to be parsed with UTF8
-          label = glean::web_notification::IconUrlEncodingLabel::eUtf8;
-        } else {
-          // Can be parsed either way but with difference, unclear which one is
-          // intended without fetching
-          label = glean::web_notification::IconUrlEncodingLabel::eEitherWay;
-        }
-      }
-    } else {
-      label = glean::web_notification::IconUrlEncodingLabel::eDocumentCharset;
-    }
-  } else if (NS_SUCCEEDED(rvUtf8)) {
-    // Can be only parsed with UTF8
-    label = glean::web_notification::IconUrlEncodingLabel::eUtf8;
-  }
-
-  glean::web_notification::icon_url_encoding.EnumGet(label).Add();
 
   return rv;
 }

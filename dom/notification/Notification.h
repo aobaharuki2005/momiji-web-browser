@@ -13,6 +13,7 @@
 #include "mozilla/dom/notification/NotificationChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
+#include "nsString.h"
 
 class nsIPrincipal;
 class nsIVariant;
@@ -98,8 +99,8 @@ class Notification : public DOMEventTargetHelper, public SupportsWeakPtr {
     aRetval = mIPCNotification.options().tag();
   }
 
-  void GetIcon(nsAString& aRetval) {
-    aRetval = mIPCNotification.options().icon();
+  void GetIcon(nsACString& aRetval) {
+    aRetval = NS_ConvertUTF16toUTF8(mIPCNotification.options().icon());
   }
 
   void MaybeNotifyClose();
@@ -193,8 +194,8 @@ class Notification : public DOMEventTargetHelper, public SupportsWeakPtr {
   bool SendShow(Promise* aPromise);
 
   static nsresult ResolveIconURL(nsIGlobalObject* aGlobal,
-                                 const nsAString& aIconURL,
-                                 nsString& aResolvedURL);
+                                 const nsACString& aIconUrl,
+                                 nsString& aResolvedUrl);
 };
 
 }  // namespace mozilla::dom
