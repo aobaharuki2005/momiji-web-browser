@@ -1371,15 +1371,6 @@ void nsWindow::HideWaylandPopupWindow(bool aTemporaryHide,
   if (mPopupClosed) {
     LOG("  Clearing mMoveToRectPopupSize\n");
     mMoveToRectPopupSize = {};
-#ifdef MOZ_WAYLAND
-    if (moz_container_wayland_is_waiting_to_show(mContainer)) {
-      // We need to clear rendering queue, see Bug 1782948.
-      LOG("  popup failed to show by Wayland compositor, clear rendering "
-          "queue.");
-      moz_container_wayland_clear_waiting_to_show_flag(mContainer);
-      ClearRenderingQueue();
-    }
-#endif
   }
 }
 
@@ -1440,8 +1431,7 @@ void nsWindow::WaylandPopupCloseOrphanedPopups() {
   nsWindow* popup = mWaylandPopupNext;
   bool dangling = false;
   while (popup) {
-    if (!dangling &&
-        moz_container_wayland_is_waiting_to_show(popup->GetMozContainer())) {
+    if (!dangling && !MOZ_WL_SURFACE(popup->GetMozContainer())->IsVisible()) {
       LOG("  popup [%p] is waiting to show, close all child popups", popup);
       dangling = true;
     } else if (dangling) {
@@ -4117,13 +4107,6 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
     LOG("quit, !mGdkWindow || !mHasMappedToplevel");
     return FALSE;
   }
-#ifdef MOZ_WAYLAND
-  if (!mIsDragPopup && GdkIsWaylandDisplay() &&
-      !moz_container_wayland_can_draw(mContainer)) {
-    LOG("quit, !moz_container_wayland_can_draw()");
-    return FALSE;
-  }
-#endif
 
   if (!GetPaintListener()) {
     LOG("quit, !GetPaintListener()");
@@ -6230,33 +6213,19 @@ void nsWindow::ConfigureCompositor() {
   MOZ_DIAGNOSTIC_ASSERT(mIsMapped);
 
   LOG("nsWindow::ConfigureCompositor()");
-  auto startCompositing = [self = RefPtr{this}, this]() -> void {
-    LOG("  moz_container_wayland_add_or_fire_initial_draw_callback "
-        "ConfigureCompositor");
 
-    // too late
-    if (mIsDestroyed || !mIsMapped) {
-      LOG("  quit, mIsDestroyed = %d mIsMapped = %d", !!mIsDestroyed,
-          !!mIsMapped);
-      return;
-    }
-    // Compositor will be resumed at nsWindow::SetCompositorWidgetDelegate().
-    if (!mCompositorWidgetDelegate) {
-      LOG("  quit, missing mCompositorWidgetDelegate");
-      return;
-    }
-
-    ResumeCompositorImpl();
-  };
-
-  if (GdkIsWaylandDisplay()) {
-#ifdef MOZ_WAYLAND
-    moz_container_wayland_add_or_fire_initial_draw_callback(mContainer,
-                                                            startCompositing);
-#endif
-  } else {
-    startCompositing();
+  if (mIsDestroyed || !mIsMapped) {
+    LOG("  quit, mIsDestroyed = %d mIsMapped = %d", !!mIsDestroyed,
+        !!mIsMapped);
+    return;
   }
+  // Compositor will be resumed at nsWindow::SetCompositorWidgetDelegate().
+  if (!mCompositorWidgetDelegate) {
+    LOG("  quit, missing mCompositorWidgetDelegate");
+    return;
+  }
+
+  ResumeCompositorImpl();
 }
 
 nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
@@ -9979,15 +9948,6 @@ bool nsWindow::SetEGLNativeWindowSize(
 
 nsWindow* nsWindow::GetWindow(GdkWindow* window) {
   return get_window_for_gdk_window(window);
-}
-
-void nsWindow::ClearRenderingQueue() {
-  LOG("nsWindow::ClearRenderingQueue()");
-
-  if (mWidgetListener) {
-    mWidgetListener->RequestWindowClose(this);
-  }
-  DestroyLayerManager();
 }
 
 // nsWindow::OnMap() / nsWindow::OnUnmap() is called from map/unmap mContainer
