@@ -237,8 +237,4 @@ def patch_schedules(base_rev, patch_content, mode="quick"):
             f"Invalid mode: '{mode}'; expected one of 'extensive', 'moderate', 'quick'"
         )
 
-    return {
-        translate_group(k): v
-        for k, v in data["groups"].items()
-        if v >= confidence_threshold
-    }
+    return {k: v for k, v in data["groups"].items() if v >= confidence_threshold}
