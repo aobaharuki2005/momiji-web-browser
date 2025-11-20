@@ -38,12 +38,15 @@ extern mozilla::LazyLogModule gWidgetWaylandLog;
     MOZ_LOG(gWidgetWaylandLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #  define LOGS_VERBOSE(...) \
     MOZ_LOG(gWidgetWaylandLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
+#  define LOG_ENABLED_VERBOSE() \
+    MOZ_LOG_TEST(gWidgetWaylandLog, mozilla::LogLevel::Verbose)
 #else
 #  define LOGWAYLAND(...)
 #  undef LOGVERBOSE
 #  define LOGVERBOSE(...)
 #  define LOGS(...)
 #  define LOGS_VERBOSE(...)
+#  define LOG_ENABLED_VERBOSE(...)
 #endif /* MOZ_LOGGING */
 
 using namespace mozilla;
@@ -136,6 +139,10 @@ void WaylandSurface::FrameCallbackHandler(struct wl_callback* aCallback,
 
     // Don't run emulated callbacks on hidden surfaces
     if ((emulatedCallback || aRoutedFromChildSurface) && !mIsVisible) {
+      LOGVERBOSE(
+          "WaylandSurface::FrameCallbackHandler() quit, emulatedCallback %d "
+          "aRoutedFromChildSurface %d mIsVisible %d",
+          emulatedCallback, aRoutedFromChildSurface, !mIsVisible);
       return;
     }
 
@@ -161,6 +168,9 @@ void WaylandSurface::FrameCallbackHandler(struct wl_callback* aCallback,
     // We're getting regular frame callback from this surface so we must
     // have buffer attached.
     if (!emulatedCallback && !aRoutedFromChildSurface) {
+      LOGVERBOSE(
+          "WaylandSurface::FrameCallbackHandler() marked as visible & has "
+          "buffer");
       mIsVisible = true;
       mBufferAttached = true;
     }
@@ -1140,16 +1150,30 @@ GdkWindow* WaylandSurface::GetGdkWindow() const {
 }
 
 double WaylandSurface::GetScale() {
+#ifdef MOZ_LOGGING
+  static float lastLoggedScale = 0.0;
+#endif
+
   if (mScreenScale != sNoScale) {
-    LOGVERBOSE("WaylandSurface::GetScale() fractional scale %f",
-               (double)mScreenScale);
+#ifdef MOZ_LOGGING
+    if (LOG_ENABLED_VERBOSE() && lastLoggedScale != mScreenScale) {
+      lastLoggedScale = mScreenScale;
+      LOGVERBOSE("WaylandSurface::GetScale() fractional scale %f",
+                 (double)mScreenScale);
+    }
+#endif
     return mScreenScale;
   }
 
   // We don't have scale yet - query parent surface if there's any.
   if (mParent) {
     auto scale = mParent->GetScale();
-    LOGVERBOSE("WaylandSurface::GetScale() parent scale %f", scale);
+#ifdef MOZ_LOGGING
+    if (LOG_ENABLED_VERBOSE() && lastLoggedScale != scale) {
+      lastLoggedScale = scale;
+      LOGVERBOSE("WaylandSurface::GetScale() parent scale %f", scale);
+    }
+#endif
     return scale;
   }
 
