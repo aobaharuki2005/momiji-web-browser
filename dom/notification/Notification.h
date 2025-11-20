@@ -100,7 +100,12 @@ class Notification : public DOMEventTargetHelper, public SupportsWeakPtr {
   }
 
   void GetIcon(nsACString& aRetval) {
-    aRetval = NS_ConvertUTF16toUTF8(mIPCNotification.options().icon());
+    nsIURI* iconUri = mIPCNotification.options().icon();
+    if (!iconUri) {
+      aRetval.Truncate();
+      return;
+    }
+    iconUri->GetSpec(aRetval);
   }
 
   void MaybeNotifyClose();
@@ -110,7 +115,7 @@ class Notification : public DOMEventTargetHelper, public SupportsWeakPtr {
 
   static already_AddRefed<Promise> RequestPermission(
       const GlobalObject& aGlobal,
-      const Optional<OwningNonNull<NotificationPermissionCallback> >& aCallback,
+      const Optional<OwningNonNull<NotificationPermissionCallback>>& aCallback,
       ErrorResult& aRv);
 
   static NotificationPermission GetPermission(const GlobalObject& aGlobal,
@@ -193,9 +198,8 @@ class Notification : public DOMEventTargetHelper, public SupportsWeakPtr {
   bool CreateActor();
   bool SendShow(Promise* aPromise);
 
-  static nsresult ResolveIconURL(nsIGlobalObject* aGlobal,
-                                 const nsACString& aIconUrl,
-                                 nsString& aResolvedUrl);
+  static already_AddRefed<nsIURI> ResolveIconURL(nsIGlobalObject* aGlobal,
+                                                 const nsACString& aIconUrl);
 };
 
 }  // namespace mozilla::dom

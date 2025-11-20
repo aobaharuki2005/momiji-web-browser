@@ -395,8 +395,7 @@ already_AddRefed<Notification> Notification::ValidateAndCreate(
   // Step 12: If options["icon"] exists, then parse it using baseURL, and if
   // that does not return failure, set notification’s icon URL to the return
   // value. (Otherwise icon URL is not set.)
-  nsAutoString iconUrl;
-  ResolveIconURL(aGlobal, aOptions.mIcon, iconUrl);
+  RefPtr<nsIURI> iconUrl = ResolveIconURL(aGlobal, aOptions.mIcon);
 
   // Step 19: Set notification’s actions to « ».
   nsTArray<IPCNotificationAction> actions;
@@ -425,7 +424,7 @@ already_AddRefed<Notification> Notification::ValidateAndCreate(
                       nsString(aTitle), aOptions.mDir, nsString(aOptions.mLang),
                       nsString(aOptions.mBody), nsString(aOptions.mTag),
                       iconUrl, aOptions.mRequireInteraction, silent, vibrate,
-                      nsString(dataResult.unwrap()), std::move(actions)));
+                      nsString(dataResult.unwrap()), actions));
 
   RefPtr<Notification> notification =
       new Notification(aGlobal, ipcNotification, aScope);
@@ -563,31 +562,26 @@ uint32_t Notification::MaxActions(const GlobalObject& aGlobal) {
   return kMaxActions;
 }
 
-nsresult Notification::ResolveIconURL(nsIGlobalObject* aGlobal,
-                                      const nsACString& aIconUrl,
-                                      nsString& aResolvedUrl) {
+already_AddRefed<nsIURI> Notification::ResolveIconURL(
+    nsIGlobalObject* aGlobal, const nsACString& aIconUrl) {
   nsresult rv = NS_OK;
 
   if (aIconUrl.IsEmpty()) {
-    return rv;
+    return nullptr;
   }
 
   nsCOMPtr<nsIURI> baseUri = aGlobal->GetBaseURI();
   if (!baseUri) {
-    return rv;
+    return nullptr;
   }
 
   nsCOMPtr<nsIURI> srcUri;
   rv = NS_NewURI(getter_AddRefs(srcUri), aIconUrl, nullptr, baseUri);
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoCString src;
-    srcUri->GetSpec(src);
-    // XXX(krosylight): We should be able to pass UTF8 as-is, or ideally the URI
-    // object itself.
-    CopyUTF8toUTF16(src, aResolvedUrl);
+  if (NS_FAILED(rv)) {
+    return nullptr;
   }
 
-  return rv;
+  return srcUri.forget();
 }
 
 JSObject* Notification::WrapObject(JSContext* aCx,
