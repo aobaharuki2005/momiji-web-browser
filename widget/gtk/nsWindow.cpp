@@ -970,7 +970,7 @@ bool nsWindow::ToplevelUsesCSD() const {
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
     static auto sGdkWaylandDisplayPrefersSsd =
-        (gboolean(*)(const GdkWaylandDisplay*))dlsym(
+        (gboolean (*)(const GdkWaylandDisplay*))dlsym(
             RTLD_DEFAULT, "gdk_wayland_display_prefers_ssd");
     // NOTE(emilio): Not using GDK_WAYLAND_DISPLAY to avoid bug 1946088.
     return !sGdkWaylandDisplayPrefersSsd ||
@@ -1439,6 +1439,7 @@ void nsWindow::WaylandPopupCloseOrphanedPopups() {
       LOG("  popup [%p] is waiting to show, close all child popups", popup);
       dangling = true;
     } else if (dangling) {
+      LOG("  popup [%p] is dangling, hide it", popup);
       popup->WaylandPopupMarkAsClosed();
     }
     popup = popup->mWaylandPopupNext;
@@ -5286,7 +5287,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
         if (StaticPrefs::apz_gtk_pangesture_enabled() &&
             gtk_check_version(3, 20, 0) == nullptr) {
           static auto sGdkEventIsScrollStopEvent =
-              (gboolean(*)(const GdkEvent*))dlsym(
+              (gboolean (*)(const GdkEvent*))dlsym(
                   RTLD_DEFAULT, "gdk_event_is_scroll_stop_event");
 
           LOG("[%d] pan smooth event dx=%.2f dy=%.2f inprogress=%d\n",
@@ -10086,7 +10087,7 @@ RefPtr<nsWindow::ExportHandlePromise> nsWindow::ExportHandle() {
   auto* toplevel = GetToplevelGdkWindow();
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
-    static auto sGdkWaylandWindowExportHandle = (gboolean(*)(
+    static auto sGdkWaylandWindowExportHandle = (gboolean (*)(
         const GdkWindow*, GdkWaylandWindowExported, gpointer,
         GDestroyNotify))dlsym(RTLD_DEFAULT, "gdk_wayland_window_export_handle");
     if (!sGdkWaylandWindowExportHandle || !toplevel) {
