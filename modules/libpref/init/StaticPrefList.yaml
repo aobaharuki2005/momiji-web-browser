@@ -872,6 +872,7 @@
   value: 100
   mirror: always
 
+#ifdef XP_WIN
 - name: apz.windows.force_disable_direct_manipulation
   type: RelaxedAtomicBool
   value: false
@@ -881,6 +882,7 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+#endif
 
 - name: apz.x_skate_highmem_adjust
   type: AtomicFloat
