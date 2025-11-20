@@ -88,7 +88,6 @@ nimbus_targeting_environment:
       - "browser.startup.page"
       - "browser.toolbars.bookmarks.visibility"
       - "browser.urlbar.lastUrlbarSearchSeconds"
-      - "browser.urlbar.quicksuggest.dataCollection.enabled"
       - "browser.urlbar.showSearchSuggestionsFirst"
       - "browser.urlbar.suggest.quicksuggest.sponsored"
       - "media.videocontrols.picture-in-picture.enabled"
@@ -203,8 +202,6 @@ nimbus_targeting_environment:
           type: string
         browser__urlbar__lastUrlbarSearchSeconds:
           type: number
-        browser__urlbar__quicksuggest__dataCollection__enabled:
-          type: boolean
         browser__urlbar__showSearchSuggestionsFirst:
           type: boolean
         browser__urlbar__suggest__quicksuggest__sponsored:

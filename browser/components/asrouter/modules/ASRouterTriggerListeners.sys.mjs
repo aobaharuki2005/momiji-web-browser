@@ -115,7 +115,6 @@ export const ASRouterTriggerListeners = new Map([
         "datareporting.healthreport.uploadEnabled",
         "datareporting.usage.uploadEnabled",
         "datareporting.policy.dataSubmissionEnabled",
-        "browser.urlbar.quicksuggest.dataCollection.enabled",
         "app.shield.optoutstudies.enabled",
         "browser.crashReports.unsubmittedCheck.autoSubmit2",
         "browser.discovery.enabled",

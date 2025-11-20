@@ -486,16 +486,6 @@ pref("browser.urlbar.suggest.quicksuggest.nonsponsored", false, sticky);
 // default-branch values, the user is enrolled in over time.
 pref("browser.urlbar.suggest.quicksuggest.sponsored", false, sticky);
 
-// TODO: Remove this pref, which is the old opt-in pref for online Firefox
-// Suggest. We need to keep it for now because some live Nimbus experiments use
-// a targeting filter that depends on it. Original comment below.
-//
-// Whether data collection is enabled for quick suggest results in the urlbar.
-// This pref is exposed to the user in the UI, and it's sticky so that its
-// user-branch value persists regardless of whatever Firefox Suggest scenarios,
-// with their various default-branch values, the user is enrolled in over time.
-pref("browser.urlbar.quicksuggest.dataCollection.enabled", false, sticky);
-
 // Whether online Firefox Suggest is available to the user. This is only
 // relevant when Suggest overall is enabled [1]. When true, a checkbox will be
 // shown in the settings UI allowing to the user to toggle online Suggest.
