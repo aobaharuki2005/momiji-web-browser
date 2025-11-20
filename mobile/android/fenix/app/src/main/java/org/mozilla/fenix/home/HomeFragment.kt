@@ -599,7 +599,7 @@ class HomeFragment : Fragment() {
     private fun buildToolbar(activity: HomeActivity): FenixHomeToolbar =
         when (activity.settings().shouldUseComposableToolbar) {
             true -> {
-                val toolbarStore = buildToolbarStore(activity)
+                val toolbarStore by buildToolbarStore(activity)
 
                 homeNavigationBar = HomeNavigationBar(
                     context = activity,
@@ -1385,13 +1385,13 @@ class HomeFragment : Fragment() {
     ) = context?.let {
         AwesomeBarComposable(
             activity = requireActivity() as HomeActivity,
+            fragment = this,
             modifier = modifier,
             components = requireComponents,
             appStore = requireComponents.appStore,
             browserStore = requireComponents.core.store,
             toolbarStore = toolbarStore,
             navController = findNavController(),
-            lifecycleOwner = this,
             tabId = args.sessionToStartSearchFor,
             searchAccessPoint = args.searchAccessPoint,
         ).also {

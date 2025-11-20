@@ -47,9 +47,8 @@ import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
@@ -81,14 +80,13 @@ import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
-import mozilla.components.compose.browser.toolbar.store.EnvironmentCleared
-import mozilla.components.compose.browser.toolbar.store.EnvironmentRehydrated
 import mozilla.components.compose.browser.toolbar.store.Mode
 import mozilla.components.compose.browser.toolbar.ui.BrowserToolbarQuery
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -108,7 +106,6 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
-import org.mozilla.fenix.components.toolbar.BrowserToolbarEnvironment
 import org.mozilla.fenix.databinding.FragmentHistoryBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
@@ -131,7 +128,6 @@ import org.mozilla.fenix.search.BrowserToolbarSearchMiddleware
 import org.mozilla.fenix.search.BrowserToolbarSearchStatusSyncMiddleware
 import org.mozilla.fenix.search.BrowserToolbarToFenixSearchMapperMiddleware
 import org.mozilla.fenix.search.FenixSearchMiddleware
-import org.mozilla.fenix.search.SearchFragmentAction
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionClicked
 import org.mozilla.fenix.search.SearchFragmentAction.SuggestionSelected
 import org.mozilla.fenix.search.SearchFragmentStore
@@ -146,8 +142,8 @@ private const val MATERIAL_DESIGN_SCRIM = "#52000000"
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, MenuProvider {
     private lateinit var historyStore: HistoryFragmentStore
-    private lateinit var toolbarStore: BrowserToolbarStore
-    private val searchStore by lazy { buildSearchStore(toolbarStore) }
+    private lateinit var searchStore: SearchFragmentStore
+    private val toolbarStore by buildToolbarStore()
 
     private lateinit var historyProvider: DefaultPagedHistoryProvider
 
@@ -210,6 +206,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                 ),
             )
         }
+        searchStore = buildSearchStore(toolbarStore).value
+
         _historyView = HistoryView(
             container = binding.historyLayout,
             onZeroItemsLoaded = {
@@ -295,7 +293,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         if (requireContext().settings().shouldUseComposableToolbar) {
-            toolbarStore = buildToolbarStore()
             qrScanFenixFeature = QrScanFenixFeature.register(this, qrScanLauncher)
             voiceSearchFeature = VoiceSearchFeature.register(this, voiceSearchLauncher)
         }
@@ -790,56 +787,61 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             }.create().withCenterAlignedButtons()
     }
 
-    private fun buildToolbarStore() = StoreProvider.get(this) {
+    private fun buildToolbarStore() = fragmentStore(
+        BrowserToolbarState(mode = Mode.EDIT),
+    ) {
+        val lifecycleScope = viewLifecycleOwner.lifecycle.coroutineScope
+
         BrowserToolbarStore(
-            initialState = BrowserToolbarState(mode = Mode.EDIT),
+            initialState = it,
             middleware = listOf(
                 BrowserToolbarSyncToHistoryMiddleware(historyStore),
-                BrowserToolbarSearchStatusSyncMiddleware(requireComponents.appStore),
+                BrowserToolbarSearchStatusSyncMiddleware(
+                    appStore = requireComponents.appStore,
+                    browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
+                    scope = lifecycleScope,
+                ),
                 BrowserToolbarSearchMiddleware(
+                    uiContext = requireActivity(),
                     appStore = requireComponents.appStore,
                     browserStore = requireComponents.core.store,
                     components = requireComponents,
-                    settings = requireComponents.settings,
-                ),
-            ),
-        )
-    }.also {
-        it.dispatch(
-            EnvironmentRehydrated(
-                BrowserToolbarEnvironment(
-                    context = requireContext(),
-                    fragment = this,
                     navController = findNavController(),
                     browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
+                    settings = requireComponents.settings,
+                    scope = lifecycleScope,
                 ),
             ),
-        )
-
-        viewLifecycleOwner.lifecycle.addObserver(
-            object : DefaultLifecycleObserver {
-                override fun onDestroy(owner: LifecycleOwner) {
-                    it.dispatch(EnvironmentCleared)
-                }
-            },
         )
     }
 
     private fun buildSearchStore(
         toolbarStore: BrowserToolbarStore,
-    ) = StoreProvider.get(this) {
+    ) = fragmentStore(
+        createInitialSearchFragmentState(
+            activity = requireActivity() as HomeActivity,
+            components = requireComponents,
+            tabId = null,
+            pastedText = null,
+            searchAccessPoint = MetricsUtils.Source.NONE,
+        ),
+    ) {
+        val lifecycleScope = viewLifecycleOwner.lifecycle.coroutineScope
+
         SearchFragmentStore(
-            initialState = createInitialSearchFragmentState(
-                activity = requireActivity() as HomeActivity,
-                components = requireComponents,
-                tabId = null,
-                pastedText = null,
-                searchAccessPoint = MetricsUtils.Source.NONE,
-            ),
+            initialState = it,
             middleware = listOf(
-                BrowserToolbarToFenixSearchMapperMiddleware(toolbarStore),
-                BrowserStoreToFenixSearchMapperMiddleware(requireComponents.core.store),
+                BrowserToolbarToFenixSearchMapperMiddleware(
+                    toolbarStore = toolbarStore,
+                    browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
+                    scope = lifecycleScope,
+                ),
+                BrowserStoreToFenixSearchMapperMiddleware(
+                    browserStore = requireComponents.core.store,
+                    scope = lifecycleScope,
+                ),
                 FenixSearchMiddleware(
+                    fragment = this@HistoryFragment,
                     engine = requireComponents.core.engine,
                     useCases = requireComponents.useCases,
                     nimbusComponents = requireComponents.nimbus,
@@ -847,27 +849,10 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                     appStore = requireComponents.appStore,
                     browserStore = requireComponents.core.store,
                     toolbarStore = toolbarStore,
-                ),
-            ),
-        )
-    }.also {
-        it.dispatch(
-            SearchFragmentAction.EnvironmentRehydrated(
-                SearchFragmentStore.Environment(
-                    context = requireContext(),
-                    viewLifecycleOwner = viewLifecycleOwner,
-                    browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
                     navController = findNavController(),
+                    browsingModeManager = (requireActivity() as HomeActivity).browsingModeManager,
                 ),
             ),
-        )
-
-        viewLifecycleOwner.lifecycle.addObserver(
-            object : DefaultLifecycleObserver {
-                override fun onDestroy(owner: LifecycleOwner) {
-                    it.dispatch(SearchFragmentAction.EnvironmentCleared)
-                }
-            },
         )
     }
 
