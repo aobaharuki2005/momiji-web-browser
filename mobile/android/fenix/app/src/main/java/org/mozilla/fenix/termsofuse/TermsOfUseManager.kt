@@ -5,16 +5,16 @@
 package org.mozilla.fenix.termsofuse
 
 import androidx.annotation.VisibleForTesting
-import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptRepository
 import org.mozilla.fenix.utils.Settings.Companion.FIVE_DAYS_MS
 import org.mozilla.fenix.utils.Settings.Companion.THIRTY_SECONDS_MS
 
 /**
  * Helps determine when the terms of use prompt should show.
  *
- * @param settings app settings
+ * @param repository the repository for data related to the Terms of Use prompt.
  */
-class TermsOfUseManager(private val settings: Settings) {
+class TermsOfUseManager(private val repository: TermsOfUsePromptRepository) {
 
     private var isFirstCheckSinceStartingApp: Boolean = false
 
@@ -51,21 +51,21 @@ class TermsOfUseManager(private val settings: Settings) {
         ignoreFirstCheckSinceStartingApp: Boolean = false,
         currentTimeInMillis: Long = System.currentTimeMillis(),
     ): Boolean {
-        if (settings.hasAcceptedTermsOfService) return false
-        if (!settings.isTermsOfUsePromptEnabled) return false
-        if (settings.termsOfUsePromptDisplayedCount >= settings.getTermsOfUseMaxDisplayCount()) return false
+        if (repository.hasAcceptedTermsOfUse) return false
+        if (!repository.isTermsOfUsePromptEnabled) return false
+        if (repository.hasExceededMaxDisplayCount) return false
 
         val isFirstCheck = isFirstCheckSinceStartingApp
         isFirstCheckSinceStartingApp = false
 
-        val durationSinceLastPrompt = currentTimeInMillis - settings.lastTermsOfUsePromptTimeInMillis
-        val durationBetweenPrompts = if (settings.isDebugTermsOfServiceTriggerTimeEnabled) {
+        val durationSinceLastPrompt = currentTimeInMillis - repository.lastTermsOfUsePromptTimeInMillis
+        val durationBetweenPrompts = if (repository.isDebugTermsOfUseTriggerTimeEnabled) {
             THIRTY_SECONDS_MS
         } else {
             FIVE_DAYS_MS
         }
 
-        if (settings.hasPostponedAcceptingTermsOfUse && durationSinceLastPrompt < durationBetweenPrompts) return false
+        if (repository.hasPostponedAcceptingTermsOfUse && durationSinceLastPrompt < durationBetweenPrompts) return false
         if (!ignoreFirstCheckSinceStartingApp && !isFirstCheck) return false
 
         return true

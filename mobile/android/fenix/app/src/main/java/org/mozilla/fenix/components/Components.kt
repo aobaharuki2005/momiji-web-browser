@@ -74,6 +74,7 @@ import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.reviewprompt.ReviewPromptMiddleware
 import org.mozilla.fenix.settings.settingssearch.DefaultFenixSettingsIndexer
 import org.mozilla.fenix.termsofuse.TermsOfUseManager
+import org.mozilla.fenix.termsofuse.store.DefaultTermsOfUsePromptRepository
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.isLargeScreenSize
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
@@ -354,7 +355,7 @@ class Components(private val context: Context) {
     }
 
     val termsOfUseManager by lazyMonitored {
-        TermsOfUseManager(settings)
+        TermsOfUseManager(DefaultTermsOfUsePromptRepository(settings))
     }
 
     val settingsIndexer by lazyMonitored {
