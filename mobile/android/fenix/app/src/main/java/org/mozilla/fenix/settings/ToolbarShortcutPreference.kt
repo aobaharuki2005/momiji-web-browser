@@ -49,12 +49,12 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
     protected abstract val options: List<ShortcutOption>
     protected abstract fun readSelectedKey(): String
     protected abstract fun writeSelectedKey(key: String)
-    protected abstract fun toolbarShortcutPreview(): Int
+    protected abstract fun getSelectedIconImageView(holder: PreferenceViewHolder): ImageView
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
-        val preview = holder.findViewById(R.id.toolbar_preview) as ImageView
+        val selectedIcon = getSelectedIconImageView(holder)
         val selectedContainer = holder.findViewById(R.id.selected_container) as LinearLayout
         val optionsContainer = holder.findViewById(R.id.options_container) as LinearLayout
         val separator = holder.findViewById(R.id.separator) as View
@@ -63,12 +63,11 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
         colorOnSurface = holder.itemView.getMaterialColor(materialR.attr.colorOnSurface)
         colorOnSurfaceVariant = holder.itemView.getMaterialColor(materialR.attr.colorOnSurfaceVariant)
 
-        preview.setImageResource(toolbarShortcutPreview())
-
         val selectedKey = readSelectedKey()
         val selected = options.firstOrNull {
             it.key == ShortcutType.fromValue(selectedKey)
         } ?: options.first()
+        selectedIcon.setImageResource(selected.icon)
         selectedContainer.removeAllViews()
         selectedContainer.addView(
             makeRow(
@@ -91,6 +90,7 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
                     isEnabled = true,
                 ) { newlySelected ->
                     writeSelectedKey(newlySelected.key.value)
+                    selectedIcon.setImageResource(newlySelected.icon)
                     notifyChanged()
                 },
             )
