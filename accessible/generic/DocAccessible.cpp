@@ -166,7 +166,7 @@ NS_IMPL_RELEASE_INHERITED(DocAccessible, HyperTextAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-ENameValueFlag DocAccessible::Name(nsString& aName) const {
+ENameValueFlag DocAccessible::DirectName(nsString& aName) const {
   aName.Truncate();
 
   if (mParent) {
@@ -174,7 +174,7 @@ ENameValueFlag DocAccessible::Name(nsString& aName) const {
   }
   if (aName.IsEmpty()) {
     // Allow name via aria-labelledby or title attribute
-    LocalAccessible::Name(aName);
+    LocalAccessible::DirectName(aName);
   }
   if (aName.IsEmpty()) {
     Title(aName);  // Try title element
