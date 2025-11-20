@@ -9880,7 +9880,7 @@
 # https://html.spec.whatwg.org/#creating-a-css-module-script
 - name: layout.css.module-scripts.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
