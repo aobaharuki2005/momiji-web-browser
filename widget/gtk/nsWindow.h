@@ -498,10 +498,6 @@ class nsWindow final : public nsIWidget {
 
   void ResumeCompositorImpl();
 
-  // Force hide this window, remove compositor etc. to avoid
-  // rendering queue blocking (see Bug 1782948).
-  void ClearRenderingQueue();
-
   bool ApplyEnterLeaveMutterWorkaround();
 
   void NotifyOcclusionState(mozilla::widget::OcclusionState aState) override;
