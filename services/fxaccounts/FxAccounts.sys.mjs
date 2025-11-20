@@ -1321,6 +1321,12 @@ FxAccountsInternal.prototype = {
    * Sets the user to be verified in the account state,
    */
   async setUserVerified() {
+    await this.withCurrentAccountState(async currentState => {
+      const userData = await currentState.getUserAccountData();
+      if (!userData.verified) {
+        await currentState.updateUserAccountData({ verified: true });
+      }
+    });
     await this.notifyObservers(ONVERIFIED_NOTIFICATION);
   },
 
