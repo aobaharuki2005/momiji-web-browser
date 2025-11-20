@@ -30,25 +30,94 @@ const TEST_DATA = [
     expectedTargetLabel: "::marker",
     expectedAnimationNameLabel: "div-marker",
   },
+  {
+    expectedTargetLabel: "::view-transition-group(root)",
+    expectedAnimationNameLabel: "-ua-view-transition-group-anim-root",
+  },
+  {
+    expectedTargetLabel: "::view-transition-group(my-vt)",
+    expectedAnimationNameLabel: "my-vt-animation",
+  },
+  {
+    expectedTargetLabel: "::view-transition-old(root)",
+    expectedAnimationNameLabel: "-ua-mix-blend-mode-plus-lighter",
+  },
+  {
+    expectedTargetLabel: "::view-transition-old(root)",
+    expectedAnimationNameLabel: "-ua-view-transition-fade-out",
+  },
+  {
+    expectedTargetLabel: "::view-transition-new(root)",
+    expectedAnimationNameLabel: "-ua-mix-blend-mode-plus-lighter",
+  },
+  {
+    expectedTargetLabel: "::view-transition-new(root)",
+    expectedAnimationNameLabel: "-ua-view-transition-fade-in",
+  },
+  {
+    expectedTargetLabel: "::view-transition-old(my-vt)",
+    expectedAnimationNameLabel: "-ua-mix-blend-mode-plus-lighter",
+  },
+  {
+    expectedTargetLabel: "::view-transition-old(my-vt)",
+    expectedAnimationNameLabel: "-ua-view-transition-fade-out",
+  },
+  {
+    expectedTargetLabel: "::view-transition-new(my-vt)",
+    expectedAnimationNameLabel: "-ua-mix-blend-mode-plus-lighter",
+  },
+  {
+    expectedTargetLabel: "::view-transition-new(my-vt)",
+    expectedAnimationNameLabel: "-ua-view-transition-fade-in",
+  },
 ];
 
 add_task(async function () {
   await addTab(URL_ROOT + "doc_pseudo.html");
+
   const { animationInspector, inspector, panel } =
     await openAnimationInspector();
 
-  info("Checking count of animation item for pseudo elements");
-  is(
-    panel.querySelectorAll(".animation-list .animation-item").length,
-    TEST_DATA.length,
-    `Count of animation item should be ${TEST_DATA.length}`
-  );
+  // Select the html node so we can see ::view-transition animations
+  await selectNode("html", inspector);
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    const document = content.document;
+    const transition = document.startViewTransition(() => {
+      document.querySelector(".div-view-transition").append("world");
+    });
+    await transition.ready;
+    await transition.updateCallbackDone;
+  });
+
+  info("Waiting for expected animations to be displayed");
+  try {
+    await waitFor(
+      () =>
+        panel.querySelectorAll(".animation-list .animation-item").length ===
+        TEST_DATA.length
+    );
+    ok(
+      true,
+      `Got expectedCount of animation item should be ${TEST_DATA.length}`
+    );
+  } catch (e) {
+    ok(
+      false,
+      `Didn't get expected number of animations. Got ${panel.querySelectorAll(".animation-list .animation-item").length} expected ${TEST_DATA.length}`
+    );
+  }
 
   info("Checking content of each animation item");
   for (let i = 0; i < TEST_DATA.length; i++) {
     const testData = TEST_DATA[i];
-    info(`Checking pseudo element for ${testData.expectedTargetLabel}`);
+    info(`Checking pseudo element for animation at index #${i}`);
     const animationItemEl = await findAnimationItemByIndex(panel, i);
+
+    if (!animationItemEl) {
+      ok(false, `Didn't find an animation at index #${i}`);
+      continue;
+    }
 
     info("Checking text content of animation target");
     const animationTargetEl = animationItemEl.querySelector(
@@ -57,7 +126,7 @@ add_task(async function () {
     is(
       animationTargetEl.textContent,
       testData.expectedTargetLabel,
-      `Text content of animation target[${i}] should be ${testData.expectedTarget}`
+      `Got expected target for animation at index #${i}`
     );
 
     info("Checking text content of animation name");
@@ -65,7 +134,7 @@ add_task(async function () {
     is(
       animationNameEl.textContent,
       testData.expectedAnimationNameLabel,
-      `The animation name should be ${testData.expectedAnimationNameLabel}`
+      `Got expected animation name for animation at index #${i}`
     );
   }
 
@@ -85,7 +154,8 @@ add_task(async function () {
     TEST_DATA[0].expectedKeyframsGraphPathSegments
   );
 
-  info("Select <body> again to reset the animation list");
+  // Select `body` only so we avoid having all the view transition items
+  info("Select <body> to reset the animation list");
   await selectNode("body", inspector);
 
   info(
@@ -100,6 +170,55 @@ add_task(async function () {
   assertKeyframesGraphPathSegments(
     panel,
     TEST_DATA[1].expectedKeyframsGraphPathSegments
+  );
+
+  info(
+    "Check that view-transition node can be selected from the animation panel"
+  );
+  info("Select <html> to reset the animation list");
+  await selectNode("html", inspector);
+  // wait for all the animations to be displayed again
+  await waitFor(
+    () =>
+      panel.querySelectorAll(".animation-list .animation-item").length ===
+      TEST_DATA.length
+  );
+
+  onDetailRendered = animationInspector.once("animation-keyframes-rendered");
+  await clickOnTargetNodeByTargetText(
+    animationInspector,
+    panel,
+    "::view-transition-group(my-vt)"
+  );
+
+  // we get all the view transition animations, even those on elements who are not children
+  // of the currently selected node
+  const expectedTargets = [
+    "::view-transition-group(my-vt)",
+    "::view-transition-group(root)",
+    "::view-transition-old(my-vt)",
+    "::view-transition-old(my-vt)",
+    "::view-transition-old(root)",
+    "::view-transition-old(root)",
+    "::view-transition-new(my-vt)",
+    "::view-transition-new(my-vt)",
+    "::view-transition-new(root)",
+    "::view-transition-new(root)",
+  ];
+  await waitFor(() =>
+    [
+      ...panel.querySelectorAll(
+        ".animation-list .animation-item .animation-target .attrName"
+      ),
+    ]
+      .map(attrNameEl => attrNameEl.textContent)
+      .every((targetElText, index) => targetElText === expectedTargets[index])
+  );
+
+  is(
+    inspector.selection.nodeFront.displayName,
+    "::view-transition-group(my-vt)",
+    "Expected view transition pseudo element node was selected"
   );
 });
 

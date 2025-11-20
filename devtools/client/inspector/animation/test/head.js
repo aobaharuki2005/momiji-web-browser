@@ -316,6 +316,41 @@ const clickOnTargetNode = async function (animationInspector, panel, index) {
 };
 
 /**
+ * Click on the target node for the given AnimationTargetComponent target element text
+ *
+ * @param {AnimationInspector} animationInspector.
+ * @param {DOMElement} panel
+ *        #animation-container element.
+ * @param {string} targetText
+ *        text displayed to represent the animation target in the panel.
+ */
+const clickOnTargetNodeByTargetText = async function (
+  animationInspector,
+  panel,
+  targetText
+) {
+  const { inspector } = animationInspector;
+  const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
+  info(`Click on a target node in animation target "${targetText}"`);
+
+  const animationItemEl = await findAnimationItemByTargetText(
+    panel,
+    targetText
+  );
+  if (!animationItemEl) {
+    throw new Error(`Couln't find target "${targetText}"`);
+  }
+  const targetEl = animationItemEl.querySelector(
+    ".animation-target .objectBox"
+  );
+  const onHighlight = waitForHighlighterTypeShown(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
+  EventUtils.synthesizeMouseAtCenter(targetEl, {}, targetEl.ownerGlobal);
+  await onHighlight;
+};
+
+/**
  * Drag on the scrubber to update the animation current time.
  *
  * @param {DOMElement} panel
@@ -847,6 +882,10 @@ function isPassingThrough(pathData, x, y) {
 async function findAnimationItemByIndex(panel, index) {
   const itemEls = [...panel.querySelectorAll(".animation-item")];
   const itemEl = itemEls[index];
+  if (!itemEl) {
+    return null;
+  }
+
   itemEl.scrollIntoView(false);
 
   await waitUntil(
@@ -883,6 +922,35 @@ async function findAnimationItemByTargetSelector(panel, selector) {
     const attrNameEl = itemEl.querySelector(".animation-target .attrName");
     const regexp = new RegExp(`\\${selector}(\\.|$)`, "gi");
     if (regexp.exec(attrNameEl.textContent)) {
+      return itemEl;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Return animation item element by given target element text of animation.
+ *
+ * @param {DOMElement} panel
+ *        #animation-container element.
+ * @param {string} targetText
+ *        text displayed to represent the animation target in the panel.
+ * @return {DOMElement|null}
+ *        Animation item element.
+ */
+async function findAnimationItemByTargetText(panel, targetText) {
+  for (const itemEl of panel.querySelectorAll(".animation-item")) {
+    itemEl.scrollIntoView(false);
+
+    await waitUntil(
+      () =>
+        itemEl.querySelector(".animation-target .attrName") &&
+        itemEl.querySelector(".animation-computed-timing-path")
+    );
+
+    const attrNameEl = itemEl.querySelector(".animation-target .attrName");
+    if (attrNameEl.textContent.trim() === targetText) {
       return itemEl;
     }
   }

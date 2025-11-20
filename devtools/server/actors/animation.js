@@ -35,6 +35,13 @@ const {
   ANIMATION_TYPE_FOR_LONGHANDS,
 } = require("resource://devtools/server/actors/animation-type-longhand.js");
 
+loader.lazyRequireGetter(
+  this,
+  "getNodeDisplayName",
+  "resource://devtools/server/actors/inspector/utils.js",
+  true
+);
+
 // Types of animations.
 const ANIMATION_TYPES = {
   CSS_ANIMATION: "cssanimation",
@@ -83,16 +90,19 @@ class AnimationPlayerActor extends Actor {
 
     this.walker = animationsActor.walker;
     this.player = player;
+    // getting the node might need to traverse the DOM, let's only do this once, when
+    // the Actor gets created
+    this.node = this.getNode();
 
     // Listen to animation mutations on the node to alert the front when the
     // current animation changes.
-    // If the node is a pseudo-element, then we listen on its parent with
-    // subtree:true (there's no risk of getting too many notifications in
-    // onAnimationMutation since we filter out events that aren't for the
-    // current animation).
     this.observer = new this.window.MutationObserver(this.onAnimationMutation);
     if (this.isPseudoElement) {
-      this.observer.observe(this.node.parentElement, {
+      // If the node is a pseudo-element, then we listen on its binding element (which is
+      // this.player.effect.target here), with `subtree:true` (there's no risk of getting
+      // too many notifications in onAnimationTargetMutation since we filter out events
+      // that aren't for the current animation).
+      this.observer.observe(this.player.effect.target, {
         animations: true,
         subtree: true,
       });
@@ -119,23 +129,11 @@ class AnimationPlayerActor extends Actor {
     return !!this.player.effect.pseudoElement;
   }
 
-  get pseudoElemenName() {
-    if (!this.isPseudoElement) {
-      return null;
-    }
-
-    return `_moz_generated_content_${this.player.effect.pseudoElement.replace(
-      /^::/,
-      ""
-    )}`;
-  }
-
-  get node() {
+  getNode() {
     if (!this.isPseudoElement) {
       return this.player.effect.target;
     }
 
-    const pseudoElementName = this.pseudoElemenName;
     const originatingElem = this.player.effect.target;
     const treeWalker = this.walker.getDocumentWalker(originatingElem);
 
@@ -144,9 +142,15 @@ class AnimationPlayerActor extends Actor {
     for (
       let next = treeWalker.firstChild();
       next;
-      next = treeWalker.nextSibling()
+      // Use `nextNode` (and not `nextSibling`) as we might need to traverse the whole
+      // children tree to find nested elements (e.g. `::view-transition-group(root)`).
+      next = treeWalker.nextNode()
     ) {
-      if (next.nodeName === pseudoElementName) {
+      if (!next.implementedPseudoElement) {
+        continue;
+      }
+
+      if (this.player.effect.pseudoElement === getNodeDisplayName(next)) {
         return next;
       }
     }
@@ -154,11 +158,12 @@ class AnimationPlayerActor extends Actor {
     console.warn(
       `Pseudo element ${this.player.effect.pseudoElement} is not found`
     );
-    return originatingElem;
+
+    return null;
   }
 
   get document() {
-    return this.node.ownerDocument;
+    return this.player.effect.target.ownerDocument;
   }
 
   get window() {
@@ -376,7 +381,7 @@ class AnimationPlayerActor extends Actor {
       // The document timeline's currentTime is being sent along too. This is
       // not strictly related to the node's animationPlayer, but is useful to
       // know the current time of the animation with respect to the document's.
-      documentCurrentTime: this.node.ownerDocument.timeline.currentTime,
+      documentCurrentTime: this.document.timeline.currentTime,
       // The time which this animation created.
       createdTime: this.createdTime,
       // The time which an animation's current time when this animation has created.
@@ -660,7 +665,16 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
    * /devtools/server/actors/inspector
    */
   getAnimationPlayersForNode(nodeActor) {
-    const animations = nodeActor.rawNode.getAnimations({ subtree: true });
+    let { rawNode } = nodeActor;
+
+    // If the selected node is a ::view-transition child, we want to show all the view-transition
+    // animations so the user can't play only "parts" of the transition.
+    const viewTransitionNode = this.#closestViewTransitionNode(rawNode);
+    if (viewTransitionNode) {
+      rawNode = viewTransitionNode;
+    }
+
+    const animations = rawNode.getAnimations({ subtree: true });
 
     // Destroy previously stored actors
     if (this.actors) {
@@ -684,14 +698,40 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
     this.stopAnimationPlayerUpdates();
     // ownerGlobal doesn't exist in content privileged windows.
     // eslint-disable-next-line mozilla/use-ownerGlobal
-    const win = nodeActor.rawNode.ownerDocument.defaultView;
+    const win = rawNode.ownerDocument.defaultView;
     this.observer = new win.MutationObserver(this.onAnimationMutation);
-    this.observer.observe(nodeActor.rawNode, {
+    this.observer.observe(rawNode, {
       animations: true,
       subtree: true,
     });
 
     return this.actors;
+  }
+
+  /**
+   * Returns the passed node closest ::view-transition node if it exists, null otherwise
+   *
+   * @param {Element} rawNode
+   * @returns {Element|null}
+   */
+  #closestViewTransitionNode(rawNode) {
+    const { implementedPseudoElement } = rawNode;
+    if (
+      !implementedPseudoElement ||
+      !implementedPseudoElement?.startsWith("::view-transition")
+    ) {
+      return null;
+    }
+    // Look up for the root ::view-transition node
+    while (
+      rawNode &&
+      rawNode.implementedPseudoElement &&
+      rawNode.implementedPseudoElement !== "::view-transition"
+    ) {
+      rawNode = rawNode.parentElement;
+    }
+
+    return rawNode;
   }
 
   onAnimationMutation(mutations) {
@@ -737,7 +777,9 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
               a.player.animationName === player.animationName) ||
             (a.isCssTransition() &&
               a.player.transitionProperty === player.transitionProperty);
-          const isSameNode = a.player.effect.target === player.effect.target;
+          const isSameNode =
+            a.player.effect.target === player.effect.target &&
+            a.player.effect.pseudoElement === player.effect.pseudoElement;
 
           return isSameType && isSameNode && isSameName;
         });
