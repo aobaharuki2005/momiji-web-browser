@@ -9,6 +9,10 @@
       href="chrome://mochikit/content/tests/SimpleTest/test.css"
     />
     <link rel="stylesheet" href="chrome://global/skin/global.css" />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/content/preferences/widgets/setting-group.css"
+    />
     <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
     <script src="../../../../../toolkit/content/tests/widgets/lit-test-helpers.js"></script>
     <script src="./head.js"></script>
@@ -146,40 +150,74 @@
           `);
         }
 
-        async function assertVisibilityChanges(group, staysHidden = false) {
+        async function assertVisibilityChanges(
+          group,
+          staysHidden = false,
+          hiddenElsewhere = false
+        ) {
           await waitForRenderUpdate();
           ok(group, "setting-group is created");
           let [control1, control2] = group.querySelectorAll("setting-control");
-          is(control1.hidden, true, "First setting-control should be hidden");
-          is(control2.hidden, true, "Second setting-control should be hidden");
-
           ok(
-            group.hidden,
+            BrowserTestUtils.isHidden(control1),
+            "First setting-control should be hidden"
+          );
+          ok(
+            BrowserTestUtils.isHidden(control2),
+            "Second setting-control should be hidden"
+          );
+          ok(
+            BrowserTestUtils.isHidden(group),
             "setting-group should be hidden since its controls are hidden"
           );
-          is(
-            group.getAttribute("data-hidden-from-search"),
-            "true",
-            "setting-group is hidden from search when hidden"
-          );
-          info(group.hasAttribute("data-hidden-by-setting-group"));
+          let initialHiddenValue = group.hidden;
 
-          Services.prefs.setBoolPref(PREF_ONE, true);
-          await waitForRenderUpdate();
-          if (staysHidden) {
-            ok(BrowserTestUtils.isHidden(group), "Group should stay hidden");
+          if (hiddenElsewhere) {
+            ok(
+              !group.hasAttribute("data-hidden-from-search"),
+              "setting-group is not hidden from search when hidden elsewhere"
+            );
+          } else {
             is(
               group.getAttribute("data-hidden-from-search"),
               "true",
               "setting-group is hidden from search when hidden"
             );
+          }
+          is(
+            group.hidden,
+            initialHiddenValue,
+            "setting-group should not change hidden attribute"
+          );
+
+          Services.prefs.setBoolPref(PREF_ONE, true);
+          await waitForRenderUpdate();
+          is(
+            group.hidden,
+            initialHiddenValue,
+            "setting-group should not change hidden attribute"
+          );
+          if (staysHidden) {
+            ok(BrowserTestUtils.isHidden(group), "Group should stay hidden");
+            if (hiddenElsewhere) {
+              ok(
+                !group.hasAttribute("data-hidden-from-search"),
+                "setting-group is not hidden from search when hidden elsewhere"
+              );
+            } else {
+              is(
+                group.getAttribute("data-hidden-from-search"),
+                "true",
+                "setting-group is hidden from search when hidden"
+              );
+            }
           } else {
             ok(
               !control1.hidden,
               "Control 1 should be visible after changing pref value"
             );
             ok(
-              !group.hidden,
+              BrowserTestUtils.isVisible(group),
               "Group should be visible since one of the controls is visible"
             );
             ok(
@@ -194,23 +232,38 @@
           }
           Services.prefs.setBoolPref(PREF_TWO, true);
           await waitForRenderUpdate();
+          is(
+            group.hidden,
+            initialHiddenValue,
+            "setting-group should not change hidden attribute"
+          );
           if (staysHidden) {
             ok(
               BrowserTestUtils.isHidden(group),
               "Group should still stay hidden"
             );
-            is(
-              group.getAttribute("data-hidden-from-search"),
-              "true",
-              "setting-group is hidden from search when hidden"
-            );
+            if (hiddenElsewhere) {
+              ok(
+                !group.hasAttribute("data-hidden-from-search"),
+                "setting-group is not hidden from search when hidden elsewhere"
+              );
+            } else {
+              is(
+                group.getAttribute("data-hidden-from-search"),
+                "true",
+                "setting-group is hidden from search when hidden"
+              );
+            }
           } else {
             ok(
               !control2.hidden,
               "Control 2 should be visible after changing pref value"
             );
             ok(!control1.hidden, "Control 1 should still be visible");
-            ok(!group.hidden, "Group should still be visible");
+            ok(
+              BrowserTestUtils.isVisible(group),
+              "Group should still be visible"
+            );
             ok(
               !group.hasAttribute("data-hidden-from-search"),
               "setting-group is not hidden from search when visible"
@@ -221,6 +274,11 @@
           Services.prefs.setBoolPref(PREF_TWO, false);
 
           await waitForRenderUpdate();
+          is(
+            group.hidden,
+            initialHiddenValue,
+            "setting-group should not change hidden attribute"
+          );
           ok(
             control1.hidden,
             "Control 1 should be hidden after changing pref value"
@@ -230,7 +288,7 @@
             "Control 2 should be hidden after changing pref value"
           );
           ok(
-            group.hidden,
+            BrowserTestUtils.isHidden(group),
             "Group should be hidden now that the controls are hidden"
           );
           is(
@@ -271,6 +329,17 @@
         let group = result.querySelector("setting-group");
         info("-- assertVisibilityChanges setting-group --");
         await assertVisibilityChanges(group);
+
+        // Without a groupbox, initially hidden, settings visible
+        result = await renderTemplate(config);
+        group = result.querySelector("setting-group");
+        // Make a setting visible so the group would be visible
+        Services.prefs.setBoolPref(PREF_TWO, true);
+        await waitForRenderUpdate();
+        // Hide the group, as if it's on a hidden setting pane
+        group.hidden = true;
+        info("-- assertVisibilityChanges setting-group hidden --");
+        await assertVisibilityChanges(group, true, true);
 
         // Check with an initially visible groupbox
         result = await renderTemplateInGroupbox(config);

@@ -31,6 +31,17 @@ const CLICK_HANDLERS = new Set([
   "moz-box-group",
 ]);
 
+/**
+ * Enumish of attribute names used for changing setting-group and groupbox
+ * visibilities based on the visibility of child setting-controls.
+ */
+const HiddenAttr = Object.freeze({
+  /** Attribute used to hide elements without using the hidden attribute. */
+  Self: "data-hidden-by-setting-group",
+  /** Attribute used to signal that this element should not be searchable. */
+  Search: "data-hidden-from-search",
+});
+
 export class SettingGroup extends SettingElement {
   constructor() {
     super();
@@ -64,21 +75,22 @@ export class SettingGroup extends SettingElement {
     await this.updateComplete;
     // @ts-expect-error bug 1997478
     let hasVisibleControls = [...this.controlEls].some(el => !el.hidden);
-    this.hidden = !hasVisibleControls;
     let groupbox = /** @type {XULElement} */ (this.closest("groupbox"));
     if (hasVisibleControls) {
-      this.removeAttribute("data-hidden-from-search");
-      if (groupbox && groupbox.hasAttribute("data-hidden-by-setting-group")) {
-        groupbox.removeAttribute("data-hidden-from-search");
-        groupbox.removeAttribute("data-hidden-by-setting-group");
-        groupbox.hidden = false;
+      if (this.hasAttribute(HiddenAttr.Self)) {
+        this.removeAttribute(HiddenAttr.Self);
+        this.removeAttribute(HiddenAttr.Search);
+      }
+      if (groupbox && groupbox.hasAttribute(HiddenAttr.Self)) {
+        groupbox.removeAttribute(HiddenAttr.Search);
+        groupbox.removeAttribute(HiddenAttr.Self);
       }
     } else {
-      this.setAttribute("data-hidden-from-search", "true");
-      if (groupbox && !groupbox.hasAttribute("data-hidden-from-search")) {
-        groupbox.setAttribute("data-hidden-from-search", "true");
-        groupbox.setAttribute("data-hidden-by-setting-group", "");
-        groupbox.hidden = true;
+      this.setAttribute(HiddenAttr.Self, "");
+      this.setAttribute(HiddenAttr.Search, "true");
+      if (groupbox && !groupbox.hasAttribute(HiddenAttr.Search)) {
+        groupbox.setAttribute(HiddenAttr.Search, "true");
+        groupbox.setAttribute(HiddenAttr.Self, "");
       }
     }
   }
