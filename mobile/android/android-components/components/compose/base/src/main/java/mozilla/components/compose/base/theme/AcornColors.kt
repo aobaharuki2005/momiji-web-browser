@@ -106,6 +106,7 @@ class AcornColors(
     tabActive: Color,
     tabInactive: Color,
     badgeActive: Color,
+    information: Color,
     surfaceDimVariant: Color,
 ) {
     // Layers
@@ -445,6 +446,13 @@ class AcornColors(
      */
 
     /**
+     * Attention-grabbing color against surface for fills, icons, and text,
+     * indicating neutral information.
+     */
+    var information by mutableStateOf(information)
+        private set
+
+    /**
      * Surface Dim Variant
      *
      * Slightly dimmer surface color in light theme.
@@ -538,6 +546,7 @@ class AcornColors(
         tabActive = other.tabActive
         tabInactive = other.tabInactive
         badgeActive = other.badgeActive
+        information = other.information
         surfaceDimVariant = other.surfaceDimVariant
     }
 
@@ -630,6 +639,7 @@ class AcornColors(
         tabActive: Color = this.tabActive,
         tabInactive: Color = this.tabInactive,
         badgeActive: Color = this.badgeActive,
+        information: Color = this.information,
         surfaceDimVariant: Color = this.surfaceDimVariant,
     ): AcornColors = AcornColors(
         layer1 = layer1,
@@ -716,6 +726,7 @@ class AcornColors(
         tabActive = tabActive,
         tabInactive = tabInactive,
         badgeActive = badgeActive,
+        information = information,
         surfaceDimVariant = surfaceDimVariant,
     )
 }
@@ -805,6 +816,7 @@ val darkColorPalette = AcornColors(
     tabActive = PhotonColors.DarkGrey30,
     tabInactive = PhotonColors.DarkGrey80,
     badgeActive = PhotonColors.Ink60,
+    information = PhotonColors.Blue30,
     surfaceDimVariant = PhotonColors.DarkGrey80,
 )
 
@@ -893,6 +905,7 @@ val lightColorPalette = AcornColors(
     tabActive = PhotonColors.LightGrey10,
     tabInactive = PhotonColors.LightGrey20,
     badgeActive = PhotonColors.Violet05,
+    information = PhotonColors.Blue60,
     surfaceDimVariant = PhotonColors.LightGrey20,
 )
 
@@ -1050,14 +1063,12 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
  */
 
 /**
- * Information
- *
- * Attention-grabbing color against surface for fills, icons, and text, indicating neutral information.
+ * @see AcornColors.information
  */
 val ColorScheme.information: Color
     @Composable
     @ReadOnlyComposable
-    get() = AcornTheme.colors.iconAccentBlue
+    get() = AcornTheme.colors.information
 
 /**
  * @see AcornColors.surfaceDimVariant
