@@ -106,14 +106,12 @@
 #include "ColorPickerParent.h"
 #include "FilePickerParent.h"
 #include "IHistory.h"
-#include "ImageOps.h"
 #include "MMPrinter.h"
 #include "PermissionMessageUtils.h"
 #include "ProcessPriorityManager.h"
 #include "StructuredCloneData.h"
 #include "UnitTransforms.h"
 #include "VsyncSource.h"
-#include "gfxDrawable.h"
 #include "gfxUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ProfilerLabels.h"
@@ -2371,15 +2369,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
 
   nsCOMPtr<imgIContainer> customCursorImage;
   if (aCustomCursor) {
-    RefPtr<gfx::DataSourceSurface> customCursorSurface =
-        nsContentUtils::IPCImageToSurface(*aCustomCursor);
-    if (!customCursorSurface) {
+    customCursorImage = nsContentUtils::IPCImageToImage(*aCustomCursor);
+    if (!customCursorImage) {
       return IPC_FAIL(this, "Invalid custom cursor data");
     }
-
-    RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
-        customCursorSurface, customCursorSurface->GetSize());
-    customCursorImage = image::ImageOps::CreateFromDrawable(drawable);
   }
 
   mCursor = nsIWidget::Cursor{aCursor,

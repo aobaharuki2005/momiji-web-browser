@@ -8939,10 +8939,10 @@ nsresult nsContentUtils::IPCTransferableDataToTransferable(
       }
       case IPCTransferableDataType::TIPCTransferableDataImageContainer: {
         const auto& data = item.data().get_IPCTransferableDataImageContainer();
-        nsCOMPtr<imgIContainer> container;
-        rv = DeserializeTransferableDataImageContainer(
-            data, getter_AddRefs(container));
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<imgIContainer> container = IPCImageToImage(data.image());
+        if (!container) {
+          return NS_ERROR_FAILURE;
+        }
         transferData = container;
         break;
       }
@@ -9016,10 +9016,10 @@ nsresult nsContentUtils::IPCTransferableDataItemToVariant(
     }
     case IPCTransferableDataType::TIPCTransferableDataImageContainer: {
       const auto& data = aItem.data().get_IPCTransferableDataImageContainer();
-      nsCOMPtr<imgIContainer> container;
-      nsresult rv = DeserializeTransferableDataImageContainer(
-          data, getter_AddRefs(container));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<imgIContainer> container = IPCImageToImage(data.image());
+      if (!container) {
+        return NS_ERROR_FAILURE;
+      }
       return aVariant->SetAsISupports(container);
     }
     case IPCTransferableDataType::TIPCTransferableDataBlob: {
@@ -9091,23 +9091,6 @@ static already_AddRefed<DataSourceSurface> BigBufferToDataSurface(
   }
   return CreateDataSourceSurfaceFromData(aImageSize, aFormat, aData.Data(),
                                          aStride);
-}
-
-nsresult nsContentUtils::DeserializeTransferableDataImageContainer(
-    const IPCTransferableDataImageContainer& aData,
-    imgIContainer** aContainer) {
-  RefPtr<DataSourceSurface> surface = IPCImageToSurface(aData.image());
-  if (!surface) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<gfxDrawable> drawable =
-      new gfxSurfaceDrawable(surface, surface->GetSize());
-  nsCOMPtr<imgIContainer> imageContainer =
-      image::ImageOps::CreateFromDrawable(drawable);
-  imageContainer.forget(aContainer);
-
-  return NS_OK;
 }
 
 bool nsContentUtils::IsFlavorImage(const nsACString& aFlavor) {
@@ -9374,6 +9357,20 @@ already_AddRefed<DataSourceSurface> nsContentUtils::IPCImageToSurface(
     const IPCImage& aImage) {
   return BigBufferToDataSurface(aImage.data(), aImage.stride(),
                                 aImage.size().ToUnknownSize(), aImage.format());
+}
+
+already_AddRefed<imgIContainer> nsContentUtils::IPCImageToImage(
+    const IPCImage& aImage) {
+  RefPtr<DataSourceSurface> surface = IPCImageToSurface(aImage);
+  if (!surface) {
+    return nullptr;
+  }
+
+  RefPtr<gfxDrawable> drawable =
+      new gfxSurfaceDrawable(surface, surface->GetSize());
+  nsCOMPtr<imgIContainer> imageContainer =
+      image::ImageOps::CreateFromDrawable(drawable);
+  return imageContainer.forget();
 }
 
 Modifiers nsContentUtils::GetWidgetModifiers(int32_t aModifiers) {

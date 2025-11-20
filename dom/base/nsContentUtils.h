@@ -2975,14 +2975,6 @@ class nsContentUtils {
           aCallback);
 
   /**
-   * Given an IPCDataTransferImageContainer construct an imgIContainer for the
-   * image encoded by the transfer item.
-   */
-  static nsresult DeserializeTransferableDataImageContainer(
-      const mozilla::dom::IPCTransferableDataImageContainer& aData,
-      imgIContainer** aContainer);
-
-  /**
    * Given a flavor obtained from an IPCDataTransferItem or nsITransferable,
    * returns true if we should treat the data as an image.
    */
@@ -3030,6 +3022,8 @@ class nsContentUtils {
   static mozilla::Maybe<mozilla::dom::IPCImage> SurfaceToIPCImage(
       mozilla::gfx::DataSourceSurface&);
   static already_AddRefed<mozilla::gfx::DataSourceSurface> IPCImageToSurface(
+      const mozilla::dom::IPCImage&);
+  static already_AddRefed<imgIContainer> IPCImageToImage(
       const mozilla::dom::IPCImage&);
 
   // Helpers shared by the implementations of nsContentUtils methods and

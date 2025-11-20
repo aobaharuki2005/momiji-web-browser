@@ -5,8 +5,6 @@
 
 #include "RemoteImageProtocolHandler.h"
 
-#include "gfxDrawable.h"
-#include "ImageOps.h"
 #include "imgITools.h"
 #include "nsContentUtils.h"
 #include "nsIPipe.h"
@@ -71,16 +69,11 @@ static nsresult EncodeImage(const dom::IPCImage& aImage,
       do_GetService("@mozilla.org/image/tools;1", &rv);
   MOZ_TRY(rv);
 
-  RefPtr<gfx::DataSourceSurface> surface =
-      nsContentUtils::IPCImageToSurface(aImage);
-  if (!surface) {
+  nsCOMPtr<imgIContainer> imgContainer =
+      nsContentUtils::IPCImageToImage(aImage);
+  if (!imgContainer) {
     return NS_ERROR_FAILURE;
   }
-
-  RefPtr<gfxDrawable> drawable =
-      new gfxSurfaceDrawable(surface, surface->GetSize());
-  nsCOMPtr<imgIContainer> imgContainer =
-      image::ImageOps::CreateFromDrawable(drawable);
 
   nsCOMPtr<nsIInputStream> stream;
   MOZ_TRY(imgTools->EncodeImage(imgContainer, nsLiteralCString(IMAGE_PNG),
