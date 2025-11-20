@@ -1,61 +1,303 @@
-From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
-Date: Wed, 10 Sep 2025 12:47:04 +0200
-Subject: (cherry-pick-branch-heads/7390) [M141] Do not hide inbound-rtp if
- media is received.
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Daniel Baker <dbaker@mozilla.com>
+Date: Wed, 19 Nov 2025 17:59:49 -0700
+Subject: (tmp-cherry-pick) Revert "Remove use of global clocks in TestClient"
+ (db0e64c5e8)
 
-This condition neglected the fact that if Insertable Streams API is used
-we can have frames or samples despite packets never being received.
+This reverts commit 5b634ccedca5ab7969edc68fca15d327aa0440d3.
 
-This CL fixes this unintended regression.
+Reason for revert: Breaks downstream
 
-# Ignore unrelated compile issues on ios webrtc bots
-NOTRY=True
+Bug: webrtc:42223992
+Original change's description:
+> Remove use of global clocks in TestClient
+>
+> The functions that are relevant here can be abstracted away with
+> WaitUntil, which is available since this is a test-only target. This
+> may be updated once the ClockVariant is simplified to relevant clocks
+> for testing.
+>
+> Bug: webrtc:42223992
+> Change-Id: I68a0514be56931e44777f4cd086f5ea794da377a
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407405
+> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+> Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
+> Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#45529}
 
-(cherry picked from commit c15949eda5a00122e2f3b5a643e15781049b9927)
-
-Bug: chromium:444048024, chromium:444384230
-Change-Id: Ie6e17a3bc96701476787f5898446f3f706715d15
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408884
-Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
-Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
-Auto-Submit: Henrik Boström <hbos@webrtc.org>
-Commit-Queue: Henrik Boström <hbos@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#45616}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/409020
-Cr-Commit-Position: refs/branch-heads/7390@{#2}
-Cr-Branched-From: 2f553bf8d573c90176d51559b76dfc836996c8f5-refs/heads/main@{#45520}
+Bug: webrtc:42223992
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Change-Id: I6bc22c6d604536a3eb163dbef77b025ff2cd124a
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407442
+Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#45531}
 ---
- pc/rtc_stats_collector.cc | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ p2p/test/stun_server_unittest.cc |  2 +-
+ rtc_base/BUILD.gn                |  1 -
+ rtc_base/socket_unittest.cc      |  6 ++--
+ rtc_base/test_client.cc          | 58 +++++++++++++++++++++-----------
+ rtc_base/test_client.h           | 18 +++++-----
+ 5 files changed, 51 insertions(+), 34 deletions(-)
 
-diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
-index 8686143e68..8d6cc22426 100644
---- a/pc/rtc_stats_collector.cc
-+++ b/pc/rtc_stats_collector.cc
-@@ -1754,7 +1754,10 @@ void RTCStatsCollector::ProduceAudioRTPStreamStats_n(
-     if (!voice_receiver_info.connected()) {
-       continue;  // The SSRC is not known yet.
-     }
--    if (spec_lifetime && voice_receiver_info.packets_received == 0) {
-+    // Check both packets received and samples received to handle the Insertable
-+    // Streams use case of receiving media without receiving packets.
-+    if (spec_lifetime && voice_receiver_info.packets_received == 0 &&
-+        voice_receiver_info.total_samples_received == 0) {
-       // The SSRC is known despite not receiving any packets. This happens if
-       // SSRC is signalled in the SDP which we should not rely on for getStats.
-       continue;
-@@ -1868,7 +1871,10 @@ void RTCStatsCollector::ProduceVideoRTPStreamStats_n(
-     if (!video_receiver_info.connected()) {
-       continue;  // The SSRC is not known yet.
-     }
--    if (spec_lifetime && video_receiver_info.packets_received == 0) {
-+    // Check both packets received and frames received to handle the Insertable
-+    // Streams use case of receiving media without receiving packets.
-+    if (spec_lifetime && video_receiver_info.packets_received == 0 &&
-+        video_receiver_info.frames_received == 0) {
-       // The SSRC is known despite not receiving any packets. This happens if
-       // SSRC is signalled in the SDP which we should not rely on for getStats.
-       continue;
+diff --git a/p2p/test/stun_server_unittest.cc b/p2p/test/stun_server_unittest.cc
+index 085fbc2a85..8baa8b7b37 100644
+--- a/p2p/test/stun_server_unittest.cc
++++ b/p2p/test/stun_server_unittest.cc
+@@ -54,7 +54,7 @@ class StunServerTest : public ::testing::Test {
+   StunMessage* Receive() {
+     StunMessage* msg = nullptr;
+     std::unique_ptr<TestClient::Packet> packet =
+-        client_->NextPacket(TestClient::kTimeout);
++        client_->NextPacket(TestClient::kTimeoutMs);
+     if (packet) {
+       ByteBufferReader buf(packet->buf);
+       msg = new StunMessage();
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index 4ee00c8848..27cf292d16 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -1722,7 +1722,6 @@ rtc_library("testclient") {
+     ":timeutils",
+     "../api/units:time_delta",
+     "../api/units:timestamp",
+-    "../test:wait_until",
+     "network:received_packet",
+     "synchronization:mutex",
+     "third_party/sigslot",
+diff --git a/rtc_base/socket_unittest.cc b/rtc_base/socket_unittest.cc
+index d258f3d7c7..90dd485544 100644
+--- a/rtc_base/socket_unittest.cc
++++ b/rtc_base/socket_unittest.cc
+@@ -1266,15 +1266,13 @@ void SocketTest::UdpSocketRecvTimestampUseRtcEpoch(const IPAddress& loopback) {
+ 
+   SocketAddress addr2;
+   client2->SendTo("foo", 3, address);
+-  std::unique_ptr<TestClient::Packet> packet_1 =
+-      client1->NextPacket(TimeDelta::Seconds(10));
++  std::unique_ptr<TestClient::Packet> packet_1 = client1->NextPacket(10000);
+   ASSERT_TRUE(packet_1 != nullptr);
+   EXPECT_NEAR(packet_1->packet_time->us(), TimeMicros(), 1000'000);
+ 
+   Thread::SleepMs(100);
+   client2->SendTo("bar", 3, address);
+-  std::unique_ptr<TestClient::Packet> packet_2 =
+-      client1->NextPacket(TimeDelta::Seconds(10));
++  std::unique_ptr<TestClient::Packet> packet_2 = client1->NextPacket(10000);
+   ASSERT_TRUE(packet_2 != nullptr);
+   EXPECT_GT(packet_2->packet_time->us(), packet_1->packet_time->us());
+   EXPECT_NEAR(packet_2->packet_time->us(), TimeMicros(), 1000'000);
+diff --git a/rtc_base/test_client.cc b/rtc_base/test_client.cc
+index ff28deaa6a..a7577d54bd 100644
+--- a/rtc_base/test_client.cc
++++ b/rtc_base/test_client.cc
+@@ -10,20 +10,22 @@
+ 
+ #include "rtc_base/test_client.h"
+ 
++#include <cstdint>
+ #include <cstring>
+ #include <memory>
+ #include <optional>
+ #include <utility>
+-#include <variant>
+ 
+ #include "api/units/time_delta.h"
+ #include "api/units/timestamp.h"
+ #include "rtc_base/async_packet_socket.h"
++#include "rtc_base/fake_clock.h"
+ #include "rtc_base/network/received_packet.h"
+ #include "rtc_base/socket.h"
+ #include "rtc_base/socket_address.h"
+ #include "rtc_base/synchronization/mutex.h"
+-#include "test/wait_until.h"
++#include "rtc_base/thread.h"
++#include "rtc_base/time_utils.h"
+ 
+ namespace webrtc {
+ 
+@@ -32,11 +34,11 @@ namespace webrtc {
+ //         NextPacket.
+ 
+ TestClient::TestClient(std::unique_ptr<AsyncPacketSocket> socket)
+-    : TestClient(std::move(socket), std::monostate()) {}
++    : TestClient(std::move(socket), nullptr) {}
+ 
+ TestClient::TestClient(std::unique_ptr<AsyncPacketSocket> socket,
+-                       ClockVariant clock)
+-    : clock_(clock), socket_(std::move(socket)) {
++                       ThreadProcessingFakeClock* fake_clock)
++    : fake_clock_(fake_clock), socket_(std::move(socket)) {
+   socket_->RegisterReceivedPacketCallback(
+       [&](AsyncPacketSocket* socket, const ReceivedIpPacket& packet) {
+         OnPacket(socket, packet);
+@@ -48,8 +50,11 @@ TestClient::~TestClient() {}
+ 
+ bool TestClient::CheckConnState(AsyncPacketSocket::State state) {
+   // Wait for our timeout value until the socket reaches the desired state.
+-  return WaitUntil([&]() { return socket_->GetState() == state; },
+-                   {.clock = clock_});
++  int64_t end = TimeAfter(kTimeoutMs);
++  while (socket_->GetState() != state && TimeUntil(end) > 0) {
++    AdvanceTime(1);
++  }
++  return (socket_->GetState() == state);
+ }
+ 
+ int TestClient::Send(const char* buf, size_t size) {
+@@ -64,7 +69,7 @@ int TestClient::SendTo(const char* buf,
+   return socket_->SendTo(buf, size, dest, options);
+ }
+ 
+-std::unique_ptr<TestClient::Packet> TestClient::NextPacket(TimeDelta timeout) {
++std::unique_ptr<TestClient::Packet> TestClient::NextPacket(int timeout_ms) {
+   // If no packets are currently available, we go into a get/dispatch loop for
+   // at most timeout_ms.  If, during the loop, a packet arrives, then we can
+   // stop early and return it.
+@@ -76,20 +81,21 @@ std::unique_ptr<TestClient::Packet> TestClient::NextPacket(TimeDelta timeout) {
+   // Pumping another thread's queue could lead to messages being dispatched from
+   // the wrong thread to non-thread-safe objects.
+ 
+-  bool packets_available = WaitUntil(
+-      [&] {
+-        MutexLock lock(&mutex_);
+-        return !packets_.empty();
+-      },
+-      {
+-          .timeout = timeout,
+-          .clock = clock_,
+-      });
++  int64_t end = TimeAfter(timeout_ms);
++  while (TimeUntil(end) > 0) {
++    {
++      MutexLock lock(&mutex_);
++      if (!packets_.empty()) {
++        break;
++      }
++    }
++    AdvanceTime(1);
++  }
+ 
+   // Return the first packet placed in the queue.
+   std::unique_ptr<Packet> packet;
+   MutexLock lock(&mutex_);
+-  if (packets_available) {
++  if (!packets_.empty()) {
+     packet = std::move(packets_.front());
+     packets_.erase(packets_.begin());
+   }
+@@ -101,7 +107,7 @@ bool TestClient::CheckNextPacket(const char* buf,
+                                  size_t size,
+                                  SocketAddress* addr) {
+   bool res = false;
+-  std::unique_ptr<Packet> packet = NextPacket(kTimeout);
++  std::unique_ptr<Packet> packet = NextPacket(kTimeoutMs);
+   if (packet) {
+     res = (packet->buf.size() == size &&
+            memcmp(packet->buf.data(), buf, size) == 0 &&
+@@ -126,8 +132,20 @@ bool TestClient::CheckTimestamp(std::optional<Timestamp> packet_timestamp) {
+   return res;
+ }
+ 
++void TestClient::AdvanceTime(int ms) {
++  // If the test is using a fake clock, we must advance the fake clock to
++  // advance time. Otherwise, ProcessMessages will work.
++  if (fake_clock_) {
++    for (int64_t start = TimeMillis(); TimeMillis() < start + ms;) {
++      fake_clock_->AdvanceTime(TimeDelta::Millis(1));
++    };
++  } else {
++    Thread::Current()->ProcessMessages(1);
++  }
++}
++
+ bool TestClient::CheckNoPacket() {
+-  return NextPacket(kNoPacketTimeout) == nullptr;
++  return NextPacket(kNoPacketTimeoutMs) == nullptr;
+ }
+ 
+ int TestClient::GetError() {
+diff --git a/rtc_base/test_client.h b/rtc_base/test_client.h
+index 7a7d77106b..355f578711 100644
+--- a/rtc_base/test_client.h
++++ b/rtc_base/test_client.h
+@@ -16,16 +16,15 @@
+ #include <optional>
+ #include <vector>
+ 
+-#include "api/units/time_delta.h"
+ #include "api/units/timestamp.h"
+ #include "rtc_base/async_packet_socket.h"
+ #include "rtc_base/buffer.h"
++#include "rtc_base/fake_clock.h"
+ #include "rtc_base/network/received_packet.h"
+ #include "rtc_base/socket.h"
+ #include "rtc_base/socket_address.h"
+ #include "rtc_base/synchronization/mutex.h"
+ #include "rtc_base/third_party/sigslot/sigslot.h"
+-#include "test/wait_until.h"
+ 
+ namespace webrtc {
+ 
+@@ -44,7 +43,7 @@ class TestClient : public sigslot::has_slots<> {
+   };
+ 
+   // Default timeout for NextPacket reads.
+-  static constexpr TimeDelta kTimeout = TimeDelta::Seconds(5);
++  static const int kTimeoutMs = 5000;
+ 
+   // Creates a client that will send and receive with the given socket and
+   // will post itself messages with the given thread.
+@@ -52,7 +51,8 @@ class TestClient : public sigslot::has_slots<> {
+   // Create a test client that will use a fake clock. NextPacket needs to wait
+   // for a packet to be received, and thus it needs to advance the fake clock
+   // if the test is using one, rather than just sleeping.
+-  TestClient(std::unique_ptr<AsyncPacketSocket> socket, ClockVariant clock);
++  TestClient(std::unique_ptr<AsyncPacketSocket> socket,
++             ThreadProcessingFakeClock* fake_clock);
+   ~TestClient() override;
+ 
+   TestClient(const TestClient&) = delete;
+@@ -77,11 +77,11 @@ class TestClient : public sigslot::has_slots<> {
+ 
+   // Returns the next packet received by the client or null if none is received
+   // within the specified timeout.
+-  std::unique_ptr<Packet> NextPacket(TimeDelta timeout);
++  std::unique_ptr<Packet> NextPacket(int timeout_ms);
+ 
+   // Checks that the next packet has the given contents. Returns the remote
+   // address that the packet was sent from.
+-  bool CheckNextPacket(const char* buf, size_t size, SocketAddress* addr);
++  bool CheckNextPacket(const char* buf, size_t len, SocketAddress* addr);
+ 
+   // Checks that no packets have arrived or will arrive in the next second.
+   bool CheckNoPacket();
+@@ -96,7 +96,7 @@ class TestClient : public sigslot::has_slots<> {
+ 
+  private:
+   // Timeout for reads when no packet is expected.
+-  static constexpr TimeDelta kNoPacketTimeout = TimeDelta::Seconds(1);
++  static const int kNoPacketTimeoutMs = 1000;
+   // Workaround for the fact that AsyncPacketSocket::GetConnState doesn't exist.
+   Socket::ConnState GetState();
+ 
+@@ -104,8 +104,9 @@ class TestClient : public sigslot::has_slots<> {
+                 const ReceivedIpPacket& received_packet);
+   void OnReadyToSend(AsyncPacketSocket* socket);
+   bool CheckTimestamp(std::optional<Timestamp> packet_timestamp);
++  void AdvanceTime(int ms);
+ 
+-  ClockVariant clock_;
++  ThreadProcessingFakeClock* fake_clock_ = nullptr;
+   Mutex mutex_;
+   std::unique_ptr<AsyncPacketSocket> socket_;
+   std::vector<std::unique_ptr<Packet>> packets_;
+@@ -115,4 +116,5 @@ class TestClient : public sigslot::has_slots<> {
+ 
+ }  //  namespace webrtc
+ 
++
+ #endif  // RTC_BASE_TEST_CLIENT_H_
