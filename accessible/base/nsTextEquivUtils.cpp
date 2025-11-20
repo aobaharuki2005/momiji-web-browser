@@ -45,6 +45,18 @@ static nsTHashSet<const Accessible*>& GetReferencedAccs() {
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Public.
 
+bool nsTextEquivUtils::HasNameRule(const Accessible* aAccessible,
+                                   ETextEquivRule aRule) {
+  uint32_t rule = GetRoleRule(aAccessible->Role());
+  if (aAccessible->IsHTMLTableRow() && !aAccessible->HasStrongARIARole()) {
+    // For table row accessibles, we only want to calculate the name from the
+    // sub tree if an ARIA role is present.
+    rule = eNameFromSubtreeIfReqRule;
+  }
+
+  return (rule & aRule) == aRule;
+}
+
 nsresult nsTextEquivUtils::GetNameFromSubtree(
     const LocalAccessible* aAccessible, nsAString& aName) {
   aName.Truncate();
@@ -69,7 +81,7 @@ nsresult nsTextEquivUtils::GetNameFromSubtree(
     }
   }
 
-  if (GetRoleRule(aAccessible->Role()) == eNameFromSubtreeRule) {
+  if (HasNameRule(aAccessible, eNameFromSubtreeRule)) {
     // XXX: is it necessary to care the accessible is not a document?
     if (aAccessible->IsContent()) {
       nsAutoString name;
@@ -317,7 +329,7 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
 
 nsresult nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
                                            nsAString* aString) {
-  if (GetRoleRule(aAccessible->Role()) != eNameFromValueRule) {
+  if (!HasNameRule(aAccessible, eNameFromValueRule)) {
     return NS_OK_NO_NAME_CLAUSE_HANDLED;
   }
 
@@ -414,11 +426,11 @@ uint32_t nsTextEquivUtils::GetRoleRule(role aRole) {
 
 bool nsTextEquivUtils::ShouldIncludeInSubtreeCalculation(
     Accessible* aAccessible) {
-  uint32_t nameRule = GetRoleRule(aAccessible->Role());
-  if (nameRule == eNameFromSubtreeRule) {
+  if (HasNameRule(aAccessible, eNameFromSubtreeRule)) {
     return true;
   }
-  if (!(nameRule & eNameFromSubtreeIfReqRule)) {
+
+  if (!HasNameRule(aAccessible, eNameFromSubtreeIfReqRule)) {
     return false;
   }
 
