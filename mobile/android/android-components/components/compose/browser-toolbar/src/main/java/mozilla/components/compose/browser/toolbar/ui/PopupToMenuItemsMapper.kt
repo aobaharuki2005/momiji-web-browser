@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
@@ -76,7 +77,7 @@ internal fun menuItemComposable(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .background(AcornTheme.colors.layer1)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                         .thenConditional(
                             Modifier.clickable(
                                 role = Role.Button,
@@ -106,7 +107,7 @@ internal fun menuItemComposable(
                                 modifier = Modifier.size(24.dp),
                                 contentScale = ContentScale.Crop,
                                 colorFilter = when (source.icon.shouldTint) {
-                                    true -> ColorFilter.tint(AcornTheme.colors.iconPrimary)
+                                    true -> ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
                                     else -> null
                                 },
                             )
@@ -116,7 +117,7 @@ internal fun menuItemComposable(
                                 painter = painterResource(source.icon.resourceId),
                                 contentDescription = null,
                                 modifier = Modifier.size(24.dp),
-                                tint = AcornTheme.colors.iconPrimary,
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                         null -> {}
@@ -131,7 +132,7 @@ internal fun menuItemComposable(
                         modifier = Modifier
                             .fillMaxSize()
                             .wrapContentSize(Alignment.CenterStart),
-                        color = AcornTheme.colors.textPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         style = AcornTheme.typography.subtitle1,
                     )
@@ -141,9 +142,7 @@ internal fun menuItemComposable(
 
         is BrowserToolbarMenuDivider -> {
             @Composable {
-                HorizontalDivider(
-                    color = AcornTheme.colors.borderSecondary,
-                )
+                HorizontalDivider()
             }
         }
     }
