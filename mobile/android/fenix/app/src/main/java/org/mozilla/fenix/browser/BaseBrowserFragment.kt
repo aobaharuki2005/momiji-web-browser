@@ -125,6 +125,7 @@ import mozilla.components.feature.webauthn.WebAuthnFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
 import mozilla.components.service.sync.autofill.DefaultCreditCardValidationDelegate
 import mozilla.components.service.sync.logins.DefaultLoginValidationDelegate
 import mozilla.components.service.sync.logins.LoginsApiException
@@ -163,6 +164,8 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.permissions.FenixSitePermissionLearnMoreUrlProvider
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.browser.readermode.ReaderModeController
+import org.mozilla.fenix.browser.store.BrowserScreenMiddleware
+import org.mozilla.fenix.browser.store.BrowserScreenState
 import org.mozilla.fenix.browser.store.BrowserScreenStore
 import org.mozilla.fenix.browser.tabstrip.TabStrip
 import org.mozilla.fenix.components.Components
@@ -359,7 +362,7 @@ abstract class BaseBrowserFragment :
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     internal var webAppToolbarShouldBeVisible = true
 
-    protected lateinit var browserScreenStore: BrowserScreenStore
+    protected val browserScreenStore by buildBrowserScreenStore()
     private val homeViewModel: HomeScreenViewModel by activityViewModels()
 
     private var downloadDialog: AlertDialog? = null
@@ -439,8 +442,6 @@ abstract class BaseBrowserFragment :
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
         val profilerStartTime = requireComponents.core.engine.profiler?.getProfilerTime()
-
-        browserScreenStore = buildBrowserScreenStore()
 
         initializeUI(view)
 
@@ -1489,11 +1490,17 @@ abstract class BaseBrowserFragment :
         awesomeBarComposable = it
     }
 
-    private fun buildBrowserScreenStore() = BrowserScreenStoreBuilder.build(
-        context = requireContext(),
-        lifecycleOwner = this,
-        fragmentManager = childFragmentManager,
-    )
+    private fun buildBrowserScreenStore() = fragmentStore(BrowserScreenState()) {
+        BrowserScreenStore(
+            middleware = listOf(
+                BrowserScreenMiddleware(
+                    uiContext = requireContext(),
+                    crashReporter = requireContext().components.analytics.crashReporter,
+                    fragmentManager = childFragmentManager,
+                ),
+            ),
+        )
+    }
 
     private fun buildToolbarStore(
         activity: HomeActivity,
