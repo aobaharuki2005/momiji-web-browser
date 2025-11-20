@@ -175,7 +175,7 @@ index 8ce03f60f4..7f087ba22d 100644
        RTC_GUARDED_BY(network_thread_);
    const std::unique_ptr<AsyncDnsResolverFactoryInterface>
 diff --git a/p2p/base/port.cc b/p2p/base/port.cc
-index ea6b045a11..c7c1de2ef5 100644
+index a81b94dd28..fb7ce4096b 100644
 --- a/p2p/base/port.cc
 +++ b/p2p/base/port.cc
 @@ -121,7 +121,6 @@ Port::Port(const PortParametersRef& args,
@@ -187,7 +187,7 @@ index ea6b045a11..c7c1de2ef5 100644
        generation_(0),
        ice_username_fragment_(args.ice_username_fragment),
 diff --git a/p2p/base/port.h b/p2p/base/port.h
-index 134d9eb854..1a237be898 100644
+index 9c5ce8c74d..62552f83ec 100644
 --- a/p2p/base/port.h
 +++ b/p2p/base/port.h
 @@ -169,7 +169,6 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
@@ -282,7 +282,7 @@ index 0674a5a320..c74feae432 100644
          min_port, max_port, *args.server_address, args.config->credentials,
          args.relative_priority, args.config->tls_alpn_protocols,
 diff --git a/p2p/client/basic_port_allocator.cc b/p2p/client/basic_port_allocator.cc
-index e288c7122d..ee4762815e 100644
+index 01f022755d..b986a16f17 100644
 --- a/p2p/client/basic_port_allocator.cc
 +++ b/p2p/client/basic_port_allocator.cc
 @@ -567,7 +567,6 @@ bool BasicPortAllocatorSession::CandidatesAllocationDone() const {

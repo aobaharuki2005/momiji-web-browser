@@ -270,8 +270,6 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
   // are discovered that belong to port SignalAddressReady is fired.
   void SubscribeCandidateReadyCallback(
       absl::AnyInvocable<void(Port*, const Candidate&)> callback);
-
-  void SendCandidateReady(const Candidate& candidate);
   // Downstream code uses this signal. We will continue firing it along with the
   // callback list. The signal can be deleted once all downstream usages are
   // replaced with the new CallbackList implementation.
@@ -285,12 +283,18 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
 
   // SignalPortComplete is sent when port completes the task of candidates
   // allocation.
+  void SubscribePortComplete(absl::AnyInvocable<void(Port*)> callback);
   sigslot::signal1<Port*> SignalPortComplete;
+
   // This signal sent when port fails to allocate candidates and this port
   // can't be used in establishing the connections. When port is in shared mode
   // and port fails to allocate one of the candidates, port shouldn't send
   // this signal as other candidates might be usefull in establishing the
   // connection.
+  void SubscribePortError(absl::AnyInvocable<void(Port*)> callback);
+  // Downstream code uses this signal. We will continue firing it along with the
+  // callback list. The signal can be deleted once all downstream usages are
+  // replaced with the new CallbackList implementation.
   sigslot::signal1<Port*> SignalPortError;
 
   void SubscribePortDestroyed(
@@ -515,6 +519,8 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
       LocalNetworkAccessPermissionStatus status);
 
   void SendCandidateReadyCallbackList(Port*, const Candidate&);
+  void SendPortCompleteCallbackList(Port*);
+  void SendPortErrorCallbackList(Port*);
 
   const Environment env_;
   TaskQueueBase* const thread_;
@@ -566,6 +572,8 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
       candidate_error_callback_list_ RTC_GUARDED_BY(thread_);
   CallbackList<Port*, const Candidate&> candidate_ready_callback_list_
       RTC_GUARDED_BY(thread_);
+  CallbackList<Port*> port_complete_callback_list_ RTC_GUARDED_BY(thread_);
+  CallbackList<Port*> port_error_callback_list_ RTC_GUARDED_BY(thread_);
 
   absl::AnyInvocable<void()> role_conflict_callback_ RTC_GUARDED_BY(thread_);
 
