@@ -5,11 +5,10 @@
 package org.mozilla.fenix.wallpapers
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Represents all state related to the Wallpapers feature.
@@ -44,7 +43,7 @@ data class WallpaperState(
                     Color(currentWallpaper.cardColorLight)
                 }
             }
-            else -> MaterialTheme.colorScheme.surfaceContainerLowest
+            else -> FirefoxTheme.colors.layer2
         }
 
     /**
@@ -52,10 +51,11 @@ data class WallpaperState(
      */
     val buttonBackgroundColor: Color
         @Composable
+        @ReadOnlyComposable
         get() = if (isCurrentWallpaperDefault()) {
-            ButtonDefaults.buttonColors().containerColor
+            FirefoxTheme.colors.actionSecondary
         } else {
-            MaterialTheme.colorScheme.surface
+            FirefoxTheme.colors.layer1
         }
 
     /**
@@ -63,10 +63,11 @@ data class WallpaperState(
      */
     val buttonTextColor: Color
         @Composable
-        get() = if (isCurrentWallpaperDefault()) {
-            ButtonDefaults.buttonColors().contentColor
-        } else {
-            MaterialTheme.colorScheme.onSurface
+        @ReadOnlyComposable
+        get() = when {
+            currentWallpaper.cardColorDark != null &&
+                isSystemInDarkTheme() -> FirefoxTheme.colors.textPrimary
+            else -> FirefoxTheme.colors.textActionSecondary
         }
 
     private fun isCurrentWallpaperDefault(): Boolean = Wallpaper.nameIsDefault(currentWallpaper.name)
@@ -80,6 +81,17 @@ data class WallpaperState(
     ) {
         if (currentWallpaper.cardColorLight != null && currentWallpaper.cardColorDark != null) {
             run(Color(currentWallpaper.cardColorLight), Color(currentWallpaper.cardColorDark))
+        }
+    }
+
+    /**
+     * Run the [run] block only if the current wallpaper's card colors are available.
+     */
+    fun runIfWallpaperCardColorsAreAvailable(
+        run: (cardColorLight: Int, cardColorDark: Int) -> Unit,
+    ) {
+        if (currentWallpaper.cardColorLight != null && currentWallpaper.cardColorDark != null) {
+            run(currentWallpaper.cardColorLight.toInt(), currentWallpaper.cardColorDark.toInt())
         }
     }
 }

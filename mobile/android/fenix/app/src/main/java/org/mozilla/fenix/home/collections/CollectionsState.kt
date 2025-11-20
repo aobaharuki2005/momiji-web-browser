@@ -4,8 +4,7 @@
 
 package org.mozilla.fenix.home.collections
 
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import mozilla.components.browser.state.selector.normalTabs
@@ -14,6 +13,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
@@ -109,10 +109,10 @@ data class CollectionColors(
          */
         @Composable
         fun colors(
-            buttonBackgroundColor: Color = ButtonDefaults.buttonColors().containerColor,
-            buttonTextColor: Color = ButtonDefaults.buttonColors().contentColor,
-            titleTextColor: Color = MaterialTheme.colorScheme.onSurface,
-            descriptionTextColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+            buttonBackgroundColor: Color = FirefoxTheme.colors.actionPrimary,
+            buttonTextColor: Color = FirefoxTheme.colors.textActionPrimary,
+            titleTextColor: Color = FirefoxTheme.colors.textPrimary,
+            descriptionTextColor: Color = FirefoxTheme.colors.textSecondary,
         ) = CollectionColors(
             buttonBackgroundColor = buttonBackgroundColor,
             buttonTextColor = buttonTextColor,
@@ -129,22 +129,24 @@ data class CollectionColors(
             val textColor = wallpaperState.currentWallpaper.textColor
             val titleTextColor: Color
             val descriptionTextColor: Color
-
             if (textColor == null) {
-                titleTextColor = MaterialTheme.colorScheme.onSurface
-                descriptionTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                titleTextColor = FirefoxTheme.colors.textPrimary
+                descriptionTextColor = FirefoxTheme.colors.textSecondary
             } else {
                 val color = Color(textColor)
                 titleTextColor = color
                 descriptionTextColor = color
             }
 
-            var buttonColor = ButtonDefaults.buttonColors().containerColor
-            var buttonTextColor = ButtonDefaults.buttonColors().contentColor
+            var buttonColor = FirefoxTheme.colors.actionPrimary
+            var buttonTextColor = FirefoxTheme.colors.textActionPrimary
 
             wallpaperState.ComposeRunIfWallpaperCardColorsAreAvailable { _, _ ->
-                buttonColor = MaterialTheme.colorScheme.surface
-                buttonTextColor = MaterialTheme.colorScheme.onSurface
+                buttonColor = FirefoxTheme.colors.layer1
+
+                if (!isSystemInDarkTheme()) {
+                    buttonTextColor = FirefoxTheme.colors.textActionSecondary
+                }
             }
 
             return CollectionColors(

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.recentvisits.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -49,7 +48,6 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.theme.FirefoxTheme
-import mozilla.components.ui.icons.R as iconsR
 
 // Number of recently visited items per column.
 private const val VISITS_PER_COLUMN = 3
@@ -74,7 +72,7 @@ private val contentPadding = 16.dp
 fun RecentlyVisited(
     recentVisits: List<RecentlyVisitedItem>,
     menuItems: List<RecentVisitMenuItem>,
-    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    backgroundColor: Color = FirefoxTheme.colors.layer2,
     onRecentVisitClick: (RecentlyVisitedItem, pageNumber: Int) -> Unit = { _, _ -> },
 ) {
     val isSingleColumn by remember(recentVisits) { derivedStateOf { recentVisits.size <= VISITS_PER_COLUMN } }
@@ -177,7 +175,7 @@ private fun RecentlyVisitedHistoryGroup(
                     onClick = { onRecentVisitClick(recentVisit) },
                     onLongClick = { isMenuExpanded = true },
                 ),
-            beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_tab_tray_24),
+            beforeIconPainter = painterResource(R.drawable.ic_multiple_tabs),
             description = stringResource(id = captionId, recentVisit.historyMetadata.size),
         )
 
@@ -239,7 +237,11 @@ private fun RecentlyVisitedHistoryHighlight(
 @PreviewLightDark
 private fun RecentlyVisitedMultipleColumnsPreview() {
     FirefoxTheme {
-        Surface {
+        Box(
+            modifier = Modifier
+                .background(color = FirefoxTheme.colors.layer1)
+                .padding(vertical = contentPadding),
+        ) {
             RecentlyVisited(
                 recentVisits = listOf(
                     RecentHistoryGroup(title = "running shoes"),
@@ -258,7 +260,11 @@ private fun RecentlyVisitedMultipleColumnsPreview() {
 @PreviewLightDark
 private fun RecentlyVisitedSingleColumnPreview() {
     FirefoxTheme {
-        Surface {
+        Box(
+            modifier = Modifier
+                .background(color = FirefoxTheme.colors.layer1)
+                .padding(vertical = contentPadding),
+        ) {
             RecentlyVisited(
                 recentVisits = listOf(
                     RecentHistoryGroup(title = "running shoes"),
