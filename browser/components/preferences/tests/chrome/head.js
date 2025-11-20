@@ -1,3 +1,5 @@
+/** @import { Setting } from "chrome://global/content/preferences/Setting.mjs"; */
+
 /**
  * @callback TestSettingControlCommonPropertiesFunction
  * @param {(config: Record<string, any>) => Promise<HTMLElement>} renderTemplateFunction
@@ -75,4 +77,20 @@ async function testCommonSettingControlPropertiesUnset(renderTemplateFunction) {
 async function testCommonSettingControlProperties(renderTemplateFunction) {
   await testCommonSettingControlPropertiesSet(renderTemplateFunction);
   await testCommonSettingControlPropertiesUnset(renderTemplateFunction);
+}
+
+/**
+ * Waits for a setting to emit a "change" event.
+ *
+ * @param {Setting} setting - The setting object to watch for changes.
+ * @returns {Promise<void>} A promise that resolves when the setting emits a
+   "change" event
+ */
+function waitForSettingChange(setting) {
+  return new Promise(resolve => {
+    setting.on("change", function handler() {
+      setting.off("change", handler);
+      resolve();
+    });
+  });
 }

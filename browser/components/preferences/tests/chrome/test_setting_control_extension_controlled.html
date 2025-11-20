@@ -18,6 +18,7 @@
     />
     <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
     <script src="../../../../../toolkit/content/tests/widgets/lit-test-helpers.js"></script>
+    <script src="./head.js"></script>
     <script
       type="module"
       src="chrome://browser/content/preferences/widgets/setting-group.mjs"
@@ -75,15 +76,6 @@
 
       async function disableExtensionByMouse(elem) {
         await synthesizeMouseAtCenter(elem, {});
-      }
-
-      function waitForSettingChange(setting) {
-        return new Promise(resolve => {
-          setting.on("change", function handler() {
-            setting.off("change", handler);
-            resolve();
-          });
-        });
       }
 
       const getExtensionControlledMessageBar = control =>

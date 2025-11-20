@@ -54,15 +54,6 @@
         return testHelpers.renderTemplate(settingGroupTemplate(config));
       }
 
-      function waitForSettingChange(setting) {
-        return new Promise(resolve => {
-          setting.on("change", function handler() {
-            setting.off("change", handler);
-            resolve();
-          });
-        });
-      }
-
       add_setup(async function setup() {
         testHelpers = new InputTestHelpers();
         ({ html, nothing } = await testHelpers.setupLit());
