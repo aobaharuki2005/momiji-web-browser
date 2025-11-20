@@ -103,6 +103,8 @@ Preferences.addAll([
   { id: "browser.tabs.hoverPreview.enabled", type: "bool" },
   { id: "browser.tabs.hoverPreview.showThumbnails", type: "bool" },
   { id: "browser.tabs.groups.smart.userEnabled", type: "bool" },
+  { id: "browser.tabs.groups.smart.enabled", type: "bool" },
+  { id: "privacy.userContext.ui.enabled", type: "bool" },
 
   { id: "sidebar.verticalTabs", type: "bool" },
   { id: "sidebar.revamp", type: "bool" },
@@ -1208,6 +1210,293 @@ Preferences.addSetting(
     }
   }
 );
+
+// Tabs settings
+
+// "Opening" tabs settings
+Preferences.addSetting({
+  id: "tabsOpening",
+});
+/**
+ * browser.link.open_newwindow - int
+ *   Determines where links targeting new windows should open.
+ *   Values:
+ *     1 - Open in the current window or tab.
+ *     2 - Open in a new window.
+ *     3 - Open in a new tab in the most recent window.
+ */
+Preferences.addSetting({
+  id: "linkTargeting",
+  pref: "browser.link.open_newwindow",
+  /**
+   * Determines where a link which opens a new window will open.
+   *
+   * @returns |true| if such links should be opened in new tabs
+   */
+  get: prefVal => {
+    return prefVal != 2;
+  },
+  /**
+   * Determines where a link which opens a new window will open.
+   *
+   * @returns 2 if such links should be opened in new windows,
+   *          3 if such links should be opened in new tabs
+   */
+  set: checked => {
+    return checked ? 3 : 2;
+  },
+});
+/**
+ * browser.tabs.loadInBackground - bool
+ *  True - Whether browser should switch to a new tab opened from a link.
+ */
+Preferences.addSetting({
+  id: "switchToNewTabs",
+  pref: "browser.tabs.loadInBackground",
+});
+Preferences.addSetting({
+  id: "openAppLinksNextToActiveTab",
+  pref: "browser.link.open_newwindow.override.external",
+  /**
+   * @returns {boolean}
+   *   Whether the "Open links in tabs instead of new windows" settings
+   *   checkbox should be checked. Should only be checked if the
+   *   `browser.link.open_newwindow.override.external` pref is set to the
+   *   value of 7 (nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT).
+   */
+  get: prefVal => {
+    return prefVal == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT;
+  },
+  /**
+   * This pref has at least 8 valid values but we are offering a checkbox
+   * to set one specific value (`7`).
+   *
+   * @param {boolean} checked
+   * @returns {number}
+   *   - `7` (`nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT`) if checked
+   *   - the default value of
+   *     `browser.link.open_newwindow.override.external` if not checked
+   */
+  set: (checked, _, setting) => {
+    return checked
+      ? Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT
+      : setting.pref.defaultValue;
+  },
+  onUserChange: checked => {
+    Glean.linkHandling.openNextToActiveTabSettingsEnabled.set(checked);
+    Glean.linkHandling.openNextToActiveTabSettingsChange.record({
+      checked,
+    });
+  },
+});
+/**
+ * browser.tabs.warnOnOpen - bool
+ *   True - Whether the user should be warned when trying to open a lot of
+ *          tabs at once (e.g. a large folder of bookmarks), allowing to
+ *          cancel the action.
+ */
+Preferences.addSetting({
+  id: "warnOpenMany",
+  pref: "browser.tabs.warnOnOpen",
+  // The "opening multiple tabs might slow down Firefox" warning provides
+  // an option for not showing this warning again. When the user disables it,
+  // we provide checkboxes to re-enable the warning.
+  visible: () => TransientPrefs.prefShouldBeVisible("browser.tabs.warnOnOpen"),
+});
+
+// "Interaction" tabs settings
+Preferences.addSetting({
+  id: "tabsInteraction",
+});
+Preferences.addSetting({
+  id: "ctrlTabRecentlyUsedOrder",
+  pref: "browser.ctrlTab.sortByRecentlyUsed",
+  onUserClick: () => {
+    Services.prefs.clearUserPref("browser.ctrlTab.migrated");
+  },
+});
+Preferences.addSetting({
+  id: "tabHoverPreview",
+  pref: "browser.tabs.hoverPreview.enabled",
+});
+Preferences.addSetting({
+  id: "tabPreviewShowThumbnails",
+  pref: "browser.tabs.hoverPreview.showThumbnails",
+  deps: ["tabHoverPreview"],
+  visible: ({ tabHoverPreview }) => !!tabHoverPreview.value,
+});
+Preferences.addSetting({
+  id: "smartTabGroups",
+  pref: "browser.tabs.groups.smart.enabled",
+});
+Preferences.addSetting({
+  id: "tabGroupSuggestions",
+  pref: "browser.tabs.groups.smart.userEnabled",
+  deps: ["smartTabGroups"],
+  visible: ({ smartTabGroups }) =>
+    !!smartTabGroups.value && Services.locale.appLocaleAsBCP47.startsWith("en"),
+});
+if (AppConstants.platform === "win") {
+  /**
+   * browser.taskbar.previews.enable - bool
+   *   True - Tabs are to be shown in Windows 7 taskbar.
+   *   False - Only the window is to be shown in Windows 7 taskbar.
+   */
+  Preferences.addSetting({
+    id: "showTabsInTaskbar",
+    pref: "browser.taskbar.previews.enable",
+    // Functionality for "Show tabs in taskbar" on Windows 7 and up.
+    visible: () => {
+      if (AppConstants.platform !== "win") {
+        return false;
+      }
+
+      try {
+        let ver = parseFloat(Services.sysinfo.getProperty("version"));
+        return ver >= 6.1;
+      } catch (ex) {
+        return false;
+      }
+    },
+  });
+} else {
+  // Not supported unless we're on Windows
+  Preferences.addSetting({ id: "showTabsInTaskbar", visible: () => false });
+}
+
+// "Containers" tabs settings
+Preferences.addSetting({
+  id: "privacyUserContextUI",
+  pref: "privacy.userContext.ui.enabled",
+});
+Preferences.addSetting({
+  id: "browserContainersbox",
+  deps: ["privacyUserContextUI"],
+  visible: ({ privacyUserContextUI }) => !!privacyUserContextUI.value,
+});
+Preferences.addSetting({
+  id: "browserContainersCheckbox",
+  pref: "privacy.userContext.enabled",
+  controllingExtensionInfo: {
+    storeId: "privacy.containers",
+    l10nId: "extension-controlling-privacy-containers",
+  },
+  async promptToCloseTabsAndDisable(count, setting) {
+    let [title, message, okButton, cancelButton] =
+      await document.l10n.formatValues([
+        { id: "containers-disable-alert-title" },
+        { id: "containers-disable-alert-desc", args: { tabCount: count } },
+        { id: "containers-disable-alert-ok-button", args: { tabCount: count } },
+        { id: "containers-disable-alert-cancel-button" },
+      ]);
+
+    let buttonFlags =
+      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0 +
+      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1;
+
+    let rv = Services.prompt.confirmEx(
+      window,
+      title,
+      message,
+      buttonFlags,
+      okButton,
+      cancelButton,
+      null,
+      null,
+      {}
+    );
+
+    // User confirmed - disable containers and close container tabs.
+    if (rv == 0) {
+      await ContextualIdentityService.closeContainerTabs();
+      setting.pref.value = false;
+    }
+
+    // Keep the checkbox checked when the user opts not to close tabs.
+    return true;
+  },
+  set(val, _, setting) {
+    // When enabling container tabs, just set the pref value.
+    if (val) {
+      return val;
+    }
+
+    // When disabling container tabs, check if there are container tabs currently
+    // open. If there aren't, then proceed with disabling.
+    let count = ContextualIdentityService.countContainerTabs();
+    if (count == 0) {
+      return false;
+    }
+
+    // When disabling container tabs with container tabs currently open show a
+    // dialog to determine whether or not the tabs should be closed.
+    return this.promptToCloseTabsAndDisable(count, setting);
+  },
+});
+Preferences.addSetting({
+  id: "browserContainersSettings",
+  deps: ["browserContainersCheckbox"],
+  /**
+   * Displays container panel for customising and adding containers.
+   */
+  onUserClick: () => {
+    gotoPref("containers");
+  },
+  getControlConfig: config => {
+    let searchKeywords = [
+      "user-context-personal",
+      "user-context-work",
+      "user-context-banking",
+      "user-context-shopping",
+    ]
+      .map(ContextualIdentityService.formatContextLabel)
+      .join(" ");
+    config.controlAttrs.searchkeywords = searchKeywords;
+    return config;
+  },
+  disabled: ({ browserContainersCheckbox }) => !browserContainersCheckbox.value,
+});
+
+// "Closing" tabs settings
+Preferences.addSetting({
+  id: "tabsClosing",
+});
+/**
+ * browser.tabs.warnOnClose - bool
+ *   True - If when closing a window with multiple tabs the user is warned and
+ *          allowed to cancel the action, false to just close the window.
+ */
+Preferences.addSetting({
+  id: "warnCloseMultiple",
+  pref: "browser.tabs.warnOnClose",
+});
+/**
+ * browser.warnOnQuitShortcut - bool
+ *   True - If the keyboard shortcut (Ctrl/Cmd+Q) is pressed, the user should
+ *          be warned, false to just quit without prompting.
+ */
+Preferences.addSetting({
+  id: "warnOnQuitKey",
+  pref: "browser.warnOnQuitShortcut",
+  setup() {
+    let quitKeyElement =
+      window.browsingContext.topChromeWindow.document.getElementById(
+        "key_quitApplication"
+      );
+    if (quitKeyElement) {
+      this.quitKey = ShortcutUtils.prettifyShortcut(quitKeyElement);
+    }
+  },
+  visible() {
+    return AppConstants.platform !== "win" && this.quitKey;
+  },
+  getControlConfig(config) {
+    return {
+      ...config,
+      l10nArgs: { quitKey: this.quitKey },
+    };
+  },
+});
 
 SettingGroupManager.registerGroups({
   containers: {
@@ -2349,6 +2638,98 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  tabs: {
+    l10nId: "tabs-group-header2",
+    headingLevel: 2,
+    items: [
+      {
+        id: "tabsOpening",
+        control: "moz-fieldset",
+        l10nId: "tabs-opening-heading",
+        headingLevel: 3,
+        items: [
+          {
+            id: "linkTargeting",
+            l10nId: "open-new-link-as-tabs",
+          },
+          {
+            id: "switchToNewTabs",
+            l10nId: "switch-to-new-tabs",
+          },
+          {
+            id: "openAppLinksNextToActiveTab",
+            l10nId: "open-external-link-next-to-active-tab",
+          },
+          {
+            id: "warnOpenMany",
+            l10nId: "warn-on-open-many-tabs",
+          },
+        ],
+      },
+      {
+        id: "tabsInteraction",
+        control: "moz-fieldset",
+        l10nId: "tabs-interaction-heading",
+        headingLevel: 3,
+        items: [
+          {
+            id: "ctrlTabRecentlyUsedOrder",
+            l10nId: "ctrl-tab-recently-used-order",
+          },
+          {
+            id: "tabPreviewShowThumbnails",
+            l10nId: "settings-tabs-show-image-in-preview",
+          },
+          {
+            id: "tabGroupSuggestions",
+            l10nId: "settings-tabs-show-group-and-tab-suggestions",
+          },
+          {
+            id: "showTabsInTaskbar",
+            l10nId: "show-tabs-in-taskbar",
+          },
+        ],
+      },
+      {
+        id: "browserContainersbox",
+        control: "moz-fieldset",
+        l10nId: "tabs-containers-heading",
+        headingLevel: 3,
+        items: [
+          {
+            id: "browserContainersCheckbox",
+            l10nId: "browser-containers-enabled",
+            supportPage: "containers",
+          },
+          {
+            id: "browserContainersSettings",
+            l10nId: "browser-containers-settings",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids":
+                "containers-add-button.label, containers-settings-button.label, containers-remove-button.label, containers-new-tab-check.label",
+            },
+          },
+        ],
+      },
+      {
+        id: "tabsClosing",
+        control: "moz-fieldset",
+        l10nId: "tabs-closing-heading",
+        headingLevel: 3,
+        items: [
+          {
+            id: "warnCloseMultiple",
+            l10nId: "ask-on-close-multiple-tabs",
+          },
+          {
+            id: "warnOnQuitKey",
+            l10nId: "ask-on-quit-with-key",
+          },
+        ],
+      },
+    ],
+  },
 });
 
 /**
@@ -2448,7 +2829,6 @@ var gMainPane = {
         .addEventListener(aEventType, aCallback.bind(gMainPane));
     }
 
-    this.initBrowserContainers();
     this.displayUseSystemLocale();
     this.updateProxySettingsUI();
     initializeProxyUI(gMainPane);
@@ -2473,62 +2853,8 @@ var gMainPane = {
     initSettingGroup("performance");
     initSettingGroup("startup");
     initSettingGroup("networkProxy");
+    initSettingGroup("tabs");
 
-    if (AppConstants.platform == "win") {
-      // Functionality for "Show tabs in taskbar" on Windows 7 and up.
-      try {
-        let ver = parseFloat(Services.sysinfo.getProperty("version"));
-        let showTabsInTaskbar = document.getElementById("showTabsInTaskbar");
-        showTabsInTaskbar.hidden = ver < 6.1;
-      } catch (ex) {}
-    }
-
-    let thumbsCheckbox = document.getElementById("tabPreviewShowThumbnails");
-    let cardPreviewEnabledPref = Preferences.get(
-      "browser.tabs.hoverPreview.enabled"
-    );
-    let maybeShowThumbsCheckbox = () =>
-      (thumbsCheckbox.hidden = !cardPreviewEnabledPref.value);
-    cardPreviewEnabledPref.on("change", maybeShowThumbsCheckbox);
-    maybeShowThumbsCheckbox();
-
-    const tabGroupSuggestionsCheckbox = document.getElementById(
-      "tabGroupSuggestions"
-    );
-    const smartTabGroupFeatureEnabled =
-      Services.prefs.getBoolPref("browser.tabs.groups.smart.enabled", false) &&
-      Services.locale.appLocaleAsBCP47.startsWith("en");
-    tabGroupSuggestionsCheckbox.hidden = !smartTabGroupFeatureEnabled;
-
-    // The "opening multiple tabs might slow down Firefox" warning provides
-    // an option for not showing this warning again. When the user disables it,
-    // we provide checkboxes to re-enable the warning.
-    if (!TransientPrefs.prefShouldBeVisible("browser.tabs.warnOnOpen")) {
-      document.getElementById("warnOpenMany").hidden = true;
-    }
-
-    if (AppConstants.platform != "win") {
-      let quitKeyElement =
-        window.browsingContext.topChromeWindow.document.getElementById(
-          "key_quitApplication"
-        );
-      if (quitKeyElement) {
-        let quitKey = ShortcutUtils.prettifyShortcut(quitKeyElement);
-        document.l10n.setAttributes(
-          document.getElementById("warnOnQuitKey"),
-          "ask-on-quit-with-key",
-          { quitKey }
-        );
-      } else {
-        // If the quit key element does not exist, then the quit key has
-        // been disabled, so just hide the checkbox.
-        document.getElementById("warnOnQuitKey").hidden = true;
-      }
-    }
-
-    setEventListener("ctrlTabRecentlyUsedOrder", "command", function () {
-      Services.prefs.clearUserPref("browser.ctrlTab.migrated");
-    });
     setEventListener("manageBrowserLanguagesButton", "command", function () {
       gMainPane.showBrowserLanguagesSubDialog({ search: false });
     });
@@ -2554,11 +2880,6 @@ var gMainPane = {
       });
     }
 
-    setEventListener(
-      "disableContainersExtension",
-      "command",
-      makeDisableControllingExtension(PREF_SETTING_TYPE, CONTAINERS_KEY)
-    );
     setEventListener("chooseLanguage", "command", gMainPane.showLanguages);
     // TODO (Bug 1817084) Remove this code when we disable the extension
     setEventListener(
@@ -2577,16 +2898,6 @@ var gMainPane = {
       gMainPane.updateColorsButton.bind(gMainPane)
     );
     gMainPane.updateColorsButton();
-    setEventListener(
-      "browserContainersCheckbox",
-      "command",
-      gMainPane.checkBrowserContainers
-    );
-    setEventListener(
-      "browserContainersSettings",
-      "command",
-      gMainPane.showContainerSettings
-    );
     setEventListener(
       "data-migration",
       "command",
@@ -2782,16 +3093,6 @@ var gMainPane = {
       this._sortColumn = document.getElementById("typeColumn");
     }
 
-    appendSearchKeywords(
-      "browserContainersSettings",
-      [
-        "user-context-personal",
-        "user-context-work",
-        "user-context-banking",
-        "user-context-shopping",
-      ].map(ContextualIdentityService.formatContextLabel)
-    );
-
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "main-pane-loaded");
 
@@ -2807,27 +3108,6 @@ var gMainPane = {
       document.getElementById("checkSpelling"),
       () => this.writeCheckSpelling()
     );
-    Preferences.addSyncFromPrefListener(
-      document.getElementById("linkTargeting"),
-      () => this.readLinkTarget()
-    );
-    Preferences.addSyncToPrefListener(
-      document.getElementById("linkTargeting"),
-      () => this.writeLinkTarget()
-    );
-    Preferences.addSyncFromPrefListener(
-      document.getElementById("openAppLinksNextToActiveTab"),
-      () => this.readExternalLinkNextToActiveTab()
-    );
-    Preferences.addSyncToPrefListener(
-      document.getElementById("openAppLinksNextToActiveTab"),
-      inputElement => this.writeExternalLinkNextToActiveTab(inputElement)
-    );
-    Preferences.addSyncFromPrefListener(
-      document.getElementById("browserContainersCheckbox"),
-      () => this.readBrowserContainersCheckbox()
-    );
-
     this.setInitialized();
   },
 
@@ -2895,47 +3175,6 @@ var gMainPane = {
    * privacy.userContext.enabled
    * - true if containers is enabled
    */
-
-  /**
-   * Enables/disables the Settings button used to configure containers
-   */
-  readBrowserContainersCheckbox() {
-    const pref = Preferences.get("privacy.userContext.enabled");
-    const settings = document.getElementById("browserContainersSettings");
-
-    settings.disabled = !pref.value;
-    const containersEnabled = Services.prefs.getBoolPref(
-      "privacy.userContext.enabled"
-    );
-    const containersCheckbox = document.getElementById(
-      "browserContainersCheckbox"
-    );
-    containersCheckbox.checked = containersEnabled;
-    handleControllingExtension(PREF_SETTING_TYPE, CONTAINERS_KEY).then(
-      isControlled => {
-        containersCheckbox.disabled = isControlled;
-      }
-    );
-  },
-
-  /**
-   * Show the Containers UI depending on the privacy.userContext.ui.enabled pref.
-   */
-  initBrowserContainers() {
-    if (!Services.prefs.getBoolPref("privacy.userContext.ui.enabled")) {
-      // The browserContainersGroup element has its own internal padding that
-      // is visible even if the browserContainersbox is visible, so hide the whole
-      // groupbox if the feature is disabled to prevent a gap in the preferences.
-      document
-        .getElementById("browserContainersbox")
-        .setAttribute("data-hidden-from-search", "true");
-      return;
-    }
-    Services.prefs.addObserver(PREF_CONTAINERS_EXTENSION, this);
-
-    document.getElementById("browserContainersbox").hidden = false;
-    this.readBrowserContainersCheckbox();
-  },
 
   async onGetStarted() {
     if (!AppConstants.MOZ_DEV_EDITION) {
@@ -3676,98 +3915,6 @@ var gMainPane = {
     cps2.setGlobal(win.FullZoom.name, newZoom, nonPrivateLoadContext);
   },
 
-  // TABS
-
-  /*
-   * Preferences:
-   *
-   * browser.link.open_newwindow - int
-   *   Determines where links targeting new windows should open.
-   *   Values:
-   *     1 - Open in the current window or tab.
-   *     2 - Open in a new window.
-   *     3 - Open in a new tab in the most recent window.
-   * browser.tabs.loadInBackground - bool
-   *   True - Whether browser should switch to a new tab opened from a link.
-   * browser.tabs.warnOnClose - bool
-   *   True - If when closing a window with multiple tabs the user is warned and
-   *          allowed to cancel the action, false to just close the window.
-   * browser.warnOnQuitShortcut - bool
-   *   True - If the keyboard shortcut (Ctrl/Cmd+Q) is pressed, the user should
-   *          be warned, false to just quit without prompting.
-   * browser.tabs.warnOnOpen - bool
-   *   True - Whether the user should be warned when trying to open a lot of
-   *          tabs at once (e.g. a large folder of bookmarks), allowing to
-   *          cancel the action.
-   * browser.taskbar.previews.enable - bool
-   *   True - Tabs are to be shown in Windows 7 taskbar.
-   *   False - Only the window is to be shown in Windows 7 taskbar.
-   */
-
-  /**
-   * Determines where a link which opens a new window will open.
-   *
-   * @returns |true| if such links should be opened in new tabs
-   */
-  readLinkTarget() {
-    var openNewWindow = Preferences.get("browser.link.open_newwindow");
-    return openNewWindow.value != 2;
-  },
-
-  /**
-   * Determines where a link which opens a new window will open.
-   *
-   * @returns 2 if such links should be opened in new windows,
-   *          3 if such links should be opened in new tabs
-   */
-  writeLinkTarget() {
-    var linkTargeting = document.getElementById("linkTargeting");
-    return linkTargeting.checked ? 3 : 2;
-  },
-
-  /**
-   * @returns {boolean}
-   *   Whether the "Open links in tabs instead of new windows" settings
-   *   checkbox should be checked. Should only be checked if the
-   *   `browser.link.open_newwindow.override.external` pref is set to the
-   *   value of 7 (nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT).
-   */
-  readExternalLinkNextToActiveTab() {
-    const externalLinkOpenOverride = Preferences.get(
-      "browser.link.open_newwindow.override.external"
-    );
-
-    return (
-      externalLinkOpenOverride.value ==
-      Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT
-    );
-  },
-
-  /**
-   * This pref has at least 8 valid values but we are offering a checkbox
-   * to set one specific value (`7`).
-   *
-   * @param {HTMLInputElement} inputElement
-   * @returns {number}
-   *   - `7` (`nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT`) if checked
-   *   - the default value of
-   *     `browser.link.open_newwindow.override.external` if not checked
-   */
-  writeExternalLinkNextToActiveTab(inputElement) {
-    const externalLinkOpenOverride = Preferences.get(
-      "browser.link.open_newwindow.override.external"
-    );
-    Glean.linkHandling.openNextToActiveTabSettingsEnabled.set(
-      inputElement.checked
-    );
-    Glean.linkHandling.openNextToActiveTabSettingsChange.record({
-      checked: inputElement.checked,
-    });
-    return inputElement.checked
-      ? Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_AFTER_CURRENT
-      : externalLinkOpenOverride.defaultValue;
-  },
-
   /**
    *  Shows a subdialog containing the profile selector page.
    */
@@ -4011,57 +4158,6 @@ var gMainPane = {
         "network-proxy-connection-description"
       );
     }
-  },
-
-  async checkBrowserContainers() {
-    let checkbox = document.getElementById("browserContainersCheckbox");
-    if (checkbox.checked) {
-      Services.prefs.setBoolPref("privacy.userContext.enabled", true);
-      return;
-    }
-
-    let count = ContextualIdentityService.countContainerTabs();
-    if (count == 0) {
-      Services.prefs.setBoolPref("privacy.userContext.enabled", false);
-      return;
-    }
-
-    let [title, message, okButton, cancelButton] =
-      await document.l10n.formatValues([
-        { id: "containers-disable-alert-title" },
-        { id: "containers-disable-alert-desc", args: { tabCount: count } },
-        { id: "containers-disable-alert-ok-button", args: { tabCount: count } },
-        { id: "containers-disable-alert-cancel-button" },
-      ]);
-
-    let buttonFlags =
-      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0 +
-      Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1;
-
-    let rv = Services.prompt.confirmEx(
-      window,
-      title,
-      message,
-      buttonFlags,
-      okButton,
-      cancelButton,
-      null,
-      null,
-      {}
-    );
-    if (rv == 0) {
-      Services.prefs.setBoolPref("privacy.userContext.enabled", false);
-      return;
-    }
-
-    checkbox.checked = true;
-  },
-
-  /**
-   * Displays container panel for customising and adding containers.
-   */
-  showContainerSettings() {
-    gotoPref("containers");
   },
 
   // FONTS
@@ -4474,7 +4570,6 @@ var gMainPane = {
 
   destroy() {
     window.removeEventListener("unload", this);
-    Services.prefs.removeObserver(PREF_CONTAINERS_EXTENSION, this);
     Services.obs.removeObserver(this, AUTO_UPDATE_CHANGED_TOPIC);
     Services.obs.removeObserver(this, BACKGROUND_UPDATE_CHANGED_TOPIC);
 
@@ -4494,7 +4589,6 @@ var gMainPane = {
   async observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed") {
       if (aData == PREF_CONTAINERS_EXTENSION) {
-        this.readBrowserContainersCheckbox();
         return;
       }
       // Rebuild the list when there are changes to preferences that influence

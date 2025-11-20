@@ -183,7 +183,20 @@ preferences-manage-profiles-learn-more = Learn more
 preferences-manage-profiles-button =
   .label = Manage Profiles
 
-tabs-group-header = Tabs
+tabs-group-header2 =
+  .label = Tabs
+
+tabs-opening-heading =
+  .label = Opening
+
+tabs-interaction-heading =
+  .label = Interaction
+
+tabs-containers-heading =
+  .label = Containers
+
+tabs-closing-heading =
+  .label = Closing
 
 ctrl-tab-recently-used-order =
     .label = Ctrl+Tab cycles through tabs in recently used order

@@ -46,7 +46,6 @@ const API_PROXY_PREFS = [
 ];
 
 let extensionControlledContentIds = {
-  "privacy.containers": "browserContainersExtensionContent",
   webNotificationsDisabled: "browserNotificationsPermissionExtensionContent",
   "services.passwordSavingEnabled": "passwordManagerExtensionContent",
   "proxy.settings": "proxyExtensionContent",

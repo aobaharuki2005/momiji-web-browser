@@ -264,10 +264,6 @@ radio {
   align-items: center;
 }
 
-#browserContainersExtensionContent {
-  padding-block: 5px;
-}
-
 .extension-controlled {
   margin-block: 18px;
 }
@@ -1497,4 +1493,8 @@ setting-group[groupid="home"] {
 
 #dohProviderSelect {
   --select-max-width: 235px;
+}
+
+#browserContainersbox moz-message-bar {
+  margin-block-start: 0;
 }
