@@ -116,10 +116,10 @@
       - condprof
       - featuregates
       - firefox-ci
+      - manifest
       - mozbase
       - mozbuild
       - mozharness
-      - skip-fails
       - taskgraph-tests
       - telemetry-python
       - tryselect
