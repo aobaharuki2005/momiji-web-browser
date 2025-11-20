@@ -433,6 +433,7 @@
   value: false
   mirror: always
 
+#ifdef ANDROID
 - name: apz.android.chrome_fling_physics.friction
   type: AtomicFloat
   value: 0.015f
@@ -447,6 +448,7 @@
   type: AtomicFloat
   value: 0.1f
   mirror: always
+#endif
 
 - name: apz.autoscroll.enabled
   type: RelaxedAtomicBool
