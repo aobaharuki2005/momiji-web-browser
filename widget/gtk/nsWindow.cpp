@@ -722,10 +722,6 @@ void nsWindow::Destroy() {
   // just drop the reference here.
   mEGLWindow = nullptr;
 
-  // mGdkWindow is owned by mContainer, will be deleted with mShell/mContainer.
-  g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
-  mGdkWindow = nullptr;
-
   gtk_widget_destroy(mShell);
   mShell = nullptr;
   mContainer = nullptr;
@@ -6173,6 +6169,19 @@ void nsWindow::ConfigureCompositor() {
   ResumeCompositorImpl();
 }
 
+void nsWindow::SetGdkWindow(GdkWindow* aGdkWindow) {
+  LOG("nsWindow::SetGdkWindow() %p", aGdkWindow);
+  if (!aGdkWindow) {
+    if (mGdkWindow) {
+      g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
+    }
+    mGdkWindow = nullptr;
+  } else {
+    mGdkWindow = aGdkWindow;
+    g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
+  }
+}
+
 nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
                           const widget::InitData& aInitData) {
   MOZ_DIAGNOSTIC_ASSERT(aInitData.mWindowType != WindowType::Invisible);
@@ -6423,9 +6432,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   }
 
   gtk_widget_realize(container);
-
-  mGdkWindow = gtk_widget_get_window(GTK_WIDGET(mContainer));
-  g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
 
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
