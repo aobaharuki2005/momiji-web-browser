@@ -12,7 +12,6 @@
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/CookieServiceChild.h"
-#include "mozilla/net/DataChannelChild.h"
 #ifdef MOZ_WIDGET_GTK
 #  include "mozilla/net/GIOChannelChild.h"
 #endif

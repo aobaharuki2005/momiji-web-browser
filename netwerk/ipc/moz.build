@@ -75,7 +75,6 @@ PREPROCESSED_IPDL_SOURCES += [
 
 IPDL_SOURCES = [
     "NeckoChannelParams.ipdlh",
-    "PDataChannel.ipdl",
     "PDocumentChannel.ipdl",
     "PFileChannel.ipdl",
     "PInputChannelThrottleQueue.ipdl",

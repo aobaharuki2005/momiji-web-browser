@@ -18,7 +18,6 @@
 #include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/WebSocketEventListenerParent.h"
-#include "mozilla/net/DataChannelParent.h"
 #ifdef MOZ_WIDGET_GTK
 #  include "mozilla/net/GIOChannelParent.h"
 #endif
@@ -325,20 +324,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvConnectBaseChannel(
 
   nsCOMPtr<nsIChannel> channel;
   NS_LinkRedirectChannels(channelId, parentChannel, getter_AddRefs(channel));
-  return IPC_OK();
-}
-
-already_AddRefed<PDataChannelParent> NeckoParent::AllocPDataChannelParent(
-    const uint32_t& channelId) {
-  RefPtr<DataChannelParent> p = new DataChannelParent();
-  return p.forget();
-}
-
-mozilla::ipc::IPCResult NeckoParent::RecvPDataChannelConstructor(
-    PDataChannelParent* actor, const uint32_t& channelId) {
-  DataChannelParent* p = static_cast<DataChannelParent*>(actor);
-  DebugOnly<bool> rv = p->Init(channelId);
-  MOZ_ASSERT(rv);
   return IPC_OK();
 }
 

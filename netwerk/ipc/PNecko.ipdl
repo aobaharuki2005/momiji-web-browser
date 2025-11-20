@@ -21,7 +21,6 @@ include protocol PTCPSocket;
 include protocol PTCPServerSocket;
 include protocol PUDPSocket;
 include protocol PDNSRequest;
-include protocol PDataChannel;
 include protocol PTransportProvider;
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
@@ -59,7 +58,6 @@ namespace net {
   manages PTCPServerSocket;
   manages PUDPSocket;
   manages PDNSRequest;
-  manages PDataChannel;
 #ifdef MOZ_WIDGET_GTK
   manages PGIOChannel;
 #endif
@@ -120,11 +118,6 @@ parent:
    */
   async ConnectBaseChannel(uint32_t channelId);
 
-  /**
-   * channelId is used to establish a connection between redirect channels in
-   * the parent and the child when we're redirecting to a data: URI.
-   */
-  async PDataChannel(uint32_t channelId);
 #ifdef MOZ_WIDGET_GTK
   async PGIOChannel(nullable PBrowser browser, SerializedLoadContext loadContext, GIOChannelCreationArgs args);
 #endif
