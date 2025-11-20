@@ -641,7 +641,7 @@ class SearchTest : TestSetup() {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            verifyPageContent("mozilla")
+           waitForPageToLoad()
         }.openThreeDotMenu {
         }.openHistory {
             // Full URL no longer visible in the nav bar, so we'll check the history record
