@@ -148,7 +148,7 @@ class AbsoluteContainingBlock {
                                      const LogicalMargin& aOffsets);
 
   void ReflowAbsoluteFrame(
-      nsIFrame* aDelegatingFrame, nsPresContext* aPresContext,
+      nsContainerFrame* aDelegatingFrame, nsPresContext* aPresContext,
       const ReflowInput& aReflowInput,
       const nsRect& aOriginalContainingBlockRect, AbsPosReflowFlags aFlags,
       nsIFrame* aKidFrame, nsReflowStatus& aStatus,

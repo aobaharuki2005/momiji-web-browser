@@ -1003,7 +1003,7 @@ static nsRect GrowOverflowCheckRect(const nsRect& aOverflowCheckRect,
 // positioned child has the exact same size and position and skip the
 // reflow...
 void AbsoluteContainingBlock::ReflowAbsoluteFrame(
-    nsIFrame* aDelegatingFrame, nsPresContext* aPresContext,
+    nsContainerFrame* aDelegatingFrame, nsPresContext* aPresContext,
     const ReflowInput& aReflowInput, const nsRect& aOriginalContainingBlockRect,
     AbsPosReflowFlags aFlags, nsIFrame* aKidFrame, nsReflowStatus& aStatus,
     OverflowAreas* aOverflowAreas,
