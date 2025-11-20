@@ -416,7 +416,7 @@ class Skipfails:
         if self.command_context is not None:
             self.topsrcdir = self.command_context.topsrcdir
         else:
-            self.topsrcdir = Path(__file__).parent.parent.parent
+            self.topsrcdir = Path(__file__).parent.parent
         self.topsrcdir = os.path.normpath(self.topsrcdir)
         if isinstance(try_url, list) and len(try_url) == 1:
             self.try_url = try_url[0]
@@ -553,7 +553,7 @@ class Skipfails:
     def full_path(self, filename):
         """Returns full path for the relative filename"""
 
-        return os.path.join(self.topsrcdir, os.path.normpath(filename))
+        return os.path.join(self.topsrcdir, os.path.normpath(filename.split(":")[-1]))
 
     def isdir(self, filename):
         """Returns True if filename is a directory"""
