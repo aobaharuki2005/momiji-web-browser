@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -64,6 +65,7 @@ import org.mozilla.fenix.home.recentvisits.view.RecentlyVisited
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.home.sessioncontrol.MessageCardInteractor
 import org.mozilla.fenix.home.setup.ui.SetupChecklist
+import org.mozilla.fenix.home.store.HeaderState
 import org.mozilla.fenix.home.store.HomepageState
 import org.mozilla.fenix.home.store.NimbusMessageState
 import org.mozilla.fenix.home.topsites.TopSiteColors
@@ -74,6 +76,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.utils.isLargeScreenSize
 import org.mozilla.fenix.wallpapers.WallpaperState
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Top level composable for the homepage.
@@ -114,8 +117,10 @@ internal fun Homepage(
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (state.showHeader) {
+            if (state.headerState.showHeader) {
                 HomepageHeader(
+                    wordmarkColor = state.headerState.wordmarkColor,
+                    privateBrowsingButtonColor = state.headerState.privateBrowsingButtonColor,
                     browsingMode = state.browsingMode,
                     browsingModeChanged = interactor::onPrivateModeButtonClicked,
                 )
@@ -479,7 +484,15 @@ private fun HomepagePreview() {
                 showRecentlyVisited = true,
                 showPocketStories = true,
                 showCollections = true,
-                showHeader = false,
+                headerState = HeaderState(
+                    showHeader = false,
+                    wordmarkColor = null,
+                    privateBrowsingButtonColor = colorResource(
+                        getAttr(
+                            iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                        ),
+                    ),
+                ),
                 searchBarVisible = true,
                 searchBarEnabled = false,
                 firstFrameDrawn = true,
@@ -521,7 +534,15 @@ private fun HomepagePreviewCollections() {
                 showRecentlyVisited = true,
                 showPocketStories = true,
                 showCollections = true,
-                showHeader = false,
+                headerState = HeaderState(
+                    showHeader = false,
+                    wordmarkColor = null,
+                    privateBrowsingButtonColor = colorResource(
+                        getAttr(
+                            iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                        ),
+                    ),
+                ),
                 searchBarVisible = true,
                 searchBarEnabled = false,
                 firstFrameDrawn = true,
@@ -563,7 +584,15 @@ private fun MinimalHomepagePreview() {
                 showRecentlyVisited = false,
                 showPocketStories = true,
                 showCollections = false,
-                showHeader = false,
+                HeaderState(
+                    showHeader = false,
+                    wordmarkColor = null,
+                    privateBrowsingButtonColor = colorResource(
+                        getAttr(
+                            iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                        ),
+                    ),
+                ),
                 searchBarVisible = false,
                 searchBarEnabled = false,
                 firstFrameDrawn = true,
@@ -590,7 +619,15 @@ private fun PrivateHomepagePreview() {
     FirefoxTheme(theme = Theme.Private) {
         Homepage(
             state = HomepageState.Private(
-                showHeader = false,
+                headerState = HeaderState(
+                    showHeader = false,
+                    wordmarkColor = null,
+                    privateBrowsingButtonColor = colorResource(
+                        getAttr(
+                            iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                        ),
+                    ),
+                ),
                 firstFrameDrawn = true,
                 isSearchInProgress = false,
                 privateModeRedesignEnabled = false,
