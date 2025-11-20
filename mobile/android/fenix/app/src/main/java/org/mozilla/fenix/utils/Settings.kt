@@ -2169,6 +2169,14 @@ class Settings(
     )
 
     /**
+     * Indicates if the toolbar CFR was displayed to the user.
+     */
+    var hasSeenBrowserToolbarCFR by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_toolbar_cfr),
+        default = false,
+    )
+
+    /**
      * Get the current mode for how https-only is enabled.
      */
     fun getHttpsOnlyMode(): HttpsOnlyMode {
