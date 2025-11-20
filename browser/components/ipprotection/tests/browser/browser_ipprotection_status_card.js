@@ -160,15 +160,25 @@ add_task(async function test_ipprotection_events_on_toggle() {
   let toggle = statusCard?.connectionToggleEl;
   Assert.ok(toggle, "Status card connection toggle should be present");
 
+  let startedProxyPromise = BrowserTestUtils.waitForEvent(
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
+    false,
+    () => !!IPPProxyManager.activatedAt
+  );
   let enableEventPromise = BrowserTestUtils.waitForEvent(
     window,
     userEnableEventName
   );
 
   toggle.click();
+  info("Clicked toggle to turn VPN on");
 
-  await enableEventPromise;
-  Assert.ok("Enable event was found after clicking the toggle");
+  await Promise.all([startedProxyPromise, enableEventPromise]);
+  Assert.ok(
+    true,
+    "Enable event and proxy started event were found after clicking the toggle"
+  );
 
   let userEnabledPref = Services.prefs.getBoolPref(
     "browser.ipProtection.userEnabled",
@@ -176,15 +186,26 @@ add_task(async function test_ipprotection_events_on_toggle() {
   );
   Assert.equal(userEnabledPref, true, "userEnabled pref should be set to true");
 
+  let stoppedProxyPromise = BrowserTestUtils.waitForEvent(
+    IPPProxyManager,
+    "IPPProxyManager:StateChanged",
+    false,
+    () => !IPPProxyManager.activatedAt
+  );
   let disableEventPromise = BrowserTestUtils.waitForEvent(
     window,
     userDisableEventName
   );
 
+  toggle = statusCard?.connectionToggleEl;
   toggle.click();
+  info("Clicked toggle to turn VPN off");
 
-  await disableEventPromise;
-  Assert.ok("Disable event was found after clicking the toggle");
+  await Promise.all([stoppedProxyPromise, disableEventPromise]);
+  Assert.ok(
+    true,
+    "Disable event and stopped proxy event were found after clicking the toggle"
+  );
 
   userEnabledPref = Services.prefs.getBoolPref(
     "browser.ipProtection.userEnabled",
