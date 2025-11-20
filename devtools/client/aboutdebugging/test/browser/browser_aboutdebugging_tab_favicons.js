@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { ImageTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ImageTestUtils.sys.mjs"
+);
+
 /**
  * Check that about:debugging uses the favicon of tab targets as the icon of their debug
  * target item, and doesn't always use the default globe icon.
@@ -14,10 +18,8 @@ const TAB_URL =
   "https://example.com/browser/devtools/client/aboutdebugging/" +
   "test/browser/test-tab-favicons.html";
 
-// The favicon in the page is re-encoded, with different results depending on zlib-rs usage.
-const EXPECTED_FAVICON = AppConstants.USE_LIBZ_RS
-  ? "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVRYR+3SMQoAIAxD0fb+h9ZBEM3SKfwlTkISeEN7Va16Xt/feV9oyDsAHKCdaeDIA2AB+BEGgAO0Mw0ceQAsAD/CAHCAdqaBIw+ABeBHGAAO0M40cOQBoIANOAOf8d5vwtsAAAAASUVORK5CYII="
-  : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAV0lEQVRYR+2UMQ4AIAgD4f+P1m6KcVQ7eMZBJCHNUcgWoTtOzoHeJan4dD4RYCewtvl2z3f1yx8CnhOwmxABdgLsAQjYTYgAOwGmAAJ2EyLAToAp+J5ABzgDn/EwCmG5AAAAAElFTkSuQmCC";
+const EXPECTED_FAVICON =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAV0lEQVRYR+2UMQ4AIAgD4f+P1m6KcVQ7eMZBJCHNUcgWoTtOzoHeJan4dD4RYCewtvl2z3f1yx8CnhOwmxABdgLsAQjYTYgAOwGmAAJ2EyLAToAp+J5ABzgDn/EwCmG5AAAAAElFTkSuQmCC";
 
 add_task(async function () {
   const faviconTab = await addTab(TAB_URL, { background: true });
@@ -40,7 +42,8 @@ add_task(async function () {
     ".qa-debug-target-item-icon"
   );
 
-  is(
+  await ImageTestUtils.assertEqualImage(
+    window,
     faviconTabIcon.src,
     EXPECTED_FAVICON,
     "The debug target item for the tab shows the favicon of the tab"

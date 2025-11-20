@@ -1,5 +1,9 @@
 "use strict";
 
+const { ImageTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ImageTestUtils.sys.mjs"
+);
+
 const FAVICON =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAARElEQVQYV2NkYLj3nwEnUGKEMxkYGBghilEFIQBTHKqYOIDFZHQ+DNz7j0MxdoDDGThNRgfoNsEATsXYARbFuAHtFAMAuvMbOrNomdAAAAAASUVORK5CYII=";
 const PAGE_URL = `data:text/html,
@@ -36,13 +40,20 @@ add_task(async function test_tabicon_after_bg_tab_crash() {
         100,
         5
       );
-      Assert.equal(browser.mIconURL, FAVICON, "Favicon is correctly set.");
+      await ImageTestUtils.assertEqualImage(
+        window,
+        browser.mIconURL,
+        FAVICON,
+        "Favicon is correctly set."
+      );
+
       await BrowserTestUtils.switchTab(gBrowser, originalTab);
       await BrowserTestUtils.crashFrame(
         browser,
         false /* shouldShowTabCrashPage */
       );
-      Assert.equal(
+      await ImageTestUtils.assertEqualImage(
+        window,
         browser.mIconURL,
         FAVICON,
         "Favicon is still set after crash."

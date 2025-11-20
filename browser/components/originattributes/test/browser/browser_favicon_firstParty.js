@@ -12,6 +12,10 @@ const { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
 
+const { ImageTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ImageTestUtils.sys.mjs"
+);
+
 const FIRST_PARTY_ONE = "example.com";
 const FIRST_PARTY_TWO = "example.org";
 const THIRD_PARTY = "example.net";
@@ -222,14 +226,19 @@ async function generateCookies(aThirdParty) {
   return cookies;
 }
 
-function assertIconIsData(item) {
+async function assertIconIsData(item) {
   let icon = item.getAttribute("image");
   is(
     icon.substring(0, 5),
     "data:",
     "Expected the image element to be a data URI"
   );
-  is(icon, ICON_DATA, "Expected to see the correct data.");
+  await ImageTestUtils.assertEqualImage(
+    window,
+    icon,
+    ICON_DATA,
+    "Expected to see the correct data."
+  );
 }
 
 async function doTest(aTestPage, aExpectedCookies, aFaviconURL) {
@@ -255,7 +264,7 @@ async function doTest(aTestPage, aExpectedCookies, aFaviconURL) {
   // Waiting until favicon loaded.
   await promiseFaviconLoaded;
 
-  assertIconIsData(tabInfo.tab);
+  await assertIconIsData(tabInfo.tab);
 
   BrowserTestUtils.removeTab(tabInfo.tab);
   // FIXME: We need to wait for the next event tick here to avoid observing
@@ -300,7 +309,7 @@ async function doTestForAllTabsFavicon(
   // Waiting until the favicon loaded.
   await promiseFaviconLoaded;
 
-  assertIconIsData(tabInfo.tab);
+  await assertIconIsData(tabInfo.tab);
 
   gTabsPanel.init();
 
@@ -313,7 +322,7 @@ async function doTestForAllTabsFavicon(
   gTabsPanel.showAllTabsPanel();
   await allTabsPopupShownPromise;
 
-  assertIconIsData(
+  await assertIconIsData(
     gTabsPanel.allTabsViewTabs.lastElementChild.firstElementChild
   );
 
@@ -341,7 +350,7 @@ async function doTestForAllTabsFavicon(
   // Wait until the favicon is fully loaded.
   await promiseFaviconLoaded;
 
-  assertIconIsData(tabInfo.tab);
+  await assertIconIsData(tabInfo.tab);
 
   // Make the popup of allTabs showing up again.
   allTabsPopupShownPromise = BrowserTestUtils.waitForEvent(
@@ -351,7 +360,7 @@ async function doTestForAllTabsFavicon(
   gTabsPanel.showAllTabsPanel();
   await allTabsPopupShownPromise;
 
-  assertIconIsData(
+  await assertIconIsData(
     gTabsPanel.allTabsViewTabs.lastElementChild.firstElementChild
   );
 

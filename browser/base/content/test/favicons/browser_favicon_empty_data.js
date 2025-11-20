@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { ImageTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/ImageTestUtils.sys.mjs"
+);
+
 const TEST_ROOT =
   "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
 
@@ -22,7 +26,12 @@ add_task(async function () {
         .getTabForBrowser(browser)
         .querySelector(".tab-icon-image");
       await addContentLinkForIconUrl(ICON_URL, browser);
-      Assert.equal(browser.mIconURL, ICON_DATAURI, "Favicon is correctly set.");
+      await ImageTestUtils.assertEqualImage(
+        window,
+        browser.mIconURL,
+        ICON_DATAURI,
+        "Favicon is correctly set."
+      );
 
       // Give some time to ensure the icon is rendered.
       /* eslint-disable mozilla/no-arbitrary-setTimeout */
