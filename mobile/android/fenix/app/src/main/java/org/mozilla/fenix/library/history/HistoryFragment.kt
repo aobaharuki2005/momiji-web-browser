@@ -73,9 +73,9 @@ import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
-import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
+import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction
@@ -456,7 +456,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                     FirefoxTheme {
                         val historyState = historyStore.observeAsComposableState { it }.value
                         val searchState = searchStore.observeAsComposableState { it }.value
-                        val awesomebarBackground = AcornTheme.colors.layer1
+                        val awesomebarBackground = AwesomeBarDefaults.colors().background
                         val awesomebarScrim by remember(searchState.query.isEmpty()) {
                             derivedStateOf {
                                 when (searchState.query.isNotEmpty()) {
