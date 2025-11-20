@@ -32,7 +32,7 @@ tasks:
             artifact_map: taskcluster/gecko_taskgraph/manifests/firefox_integration.yml
         if-dependencies:
             - build
-        run-on-projects: [autoland]
+        run-on-projects: [autoland-only]
         treeherder:
             tier: 2
             kind: build
