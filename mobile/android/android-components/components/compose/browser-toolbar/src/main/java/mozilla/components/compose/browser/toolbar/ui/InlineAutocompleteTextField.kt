@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -125,7 +126,7 @@ internal fun InlineAutocompleteTextField(
     }
 
     var currentSuggestion: AutocompleteResult? by remember(suggestion) { mutableStateOf(suggestion) }
-    val suggestionTextColor = AcornTheme.colors.textPrimary
+    val suggestionTextColor = MaterialTheme.colorScheme.onSurface
     val highlightBackgroundColor = Color(TEXT_HIGHLIGHT_COLOR.toColorInt())
     val suggestionVisualTransformation = remember(currentSuggestion, textFieldValue) {
         when (textFieldValue.text.isEmpty()) {
@@ -219,7 +220,7 @@ internal fun InlineAutocompleteTextField(
                     .focusRequester(focusRequester),
                 textStyle = TextStyle(
                     fontSize = TEXT_SIZE.sp,
-                    color = AcornTheme.colors.textPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = when (deviceLayoutDirection) {
                         LayoutDirection.Ltr -> TextAlign.Start
                         LayoutDirection.Rtl -> TextAlign.End
@@ -255,7 +256,7 @@ internal fun InlineAutocompleteTextField(
                         }
                     }
                 },
-                cursorBrush = SolidColor(AcornTheme.colors.textPrimary),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 decorationBox = { innerTextField ->
                     Box(
                         modifier = Modifier
@@ -292,7 +293,7 @@ internal fun InlineAutocompleteTextField(
                                 text = hint,
                                 style = TextStyle(
                                     fontSize = TEXT_SIZE.sp,
-                                    color = AcornTheme.colors.textSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 ),
                             )
                         }
@@ -457,7 +458,7 @@ private class PasteSanitizerTextToolbar(
 private fun InlineAutocompleteTextFieldWithSuggestion() {
     AcornTheme {
         Box(
-            Modifier.background(AcornTheme.colors.layer1),
+            Modifier.background(MaterialTheme.colorScheme.surfaceDim),
         ) {
             InlineAutocompleteTextField(
                 query = "wiki",
@@ -481,7 +482,7 @@ private fun InlineAutocompleteTextFieldWithSuggestion() {
 private fun InlineAutocompleteTextFieldWithNoQuery() {
     AcornTheme {
         Box(
-            Modifier.background(AcornTheme.colors.layer1),
+            Modifier.background(MaterialTheme.colorScheme.surfaceDim),
         ) {
             InlineAutocompleteTextField(
                 query = "",
