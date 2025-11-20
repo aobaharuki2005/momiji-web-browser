@@ -13,23 +13,26 @@ add_task(async function test_flags_content() {
     code: "us",
   };
 
-  let content = await openPanel();
+  let content = await openPanel({ isSignedOut: false });
 
-  let flagLoadedPromise = BrowserTestUtils.waitForMutationCondition(
+  let cardLoadedPromise = BrowserTestUtils.waitForMutationCondition(
     content.shadowRoot,
     { childList: true, subtree: true },
-    () => content.locationEl?.shadowRoot.querySelector("ipprotection-flag")
+    () => content.statusCardEl
   );
 
   await setPanelState({
     isSignedOut: false,
     location: mockLocation,
   });
-  await flagLoadedPromise;
+  await cardLoadedPromise;
 
-  Assert.ok(content.locationEl, "Location details should be present");
+  let statusCard = content.statusCardEl;
 
-  let flag = content.locationEl?.shadowRoot.querySelector("ipprotection-flag");
+  Assert.ok(statusCard.locationEl, "Location details should be present");
+
+  let flag =
+    statusCard.locationEl?.shadowRoot.querySelector("ipprotection-flag");
 
   Assert.ok(flag, "Flag component should be present");
 
