@@ -5,11 +5,12 @@
 package mozilla.components.ui.tabcounter
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -32,6 +33,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.theme.AcornTheme
+import mozilla.components.compose.base.theme.acornPrivateColorScheme
+import mozilla.components.compose.base.theme.privateColorPalette
 import mozilla.components.compose.base.utils.toLocaleString
 import mozilla.components.ui.tabcounter.TabCounterTestTags.NORMAL_TABS_COUNTER
 import mozilla.components.ui.icons.R as iconsR
@@ -47,18 +50,16 @@ private const val TWO_DIGITS_SIZE_RATIO = 0.4f
  * This composable uses LocalContentColor, provided by CompositionLocalProvider,
  * to set the color of its icons and text.
  *
- * @param tabCount the number to be displayed inside the counter.
- * @param showPrivacyBadge if true, show the privacy badge.
- * @param textColor the color of the text inside of tab counter.
- * @param iconColor the border color of the tab counter.
+ * @param tabCount The number to be displayed inside the counter.
+ * @param showPrivacyBadge If true, show the privacy badge.
+ * @param contentColor The content color to be used for the text and border of the tab counter.
  */
 @Composable
 @Suppress("CognitiveComplexMethod")
 fun TabCounter(
     tabCount: Int,
     showPrivacyBadge: Boolean = false,
-    textColor: Color = AcornTheme.colors.textPrimary,
-    iconColor: Color = AcornTheme.colors.iconPrimary,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     val formattedTabCount = remember(tabCount) { tabCount.toLocaleString() }
     val normalTabCountText by remember(tabCount) {
@@ -113,14 +114,14 @@ fun TabCounter(
                 id = counterBoxBackground,
             ),
             contentDescription = tabsCounterDescription,
-            tint = iconColor,
+            tint = contentColor,
         )
 
         if (tabCount <= MAX_VISIBLE_TABS) {
             Text(
                 text = normalTabCountText,
                 modifier = Modifier.clearAndSetSemantics {},
-                color = textColor,
+                color = contentColor,
                 fontSize = with(LocalDensity.current) { counterTabsTextSize.toDp().toSp() },
                 fontWeight = FontWeight.W700,
                 textAlign = TextAlign.Center,
@@ -153,9 +154,20 @@ object TabCounterTestTags {
 @Composable
 private fun TabCounterPreview() {
     AcornTheme {
-        Box(
-            modifier = Modifier.background(color = AcornTheme.colors.layer1),
-        ) {
+        Surface {
+            TabCounter(tabCount = 55)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun TabCounterPrivatePreview() {
+    AcornTheme(
+        colors = privateColorPalette,
+        colorScheme = acornPrivateColorScheme(),
+    ) {
+        Surface {
             TabCounter(tabCount = 55)
         }
     }
@@ -166,9 +178,7 @@ private fun TabCounterPreview() {
 @Composable
 private fun InfiniteTabCounterPreview() {
     AcornTheme {
-        Box(
-            modifier = Modifier.background(color = AcornTheme.colors.layer1),
-        ) {
+        Surface {
             TabCounter(tabCount = 100)
         }
     }

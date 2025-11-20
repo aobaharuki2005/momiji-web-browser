@@ -305,8 +305,7 @@ private fun TabPageBanner(
                 ) {
                     TabCounter(
                         tabCount = counts.normalTabCount,
-                        textColor = LocalContentColor.current,
-                        iconColor = LocalContentColor.current,
+                        contentColor = LocalContentColor.current,
                     )
                 }
 
