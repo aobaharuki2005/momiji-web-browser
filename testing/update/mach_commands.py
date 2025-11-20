@@ -318,6 +318,17 @@ def build(command_context, binary_path, **kwargs):
         # TODO: update tests to check against config version, not update server resp
         # kwargs["to_display_version"] = uv_config.to_display_version
 
+    if kwargs.get("source_locale"):
+        config.locale = kwargs["source_locale"]
+
+    if kwargs.get("source_versions_back"):
+        config.source_version_position = -int(kwargs["source_versions_back"])
+
+    if kwargs.get("source_version"):
+        config.source_version = kwargs["source_version"]
+    else:
+        config.source_version = None
+
     config.set_ftp_info()
 
     tempdir = tempfile.TemporaryDirectory()
@@ -346,17 +357,6 @@ def build(command_context, binary_path, **kwargs):
         else:
             logging.ERROR("Invalid test type")
             sys.exit(1)
-
-    if kwargs.get("source_locale"):
-        config.locale = kwargs["source_locale"]
-
-    if kwargs.get("source_versions_back"):
-        config.source_version_position = -int(kwargs["source_versions_back"])
-
-    if kwargs.get("source_version"):
-        config.source_version = kwargs["source_version"]
-    else:
-        config.source_version = None
 
     config.dir = command_context.topsrcdir
 
