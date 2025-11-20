@@ -2059,7 +2059,6 @@ impl YamlFrameReader {
 
         let filters = yaml["filters"].as_vec_filter_op().unwrap_or_default();
         let filter_datas = yaml["filter-datas"].as_vec_filter_data().unwrap_or_default();
-        let filter_primitives = yaml["filter-primitives"].as_vec_filter_primitive().unwrap_or_default();
 
         let snapshot = if !yaml["snapshot"].is_badvalue() {
             let yaml = &yaml["snapshot"];
@@ -2095,7 +2094,6 @@ impl YamlFrameReader {
             mix_blend_mode,
             &filters,
             &filter_datas,
-            &filter_primitives,
             raster_space,
             flags,
             snapshot,
@@ -2126,13 +2124,11 @@ impl YamlFrameReader {
 
         let filters = item["filters"].as_vec_filter_op().unwrap_or_default();
         let filter_datas = item["filter-datas"].as_vec_filter_data().unwrap_or_default();
-        let filter_primitives = item["filter-primitives"].as_vec_filter_primitive().unwrap_or_default();
 
         dl.push_backdrop_filter(
             info,
             &filters,
             &filter_datas,
-            &filter_primitives,
         );
     }
 }

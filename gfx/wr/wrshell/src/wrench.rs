@@ -615,7 +615,6 @@ impl YamlWriter {
                     DisplayItem::SetGradientStops => {}
                     DisplayItem::SetFilterOps => {}
                     DisplayItem::SetFilterData => {}
-                    DisplayItem::SetFilterPrimitives => {}
                     DisplayItem::SetPoints => {}
                     DisplayItem::PopAllShadows => {}
                     DisplayItem::ReuseItems(..) => {}

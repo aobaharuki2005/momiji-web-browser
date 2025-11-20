@@ -94,8 +94,8 @@
 //! blend the overlay tile (this is not always optimal right now, but will be
 //! improved as a follow up).
 
-use api::{BorderRadius, ClipMode, FilterPrimitiveKind, MixBlendMode, PremultipliedColorF, SVGFE_GRAPH_MAX};
-use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FilterOpGraphPictureBufferId, RasterSpace};
+use api::{BorderRadius, ClipMode, MixBlendMode, PremultipliedColorF, SVGFE_GRAPH_MAX};
+use api::{PropertyBinding, PropertyBindingId, FilterOpGraphPictureBufferId, RasterSpace};
 use api::{DebugFlags, ImageKey, ColorF, ColorU, PrimitiveFlags, SnapshotInfo};
 use api::{ImageRendering, ColorDepth, YuvRangedColorSpace, YuvFormat, AlphaType};
 use api::units::*;
@@ -111,7 +111,6 @@ use crate::composite::{CompositorTransformIndex, CompositorSurfaceKind};
 use crate::debug_colors;
 use euclid::{vec3, Point2D, Scale, Vector2D, Box2D};
 use euclid::approxeq::ApproxEq;
-use crate::filterdata::SFilterData;
 use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, FilterGraphOp, FilterGraphNode, Filter, FrameId};
 use crate::internal_types::{PlaneSplitterIndex, PlaneSplitAnchor, TextureSource};
@@ -4408,8 +4407,6 @@ pub enum PictureCompositeMode {
     TileCache {
         slice_id: SliceId,
     },
-    /// Apply an SVG filter
-    SvgFilter(Vec<FilterPrimitive>, Vec<SFilterData>),
     /// Apply an SVG filter graph
     SVGFEGraph(Vec<(FilterGraphNode, FilterGraphOp)>),
     /// A surface that is used as an input to another primitive
@@ -4454,52 +4451,6 @@ impl PictureCompositeMode {
                 let blur_inflation_y = max_blur_radius_y * BLUR_SAMPLE_SCALE;
 
                 surface_rect.inflate(blur_inflation_x, blur_inflation_y)
-            }
-            PictureCompositeMode::SvgFilter(primitives, _) => {
-                let mut result_rect = surface_rect;
-                let mut output_rects = Vec::with_capacity(primitives.len());
-
-                for (cur_index, primitive) in primitives.iter().enumerate() {
-                    let output_rect = match primitive.kind {
-                        FilterPrimitiveKind::Blur(ref primitive) => {
-                            let input = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect);
-                            let width_factor = primitive.width.round() * BLUR_SAMPLE_SCALE;
-                            let height_factor = primitive.height.round() * BLUR_SAMPLE_SCALE;
-                            input.inflate(width_factor, height_factor)
-                        }
-                        FilterPrimitiveKind::DropShadow(ref primitive) => {
-                            let inflation_factor = primitive.shadow.blur_radius.ceil() * BLUR_SAMPLE_SCALE;
-                            let input = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect);
-                            let shadow_rect = input.inflate(inflation_factor, inflation_factor);
-                            input.union(&shadow_rect.translate(primitive.shadow.offset * Scale::new(1.0)))
-                        }
-                        FilterPrimitiveKind::Blend(ref primitive) => {
-                            primitive.input1.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect)
-                                .union(&primitive.input2.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect))
-                        }
-                        FilterPrimitiveKind::Composite(ref primitive) => {
-                            primitive.input1.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect)
-                                .union(&primitive.input2.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect))
-                        }
-                        FilterPrimitiveKind::Identity(ref primitive) =>
-                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect),
-                        FilterPrimitiveKind::Opacity(ref primitive) =>
-                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect),
-                        FilterPrimitiveKind::ColorMatrix(ref primitive) =>
-                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect),
-                        FilterPrimitiveKind::ComponentTransfer(ref primitive) =>
-                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect),
-                        FilterPrimitiveKind::Offset(ref primitive) => {
-                            let input_rect = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect);
-                            input_rect.translate(primitive.offset * Scale::new(1.0))
-                        },
-
-                        FilterPrimitiveKind::Flood(..) => surface_rect,
-                    };
-                    output_rects.push(output_rect);
-                    result_rect = result_rect.union(&output_rect);
-                }
-                result_rect
             }
             PictureCompositeMode::SVGFEGraph(ref filters) => {
                 // Return prim_subregion for use in get_local_prim_rect, which
@@ -4555,53 +4506,6 @@ impl PictureCompositeMode {
 
                 rect
             }
-            PictureCompositeMode::SvgFilter(primitives, _) => {
-                let mut result_rect = surface_rect;
-                let mut output_rects = Vec::with_capacity(primitives.len());
-
-                for (cur_index, primitive) in primitives.iter().enumerate() {
-                    let output_rect = match primitive.kind {
-                        FilterPrimitiveKind::Blur(ref primitive) => {
-                            let input = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect);
-                            let width_factor = primitive.width.round() * BLUR_SAMPLE_SCALE;
-                            let height_factor = primitive.height.round() * BLUR_SAMPLE_SCALE;
-
-                            input.inflate(width_factor, height_factor)
-                        }
-                        FilterPrimitiveKind::DropShadow(ref primitive) => {
-                            let inflation_factor = primitive.shadow.blur_radius.ceil() * BLUR_SAMPLE_SCALE;
-                            let input = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect);
-                            let shadow_rect = input.inflate(inflation_factor, inflation_factor);
-                            input.union(&shadow_rect.translate(primitive.shadow.offset * Scale::new(1.0)))
-                        }
-                        FilterPrimitiveKind::Blend(ref primitive) => {
-                            primitive.input1.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect)
-                                .union(&primitive.input2.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect))
-                        }
-                        FilterPrimitiveKind::Composite(ref primitive) => {
-                            primitive.input1.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect)
-                                .union(&primitive.input2.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect))
-                        }
-                        FilterPrimitiveKind::Identity(ref primitive) =>
-                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect),
-                        FilterPrimitiveKind::Opacity(ref primitive) =>
-                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect),
-                        FilterPrimitiveKind::ColorMatrix(ref primitive) =>
-                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect),
-                        FilterPrimitiveKind::ComponentTransfer(ref primitive) =>
-                            primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect),
-                        FilterPrimitiveKind::Offset(ref primitive) => {
-                            let input_rect = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(surface_rect);
-                            input_rect.translate(primitive.offset * Scale::new(1.0))
-                        },
-
-                        FilterPrimitiveKind::Flood(..) => surface_rect,
-                    };
-                    output_rects.push(output_rect);
-                    result_rect = result_rect.union(&output_rect);
-                }
-                result_rect
-            }
             PictureCompositeMode::SVGFEGraph(ref filters) => {
                 // surface_rect may be for source or target, so invalidate based
                 // on both interpretations
@@ -4624,7 +4528,6 @@ impl PictureCompositeMode {
             PictureCompositeMode::IntermediateSurface => "IntermediateSurface",
             PictureCompositeMode::MixBlend(..) => "MixBlend",
             PictureCompositeMode::SVGFEGraph(..) => "SVGFEGraph",
-            PictureCompositeMode::SvgFilter(..) => "SvgFilter",
             PictureCompositeMode::TileCache{..} => "TileCache",
             PictureCompositeMode::Filter(Filter::Blur{..}) => "Filter::Blur",
             PictureCompositeMode::Filter(Filter::Brightness(..)) => "Filter::Brightness",
@@ -6500,56 +6403,6 @@ impl PicturePrimitive {
                             surface_rects.clipped_local,
                         );
                     }
-                    PictureCompositeMode::SvgFilter(ref primitives, ref filter_datas) => {
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        let picture_task_id = frame_state.rg_builder.add().init(
-                            RenderTask::new_dynamic(
-                                surface_rects.task_size,
-                                RenderTaskKind::new_picture(
-                                    surface_rects.task_size,
-                                    surface_rects.needs_scissor_rect,
-                                    surface_rects.clipped.min,
-                                    surface_spatial_node_index,
-                                    raster_spatial_node_index,
-                                    device_pixel_scale,
-                                    None,
-                                    None,
-                                    None,
-                                    cmd_buffer_index,
-                                    can_use_shared_surface,
-                                    None,
-                                )
-                            ).with_uv_rect_kind(surface_rects.uv_rect_kind)
-                        );
-
-                        let is_opaque = false; // TODO
-                        let filter_task_id = request_render_task(
-                            frame_state,
-                            &self.snapshot,
-                            &surface_rects,
-                            is_opaque,
-                            &mut|rg_builder, _| {
-                                RenderTask::new_svg_filter(
-                                    primitives,
-                                    filter_datas,
-                                    rg_builder,
-                                    surface_rects.clipped.size().to_i32(),
-                                    surface_rects.uv_rect_kind,
-                                    picture_task_id,
-                                    device_pixel_scale,
-                                )
-                            }
-                        );
-
-                        primary_render_task_id = filter_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_chained(
-                            picture_task_id,
-                            filter_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
                     PictureCompositeMode::SVGFEGraph(ref filters) => {
                         let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
 
@@ -6678,7 +6531,6 @@ impl PicturePrimitive {
                     PictureCompositeMode::Filter(..) |
                     PictureCompositeMode::MixBlend(..) |
                     PictureCompositeMode::IntermediateSurface |
-                    PictureCompositeMode::SvgFilter(..) |
                     PictureCompositeMode::SVGFEGraph(..) => {
                         // TODO(gw): We can take advantage of the same logic that
                         //           exists in the opaque rect detection for tile
@@ -7316,8 +7168,7 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::MixBlend(..) |
             PictureCompositeMode::Blit(_) |
-            PictureCompositeMode::IntermediateSurface |
-            PictureCompositeMode::SvgFilter(..) => {}
+            PictureCompositeMode::IntermediateSurface => {}
             PictureCompositeMode::SVGFEGraph(ref filters) => {
                 // Update interned filter data
                 for (_node, op) in filters {

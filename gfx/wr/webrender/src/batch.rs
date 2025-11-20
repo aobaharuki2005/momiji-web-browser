@@ -1522,25 +1522,6 @@ impl BatchBuilder {
                                 }
                             }
                         }
-                        PictureCompositeMode::SvgFilter(..) => {
-                            let kind = BatchKind::Brush(
-                                BrushBatchKind::Image(ImageBufferKind::Texture2D)
-                            );
-                            let key = BatchKey::new(
-                                kind,
-                                blend_mode,
-                                textures,
-                            );
-
-                            let prim_user_data = ImageBrushUserData {
-                                color_mode: ShaderColorMode::Image,
-                                alpha_type: AlphaType::PremultipliedAlpha,
-                                raster_space: RasterizationSpace::Screen,
-                                opacity: 1.0,
-                            }.encode();
-
-                            (key, prim_user_data, uv_rect_address.as_int())
-                        }
                         PictureCompositeMode::SVGFEGraph(..) => {
                             let kind = BatchKind::Brush(
                                 BrushBatchKind::Image(ImageBufferKind::Texture2D)

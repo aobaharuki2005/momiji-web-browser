@@ -195,7 +195,6 @@ pub enum DisplayItem {
     SetGradientStops,
     SetFilterOps,
     SetFilterData,
-    SetFilterPrimitives,
     SetPoints,
 
     // These marker items terminate a scope introduced by a previous item.
@@ -244,7 +243,6 @@ pub enum DebugDisplayItem {
     SetGradientStops(Vec<GradientStop>),
     SetFilterOps(Vec<FilterOp>),
     SetFilterData(FilterData),
-    SetFilterPrimitives(Vec<FilterPrimitive>),
     SetPoints(Vec<LayoutPoint>),
 
     PopReferenceFrame,
@@ -2291,7 +2289,6 @@ impl DisplayItem {
             DisplayItem::PushStackingContext(..) => "push_stacking_context",
             DisplayItem::SetFilterOps => "set_filter_ops",
             DisplayItem::SetFilterData => "set_filter_data",
-            DisplayItem::SetFilterPrimitives => "set_filter_primitives",
             DisplayItem::SetPoints => "set_points",
             DisplayItem::RadialGradient(..) => "radial_gradient",
             DisplayItem::Rectangle(..) => "rectangle",
