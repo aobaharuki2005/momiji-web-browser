@@ -80,6 +80,9 @@ class WaylandSurface final {
   // We've got first frame callback so we're really visible now.
   bool IsVisible() const { return mIsVisible; }
 
+  // Called from frame callback and sets the visible flag
+  void VisibleCallbackHandler();
+
   // Indicate that Wayland surface uses Gdk resources which
   // need to be released on main thread by GdkCleanUpLocked().
   // It may be called after Unmap() to make sure
@@ -373,6 +376,9 @@ class WaylandSurface final {
   // Surface flip state on X/Y asix
   bool mBufferTransformFlippedX = false;
   bool mBufferTransformFlippedY = false;
+
+  // Frame callback for mIsVisible flag
+  wl_callback* mVisibleFrameCallback = nullptr;
 
   // Frame callbacks of this surface
   wl_callback* mFrameCallback = nullptr;
