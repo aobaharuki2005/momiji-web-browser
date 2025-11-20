@@ -6,12 +6,12 @@ package mozilla.components.compose.browser.toolbar.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.content.res.Configuration.UI_MODE_TYPE_NORMAL
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -229,15 +229,15 @@ private fun HighlightedDomainUrlPreview(
     @PreviewParameter(HighlightedUrlDomainDataProvider::class) config: HighlightedUrlDomainPreviewModel,
 ) {
     AcornTheme {
-        Box(Modifier.background(AcornTheme.colors.layer1)) {
+        Surface {
             HighlightedDomainUrl(
                 url = config.url,
                 registrableDomainIndexRange = config.registrableDomainIndexRange,
                 fadedTextStyle = LocalTextStyle.current.merge(
-                    TextStyle(color = AcornTheme.colors.actionWarning),
+                    TextStyle(color = MaterialTheme.colorScheme.onSurfaceVariant),
                 ),
                 boldedTextStyle = LocalTextStyle.current.merge(
-                    TextStyle(color = AcornTheme.colors.textPrimary),
+                    TextStyle(color = MaterialTheme.colorScheme.onSurface),
                 ),
                 modifier = Modifier.width(200.dp),
             )
@@ -251,15 +251,15 @@ private fun RTLHighlightedDomainUrlPreview(
     @PreviewParameter(HighlightedUrlDomainDataProvider::class) config: HighlightedUrlDomainPreviewModel,
 ) {
     AcornTheme {
-        Box(Modifier.background(AcornTheme.colors.layer1)) {
+        Surface {
             HighlightedDomainUrl(
                 url = config.url,
                 registrableDomainIndexRange = config.registrableDomainIndexRange,
                 fadedTextStyle = LocalTextStyle.current.merge(
-                    TextStyle(color = AcornTheme.colors.actionWarning),
+                    TextStyle(color = MaterialTheme.colorScheme.onSurfaceVariant),
                 ),
                 boldedTextStyle = LocalTextStyle.current.merge(
-                    TextStyle(color = AcornTheme.colors.textPrimary),
+                    TextStyle(color = MaterialTheme.colorScheme.onSurface),
                 ),
                 modifier = Modifier.width(200.dp),
             )
