@@ -225,31 +225,38 @@ addAccessibleTask(
   </label>
 `,
   async function testARIACoreExamples(browser, docAcc) {
-    function testName_(id, expected) {
+    function testName_(id, expected, cached) {
       const acc = findAccessibleChildByID(docAcc, id);
+      if (browser.isRemoteBrowser) {
+        is(
+          acc.cache.has("name"),
+          cached,
+          `Name should ${cached ? "" : "not "}be in cache for '${id}'`
+        );
+      }
       testName(acc, expected);
     }
     // Example 1 from section 4.3.1 under 2.B.
     // Element1 should get its name from the text in element3.
     // Element2 should not get its name from element1 because that already
     // gets its name from another element.
-    testName_("el1", "hello");
-    testName_("el2", null);
+    testName_("el1", "hello", false);
+    testName_("el2", null, false);
 
     // Example 2 from section 4.3.1 under 2.C.
     // The buttons should get their name from their labels and the links.
-    testName_("del_row1", "Delete Documentation.pdf");
-    testName_("del_row2", "Delete HolidayLetter.pdf");
+    testName_("del_row1", "Delete Documentation.pdf", true);
+    testName_("del_row2", "Delete HolidayLetter.pdf", true);
 
     // Example 3 from section 4.3.1 under 2.F.
     // Name should be own content text plus the value of the input plus
     // more own inner text, separated by 1 space.
-    testName_("chkbx", "Flash the screen 5 times");
+    testName_("chkbx", "Flash the screen 5 times", false);
 
     // Example 4 from section 4.3.1 under 2.F.
     // Name from content should include all the child nodes, including
     // table cells.
-    testName_("input_with_html_label", "foo bar baz");
+    testName_("input_with_html_label", "foo bar baz", false);
   },
   { topLevel: true, chrome: true }
 );
