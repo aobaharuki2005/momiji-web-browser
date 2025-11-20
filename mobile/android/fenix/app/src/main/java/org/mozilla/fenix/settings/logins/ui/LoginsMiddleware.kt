@@ -187,16 +187,18 @@ internal class LoginsMiddleware(
 
             try {
                 val loginAdded = loginsStorage.add(newLoginToAdd)
-                dispatch(
-                    LoginClicked(
-                        LoginItem(
-                            guid = loginAdded.guid,
-                            url = loginAdded.origin,
-                            username = loginAdded.username,
-                            password = loginAdded.password,
+                mainScope.launch {
+                    dispatch(
+                        LoginClicked(
+                            LoginItem(
+                                guid = loginAdded.guid,
+                                url = loginAdded.origin,
+                                username = loginAdded.username,
+                                password = loginAdded.password,
+                            ),
                         ),
-                    ),
-                )
+                    )
+                }
             } catch (exception: LoginsApiException) {
                 exception.printStackTrace()
             }
