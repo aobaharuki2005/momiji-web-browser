@@ -403,10 +403,12 @@
   value: true
   mirror: always
 
+#ifdef XP_MACOSX
 - name: apz.mac.enable_double_tap_zoom_touchpad_gesture
   type: RelaxedAtomicBool
   value: true
   mirror: always
+#endif
 
 - name: apz.allow_immediate_handoff
   type: RelaxedAtomicBool
