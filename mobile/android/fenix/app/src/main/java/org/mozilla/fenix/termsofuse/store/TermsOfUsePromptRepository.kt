@@ -6,40 +6,33 @@ package org.mozilla.fenix.termsofuse.store
 
 import org.mozilla.fenix.termsofuse.TOU_VERSION
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.Settings.Companion.FIVE_DAYS_MS
+import org.mozilla.fenix.utils.Settings.Companion.THIRTY_SECONDS_MS
 
 /**
  * Repository for preferences related to the terms of use bottom sheet.
  */
 interface TermsOfUsePromptRepository {
     /**
-     * Whether the user has accepted the Terms of Use.
+     * Determines whether the Terms of Use prompt can be shown.
+     *
+     * @return `true` if the following conditions are met:
+     *
+     * - The user has not accepted the Terms of Use.
+     * - The terms of use prompt feature flag is enabled.
+     * - The prompt has not already been displayed the maximum number of times.
      */
-    val hasAcceptedTermsOfUse: Boolean
+    fun canShowTermsOfUsePrompt(): Boolean
 
     /**
-     * Whether the Terms of Use prompt feature is enabled.
+     * Determines whether the user postponed accepting the Terms of Use and is within the cooldown
+     * period.
+     *
+     * **Do not show the Terms of Use prompt if `true`.**
+     *
+     * @return `true` if the user postponed accepting the Terms of Use and is within the cooldown period.
      */
-    val isTermsOfUsePromptEnabled: Boolean
-
-    /**
-     * Whether the user exceeded the maximum number of times the Terms of Use prompt has been displayed.
-     */
-    val hasExceededMaxDisplayCount: Boolean
-
-    /**
-     * Whether the debug Terms of Use trigger time is enabled.
-     */
-    val isDebugTermsOfUseTriggerTimeEnabled: Boolean
-
-    /**
-     * The last time the Terms of Use prompt was displayed.
-     */
-    val lastTermsOfUsePromptTimeInMillis: Long
-
-    /**
-     * Whether the user has postponed accepting the Terms of Use.
-     */
-    val hasPostponedAcceptingTermsOfUse: Boolean
+    fun userPostponedAndWithinCooldownPeriod(currentTimeMillis: Long): Boolean
 
     /**
      * Updates the Terms of Use related preferences when the user accepts the ToU.
@@ -74,23 +67,22 @@ interface TermsOfUsePromptRepository {
 class DefaultTermsOfUsePromptRepository(
     private val settings: Settings,
 ) : TermsOfUsePromptRepository {
-    override val hasAcceptedTermsOfUse: Boolean
-        get() = settings.hasAcceptedTermsOfService
+    override fun canShowTermsOfUsePrompt(): Boolean =
+        !settings.hasAcceptedTermsOfService && settings.isTermsOfUsePromptEnabled && !hasExceededMaxDisplayCount()
 
-    override val isTermsOfUsePromptEnabled: Boolean
-        get() = settings.isTermsOfUsePromptEnabled
+    override fun userPostponedAndWithinCooldownPeriod(currentTimeMillis: Long): Boolean {
+        val durationSinceLastPrompt = currentTimeMillis - settings.lastTermsOfUsePromptTimeInMillis
+        val durationBetweenPrompts = if (settings.isDebugTermsOfServiceTriggerTimeEnabled) {
+            THIRTY_SECONDS_MS
+        } else {
+            FIVE_DAYS_MS
+        }
 
-    override val hasExceededMaxDisplayCount: Boolean
-        get() = settings.termsOfUsePromptDisplayedCount > settings.getTermsOfUseMaxDisplayCount()
+        return settings.hasPostponedAcceptingTermsOfUse && (durationSinceLastPrompt < durationBetweenPrompts)
+    }
 
-    override val isDebugTermsOfUseTriggerTimeEnabled: Boolean
-        get() = settings.isDebugTermsOfServiceTriggerTimeEnabled
-
-    override val lastTermsOfUsePromptTimeInMillis: Long
-        get() = settings.lastTermsOfUsePromptTimeInMillis
-
-    override val hasPostponedAcceptingTermsOfUse: Boolean
-        get() = settings.hasPostponedAcceptingTermsOfUse
+    private fun hasExceededMaxDisplayCount() =
+        settings.termsOfUsePromptDisplayedCount > settings.getTermsOfUseMaxDisplayCount()
 
     override fun updateHasAcceptedTermsOfUsePreference(nowMillis: Long) {
         settings.hasAcceptedTermsOfService = true

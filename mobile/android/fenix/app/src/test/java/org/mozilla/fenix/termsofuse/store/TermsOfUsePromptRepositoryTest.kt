@@ -12,6 +12,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.utils.Settings.Companion.FIVE_DAYS_MS
+import org.mozilla.fenix.utils.Settings.Companion.THIRTY_SECONDS_MS
 import org.robolectric.RobolectricTestRunner
 
 private const val TIME_IN_MILLIS = 1759926358L
@@ -34,103 +36,134 @@ class TermsOfUsePromptRepositoryTest {
     }
 
     @Test
-    fun `WHEN settings hasAcceptedTermsOfService is false THEN hasAcceptedTermsOfUse returns false`() {
+    fun `WHEN all conditions satisfied THEN show the prompt`() {
         settings.hasAcceptedTermsOfService = false
+        settings.isTermsOfUsePromptEnabled = true
+        settings.termsOfUsePromptDisplayedCount = MAX_DISPLAY_COUNT
 
         assertFalse(settings.hasAcceptedTermsOfService)
-        assertFalse(repository.hasAcceptedTermsOfUse)
+        assertTrue(settings.isTermsOfUsePromptEnabled)
+        assertEquals(MAX_DISPLAY_COUNT, settings.termsOfUsePromptDisplayedCount)
+
+        assertTrue(repository.canShowTermsOfUsePrompt())
     }
 
     @Test
-    fun `WHEN settings hasAcceptedTermsOfService is true THEN hasAcceptedTermsOfUse returns true`() {
+    fun `WHEN user has already accepted the ToU THEN don't show the prompt`() {
         settings.hasAcceptedTermsOfService = true
+        settings.isTermsOfUsePromptEnabled = true
+        settings.termsOfUsePromptDisplayedCount = MAX_DISPLAY_COUNT
 
         assertTrue(settings.hasAcceptedTermsOfService)
-        assertTrue(repository.hasAcceptedTermsOfUse)
-    }
-
-    @Test
-    fun `WHEN settings isTermsOfUsePromptEnabled is false THEN isTermsOfUsePromptEnabled returns false`() {
-        settings.isTermsOfUsePromptEnabled = false
-
-        assertFalse(settings.isTermsOfUsePromptEnabled)
-        assertFalse(repository.isTermsOfUsePromptEnabled)
-    }
-
-    @Test
-    fun `WHEN settings isTermsOfUsePromptEnabled is true THEN isTermsOfUsePromptEnabled returns true`() {
-        settings.isTermsOfUsePromptEnabled = true
-
         assertTrue(settings.isTermsOfUsePromptEnabled)
-        assertTrue(repository.isTermsOfUsePromptEnabled)
+        assertEquals(MAX_DISPLAY_COUNT, settings.termsOfUsePromptDisplayedCount)
+
+        assertFalse(repository.canShowTermsOfUsePrompt())
     }
 
     @Test
-    fun `WHEN settings ToU prompt count is more than the max display count THEN hasExceededMaxDisplayCount returns true`() {
-        val count = MAX_DISPLAY_COUNT + 1
-        settings.termsOfUsePromptDisplayedCount = count
+    fun `WHEN the prompt feature is disabled THEN don't show the prompt`() {
+        settings.hasAcceptedTermsOfService = false
+        settings.isTermsOfUsePromptEnabled = false
+        settings.termsOfUsePromptDisplayedCount = MAX_DISPLAY_COUNT
 
-        assertEquals(count, settings.termsOfUsePromptDisplayedCount)
-        assertTrue(repository.hasExceededMaxDisplayCount)
+        assertFalse(settings.hasAcceptedTermsOfService)
+        assertFalse(settings.isTermsOfUsePromptEnabled)
+        assertEquals(MAX_DISPLAY_COUNT, settings.termsOfUsePromptDisplayedCount)
+
+        assertFalse(repository.canShowTermsOfUsePrompt())
     }
 
     @Test
-    fun `WHEN settings ToU prompt count is the max display count THEN hasExceededMaxDisplayCount returns false`() {
-        val count = MAX_DISPLAY_COUNT
-        settings.termsOfUsePromptDisplayedCount = count
+    fun `WHEN user has already seen the maximum number of prompts THEN don't show the prompt`() {
+        val excessiveDisplayCount = MAX_DISPLAY_COUNT + 1
+        settings.hasAcceptedTermsOfService = false
+        settings.isTermsOfUsePromptEnabled = true
+        settings.termsOfUsePromptDisplayedCount = excessiveDisplayCount
 
-        assertEquals(count, settings.termsOfUsePromptDisplayedCount)
-        assertFalse(repository.hasExceededMaxDisplayCount)
+        assertFalse(settings.hasAcceptedTermsOfService)
+        assertTrue(settings.isTermsOfUsePromptEnabled)
+        assertEquals(excessiveDisplayCount, settings.termsOfUsePromptDisplayedCount)
+
+        assertFalse(repository.canShowTermsOfUsePrompt())
     }
 
     @Test
-    fun `WHEN settings ToU prompt count is less than the max display count THEN hasExceededMaxDisplayCount returns false`() {
-        val count = MAX_DISPLAY_COUNT - 1
-        settings.termsOfUsePromptDisplayedCount = count
-
-        assertEquals(count, settings.termsOfUsePromptDisplayedCount)
-        assertFalse(repository.hasExceededMaxDisplayCount)
-    }
-
-    @Test
-    fun `WHEN settings isDebugTermsOfServiceTriggerTimeEnabled is false THEN isDebugTermsOfUseTriggerTimeEnabled returns false`() {
-        settings.isDebugTermsOfServiceTriggerTimeEnabled = false
-
-        assertFalse(settings.isDebugTermsOfServiceTriggerTimeEnabled)
-        assertFalse(repository.isDebugTermsOfUseTriggerTimeEnabled)
-    }
-
-    @Test
-    fun `WHEN settings isDebugTermsOfServiceTriggerTimeEnabled is true THEN isDebugTermsOfUseTriggerTimeEnabled returns true`() {
-        settings.isDebugTermsOfServiceTriggerTimeEnabled = true
-
-        assertTrue(settings.isDebugTermsOfServiceTriggerTimeEnabled)
-        assertTrue(repository.isDebugTermsOfUseTriggerTimeEnabled)
-    }
-
-    @Test
-    fun `WHEN settings lastTermsOfUsePromptTimeInMillis is set THEN lastTermsOfUsePromptTimeInMillis returns the same value`() {
-        val time = 12345L
-        settings.lastTermsOfUsePromptTimeInMillis = time
-
-        assertEquals(time, settings.lastTermsOfUsePromptTimeInMillis)
-        assertEquals(time, repository.lastTermsOfUsePromptTimeInMillis)
-    }
-
-    @Test
-    fun `WHEN settings hasPostponedAcceptingTermsOfUse is false THEN hasPostponedAcceptingTermsOfUse returns false`() {
-        settings.hasPostponedAcceptingTermsOfUse = false
-
-        assertFalse(settings.hasPostponedAcceptingTermsOfUse)
-        assertFalse(repository.hasPostponedAcceptingTermsOfUse)
-    }
-
-    @Test
-    fun `WHEN settings hasPostponedAcceptingTermsOfUse is true THEN hasPostponedAcceptingTermsOfUse returns true`() {
+    fun `WHEN user was last prompted less than 5 days ago and postponed accepting ToU THEN userPostponedAndWithinCooldownPeriod returns true`() {
+        val lastPromptTimeMs = TIME_IN_MILLIS - (FIVE_DAYS_MS - 1)
+        settings.lastTermsOfUsePromptTimeInMillis = lastPromptTimeMs
         settings.hasPostponedAcceptingTermsOfUse = true
 
+        assertEquals(lastPromptTimeMs, settings.lastTermsOfUsePromptTimeInMillis)
         assertTrue(settings.hasPostponedAcceptingTermsOfUse)
-        assertTrue(repository.hasPostponedAcceptingTermsOfUse)
+
+        assertTrue(repository.userPostponedAndWithinCooldownPeriod(TIME_IN_MILLIS))
+    }
+
+    @Test
+    fun `WHEN user was last prompted 5 days ago and postponed accepting ToU THEN userPostponedAndWithinCooldownPeriod returns false`() {
+        val lastPromptTimeMs = TIME_IN_MILLIS - FIVE_DAYS_MS
+        settings.lastTermsOfUsePromptTimeInMillis = lastPromptTimeMs
+        settings.hasPostponedAcceptingTermsOfUse = true
+
+        assertEquals(lastPromptTimeMs, settings.lastTermsOfUsePromptTimeInMillis)
+        assertTrue(settings.hasPostponedAcceptingTermsOfUse)
+
+        assertFalse(repository.userPostponedAndWithinCooldownPeriod(TIME_IN_MILLIS))
+    }
+
+    @Test
+    fun `WHEN user was last prompted over 5 days ago and postponed accepting ToU THEN userPostponedAndWithinCooldownPeriod returns false`() {
+        val lastPromptTimeMs = TIME_IN_MILLIS - (FIVE_DAYS_MS + 1)
+        settings.lastTermsOfUsePromptTimeInMillis = lastPromptTimeMs
+        settings.hasPostponedAcceptingTermsOfUse = true
+
+        assertEquals(lastPromptTimeMs, settings.lastTermsOfUsePromptTimeInMillis)
+        assertTrue(settings.hasPostponedAcceptingTermsOfUse)
+
+        assertFalse(repository.userPostponedAndWithinCooldownPeriod(TIME_IN_MILLIS))
+    }
+
+    @Test
+    fun `GIVEN debug mode WHEN user was last prompted less than 30 seconds ago and postponed accepting ToU THEN userPostponedAndWithinCooldownPeriod returns true`() {
+        val lastPromptTimeMs = TIME_IN_MILLIS - (THIRTY_SECONDS_MS - 1)
+        settings.lastTermsOfUsePromptTimeInMillis = lastPromptTimeMs
+        settings.isDebugTermsOfServiceTriggerTimeEnabled = true
+        settings.hasPostponedAcceptingTermsOfUse = true
+
+        assertEquals(lastPromptTimeMs, settings.lastTermsOfUsePromptTimeInMillis)
+        assertTrue(settings.isDebugTermsOfServiceTriggerTimeEnabled)
+        assertTrue(settings.hasPostponedAcceptingTermsOfUse)
+
+        assertTrue(repository.userPostponedAndWithinCooldownPeriod(TIME_IN_MILLIS))
+    }
+
+    @Test
+    fun `GIVEN debug mode WHEN user was last prompted 30 seconds ago and postponed accepting ToU THEN userPostponedAndWithinCooldownPeriod returns false`() {
+        val lastPromptTimeMs = TIME_IN_MILLIS - THIRTY_SECONDS_MS
+        settings.lastTermsOfUsePromptTimeInMillis = lastPromptTimeMs
+        settings.isDebugTermsOfServiceTriggerTimeEnabled = true
+        settings.hasPostponedAcceptingTermsOfUse = true
+
+        assertEquals(lastPromptTimeMs, settings.lastTermsOfUsePromptTimeInMillis)
+        assertTrue(settings.isDebugTermsOfServiceTriggerTimeEnabled)
+        assertTrue(settings.hasPostponedAcceptingTermsOfUse)
+
+        assertFalse(repository.userPostponedAndWithinCooldownPeriod(TIME_IN_MILLIS))
+    }
+
+    @Test
+    fun `GIVEN debug mode WHEN user was last prompted over 30 seconds ago and postponed accepting ToU THEN userPostponedAndWithinCooldownPeriod returns false`() {
+        val lastPromptTimeMs = TIME_IN_MILLIS - (THIRTY_SECONDS_MS + 1)
+        settings.lastTermsOfUsePromptTimeInMillis = lastPromptTimeMs
+        settings.isDebugTermsOfServiceTriggerTimeEnabled = true
+        settings.hasPostponedAcceptingTermsOfUse = true
+
+        assertEquals(lastPromptTimeMs, settings.lastTermsOfUsePromptTimeInMillis)
+        assertTrue(settings.isDebugTermsOfServiceTriggerTimeEnabled)
+        assertTrue(settings.hasPostponedAcceptingTermsOfUse)
+
+        assertFalse(repository.userPostponedAndWithinCooldownPeriod(TIME_IN_MILLIS))
     }
 
     @Test

@@ -6,14 +6,15 @@ package org.mozilla.fenix.termsofuse
 
 import org.mozilla.fenix.termsofuse.store.TermsOfUsePromptRepository
 
-class MockTermsOfUsePromptRepository(
-    override var hasAcceptedTermsOfUse: Boolean = false,
-    override val isTermsOfUsePromptEnabled: Boolean = true, // enable the feature by default for testing
-    override val hasExceededMaxDisplayCount: Boolean = false,
-    override val isDebugTermsOfUseTriggerTimeEnabled: Boolean = false,
-    override val lastTermsOfUsePromptTimeInMillis: Long = 0L,
-    override val hasPostponedAcceptingTermsOfUse: Boolean = false,
+class FakeTermsOfUsePromptRepository(
+    private val canShowTermsOfUsePrompt: Boolean = true,
+    private val userPostponedAndWithinCooldownPeriod: Boolean = false,
 ) : TermsOfUsePromptRepository {
+    override fun canShowTermsOfUsePrompt() = canShowTermsOfUsePrompt
+
+    override fun userPostponedAndWithinCooldownPeriod(currentTimeMillis: Long) =
+        userPostponedAndWithinCooldownPeriod
+
     override fun updateHasAcceptedTermsOfUsePreference(nowMillis: Long) {}
     override fun updateHasPostponedAcceptingTermsOfUsePreference() {}
     override fun updateLastTermsOfUsePromptTimeInMillis(currentTimeInMillis: Long) {}
