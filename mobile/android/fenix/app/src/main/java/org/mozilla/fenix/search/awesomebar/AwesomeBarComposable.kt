@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -30,7 +31,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
 import mozilla.components.compose.browser.toolbar.store.BrowserEditToolbarAction.SearchQueryUpdated
@@ -181,7 +181,7 @@ class AwesomeBarComposable(
             if (state.shouldShowSearchSuggestions) {
                 Box(
                     modifier = modifier
-                        .background(AcornTheme.colors.layer1)
+                        .background(MaterialTheme.colorScheme.surface)
                         .fillMaxSize()
                         .pointerInput(WindowInsets.isImeVisible) {
                             detectTapGestures(
