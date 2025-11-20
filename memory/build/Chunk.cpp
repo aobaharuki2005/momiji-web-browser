@@ -208,10 +208,16 @@ static inline void* _mmap(void* addr, size_t length, int prot, int flags,
 
 #ifdef XP_WIN
 
-static void* pages_map(void* aAddr, size_t aSize) {
-  void* ret = nullptr;
-  ret = MozVirtualAlloc(aAddr, aSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-  return ret;
+static void* pages_map(void* aAddr, size_t aSize, ShouldCommit should_commit) {
+  switch (should_commit) {
+    case ReserveAndCommit:
+      return MozVirtualAlloc(aAddr, aSize, MEM_RESERVE | MEM_COMMIT,
+                             PAGE_READWRITE);
+    case ReserveOnly:
+      // When not requesting committed memory we can skip MozVirtualAlloc and
+      // its stall behaviour.
+      return VirtualAlloc(aAddr, aSize, MEM_RESERVE, PAGE_NOACCESS);
+  }
 }
 
 static void pages_unmap(void* aAddr, size_t aSize) {
@@ -232,7 +238,7 @@ static void pages_unmap(void* aAddr, size_t aSize) {
   }
 }
 
-static void* pages_map(void* aAddr, size_t aSize) {
+static void* pages_map(void* aAddr, size_t aSize, ShouldCommit should_commit) {
   void* ret;
 #  if defined(__ia64__) || \
       (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
@@ -263,8 +269,9 @@ static void* pages_map(void* aAddr, size_t aSize) {
   void* region = MAP_FAILED;
   for (hint = start; region == MAP_FAILED && hint + aSize <= end;
        hint += kChunkSize) {
-    region = mmap((void*)hint, aSize, PROT_READ | PROT_WRITE,
-                  MAP_PRIVATE | MAP_ANON, -1, 0);
+    region =
+        mmap((void*)hint, aSize, committed ? PROT_READ | PROT_WRITE : PROT_NONE,
+             MAP_PRIVATE | MAP_ANON, -1, 0);
     if (region != MAP_FAILED) {
       if (((size_t)region + (aSize - 1)) & 0xffff800000000000) {
         if (munmap(region, aSize)) {
@@ -278,8 +285,10 @@ static void* pages_map(void* aAddr, size_t aSize) {
 #  else
   // We don't use MAP_FIXED here, because it can cause the *replacement*
   // of existing mappings, and we only want to create new mappings.
-  ret =
-      mmap(aAddr, aSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+  ret = mmap(
+      aAddr, aSize,
+      should_commit == ReserveAndCommit ? PROT_READ | PROT_WRITE : PROT_NONE,
+      MAP_PRIVATE | MAP_ANON, -1, 0);
   MOZ_ASSERT(ret);
 #  endif
   if (ret == MAP_FAILED) {
@@ -399,7 +408,7 @@ static bool pages_purge(void* addr, size_t length, bool force_zero) {
 // cherry-picked from upstream jemalloc 3.4.1 to fix Mozilla bug 956501.
 
 static void* pages_trim(void* addr, size_t alloc_size, size_t leadsize,
-                        size_t size) {
+                        size_t size, ShouldCommit should_commit) {
   void* ret = (void*)((uintptr_t)addr + leadsize);
 
   MOZ_ASSERT(alloc_size >= leadsize + size);
@@ -408,7 +417,7 @@ static void* pages_trim(void* addr, size_t alloc_size, size_t leadsize,
     void* new_addr;
 
     pages_unmap(addr, alloc_size);
-    new_addr = pages_map(ret, size);
+    new_addr = pages_map(ret, size, should_commit);
     if (new_addr == ret) {
       return ret;
     }
@@ -432,7 +441,8 @@ static void* pages_trim(void* addr, size_t alloc_size, size_t leadsize,
 #endif
 }
 
-static void* pages_mmap_aligned_slow(size_t size, size_t alignment) {
+static void* pages_mmap_aligned_slow(size_t size, size_t alignment,
+                                     ShouldCommit should_commit) {
   void *ret, *pages;
   size_t alloc_size, leadsize;
 
@@ -442,20 +452,21 @@ static void* pages_mmap_aligned_slow(size_t size, size_t alignment) {
     return nullptr;
   }
   do {
-    pages = pages_map(nullptr, alloc_size);
+    pages = pages_map(nullptr, alloc_size, should_commit);
     if (!pages) {
       return nullptr;
     }
     leadsize =
         ALIGNMENT_CEILING((uintptr_t)pages, alignment) - (uintptr_t)pages;
-    ret = pages_trim(pages, alloc_size, leadsize, size);
+    ret = pages_trim(pages, alloc_size, leadsize, size, should_commit);
   } while (!ret);
 
   MOZ_ASSERT(ret);
   return ret;
 }
 
-static void* pages_mmap_aligned(size_t size, size_t alignment) {
+void* pages_mmap_aligned(size_t size, size_t alignment,
+                         ShouldCommit should_commit) {
   void* ret;
   size_t offset;
 
@@ -469,14 +480,14 @@ static void* pages_mmap_aligned(size_t size, size_t alignment) {
   // Optimistically try mapping precisely the right amount before falling
   // back to the slow method, with the expectation that the optimistic
   // approach works most of the time.
-  ret = pages_map(nullptr, size);
+  ret = pages_map(nullptr, size, should_commit);
   if (!ret) {
     return nullptr;
   }
   offset = ALIGNMENT_ADDR2OFFSET(ret, alignment);
   if (offset != 0) {
     pages_unmap(ret, size);
-    return pages_mmap_aligned_slow(size, alignment);
+    return pages_mmap_aligned_slow(size, alignment, should_commit);
   }
 
   MOZ_ASSERT(ret);
@@ -619,9 +630,17 @@ void chunk_dealloc(void* aChunk, size_t aSize, ChunkType aType) {
       size_t recycle_remaining = gRecycleLimit - recycled_so_far;
       size_t to_recycle;
       if (aSize > recycle_remaining) {
+#ifndef XP_WIN
         to_recycle = recycle_remaining;
         // Drop pages that would overflow the recycle limit
-        pages_trim(aChunk, aSize, 0, to_recycle);
+        pages_trim(aChunk, aSize, 0, to_recycle, ReserveAndCommit);
+#else
+        // On windows pages_trim unallocates and reallocates the whole
+        // chunk, there's no point doing that during recycling so instead we
+        // fail.
+        pages_unmap(aChunk, aSize);
+        return;
+#endif
       } else {
         to_recycle = aSize;
       }
@@ -727,7 +746,7 @@ void* chunk_alloc(size_t aSize, size_t aAlignment, bool aBase) {
     ret = chunk_recycle(aSize, aAlignment);
   }
   if (!ret) {
-    ret = pages_mmap_aligned(aSize, aAlignment);
+    ret = pages_mmap_aligned(aSize, aAlignment, ReserveAndCommit);
   }
   if (ret && !aBase) {
     if (!gChunkRTree.Set(ret, ret)) {
