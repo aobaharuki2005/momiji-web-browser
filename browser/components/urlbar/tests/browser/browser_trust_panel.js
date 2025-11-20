@@ -114,3 +114,23 @@ add_task(async function test_blob_secure() {
 
   await BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_notsecure_label_without_tracking() {
+  const tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+    opening: "http://example.com",
+    waitForLoad: true,
+  });
+
+  await BrowserTestUtils.waitForCondition(() => urlbarIcon(window) != "none");
+  await toggleETP(tab);
+
+  Assert.ok(
+    BrowserTestUtils.isVisible(urlbarLabel(window)),
+    "Showing Not Secure label"
+  );
+
+  await toggleETP(tab);
+  await BrowserTestUtils.removeTab(tab);
+});

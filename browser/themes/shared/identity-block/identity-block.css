@@ -309,12 +309,16 @@
     margin-inline-end: var(--identity-box-margin-inline);
     -moz-context-properties: fill, fill-opacity;
 
-    list-style-image: url(chrome://browser/skin/trust-icon-active.svg);
-
+    /* The urlbar will show insecure or secure icon by default depending
+       on the state of the connection, the further clauses may override that. */
     &:where(.insecure) {
       list-style-image: url(chrome://browser/skin/trust-icon-insecure.svg);
       background-color: var(--urlbar-box-bgcolor);
       color: var(--urlbar-box-text-color);
+    }
+
+    &.secure {
+      list-style-image: url(chrome://browser/skin/trust-icon-active.svg);
     }
 
     &.inactive {
