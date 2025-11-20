@@ -249,6 +249,12 @@ class nsLayoutUtils {
   static void NotifyPaintSkipTransaction(ViewID aScrollId);
 
   /**
+   * Similar to above NotifyPaintSkipTransaction, but scroll offset is being
+   * sent to APZ in a full transaction.
+   */
+  static void NotifyApzTransaction(ViewID aScrollId);
+
+  /**
    * Use heuristics to figure out the child list that
    * aChildFrame is currently in.
    */
