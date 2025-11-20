@@ -873,6 +873,12 @@ class LocalAccessible : public nsISupports, public Accessible {
   bool ARIADescription(nsString& aDescription) const;
 
   /**
+   * Returns the accessible "tooltip", usually derived from title attribute in
+   * HTML or tooltiptext in XUL.
+   */
+  bool Tooltip(nsString& aTooltip) const;
+
+  /**
    * Returns the accessible name specified for this control using XUL
    * <label control="id" ...>.
    */
