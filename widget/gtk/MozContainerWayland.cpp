@@ -262,25 +262,6 @@ static bool moz_container_wayland_ensure_surface(MozContainer* container,
   return true;
 }
 
-struct wl_egl_window* moz_container_wayland_get_egl_window(
-    MozContainer* container) {
-  LOGCONTAINER("%s [%p] mapped %d eglwindow %d", __FUNCTION__,
-               (void*)moz_container_get_nsWindow(container),
-               MOZ_WL_SURFACE(container)->IsMapped(),
-               MOZ_WL_SURFACE(container)->HasEGLWindow());
-
-  if (!MOZ_WL_SURFACE(container)->IsMapped()) {
-    return nullptr;
-  }
-
-  // TODO: Get size from bounds instead of GdkWindow?
-  // We may be in rendering/compositor thread here.
-  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
-  DesktopIntSize size(gdk_window_get_width(window),
-                      gdk_window_get_height(window));
-  return MOZ_WL_SURFACE(container)->GetEGLWindow(size);
-}
-
 double moz_container_wayland_get_scale(MozContainer* container) {
   nsWindow* window = moz_container_get_nsWindow(container);
   return window ? window->FractionalScaleFactor() : 1.0;
