@@ -42,8 +42,7 @@ ENameValueFlag HTMLBRAccessible::NativeName(nsString& aName) const {
 ////////////////////////////////////////////////////////////////////////////////
 
 ENameValueFlag HTMLLabelAccessible::NativeName(nsString& aName) const {
-  nsTextEquivUtils::GetNameFromSubtree(this, aName);
-  return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
+  return eNameOK;
 }
 
 Relation HTMLLabelAccessible::RelationByType(RelationType aType) const {
