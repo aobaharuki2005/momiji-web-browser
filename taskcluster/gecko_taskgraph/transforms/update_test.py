@@ -12,7 +12,7 @@ from taskgraph.util.copy import deepcopy
 from taskgraph.util.schema import resolve_keyed_by
 from typing_extensions import final
 
-from gecko_taskgraph.util.attributes import is_try, task_name
+from gecko_taskgraph.util.attributes import task_name
 
 
 @final
@@ -65,15 +65,15 @@ def infix_treeherder_symbol(symbol, infix):
 @transforms.add
 def set_task_configuration(config, tasks):
     release_type = ReleaseType.release
+    config_tasks = {}
     if config.params["release_type"] == "beta":
         release_type = ReleaseType.beta
     elif config.params["release_type"].startswith("esr"):
         esr_version = int(config.params["release_type"].split("esr")[1])
         release_type = ReleaseType.esr
         if esr_version < ESR_SUPPORT_CUTOFF:
-            yield None
+            return None
 
-    config_tasks = {}
     for dep in config.kind_dependencies_tasks.values():
         if "update-verify-config" in dep.kind:
             config_tasks[task_name(dep)] = dep
@@ -107,34 +107,17 @@ def set_task_configuration(config, tasks):
             del this_task["test-platforms"]
 
             if this_task["shipping-product"] == "firefox":
-                product_channel = release_type.name.lower()
-                if this_task["shipping-phase"] == "promote":
-                    update_channel = "-localtest"
-                elif this_task["shipping-phase"] == "push":
-                    update_channel = "-cdntest"
-                else:
-                    raise OSError("Expected promote or push shipping-phase.")
-
-                this_task["treeherder"]["symbol"] = infix_treeherder_symbol(
-                    this_task["treeherder"]["symbol"], this_task["shipping-phase"]
-                )
-                if release_type != ReleaseType.release:
-                    this_task["name"] = this_task["name"] + f"-{product_channel}"
-                this_task["run"]["command"] = (
-                    this_task["run"]["command"]
-                    + f" --channel {product_channel}{update_channel}"
-                )
-
-                if release_type == ReleaseType.esr:
+                if release_type == ReleaseType.beta:
+                    this_task["name"] = this_task["name"] + "-beta"
                     this_task["run"]["command"] = (
-                        this_task["run"]["command"] + f" --esr-version {esr_version}"
+                        this_task["run"]["command"] + " --channel beta-localtest"
                     )
-
-            if is_try(config.params):
-                this_task["run"]["command"] = (
-                    this_task["run"]["command"] + " --use-balrog-staging"
-                )
-                this_task["worker"]["env"]["BALROG_STAGING"] = "1"
+                elif release_type == ReleaseType.esr:
+                    this_task["name"] = this_task["name"] + "-esr"
+                    this_task["run"]["command"] = (
+                        this_task["run"]["command"]
+                        + f" --channel esr-localtest --esr-version {esr_version}"
+                    )
             this_task["name"] = this_task["name"].replace("linux-docker-", "")
             this_task["index"]["job-name"] = "update-test-" + this_task["name"]
 
@@ -169,12 +152,12 @@ def parametrize_by_locale(config, tasks):
                 this_task["run"]["command"] + f" --source-locale {locale}"
             )
             this_task["description"] = (
-                f"{this_task['description']}, locale coverage: {locale}"
+                f'{this_task["description"]}, locale coverage: {locale}'
             )
             this_task["name"] = this_task["name"].replace("locale", locale)
             this_task["index"][
                 "job-name"
-            ] = f"{this_task['index']['job-name']}-{locale}"
+            ] = f'{this_task["index"]["job-name"]}-{locale}'
             this_task["treeherder"]["symbol"] = infix_treeherder_symbol(
                 this_task["treeherder"]["symbol"], locale
             )
