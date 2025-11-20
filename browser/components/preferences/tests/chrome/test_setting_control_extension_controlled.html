@@ -332,7 +332,9 @@
         await disableExtensionByMouse(disableExtensionButton);
 
         await TestUtils.waitForCondition(
-          () => !getExtensionControlledMessageBar(control),
+          () =>
+            !control.isDisablingExtension &&
+            !getExtensionControlledMessageBar(control),
           "Wait for the extension controlled message bar to be removed after disabling the only controlling extension"
         );
 
@@ -409,7 +411,7 @@
         await synthesizeKey(" ");
 
         await TestUtils.waitForCondition(
-          () => !control.controlEl.disabled,
+          () => !control.isDisablingExtension && !control.controlEl.disabled,
           "Wait for the control to become mutable as a side-effect of disabling the controlling extension"
         );
         extensionControlledMessageBar =
@@ -549,8 +551,9 @@
 
         await TestUtils.waitForCondition(
           () =>
+            !control.isDisablingExtension &&
             getExtensionControlledMessageBar(control)?.messageL10nArgs.name ===
-            ADDON_NAME,
+              ADDON_NAME,
           "Wait for the message bar to be refreshed after disabling the controlling extension"
         );
 
@@ -673,6 +676,7 @@
 
         control.remove();
       });
+
       add_task(async function test_addons_link_in_message_bar() {
         // Setup pre-test items like extension, AddonManager, ExtensionSettingStore
         const SETTING_ID = "extension-controlled-setting";
