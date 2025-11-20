@@ -10,8 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -20,7 +20,6 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams
 import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.compose.base.theme.localAcornColors
 import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarAction.ToolbarGravityUpdated
@@ -105,27 +104,27 @@ class BrowserToolbarComposable(
         }
 
         FirefoxTheme {
-            val firefoxColors = FirefoxTheme.colors
-            val customTheme = remember(customColors, firefoxColors) {
-                firefoxColors.copy(
+            val materialColors = MaterialTheme.colorScheme
+            val colorScheme = remember(customColors.value, materialColors) {
+                materialColors.copy(
                     // Toolbar background
-                    layer1 = customColors.value?.toolbarColor?.let { Color(it) } ?: firefoxColors.layer1,
+                    surface = customColors.value?.toolbarColor?.let { Color(it) }
+                        ?: materialColors.surface,
                     // Page origin background
-                    layer3 = when (customTabSession) {
-                        null -> firefoxColors.layer3 // show a different background only for normal tabs
-                        else -> customColors.value?.toolbarColor?.let { Color(it) } ?: firefoxColors.layer1
+                    surfaceDim = when (customTabSession) {
+                        null -> materialColors.surfaceDim // show a different background only for normal tabs
+                        else -> customColors.value?.toolbarColor?.let { Color(it) }
+                            ?: materialColors.surface
                     },
-                    // All text but the title and URL subdomain
-                    textPrimary = customColors.value?.readableColor?.let { Color(it) } ?: firefoxColors.textPrimary,
-                    // Title and URL subdomain
-                    textSecondary =
-                        customColors.value?.secondaryReadableColor?.let { Color(it) } ?: firefoxColors.textSecondary,
-                    // All icons tint
-                    iconPrimary = customColors.value?.readableColor?.let { Color(it) } ?: firefoxColors.iconPrimary,
+                    onSurface = customColors.value?.readableColor?.let { Color(it) }
+                        ?: materialColors.onSurface,
+                    onSurfaceVariant =
+                        customColors.value?.secondaryReadableColor?.let { Color(it) }
+                            ?: materialColors.onSurfaceVariant,
                 )
             }
 
-            CompositionLocalProvider(localAcornColors provides customTheme) {
+            MaterialTheme(colorScheme = colorScheme) {
                 when (shouldShowTabStrip) {
                     true -> Column(
                         modifier = Modifier
