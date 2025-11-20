@@ -167,6 +167,21 @@ impl ScalingInstance {
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct SvgFilterInstance {
+    pub task_address: RenderTaskAddress,
+    pub input_1_task_address: RenderTaskAddress,
+    pub input_2_task_address: RenderTaskAddress,
+    pub kind: u16,
+    pub input_count: u16,
+    pub generic_int: u16,
+    pub padding: u16,
+    pub extra_data_address: i32,
+}
+
+#[derive(Clone, Debug)]
+#[repr(C)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SVGFEFilterInstance {
     pub target_rect: DeviceRect,
     pub input_1_content_scale_and_offset: [f32; 4],

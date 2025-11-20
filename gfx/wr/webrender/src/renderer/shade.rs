@@ -269,6 +269,7 @@ impl LazilyCompiledShader {
                 VertexArrayKind::Border => &desc::BORDER,
                 VertexArrayKind::Scale => &desc::SCALE,
                 VertexArrayKind::Resolve => &desc::RESOLVE,
+                VertexArrayKind::SvgFilter => &desc::SVG_FILTER,
                 VertexArrayKind::SvgFilterNode => &desc::SVG_FILTER_NODE,
                 VertexArrayKind::Composite => &desc::COMPOSITE,
                 VertexArrayKind::Clear => &desc::CLEAR,
@@ -619,6 +620,7 @@ pub struct Shaders {
     cs_linear_gradient: ShaderHandle,
     cs_radial_gradient: ShaderHandle,
     cs_conic_gradient: ShaderHandle,
+    cs_svg_filter: ShaderHandle,
     cs_svg_filter_node: ShaderHandle,
 
     // Brush shaders
@@ -755,6 +757,13 @@ impl Shaders {
             ShaderKind::Cache(VertexArrayKind::Blur),
             "cs_blur",
             &["COLOR_TARGET"],
+            &shader_list,
+        )?;
+
+        let cs_svg_filter = loader.create_shader(
+            ShaderKind::Cache(VertexArrayKind::SvgFilter),
+            "cs_svg_filter",
+            &[],
             &shader_list,
         )?;
 
@@ -1088,6 +1097,7 @@ impl Shaders {
             cs_conic_gradient,
             cs_border_solid,
             cs_scale,
+            cs_svg_filter,
             cs_svg_filter_node,
             brush_solid,
             brush_image,
@@ -1302,6 +1312,7 @@ impl Shaders {
     pub fn cs_linear_gradient(&mut self) -> &mut LazilyCompiledShader { self.loader.get(self.cs_linear_gradient) }
     pub fn cs_radial_gradient(&mut self) -> &mut LazilyCompiledShader { self.loader.get(self.cs_radial_gradient) }
     pub fn cs_conic_gradient(&mut self) -> &mut LazilyCompiledShader { self.loader.get(self.cs_conic_gradient) }
+    pub fn cs_svg_filter(&mut self) -> &mut LazilyCompiledShader { self.loader.get(self.cs_svg_filter) }
     pub fn cs_svg_filter_node(&mut self) -> &mut LazilyCompiledShader { self.loader.get(self.cs_svg_filter_node) }
     pub fn cs_clip_rectangle_slow(&mut self) -> &mut LazilyCompiledShader { self.loader.get(self.cs_clip_rectangle_slow) }
     pub fn cs_clip_rectangle_fast(&mut self) -> &mut LazilyCompiledShader { self.loader.get(self.cs_clip_rectangle_fast) }
