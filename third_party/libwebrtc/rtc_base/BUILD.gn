@@ -1382,6 +1382,7 @@ if (!build_with_mozilla) {
     ":checks",
     ":dscp",
     ":macromagic",
+    ":sigslot_trampoline",
     ":socket",
     ":socket_address",
     ":timeutils",
