@@ -129,6 +129,13 @@ static_assert(MFD_HUGE_MASK == MAP_HUGE_MASK);
 static_assert(MFD_HUGE_SHIFT == MAP_HUGE_SHIFT);
 #endif
 
+// Added in 6.10
+#ifndef F_DUPFD_QUERY
+#  define F_DUPFD_QUERY (F_LINUX_SPECIFIC_BASE + 3)
+#else
+static_assert(F_DUPFD_QUERY == (F_LINUX_SPECIFIC_BASE + 3));
+#endif
+
 // To avoid visual confusion between "ifdef ANDROID" and "ifndef ANDROID":
 #ifndef ANDROID
 #  define DESKTOP
@@ -1111,6 +1118,9 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 #endif
             // Not much different from other forms of dup(), and commonly used.
             .Case(F_DUPFD_CLOEXEC, Allow())
+            // Used by Mesa, generally useful, and harmless: tests if
+            // two file descriptors refer to the same file description.
+            .Case(F_DUPFD_QUERY, Allow())
             .Default(SandboxPolicyBase::EvaluateSyscall(sysno));
       }
 
