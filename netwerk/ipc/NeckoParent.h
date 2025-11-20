@@ -137,6 +137,8 @@ class NeckoParent : public PNeckoParent {
       const uint64_t& aInnerWindowID);
   bool DeallocPWebSocketEventListenerParent(PWebSocketEventListenerParent*);
 
+  mozilla::ipc::IPCResult RecvConnectBaseChannel(const uint32_t& channelId);
+
   already_AddRefed<PDataChannelParent> AllocPDataChannelParent(
       const uint32_t& channelId);
 

@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsBaseParentChannel.h"
 #include "nsHttp.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
@@ -316,6 +317,16 @@ bool NeckoParent::DeallocPWebSocketEventListenerParent(
       dont_AddRef(static_cast<WebSocketEventListenerParent*>(aActor));
   MOZ_ASSERT(c);
   return true;
+}
+
+mozilla::ipc::IPCResult NeckoParent::RecvConnectBaseChannel(
+    const uint32_t& channelId) {
+  RefPtr<nsBaseParentChannel> parentChannel =
+      new nsBaseParentChannel(ContentParent::Cast(Manager())->GetRemoteType());
+
+  nsCOMPtr<nsIChannel> channel;
+  NS_LinkRedirectChannels(channelId, parentChannel, getter_AddRefs(channel));
+  return IPC_OK();
 }
 
 already_AddRefed<PDataChannelParent> NeckoParent::AllocPDataChannelParent(

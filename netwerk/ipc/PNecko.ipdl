@@ -117,6 +117,12 @@ parent:
                               DNSFlags flags, nsresult reason);
 
   /**
+   * Establish a connection between generic redirect channels which do not need
+   * specialized nsIParentChannel handling.
+   */
+  async ConnectBaseChannel(uint32_t channelId);
+
+  /**
    * channelId is used to establish a connection between redirect channels in
    * the parent and the child when we're redirecting to a data: URI.
    */
