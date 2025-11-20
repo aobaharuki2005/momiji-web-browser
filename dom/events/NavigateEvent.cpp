@@ -533,6 +533,9 @@ void NavigateEvent::ProcessScrollBehavior() {
   }
 
   // Step 4.3
+  // Here we need to update Document::mScrollToRef, since that is what
+  // Document::ScrollToRef will be scrolling to.
+  document->SetScrollToRef(document->GetDocumentURI());
   document->ScrollToRef();
 }
 
