@@ -88,6 +88,7 @@ class DebugScript {
   void delete_(JS::GCContext* gcx, DebugScriptObject* owner);
 
   static DebugScript* get(JSScript* script);
+  static DebugScript* getUnbarriered(JSScript* script);
   static DebugScript* getOrCreate(JSContext* cx, HandleScript script);
 
  public:

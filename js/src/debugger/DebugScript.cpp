@@ -102,6 +102,16 @@ DebugScript* DebugScript::get(JSScript* script) {
   MOZ_ASSERT(script->hasDebugScript());
   DebugScriptMap* map = script->zone()->debugScriptMap;
   MOZ_ASSERT(map);
+  DebugScriptObject* object = map->get(script);
+  MOZ_ASSERT(object);
+  return object->as<DebugScriptObject>().debugScript();
+}
+
+/* static */
+DebugScript* DebugScript::getUnbarriered(JSScript* script) {
+  MOZ_ASSERT(script->hasDebugScript());
+  DebugScriptMap* map = script->zone()->debugScriptMap;
+  MOZ_ASSERT(map);
   DebugScriptMap::Ptr p = map->lookupUnbarriered(script);
   MOZ_ASSERT(p);
   return p->value().get()->as<DebugScriptObject>().debugScript();
@@ -205,7 +215,9 @@ JSBreakpointSite* DebugScript::getOrCreateBreakpointSite(JSContext* cx,
 /* static */
 void DebugScript::destroyBreakpointSite(JS::GCContext* gcx, JSScript* script,
                                         jsbytecode* pc) {
-  DebugScript* debug = get(script);
+  // Avoid barriers during sweeping. |debug| does not escape.
+  DebugScript* debug = getUnbarriered(script);
+
   JSBreakpointSite*& site = debug->breakpoints[script->pcToOffset(pc)];
   MOZ_ASSERT(site);
   MOZ_ASSERT(site->isEmpty());
@@ -283,7 +295,8 @@ bool DebugScript::incrementStepperCount(JSContext* cx, HandleScript script) {
 
 /* static */
 void DebugScript::decrementStepperCount(JS::GCContext* gcx, JSScript* script) {
-  DebugScript* debug = get(script);
+  // Avoid barriers during sweeping. |debug| does not escape.
+  DebugScript* debug = getUnbarriered(script);
   MOZ_ASSERT(debug);
   MOZ_ASSERT(debug->stepperCount > 0);
 
@@ -328,7 +341,8 @@ bool DebugScript::incrementGeneratorObserverCount(JSContext* cx,
 /* static */
 void DebugScript::decrementGeneratorObserverCount(JS::GCContext* gcx,
                                                   JSScript* script) {
-  DebugScript* debug = get(script);
+  // Avoid barriers during sweeping. |debug| does not escape.
+  DebugScript* debug = getUnbarriered(script);
   MOZ_ASSERT(debug);
   MOZ_ASSERT(debug->generatorObserverCount > 0);
 
@@ -358,9 +372,8 @@ void DebugAPI::removeDebugScript(JS::GCContext* gcx, JSScript* script) {
 
     DebugScriptMap* map = script->zone()->debugScriptMap;
     MOZ_ASSERT(map);
-    DebugScriptMap::Ptr p = map->lookupUnbarriered(script);
-    MOZ_ASSERT(p);
-    map->remove(p);
+    MOZ_ASSERT(map->has(script));
+    map->remove(script);
     script->setHasDebugScript(false);
 
     // The DebugScript will be destroyed at the next GC when its owning
