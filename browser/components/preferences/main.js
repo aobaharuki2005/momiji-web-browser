@@ -5305,7 +5305,14 @@ var gMainPane = {
       /^https?$/.test(uri.scheme) &&
       Services.prefs.getBoolPref("browser.chrome.site_icons")
     ) {
-      return uri.prePath + "/favicon.ico";
+      // As the favicon originates from web content and is displayed in the parent process,
+      // use the moz-remote-image: protocol to safely re-encode it.
+      let params = new URLSearchParams({
+        url: uri.prePath + "/favicon.ico",
+        width: 16,
+        height: 16,
+      });
+      return "moz-remote-image://?" + params;
     }
 
     return "";
