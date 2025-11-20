@@ -65,12 +65,6 @@ skip-if = [
 
 ["browser_commands_from_url.js"]
 
-["browser_destroying_iframes.js"]
-skip-if = [
-  "asan", # Getting random unhandled exceptions which aren't crashing DevTools
-  "tsan",
-]
-
 ["browser_devtools_api_destroy.js"]
 
 ["browser_dynamic_tool_enabling.js"]
