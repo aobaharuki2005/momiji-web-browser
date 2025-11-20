@@ -7911,6 +7911,7 @@ dependencies = [
  "gecko-profiler",
  "gleam",
  "log",
+ "mozbuild",
  "nsstring",
  "num_cpus",
  "objc",
