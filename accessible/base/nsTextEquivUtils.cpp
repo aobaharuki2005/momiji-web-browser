@@ -57,8 +57,8 @@ bool nsTextEquivUtils::HasNameRule(const Accessible* aAccessible,
   return (rule & aRule) == aRule;
 }
 
-nsresult nsTextEquivUtils::GetNameFromSubtree(
-    const LocalAccessible* aAccessible, nsAString& aName) {
+nsresult nsTextEquivUtils::GetNameFromSubtree(const Accessible* aAccessible,
+                                              nsAString& aName) {
   aName.Truncate();
 
   if (GetReferencedAccs().Contains(aAccessible)) {
@@ -71,24 +71,18 @@ nsresult nsTextEquivUtils::GetNameFromSubtree(
   }
   GetReferencedAccs().Insert(aAccessible);
 
-  if (nsIContent* content = aAccessible->GetContent()) {
-    AssociatedElementsIterator iter(aAccessible->Document(), content,
-                                    nsGkAtoms::aria_actions);
-    while (Accessible* actionTarget = iter.Next()) {
-      // aria-action targets are excluded from name calculation, so consider any
-      // of these targets as "referenced" for our purposes.
-      GetReferencedAccs().Insert(actionTarget);
-    }
+  Relation customActions(aAccessible->RelationByType(RelationType::ACTION));
+  while (Accessible* target = customActions.Next()) {
+    // aria-action targets are excluded from name calculation, so consider any
+    // of these targets as "referenced" for our purposes.
+    GetReferencedAccs().Insert(target);
   }
 
   if (HasNameRule(aAccessible, eNameFromSubtreeRule)) {
-    // XXX: is it necessary to care the accessible is not a document?
-    if (aAccessible->IsContent()) {
-      nsAutoString name;
-      AppendFromAccessibleChildren(aAccessible, &name);
-      name.CompressWhitespace();
-      if (!nsCoreUtils::IsWhitespaceString(name)) aName = name;
-    }
+    nsAutoString name;
+    AppendFromAccessibleChildren(aAccessible, &name);
+    name.CompressWhitespace();
+    if (!nsCoreUtils::IsWhitespaceString(name)) aName = name;
   }
 
   // Once the text alternative computation is complete (i.e., once we've
@@ -278,6 +272,24 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
             aString->Append(char16_t(' '));
           }
         }
+      }
+    }
+  } else if (aAccessible->IsRemote()) {
+    if (aAccessible->IsText()) {
+      // Leafs should have their text appended with no spacing.
+      nsAutoString name;
+      aAccessible->Name(name);
+      aString->Append(name);
+      return NS_OK;
+    }
+    if (RefPtr<nsAtom>(aAccessible->DisplayStyle()) == nsGkAtoms::block ||
+        aAccessible->IsHTMLListItem() || aAccessible->IsTableRow() ||
+        aAccessible->IsTableCell()) {
+      // Similar to local case above, we need to add spaces around block level
+      // accessibles.
+      isHTMLBlock = true;
+      if (!aString->IsEmpty()) {
+        aString->Append(char16_t(' '));
       }
     }
   }
