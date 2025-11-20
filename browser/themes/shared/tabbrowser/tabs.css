@@ -329,13 +329,9 @@
     }
 
     &[bursting]::before {
-      background-image: url("chrome://browser/skin/tabbrowser/loading-burst.svg");
-      background-position: center center;
-      background-size: 100% auto;
-      background-repeat: no-repeat;
+      background-color: var(--tab-loading-fill);
+      clip-path: circle(closest-side);
       animation: tab-burst-animation 375ms cubic-bezier(0, 0, 0.58, 1);
-      -moz-context-properties: fill;
-      fill: var(--tab-loading-fill);
     }
 
     &[bursting][notselectedsinceload]::before {
