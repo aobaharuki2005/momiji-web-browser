@@ -9024,21 +9024,14 @@
   mirror: always
   set_spidermonkey_pref: startup
 
-  # Experimental support for Iterator Chunking in JavaScript.
+ # Experimental support for Iterator Chunking in JavaScript.
 - name: javascript.options.experimental.iterator_chunking
   type: bool
   value: false
   mirror: always
   set_spidermonkey_pref: startup
 
- #endif  // NIGHTLY_BUILD
-
-  # Capture stack traces for OOM
-- name: javascript.options.experimental.capture_oom_stack_trace
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-  set_spidermonkey_pref: startup
+#endif  // NIGHTLY_BUILD
 
 # Whether to Baseline-compile self-hosted functions the first time they are
 # used and cache the result.

@@ -1564,8 +1564,6 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   MaybeReadFallback recoverBailout(cx, activation, &iter,
                                    MaybeReadFallback::Fallback_DoNothing);
 
-  // FrameIter can't walk the stack trace while we are bailing out
-  AutoUnsafeStackTrace aust(cx);
   // Ensure that all value locations are readable from the SnapshotIterator.
   // Get the RInstructionResults from the JitActivation if the frame got
   // recovered ahead of the bailout.
