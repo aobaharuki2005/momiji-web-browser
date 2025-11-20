@@ -517,7 +517,11 @@ nsPluginArray* Navigator::GetPlugins(ErrorResult& aRv) {
   return mPlugins;
 }
 
-bool Navigator::PdfViewerEnabled() { return !StaticPrefs::pdfjs_disabled(); }
+bool Navigator::PdfViewerEnabled() {
+  return !StaticPrefs::pdfjs_disabled() ||
+         nsContentUtils::ShouldResistFingerprinting(GetDocShell(),
+                                                    RFPTarget::PdfjsSpoof);
+}
 
 Permissions* Navigator::GetPermissions(ErrorResult& aRv) {
   if (!mWindow) {
