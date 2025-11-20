@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components
 
-import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -58,33 +57,5 @@ class StoreProviderFactory<T : Store<*, *>>(
     @Suppress("UNCHECKED_CAST")
     override fun <VM : ViewModel> create(modelClass: Class<VM>): VM {
         return StoreProvider(createStore) as VM
-    }
-}
-
-/**
- * Helper function for lazy creation of a [Store] instance scoped to a [ViewModelStoreOwner].
- *
- * @param createStore [Store] factory receiving also the [ViewModel.viewModelScope] associated with this [ViewModel].
- *
- * Example:
- * ```
- * val store by lazy { scope ->
- *   MyStore(
- *     middleware = listOf(
- *       MyMiddleware(
- *         settings = requireComponents.settings,
- *         ...
- *         scope = scope,
- *       ),
- *     )
- *   )
- * }
- */
-@MainThread
-inline fun <reified T : Store<*, *>> ViewModelStoreOwner.lazyStore(
-    noinline createStore: (CoroutineScope) -> T,
-): Lazy<T> {
-    return lazy(mode = LazyThreadSafetyMode.NONE) {
-        StoreProvider.get(this, createStore)
     }
 }
