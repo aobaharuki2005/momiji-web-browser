@@ -6,3 +6,11 @@ type CanonicalURLSource = "link" | "opengraph" | "jsonLd" | "fallback";
 type CanonicalURLSourceResults = {
   [source in CanonicalURLSource]: string | null;
 };
+
+interface CanonicalURLIdentifiedEvent {
+  type: "CanonicalURL:Identified";
+  target: MozBrowser;
+  detail: {
+    canonicalUrl: string;
+  };
+}

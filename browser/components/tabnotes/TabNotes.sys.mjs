@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Provides the CRUD interface for tab notes.
+ */
 export class TabNotesStorage {
   /** @type {Map<URL, string>} */
   #store;
@@ -32,8 +35,15 @@ export class TabNotesStorage {
    *   The actual note that was set after sanitization
    */
   set(url, note) {
+    let existingNote = this.get(url);
     let sanitized = this.#sanitizeInput(note);
     this.#store.set(url, sanitized);
+    if (!existingNote) {
+      Services.obs.notifyObservers(null, "TabNote:Created", url.toString());
+    } else if (existingNote && existingNote != sanitized) {
+      Services.obs.notifyObservers(null, "TabNote:Edited", url.toString());
+    }
+
     return sanitized;
   }
 
@@ -46,7 +56,11 @@ export class TabNotesStorage {
    *   True if there was a note and it was deleted; false otherwise
    */
   delete(url) {
-    return this.#store.delete(url);
+    let wasDeleted = this.#store.delete(url);
+    if (wasDeleted) {
+      Services.obs.notifyObservers(null, "TabNote:Removed", url.toString());
+    }
+    return wasDeleted;
   }
 
   /**
