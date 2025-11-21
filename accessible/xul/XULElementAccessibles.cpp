@@ -146,7 +146,10 @@ void XULLinkAccessible::Value(nsString& aValue) const {
 
 ENameValueFlag XULLinkAccessible::NativeName(nsString& aName) const {
   mContent->AsElement()->GetAttr(nsGkAtoms::value, aName);
-  return eNameOK;
+  if (!aName.IsEmpty()) return eNameOK;
+
+  nsTextEquivUtils::GetNameFromSubtree(this, aName);
+  return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
 }
 
 role XULLinkAccessible::NativeRole() const { return roles::LINK; }
