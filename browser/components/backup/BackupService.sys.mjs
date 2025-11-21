@@ -637,7 +637,17 @@ export class BackupService extends EventTarget {
     // Check if disabled by Nimbus killswitch.
     const archiveKillswitchTriggered =
       lazy.NimbusFeatures.backupService.getVariable("archiveKillswitch");
-    if (archiveKillswitchTriggered) {
+    const archiveOverrideEnabled = Services.prefs.getBoolPref(
+      BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
+      false
+    );
+    // This is explicitly checking for archiveKillswitchTriggered !== false because
+    // we now also (potentially) want to use this nimbus setting for doing staged rollout
+    // of the feature. What this means is that if the value is:
+    //     - true: feature is turned off ("killed")
+    //     - undefined: feature is turned off (not launched yet)
+    //     - false: feature is turned on
+    if (archiveKillswitchTriggered !== false && !archiveOverrideEnabled) {
       return {
         enabled: false,
         reason: "Archiving a profile disabled remotely.",
@@ -705,7 +715,17 @@ export class BackupService extends EventTarget {
     // Check if disabled by Nimbus killswitch.
     const restoreKillswitchTriggered =
       lazy.NimbusFeatures.backupService.getVariable("restoreKillswitch");
-    if (restoreKillswitchTriggered) {
+    const restoreOverrideEnabled = Services.prefs.getBoolPref(
+      BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME,
+      false
+    );
+    // This is explicitly checking for restoreKillswitchTriggered !== false because
+    // we now also (potentially) want to use this nimbus setting for doing staged rollout
+    // of the feature. What this means is that if the value is:
+    //     - true: feature is turned off ("killed")
+    //     - undefined: feature is turned off (not launched yet)
+    //     - false: feature is turned on
+    if (restoreKillswitchTriggered !== false && !restoreOverrideEnabled) {
       return {
         enabled: false,
         reason: "Restore from backup disabled remotely.",
