@@ -36,6 +36,8 @@ skip-if = ["os == 'mac' && os_version == '11.20' && arch == 'aarch64' && !debug"
 
 ["browser_multiple_section.js"]
 
+["browser_nl_fields.js"]
+
 ["browser_parse_address_fields.js"]
 
 ["browser_parse_creditcard_expiry_fields.js"]
