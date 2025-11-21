@@ -89,6 +89,95 @@ aab:
     replace:
         target: "geckoview-test_runner.aab"
 
+trainhop-release:
+    description: Mochitest-browser for Newtab using latest Release builds
+    component: "Firefox::New Tab Page"
+    suffix: "trainhop-rel"
+    mozinfo: "trainhop"
+    expiration: None
+    merge:
+        worker:
+            env:
+                MOZHARNESS_TEST_TAG:
+                    - "newtab"
+        mozharness:
+            chunked: false
+            extra-options:
+                - --install-extension=newtab.xpi
+                # This preference is normally set via Nimbus when doing a New Tab
+                # train-hop, but when running the tests in automation like this, we
+                # install the XPI using the more traditional extension install
+                # mechanism.
+                #
+                # This is kind of a hack, but so long as this string here is not
+                # empty, we bypass the uninstall that occurs at startup, and read
+                # from the installed XPI.
+                - --setpref=browser.newtabpage.trainhopAddon.version=any
+        dependencies:
+            newtab-xpi-job: build-extensions-browser
+    replace:
+        fetches:
+            newtab-xpi-job:
+                - artifact: ../browser-extensions/newtab.xpi
+                  extract: false
+        target:
+            by-test-platform:
+                linux.*:
+                    index: gecko.v2.mozilla-release.shippable.latest.firefox.linux64-opt
+                    name: build/target.tar.xz
+                macosx.*:
+                    index: gecko.v2.mozilla-release.shippable.latest.firefox.macosx64-opt
+                    name: build/target.dmg
+                windows.*:
+                    index: gecko.v2.mozilla-release.shippable.latest.firefox.win64-opt
+                    name: build/target.zip
+
+
+trainhop-beta:
+    description: Mochitest-browser for Newtab using latest Beta builds
+    component: "Firefox::New Tab Page"
+    suffix: "trainhop-beta"
+    mozinfo: "trainhop"
+    expiration: None
+    merge:
+        worker:
+            env:
+                MOZHARNESS_TEST_TAG:
+                    - "newtab"
+        mozharness:
+            chunked: false
+            extra-options:
+                - --install-extension=newtab.xpi
+                # This preference is normally set via Nimbus when doing a New Tab
+                # train-hop, but when running the tests in automation like this, we
+                # install the XPI using the more traditional extension install
+                # mechanism.
+                #
+                # This is kind of a hack, but so long as this string here is not
+                # empty, we bypass the uninstall that occurs at startup, and read
+                # from the installed XPI.
+                - --setpref=browser.newtabpage.trainhopAddon.version=any
+        dependencies:
+            newtab-xpi-job: build-extensions-browser
+
+    replace:
+        fetches:
+            newtab-xpi-job:
+                - artifact: ../browser-extensions/newtab.xpi
+                  extract: false
+        target:
+            by-test-platform:
+                linux.*:
+                    index: gecko.v2.mozilla-beta.shippable.latest.firefox.linux64-opt
+                    name: build/target.tar.xz
+                macosx.*:
+                    index: gecko.v2.mozilla-beta.shippable.latest.firefox.macosx64-opt
+                    name: build/target.dmg
+                windows.*:
+                    index: gecko.v2.mozilla-beta.shippable.latest.firefox.win64-opt
+                    name: build/target.zip
+
+
 geckoview-no-fission:
     description: "{description} without fission enabled"
     component: "GeckoView::General"

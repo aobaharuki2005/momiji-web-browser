@@ -162,10 +162,6 @@ mochitest-valgrind:
 desktop-screenshot-capture:
     - mochitest-browser-screenshots
 
-newtab-trainhop-tests:
-    - mochitest-browser-newtab-trainhop-beta
-    - mochitest-browser-newtab-trainhop-release
-
 ### Specific platform test sets
 
 # Linux

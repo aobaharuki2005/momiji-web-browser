@@ -65,7 +65,6 @@ linux2404-64/opt:
         - linux-tests
         - web-platform-tests
         - web-platform-tests-backlog
-        - newtab-trainhop-tests
 
 linux2404-64-shippable/opt:
     build-platform: linux64-shippable/opt
@@ -74,7 +73,6 @@ linux2404-64-shippable/opt:
         - linux-tests
         - web-platform-tests
         - web-platform-tests-backlog
-        - newtab-trainhop-tests
 
 linux2404-64/debug:
     build-platform: linux64/debug
@@ -246,7 +244,6 @@ windows11-64-24h2/opt:
         - windows-talos
         - browsertime
         - windows-talos-webgl
-        - newtab-trainhop-tests
 
 windows11-64-24h2-shippable/opt:
     build-platform: win64-shippable/opt
@@ -265,7 +262,6 @@ windows11-64-24h2-shippable/opt:
         - windows-talos
         - browsertime
         - windows-talos-webgl
-        - newtab-trainhop-tests
 
 windows11-64-24h2-devedition/opt:
     build-platform: win64-devedition/opt
@@ -340,7 +336,6 @@ macosx1470-64-shippable/opt:
         - macosx1470-64-tests
         - webgpu
         - web-platform-tests-backlog
-        - newtab-trainhop-tests
 
 macosx1470-64-devedition/opt:
     build-platform: macosx64-devedition/opt
@@ -355,7 +350,6 @@ macosx1470-64/opt:
         - web-platform-tests-backlog
         - webgpu
         - browsertime
-        - newtab-trainhop-tests
 
 macosx1470-64/debug:
     build-platform: macosx64/debug
