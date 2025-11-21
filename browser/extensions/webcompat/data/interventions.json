@@ -6045,6 +6045,25 @@
       }
     ]
   },
+  "1999770": {
+    "label": "configuraraparelhos.claro.com.br",
+    "bugs": {
+      "1999770": {
+        "issue": "broken-layout",
+        "matches": ["*://configuraraparelhos.claro.com.br/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "content_scripts": {
+          "css": [
+            "1999770-configuraraparelhos.claro.com.br-fix-missing-text.css"
+          ]
+        }
+      }
+    ]
+  },
   "2000558": {
     "label": "www.jal.co.jp",
     "bugs": {
