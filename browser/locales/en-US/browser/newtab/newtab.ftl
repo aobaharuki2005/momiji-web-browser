@@ -254,13 +254,8 @@ newtab-custom-stories-personalized-checkbox-label = Personalized stories based o
 newtab-custom-weather-toggle =
   .label = Weather
   .description = Today’s forecast at a glance
-newtab-custom-trending-search-toggle =
-  .label = Trending searches
-  .description = Popular and frequently searched topics
 newtab-custom-widget-weather-toggle =
   .label = Weather
-newtab-custom-widget-trending-search-toggle =
-  .label = Trending searches
 newtab-custom-widget-lists-toggle =
   .label = Lists
 newtab-custom-widget-timer-toggle =
@@ -547,17 +542,6 @@ newtab-report-cancel = Cancel
 newtab-report-submit = Submit
 newtab-toast-thanks-for-reporting =
     .message = Thank you for reporting this.
-
-## Strings for trending searches
-
-# "Trending searches refers to popular searches from search engines
-newtab-trending-searches-title = Trending searches
-newtab-trending-searches-show-trending =
-    .title = Show trending searches
-newtab-trending-searches-hide-trending =
-    .title = Hide trending searches
-newtab-trending-searches-learn-more = Learn more
-newtab-trending-searches-dismiss = Hide trending searches
 
 ## Strings for task / to-do list productivity widget
 
