@@ -47,7 +47,9 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ) = content {
-        StartProfilerScreen(viewModel = profilerViewModel)
+        FirefoxTheme {
+            StartProfilerScreen(viewModel = profilerViewModel)
+        }
     }
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -130,10 +132,11 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                 text = stringResource(R.string.profiler_settings_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = FirefoxTheme.colors.textPrimary,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
+
             Spacer(modifier = Modifier.height(8.dp))
+
             ProfilerSettings.entries.forEach { setting ->
                 val settingName = when (setting) {
                     ProfilerSettings.Firefox -> stringResource(R.string.profiler_filter_firefox)
@@ -158,6 +161,7 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
                     selected = selectedSetting == setting,
                     onClick = { selectedSetting = setting },
                 )
+
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
