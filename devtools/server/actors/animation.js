@@ -324,14 +324,9 @@ class AnimationPlayerActor extends Actor {
       return null;
     }
 
-    let pseudo = null;
-    let target = this.player.effect.target;
-    if (target.type) {
-      // Animated element is a pseudo element.
-      pseudo = target.type;
-      target = target.element;
-    }
-    return this.window.getComputedStyle(target, pseudo).animationTimingFunction;
+    const { target, pseudoElement } = this.player.effect;
+    return this.window.getComputedStyle(target, pseudoElement)
+      .animationTimingFunction;
   }
 
   getPropertiesCompositorStatus() {
@@ -492,16 +487,10 @@ class AnimationPlayerActor extends Actor {
           return;
         }
         if (!underlyingValue) {
-          let pseudo = null;
-          let target = this.player.effect.target;
-          if (target.type) {
-            // This target is a pseudo element.
-            pseudo = target.type;
-            target = target.element;
-          }
+          const { target, pseudoElement } = this.player.effect;
           const value = DOMWindowUtils.getUnanimatedComputedStyle(
             target,
-            pseudo,
+            pseudoElement,
             property.name,
             DOMWindowUtils.FLUSH_NONE
           );
