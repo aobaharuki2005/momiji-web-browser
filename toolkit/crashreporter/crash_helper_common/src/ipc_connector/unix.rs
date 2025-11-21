@@ -6,7 +6,9 @@
 use crate::platform::linux::{set_socket_cloexec, set_socket_default_flags};
 #[cfg(target_os = "macos")]
 use crate::platform::macos::{set_socket_cloexec, set_socket_default_flags};
-use crate::{ignore_eintr, IntoRawAncillaryData, PlatformError, ProcessHandle, IO_TIMEOUT};
+use crate::{
+    ignore_eintr, platform::PlatformError, IntoRawAncillaryData, ProcessHandle, IO_TIMEOUT,
+};
 
 use nix::{
     cmsg_space,
@@ -17,7 +19,7 @@ use nix::{
 use std::{
     ffi::{CStr, CString},
     io::{IoSlice, IoSliceMut},
-    os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd},
+    os::fd::{AsFd, AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd},
     str::FromStr,
 };
 
@@ -37,6 +39,8 @@ impl IntoRawAncillaryData for AncillaryData {
 
 // This must match `kInvalidHandle` in `mfbt/UniquePtrExt.h`
 pub const INVALID_ANCILLARY_DATA: RawAncillaryData = -1;
+
+pub type IPCConnectorKey = RawFd;
 
 pub struct IPCConnector {
     socket: OwnedFd,
@@ -82,7 +86,7 @@ impl IPCConnector {
     /// command-line to a child process. This only works for newly
     /// created connectors because they are explicitly created as inheritable.
     pub fn serialize(&self) -> CString {
-        CString::new(self.socket.as_raw_fd().to_string()).unwrap()
+        CString::new(self.as_raw().to_string()).unwrap()
     }
 
     /// Deserialize a connector from an argument passed on the command-line.
@@ -102,11 +106,15 @@ impl IPCConnector {
         self.socket.into_raw()
     }
 
-    pub fn as_raw_ref(&self) -> BorrowedFd<'_> {
-        self.socket.as_fd()
+    pub(crate) fn as_raw(&self) -> RawFd {
+        self.socket.as_raw_fd()
     }
 
-    pub fn poll(&self, flags: PollFlags) -> Result<(), PlatformError> {
+    pub fn key(&self) -> IPCConnectorKey {
+        self.socket.as_raw_fd()
+    }
+
+    fn poll(&self, flags: PollFlags) -> Result<(), PlatformError> {
         let timeout = PollTimeout::from(IO_TIMEOUT);
         let res = ignore_eintr!(poll(
             &mut [PollFd::new(self.socket.as_fd(), flags)],
@@ -134,6 +142,11 @@ impl IPCConnector {
     where
         T: Message,
     {
+        // HACK: Workaround for a macOS-specific bug
+        #[cfg(target_os = "macos")]
+        self.poll(PollFlags::POLLIN)
+            .map_err(IPCError::ReceptionFailure)?;
+
         let header = self.recv_header()?;
 
         if header.kind != T::kind() {
@@ -150,7 +163,7 @@ impl IPCConnector {
         let scm = ControlMessage::ScmRights(&scm_fds);
 
         let res = ignore_eintr!(sendmsg::<()>(
-            self.socket.as_raw_fd(),
+            self.as_raw(),
             &iov,
             &[scm],
             MsgFlags::empty(),
@@ -162,7 +175,10 @@ impl IPCConnector {
                 if bytes_sent == buff.len() {
                     Ok(())
                 } else {
-                    Err(PlatformError::SendTooShort(buff.len(), bytes_sent))
+                    Err(PlatformError::SendTooShort {
+                        expected: buff.len(),
+                        sent: bytes_sent,
+                    })
                 }
             }
             Err(code) => Err(PlatformError::SendFailure(code)),
@@ -182,7 +198,7 @@ impl IPCConnector {
         }
     }
 
-    pub fn recv_header(&self) -> Result<messages::Header, IPCError> {
+    pub(crate) fn recv_header(&self) -> Result<messages::Header, IPCError> {
         let (header, _) = self.recv(messages::HEADER_SIZE)?;
         messages::Header::decode(&header).map_err(IPCError::BadMessage)
     }
@@ -196,7 +212,7 @@ impl IPCConnector {
         let mut iov = [IoSliceMut::new(&mut buff)];
 
         let res = ignore_eintr!(recvmsg::<()>(
-            self.socket.as_raw_fd(),
+            self.as_raw(),
             &mut iov,
             Some(&mut cmsg_buffer),
             MsgFlags::empty(),
@@ -212,7 +228,7 @@ impl IPCConnector {
         let res = match res {
             #[cfg(target_os = "macos")]
             Err(_code @ Errno::ENOMEM) => ignore_eintr!(recvmsg::<()>(
-                self.socket.as_raw_fd(),
+                self.as_raw(),
                 &mut iov,
                 Some(&mut cmsg_buffer),
                 MsgFlags::empty(),
@@ -232,7 +248,10 @@ impl IPCConnector {
         };
 
         if res.bytes != expected_size {
-            return Err(PlatformError::ReceiveTooShort(expected_size, res.bytes));
+            return Err(PlatformError::ReceiveTooShort {
+                expected: expected_size,
+                received: res.bytes,
+            });
         }
 
         Ok((buff, fd))

@@ -4,14 +4,13 @@
 
 use crate::{
     errors::IPCError,
-    platform::{
-        windows::{create_manual_reset_event, server_addr, OverlappedOperation},
-        PlatformError,
-    },
-    IPCConnector, IPCListenerError, Pid,
+    ipc_listener::IPCListenerError,
+    platform::windows::{get_last_error, server_addr, OverlappedOperation, PlatformError},
+    IPCConnector, Pid,
 };
 
 use std::{
+    cell::RefCell,
     ffi::{CStr, CString, OsString},
     os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle},
     ptr::null_mut,
@@ -19,7 +18,7 @@ use std::{
     str::FromStr,
 };
 use windows_sys::Win32::{
-    Foundation::{GetLastError, HANDLE, INVALID_HANDLE_VALUE, TRUE},
+    Foundation::{HANDLE, INVALID_HANDLE_VALUE, TRUE},
     Security::SECURITY_ATTRIBUTES,
     Storage::FileSystem::{
         FILE_FLAG_FIRST_PIPE_INSTANCE, FILE_FLAG_OVERLAPPED, PIPE_ACCESS_DUPLEX,
@@ -34,66 +33,53 @@ pub struct IPCListener {
     /// The name of the pipe this listener will be bound to
     server_addr: CString,
     /// A named pipe handle listening for incoming connections
-    handle: Rc<OwnedHandle>,
-    /// Stores the only pending operation we might have on the pipe
+    handle: RefCell<Rc<OwnedHandle>>,
+    /// Stores the only listen operation that might be pending
     overlapped: Option<OverlappedOperation>,
-    /// A handle to an event which will be used for overlapped I/O on the pipe
-    event: OwnedHandle,
 }
 
 impl IPCListener {
     pub(crate) fn new(server_addr: CString) -> Result<IPCListener, IPCListenerError> {
         let pipe = create_named_pipe(&server_addr, /* first_instance */ true)
             .map_err(IPCListenerError::PipeCreationFailure)?;
-        let event = create_manual_reset_event().map_err(IPCListenerError::AcceptError)?;
 
         Ok(IPCListener {
             server_addr,
-            handle: Rc::new(pipe),
+            handle: RefCell::new(Rc::new(pipe)),
             overlapped: None,
-            event,
         })
     }
 
-    pub fn event_raw_handle(&self) -> HANDLE {
-        self.event.as_raw_handle() as HANDLE
+    pub(crate) fn as_raw(&self) -> HANDLE {
+        self.handle.borrow().as_raw_handle() as HANDLE
     }
 
     pub(crate) fn address(&self) -> &CStr {
         &self.server_addr
     }
 
+    pub(crate) fn sched_listen(&self) -> Result<OverlappedOperation, IPCListenerError> {
+        OverlappedOperation::listen(&self.handle.borrow()).map_err(IPCListenerError::ListenError)
+    }
+
     pub(crate) fn listen(&mut self) -> Result<(), IPCListenerError> {
-        self.overlapped = Some(
-            OverlappedOperation::listen(&self.handle, self.event_raw_handle())
-                .map_err(IPCListenerError::ListenError)?,
-        );
+        self.overlapped = Some(self.sched_listen()?);
         Ok(())
     }
 
     pub fn accept(&mut self) -> Result<IPCConnector, IPCListenerError> {
-        let connected_pipe = {
-            // We extract the overlapped operation within this scope so
-            // that it's dropped right away. This ensures that only one
-            // reference to the listener's handle remains.
-            let overlapped = self
-                .overlapped
-                .take()
-                .expect("Accepting a connection without listening first");
-            overlapped
-                .accept(self.handle.as_raw_handle() as HANDLE)
-                .map_err(IPCListenerError::AcceptError)?;
+        let overlapped = self
+            .overlapped
+            .take()
+            .expect("Accepting a connection without listening first");
+        overlapped.accept().map_err(IPCListenerError::AcceptError)?;
+        self.replace_pipe()
+    }
 
-            let new_pipe = create_named_pipe(&self.server_addr, /* first_instance */ false)
-                .map_err(IPCListenerError::PipeCreationFailure)?;
-
-            std::mem::replace(&mut self.handle, Rc::new(new_pipe))
-        };
-
-        // Once we've accepted a new connection and replaced the listener's
-        // pipe we need to listen again before we return, so that we're ready
-        // for the next iteration.
-        self.listen()?;
+    pub(crate) fn replace_pipe(&self) -> Result<IPCConnector, IPCListenerError> {
+        let new_pipe = create_named_pipe(&self.server_addr, /* first_instance */ false)
+            .map_err(IPCListenerError::PipeCreationFailure)?;
+        let connected_pipe = self.handle.replace(Rc::new(new_pipe));
 
         // We can guarantee that there's only one reference to this handle at
         // this point in time.
@@ -106,7 +92,7 @@ impl IPCListener {
     /// command-line to a child process. This only works for newly
     /// created listeners because they are explicitly created as inheritable.
     pub fn serialize(&self) -> OsString {
-        let raw_handle = self.handle.as_raw_handle() as usize;
+        let raw_handle = self.handle.borrow().as_raw_handle() as usize;
         OsString::from_str(raw_handle.to_string().as_ref()).unwrap()
     }
 
@@ -118,20 +104,12 @@ impl IPCListener {
         let handle = usize::from_str(string).map_err(|_e| IPCError::ParseError)?;
         // SAFETY: This is a handle we passed in ourselves.
         let handle = unsafe { OwnedHandle::from_raw_handle(handle as RawHandle) };
-        let event = create_manual_reset_event().map_err(IPCListenerError::CreationError)?;
 
-        let mut listener = IPCListener {
+        Ok(IPCListener {
             server_addr,
-            handle: Rc::new(handle),
+            handle: RefCell::new(Rc::new(handle)),
             overlapped: None,
-            event,
-        };
-
-        // Since we've inherited this handler we need to start a new
-        // asynchronous operation to listen for incoming connections.
-        listener.listen()?;
-
-        Ok(listener)
+        })
     }
 }
 
@@ -176,7 +154,7 @@ fn create_named_pipe(
     };
 
     if pipe == INVALID_HANDLE_VALUE {
-        return Err(PlatformError::CreatePipeFailure(unsafe { GetLastError() }));
+        return Err(PlatformError::CreatePipeFailure(get_last_error()));
     }
 
     // SAFETY: We just verified that the handle is valid.
