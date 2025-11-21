@@ -1375,8 +1375,8 @@ class StyleRuleActor extends Actor {
 
     if (newCssRule) {
       const ruleEntry = this.pageStyle.findEntryMatchingRule(node, newCssRule);
-      if (ruleEntry.length === 1) {
-        entries = this.pageStyle.getAppliedProps(node, ruleEntry, {
+      if (ruleEntry) {
+        entries = this.pageStyle.getAppliedProps(node, [ruleEntry], {
           matchedSelectors: true,
         });
       } else {

@@ -256,6 +256,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_rules_edit-selector-nested-rules.js"]
 
+["browser_rules_edit-selector-pseudo-element.js"]
+
 ["browser_rules_edit-selector_01.js"]
 
 ["browser_rules_edit-selector_02.js"]
