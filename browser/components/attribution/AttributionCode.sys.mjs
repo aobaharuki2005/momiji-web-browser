@@ -44,6 +44,7 @@ const ATTR_CODE_MAX_LENGTH = 1010;
 const ATTR_CODE_VALUE_REGEX = /[a-zA-Z0-9_%\\-\\.\\(\\)]*/;
 const ATTR_CODE_FIELD_SEPARATOR = "%26"; // URL-encoded &
 const ATTR_CODE_KEY_VALUE_SEPARATOR = "%3D"; // URL-encoded =
+const MSCLKID_KEY_PREFIX = "storeBingAd_";
 const ATTR_CODE_KEYS = [
   "source",
   "medium",
@@ -54,6 +55,7 @@ const ATTR_CODE_KEYS = [
   "ua",
   "dltoken",
   "msstoresignedin",
+  "msclkid",
   "dlsource",
 ];
 
@@ -145,6 +147,10 @@ export var AttributionCode = {
             parsed[key] = value;
           }
         }
+      } else if (param.startsWith(MSCLKID_KEY_PREFIX)) {
+        // Microsoft Store Ads uses `_` to separate the key and value, therefore
+        // requires special handling.
+        parsed.msclkid = param.substring(MSCLKID_KEY_PREFIX.length);
       } else {
         lazy.log.debug(
           `parseAttributionCode: "${code}" => isValid = false: "${key}", "${value}"`
