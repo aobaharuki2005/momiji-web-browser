@@ -263,6 +263,13 @@
   value: true
   mirror: always
 
+# Whether to enable automatic details relationships for
+# anchor positioned content.
+- name: accessibility.anchorPositionedAsDetails.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Whether to enable all accessibility cache domains on startup.
 #  * false: enable domains as needed
 #  * true:  enable all domains regardless of need (cache everything)

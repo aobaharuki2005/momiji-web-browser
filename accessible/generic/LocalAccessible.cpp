@@ -76,6 +76,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ScrollContainerFrame.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/dom/Element.h"
@@ -2021,6 +2022,9 @@ LocalAccessible* LocalAccessible::GetPopoverTargetDetailsRelation() const {
 
 LocalAccessible* LocalAccessible::GetAnchorPositionTargetDetailsRelation()
     const {
+  if (!StaticPrefs::accessibility_anchorPositionedAsDetails_enabled()) {
+    return nullptr;
+  }
   nsIFrame* positionedFrame = nsCoreUtils::GetPositionedFrameForAnchor(
       mDoc->PresShellPtr(), GetFrame());
   if (!positionedFrame) {
@@ -2436,7 +2440,8 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
 
       // Check early if the accessible is a tooltip. If so, it can never be a
       // valid target for an anchor's details relation.
-      if (Role() != roles::TOOLTIP) {
+      if (StaticPrefs::accessibility_anchorPositionedAsDetails_enabled() &&
+          Role() != roles::TOOLTIP) {
         if (const nsIFrame* anchorFrame =
                 nsCoreUtils::GetAnchorForPositionedFrame(mDoc->PresShellPtr(),
                                                          GetFrame())) {
