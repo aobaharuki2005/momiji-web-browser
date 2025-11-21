@@ -1203,7 +1203,9 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         if (browsingModeManager.mode == BrowsingMode.Private) {
-            activity?.window?.setBackgroundDrawableResource(R.drawable.private_home_background_gradient)
+            activity?.window?.setBackgroundDrawable(
+                getColor(requireContext(), R.color.fx_mobile_private_surface).toDrawable(),
+            )
         }
 
         hideToolbar()
@@ -1249,11 +1251,6 @@ class HomeFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        if (browsingModeManager.mode == BrowsingMode.Private) {
-            activity?.window?.setBackgroundDrawable(
-                getColor(requireContext(), R.color.fx_mobile_private_layer_color_1).toDrawable(),
-            )
-        }
 
         // Counterpart to the update in onResume to keep the last access timestamp of the selected
         // tab up-to-date.

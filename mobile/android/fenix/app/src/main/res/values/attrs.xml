@@ -70,7 +70,6 @@
     <attr name="menuItemButtonTintColor" format="reference"/>
 
     <!-- Misc -->
-    <attr name="homeBackground" format="reference"/>
     <attr name="bottomBarBackground" format="reference"/>
     <attr name="bottomBarBackgroundTop" format="reference"/>
     <attr name="fenixLogo" format="reference" />
