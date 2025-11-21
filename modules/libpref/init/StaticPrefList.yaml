@@ -3534,14 +3534,6 @@
 #endif
   mirror: always
 
-# If this is true, TextEventDispatcher dispatches keydown and keyup events
-# even during composition (keypress events are never fired during composition
-# even if this is true).
-- name: dom.keyboardevent.dispatch_during_composition
-  type: bool
-  value: true
-  mirror: always
-
 # Enable/disable KeyboardEvent.initKeyEvent function
 - name: dom.keyboardevent.init_key_event.enabled
   type: bool
