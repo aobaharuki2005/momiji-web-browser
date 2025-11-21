@@ -191,7 +191,7 @@ class AccessibleHighlighter extends AutoRefreshHighlighter {
   /**
    * Check if node is a valid element, document or text node.
    *
-   * @override  AutoRefreshHighlighter.prototype._isNodeValid
+   * @override
    * @param  {DOMNode} node
    *         The node to highlight.
    * @return {Boolean} whether or not node is valid.

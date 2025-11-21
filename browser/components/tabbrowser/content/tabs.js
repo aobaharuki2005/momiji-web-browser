@@ -917,7 +917,7 @@
 
     /**
      * @returns {FocusableItem[]}
-     * @override tabbox.js:TabsBase
+     * @override
      */
     get ariaFocusableItems() {
       if (this.#focusableItems) {
