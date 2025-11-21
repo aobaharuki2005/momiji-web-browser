@@ -6,17 +6,8 @@
 
 "use strict";
 
-const kBaseUrlForContent = getRootDirectory(gTestPath).replace(
-  "chrome://mochitests/content",
-  "https://example.com"
-);
 const kContentFileUrl =
   kBaseUrlForContent + "simple_navigator_clipboard_readText.html";
-
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js",
-  this
-);
 
 // @param aBrowser browser object of the content tab.
 // @param aContentElementId the ID of the element to be tapped.

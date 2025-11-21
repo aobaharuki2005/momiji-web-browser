@@ -7,12 +7,7 @@
 "use strict";
 requestLongerTimeout(2);
 
-const kBaseUrlForContent = getRootDirectory(gTestPath).replace(
-  "chrome://mochitests/content",
-  "https://example.com"
-);
-const kContentFileName = "file_toplevel.html";
-const kContentFileUrl = kBaseUrlForContent + kContentFileName;
+const kContentFileUrl = kBaseUrlForContent + "file_toplevel.html";
 const kIsMac = navigator.platform.indexOf("Mac") > -1;
 
 async function waitForPasteContextMenu() {

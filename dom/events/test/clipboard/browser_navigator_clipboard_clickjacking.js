@@ -6,19 +6,8 @@
 
 "use strict";
 
-const kBaseUrlForContent = getRootDirectory(gTestPath).replace(
-  "chrome://mochitests/content",
-  "https://example.com"
-);
-
-const kContentFileName = "simple_navigator_clipboard_keydown.html";
-
-const kContentFileUrl = kBaseUrlForContent + kContentFileName;
-
-const kApzTestNativeEventUtilsUrl =
-  "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js";
-
-Services.scriptloader.loadSubScript(kApzTestNativeEventUtilsUrl, this);
+const kContentFileUrl =
+  kBaseUrlForContent + "simple_navigator_clipboard_keydown.html";
 
 add_task(async function test_paste_button_clickjacking() {
   await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {

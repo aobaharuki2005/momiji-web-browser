@@ -6,12 +6,7 @@
 
 "use strict";
 
-const kBaseUrlForContent = getRootDirectory(gTestPath).replace(
-  "chrome://mochitests/content",
-  "https://example.com"
-);
-const kContentFileName = "file_toplevel.html";
-const kContentFileUrl = kBaseUrlForContent + kContentFileName;
+const kContentFileUrl = kBaseUrlForContent + "file_toplevel.html";
 
 async function waitForPasteContextMenu() {
   await waitForPasteMenuPopupEvent("shown");
