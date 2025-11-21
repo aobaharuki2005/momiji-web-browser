@@ -6029,5 +6029,20 @@
         "ua_string": ["Chrome", "add_Firefox_as_Gecko"]
       }
     ]
+  },
+  "1999488": {
+    "label": "languageacademy.com.au",
+    "bugs": {
+      "1999488": {
+        "issue": "unsupported-warning",
+        "matches": ["*://*.languageacademy.com.au/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["Chrome", "add_Firefox_as_Gecko"]
+      }
+    ]
   }
 }
