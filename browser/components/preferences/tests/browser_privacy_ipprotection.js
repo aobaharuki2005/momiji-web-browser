@@ -7,6 +7,8 @@
 
 const FEATURE_PREF = "browser.ipProtection.variant";
 const MODE_PREF = "browser.ipProtection.exceptionsMode";
+const AUTOSTART_FEATURE_ENABLED_PREF =
+  "browser.ipProtection.features.autoStart";
 const AUTOSTART_PREF = "browser.ipProtection.autoStartEnabled";
 const AUTOSTART_PRIVATE_PREF = "browser.ipProtection.autoStartPrivateEnabled";
 
@@ -15,6 +17,7 @@ const SECTION_ID = "dataIPProtectionGroup";
 async function setupVpnPrefs({
   feature,
   mode = "all",
+  autostartFeatureEnabled = false,
   autostart = false,
   autostartprivate = false,
 }) {
@@ -22,6 +25,7 @@ async function setupVpnPrefs({
     set: [
       [FEATURE_PREF, feature],
       [MODE_PREF, mode],
+      [AUTOSTART_FEATURE_ENABLED_PREF, autostartFeatureEnabled],
       [AUTOSTART_PREF, autostart],
       [AUTOSTART_PRIVATE_PREF, autostartprivate],
     ],
@@ -227,6 +231,7 @@ add_task(async function test_exceptions_change_mode_and_buttons() {
 add_task(async function test_autostart_checkboxes() {
   await setupVpnPrefs({
     feature: "beta",
+    autostartFeatureEnabled: true,
     autostart: true,
     autostartprivate: true,
   });
