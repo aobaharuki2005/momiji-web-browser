@@ -46,9 +46,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
@@ -75,6 +75,7 @@ import org.mozilla.fenix.downloads.listscreen.ui.FileListItem
 import org.mozilla.fenix.downloads.listscreen.ui.Filters
 import org.mozilla.fenix.downloads.listscreen.ui.ToolbarConfig
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -154,7 +155,7 @@ fun DownloadsScreen(
                         Text(
                             text = toolbarConfig.title,
                             color = toolbarConfig.textColor,
-                            style = FirefoxTheme.typography.headline6,
+                            style = FirefoxTheme.typography.headline5,
                         )
                     }
                 },
@@ -206,7 +207,6 @@ fun DownloadsScreen(
                 )
             }
         },
-        containerColor = FirefoxTheme.colors.layer1,
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState,
@@ -515,7 +515,7 @@ private fun NoSearchResults(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = stringResource(id = R.string.download_search_no_results_found),
-            color = FirefoxTheme.colors.textSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = FirefoxTheme.typography.body2,
         )
     }
@@ -524,7 +524,7 @@ private fun NoSearchResults(modifier: Modifier = Modifier) {
 @Composable
 private fun EmptyState(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(all = 16.dp),
+        modifier = modifier.padding(all = FirefoxTheme.layout.space.static200),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -533,19 +533,19 @@ private fun EmptyState(modifier: Modifier = Modifier) {
             contentDescription = null,
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static200))
 
         Text(
             text = stringResource(id = R.string.download_empty_message_2),
-            color = FirefoxTheme.colors.textPrimary,
-            style = FirefoxTheme.typography.headline7,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = FirefoxTheme.typography.headline6,
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static100))
 
         Text(
             text = stringResource(id = R.string.download_empty_description),
-            color = FirefoxTheme.colors.textPrimary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = FirefoxTheme.typography.body2,
         )
     }
@@ -567,9 +567,9 @@ private fun getToolbarConfig(mode: Mode): ToolbarConfig {
 
         is Mode.Normal -> ToolbarConfig(
             title = stringResource(R.string.library_downloads),
-            backgroundColor = FirefoxTheme.colors.layer1,
-            textColor = FirefoxTheme.colors.textPrimary,
-            iconColor = FirefoxTheme.colors.iconPrimary,
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            textColor = MaterialTheme.colorScheme.onSurface,
+            iconColor = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -754,6 +754,40 @@ private fun DownloadsScreenPreviews(
             ) {
                 Snackbar(snackbarData = it)
             }
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun DownloadsScreenPrivatePreviews(
+    @PreviewParameter(DownloadsScreenPreviewModelParameterProvider::class) state: DownloadUIState,
+) {
+    val downloadsStore = remember { DownloadUIStore(initialState = state) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    FirefoxTheme(theme = Theme.Private) {
+        Box {
+            DownloadsScreen(
+                downloadsStore = downloadsStore,
+                onItemClick = {
+                    scope.launch {
+                        snackbarHostState.displaySnackbar(
+                            message = "Item ${it.fileName} clicked",
+                        )
+                    }
+                },
+                onNavigationIconClick = {
+                    scope.launch {
+                        snackbarHostState.displaySnackbar(
+                            message = "Navigation Icon clicked",
+                        )
+                    }
+                },
+            )
+            SnackbarHost(
+                hostState = snackbarHostState,
+            )
         }
     }
 }
