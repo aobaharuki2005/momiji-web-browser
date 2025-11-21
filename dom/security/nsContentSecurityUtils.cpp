@@ -321,6 +321,7 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   // These are strings because the Telemetry Events API only accepts strings
   static constexpr auto kChromeURI = "chromeuri"_ns;
   static constexpr auto kResourceURI = "resourceuri"_ns;
+  static constexpr auto kMozSrcURI = "mozsrcuri"_ns;
   static constexpr auto kBlobUri = "bloburi"_ns;
   static constexpr auto kDataUri = "dataurl"_ns;
   static constexpr auto kAboutUri = "abouturi"_ns;
@@ -371,6 +372,9 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
                                     Some(StripQueryRef(fileName)));
     }
     return FilenameTypeAndDetails(kResourceURI, Some(StripQueryRef(fileName)));
+  }
+  if (StringBeginsWith(fileName, "moz-src://"_ns)) {
+    return FilenameTypeAndDetails(kMozSrcURI, Some(StripQueryRef(fileName)));
   }
 
   // blob: and data:
