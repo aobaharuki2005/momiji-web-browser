@@ -174,7 +174,6 @@
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_normal_theme</item>
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_normal_theme</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_normal_theme</item>
-        <item name="preferenceSectionHeader">@color/fx_mobile_text_color_accent</item>
         <item name="selectPromptHeaderTextColor">@color/fx_mobile_text_color_accent</item>
         <item name="menuItemButtonTintColor">@color/fx_mobile_text_color_accent</item>
 
@@ -474,7 +473,6 @@
         <item name="awesomeBarIndicatorColor">@color/photonGreen60</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/photonBlue40</item>
         <item name="selectPromptHeaderTextColor">@color/accent_high_contrast_private_theme</item>
-        <item name="preferenceSectionHeader">@color/photonViolet40</item>
         <item name="menuItemButtonTintColor">@color/accent_high_contrast_private_theme</item>
 
         <!-- Shared widget colors -->
@@ -657,6 +655,15 @@
         <item name="android:progressDrawable">@drawable/progress_gradient</item>
     </style>
 
+    <style name="AcornHeadline8">
+        <item name="android:textSize">14sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.02857</item> <!-- 0.4sp / 14sp -->
+        <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
+        <item name="android:fontWeight">@integer/font_weight_medium</item>
+        <item name="android:lineHeight" tools:targetApi="28">20sp</item>
+    </style>
+
     <style name="QuickSettingsText">
         <item name="android:textColor">@color/state_list_text_color</item>
         <item name="android:textSize">14sp</item>
@@ -771,10 +778,8 @@
         <item name="android:lineSpacingExtra">@dimen/about_header_text_line_spacing_extra</item>
     </style>
 
-    <style name="PreferenceSectionHeader" parent="@android:style/Widget.ListView">
-        <item name="android:textColor">?preferenceSectionHeader</item>
-        <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
-        <item name="android:fontWeight">@integer/font_weight_medium</item>
+    <style name="PreferenceSectionHeader" parent="AcornHeadline8">
+        <item name="android:textColor">?colorOnSurfaceVariant</item>
     </style>
 
     <style name="EngineTextField" parent="TextAppearance.AppCompat">
