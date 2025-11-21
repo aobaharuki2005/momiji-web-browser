@@ -331,8 +331,8 @@ already_AddRefed<AccAttributes> HTMLTextFieldAccessible::NativeAttributes() {
   return attributes.forget();
 }
 
-ENameValueFlag HTMLTextFieldAccessible::DirectName(nsString& aName) const {
-  ENameValueFlag nameFlag = LocalAccessible::DirectName(aName);
+ENameValueFlag HTMLTextFieldAccessible::Name(nsString& aName) const {
+  ENameValueFlag nameFlag = LocalAccessible::Name(aName);
   if (!aName.IsEmpty()) return nameFlag;
 
   // text inputs and textareas might have useful placeholder text
@@ -510,8 +510,8 @@ bool HTMLFileInputAccessible::IsAcceptableChild(nsIContent* aEl) const {
   return aEl->IsText();
 }
 
-ENameValueFlag HTMLFileInputAccessible::DirectName(nsString& aName) const {
-  ENameValueFlag flag = HyperTextAccessible::DirectName(aName);
+ENameValueFlag HTMLFileInputAccessible::Name(nsString& aName) const {
+  ENameValueFlag flag = HyperTextAccessible::Name(aName);
   if (flag == eNameFromSubtree) {
     // The author didn't provide a name. We'll compute the name from our subtree
     // below.
@@ -539,11 +539,7 @@ ENameValueFlag HTMLFileInputAccessible::DirectName(nsString& aName) const {
     }
     aName += leaf->Text();
   }
-
-  // XXX: Return eNameOK even if we got the name from a label or subtree. This
-  // is to force us to cache the name, since the calculation of this type is out
-  // of spec and pretty nuanced.
-  return eNameOK;
+  return flag;
 }
 
 bool HTMLFileInputAccessible::HasPrimaryAction() const { return true; }
@@ -687,15 +683,11 @@ ENameValueFlag HTMLGroupboxAccessible::NativeName(nsString& aName) const {
 
   nsIContent* legendContent = GetLegend();
   if (legendContent) {
-    bool usedHiddenContent = nsTextEquivUtils::AppendTextEquivFromContent(
-        this, legendContent, &aName);
-    aName.CompressWhitespace();
-    if (!usedHiddenContent && !aName.IsEmpty()) {
-      return eNameFromRelations;
-    }
+    nsTextEquivUtils::AppendTextEquivFromContent(this, legendContent, &aName);
   }
 
-  return eNameOK;
+  aName.CompressWhitespace();
+  return aName.IsEmpty() ? eNameOK : eNameFromRelations;
 }
 
 Relation HTMLGroupboxAccessible::RelationByType(RelationType aType) const {
@@ -740,15 +732,11 @@ ENameValueFlag HTMLFigureAccessible::NativeName(nsString& aName) const {
 
   nsIContent* captionContent = Caption();
   if (captionContent) {
-    bool usedHiddenContent = nsTextEquivUtils::AppendTextEquivFromContent(
-        this, captionContent, &aName);
-    aName.CompressWhitespace();
-    if (!usedHiddenContent && !aName.IsEmpty()) {
-      return eNameFromRelations;
-    }
+    nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent, &aName);
   }
 
-  return eNameOK;
+  aName.CompressWhitespace();
+  return aName.IsEmpty() ? eNameOK : eNameFromRelations;
 }
 
 Relation HTMLFigureAccessible::RelationByType(RelationType aType) const {

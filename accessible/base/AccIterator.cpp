@@ -411,14 +411,3 @@ Accessible* RemoteAccIterator::Next() {
   }
   return nullptr;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// ArrayAccIterator
-////////////////////////////////////////////////////////////////////////////////
-
-Accessible* ArrayAccIterator::Next() {
-  if (mIndex < mAccs.Length()) {
-    return mAccs[mIndex++];
-  }
-  return nullptr;
-}
