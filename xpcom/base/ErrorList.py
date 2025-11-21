@@ -963,8 +963,7 @@ with modules["URILOADER"]:
     # doesn't need to be reparsed from the original source.
     errors["NS_ERROR_PARSED_DATA_CACHED"] = FAILURE(33)
 
-    # When browser.tabs.documentchannel.parent-controlled pref and SHIP
-    # are enabled and a load gets cancelled due to another one
+    # When SHIP is enabled and a load gets cancelled due to another one
     # starting, the error is NS_BINDING_CANCELLED_OLD_LOAD.
     errors["NS_BINDING_CANCELLED_OLD_LOAD"] = FAILURE(39)
 
