@@ -2479,18 +2479,25 @@ add_task(async function check_backupArchiveEnabled() {
   const sandbox = sinon.createSandbox();
   registerCleanupFunction(() => sandbox.restore());
 
-  await pushPrefs(["browser.backup.archive.enabled", true]);
+  await pushPrefs(
+    ["browser.backup.archive.enabled", true],
+    ["browser.backup.archive.overridePlatformCheck", true]
+  );
 
   is(
     await ASRouterTargeting.Environment.backupArchiveEnabled,
     true,
     "should return true if the killswitch is not on"
   );
-
+  await SpecialPowers.popPrefEnv();
   const archiveExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
     featureId: "backupService",
     value: { archiveKillswitch: true },
   });
+  await pushPrefs(
+    ["browser.backup.archive.enabled", true],
+    ["browser.backup.archive.overridePlatformCheck", false]
+  );
 
   is(
     await ASRouterTargeting.Environment.backupArchiveEnabled,
@@ -2507,12 +2514,20 @@ add_task(async function check_backupRestoreEnabled() {
   const sandbox = sinon.createSandbox();
   registerCleanupFunction(() => sandbox.restore());
 
-  await pushPrefs(["browser.backup.restore.enabled", true]);
+  await pushPrefs(
+    ["browser.backup.restore.enabled", true],
+    ["browser.backup.restore.overridePlatformCheck", true]
+  );
 
   is(
     await ASRouterTargeting.Environment.backupRestoreEnabled,
     true,
     "should return true if the killswitch is not on"
+  );
+  await SpecialPowers.popPrefEnv();
+  await pushPrefs(
+    ["browser.backup.restore.enabled", true],
+    ["browser.backup.restore.overridePlatformCheck", false]
   );
 
   const restoreExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
