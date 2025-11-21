@@ -125,7 +125,7 @@ LocalAccessible::~LocalAccessible() {
   NS_ASSERTION(!mDoc, "LastRelease was never called!?!");
 }
 
-ENameValueFlag LocalAccessible::Name(nsString& aName) const {
+ENameValueFlag LocalAccessible::DirectName(nsString& aName) const {
   aName.Truncate();
 
   if (!HasOwnContent()) return eNameOK;
@@ -149,6 +149,10 @@ ENameValueFlag LocalAccessible::Name(nsString& aName) const {
   aName.SetIsVoid(true);
 
   return nameFlag;
+}
+
+ENameValueFlag LocalAccessible::Name(nsString& aName) const {
+  return DirectName(aName);
 }
 
 EDescriptionValueFlag LocalAccessible::Description(
