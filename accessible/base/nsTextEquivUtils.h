@@ -59,10 +59,7 @@ class nsTextEquivUtils {
    * @param aRule       [in] a given name rule
    * @return true if the accessible has the rule
    */
-  static inline bool HasNameRule(Accessible* aAccessible,
-                                 ETextEquivRule aRule) {
-    return (GetRoleRule(aAccessible->Role()) & aRule) == aRule;
-  }
+  static bool HasNameRule(const Accessible* aAccessible, ETextEquivRule aRule);
 
   /**
    * Calculates the name from the given accessible's subtree, if allowed.
