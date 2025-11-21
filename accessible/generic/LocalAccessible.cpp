@@ -137,26 +137,8 @@ ENameValueFlag LocalAccessible::Name(nsString& aName) const {
   if (!aName.IsEmpty()) return nameFlag;
 
   // In the end get the name from tooltip.
-  if (mContent->IsHTMLElement()) {
-    if (mContent->AsElement()->GetAttr(nsGkAtoms::title, aName)) {
-      aName.CompressWhitespace();
-      return eNameFromTooltip;
-    }
-  } else if (mContent->IsXULElement()) {
-    if (mContent->AsElement()->GetAttr(nsGkAtoms::tooltiptext, aName)) {
-      aName.CompressWhitespace();
-      return eNameFromTooltip;
-    }
-  } else if (mContent->IsSVGElement()) {
-    // If user agents need to choose among multiple 'desc' or 'title'
-    // elements for processing, the user agent shall choose the first one.
-    for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
-         childElm = childElm->GetNextSibling()) {
-      if (childElm->IsSVGElement(nsGkAtoms::desc)) {
-        nsTextEquivUtils::AppendTextEquivFromContent(this, childElm, &aName);
-        return eNameFromTooltip;
-      }
-    }
+  if (Tooltip(aName)) {
+    return eNameFromTooltip;
   }
 
   if (auto cssAlt = CssAltContent(mContent)) {
@@ -190,28 +172,14 @@ EDescriptionValueFlag LocalAccessible::Description(
 
   if (aDescription.IsEmpty()) {
     NativeDescription(aDescription);
+    aDescription.CompressWhitespace();
+  }
 
-    if (aDescription.IsEmpty()) {
-      // Keep the Name() method logic.
-      if (mContent->IsHTMLElement()) {
-        mContent->AsElement()->GetAttr(nsGkAtoms::title, aDescription);
-      } else if (mContent->IsXULElement()) {
-        mContent->AsElement()->GetAttr(nsGkAtoms::tooltiptext, aDescription);
-      } else if (mContent->IsSVGElement()) {
-        for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
-             childElm = childElm->GetNextSibling()) {
-          if (childElm->IsSVGElement(nsGkAtoms::desc)) {
-            nsTextEquivUtils::AppendTextEquivFromContent(this, childElm,
-                                                         &aDescription);
-            break;
-          }
-        }
-      }
-    }
+  if (aDescription.IsEmpty()) {
+    Tooltip(aDescription);
   }
 
   if (!aDescription.IsEmpty()) {
-    aDescription.CompressWhitespace();
     nsAutoString name;
     Name(name);
     // Don't expose a description if it is the same as the name.
@@ -2662,6 +2630,35 @@ bool LocalAccessible::ARIADescription(nsString& aDescription) const {
   }
 
   return !aDescription.IsEmpty();
+}
+
+// LocalAccessible protected
+bool LocalAccessible::Tooltip(nsString& aTooltip) const {
+  if (!HasOwnContent()) {
+    return false;
+  }
+
+  if (mContent->IsHTMLElement()) {
+    mContent->AsElement()->GetAttr(nsGkAtoms::title, aTooltip);
+    aTooltip.CompressWhitespace();
+    return !aTooltip.IsEmpty();
+  } else if (mContent->IsXULElement()) {
+    mContent->AsElement()->GetAttr(nsGkAtoms::tooltiptext, aTooltip);
+    aTooltip.CompressWhitespace();
+    return !aTooltip.IsEmpty();
+  } else if (mContent->IsSVGElement()) {
+    // If user agents need to choose among multiple 'desc' or 'title'
+    // elements for processing, the user agent shall choose the first one.
+    for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
+         childElm = childElm->GetNextSibling()) {
+      if (childElm->IsSVGElement(nsGkAtoms::desc)) {
+        nsTextEquivUtils::AppendTextEquivFromContent(this, childElm, &aTooltip);
+        aTooltip.CompressWhitespace();
+        return !aTooltip.IsEmpty();
+      }
+    }
+  }
+  return false;
 }
 
 // LocalAccessible protected
