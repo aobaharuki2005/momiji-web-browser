@@ -73,7 +73,7 @@ tomlj = "1.1.1"
 detekt = "1.23.8"
 google-java-format = "1.28.0"
 ktlint = "1.7.1"
-spotless = "8.0.0"
+spotless = "8.1.0"
 
 # Mozilla
 glean = "66.1.1"
