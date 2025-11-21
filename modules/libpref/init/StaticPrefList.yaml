@@ -7027,7 +7027,7 @@
   value: -1
   mirror: once
 
-
+#ifdef XP_WIN
 - name: gfx.direct3d11.reuse-decoder-device
   type: bool
   value: true
@@ -7062,6 +7062,7 @@
   type: int32_t
   value: 0
   mirror: once
+#endif
 
 # Rate by which the frame rate is divided. I.e. at a number higher than 1 we
 # will only refresh every <x> frames.
