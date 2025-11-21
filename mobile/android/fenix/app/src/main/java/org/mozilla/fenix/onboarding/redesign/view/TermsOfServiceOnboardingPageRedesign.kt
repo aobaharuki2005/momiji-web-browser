@@ -53,7 +53,6 @@ fun TermsOfServiceOnboardingPageRedesign(
     eventHandler: OnboardingTermsOfServiceEventHandler,
 ) {
     Card(
-        modifier = Modifier.padding(bottom = 60.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Column(

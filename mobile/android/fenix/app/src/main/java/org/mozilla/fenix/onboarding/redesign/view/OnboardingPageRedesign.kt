@@ -62,10 +62,6 @@ fun OnboardingPageRedesign(
             pageState = pageState,
             mainImage = mainImage,
         )
-
-        pageState.secondaryButton?.let {
-            SecondaryButton(title = pageState.title, secondaryButton = it)
-        }
     }
 
     LaunchedEffect(pageState) {
@@ -87,7 +83,7 @@ private fun SecondaryButton(
         text = secondaryButton.text,
         onClick = secondaryButton.onClick,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = FirefoxTheme.colors.textActionPrimary,
+            contentColor = FirefoxTheme.colors.textActionSecondary,
         ),
     )
 }
@@ -123,6 +119,10 @@ private fun CardView(
                 text = pageState.primaryButton.text,
                 onClick = pageState.primaryButton.onClick,
             )
+
+            pageState.secondaryButton?.let {
+                SecondaryButton(title = pageState.title, secondaryButton = it)
+            }
         }
     }
 }
