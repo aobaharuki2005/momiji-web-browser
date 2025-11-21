@@ -386,8 +386,13 @@ tasks:
                           kind: decision-task
 
                       routes:
-                          - checks
-                          - "tc-treeherder.v2.${project}.${head_sha}"
+                          $flattenDeep:
+                              - checks
+                              - $if: 'tasks_for == "github-push"'
+                                then:
+                                    - "tc-treeherder.v2.${project}.${head_sha}"
+                                    - "index.${trustDomain}.v2.${project}.latest.taskgraph.decision"
+                                    - "index.${trustDomain}.v2.${project}.revision.${head_sha}.taskgraph.decision"
                       scopes:
                           - 'assume:repo:${repoUrl[8:]}:branch:${short_head_ref}'
                       dependencies: []
