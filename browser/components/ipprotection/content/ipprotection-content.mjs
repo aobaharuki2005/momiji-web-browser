@@ -10,8 +10,6 @@ import {
 } from "chrome://browser/content/ipprotection/ipprotection-constants.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/ipprotection/ipprotection-header.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-message-bar.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-signedout.mjs";
@@ -25,7 +23,6 @@ import "chrome://global/content/elements/moz-toggle.mjs";
  */
 export default class IPProtectionContentElement extends MozLitElement {
   static queries = {
-    headerEl: "ipprotection-header",
     signedOutEl: "ipprotection-signedout",
     messagebarEl: "ipprotection-message-bar",
     statusCardEl: "ipprotection-status-card",
@@ -147,16 +144,18 @@ export default class IPProtectionContentElement extends MozLitElement {
   #keyListener(event) {
     let keyCode = event.code;
     switch (keyCode) {
+      case "Tab":
       case "ArrowUp":
       // Intentional fall-through
       case "ArrowDown": {
         event.stopPropagation();
         event.preventDefault();
 
-        let direction =
-          keyCode == "ArrowDown"
-            ? Services.focus.MOVEFOCUS_FORWARD
-            : Services.focus.MOVEFOCUS_BACKWARD;
+        let isForward =
+          (keyCode == "Tab" && !event.shiftKey) || keyCode == "ArrowDown";
+        let direction = isForward
+          ? Services.focus.MOVEFOCUS_FORWARD
+          : Services.focus.MOVEFOCUS_BACKWARD;
         Services.focus.moveFocus(
           window,
           null,
@@ -309,8 +308,6 @@ export default class IPProtectionContentElement extends MozLitElement {
         rel="stylesheet"
         href="chrome://browser/content/ipprotection/ipprotection-content.css"
       />
-      <ipprotection-header titleId="ipprotection-title"></ipprotection-header>
-      <hr />
       <div id="ipprotection-content-wrapper">${content}</div>
     `;
   }

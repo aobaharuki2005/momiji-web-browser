@@ -24,7 +24,7 @@ ipprotection-experiment-badge =
   .label = BETA
 
 ipprotection-help-button =
-  .title = Open { -firefox-vpn-brand-name } support page
+  .tooltiptext = Open { -firefox-vpn-brand-name } support page
 
 ipprotection-title = { -firefox-vpn-brand-name }
 

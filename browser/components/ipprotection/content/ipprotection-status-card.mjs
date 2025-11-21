@@ -14,8 +14,6 @@ import {
 } from "chrome://browser/content/ipprotection/ipprotection-timer.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/ipprotection/ipprotection-header.mjs";
-// eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-toggle.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-site-settings-control.mjs";

@@ -822,6 +822,19 @@
              class="PanelUI-subView"
              mainview-with-header="true"
              has-custom-header="true">
+    <hbox id="PanelUI-ipprotection-header"
+         class="panel-header panel-header-with-info-button">
+        <html:h1>
+          <html:span id="ipprotection-header-content"
+                     data-l10n-id="ipprotection-title"></html:span>
+          <html:moz-badge
+            id="ipprotection-experiment-badge"
+            data-l10n-id="ipprotection-experiment-badge"
+          ></html:moz-badge>
+        </html:h1>
+    </hbox>
+    <toolbarseparator/>
+    <vbox id="PanelUI-ipprotection-content" class="panel-subview-body"/>
   </panelview>
 
   <panelview id="PanelUI-ipprotection-site-settings"
