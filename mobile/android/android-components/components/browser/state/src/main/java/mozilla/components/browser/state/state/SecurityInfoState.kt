@@ -4,16 +4,20 @@
 
 package mozilla.components.browser.state.state
 
+import java.security.cert.X509Certificate
+
 /**
  * A value type holding security information for a Session.
  *
  * @property secure true if the tab is currently pointed to a URL with
  * a valid SSL certificate, otherwise false.
- * @property host domain for which the SSL certificate was issued.
+ * @property host domain for which the certificate was issued.
  * @property issuer name of the certificate authority who issued the SSL certificate.
+ * @property certificate the certificate in question.
  */
 data class SecurityInfoState(
     val secure: Boolean = false,
     val host: String = "",
     val issuer: String = "",
+    val certificate: X509Certificate? = null,
 )

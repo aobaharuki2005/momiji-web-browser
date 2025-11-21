@@ -217,7 +217,7 @@ class EngineObserverTest {
                 textDirectiveUserActivation: Boolean,
             ) {
                 if (url.startsWith("https://")) {
-                    notifyObservers { onSecurityChange(true, "host", "issuer") }
+                    notifyObservers { onSecurityChange(true, "host", "issuer", null) }
                 } else {
                     notifyObservers { onSecurityChange(false) }
                 }

@@ -40,6 +40,7 @@ import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Headers.Names.E_TAG
 import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.state.Store
+import java.security.cert.X509Certificate
 
 private const val PAGE_LOAD_COMPLETION_PROGRESS = 100
 
@@ -158,11 +159,11 @@ internal class EngineObserver(
         }
     }
 
-    override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
+    override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?, certificate: X509Certificate?) {
         store.dispatch(
             ContentAction.UpdateSecurityInfoAction(
                 tabId,
-                SecurityInfoState(secure, host ?: "", issuer ?: ""),
+                SecurityInfoState(secure, host ?: "", issuer ?: "", certificate),
             ),
         )
     }

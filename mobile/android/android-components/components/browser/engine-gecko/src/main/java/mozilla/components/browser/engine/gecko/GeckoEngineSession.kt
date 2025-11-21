@@ -1080,11 +1080,11 @@ class GeckoEngineSession(
             }
 
             notifyObservers {
-                // TODO provide full certificate info: https://github.com/mozilla-mobile/android-components/issues/5557
                 onSecurityChange(
                     securityInfo.isSecure,
                     securityInfo.host,
                     securityInfo.getIssuerName(),
+                    securityInfo.certificate,
                 )
             }
         }

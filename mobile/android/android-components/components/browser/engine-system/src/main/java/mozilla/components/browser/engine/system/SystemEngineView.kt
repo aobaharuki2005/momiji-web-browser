@@ -187,6 +187,9 @@ class SystemEngineView @JvmOverloads constructor(
                         secure = cert != null,
                         host = cert?.let { url.toUri().host },
                         issuer = cert?.issuedBy?.oName,
+                        // Bug 2000336: when the minimum API version is 29,
+                        // this can use cert?.x509Certificate.
+                        certificate = null,
                     )
                 }
             }
