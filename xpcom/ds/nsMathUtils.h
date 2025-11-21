@@ -84,19 +84,6 @@ inline double NS_hypot(double aNum1, double aNum2) {
 }
 
 /**
- * Check whether a floating point number is finite (not +/-infinity and not a
- * NaN value).
- */
-inline bool NS_finite(double aNum) {
-#ifdef WIN32
-  // NOTE: '!!' casts an int to bool without spamming MSVC warning C4800.
-  return !!_finite(aNum);
-#else
-  return std::isfinite(aNum);
-#endif
-}
-
-/**
  * Returns the result of the modulo of x by y using a floored division.
  * fmod(x, y) is using a truncated division.
  * The main difference is that the result of this method will have the sign of
