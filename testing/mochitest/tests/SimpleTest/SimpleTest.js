@@ -1227,7 +1227,14 @@ SimpleTest.promiseClipboardChange = async function (
 
     let errorMsg = `Timed out while polling clipboard for ${
       preExpectedVal ? "initialized" : "requested"
-    } data, got: ${data}`;
+    } data, got: ${
+      flavor == "text/plain"
+        ? data
+            .replaceAll("\\", "\\\\")
+            .replaceAll("\t", "\\t")
+            .replaceAll("\n", "\\n")
+        : data
+    }`;
     SimpleTest.ok(expectFailure, errorMsg);
     if (!expectFailure) {
       throw new Error(errorMsg);

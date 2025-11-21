@@ -1113,8 +1113,9 @@ static void UserSelectRangesToAdd(nsRange* aItem,
   // We cannot directly call IsEditorSelection() because we may be in an
   // inconsistent state during Collapse() (we're cleared already but we haven't
   // got a new focus node yet).
-  if (IsEditorNode(aItem->GetStartContainer()) &&
-      IsEditorNode(aItem->GetEndContainer())) {
+  if (!StaticPrefs::dom_selection_exclude_non_selectable_nodes() ||
+      (IsEditorNode(aItem->GetStartContainer()) &&
+       IsEditorNode(aItem->GetEndContainer()))) {
     // Don't mess with the selection ranges for editing, editor doesn't really
     // deal well with multi-range selections.
     aRangesToAdd.AppendElement(aItem);
@@ -2114,8 +2115,7 @@ void Selection::SelectFramesOfFlattenedTreeOfContent(nsIContent* aContent,
 
 UniquePtr<SelectionDetails> Selection::LookUpSelection(
     nsIContent* aContent, uint32_t aContentOffset, uint32_t aContentLength,
-    UniquePtr<SelectionDetails> aDetailsHead, SelectionType aSelectionType,
-    bool aSlowCheck) {
+    UniquePtr<SelectionDetails> aDetailsHead, SelectionType aSelectionType) {
   if (!aContent) {
     return aDetailsHead;
   }

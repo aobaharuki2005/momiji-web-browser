@@ -210,7 +210,7 @@ load 1396466.html
 load 1397795.html
 load 1400701.html
 load 1403377.html
-load 1405771.html
+asserts(1) load 1405771.html
 load 1406109-1.html
 load 1411473.html
 load 1413815.html

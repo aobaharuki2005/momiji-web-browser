@@ -135,6 +135,7 @@
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCompatibility.h"
+#include "nsComputedDOMStyle.h"
 #include "nsContainerFrame.h"
 #include "nsContentList.h"
 #include "nsContentListDeclarations.h"
@@ -286,6 +287,56 @@ nsIFrame* nsIContent::GetPrimaryFrame(mozilla::FlushType aType) {
   }
 
   return frame;
+}
+
+bool nsIContent::IsSelectable() const {
+  if (!IsInComposedDoc() ||
+      // Generated content is not selectable.
+      IsGeneratedContentContainerForBefore() ||
+      IsGeneratedContentContainerForAfter() ||
+      // Fully invisible nodes like `Comment` should not be selectable.
+      (!IsElement() && !IsText() && !IsShadowRoot())) {
+    return false;
+  }
+  // If this is editable, this should be selectable even if `user-select` is set
+  // to `none`.
+  if (IsEditable()) {
+    return true;
+  }
+  // ...and same if this is a text control.
+  if (const auto* const textControlElement =
+          mozilla::TextControlElement::FromNode(this)) {
+    if (textControlElement->IsSingleLineTextControlOrTextArea()) {
+      return true;
+    }
+  }
+  // Otherwise, check `user-select` style with the layout if there is.
+  for (const nsIContent* content = this; content;
+       content = content->GetFlattenedTreeParent()) {
+    // First, ask the primary frame.
+    if (nsIFrame* const frame = content->GetPrimaryFrame()) {
+      // FYI: This does the same checks which were done before this loop so that
+      // return true for editable content or text control.
+      return frame->IsSelectable();
+    }
+    if (!content->IsElement()) {
+      // Okay, we're a `Text` or `ShadowRoot` in a `display:none` element. Let's
+      // check the frame or style of the ancestors in the flattened tree.
+      continue;
+    }
+    // Okay, we're an element whose `display` is `contents` or `none` or which
+    // is in a `display:none` ancestors, we should check whether this element is
+    // directly specified the `user-select` style and if it's not `auto`,
+    // consider whether this is selectable not unselectable.
+    const RefPtr<const mozilla::ComputedStyle> elementStyle =
+        nsComputedDOMStyle::GetComputedStyleNoFlush(content->AsElement());
+    if (elementStyle &&
+        elementStyle->UserSelect() != mozilla::StyleUserSelect::Auto) {
+      return elementStyle->UserSelect() != mozilla::StyleUserSelect::None;
+    }
+    // Finally, if `user-select:auto`, let's check the parent.
+  }
+  return false;
 }
 
 namespace mozilla::dom {

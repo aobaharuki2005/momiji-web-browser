@@ -5231,7 +5231,14 @@ UniquePtr<SelectionDetails> nsTextFrame::GetSelectionDetails() {
     return nullptr;
   }
   UniquePtr<SelectionDetails> details = frameSelection->LookUpSelection(
-      mContent, GetContentOffset(), GetContentLength(), false);
+      mContent, GetContentOffset(), GetContentLength(),
+      // We don't want to paint text as selected if this is not selectable.
+      // Note if this is editable, this is always treated as selectable, i.e.,
+      // if `user-select` is specified to `none` so that we never stop painting
+      // selections when there is IME composition which may need normal
+      // selection as a part of it.
+      IsSelectable() ? nsFrameSelection::IgnoreNormalSelection::No
+                     : nsFrameSelection::IgnoreNormalSelection::Yes);
   for (SelectionDetails* sd = details.get(); sd; sd = sd->mNext.get()) {
     sd->mStart += mContentOffset;
     sd->mEnd += mContentOffset;

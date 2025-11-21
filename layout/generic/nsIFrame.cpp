@@ -5042,7 +5042,8 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
     if (GetContent() && GetContent()->IsMaybeSelected()) {
       bool inSelection = false;
       UniquePtr<SelectionDetails> details = frameselection->LookUpSelection(
-          offsets.content, 0, offsets.EndOffset(), false);
+          offsets.content, 0, offsets.EndOffset(),
+          nsFrameSelection::IgnoreNormalSelection::No);
 
       //
       // If there are any details, check to see if the user clicked

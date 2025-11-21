@@ -494,8 +494,10 @@ void nsContainerFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
       newContent ? newContent->ComputeIndexOf_Deprecated(mContent) : 0;
 
   // look up to see what selection(s) are on this frame
-  UniquePtr<SelectionDetails> details =
-      frameSelection->LookUpSelection(newContent, offset, 1, false);
+  UniquePtr<SelectionDetails> details = frameSelection->LookUpSelection(
+      newContent, offset, 1,
+      IsSelectable() ? nsFrameSelection::IgnoreNormalSelection::No
+                     : nsFrameSelection::IgnoreNormalSelection::Yes);
   if (!details) {
     return;
   }

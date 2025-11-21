@@ -1536,7 +1536,7 @@ nsresult nsFrameSelection::TakeFocus(nsIContent& aNewFocus,
 
 UniquePtr<SelectionDetails> nsFrameSelection::LookUpSelection(
     nsIContent* aContent, int32_t aContentOffset, int32_t aContentLength,
-    bool aSlowCheck) const {
+    IgnoreNormalSelection aIgnoreNormalSelection) const {
   if (!aContent || !mPresShell) {
     return nullptr;
   }
@@ -1550,13 +1550,13 @@ UniquePtr<SelectionDetails> nsFrameSelection::LookUpSelection(
   }
 
   UniquePtr<SelectionDetails> details;
-
-  for (size_t j = 0; j < std::size(mDomSelections); j++) {
+  for (size_t j = aIgnoreNormalSelection == IgnoreNormalSelection::Yes ? 1 : 0;
+       j < std::size(mDomSelections); j++) {
     MOZ_ASSERT(mDomSelections[j]);
     details = mDomSelections[j]->LookUpSelection(
         aContent, static_cast<uint32_t>(aContentOffset),
         static_cast<uint32_t>(aContentLength), std::move(details),
-        kPresentSelectionTypes[j], aSlowCheck);
+        kPresentSelectionTypes[j]);
   }
 
   // This may seem counter intuitive at first. Highlight selections need to be
@@ -1570,7 +1570,7 @@ UniquePtr<SelectionDetails> nsFrameSelection::LookUpSelection(
     details = iter.second()->LookUpSelection(
         aContent, static_cast<uint32_t>(aContentOffset),
         static_cast<uint32_t>(aContentLength), std::move(details),
-        SelectionType::eHighlight, aSlowCheck);
+        SelectionType::eHighlight);
   }
 
   return details;

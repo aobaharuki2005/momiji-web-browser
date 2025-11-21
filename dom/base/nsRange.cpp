@@ -3358,6 +3358,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
           selectable = false;
         }
         if (selectable) {
+          // FIXME: Use content->IsSelectable()
           nsIFrame* frame = content->GetPrimaryFrame();
           for (nsIContent* p = content; !frame && (p = p->GetParent());) {
             frame = p->GetPrimaryFrame();
