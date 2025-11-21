@@ -51,7 +51,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isComposeLoginsEnabled = settings.enableComposeLogins,
         openLinksInApp = getOpenLinksInApp(settings),
         tabManagerOpeningAnimationEnabled = settings.tabManagerOpeningAnimationEnabled,
-        hasSeenBrowserToolbarCFR = settings.hasSeenBrowserToolbarCFR,
     )
 
     /**
@@ -81,7 +80,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
     override var isComposeLoginsEnabled: Boolean by updatedFeatureFlags::isComposeLoginsEnabled
     override var openLinksInExternalApp: OpenLinksInApp by updatedFeatureFlags::openLinksInApp
     override var tabManagerOpeningAnimationEnabled: Boolean by updatedFeatureFlags::tabManagerOpeningAnimationEnabled
-    override var hasSeenBrowserToolbarCFR: Boolean by updatedFeatureFlags::hasSeenBrowserToolbarCFR
 
     override fun applyFlagUpdates() {
         Log.i(TAG, "applyFlagUpdates: Trying to apply the updated feature flags: $updatedFeatureFlags")
@@ -121,7 +119,6 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.enableComposeLogins = featureFlags.isComposeLoginsEnabled
         setOpenLinksInApp(featureFlags.openLinksInApp)
         settings.tabManagerOpeningAnimationEnabled = featureFlags.tabManagerOpeningAnimationEnabled
-        settings.hasSeenBrowserToolbarCFR = featureFlags.hasSeenBrowserToolbarCFR
     }
 }
 
@@ -149,7 +146,6 @@ private data class FeatureFlags(
     var isComposeLoginsEnabled: Boolean,
     var openLinksInApp: OpenLinksInApp,
     var tabManagerOpeningAnimationEnabled: Boolean,
-    var hasSeenBrowserToolbarCFR: Boolean,
 )
 
 internal fun getETPPolicy(settings: Settings): ETPPolicy {
