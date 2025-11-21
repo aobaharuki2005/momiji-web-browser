@@ -1,0 +1,5 @@
+[DEFAULT]
+run-if = ["os != 'android'"]
+firefox-appdir = "browser"
+
+["test_intent_classifier.js"]

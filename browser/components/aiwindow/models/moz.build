@@ -4,3 +4,9 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning: General")
+
+MOZ_SRC_FILES += [
+    "IntentClassifier.sys.mjs",
+]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
