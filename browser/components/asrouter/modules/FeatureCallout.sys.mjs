@@ -2279,7 +2279,7 @@ export class FeatureCallout {
     "dismiss-button-background-active",
   ];
 
-  /** @type {Object<string, FeatureCalloutTheme>} */
+  /** @type {{[key: string]: FeatureCalloutTheme}} */
   static themePresets = {
     // For themed system pages like New Tab and Firefox View. Themed content
     // colors inherit from the user's theme through contentTheme.js.

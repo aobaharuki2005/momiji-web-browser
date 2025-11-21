@@ -385,9 +385,9 @@ exports.diff = diff;
  * Creates a hash map mapping node IDs to its parent node.
  *
  * @param {CensusTreeNode} node
- * @param {Object<number, TreeNode>} aggregator
+ * @param {{[key: number]: TreeNode}} aggregator
  *
- * @return {Object<number, TreeNode>}
+ * @return {{[key: number]: TreeNode}}
  */
 const createParentMap = function (node, getId = n => n.id, aggregator = {}) {
   if (node.children) {

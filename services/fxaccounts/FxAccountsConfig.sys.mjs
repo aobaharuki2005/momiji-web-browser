@@ -134,7 +134,7 @@ export var FxAccountsConfig = {
   /**
    * @param path should be parsable by the URL constructor first parameter.
    * @param {bool} [options.includeDefaultParams] If true include the default search params.
-   * @param {Object.<string, string>} [options.extraParams] Additionnal search params.
+   * @param {{[key: string]: string}} [options.extraParams] Additionnal search params.
    * @param {bool} [options.addAccountIdentifiers] if true we add the current logged-in user uid and email to the search params.
    */
   async _buildURL(

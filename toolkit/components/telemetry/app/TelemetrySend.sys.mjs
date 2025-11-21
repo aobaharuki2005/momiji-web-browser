@@ -1641,7 +1641,7 @@ export var TelemetrySendImpl = {
   /**
    * Return a promise that allows to wait on pending pings.
    *
-   * @return {Object<Promise>} A promise resolved when all the pending pings promises
+   * @return {Promise} A promise resolved when all the pending pings promises
    *         are resolved.
    */
   promisePendingPingActivity() {

@@ -2654,7 +2654,7 @@ export var XPIProvider = {
    * Unregisters the dictionaries in the given object, and re-registers
    * any built-in dictionaries in their place, when they exist.
    *
-   * @param {Object<nsIURI>} aDicts
+   * @param {{[key: string]: nsIURI}} aDicts
    *        An object containing a property with a dictionary language
    *        code and a nsIURI value for each dictionary to be
    *        unregistered.

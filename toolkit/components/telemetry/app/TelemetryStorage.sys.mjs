@@ -1558,7 +1558,7 @@ var TelemetryStorageImpl = {
    * Track any pending ping save tasks through the promise passed here.
    * This is needed to block on any outstanding ping save activity.
    *
-   * @param {Object<Promise>} The save promise to track.
+   * @param {Promise} The save promise to track.
    */
   _trackPendingPingSaveTask(promise) {
     let clear = () => this._activePendingPingSaves.delete(promise);
@@ -1569,7 +1569,7 @@ var TelemetryStorageImpl = {
   /**
    * Return a promise that allows to wait on pending pings being saved.
    *
-   * @return {Object<Promise>} A promise resolved when all the pending pings save promises
+   * @return {Promise} A promise resolved when all the pending pings save promises
    *         are resolved.
    */
   promisePendingPingSaves() {

@@ -20,9 +20,9 @@ const MAX_INT_32 = 2 ** 32;
  * Divides numerator fields by the denominator. Value is set to 0 if denominator is missing or 0.
  * Adds 0 value for all situations where there is a denominator but no numerator value.
  *
- * @param {Object.<string, number>} numerator
- * @param {Object.<string, number>} denominator
- * returns {Object.<string, number>}
+ * @param {{[key: string]: number}} numerator
+ * @param {{[key: string]: number}} denominator
+ * @returns {{[key: string]: number}}
  */
 export function divideDict(numerator, denominator) {
   const result = {};
@@ -323,7 +323,7 @@ export class FeatureModel {
    *
    * @param {object} config
    * @param {Array.<Array.<string|number>>} config.dataForIntervals Raw aggregate output from SQL query. Could be clicks or impressions
-   * @param {Object.<string, number>} config.indexSchema Map of keys to indices in each sub-array in dataForIntervals
+   * @param {{[key: string]: number}} config.indexSchema Map of keys to indices in each sub-array in dataForIntervals
    * @param {boolean} [config.applyThresholding=false] Whether to apply thresholds
    * @param {boolean} [config.applyDifferntialPrivacy=false] Whether to apply differential privacy. This will be used for sending to telemetry.
    * @returns
@@ -472,8 +472,8 @@ export class FeatureModel {
    * In all cases model_id is returned.
    *
    * @param {object} params - Function parameters.
-   * @param {Object<string, number>} params.clickDict - A dictionary of interest keys to click counts.
-   * @param {Object<string, number>} params.impressionDict - A dictionary of interest keys to impression counts.
+   * @param {{[key: string]: number}} params.clickDict - A dictionary of interest keys to click counts.
+   * @param {{[key: string]: number}} params.impressionDict - A dictionary of interest keys to impression counts.
    * @param {string} [params.model_id="unknown"] - Identifier for the model used in generating the vectors.
    * @param {boolean} [params.condensePrivateValues=true] - If true, condenses coarse private interest values into an array format.
    *

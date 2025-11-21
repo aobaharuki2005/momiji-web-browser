@@ -791,7 +791,7 @@ class WarningSettingConfig {
   /**
    *
    * @param {string} id - The unique setting ID for the setting created by this config
-   * @param {Object.<string,string>} prefMapping - A map from member name (to be used in the
+   * @param {{[key: string]: string}} prefMapping - A map from member name (to be used in the
    * `problematic` arg's arg) to pref string, containing all of the preferences this Setting
    * relies upon. On setup, this object will create properties for each entry here, where the
    * value is the result of Preferences.get(key).

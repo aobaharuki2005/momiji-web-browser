@@ -132,8 +132,8 @@ export function normUpdate(vals, input_normobj) {
  * Normalize a dictionary of {key: hist[]} using squared values and column-wise normalization.
  * Returns {key: normedHist[]} where each hist[j] is divided by sum_k hist_k[j]^2.
  *
- * @param {Object<string, number[]>} dict - A dictionary mapping keys to arrays of P(t|s) values.
- * @returns {Object<string, number[]>} New dictionary with normalized histograms (P(s|t)).
+ * @param {{[key: string]: number}} dict - A dictionary mapping keys to arrays of P(t|s) values.
+ * @returns {{[key: string]: number}} New dictionary with normalized histograms (P(s|t)).
  */
 export function normHistDict(dict) {
   const keys = Object.keys(dict);

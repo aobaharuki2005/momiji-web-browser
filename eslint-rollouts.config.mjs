@@ -309,7 +309,6 @@ export default [
       "jsdoc/check-param-names": "off",
       "jsdoc/check-property-names": "off",
       "jsdoc/check-tag-names": "off",
-      "jsdoc/check-types": "off",
       "jsdoc/require-param-type": "off",
       "jsdoc/require-returns-type": "off",
       "jsdoc/valid-types": "off",

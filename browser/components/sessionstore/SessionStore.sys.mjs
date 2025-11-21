@@ -1088,7 +1088,7 @@ var SessionStoreInternal = {
   /**
    * states for all currently opened windows
    *
-   * @type {object.<WindowID, WindowStateData>}
+   * @type {{[key: WindowID]: WindowStateData}}
    */
   _windows: {},
 
