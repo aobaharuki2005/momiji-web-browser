@@ -182,6 +182,7 @@ void SharedScriptCache::Invalidate() {
   if (sSingleton) {
     sSingleton->InvalidateInProcess();
   }
+  TRACE_FOR_TEST_0("memorycache:invalidate");
 }
 
 void SharedScriptCache::InvalidateInProcess() {
