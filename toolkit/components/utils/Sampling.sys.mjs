@@ -25,7 +25,7 @@ export var Sampling = {
 
   /**
    * @param {ArrayBuffer} buffer Data to convert
-   * @returns {String}    `buffer`'s content, converted to a hexadecimal string.
+   * @returns {string}    `buffer`'s content, converted to a hexadecimal string.
    */
   bufferToHex(buffer) {
     const hexCodes = [];
@@ -83,7 +83,7 @@ export var Sampling = {
    * into the first bucket.
    *
    * @param    {object}  input Input to hash to determine the sample.
-   * @param    {Number}  rate  Number between 0.0 and 1.0 to sample at. A value of
+   * @param    {number}  rate  Number between 0.0 and 1.0 to sample at. A value of
    *                           0.25 returns true 25% of the time.
    * @promises {boolean} True if the input is in the sample.
    */

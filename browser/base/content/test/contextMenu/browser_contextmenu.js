@@ -2591,7 +2591,7 @@ add_task(async function test_strip_on_share_on_secure_about_page() {
 /**
  * Selects the text of the element that matches the provided `selector`
  *
- * @param {String} selector
+ * @param {string} selector
  *        A selector passed to querySelector to find
  *        the element that will be referenced.
  */

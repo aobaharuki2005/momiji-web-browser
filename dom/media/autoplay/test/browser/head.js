@@ -1,9 +1,9 @@
 /**
  * Return a web-based URL for a given file based on the testing directory.
  *
- * @param {String} fileName
+ * @param {string} fileName
  *        file that caller wants its web-based url
- * @param {Boolean} crossOrigin [optional]
+ * @param {boolean} crossOrigin [optional]
  *        if set, then return a url with different origin. The default value is
  *        false.
  */

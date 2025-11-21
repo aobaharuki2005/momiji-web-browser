@@ -747,9 +747,9 @@ async function withPerfObserver(testFn, exceptions = {}, win = window) {
  *
  * @param {bool} keyed
  *        Pass true to synthesize typing the search string one key at a time.
- * @param {array} expectedReflowsFirstOpen
+ * @param {Array} expectedReflowsFirstOpen
  *        The array of expected reflow stacks when the panel is first opened.
- * @param {array} [expectedReflowsSecondOpen]
+ * @param {Array} [expectedReflowsSecondOpen]
  *        The array of expected reflow stacks when the panel is subsequently
  *        opened, if you're testing opening the panel twice.
  */

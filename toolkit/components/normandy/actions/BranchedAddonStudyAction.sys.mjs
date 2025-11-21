@@ -728,9 +728,9 @@ export class BranchedAddonStudyAction extends BaseStudyAction {
    * The deadline is 7 days from the first time that recipe failed, as
    * reckoned by the client's clock.
    *
-   * @param {Object} args
+   * @param {object} args
    * @param {Study} args.study The enrolled study to potentially unenroll.
-   * @param {String} args.reason If the study should end, the reason it is ending.
+   * @param {string} args.reason If the study should end, the reason it is ending.
    */
   async _considerTemporaryError({ study, reason }) {
     if (!study?.active) {

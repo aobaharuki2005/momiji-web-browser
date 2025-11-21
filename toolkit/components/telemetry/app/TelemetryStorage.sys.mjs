@@ -251,7 +251,7 @@ export var TelemetryStorage = {
   /**
    * Save a pending - outgoing - ping to disk and track it.
    *
-   * @param {Object} ping The ping data.
+   * @param {object} ping The ping data.
    * @return {Promise} Resolved when the ping was saved.
    */
   savePendingPing(ping) {
@@ -261,7 +261,7 @@ export var TelemetryStorage = {
   /**
    * Saves session data to disk.
    *
-   * @param {Object}  sessionData The session data.
+   * @param {object}  sessionData The session data.
    * @return {Promise} Resolved when the data was saved.
    */
   saveSessionData(sessionData) {
@@ -280,7 +280,7 @@ export var TelemetryStorage = {
   /**
    * Load a pending ping from disk by id.
    *
-   * @param {String} id The pings id.
+   * @param {string} id The pings id.
    * @return {Promise} Resolved with the loaded ping data.
    */
   loadPendingPing(id) {
@@ -290,7 +290,7 @@ export var TelemetryStorage = {
   /**
    * Remove a pending ping from disk by id.
    *
-   * @param {String} id The pings id.
+   * @param {string} id The pings id.
    * @return {Promise} Resolved when the ping was removed.
    */
   removePendingPing(id) {
@@ -419,8 +419,8 @@ export var TelemetryStorage = {
   /**
    * Loads a ping file.
    *
-   * @param {String} aFilePath The path of the ping file.
-   * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
+   * @param {string} aFilePath The path of the ping file.
+   * @return {Promise<object>} A promise resolved with the ping content or rejected if the
    *                           ping contains invalid data.
    */
   async loadPingFile(aFilePath) {
@@ -440,10 +440,10 @@ export var TelemetryStorage = {
   /**
    * Only used in tests, builds an archived ping path from the ping metadata.
    *
-   * @param {String} aPingId The ping id.
-   * @param {Object} aDate The ping creation date.
-   * @param {String} aType The ping type.
-   * @return {String} The full path to the archived ping.
+   * @param {string} aPingId The ping id.
+   * @param {object} aDate The ping creation date.
+   * @param {string} aType The ping type.
+   * @return {string} The full path to the archived ping.
    */
   _testGetArchivedPingPath(aPingId, aDate, aType) {
     return getArchivedPingPath(aPingId, aDate, aType);
@@ -453,7 +453,7 @@ export var TelemetryStorage = {
    * Only used in tests, this helper extracts ping metadata from a given filename.
    *
    * @param fileName {String} The filename.
-   * @return {Object} Null if the filename didn't match the expected form.
+   * @return {object} Null if the filename didn't match the expected form.
    *                  Otherwise an object with the extracted data in the form:
    *                  { timestamp: <number>,
    *                    id: <string>,
@@ -807,7 +807,7 @@ var TelemetryStorageImpl = {
   /**
    * Loads session data from the session data file.
    *
-   * @return {Promise<Object>} A promise resolved with an object on success,
+   * @return {Promise<object>} A promise resolved with an object on success,
    *                           with null otherwise.
    */
   loadSessionData() {
@@ -1868,9 +1868,9 @@ var TelemetryStorageImpl = {
   /**
    * Loads a ping file.
    *
-   * @param {String} aFilePath The path of the ping file.
-   * @param {Boolean} [aCompressed=false] If |true|, expects the file to be compressed using lz4.
-   * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
+   * @param {string} aFilePath The path of the ping file.
+   * @param {boolean} [aCompressed=false] If |true|, expects the file to be compressed using lz4.
+   * @return {Promise<object>} A promise resolved with the ping content or rejected if the
    *                           ping contains invalid data.
    * @throws {PingReadError} There was an error while reading the ping file from the disk.
    * @throws {PingParseError} There was an error while parsing the JSON content of the ping file.
@@ -1910,7 +1910,7 @@ var TelemetryStorageImpl = {
    * This helper extracts that data from a given filename.
    *
    * @param fileName {String} The filename.
-   * @return {Object} Null if the filename didn't match the expected form.
+   * @return {object} Null if the filename didn't match the expected form.
    *                  Otherwise an object with the extracted data in the form:
    *                  { timestamp: <number>,
    *                    id: <string>,
@@ -2121,10 +2121,10 @@ function getPingDirectory() {
 /**
  * Build the path to the archived ping.
  *
- * @param {String} aPingId The ping id.
- * @param {Object} aDate The ping creation date.
- * @param {String} aType The ping type.
- * @return {String} The full path to the archived ping.
+ * @param {string} aPingId The ping id.
+ * @param {object} aDate The ping creation date.
+ * @param {string} aType The ping type.
+ * @return {string} The full path to the archived ping.
  */
 function getArchivedPingPath(aPingId, aDate, aType) {
   // Get the ping creation date and generate the archive directory to hold it. Note
@@ -2176,8 +2176,8 @@ var getPendingPingSize = async function (aPingId) {
 /**
  * Check if a directory name is in the "YYYY-MM" format.
  *
- * @param {String} aDirName The name of the pings archive directory.
- * @return {Boolean} True if the directory name is in the right format, false otherwise.
+ * @param {string} aDirName The name of the pings archive directory.
+ * @return {boolean} True if the directory name is in the right format, false otherwise.
  */
 function isValidArchiveDir(aDirName) {
   const dirRegEx = /^[0-9]{4}-[0-9]{2}$/;
@@ -2187,9 +2187,9 @@ function isValidArchiveDir(aDirName) {
 /**
  * Gets a date object from an archive directory name.
  *
- * @param {String} aDirName The name of the pings archive directory. Must be in the YYYY-MM
+ * @param {string} aDirName The name of the pings archive directory. Must be in the YYYY-MM
  *        format.
- * @return {Object} A Date object or null if the dir name is not valid.
+ * @return {object} A Date object or null if the dir name is not valid.
  */
 function getDateFromArchiveDir(aDirName) {
   let [year, month] = aDirName.split("-");

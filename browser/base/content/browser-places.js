@@ -536,7 +536,7 @@ var PlacesCommandHook = {
   /**
    * Opens the Places Organizer.
    *
-   * @param {String} item The item to select in the organizer window,
+   * @param {string} item The item to select in the organizer window,
    *                      options are (case sensitive):
    *                      BookmarksMenu, BookmarksToolbar, UnfiledBookmarks,
    *                      AllBookmarks, History, Downloads.

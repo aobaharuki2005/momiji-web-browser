@@ -44,11 +44,11 @@ function waitForCondition(condition, nextTest, errorMsg) {
  * An utility function to write some text in the search input box
  * in a content page.
  *
- * @param {Object} browser
+ * @param {object} browser
  *        The browser that contains the content.
- * @param {String} text
+ * @param {string} text
  *        The string to write in the search field.
- * @param {String} fieldName
+ * @param {string} fieldName
  *        The name of the field to write to.
  */
 let typeInSearchField = async function (browser, text, fieldName) {

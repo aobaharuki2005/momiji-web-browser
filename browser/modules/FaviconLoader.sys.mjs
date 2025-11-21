@@ -387,7 +387,7 @@ class FaviconLoad {
  * about the size type and size dimension info.
  *
  * @param {Array} aSizes An array of strings about size.
- * @return {Number} A width of the icon in pixel.
+ * @return {number} A width of the icon in pixel.
  */
 function extractIconSize(aSizes) {
   let width = -1;

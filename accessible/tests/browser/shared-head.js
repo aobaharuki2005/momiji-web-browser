@@ -82,7 +82,7 @@ function currentContentDoc() {
  * @param   {nsIAccessibleEvent}  event
  *        Accessible event to be tested for a match.
  *
- * @return  {Boolean}
+ * @return  {boolean}
  *          True if accessible event's accessible object ID matches current
  *          document accessible ID.
  */
@@ -144,10 +144,10 @@ let Logger = {
  * Asynchronously set or remove content element's attribute (in content process
  * if e10s is enabled).
  *
- * @param  {Object}  browser  current "tabbrowser" element
- * @param  {String}  id       content element id
- * @param  {String}  attr     attribute name
- * @param  {String?} value    optional attribute value, if not present, remove
+ * @param  {object}  browser  current "tabbrowser" element
+ * @param  {string}  id       content element id
+ * @param  {string}  attr     attribute name
+ * @param  {string?} value    optional attribute value, if not present, remove
  *                            attribute
  * @return {Promise}          promise indicating that attribute is set/removed
  */
@@ -177,10 +177,10 @@ function invokeSetAttribute(browser, id, attr, value = null) {
  * e10s is enabled, or in fission process if fission is enabled and a fission
  * frame is present).
  *
- * @param  {Object}  browser  current "tabbrowser" element
- * @param  {String}  id       content element id
- * @param  {String}  aStyle   style property name
- * @param  {String?} aValue   optional style property value, if not present,
+ * @param  {object}  browser  current "tabbrowser" element
+ * @param  {string}  id       content element id
+ * @param  {string}  aStyle   style property name
+ * @param  {string?} aValue   optional style property value, if not present,
  *                            remove style
  * @return {Promise}          promise indicating that style is set/removed
  */
@@ -210,8 +210,8 @@ function invokeSetStyle(browser, id, style, value) {
  * enabled, or in fission process if fission is enabled and a fission frame is
  * present).
  *
- * @param  {Object}  browser  current "tabbrowser" element
- * @param  {String}  id       content element id
+ * @param  {object}  browser  current "tabbrowser" element
+ * @param  {string}  id       content element id
  * @return {Promise} promise  indicating that focus is set
  */
 function invokeFocus(browser, id) {
@@ -246,7 +246,7 @@ function getContentDPR(browser) {
  * enabled, or in fission process if fission is enabled and a fission frame is
  * present).
  *
- * @param  {Object}    browser  current "tabbrowser" element
+ * @param  {object}    browser  current "tabbrowser" element
  * @param  {Array}     args     arguments for the content task
  * @param  {Function}  task     content task function
  *
@@ -275,9 +275,9 @@ function invokeContentTask(browser, args, task) {
  * Compare process ID's between the top level content process and possible
  * remote/local iframe proccess.
  *
- * @param {Object}  browser
+ * @param {object}  browser
  *        Top level browser object for a tab.
- * @param {Boolean} isRemote
+ * @param {boolean} isRemote
  *        Indicates if we expect the iframe content process to be remote or not.
  */
 async function comparePIDs(browser, isRemote) {
@@ -314,7 +314,7 @@ function loadScripts(...scripts) {
 /**
  * Load a list of scripts into target's content.
  *
- * @param {Object} target
+ * @param {object} target
  *        target for loading scripts into
  * @param {Array}  scripts
  *        a list of scripts to load into content
@@ -418,11 +418,11 @@ function wrapWithIFrame(doc, options = {}) {
  * Takes an HTML snippet or HTML doc url and returns an encoded URI for a full
  * document with the snippet or the URL as a source for the IFRAME.
  *
- * @param {String} doc
+ * @param {string} doc
  *        a markup snippet or url.
- * @param {Object} options (see options in addAccessibleTask).
+ * @param {object} options (see options in addAccessibleTask).
  *
- * @return {String}
+ * @return {string}
  *        a base64 encoded data url of the document container the snippet.
  */
 function snippetToURL(doc, options = {}) {
@@ -685,12 +685,12 @@ function accessibleTask(doc, task, options = {}) {
  * A wrapper around browser test add_task that triggers an accessible test task
  * as a new browser test task with given document, data URL or markup snippet.
  *
- * @param  {String} doc
+ * @param  {string} doc
  *         URL (relative to current directory) or data URL or markup snippet
  *         that is used to test content with
  * @param  {Function|AsyncFunction} task
  *         a generator or a function with tests to run
- * @param  {null|Object} options
+ * @param  {null | object} options
  *         Options for running accessibility test tasks:
  *         - {Boolean} topLevel
  *           Flag to run the test with content in the top level content process.
@@ -797,7 +797,7 @@ function addAccessibleTask(doc, task, options = {}) {
  * Check if an accessible object has a defunct test.
  *
  * @param  {nsIAccessible}  accessible object to test defunct state for
- * @return {Boolean}        flag indicating defunct state
+ * @return {boolean}        flag indicating defunct state
  */
 function isDefunct(accessible) {
   let defunct = false;
@@ -819,7 +819,7 @@ function isDefunct(accessible) {
  * Get the DOM tag name for a given accessible.
  *
  * @param  {nsIAccessible}  accessible accessible
- * @return {String?}                   tag name of associated DOM node, or null.
+ * @return {string?}                   tag name of associated DOM node, or null.
  */
 function getAccessibleTagName(acc) {
   try {
@@ -834,7 +834,7 @@ function getAccessibleTagName(acc) {
  * looks for an accessible that matches based on its DOMNode id.
  *
  * @param  {nsIAccessible}  accessible root accessible
- * @param  {String}         id         id to look up accessible for
+ * @param  {string}         id         id to look up accessible for
  * @param  {Array?}         interfaces the interface or an array interfaces
  *                                     to query it/them from obtained accessible
  * @return {nsIAccessible?}            found accessible if any

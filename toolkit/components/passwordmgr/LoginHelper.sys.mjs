@@ -357,7 +357,7 @@ class ImportRowProcessor {
    * It makes sure that if the `timePasswordChanged` field is present it will be used to decide if it's a "no_change" or "added".
    * The entry with the oldest `timePasswordChanged` will be "added", the rest will be "no_change".
    *
-   * @returns {Object[]} An entry for each processed row containing how the row was processed and the login data.
+   * @returns {object[]} An entry for each processed row containing how the row was processed and the login data.
    */
   async processLoginsAndBuildSummary() {
     this.markLastTimePasswordChangedAsModified();
@@ -631,7 +631,7 @@ export const LoginHelper = {
   /**
    * Returns a new XPCOM property bag with the provided properties.
    *
-   * @param {Object} aProperties
+   * @param {object} aProperties
    *        Each property of this object is copied to the property bag.  This
    *        parameter can be omitted to return an empty property bag.
    *
@@ -659,7 +659,7 @@ export const LoginHelper = {
    *
    * @deprecated Use Services.logins.searchLoginsAsync instead.
    *
-   * @param {Object} aSearchOptions - A regular JS object to copy to a property bag before searching
+   * @param {object} aSearchOptions - A regular JS object to copy to a property bag before searching
    * @return {nsILoginInfo[]} - The result of calling searchLogins.
    */
   searchLoginsWithObject(aSearchOptions) {
@@ -694,9 +694,9 @@ export const LoginHelper = {
   },
 
   /**
-   * @param {String} aLoginOrigin - An origin value from a stored login's
+   * @param {string} aLoginOrigin - An origin value from a stored login's
    *                                origin or formActionOrigin properties.
-   * @param {String} aSearchOrigin - The origin that was are looking to match
+   * @param {string} aSearchOrigin - The origin that was are looking to match
    *                                 with aLoginOrigin. This would normally come
    *                                 from a form or page that we are considering.
    * @param {nsILoginFindOptions} aOptions - Options to affect whether the origin
@@ -1274,11 +1274,11 @@ export const LoginHelper = {
    *
    * @param {Element} element
    *                  the field we want to check.
-   * @param {Object} options
+   * @param {object} options
    * @param {bool} [options.ignoreConnect] - Whether to ignore checking isConnected
    *                                         of the element.
    *
-   * @returns {Boolean} true if the field can
+   * @returns {boolean} true if the field can
    *                    be treated as a password input
    */
   isPasswordFieldType(element, { ignoreConnect = false } = {}) {
@@ -1290,11 +1290,11 @@ export const LoginHelper = {
    *
    * @param {Element} element
    *                  the field we want to check.
-   * @param {Object} options
+   * @param {object} options
    * @param {bool} [options.ignoreConnect] - Whether to ignore checking isConnected
    *                                         of the element.
    *
-   * @returns {Boolean} true if the field type is one
+   * @returns {boolean} true if the field type is one
    *                    of the username types.
    */
   isUsernameFieldType(element, { ignoreConnect = false } = {}) {
@@ -1421,8 +1421,8 @@ export const LoginHelper = {
    * For each login, add the login to the password manager if a similar one
    * doesn't already exist. Merge it otherwise with the similar existing ones.
    *
-   * @param {Object[]} loginDatas - For each login, the data that needs to be added.
-   * @returns {Object[]} An entry for each processed row containing how the row was processed and the login data.
+   * @param {object[]} loginDatas - For each login, the data that needs to be added.
+   * @returns {object[]} An entry for each processed row containing how the row was processed and the login data.
    */
   async maybeImportLogins(loginDatas) {
     // by setting this flag we ensure no events are submitted

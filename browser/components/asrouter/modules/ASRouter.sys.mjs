@@ -1770,7 +1770,7 @@ export class _ASRouter {
    * for the given items, then store it and return it.
    *
    * @param {obj} state Reference to ASRouter internal state
-   * @param {array} items Can be messages, providers or groups that we count impressions for
+   * @param {Array} items Can be messages, providers or groups that we count impressions for
    * @param {string} impressionsString Key name for entry in state where impressions are stored
    */
   _cleanupImpressionsForItems(state, items, impressionsString) {
@@ -1821,7 +1821,7 @@ export class _ASRouter {
    * - Updates the shared database after each cleanup operation
    *
    * @param {obj} state Reference to ASRouter internal state
-   * @param {array} items are messages that we count impressions for
+   * @param {Array} items are messages that we count impressions for
    * @param {string} impressionsString Key name for entry in state where impressions are stored
    * @returns {obj} Updated impressions object with cleaned data
    */

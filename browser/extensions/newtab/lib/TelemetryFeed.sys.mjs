@@ -299,7 +299,7 @@ export class TelemetryFeed {
   /**
    * Retrieves most recently followed sections (maximum 2 sections)
    *
-   * @returns {String[]} comma separated string of section UUID's
+   * @returns {string[]} comma separated string of section UUID's
    */
   getFollowedSections() {
     const sections =
@@ -1966,8 +1966,8 @@ export class TelemetryFeed {
   /**
    * Handle impression stats actions from Discovery Stream.
    *
-   * @param {String} port  The session port with which this is associated
-   * @param {Object} data  The impression data structured as {source: "SOURCE", tiles: [{id: 123}]}
+   * @param {string} port  The session port with which this is associated
+   * @param {object} data  The impression data structured as {source: "SOURCE", tiles: [{id: 123}]}
    */
   handleDiscoveryStreamImpressionStats(port, data) {
     let session = this.sessions.get(port);
@@ -2055,8 +2055,8 @@ export class TelemetryFeed {
    * @note Any existing keys with the same names already in the
    * session perf object will be overwritten by values passed in here.
    *
-   * @param {String} port  The session with which this is associated
-   * @param {Object} data  The perf data to be
+   * @param {string} port  The session with which this is associated
+   * @param {object} data  The perf data to be
    */
   saveSessionPerfData(port, data) {
     // XXX should use try/catch and send a bad state indicator if this

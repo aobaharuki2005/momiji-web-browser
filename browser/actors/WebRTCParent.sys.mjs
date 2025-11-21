@@ -827,7 +827,7 @@ function prompt(aActor, aBrowser, aRequest) {
       /**
        * Prepare the device selector for one kind of device.
        *
-       * @param {Object[]} devices - available devices of this kind.
+       * @param {object[]} devices - available devices of this kind.
        * @param {string} IDPrefix - indicating kind of device and so
        *   associated UI elements.
        * @param {string[]} describedByIDs - an array to which might be

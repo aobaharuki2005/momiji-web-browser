@@ -4,7 +4,7 @@ const { Cc, Ci, Cu: ChromeUtils } = SpecialPowers;
  * Converts a property bag to object.
  *
  * @param {nsIPropertyBag} bag - The property bag to convert
- * @returns {Object} - The object representation of the nsIPropertyBag
+ * @returns {object} - The object representation of the nsIPropertyBag
  */
 function propBagToObject(bag) {
   if (!(bag instanceof Ci.nsIPropertyBag)) {

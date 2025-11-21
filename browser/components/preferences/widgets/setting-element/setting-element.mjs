@@ -14,7 +14,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 /** @import { AttributePart } from "chrome://global/content/vendor/lit.all.mjs" */
 
 /**
- * @typedef {Object} SettingElementConfig
+ * @typedef {object} SettingElementConfig
  * @property {string} [id] - The ID for the Setting, this should match the layout id
  * @property {string} [l10nId] - The Fluent l10n ID for the setting
  * @property {Record<string, string>} [l10nArgs] - An object containing l10n IDs and their values that will be translated with Fluent

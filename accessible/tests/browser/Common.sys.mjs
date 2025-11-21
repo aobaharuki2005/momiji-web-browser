@@ -132,7 +132,7 @@ export const CommonUtils = {
    * like ::details-content.
    *
    * @param  {nsIAccessible} accessible  accessible
-   * @return {String?}                   DOMNode id if available
+   * @return {string?}                   DOMNode id if available
    */
   getAccessibleDOMNodeID(accessible) {
     try {

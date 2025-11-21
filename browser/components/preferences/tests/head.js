@@ -274,7 +274,7 @@ async function waitForAndAssertPrefState(pref, expectedValue, message) {
  */
 async function mockDefaultFxAInstance() {
   /**
-   * @typedef {Object} MockFxAUtilityFunctions
+   * @typedef {object} MockFxAUtilityFunctions
    * @property {function():void} mock - Makes the dummy values default, creating
    *                             the illusion of a production FxA instance.
    * @property {function():void} unmock - Restores the true defaults, creating

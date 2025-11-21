@@ -145,18 +145,18 @@ export var TelemetryController = Object.freeze({
    * it should only contain alphanumeric characters and '-' for separation, i.e. satisfy:
    * /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i
    *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} [aOptions] Options object.
-   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   * @param {string} aType The type of the ping.
+   * @param {object} aPayload The actual data payload for the ping.
+   * @param {object} [aOptions] Options object.
+   * @param {boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
-   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
+   * @param {boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
-   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   * @param {object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
+   * @param {string} [aOptions.overrideClientId=undefined] if set, override the
    *                 client id to the provided value. Implies aOptions.addClientId=true.
-   * @param {String} [aOptions.overrideProfileGroupId=undefined] if set, override the
+   * @param {string} [aOptions.overrideProfileGroupId=undefined] if set, override the
    *                 profile group id to the provided value. Implies aOptions.addClientId=true.
    * @returns {Promise} Test-only - a promise that resolves with the ping id once the ping is stored or sent.
    */
@@ -181,19 +181,19 @@ export var TelemetryController = Object.freeze({
   /**
    * Save a ping to disk.
    *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} [aOptions] Options object.
-   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   * @param {string} aType The type of the ping.
+   * @param {object} aPayload The actual data payload for the ping.
+   * @param {object} [aOptions] Options object.
+   * @param {boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
-   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
+   * @param {boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
-   * @param {Boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
+   * @param {boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
    *                  if found.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   * @param {object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {string} [aOptions.overrideClientId=undefined] if set, override the
    *                 client id to the provided value. Implies aOptions.addClientId=true.
-   * @param {String} [aOptions.overrideProfileGroupId=undefined] if set, override the
+   * @param {string} [aOptions.overrideProfileGroupId=undefined] if set, override the
    *                 profile group id to the provided value. Implies aOptions.addClientId=true.
    *
    * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
@@ -221,7 +221,7 @@ export var TelemetryController = Object.freeze({
   /**
    * Save an aborted-session ping to disk without adding it to the pending pings.
    *
-   * @param {Object} aPayload The ping payload data.
+   * @param {object} aPayload The ping payload data.
    * @return {Promise} Promise that is resolved when the ping is saved.
    */
   saveAbortedSessionPing(aPayload) {
@@ -368,19 +368,19 @@ var Impl = {
   /**
    * Assemble a complete ping following the common ping format specification.
    *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} aOptions Options object.
-   * @param {Boolean} aOptions.addClientId true if the ping should contain the client
+   * @param {string} aType The type of the ping.
+   * @param {object} aPayload The actual data payload for the ping.
+   * @param {object} aOptions Options object.
+   * @param {boolean} aOptions.addClientId true if the ping should contain the client
    *                  id, false otherwise.
-   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   * @param {boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   * @param {object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {string} [aOptions.overrideClientId=undefined] if set, override the
    *                 client id to the provided value. Implies aOptions.addClientId=true.
-   * @param {String} [aOptions.overrideProfileGroupId=undefined] if set, override the
+   * @param {string} [aOptions.overrideProfileGroupId=undefined] if set, override the
    *                 profile group id to the provided value. Implies aOptions.addClientId=true.
-   * @returns {Object} An object that contains the assembled ping data.
+   * @returns {object} An object that contains the assembled ping data.
    */
   assemblePing: function assemblePing(aType, aPayload, aOptions = {}) {
     this._log.trace(
@@ -440,18 +440,18 @@ var Impl = {
    * Depending on configuration, the ping will be sent to the server (immediately or later)
    * and archived locally.
    *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} [aOptions] Options object.
-   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   * @param {string} aType The type of the ping.
+   * @param {object} aPayload The actual data payload for the ping.
+   * @param {object} [aOptions] Options object.
+   * @param {boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
-   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
+   * @param {boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
-   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   * @param {object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
+   * @param {string} [aOptions.overrideClientId=undefined] if set, override the
    *                 client id to the provided value. Implies aOptions.addClientId=true.
-   * @param {String} [aOptions.overrideProfileGroupId=undefined] if set, override the
+   * @param {string} [aOptions.overrideProfileGroupId=undefined] if set, override the
    *                 profile group id to the provided value. Implies aOptions.addClientId=true.
    * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
    */
@@ -505,18 +505,18 @@ var Impl = {
   /**
    * Submit ping payloads to Telemetry.
    *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} [aOptions] Options object.
-   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   * @param {string} aType The type of the ping.
+   * @param {object} aPayload The actual data payload for the ping.
+   * @param {object} [aOptions] Options object.
+   * @param {boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
-   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
+   * @param {boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
-   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   * @param {object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
+   * @param {string} [aOptions.overrideClientId=undefined] if set, override the
    *                 client id to the provided value. Implies aOptions.addClientId=true.
-   * @param {String} [aOptions.overrideProfileGroupId=undefined] if set, override the
+   * @param {string} [aOptions.overrideProfileGroupId=undefined] if set, override the
    *                 profile group id to the provided value. Implies aOptions.addClientId=true.
    * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
    */
@@ -565,18 +565,18 @@ var Impl = {
   /**
    * Save a ping to disk.
    *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} aOptions Options object.
-   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
+   * @param {string} aType The type of the ping.
+   * @param {object} aPayload The actual data payload for the ping.
+   * @param {object} aOptions Options object.
+   * @param {boolean} aOptions.addClientId true if the ping should contain the client id,
    *                  false otherwise.
-   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   * @param {boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
-   * @param {Boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @param {String} [aOptions.overrideClientId=undefined] if set, override the
+   * @param {boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
+   * @param {object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {string} [aOptions.overrideClientId=undefined] if set, override the
    *                 client id to the provided value. Implies aOptions.addClientId=true.
-   * @param {String} [aOptions.overrideProfileGroupId=undefined] if set, override the
+   * @param {string} [aOptions.overrideProfileGroupId=undefined] if set, override the
    *                 profile group id to the provided value. Implies aOptions.addClientId=true.
    *
    * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
@@ -641,7 +641,7 @@ var Impl = {
   /**
    * Save an aborted-session ping to disk without adding it to the pending pings.
    *
-   * @param {Object} aPayload The ping payload data.
+   * @param {object} aPayload The ping payload data.
    * @return {Promise} Promise that is resolved when the ping is saved.
    */
   saveAbortedSessionPing(aPayload) {

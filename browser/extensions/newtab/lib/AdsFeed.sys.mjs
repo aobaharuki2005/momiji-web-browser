@@ -169,7 +169,7 @@ export class AdsFeed {
    * Normalize new Unified Ads API response into
    * previous Contile ads response
    *
-   * @param {array} - Array of UAPI placement objects ("newtab_tile_1", etc.)
+   * @param {Array} - Array of UAPI placement objects ("newtab_tile_1", etc.)
    * @returns {object} - Object containing array of formatted UAPI objects to match legacy Contile system
    */
   _normalizeTileData(data) {
@@ -270,7 +270,7 @@ export class AdsFeed {
    * Fetch data from the Mozilla Ad Routing Service (MARS) unified ads API
    * This function is designed to get whichever ads types are needed (tiles, spocs)
    *
-   * @param {array} supportedAdTypes
+   * @param {Array} supportedAdTypes
    * @returns {object} Response object containing ad information from MARS
    */
   async fetchData(supportedAdTypes) {

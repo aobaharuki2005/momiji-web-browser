@@ -36,7 +36,7 @@ class WindowSpamProtection {
    * download's source URL. This is done so we can track the number of times a
    * given download has been blocked.
    *
-   * @type {Map<String, DownloadSpam>}
+   * @type {Map<string, DownloadSpam>}
    */
   _downloadSpamForUrl = new Map();
 
@@ -45,7 +45,7 @@ class WindowSpamProtection {
    * listeners attached. They will be attached when the spamList is created
    * (i.e. when the first spam download is blocked).
    *
-   * @type {Set<Object>}
+   * @type {Set<object>}
    */
   _pendingViews = new Set();
 
@@ -55,7 +55,7 @@ class WindowSpamProtection {
    * sessions will have no blocked downloads. So we don't want to create a
    * DownloadList unless we actually need it.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   _blocking = false;
 
@@ -95,7 +95,7 @@ class WindowSpamProtection {
    * Add a blocked download to the spamList or increment the count of an
    * existing blocked download, then notify listeners about this.
    *
-   * @param {String} url
+   * @param {string} url
    */
   addDownloadSpam(url) {
     this._blocking = true;
@@ -143,7 +143,7 @@ class WindowSpamProtection {
   /**
    * Remove the download spam data for a given source URL.
    *
-   * @param {String} url
+   * @param {string} url
    */
   removeDownloadSpamForUrl(url) {
     if (this._downloadSpamForUrl.has(url)) {
@@ -158,7 +158,7 @@ class WindowSpamProtection {
    * Set up a downloads view (e.g. the downloads panel) to receive notifications
    * about downloads in the spamList.
    *
-   * @param {Object} view An object that implements handlers for download
+   * @param {object} view An object that implements handlers for download
    *                      related notifications, like onDownloadAdded.
    */
   registerView(view) {
@@ -216,7 +216,7 @@ export class DownloadSpamProtection {
    * download was blocked. This is invoked when a download is blocked by
    * nsExternalAppHandler::IsDownloadSpam
    *
-   * @param {String} url
+   * @param {string} url
    * @param {Window} window
    */
   update(url, window) {
@@ -250,7 +250,7 @@ export class DownloadSpamProtection {
    * Remove the download spam data for a given source URL in the passed window,
    * if any exists.
    *
-   * @param {String} url
+   * @param {string} url
    * @param {Window} window
    */
   removeDownloadSpamForWindow(url, window) {
@@ -264,7 +264,7 @@ export class DownloadSpamProtection {
    * downloads view. The bulk of resources won't be expended until a download is
    * blocked. To add multiple views, call this method multiple times.
    *
-   * @param {Object} view An object that implements handlers for download
+   * @param {object} view An object that implements handlers for download
    *                      related notifications, like onDownloadAdded.
    * @param {Window} window
    */

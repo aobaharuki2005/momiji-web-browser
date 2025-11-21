@@ -161,10 +161,10 @@ function useTriggeringPrincipal(principal = undefined) {
  *
  * @param {MozBrowser} browser - Browser to navigate.
  * @param {string} scheme - Scheme of the test url. e.g. irc
- * @param {Object} [options] - Test options.
- * @param {Object} [options.permDialogOptions] - Test options for the permission
+ * @param {object} [options] - Test options.
+ * @param {object} [options.permDialogOptions] - Test options for the permission
  * dialog. If defined, we expect this dialog to be shown.
- * @param {Object} [options.chooserDialogOptions] - Test options for the chooser
+ * @param {object} [options.chooserDialogOptions] - Test options for the chooser
  * dialog. If defined, we expect this dialog to be shown.
  * @param {Function} [options.triggerLoad] - An async callback function to
  * trigger the load. Will be passed the browser and scheme to use.
@@ -330,7 +330,7 @@ async function testOpenProto(
  * @param {dialog} dialogEl
  * @param {string} dialogType - String identifier of dialog type.
  * Either "permission" or "chooser".
- * @param {Object} options - Test Options.
+ * @param {object} options - Test Options.
  * @param {boolean} [options.hasCheckbox] - Whether the dialog is expected to
  * have a visible checkbox.
  * @param {boolean} [options.hasCheckboxState] - The check state of the checkbox

@@ -41,10 +41,10 @@ const matchCurrentScreenTargeting = (prefName, screenIdRegEx = ".*") => {
  * Creates a "hasn't been viewed in > 24 hours"
  * JEXL string and adds it to each message specified
  *
- * @param {array} messageIds - IDs of messages that the targeting string will be added to
+ * @param {Array} messageIds - IDs of messages that the targeting string will be added to
  * @param {string} prefix - The prefix of messageIDs that will used to create the JEXL string
- * @param {array} messages - The array of messages that will be edited
- * @returns {array} - The array of messages with the appropriate targeting strings edited
+ * @param {Array} messages - The array of messages that will be edited
+ * @returns {Array} - The array of messages with the appropriate targeting strings edited
  */
 function add24HourImpressionJEXLTargeting(
   messageIds,

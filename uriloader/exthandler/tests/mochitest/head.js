@@ -516,7 +516,7 @@ function waitForExtProtocolSandboxError() {
 /**
  * Run the external protocol sandbox test using iframes.
  *
- * @param {Object} options
+ * @param {object} options
  * @param {boolean} options.blocked - Whether the navigation should be blocked.
  * @param {string} options.sandbox -   See {@link navigateExternalProtoFromIframe}.
  * @param {string} options.useCSPSandbox -  See {@link navigateExternalProtoFromIframe}.

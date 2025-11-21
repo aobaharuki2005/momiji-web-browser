@@ -340,7 +340,7 @@ export class nsContentDispatchChooser {
    * we will fallback to a standalone window.
    *
    * @param {string} aDialogURL - URL of the dialog to open.
-   * @param {Object} aDialogArgs - Arguments passed to the dialog.
+   * @param {object} aDialogArgs - Arguments passed to the dialog.
    * @param {BrowsingContext} [aBrowsingContext] - BrowsingContext associated
    * with the tab the dialog is associated with.
    */

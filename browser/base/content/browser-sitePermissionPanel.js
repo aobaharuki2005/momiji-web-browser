@@ -982,7 +982,7 @@ var gPermissionPanel = {
    * Create a permission item for a WebRTC permission. May return null if there
    * already is a suitable permission item for this device type.
    *
-   * @param {Object} permission - Permission object.
+   * @param {object} permission - Permission object.
    * @param {string} id - Permission ID without suffix.
    * @param {string} [key] - Secondary permission key.
    * @returns {xul:hbox|null} - Element for permission or null if permission

@@ -617,7 +617,7 @@ class ChromeActions {
    * Set the different editor states in order to be able to update the context
    * menu.
    *
-   * @param {Object} details
+   * @param {object} details
    */
   updateEditorStates({ details }) {
     const doc = this.domWindow.document;

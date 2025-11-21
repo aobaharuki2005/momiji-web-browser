@@ -402,9 +402,9 @@ export class FxAccounts {
    * result if it's not older than 4 hours. If the cached data is too old or
    * missing, it fetches new data and updates the cache.
    *
-   * @typedef {Object} AttachedClient
-   * @property {String} id - OAuth `client_id` of the client.
-   * @property {Number} lastAccessedDaysAgo - How many days ago the client last
+   * @typedef {object} AttachedClient
+   * @property {string} id - OAuth `client_id` of the client.
+   * @property {number} lastAccessedDaysAgo - How many days ago the client last
    *    accessed the FxA server APIs.
    *
    * @returns {Array.<AttachedClient>} A list of attached clients.
@@ -1204,8 +1204,8 @@ FxAccountsInternal.prototype = {
    * It's split out into a separate method so that we can easily
    * stash in-flight calls in a cache.
    *
-   * @param {String} scopeString
-   * @param {Number} ttl
+   * @param {string} scopeString
+   * @param {number} ttl
    * @returns {Promise<string>}
    * @private
    */

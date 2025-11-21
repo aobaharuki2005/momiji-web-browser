@@ -588,7 +588,7 @@ export class ScreenshotsOverlay {
    * metaKey for macOS. ctrlKey for Windows and Linux.
    *
    * @param {Event} event The keydown event
-   * @returns {Boolean} True if the accel key is pressed, false otherwise.
+   * @returns {boolean} True if the accel key is pressed, false otherwise.
    */
   getAccelKey(event) {
     if (AppConstants.platform === "macosx") {
@@ -1140,7 +1140,7 @@ export class ScreenshotsOverlay {
    *
    * @param {KeyEvent} event The keydown event
    *
-   * @returns {Boolean} True if the event was handled here, otherwise false.
+   * @returns {boolean} True if the event was handled here, otherwise false.
    */
   handleKeyDownOnButton(event) {
     switch (event.originalTarget) {
@@ -1176,7 +1176,7 @@ export class ScreenshotsOverlay {
   /**
    * Dispatch a custom event to the ScreenshotsComponentChild actor
    *
-   * @param {String} eventType The name of the event
+   * @param {string} eventType The name of the event
    * @param {object} detail Extra details to send to the child actor
    */
   #dispatchEvent(eventType, detail) {
@@ -1192,8 +1192,8 @@ export class ScreenshotsOverlay {
   /**
    * Set a new state for the overlay
    *
-   * @param {String} newState
-   * @param {Object} options (optional) Options for calling start of state method
+   * @param {string} newState
+   * @param {object} options (optional) Options for calling start of state method
    */
   #setState(newState, options = {}) {
     if (this.#state === STATES.SELECTED && newState === STATES.CROSSHAIRS) {
@@ -1319,8 +1319,8 @@ export class ScreenshotsOverlay {
    * Dragging has started so we set the initial selection region and set the
    * state to draggingReady.
    *
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
+   * @param {number} pageX The x position relative to the page
+   * @param {number} pageY The y position relative to the page
    */
   crosshairsDragStart(pageX, pageY) {
     this.selectionRegion.dimensions = {
@@ -1337,9 +1337,9 @@ export class ScreenshotsOverlay {
    * If the background is clicked we set the state to crosshairs
    * otherwise set the state to resizing
    *
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
-   * @param {String} targetId The id of the event target
+   * @param {number} pageX The x position relative to the page
+   * @param {number} pageY The y position relative to the page
+   * @param {string} targetId The id of the event target
    */
   selectedDragStart(pageX, pageY, targetId) {
     if (targetId === this.screenshotsContainer.id) {
@@ -1357,8 +1357,8 @@ export class ScreenshotsOverlay {
    * Draw the eyes in the preview container and find the element currently
    * being hovered.
    *
-   * @param {Number} clientX The x position relative to the viewport
-   * @param {Number} clientY The y position relative to the viewport
+   * @param {number} clientX The x position relative to the viewport
+   * @param {number} clientY The y position relative to the viewport
    */
   crosshairsMove(clientX, clientY) {
     this.drawPreviewEyes(clientX, clientY);
@@ -1370,8 +1370,8 @@ export class ScreenshotsOverlay {
    * Set the selection region dimensions and if the region is at least 40
    * pixels diagnally in distance, set the state to dragging.
    *
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
+   * @param {number} pageX The x position relative to the page
+   * @param {number} pageY The y position relative to the page
    */
   draggingReadyDrag(pageX, pageY) {
     this.selectionRegion.dimensions = {
@@ -1388,8 +1388,8 @@ export class ScreenshotsOverlay {
    * Scroll if along the edge of the viewport, update the selection region
    * dimensions and draw the selection container.
    *
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
+   * @param {number} pageX The x position relative to the page
+   * @param {number} pageY The y position relative to the page
    */
   draggingDrag(pageX, pageY) {
     this.scrollIfByEdge(pageX, pageY);
@@ -1404,8 +1404,8 @@ export class ScreenshotsOverlay {
   /**
    * Resize the selection region depending on the mover that started the resize.
    *
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
+   * @param {number} pageX The x position relative to the page
+   * @param {number} pageY The y position relative to the page
    */
   resizingDrag(pageX, pageY) {
     this.scrollIfByEdge(pageX, pageY);
@@ -1529,7 +1529,7 @@ export class ScreenshotsOverlay {
    * container and set the state to selected.
    * Otherwise set the state to crosshairs.
    *
-   * @param {Object} options (optional) Options for passing to setState method
+   * @param {object} options (optional) Options for passing to setState method
    */
   draggingReadyDragEnd(options = {}) {
     if (this.hoverElementRegion.isRegionValid) {
@@ -1547,8 +1547,8 @@ export class ScreenshotsOverlay {
   /**
    * Update the selection region dimensions and set the state to selected.
    *
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
+   * @param {number} pageX The x position relative to the page
+   * @param {number} pageY The y position relative to the page
    */
   draggingDragEnd(pageX, pageY) {
     this.selectionRegion.dimensions = {
@@ -1564,8 +1564,8 @@ export class ScreenshotsOverlay {
    * Update the selection region dimensions by calling `resizingDrag` and set
    * the state to selected.
    *
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
+   * @param {number} pageX The x position relative to the page
+   * @param {number} pageY The y position relative to the page
    */
   resizingDragEnd(pageX, pageY) {
     this.resizingDrag(pageX, pageY);
@@ -1598,8 +1598,8 @@ export class ScreenshotsOverlay {
   /**
    * Draw the preview eyes pointer towards the mouse.
    *
-   * @param {Number} clientX The x position relative to the viewport
-   * @param {Number} clientY The y position relative to the viewport
+   * @param {number} clientX The x position relative to the viewport
+   * @param {number} clientY The y position relative to the viewport
    */
   drawPreviewEyes(clientX, clientY) {
     let { clientWidth, clientHeight } = this.windowDimensions.dimensions;
@@ -1806,8 +1806,8 @@ export class ScreenshotsOverlay {
    * If a reasonable element is found, draw the hover element container for
    * that element region.
    *
-   * @param {Number} clientX The x position relative to the viewport
-   * @param {Number} clientY The y position relative to the viewport
+   * @param {number} clientX The x position relative to the viewport
+   * @param {number} clientY The y position relative to the viewport
    */
   async handleElementHover(clientX, clientY) {
     this.setPointerEventsNone();
@@ -1850,8 +1850,8 @@ export class ScreenshotsOverlay {
   /**
    * Scroll the viewport if near one or both of the edges.
    *
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
+   * @param {number} pageX The x position relative to the page
+   * @param {number} pageY The y position relative to the page
    */
   scrollIfByEdge(pageX, pageY) {
     let { scrollX, scrollY, clientWidth, clientHeight } =
@@ -1877,8 +1877,8 @@ export class ScreenshotsOverlay {
   /**
    * Scroll the window by the given amount.
    *
-   * @param {Number} x The x amount to scroll
-   * @param {Number} y The y amount to scroll
+   * @param {number} x The x amount to scroll
+   * @param {number} y The y amount to scroll
    */
   scrollWindow(x, y) {
     this.window.scrollBy(x, y);
@@ -1889,7 +1889,7 @@ export class ScreenshotsOverlay {
    * The page was resized or scrolled. We need to update the screenshots
    * container size so we don't draw outside the page bounds.
    *
-   * @param {String} eventType will be "scroll" or "resize"
+   * @param {string} eventType will be "scroll" or "resize"
    */
   async updateScreenshotsOverlayDimensions(eventType) {
     let updateWindowDimensionsPromise = this.updateWindowDimensions();
@@ -1916,7 +1916,7 @@ export class ScreenshotsOverlay {
   /**
    * Returns the window's dimensions for the current window.
    *
-   * @return {Object} An object containing window dimensions
+   * @return {object} An object containing window dimensions
    *   {
    *     clientWidth: The width of the viewport
    *     clientHeight: The height of the viewport

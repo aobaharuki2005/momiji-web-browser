@@ -105,10 +105,10 @@ async function waitForAllowListState(allowedSiteHosts) {
 /**
  * Dispatch a RemoteSettings "sync" event.
  *
- * @param {Object} data - The event's data payload.
- * @param {Object} [data.created] - Records that were created.
- * @param {Object} [data.updated] - Records that were updated.
- * @param {Object} [data.deleted] - Records that were removed.
+ * @param {object} data - The event's data payload.
+ * @param {object} [data.created] - Records that were created.
+ * @param {object} [data.updated] - Records that were updated.
+ * @param {object} [data.deleted] - Records that were removed.
  */
 async function remoteSettingsSync({ created, updated, deleted }) {
   await RemoteSettings(COLLECTION_NAME).emit("sync", {

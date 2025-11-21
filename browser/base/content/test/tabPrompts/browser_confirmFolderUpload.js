@@ -10,7 +10,7 @@ const { PromptTestUtils } = ChromeUtils.importESModule(
 /**
  * Create a temporary test directory that will be cleaned up on test shutdown.
  *
- * @returns {String} - absolute directory path.
+ * @returns {string} - absolute directory path.
  */
 function getTestDirectory() {
   let tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);

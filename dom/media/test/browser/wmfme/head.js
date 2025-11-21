@@ -3,9 +3,9 @@
 /**
  * Return a web-based URL for a given file based on the testing directory.
  *
- * @param {String} fileName
+ * @param {string} fileName
  *        file that caller wants its web-based url
- * @param {Boolean} cors [optional]
+ * @param {boolean} cors [optional]
  *        if set, then return a url with different origin
  */
 function GetTestWebBasedURL(fileName) {

@@ -97,9 +97,9 @@ add_setup(async function () {
 /**
  * Set exceptions via RemoteSettings.
  *
- * @param {Boolean} baseline - If true, set baseline allow list entries.
- * @param {Boolean} convenience - If true, set convenience allow list entries.
- * @param {String} category - The content blocking category to set.
+ * @param {boolean} baseline - If true, set baseline allow list entries.
+ * @param {boolean} convenience - If true, set convenience allow list entries.
+ * @param {string} category - The content blocking category to set.
  */
 async function setAllowListPrefs(baseline, convenience, category) {
   info("Set allow list baseline and convenience prefs");

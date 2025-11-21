@@ -29,19 +29,19 @@ class ProtectionCategory {
    *
    * @param {string} id - Identifier of the category. Used to query the category
    * UI elements in the DOM.
-   * @param {Object} options - Category options.
+   * @param {object} options - Category options.
    * @param {string} options.prefEnabled - ID of pref which controls the
    * category enabled state.
-   * @param {Object} flags - Flags for this category to look for in the content
+   * @param {object} flags - Flags for this category to look for in the content
    * blocking event and content blocking log.
-   * @param {Number} [flags.load] - Load flag for this protection category. If
+   * @param {number} [flags.load] - Load flag for this protection category. If
    * omitted, we will never match a isAllowing check for this category.
-   * @param {Number} [flags.block] - Block flag for this protection category. If
+   * @param {number} [flags.block] - Block flag for this protection category. If
    * omitted, we will never match a isBlocking check for this category.
-   * @param {Number} [flags.shim] - Shim flag for this protection category. This
+   * @param {number} [flags.shim] - Shim flag for this protection category. This
    * flag is set if we replaced tracking content with a non-tracking shim
    * script.
-   * @param {Number} [flags.allow] - Allow flag for this protection category.
+   * @param {number} [flags.allow] - Allow flag for this protection category.
    * This flag is set if we explicitly allow normally blocked tracking content.
    * The webcompat extension can do this if it needs to unblock content on user
    * opt-in.
@@ -193,7 +193,7 @@ class ProtectionCategory {
   /**
    * Create a list of items, each representing a tracker.
    *
-   * @returns {Object} result - An object containing the results.
+   * @returns {object} result - An object containing the results.
    * @returns {HTMLDivElement[]} result.items - Generated tracker items. May be
    * empty.
    * @returns {boolean} result.anyShimAllowed - Flag indicating if any of the
@@ -236,7 +236,7 @@ class ProtectionCategory {
    * @param {string} origin - Origin of the tracker.
    * @param {Array} actions - Array of actions from the content blocking log
    * associated with the tracking origin.
-   * @returns {Object} result - An object containing the results.
+   * @returns {object} result - An object containing the results.
    * @returns {HTMLDListElement} [options.item] - Generated item or null if we
    * don't have an item for this origin based on the actions log.
    * @returns {boolean} options.shimAllowed - Flag indicating whether the
@@ -300,7 +300,7 @@ class ProtectionCategory {
   }
 
   /**
-   * @param {Number} state - Content blocking event flags.
+   * @param {number} state - Content blocking event flags.
    * @returns {boolean} - Whether the protection has blocked a tracker.
    */
   isBlocking(state) {
@@ -308,7 +308,7 @@ class ProtectionCategory {
   }
 
   /**
-   * @param {Number} state - Content blocking event flags.
+   * @param {number} state - Content blocking event flags.
    * @returns {boolean} - Whether the protection has allowed a tracker.
    */
   isAllowing(state) {
@@ -316,7 +316,7 @@ class ProtectionCategory {
   }
 
   /**
-   * @param {Number} state - Content blocking event flags.
+   * @param {number} state - Content blocking event flags.
    * @returns {boolean} - Whether the protection has detected (blocked or
    * allowed) a tracker.
    */
@@ -325,7 +325,7 @@ class ProtectionCategory {
   }
 
   /**
-   * @param {Number} state - Content blocking event flags.
+   * @param {number} state - Content blocking event flags.
    * @returns {boolean} - Whether the protections has allowed a tracker that
    * would have normally been blocked.
    */
@@ -2856,7 +2856,7 @@ var gProtectionsHandler = {
   /**
    * Showing the protections popup.
    *
-   * @param {Object} options
+   * @param {object} options
    *                 The object could have two properties.
    *                 event:
    *                   The event triggers the protections popup to be opened.
@@ -2955,7 +2955,7 @@ var gProtectionsHandler = {
   /**
    * Sends a message to webcompat extension to unblock content and remove placeholders
    *
-   * @param {String} shimId - the id of the shim blocking the content
+   * @param {string} shimId - the id of the shim blocking the content
    */
   _sendUnblockMessageToSmartblock(shimId) {
     Services.obs.notifyObservers(
@@ -2968,7 +2968,7 @@ var gProtectionsHandler = {
   /**
    * Sends a message to webcompat extension to reblock content
    *
-   * @param {String} shimId - the id of the shim blocking the content
+   * @param {string} shimId - the id of the shim blocking the content
    */
   _sendReblockMessageToSmartblock(shimId) {
     Services.obs.notifyObservers(

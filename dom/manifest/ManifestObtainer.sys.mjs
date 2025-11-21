@@ -30,10 +30,10 @@ export var ManifestObtainer = {
    * on the parent process.
    *
    * @param  {XULBrowser} The browser to check for the manifest.
-   * @param {Object} aOptions
-   * @param {Boolean} aOptions.checkConformance If spec conformance messages should be collected.
+   * @param {object} aOptions
+   * @param {boolean} aOptions.checkConformance If spec conformance messages should be collected.
    *                                            Adds proprietary moz_* members to manifest.
-   * @return {Promise<Object>} The processed manifest.
+   * @return {Promise<object>} The processed manifest.
    */
   async browserObtainManifest(
     aBrowser,
@@ -60,10 +60,10 @@ export var ManifestObtainer = {
    * Public interface for obtaining a web manifest from a XUL browser.
    *
    * @param {Window} aContent A content Window from which to extract the manifest.
-   * @param {Object} aOptions
-   * @param {Boolean} aOptions.checkConformance If spec conformance messages should be collected.
+   * @param {object} aOptions
+   * @param {boolean} aOptions.checkConformance If spec conformance messages should be collected.
    *                                            Adds proprietary moz_* members to manifest.
-   * @return {Promise<Object>} The processed manifest.
+   * @return {Promise<object>} The processed manifest.
    */
   async contentObtainManifest(
     aContent,
@@ -115,7 +115,7 @@ function isXULBrowser(aBrowser) {
  *
  * @param {Response} aResp Response from fetch().
  * @param {Window} aContentWindow The content window.
- * @return {Promise<Object>} The processed manifest.
+ * @return {Promise<object>} The processed manifest.
  */
 async function processResponse(aResp, aContentWindow, aOptions) {
   const badStatus = aResp.status < 200 || aResp.status >= 300;
@@ -138,7 +138,7 @@ async function processResponse(aResp, aContentWindow, aOptions) {
  * Asynchronously fetches a web manifest.
  *
  * @param {Window} a The content Window from where to extract the manifest.
- * @return {Promise<Object>}
+ * @return {Promise<object>}
  */
 async function fetchManifest(aWindow) {
   if (!aWindow || aWindow.top !== aWindow) {

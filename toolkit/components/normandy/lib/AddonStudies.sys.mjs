@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * @typedef {Object} Study
- * @property {Number} recipeId
+ * @typedef {object} Study
+ * @property {number} recipeId
  *   ID of the recipe that created the study. Used as the primary key of the
  *   study.
- * @property {Number} slug
+ * @property {number} slug
  *   String code used to identify the study for use in Telemetry and logging.
  * @property {string} userFacingName
  *   Name of the study to show to the user
@@ -92,7 +92,7 @@ async function getDatabase() {
  * Get a transaction for interacting with the study store.
  *
  * @param {IDBDatabase} db
- * @param {String} mode Either "readonly" or "readwrite"
+ * @param {string} mode Either "readonly" or "readwrite"
  *
  * NOTE: Methods on the store returned by this function MUST be called
  * synchronously, otherwise the transaction with the store will expire.
@@ -260,8 +260,8 @@ export var AddonStudies = {
   /**
    * Test whether there is a study in storage for the given recipe ID.
    *
-   * @param {Number} recipeId
-   * @returns {Boolean}
+   * @param {number} recipeId
+   * @returns {boolean}
    */
   async has(recipeId) {
     const db = await getDatabase();
@@ -272,7 +272,7 @@ export var AddonStudies = {
   /**
    * Fetch a study from storage.
    *
-   * @param {Number} recipeId
+   * @param {number} recipeId
    * @return {Study} The requested study, or null if none with that ID exist.
    */
   async get(recipeId) {
@@ -387,7 +387,7 @@ export var AddonStudies = {
    *
    * @param {IDBDatabase} db
    * @param {Study} study
-   * @param {String} reason Why the study is ending.
+   * @param {string} reason Why the study is ending.
    */
   async markAsEnded(study, reason = "unknown") {
     if (reason === "unknown") {

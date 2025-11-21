@@ -835,7 +835,7 @@ SimpleTest.waitForExplicitFinish = function () {
  * "SimpleTest.requestLongerTimeout(5)" will give it 5 times as long to
  * finish.
  *
- * @param {Number} factor
+ * @param {number} factor
  *        The multiplication factor to use on the timeout for this test.
  */
 SimpleTest.requestLongerTimeout = function (factor) {
@@ -934,7 +934,7 @@ window.setTimeout = function SimpleTest_setTimeoutShim() {
  * using it.  Such magic timeout values could result in intermittent
  * failures in your test, and are almost never necessary!
  *
- * @param {String} reason
+ * @param {string} reason
  *        A string representation of the reason why the test needs timeouts.
  */
 SimpleTest.requestFlakyTimeout = function (reason) {
@@ -1088,7 +1088,7 @@ const kTextHtmlSuffixClipboardDataWindows =
  * on the clipboard. This only uses the global clipboard and only for text/plain
  * values.
  *
- * @param {String|Function} aExpectedStringOrValidatorFn
+ * @param {string | Function} aExpectedStringOrValidatorFn
  *        The string value that is expected to be on the clipboard, or a
  *        validator function getting expected clipboard data and returning a bool.
  *        If you specify string value, line breakers in clipboard are treated
@@ -1109,9 +1109,9 @@ const kTextHtmlSuffixClipboardDataWindows =
  * @param {Function} aFailureFn
  *        A function called if the expected value isn't found on the clipboard
  *        within 5s. It can also be called if the known value can't be found.
- * @param {String} [aFlavor="text/plain"]
+ * @param {string} [aFlavor="text/plain"]
  *        The flavor to look for.
- * @param {Number} [aTimeout=5000]
+ * @param {number} [aTimeout=5000]
  *        The timeout (in milliseconds) to wait for a clipboard change.
  * @param {boolean} [aExpectFailure=false]
  *        If true, fail if the clipboard contents are modified within the timeout
@@ -1278,7 +1278,7 @@ SimpleTest.promiseClipboardChange = async function (
  *        A function returns the result of the condition
  * @param {Function} aCallback
  *        A function called after the condition is passed or timeout.
- * @param {String} aErrorMsg
+ * @param {string} aErrorMsg
  *        The message displayed when the condition failed to pass
  *        before timeout.
  * @param interval

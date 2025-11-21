@@ -585,7 +585,7 @@ function parseAboutPageURL(url) {
 /**
  * Get the number of records in autofill storage, e.g. credit cards/addresses.
  *
- * @param  {Object} [data]
+ * @param  {object} [data]
  * @param  {string} [data.collectionName]
  *         The name used to specify which collection to retrieve records.
  * @param  {string} [data.searchString]
@@ -1276,7 +1276,7 @@ const TargetingGetters = {
    * web content. The available height and width are each calculated taking
    * into account the presence of menu bars, docks, and other similar OS elements
    *
-   * @returns {Object} resolution The resolution object containing width and height
+   * @returns {object} resolution The resolution object containing width and height
    * @returns {number} resolution.width The available width of the primary monitor
    * @returns {number} resolution.height The available height of the primary monitor
    */

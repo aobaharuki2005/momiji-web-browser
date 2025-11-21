@@ -134,7 +134,7 @@ this.AccessibilityUtils = (function () {
    * @param   {nsIAccessible} accessible
    *          Accessible for which to determine its role attribute value.
    *
-   * @returns {String}
+   * @returns {string}
    *          Role attribute value if specified.
    */
   function getAriaRoles(accessible) {
@@ -733,7 +733,7 @@ this.AccessibilityUtils = (function () {
    * @param   {nsIAccessible} accessible
    *          Accessible for which to determine if it is keyboard focusable.
    *
-   * @returns {Boolean}
+   * @returns {boolean}
    *          True if focusable with the keyboard.
    */
   function isKeyboardFocusable(accessible) {
@@ -790,7 +790,7 @@ this.AccessibilityUtils = (function () {
    * accessibility failure that prevents UI from being accessible to keyboard/AT
    * users.
    *
-   * @param {String} message
+   * @param {string} message
    * @param {nsIAccessible} accessible
    *        Accessible to log along with the failure message.
    */
@@ -804,7 +804,7 @@ this.AccessibilityUtils = (function () {
    * practices are not followed or for something that is not as severe to be
    * considered a failure.
    *
-   * @param {String} message
+   * @param {string} message
    * @param {nsIAccessible} accessible
    *        Accessible to log along with the todo message.
    */

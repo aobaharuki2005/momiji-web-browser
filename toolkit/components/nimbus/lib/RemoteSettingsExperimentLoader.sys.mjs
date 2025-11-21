@@ -247,7 +247,7 @@ export class RemoteSettingsExperimentLoader {
   /**
    * Initialize the loader, updating recipes from Remote Settings.
    *
-   * @param {Object} options            additional options.
+   * @param {object} options            additional options.
    * @param {bool}   options.forceSync  force Remote Settings to sync recipe collection
    *                                    before updating recipes; throw if sync fails.
    * @return {Promise}                  which resolves after initialization and recipes

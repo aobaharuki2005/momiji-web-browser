@@ -20,7 +20,7 @@
 /**
  * Experiments store info about an active or expired preference experiment.
  *
- * @typedef {Object} Experiment
+ * @typedef {object} Experiment
  * @property {string} slug
  *   A string uniquely identifying the experiment. Used for telemetry, and other
  *   machine-oriented use cases. Used as a display name if `userFacingName` is
@@ -41,7 +41,7 @@
  *   ISO-formatted date string of when temporary errors with this experiment
  *   should not longer be considered temporary. After this point, further errors
  *   will result in unenrollment.
- * @property {Object} preferences
+ * @property {object} preferences
  *   An object consisting of all the preferences that are set by this experiment.
  *   Keys are the name of each preference affected by this experiment. Values are
  *   Preference Objects, about which see below.
@@ -106,7 +106,7 @@ const DefaultPreferences = Services.prefs.getDefaultBranch("");
 /**
  * Enum storing Preference modules for each type of preference branch.
  *
- * @enum {Object}
+ * @enum {object}
  */
 const PreferenceBranchType = {
   user: UserPreferences,
@@ -323,7 +323,7 @@ export var PreferenceExperiments = {
   /**
    * Start a new preference experiment.
    *
-   * @param {Object} experiment
+   * @param {object} experiment
    * @param {string} experiment.slug
    * @param {string} experiment.actionName  The action who knows about this
    *   experiment and is responsible for cleaning it up. This should
@@ -584,7 +584,7 @@ export var PreferenceExperiments = {
    * Check if a preference observer is active for an experiment.
    *
    * @param {string} experimentSlug
-   * @return {Boolean}
+   * @return {boolean}
    */
   hasObserver(experimentSlug) {
     log.debug(`PreferenceExperiments.hasObserver(${experimentSlug})`);
@@ -699,11 +699,11 @@ export var PreferenceExperiments = {
    * reset the associated preference to its previous value.
    *
    * @param {string} experimentSlug
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} [options.resetValue = true]
    *   If true, reset the preference to its original value prior to
    *   the experiment. Optional, defaults to true.
-   * @param {String} [options.reason = "unknown"]
+   * @param {string} [options.reason = "unknown"]
    *   Reason that the experiment is ending. Optional, defaults to
    *   "unknown".
    * @rejects {Error}

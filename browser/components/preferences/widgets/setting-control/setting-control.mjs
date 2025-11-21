@@ -22,21 +22,21 @@ import MozInputFolder from "chrome://global/content/elements/moz-input-folder.mj
 /** @import { Setting } from "chrome://global/content/preferences/Setting.mjs" */
 
 /**
- * @typedef {Object} SettingNestedConfig
+ * @typedef {object} SettingNestedConfig
  * @property {SettingControlConfig[]} [items] Additional nested SettingControls to render.
  * @property {SettingOptionConfig[]} [options]
  * Additional nested plain elements to render (may have SettingControls nested within them, though).
  */
 
 /**
- * @typedef {Object} SettingOptionConfigExtensions
+ * @typedef {object} SettingOptionConfigExtensions
  * @property {string} [control]
  * The element tag to render, default assumed based on parent control.
  * @property {any} [value] A value to set on the option.
  */
 
 /**
- * @typedef {Object} SettingControlConfigExtensions
+ * @typedef {object} SettingControlConfigExtensions
  * @property {string} id
  * The ID for the Setting, also set in the DOM unless overridden with controlAttrs.id
  * @property {string} [control] The element to render, default to "moz-checkbox".

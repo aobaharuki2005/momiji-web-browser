@@ -401,7 +401,7 @@ export class ContileIntegration {
   /**
    * Filter the tiles whose sponsor is on the Top Sites sponsor blocklist.
    *
-   * @param {array} tiles
+   * @param {Array} tiles
    *   An array of the tile objects
    */
   _filterBlockedSponsors(tiles) {
@@ -1156,7 +1156,7 @@ export class TopSitesFeed {
    * needed.
    *
    * @param {Array} plainPinnedSites (from the pinnedSitesCache)
-   * @returns {Boolean} Did we insert any search shortcuts?
+   * @returns {boolean} Did we insert any search shortcuts?
    */
   async _maybeInsertSearchShortcuts(plainPinnedSites) {
     // Only insert shortcuts if the experiment is running
@@ -1586,7 +1586,7 @@ export class TopSitesFeed {
    * If the chosen partner doesn't have a tile to serve, another tile from a different
    * partner is used as the replacement.
    *
-   * @param {Object} sponsoredLinks An object with sponsored links from all the partners.
+   * @param {object} sponsoredLinks An object with sponsored links from all the partners.
    * @returns {Array} An array of merged sponsored links.
    */
   _mergeSponsoredLinks(sponsoredLinks) {

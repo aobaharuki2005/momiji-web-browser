@@ -77,7 +77,7 @@ function getDatabase() {
  * Get a transaction for interacting with the rollout store.
  *
  * @param {IDBDatabase} db
- * @param {String} mode Either "readonly" or "readwrite"
+ * @param {string} mode Either "readonly" or "readwrite"
  *
  * NOTE: Methods on the store returned by this function MUST be called
  * synchronously, otherwise the transaction with the store will expire.

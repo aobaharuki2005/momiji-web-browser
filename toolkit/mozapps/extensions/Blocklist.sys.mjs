@@ -224,7 +224,7 @@ const Utils = {
    * its comma separated list for it to be valid. Similarly for the
    * xpcomabi property.
    *
-   * @param {Object} item
+   * @param {object} item
    *        The blocklist item.
    * @returns {bool}
    *        Whether the entry matches the current OS.
@@ -275,7 +275,7 @@ const Utils = {
    * Tests if this versionRange matches the item specified, and has a matching
    * targetApplication id and version.
    *
-   * @param {Object} versionRange
+   * @param {object} versionRange
    *        The versionRange to check against
    * @param {string} itemVersion
    *        The version of the actual addon/plugin to test for.
@@ -333,7 +333,7 @@ const Utils = {
    * If there *are* targetApplications, if any of them don't have a guid property,
    * assign them the current app's guid.
    *
-   * @param {Object} entry
+   * @param {object} entry
    *                 blocklist entry object.
    */
   ensureVersionRangeIsSane(entry) {
@@ -361,8 +361,8 @@ const Utils = {
   /**
    * Create a blocklist URL for the given blockID
    *
-   * @param {String} id the blockID to use
-   * @returns {String} the blocklist URL.
+   * @param {string} id the blockID to use
+   * @returns {string} the blocklist URL.
    */
   _createBlocklistURL(id) {
     let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ITEM_URL);
@@ -383,11 +383,11 @@ class TargetAppFilter {
   /**
    * Filter the entry.
    *
-   * @param {Object} entry
+   * @param {object} entry
    *    A Remote Settings record. If it has a filter_expression, we'll pass it
    *    straight to the default JEXL filter. Otherwise, we'll do custom
    *    version range processing for target apps.
-   * @returns {?Object} The entry if it matches, `null` otherwise.
+   * @returns {?object} The entry if it matches, `null` otherwise.
    */
   async filterEntry(entry) {
     // If the entry has a JEXL filter expression, it should prevail.
@@ -461,7 +461,7 @@ class TargetAppFilter {
  *
  * @param {ClientEnvironment} environment Forarded as-is to the JEXL filter
  * @param {string}            collectionName Forarded as-is to the JEXL filter
- * @returns {Object} The entry if it matches, `null` otherwise.
+ * @returns {object} The entry if it matches, `null` otherwise.
  */
 async function createTargetAppFilter(environment, collectionName) {
   const jexlFilter = await lazy.jexlFilterCreator(environment, collectionName);

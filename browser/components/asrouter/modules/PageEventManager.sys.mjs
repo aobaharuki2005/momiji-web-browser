@@ -13,25 +13,25 @@ export class PageEventManager {
   /**
    * A set of parameters defining a page event listener.
    *
-   * @typedef {Object} PageEventListenerParams
-   * @property {String} type Event type string e.g. `click`
-   * @property {String} [selectors] Target selector, e.g. `tag.class, #id[attr]`
+   * @typedef {object} PageEventListenerParams
+   * @property {string} type Event type string e.g. `click`
+   * @property {string} [selectors] Target selector, e.g. `tag.class, #id[attr]`
    * @property {PageEventListenerOptions} [options] addEventListener options
    *
-   * @typedef {Object} PageEventListenerOptions
-   * @property {Boolean} [capture] Use event capturing phase?
-   * @property {Boolean} [once] Remove listener after first event?
-   * @property {Boolean} [preventDefault] Inverted value for `passive` option
-   * @property {Number} [interval] Used only for `timeout` and `interval` event
+   * @typedef {object} PageEventListenerOptions
+   * @property {boolean} [capture] Use event capturing phase?
+   * @property {boolean} [once] Remove listener after first event?
+   * @property {boolean} [preventDefault] Inverted value for `passive` option
+   * @property {number} [interval] Used only for `timeout` and `interval` event
    *   types. These don't set up real event listeners, but instead invoke the
    *   action on a timer.
    *
-   * @typedef {Object} PageEventListener
+   * @typedef {object} PageEventListener
    * @property {Function} callback Function to call when event is triggered
    * @property {AbortController} controller Handle for aborting the listener
    *
-   * @typedef {Object} PageEvent
-   * @property {String} type Event type string e.g. `click`
+   * @typedef {object} PageEvent
+   * @property {string} type Event type string e.g. `click`
    * @property {Element} [target] Event target
    */
 

@@ -170,8 +170,8 @@ ChromeUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
     /**
      * Disable an active add-on study and remove its add-on.
      *
-     * @param {String} recipeId the id of the addon to remove
-     * @param {String} reason the reason for removal
+     * @param {string} recipeId the id of the addon to remove
+     * @param {string} reason the reason for removal
      */
     async removeAddonStudy(recipeId, reason) {
       try {
@@ -195,8 +195,8 @@ ChromeUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
     /**
      * Disable an active preference study.
      *
-     * @param {String} experimentName the name of the experiment to remove
-     * @param {String} reason the reason for removal
+     * @param {string} experimentName the name of the experiment to remove
+     * @param {string} reason the reason for removal
      */
     async removePreferenceStudy(experimentName, reason) {
       try {

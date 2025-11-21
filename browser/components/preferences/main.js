@@ -3301,7 +3301,7 @@ var gMainPane = {
       /**
        * The fully initialized state.
        *
-       * @param {Object} supportedLanguages
+       * @param {object} supportedLanguages
        * @param {Array<{ langTag: string, displayName: string}>} languageList
        * @param {Map<string, DownloadPhase>} downloadPhases
        */

@@ -256,7 +256,7 @@ export class NewTabContentPing {
   /**
    * Returns true or false with a certain proability specified
    *
-   * @param {Number} prob Probability
+   * @param {number} prob Probability
    * @returns {boolean} Random boolean result of probability prob
    */
   static decideWithProbability(prob) {

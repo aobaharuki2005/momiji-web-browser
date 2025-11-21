@@ -872,7 +872,7 @@ var ActivityStreamProvider = {
   /**
    * Get most-recently-created visited bookmarks for Activity Stream.
    *
-   * @param {Object} aOptions
+   * @param {object} aOptions
    *   {num}  bookmarkSecondsAgo: Maximum age of added bookmark.
    *   {bool} ignoreBlocked: Do not filter out blocked links.
    *   {int}  numItems: Maximum number of items to return.
@@ -950,7 +950,7 @@ var ActivityStreamProvider = {
   /**
    * Get most-recently-visited history with metadata for Activity Stream.
    *
-   * @param {Object} aOptions
+   * @param {object} aOptions
    *   {bool} ignoreBlocked: Do not filter out blocked links.
    *   {int}  numItems: Maximum number of items to return.
    */
@@ -992,7 +992,7 @@ var ActivityStreamProvider = {
   /**
    * Gets the top frecent sites for Activity Stream.
    *
-   * @param {Object} aOptions
+   * @param {object} aOptions
    *   {bool} ignoreBlocked: Do not filter out blocked links.
    *   {int}  numItems: Maximum number of items to return.
    *   {int}  topsiteFrecency: Minimum amount of frecency for a site.
@@ -1205,9 +1205,9 @@ var ActivityStreamProvider = {
   /**
    * Executes arbitrary query against places database
    *
-   * @param {String} aQuery
+   * @param {string} aQuery
    *        SQL query to execute
-   * @param {Object} [optional] aOptions
+   * @param {object} [optional] aOptions
    *          aOptions.columns - an array of column names. if supplied the return
    *          items will consists of objects keyed on column names. Otherwise
    *          array of raw values is returned in the select order
@@ -1256,7 +1256,7 @@ var ActivityStreamLinks = {
   /**
    * Block a url
    *
-   * @param {Object} aLink
+   * @param {object} aLink
    *          The link which contains a URL to add to the block list
    */
   blockURL(aLink) {
@@ -1271,7 +1271,7 @@ var ActivityStreamLinks = {
    * Adds a bookmark and opens up the Bookmark Dialog to show feedback that
    * the bookmarking action has been successful
    *
-   * @param {Object} aData
+   * @param {object} aData
    *          aData.url The url to bookmark
    *          aData.title The title of the page to bookmark
    * @param {Window} aBrowserWindow
@@ -1287,7 +1287,7 @@ var ActivityStreamLinks = {
   /**
    * Removes a bookmark
    *
-   * @param {String} aBookmarkGuid
+   * @param {string} aBookmarkGuid
    *          The bookmark guid associated with the bookmark to remove
    *
    * @returns {Promise} Returns a promise at completion.
@@ -1299,7 +1299,7 @@ var ActivityStreamLinks = {
   /**
    * Removes a history link and unpins the URL if previously pinned
    *
-   * @param {String} aUrl
+   * @param {string} aUrl
    *           The url to be removed from history
    *
    * @returns {Promise} Returns a promise set to true if link was removed
@@ -1313,7 +1313,7 @@ var ActivityStreamLinks = {
   /**
    * Get the Highlights links to show on Activity Stream
    *
-   * @param {Object} aOptions
+   * @param {object} aOptions
    *   {bool} excludeBookmarks: Don't add bookmark items.
    *   {bool} excludeHistory: Don't add history items.
    *   {bool} withFavicons: Add favicon data: URIs, when possible.
@@ -2136,7 +2136,7 @@ export var NewTabUtils = {
    * (If less than 0, then add 24.)
    *
    * @param {str} [surfaceID] Optional surface ID to constrain time zone to reduce identifying telemetry.
-   * @returns {Number} utc_offset. Output is clamped if surfaceID is specified, and 0 if surfaceID present and not supported.
+   * @returns {number} utc_offset. Output is clamped if surfaceID is specified, and 0 if surfaceID present and not supported.
    */
   getUtcOffset(surfaceID) {
     const surfaceRestrictions = { NEW_TAB_EN_US: { min: 24 - 8, max: 24 - 4 } }; // Inclusive hour ranges UTC-8 (PST), UTC-4 (EDT)
@@ -2169,7 +2169,7 @@ export var NewTabUtils = {
    * Borrowed from https://github.com/mozilla/gcp-ingestion/ingestion-beam/
    * src/main/java/com/mozilla/telemetry/transforms/NormalizeAttributes.java
    *
-   * @returns {String} Normalized OS string mac|win|linux|android|ios|other
+   * @returns {string} Normalized OS string mac|win|linux|android|ios|other
    */
   normalizeOs() {
     const osString = Services.appinfo.OS;

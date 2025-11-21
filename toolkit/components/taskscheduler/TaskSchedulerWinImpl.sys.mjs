@@ -275,7 +275,7 @@ export var WinImpl = {
    * @param id
    *        A string representing the identifier of the task to format
    *
-   * @param {Object} options
+   * @param {object} options
    *        Optional, as are all of its properties:
    *        {
    *            options.nameVersion

@@ -137,12 +137,12 @@ function matchEvent(event, matchCriteria) {
  * event of the given type with the given target (defined by its id or
  * accessible) is observed.
  *
- * @param  {Number}                eventType        expected accessible event
+ * @param  {number}                eventType        expected accessible event
  *                                                  type
- * @param  {String|nsIAccessible|Function}  matchCriteria  expected content
+ * @param  {string | nsIAccessible | Function}  matchCriteria  expected content
  *                                                         element id
  *                                                         for the event
- * @param  {String}                message          Message to prepend to logging.
+ * @param  {string}                message          Message to prepend to logging.
  * @return {Promise}                                promise that resolves to an
  *                                                  event
  */
@@ -223,9 +223,9 @@ class UnexpectedEvents {
  *
  * @param {Array}   events          a list of events to wait (same format as
  *                                   waitForEvent arguments)
- * @param {String}  message         Message to prepend to logging.
- * @param {Boolean} ordered         Events need to be received in given order.
- * @param {Object}  invokerOrWindow a local window or a special content invoker
+ * @param {string}  message         Message to prepend to logging.
+ * @param {boolean} ordered         Events need to be received in given order.
+ * @param {object}  invokerOrWindow a local window or a special content invoker
  *                                   it takes a list of arguments and a task
  *                                   function.
  */

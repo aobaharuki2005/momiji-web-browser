@@ -29,11 +29,11 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
  *
  * @param {DOMNode} template - The template is copied to create a new dialog.
  * @param {DOMNode} parentElement - New dialog is appended onto parentElement.
- * @param {String}  id - A unique identifier for the dialog.
- * @param {Object}  dialogOptions - Dialog options object.
- * @param {String[]} [dialogOptions.styleSheets] - An array of URLs to additional
+ * @param {string}  id - A unique identifier for the dialog.
+ * @param {object}  dialogOptions - Dialog options object.
+ * @param {string[]} [dialogOptions.styleSheets] - An array of URLs to additional
  * stylesheets to inject into the frame.
- * @param {Boolean} [consumeOutsideClicks] - Whether to close the dialog when
+ * @param {boolean} [consumeOutsideClicks] - Whether to close the dialog when
  * its background overlay is clicked.
  * @param {SubDialog~resizeCallback} [resizeCallback] - Function to be called on
  * dialog resize.
@@ -667,9 +667,9 @@ SubDialog.prototype = {
    * Helper for converting em to px because an em value from the dialog window could
    * translate to something else in the host window, as font sizes may vary.
    *
-   * @param {String} val
+   * @param {string} val
    *                 A CSS length value.
-   * @return {String} The converted CSS length value, or the original value if
+   * @return {string} The converted CSS length value, or the original value if
    *                  no conversion took place.
    */
   _emToPx(val) {
@@ -788,7 +788,7 @@ SubDialog.prototype = {
   /**
    * Setup dialog event listeners.
    *
-   * @param {Boolean} [includeLoad] - Whether to register load/unload listeners.
+   * @param {boolean} [includeLoad] - Whether to register load/unload listeners.
    */
   _addDialogEventListeners(includeLoad = true) {
     if (this._window.isChromeWindow) {
@@ -838,7 +838,7 @@ SubDialog.prototype = {
   /**
    * Remove dialog event listeners.
    *
-   * @param {Boolean} [includeLoad] - Whether to remove load/unload listeners.
+   * @param {boolean} [includeLoad] - Whether to remove load/unload listeners.
    */
   _removeDialogEventListeners(includeLoad = true) {
     if (this._window.isChromeWindow) {
@@ -934,17 +934,17 @@ SubDialog.prototype = {
  */
 export class SubDialogManager {
   /**
-   * @param {Object} options - Dialog manager options.
+   * @param {object} options - Dialog manager options.
    * @param {DOMNode} options.dialogStack - Container element for all dialogs
    * this instance manages.
    * @param {DOMNode} options.dialogTemplate - Element to use as template for
    * constructing new dialogs.
-   * @param {Number} [options.orderType] - Whether dialogs should be ordered as
+   * @param {number} [options.orderType] - Whether dialogs should be ordered as
    * a stack or a queue.
-   * @param {Boolean} [options.allowDuplicateDialogs] - Whether to allow opening
+   * @param {boolean} [options.allowDuplicateDialogs] - Whether to allow opening
    * duplicate dialogs (same URI) at the same time. If disabled, opening a
    * dialog with the same URI as an existing dialog will be a no-op.
-   * @param {Object} options.dialogOptions - Options passed to every
+   * @param {object} options.dialogOptions - Options passed to every
    * SubDialog instance.
    * @see {@link SubDialog} for a list of dialog options.
    */

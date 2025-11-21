@@ -541,7 +541,7 @@ export class LoginFormState {
    *
    * @param {HTMLInputElement} aUsernameField element contained in a LoginForm
    *                                          cached in LoginFormFactory.
-   * @returns {Boolean} whether the username and password fields still have the
+   * @returns {boolean} whether the username and password fields still have the
    *                    last-filled values, if previously filled.
    */
   #isLoginAlreadyFilled(aUsernameField) {
@@ -780,7 +780,7 @@ export class LoginFormState {
    *
    * @param {FormLike} form
    *                  the form to check.
-   * @param {Object}  recipe=null
+   * @param {object}  recipe=null
    *                  A relevant field override recipe to use.
    * @returns {Element} The username field or null (if the form is not a
    *                    username-only form).
@@ -825,11 +825,11 @@ export class LoginFormState {
 
   /**
    * @param {LoginForm} form - the LoginForm to look for password fields in.
-   * @param {Object} options
+   * @param {object} options
    * @param {bool} [options.skipEmptyFields=false] - Whether to ignore password fields with no value.
    *                                                 Used at capture time since saving empty values isn't
    *                                                 useful.
-   * @param {Object} [options.fieldOverrideRecipe=null] - A relevant field override recipe to use.
+   * @param {object} [options.fieldOverrideRecipe=null] - A relevant field override recipe to use.
    * @return {Array|null} Array of password field elements for the specified form.
    *                      If no pw fields are found, or if more than 5 are found, then null
    *                      is returned.
@@ -984,10 +984,10 @@ export class LoginFormState {
    * @param {LoginForm} form
    * @param {bool} isSubmission
    * @param {Set} recipes
-   * @param {Object} options
+   * @param {object} options
    * @param {bool} [options.ignoreConnect] - Whether to ignore checking isConnected
    *                                         of the element.
-   * @return {Object} {usernameField, newPasswordField, oldPasswordField, confirmPasswordField}
+   * @return {object} {usernameField, newPasswordField, oldPasswordField, confirmPasswordField}
    *
    * usernameField may be null.
    * newPasswordField may be null. If null, this is a username-only form.
@@ -1272,7 +1272,7 @@ export class LoginFormState {
    * @param {Element} aField
    *                  A form field we want to verify.
    *
-   * @returns {Object} an object with information about the
+   * @returns {object} an object with information about the
    *                   LoginForm username and password field
    *                   or null if the passed field is invalid.
    */
@@ -1512,7 +1512,7 @@ export class LoginManagerChild extends JSWindowActorChild {
    * Get relevant logins and recipes from the parent
    *
    * @param {HTMLFormElement} form - form to get login data for
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} options.guid - guid of a login to retrieve
    * @param {boolean} options.showPrimaryPassword - whether to show a primary password prompt
    */
@@ -2311,7 +2311,7 @@ export class LoginManagerChild extends JSWindowActorChild {
    *        generated password being filled into a form-like element.
    * @param {boolean?} options.ignoreConnect Whether to ignore isConnected attribute of a element.
    *
-   * @returns {Boolean} whether the message is sent to the parent process.
+   * @returns {boolean} whether the message is sent to the parent process.
    */
   _maybeSendFormInteractionMessage(
     form,
@@ -2712,7 +2712,7 @@ export class LoginManagerChild extends JSWindowActorChild {
    *        which are only used when the fill is userTriggered
    * @param {Set} recipes a set of recipes that could be used to affect how the
    *        form is filled
-   * @param {Object} [options = {}] a list of options for this method
+   * @param {object} [options = {}] a list of options for this method
    * @param {HTMLInputElement} [options.inputElement = null] an optional target
    *        input element we want to fill
    * @param {bool} [options.autofillForm = false] denotes if we should fill the

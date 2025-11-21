@@ -506,7 +506,7 @@ export var AddonRepository = {
    *
    * @param  aIDs
    *         The array of ids to retrieve metadata for.
-   * @returns {array<AddonSearchResult>}
+   * @returns {Array<AddonSearchResult>}
    */
   async getAddonsByIDs(aIDs) {
     const idCheck = aIDs.map(id => {
@@ -542,13 +542,13 @@ export var AddonRepository = {
    *        metadata for.
    * @returns {object} result
    *        The result of the mapping.
-   * @returns {array<AddonSearchResult>} result.addons
+   * @returns {Array<AddonSearchResult>} result.addons
    *        The AddonSearchResults for the addons that were successfully mapped.
-   * @returns {array<string>} result.matchedIDs
+   * @returns {Array<string>} result.matchedIDs
    *        The IDs of the extensions that were successfully matched to
    *        equivalents that can be installed in this browser. These are
    *        the IDs before matching to equivalents.
-   * @returns {array<string>} result.unmatchedIDs
+   * @returns {Array<string>} result.unmatchedIDs
    *        The IDs of the extensions that were not matched to equivalents.
    */
   async getMappedAddons(browserID, extensionIDs) {
@@ -595,7 +595,7 @@ export var AddonRepository = {
    *
    * @param  aIds
    *         The array of add-on ids to add to the cache
-   * @returns {array<AddonSearchResult>} Add-ons to add to the cache.
+   * @returns {Array<AddonSearchResult>} Add-ons to add to the cache.
    */
   async cacheAddons(aIds) {
     logger.debug(
@@ -1062,7 +1062,7 @@ var AddonDatabase = {
    * Asynchronously repopulates the database so it only contains the
    * specified add-ons
    *
-   * @param {array<AddonSearchResult>} aAddons
+   * @param {Array<AddonSearchResult>} aAddons
    *              Add-ons to repopulate the database with.
    */
   repopulate(aAddons) {
@@ -1079,7 +1079,7 @@ var AddonDatabase = {
   /**
    * Asynchronously insert new addons into the database.
    *
-   * @param {array<AddonSearchResult>} aAddons
+   * @param {Array<AddonSearchResult>} aAddons
    *              Add-ons to insert/update in the database
    */
   async update(aAddons) {
@@ -1091,7 +1091,7 @@ var AddonDatabase = {
   /**
    * Merge the given addons into the database.
    *
-   * @param {array<AddonSearchResult>} aAddons
+   * @param {Array<AddonSearchResult>} aAddons
    *              Add-ons to insert/update in the database
    */
   _update(aAddons) {

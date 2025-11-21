@@ -76,7 +76,7 @@ ChromeUtils.defineLazyGetter(lazy, "syncDataStore", () => {
      * { childPref: value }
      * where value is parsed to the appropriate type
      *
-     * @returns {Object[]}
+     * @returns {object[]}
      */
     _getBranchChildValues(prefBranch, featureId) {
       const branch = Services.prefs.getBranch(prefBranch);

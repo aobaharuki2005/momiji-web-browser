@@ -376,11 +376,11 @@ const markupTests = [
  * becomes defunct, update its reference using the one that is attached to one
  * of the above events.
  *
- * @param {Object} browser      current "tabbrowser" element
- * @param {Object} target       { acc, id } structure that contains an
+ * @param {object} browser      current "tabbrowser" element
+ * @param {object} target       { acc, id } structure that contains an
  *                               accessible and its content element
  *                               id.
- * @param {Object} rule         current attr rule for name calculation
+ * @param {object} rule         current attr rule for name calculation
  * @param {[type]} expected     expected name value
  */
 async function testAttrRule(browser, target, rule, expected) {
@@ -405,11 +405,11 @@ async function testAttrRule(browser, target, rule, expected) {
  * in a reorder event - wait for it. If accessible becomes defunct, update its
  * reference using the one that is attached to a possible reorder event.
  *
- * @param {Object} browser      current "tabbrowser" element
- * @param {Object} target       { acc, id } structure that contains an
+ * @param {object} browser      current "tabbrowser" element
+ * @param {object} target       { acc, id } structure that contains an
  *                               accessible and its content element
  *                               id.
- * @param {Object} rule         current elm rule for name calculation
+ * @param {object} rule         current elm rule for name calculation
  * @param {[type]} expected     expected name value
  */
 async function testElmRule(browser, target, rule, expected) {
@@ -434,11 +434,11 @@ async function testElmRule(browser, target, rule, expected) {
  * accessible becomes defunct, update its reference using the one that is
  * attached to a reorder event.
  *
- * @param {Object} browser      current "tabbrowser" element
- * @param {Object} target       { acc, id } structure that contains an
+ * @param {object} browser      current "tabbrowser" element
+ * @param {object} target       { acc, id } structure that contains an
  *                               accessible and its content element
  *                               id.
- * @param {Object} rule         current subtree rule for name calculation
+ * @param {object} rule         current subtree rule for name calculation
  * @param {[type]} expected     expected name value
  */
 async function testSubtreeRule(browser, target, rule, expected) {
@@ -463,8 +463,8 @@ async function testSubtreeRule(browser, target, rule, expected) {
  * Iterate over a list of rules and test accessible names for each one of the
  * rules.
  *
- * @param {Object} browser      current "tabbrowser" element
- * @param {Object} target       { acc, id } structure that contains an
+ * @param {object} browser      current "tabbrowser" element
+ * @param {object} target       { acc, id } structure that contains an
  *                               accessible and its content element
  *                               id.
  * @param {Array}  ruleset      A list of rules to test a target with

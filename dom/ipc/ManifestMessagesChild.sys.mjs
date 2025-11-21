@@ -49,7 +49,7 @@ export class ManifestMessagesChild extends JSWindowActorChild {
    * Asynchronously obtains a web manifest from this window by using the
    * ManifestObtainer and returns the result.
    *
-   * @param {Object} checkConformance True if spec conformance messages should be collected.
+   * @param {object} checkConformance True if spec conformance messages should be collected.
    */
   async obtainManifest(options) {
     const { checkConformance } = options;
@@ -92,7 +92,7 @@ export class ManifestMessagesChild extends JSWindowActorChild {
  * FIX ME: https://bugzilla.mozilla.org/show_bug.cgi?id=1172586
  *
  * @param  {Error} aError The error to serialize.
- * @return {Object} The serialized object.
+ * @return {object} The serialized object.
  */
 function serializeError(aError) {
   const clone = {

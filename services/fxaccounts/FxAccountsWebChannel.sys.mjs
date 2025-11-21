@@ -144,13 +144,13 @@ function getErrorDetails(error) {
 /**
  * Create a new FxAccountsWebChannel to listen for account updates
  *
- * @param {Object} options Options
- *   @param {Object} options
- *     @param {String} options.content_uri
+ * @param {object} options Options
+ *   @param {object} options
+ *     @param {string} options.content_uri
  *     The FxA Content server uri
- *     @param {String} options.channel_id
+ *     @param {string} options.channel_id
  *     The ID of the WebChannel
- *     @param {String} options.helpers
+ *     @param {string} options.helpers
  *     Helpers functions. Should only be passed in for testing.
  * @constructor
  */
@@ -672,7 +672,7 @@ FxAccountsWebChannelHelpers.prototype = {
   /**
    * Logins in to sync by completing an OAuth flow
    *
-   * @param { Object } oauthData: The oauth code and state as returned by the server
+   * @param {object} oauthData: The oauth code and state as returned by the server
    */
   async oauthLogin(oauthData) {
     log.debug("Webchannel is completing the oauth flow");
@@ -906,8 +906,8 @@ FxAccountsWebChannelHelpers.prototype = {
   /**
    * Open Sync Preferences in the current tab of the browser
    *
-   * @param {Object} browser the browser in which to open preferences
-   * @param {String} [entryPoint] entryPoint to use for logging
+   * @param {object} browser the browser in which to open preferences
+   * @param {string} [entryPoint] entryPoint to use for logging
    */
   openSyncPreferences(browser, entryPoint) {
     let uri = "about:preferences";
@@ -924,7 +924,7 @@ FxAccountsWebChannelHelpers.prototype = {
   /**
    * Open Firefox View in the browser's window
    *
-   * @param {Object} browser the browser in whose window we'll open Firefox View
+   * @param {object} browser the browser in whose window we'll open Firefox View
    */
   openFirefoxView(browser) {
     browser.ownerGlobal.FirefoxViewHandler.openTab("syncedtabs");

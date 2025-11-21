@@ -102,7 +102,7 @@ export class FxAccountsKeys {
   /**
    * Get the key for a specified OAuth scope.
    *
-   * @param {String} scope The OAuth scope whose key should be returned
+   * @param {string} scope The OAuth scope whose key should be returned
    *
    * @return Promise<JWK>
    *        If no key is available the promise resolves to `null`.
@@ -128,9 +128,9 @@ export class FxAccountsKeys {
   /**
    * Validates if the given scoped keys are valid keys
    *
-   * @param { Object } scopedKeys: The scopedKeys bundle
+   * @param {object} scopedKeys: The scopedKeys bundle
    *
-   * @return { Boolean }: true if the scopedKeys bundle is valid, false otherwise
+   * @return {boolean}: true if the scopedKeys bundle is valid, false otherwise
    */
   validScopedKeys(scopedKeys) {
     for (const expectedScope of Object.keys(scopedKeys)) {
@@ -195,7 +195,7 @@ export class FxAccountsKeys {
    * for use as a key identifier, rather than the timestamp+fingerprint format used by
    * FxA scoped keys.
    *
-   * @param {Object} jwk The JWK from which to extract the `kid` field as hex.
+   * @param {object} jwk The JWK from which to extract the `kid` field as hex.
    */
   kidAsHex(jwk) {
     // The kid format is "{timestamp}-{b64url(fingerprint)}", but we have to be careful
@@ -275,7 +275,7 @@ export class FxAccountsKeys {
   /**
    * Set externally derived scoped keys in internal storage
    *
-   * @param { Object } scopedKeys: The scoped keys object derived by the oauth flow
+   * @param {object} scopedKeys: The scoped keys object derived by the oauth flow
    *
    * @return { Promise }: A promise that resolves if the keys were successfully stored,
    *    or rejects if we failed to persist the keys, or if the user is not signed in already
@@ -653,9 +653,9 @@ export class FxAccountsKeys {
    *
    * @param {ArrayBuffer} kid bytes of the key hash to use in the key identifier
    * @param {ArrayBuffer} key bytes of the derived sync key
-   * @param {String} scope the scope with which this key is associated
-   * @param {Number} keyRotationTimestamp server-provided timestamp of last key rotation
-   * @returns {Object} key material formatted as a JWK object
+   * @param {string} scope the scope with which this key is associated
+   * @param {number} keyRotationTimestamp server-provided timestamp of last key rotation
+   * @returns {object} key material formatted as a JWK object
    */
   _formatLegacyScopedKey(kid, key, scope, { keyRotationTimestamp }) {
     kid = ChromeUtils.base64URLEncode(kid, {

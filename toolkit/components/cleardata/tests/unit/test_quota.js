@@ -21,11 +21,11 @@ const skipLocalStorageTests = Services.prefs.getBoolPref(
 /**
  * Create an origin with partitionKey.
  *
- * @param {String} host - Host portion of origin to create.
- * @param {String} [topLevelBaseDomain] - Optional first party base domain to use for partitionKey.
- * @param {Object} [originAttributes] - Optional object of origin attributes to
+ * @param {string} host - Host portion of origin to create.
+ * @param {string} [topLevelBaseDomain] - Optional first party base domain to use for partitionKey.
+ * @param {object} [originAttributes] - Optional object of origin attributes to
  * set. If topLevelBaseDomain is passed, the partitionKey will be overwritten.
- * @returns {String} Origin with suffix.
+ * @returns {string} Origin with suffix.
  */
 function getOrigin(host, topLevelBaseDomain, originAttributes = {}) {
   return getPrincipal(host, topLevelBaseDomain, originAttributes).origin;

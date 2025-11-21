@@ -18,7 +18,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  */
 export class PopupAndRedirectBlockingChild extends JSWindowActorChild {
   /**
-   * @typedef {Object} DocState
+   * @typedef {object} DocState
    * @property {Array<{
    *   popupWindowURISpec: string,
    *   popupWindowFeatures: string,

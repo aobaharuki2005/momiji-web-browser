@@ -34,7 +34,7 @@ const TIMEOUT_DELAY_MS = 20000;
  *
  * @param  request
  *         The XMLHttpRequest.
- * @returns {Object} result - An object containing the results.
+ * @returns {object} result - An object containing the results.
  * @returns {integer} result.status - Request status code, if available, else the channel nsresult.
  * @returns {integer} result.channelStatus - Channel nsresult.
  * @returns {integer} result.errorCode - Request error code.

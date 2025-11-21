@@ -92,7 +92,7 @@ function maybeFixupIpv6(host) {
  * aSchemelessSite and aOriginAttributesPattern.
  * @param {string} aSchemelessSite - Domain to check for. Must be a valid,
  * non-empty baseDomain string.
- * @param {Object} [aOriginAttributesPattern] - Additional OriginAttributes
+ * @param {object} [aOriginAttributesPattern] - Additional OriginAttributes
  * filtering using an OriginAttributesPattern. Defaults to {} which matches all.
  * @returns {boolean} Whether the (host, originAttributes) or principal matches
  * the site.
@@ -1168,7 +1168,7 @@ const PushNotificationsCleaner = {
    * Clear entries for aDomain including subdomains of aDomain.
    *
    * @param {string} aDomain - Domain to clear data for.
-   * @param {Object} aOriginAttributesPattern - Optional pattern to filter OriginAttributes.
+   * @param {object} aOriginAttributesPattern - Optional pattern to filter OriginAttributes.
    * @returns {Promise} a promise which resolves once data has been cleared.
    */
   _deleteByRootDomain(aDomain, aOriginAttributesPattern = null) {

@@ -520,7 +520,7 @@ export var PictureInPicture = {
    * respective WindowGlobal.
    *
    * @param {BrowsingContext} browsingContext The BrowsingContext with eligible videos
-   * @param {Object} object
+   * @param {object} object
    *    pipCount: The number of eligible videos for the respective WindowGlobal
    *    pipDisabledCount: The number of disablePiP videos for the respective WindowGlobal
    */
@@ -587,7 +587,7 @@ export var PictureInPicture = {
    *
    * @param {Document} document The window document
    * @param {Element} pipToggle The urlbar PiP button
-   * @param {String} dataL10nId The data l10n id of the string we want to show
+   * @param {string} dataL10nId The data l10n id of the string we want to show
    */
   updateUrlbarHoverText(document, pipToggle, dataL10nId) {
     let shortcut = document.getElementById("key_togglePictureInPicture");
@@ -830,7 +830,7 @@ export var PictureInPicture = {
    * Closes a single PiP window. Used exclusively in conjunction with support
    * for multiple PiP windows
    *
-   * @param {Object} closeData
+   * @param {object} closeData
    *   Additional data required to complete a close operation on a PiP window
    * @param {PictureInPictureParent} closeData.actorRef
    *   The PictureInPictureParent actor associated with the PiP window being closed
@@ -1541,7 +1541,7 @@ export var PictureInPicture = {
    * @param {Screen} screen
    * The screen we need to get the size and coordinates of
    *
-   * @returns {array}
+   * @returns {Array}
    * Size and location of screen in desktop pixels.
    *
    *   screenLeft.value (int):

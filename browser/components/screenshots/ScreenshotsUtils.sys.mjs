@@ -393,7 +393,7 @@ export var ScreenshotsUtils = {
    * Move the native cursor to the given position. Clamp the position to the
    * window just in case.
    *
-   * @param {Object} position An object containing the left and top position
+   * @param {object} position An object containing the left and top position
    * @param {Browser} browser The selected browser
    */
   moveCursor(position, browser) {
@@ -1019,7 +1019,7 @@ export var ScreenshotsUtils = {
    * screenshot to the max width. If the area is still too large for the canvas
    * we will adjust the height so we can successfully capture the screenshot.
    *
-   * @param {Object} rect The dimensions of the screenshot. The rect will be
+   * @param {object} rect The dimensions of the screenshot. The rect will be
    * modified in place
    */
   cropScreenshotRectIfNeeded(rect) {

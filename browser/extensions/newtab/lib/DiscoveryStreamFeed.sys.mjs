@@ -803,8 +803,8 @@ export class DiscoveryStreamFeed {
   /**
    * Adds the promise result to newFeeds and pushes a promise to newsFeedsPromises.
    *
-   * @param {Object} Has both newFeedsPromises (Array) and newFeeds (Object)
-   * @param {Boolean} isStartup We have different cache handling for startup.
+   * @param {object} Has both newFeedsPromises (Array) and newFeeds (Object)
+   * @param {boolean} isStartup We have different cache handling for startup.
    * @returns {Function} We return a function so we can contain
    *                     the scope for isStartup and the promises object.
    *                     Combines feed results and promises for each component with a feed.
@@ -880,7 +880,7 @@ export class DiscoveryStreamFeed {
    * Filters out components with no feeds, and combines all feeds on this component
    * with the feeds from other components.
    *
-   * @param {Boolean} isStartup We have different cache handling for startup.
+   * @param {boolean} isStartup We have different cache handling for startup.
    * @returns {Function} We return a function so we can contain the scope for isStartup.
    *                     Reduces feeds into promises and feed data.
    */
@@ -896,9 +896,9 @@ export class DiscoveryStreamFeed {
   /**
    * Filters out rows with no components, and gets us a promise for each unique feed.
    *
-   * @param {Object} layout This is the Discovery Stream layout object.
-   * @param {Boolean} isStartup We have different cache handling for startup.
-   * @returns {Object} An object with newFeedsPromises (Array) and newFeeds (Object),
+   * @param {object} layout This is the Discovery Stream layout object.
+   * @param {boolean} isStartup We have different cache handling for startup.
+   * @returns {object} An object with newFeedsPromises (Array) and newFeeds (Object),
    *                   we can Promise.all newFeedsPromises to get completed data in newFeeds.
    */
   buildFeedPromises(layout, isStartup, sendUpdate) {
@@ -2086,7 +2086,7 @@ export class DiscoveryStreamFeed {
   }
 
   /**
-   * @typedef {Object} RefreshAll
+   * @typedef {object} RefreshAll
    * @property {boolean} updateOpenTabs - Sends updates to open tabs immediately if true,
    *                                      updates in background if false
    * @property {boolean} isStartup - When the function is called at browser startup

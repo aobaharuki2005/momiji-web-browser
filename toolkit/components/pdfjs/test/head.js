@@ -186,7 +186,7 @@ async function waitForTelemetry(browser) {
 /**
  * Enable an editor (Ink, FreeText, ...).
  *
- * @param {Object} browser
+ * @param {object} browser
  * @param {string} name
  */
 async function enableEditor(browser, name, expectedPageRendered) {
@@ -234,9 +234,9 @@ async function enableEditor(browser, name, expectedPageRendered) {
 /**
  * The text layer contains some spans with the text of the pdf.
  *
- * @param {Object} browser
+ * @param {object} browser
  * @param {string} text
- * @returns {Object} the bbox of the span containing the text.
+ * @returns {object} the bbox of the span containing the text.
  */
 async function getSpanBox(browser, text, pageNumber = 1) {
   return SpecialPowers.spawn(
@@ -277,7 +277,7 @@ async function getSpanBox(browser, text, pageNumber = 1) {
 /**
  * Count the number of elements corresponding to the given selector.
  *
- * @param {Object} browser
+ * @param {object} browser
  * @param {string} selector
  * @returns
  */
@@ -294,7 +294,7 @@ async function countElements(browser, selector) {
 /**
  * Click at the given coordinates.
  *
- * @param {Object} browser
+ * @param {object} browser
  * @param {number} x
  * @param {number} y
  * @param {number} n
@@ -327,7 +327,7 @@ async function clickAt(browser, x, y, n = 1) {
 /**
  * Click on the element corresponding to the given selector.
  *
- * @param {Object} browser
+ * @param {object} browser
  * @param {string} selector
  */
 async function clickOn(browser, selector) {
@@ -355,7 +355,7 @@ function focusEditorLayer(browser) {
 /**
  * Focus an element corresponding to the given selector.
  *
- * @param {Object} browser
+ * @param {object} browser
  * @param {string} selector
  * @returns
  */
@@ -394,7 +394,7 @@ async function hitKey(browser, char) {
 /**
  * Write some text using the keyboard.
  *
- * @param {Object} browser
+ * @param {object} browser
  * @param {string} text
  */
 async function write(browser, text) {
@@ -415,9 +415,9 @@ async function escape(browser) {
 /**
  * Add a FreeText annotation and write some text inside.
  *
- * @param {Object} browser
+ * @param {object} browser
  * @param {string} text
- * @param {Object} box
+ * @param {object} box
  */
 async function addFreeText(browser, text, box) {
   info("Add FreeText: " + text);

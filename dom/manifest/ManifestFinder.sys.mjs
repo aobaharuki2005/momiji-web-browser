@@ -8,7 +8,7 @@ export var ManifestFinder = {
    * manifest link relationship.
    *
    * @param aContent DOM Window to check.
-   * @return {Promise<Boolean>}
+   * @return {Promise<boolean>}
    */
   contentHasManifestLink(aContent) {
     if (!aContent || isXULBrowser(aContent)) {

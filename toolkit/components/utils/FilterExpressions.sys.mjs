@@ -64,7 +64,7 @@ export var FilterExpressions = {
  * Return an array of the given object's own keys (specifically, its enumerable
  * properties), or undefined if the argument isn't an object.
  *
- * @param {Object} obj
+ * @param {object} obj
  * @return {Array[String]|undefined}
  */
 function keys(obj) {
@@ -80,7 +80,7 @@ function keys(obj) {
  * enumerable string-keyed property values), or undefined if the argument isn't
  * an object.
  *
- * @param {Object} obj
+ * @param {object} obj
  * @return {Array|undefined}
  */
 function values(obj) {

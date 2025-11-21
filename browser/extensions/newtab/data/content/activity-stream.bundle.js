@@ -2574,9 +2574,9 @@ const PREF_SYSTEM_STORIES_ENABLED = "feeds.system.topstories";
  *
  * @function useIntersectionObserver
  * @param {function} callback - The function to call when an element comes into the viewport
- * @param {Object} options - Options object passed to Intersection Observer:
+ * @param {object} options - Options object passed to Intersection Observer:
  * https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver#options
- * @param {Boolean} [isSingle = false] Boolean if the elements are an array or single element
+ * @param {boolean} [isSingle = false] Boolean if the elements are an array or single element
  *
  * @returns {React.MutableRefObject} a ref containing an array of elements or single element
  */
@@ -6292,7 +6292,7 @@ _PerfService.prototype = {
    * object to add a mark with the given name to the appropriate performance
    * timeline.
    *
-   * @param  {String} name  the name to give the current mark
+   * @param  {string} name  the name to give the current mark
    * @return {void}
    */
   mark: function mark(str) {
@@ -6303,8 +6303,8 @@ _PerfService.prototype = {
    * Calls the underlying getEntriesByName on the appropriate Window.performance
    * object.
    *
-   * @param  {String} name
-   * @param  {String} type eg "mark"
+   * @param  {string} name
+   * @param  {string} type eg "mark"
    * @return {Array}       Performance* objects
    */
   getEntriesByName: function getEntriesByName(entryName, type) {
@@ -6324,7 +6324,7 @@ _PerfService.prototype = {
    * created dynamically later.  Exactly how/when that shows up needs to be
    * investigated.
    *
-   * @return {Number} A double of milliseconds with a precision of 0.5us.
+   * @return {number} A double of milliseconds with a precision of 0.5us.
    */
   get timeOrigin() {
     return this._perf.timeOrigin;
@@ -6335,7 +6335,7 @@ _PerfService.prototype = {
    * should ([bug 1401406](https://bugzilla.mozilla.org/show_bug.cgi?id=1401406)
    * be comparable across both chrome and content.
    *
-   * @return {Number}
+   * @return {number}
    */
   absNow: function absNow() {
     return this.timeOrigin + this._perf.now();
@@ -6345,9 +6345,9 @@ _PerfService.prototype = {
    * This returns the absolute startTime from the most recent performance.mark()
    * with the given name.
    *
-   * @param  {String} name  the name to lookup the start time for
+   * @param  {string} name  the name to lookup the start time for
    *
-   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
+   * @return {number}       the returned start time, as a DOMHighResTimeStamp
    *
    * @throws {Error}        "No Marks with the name ..." if none are available
    *

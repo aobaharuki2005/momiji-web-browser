@@ -7,8 +7,8 @@ const TESTROOT = "https://example.com/browser/" + RELATIVE_DIR;
 /**
  * Get the the pixels on the drawn canvas.
  *
- * @param {Object} browser
- * @returns {Object}
+ * @param {object} browser
+ * @returns {object}
  */
 async function getPixels(browser) {
   return SpecialPowers.spawn(browser, [], async function () {

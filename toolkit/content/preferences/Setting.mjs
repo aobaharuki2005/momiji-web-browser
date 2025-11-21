@@ -104,7 +104,7 @@ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs
  */
 
 /**
- * @typedef {Object} SettingControllingExtensionInfo
+ * @typedef {object} SettingControllingExtensionInfo
  * @property {string} storeId The ExtensionSettingsStore id that controls this setting.
  * @property {string} l10nId A fluent id to show in a controlled by extension message.
  * @property {string} [name] The controlling extension's name.

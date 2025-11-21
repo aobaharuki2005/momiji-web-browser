@@ -335,7 +335,7 @@ export let ContentSearch = {
   /**
    * Construct a state object representing the search engine state.
    *
-   * @returns {Object} state
+   * @returns {object} state
    */
   async currentStateObj() {
     let state = {

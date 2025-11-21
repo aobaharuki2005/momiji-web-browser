@@ -80,7 +80,7 @@ export var TelemetryHealthPing = {
   /**
    * Record a failure to send a ping out.
    *
-   * @param {String} failureType The type of failure (e.g. "timeout", ...).
+   * @param {string} failureType The type of failure (e.g. "timeout", ...).
    * @returns {Promise} Test-only, resolved when the ping is stored or sent.
    */
   recordSendFailure(failureType) {
@@ -90,7 +90,7 @@ export var TelemetryHealthPing = {
   /**
    * Record that a ping was discarded and its type.
    *
-   * @param {String} pingType The type of discarded ping (e.g. "main", ...).
+   * @param {string} pingType The type of discarded ping (e.g. "main", ...).
    * @returns {Promise} Test-only, resolved when the ping is stored or sent.
    */
   recordDiscardedPing(pingType) {
@@ -100,8 +100,8 @@ export var TelemetryHealthPing = {
   /**
    * Assemble payload.
    *
-   * @param {String} reason A string indicating the triggering reason (e.g. "immediate", "delayed", "shutdown").
-   * @returns {Object} The assembled payload.
+   * @param {string} reason A string indicating the triggering reason (e.g. "immediate", "delayed", "shutdown").
+   * @returns {object} The assembled payload.
    */
   _assemblePayload(reason) {
     this._log.trace("_assemblePayload()");
@@ -124,8 +124,8 @@ export var TelemetryHealthPing = {
   /**
    * Sort input dictionary descending by value.
    *
-   * @param {Object} failures A dictionary of failures subtype and count.
-   * @returns {Object} Sorted failures by value.
+   * @param {object} failures A dictionary of failures subtype and count.
+   * @returns {object} Sorted failures by value.
    */
   _getTopDiscardFailures(failures) {
     this._log.trace("_getTopDiscardFailures()");
@@ -144,7 +144,7 @@ export var TelemetryHealthPing = {
   /**
    * Assemble the failure information and submit it.
    *
-   * @param {String} reason A string indicating the triggering reason (e.g. "immediate", "delayed", "shutdown").
+   * @param {string} reason A string indicating the triggering reason (e.g. "immediate", "delayed", "shutdown").
    * @returns {Promise} Test-only promise that resolves when the ping was stored or sent (if any).
    */
   _submitPing(reason) {
@@ -181,8 +181,8 @@ export var TelemetryHealthPing = {
   /**
    * Accumulate failure information and trigger a ping immediately or on timeout.
    *
-   * @param {String} failureType The type of failure (e.g. "timeout", ...).
-   * @param {String} failureSubType The subtype of failure (e.g. ping type, ...).
+   * @param {string} failureType The type of failure (e.g. "timeout", ...).
+   * @param {string} failureSubType The subtype of failure (e.g. ping type, ...).
    * @returns {Promise} Test-only, resolved when the ping is stored or sent.
    */
   _addToFailure(failureType, failureSubType) {

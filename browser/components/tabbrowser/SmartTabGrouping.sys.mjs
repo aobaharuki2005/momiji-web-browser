@@ -188,7 +188,7 @@ export function getBestAnchorClusterInfo(groupIndices, anchorItems) {
 /**
  * Check tab to see if it's a search page
  *
- * @param {Object} tab
+ * @param {object} tab
  * @returns {boolean} Returns true if the tab is a web search from the Firefox search UI and the user is still on the original page.
  * Changes in search query after search is made is supported.
  * Returns false if user started from a hompepage of a site rather than the New Tab / browser UI
@@ -256,7 +256,7 @@ export class SmartTabGroupingManager {
    * Generates suggested tabs for an existing or provisional group
    *
    * @param {object} group active group we are adding tabs to
-   * @param {array} tabs list of tabs from gbrowser, some of which may be grouped in other groups
+   * @param {Array} tabs list of tabs from gbrowser, some of which may be grouped in other groups
    * @returns a list of suggested new tabs. If no new tabs are suggested an empty list is returned.
    */
   async smartTabGroupingForGroup(group, tabs) {
@@ -331,10 +331,10 @@ export class SmartTabGroupingManager {
   /**
    * Get tabs that need to be included in suggestions
    *
-   * @param {array} allTabs all tabs that are part of the window
-   * @param {array} groupedIndices indices of tabs that are already part of the group
-   * @param {array} alreadyGroupedIndices indices of tabs that are part of other groups
-   * @returns {array} tabs indices to be considered for suggestions
+   * @param {Array} allTabs all tabs that are part of the window
+   * @param {Array} groupedIndices indices of tabs that are already part of the group
+   * @param {Array} alreadyGroupedIndices indices of tabs that are part of other groups
+   * @returns {Array} tabs indices to be considered for suggestions
    */
   getTabsToSuggest(allTabs, groupedIndices, alreadyGroupedIndices) {
     // tabs to be excluded
@@ -357,9 +357,9 @@ export class SmartTabGroupingManager {
   /**
    * Generates similar tabs a grouped list of tabs
    *
-   * @param {array} allTabs all tabs that are part of the window
-   * @param {array} groupedIndices indices of tabs that are already part of the group
-   * @param {array} alreadyGroupedIndices indices of tabs that are part of other groups
+   * @param {Array} allTabs all tabs that are part of the window
+   * @param {Array} groupedIndices indices of tabs that are already part of the group
+   * @param {Array} alreadyGroupedIndices indices of tabs that are part of other groups
    * @param {string} groupLabel name of group if present
    * @param {number} threshold for nearest neighbor similarity
    * @returns a list of suggested tabs that are similar to the groupedIndices tabs
@@ -460,8 +460,8 @@ export class SmartTabGroupingManager {
   /**
    * Calculates the sigmoid value of the input
    *
-   * @param {Number} z
-   * @return {Number}
+   * @param {number} z
+   * @return {number}
    */
   sigmoid(z) {
     return 1 / (1 + Math.exp(-z));
@@ -470,10 +470,10 @@ export class SmartTabGroupingManager {
   /**
    * Calculates the probability using the linear combination of the parameters
    *
-   * @param {Number} groupSimilarity how similar a candidate tab is to the group name
-   * @param {Number} titleSimilarity how similar a candidate tab is to the anchors
-   * @param {Object} params the logistic regression weights assigned to each parameter
-   * @return {Number}
+   * @param {number} groupSimilarity how similar a candidate tab is to the group name
+   * @param {number} titleSimilarity how similar a candidate tab is to the anchors
+   * @param {object} params the logistic regression weights assigned to each parameter
+   * @return {number}
    */
   calculateProbability(groupSimilarity, titleSimilarity, params) {
     return this.sigmoid(
@@ -510,9 +510,9 @@ export class SmartTabGroupingManager {
   /**
    * Generates similar tabs to a grouped list of tabs using a logistic regression "model"
    *
-   * @param {array} allTabs all tabs that are part of the window
-   * @param {array} groupedIndices indices of tabs that are already part of the group
-   * @param {array} alreadyGroupedIndices indices of tabs that are part of other groups
+   * @param {Array} allTabs all tabs that are part of the window
+   * @param {Array} groupedIndices indices of tabs that are already part of the group
+   * @param {Array} alreadyGroupedIndices indices of tabs that are part of other groups
    * @param {string} groupLabel name of group if present
    */
   async findSimilarTabsLogisticRegression({
@@ -655,7 +655,7 @@ export class SmartTabGroupingManager {
   /**
    * Prepares data to be used by the ml models
    *
-   * @param {Object[]} tabList list of tabs in the current window
+   * @param {object[]} tabList list of tabs in the current window
    * @param {boolean} useDescription whether we should combined the title and description
    * @return {Promise<*[Object]>}
    * @private
@@ -938,7 +938,7 @@ export class SmartTabGroupingManager {
   /**
    * Generates clusters for a given list of tabs using precomputed embeddings or newly generated ones.
    *
-   * @param {Object[]} tabList - List of tab objects to be clustered.
+   * @param {object[]} tabList - List of tab objects to be clustered.
    * @param {number[][]} [precomputedEmbeddings] - Precomputed embeddings for tab titles and descriptions.
    * @param {number} numClusters - Number of clusters to form.
    * @param {Function} randFunc - Random function used for clustering initialization.
@@ -1474,7 +1474,7 @@ export class SmartTabGroupingResult {
    * Converts a cluster representation to a flat list of tabs, with clusterID key in each
    * tab representing the id of the cluster it was part of.
    *
-   * @returns {[Object]}
+   * @returns {[object]}
    */
   _flatMapItemsInClusters() {
     return this.clusterRepresentations.reduce((result, clusterRep) => {

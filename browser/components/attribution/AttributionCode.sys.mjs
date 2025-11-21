@@ -92,7 +92,7 @@ export var AttributionCode = {
   /**
    * Write the given attribution code to the attribution file.
    *
-   * @param {String} code to write.
+   * @param {string} code to write.
    */
   async writeAttributionFile(code) {
     // Writing attribution files is only used as part of test code

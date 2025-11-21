@@ -399,7 +399,7 @@ async function createDummyDataForHost(host) {
 /**
  * Helper function to create file URL to open
  *
- * @returns {Object} a file URL
+ * @returns {object} a file URL
  */
 function createFileURL() {
   if (!fileURL) {
@@ -506,7 +506,7 @@ function promiseSanitizationComplete() {
  * @param {Window} browserWin (optional)
  *        The browser window that the dialog is expected to open in. If not
  *        supplied, the initial browser window of the test run is used.
- * @param {Object} {mode, checkingDataSizes}
+ * @param {object} {mode, checkingDataSizes}
  *        mode: context to open the dialog in
  *          One of
  *            clear on shutdown settings context ("clearOnShutdown"),
@@ -571,9 +571,9 @@ ClearHistoryDialogHelper.prototype = {
   },
 
   /**
-   * @param {String} aCheckboxId
+   * @param {string} aCheckboxId
    *        The checkbox id name
-   * @param {Boolean} aCheckState
+   * @param {boolean} aCheckState
    *        True if the checkbox should be checked, false otherwise
    */
   validateCheckbox(aCheckboxId, aCheckState) {

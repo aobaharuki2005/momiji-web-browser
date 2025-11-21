@@ -51,7 +51,7 @@ function promiseWebAuthnGetAssertionDiscoverableBC(
  * Test that a webauthn request triggers BTP user activation.
  *
  * @param {Function} triggerFn - Function that runs the webauthn request.
- * @param {String} userActivationSiteHost - The expected user activation site host in BTP.
+ * @param {string} userActivationSiteHost - The expected user activation site host in BTP.
  */
 async function runWebAuthTest(triggerFn, userActivationSiteHost) {
   is(

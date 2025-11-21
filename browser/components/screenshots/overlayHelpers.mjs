@@ -56,10 +56,10 @@ export function setMaxDetectWidth(maxWidth) {
  *
  * If the element is not an iframe, then we will just return the element.
  *
- * @param {Number} x The x coordinate
- * @param {Number} y The y coordinate
+ * @param {number} x The x coordinate
+ * @param {number} y The y coordinate
  * @param {Document} doc The document
- * @returns {Object}
+ * @returns {object}
  *    ele: The element for a given point (x, y)
  *    rect: The rect for the given point if ele is an iframe
  *          otherwise null
@@ -247,7 +247,7 @@ export class Region {
    * Sets the dimensions if the given dimension is defined.
    * Otherwise will reset the dimensions
    *
-   * @param {Object} dims The new region dimensions
+   * @param {object} dims The new region dimensions
    *  {
    *    left: new left dimension value or undefined
    *    top: new top dimension value or undefined

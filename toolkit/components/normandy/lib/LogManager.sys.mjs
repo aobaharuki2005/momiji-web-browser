@@ -12,7 +12,7 @@ export var LogManager = {
    * Configure the root logger for the Recipe Client. Must be called at
    * least once before using any loggers created via getLogger.
    *
-   * @param {Number} loggingLevel
+   * @param {number} loggingLevel
    *        Logging level to use as defined in Log.sys.mjs
    */
   configure(loggingLevel) {
@@ -26,7 +26,7 @@ export var LogManager = {
   /**
    * Obtain a named logger with the recipe client logger as its parent.
    *
-   * @param {String} name
+   * @param {string} name
    *        Name of the logger to obtain.
    * @return {Logger}
    */

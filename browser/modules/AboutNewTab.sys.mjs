@@ -94,10 +94,10 @@ export const AboutNewTab = {
    *
    * This will only act if there is a change of state and if not overridden.
    *
-   * @returns {Boolean} Returns if there has been a state change
+   * @returns {boolean} Returns if there has been a state change
    *
-   * @param {Boolean}   stateEnabled    activity stream enabled state to set to
-   * @param {Boolean}   forceState      force state change
+   * @param {boolean}   stateEnabled    activity stream enabled state to set to
+   * @param {boolean}   forceState      force state change
    */
   toggleActivityStream(stateEnabled, forceState = false) {
     if (

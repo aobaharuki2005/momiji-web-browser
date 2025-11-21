@@ -148,7 +148,7 @@
      * Handle theme updates from the LightweightThemeChild actor or due to
      * changes to the prefers-color-scheme media query.
      *
-     * @param {Object} event object containing the theme or query update.
+     * @param {object} event object containing the theme or query update.
      */
     handleEvent(event) {
       if (event.type == "LightweightTheme:Set") {
@@ -181,7 +181,7 @@
     /**
      * Apply theme data to an element
      *
-     * @param {Object} themeData The theme data.
+     * @param {object} themeData The theme data.
      */
     _setProperties(themeData) {
       const root = document.documentElement;

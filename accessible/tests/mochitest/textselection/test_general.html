@@ -20,7 +20,7 @@
      * @param {string} aID  The ID to test.
      * @param {nsIAccessibleText} acc  The accessible to test.
      * @param {int} index  The selection's index to test.
-     * @param {array} offsets  The start and end offset to test against.
+     * @param {Array} offsets  The start and end offset to test against.
      * @param {string} msgStart  The start of the message to return in test
      *                           messages.
      */
@@ -39,7 +39,7 @@
      * Test adding selections to accessibles.
      *
      * @param {string} aID  The ID of the element to test.
-     * @param {array} aSelections  Array of selection start and end indices.
+     * @param {Array} aSelections  Array of selection start and end indices.
      */
     async function addSelections(aID, aSelections) {
       info("Test adding selections to " + aID);
@@ -71,7 +71,7 @@
      *
      * @param {string} aID  The ID of the element to test.
      * @param {int} aIndex  The index of the selection to change.
-     * @param {array} aSelection  Array of the selection's new start and end
+     * @param {Array} aSelection  Array of the selection's new start and end
      *                            indices.
      */
     async function changeSelection(aID, aIndex, aSelection) {
@@ -118,7 +118,7 @@
      * @param  {int} aNodeOffset1  The offset where the selection should start
      * @param {string} aNodeID2  The node in which the selection should end
      * @param {int} aNodeOffset2  The index at which the selection should end
-     * @param {array} aTests  An array of accessibles and their start and end
+     * @param {Array} aTests  An array of accessibles and their start and end
      *                        offsets to test.
      */
     async function changeDOMSelection(aID, aNodeID1, aNodeOffset1,

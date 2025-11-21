@@ -76,7 +76,7 @@ var gPermissionManager = {
   },
 
   /**
-   * @param {Object} params
+   * @param {object} params
    * @param {string} params.permissionType Permission type for which the dialog should be shown
    * @param {string} params.prefilledHost The value which the URL field should initially contain
    * @param {boolean} params.blockVisible Display the "Block" button in the dialog

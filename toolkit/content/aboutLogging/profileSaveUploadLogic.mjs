@@ -161,7 +161,7 @@ export class ProfileSaveOrUploadDialog {
    * The progress is reported with the callback onProgress. The parameter to
    * this function is a number between 0 and 1.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {(progress: number) => unknown} options.onProgress
    * @returns {Promise<string>} The JWT token returned by the server
    */

@@ -107,7 +107,7 @@ function verifyBlobProperties(blob1, blob2, fileId) {
  *
  * @param {Blob} blob1 actual Blob value
  * @param {Blob} blob2 Blob with expected properties
- * @param {Number} fileId expected id
+ * @param {number} fileId expected id
  */
 async function verifyBlobAsync(blob1, blob2, fileId) {
   verifyBlobProperties(blob1, blob2, fileId);

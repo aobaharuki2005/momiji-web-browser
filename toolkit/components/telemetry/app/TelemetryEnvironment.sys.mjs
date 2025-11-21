@@ -118,11 +118,11 @@ export var TelemetryEnvironment = {
    * If an annotation with the same id already exists, it will be overwritten.
    * This triggers a new subsession, subject to throttling.
    *
-   * @param {String} id The id of the active experiment.
-   * @param {String} branch The experiment branch.
-   * @param {Object} [options] Optional object with options.
-   * @param {String} [options.type=false] The specific experiment type.
-   * @param {String} [options.enrollmentId=undefined] The id of the enrollment.
+   * @param {string} id The id of the active experiment.
+   * @param {string} branch The experiment branch.
+   * @param {object} [options] Optional object with options.
+   * @param {string} [options.type=false] The specific experiment type.
+   * @param {string} [options.enrollmentId=undefined] The id of the enrollment.
    */
   setExperimentActive(id, branch, options = {}) {
     if (gGlobalEnvironment) {
@@ -136,7 +136,7 @@ export var TelemetryEnvironment = {
    * Remove an experiment annotation from the environment.
    * If the annotation exists, a new subsession will triggered.
    *
-   * @param {String} id The id of the active experiment.
+   * @param {string} id The id of the active experiment.
    */
   setExperimentInactive(id) {
     if (gGlobalEnvironment) {
@@ -516,10 +516,10 @@ function getGfxField(aPropertyName, aDefault) {
 /**
  * Returns a substring of the input string.
  *
- * @param {String} aString The input string.
+ * @param {string} aString The input string.
  * @param {Integer} aMaxLength The maximum length of the returned substring. If this is
  *        greater than the length of the input string, we return the whole input string.
- * @return {String} The substring or null if the input string is null.
+ * @return {string} The substring or null if the input string is null.
  */
 function limitStringToLength(aString, aMaxLength) {
   if (typeof aString !== "string") {

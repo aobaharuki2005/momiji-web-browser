@@ -501,7 +501,7 @@ export const NimbusTestUtils = {
     /**
      * A migration state that represents no migrations.
      *
-     * @type {Record<Phase, Number>}
+     * @type {Record<Phase, number>}
      */
     UNMIGRATED: Object.freeze({}),
 
@@ -524,7 +524,7 @@ export const NimbusTestUtils = {
     /**
      * A migration state that represents all migrations applied.
      *
-     * @type {Record<Phase, Number>}
+     * @type {Record<Phase, number>}
      */
     get LATEST() {
       return NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL;

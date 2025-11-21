@@ -66,7 +66,7 @@ export function unaryEncodeDiffPrivacy(x, N, p, q) {
 /**
  * Adds value to all a particular key in a dictionary. If the key is missing it sets the value.
  *
- * @param {Object} dict - The dictionary to modify.
+ * @param {object} dict - The dictionary to modify.
  * @param {string} key - The key whose value should be added or set.
  * @param {number} value - The value to add to the key.
  */
@@ -81,9 +81,9 @@ export function dictAdd(dict, key, value) {
 /**
  * Apply function to all keys in dictionary, returning new dictionary.
  *
- * @param {Object} obj - The object whose values should be transformed.
+ * @param {object} obj - The object whose values should be transformed.
  * @param {Function} fn - The function to apply to each value.
- * @returns {Object} A new object with the transformed values.
+ * @returns {object} A new object with the transformed values.
  */
 export function dictApply(obj, fn) {
   return Object.fromEntries(
@@ -242,9 +242,9 @@ export class FeatureModel {
   /**
    *
    * @param {string} modelId
-   * @param {Object} dayTimeWeighting Data for day time weighting class
-   * @param {Object} interestVectorModel Data for interest model
-   * @param {Object} tileImportance Data for tile importance
+   * @param {object} dayTimeWeighting Data for day time weighting class
+   * @param {object} interestVectorModel Data for interest model
+   * @param {object} tileImportance Data for tile importance
    * @param {boolean} rescale Whether to rescale to max value
    * @param {boolean} logScale Whether to apply natural log (ln(x+ 1)) before rescaling
    */
@@ -321,7 +321,7 @@ export class FeatureModel {
   /**
    * Computes an interest vector or aggregate based on the model and raw sql inout.
    *
-   * @param {Object} config
+   * @param {object} config
    * @param {Array.<Array.<string|number>>} config.dataForIntervals Raw aggregate output from SQL query. Could be clicks or impressions
    * @param {Object.<string, number>} config.indexSchema Map of keys to indices in each sub-array in dataForIntervals
    * @param {boolean} [config.applyThresholding=false] Whether to apply thresholds
@@ -411,8 +411,8 @@ export class FeatureModel {
    * Convert float to discrete values, based on threshold parmaters for each feature in the model.
    * Values are modifified in place on provided dictionary.
    *
-   * @param {Object} valueDict of all values in model
-   * @param {Boolean} applyDifferentialPrivacy whether to apply differential privacy as well as thresholding.
+   * @param {object} valueDict of all values in model
+   * @param {boolean} applyDifferentialPrivacy whether to apply differential privacy as well as thresholding.
    */
   applyThresholding(valueDict, applyDifferentialPrivacy = false) {
     for (const key of Object.keys(valueDict)) {
@@ -471,16 +471,16 @@ export class FeatureModel {
    *
    * In all cases model_id is returned.
    *
-   * @param {Object} params - Function parameters.
+   * @param {object} params - Function parameters.
    * @param {Object<string, number>} params.clickDict - A dictionary of interest keys to click counts.
    * @param {Object<string, number>} params.impressionDict - A dictionary of interest keys to impression counts.
    * @param {string} [params.model_id="unknown"] - Identifier for the model used in generating the vectors.
    * @param {boolean} [params.condensePrivateValues=true] - If true, condenses coarse private interest values into an array format.
    *
-   * @returns {Object} result - An object containing one or more of the following:
-   * @returns {Object} result.inferredInterest - A dictionary of private inferred interest scores
-   * @returns {Object} [result.coarseInferredInterests] - A dictionary of thresholded interest scores (non-private), if supported.
-   * @returns {Object} [result.coarsePrivateInferredInterests] - A dictionary of thresholded interest scores with differential privacy, if supported.
+   * @returns {object} result - An object containing one or more of the following:
+   * @returns {object} result.inferredInterest - A dictionary of private inferred interest scores
+   * @returns {object} [result.coarseInferredInterests] - A dictionary of thresholded interest scores (non-private), if supported.
+   * @returns {object} [result.coarsePrivateInferredInterests] - A dictionary of thresholded interest scores with differential privacy, if supported.
    */
   computeCTRInterestVectors({
     clicks,
@@ -539,16 +539,16 @@ export class FeatureModel {
    * Returns standard inferred interests (with Laplace noise), and optionally returns
    * coarse-grained and private-coarse versions depending on model support.
    *
-   * @param {Object} params - The function parameters.
-   * @param {Array<Object>} params.dataForIntervals - An array of data points grouped by time intervals (e.g., clicks, impressions).
-   * @param {Object} params.indexSchema - Schema that defines how interest indices should be computed.
+   * @param {object} params - The function parameters.
+   * @param {Array<object>} params.dataForIntervals - An array of data points grouped by time intervals (e.g., clicks, impressions).
+   * @param {object} params.indexSchema - Schema that defines how interest indices should be computed.
    * @param {string} [params.model_id="unknown"] - Identifier for the model used to produce these vectors.
    * @param {boolean} [params.condensePrivateValues=true] - If true, condenses coarse private interest values into an array format.
    *
-   * @returns {Object} result - An object containing the computed interest vectors.
-   * @returns {Object} result.inferredInterests - A dictionary of private inferred interest values, with `model_id`.
-   * @returns {Object} [result.coarseInferredInterests] - Coarse thresholded (non-private) interest vector, if supported.
-   * @returns {Object|{values: Array<number>, model_id: string}} [result.coarsePrivateInferredInterests] - Coarse and differentially private interests.
+   * @returns {object} result - An object containing the computed interest vectors.
+   * @returns {object} result.inferredInterests - A dictionary of private inferred interest values, with `model_id`.
+   * @returns {object} [result.coarseInferredInterests] - Coarse thresholded (non-private) interest vector, if supported.
+   * @returns {object | {values: Array<number>, model_id: string}} [result.coarsePrivateInferredInterests] - Coarse and differentially private interests.
    *           If `condensePrivateValues` is true, returned as an object with a `values` array; otherwise, as a dictionary.
    */
   computeInterestVectors({

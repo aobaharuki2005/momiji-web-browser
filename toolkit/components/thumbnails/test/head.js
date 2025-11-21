@@ -183,10 +183,10 @@ function bgCaptureIfMissing(aURL, aOptions) {
 /**
  * Queues a BackgroundPageThumbs capture with the supplied method.
  *
- * @param {String} aMethodName One of the method names on BackgroundPageThumbs
+ * @param {string} aMethodName One of the method names on BackgroundPageThumbs
  * for capturing thumbnails. Example: "capture", "captureIfMissing".
- * @param {String} aURL The URL of the page to capture.
- * @param {Object} aOptions The options object to pass to BackgroundPageThumbs.
+ * @param {string} aURL The URL of the page to capture.
+ * @param {object} aOptions The options object to pass to BackgroundPageThumbs.
  *
  * @returns {Promise}
  * @resolves {Array} Resolves once the capture has completed with an Array of

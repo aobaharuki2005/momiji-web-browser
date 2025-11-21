@@ -172,7 +172,7 @@ Preferences._set = function (prefName, prefValue) {
  * @param   prefName  {String|Array}
  *          the pref to check, or an array of prefs to check
  *
- * @returns {Boolean|Array}
+ * @returns {boolean | Array}
  *          whether or not the pref has a value; or, if the caller provided
  *          an array of pref names, an array of booleans indicating whether
  *          or not the prefs have values
@@ -196,7 +196,7 @@ Preferences.has = function (prefName) {
  * @param   prefName  {String|Array}
  *          the pref to check, or an array of prefs to check
  *
- * @returns {Boolean|Array}
+ * @returns {boolean | Array}
  *          whether or not the pref has a user-set value; or, if the caller
  *          provided an array of pref names, an array of booleans indicating
  *          whether or not the prefs have user-set values
@@ -262,7 +262,7 @@ Preferences.unlock = function (prefName) {
  * @param   prefName  {String|Array}
  *          the pref to check, or an array of prefs to check
  *
- * @returns {Boolean|Array}
+ * @returns {boolean | Array}
  *          whether or not the pref has a user-set value; or, if the caller
  *          provided an array of pref names, an array of booleans indicating
  *          whether or not the prefs have user-set values

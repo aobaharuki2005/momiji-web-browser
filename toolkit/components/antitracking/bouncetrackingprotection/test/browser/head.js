@@ -165,7 +165,7 @@ function getBounceURL({
  *
  * @param {MozBrowser} browser - Browser to insert the link in.
  * @param {URL} targetURL - Destination for navigation.
- * @param {Object} options - Additional options.
+ * @param {object} options - Additional options.
  * @param {string} [options.spawnWindow] - If set to "newTab" or "popup" the
  * link will be opened in a new tab or popup window respectively. If unset the
  * link is opened in the given browser.

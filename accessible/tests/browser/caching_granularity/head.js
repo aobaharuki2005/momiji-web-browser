@@ -27,7 +27,7 @@ loadScripts(
  *
  * @param {nsIAccessible} accessible the accessible where the attribute to query
  *                                   should be cached
- * @param {String}        attribute  the attribute to query in the cache
+ * @param {string}        attribute  the attribute to query in the cache
  */
 async function verifyAttributeCached(accessible, attribute) {
   // Wait until the attribute is present in the cache.
@@ -47,7 +47,7 @@ async function verifyAttributeCached(accessible, attribute) {
  *
  * @param {nsIAccessible} accessible the accessible where the attribute to query
  *                                   should be cached
- * @param {String}        attribute  the attribute to query in the cache
+ * @param {string}        attribute  the attribute to query in the cache
  */
 function verifyAttributeCachedNoRetry(accessible, attribute) {
   try {
@@ -71,7 +71,7 @@ function verifyAttributeCachedNoRetry(accessible, attribute) {
  *
  * @param  {nsIAccessible}  accessible the accessible where the attribute to
  *                                     query should be cached
- * @param  {String}         attribute  the attribute to query in the cache
+ * @param  {string}         attribute  the attribute to query in the cache
  * @param  {QueryCallback}  queryCb    the callback that this function will
  *                                     invoke to query the given attribute
  */
@@ -101,7 +101,7 @@ async function testAttributeCachePresence(accessible, attribute, queryCb) {
  *
  * @param  {nsIAccessible}  accessible the accessible where the attribute to
  *                                     query should be cached
- * @param  {String}         attribute  the attribute to query in the cache
+ * @param  {string}         attribute  the attribute to query in the cache
  * @param  {QueryCallback}  queryCb    the callback that this function will
  *                                     invoke to query the given attribute
  */

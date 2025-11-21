@@ -144,7 +144,7 @@ export class ShowHeartbeatAction extends BaseAction {
    * ID, then the client ID is attached to the surveyId in the format
    * `${surveyId}::${userId}`.
    *
-   * @return {String} Survey ID, possibly with user UUID
+   * @return {string} Survey ID, possibly with user UUID
    */
   generateSurveyId(recipe) {
     const { includeTelemetryUUID, surveyId } = recipe.arguments;
@@ -158,7 +158,7 @@ export class ShowHeartbeatAction extends BaseAction {
    * Generate the appropriate post-answer URL for a recipe.
    *
    * @param  recipe
-   * @return {String} URL with post-answer query params
+   * @return {string} URL with post-answer query params
    */
   async generatePostAnswerURL(recipe) {
     const { postAnswerUrl, message, includeTelemetryUUID } = recipe.arguments;

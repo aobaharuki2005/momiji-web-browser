@@ -1332,9 +1332,9 @@ Sync11Service.prototype = {
    * Perform a full sync (or of the given engines). While a sync is in progress,
    * this call is ignored; to guarantee a follow-up you must call queueSync().
    *
-   * @param {Object} options
-   * @param {Array<String>} [options.engines] — names of engines to sync
-   * @param {String} [options.why] — reason for the sync
+   * @param {object} options
+   * @param {Array<string>} [options.engines] — names of engines to sync
+   * @param {string} [options.why] — reason for the sync
    * @returns {Promise<void>}
    */
   async sync({ engines, why } = {}) {
@@ -1387,7 +1387,7 @@ Sync11Service.prototype = {
   /**
    * Kick off a sync after the current one finishes, or immediately if idle.
    *
-   * @param {String} why — reason for calling the sync
+   * @param {string} why — reason for calling the sync
    */
   queueSync(why) {
     if (this._locked) {
@@ -1466,7 +1466,7 @@ Sync11Service.prototype = {
    * Upload crypto/keys
    *
    * @param {WBORecord} cryptoKeys crypto/keys record
-   * @param {Number} lastModified known last modified timestamp (in decimal seconds),
+   * @param {number} lastModified known last modified timestamp (in decimal seconds),
    *                 will be used to set the X-If-Unmodified-Since header
    */
   async _uploadCryptoKeys(cryptoKeys, lastModified) {

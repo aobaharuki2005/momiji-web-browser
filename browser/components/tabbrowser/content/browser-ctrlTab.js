@@ -21,7 +21,7 @@ var tabPreviews = {
    * image URL will fail to load and this method will return null after 1s.
    * Callers should handle this case by doing nothing or using a fallback image.
    *
-   * @param {String} uri The page URL.
+   * @param {string} uri The page URL.
    * @returns {Promise<Image|null>}
    */
   loadImage: async function tabPreviews_loadImage(uri) {
@@ -97,7 +97,7 @@ var tabPreviews = {
    * it in aTab.__thumbnail, and possibly store it in thumbnail storage.
    *
    * @param {MozTabbrowserTab} aTab The tab to capture a preview for.
-   * @param {Boolean} aShouldCache Cache/store the captured thumbnail?
+   * @param {boolean} aShouldCache Cache/store the captured thumbnail?
    * @returns {Promise<HTMLCanvasElement|null>} Resolves to...
    * @resolves {HTMLCanvasElement} A snapshot of the tab's content. If the
    *   snapshot is safe for storage and aShouldCache is true, the snapshot is

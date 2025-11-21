@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * @typedef {Object} UIState
+ * @typedef {object} UIState
  * @property {string} status The Sync/FxA status, see STATUS_* constants.
  * @property {string} [email] The FxA email configured to log-in with Sync.
  * @property {string} [displayName] The user's FxA display name.

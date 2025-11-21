@@ -272,7 +272,7 @@ export var SessionStore = {
   /**
    * Get the collection of all matching windows tracked by SessionStore
    *
-   * @param {Window|Object} [aWindowOrOptions] Optionally an options object or a window to used to determine if we're filtering for private or non-private windows
+   * @param {Window | object} [aWindowOrOptions] Optionally an options object or a window to used to determine if we're filtering for private or non-private windows
    * @param {boolean} [aWindowOrOptions.private] Determine if we should filter for private or non-private windows
    */
   getWindows(aWindowOrOptions) {
@@ -368,7 +368,7 @@ export var SessionStore = {
   /**
    * Get the number of closed tabs associated with all matching windows
    *
-   * @param {Window|Object} [aOptions]
+   * @param {Window | object} [aOptions]
    *        Either a DOMWindow (see aOptions.sourceWindow) or an object with properties
             to identify which closed tabs to include in the count.
    * @param {Window} aOptions.sourceWindow
@@ -408,7 +408,7 @@ export var SessionStore = {
   /**
    * Get the closed tab data associated with all matching windows
    *
-   * @param {Window|Object} [aOptions]
+   * @param {Window | object} [aOptions]
    *        Either a DOMWindow (see aOptions.sourceWindow) or an object with properties
             to identify which closed tabs to get data from
    * @param {Window} aOptions.sourceWindow
@@ -468,10 +468,10 @@ export var SessionStore = {
   /**
    * Re-open a closed tab
    *
-   * @param {Window|Object} aSource
+   * @param {Window | object} aSource
    *        Either a DOMWindow or an object with properties to resolve to the window
    *        the tab was previously open in.
-   * @param {String} aSource.sourceWindowId
+   * @param {string} aSource.sourceWindowId
             A SessionStore window id used to look up the window where the tab was closed
    * @param {number} aSource.sourceClosedId
             The closedId used to look up the closed window where the tab was closed
@@ -487,10 +487,10 @@ export var SessionStore = {
   /**
    * Re-open a tab from a closed window, which corresponds to the closedId
    *
-   * @param {Window|Object} aSource
+   * @param {Window | object} aSource
    *        Either a DOMWindow or an object with properties to resolve to the window
    *        the tab was previously open in.
-   * @param {String} aSource.sourceWindowId
+   * @param {string} aSource.sourceWindowId
             A SessionStore window id used to look up the window where the tab was closed
    * @param {number} aSource.sourceClosedId
             The closedId used to look up the closed window where the tab was closed
@@ -516,10 +516,10 @@ export var SessionStore = {
    * Removes the record at the given index so it cannot be un-closed or appear
    * in a list of recently-closed tabs
    *
-   * @param {Window|Object} aSource
+   * @param {Window | object} aSource
    *        Either a DOMWindow or an object with properties to resolve to the window
    *        the tab was previously open in.
-   * @param {String} aSource.sourceWindowId
+   * @param {string} aSource.sourceWindowId
             A SessionStore window id used to look up the window where the tab was closed
    * @param {number} aSource.sourceClosedId
             The closedId used to look up the closed window where the tab was closed
@@ -536,10 +536,10 @@ export var SessionStore = {
    * Removes the record at the given index so it cannot be un-closed or appear
    * in a list of recently-closed tabs
    *
-   * @param {Window|Object} aSource
+   * @param {Window | object} aSource
    *        Either a DOMWindow or an object with properties to resolve to the window
    *        the tab was previously open in.
-   * @param {String} aSource.sourceWindowId
+   * @param {string} aSource.sourceWindowId
             A SessionStore window id used to look up the window where the tab group was closed
    * @param {number} aSource.sourceClosedId
             The closedId used to look up the closed window where the tab group was closed
@@ -559,13 +559,13 @@ export var SessionStore = {
    *
    * @param {integer} aClosedId
    *        The closedId of the tab
-   * @param {Window|Object} aSourceOptions
+   * @param {Window | object} aSourceOptions
    *        Either a DOMWindow or an object with properties to resolve to the window
    *        the tab was previously open in.
    * @param {boolean} [aSourceOptions.includePrivate = true]
             If no other means of resolving a source window is given, this flag is used to
             constrain a search across all open window's closed tabs.
-   * @param {String} aSourceOptions.sourceWindowId
+   * @param {string} aSourceOptions.sourceWindowId
             A SessionStore window id used to look up the window where the tab was closed
    * @param {number} aSourceOptions.sourceClosedId
             The closedId used to look up the closed window where the tab was closed
@@ -603,7 +603,7 @@ export var SessionStore = {
   /**
    * Look up a window tracked by SessionStore by its id
    *
-   * @param {String} aSessionStoreId
+   * @param {string} aSessionStoreId
    */
   getWindowById: function ss_getWindowById(aSessionStoreId) {
     return SessionStoreInternal.getWindowById(aSessionStoreId);
@@ -910,7 +910,7 @@ export var SessionStore = {
   /**
    * Re-open a closed tab group
    *
-   * @param {Window|Object} source
+   * @param {Window | object} source
    *        Either a DOMWindow or an object with properties to resolve to the window
    *        the tab was previously open in.
    * @param {string} source.sourceWindowId
@@ -997,7 +997,7 @@ export var SessionStore = {
    * Validates that a state object matches the schema
    * defined in browser/components/sessionstore/session.schema.json
    *
-   * @param {Object} [state] State object to validate. If not provided,
+   * @param {object} [state] State object to validate. If not provided,
    *   will validate the current session state.
    * @returns {Promise} A promise which resolves to a validation result object
    */
@@ -1123,7 +1123,7 @@ var SessionStoreInternal = {
   _tabsRestoringCount: 0,
 
   /**
-   * @typedef {Object} CloseAction
+   * @typedef {object} CloseAction
    * @property {string} type
    *   What the close action acted upon. One of either _LAST_ACTION_CLOSED_TAB or
    *   _LAST_ACTION_CLOSED_WINDOW
@@ -5745,7 +5745,7 @@ var SessionStoreInternal = {
    *
    * @param tabData
    *        an array of data to be restored
-   * @param {String} windowId
+   * @param {string} windowId
    *        The SessionStore id for the window these tabs should be associated with
    * @returns the updated tabData array
    */
@@ -8327,7 +8327,7 @@ var SessionStoreInternal = {
   },
 
   /**
-   * @param {Window|Object} source
+   * @param {Window | object} source
    * @param {string} tabGroupId
    * @param {Window} [targetWindow]
    * @returns {MozTabbrowserTabGroup}
@@ -8499,7 +8499,7 @@ var SessionStoreInternal = {
    * Validates that a state object matches the schema
    * defined in browser/components/sessionstore/session.schema.json
    *
-   * @param {Object} [state] State object to validate. If not provided,
+   * @param {object} [state] State object to validate. If not provided,
    *   will validate the current session state.
    * @returns {Promise} A promise which resolves to a validation result object
    */

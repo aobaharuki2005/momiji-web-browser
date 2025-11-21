@@ -78,7 +78,7 @@ add_task(async () => {
        * A helper function used to get the "flipped" attribute of the video's shadowRoot's first child.
        *
        * @param {Element} browser The <xul:browser> hosting the <video>
-       * @param {String} videoID The ID of the video being checked
+       * @param {string} videoID The ID of the video being checked
        */
       async function getFlippedAttribute(browser, videoID) {
         let videoFlippedAttribute = await SpecialPowers.spawn(

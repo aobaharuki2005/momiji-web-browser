@@ -210,7 +210,7 @@ class ListenerHelper {
    * @param {EventListenerParam} eventListenerParam
    * @param {string} target
    * @param {Function} callback
-   * @returns {Array<function>} Array of remove event listener functions.
+   * @returns {Array<Function>} Array of remove event listener functions.
    */
   static addListener(elements, eventListenerParam, target, callback) {
     let { action, eventType, target: customTarget } = eventListenerParam;
@@ -1432,7 +1432,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
    * the information associated with that provider.
    *
    * @param {string} url The url to check
-   * @returns {array|null} Returns null if there's no match, otherwise an array
+   * @returns {Array | null} Returns null if there's no match, otherwise an array
    *   of provider name and the provider information.
    */
   _getProviderInfoForUrl(url) {

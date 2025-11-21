@@ -212,7 +212,7 @@ export class ExperimentManager {
    *   * `isFirstStartup`: a boolean indicating whether or not the current enrollment
    *      is performed during the first startup
    *
-   * @returns {Object} A context object
+   * @returns {object} A context object
    */
   createTargetingContext() {
     let context = {

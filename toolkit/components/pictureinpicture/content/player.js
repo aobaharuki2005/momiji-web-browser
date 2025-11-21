@@ -69,7 +69,7 @@ const BOTTOM_RIGHT_QUADRANT = 4;
  * Public function to be called from PictureInPicture.sys.mjs. This is the main
  * entrypoint for initializing the player window.
  *
- * @param {Number} id
+ * @param {number} id
  *   A unique numeric ID for the window, used for Telemetry Events.
  * @param {WindowGlobalParent} wgp
  *   The WindowGlobalParent that is hosting the originating video.
@@ -85,7 +85,7 @@ function setupPlayer(id, wgp, videoRef, autoFocus) {
  * Public function to be called from PictureInPicture.sys.mjs. This update the
  * controls based on whether or not the video is playing.
  *
- * @param {Boolean} isPlaying
+ * @param {boolean} isPlaying
  *   True if the Picture-in-Picture video is playing.
  */
 function setIsPlayingState(isPlaying) {
@@ -96,7 +96,7 @@ function setIsPlayingState(isPlaying) {
  * Public function to be called from PictureInPicture.sys.mjs. This update the
  * controls based on whether or not the video is muted.
  *
- * @param {Boolean} isMuted
+ * @param {boolean} isMuted
  *   True if the Picture-in-Picture video is muted.
  */
 function setIsMutedState(isMuted) {
@@ -106,7 +106,7 @@ function setIsMutedState(isMuted) {
 /**
  * Function to resize and reposition the PiP window
  *
- * @param {Object} rect
+ * @param {object} rect
  *   An object containing `left`, `top`, `width`, and `height` for the PiP
  *   window
  */
@@ -212,7 +212,7 @@ let Player = {
   /**
    * Initializes the player browser, and sets up the initial state.
    *
-   * @param {Number} id
+   * @param {number} id
    *   A unique numeric ID for the window, used for Telemetry Events.
    * @param {WindowGlobalParent} wgp
    *   The WindowGlobalParent that is hosting the originating video.
@@ -607,7 +607,7 @@ let Player = {
    * If the volume is changed via the keyboard, onKeyDown will set
    * this.preventNextInputEvent to true.
    *
-   * @param {Number} volume A number between 0 and 1 that represents the volume
+   * @param {number} volume A number between 0 and 1 that represents the volume
    */
   handleAudioScrubbing(volume) {
     // When using the keyboard to adjust the volume, we get both a keydown and
@@ -775,7 +775,7 @@ let Player = {
   /**
    * Function to toggle the visibility of the subtitles settings panel
    *
-   * @param {Object} options [optional] Object containing options for the function
+   * @param {object} options [optional] Object containing options for the function
    *   - forceHide: true to force hide the subtitles settings panel
    *   - isKeyboard: true if the subtitles button was activated using the keyboard
    *     to show or hide the subtitles settings panel
@@ -1272,7 +1272,7 @@ let Player = {
    * SET isPlaying to true if the video is playing, false otherwise. This will
    * update the internal state and displayed controls.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   get isPlaying() {
     return this._isPlaying;
@@ -1311,7 +1311,7 @@ let Player = {
    * SET isMuted to true if the video is muted, false otherwise. This will
    * update the internal state and displayed controls.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   get isMuted() {
     return this._isMuted;
@@ -1384,7 +1384,7 @@ let Player = {
   /**
    * Makes the player controls visible.
    *
-   * @param {Boolean} revealIndefinitely
+   * @param {boolean} revealIndefinitely
    *   If false, this will hide the controls again after
    *   CONTROLS_FADE_TIMEOUT_MS milliseconds has passed. If true, the controls
    *   will remain visible until revealControls is called again with
@@ -1432,9 +1432,9 @@ let Player = {
    * impose a minimum window size. For other platforms, this function is a
    * no-op.
    *
-   * @param {Number} width
+   * @param {number} width
    *   The width of the video being played.
-   * @param {Number} height
+   * @param {number} height
    *   The height of the video being played.
    */
   computeAndSetMinimumSize(width, height) {

@@ -16,9 +16,9 @@ const PREF_SYSTEM_STORIES_ENABLED = "feeds.system.topstories";
  *
  * @function useIntersectionObserver
  * @param {function} callback - The function to call when an element comes into the viewport
- * @param {Object} options - Options object passed to Intersection Observer:
+ * @param {object} options - Options object passed to Intersection Observer:
  * https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver#options
- * @param {Boolean} [isSingle = false] Boolean if the elements are an array or single element
+ * @param {boolean} [isSingle = false] Boolean if the elements are an array or single element
  *
  * @returns {React.MutableRefObject} a ref containing an array of elements or single element
  */

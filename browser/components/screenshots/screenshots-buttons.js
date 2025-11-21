@@ -60,7 +60,7 @@
      * Focus the last used button.
      * This will default to the visible page button.
      *
-     * @param {String} buttonToFocus
+     * @param {string} buttonToFocus
      */
     async focusButton(buttonToFocus) {
       await this.shadowRoot.querySelector("moz-button-group").updateComplete;

@@ -537,7 +537,7 @@ export var webrtcUI = {
    * For camera and microphone streams, this will also revoke any associated
    * permissions from SitePermissions.
    *
-   * @param {Array<Object>} activeStreams - An array of streams obtained via webrtcUI.getActiveStreams.
+   * @param {Array<object>} activeStreams - An array of streams obtained via webrtcUI.getActiveStreams.
    * @param {boolean} stopCameras - True to stop the camera streams (defaults to true)
    * @param {boolean} stopMics - True to stop the microphone streams (defaults to true)
    * @param {boolean} stopScreens - True to stop the screen streams (defaults to true)

@@ -1318,7 +1318,7 @@ class TrustPanel {
   /**
    * Sends a message to webcompat extension to unblock content and remove placeholders
    *
-   * @param {String} shimId - the id of the shim blocking the content
+   * @param {string} shimId - the id of the shim blocking the content
    */
   #sendUnblockMessageToSmartblock(shimId) {
     Services.obs.notifyObservers(
@@ -1331,7 +1331,7 @@ class TrustPanel {
   /**
    * Sends a message to webcompat extension to reblock content
    *
-   * @param {String} shimId - the id of the shim blocking the content
+   * @param {string} shimId - the id of the shim blocking the content
    */
   #sendReblockMessageToSmartblock(shimId) {
     Services.obs.notifyObservers(

@@ -525,14 +525,14 @@ class EngineStore {
   /**
    * A list of engines that are currently visible in the UI.
    *
-   * @type {Object[]}
+   * @type {object[]}
    */
   engines = [];
 
   /**
    * A list of listeners to be notified when the engine list changes.
    *
-   * @type {Object[]}
+   * @type {object[]}
    */
   #listeners = [];
 

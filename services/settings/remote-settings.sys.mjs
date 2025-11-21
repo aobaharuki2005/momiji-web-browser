@@ -106,8 +106,8 @@ class JexlFilter {
    * Default entry filtering function, in charge of excluding remote settings entries
    * where the JEXL expression evaluates into a falsy value.
    *
-   * @param {Object} entry The Remote Settings entry to be excluded or kept.
-   * @returns {?Object} the entry or null if excluded.
+   * @param {object} entry The Remote Settings entry to be excluded or kept.
+   * @returns {?object} the entry or null if excluded.
    */
   async filterEntry(entry) {
     const { filter_expression } = entry;
@@ -160,8 +160,8 @@ function remoteSettingsFunction() {
   /**
    * RemoteSettings constructor.
    *
-   * @param {String} collectionName The remote settings identifier
-   * @param {Object} options Advanced options
+   * @param {string} collectionName The remote settings identifier
+   * @param {object} options Advanced options
    * @returns {RemoteSettingsClient} An instance of a Remote Settings client.
    */
   const remoteSettings = function (collectionName, options) {
@@ -341,7 +341,7 @@ function remoteSettingsFunction() {
   /**
    * Main polling method, called by the ping mechanism.
    *
-   * @param {Object} options
+   * @param {object} options
 .  * @param {Object} options.expectedTimestamp (optional) The expected timestamp to be received — used by servers for cache busting.
    * @param {string} options.trigger           (optional) label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
    * @param {bool}   options.full              (optional) Ignore last polling status and fetch all changes (default: `false`)
@@ -651,7 +651,7 @@ function remoteSettingsFunction() {
    * Returns an object with polling status information and the list of
    * known remote settings collections.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean?} options.localOnly (optional) If set to `true`, do not contact the server.
    */
   remoteSettings.inspect = async (options = {}) => {

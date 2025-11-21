@@ -1731,13 +1731,13 @@ var AddonManagerInternal = {
    *
    * @param  aUrl
    *         The string represenation of the URL where the add-on is located
-   * @param  {Object} [aOptions = {}]
+   * @param  {object} [aOptions = {}]
    *         Additional options for this install
    * @param  {string} [aOptions.hash]
    *         An optional hash of the add-on
    * @param  {string} [aOptions.name]
    *         An optional placeholder name while the add-on is being downloaded
-   * @param  {string|Object} [aOptions.icons]
+   * @param  {string | object} [aOptions.icons]
    *         Optional placeholder icons while the add-on is being downloaded
    * @param  {string} [aOptions.version]
    *         An optional placeholder version while the add-on is being downloaded
@@ -1745,7 +1745,7 @@ var AddonManagerInternal = {
    *         An optional <browser> element for download permissions prompts.
    * @param  {nsIPrincipal} [aOptions.triggeringPrincipal]
    *         The principal which is attempting to install the add-on.
-   * @param  {Object} [aOptions.telemetryInfo]
+   * @param  {object} [aOptions.telemetryInfo]
    *         An optional object which provides details about the installation source
    *         included in the addon manager telemetry events.
    * @throws if aUrl is not specified or if an optional argument of
@@ -1882,7 +1882,7 @@ var AddonManagerInternal = {
    *
    * @param  {Element} aBrowser: The optional browser element that started the install
    * @param {nsIPrincipal} aInstallingPrincipal
-   * @param {String} aSitePerm
+   * @param {string} aSitePerm
    * @returns {Promise<SitePermsAddonInstall|null>} The promise will resolve with null if there
    *         are no provider with a getSitePermsAddonInstallForWebpage method. In practice,
    *         this should only be the case when SitePermsAddonProvider is not enabled,
@@ -2852,7 +2852,7 @@ var AddonManagerInternal = {
    *         Ideal icon size in pixels
    * @param  aWindow
    *         Optional window object for determining the correct scale.
-   * @return {String} The absolute URL of the icon or null if the addon doesn't have icons
+   * @return {string} The absolute URL of the icon or null if the addon doesn't have icons
    */
   getPreferredIconURL(aAddon, aSize, aWindow = undefined) {
     if (aWindow && aWindow.devicePixelRatio) {
@@ -3320,7 +3320,7 @@ var AddonManagerInternal = {
    * @param {browser}      browser browser user is installing from
    * @param {nsIURI}       url     URI for the principal of the installing source
    * @param {AddonInstallWrapper} install
-   * @param {Object}       info    information such as addon wrapper
+   * @param {object}       info    information such as addon wrapper
    * @param {AddonWrapper} info.addon
    * @param {string}       source  simplified string describing source of install and is
    *                               generated based on the installing principal and checking
@@ -4854,10 +4854,10 @@ export class EnvironmentAddonBuilder {
   /**
    * Returns a substring of the input string.
    *
-   * @param {String} aString The input string.
+   * @param {string} aString The input string.
    * @param {Integer} aMaxLength The maximum length of the returned substring. If this is
    *        greater than the length of the input string, we return the whole input string.
-   * @return {String} The substring or null if the input string is null.
+   * @return {string} The substring or null if the input string is null.
    */
   limitStringToLength(aString, aMaxLength) {
     if (typeof aString !== "string") {
@@ -4870,7 +4870,7 @@ export class EnvironmentAddonBuilder {
    * Enforces the parameter to a boolean value.
    *
    * @param aValue The input value.
-   * @return {Boolean|Object} If aValue is a boolean or a number, returns its truthfulness
+   * @return {boolean | object} If aValue is a boolean or a number, returns its truthfulness
    *         value. Otherwise, return null.
    */
   enforceBoolean(aValue) {
@@ -5553,7 +5553,7 @@ AMTelemetry = {
    * @param {AddonInstall} install
    *        The AddonInstall instance to retrieve the source from.
    *
-   * @returns {Object | null}
+   * @returns {object | null}
    *          The telemetry infor ({source, method}) from the given AddonInstall instance.
    */
   getInstallTelemetryInfo(install) {

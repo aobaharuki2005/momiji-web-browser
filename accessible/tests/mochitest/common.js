@@ -873,7 +873,7 @@ function getTextFromClipboard() {
  * accessible has died.
  *
  * @param  {nsIAccessible} accessible  accessible
- * @return {String?}                   DOMNode id if available
+ * @return {string?}                   DOMNode id if available
  */
 function getAccessibleDOMNodeID(accessible) {
   try {

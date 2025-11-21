@@ -956,7 +956,7 @@ function fileURIFixup(uriString) {
  *    user:pass@no-scheme.com
  *
  * @param {string} uriString The string to fixup.
- * @param {Number} fixupFlags The fixup flags to use.
+ * @param {number} fixupFlags The fixup flags to use.
  * @returns {nsIURI} an nsIURI built adding the default protocol to the string,
  *          or null if fixing was not possible.
  */
@@ -982,7 +982,7 @@ function fixupURIProtocol(uriString, fixupFlags) {
  * user typos and/or "broken" links output by commandline tools.
  *
  * @param {string} uriString The string to make into a URI.
- * @param {Number} fixupFlags The fixup flags to use.
+ * @param {number} fixupFlags The fixup flags to use.
  * @throws NS_ERROR_MALFORMED_URI if the uri is invalid.
  */
 function makeURIWithFixedLocalHosts(uriString, fixupFlags) {
@@ -1272,7 +1272,7 @@ function isURILike(uriString, host) {
  * If no changes were made, it returns an empty string.
  *
  * @param {string} oldHost.
- * @return {String} Fixed up hostname or an empty string.
+ * @return {string} Fixed up hostname or an empty string.
  */
 function maybeAddPrefixAndSuffix(oldHost) {
   let prefix = Services.prefs.getCharPref(

@@ -504,7 +504,7 @@ let gTranslationsPane = {
    *
    * @param {Array<string>} currentSet
    * @param {Array<string>} newSet
-   * @returns {Object} {Array<string>, Array<string>}
+   * @returns {object} {Array<string>, Array<string>}
    */
   setDifference(currentSet, newSet) {
     const added = newSet.filter(lang => !currentSet.includes(lang));

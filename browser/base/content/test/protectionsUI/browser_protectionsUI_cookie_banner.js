@@ -34,9 +34,9 @@ const exampleRules = JSON.stringify([
  * be visible with the given configuration.
  *
  * @param {*} options - Configuration to test.
- * @param {Number} options.featureMode - nsICookieBannerService::Modes value for
+ * @param {number} options.featureMode - nsICookieBannerService::Modes value for
  * normal browsing.
- * @param {Number} options.featureModePBM - nsICookieBannerService::Modes value
+ * @param {number} options.featureModePBM - nsICookieBannerService::Modes value
  * for private browsing.
  * @param {boolean} options.visibilityPref - State of the cookie banner UI
  * visibility pref.
@@ -71,9 +71,9 @@ function cookieBannerSectionIsVisible({
  * @param {*} options - Test options.
  * @param {Window} options.win - Browser window to use for testing. It's
  * browsing mode should match the testPBM variable.
- * @param {Number} options.featureMode - nsICookieBannerService::Modes value for
+ * @param {number} options.featureMode - nsICookieBannerService::Modes value for
  * normal browsing.
- * @param {Number} options.featureModePBM - nsICookieBannerService::Modes value
+ * @param {number} options.featureModePBM - nsICookieBannerService::Modes value
  * for private browsing.
  * @param {boolean} options.visibilityPref - State of the cookie banner UI
  * visibility pref.
