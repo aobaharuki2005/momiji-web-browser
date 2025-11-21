@@ -228,6 +228,9 @@ split-view-footer {
 
   padding-block: var(--space-xxsmall);
   padding-inline: var(--space-small) var(--space-xsmall);
+
+  -moz-context-properties: fill;
+  fill: var(--button-icon-fill);
 }
 
 .split-view-icon {
