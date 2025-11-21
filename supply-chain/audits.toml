@@ -3067,12 +3067,6 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.10.0 -> 0.11.0"
 
-[[audits.hashlink]]
-who = "Erich Gubler <erichdongubler@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "0.10.0 -> 0.10.0@git:76dc47a12af5829c1e8bf4834e38b410dec2aeff"
-importable = false
-
 [[audits.headers]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"

@@ -72,10 +72,6 @@ notes = "The dependencies on tokio-reactor and tokio-threadpools are just a hack
 criteria = "safe-to-run"
 notes = "Used for fuzzing."
 
-[policy.hashlink]
-audit-as-crates-io = true
-notes = "Only a single change on top of 0.10.0 to allow `hashbrown` 0.16 as a dependency."
-
 [policy.http3server]
 criteria = "safe-to-run"
 notes = "Used for testing."
