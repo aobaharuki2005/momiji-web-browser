@@ -167,7 +167,7 @@ class Core(
             enterpriseRootsEnabled = context.settings().allowThirdPartyRootCerts,
             clearColor = ContextCompat.getColor(
                 context,
-                R.color.fx_mobile_layer_color_1,
+                R.color.fx_mobile_surface,
             ),
             httpsOnlyMode = context.settings().getHttpsOnlyMode(),
             dohSettingsMode = context.settings().getDohSettingsMode(),
