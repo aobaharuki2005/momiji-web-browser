@@ -94,7 +94,11 @@ class StyleRuleActor extends Actor {
     this.pageStyle = pageStyle;
     this.rawStyle = item.style;
     this._userAdded = userAdded;
+    this._pseudoElements = new Set();
     this._pseudoElement = pseudoElement;
+    if (pseudoElement) {
+      this._pseudoElements.add(pseudoElement);
+    }
     this._parentSheet = null;
     // Parsed CSS declarations from this.form().declarations used to check CSS property
     // names and values before tracking changes. Using cached values instead of accessing
@@ -149,6 +153,10 @@ class StyleRuleActor extends Actor {
     this.rawNode = null;
     this.rawRule = null;
     this._declarations = null;
+    if (this._pseudoElements) {
+      this._pseudoElements.clear();
+      this._pseudoElements = null;
+    }
   }
 
   // Objects returned by this actor are owned by the PageStyleActor
@@ -370,6 +378,14 @@ class StyleRuleActor extends Actor {
       // to getComputedStyle to actually get the computed style of the pseudo element.
       !this.isPseudoElementAnonymousNodeSelected ? this._pseudoElement : null
     );
+  }
+
+  get pseudoElements() {
+    return this._pseudoElements;
+  }
+
+  addPseudo(pseudoElement) {
+    this._pseudoElements.add(pseudoElement);
   }
 
   getDocument(sheet) {

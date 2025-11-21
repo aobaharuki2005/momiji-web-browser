@@ -179,7 +179,11 @@ class PageStyleActor extends Actor {
    */
   _styleRef(item, pseudoElement, userAdded = false) {
     if (this.refMap.has(item)) {
-      return this.refMap.get(item);
+      const styleRuleActor = this.refMap.get(item);
+      if (pseudoElement) {
+        styleRuleActor.addPseudo(pseudoElement);
+      }
+      return styleRuleActor;
     }
     const actor = new StyleRuleActor({
       pageStyle: this,
@@ -1042,22 +1046,38 @@ class PageStyleActor extends Actor {
           ? entry.inherited.rawNode
           : node.rawNode;
 
+        const pseudos = [];
         const { bindingElement, pseudo } =
           CssLogic.getBindingElementAndPseudo(element);
+        if (pseudo) {
+          pseudos.push(pseudo);
+        } else if (entry.rule.pseudoElements.size) {
+          // if `node` is not a pseudo element but the rule applies to some pseudo elements,
+          // we need to pass those to CSSStyleRule#selectorMatchesElement
+          pseudos.push(...entry.rule.pseudoElements);
+        } else {
+          // If the rule doesn't apply to any pseudo, set a null item so we'll still do
+          // the proper check below
+          pseudos.push(null);
+        }
+
         const relevantLinkVisited = CssLogic.hasVisitedState(bindingElement);
         entry.matchedSelectorIndexes = [];
-
         const len = domRule.selectorCount;
         for (let i = 0; i < len; i++) {
-          if (
-            domRule.selectorMatchesElement(
-              i,
-              bindingElement,
-              pseudo,
-              relevantLinkVisited
-            )
-          ) {
-            entry.matchedSelectorIndexes.push(i);
+          for (const pseudoElementName of pseudos) {
+            if (
+              domRule.selectorMatchesElement(
+                i,
+                bindingElement,
+                pseudoElementName,
+                relevantLinkVisited
+              )
+            ) {
+              entry.matchedSelectorIndexes.push(i);
+              // if we matched the selector for one pseudo, no need to check the other ones
+              break;
+            }
           }
         }
       }

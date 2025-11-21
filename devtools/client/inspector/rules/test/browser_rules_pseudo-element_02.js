@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test that pseudoelements are displayed correctly in the markup view.
+// Test that pseudo elements rules are displayed correctly in Rules view.
 
 const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 
@@ -18,11 +18,7 @@ add_task(async function () {
 
   info("Check rules on #topleft::before node");
   const beforeElement = children.nodes[0];
-  is(
-    beforeElement.tagName,
-    "_moz_generated_content_before",
-    "tag name is correct"
-  );
+  is(beforeElement.displayName, "::before", "display name is correct");
   await selectNode(beforeElement, inspector);
   checkRuleViewContent(view, [
     {
@@ -65,12 +61,8 @@ add_task(async function () {
   ]);
 
   info("Check rules on #topleft::after node");
-  const afterElement = children.nodes[children.nodes.length - 1];
-  is(
-    afterElement.tagName,
-    "_moz_generated_content_after",
-    "tag name is correct"
-  );
+  const afterElement = children.nodes.at(-1);
+  is(afterElement.displayName, "::after", "display name is correct");
   await selectNode(afterElement, inspector);
   checkRuleViewContent(view, [
     {
@@ -114,9 +106,9 @@ add_task(async function () {
   const listChildren = await inspector.markup.walker.children(listNode);
   const listAfterNode = listChildren.nodes.at(-1);
   is(
-    listAfterNode.tagName,
-    "_moz_generated_content_after",
-    "tag name is correct for #list::after"
+    listAfterNode.displayName,
+    "::after",
+    "display name is correct for #list::after"
   );
   const listAfterChildren =
     await inspector.markup.walker.children(listAfterNode);
@@ -127,9 +119,9 @@ add_task(async function () {
   );
   const listAfterMarkerNode = listAfterChildren.nodes[0];
   is(
-    listAfterMarkerNode.tagName,
-    "_moz_generated_content_marker",
-    "tag name is correct for #list::after::marker"
+    listAfterMarkerNode.displayName,
+    "::marker",
+    "display name is correct for #list::after::marker"
   );
   info("Check rules on #list-item::marker node");
   await selectNode(listAfterMarkerNode, inspector);
@@ -170,11 +162,7 @@ add_task(async function () {
 
   info("Check rules on #list-item::marker node");
   const markerElement = listItemChildren.nodes[0];
-  is(
-    markerElement.tagName,
-    "_moz_generated_content_marker",
-    "tag name is correct"
-  );
+  is(markerElement.displayName, "::marker", "display name is correct");
   await selectNode(markerElement, inspector);
   checkRuleViewContent(view, [
     {
@@ -204,11 +192,7 @@ add_task(async function () {
 
   info("Check rules on #list-item::before node");
   const listBeforeElement = listItemChildren.nodes[1];
-  is(
-    listBeforeElement.tagName,
-    "_moz_generated_content_before",
-    "tag name is correct"
-  );
+  is(listBeforeElement.displayName, "::before", "display name is correct");
   await selectNode(listBeforeElement, inspector);
   checkRuleViewContent(view, [
     {
@@ -237,6 +221,37 @@ add_task(async function () {
     {
       selector: `body`,
       ancestorRulesData: null,
+      inherited: true,
+      declarations: [{ name: "color", value: "#333" }],
+    },
+  ]);
+
+  info("Check unmatched selector parts in Pseudo element section");
+  await selectNode("#with-unmatched-selector", inspector);
+  checkRuleViewContent(view, [
+    {
+      header: `Pseudo-elements`,
+    },
+    {
+      selector: `#with-unmatched-selector::before, ~~unknown::before~~, #with-unmatched-selector::after, ~~anotherunknown~~`,
+      declarations: [{ name: "content", value: `"unmatched pseudo"` }],
+    },
+    {
+      header: `This Element`,
+    },
+    {
+      selector: `element`,
+      declarations: [],
+    },
+    {
+      selector: `*`,
+      declarations: [{ name: "cursor", value: "default" }],
+    },
+    {
+      header: "Inherited from body",
+    },
+    {
+      selector: `body`,
       inherited: true,
       declarations: [{ name: "color", value: "#333" }],
     },

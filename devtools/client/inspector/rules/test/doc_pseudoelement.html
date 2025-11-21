@@ -189,6 +189,13 @@ html:active-view-transition {
     color: thistle;
 }
 
+#with-unmatched-selector::before,
+unknown::before,
+#with-unmatched-selector::after,
+anotherunknown {
+    content: "unmatched pseudo";
+}
+
     </style>
   </head>
   <body>
@@ -209,6 +216,8 @@ html:active-view-transition {
     <div id="bottomleft" class="box bottomleft">
         <p>Bottom Left<br />Position</p>
     </div>
+
+    <div id="with-unmatched-selector">Some unmatched pseudo-element selector part</div>
 
     <ol id="list">
         <li id="list-item" class="box">List element</li>

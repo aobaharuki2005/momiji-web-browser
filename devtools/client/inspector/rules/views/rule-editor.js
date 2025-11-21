@@ -934,16 +934,11 @@ RuleEditor.prototype = {
       });
     }
 
-    let containerClass = "ruleview-selector ";
-
-    // Only add matched/unmatched class when the rule does have some matched
-    // selectors. We don't always have some (e.g. rules for pseudo elements)
-
-    if (this.rule.matchedSelectorIndexes.length) {
-      containerClass += this.rule.matchedSelectorIndexes.includes(selectorIndex)
+    const containerClass =
+      "ruleview-selector " +
+      (this.rule.matchedSelectorIndexes.includes(selectorIndex)
         ? "matched"
-        : "unmatched";
-    }
+        : "unmatched");
 
     let selectorContainerTitle;
     if (
