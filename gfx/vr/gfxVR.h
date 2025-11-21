@@ -95,8 +95,8 @@ struct VRDisplayInfo {
   }
 };
 
-static_assert(std::is_pod<VRDisplayInfo>::value,
-              "VRDisplayInfo must be a POD type.");
+static_assert(std::is_trivial_v<VRDisplayInfo>,
+              "VRDisplayInfo must be a trivial type.");
 
 struct VRSubmitFrameResultInfo {
   VRSubmitFrameResultInfo()
