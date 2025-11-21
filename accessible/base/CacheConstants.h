@@ -209,9 +209,6 @@ class CacheKey {
   static constexpr nsStaticAtom* MinValue = nsGkAtoms::min;
   // nsString, CacheDomain::NameAndDescription
   static constexpr nsStaticAtom* Name = nsGkAtoms::name;
-  // ENameValueFlag, CacheDomain::NameAndDescription
-  // Returned by Accessible::Name.
-  static constexpr nsStaticAtom* NameValueFlag = nsGkAtoms::explicit_name;
   // double, CacheDomain::Value
   // The numeric value returned by Accessible::CurValue.
   static constexpr nsStaticAtom* NumericValue = nsGkAtoms::value;
