@@ -544,7 +544,11 @@ ENameValueFlag HTMLFileInputAccessible::DirectName(nsString& aName) const {
     }
     aName += leaf->Text();
   }
-  return flag;
+
+  // XXX: Return eNameOK even if we got the name from a label or subtree. This
+  // is to force us to cache the name, since the calculation of this type is out
+  // of spec and pretty nuanced.
+  return eNameOK;
 }
 
 bool HTMLFileInputAccessible::HasPrimaryAction() const { return true; }
@@ -688,11 +692,15 @@ ENameValueFlag HTMLGroupboxAccessible::NativeName(nsString& aName) const {
 
   nsIContent* legendContent = GetLegend();
   if (legendContent) {
-    nsTextEquivUtils::AppendTextEquivFromContent(this, legendContent, &aName);
+    bool usedHiddenContent = nsTextEquivUtils::AppendTextEquivFromContent(
+        this, legendContent, &aName);
+    aName.CompressWhitespace();
+    if (!usedHiddenContent && !aName.IsEmpty()) {
+      return eNameFromRelations;
+    }
   }
 
-  aName.CompressWhitespace();
-  return aName.IsEmpty() ? eNameOK : eNameFromRelations;
+  return eNameOK;
 }
 
 Relation HTMLGroupboxAccessible::RelationByType(RelationType aType) const {
@@ -737,11 +745,15 @@ ENameValueFlag HTMLFigureAccessible::NativeName(nsString& aName) const {
 
   nsIContent* captionContent = Caption();
   if (captionContent) {
-    nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent, &aName);
+    bool usedHiddenContent = nsTextEquivUtils::AppendTextEquivFromContent(
+        this, captionContent, &aName);
+    aName.CompressWhitespace();
+    if (!usedHiddenContent && !aName.IsEmpty()) {
+      return eNameFromRelations;
+    }
   }
 
-  aName.CompressWhitespace();
-  return aName.IsEmpty() ? eNameOK : eNameFromRelations;
+  return eNameOK;
 }
 
 Relation HTMLFigureAccessible::RelationByType(RelationType aType) const {
