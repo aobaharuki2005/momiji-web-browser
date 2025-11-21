@@ -6,6 +6,8 @@
 "use strict";
 
 const FEATURE_PREF = "browser.ipProtection.variant";
+const SITE_EXCEPTIONS_FEATURE_PREF =
+  "browser.ipProtection.features.siteExceptions";
 const MODE_PREF = "browser.ipProtection.exceptionsMode";
 const AUTOSTART_FEATURE_ENABLED_PREF =
   "browser.ipProtection.features.autoStart";
@@ -16,6 +18,7 @@ const SECTION_ID = "dataIPProtectionGroup";
 
 async function setupVpnPrefs({
   feature,
+  siteExceptions = false,
   mode = "all",
   autostartFeatureEnabled = false,
   autostart = false,
@@ -24,6 +27,7 @@ async function setupVpnPrefs({
   return SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, feature],
+      [SITE_EXCEPTIONS_FEATURE_PREF, siteExceptions],
       [MODE_PREF, mode],
       [AUTOSTART_FEATURE_ENABLED_PREF, autostartFeatureEnabled],
       [AUTOSTART_PREF, autostart],
@@ -66,7 +70,7 @@ add_task(
 
 // Test the site exceptions controls load correctly with mode set to "all"
 add_task(async function test_exceptions_load_with_all_mode() {
-  await setupVpnPrefs({ feature: "beta" });
+  await setupVpnPrefs({ feature: "beta", siteExceptions: true });
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
@@ -121,7 +125,11 @@ add_task(async function test_exceptions_load_with_all_mode() {
 
 // Test the site exceptions controls load correctly with mode set to "select"
 add_task(async function test_exceptions_with_select_mode() {
-  await setupVpnPrefs({ feature: "beta", mode: "select" });
+  await setupVpnPrefs({
+    feature: "beta",
+    siteExceptions: true,
+    mode: "select",
+  });
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
@@ -176,7 +184,7 @@ add_task(async function test_exceptions_with_select_mode() {
 
 // Test the site exceptions controls and pref update correctly after selecting another mode option.
 add_task(async function test_exceptions_change_mode_and_buttons() {
-  await setupVpnPrefs({ feature: "beta" });
+  await setupVpnPrefs({ feature: "beta", siteExceptions: true });
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
