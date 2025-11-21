@@ -1349,61 +1349,51 @@ class StyleRuleActor extends Actor {
    *        True if the selector should be updated by editing the
    *        authored text; false if the selector should be updated via
    *        CSSOM.
-   * @returns {Object}
+   * @returns {Promise<Object>}
    *        Returns an object that contains the applied style properties of the
    *        new rule and a boolean indicating whether or not the new selector
    *        matches the current selected element
    */
-  modifySelector(node, value, editAuthored = false) {
+  async modifySelector(node, value, editAuthored = false) {
     if (this.type === ELEMENT_STYLE || this.rawRule.selectorText === value) {
       return { ruleProps: null, isMatching: true };
     }
 
     // The rule's previous selector is lost after calling _addNewSelector(). Save it now.
     const oldValue = this.rawRule.selectorText;
-    let selectorPromise = this._addNewSelector(value, editAuthored);
+    const newCssRule = await this._addNewSelector(value, editAuthored);
 
-    if (editAuthored) {
-      selectorPromise = selectorPromise.then(newCssRule => {
-        if (newCssRule) {
-          this.logSelectorChange(oldValue, value);
-          const style = this.pageStyle._styleRef(newCssRule);
-          // See the comment in |form| to understand this.
-          return style.getAuthoredCssText().then(() => newCssRule);
-        }
-        return newCssRule;
-      });
+    if (editAuthored && newCssRule) {
+      this.logSelectorChange(oldValue, value);
+      const style = this.pageStyle._styleRef(newCssRule);
+      // See the comment in |form| to understand this.
+      await style.getAuthoredCssText();
     }
 
-    return selectorPromise.then(newCssRule => {
-      let entries = null;
-      let isMatching = false;
+    let entries = null;
+    let isMatching = false;
 
-      if (newCssRule) {
-        const ruleEntry = this.pageStyle.findEntryMatchingRule(
-          node,
-          newCssRule
-        );
-        if (ruleEntry.length === 1) {
-          entries = this.pageStyle.getAppliedProps(node, ruleEntry, {
-            matchedSelectors: true,
-          });
-        } else {
-          entries = this.pageStyle.getNewAppliedProps(node, newCssRule);
-        }
-
-        isMatching = entries.some(
-          ruleProp => !!ruleProp.matchedSelectorIndexes.length
-        );
+    if (newCssRule) {
+      const ruleEntry = this.pageStyle.findEntryMatchingRule(node, newCssRule);
+      if (ruleEntry.length === 1) {
+        entries = this.pageStyle.getAppliedProps(node, ruleEntry, {
+          matchedSelectors: true,
+        });
+      } else {
+        entries = this.pageStyle.getNewAppliedProps(node, newCssRule);
       }
 
-      const result = { isMatching };
-      if (entries) {
-        result.ruleProps = { entries };
-      }
+      isMatching = entries.some(
+        ruleProp => !!ruleProp.matchedSelectorIndexes.length
+      );
+    }
 
-      return result;
-    });
+    const result = { isMatching };
+    if (entries) {
+      result.ruleProps = { entries };
+    }
+
+    return result;
   }
 
   /**
