@@ -231,26 +231,44 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
     return eNameOK;
   }
 
-  ENameValueFlag nameFlag = eNameOK;
   if (mCachedFields) {
     if (IsText()) {
       mCachedFields->GetAttribute(CacheKey::Text, aName);
       return eNameOK;
     }
-    auto cachedNameFlag =
-        mCachedFields->GetAttribute<int32_t>(CacheKey::NameValueFlag);
-    if (cachedNameFlag) {
-      nameFlag = static_cast<ENameValueFlag>(*cachedNameFlag);
-    }
+
     if (mCachedFields->GetAttribute(CacheKey::Name, aName)) {
+      // Bug 1998255 - Once we tackle computing label calculation in the parent
+      // process, we can remove the cached name flag.
+      auto cachedNameFlag =
+          mCachedFields->GetAttribute<int32_t>(CacheKey::NameValueFlag);
+      ENameValueFlag nameFlag =
+          cachedNameFlag ? static_cast<ENameValueFlag>(*cachedNameFlag)
+                         : eNameOK;
+
       VERIFY_CACHE(CacheDomain::NameAndDescription);
       return nameFlag;
+    }
+
+    nsTextEquivUtils::GetNameFromSubtree(this, aName);
+    if (!aName.IsEmpty()) {
+      return eNameFromSubtree;
+    }
+
+    if (mCachedFields->GetAttribute(CacheKey::Tooltip, aName)) {
+      VERIFY_CACHE(CacheDomain::NameAndDescription);
+      return eNameFromTooltip;
+    }
+
+    if (mCachedFields->GetAttribute(CacheKey::CssAltContent, aName)) {
+      VERIFY_CACHE(CacheDomain::NameAndDescription);
+      return eNameOK;
     }
   }
 
   MOZ_ASSERT(aName.IsEmpty());
   aName.SetIsVoid(true);
-  return nameFlag;
+  return eNameOK;
 }
 
 EDescriptionValueFlag RemoteAccessible::Description(
