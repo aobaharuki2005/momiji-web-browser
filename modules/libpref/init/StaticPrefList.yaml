@@ -6617,12 +6617,6 @@
 # Prefs starting with "gfx."
 #---------------------------------------------------------------------------
 
-# Allow 24-bit colour when the hardware supports it.
-- name: gfx.android.rgb16.force
-  type: bool
-  value: false
-  mirror: once
-
 - name: gfx.apitrace.enabled
   type: bool
   value: false
