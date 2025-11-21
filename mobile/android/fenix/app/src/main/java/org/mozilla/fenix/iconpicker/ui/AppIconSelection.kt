@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +48,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -69,6 +71,7 @@ import org.mozilla.fenix.iconpicker.IconGroupTitle
 import org.mozilla.fenix.iconpicker.SystemAction
 import org.mozilla.fenix.iconpicker.UserAction
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 private val ListItemHeight = 56.dp
 private val AppIconSize = 40.dp
@@ -156,37 +159,37 @@ private fun AppIconList(
     groupedIcons: Map<IconGroupTitle, List<AppIcon>>,
     onIconSelected: (AppIcon) -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .padding(paddingValues)
-            .background(color = FirefoxTheme.colors.layer1),
-    ) {
-        groupedIcons.forEach { (header, icons) ->
-            item(contentType = { header::class }) {
-                AppIconGroupHeader(header)
-            }
+    Surface {
+        LazyColumn(
+            modifier = Modifier.padding(paddingValues),
+        ) {
+            groupedIcons.forEach { (header, icons) ->
+                item(contentType = { header::class }) {
+                    AppIconGroupHeader(header)
+                }
 
-            items(
-                items = icons,
-                contentType = { item -> item::class },
-            ) { icon ->
-                val iconSelected = icon == selectedIcon
+                items(
+                    items = icons,
+                    contentType = { item -> item::class },
+                ) { icon ->
+                    val iconSelected = icon == selectedIcon
 
-                AppIconOption(
-                    appIcon = icon,
-                    selected = iconSelected,
-                    onClick = {
-                        if (!iconSelected) {
-                            onIconSelected(icon)
-                        }
-                    },
-                )
-            }
+                    AppIconOption(
+                        appIcon = icon,
+                        selected = iconSelected,
+                        onClick = {
+                            if (!iconSelected) {
+                                onIconSelected(icon)
+                            }
+                        },
+                    )
+                }
 
-            item {
-                Spacer(modifier = Modifier.height(GroupSpacerHeight))
+                item {
+                    Spacer(modifier = Modifier.height(GroupSpacerHeight))
 
-                HorizontalDivider(color = FirefoxTheme.colors.borderPrimary)
+                    HorizontalDivider()
+                }
             }
         }
     }
@@ -202,7 +205,7 @@ private fun AppIconGroupHeader(title: IconGroupTitle) {
             .wrapContentHeight(Alignment.CenterVertically)
             .semantics { heading() },
         style = FirefoxTheme.typography.headline8,
-        color = MaterialTheme.colorScheme.tertiary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
@@ -212,45 +215,44 @@ private fun AppIconOption(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(ListItemHeight)
-            .selectable(
-                selected = selected,
-                role = Role.RadioButton,
-                onClick = { onClick() },
-            )
-            .semantics(mergeDescendants = true) {},
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(
-            selected = selected,
-            onClick = {
-                onClick()
-            },
-            modifier = Modifier.clearAndSetSemantics {},
-        )
-
-        AppIcon(appIcon)
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column {
-            Text(
-                text = stringResource(appIcon.titleId),
-                style = FirefoxTheme.typography.subtitle1,
-                color = FirefoxTheme.colors.textPrimary,
-            )
-
-            appIcon.subtitleId?.let {
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = stringResource(it),
-                    style = FirefoxTheme.typography.body2,
-                    color = FirefoxTheme.colors.textSecondary,
+    Surface {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(ListItemHeight)
+                .selectable(
+                    selected = selected,
+                    role = Role.RadioButton,
+                    onClick = { onClick() },
                 )
+                .semantics(mergeDescendants = true) {},
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RadioButton(
+                selected = selected,
+                onClick = {
+                    onClick()
+                },
+                modifier = Modifier.clearAndSetSemantics {},
+            )
+
+            AppIcon(appIcon)
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                Text(
+                    text = stringResource(appIcon.titleId),
+                    style = FirefoxTheme.typography.body1,
+                )
+
+                appIcon.subtitleId?.let {
+                    Text(
+                        text = stringResource(it),
+                        style = FirefoxTheme.typography.body2,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
@@ -277,7 +279,7 @@ fun AppIcon(
             .size(iconSize)
             .border(
                 width = borderWidth,
-                color = FirefoxTheme.colors.borderPrimary,
+                color = MaterialTheme.colorScheme.outlineVariant,
                 shape = roundedShape,
             )
             .padding(backgroundPadding)
@@ -321,17 +323,15 @@ private fun RestartWarningDialog(
         title = {
             Text(
                 text = stringResource(R.string.restart_warning_dialog_title),
-                color = FirefoxTheme.colors.textPrimary,
-                style = FirefoxTheme.typography.headline7,
+                style = FirefoxTheme.typography.headline5,
             )
-                },
+        },
         text = {
             Text(
                 text = stringResource(
                     id = R.string.restart_warning_dialog_body_2,
                     stringResource(R.string.app_name),
                 ),
-                color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.body2,
             )
         },
@@ -378,6 +378,14 @@ private fun AppIconOptionPreview() {
     }
 }
 
+@Preview
+@Composable
+private fun AppIconOptionPrivatePreview() {
+    FirefoxTheme(theme = Theme.Private) {
+        AppIconOption(AppIcon.AppDefault, false) {}
+    }
+}
+
 @FlexibleWindowLightDarkPreview
 @Composable
 private fun AppIconOptionWithSubtitlePreview() {
@@ -386,10 +394,30 @@ private fun AppIconOptionWithSubtitlePreview() {
     }
 }
 
+@Preview
+@Composable
+private fun AppIconOptionWithSubtitlePrivatePreview() {
+    FirefoxTheme(theme = Theme.Private) {
+        AppIconOption(AppIcon.AppMomo, false) {}
+    }
+}
+
 @FlexibleWindowLightDarkPreview
 @Composable
 private fun RestartWarningDialogPreview() {
     FirefoxTheme {
+        RestartWarningDialog(
+            onConfirmClicked = {},
+            onDismissClicked = {},
+            onDismissed = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun RestartWarningDialogPrivatePreview() {
+    FirefoxTheme(theme = Theme.Private) {
         RestartWarningDialog(
             onConfirmClicked = {},
             onDismissClicked = {},
