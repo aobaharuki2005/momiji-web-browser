@@ -794,7 +794,7 @@ private fun BookmarksListTopBarActionsNoSelection(
             },
         ) {
             Icon(
-                painter = painterResource(iconsR.drawable.mozac_ic_filter),
+                painter = painterResource(iconsR.drawable.mozac_ic_sort_24),
                 contentDescription = stringResource(
                     R.string.bookmark_sort_menu_content_desc,
                 ),
@@ -1018,7 +1018,7 @@ private fun SelectFolderTopBar(store: BookmarksStore) {
                     store.dispatch(BookmarksListMenuAction.SortMenu.SortMenuButtonClicked)
                 }) {
                     Icon(
-                        painter = painterResource(iconsR.drawable.mozac_ic_filter),
+                        painter = painterResource(iconsR.drawable.mozac_ic_sort_24),
                         contentDescription = stringResource(
                             R.string.bookmark_sort_menu_content_desc,
                         ),
