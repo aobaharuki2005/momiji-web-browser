@@ -2960,13 +2960,6 @@
   value: true
   mirror: always
 
-# Control whether clipboard.read(), clipboard.write() and ClipboardItem are exposed
-# to content.
-- name: dom.events.asyncClipboard.clipboardItem
-  type: bool
-  value: true
-  mirror: always
-
 # Skips checking permission and user activation when accessing the clipboard.
 # Should only be enabled in tests.
 # Access with Clipboard::IsTestingPrefEnabled().

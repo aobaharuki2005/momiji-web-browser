@@ -56,12 +56,6 @@ function clearClipboard() {
   SpecialPowers.Services.clipboard.setData(transf, null, SpecialPowers.Services.clipboard.kGlobalClipboard);
 }
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({"set": [
-    ["dom.events.asyncClipboard.clipboardItem", true],
-  ]});
-});
-
 // Test that without enough permissions, we are NOT allowed to use writeText, write, read or readText in background script
 add_task(async function test_background_async_clipboard_no_permissions() {
   function backgroundScript() {
