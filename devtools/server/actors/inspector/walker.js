@@ -195,7 +195,7 @@ class WalkerActor extends Actor {
    *        The server connection.
    * @param {TargetActor} targetActor
    *        The top-level Actor for this tab.
-   * @param {Object} options
+   * @param {object} options
    *        - {Boolean} showAllAnonymousContent: Show all native anonymous content
    */
   constructor(conn, targetActor, options) {
@@ -469,7 +469,7 @@ class WalkerActor extends Actor {
    * Determine if the walker has come across this DOM node before.
    *
    * @param {DOMNode} rawNode
-   * @return {Boolean}
+   * @return {boolean}
    */
   hasNode(rawNode) {
     return this._nodeActorsMap.has(rawNode);
@@ -630,7 +630,7 @@ class WalkerActor extends Actor {
    * Ensures that the node is attached and it can be accessed from the root.
    *
    * @param {(Node|NodeActor)} nodes The nodes
-   * @return {Object} An object compatible with the disconnectedNode type.
+   * @return {object} An object compatible with the disconnectedNode type.
    */
   attachElement(node) {
     const { nodes, newParents } = this.attachElements([node]);
@@ -644,7 +644,7 @@ class WalkerActor extends Actor {
    * Ensures that the nodes are attached and they can be accessed from the root.
    *
    * @param {(Node[]|NodeActor[])} nodes The nodes
-   * @return {Object} An object compatible with the disconnectedNodeArray type.
+   * @return {object} An object compatible with the disconnectedNodeArray type.
    */
   attachElements(nodes) {
     const nodeActors = [];
@@ -1132,7 +1132,7 @@ class WalkerActor extends Actor {
    * Get a list of nodes that match the given selector in all known frames of
    * the current content page.
    *
-   * @param {String} selector.
+   * @param {string} selector.
    * @return {Array}
    */
   _multiFrameQuerySelectorAll(selector) {
@@ -1153,7 +1153,7 @@ class WalkerActor extends Actor {
    * Get a list of nodes that match the given XPath in all known frames of
    * the current content page.
    *
-   * @param {String} xPath.
+   * @param {string} xPath.
    * @return {Array}
    */
   _multiFrameXPath(xPath) {
@@ -1185,7 +1185,7 @@ class WalkerActor extends Actor {
    * Return a NodeListActor with all nodes that match the given XPath in all
    * frames of the current content page.
    *
-   * @param {String} xPath
+   * @param {string} xPath
    */
   multiFrameXPath(xPath) {
     return new NodeListActor(this, this._multiFrameXPath(xPath));
@@ -1876,7 +1876,7 @@ class WalkerActor extends Actor {
    * Set the state of some subset of mutation breakpoint types for this actor.
    *
    * @param {NodeActor} node The node to set breakpoint info for.
-   * @param {Object} bps A subset of the breakpoints for this actor that
+   * @param {object} bps A subset of the breakpoints for this actor that
    *                            should be updated to new states.
    */
   setMutationBreakpoints(node, bps) {
@@ -1914,7 +1914,7 @@ class WalkerActor extends Actor {
    * Update the mutation breakpoint state for the given DOM node.
    *
    * @param {Node} rawNode The DOM node.
-   * @param {Object} bpsForNode The state of each mutation bp type we support.
+   * @param {object} bpsForNode The state of each mutation bp type we support.
    */
   _updateMutationBreakpointState(mutationReason, rawNode, bpsForNode) {
     const rawDoc = rawNode.ownerDocument || rawNode;
@@ -2562,7 +2562,7 @@ class WalkerActor extends Actor {
    * Check if a node is attached to the DOM tree of the current page.
    *
    * @param {Node} rawNode
-   * @return {Boolean} false if the node is removed from the tree or within a
+   * @return {boolean} false if the node is removed from the tree or within a
    * document fragment
    */
   _isInDOMTree(rawNode) {
@@ -2686,7 +2686,7 @@ class WalkerActor extends Actor {
    *   toolbox.getPanel("inspector").selection.setNodeFront(nodeFront);
    * });
    *
-   * @param {String} actorID The ID for the actor that has a reference to the
+   * @param {string} actorID The ID for the actor that has a reference to the
    * DOM node.
    * @param {Array} path Where, on the actor, is the DOM node stored. If in the
    * scope of the actor, the node is available as `this.data.node`, then this

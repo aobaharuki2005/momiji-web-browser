@@ -4,7 +4,7 @@
 // @ts-check
 
 /**
- * @typedef {Object} StateProps
+ * @typedef {object} StateProps
  * @property {number} interval
  * @property {number} entries
  * @property {string[]} features
@@ -15,7 +15,7 @@
  */
 
 /**
- * @typedef {Object} ThunkDispatchProps
+ * @typedef {object} ThunkDispatchProps
  * @property {typeof actions.changeInterval} changeInterval
  * @property {typeof actions.changeEntries} changeEntries
  * @property {typeof actions.changeFeatures} changeFeatures
@@ -28,7 +28,7 @@
  */
 
 /**
- * @typedef {Object} State
+ * @typedef {object} State
  * @property {null | string} temporaryThreadText
  */
 

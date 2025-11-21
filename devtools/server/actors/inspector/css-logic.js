@@ -286,7 +286,7 @@ class CssLogic {
   /**
    * Retrieve the list of stylesheets in the document.
    *
-   * @return {array} the list of stylesheets in the document.
+   * @return {Array} the list of stylesheets in the document.
    */
   get sheets() {
     if (!this._sheetsCached) {
@@ -477,7 +477,7 @@ class CssLogic {
    * @private
    * @param {DOMRule} domRule
    *        The DOM Rule containing the selector.
-   * @param {Number} idx
+   * @param {number} idx
    *        The index of the selector within the DOMRule.
    * @return {boolean}
    *         true if the given selector matches the highlighted element or any
@@ -510,10 +510,10 @@ class CssLogic {
   /**
    * Check if the highlighted element or its parents have matched selectors.
    *
-   * @param {Array<String>} properties: The list of properties you want to check if they
+   * @param {Array<string>} properties: The list of properties you want to check if they
    * have matched selectors or not. For CSS variables, this will check if the variable
    * is set OR used in a matching rule.
-   * @return {Set<String>} A Set containing the properties that do have matched selectors.
+   * @return {Set<string>} A Set containing the properties that do have matched selectors.
    */
   hasMatchedSelectors(properties) {
     if (!this._matchedRules) {
@@ -712,7 +712,7 @@ CssLogic.getShortName = function (element) {
  *
  * @param {DOMRule} domRule
  *        The DOMRule to parse.
- * @param {Boolean} desugared
+ * @param {boolean} desugared
  *        Set to true to get the desugared selector (see https://drafts.csswg.org/css-nesting-1/#nest-selector)
  * @return {Array}
  *         An array of string selectors.
@@ -738,7 +738,7 @@ CssLogic.getSelectors = function (domRule, desugared = false) {
  * (the parent of the anonymous node), along with which pseudo element
  * it was.  Otherwise, return the node itself.
  *
- * @returns {Object}
+ * @returns {object}
  *            - {DOMNode} node The non-anonymous node
  *            - {string} pseudo One of ':marker', ':before', ':after', or null.
  */
@@ -1104,7 +1104,7 @@ class CssRule {
    * Retrieve the list of CssSelector objects for each of the parsed selectors
    * of the current CSSStyleRule.
    *
-   * @return {array} the array hold the CssSelector objects.
+   * @return {Array} the array hold the CssSelector objects.
    */
   get selectors() {
     if (this._selectors) {
@@ -1140,7 +1140,7 @@ class CssSelector {
    * @constructor
    * @param {CssRule} cssRule the CssRule instance from where the selector comes.
    * @param {string} selector The selector that we wish to investigate.
-   * @param {Number} index The index of the selector within it's rule.
+   * @param {number} index The index of the selector within it's rule.
    */
   constructor(cssRule, selector, index) {
     this.cssRule = cssRule;
@@ -1247,7 +1247,7 @@ class CssSelector {
    * @see http://www.w3.org/TR/css3-selectors/#specificity
    * @see http://www.w3.org/TR/CSS2/selector.html
    *
-   * @return {Number} The selector's specificity.
+   * @return {number} The selector's specificity.
    */
   get specificity() {
     if (this.inlineStyle) {
@@ -1332,7 +1332,7 @@ class CssPropertyInfo {
    * selectors, from each of the matched rules. Only selectors coming from
    * allowed stylesheets are included in the array.
    *
-   * @return {array} the list of CssSelectorInfo objects of selectors that match
+   * @return {Array} the list of CssSelectorInfo objects of selectors that match
    * the highlighted element and its parents.
    */
   get matchedSelectors() {
@@ -1604,7 +1604,7 @@ class CssSelectorInfo {
    *         The instance to compare ourselves against.
    * @param  {Array<CssSelectorInfo>} selectorInfos
    *         The list of CssSelectorInfo we are currently ordering
-   * @return {Number}
+   * @return {number}
    *         -1, 0, 1 depending on how that compares with this.
    */
   compareTo(that, selectorInfos) {

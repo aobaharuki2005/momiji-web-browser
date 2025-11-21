@@ -316,7 +316,7 @@ function _isInputAlive(input) {
  * If remote connections are disabled, an error is thrown.
  *
  * @param {DevToolsServer} devToolsServer
- * @param {Object} socketOptions
+ * @param {object} socketOptions
  *        options of socket as follows
  *        {
  *          authenticator:

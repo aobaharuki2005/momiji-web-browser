@@ -127,7 +127,7 @@ class NetworkParentActor extends Actor {
   /**
    * Blocks the requests based on the filters
    *
-   * @param {Object} filters
+   * @param {object} filters
    */
   blockRequest(filters) {
     if (!this.networkEventWatcher) {
@@ -139,7 +139,7 @@ class NetworkParentActor extends Actor {
   /**
    * Unblocks requests based on the filters
    *
-   * @param {Object} filters
+   * @param {object} filters
    */
   unblockRequest(filters) {
     if (!this.networkEventWatcher) {

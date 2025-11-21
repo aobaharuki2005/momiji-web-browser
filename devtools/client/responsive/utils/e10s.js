@@ -15,7 +15,7 @@ const REQUEST_DONE_SUFFIX = ":Done";
  *
  * @param {nsIMessageListenerManager} mm
  *    The Message Manager
- * @param {String} message
+ * @param {string} message
  *    The message. It will be prefixed with the constant `MESSAGE_PREFIX`
  * @param {Function} listener
  *    The listener function that processes the message.
@@ -31,7 +31,7 @@ exports.on = on;
  *
  * @param {nsIMessageListenerManager} mm
  *    The Message Manager
- * @param {String} message
+ * @param {string} message
  *    The message. It will be prefixed with the constant `MESSAGE_PREFIX`
  * @param {Function} listener
  *    The listener function that processes the message.
@@ -47,7 +47,7 @@ exports.off = off;
  *
  * @param {nsIMessageListenerManager} mm
  *    The Message Manager
- * @param {String} message
+ * @param {string} message
  *    The message. It will be prefixed with the constant `MESSAGE_PREFIX`
  * @returns {Promise}
  *    A promise that is resolved when the given message is emitted.
@@ -68,9 +68,9 @@ exports.once = once;
  *
  * @param {nsIMessageListenerManager} mm
  *    The Message Manager
- * @param {String} message
+ * @param {string} message
  *    The message. It will be prefixed with the constant `MESSAGE_PREFIX`.
- * @param {Object} data
+ * @param {object} data
  *    A JSON object containing data to be delivered to the listeners.
  */
 function emit(mm, message, data) {
@@ -84,10 +84,10 @@ exports.emit = emit;
  *
  * @param {nsIMessageListenerManager} mm
  *    The Message Manager
- * @param {String} message
+ * @param {string} message
  *    The message. It will be prefixed with the constant `MESSAGE_PREFIX`, and
  *    also suffixed with `REQUEST_DONE_SUFFIX` for the reply.
- * @param {Object} data
+ * @param {object} data
  *    A JSON object containing data to be delivered to the listeners.
  * @returns {Promise}
  *    A promise that is resolved when the request is done.

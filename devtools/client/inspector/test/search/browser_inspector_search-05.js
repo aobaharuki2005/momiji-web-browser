@@ -85,8 +85,8 @@ const checkCorrectButton = async function (inspector, frameSelector) {
  * Gets the currently selected nodefront. It also finds the
  * document node which contains the node.
  *
- * @param   {Object} inspector
- * @returns {Object}
+ * @param   {object} inspector
+ * @returns {object}
  *          nodeFront - The currently selected nodeFront
  *          document - The document which contains the node.
  */

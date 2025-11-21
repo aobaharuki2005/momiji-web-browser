@@ -534,7 +534,7 @@ CubicBezierWidget.prototype = {
   /**
    * Set new coordinates for the control point and redraw the curve
    *
-   * @param {String} value A string value. E.g. "linear",
+   * @param {string} value A string value. E.g. "linear",
    * "cubic-bezier(0,0,1,1)"
    */
   set cssCubicBezierValue(value) {
@@ -868,7 +868,7 @@ TimingFunctionPreviewWidget.prototype = {
    * the supplied function value is different from the previous one. If the
    * supplied function is invalid, the preview will stop.
    *
-   * @param {String} value
+   * @param {string} value
    */
   preview(value) {
     // Don't restart the preview animation if the value is the same
@@ -886,7 +886,7 @@ TimingFunctionPreviewWidget.prototype = {
   /**
    * Re-start the preview animation from the beginning.
    *
-   * @param {String} timingFunction The value for the timing-function.
+   * @param {string} timingFunction The value for the timing-function.
    */
   restartAnimation(timingFunction) {
     // Cancel the previous animation if there was any.
@@ -966,7 +966,7 @@ function distance(x1, y1, x2, y2) {
  * If it is, return the coordinates as an array.
  * Otherwise, return undefined.
  *
- * @param {String} value
+ * @param {string} value
  * @return {Array} of coordinates, or undefined
  */
 function parseTimingFunction(value) {
@@ -1014,7 +1014,7 @@ exports.parseTimingFunction = parseTimingFunction;
 /**
  * Removes a class from a node and adds it to another.
  *
- * @param {String} className the class to swap
+ * @param {string} className the class to swap
  * @param {DOMNode} from the node to remove the class from
  * @param {DOMNode} to the node to add the class to
  */
@@ -1033,7 +1033,7 @@ function swapClassName(className, from, to) {
  *
  * @param {Array} c1 first coordinate array to compare
  * @param {Array} c2 second coordinate array to compare
- * @return {Boolean}
+ * @return {boolean}
  */
 function coordsAreEqual(c1, c2) {
   return c1.reduce((prev, curr, index) => prev && curr === c2[index], true);

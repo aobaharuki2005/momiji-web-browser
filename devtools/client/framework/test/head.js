@@ -18,7 +18,7 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
  *
  * @param {XULTab} tab
  *        The tab for which we want to get the list of supported toolIds
- * @return {Array<String>} array of tool ids
+ * @return {Array<string>} array of tool ids
  */
 async function getSupportedToolIds(tab) {
   info("Getting the entire list of tools supported in this tab");
@@ -115,7 +115,7 @@ function checkHostType(toolbox, hostType, previousHostType) {
  * Create a new <script> referencing URL.  Return a promise that
  * resolves when this has happened
  *
- * @param {String} url
+ * @param {string} url
  *        the url
  * @return {Promise} a promise that resolves when the element has been created
  */
@@ -134,7 +134,7 @@ function createScript(url) {
  * Wait for the toolbox to notice that a given source is loaded
  *
  * @param {Toolbox} toolbox
- * @param {String} url
+ * @param {string} url
  *        the url to wait for
  * @return {Promise} a promise that is resolved when the source is loaded
  */
@@ -427,7 +427,7 @@ async function openAboutToolbox(params) {
  *
  * @param {Toolbox} toolbox
  *        Toolbox instance.
- * @param {String} path
+ * @param {string} path
  *        Path to the FTL file.
  */
 function loadFTL(toolbox, path) {
@@ -442,7 +442,7 @@ function loadFTL(toolbox, path) {
  * Emit a reload key shortcut from a given toolbox, and wait for the reload to
  * be completed.
  *
- * @param {String} shortcut
+ * @param {string} shortcut
  *        The key shortcut to send, as expected by the devtools shortcuts
  *        helpers (eg. "CmdOrCtrl+F5").
  * @param {Toolbox} toolbox

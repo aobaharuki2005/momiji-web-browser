@@ -211,7 +211,7 @@ class InspectorActor extends Actor {
    * A new instance will be created everytime the method is called, so it's up
    * to the consumer to release it when it is not needed anymore
    *
-   * @param {String} type The type of highlighter to create
+   * @param {string} type The type of highlighter to create
    * @return {Highlighter} The highlighter actor instance or null if the
    * typeName passed doesn't match any available highlighter
    */
@@ -254,11 +254,11 @@ class InspectorActor extends Actor {
   /**
    * Resolve a URL to its absolute form, in the scope of a given content window.
    *
-   * @param {String} url.
+   * @param {string} url.
    * @param {NodeActor} node If provided, the owner window of this node will be
    * used to resolve the URL. Otherwise, the top-level content window will be
    * used instead.
-   * @return {String} url.
+   * @return {string} url.
    */
   resolveRelativeURL(url, node) {
     const document = InspectorActorUtils.isNodeDead(node)
@@ -303,7 +303,7 @@ class InspectorActor extends Actor {
    * but will cause events to be sent to the front when a color is picked or when the user
    * cancels the picker.
    *
-   * @param {Object} options
+   * @param {object} options
    */
   async pickColorFromPage(options) {
     await this.createEyeDropper();

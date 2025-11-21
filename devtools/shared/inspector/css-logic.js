@@ -92,7 +92,7 @@ exports.CSSAtRuleClassNameType = {
  * Get Rule type as human-readable string (ex: "@media", "@container", …)
  *
  * @param {CSSRule} cssRule
- * @returns {String}
+ * @returns {string}
  */
 exports.getCSSAtRuleTypeName = function (cssRule) {
   const ruleClassName = ChromeUtils.getClassName(cssRule);
@@ -107,9 +107,9 @@ exports.getCSSAtRuleTypeName = function (cssRule) {
 /**
  * Lookup a l10n string in the shared styleinspector string bundle.
  *
- * @param {String} name
+ * @param {string} name
  *        The key to lookup.
- * @returns {String} A localized version of the given key.
+ * @returns {string} A localized version of the given key.
  */
 exports.l10n = name => styleInspectorL10N.getStr(name);
 exports.l10nFormatStr = (name, ...args) =>
@@ -241,17 +241,17 @@ function getLineCountInComments(text) {
  * is an object that looks like this:
  *
  * {
- *  original: {line: {Number}, column: {Number}},
- *  generated: {line: {Number}, column: {Number}},
+ *  original: {line: {number}, column: {number}},
+ *  generated: {line: {number}, column: {number}},
  * }
  *
- * @param  {String} text
+ * @param  {string} text
  *         The CSS source to prettify.
- * @param  {Number} ruleCount
+ * @param  {number} ruleCount
  *         The number of CSS rules expected in the CSS source.
  *         Set to null to force the text to be pretty-printed.
  *
- * @return {Object}
+ * @return {object}
  *         Object with the prettified source and source mappings.
  *          {
  *            result: {String}  // Prettified source
@@ -554,7 +554,7 @@ exports.prettifyCSS = prettifyCSS;
  * (the parent of the anonymous node), along with which pseudo element
  * it was.  Otherwise, return the node itself.
  *
- * @returns {Object}
+ * @returns {object}
  *            - {DOMNode} node: The non-anonymous node
  *            - {string|null} pseudo: The label representing the anonymous node
  *                                    (e.g. '::marker',  '::before', '::after', '::view-transition',
@@ -871,8 +871,8 @@ var IS_VARIABLE_TOKEN = new RegExp(`^--(${VALID_CHAR})*$`, "i");
 /**
  * Check that this is a CSS variable.
  *
- * @param {String} input
- * @return {Boolean}
+ * @param {string} input
+ * @return {boolean}
  */
 function isCssVariable(input) {
   return !!input.match(IS_VARIABLE_TOKEN);

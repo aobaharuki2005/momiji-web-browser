@@ -99,7 +99,7 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  * routed to the remote Web Console.
  *
  * @constructor
- * @param {Object} options
+ * @param {object} options
  * @param {Function(nsIChannel): boolean} options.ignoreChannelFunction
  *        This function will be called for every detected channel to decide if it
  *        should be monitored or not.
@@ -181,7 +181,7 @@ export class NetworkObserver {
    * Network response bodies are piped through a buffer of the given size
    * (in bytes).
    *
-   * @type {Number}
+   * @type {number}
    */
   #responsePipeSegmentSize = Services.prefs.getIntPref(
     "network.buffer.cache.size"
@@ -201,7 +201,7 @@ export class NetworkObserver {
   /**
    * Throttling configuration, see constructor of NetworkThrottleManager
    *
-   * @type {Object}
+   * @type {object}
    */
   #throttleData = null;
   /**

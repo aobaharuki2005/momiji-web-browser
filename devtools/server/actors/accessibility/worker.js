@@ -25,7 +25,7 @@ createTask(self, "getBgRGBA", ({ dataTextBuf, dataBackgroundBuf }) =>
  * https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
  *
  * @param {Array} rgba An array with [r,g,b,a] values.
- * @return {Number} The calculated luminance.
+ * @return {number} The calculated luminance.
  */
 function calculateLuminance(rgba) {
   for (let i = 0; i < 3; i++) {
@@ -47,7 +47,7 @@ function calculateLuminance(rgba) {
  *         pixel data for the accessible object with text visible.
  * @param  {ImageData} dataBackgroundBuf
  *         pixel data for the accessible object with transparent text.
- * @return {Object}
+ * @return {object}
  *         RGBA or a range of RGBAs with min and max values.
  */
 function getBgRGBA(dataTextBuf, dataBackgroundBuf) {

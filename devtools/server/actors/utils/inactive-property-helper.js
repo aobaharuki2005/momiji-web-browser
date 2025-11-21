@@ -807,22 +807,22 @@ class InactivePropertyHelper {
    *        The computed style for this DOMNode.
    * @param {DOMRule} cssRule
    *        The CSS rule the property is defined in.
-   * @param {String} property
+   * @param {string} property
    *        The CSS property name.
    *
-   * @return {Object|null} object
+   * @return {object | null} object
    *         if the property is active, this will return null
-   * @return {String} object.display
+   * @return {string} object.display
    *         The element computed display value.
-   * @return {String} object.fixId
+   * @return {string} object.fixId
    *         A Fluent id containing a suggested solution to the problem that is
    *         causing a property to be inactive.
-   * @return {String} object.msgId
+   * @return {string} object.msgId
    *         A Fluent id containing an error message explaining why a property
    *         is inactive in this situation.
-   * @return {String} object.property
+   * @return {string} object.property
    *         The inactive property name.
-   * @return {String} object.learnMoreURL
+   * @return {string} object.learnMoreURL
    *         An optional link if we need to open an other link than
    *         the default MDN property one.
    */
@@ -955,7 +955,7 @@ class InactivePropertyHelper {
    * Check if the current node's propName is set to one of the values passed in
    * the values array.
    *
-   * @param {String} propName
+   * @param {string} propName
    *        Property name to check.
    * @param {Array} values
    *        Values to compare against.
@@ -971,7 +971,7 @@ class InactivePropertyHelper {
    * Check if a rule's propName is set to one of the values passed in the values
    * array.
    *
-   * @param {String} propName
+   * @param {string} propName
    *        Property name to check.
    * @param {Array} values
    *        Values to compare against.
@@ -1355,7 +1355,7 @@ class InactivePropertyHelper {
   /**
    * Return the current node's localName.
    *
-   * @returns {String}
+   * @returns {string}
    */
   get localName() {
     return this.node.localName;
@@ -1379,7 +1379,7 @@ class InactivePropertyHelper {
    * Check if the current node is an absolutely-positioned grid element.
    * See: https://drafts.csswg.org/css-grid/#abspos-items
    *
-   * @return {Boolean} whether or not the current node is absolutely-positioned by a
+   * @return {boolean} whether or not the current node is absolutely-positioned by a
    *                   grid container.
    */
   isAbsPosGridElement() {
@@ -1588,7 +1588,7 @@ class InactivePropertyHelper {
    * This is either going to be the table element if there is one, or the parent element.
    * If the current element is not a table track, this returns the current element.
    *
-   * @param  {Boolean} isGroup
+   * @param  {boolean} isGroup
    *         Whether the element is a table track group, instead of a table track.
    * @return {DOMNode}
    *         The parent table, the parent element, or the element itself.
@@ -1640,7 +1640,7 @@ class InactivePropertyHelper {
    * Assuming the current element is an internal table element,
    * check wether its parent table element has `border-collapse` set to `collapse`.
    *
-   * @returns {Boolean}
+   * @returns {boolean}
    */
   checkTableParentHasBorderCollapsed() {
     const parent = this.getTableParent();
@@ -1678,7 +1678,7 @@ function allCssPropertiesExcept(propertiesToIgnore) {
  *         The node to get the styles for.
  * @param  {Window} window
  *         Optional window object. If omitted, will get the node's window.
- * @return {Object}
+ * @return {object}
  */
 function computedStyle(node, window = node.ownerGlobal) {
   return window.getComputedStyle(node);

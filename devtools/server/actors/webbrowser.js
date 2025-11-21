@@ -331,7 +331,7 @@ BrowserTabList.prototype._getActorForBrowser = async function (browser) {
  * - for the tab matching a browserId if one is passed
  * - OR the currently selected tab if no browserId is passed.
  *
- * @param {Number} browserId: use to match any tab
+ * @param {number} browserId: use to match any tab
  */
 BrowserTabList.prototype.getTab = function ({ browserId }) {
   if (typeof browserId == "number") {

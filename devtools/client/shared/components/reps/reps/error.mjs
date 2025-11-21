@@ -224,7 +224,7 @@ function getCauseElement(props, preview) {
  * the frames. The shape of the frames are extremely important as they can then
  * be processed here or in the toolbox by other components.
  *
- * @param {String} stack
+ * @param {string} stack
  * @returns {Array} Array of frames, which are object with the following shape:
  *                  - {String} filename
  *                  - {String} functionName

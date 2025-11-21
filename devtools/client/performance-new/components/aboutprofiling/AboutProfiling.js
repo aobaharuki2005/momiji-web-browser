@@ -63,12 +63,12 @@ function encodeShellValue(value) {
 /**
  * @typedef {import("../../@types/perf").RecordingSettings} RecordingSettings
  *
- * @typedef {Object} ButtonStateProps
+ * @typedef {object} ButtonStateProps
  * @property {RecordingSettings} recordingSettings
  *
  * @typedef {ButtonStateProps} ButtonProps
  *
- * @typedef {Object} ButtonState
+ * @typedef {object} ButtonState
  * @property {boolean} hasDeveloperOptions
  */
 
@@ -236,7 +236,7 @@ const MoreActionsButton = connect(mapStateToButtonProps)(MoreActionsButtonImpl);
 /**
  * @typedef {import("../../@types/perf").PageContext} PageContext
  *
- * @typedef {Object} StateProps
+ * @typedef {object} StateProps
  * @property {boolean?} isSupportedPlatform
  * @property {PageContext} pageContext
  * @property {string | null} promptEnvRestart

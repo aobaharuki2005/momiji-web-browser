@@ -280,7 +280,7 @@ class WebcompatTrackerDebugger {
    * Create a row for a tracker.
    *
    * @param {string} hostname - The hostname of the tracker.
-   * @param {Object} trackerData - The data associated with the tracker.
+   * @param {object} trackerData - The data associated with the tracker.
    * @param {string} trackerData.trackerType - The type of tracker (e.g., "tracking", "fingerprinting").
    * @returns {HTMLTableRowElement} The tracker row element.
    */

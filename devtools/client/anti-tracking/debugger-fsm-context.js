@@ -13,7 +13,7 @@ class DebuggerFSMContext {
    * Creates an instance of DebuggerFSMContext.
    *
    * @param {Array} allTrackers - A non-empty list of all trackers to be managed by the FSM context.
-   * @param {Object} callbacks - An object containing optional callback functions.
+   * @param {object} callbacks - An object containing optional callback functions.
    * @param {Function} [callbacks.onPromptTextUpdate] - Callback invoked when the prompt text is updated.
    * @param {Function} [callbacks.onButtonStateUpdate] - Callback invoked when the button state is updated.
    * @param {Function} [callbacks.onTrackersBlockedStateUpdate] - Callback invoked when the trackers blocked state is updated.

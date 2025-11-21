@@ -40,7 +40,7 @@ RootContainer.prototype = {
   /**
    * Set the expanded state of the container node.
    *
-   * @param  {Boolean} value
+   * @param  {boolean} value
    */
   setExpanded() {},
 

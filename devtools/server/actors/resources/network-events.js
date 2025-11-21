@@ -115,7 +115,7 @@ class NetworkEventWatcher {
    * If persist is enabled, we will keep all informations for all documents, leading
    * to lots of allocations!
    *
-   * @param {Boolean} enabled
+   * @param {boolean} enabled
    */
   setPersist(enabled) {
     this.persist = enabled;
@@ -142,7 +142,7 @@ class NetworkEventWatcher {
   /**
    * Instruct to save or ignore request and response bodies
    *
-   * @param {Boolean} save
+   * @param {boolean} save
    */
   setSaveRequestAndResponseBodies(save) {
     this.listener.setSaveRequestAndResponseBodies(save);
@@ -151,7 +151,7 @@ class NetworkEventWatcher {
   /**
    * Block requests based on the filters
    *
-   * @param {Object} filters
+   * @param {object} filters
    */
   blockRequest(filters) {
     this.listener.blockRequest(filters);
@@ -160,7 +160,7 @@ class NetworkEventWatcher {
   /**
    * Unblock requests based on the fitlers
    *
-   * @param {Object} filters
+   * @param {object} filters
    */
   unblockRequest(filters) {
     this.listener.unblockRequest(filters);

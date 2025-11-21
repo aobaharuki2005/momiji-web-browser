@@ -278,16 +278,16 @@ async function testMediaRuleAdded(ui, editor) {
 /**
  * Run assertion on given rule
  *
- * @param {Object} options
+ * @param {object} options
  * @param {StyleEditorUI} options.ui
  * @param {StyleSheetEditor} options.editor: The editor the rule is displayed in
  * @param {Element} options.rule: The rule element in the media sidebar
- * @param {String} options.conditionText: at-rule condition text (for @media, @container, @support)
- * @param {Boolean} options.matches: Whether or not the document matches the rule
- * @param {String} options.layerName: Optional name of the @layer
- * @param {String} options.propertyName: Name of the @property if type is "property"
- * @param {Number} options.line: Line of the rule
- * @param {String} options.type: The type of the rule (container, layer, media, support, property ).
+ * @param {string} options.conditionText: at-rule condition text (for @media, @container, @support)
+ * @param {boolean} options.matches: Whether or not the document matches the rule
+ * @param {string} options.layerName: Optional name of the @layer
+ * @param {string} options.propertyName: Name of the @property if type is "property"
+ * @param {number} options.line: Line of the rule
+ * @param {string} options.type: The type of the rule (container, layer, media, support, property ).
  *                               Defaults to "media".
  */
 async function testRule({

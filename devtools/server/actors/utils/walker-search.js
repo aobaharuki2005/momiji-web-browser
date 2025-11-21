@@ -308,8 +308,8 @@ class WalkerSearch {
   /**
    * Search the document
    *
-   * @param {String} query What to search for
-   * @param {Object} options The following options are accepted:
+   * @param {string} query What to search for
+   * @param {object} options The following options are accepted:
    * - searchMethod {String} one of WalkerSearch.SEARCH_METHOD_*
    *   defaults to WalkerSearch.SEARCH_METHOD_CONTAINS (does not apply to
    *   selector and XPath search types)

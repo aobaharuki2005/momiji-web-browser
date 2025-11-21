@@ -50,16 +50,16 @@ function isFileChannel(channel) {
  * @constructor
  * @param {DevToolsServerConnection} conn
  *        The connection into which this Actor will be added.
- * @param {Object} sessionContext
+ * @param {object} sessionContext
  *        The Session Context to help know what is debugged.
  *        See devtools/server/actors/watcher/session-context.js
- * @param {Object} options
+ * @param {object} options
  *        Dictionary object with the following attributes:
  *        - onNetworkEventUpdate: optional function
  *          Callback for updates for the network event
  *        - onNetworkEventDestroy: optional function
  *          Callback for the destruction of the network event
- * @param {Object} networkEventOptions
+ * @param {object} networkEventOptions
  *        Object describing the network event or the configuration of the
  *        network observer, and which cannot be easily inferred from the raw
  *        channel.

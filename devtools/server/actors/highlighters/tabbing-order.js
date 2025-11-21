@@ -204,7 +204,7 @@ class TabbingOrderHighlighter {
    * Update NodeTabbingOrderHighlighter focus styling for a node that,
    * potentially, belongs to the tabbing order.
    *
-   * @param {Object} options
+   * @param {object} options
    *        Options specifying the node and its focused state.
    */
   updateFocus({ node, focused }) {

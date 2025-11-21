@@ -521,7 +521,7 @@ async function withDevToolsPanel(url, callback, aWindow = window) {
  * interactions, since the about:profiling page does not include buttons to control
  * the recording.
  *
- * @returns {Object}
+ * @returns {object}
  */
 function getActiveConfiguration() {
   const BackgroundJSM = ChromeUtils.importESModule(

@@ -278,7 +278,7 @@ class MarkupContextMenu {
   /**
    * Paste the contents of the clipboard as adjacent HTML to the selected Node.
    *
-   * @param  {String} position
+   * @param  {string} position
    *         The position as specified for Element.insertAdjacentHTML
    *         (i.e. "beforeBegin", "afterBegin", "beforeEnd", "afterEnd").
    */

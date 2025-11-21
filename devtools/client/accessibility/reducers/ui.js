@@ -143,9 +143,9 @@ function onSelect(state, { accessible, response: ancestry, error }) {
 /**
  * Handle "canBeDisabled" flag update for accessibility service
  *
- * @param  {Object}  state   Current ui state
- * @param  {Object}  action  Redux action object
- * @return {Object}  updated state
+ * @param  {object}  state   Current ui state
+ * @param  {object}  action  Redux action object
+ * @return {object}  updated state
  */
 function onCanBeDisabledChange(state, { canBeDisabled }) {
   return Object.assign({}, state, { canBeDisabled });
@@ -154,9 +154,9 @@ function onCanBeDisabledChange(state, { canBeDisabled }) {
 /**
  * Handle "canBeEnabled" flag update for accessibility service
  *
- * @param  {Object}  state   Current ui state.
- * @param  {Object}  action  Redux action object
- * @return {Object}  updated state
+ * @param  {object}  state   Current ui state.
+ * @param  {object}  action  Redux action object
+ * @return {object}  updated state
  */
 function onCanBeEnabledChange(state, { canBeEnabled }) {
   return Object.assign({}, state, { canBeEnabled });
@@ -165,9 +165,9 @@ function onCanBeEnabledChange(state, { canBeEnabled }) {
 /**
  * Handle pref update for accessibility panel.
  *
- * @param  {Object}  state   Current ui state.
- * @param  {Object}  action  Redux action object
- * @return {Object}  updated state
+ * @param  {object}  state   Current ui state.
+ * @param  {object}  action  Redux action object
+ * @return {object}  updated state
  */
 function onPrefChange(state, { name, value }) {
   return {
@@ -179,9 +179,9 @@ function onPrefChange(state, { name, value }) {
 /**
  * Handle reset action for the accessibility panel UI.
  *
- * @param  {Object}  state   Current ui state.
- * @param  {Object}  action  Redux action object
- * @return {Object}  updated state
+ * @param  {object}  state   Current ui state.
+ * @param  {object}  action  Redux action object
+ * @return {object}  updated state
  */
 function onReset(state, { enabled, canBeDisabled, canBeEnabled, supports }) {
   const newState = {
@@ -198,10 +198,10 @@ function onReset(state, { enabled, canBeDisabled, canBeEnabled, supports }) {
 /**
  * Handle accessibilty service enabling/disabling.
  *
- * @param {Object}  state   Current accessibility services enabled state.
- * @param {Object}  action  Redux action object
- * @param {Boolean} enabled New enabled state.
- * @return {Object}  updated state
+ * @param {object}  state   Current accessibility services enabled state.
+ * @param {object}  action  Redux action object
+ * @param {boolean} enabled New enabled state.
+ * @return {object}  updated state
  */
 function onToggle(state, { error }, enabled) {
   if (error) {

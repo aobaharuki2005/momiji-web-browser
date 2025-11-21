@@ -55,7 +55,7 @@ TooltipToggle.prototype = {
    *        The function can also return a promise that will resolve to one of
    *        the values listed above.
    *        If omitted, the tooltip will be shown everytime.
-   * @param {Object} options
+   * @param {object} options
             Set of optional arguments:
    *        - {Number} toggleDelay
    *          An optional delay (in ms) that will be observed before showing

@@ -130,7 +130,7 @@ class WebConsole {
   /**
    * Initialize the Web Console instance.
    *
-   * @param {Boolean} emitCreatedEvent: Defaults to true. If false is passed,
+   * @param {boolean} emitCreatedEvent: Defaults to true. If false is passed,
    *        We won't be sending the 'web-console-created' event.
    *
    * @return object
@@ -159,7 +159,7 @@ class WebConsole {
   /**
    * Get the value from the input field.
    *
-   * @returns {String|null} returns null if there's no input.
+   * @returns {string | null} returns null if there's no input.
    */
   getInputValue() {
     if (!this.jsterm) {
@@ -184,7 +184,7 @@ class WebConsole {
   /**
    * Sets the value of the input field (command line)
    *
-   * @param {String} newValue: The new value to set.
+   * @param {string} newValue: The new value to set.
    */
   setInputValue(newValue) {
     if (!this.jsterm) {
@@ -258,7 +258,7 @@ class WebConsole {
    * Retrieve information about the JavaScript debugger's currently selected stackframe.
    * is used to allow the Web Console to evaluate code in the selected stackframe.
    *
-   * @return {String}
+   * @return {string}
    *         The Frame Actor ID.
    *         If the debugger is not open or if it's not paused, then |null| is
    *         returned.
@@ -282,8 +282,8 @@ class WebConsole {
    * parser worker to provide additional feature for the user (top-level await,
    * original languages mapping, …).
    *
-   * @param {String} expression: The input to maybe map.
-   * @returns {Object|null}
+   * @param {string} expression: The input to maybe map.
+   * @returns {object | null}
    *          Returns null if the input can't be mapped.
    *          If it can, returns an object containing the following:
    *            - {String} expression: The mapped expression

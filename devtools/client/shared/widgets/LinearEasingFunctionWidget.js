@@ -407,8 +407,8 @@ class LinearEasingFunctionWidget extends EventEmitter {
   /**
    * Create a control points for the svg line.
    *
-   * @param {Number} cx
-   * @param {Number} cy
+   * @param {number} cx
+   * @param {number} cy
    * @returns {SVGCircleElement}
    */
   #createSvgControlPointEl(cx, cy) {
@@ -429,7 +429,7 @@ class LinearEasingFunctionWidget extends EventEmitter {
    * Return the position in the SVG viewbox from mouse event.
    *
    * @param {MouseEvent} event
-   * @returns {Object} An object with x and y properties
+   * @returns {object} An object with x and y properties
    */
   #getPositionInSvgFromEvent(event) {
     const position = this.#svgEl.createSVGPoint();
@@ -447,7 +447,7 @@ class LinearEasingFunctionWidget extends EventEmitter {
    * Provide the value of the linear() function we want to visualize here.
    * Called from the tooltip with the value of the function in the rule view.
    *
-   * @param {String} linearFunctionValue: e.g. `linear(0, 0.5, 1)`.
+   * @param {string} linearFunctionValue: e.g. `linear(0, 0.5, 1)`.
    */
   setCssLinearValue(linearFunctionValue) {
     if (!linearFunctionValue) {
@@ -466,7 +466,7 @@ class LinearEasingFunctionWidget extends EventEmitter {
    * Return the value of the linear() function based on the state of the graph.
    * The resulting value is what we emit in the "updated" event.
    *
-   * @return {String|null} e.g. `linear(0 0%, 0.5 50%, 1 100%)`.
+   * @return {string | null} e.g. `linear(0 0%, 0.5 50%, 1 100%)`.
    */
   getCssLinearValue() {
     if (!this.#functionPoints) {
@@ -596,8 +596,8 @@ class TimingFunctionPreviewWidget {
  * Parse a linear() string to collect the different values.
  * https://drafts.csswg.org/css-easing-2/#the-linear-easing-function
  *
- * @param {String} value
- * @return {Array<Object>|undefined} returns undefined if value isn't a valid linear() value.
+ * @param {string} value
+ * @return {Array<object> | undefined} returns undefined if value isn't a valid linear() value.
  *                                   the items of the array are objects with {Number} `input`
  *                                   and {Number} `output` properties.
  */
@@ -730,11 +730,11 @@ function parseTimingFunction(value) {
 /**
  * Linearly interpolate between 2 numbers.
  *
- * @param {Number} x
- * @param {Number} y
- * @param {Number} a
+ * @param {number} x
+ * @param {number} y
+ * @param {number} a
  *        A value of 0 returns x, and 1 returns y
- * @return {Number}
+ * @return {number}
  */
 function lerp(x, y, a) {
   return x * (1 - a) + y * a;
@@ -744,10 +744,10 @@ function lerp(x, y, a) {
  * Clamp value in a range, meaning the result won't be smaller than min
  * and no bigger than max.
  *
- * @param {Number} min
- * @param {Number} max
- * @param {Number} value
- * @returns {Number}
+ * @param {number} min
+ * @param {number} max
+ * @param {number} value
+ * @returns {number}
  */
 function clamp(min, max, value) {
   return Math.max(min, Math.min(value, max));

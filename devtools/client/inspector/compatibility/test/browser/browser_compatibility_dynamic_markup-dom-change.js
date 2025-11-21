@@ -78,7 +78,7 @@ add_task(async function () {
  * This overrides the definition in inspector/test/head.js which times
  * out when the container to be clicked is already the selected node.
  *
- * @param {String|NodeFront} selector
+ * @param {string | NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return {Promise} Resolves when the node has been selected.

@@ -8,7 +8,7 @@
  */
 
 /**
- * @typedef {Object} State
+ * @typedef {object} State
  * @property {boolean} isOnboardingEnabled
  */
 

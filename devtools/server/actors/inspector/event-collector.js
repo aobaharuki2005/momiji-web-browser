@@ -219,7 +219,7 @@ class MainEventCollector {
    *
    * @param  {DOMNode} node
    *         The not for which we want to check for event listeners.
-   * @return {Boolean}
+   * @return {boolean}
    *         true if the node has event listeners, false otherwise.
    */
   hasListeners(node) {
@@ -233,9 +233,9 @@ class MainEventCollector {
    *
    * @param  {DOMNode} node
    *         The not for which we want to get event listeners.
-   * @param  {Object} options
+   * @param  {object} options
    *         An object for passing in options.
-   * @param  {Boolean} [options.checkOnly = false]
+   * @param  {boolean} [options.checkOnly = false]
    *         Don't get any listeners but return true when the first event is
    *         found.
    * @return {Array}
@@ -798,7 +798,7 @@ class EventCollector {
    *
    * @param  {DOMNode} node
    *         The node to be checked for events.
-   * @return {Boolean}
+   * @return {boolean}
    *         True if the node has event listeners, false otherwise.
    */
   hasEventListeners(node) {
@@ -829,7 +829,7 @@ class EventCollector {
    *
    * @param  {DOMNode} node
    *         The node for which events are to be gathered.
-   * @return {Array<Object>}
+   * @return {Array<object>}
    *         An array containing objects in the following format:
    *         {
    *           {String} type: The event type, e.g. "click"

@@ -140,7 +140,7 @@ async function updateFrameDisplayName(frame, thunkArgs) {
 /**
  * Update the display names of the mapped original frames
  *
- * @param {Object} thread
+ * @param {object} thread
  * @returns
  */
 export function updateAllFrameDisplayNames(thread) {

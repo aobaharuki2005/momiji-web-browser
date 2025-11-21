@@ -203,14 +203,14 @@ class Inspector extends EventEmitter {
    * Set any attributes or listeners that rely on the document being loaded or fronts
    * from the InspectorFront and Target here.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {NodeFront|undefined} options.defaultStartupNode: Optional node front that
    *        will be selected when the first root node is available.
    * @param {ElementIdentifier|undefined} options.defaultStartupNodeDomReference: Optional
    *        element identifier whose matching node front will be selected when the first
    *        root node is available.
    *        Will be ignored if defaultStartupNode is passed.
-   * @param {String|undefined} options.defaultStartupNodeSelectionReason: Optional string
+   * @param {string | undefined} options.defaultStartupNodeSelectionReason: Optional string
    *        that will be used as a reason for the node selection when either
    *        defaultStartupNode or defaultStartupNodeDomReference is passed
    * @returns {Inspector}
@@ -885,7 +885,7 @@ class Inspector extends EventEmitter {
   /**
    * Check if the inspector should use the landscape mode.
    *
-   * @return {Boolean} true if the inspector should be in landscape mode.
+   * @return {boolean} true if the inspector should be in landscape mode.
    */
   #useLandscapeMode() {
     if (!this.panelDoc) {
@@ -1404,10 +1404,10 @@ class Inspector extends EventEmitter {
    * Create a side-panel tab controlled by an extension
    * using the devtools.panels.elements.createSidebarPane and sidebar object API
    *
-   * @param {String} id
+   * @param {string} id
    *        An unique id for the sidebar tab.
-   * @param {Object} options
-   * @param {String} options.title
+   * @param {object} options
+   * @param {string} options.title
    *        The tab title
    */
   addExtensionSidebar(id, { title }) {
@@ -1441,7 +1441,7 @@ class Inspector extends EventEmitter {
    * extension has been disable/uninstalled while the toolbox and inspector were
    * still open).
    *
-   * @param {String} id
+   * @param {string} id
    *        The id of the sidebar tab to destroy.
    */
   removeExtensionSidebar(id) {
@@ -1483,7 +1483,7 @@ class Inspector extends EventEmitter {
    * Method to check whether the document is a HTML document and
    * pickColorFromPage method is available or not.
    *
-   * @return {Boolean} true if the eyedropper highlighter is supported by the current
+   * @return {boolean} true if the eyedropper highlighter is supported by the current
    *         document.
    */
   async supportsEyeDropper() {
@@ -1613,7 +1613,7 @@ class Inspector extends EventEmitter {
   /**
    * Can a new HTML element be inserted into the currently selected element?
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   canAddHTMLChild() {
     const selection = this.selection;

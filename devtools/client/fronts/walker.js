@@ -437,7 +437,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   /**
    * Start the element picker on the debuggee target.
    *
-   * @param {Boolean} doFocus - Optionally focus the content area once the picker is
+   * @param {boolean} doFocus - Optionally focus the content area once the picker is
    *                            activated.
    */
   pick(doFocus) {

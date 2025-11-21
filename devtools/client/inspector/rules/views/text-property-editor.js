@@ -99,7 +99,7 @@ const IS_DRAGGING_CLASSNAME = "ruleview-propertyvalue-dragging";
  *        The rule editor that owns this TextPropertyEditor.
  * @param {TextProperty} property
  *        The text property to edit.
- * @param {Object} options
+ * @param {object} options
  * @param {Set} options.elementsWithPendingClicks
  */
 class TextPropertyEditor {
@@ -456,7 +456,7 @@ class TextPropertyEditor {
    * Get the grid line names of the grid that the currently selected element is
    * contained in.
    *
-   * @return {Object} Contains the names of the cols and rows as arrays
+   * @return {object} Contains the names of the cols and rows as arrays
    * {cols: [], rows: []}.
    */
   #getGridlineNames = async () => {
@@ -530,7 +530,7 @@ class TextPropertyEditor {
    * Get the path from which to resolve requests for this
    * rule's stylesheet.
    *
-   * @return {String} the stylesheet's href.
+   * @return {string} the stylesheet's href.
    */
   get #sheetHref() {
     const domRule = this.rule.domRule;
@@ -1381,11 +1381,11 @@ class TextPropertyEditor {
    * Ignores the change if the user pressed escape, otherwise
    * commits it.
    *
-   * @param {String} value
+   * @param {string} value
    *        The value contained in the editor.
-   * @param {Boolean} commit
+   * @param {boolean} commit
    *        True if the change should be applied.
-   * @param {Number} direction
+   * @param {number} direction
    *        The move focus direction number.
    */
   #onNameDone = (value, commit, direction) => {
@@ -1441,7 +1441,7 @@ class TextPropertyEditor {
    * Begin editing next or previous available property given the focus
    * direction.
    *
-   * @param {Number} direction
+   * @param {number} direction
    *        The move focus direction number.
    */
   remove(direction) {
@@ -1459,11 +1459,11 @@ class TextPropertyEditor {
    * Called when a value editor closes.  If the user pressed escape,
    * revert to the value this property had before editing.
    *
-   * @param {String} value
+   * @param {string} value
    *        The value contained in the editor.
-   * @param {Boolean} commit
+   * @param {boolean} commit
    *        True if the change should be applied.
-   * @param {Number} direction
+   * @param {number} direction
    *        The move focus direction number.
    */
   #onValueDone = (value = "", commit, direction) => {
@@ -1566,9 +1566,9 @@ class TextPropertyEditor {
    * Example: Calling with "red; width: 100px" would return
    * { firstValue: "red", propertiesToAdd: [{ name: "width", value: "100px" }] }
    *
-   * @param {String} value
+   * @param {string} value
    *        The string to parse
-   * @return {Object} An object with the following properties:
+   * @return {object} An object with the following properties:
    *        firstValue: A string containing a simple value, like
    *                    "red" or "100px!important"
    *        propertiesToAdd: An array with additional properties, following the
@@ -1609,9 +1609,9 @@ class TextPropertyEditor {
   /**
    * Live preview this property, without committing changes.
    *
-   * @param {String} value
+   * @param {string} value
    *        The value to set the current property to.
-   * @param {Boolean} reverting
+   * @param {boolean} reverting
    *        True if we're reverting the previously previewed value
    */
   #previewValue = (value, reverting = false) => {
@@ -1634,7 +1634,7 @@ class TextPropertyEditor {
    * Alt on macosx and ctrl on other OSs
    *
    * @param  {KeyboardEvent} event
-   * @returns {Boolean}
+   * @returns {boolean}
    */
   #hasSmallIncrementModifier(event) {
     const modifier =
@@ -1647,8 +1647,8 @@ class TextPropertyEditor {
    * e.g. if the input is "128px" it will return an object like
    * { groups: { value: "128", unit: "px"}}
    *
-   * @param  {String} value
-   * @returns {Object|null}
+   * @param  {string} value
+   * @returns {object | null}
    */
   #parseDimension(value) {
     // The regex handles values like +1, -1, 1e4, .4, 1.3e-4, 1.567
@@ -1661,7 +1661,7 @@ class TextPropertyEditor {
    * Check if a textProperty value is supported to add the dragging feature
    *
    * @param  {TextProperty} textProperty
-   * @returns {Boolean}
+   * @returns {boolean}
    */
   #isDraggableProperty(textProperty) {
     // Check if the feature is explicitly disabled.
@@ -1853,7 +1853,7 @@ class TextPropertyEditor {
    * Validate this property. Does it make sense for this value to be assigned
    * to this property name? This does not apply the property value
    *
-   * @return {Boolean} true if the property name + value pair is valid, false otherwise.
+   * @return {boolean} true if the property name + value pair is valid, false otherwise.
    */
   isValid() {
     return this.prop.isValid();
@@ -1862,7 +1862,7 @@ class TextPropertyEditor {
   /**
    * Validate the name of this property.
    *
-   * @return {Boolean} true if the property name is valid, false otherwise.
+   * @return {boolean} true if the property name is valid, false otherwise.
    */
   #isNameValid() {
     return this.prop.isNameValid();

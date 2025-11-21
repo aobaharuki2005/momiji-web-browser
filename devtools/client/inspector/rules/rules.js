@@ -138,7 +138,7 @@ const REGISTERED_PROPERTIES_CONTAINER_ID = "registered-properties-container";
  *        Inspector toolbox panel
  * @param {Document} document
  *        The document that will contain the rule view.
- * @param {Object} store
+ * @param {object} store
  *        The CSS rule view can use this object to store metadata
  *        that might outlast the rule view, particularly the current
  *        set of disabled properties.
@@ -364,9 +364,9 @@ CssRuleView.prototype = {
    * unhighlight the highlighted nodes.
    *
    * @param {Rule} rule
-   * @param {String} selector
+   * @param {string} selector
    *        Elements matching this selector will be highlighted on the page.
-   * @param {Boolean} highlightFromRulesSelector
+   * @param {boolean} highlightFromRulesSelector
    */
   async toggleSelectorHighlighter(
     rule,
@@ -410,8 +410,8 @@ CssRuleView.prototype = {
   /**
    * Check whether a SelectorHighlighter is active for the given selector text.
    *
-   * @param {String} selector
-   * @return {Boolean}
+   * @param {string} selector
+   * @return {boolean}
    */
   isSelectorHighlighted(selector) {
     const options = this.inspector.highlighters.getOptionsForActiveHighlighter(
@@ -545,9 +545,9 @@ CssRuleView.prototype = {
    * This is the place to observe for highlighter events, check the highlighter type and
    * event name, then react to specific events, for example by modifying the DOM.
    *
-   * @param {String} eventName
+   * @param {string} eventName
    *        Highlighter event name. One of: "highlighter-hidden", "highlighter-shown"
-   * @param {Object} data
+   * @param {object} data
    *        Object with data associated with the highlighter event.
    */
   handleHighlighterEvent(eventName, data) {
@@ -646,7 +646,7 @@ CssRuleView.prototype = {
    *
    * @param {DOMNode} node
    *        The node which we want information about
-   * @return {Object|null} containing the following props:
+   * @return {object | null} containing the following props:
    * - type {String} One of the VIEW_NODE_XXX_TYPE const in
    *   client/inspector/shared/node-types.
    * - rule {Rule} The Rule object.
@@ -662,7 +662,7 @@ CssRuleView.prototype = {
    *
    * @param {DOMNode} node
    *        The node which we want information about
-   * @return {Object|null} containing the following props:
+   * @return {object | null} containing the following props:
    * - type {String} Compatibility issue type.
    * - property {string} The incompatible rule
    * - alias {Array} The browser specific alias of rule
@@ -829,7 +829,7 @@ CssRuleView.prototype = {
   /**
    * Set the filter style search value.
    *
-   * @param {String} value
+   * @param {string} value
    *        The search value.
    */
   setFilterStyles(value = "") {
@@ -1076,7 +1076,7 @@ CssRuleView.prototype = {
    *
    * @param {NodeActor} element
    *        The node whose style rules we'll inspect.
-   * @param {Boolean} allowRefresh
+   * @param {boolean} allowRefresh
    *        Update the view even if the element is the same as last time.
    */
   selectElement(element, allowRefresh = false) {
@@ -1362,11 +1362,11 @@ CssRuleView.prototype = {
   /**
    * Creates an expandable container in the rule view
    *
-   * @param  {String} label
+   * @param  {string} label
    *         The label for the container header
-   * @param  {String} containerId
+   * @param  {string} containerId
    *         The id that will be set on the container
-   * @param  {Boolean} isPseudo
+   * @param  {boolean} isPseudo
    *         Whether or not the container will hold pseudo element rules
    * @return {DOMNode} The container element
    */
@@ -1437,7 +1437,7 @@ CssRuleView.prototype = {
   /**
    * Return the RegisteredPropertyEditor element for a given property name
    *
-   * @param {String} registeredPropertyName
+   * @param {string} registeredPropertyName
    * @returns {Element|null}
    */
   getRegisteredPropertyElement(registeredPropertyName) {
@@ -1453,9 +1453,9 @@ CssRuleView.prototype = {
    *         Clickable toggle DOM Node
    * @param  {DOMNode}  container
    *         Expandable container DOM Node
-   * @param  {Boolean}  isPseudo
+   * @param  {boolean}  isPseudo
    *         Whether or not the container will hold pseudo element rules
-   * @param  {Boolean}  showPseudo
+   * @param  {boolean}  showPseudo
    *         Whether or not pseudo element rules should be displayed
    */
   _toggleContainerVisibility(toggleButton, container, isPseudo, showPseudo) {
@@ -1653,7 +1653,7 @@ CssRuleView.prototype = {
    * @param  {Rule} rule
    *         The rule object we're highlighting if its rule selectors or
    *         property values match the search value.
-   * @return {Boolean} true if the rule was highlighted, false otherwise.
+   * @return {boolean} true if the rule was highlighted, false otherwise.
    */
   highlightRule(rule) {
     const isRuleSelectorHighlighted = this._highlightRuleSelector(rule);
@@ -1680,7 +1680,7 @@ CssRuleView.prototype = {
    *
    * @param  {Rule} rule
    *         The Rule object.
-   * @return {Boolean} true if the rule selector was highlighted,
+   * @return {boolean} true if the rule selector was highlighted,
    *         false otherwise.
    */
   _highlightRuleSelector(rule) {
@@ -1714,7 +1714,7 @@ CssRuleView.prototype = {
    * Highlights the ancestor rules data (@media / @layer) that matches the filter search
    * value and returns a boolean indicating whether or not element was highlighted.
    *
-   * @return {Boolean} true if the element was highlighted, false otherwise.
+   * @return {boolean} true if the element was highlighted, false otherwise.
    */
   _highlightAncestorRules(rule) {
     const element = rule.editor.ancestorDataEl;
@@ -1746,7 +1746,7 @@ CssRuleView.prototype = {
    * returns a boolean indicating whether or not the stylesheet source was
    * highlighted.
    *
-   * @return {Boolean} true if the stylesheet source was highlighted, false
+   * @return {boolean} true if the stylesheet source was highlighted, false
    *         otherwise.
    */
   _highlightStyleSheet(rule) {
@@ -1878,17 +1878,17 @@ CssRuleView.prototype = {
    * element if the search terms match the property, and returns a boolean
    * indicating whether or not the search terms match.
    *
-   * @param  {Object} options
+   * @param  {object} options
    * @param  {DOMNode} options.element
    *         The node to highlight if search terms match
-   * @param  {String} options.propertyName
+   * @param  {string} options.propertyName
    *         The property name of a rule
-   * @param  {String} options.propertyValue
+   * @param  {string} options.propertyValue
    *         The property value of a rule
    * @param  {TextProperty} options.textProperty
    *         The text property that we may highlight. It's helpful in cases we don't have
    *         an element yet (e.g. if the property is a hidden unused variable)
-   * @return {Boolean} true if the given search terms match the property, false
+   * @return {boolean} true if the given search terms match the property, false
    *         otherwise.
    */
   _highlightMatches({ element, propertyName, propertyValue, textProperty }) {
@@ -2153,7 +2153,7 @@ CssRuleView.prototype = {
    *         The rule to scroll to.
    * @param  {Element|null} declaration
    *         Optional. The declaration to scroll to.
-   * @param  {String} scrollBehavior
+   * @param  {string} scrollBehavior
    *         Optional. The transition animation when scrolling. If prefers-reduced-motion
    *         system pref is set, then the scroll behavior will be overridden to "auto".
    */
@@ -2196,14 +2196,14 @@ CssRuleView.prototype = {
    * Finds the specified TextProperty name in the rule view. If found, scroll to and
    * flash the TextProperty.
    *
-   * @param  {String} name
+   * @param  {string} name
    *         The property name to scroll to and highlight.
-   * @param  {Object} options
+   * @param  {object} options
    * @param  {Function|undefined} options.ruleValidator
    *         An optional function that can be used to filter out rules we shouldn't look
    *         into to find the property name. The function is called with a Rule object,
    *         and the rule will be skipped if the function returns a falsy value.
-   * @return {Boolean} true if the TextProperty name is found, and false otherwise.
+   * @return {boolean} true if the TextProperty name is found, and false otherwise.
    */
   highlightProperty(name, { ruleValidator } = {}) {
     // First, let's clear any search we might have, as the property could be hidden
@@ -2333,7 +2333,7 @@ CssRuleView.prototype = {
    *
    * @param {Rule} rule
    * @param {Element} element
-   * @param {String} scrollBehavior
+   * @param {string} scrollBehavior
    */
   _highlightElementInRule(rule, element, scrollBehavior) {
     if (rule) {
@@ -2700,7 +2700,7 @@ class RuleViewTool {
    * Update rules that reference registered properties whose name is in the passed Set,
    * so the `var()` tooltip has up-to-date information.
    *
-   * @param {Set<String>} registeredPropertyNames
+   * @param {Set<string>} registeredPropertyNames
    */
   _updateElementStyleRegisteredProperties(registeredPropertyNames) {
     if (!this.view._elementStyle) {

@@ -126,7 +126,7 @@ class StyleSheetsManager extends EventEmitter {
    * to watch for stylesheet additions and modifications.
    * This resolves once it notified about existing stylesheets.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {Function} onAvailable: Function that will be called when a stylesheet is
    *                   registered, but also with already registered stylesheets
    *                   if ignoreExisting is not set to true.
@@ -134,7 +134,7 @@ class StyleSheetsManager extends EventEmitter {
    *                   - {String} resourceId: The id that was assigned to the stylesheet
    *                   - {StyleSheet} styleSheet: The actual stylesheet object
    *                   - {Object} creationData: An object with:
-   *                              - {Boolean} isCreatedByDevTools: Was the stylesheet created
+   *                              - {boolean} isCreatedByDevTools: Was the stylesheet created
    *                                by DevTools (e.g. by the user clicking the new stylesheet
    *                                button in the styleeditor)
    *                              - {String} fileName
@@ -147,7 +147,7 @@ class StyleSheetsManager extends EventEmitter {
    * @param {Function} onDestroyed: Function that will be called when a stylesheet is removed
    *                   This is called with a single object parameter with the following properties:
    *                   - {String} resourceId: The id that was assigned to the stylesheet
-   * @param {Boolean} ignoreExisting: Pass to true to avoid onAvailable to be called with
+   * @param {boolean} ignoreExisting: Pass to true to avoid onAvailable to be called with
    *                  already registered stylesheets.
    */
   async watch({ onAvailable, onUpdated, onDestroyed, ignoreExisting = false }) {
@@ -214,7 +214,7 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Remove the passed listeners
    *
-   * @param {Object} options: See this.watch
+   * @param {object} options: See this.watch
    */
   unwatch({ onAvailable, onUpdated, onDestroyed }) {
     if (!this.#watchListeners) {
@@ -316,7 +316,7 @@ class StyleSheetsManager extends EventEmitter {
    * registered yet.
    *
    * @params {StyleSheet} styleSheet
-   * @returns {String} resourceId
+   * @returns {string} resourceId
    */
   getStyleSheetResourceId(styleSheet) {
     const existingResourceId = this.#findStyleSheetResourceId(styleSheet);
@@ -335,7 +335,7 @@ class StyleSheetsManager extends EventEmitter {
    * stylesheet wasn't registered yet.
    *
    * @params {StyleSheet} styleSheet
-   * @returns {String} resourceId
+   * @returns {string} resourceId
    */
   #findStyleSheetResourceId(styleSheet) {
     for (const [
@@ -353,7 +353,7 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Return owner node of the style sheet of the given resource id.
    *
-   * @params {String} resourceId
+   * @params {string} resourceId
    *                  The id associated with the stylesheet
    * @returns {Element|null}
    */
@@ -365,9 +365,9 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Return the index of given stylesheet of the given resource id.
    *
-   * @params {String} resourceId
+   * @params {string} resourceId
    *                  The id associated with the stylesheet
-   * @returns {Number}
+   * @returns {number}
    */
   getStyleSheetIndex(resourceId) {
     const styleSheet = this.#styleSheetMap.get(resourceId);
@@ -392,9 +392,9 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Get the text of a stylesheet given its resourceId.
    *
-   * @params {String} resourceId
+   * @params {string} resourceId
    *                  The id associated with the stylesheet
-   * @returns {String}
+   * @returns {string}
    */
   async getText(resourceId) {
     const styleSheet = this.#styleSheetMap.get(resourceId);
@@ -413,9 +413,9 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Toggle the disabled property of the stylesheet
    *
-   * @params {String} resourceId
+   * @params {string} resourceId
    *                  The id associated with the stylesheet
-   * @return {Boolean} the disabled state after toggling.
+   * @return {boolean} the disabled state after toggling.
    */
   toggleDisabled(resourceId) {
     const styleSheet = this.#styleSheetMap.get(resourceId);
@@ -429,15 +429,15 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Update the style sheet in place with new text.
    *
-   * @param  {String} resourceId
-   * @param  {String} text
+   * @param  {string} resourceId
+   * @param  {string} text
    *         New text.
-   * @param  {Object} options
-   * @param  {Boolean} options.transition
+   * @param  {object} options
+   * @param  {boolean} options.transition
    *         Whether to do CSS transition for change. Defaults to false.
-   * @param  {Number} options.kind
+   * @param  {number} options.kind
    *         Either UPDATE_PRESERVING_RULES or UPDATE_GENERAL. Defaults to UPDATE_GENERAL.
-   * @param {String} options.cause
+   * @param {string} options.cause
    *         Indicates the cause of this update (e.g. "styleeditor") if this was called
    *         from the stylesheet to be edited by the user from the StyleEditor.
    */
@@ -486,11 +486,11 @@ class StyleSheetsManager extends EventEmitter {
    * Applies a transition to the stylesheet document so any change made by the user in the
    * client will be animated so it's more visible.
    *
-   * @param {String} resourceId
+   * @param {string} resourceId
    *        The id associated with the stylesheet
-   * @param {Number} kind
+   * @param {number} kind
    *        Either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
-   * @param {String} cause
+   * @param {string} cause
    *         Indicates the cause of this update (e.g. "styleeditor") if this was called
    *         from the stylesheet to be edited by the user from the StyleEditor.
    */
@@ -519,11 +519,11 @@ class StyleSheetsManager extends EventEmitter {
   }
 
   /**
-   * @param {String} resourceId
+   * @param {string} resourceId
    *        The id associated with the stylesheet
-   * @param {Number} kind
+   * @param {number} kind
    *        Either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
-   * @param {String} cause
+   * @param {string} cause
    *         Indicates the cause of this update (e.g. "styleeditor") if this was called
    *         from the stylesheet to be edited by the user from the StyleEditor.
    */
@@ -617,7 +617,7 @@ class StyleSheetsManager extends EventEmitter {
    * all the at-rules of a given stylesheet.
    *
    * @param {StyleSheet} styleSheet
-   * @returns {Object} An object of the following shape:
+   * @returns {object} An object of the following shape:
    *          - {Integer} ruleCount: The total number of rules in the stylesheet
    *          - {Array<Object>} atRules: An array of object of the following shape:
    *            - type {String}
@@ -732,9 +732,9 @@ class StyleSheetsManager extends EventEmitter {
    * Called when the status of a media query support changes (i.e. it now matches, or it
    * was matching but isn't anymore)
    *
-   * @param {String} resourceId
+   * @param {string} resourceId
    *        The id associated with the stylesheet
-   * @param {Number} index
+   * @param {number} index
    *        The index of the media rule relatively to all the other at-rules of the stylesheet
    * @param {MediaQueryList} mql
    *        The result of matchMedia for the given media rule
@@ -758,7 +758,7 @@ class StyleSheetsManager extends EventEmitter {
    * Get the node href of a given stylesheet
    *
    * @param {StyleSheet} styleSheet
-   * @returns {String}
+   * @returns {string}
    */
   getNodeHref(styleSheet) {
     const { ownerNode } = styleSheet;
@@ -781,7 +781,7 @@ class StyleSheetsManager extends EventEmitter {
    * Get the sourcemap base url of a given stylesheet
    *
    * @param {StyleSheet} styleSheet
-   * @returns {String}
+   * @returns {string}
    */
   getSourcemapBaseURL(styleSheet) {
     // When the style is injected via nsIDOMWindowUtils.loadSheet, even
@@ -838,7 +838,7 @@ class StyleSheetsManager extends EventEmitter {
    * Returns true if a given stylesheet has an ancestor with the same url it has
    *
    * @param {StyleSheet} styleSheet
-   * @returns {Boolean}
+   * @returns {boolean}
    */
   #haveAncestorWithSameURL(styleSheet) {
     const href = styleSheet.href;
@@ -854,11 +854,11 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Helper function called when a property changed in a given stylesheet
    *
-   * @param {String} resourceId
+   * @param {string} resourceId
    *        The id of the stylesheet the change occured in
-   * @param {String} property
+   * @param {string} property
    *        The property that was changed
-   * @param {String} value
+   * @param {string} value
    *        The value of the property
    */
   #notifyPropertyChanged(resourceId, property, value) {
@@ -918,7 +918,7 @@ class StyleSheetsManager extends EventEmitter {
    * resourceId and call registered `onAvailable` listeners.
    *
    * @param {StyleSheet} styleSheet
-   * @returns {String} the associated resourceId
+   * @returns {string} the associated resourceId
    */
   #registerStyleSheet(styleSheet) {
     const existingResourceId = this.#findStyleSheetResourceId(styleSheet);
@@ -994,7 +994,7 @@ class StyleSheetsManager extends EventEmitter {
    * Returns true if the passed styleSheet should be handled.
    *
    * @param {StyleSheet} styleSheet
-   * @returns {Boolean}
+   * @returns {boolean}
    */
   #shouldListSheet(styleSheet) {
     const href = styleSheet.href?.toLowerCase();

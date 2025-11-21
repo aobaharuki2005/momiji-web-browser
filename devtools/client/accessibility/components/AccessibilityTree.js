@@ -128,7 +128,7 @@ class AccessibilityTree extends Component {
    * within the accessibility tree, re-fetch its children and re-render the
    * corresponding subtree.
    *
-   * @param {Object} accessibleFront
+   * @param {object} accessibleFront
    *        accessible front that had its subtree reordered.
    */
   onReorder(accessibleFront) {
@@ -161,9 +161,9 @@ class AccessibilityTree extends Component {
    * and that accessible is cached and rendered within the accessibility tree,
    * re-fetch its parent's children and re-render the corresponding subtree.
    *
-   * @param {Object} accessibleFront
+   * @param {object} accessibleFront
    *        accessible front that had its name changed.
-   * @param {Object} parentFront
+   * @param {object} parentFront
    *        optional parent accessible front. Note: if it parent is not
    *        present, we assume that the top level document's name has changed
    *        and use accessible walker as a parent.
@@ -187,7 +187,7 @@ class AccessibilityTree extends Component {
    * accessibility tree, re-fetch its children and re-render the corresponding
    * subtree.
    *
-   * @param  {Object} accessibleFront
+   * @param  {object} accessibleFront
    *         accessible front that had its child text changed.
    */
   onTextChange(accessibleFront) {

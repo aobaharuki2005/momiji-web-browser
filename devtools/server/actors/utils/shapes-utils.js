@@ -7,11 +7,11 @@
 /**
  * Get the distance between two points on a plane.
  *
- * @param {Number} x1 the x coord of the first point
- * @param {Number} y1 the y coord of the first point
- * @param {Number} x2 the x coord of the second point
- * @param {Number} y2 the y coord of the second point
- * @returns {Number} the distance between the two points
+ * @param {number} x1 the x coord of the first point
+ * @param {number} y1 the y coord of the first point
+ * @param {number} x2 the x coord of the second point
+ * @param {number} y2 the y coord of the second point
+ * @returns {number} the distance between the two points
  */
 const getDistance = (x1, y1, x2, y2) => {
   return Math.round(Math.hypot(x2 - x1, y2 - y1));
@@ -21,17 +21,17 @@ const getDistance = (x1, y1, x2, y2) => {
  * Determine if the given x/y coords are along the edge of the given ellipse.
  * We allow for a small area around the edge that still counts as being on the edge.
  *
- * @param {Number} x the x coordinate of the click
- * @param {Number} y the y coordinate of the click
- * @param {Number} cx the x coordinate of the center of the ellipse
- * @param {Number} cy the y coordinate of the center of the ellipse
- * @param {Number} rx the x radius of the ellipse
- * @param {Number} ry the y radius of the ellipse
- * @param {Number} clickWidthX the width of the area that counts as being on the edge
+ * @param {number} x the x coordinate of the click
+ * @param {number} y the y coordinate of the click
+ * @param {number} cx the x coordinate of the center of the ellipse
+ * @param {number} cy the y coordinate of the center of the ellipse
+ * @param {number} rx the x radius of the ellipse
+ * @param {number} ry the y radius of the ellipse
+ * @param {number} clickWidthX the width of the area that counts as being on the edge
  *                             along the x radius.
- * @param {Number} clickWidthY the width of the area that counts as being on the edge
+ * @param {number} clickWidthY the width of the area that counts as being on the edge
  *                             along the y radius.
- * @returns {Boolean} whether the click counts as being on the edge of the ellipse.
+ * @returns {boolean} whether the click counts as being on the edge of the ellipse.
  */
 const clickedOnEllipseEdge = (
   x,
@@ -60,13 +60,13 @@ const clickedOnEllipseEdge = (
 /**
  * Get the distance between a point and a line defined by two other points.
  *
- * @param {Number} x1 the x coordinate of the first point in the line
- * @param {Number} y1 the y coordinate of the first point in the line
- * @param {Number} x2 the x coordinate of the second point in the line
- * @param {Number} y2 the y coordinate of the second point in the line
- * @param {Number} x3 the x coordinate of the point for which the distance is found
- * @param {Number} y3 the y coordinate of the point for which the distance is found
- * @returns {Number} the distance between (x3,y3) and the line defined by
+ * @param {number} x1 the x coordinate of the first point in the line
+ * @param {number} y1 the y coordinate of the first point in the line
+ * @param {number} x2 the x coordinate of the second point in the line
+ * @param {number} y2 the y coordinate of the second point in the line
+ * @param {number} x3 the x coordinate of the point for which the distance is found
+ * @param {number} y3 the y coordinate of the point for which the distance is found
+ * @returns {number} the distance between (x3,y3) and the line defined by
  *          (x1,y1) and (y1,y2)
  */
 const distanceToLine = (x1, y1, x2, y2, x3, y3) => {
@@ -79,12 +79,12 @@ const distanceToLine = (x1, y1, x2, y2, x3, y3) => {
 /**
  * Get the point on the line defined by points a,b that is closest to point c
  *
- * @param {Number} ax the x coordinate of point a
- * @param {Number} ay the y coordinate of point a
- * @param {Number} bx the x coordinate of point b
- * @param {Number} by the y coordinate of point b
- * @param {Number} cx the x coordinate of point c
- * @param {Number} cy the y coordinate of point c
+ * @param {number} ax the x coordinate of point a
+ * @param {number} ay the y coordinate of point a
+ * @param {number} bx the x coordinate of point b
+ * @param {number} by the y coordinate of point b
+ * @param {number} cx the x coordinate of point c
+ * @param {number} cy the y coordinate of point c
  * @returns {Array} a 2 element array that contains the x/y coords of the projected point
  */
 const projection = (ax, ay, bx, by, cx, cy) => {
@@ -100,7 +100,7 @@ const projection = (ax, ay, bx, by, cx, cy) => {
  *
  * @param {Array} a the first vector
  * @param {Array} b the second vector
- * @returns {Number} the dot product of a and b
+ * @returns {number} the dot product of a and b
  */
 const dotProduct = (a, b) => {
   return a.reduce((prev, curr, i) => {
@@ -111,13 +111,13 @@ const dotProduct = (a, b) => {
 /**
  * Determine if the given x/y coords are above the given point.
  *
- * @param {Number} x the x coordinate of the click
- * @param {Number} y the y coordinate of the click
- * @param {Number} pointX the x coordinate of the center of the point
- * @param {Number} pointY the y coordinate of the center of the point
- * @param {Number} radiusX the x radius of the point
- * @param {Number} radiusY the y radius of the point
- * @returns {Boolean} whether the click was on the point
+ * @param {number} x the x coordinate of the click
+ * @param {number} y the y coordinate of the click
+ * @param {number} pointX the x coordinate of the center of the point
+ * @param {number} pointY the y coordinate of the center of the point
+ * @param {number} radiusX the x radius of the point
+ * @param {number} radiusY the y radius of the point
+ * @returns {boolean} whether the click was on the point
  */
 const clickedOnPoint = (x, y, pointX, pointY, radiusX, radiusY) => {
   return (

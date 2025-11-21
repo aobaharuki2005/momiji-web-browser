@@ -133,9 +133,9 @@ const createHost = async function (
  * Open and close the toolbox in the current browser tab, several times, waiting
  * some amount of time in between.
  *
- * @param {Number} nbOfTimes
- * @param {Number} usageTime in milliseconds
- * @param {String} toolId
+ * @param {number} nbOfTimes
+ * @param {number} usageTime in milliseconds
+ * @param {string} toolId
  */
 async function openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
   for (let i = 0; i < nbOfTimes; i++) {

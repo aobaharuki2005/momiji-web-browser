@@ -81,7 +81,7 @@ function teardown(ed, win) {
  * separate directory.
  * The script will be loaded synchronously and in the test's scope.
  *
- * @param {String} filePath The file path, relative to the current directory.
+ * @param {string} filePath The file path, relative to the current directory.
  *                 Examples:
  *                 - "helper_attributes_test_runner.js"
  */

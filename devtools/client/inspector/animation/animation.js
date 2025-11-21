@@ -222,7 +222,7 @@ class AnimationInspector {
   /**
    * This function calls AnimationsFront.setCurrentTimes with considering the createdTime.
    *
-   * @param {Number} currentTime
+   * @param {number} currentTime
    */
   async doSetCurrentTimes(currentTime) {
     const { animations, timeScale } = this.state;
@@ -235,7 +235,7 @@ class AnimationInspector {
   /**
    * Return a map of animated property from given animation actor.
    *
-   * @param {Object} animation
+   * @param {object} animation
    * @return {Map} A map of animated property
    *         key: {String} Animated property name
    *         value: {Array} Array of keyframe object
@@ -273,11 +273,11 @@ class AnimationInspector {
    * Return the computed style of the specified property after setting the given styles
    * to the simulated element.
    *
-   * @param {String} property
+   * @param {string} property
    *        CSS property name (e.g. text-align).
-   * @param {Object} styles
+   * @param {object} styles
    *        Map of CSS property name and value.
-   * @return {String}
+   * @return {string}
    *         Computed style of property.
    */
   getComputedStyle(property, styles) {
@@ -323,7 +323,7 @@ class AnimationInspector {
    * Then, dispatches the current time to listeners that are registered
    * by addAnimationsCurrentTimeListener.
    *
-   * @param {Number} currentTime
+   * @param {number} currentTime
    */
   onAnimationsCurrentTimeUpdated(currentTime) {
     this.currentTime = currentTime;
@@ -336,7 +336,7 @@ class AnimationInspector {
   /**
    * This method is called when the current time proceed by CurrentTimeTimer.
    *
-   * @param {Number} currentTime
+   * @param {number} currentTime
    * @param {Bool} shouldStop
    */
   onCurrentTimeTimerUpdated(currentTime, shouldStop) {
@@ -629,9 +629,9 @@ class AnimationInspector {
    *
    * @param {Array} keyframes
    *        e.g. [{ opacity: 0 }, { opacity: 1 }]
-   * @param {Object} effectTiming
+   * @param {object} effectTiming
    *        e.g. { duration: 1000, fill: "both" }
-   * @param {Boolean} isElementNeeded
+   * @param {boolean} isElementNeeded
    *        true:  create animation with an element.
    *               If want to know computed value of the element, turn on.
    *        false: create animation without an element,
@@ -677,7 +677,7 @@ class AnimationInspector {
    * The returned animation is implementing Animation interface of Web Animation API.
    * https://drafts.csswg.org/web-animations/#the-animation-interface
    *
-   * @param {Object} effectTiming
+   * @param {object} effectTiming
    *        e.g. { duration: 1000, fill: "both" }
    * @return {Animation}
    *         https://drafts.csswg.org/web-animations/#the-animation-interface

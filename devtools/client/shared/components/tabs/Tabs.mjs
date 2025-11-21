@@ -248,8 +248,8 @@ class Tabs extends Component {
    *
    * @param {Integer} index
    *        Index of the tab that we want to set as the active one
-   * @param {Object} options
-   * @param {Boolean} options.fromMouseEvent
+   * @param {object} options
+   * @param {boolean} options.fromMouseEvent
    *        Set to true if this is called from a click on the tab
    */
   setActive(index, options = {}) {

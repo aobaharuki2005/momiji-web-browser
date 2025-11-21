@@ -8,7 +8,7 @@
  */
 
 /**
- * @typedef {Object} Props
+ * @typedef {object} Props
  * @property {number} value
  * @property {React.ReactNode} label
  * @property {string} id

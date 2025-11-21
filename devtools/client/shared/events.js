@@ -6,7 +6,7 @@
 /**
  * Prevent event default behaviour and stop its propagation.
  *
- * @param  {Object} event
+ * @param  {object} event
  *         Event or react synthetic event.
  */
 exports.preventDefaultAndStopPropagation = function (event) {

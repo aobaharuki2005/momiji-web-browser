@@ -85,7 +85,7 @@ class AccessibilityProxy {
   /**
    * Perform an audit for a given filter.
    *
-   * @param  {String} filter
+   * @param  {string} filter
    *         Type of an audit to perform.
    * @param  {Function} onProgress
    *         Audit progress callback.
@@ -174,7 +174,7 @@ class AccessibilityProxy {
    * Return the topmost level accessibility walker to be used as the root of
    * the accessibility tree view.
    *
-   * @return {Object}
+   * @return {object}
    *         Topmost accessibility walker.
    */
   getAccessibilityTreeRoot() {
@@ -245,7 +245,7 @@ class AccessibilityProxy {
   /**
    * Start picking and add walker listeners.
    *
-   * @param  {Boolean} doFocus
+   * @param  {boolean} doFocus
    *         If true, move keyboard focus into content.
    */
   pick(doFocus, onHovered, onPicked, onPreviewed, onCanceled) {

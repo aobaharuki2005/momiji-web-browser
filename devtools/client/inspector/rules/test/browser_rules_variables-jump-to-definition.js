@@ -462,8 +462,8 @@ function getJumpToDefinitionButtonForDeclaration(rule, declaration) {
  *
  * @param {RuleView} view
  * @param {Element} jumpToDefinitionButton
- * @param {String} expectedPropertyName: The name of the property that should be highlighted
- * @param {String} expectedPropertyValue: The value of the property that should be highlighted
+ * @param {string} expectedPropertyName: The name of the property that should be highlighted
+ * @param {string} expectedPropertyValue: The value of the property that should be highlighted
  */
 async function highlightProperty(
   view,

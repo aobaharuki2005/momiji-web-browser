@@ -13,7 +13,7 @@
  */
 
 /**
- * @typedef {Object} State - The mutable state of the popup.
+ * @typedef {object} State - The mutable state of the popup.
  * @property {Array<() => void>} cleanup - Functions to cleanup once the view is hidden.
  * @property {boolean} isInfoCollapsed
  */

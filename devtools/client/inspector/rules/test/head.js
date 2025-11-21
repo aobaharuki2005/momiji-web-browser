@@ -49,7 +49,7 @@ async function hideTooltipAndWaitForRuleViewChanged(editorTooltip, view) {
  *        A validator generator function that returns a boolean.
  *        This is called every few milliseconds to check if the result is true.
  *        When it is true, the promise resolves.
- * @param {String} name
+ * @param {string} name
  *        Optional name of the test. This is used to generate
  *        the success and failure messages.
  * @return a promise that resolves when the function returned true or rejects
@@ -83,7 +83,7 @@ var waitForSuccess = async function (validatorFn, desc = "untitled") {
  * @param {SwatchColorPickerTooltip} colorPicker
  * @param {Array} newRgba
  *        The new color to be set [r, g, b, a]
- * @param {Object} expectedChange
+ * @param {object} expectedChange
  *        Optional object that needs the following props:
  *          - {String} selector The selector to the element in the page that
  *            will have its style changed.
@@ -131,13 +131,13 @@ var simulateColorPickerChange = async function (
  *
  * @param {RuleView} view
  *        The related rule view instance
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        Which rule to target in the rule view
- * @param {Number} propIndex
+ * @param {number} propIndex
  *        Which property to target in the rule
  * @param {Array} newRgba
  *        The new color to be set [r, g, b, a]
- * @param {Object} expectedChange
+ * @param {object} expectedChange
  *        Optional object that needs the following props:
  *          - {String} selector The selector to the element in the page that
  *            will have its style changed.
@@ -174,13 +174,13 @@ var openColorPickerAndSelectColor = async function (
  *
  * @param {RuleView} view
  *        The related rule view instance
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        Which rule to target in the rule view
- * @param {Number} propIndex
+ * @param {number} propIndex
  *        Which property to target in the rule
  * @param {Array} coords
  *        The new coordinates to be used, e.g. [0.1, 2, 0.9, -1]
- * @param {Object} expectedChange
+ * @param {object} expectedChange
  *        Optional object that needs the following props:
  *          - {String} selector The selector to the element in the page that
  *            will have its style changed.
@@ -226,20 +226,20 @@ var openCubicBezierAndChangeCoords = async function (
  *
  * @param {CssRuleView} view
  *        The instance of the rule-view panel
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        The index of the rule to use.
- * @param {String} name
+ * @param {string} name
  *        The name for the new property
- * @param {String} value
+ * @param {string} value
  *        The value for the new property
- * @param {Object=} options
- * @param {String=} options.commitValueWith
+ * @param {object=} options
+ * @param {string=} options.commitValueWith
  *        Which key should be used to commit the new value. VK_TAB is used by
  *        default, but tests might want to use another key to test cancelling
  *        for exemple.
  *        If set to null, no keys will be hit, so the input will still be focused
  *        at the end of this function
- * @param {Boolean=} options.blurNewProperty
+ * @param {boolean=} options.blurNewProperty
  *        After the new value has been added, a new property would have been
  *        focused. This parameter is true by default, and that causes the new
  *        property to be blurred. Set to false if you don't want this.
@@ -366,7 +366,7 @@ var addProperty = async function (
  *        The instance of the rule-view panel.
  * @param {TextProperty} textProp
  *        The instance of the TextProperty to be changed.
- * @param {String} name
+ * @param {string} name
  *        The new property name.
  */
 var renameProperty = async function (view, textProp, name) {
@@ -401,7 +401,7 @@ var renameProperty = async function (view, textProp, name) {
  *        The instance of the rule-view panel
  * @param {TextProperty} textProp
  *        The instance of the TextProperty to be removed
- * @param {Boolean} blurNewProperty
+ * @param {boolean} blurNewProperty
  *        After the property has been removed, a new property would have been
  *        focused. This parameter is true by default, and that causes the new
  *        property to be blurred. Set to false if you don't want this.
@@ -465,9 +465,9 @@ async function addNewRule(inspector, view) {
  *        The instance of InspectorPanel currently loaded in the toolbox
  * @param {CssRuleView} view
  *        The instance of the rule-view panel
- * @param {String} expectedSelector
+ * @param {string} expectedSelector
  *        The value we expect the selector to have
- * @param {Number} expectedIndex
+ * @param {number} expectedIndex
  *        The index we expect the rule to have in the rule-view
  * @returns {Rule} a promise that resolves the new model Rule after the rule has
  *          been added
@@ -553,9 +553,9 @@ function waitForStyleModification(inspector) {
  *
  * @param {CssRuleView} view
  *        The instance of the Rules view
- * @param {String} selectorText
+ * @param {string} selectorText
  *        The selector of the CSS rule to look for
- * @param {Number} index
+ * @param {number} index
  *        If there are more CSS rules with the same selector, use this index
  *        to determine which one should be retrieved. Defaults to 0 (first)
  */
@@ -607,7 +607,7 @@ async function clickSelectorIcon(view, selectorText, index = 0) {
  * has been recorded.
  *
  * @param {CssRuleView} view The rule-view instance.
- * @param {String} name The class name to find the checkbox.
+ * @param {string} name The class name to find the checkbox.
  */
 async function toggleClassPanelCheckBox(view, name) {
   info(`Clicking on checkbox for class ${name}`);
@@ -682,7 +682,7 @@ async function openEyedropper(view, swatch) {
  *
  * @param {ruleView} view
  *        The rule-view instance.
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        The index we expect the rule to have in the rule-view. If an array, the first
  *        item is the children index in the rule view, and the second item is the child
  *        node index in the retrieved rule view element. This is helpful to select rules
@@ -754,10 +754,10 @@ async function getPropertiesForRuleIndex(
  *
  * @param {ruleView} view
  *        The rule-view instance
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        The index of the CSS rule where we can find the declaration to be
  *        toggled.
- * @param {Object} declaration
+ * @param {object} declaration
  *        An object representing the declaration e.g. { color: "red" }.
  */
 async function toggleDeclaration(view, ruleIndex, declaration) {
@@ -779,11 +779,11 @@ async function toggleDeclaration(view, ruleIndex, declaration) {
  *
  * @param {RuleView} view
  *        Instance of RuleView.
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        The index of the CSS rule where to find the declaration.
- * @param {Object} declaration
+ * @param {object} declaration
  *        An object representing the target declaration e.g. { color: red }.
- * @param {Object} newDeclaration
+ * @param {object} newDeclaration
  *        An object representing the desired updated declaration e.g. { display: none }.
  */
 async function updateDeclaration(
@@ -818,11 +818,11 @@ async function updateDeclaration(
  *
  * @param {ruleView} view
  *        The rule-view instance.
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        The index we expect the rule to have in the rule-view.
- * @param {Object} declaration
+ * @param {object} declaration
  *        An object representing the declaration e.g. { color: "red" }.
- * @param {Object} options
+ * @param {object} options
  * @param {string | undefined} options.expected
  *        Expected message ID for the given incompatible property.
  * If the expected message is not specified (undefined), the given declaration
@@ -894,9 +894,9 @@ async function checkDeclarationCompatibility(
  *
  * @param {ruleView} view
  *        The rule-view instance.
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        The index we expect the rule to have in the rule-view.
- * @param {Object} declaration
+ * @param {object} declaration
  *        An object representing the declaration e.g. { color: "red" }.
  */
 async function checkDeclarationIsInactive(view, ruleIndex, declaration) {
@@ -926,12 +926,12 @@ async function checkDeclarationIsInactive(view, ruleIndex, declaration) {
  *
  * @param {ruleView} view
  *        The rule-view instance.
- * @param {Number|Array} ruleIndex
+ * @param {number | Array} ruleIndex
  *        The index we expect the rule to have in the rule-view. If an array, the first
  *        item is the children index in the rule view, and the second item is the child
  *        node index in the retrieved rule view element. This is helpful to select rules
  *        inside the pseudo element section.
- * @param {Object} declaration
+ * @param {object} declaration
  *        An object representing the declaration e.g. { color: "red" }.
  */
 async function checkDeclarationIsActive(view, ruleIndex, declaration) {
@@ -951,9 +951,9 @@ async function checkDeclarationIsActive(view, ruleIndex, declaration) {
  *        The rule-view instance.
  *  @param {string} type
  *        The interactive tooltip type being tested.
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  *        The index we expect the rule to have in the rule-view.
- * @param {Object} declaration
+ * @param {object} declaration
  *        An object representing the declaration e.g. { color: "red" }.
  */
 async function checkInteractiveTooltip(view, type, ruleIndex, declaration) {
@@ -1156,9 +1156,9 @@ async function runInactiveCSSTests(view, inspector, tests) {
  * Return the checkbox element from the Rules view corresponding
  * to the given pseudo-class.
  *
- * @param  {Object} view
+ * @param  {object} view
  *         Instance of RuleView.
- * @param  {String} pseudo
+ * @param  {string} pseudo
  *         Pseudo-class, like :hover, :active, :focus, etc.
  * @return {HTMLElement}
  */
@@ -1173,13 +1173,13 @@ function getPseudoClassCheckbox(view, pseudo) {
  *
  * @param {RulesView} view
  *        The RulesView instance.
- * @param {String} selector
+ * @param {string} selector
  *        Selector name for a rule. (e.g. "div", "div::before" and ".sample" etc);
- * @param {String} propertyName
+ * @param {string} propertyName
  *        Property name (e.g. "color" and "padding-top" etc);
- * @param {String} expectedClassName
+ * @param {string} expectedClassName
  *        The class name the variable should have.
- * @param {String} expectedDatasetValue
+ * @param {string} expectedDatasetValue
  *        The variable data attribute value.
  */
 function checkCSSVariableOutput(
@@ -1205,7 +1205,7 @@ function checkCSSVariableOutput(
  *
  * @param {RulesView} view
  *        The RulesView instance.
- * @param {Number} ruleIndex
+ * @param {number} ruleIndex
  * @returns {HTMLElement}
  */
 function getRuleViewAncestorRulesDataElementByIndex(view, ruleIndex) {
@@ -1220,8 +1220,8 @@ function getRuleViewAncestorRulesDataElementByIndex(view, ruleIndex) {
  *
  * @param {RulesView} view
  *        The RulesView instance.
- * @param {Number} ruleIndex
- * @returns {String}
+ * @param {number} ruleIndex
+ * @returns {string}
  */
 function getRuleViewAncestorRulesDataTextByIndex(view, ruleIndex) {
   return getRuleViewAncestorRulesDataElementByIndex(view, ruleIndex)?.innerText;

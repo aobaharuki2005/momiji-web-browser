@@ -38,7 +38,7 @@ class Rule {
   /**
    * @param {ElementStyle} elementStyle
    *        The ElementStyle to which this rule belongs.
-   * @param {Object} options
+   * @param {object} options
    *        The information used to construct this rule. Properties include:
    *          rule: A StyleRuleActor
    *          inherited: An element this rule was inherited from. If omitted,
@@ -226,7 +226,7 @@ class Rule {
   /**
    * Returns the TextProperty with the given id or undefined if it cannot be found.
    *
-   * @param {String|null} id
+   * @param {string | null} id
    *        A TextProperty id.
    * @return {TextProperty|undefined} with the given id in the current Rule or undefined
    * if it cannot be found.
@@ -260,7 +260,7 @@ class Rule {
    * Returns true if the rule matches the creation options
    * specified.
    *
-   * @param {Object} options
+   * @param {object} options
    *        Creation options. See the Rule constructor for documentation.
    */
   matches(options) {
@@ -270,13 +270,13 @@ class Rule {
   /**
    * Create a new TextProperty to include in the rule.
    *
-   * @param {String} name
+   * @param {string} name
    *        The text property name (such as "background" or "border-top").
-   * @param {String} value
+   * @param {string} value
    *        The property's value (not including priority).
-   * @param {String} priority
+   * @param {string} priority
    *        The property's priority (either "important" or an empty string).
-   * @param {Boolean} enabled
+   * @param {boolean} enabled
    *        True if the property should be enabled.
    * @param {TextProperty} siblingProp
    *        Optional, property next to which the new property will be added.
@@ -452,7 +452,7 @@ class Rule {
    *
    * @param {TextProperty} property
    *        The property to rename.
-   * @param {String} name
+   * @param {string} name
    *        The new property name (such as "background" or "border-top").
    * @return {Promise}
    */
@@ -474,9 +474,9 @@ class Rule {
    *
    * @param {TextProperty} property
    *        The property to manipulate.
-   * @param {String} value
+   * @param {string} value
    *        The property's value (not including priority).
-   * @param {String} priority
+   * @param {string} priority
    *        The property's priority (either "important" or an empty string).
    * @return {Promise}
    */
@@ -500,9 +500,9 @@ class Rule {
    *
    * @param {TextProperty} property
    *        The property which value will be previewed
-   * @param {String} value
+   * @param {string} value
    *        The value to be used for the preview
-   * @param {String} priority
+   * @param {string} priority
    *        The property's priority (either "important" or an empty string).
    * @return {Promise}
    */
@@ -530,7 +530,7 @@ class Rule {
    *
    * @param {TextProperty} property
    *        The property to enable/disable
-   * @param {Boolean} value
+   * @param {boolean} value
    */
   setPropertyEnabled(property, value) {
     if (property.enabled === !!value) {
@@ -739,7 +739,7 @@ class Rule {
    * @param {TextProperty} newProp
    *        The current version of the property, as parsed from the
    *        authoredText in Rule._getTextProperties().
-   * @return {Boolean} true if a property was updated, false if no properties
+   * @return {boolean} true if a property was updated, false if no properties
    *         were updated.
    */
   _updateTextProperty(newProp) {
@@ -804,7 +804,7 @@ class Rule {
    *
    * @param {TextProperty} textProperty
    *        The text property that will be left to focus on a sibling.
-   * @param {Number} direction
+   * @param {number} direction
    *        The move focus direction number.
    */
   editClosestTextProperty(textProperty, direction) {
@@ -855,7 +855,7 @@ class Rule {
   }
 
   /**
-   * @returns {Boolean} Whether or not the rule is in a layer
+   * @returns {boolean} Whether or not the rule is in a layer
    */
   isInLayer() {
     return this.domRule.ancestorData.some(({ type }) => type === "layer");
@@ -867,7 +867,7 @@ class Rule {
    * of the same CSSLayerBlockRule)
    *
    * @param {Rule} otherRule: The rule we want to compare with
-   * @returns {Boolean}
+   * @returns {boolean}
    */
   isInDifferentLayer(otherRule) {
     const filterLayer = ({ type }) => type === "layer";
@@ -892,7 +892,7 @@ class Rule {
   }
 
   /**
-   * @returns {Boolean} Whether or not the rule is in a @starting-style rule
+   * @returns {boolean} Whether or not the rule is in a @starting-style rule
    */
   isInStartingStyle() {
     return this.domRule.ancestorData.some(
@@ -901,7 +901,7 @@ class Rule {
   }
 
   /**
-   * @returns {Boolean} Whether or not the rule can be edited
+   * @returns {boolean} Whether or not the rule can be edited
    */
   isEditable() {
     return !this.isSystem && this.domRule.type !== PRES_HINTS;
@@ -910,7 +910,7 @@ class Rule {
   /**
    * See whether this rule has any non-invisible properties.
    *
-   * @return {Boolean} true if there is any visible property, or false
+   * @return {boolean} true if there is any visible property, or false
    *         if all properties are invisible
    */
   hasAnyVisibleProperties() {

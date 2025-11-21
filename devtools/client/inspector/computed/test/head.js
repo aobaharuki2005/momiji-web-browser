@@ -39,7 +39,7 @@ function getComputedViewProperties(view) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {String} name
+ * @param {string} name
  *        The name of the property to retrieve
  * @return an object {nameSpan, valueSpan}
  */
@@ -62,7 +62,7 @@ function getComputedViewProperty(view, name) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {String} name
+ * @param {string} name
  *        The name of the property to retrieve
  * @return {PropertyView}
  */
@@ -79,7 +79,7 @@ function getComputedViewPropertyView(view, name) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {String} name
+ * @param {string} name
  *        The name of the property to retrieve
  * @return {Promise} A promise that resolves to the property matched rules
  * container
@@ -117,9 +117,9 @@ var getComputedViewMatchedRules = async function (view, name) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {String} name
+ * @param {string} name
  *        The name of the property to retrieve
- * @return {String} The property value
+ * @return {string} The property value
  */
 function getComputedViewPropertyValue(view, name) {
   return getComputedViewProperty(view, name).valueSpan.textContent;
@@ -131,7 +131,7 @@ function getComputedViewPropertyValue(view, name) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {Number} index
+ * @param {number} index
  *        The index of the property to be expanded
  * @return a promise that resolves when the property has been expanded, or
  * rejects if the property was not found
@@ -153,7 +153,7 @@ function expandComputedViewPropertyByIndex(view, index) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {Number} index
+ * @param {number} index
  *        The index of the matched selector element
  * @return {DOMNode} The link at the given index, if one exists, null otherwise
  */
@@ -185,7 +185,7 @@ function selectAllText(view) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {String} expectedPattern
+ * @param {string} expectedPattern
  *        A regular expression used to check the content of the clipboard
  */
 async function copyAllAndCheckClipboard(view, expectedPattern) {
@@ -211,11 +211,11 @@ async function copyAllAndCheckClipboard(view, expectedPattern) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {Object} positions
+ * @param {object} positions
  *        The start and end positions of the text to be selected. This must be an object
  *        like this:
  *        { start: {prop: 1, offset: 0}, end: {prop: 3, offset: 5} }
- * @param {String} expectedPattern
+ * @param {string} expectedPattern
  *        A regular expression used to check the content of the clipboard
  */
 async function copySomeTextAndCheckClipboard(view, positions, expectedPattern) {
@@ -276,12 +276,12 @@ function failClipboardCheck(expectedPattern) {
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
- * @param {Object} options
+ * @param {object} options
  * @param {string} options.property
  *        The property name to check
  * @param {string} options.expectedComputedValue
  *        The expected value displayed for the property
- * @param {Object[]} options.expectedMatchedSelectors
+ * @param {object[]} options.expectedMatchedSelectors
  *        An array of objects describing the expected matched selectors
  * @param {string} options.expectedMatchedSelectors[].selector
  *        The selector that should be displayed at this index

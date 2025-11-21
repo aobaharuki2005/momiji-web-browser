@@ -107,9 +107,9 @@ function unwrapDebuggeeValue(value) {
  *        The debuggee value.
  * @param {Pool} pool
  *        The pool where the created actor will be added to.
- * @param {Number} [depth]
+ * @param {number} [depth]
  *        The current depth within the chain of nested object actor being previewed.
- * @param {Object} [objectActorAttributes]
+ * @param {object} [objectActorAttributes]
  *        An optional object whose properties will be assigned to the ObjectActor if one
  *        is created.
  */
@@ -184,8 +184,8 @@ function createValueGrip(threadActor, value, pool, depth = 0, objectActorAttribu
 /**
  * Returns a grip for the passed BigInt
  *
- * @param {BigInt} value
- * @returns {Object}
+ * @param {bigint} value
+ * @returns {object}
  */
 function createBigIntValueGrip(value) {
   return {

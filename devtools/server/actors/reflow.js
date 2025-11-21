@@ -190,7 +190,7 @@ class Observable {
  * make sure all reflows which occurred before switching the mode on or off are
  * either observed or ignored depending on the current mode.
  *
- * @param {Boolean} ignore
+ * @param {boolean} ignore
  * @param {DOMNode} syncReflowNode The node to use to force a sync reflow
  */
 var gIgnoreLayoutChanges = false;
@@ -343,9 +343,9 @@ class LayoutChangesObserver extends EventEmitter {
    * reflows array.
    * The EVENT_BATCHING_DELAY loop will take care of it later.
    *
-   * @param {Number} start When the reflow started
-   * @param {Number} end When the reflow ended
-   * @param {Boolean} isInterruptible
+   * @param {number} start When the reflow started
+   * @param {number} end When the reflow ended
+   * @param {boolean} isInterruptible
    */
   _onReflow(start, end, isInterruptible) {
     if (gIgnoreLayoutChanges) {

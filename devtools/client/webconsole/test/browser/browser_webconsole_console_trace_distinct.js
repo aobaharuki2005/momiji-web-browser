@@ -65,7 +65,7 @@ function getFrames(hud) {
  * Given a stacktrace element, return an array of the frame names displayed in it.
  *
  * @param {HTMLElement} traceEl
- * @returns {Array<String>}
+ * @returns {Array<string>}
  */
 function getFramesTitleFromTrace(traceEl) {
   return Array.from(traceEl.querySelectorAll(".frame .title")).map(

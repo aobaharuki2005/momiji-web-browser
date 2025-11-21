@@ -35,7 +35,7 @@ class BlackboxingActor extends Actor {
    * Request to blackbox a new JS file either completely if no range is passed.
    * Or only a precise subset of lines described by range attribute.
    *
-   * @param {String} url
+   * @param {string} url
    *                 Mandatory argument to mention what URL of JS file should be blackboxed.
    * @param {Array<Objects>} ranges
    *                 The whole file will be blackboxed if this array is empty.

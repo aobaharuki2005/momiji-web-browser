@@ -218,7 +218,7 @@ function isPreloadRequest(channel) {
  * Get the channel cause details.
  *
  * @param {nsIChannel} channel
- * @returns {Object}
+ * @returns {object}
  *          - loadingDocumentUri {string} uri of the document which created the
  *            channel
  *          - type {string} cause type as string
@@ -303,7 +303,7 @@ const HTTP_PROTOCOL_STRINGS = ["http", "https"];
  * default and otherwise falls back on `httpVersion`. Ideally we should merge
  * the two properties.
  *
- * @param {Object} httpActivity
+ * @param {object} httpActivity
  *     The httpActivity object for which we need to get the protocol.
  *
  * @returns {string}
@@ -431,11 +431,11 @@ function getWebSocketChannel(channel) {
  * For a given channel, fetch the request's headers and cookies.
  *
  * @param {nsIChannel} channel
- * @return {Object}
+ * @return {object}
  *     An object with two properties:
- *     @property {Array<Object>} cookies
+ *     @property {Array<object>} cookies
  *         Array of { name, value } objects.
- *     @property {Array<Object>} headers
+ *     @property {Array<object>} headers
  *         Array of { name, value } objects.
  */
 function fetchRequestHeadersAndCookies(channel) {
@@ -470,7 +470,7 @@ function fetchRequestHeadersAndCookies(channel) {
  * Parse the early hint raw headers string to an
  * array of name/value object header pairs
  *
- * @param {String} rawHeaders
+ * @param {string} rawHeaders
  * @returns {Array}
  */
 function parseEarlyHintsResponseHeaders(rawHeaders) {
@@ -489,11 +489,11 @@ function parseEarlyHintsResponseHeaders(rawHeaders) {
  * For a given channel, fetch the response's headers and cookies.
  *
  * @param {nsIChannel} channel
- * @return {Object}
+ * @return {object}
  *     An object with two properties:
- *     @property {Array<Object>} cookies
+ *     @property {Array<object>} cookies
  *         Array of { name, value } objects.
- *     @property {Array<Object>} headers
+ *     @property {Array<object>} headers
  *         Array of { name, value } objects.
  */
 function fetchResponseHeadersAndCookies(channel) {
@@ -747,7 +747,7 @@ function handleDataChannel(channel, networkEventActor) {
  * is available. The flag is used by the consumer of the resource (frontend)
  * to determine when to lazily fetch the data.
  *
- * @param {Object} resource - This could be a network resource object or a network resource
+ * @param {object} resource - This could be a network resource object or a network resource
  *                            updates object.
  * @param {Array} networkEvents
  */

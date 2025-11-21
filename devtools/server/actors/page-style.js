@@ -172,9 +172,9 @@ class PageStyleActor extends Actor {
    * Return or create a StyleRuleActor for the given item.
    *
    * @param {CSSStyleRule|Element} item
-   * @param {String} pseudoElement An optional pseudo-element type in cases when the CSS
+   * @param {string} pseudoElement An optional pseudo-element type in cases when the CSS
    *        rule applies to a pseudo-element.
-   * @param {Boolean} userAdded: Optional boolean to distinguish rules added by the user.
+   * @param {boolean} userAdded: Optional boolean to distinguish rules added by the user.
    * @return {StyleRuleActor} The newly created, or cached, StyleRuleActor for this item.
    */
   _styleRef(item, pseudoElement, userAdded = false) {
@@ -215,7 +215,7 @@ class PageStyleActor extends Actor {
   /**
    * Get the StyleRuleActor matching the given rule id or null if no match is found.
    *
-   * @param  {String} ruleId
+   * @param  {string} ruleId
    *         Actor ID of the StyleRuleActor
    * @return {StyleRuleActor|null}
    */
@@ -236,14 +236,14 @@ class PageStyleActor extends Actor {
    * Get the computed style for a node.
    *
    * @param {NodeActor} node
-   * @param {Object} options
-   * @param {String} options.filter: A string filter that affects the "matched" handling.
-   * @param {Array<String>} options.filterProperties: An array of properties names that
+   * @param {object} options
+   * @param {string} options.filter: A string filter that affects the "matched" handling.
+   * @param {Array<string>} options.filterProperties: An array of properties names that
    *        you would like returned.
-   * @param {Boolean} options.markMatched: true if you want the 'matched' property to be
+   * @param {boolean} options.markMatched: true if you want the 'matched' property to be
    *        added when a computed property has been modified by a style included by `filter`.
-   * @param {Boolean} options.onlyMatched: true if unmatched properties shouldn't be included.
-   * @param {Boolean} options.clearCache: true if the cssLogic cache should be cleared.
+   * @param {boolean} options.onlyMatched: true if unmatched properties shouldn't be included.
+   * @param {boolean} options.clearCache: true if the cssLogic cache should be cleared.
    *
    * @returns a JSON blob with the following form:
    *   {
@@ -778,10 +778,10 @@ class PageStyleActor extends Actor {
   /**
    * @param {DOMNode} rawNode
    * @param {StyleRuleActor} styleRuleActor
-   * @param {Object} params
-   * @param {Boolean} params.inherited
-   * @param {Boolean} params.isSystem
-   * @param {String|null} params.pseudoElement
+   * @param {object} params
+   * @param {boolean} params.inherited
+   * @param {boolean} params.isSystem
+   * @param {string | null} params.pseudoElement
    * @returns Object
    */
   _getRuleItem(rule, rawNode, { inherited, isSystem, pseudoElement }) {
@@ -983,7 +983,7 @@ class PageStyleActor extends Actor {
    *
    * @param {NodeActor} nodeActor the node
    * @param {CSSStyleRule} matchingRule the rule to find the entry for
-   * @return {Object|null} An entry as returned by _getAllElementRules, or null if no entry
+   * @return {object | null} An entry as returned by _getAllElementRules, or null if no entry
    *                       matching the passed rule was find
    */
   findEntryMatchingRule(nodeActor, matchingRule) {
@@ -1125,13 +1125,13 @@ class PageStyleActor extends Actor {
    * as information about the type of box, its position, z-index, etc...
    *
    * @param {NodeActor} node
-   * @param {Object} options The only available option is autoMargins.
+   * @param {object} options The only available option is autoMargins.
    * If set to true, the element's margins will receive an extra check to see
    * whether they are set to "auto" (knowing that the computed-style in this
    * case would return "0px").
    * The returned object will contain an extra property (autoMargins) listing
    * all margins that are set to auto, e.g. {top: "auto", left: "auto"}.
-   * @return {Object}
+   * @return {object}
    */
   getLayout(node, options) {
     this.cssLogic.highlight(node.rawNode);
@@ -1251,7 +1251,7 @@ class PageStyleActor extends Actor {
    * Adds a new rule, and returns the new StyleRuleActor.
    *
    * @param {NodeActor} node
-   * @param {String} pseudoClasses The list of pseudo classes to append to the
+   * @param {string} pseudoClasses The list of pseudo classes to append to the
    *        new selector.
    * @returns {StyleRuleActor} the new rule
    */
@@ -1334,11 +1334,11 @@ class PageStyleActor extends Actor {
   /**
    * Get an array of existing attribute values in a node document.
    *
-   * @param {String} search: A string to filter attribute value on.
-   * @param {String} attributeType: The type of attribute we want to retrieve the values.
+   * @param {string} search: A string to filter attribute value on.
+   * @param {string} attributeType: The type of attribute we want to retrieve the values.
    * @param {Element} node: The element we want to get possible attributes for. This will
    *        be used to get the document where the search is happening.
-   * @returns {Array<String>} An array of strings
+   * @returns {Array<string>} An array of strings
    */
   getAttributesInOwnerDocument(search, attributeType, node) {
     if (!search) {
@@ -1376,9 +1376,9 @@ class PageStyleActor extends Actor {
    * Collect attribute values from the document DOM tree, matching the passed filter and
    * type, to the result Set.
    *
-   * @param {Set<String>} result: A Set to which the results will be added.
-   * @param {String} search: A string to filter attribute value on.
-   * @param {String} attributeType: The type of attribute we want to retrieve the values.
+   * @param {Set<string>} result: A Set to which the results will be added.
+   * @param {string} search: A string to filter attribute value on.
+   * @param {string} attributeType: The type of attribute we want to retrieve the values.
    * @param {Document} targetDocument: The document the search occurs in.
    * @param {Node} currentNode: The current element rawNode
    */
@@ -1425,9 +1425,9 @@ class PageStyleActor extends Actor {
    * Collect attribute values from the document stylesheets, matching the passed filter
    * and type, to the result Set.
    *
-   * @param {Set<String>} result: A Set to which the results will be added.
-   * @param {String} search: A string to filter attribute value on.
-   * @param {String} attributeType: The type of attribute we want to retrieve the values.
+   * @param {Set<string>} result: A Set to which the results will be added.
+   * @param {string} search: A string to filter attribute value on.
+   * @param {string} attributeType: The type of attribute we want to retrieve the values.
    *                       It only supports "class" and "id" at the moment.
    * @param {Document} targetDocument: The document the search occurs in.
    */
@@ -1460,10 +1460,10 @@ class PageStyleActor extends Actor {
    * Collect attribute values from the rule, matching the passed filter and type, to the
    * result Set.
    *
-   * @param {Set<String>} result: A Set to which the results will be added.
+   * @param {Set<string>} result: A Set to which the results will be added.
    * @param {Rule} rule: The rule the search occurs in.
-   * @param {String} search: A string to filter attribute value on.
-   * @param {String} attributeType: The type of attribute we want to retrieve the values.
+   * @param {string} search: A string to filter attribute value on.
+   * @param {string} attributeType: The type of attribute we want to retrieve the values.
    *                       It only supports "class" and "id" at the moment.
    */
   _collectAttributesFromRule(result, rule, search, attributeType) {

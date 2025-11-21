@@ -122,7 +122,7 @@ export class StyleEditorUI extends EventEmitter {
 
   /**
    * @param {Toolbox} toolbox
-   * @param {Object} commands Object defined from devtools/shared/commands to interact with the devtools backend
+   * @param {object} commands Object defined from devtools/shared/commands to interact with the devtools backend
    * @param {Document} panelDoc
    *        Document of the toolbox panel to populate UI in.
    * @param {CssProperties} A css properties database.
@@ -175,8 +175,8 @@ export class StyleEditorUI extends EventEmitter {
   /**
    * Initiates the style editor ui creation, and start to track TargetCommand updates.
    *
-   * @params {Object} options
-   * @params {Object} options.stylesheetToSelect
+   * @params {object} options
+   * @params {object} options.stylesheetToSelect
    * @params {StyleSheetResource} options.stylesheetToSelect.stylesheet
    * @params {Integer} options.stylesheetToSelect.line
    * @params {Integer} options.stylesheetToSelect.column
@@ -685,7 +685,7 @@ export class StyleEditorUI extends EventEmitter {
    *
    * @param {StyleSheet} styleSheet
    *        Object representing stylesheet
-   * @return {Number}
+   * @return {number}
    *         1-based Integer representing the index of the current stylesheet
    *         among all stylesheets of its type (inline, constructed or user-created).
    *         Defaults to 0 when non-applicable (e.g. for stylesheet with href)
@@ -1254,9 +1254,9 @@ export class StyleEditorUI extends EventEmitter {
    *
    * @param {StyleSheetResource} stylesheet
    *        Stylesheet to select or href of stylesheet to select
-   * @param {Number} line
+   * @param {number} line
    *        Line to which the caret should be moved (zero-indexed).
-   * @param {Number} col
+   * @param {number} col
    *        Column to which the caret should be moved (zero-indexed).
    * @return {Promise}
    *         Promise that will resolve when the editor is selected and ready
@@ -1483,9 +1483,9 @@ export class StyleEditorUI extends EventEmitter {
    *
    * @param {HTMLElement} element
    *        The element corresponding to the media sidebar condition
-   * @param {String} ruleConditionText
+   * @param {string} ruleConditionText
    *        The rule conditionText
-   * @param {String} type
+   * @param {string} type
    *        The type of the at-rule (e.g. "media", "layer", "supports", …)
    */
   #setConditionContents(element, ruleConditionText, type) {
@@ -1740,8 +1740,8 @@ export class StyleEditorUI extends EventEmitter {
    * Set the active item's summary element.
    *
    * @param DOMElement summary
-   * @param {Object} options
-   * @param {String=} options.reason: Indicates why the summary was selected. It's set to
+   * @param {object} options
+   * @param {string=} options.reason: Indicates why the summary was selected. It's set to
    *                  "filter-auto" when the summary was automatically selected as the result
    *                  of the previous active summary being filtered out.
    */
@@ -1774,8 +1774,8 @@ export class StyleEditorUI extends EventEmitter {
    * Show summary's associated editor
    *
    * @param DOMElement summary
-   * @param {Object} options
-   * @param {String=} options.reason: Indicates why the summary was selected. It's set to
+   * @param {object} options
+   * @param {string=} options.reason: Indicates why the summary was selected. It's set to
    *                  "filter-auto" when the summary was automatically selected as the result
    *                  of the previous active summary being filtered out.
    */
@@ -1824,8 +1824,8 @@ export class StyleEditorUI extends EventEmitter {
    * Make the passed element visible or not, depending if it matches the current filter
    *
    * @param {Element} summary
-   * @param {Object} options
-   * @param {Boolean} options.triggerOnFilterStateChange: Set to false to avoid calling
+   * @param {object} options
+   * @param {boolean} options.triggerOnFilterStateChange: Set to false to avoid calling
    *                  #onFilterStateChange directly here. This can be useful when this
    *                  function is called for every item of the list, like in `setFilter`.
    */

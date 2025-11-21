@@ -16,7 +16,7 @@ class FluentL10n {
    * It can optionally add the right attributes to the document element.
    *
    * @param {Array} resourceIds
-   * @param {Object} [options]
+   * @param {object} [options]
    * @param {boolean} [options.setAttributesOnDocument]
    */
   async init(resourceIds, { setAttributesOnDocument } = {}) {

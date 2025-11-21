@@ -148,7 +148,7 @@ const {
  *
  * @param  {nsIAccessible}  accessible
  *         object to be tested.
- * @return {Boolean}
+ * @return {boolean}
  *         True if accessible object is stale, false otherwise.
  */
 function isStale(accessible) {
@@ -162,14 +162,14 @@ function isStale(accessible) {
 /**
  * Get accessibility audit starting with the passed accessible object as a root.
  *
- * @param {Object} acc
+ * @param {object} acc
  *        AccessibileActor to be used as the root for the audit.
- * @param {Object} options
+ * @param {object} options
  *        Options for running audit, may include:
  *        - types: Array of audit types to be performed during audit.
  * @param {Map} report
  *        An accumulator map to be used to store audit information.
- * @param {Object} progress
+ * @param {object} progress
  *        An audit project object that is used to track the progress of the
  *        audit and send progress "audit-event" events to the client.
  */
@@ -474,7 +474,7 @@ class AccessibleWalkerActor extends Actor {
   /**
    * Get an accessible actor for a domnode actor.
    *
-   * @param  {Object} domNode
+   * @param  {object} domNode
    *         domnode actor for which accessible actor is being created.
    * @return {Promse}
    *         A promise that resolves when accessible actor is created for a
@@ -546,7 +546,7 @@ class AccessibleWalkerActor extends Actor {
    * Run accessibility audit and return relevant ancestries for AccessibleActors
    * that have non-empty audit checks.
    *
-   * @param  {Object} options
+   * @param  {object} options
    *         Options for running audit, may include:
    *         - types: Array of audit types to be performed during audit.
    *
@@ -590,7 +590,7 @@ class AccessibleWalkerActor extends Actor {
    * report. Instead, an "audit-event" event will be fired when the audit is
    * completed or fails.
    *
-   * @param {Object} options
+   * @param {object} options
    *        Options for running audit, may include:
    *        - types: Array of audit types to be performed during audit.
    */
@@ -749,7 +749,7 @@ class AccessibleWalkerActor extends Actor {
    * preventing transitions and applying transparency when calculating colour
    * contrast as well as temporarily hiding accessible highlighter overlay.
    *
-   * @param  {Object} win
+   * @param  {object} win
    *         Window where highlighting happens.
    */
   async clearStyles(win) {
@@ -774,7 +774,7 @@ class AccessibleWalkerActor extends Actor {
    * for preventing transitions and applying transparency when calculating
    * colour contrast and potentially restoring accessible highlighter overlay.
    *
-   * @param  {Object} win
+   * @param  {object} win
    *         Window where highlighting was happenning.
    */
   async restoreStyles(win) {
@@ -817,13 +817,13 @@ class AccessibleWalkerActor extends Actor {
    * Public method used to show an accessible object highlighter on the client
    * side.
    *
-   * @param  {Object} accessible
+   * @param  {object} accessible
    *         AccessibleActor to be highlighted.
-   * @param  {Object} options
+   * @param  {object} options
    *         Object used for passing options. Available options:
    *         - duration {Number}
    *                    Duration of time that the highlighter should be shown.
-   * @return {Boolean}
+   * @return {boolean}
    *         True if highlighter shows the accessible object.
    */
   async highlightAccessible(accessible, options = {}) {
@@ -937,7 +937,7 @@ class AccessibleWalkerActor extends Actor {
   /**
    * Click event handler for when picking is enabled.
    *
-   * @param  {Object} event
+   * @param  {object} event
    *         Current click event.
    */
   onPick(event) {
@@ -971,7 +971,7 @@ class AccessibleWalkerActor extends Actor {
   /**
    * Hover event handler for when picking is enabled.
    *
-   * @param  {Object} event
+   * @param  {object} event
    *         Current hover event.
    */
   async onHovered(event) {
@@ -1002,7 +1002,7 @@ class AccessibleWalkerActor extends Actor {
   /**
    * Keyboard event handler for when picking is enabled.
    *
-   * @param  {Object} event
+   * @param  {object} event
    *         Current keyboard event.
    */
   onKey(event) {
@@ -1093,9 +1093,9 @@ class AccessibleWalkerActor extends Actor {
    * Find deepest accessible object that corresponds to the screen coordinates of the
    * mouse pointer and attach it to the AccessibilityWalker tree.
    *
-   * @param  {Object} event
+   * @param  {object} event
    *         Correspoinding content event.
-   * @return {null|Object}
+   * @return {null | object}
    *         Accessible object, if available, that corresponds to a DOM node.
    */
   _findAndAttachAccessible(event) {
@@ -1216,7 +1216,7 @@ class AccessibleWalkerActor extends Actor {
   /**
    * Focusin event handler for when interacting with tabbing order overlay.
    *
-   * @param  {Object} event
+   * @param  {object} event
    *         Most recent focusin event.
    */
   async onFocusIn(event) {
@@ -1239,7 +1239,7 @@ class AccessibleWalkerActor extends Actor {
   /**
    * Focusout event handler for when interacting with tabbing order overlay.
    *
-   * @param  {Object} event
+   * @param  {object} event
    *         Most recent focusout event.
    */
   async onFocusOut(event) {
@@ -1268,10 +1268,10 @@ class AccessibleWalkerActor extends Actor {
   /**
    * Show tabbing order overlay for a given target.
    *
-   * @param  {Object} elm
+   * @param  {object} elm
    *         domnode actor to be used as the starting point for generating the
    *         tabbing order.
-   * @param  {Number} index
+   * @param  {number} index
    *         Starting index for the tabbing order.
    *
    * @return {JSON}

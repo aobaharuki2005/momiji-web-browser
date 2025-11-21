@@ -144,7 +144,7 @@ class CssCompatibilityTooltipHelper {
   /**
    * Fill the tooltip with inactive CSS information.
    *
-   * @param {Object} data
+   * @param {object} data
    *        An object in the following format: {
    *          // Type of compatibility issue
    *          type: <string>,
@@ -192,7 +192,7 @@ class CssCompatibilityTooltipHelper {
    *   </p>
    * </div>
    *
-   * @param {Object} data
+   * @param {object} data
    *        An object in the following format: {
    *          // Type of compatibility issue
    *          type: <string>,

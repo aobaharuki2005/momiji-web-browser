@@ -296,7 +296,7 @@ input.actions = {
 /**
  * Helper for copying a string to the clipboard.
  *
- * @param {String} string The text to be copied.
+ * @param {string} string The text to be copied.
  */
 function copyString(string) {
   document.addEventListener(
@@ -314,8 +314,8 @@ function copyString(string) {
 /**
  * Helper for dispatching an event. It's handled in chrome scope.
  *
- * @param {String} type Event detail type
- * @param {Object} value Event detail value
+ * @param {string} type Event detail type
+ * @param {object} value Event detail value
  */
 function dispatchEvent(type, value) {
   const data = {

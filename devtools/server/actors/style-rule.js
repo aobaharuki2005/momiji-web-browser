@@ -82,11 +82,11 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 class StyleRuleActor extends Actor {
   /**
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {PageStyleActor} options.pageStyle
    * @param {CSSStyleRule|Element} options.item
-   * @param {Boolean} options.userAdded: Optional boolean to distinguish rules added by the user.
-   * @param {String} options.pseudoElement An optional pseudo-element type in cases when
+   * @param {boolean} options.userAdded: Optional boolean to distinguish rules added by the user.
+   * @param {string} options.pseudoElement An optional pseudo-element type in cases when
    *        the CSS rule applies to a pseudo-element.
    */
   constructor({ pageStyle, item, userAdded = false, pseudoElement = null }) {
@@ -213,7 +213,7 @@ class StyleRuleActor extends Actor {
    * - the rule's ancestor rules (@media, @supports, @keyframes), if any
    * - the rule's position within its ancestor tree, if any
    *
-   * @return {Object}
+   * @return {object}
    */
   get metadata() {
     const data = {};
@@ -636,7 +636,7 @@ class StyleRuleActor extends Actor {
   /**
    * Return the rule cssText if applicable, null otherwise
    *
-   * @returns {String|null}
+   * @returns {string | null}
    */
   _getCssText() {
     switch (this.ruleClassName) {
@@ -655,8 +655,8 @@ class StyleRuleActor extends Actor {
   /**
    * Parse the rule declarations from its text.
    *
-   * @param {Object} options
-   * @param {Boolean} options.parseComments
+   * @param {object} options
+   * @param {boolean} options.parseComments
    * @returns {Array} @see parseNamedDeclarations
    */
   parseRuleDeclarations({ parseComments }) {
@@ -677,7 +677,7 @@ class StyleRuleActor extends Actor {
 
   /**
    *
-   * @returns {Array<Object>} ancestorData: An array of ancestor item data
+   * @returns {Array<object>} ancestorData: An array of ancestor item data
    */
   _getAncestorDataForForm() {
     const ancestorData = [];
@@ -792,8 +792,8 @@ class StyleRuleActor extends Actor {
    * Send an event notifying that the location of the rule has
    * changed.
    *
-   * @param {Number} line the new line number
-   * @param {Number} column the new column number
+   * @param {number} line the new line number
+   * @param {number} column the new column number
    */
   _notifyLocationChanged(line, column) {
     this.emit("location-changed", line, column);
@@ -893,7 +893,7 @@ class StyleRuleActor extends Actor {
    * The authored text will include invalid and otherwise ignored
    * properties.
    *
-   * @param {Boolean} skipCache
+   * @param {boolean} skipCache
    *        If a value for authoredText was previously found and cached,
    *        ignore it and parse the stylehseet again. The authoredText
    *        may be outdated if a descendant of this rule has changed.
@@ -945,7 +945,7 @@ class StyleRuleActor extends Actor {
    * selector that uniquely identifies the element and with the rule body consisting of
    * the element's style attribute.
    *
-   * @return {String}
+   * @return {string}
    */
   async getRuleText() {
     // Bail out if the rule is not supported or not an element inline style.
@@ -988,7 +988,7 @@ class StyleRuleActor extends Actor {
    * Set the contents of the rule.  This rewrites the rule in the
    * stylesheet and causes it to be re-evaluated.
    *
-   * @param {String} newText
+   * @param {string} newText
    *        The new text of the rule
    * @param {Array} modifications
    *        Array with modifications applied to the rule. Contains objects like:
@@ -1136,9 +1136,9 @@ class StyleRuleActor extends Actor {
    * current rule. Returns the newly inserted css rule or null if the rule is
    * unsuccessfully inserted to the parent style sheet.
    *
-   * @param {String} value
+   * @param {string} value
    *        The new selector value
-   * @param {Boolean} editAuthored
+   * @param {boolean} editAuthored
    *        True if the selector should be updated by editing the
    *        authored text; false if the selector should be updated via
    *        CSSOM.
@@ -1218,11 +1218,11 @@ class StyleRuleActor extends Actor {
    * Take an object with instructions to modify a CSS declaration and log an object with
    * normalized metadata which describes the change in the context of this rule.
    *
-   * @param {Object} change
+   * @param {object} change
    *        Data about a modification to a declaration. @see |modifyProperties()|
-   * @param {Object} newDeclarations
+   * @param {object} newDeclarations
    *        The current declarations array to get the latest values, names...
-   * @param {Object} oldDeclarations
+   * @param {object} oldDeclarations
    *        The previous declarations array to use to fetch old values, names...
    */
   logDeclarationChange(change, newDeclarations, oldDeclarations) {
@@ -1309,9 +1309,9 @@ class StyleRuleActor extends Actor {
    * Helper method for tracking CSS changes. Logs the change of this rule's selector as
    * two operations: a removal using the old selector and an addition using the new one.
    *
-   * @param {String} oldSelector
+   * @param {string} oldSelector
    *        This rule's previous selector.
-   * @param {String} newSelector
+   * @param {string} newSelector
    *        This rule's new selector.
    */
   logSelectorChange(oldSelector, newSelector) {
@@ -1343,13 +1343,13 @@ class StyleRuleActor extends Actor {
    *
    * @param {DOMNode} node
    *        The current selected element
-   * @param {String} value
+   * @param {string} value
    *        The new selector value
-   * @param {Boolean} editAuthored
+   * @param {boolean} editAuthored
    *        True if the selector should be updated by editing the
    *        authored text; false if the selector should be updated via
    *        CSSOM.
-   * @returns {Promise<Object>}
+   * @returns {Promise<object>}
    *        Returns an object that contains the applied style properties of the
    *        new rule and a boolean indicating whether or not the new selector
    *        matches the current selected element
@@ -1399,9 +1399,9 @@ class StyleRuleActor extends Actor {
   /**
    * Get the eligible query container for a given @container rule and a given node
    *
-   * @param {Number} ancestorRuleIndex: The index of the @container rule in this.ancestorRules
+   * @param {number} ancestorRuleIndex: The index of the @container rule in this.ancestorRules
    * @param {NodeActor} nodeActor: The nodeActor for which we want to retrieve the query container
-   * @returns {Object} An object with the following properties:
+   * @returns {object} An object with the following properties:
    *          - node: {NodeActor|null} The nodeActor representing the query container,
    *            null if none were found
    *          - containerType: {string} The computed `containerType` value of the query container
@@ -1444,7 +1444,7 @@ class StyleRuleActor extends Actor {
    * If any have changed their used/unused state, potentially as a result of changes in
    * another rule, fire a "rule-updated" event with this rule actor in its latest state.
    *
-   * @param {Boolean} forceRefresh: Set to true to emit "rule-updated", even if the state
+   * @param {boolean} forceRefresh: Set to true to emit "rule-updated", even if the state
    *        of the declarations didn't change.
    */
   maybeRefresh(forceRefresh) {
@@ -1491,10 +1491,10 @@ exports.StyleRuleActor = StyleRuleActor;
  * Compute the start and end offsets of a rule's selector text, given
  * the CSS text and the line and column at which the rule begins.
  *
- * @param {String} initialText
- * @param {Number} line (1-indexed)
- * @param {Number} column (1-indexed)
- * @return {array} An array with two elements: [startOffset, endOffset].
+ * @param {string} initialText
+ * @param {number} line (1-indexed)
+ * @param {number} column (1-indexed)
+ * @return {Array} An array with two elements: [startOffset, endOffset].
  *                 The elements mark the bounds in |initialText| of
  *                 the CSS rule's selector.
  */

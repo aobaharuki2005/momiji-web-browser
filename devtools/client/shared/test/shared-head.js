@@ -486,7 +486,7 @@ if (isMochitest) {
  * Spawn an instance of the highlighter test actor for the given toolbox
  *
  * @param {Toolbox} toolbox
- * @param {Object} options
+ * @param {object} options
  * @param {Function} options.target: Optional target to get the highlighterTestFront for.
  *        If not provided, the top level target will be used.
  * @returns {HighlighterTestFront}
@@ -544,8 +544,8 @@ function waitForAllTargetsToBeAttached(targetCommand) {
 /**
  * Add a new test tab in the browser and load the given url.
  *
- * @param {String} url The url to be loaded in the new tab
- * @param {Object} options Object with various optional fields:
+ * @param {string} url The url to be loaded in the new tab
+ * @param {object} options Object with various optional fields:
  *   - {Boolean} background If true, open the tab in background
  *   - {ChromeWindow} window Firefox top level window we should use to open the tab
  *   - {Number} userContextId The userContextId of the tab.
@@ -591,7 +591,7 @@ async function addTab(url, options = {}) {
 /**
  * Remove the given tab.
  *
- * @param {Object} tab The tab to be removed.
+ * @param {object} tab The tab to be removed.
  * @return Promise<undefined> resolved when the tab is successfully removed.
  */
 async function removeTab(tab) {
@@ -626,7 +626,7 @@ async function reloadBrowser({
  * Also wait for the toolbox to attach to the new target, if we navigated
  * to a new process.
  *
- * @param {String} url The url to be loaded in the current tab.
+ * @param {string} url The url to be loaded in the current tab.
  * @param {JSON} options Optional dictionary object with the following keys:
  *        - {XULBrowser} browser
  *          The browser element which should navigate. Defaults to the selected
@@ -1033,7 +1033,7 @@ async function createAndAttachTargetForTab(tab) {
  * Open the inspector in a tab with given URL.
  *
  * @param {string} url  The URL to open.
- * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
+ * @param {string} hostType Optional hostType, as defined in Toolbox.HostType
  * @return A promise that is resolved once the tab and inspector have loaded
  *         with an object: { tab, toolbox, inspector, highlighterTestFront }.
  */
@@ -1053,7 +1053,7 @@ function getActiveInspector() {
  * Simulate a key event from an electron key shortcut string:
  * https://github.com/electron/electron/blob/master/docs/api/accelerator.md
  *
- * @param {String} key
+ * @param {string} key
  * @param {DOMWindow} target
  *        Optional window where to fire the key event
  */
@@ -1088,7 +1088,7 @@ function waitForTick() {
  * This shouldn't be used in the tests, but is useful when writing new tests or
  * debugging existing tests in order to introduce delays in the test steps
  *
- * @param {Number} ms
+ * @param {number} ms
  *        The time to wait
  * @return A promise that resolves when the time is passed
  */
@@ -1187,13 +1187,13 @@ async function waitForTimeout(
 /**
  * Wait for eventName on target to be delivered a number of times.
  *
- * @param {Object} target
+ * @param {object} target
  *        An observable object that either supports on/off or
  *        addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Number} numTimes
+ * @param {string} eventName
+ * @param {number} numTimes
  *        Number of deliveries to wait for.
- * @param {Boolean} useCapture
+ * @param {boolean} useCapture
  *        Optional, for addEventListener/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
@@ -1233,12 +1233,12 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
 /**
  * Wait for DOM change on target.
  *
- * @param {Object} target
+ * @param {object} target
  *        The Node on which to observe DOM mutations.
- * @param {String} selector
+ * @param {string} selector
  *        Given a selector to watch whether the expected element is changed
  *        on target.
- * @param {Number} expectedLength
+ * @param {number} expectedLength
  *        Optional, default set to 1
  *        There may be more than one element match an array match the selector,
  *        give an expected length to wait for more elements.
@@ -1268,11 +1268,11 @@ function waitForDOM(target, selector, expectedLength = 1) {
 /**
  * Wait for eventName on target.
  *
- * @param {Object} target
+ * @param {object} target
  *        An observable object that either supports on/off or
  *        addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Boolean} useCapture
+ * @param {string} eventName
+ * @param {boolean} useCapture
  *        Optional, for addEventListener/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
@@ -1287,7 +1287,7 @@ function once(target, eventName, useCapture = false) {
  * separate directory.
  * The script will be loaded synchronously and in the test's scope.
  *
- * @param {String} filePath The file path, relative to the current directory.
+ * @param {string} filePath The file path, relative to the current directory.
  *                 Examples:
  *                 - "helper_attributes_test_runner.js"
  */
@@ -1300,8 +1300,8 @@ function loadHelperScript(filePath) {
  * Open the toolbox in a given tab.
  *
  * @param {XULNode} tab The tab the toolbox should be opened in.
- * @param {String} toolId Optional. The ID of the tool to be selected.
- * @param {String} hostType Optional. The type of toolbox host to be used.
+ * @param {string} toolId Optional. The ID of the tool to be selected.
+ * @param {string} hostType Optional. The type of toolbox host to be used.
  * @return {Promise} Resolves with the toolbox, when it has been opened.
  */
 async function openToolboxForTab(tab, toolId, hostType) {
@@ -1330,9 +1330,9 @@ async function openToolboxForTab(tab, toolId, hostType) {
 /**
  * Add a new tab and open the toolbox in it.
  *
- * @param {String} url The URL for the tab to be opened.
- * @param {String} toolId Optional. The ID of the tool to be selected.
- * @param {String} hostType Optional. The type of toolbox host to be used.
+ * @param {string} url The URL for the tab to be opened.
+ * @param {string} toolId Optional. The ID of the tool to be selected.
+ * @param {string} hostType Optional. The type of toolbox host to be used.
  * @return {Promise} Resolves when the tab has been added, loaded and the
  * toolbox has been opened. Resolves to the toolbox.
  */
@@ -1472,7 +1472,7 @@ function waitForClipboardPromise(setup, expected) {
  * pushPrefEnv that returns a promise resolving when the preferences have been
  * updated.
  *
- * @param {String} preferenceName
+ * @param {string} preferenceName
  *        The name of the preference to updated
  * @param {} value
  *        The preference value, type can vary
@@ -1665,8 +1665,8 @@ let allDownloads = [];
  * Returns a Promise that resolves when a new file (e.g. screenshot, JSON, …) is available
  * in the download folder.
  *
- * @param {Object} [options]
- * @param {Boolean} options.isWindowPrivate: Set to true if the window from which the file
+ * @param {object} [options]
+ * @param {boolean} options.isWindowPrivate: Set to true if the window from which the file
  *                  is downloaded is a private window. This will ensure that we check that the
  *                  file appears in the private window, not the non-private one (See Bug 1783373)
  */
@@ -1836,11 +1836,11 @@ function waitUntilState(store, predicate) {
  * If the action is async and defines a `status` property, this helper will wait
  * for the status to reach either "error" or "done".
  *
- * @param {Object} store
+ * @param {object} store
  *        Redux store where the action should be dispatched.
- * @param {String} actionType
+ * @param {string} actionType
  *        The actionType to wait for.
- * @param {Number} repeat
+ * @param {number} repeat
  *        Optional, number of time the action is expected to be dispatched.
  *        Defaults to 1
  * @return {Promise}
@@ -1875,7 +1875,7 @@ function waitForDispatch(store, actionType, repeat = 1) {
  * @param {BrowsingContext|XULBrowser} browsingContext
  *        The topmost browsing context under which we should search for the
  *        browsing context.
- * @param {Array<String>} selectors
+ * @param {Array<string>} selectors
  *        Array of CSS selectors that form a path to a specific nested frame.
  * @return {BrowsingContext} The nested browsing context.
  */
@@ -1909,7 +1909,7 @@ async function getBrowsingContextInFrames(browsingContext, selectors) {
  * Synthesize a mouse event on an element, after ensuring that it is visible
  * in the viewport.
  *
- * @param {String|Array} selector: The node selector to get the node target for the event.
+ * @param {string | Array} selector: The node selector to get the node target for the event.
  *        To target an element in a specific iframe, pass an array of CSS selectors
  *        (e.g. ["iframe", ".el-in-iframe"])
  * @param {number} x
@@ -1948,7 +1948,7 @@ async function safeSynthesizeMouseEventInContentPage(
  * Synthesize a mouse event at the center of an element, after ensuring that it is visible
  * in the viewport.
  *
- * @param {String|Array} selector: The node selector to get the node target for the event.
+ * @param {string | Array} selector: The node selector to get the node target for the event.
  *        To target an element in a specific iframe, pass an array of CSS selectors
  *        (e.g. ["iframe", ".el-in-iframe"])
  * @param {object} options: Options that will be passed to BrowserTestUtils.synthesizeMouse
@@ -1983,7 +1983,7 @@ async function safeSynthesizeMouseEventAtCenterInContentPage(
  * Scroll into view an element in the content page matching the passed selector
  *
  * @param {BrowsingContext} browsingContext: The browsing context the element lives in.
- * @param {String} selector: The node selector to get the node to scroll into view
+ * @param {string} selector: The node selector to get the node to scroll into view
  * @returns {Promise}
  */
 function scrollContentPageNodeIntoView(browsingContext, selector) {
@@ -2001,7 +2001,7 @@ function scrollContentPageNodeIntoView(browsingContext, selector) {
 /**
  * Change the zoom level of the selected page.
  *
- * @param {Number} zoomLevel
+ * @param {number} zoomLevel
  */
 function setContentPageZoomLevel(zoomLevel) {
   gBrowser.selectedBrowser.fullZoom = zoomLevel;
@@ -2010,8 +2010,8 @@ function setContentPageZoomLevel(zoomLevel) {
 /**
  * Wait for the next DOCUMENT_EVENT dom-complete resource on a top-level target
  *
- * @param {Object} commands
- * @return {Promise<Object>}
+ * @param {object} commands
+ * @return {Promise<object>}
  *         Return a promise which resolves once we fully settle the resource listener.
  *         You should await for its resolution before doing the action which may fire
  *         your resource.
@@ -2375,7 +2375,7 @@ function getClientCssProperties() {
 /**
  * Helper method to stop a Service Worker promptly.
  *
- * @param {String} workerUrl
+ * @param {string} workerUrl
  *        Absolute Worker URL to stop.
  */
 async function stopServiceWorker(workerUrl) {
@@ -2441,7 +2441,7 @@ async function stopServiceWorker(workerUrl) {
 /**
  * Helper method to stop and unregister a Service Worker promptly.
  *
- * @param {String} workerUrl
+ * @param {string} workerUrl
  *        Absolute Worker URL to unregister.
  */
 async function unregisterServiceWorker(workerUrl) {
@@ -2541,9 +2541,9 @@ async function toggleJsTracer(toolbox) {
  * Retrieve the context menu element corresponding to the provided id, for the
  * provided netmonitor instance.
  *
- * @param {Object} monitor
+ * @param {object} monitor
  *        The network monitor object
- * @param {String} id
+ * @param {string} id
  *        The id of the context menu item
  */
 function getNetmonitorContextMenuItem(monitor, id) {
@@ -2555,9 +2555,9 @@ function getNetmonitorContextMenuItem(monitor, id) {
  * Selects and clicks the context menu item of the netmonitor, it should
  * also wait for the popup to close.
  *
- * @param {Object} monitor
+ * @param {object} monitor
  *        The network monitor object
- * @param {String} id
+ * @param {string} id
  *        The id of the context menu item
  */
 async function selectNetmonitorContextMenuItem(monitor, id) {
@@ -2591,7 +2591,7 @@ async function _maybeOpenAncestorMenu(menuItem) {
  * which contains a given string.
  *
  * @param {Toolbox} toolbox
- * @param {String} query
+ * @param {string} query
  * @return {Array<DOMElement>}
  */
 async function findConsoleMessages(toolbox, query) {
@@ -2609,8 +2609,8 @@ async function findConsoleMessages(toolbox, query) {
  * Returns the DOM Element in the Web Console for the link to the JS Source.
  *
  * @param {Toolbox} toolbox
- * @param {String} messageText
- * @param {String} linkText
+ * @param {string} messageText
+ * @param {string} linkText
  * @return {DOMElement}
  */
 async function waitForConsoleMessageLink(toolbox, messageText, linkText) {
@@ -2637,10 +2637,10 @@ async function waitForConsoleMessageLink(toolbox, messageText, linkText) {
  * @param {Toolbox} toolbox
  * @param {DOMElement} frameLinkNode
  * @param {Object] options
- * @param {String|null} options.url
- * @param {Number|null} options.line
- * @param {Number|null} options.column
- * @param {String|undefined} logPointExpr
+ * @param {string | null} options.url
+ * @param {number | null} options.line
+ * @param {number | null} options.column
+ * @param {string | undefined} logPointExpr
  */
 async function clickAndAssertFrameLinkNode(
   toolbox,

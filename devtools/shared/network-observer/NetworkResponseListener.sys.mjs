@@ -33,7 +33,7 @@ ChromeUtils.defineESModuleGetters(
  *      nsitraceablechannel-intercept-http-traffic/
  *
  * @constructor
- * @param {Object} httpActivity
+ * @param {object} httpActivity
  *        HttpActivity object associated with this request. See NetworkObserver
  *        more information.
  * @param {object} options
@@ -53,7 +53,7 @@ export class NetworkResponseListener {
    * The compressed and encoded response body size. Will progressively increase
    * until the full response is received.
    *
-   * @type {Number}
+   * @type {number}
    */
   #bodySize = 0;
   /**
@@ -87,7 +87,7 @@ export class NetworkResponseListener {
   /**
    * See constructor argument of the same name.
    *
-   * @type {Object}
+   * @type {object}
    */
   #httpActivity;
   /**
@@ -107,13 +107,13 @@ export class NetworkResponseListener {
    * Offset for the onDataAvailable calls where we pass the data from our pipe
    * to the converter.
    *
-   * @type {Number}
+   * @type {number}
    */
   #offset = 0;
   /**
    * The received response body size.
    *
-   * @type {Number}
+   * @type {number}
    */
   #receivedBodySize = 0;
   /**
@@ -144,7 +144,7 @@ export class NetworkResponseListener {
    * Is true after the events which should be added at the start of a response
    * are added. This is only used for overridden requests.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   #sentStartEvents = false;
   /**
@@ -170,7 +170,7 @@ export class NetworkResponseListener {
    * Backup for existing notificationCallbacks set on the monitored channel.
    * Initialized in the constructor.
    *
-   * @type {Object}
+   * @type {object}
    */
   #wrappedNotificationCallbacks;
 

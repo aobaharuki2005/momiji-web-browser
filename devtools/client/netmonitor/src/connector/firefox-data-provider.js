@@ -30,9 +30,9 @@ class FirefoxDataProvider {
   /**
    * Constructor for data provider
    *
-   * @param {Object} commands Object defined from devtools/shared/commands to interact with the devtools backend
-   * @param {Object} actions set of actions fired during data fetching process.
-   * @param {Object} owner all events are fired on this object.
+   * @param {object} commands Object defined from devtools/shared/commands to interact with the devtools backend
+   * @param {object} actions set of actions fired during data fetching process.
+   * @param {object} owner all events are fired on this object.
    */
   constructor({ commands, actions, owner }) {
     // Options

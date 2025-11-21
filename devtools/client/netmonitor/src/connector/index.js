@@ -73,9 +73,9 @@ class Connector {
   /**
    * Connect to the backend.
    *
-   * @param {Object} connection object with e.g. reference to the Toolbox.
-   * @param {Object} actions (optional) is used to fire Redux actions to update store.
-   * @param {Object} getState (optional) is used to get access to the state.
+   * @param {object} connection object with e.g. reference to the Toolbox.
+   * @param {object} actions (optional) is used to fire Redux actions to update store.
+   * @param {object} getState (optional) is used to get access to the state.
    */
   async connect(connection, actions, getState) {
     this.actions = actions;

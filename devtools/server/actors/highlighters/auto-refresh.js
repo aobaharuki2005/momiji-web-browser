@@ -116,7 +116,7 @@ class AutoRefreshHighlighter extends EventEmitter {
    * Show the highlighter on a given node
    *
    * @param {DOMNode} node
-   * @param {Object} options
+   * @param {object} options
    *        Object used for passing options
    */
   show(node, options = {}) {
@@ -172,7 +172,7 @@ class AutoRefreshHighlighter extends EventEmitter {
    * sub-classes should override this method if they want to highlight other node types.
    *
    * @param {DOMNode} node
-   * @return {Boolean}
+   * @return {boolean}
    */
   _isNodeValid(node) {
     return isNodeValid(node);
@@ -231,7 +231,7 @@ class AutoRefreshHighlighter extends EventEmitter {
    * Update the knowledge we have of the current node's boxquads and return true
    * if any of the points x/y or bounds have change since.
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   _hasMoved() {
     const oldQuads = this.currentQuads;
@@ -244,7 +244,7 @@ class AutoRefreshHighlighter extends EventEmitter {
    * Update the knowledge we have of the current window's scrolling offset, both
    * horizontal and vertical, and return `true` if they have changed since.
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   _hasWindowScrolled() {
     if (!this.win) {
@@ -264,7 +264,7 @@ class AutoRefreshHighlighter extends EventEmitter {
    * Update the knowledge we have of the current window's dimensions and return `true`
    * if they have changed since.
    *
-   * @return {Boolean}
+   * @return {boolean}
    */
   _haveWindowDimensionsChanged() {
     const { width, height } = getWindowDimensions(this.win);

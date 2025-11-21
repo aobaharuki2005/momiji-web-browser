@@ -9,7 +9,7 @@
  */
 
 /**
- * @typedef {Object} StateProps
+ * @typedef {object} StateProps
  * @property {string} presetName
  * @property {number} interval
  * @property {string[]} threads
@@ -18,12 +18,12 @@
  */
 
 /**
- * @typedef {Object} ThunkDispatchProps
+ * @typedef {object} ThunkDispatchProps
  * @property {typeof actions.changePreset} changePreset
  */
 
 /**
- * @typedef {Object} OwnProps
+ * @typedef {object} OwnProps
  * @property {() => void} onEditSettingsLinkClicked
  */
 

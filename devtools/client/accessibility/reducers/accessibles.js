@@ -47,7 +47,7 @@ function getActorID(accessible) {
  *
  * @param {Map}    cache      Previous state maintaining a cache of previously
  *                            fetched accessibles.
- * @param {Object} accessible Accessible object to remove from cache.
+ * @param {object} accessible Accessible object to remove from cache.
  */
 function cleanupChild(cache, accessible) {
   const actorID = getActorID(accessible);
@@ -70,7 +70,7 @@ function cleanupChild(cache, accessible) {
  *
  * @param {Map}    cache      Previous state maintaining a cache of previously
  *                             fetched accessibles.
- * @param {Object} accessible Accessible object to test for staleness.
+ * @param {object} accessible Accessible object to test for staleness.
  */
 function staleChildren(cache, accessible) {
   const cached = cache.get(getActorID(accessible));
@@ -116,8 +116,8 @@ function updateAncestry(cache, ancestry) {
  *
  * @param {Map}     cache  Previous state maintaining a cache of previously
  *                         fetched accessibles.
- * @param {Object}  action Redux action object.
- * @return {Object} updated state
+ * @param {object}  action Redux action object.
+ * @return {object} updated state
  */
 function onReceiveChildren(cache, action) {
   const { error, accessible, response: children } = action;

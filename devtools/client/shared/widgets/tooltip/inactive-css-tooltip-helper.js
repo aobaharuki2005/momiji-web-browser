@@ -44,7 +44,7 @@ class InactiveCssTooltipHelper {
    *   </p>
    * </div>
    *
-   * @param {Object} data
+   * @param {object} data
    *        An object in the following format: {
    *          fixId: "inactive-css-not-grid-item-fix-2", // Fluent id containing the
    *                                                     // Inactive CSS fix.

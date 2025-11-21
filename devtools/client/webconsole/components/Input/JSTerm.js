@@ -595,7 +595,7 @@ class JSTerm extends Component {
   /**
    * Do all the imperative work needed after a Redux store update.
    *
-   * @param {Object} nextProps: props passed from shouldComponentUpdate.
+   * @param {object} nextProps: props passed from shouldComponentUpdate.
    */
   imperativeUpdate(nextProps) {
     if (!nextProps) {
@@ -654,7 +654,7 @@ class JSTerm extends Component {
 
   /**
    *
-   * @param {Number|null} editorWidth: The width to set the node to. If null, removes any
+   * @param {number | null} editorWidth: The width to set the node to. If null, removes any
    *                                   `width` property on node style.
    */
   setEditorWidth(editorWidth) {
@@ -911,7 +911,7 @@ class JSTerm extends Component {
    * Fired after a key is handled through a key map.
    *
    * @param {CodeMirror} cm: codeMirror instance
-   * @param {String} key: The key that was handled
+   * @param {string} key: The key that was handled
    */
   _onEditorKeyHandled(cm, key) {
     // The autocloseBracket addon handle closing brackets keys when they're typed, but
@@ -1071,7 +1071,7 @@ class JSTerm extends Component {
    * Takes the data returned by the server and update the autocomplete popup state (i.e.
    * its visibility and items).
    *
-   * @param {Object} data
+   * @param {object} data
    *        The autocompletion data as returned by the webconsole actor's autocomplete
    *        service. Should be of the following shape:
    *        {
@@ -1290,7 +1290,7 @@ class JSTerm extends Component {
    * current completion text. This is more than the current input + the completion text,
    * as there are special cases for element access and case-insensitive matches.
    *
-   * @return {Object}: An object of the following shape:
+   * @return {object}: An object of the following shape:
    *         - {String} expression: The complete expression
    *         - {String} completionText: the completion text only, which should be used
    *                    with the next property
@@ -1475,7 +1475,7 @@ class JSTerm extends Component {
    * Calculates and returns the width of a single character of the input box.
    * This will be used in opening the popup at the correct offset.
    *
-   * @returns {Number|null}: Width off the "x" char, or null if the input does not exist.
+   * @returns {number | null}: Width off the "x" char, or null if the input does not exist.
    */
   _getInputCharWidth() {
     return this.editor ? this.editor.defaultCharWidth() : null;

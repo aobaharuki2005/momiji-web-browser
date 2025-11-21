@@ -53,7 +53,7 @@ function isValidSnapshotFileId(snapshotId) {
 /**
  * Get the file path for the given snapshot id.
  *
- * @param {String} snapshotId
+ * @param {string} snapshotId
  *
  * @returns String | null
  */
