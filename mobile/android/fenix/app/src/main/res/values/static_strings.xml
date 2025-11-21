@@ -77,8 +77,6 @@
     <string name="preferences_debug_settings_mozilla_ads_client" translatable="false">Enable Mozilla Ads Client</string>
     <!-- Label for enabling Discover more stories -->
     <string name="preferences_debug_settings_discover_more_stories" translatable="false">Enable Discover More Stories</string>
-    <!-- Label for enabling Private Browsing Mode redesign -->
-    <string name="preferences_debug_settings_private_browsing_mode_redesign" translatable="false">Enable Private Browsing Mode redesign</string>
     <!-- Label for enabling the menu redesign -->
     <string name="preferences_debug_settings_menu_redesign" translatable="false">Enable Menu Redesign</string>
     <!-- Label for enabling Firefox Suggest -->

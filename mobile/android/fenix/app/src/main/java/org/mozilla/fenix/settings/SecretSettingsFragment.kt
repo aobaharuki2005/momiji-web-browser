@@ -186,12 +186,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_private_browsing_mode_redesign).apply {
-            isVisible = Config.channel.isNightlyOrDebug
-            isChecked = context.settings().enablePrivateBrowsingModeRedesign
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_enable_unified_trust_panel).apply {
             isChecked = context.settings().enableUnifiedTrustPanel
             onPreferenceChangeListener = SharedPreferenceUpdater()

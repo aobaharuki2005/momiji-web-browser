@@ -54,11 +54,6 @@ object FeatureFlags {
     const val DISCOVER_MORE_STORIES = true
 
     /**
-     * Enables the private browsing mode redesign on the homepage.
-     */
-    const val PRIVATE_BROWSING_MODE_REDESIGN = false
-
-    /**
      * Enables the Mozilla Ads Client.
      */
     const val MOZILLA_ADS_CLIENT_ENABLED = false

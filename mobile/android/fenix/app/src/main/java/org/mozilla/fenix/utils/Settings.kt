@@ -2308,14 +2308,6 @@ class Settings(
     )
 
     /**
-     * Indicates if the private browsing mode redesign is enabled.
-     */
-    var enablePrivateBrowsingModeRedesign by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_private_browsing_mode_redesign),
-        default = FeatureFlags.PRIVATE_BROWSING_MODE_REDESIGN,
-    )
-
-    /**
      * Indicates if the Mozilla Ads Client is enabled.
      */
     var enableMozillaAdsClient by booleanPreference(
