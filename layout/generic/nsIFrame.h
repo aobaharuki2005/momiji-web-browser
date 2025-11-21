@@ -4040,6 +4040,9 @@ class nsIFrame : public nsQueryFrame {
   /**
    * Called to discover where this frame, or a parent frame has user-select
    * style applied, which affects that way that it is selected.
+   * NOTE: Even if this returns true it does NOT mean the `user-select` style
+   * is not `none`.  If the content is editable or a text control element, this
+   * returns true.
    *
    * @param aSelectStyle out param. Returns the type of selection style found
    * (using values defined in nsStyleConsts.h).
@@ -4047,7 +4050,8 @@ class nsIFrame : public nsQueryFrame {
    * @return Whether the frame can be selected (i.e. is not affected by
    * user-select: none)
    */
-  bool IsSelectable(mozilla::StyleUserSelect* aSelectStyle) const;
+  [[nodiscard]] bool IsSelectable(
+      mozilla::StyleUserSelect* aSelectStyle = nullptr) const;
 
   /**
    * Returns whether this frame should have the content-block-size of a line,

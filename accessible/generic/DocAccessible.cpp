@@ -253,8 +253,7 @@ uint64_t DocAccessible::NativeState() const {
   // exposed on the root frame. Therefore, we explicitly use the body frame
   // here (if any).
   nsIFrame* bodyFrame = mContent ? mContent->GetPrimaryFrame() : nullptr;
-  if ((state & states::EDITABLE) ||
-      (bodyFrame && bodyFrame->IsSelectable(nullptr))) {
+  if ((state & states::EDITABLE) || (bodyFrame && bodyFrame->IsSelectable())) {
     // If the accessible is editable the layout selectable state only disables
     // mouse selection, but keyboard (shift+arrow) selection is still possible.
     state |= states::SELECTABLE_TEXT;

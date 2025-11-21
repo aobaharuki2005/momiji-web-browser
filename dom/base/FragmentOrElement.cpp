@@ -1052,7 +1052,7 @@ bool nsIContent::CanStartSelectionAsWebCompatHack() const {
     if (!frame) {
       return true;
     }
-    if (!frame->IsSelectable(nullptr)) {
+    if (!frame->IsSelectable()) {
       return false;
     }
   }

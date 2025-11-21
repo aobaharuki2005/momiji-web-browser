@@ -946,7 +946,7 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeToStringRecursive(
   if (mFlags & SkipInvisibleContent) {
     if (aNode->IsContent()) {
       if (nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame()) {
-        if (!frame->IsSelectable(nullptr)) {
+        if (!frame->IsSelectable()) {
           aSerializeRoot = SerializeRoot::eNo;
         }
       }

@@ -76,7 +76,7 @@ uint64_t HyperTextAccessible::NativeState() const {
   }
 
   nsIFrame* frame = GetFrame();
-  if ((states & states::EDITABLE) || (frame && frame->IsSelectable(nullptr))) {
+  if ((states & states::EDITABLE) || (frame && frame->IsSelectable())) {
     // If the accessible is editable the layout selectable state only disables
     // mouse selection, but keyboard (shift+arrow) selection is still possible.
     states |= states::SELECTABLE_TEXT;

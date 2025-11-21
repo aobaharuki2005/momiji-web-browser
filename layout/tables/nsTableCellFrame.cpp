@@ -255,7 +255,7 @@ inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB) {
 void nsTableCellFrame::DecorateForSelection(DrawTarget* aDrawTarget,
                                             nsPoint aPt) {
   NS_ASSERTION(IsSelected(), "Should only be called for selected cells");
-  if (!IsSelectable(nullptr)) {
+  if (!IsSelectable()) {
     return;
   }
   RefPtr<nsFrameSelection> frameSelection = PresShell()->FrameSelection();

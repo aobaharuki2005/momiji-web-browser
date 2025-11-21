@@ -2302,7 +2302,7 @@ bool nsIFrame::ShouldHandleSelectionMovementEvents() {
   if (selType == nsISelectionController::SELECTION_OFF) {
     return false;
   }
-  if (!IsSelectable(nullptr)) {
+  if (!IsSelectable()) {
     // Check whether style allows selection.
     return false;
   }
@@ -4797,7 +4797,15 @@ static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {
   // See https://github.com/w3c/csswg-drafts/issues/3344 to see why we do this
   // at used-value time instead of at computed-value time.
 
-  if (aFrame->IsTextInputFrame() || IsEditingHost(aFrame)) {
+  // Although the draft does not define that editable elements under an editing
+  // host should ignore `user-select`, Chrome ignores `user-select:none` and
+  // `user-select:all` and we've already considered as ignoring the
+  // `user-select` according to this test:
+  // https://searchfox.org/firefox-main/rev/6abddcb0a5076c3b888686ede6f4cf7d082460d3/dom/base/test/test_bug1101364.html#73-85
+  // https://searchfox.org/firefox-main/rev/4fd0fa7e5814c0b51f1dd075821988377bc56cc1/testing/web-platform/tests/css/css-ui/user-select-none-in-editable.html#23-24,32-36
+  // Therefore, we check aFrame->ContentIsEditable() instead of
+  // IsEditingHost(aFrame).
+  if (aFrame->IsTextInputFrame() || aFrame->ContentIsEditable()) {
     // We don't implement 'contain' itself, but we make 'text' behave as
     // 'contain' for contenteditable and <input> / <textarea> elements anyway so
     // this is ok.
@@ -9354,7 +9362,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
         if (!aOffsets.content) {
           return false;
         }
-        if (!aFrame->IsSelectable(nullptr)) {
+        if (!aFrame->IsSelectable()) {
           return false;
         }
         if (aPos->mAncestorLimiter &&
@@ -9846,7 +9854,7 @@ static nsIFrame* GetFirstSelectableDescendantWithLineIterator(
       PeekOffsetOption::ForceEditableRegion);
   auto FoundValidFrame = [aPeekOffsetStruct,
                           forceEditableRegion](const nsIFrame* aFrame) {
-    if (!aFrame->IsSelectable(nullptr)) {
+    if (!aFrame->IsSelectable()) {
       return false;
     }
     if (!aPeekOffsetStruct.FrameContentIsInAncestorLimiter(aFrame)) {
@@ -10413,10 +10421,9 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       return result;
     }
 
-    auto IsSelectable = [aAncestorLimiter, aOptions,
-                         frameSelection](const nsIFrame* aFrame) {
-      if (!aFrame->IsSelectable(nullptr) ||
-          MOZ_UNLIKELY(!aFrame->GetContent())) {
+    auto IsSelectableFrame = [aAncestorLimiter, aOptions,
+                              frameSelection](const nsIFrame* aFrame) {
+      if (!aFrame->IsSelectable() || MOZ_UNLIKELY(!aFrame->GetContent())) {
         return false;
       }
       // If the found frame content is managed by different nsFrameSelection, we
@@ -10440,7 +10447,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
         traversedFrame->IsBrFrame()) {
       for (nsIFrame* current = traversedFrame->GetPrevSibling(); current;
            current = current->GetPrevSibling()) {
-        if (!current->IsBlockOutside() && IsSelectable(current)) {
+        if (!current->IsBlockOutside() && IsSelectableFrame(current)) {
           if (!current->IsBrFrame()) {
             result.mIgnoredBrFrame = true;
           }
@@ -10452,13 +10459,13 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       }
     }
 
-    selectable = IsSelectable(traversedFrame);
+    selectable = IsSelectableFrame(traversedFrame);
     if (MOZ_UNLIKELY(!frameSelection) && selectable &&
         MOZ_LIKELY(traversedFrame->GetContent())) {
       frameSelection = traversedFrame->GetContent()->GetFrameSelection();
     }
     if (!selectable) {
-      if (traversedFrame->IsSelectable(nullptr)) {
+      if (traversedFrame->IsSelectable()) {
         result.mHasSelectableFrame = true;
       }
       result.mMovedOverNonSelectableText = true;
