@@ -7,10 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
-  const { TabNotes } = ChromeUtils.importESModule(
-    "moz-src:///browser/components/tabnotes/TabNotes.sys.mjs"
-  );
-
   class MozTabbrowserTabNoteMenu extends MozXULElement {
     static markup = /*html*/ `
     <panel
@@ -148,16 +144,12 @@
 
     openPanel(tab) {
       this.#currentTab = tab;
-      let url = this.#currentTab.canonicalUrl;
+      let url = this.#currentTab.linkedBrowser.currentURI.spec;
+      let note = gBrowser.TabNotes.get(url);
 
-      if (url) {
-        let note = TabNotes.get(url);
-        if (note) {
-          this.createMode = false;
-          this.#noteField.value = note;
-        } else {
-          this.createMode = true;
-        }
+      if (note) {
+        this.createMode = false;
+        this.#noteField.value = note;
       } else {
         this.createMode = true;
       }
@@ -176,9 +168,9 @@
     }
 
     saveNote() {
-      let url = this.#currentTab.canonicalUrl;
+      let url = this.#currentTab.linkedBrowser.currentURI.spec;
       let note = this.#noteField.value;
-      TabNotes.set(url, note);
+      gBrowser.TabNotes.set(url, note);
       this.#panel.hidePopup();
     }
   }
