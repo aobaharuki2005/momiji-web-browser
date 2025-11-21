@@ -1050,6 +1050,8 @@
   <string name="restart_warning_dialog_button_positive_2">Spremeni ikono</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Prekliči</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Ikone aplikacije ni bilo mogoče spremeniti. Odstranite obstoječe bližnjice in poskusite znova.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1716,6 +1718,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">Pošlji URL-je, ki jih je zaščita pred sledenjem blokirala</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Izboljšana zaščita pred sledenjem lahko ponekod blokira sledilce in skripte, ki jih spletna mesta potrebujejo za pravilno delovanje.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Predogled prijave</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Predogled prijave</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Pošlji</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2330,6 +2338,14 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Dovoli %1$su, da samodejno uveljavi izjeme, potrebne v izogib večjemu nedelovanju spletnega mesta.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Samodejno uporabi tudi izjeme, ki so potrebne samo za odpravljanje manjših težav in omogočanje razpoložljivih zmogljivosti.</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Popravljaj večje težave s stranmi (priporočeno)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Popravljaj manjše težave s stranmi</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Popravljaj težave s stranmi</string>
+  <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Več o tem</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
@@ -3565,6 +3581,8 @@
   <string name="microsurvey_close_handle_content_description">Zapri anketo</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Zapri</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Orodja za samodejno izpolnjevanje</string>
   <!--
     Debug drawer logins
 
@@ -3837,6 +3855,24 @@
   <string name="review_prompt_feedback_header">Žal nam je, da se spoprijemate s težavami. Sporočite nam, kaj lahko izboljšamo pri %1$su.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Pošlji povratne informacije</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">Nastavitve iskanja</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
+  <string name="content_description_settings_search_clear_search">Počisti iskanje</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">Pojdi nazaj</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">Ni nedavnih iskanj</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">Prišlo je do napake</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">Izbriši vse</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Nedavni rezultati iskanja</string>
   <!--
     Terms of use pop up prompt
 
