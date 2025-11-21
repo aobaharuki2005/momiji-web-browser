@@ -14357,12 +14357,14 @@
   value: 20000
   mirror: always
 
+#ifdef XP_MACOSX
 # When resolving a native HTTPS query with native APIs
 # the MacOS implementation has a max timeout
 - name: network.dns.native_https_timeout_mac_msec
   type: RelaxedAtomicInt32
   value: 5000
   mirror: always
+#endif
 
 # When this pref is true, we copy the host name to a fresh string before
 # calling into getaddrinfo.
