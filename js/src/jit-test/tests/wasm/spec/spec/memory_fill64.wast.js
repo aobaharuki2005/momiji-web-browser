@@ -13,853 +13,853 @@
  * limitations under the License.
  */
 
-// ./test/core/bulk-memory/memory_fill.wast
+// ./test/core/memory64/memory_fill64.wast
 
-// ./test/core/bulk-memory/memory_fill.wast:6
+// ./test/core/memory64/memory_fill64.wast:6
 let $0 = instantiate(`(module
-  (memory 1 1)
+  (memory i64 1 1)
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
   (func (export "test")
-    (memory.fill (i32.const 0xFF00) (i32.const 0x55) (i32.const 256))))`);
+    (memory.fill (i64.const 0xFF00) (i32.const 0x55) (i64.const 256))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:22
+// ./test/core/memory64/memory_fill64.wast:22
 invoke($0, `test`, []);
 
-// ./test/core/bulk-memory/memory_fill.wast:24
-assert_return(() => invoke($0, `checkRange`, [0, 65280, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:24
+assert_return(() => invoke($0, `checkRange`, [0n, 65280n, 0]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:26
-assert_return(() => invoke($0, `checkRange`, [65280, 65536, 85]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:26
+assert_return(() => invoke($0, `checkRange`, [65280n, 65536n, 85]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:28
+// ./test/core/memory64/memory_fill64.wast:28
 let $1 = instantiate(`(module
-  (memory 1 1)
+  (memory i64 1 1)
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
   (func (export "test")
-    (memory.fill (i32.const 0xFF00) (i32.const 0x55) (i32.const 257))))`);
+    (memory.fill (i64.const 0xFF00) (i32.const 0x55) (i64.const 257))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:44
+// ./test/core/memory64/memory_fill64.wast:44
 assert_trap(() => invoke($1, `test`, []), `out of bounds memory access`);
 
-// ./test/core/bulk-memory/memory_fill.wast:46
+// ./test/core/memory64/memory_fill64.wast:46
 let $2 = instantiate(`(module
-  (memory 1 1)
+  (memory i64 1 1)
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
   (func (export "test")
-    (memory.fill (i32.const 0xFFFFFF00) (i32.const 0x55) (i32.const 257))))`);
+    (memory.fill (i64.const 0xFFFFFF00) (i32.const 0x55) (i64.const 257))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:62
+// ./test/core/memory64/memory_fill64.wast:62
 assert_trap(() => invoke($2, `test`, []), `out of bounds memory access`);
 
-// ./test/core/bulk-memory/memory_fill.wast:64
+// ./test/core/memory64/memory_fill64.wast:64
 let $3 = instantiate(`(module
-  (memory 1 1)
+  (memory i64 1 1)
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
   (func (export "test")
-    (memory.fill (i32.const 0x12) (i32.const 0x55) (i32.const 0))))`);
+    (memory.fill (i64.const 0x12) (i32.const 0x55) (i64.const 0))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:80
+// ./test/core/memory64/memory_fill64.wast:80
 invoke($3, `test`, []);
 
-// ./test/core/bulk-memory/memory_fill.wast:82
-assert_return(() => invoke($3, `checkRange`, [0, 65536, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:82
+assert_return(() => invoke($3, `checkRange`, [0n, 65536n, 0]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:84
+// ./test/core/memory64/memory_fill64.wast:84
 let $4 = instantiate(`(module
-  (memory 1 1)
+  (memory i64 1 1)
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
   (func (export "test")
-    (memory.fill (i32.const 0x10000) (i32.const 0x55) (i32.const 0))))`);
+    (memory.fill (i64.const 0x10000) (i32.const 0x55) (i64.const 0))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:100
+// ./test/core/memory64/memory_fill64.wast:100
 invoke($4, `test`, []);
 
-// ./test/core/bulk-memory/memory_fill.wast:102
+// ./test/core/memory64/memory_fill64.wast:102
 let $5 = instantiate(`(module
-  (memory 1 1)
+  (memory i64 1 1)
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
   (func (export "test")
-    (memory.fill (i32.const 0x20000) (i32.const 0x55) (i32.const 0))))`);
+    (memory.fill (i64.const 0x20000) (i32.const 0x55) (i64.const 0))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:118
+// ./test/core/memory64/memory_fill64.wast:118
 assert_trap(() => invoke($5, `test`, []), `out of bounds memory access`);
 
-// ./test/core/bulk-memory/memory_fill.wast:120
+// ./test/core/memory64/memory_fill64.wast:120
 let $6 = instantiate(`(module
-  (memory 1 1)
+  (memory i64 1 1)
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
   (func (export "test")
-    (memory.fill (i32.const 0x1) (i32.const 0xAA) (i32.const 0xFFFE))))`);
+    (memory.fill (i64.const 0x1) (i32.const 0xAA) (i64.const 0xFFFE))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:136
+// ./test/core/memory64/memory_fill64.wast:136
 invoke($6, `test`, []);
 
-// ./test/core/bulk-memory/memory_fill.wast:138
-assert_return(() => invoke($6, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:138
+assert_return(() => invoke($6, `checkRange`, [0n, 1n, 0]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:140
-assert_return(() => invoke($6, `checkRange`, [1, 65535, 170]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:140
+assert_return(() => invoke($6, `checkRange`, [1n, 65535n, 170]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:142
-assert_return(() => invoke($6, `checkRange`, [65535, 65536, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:142
+assert_return(() => invoke($6, `checkRange`, [65535n, 65536n, 0]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:145
+// ./test/core/memory64/memory_fill64.wast:145
 let $7 = instantiate(`(module
-  (memory 1 1)
+  (memory i64 1 1)
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
   (func (export "test")
-     (memory.fill (i32.const 0x12) (i32.const 0x55) (i32.const 10))
-     (memory.fill (i32.const 0x15) (i32.const 0xAA) (i32.const 4))))`);
+     (memory.fill (i64.const 0x12) (i32.const 0x55) (i64.const 10))
+     (memory.fill (i64.const 0x15) (i32.const 0xAA) (i64.const 4))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:162
+// ./test/core/memory64/memory_fill64.wast:162
 invoke($7, `test`, []);
 
-// ./test/core/bulk-memory/memory_fill.wast:164
-assert_return(() => invoke($7, `checkRange`, [0, 18, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:164
+assert_return(() => invoke($7, `checkRange`, [0n, 18n, 0]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:166
-assert_return(() => invoke($7, `checkRange`, [18, 21, 85]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:166
+assert_return(() => invoke($7, `checkRange`, [18n, 21n, 85]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:168
-assert_return(() => invoke($7, `checkRange`, [21, 25, 170]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:168
+assert_return(() => invoke($7, `checkRange`, [21n, 25n, 170]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:170
-assert_return(() => invoke($7, `checkRange`, [25, 28, 85]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:170
+assert_return(() => invoke($7, `checkRange`, [25n, 28n, 85]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:172
-assert_return(() => invoke($7, `checkRange`, [28, 65536, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:172
+assert_return(() => invoke($7, `checkRange`, [28n, 65536n, 0]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:174
+// ./test/core/memory64/memory_fill64.wast:174
 assert_invalid(
   () => instantiate(`(module
     (func (export "testfn")
-      (memory.fill (i32.const 10) (i32.const 20) (i32.const 30))))`),
+      (memory.fill (i64.const 10) (i32.const 20) (i64.const 30))))`),
   `unknown memory 0`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:180
+// ./test/core/memory64/memory_fill64.wast:180
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
+    (func (export "testfn")
+      (memory.fill (i32.const 10) (i32.const 20) (i32.const 30))))`),
+  `type mismatch`,
+);
+
+// ./test/core/memory64/memory_fill64.wast:187
+assert_invalid(
+  () => instantiate(`(module
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (i32.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:187
+// ./test/core/memory64/memory_fill64.wast:194
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (i32.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:194
+// ./test/core/memory64/memory_fill64.wast:201
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (i32.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:201
+// ./test/core/memory64/memory_fill64.wast:208
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (f32.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:208
+// ./test/core/memory64/memory_fill64.wast:215
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (f32.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:215
+// ./test/core/memory64/memory_fill64.wast:222
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (f32.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:222
+// ./test/core/memory64/memory_fill64.wast:229
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (f32.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:229
+// ./test/core/memory64/memory_fill64.wast:236
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (i64.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:236
+// ./test/core/memory64/memory_fill64.wast:243
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (i64.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:243
+// ./test/core/memory64/memory_fill64.wast:250
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (i64.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:250
+// ./test/core/memory64/memory_fill64.wast:257
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (i64.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:257
+// ./test/core/memory64/memory_fill64.wast:264
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (f64.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:264
+// ./test/core/memory64/memory_fill64.wast:271
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (f64.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:271
+// ./test/core/memory64/memory_fill64.wast:278
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (f64.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:278
+// ./test/core/memory64/memory_fill64.wast:285
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i32.const 10) (f64.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:285
+// ./test/core/memory64/memory_fill64.wast:292
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (i32.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:292
+// ./test/core/memory64/memory_fill64.wast:299
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (i32.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:299
+// ./test/core/memory64/memory_fill64.wast:306
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (i32.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:306
+// ./test/core/memory64/memory_fill64.wast:313
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (i32.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:313
+// ./test/core/memory64/memory_fill64.wast:320
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (f32.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:320
+// ./test/core/memory64/memory_fill64.wast:327
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (f32.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:327
+// ./test/core/memory64/memory_fill64.wast:334
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (f32.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:334
+// ./test/core/memory64/memory_fill64.wast:341
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (f32.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:341
+// ./test/core/memory64/memory_fill64.wast:348
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (i64.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:348
+// ./test/core/memory64/memory_fill64.wast:355
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (i64.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:355
+// ./test/core/memory64/memory_fill64.wast:362
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (i64.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:362
+// ./test/core/memory64/memory_fill64.wast:369
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (i64.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:369
+// ./test/core/memory64/memory_fill64.wast:376
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (f64.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:376
+// ./test/core/memory64/memory_fill64.wast:383
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (f64.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:383
+// ./test/core/memory64/memory_fill64.wast:390
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (f64.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:390
+// ./test/core/memory64/memory_fill64.wast:397
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f32.const 10) (f64.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:397
+// ./test/core/memory64/memory_fill64.wast:404
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (i32.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:404
+// ./test/core/memory64/memory_fill64.wast:411
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (i32.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:411
+// ./test/core/memory64/memory_fill64.wast:418
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
-    (func (export "testfn")
-      (memory.fill (i64.const 10) (i32.const 20) (i64.const 30))))`),
-  `type mismatch`,
-);
-
-// ./test/core/bulk-memory/memory_fill.wast:418
-assert_invalid(
-  () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (i32.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:425
+// ./test/core/memory64/memory_fill64.wast:425
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (f32.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:432
+// ./test/core/memory64/memory_fill64.wast:432
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (f32.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:439
+// ./test/core/memory64/memory_fill64.wast:439
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (f32.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:446
+// ./test/core/memory64/memory_fill64.wast:446
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (f32.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:453
+// ./test/core/memory64/memory_fill64.wast:453
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (i64.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:460
+// ./test/core/memory64/memory_fill64.wast:460
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (i64.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:467
+// ./test/core/memory64/memory_fill64.wast:467
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (i64.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:474
+// ./test/core/memory64/memory_fill64.wast:474
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (i64.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:481
+// ./test/core/memory64/memory_fill64.wast:481
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (f64.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:488
+// ./test/core/memory64/memory_fill64.wast:488
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (f64.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:495
+// ./test/core/memory64/memory_fill64.wast:495
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (f64.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:502
+// ./test/core/memory64/memory_fill64.wast:502
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (i64.const 10) (f64.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:509
+// ./test/core/memory64/memory_fill64.wast:509
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (i32.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:516
+// ./test/core/memory64/memory_fill64.wast:516
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (i32.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:523
+// ./test/core/memory64/memory_fill64.wast:523
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (i32.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:530
+// ./test/core/memory64/memory_fill64.wast:530
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (i32.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:537
+// ./test/core/memory64/memory_fill64.wast:537
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (f32.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:544
+// ./test/core/memory64/memory_fill64.wast:544
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (f32.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:551
+// ./test/core/memory64/memory_fill64.wast:551
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (f32.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:558
+// ./test/core/memory64/memory_fill64.wast:558
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (f32.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:565
+// ./test/core/memory64/memory_fill64.wast:565
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (i64.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:572
+// ./test/core/memory64/memory_fill64.wast:572
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (i64.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:579
+// ./test/core/memory64/memory_fill64.wast:579
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (i64.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:586
+// ./test/core/memory64/memory_fill64.wast:586
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (i64.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:593
+// ./test/core/memory64/memory_fill64.wast:593
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (f64.const 20) (i32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:600
+// ./test/core/memory64/memory_fill64.wast:600
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (f64.const 20) (f32.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:607
+// ./test/core/memory64/memory_fill64.wast:607
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (f64.const 20) (i64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:614
+// ./test/core/memory64/memory_fill64.wast:614
 assert_invalid(
   () => instantiate(`(module
-    (memory 1 1)
+    (memory i64 1 1)
     (func (export "testfn")
       (memory.fill (f64.const 10) (f64.const 20) (f64.const 30))))`),
   `type mismatch`,
 );
 
-// ./test/core/bulk-memory/memory_fill.wast:621
+// ./test/core/memory64/memory_fill64.wast:621
 let $8 = instantiate(`(module
-  (memory 1 1 )
+  (memory i64 1 1 )
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
-  (func (export "run") (param \$offs i32) (param \$val i32) (param \$len i32)
+  (func (export "run") (param \$offs i64) (param \$val i32) (param \$len i64)
     (memory.fill (local.get \$offs) (local.get \$val) (local.get \$len))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:638
-assert_trap(() => invoke($8, `run`, [65280, 37, 512]), `out of bounds memory access`);
+// ./test/core/memory64/memory_fill64.wast:638
+assert_trap(() => invoke($8, `run`, [65280n, 37, 512n]), `out of bounds memory access`);
 
-// ./test/core/bulk-memory/memory_fill.wast:641
-assert_return(() => invoke($8, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:641
+assert_return(() => invoke($8, `checkRange`, [0n, 1n, 0]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:643
+// ./test/core/memory64/memory_fill64.wast:643
 let $9 = instantiate(`(module
-  (memory 1 1 )
+  (memory i64 1 1 )
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
-  (func (export "run") (param \$offs i32) (param \$val i32) (param \$len i32)
+  (func (export "run") (param \$offs i64) (param \$val i32) (param \$len i64)
     (memory.fill (local.get \$offs) (local.get \$val) (local.get \$len))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:660
-assert_trap(() => invoke($9, `run`, [65279, 37, 514]), `out of bounds memory access`);
+// ./test/core/memory64/memory_fill64.wast:660
+assert_trap(() => invoke($9, `run`, [65279n, 37, 514n]), `out of bounds memory access`);
 
-// ./test/core/bulk-memory/memory_fill.wast:663
-assert_return(() => invoke($9, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:663
+assert_return(() => invoke($9, `checkRange`, [0n, 1n, 0]), [value("i64", -1n)]);
 
-// ./test/core/bulk-memory/memory_fill.wast:665
+// ./test/core/memory64/memory_fill64.wast:665
 let $10 = instantiate(`(module
-  (memory 1 1 )
+  (memory i64 1 1 )
   
-  (func (export "checkRange") (param \$from i32) (param \$to i32) (param \$expected i32) (result i32)
+  (func (export "checkRange") (param \$from i64) (param \$to i64) (param \$expected i32) (result i64)
     (loop \$cont
-      (if (i32.eq (local.get \$from) (local.get \$to))
+      (if (i64.eq (local.get \$from) (local.get \$to))
         (then
-          (return (i32.const -1))))
+          (return (i64.const -1))))
       (if (i32.eq (i32.load8_u (local.get \$from)) (local.get \$expected))
         (then
-          (local.set \$from (i32.add (local.get \$from) (i32.const 1)))
+          (local.set \$from (i64.add (local.get \$from) (i64.const 1)))
           (br \$cont))))
     (return (local.get \$from)))
 
-  (func (export "run") (param \$offs i32) (param \$val i32) (param \$len i32)
+  (func (export "run") (param \$offs i64) (param \$val i32) (param \$len i64)
     (memory.fill (local.get \$offs) (local.get \$val) (local.get \$len))))`);
 
-// ./test/core/bulk-memory/memory_fill.wast:682
-assert_trap(() => invoke($10, `run`, [65279, 37, -1]), `out of bounds memory access`);
+// ./test/core/memory64/memory_fill64.wast:682
+assert_trap(() => invoke($10, `run`, [65279n, 37, 4294967295n]), `out of bounds memory access`);
 
-// ./test/core/bulk-memory/memory_fill.wast:685
-assert_return(() => invoke($10, `checkRange`, [0, 1, 0]), [value("i32", -1)]);
+// ./test/core/memory64/memory_fill64.wast:685
+assert_return(() => invoke($10, `checkRange`, [0n, 1n, 0]), [value("i64", -1n)]);
