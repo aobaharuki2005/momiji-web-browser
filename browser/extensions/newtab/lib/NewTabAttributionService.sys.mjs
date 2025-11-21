@@ -15,9 +15,6 @@ const MAX_LOOKBACK_DAYS = 30;
 const DAY_IN_MILLI = 1000 * 60 * 60 * 24;
 const CONVERSION_RESET_MILLI = 7 * DAY_IN_MILLI;
 
-const DAP_HPKE_PREF = "dap.ohttp.hpke";
-const DAP_RELAY_PREF = "dap.ohttp.relayURL";
-
 /**
  *
  */
@@ -178,14 +175,7 @@ class NewTabAttributionService {
       if (lookbackDays > MAX_LOOKBACK_DAYS) {
         return;
       }
-      const dapHpke = Services.prefs.getCharPref(
-        DAP_HPKE_PREF,
-        "https://dap-09-3.api.divviup.org/ohttp-configs"
-      );
-      const ohttpRelayURL = Services.prefs.getCharPref(
-        DAP_RELAY_PREF,
-        "https://mozilla-ohttp-dap.mozilla.fastly-edge.com/"
-      );
+
       const now = this.#now();
 
       const budget = await this.#getBudget(partnerId, now);
@@ -215,20 +205,10 @@ class NewTabAttributionService {
       }
 
       await this.#updateBudget(budget, budgetSpend, partnerId);
-
-      const options = {};
-      if (dapHpke) {
-        options.ohttp_hpke = dapHpke;
-      }
-
-      if (ohttpRelayURL) {
-        options.ohttp_relay = ohttpRelayURL;
-      }
-
       await this.#dapSender.sendDAPMeasurement(
         conversion.task,
         measurement,
-        options
+        {}
       );
     } catch (e) {
       console.error(e);

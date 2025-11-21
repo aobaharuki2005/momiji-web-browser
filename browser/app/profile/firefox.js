@@ -676,12 +676,6 @@ pref("browser.urlbar.merino.ohttpConfigURL", "");
 // OHTTP relay URL for Merino requests
 pref("browser.urlbar.merino.ohttpRelayURL", "");
 
-// OHTTP hpke for DAP
-pref("dap.ohttp.hpke", "https://dap-09-3.api.divviup.org/ohttp-configs");
-
-// OHTTP relay URL for DAP
-pref("dap.ohttp.relayURL", "https://mozilla-ohttp-dap.mozilla.fastly-edge.com/");
-
 // Enable site specific search result.
 pref("browser.urlbar.contextualSearch.enabled", true);
 
