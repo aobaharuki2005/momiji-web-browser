@@ -9,6 +9,7 @@ import { connect } from "react-redux";
 import { IS_NEWTAB } from "content-src/lib/constants";
 import { Logo } from "content-src/components/Logo/Logo";
 import React from "react";
+import { TrendingSearches } from "../DiscoveryStreamComponents/TrendingSearches/TrendingSearches";
 
 export class _Search extends React.PureComponent {
   constructor(props) {
@@ -140,6 +141,15 @@ export class _Search extends React.PureComponent {
     ]
       .filter(v => v)
       .join(" ");
+    const prefs = this.props.Prefs.values;
+
+    const trendingSearchEnabled =
+      prefs["trendingSearch.enabled"] &&
+      prefs["system.trendingSearch.enabled"] &&
+      prefs["trendingSearch.defaultSearchEngine"]?.toLowerCase() === "google";
+
+    const trendingSearchVariant =
+      this.props.Prefs.values["trendingSearch.variant"];
 
     return (
       <>
@@ -160,6 +170,9 @@ export class _Search extends React.PureComponent {
                 data-l10n-id="newtab-search-box-search-button"
                 onClick={this.onSearchClick}
               />
+              {trendingSearchEnabled &&
+                (trendingSearchVariant === "a" ||
+                  trendingSearchVariant === "c") && <TrendingSearches />}
             </div>
           )}
           {this.props.handoffEnabled && (
@@ -187,6 +200,9 @@ export class _Search extends React.PureComponent {
                   }}
                 />
               </button>
+              {trendingSearchEnabled &&
+                (trendingSearchVariant === "a" ||
+                  trendingSearchVariant === "c") && <TrendingSearches />}
             </div>
           )}
         </div>

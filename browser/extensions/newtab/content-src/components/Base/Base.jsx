@@ -650,6 +650,7 @@ export class BaseContent extends React.PureComponent {
         prefs[PREF_INFERRED_PERSONALIZATION_USER],
       topSitesRowsCount: prefs.topSitesRows,
       weatherEnabled: prefs.showWeather,
+      trendingSearchEnabled: prefs["trendingSearch.enabled"],
     };
 
     const pocketRegion = prefs["feeds.system.topstories"];
@@ -690,8 +691,14 @@ export class BaseContent extends React.PureComponent {
     const enabledWidgets = {
       listsEnabled: prefs["widgets.lists.enabled"],
       timerEnabled: prefs["widgets.focusTimer.enabled"],
+      trendingSearchEnabled: prefs["trendingSearch.enabled"],
       weatherEnabled: prefs.showWeather,
     };
+
+    // Trending Searches experiment pref check
+    const mayHaveTrendingSearch =
+      prefs["system.trendingSearch.enabled"] &&
+      prefs["trendingSearch.defaultSearchEngine"].toLowerCase() === "google";
 
     // Mobile Download Promo Pref Checks
     const mobileDownloadPromoEnabled = prefs["mobileDownloadModal.enabled"];
@@ -866,6 +873,7 @@ export class BaseContent extends React.PureComponent {
             mayHaveTopicSections={mayHavePersonalizedTopicSections}
             mayHaveInferredPersonalization={mayHaveInferredPersonalization}
             mayHaveWeather={mayHaveWeather}
+            mayHaveTrendingSearch={mayHaveTrendingSearch}
             mayHaveWidgets={mayHaveWidgets}
             mayHaveTimerWidget={mayHaveTimerWidget}
             mayHaveListsWidget={mayHaveListsWidget}

@@ -45,6 +45,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TimerFeed: "resource://newtab/lib/Widgets/TimerFeed.sys.mjs",
   TopSitesFeed: "resource://newtab/lib/TopSitesFeed.sys.mjs",
   TopStoriesFeed: "resource://newtab/lib/TopStoriesFeed.sys.mjs",
+  TrendingSearchFeed: "resource://newtab/lib/TrendingSearchFeed.sys.mjs",
   WallpaperFeed: "resource://newtab/lib/Wallpapers/WallpaperFeed.sys.mjs",
   WeatherFeed: "resource://newtab/lib/WeatherFeed.sys.mjs",
 });
@@ -93,6 +94,7 @@ const REGION_SECTIONS_CONFIG =
 const LOCALE_SECTIONS_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.sections.locale-content-config";
 
+const BROWSER_URLBAR_PLACEHOLDERNAME = "browser.urlbar.placeholderName";
 const PREF_SHOULD_AS_INITIALIZE_FEEDS =
   "browser.newtabpage.activity-stream.testing.shouldInitializeFeeds";
 
@@ -956,6 +958,36 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "trendingSearch.enabled",
+    {
+      title: "Enables the trending search widget",
+      value: true,
+    },
+  ],
+  [
+    "trendingSearch.variant",
+    {
+      title: "Determines the layout variant for the trending search widget",
+      value: "",
+    },
+  ],
+  [
+    "system.trendingSearch.enabled",
+    {
+      title: "Enables the trending search experiment in Nimbus",
+      value: false,
+    },
+  ],
+  [
+    "trendingSearch.defaultSearchEngine",
+    {
+      title: "Placeholder the trending search experiment in Nimbus",
+      getValue: () => {
+        return Services.prefs.getCharPref(BROWSER_URLBAR_PLACEHOLDERNAME, "");
+      },
+    },
+  ],
+  [
     "widgets.system.enabled",
     {
       title: "Enables visibility of all widgets and controls to enable them",
@@ -1541,6 +1573,12 @@ const FEEDS_DATA = [
     value: true,
   },
   {
+    name: "trendingsearchfeed",
+    factory: () => new lazy.TrendingSearchFeed(),
+    title: "Handles fetching the google trending search API",
+    value: true,
+  },
+  {
     name: "listsfeed",
     factory: () => new lazy.ListsFeed(),
     title: "Handles the data for the Todo list widget",
@@ -1591,7 +1629,16 @@ export class ActivityStream {
     this._updateDynamicPrefs();
     this._defaultPrefs.init();
     Services.obs.addObserver(this, "intl:app-locales-changed");
+    Services.obs.addObserver(this, "browser-search-engine-modified");
     lazy.NewTabActorRegistry.init();
+
+    // Bug 1969587: Because our pref system does not support async getValue(),
+    // we mirror the value of the BROWSER_URLBAR_PLACEHOLDERNAME pref into
+    // `trendingSearch.defaultEngine` using a lazily evaluated sync fallback.
+    //
+    // In some cases, BROWSER_URLBAR_PLACEHOLDERNAME is read before it's been set,
+    // so we also observe it and update our mirrored value when it changes initially.
+    Services.prefs.addObserver(BROWSER_URLBAR_PLACEHOLDERNAME, this);
 
     // Hook up the store and let all feeds and pages initialize
     this.store.init(
@@ -1650,6 +1697,9 @@ export class ActivityStream {
     delete this.geo;
 
     Services.obs.removeObserver(this, "intl:app-locales-changed");
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
+
+    Services.prefs.removeObserver(BROWSER_URLBAR_PLACEHOLDERNAME, this);
 
     this.store.uninit();
     this.initialized = false;
@@ -1707,8 +1757,15 @@ export class ActivityStream {
     }
   }
 
-  observe(subject, topic) {
+  observe(subject, topic, data) {
+    // Custom logic for BROWSER_URLBAR_PLACEHOLDERNAME
+    if (topic === "nsPref:changed" && data === BROWSER_URLBAR_PLACEHOLDERNAME) {
+      this._updateDynamicPrefs();
+      return;
+    }
+
     switch (topic) {
+      case "browser-search-engine-modified":
       case "intl:app-locales-changed":
       case lazy.Region.REGION_TOPIC:
         this._updateDynamicPrefs();
