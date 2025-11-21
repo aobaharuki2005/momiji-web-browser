@@ -412,8 +412,9 @@ add_test(function test_getKeyForScope() {
 
 add_task(async function test_oauth_verification() {
   let fxa = new MockFxAccounts();
-  let user = getTestUser("foo");
+  let user = getTestUser("eusebius");
   user.verified = false;
+
   await fxa.setSignedInUser(user);
   let fetched = await fxa.getSignedInUser();
   Assert.ok(!fetched.verified);
@@ -423,7 +424,7 @@ add_task(async function test_oauth_verification() {
   });
 
   fetched = await fxa.getSignedInUser();
-  Assert.ok(!fetched.verified); // keys alone don’t flip verification
+  Assert.ok(!fetched.verified);
 
   // Simulate the follow-up login message that marks the account verified.
   await fxa._internal.updateUserAccountData({
@@ -433,6 +434,69 @@ add_task(async function test_oauth_verification() {
 
   fetched = await fxa.getSignedInUser();
   Assert.ok(fetched.verified);
+});
+
+// Tests for hasKeysForScope - checking if sync keys exist locally
+add_task(async function test_hasKeysForScope_not_signed_in() {
+  const fxa = await MakeFxAccounts();
+  // Should return false when no user is signed in
+  Assert.ok(!(await fxa.keys.hasKeysForScope(SCOPE_APP_SYNC)));
+});
+
+add_task(async function test_hasKeysForScope_not_verified() {
+  const credentials = {
+    email: "foo@example.com",
+    uid: "1234567890abcdef1234567890abcdef",
+    sessionToken: "dead",
+    verified: false, // Not verified
+    ...MOCK_ACCOUNT_KEYS,
+  };
+  const fxa = await MakeFxAccounts({ credentials });
+  // Should return false when user is not verified
+  Assert.ok(!(await fxa.keys.hasKeysForScope(SCOPE_APP_SYNC)));
+});
+
+add_task(async function test_hasKeysForScope_no_keys() {
+  const credentials = {
+    email: "foo@example.com",
+    uid: "1234567890abcdef1234567890abcdef",
+    sessionToken: "dead",
+    verified: true,
+    // NO scopedKeys - third party auth scenario
+  };
+  const fxa = await MakeFxAccounts({ credentials });
+  // Should return false when user has no sync keys (third-party auth)
+  Assert.ok(!(await fxa.keys.hasKeysForScope(SCOPE_APP_SYNC)));
+});
+
+add_task(async function test_hasKeysForScope_with_keys() {
+  const credentials = {
+    email: "foo@example.com",
+    uid: "1234567890abcdef1234567890abcdef",
+    sessionToken: "dead",
+    verified: true,
+    ...MOCK_ACCOUNT_KEYS, // Has sync keys
+  };
+  const fxa = await MakeFxAccounts({ credentials });
+  // Should return true when user has sync keys
+  Assert.ok(await fxa.keys.hasKeysForScope(SCOPE_APP_SYNC));
+});
+
+add_task(async function test_hasKeysForScope_wrong_scope() {
+  const credentials = {
+    email: "foo@example.com",
+    uid: "1234567890abcdef1234567890abcdef",
+    sessionToken: "dead",
+    verified: true,
+    ...MOCK_ACCOUNT_KEYS,
+  };
+  const fxa = await MakeFxAccounts({ credentials });
+  // Should return false for a scope we don't have keys for
+  Assert.ok(
+    !(await fxa.keys.hasKeysForScope(
+      "https://identity.mozilla.com/apps/unknown"
+    ))
+  );
 });
 
 add_task(

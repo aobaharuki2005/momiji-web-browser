@@ -100,6 +100,33 @@ export class FxAccountsKeys {
   }
 
   /**
+   * Checks if we currently have the key for a given scope locally available.
+   *
+   * This method only checks if the keys exist in local storage. With OAuth-based
+   * authentication, keys cannot be fetched on demand - if they don't exist locally,
+   * there is no way to obtain them.
+   *
+   * @param {string} scope The OAuth scope whose key should be checked
+   *
+   * @return Promise<boolean>
+   *        Resolves to true if the key exists locally, false otherwise.
+   */
+  hasKeysForScope(scope) {
+    return this._fxai.withCurrentAccountState(async currentState => {
+      let userData = await currentState.getUserAccountData();
+      if (!userData) {
+        return false;
+      }
+      if (!userData.verified) {
+        return false;
+      }
+      return !!(
+        userData.scopedKeys && userData.scopedKeys.hasOwnProperty(scope)
+      );
+    });
+  }
+
+  /**
    * Get the key for a specified OAuth scope.
    *
    * @param {string} scope The OAuth scope whose key should be returned

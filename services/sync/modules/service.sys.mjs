@@ -62,6 +62,7 @@ ChromeUtils.importESModule("resource://services-sync/telemetry.sys.mjs");
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
 import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
+import { SCOPE_APP_SYNC } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 const fxAccounts = getFxAccountsSingleton();
 
@@ -966,6 +967,22 @@ Sync11Service.prototype = {
     }
   },
 
+  // Checks if sync can be configured for the current FxA user.
+  // Returns true if there is a signed-in user with sync keys available.
+  async canConfigure() {
+    let user = await fxAccounts.getSignedInUser();
+    if (!user) {
+      return false;
+    }
+    try {
+      let hasKeys = await fxAccounts.keys.hasKeysForScope(SCOPE_APP_SYNC);
+      return hasKeys;
+    } catch (err) {
+      this._log.error("Failed to check for sync keys", err);
+      return false;
+    }
+  },
+
   // configures/enabled/turns-on sync. There must be an FxA user signed in.
   async configure() {
     // We don't, and must not, throw if sync is already configured, because we
@@ -975,6 +992,12 @@ Sync11Service.prototype = {
     let user = await fxAccounts.getSignedInUser();
     if (!user) {
       throw new Error("No FxA user is signed in");
+    }
+    // Check if the user has sync keys. With OAuth-based authentication,
+    // keys cannot be fetched on demand - they must exist locally.
+    let hasKeys = await fxAccounts.keys.hasKeysForScope(SCOPE_APP_SYNC);
+    if (!hasKeys) {
+      throw new Error("User does not have sync keys");
     }
     this._log.info("Configuring sync with current FxA user");
     Svc.PrefBranch.setStringPref("username", user.email);

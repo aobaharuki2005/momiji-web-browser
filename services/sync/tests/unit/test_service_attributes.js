@@ -90,3 +90,169 @@ add_test(function test_locked() {
   Assert.equal(Service.locked, false);
   run_next_test();
 });
+
+// Tests for canConfigure and configure with sync keys
+add_task(async function test_canConfigure_no_user() {
+  _("canConfigure returns false when no user is signed in");
+  const { getFxAccountsSingleton } = ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
+  );
+  const fxAccounts = getFxAccountsSingleton();
+
+  // Mock getSignedInUser to return null
+  const originalGetSignedInUser = fxAccounts.getSignedInUser;
+  fxAccounts.getSignedInUser = () => Promise.resolve(null);
+
+  try {
+    const canConfigure = await Service.canConfigure();
+    Assert.equal(canConfigure, false);
+  } finally {
+    fxAccounts.getSignedInUser = originalGetSignedInUser;
+  }
+});
+
+add_task(async function test_canConfigure_no_keys() {
+  _("canConfigure returns false when user has no sync keys");
+  const { getFxAccountsSingleton } = ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
+  );
+  const fxAccounts = getFxAccountsSingleton();
+
+  // Mock getSignedInUser to return a user
+  const originalGetSignedInUser = fxAccounts.getSignedInUser;
+  fxAccounts.getSignedInUser = () =>
+    Promise.resolve({ email: "test@example.com", uid: "12345" });
+
+  // Mock hasKeysForScope to return false
+  const originalHasKeysForScope = fxAccounts.keys.hasKeysForScope;
+  fxAccounts.keys.hasKeysForScope = () => Promise.resolve(false);
+
+  try {
+    const canConfigure = await Service.canConfigure();
+    Assert.equal(canConfigure, false);
+  } finally {
+    fxAccounts.getSignedInUser = originalGetSignedInUser;
+    fxAccounts.keys.hasKeysForScope = originalHasKeysForScope;
+  }
+});
+
+add_task(async function test_canConfigure_with_keys() {
+  _("canConfigure returns true when user has sync keys");
+  const { getFxAccountsSingleton } = ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
+  );
+  const fxAccounts = getFxAccountsSingleton();
+
+  // Mock getSignedInUser to return a user
+  const originalGetSignedInUser = fxAccounts.getSignedInUser;
+  fxAccounts.getSignedInUser = () =>
+    Promise.resolve({ email: "test@example.com", uid: "12345" });
+
+  // Mock hasKeysForScope to return true
+  const originalHasKeysForScope = fxAccounts.keys.hasKeysForScope;
+  fxAccounts.keys.hasKeysForScope = () => Promise.resolve(true);
+
+  try {
+    const canConfigure = await Service.canConfigure();
+    Assert.equal(canConfigure, true);
+  } finally {
+    fxAccounts.getSignedInUser = originalGetSignedInUser;
+    fxAccounts.keys.hasKeysForScope = originalHasKeysForScope;
+  }
+});
+
+add_task(async function test_configure_throws_without_keys() {
+  _("configure() throws when user has no sync keys");
+  const { getFxAccountsSingleton } = ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
+  );
+  const fxAccounts = getFxAccountsSingleton();
+
+  // Mock getSignedInUser to return a user
+  const originalGetSignedInUser = fxAccounts.getSignedInUser;
+  fxAccounts.getSignedInUser = () =>
+    Promise.resolve({ email: "test@example.com", uid: "12345" });
+
+  // Mock hasKeysForScope to return false (no keys)
+  const originalHasKeysForScope = fxAccounts.keys.hasKeysForScope;
+  fxAccounts.keys.hasKeysForScope = () => Promise.resolve(false);
+
+  try {
+    await Assert.rejects(
+      Service.configure(),
+      /User does not have sync keys/,
+      "configure() should throw when no sync keys"
+    );
+  } finally {
+    fxAccounts.getSignedInUser = originalGetSignedInUser;
+    fxAccounts.keys.hasKeysForScope = originalHasKeysForScope;
+  }
+});
+
+add_task(async function test_configure_succeeds_with_keys() {
+  _("configure() succeeds when user has sync keys");
+  const { getFxAccountsSingleton } = ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
+  );
+  const fxAccounts = getFxAccountsSingleton();
+
+  // Mock getSignedInUser to return a user
+  const originalGetSignedInUser = fxAccounts.getSignedInUser;
+  fxAccounts.getSignedInUser = () =>
+    Promise.resolve({ email: "test@example.com", uid: "12345" });
+
+  // Mock hasKeysForScope to return true (has keys)
+  const originalHasKeysForScope = fxAccounts.keys.hasKeysForScope;
+  fxAccounts.keys.hasKeysForScope = () => Promise.resolve(true);
+
+  try {
+    await Service.configure();
+    // Should set the username pref
+    Assert.equal(Svc.PrefBranch.getStringPref("username"), "test@example.com");
+  } finally {
+    fxAccounts.getSignedInUser = originalGetSignedInUser;
+    fxAccounts.keys.hasKeysForScope = originalHasKeysForScope;
+    Svc.PrefBranch.clearUserPref("username");
+  }
+});
+
+add_task(async function test_third_party_to_sync_complete_flow() {
+  _("End-to-end: third-party auth (no keys) -> receive keys -> configure sync");
+  const { getFxAccountsSingleton } = ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
+  );
+  const fxAccounts = getFxAccountsSingleton();
+
+  // Save originals
+  const originalGetSignedInUser = fxAccounts.getSignedInUser;
+  const originalHasKeysForScope = fxAccounts.keys.hasKeysForScope;
+
+  // 1. User signs in without keys (third-party)
+  const user = { email: "foo@example.com", uid: "uid12345" };
+  fxAccounts.getSignedInUser = () => Promise.resolve(user);
+
+  // 2. Initially no keys - hasKeysForScope returns false
+  fxAccounts.keys.hasKeysForScope = () => Promise.resolve(false);
+
+  try {
+    // 3. Verify sync cannot be configured without keys
+    Assert.ok(!(await Service.canConfigure()));
+
+    // 4. Simulate receiving keys via webchannel (third-party creates password)
+    // Now hasKeysForScope returns true
+    fxAccounts.keys.hasKeysForScope = () => Promise.resolve(true);
+
+    // 5. Verify sync can now be configured
+    Assert.ok(await Service.canConfigure());
+
+    // 6. Configure sync
+    await Service.configure();
+
+    // 7. Verify username pref is set
+    Assert.equal(Svc.PrefBranch.getStringPref("username"), "foo@example.com");
+  } finally {
+    fxAccounts.getSignedInUser = originalGetSignedInUser;
+    fxAccounts.keys.hasKeysForScope = originalHasKeysForScope;
+    Svc.PrefBranch.clearUserPref("username");
+  }
+});

@@ -13,6 +13,7 @@ import {
   SCOPE_PROFILE,
   SCOPE_PROFILE_WRITE,
   SCOPE_APP_SYNC,
+  log,
 } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 const VALID_SCOPES = [SCOPE_PROFILE, SCOPE_PROFILE_WRITE, SCOPE_APP_SYNC];
@@ -202,11 +203,10 @@ export class FxAccountsOAuth {
       );
     const requestedSync = requestedScopes.includes(SCOPE_APP_SYNC);
     const grantedSync = scope.includes(SCOPE_APP_SYNC);
+    // This is not necessarily unexpected as the user could be using
+    // third-party auth but sent the sync scope, we shouldn't error here
     if (requestedSync && !grantedSync) {
-      throw new Error(ERROR_SYNC_SCOPE_NOT_GRANTED);
-    }
-    if (grantedSync && !keys_jwe) {
-      throw new Error(ERROR_NO_KEYS_JWE);
+      log.info("Requested Sync scope but was not granted sync!");
     }
     let scopedKeys;
     if (keys_jwe) {
