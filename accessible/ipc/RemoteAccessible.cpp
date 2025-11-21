@@ -226,44 +226,74 @@ void RemoteAccessible::ApplyCache(CacheUpdateType aUpdateType,
 
 ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
   if (RequestDomainsIfInactive(CacheDomain::NameAndDescription |
-                               CacheDomain::Text)) {
+                               CacheDomain::Text | CacheDomain::Relations) ||
+      !mCachedFields) {
     aName.SetIsVoid(true);
     return eNameOK;
   }
 
-  if (mCachedFields) {
-    if (IsText()) {
-      mCachedFields->GetAttribute(CacheKey::Text, aName);
-      return eNameOK;
-    }
+  if (IsText()) {
+    mCachedFields->GetAttribute(CacheKey::Text, aName);
+    return eNameOK;
+  }
 
-    if (mCachedFields->GetAttribute(CacheKey::Name, aName)) {
-      // Bug 1998255 - Once we tackle computing label calculation in the parent
-      // process, we can remove the cached name flag.
-      auto cachedNameFlag =
-          mCachedFields->GetAttribute<int32_t>(CacheKey::NameValueFlag);
-      ENameValueFlag nameFlag =
-          cachedNameFlag ? static_cast<ENameValueFlag>(*cachedNameFlag)
-                         : eNameOK;
+  if (mCachedFields->GetAttribute(CacheKey::Name, aName)) {
+    VERIFY_CACHE(CacheDomain::NameAndDescription);
+    return eNameOK;
+  }
 
-      VERIFY_CACHE(CacheDomain::NameAndDescription);
-      return nameFlag;
-    }
+  if (auto maybeAriaLabelIds = mCachedFields->GetAttribute<nsTArray<uint64_t>>(
+          nsGkAtoms::aria_labelledby)) {
+    RemoteAccIterator iter(*maybeAriaLabelIds, Document());
+    nsTextEquivUtils::GetTextEquivFromAccIterable(this, &iter, aName);
+    aName.CompressWhitespace();
+  }
 
-    nsTextEquivUtils::GetNameFromSubtree(this, aName);
-    if (!aName.IsEmpty()) {
-      return eNameFromSubtree;
-    }
+  if (!aName.IsEmpty()) {
+    return eNameFromRelations;
+  }
 
-    if (mCachedFields->GetAttribute(CacheKey::Tooltip, aName)) {
-      VERIFY_CACHE(CacheDomain::NameAndDescription);
-      return eNameFromTooltip;
-    }
+  if (auto accRelMapEntry = mDoc->mReverseRelations.Lookup(ID())) {
+    nsTArray<uint64_t> relationCandidateIds;
+    for (const auto& data : kRelationTypeAtoms) {
+      if (data.mAtom != nsGkAtoms::_for || data.mValidTag != nsGkAtoms::label) {
+        continue;
+      }
 
-    if (mCachedFields->GetAttribute(CacheKey::CssAltContent, aName)) {
-      VERIFY_CACHE(CacheDomain::NameAndDescription);
-      return eNameOK;
+      if (auto labelIds = accRelMapEntry.Data().Lookup(&data)) {
+        RemoteAccIterator iter(*labelIds, Document());
+        nsTextEquivUtils::GetTextEquivFromAccIterable(this, &iter, aName);
+        aName.CompressWhitespace();
+      }
     }
+    aName.CompressWhitespace();
+  }
+
+  if (!aName.IsEmpty()) {
+    return eNameFromRelations;
+  }
+
+  ArrayAccIterator iter(LegendsOrCaptions());
+  nsTextEquivUtils::GetTextEquivFromAccIterable(this, &iter, aName);
+  aName.CompressWhitespace();
+
+  if (!aName.IsEmpty()) {
+    return eNameFromRelations;
+  }
+
+  nsTextEquivUtils::GetNameFromSubtree(this, aName);
+  if (!aName.IsEmpty()) {
+    return eNameFromSubtree;
+  }
+
+  if (mCachedFields->GetAttribute(CacheKey::Tooltip, aName)) {
+    VERIFY_CACHE(CacheDomain::NameAndDescription);
+    return eNameFromTooltip;
+  }
+
+  if (mCachedFields->GetAttribute(CacheKey::CssAltContent, aName)) {
+    VERIFY_CACHE(CacheDomain::NameAndDescription);
+    return eNameOK;
   }
 
   MOZ_ASSERT(aName.IsEmpty());

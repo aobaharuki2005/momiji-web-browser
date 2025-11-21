@@ -16,6 +16,7 @@ class nsIContent;
 namespace mozilla {
 namespace a11y {
 class LocalAccessible;
+class AccIterable;
 }
 }  // namespace mozilla
 
@@ -51,6 +52,7 @@ class nsTextEquivUtils {
  public:
   typedef mozilla::a11y::LocalAccessible LocalAccessible;
   typedef mozilla::a11y::Accessible Accessible;
+  typedef mozilla::a11y::AccIterable AccIterable;
 
   /**
    * Determines if the accessible has a given name rule.
@@ -98,6 +100,10 @@ class nsTextEquivUtils {
                                      nsAtom* aIDRefsAttr,
                                      nsAString& aTextEquiv);
 
+  static void GetTextEquivFromAccIterable(const Accessible* aAccessible,
+                                          AccIterable* aIter,
+                                          nsAString& aTextEquiv);
+
   /**
    * Calculates the text equivalent from the given content - and its subtree, if
    * allowed - and appends it to the given string.
@@ -135,6 +141,13 @@ class nsTextEquivUtils {
   static nsresult AppendFromDOMChildren(nsIContent* aContent,
                                         nsAString* aString);
 
+  /**
+   * Calculates the text equivalent from the given accessible - and its subtree,
+   * if allowed. Then, appends the calculated text to the given string.
+   */
+  static nsresult AppendFromAccessible(Accessible* aAccessible,
+                                       nsAString* aString);
+
  private:
   /**
    * Iterates the given accessible's children and calculates the text equivalent
@@ -142,13 +155,6 @@ class nsTextEquivUtils {
    */
   static nsresult AppendFromAccessibleChildren(const Accessible* aAccessible,
                                                nsAString* aString);
-
-  /**
-   * Calculates the text equivalent from the given accessible - and its subtree,
-   * if allowed. Then, appends the calculated text to the given string.
-   */
-  static nsresult AppendFromAccessible(Accessible* aAccessible,
-                                       nsAString* aString);
 
   /**
    * Calculates the text equivalent from the value of the given accessible.
