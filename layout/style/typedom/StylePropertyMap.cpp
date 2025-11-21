@@ -42,11 +42,13 @@ void StylePropertyMap::Set(
     ErrorResult& aRv) {
   // Step 2.
 
-  NonCustomCSSPropertyId propId = nsCSSProps::LookupProperty(aProperty);
-  if (propId == eCSSProperty_UNKNOWN) {
+  NonCustomCSSPropertyId id = nsCSSProps::LookupProperty(aProperty);
+  if (id == eCSSProperty_UNKNOWN) {
     aRv.ThrowTypeError("Invalid property: "_ns + aProperty);
     return;
   }
+
+  auto propertyId = CSSPropertyId::FromIdOrCustomProperty(id, aProperty);
 
   if (aValues.Length() != 1) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
@@ -61,6 +63,15 @@ void StylePropertyMap::Set(
   }
 
   CSSStyleValue& styleValue = styleValueOrString.GetAsCSSStyleValue();
+
+  // Step 4
+
+  const auto valuePropertyId = styleValue.GetPropertyId();
+
+  if (valuePropertyId && *valuePropertyId != propertyId) {
+    aRv.ThrowTypeError("Invalid type for property"_ns);
+    return;
+  }
 
   nsAutoCString value;
 

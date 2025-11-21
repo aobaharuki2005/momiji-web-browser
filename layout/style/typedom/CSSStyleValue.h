@@ -20,6 +20,7 @@ class RefPtr;
 
 namespace mozilla {
 
+struct CSSPropertyId;
 class ErrorResult;
 
 namespace dom {
@@ -63,6 +64,12 @@ class CSSStyleValue : public nsISupports, public nsWrapperCache {
 
   // Defined in CSSUnsupportedValue.cpp
   CSSUnsupportedValue& GetAsCSSUnsupportedValue();
+
+  // Returns nullptr if this value is not a CSSUnsupportedValue, caller must
+  // null check.
+  //
+  // Defined in CSSUnsupportedValue.cpp
+  const CSSPropertyId* GetPropertyId();
 
   bool IsCSSKeywordValue() const;
 

@@ -28,4 +28,14 @@ CSSUnsupportedValue& CSSStyleValue::GetAsCSSUnsupportedValue() {
   return *static_cast<CSSUnsupportedValue*>(this);
 }
 
+const CSSPropertyId* CSSStyleValue::GetPropertyId() {
+  if (!IsCSSUnsupportedValue()) {
+    return nullptr;
+  }
+
+  CSSUnsupportedValue& unsupportedValue = GetAsCSSUnsupportedValue();
+
+  return &unsupportedValue.GetPropertyId();
+}
+
 }  // namespace mozilla::dom
