@@ -67,7 +67,7 @@ class CodeGeneratorLOONG64 : public CodeGeneratorShared {
   void bailoutFrom(Label* label, LSnapshot* snapshot);
   void bailout(LSnapshot* snapshot);
 
-  bool generateOutOfLineCode(CodeGenerator* codegen);
+  bool generateOutOfLineCode();
 
   template <typename T>
   void branchToBlock(Register lhs, T rhs, MBasicBlock* mir,
