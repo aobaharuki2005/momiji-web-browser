@@ -2,7 +2,7 @@ import pytest
 
 URL = "https://e.seb.lt/ib/login"
 
-COOKIES_CSS = "#content-cookie"
+COOKIES_CSS = "#cookie-consent-accept-all-btn"
 UNSUPPORTED_TEXT = "Google Chrome"
 
 
