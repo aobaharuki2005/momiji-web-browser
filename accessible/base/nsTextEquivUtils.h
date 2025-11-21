@@ -17,7 +17,7 @@ namespace mozilla {
 namespace a11y {
 class LocalAccessible;
 class AccIterable;
-}
+}  // namespace a11y
 }  // namespace mozilla
 
 /**
