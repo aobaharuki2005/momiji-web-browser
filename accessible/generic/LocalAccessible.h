@@ -155,7 +155,9 @@ class LocalAccessible : public nsISupports, public Accessible {
   /**
    * Get the name of this accessible.
    */
-  virtual ENameValueFlag Name(nsString& aName) const override;
+  virtual ENameValueFlag Name(nsString& aName) const override final;
+
+  virtual ENameValueFlag DirectName(nsString& aName) const;
 
   /**
    * Maps ARIA state attributes to state of accessible. Note the given state
