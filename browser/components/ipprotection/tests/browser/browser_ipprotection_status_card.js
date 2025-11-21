@@ -161,10 +161,10 @@ add_task(async function test_ipprotection_events_on_toggle() {
   Assert.ok(toggle, "Status card connection toggle should be present");
 
   let startedProxyPromise = BrowserTestUtils.waitForEvent(
-    IPPProxyManager,
-    "IPPProxyManager:StateChanged",
+    IPProtectionService,
+    "IPProtectionService:StateChanged",
     false,
-    () => !!IPPProxyManager.activatedAt
+    () => !!IPProtectionService.activatedAt
   );
   let enableEventPromise = BrowserTestUtils.waitForEvent(
     window,
@@ -187,10 +187,10 @@ add_task(async function test_ipprotection_events_on_toggle() {
   Assert.equal(userEnabledPref, true, "userEnabled pref should be set to true");
 
   let stoppedProxyPromise = BrowserTestUtils.waitForEvent(
-    IPPProxyManager,
-    "IPPProxyManager:StateChanged",
+    IPProtectionService,
+    "IPProtectionService:StateChanged",
     false,
-    () => !IPPProxyManager.activatedAt
+    () => !IPProtectionService.activatedAt
   );
   let disableEventPromise = BrowserTestUtils.waitForEvent(
     window,
