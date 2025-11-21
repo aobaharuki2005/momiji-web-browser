@@ -1511,7 +1511,7 @@ def test_reftest_get_lineno():
     ]
     allmods = " ".join(mods)
     lineno = sf.reftest_find_lineno(
-        "testing/test/data/fontface_reftest.list", mods, allmods
+        DATA_PATH.joinpath("fontface_reftest.list"), mods, allmods
     )
     assert lineno == 171
 
@@ -1532,7 +1532,7 @@ def test_reftest_get_lineno2():
     ]
     allmods = " ".join(mods)
     lineno = sf.reftest_find_lineno(
-        "testing/test/data/downscaling_reftest.list", mods, allmods
+        DATA_PATH.joinpath("downscaling_reftest.list"), mods, allmods
     )
     assert lineno == 183
 
@@ -1551,7 +1551,7 @@ def test_reftest_get_lineno3():
     ]
     allmods = " ".join(mods)
     lineno = sf.reftest_find_lineno(
-        "testing/test/data/dom_canvas_reftest.list", mods, allmods
+        DATA_PATH.joinpath("dom_canvas_reftest.list"), mods, allmods
     )
     assert lineno == 233
 
@@ -1632,7 +1632,7 @@ def test_reftest_skip_failure_reorder(capsys):
     manifest_after_path = DATA_PATH.joinpath("reftest-reorder-after.list")
     manifest_after = open(manifest_after_path, encoding="utf-8").read()
     sf = Skipfails(verbose=True, bugzilla="disable", implicit_vars=True, dry_run=False)
-    manifest = "testing/test/data/reftest-reorder.list"
+    manifest = DATA_PATH.joinpath("reftest-reorder.list")
     kind = Kind.LIST
     path = "fuzzy-if(cocoaWidget,0-80,0-76800) fuzzy-if(appleSilicon,0-80,0-76800) skip-if(Android) fuzzy-if(winWidget,0-63,0-76799) fuzzy-if(gtkWidget,0-70,0-2032) HTTP(..) == short.mp4.firstframe.html short.mp4.firstframe-ref.html"
     anyjs = None
