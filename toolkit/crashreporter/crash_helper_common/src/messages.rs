@@ -7,33 +7,13 @@ use minidump_writer::minidump_writer::{AuxvType, DirectAuxvDumpInfo};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 use std::{
-    array::TryFromSliceError,
-    ffi::{CString, FromBytesWithNulError, NulError, OsString},
+    ffi::{CString, OsString},
     mem::size_of,
 };
-use thiserror::Error;
 #[cfg(target_os = "windows")]
 use windows_sys::Win32::System::Diagnostics::Debug::{CONTEXT, EXCEPTION_RECORD};
 
-use crate::{breakpad::Pid, ipc_connector::AncillaryData, BreakpadString};
-
-#[derive(Debug, Error)]
-pub enum MessageError {
-    #[error("Nul terminator found within a string")]
-    InteriorNul(#[from] NulError),
-    #[error("The message contained an invalid payload")]
-    InvalidData,
-    #[error("Message kind is invalid")]
-    InvalidKind,
-    #[error("Invalid message size")]
-    InvalidSize(#[from] TryFromSliceError),
-    #[error("Missing ancillary data")]
-    MissingAncillary,
-    #[error("Missing nul terminator")]
-    MissingNul(#[from] FromBytesWithNulError),
-    #[error("Truncated message")]
-    Truncated,
-}
+use crate::{breakpad::Pid, errors::MessageError, ipc_connector::AncillaryData, BreakpadString};
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, FromPrimitive, ToPrimitive, PartialEq)]
@@ -626,7 +606,9 @@ pub struct RegisterChildProcess {
 
 impl RegisterChildProcess {
     pub fn new(ipc_endpoint: AncillaryData) -> RegisterChildProcess {
-        RegisterChildProcess { ipc_endpoint }
+        RegisterChildProcess {
+            ipc_endpoint,
+        }
     }
 
     fn payload_size(&self) -> usize {

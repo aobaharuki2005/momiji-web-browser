@@ -11,20 +11,17 @@ mod breakpad;
 mod ipc_channel;
 mod ipc_connector;
 mod ipc_listener;
-mod ipc_queue;
 mod platform;
 
-use messages::MessageError;
+use errors::MessageError;
 
 // Re-export the platform-specific types and functions
 pub use crate::breakpad::{BreakpadChar, BreakpadData, BreakpadRawData, Pid};
 pub use crate::ipc_channel::{IPCChannel, IPCClientChannel};
 pub use crate::ipc_connector::{
-    AncillaryData, IPCConnector, IPCConnectorKey, IPCEvent, RawAncillaryData,
-    INVALID_ANCILLARY_DATA,
+    AncillaryData, IPCConnector, IPCEvent, RawAncillaryData, INVALID_ANCILLARY_DATA,
 };
-pub use crate::ipc_listener::{IPCListener, IPCListenerError};
-pub use crate::ipc_queue::IPCQueue;
+pub use crate::ipc_listener::IPCListener;
 pub use crate::platform::ProcessHandle;
 
 #[cfg(target_os = "windows")]

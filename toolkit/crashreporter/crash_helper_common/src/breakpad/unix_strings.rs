@@ -9,7 +9,7 @@ use std::{
     os::unix::ffi::OsStringExt,
 };
 
-use crate::{messages::MessageError, BreakpadString};
+use crate::{errors::MessageError, BreakpadString};
 
 use super::BreakpadChar;
 
