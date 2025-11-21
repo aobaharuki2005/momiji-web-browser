@@ -197,12 +197,36 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_lna_feature_enabled).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().isLnaFeatureEnabled
+            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    context.components.core.engine.settings.lnaFeatureEnabled =
+                        newValue as Boolean
+                    return super.onPreferenceChange(preference, newValue)
+                }
+            }
+        }
+
         requirePreference<SwitchPreference>(R.string.pref_key_enable_lna_blocking_enabled).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().isLnaBlockingEnabled
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {
                 override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                     context.components.core.engine.settings.lnaBlockingEnabled =
+                        newValue as Boolean
+                    return super.onPreferenceChange(preference, newValue)
+                }
+            }
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_lna_tracker_blocking_enabled).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().isLnaTrackerBlockingEnabled
+            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    context.components.core.engine.settings.lnaTrackerBlockingEnabled =
                         newValue as Boolean
                     return super.onPreferenceChange(preference, newValue)
                 }

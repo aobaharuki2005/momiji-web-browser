@@ -445,6 +445,8 @@
     <string name="pref_key_enable_address_sync" translatable="false">pref_key_enable_address_sync</string>"
     <string name="pref_key_enable_toolbar_customization">pref_key_enable_toolbar_customization</string>
     <string name="pref_key_enable_lna_blocking_enabled" translatable="false">pref_key_enable_lna_blocking_enabled</string>
+    <string name="pref_key_enable_lna_tracker_blocking_enabled" translatable="false">pref_key_enable_lna_tracker_blocking_enabled</string>
+    <string name="pref_key_enable_lna_feature_enabled" translatable="false">pref_key_enable_lna_feature_enabled</string>
     <string name="pref_key_enable_isolated_process" translatable="false">pref_key_enable_isolated_process</string>
     <string name="pref_key_enable_app_zygote_process" translatable="false">pref_key_enable_app_zygote_process</string>
 

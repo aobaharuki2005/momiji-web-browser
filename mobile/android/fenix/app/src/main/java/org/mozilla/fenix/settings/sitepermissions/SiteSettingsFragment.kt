@@ -91,7 +91,7 @@ class SiteSettingsFragment : PreferenceFragmentCompat() {
             // not need to be bound
             .filter { it != PhoneFeature.AUTOPLAY_INAUDIBLE }
             .excludeFeatures(
-                condition = { !requireContext().settings().isLnaBlockingEnabled },
+                condition = { !requireContext().settings().isLnaFeatureEnabled },
                 features = setOf(
                     PhoneFeature.LOCAL_DEVICE_ACCESS,
                     PhoneFeature.LOCAL_NETWORK_ACCESS,

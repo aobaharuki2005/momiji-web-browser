@@ -122,7 +122,7 @@ class TrustPanelStoreTest {
         whenever(sitePermissions.localNetworkAccess).thenReturn(ALLOWED)
 
         whenever(permissionHighlights.isAutoPlayBlocking).thenReturn(true)
-        whenever(settings.isLnaBlockingEnabled).thenReturn(false)
+        whenever(settings.isLnaFeatureEnabled).thenReturn(false)
 
         val state = TrustPanelStore.createWebsitePermissionState(
             settings = settings,
@@ -156,7 +156,7 @@ class TrustPanelStoreTest {
         whenever(sitePermissions.localDeviceAccess).thenReturn(ALLOWED)
         whenever(sitePermissions.localNetworkAccess).thenReturn(ALLOWED)
         whenever(permissionHighlights.isAutoPlayBlocking).thenReturn(true)
-        whenever(settings.isLnaBlockingEnabled).thenReturn(true)
+        whenever(settings.isLnaFeatureEnabled).thenReturn(true)
 
         val state = TrustPanelStore.createWebsitePermissionState(
             settings = settings,

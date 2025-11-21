@@ -194,6 +194,8 @@ class Core(
             dohAutoselectEnabled = FxNimbus.features.doh.value().autoselectEnabled,
             bannedPorts = FxNimbus.features.networkingBannedPorts.value().bannedPortList,
             lnaBlockingEnabled = context.settings().isLnaBlockingEnabled,
+            lnaFeatureEnabled = context.settings().isLnaFeatureEnabled,
+            lnaTrackerBlockingEnabled = context.settings().isLnaTrackerBlockingEnabled,
             crliteChannel = FxNimbus.features.pki.value().crliteChannel,
         )
 
