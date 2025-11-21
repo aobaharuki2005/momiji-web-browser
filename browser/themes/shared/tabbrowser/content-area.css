@@ -372,6 +372,7 @@ split-view-footer {
 }
 
 #ask-chat-shortcuts {
+  font: menu;
   max-width: 345px;
 }
 
