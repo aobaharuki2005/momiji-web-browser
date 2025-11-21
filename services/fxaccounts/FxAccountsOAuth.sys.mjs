@@ -200,13 +200,12 @@ export class FxAccountsOAuth {
         verifier,
         OAUTH_CLIENT_ID
       );
-    if (
-      requestedScopes.includes(SCOPE_APP_SYNC) &&
-      !scope.includes(SCOPE_APP_SYNC)
-    ) {
+    const requestedSync = requestedScopes.includes(SCOPE_APP_SYNC);
+    const grantedSync = scope.includes(SCOPE_APP_SYNC);
+    if (requestedSync && !grantedSync) {
       throw new Error(ERROR_SYNC_SCOPE_NOT_GRANTED);
     }
-    if (scope.includes(SCOPE_APP_SYNC) && !keys_jwe) {
+    if (grantedSync && !keys_jwe) {
       throw new Error(ERROR_NO_KEYS_JWE);
     }
     let scopedKeys;

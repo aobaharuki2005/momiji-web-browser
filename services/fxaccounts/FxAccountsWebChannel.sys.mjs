@@ -697,8 +697,14 @@ FxAccountsWebChannelHelpers.prototype = {
     // Remember the account for future merge warnings etc.
     this.setPreviousAccountNameHashPref(email);
 
-    // Then, we persist the sync keys
-    await this._fxAccounts._internal.setScopedKeys(scopedKeys);
+    if (!scopedKeys) {
+      log.info(
+        "OAuth login completed without scoped keys; skipping Sync key storage"
+      );
+    } else {
+      // Then, we persist the sync keys
+      await this._fxAccounts._internal.setScopedKeys(scopedKeys);
+    }
 
     try {
       let parsedRequestedServices;
@@ -846,6 +852,9 @@ FxAccountsWebChannelHelpers.prototype = {
       multiService: true,
       pairing: lazy.pairingEnabled,
       choose_what_to_sync: true,
+      // This capability is for telling FxA that the current build can accept
+      // accounts without passwords/sync keys (third-party auth)
+      keys_optional: true,
       engines,
     };
   },

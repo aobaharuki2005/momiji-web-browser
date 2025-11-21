@@ -412,15 +412,23 @@ add_test(function test_getKeyForScope() {
 
 add_task(async function test_oauth_verification() {
   let fxa = new MockFxAccounts();
-  let user = getTestUser("eusebius");
-  user.verified = true;
-
+  let user = getTestUser("foo");
+  user.verified = false;
   await fxa.setSignedInUser(user);
   let fetched = await fxa.getSignedInUser();
   Assert.ok(!fetched.verified);
 
   fxa._withCurrentAccountState(state => {
     state.updateUserAccountData({ scopedKeys: { test: { foo: "bar" } } });
+  });
+
+  fetched = await fxa.getSignedInUser();
+  Assert.ok(!fetched.verified); // keys alone don’t flip verification
+
+  // Simulate the follow-up login message that marks the account verified.
+  await fxa._internal.updateUserAccountData({
+    uid: user.uid,
+    verified: true,
   });
 
   fetched = await fxa.getSignedInUser();

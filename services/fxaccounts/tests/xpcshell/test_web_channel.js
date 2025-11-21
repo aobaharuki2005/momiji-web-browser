@@ -773,6 +773,46 @@ add_task(async function test_helpers_persist_requested_services() {
   });
 });
 
+add_task(async function test_helpers_oauth_login_defers_sync_without_keys() {
+  const accountState = {
+    uid: "uid123",
+    sessionToken: "session-token",
+    email: "user@example.com",
+    requestedServices: "",
+  };
+  const destroyOAuthToken = sinon.stub().resolves();
+  const completeOAuthFlow = sinon
+    .stub()
+    .resolves({ scopedKeys: null, refreshToken: "refresh-token" });
+  const setScopedKeys = sinon.spy();
+  const setUserVerified = sinon.spy();
+  const updateUserAccountData = sinon.stub().resolves();
+
+  const helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      _internal: {
+        async getUserAccountData() {
+          return accountState;
+        },
+        completeOAuthFlow,
+        destroyOAuthToken,
+        setScopedKeys,
+        updateUserAccountData,
+        setUserVerified,
+      },
+    },
+  });
+
+  await helpers.oauthLogin({ code: "code", state: "state" });
+
+  Assert.ok(setScopedKeys.notCalled);
+  Assert.ok(updateUserAccountData.calledOnce);
+  Assert.deepEqual(
+    JSON.parse(updateUserAccountData.firstCall.args[0].requestedServices),
+    null
+  );
+});
+
 add_test(function test_helpers_open_sync_preferences() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {},

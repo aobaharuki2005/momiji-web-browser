@@ -587,15 +587,6 @@ export class FxAccounts {
         await this.signOut();
         return null;
       }
-      // XXX - these comments reflect old baggage, we should clean this up.
-      // data.verified is the sessionToken status. oauth cares only about whether it has the keys.
-      // (Note that this never forces `.verified` to `true` even if we *do* have the keys, which
-      // seems slightly odd)
-      // Note that is the primary-password is locked we can't get the scopedKeys even if they exist, so
-      // we don't want to pretend the user is unverified in that case.
-      if (Services.logins.isLoggedIn && !data.scopedKeys) {
-        data.verified = false;
-      }
       delete data.scopedKeys;
 
       let profileData = null;
