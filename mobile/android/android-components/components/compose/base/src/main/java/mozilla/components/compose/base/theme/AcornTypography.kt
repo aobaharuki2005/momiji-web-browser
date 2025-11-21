@@ -5,7 +5,6 @@
 package mozilla.components.compose.base.theme
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -18,6 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -179,65 +180,51 @@ private fun NewTypographyPreview() {
     var textShadingEnabled by remember { mutableStateOf(true) }
 
     AcornTheme(colors = lightColorPalette) {
-        Column(
-            modifier = Modifier
-            .width(200.dp)
-            .background(AcornTheme.colors.layer1),
+        Surface {
+            Column(
+                modifier = Modifier
+                    .width(200.dp)
+                    .padding(all = 8.dp),
+            ) {
+                Row {
+                    Column {
+                        Text(
+                            text = "Line Height",
+                            style = AcornTheme.typography.caption,
+                            modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer),
+                        )
 
-        ) {
-            Row {
-                Column(
-                    modifier = Modifier.padding(start = 8.dp),
-                ) {
-                    Text(
-                        text = "Line Height",
-                        style = AcornTheme.typography.caption,
-                        modifier = Modifier.background(AcornTheme.colors.layerInformation),
-                    )
+                        Spacer(Modifier.height(4.dp))
 
-                    Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Text Size",
+                            style = AcornTheme.typography.caption,
+                            modifier = Modifier.background(MaterialTheme.colorScheme.errorContainer),
+                        )
+                    }
 
-                    Text(
-                        text = "Text Size",
-                        style = AcornTheme.typography.caption,
-                        modifier = Modifier.background(AcornTheme.colors.layerCritical),
+                    Spacer(modifier = Modifier.size(8.dp))
+
+                    Switch(
+                        checked = textShadingEnabled,
+                        onCheckedChange = { textShadingEnabled = it },
                     )
                 }
 
-                Spacer(modifier = Modifier.size(8.dp))
-
-                Switch(
-                    checked = textShadingEnabled,
-                    onCheckedChange = { textShadingEnabled = it },
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp, horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-            }
-
-            Column(
-                modifier = Modifier
-                    .background(AcornTheme.colors.layer1)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-                for (index in 0..textStyles.size - 1) {
-                    Row(
-                        modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        LineHeightText(
-                            text = textStyles[index].first,
-                            style = textStyles[index].second,
-                            textShadingEnabled = textShadingEnabled,
-                        )
+                Column {
+                    for (index in 0..<textStyles.size) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            LineHeightText(
+                                text = textStyles[index].first,
+                                style = textStyles[index].second,
+                                textShadingEnabled = textShadingEnabled,
+                            )
+                        }
                     }
                 }
             }
@@ -258,7 +245,7 @@ private fun LineHeightText(
     Box(
         modifier = Modifier
             .width(intrinsicSize = IntrinsicSize.Max)
-            .thenConditional(modifier = Modifier.background(color = AcornTheme.colors.layerInformation)) {
+            .thenConditional(modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)) {
                 textShadingEnabled
             },
     ) {
@@ -266,7 +253,7 @@ private fun LineHeightText(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(convertedTextSize)
-                .thenConditional(modifier = Modifier.background(color = AcornTheme.colors.layerCritical)) {
+                .thenConditional(modifier = Modifier.background(color = MaterialTheme.colorScheme.errorContainer)) {
                     textShadingEnabled
                 }
                 .align(alignment = Alignment.Center),
