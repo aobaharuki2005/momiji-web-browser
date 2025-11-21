@@ -12,11 +12,7 @@ const { NimbusTestUtils } = ChromeUtils.importESModule(
 
 const BACKUP_DIR_PREF_NAME = "browser.backup.location";
 const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
-const BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME =
-  "browser.backup.archive.overridePlatformCheck";
 const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
-const BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME =
-  "browser.backup.restore.overridePlatformCheck";
 const SANITIZE_ON_SHUTDOWN_PREF_NAME = "privacy.sanitize.sanitizeOnShutdown";
 const SELECTABLE_PROFILES_CREATED_PREF_NAME = "browser.profiles.created";
 
@@ -51,32 +47,20 @@ add_setup(async () => {
 
 add_task(async function test_archive_killswitch_enrollment() {
   let cleanupExperiment;
-  const savedPref = Services.prefs.getBoolPref(
-    BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-    false
-  );
   await archiveTemplate({
     internalReason: "nimbus",
     async disable() {
-      Services.prefs.setBoolPref(
-        BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-        false
-      );
       cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
         featureId: "backupService",
         value: { archiveKillswitch: true },
       });
     },
     async enable() {
-      Services.prefs.setBoolPref(
-        BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-        savedPref
-      );
       await cleanupExperiment();
     },
     // Nimbus calls onUpdate if any experiments are running, meaning that the
     // observer service will be notified twice, i.e. one spurious call.
-    startup: 0,
+    startup: 1,
   });
 });
 
@@ -84,7 +68,6 @@ add_task(async function test_archive_enabled_pref() {
   await archiveTemplate({
     internalReason: "pref",
     async disable() {
-      Services.prefs.unlockPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
       Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, false);
     },
     async enable() {
@@ -94,26 +77,20 @@ add_task(async function test_archive_enabled_pref() {
 });
 
 add_task(async function test_archive_policy() {
-  let storedDefault;
   await archiveTemplate({
     internalReason: "policy",
-    disable: () => {
-      Services.prefs.unlockPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
-      const defaults = Services.prefs.getDefaultBranch("");
-      storedDefault = defaults.getBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
-      defaults.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, false);
-      defaults.lockPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
-      return 0;
+    async disable() {
+      Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, false);
+      Services.prefs.lockPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
+      return 1;
     },
-    enable: () => {
-      const defaults = Services.prefs.getDefaultBranch("");
-      defaults.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, storedDefault);
+    async enable() {
       Services.prefs.unlockPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
       Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true);
-      return 0;
+      return 1;
     },
     // At startup, there wouldn't have been a spurious call.
-    startup: 0,
+    startup: -1,
   });
 });
 
@@ -141,88 +118,22 @@ add_task(async function test_archive_selectable_profiles() {
   });
 });
 
-add_task(async function test_archive_disabled_unsupported_os() {
-  const sandbox = sinon.createSandbox();
-  const archiveWasEnabled = Services.prefs.getBoolPref(
-    BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-    false
-  );
-  Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME, false);
-  sandbox.stub(BackupService, "checkOsSupportsBackup").returns(false);
-  const cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
-    featureId: "backupService",
-    value: { archiveKillswitch: false },
-  });
-
-  try {
-    const bs = new BackupService();
-    const status = bs.archiveEnabledStatus;
-    Assert.equal(false, status.enabled);
-    Assert.equal("os version", status.internalReason);
-  } finally {
-    sandbox.restore();
-    Services.prefs.setBoolPref(
-      BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-      archiveWasEnabled
-    );
-    await cleanupExperiment();
-  }
-});
-
-add_task(async function test_archive_enabled_supported_os() {
-  const sandbox = sinon.createSandbox();
-  const archiveWasEnabled = Services.prefs.getBoolPref(
-    BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-    false
-  );
-  Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME, false);
-  sandbox.stub(BackupService, "checkOsSupportsBackup").returns(true);
-  const cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
-    featureId: "backupService",
-    value: { archiveKillswitch: false },
-  });
-  try {
-    const bs = new BackupService();
-    const status = bs.archiveEnabledStatus;
-    Assert.equal(true, status.enabled);
-  } finally {
-    sandbox.restore();
-    Services.prefs.setBoolPref(
-      BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-      archiveWasEnabled
-    );
-    await cleanupExperiment();
-  }
-});
-
 add_task(async function test_restore_killswitch_enrollment() {
   let cleanupExperiment;
-  const savedPref = Services.prefs.getBoolPref(
-    BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME,
-    false
-  );
   await restoreTemplate({
     internalReason: "nimbus",
     async disable() {
-      Services.prefs.setBoolPref(
-        BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME,
-        false
-      );
       cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
         featureId: "backupService",
         value: { restoreKillswitch: true },
       });
     },
     async enable() {
-      Services.prefs.setBoolPref(
-        BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME,
-        savedPref
-      );
       await cleanupExperiment();
     },
     // Nimbus calls onUpdate if any experiments are running, meaning that the
     // observer service will be notified twice, i.e. one spurious call.
-    startup: 0,
+    startup: 1,
   });
 });
 
@@ -239,24 +150,20 @@ add_task(async function test_restore_enabled_pref() {
 });
 
 add_task(async function test_restore_policy() {
-  let storedDefault;
   await restoreTemplate({
     internalReason: "policy",
     async disable() {
-      const defaults = Services.prefs.getDefaultBranch("");
-      storedDefault = defaults.getBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME);
-      defaults.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, false);
+      Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, false);
       Services.prefs.lockPref(BACKUP_RESTORE_ENABLED_PREF_NAME);
-      return 0;
+      return 1;
     },
     async enable() {
       Services.prefs.unlockPref(BACKUP_RESTORE_ENABLED_PREF_NAME);
-      const defaults = Services.prefs.getDefaultBranch("");
-      defaults.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, storedDefault);
-      return 0;
+      Services.prefs.setBoolPref(BACKUP_RESTORE_ENABLED_PREF_NAME, true);
+      return 1;
     },
     // At startup, there wouldn't have been a spurious call.
-    startup: 0,
+    startup: -1,
   });
 });
 
