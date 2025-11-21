@@ -72,7 +72,8 @@
 }
 
 html|div[data-category],
-groupbox[data-category] {
+groupbox[data-category],
+setting-group[data-category] {
   margin: 0 0 32px;
 }
 
