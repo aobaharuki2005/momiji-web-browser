@@ -277,3 +277,12 @@ addAccessibleTask(
   },
   { topLevel: true, chrome: true }
 );
+
+addAccessibleTask(
+  `<input id="input" type="text" title="title" placeholder="placeholder"></input>`,
+  async function testInputPlaceHolder(browser, docAcc) {
+    const input = findAccessibleChildByID(docAcc, "input");
+    testName(input, "title");
+  },
+  { topLevel: true, chrome: true }
+);
