@@ -1388,7 +1388,7 @@ void nsPresContext::SetFullZoom(float aZoom) {
   // handle that edge case by just falling back to 1.0f here, so we can render
   // something, and particularly so we don't do something invalid like trying
   // to allocate a zero-sized or infinite-sized surface.)
-  if (MOZ_UNLIKELY(!std::isfinite(aZoom) || aZoom <= 0.0f)) {
+  if (MOZ_UNLIKELY(!std::isfinite(aZoom) || aZoom < 1e-6f)) {
     aZoom = 1.0f;
   }
 
