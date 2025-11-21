@@ -797,7 +797,7 @@ impl Moz2dBlobImageHandler {
             let annotation_string = format!(
                 "Error: {:x} loading: {}",
                 unsafe { GetLastError() },
-                annotation_path.display()
+                annotation_path.to_string_lossy()
             );
             unsafe {
                 gfx_wr_set_crash_annotation(
