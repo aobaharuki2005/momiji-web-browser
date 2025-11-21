@@ -1408,16 +1408,6 @@ export class TelemetryFeed {
       case at.REPORT_CONTENT_SUBMIT:
         this.handleReportContentUserEvent(action);
         break;
-      case at.TRENDING_SEARCH_IMPRESSION:
-      case at.TRENDING_SEARCH_SUGGESTION_OPEN:
-        this.handleTrendingSearchUserEvent(action);
-        break;
-      case at.TRENDING_SEARCH_TOGGLE_COLLAPSE:
-        // only send telemetry if a user is collapsing the widget
-        if (!action.data.collapsed) {
-          this.handleTrendingSearchUserEvent(action);
-        }
-        break;
       case at.WIDGETS_LISTS_USER_EVENT:
       case at.WIDGETS_LISTS_USER_IMPRESSION:
       case at.WIDGETS_TIMER_USER_EVENT:
@@ -1477,27 +1467,6 @@ export class TelemetryFeed {
           break;
         case "WIDGETS_TIMER_USER_IMPRESSION":
           Glean.newtab.widgetsTimerImpression.record(payload);
-          break;
-      }
-    }
-  }
-
-  handleTrendingSearchUserEvent(action) {
-    const session = this.sessions.get(au.getPortIdOfSender(action));
-    if (session) {
-      const payload = {
-        newtab_visit_id: session.visit_id,
-        variant: action.data.variant || "",
-      };
-      switch (action.type) {
-        case "TRENDING_SEARCH_IMPRESSION":
-          Glean.newtab.trendingSearchImpression.record(payload);
-          break;
-        case "TRENDING_SEARCH_TOGGLE_COLLAPSE":
-          Glean.newtab.trendingSearchDismiss.record(payload);
-          break;
-        case "TRENDING_SEARCH_SUGGESTION_OPEN":
-          Glean.newtab.trendingSearchSuggestionOpen.record(payload);
           break;
       }
     }
@@ -1738,7 +1707,6 @@ export class TelemetryFeed {
   }
 
   handleSetPref(action) {
-    const prefs = this.store.getState()?.Prefs.values;
     const session = this.sessions.get(au.getPortIdOfSender(action));
     if (!session) {
       return;
@@ -1749,15 +1717,6 @@ export class TelemetryFeed {
           newtab_visit_id: session.session_id,
           weather_display_mode: action.data.value,
         });
-        break;
-      case "trendingSearch.enabled":
-        if (!action.data.value) {
-          const variant = prefs["trendingSearch.variant"] || "";
-          Glean.newtab.trendingSearchDismiss.record({
-            newtab_visit_id: session.session_id,
-            variant,
-          });
-        }
         break;
       case "widgets.lists.enabled":
         Glean.newtab.widgetsListsChangeDisplay.record({
