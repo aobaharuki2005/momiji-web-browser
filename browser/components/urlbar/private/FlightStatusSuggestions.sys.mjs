@@ -207,7 +207,7 @@ export class FlightStatusSuggestions extends RealtimeSuggestProvider {
       },
       [`departure_date_${index}`]: {
         textContent: new Intl.DateTimeFormat(undefined, {
-          month: "long",
+          month: "short",
           day: "numeric",
           weekday: "short",
           timeZone: departureTimeZone,
