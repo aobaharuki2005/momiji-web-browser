@@ -6,7 +6,6 @@ package org.mozilla.fenix.settings.biometric.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.utils.getResolvedAttrResId
@@ -53,19 +54,20 @@ internal fun UnlockScreen(
     onUnlockClicked: () -> Unit,
     onLeaveClicked: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(FirefoxTheme.colors.layer1)
-            .padding(bottom = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Spacer(modifier = Modifier.height(32.dp))
+    Surface {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Header(title)
+            Header(title)
 
-        Footer(onUnlockClicked, onLeaveClicked)
+            Footer(onUnlockClicked, onLeaveClicked)
+        }
     }
 }
 
@@ -81,7 +83,6 @@ private fun Header(title: String) {
 
         Text(
             text = title,
-            color = FirefoxTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
             style = FirefoxTheme.typography.headline6,
             maxLines = 1,
@@ -140,32 +141,20 @@ private fun Footer(onUnlockClicked: () -> Unit, onLeaveClicked: () -> Unit) {
     }
 }
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, widthDp = PHONE_WIDTH, heightDp = PHONE_HEIGHT)
+@FlexibleWindowLightDarkPreview
 @Composable
-private fun ScreenPreviewLightPhone() = ScreenPreview(Theme.Light)
+private fun UnlockLoginsScreenPreview() = UnlockLoginsScreenContent(Theme.getTheme())
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, widthDp = PHONE_WIDTH, heightDp = PHONE_HEIGHT)
 @Composable
-private fun ScreenPreviewDarkPhone() = ScreenPreview(Theme.Dark)
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, widthDp = PHONE_WIDTH, heightDp = PHONE_HEIGHT)
-@Composable
-private fun ScreenPreviewPrivatePhone() = ScreenPreview(Theme.Private)
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, widthDp = TABLET_WIDTH, heightDp = TABLET_HEIGHT)
-@Composable
-private fun ScreenPreviewLightTablet() = ScreenPreview(Theme.Light)
+private fun UnlockLoginsScreenPreviewPrivatePhone() = UnlockLoginsScreenContent(Theme.Private)
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, widthDp = TABLET_WIDTH, heightDp = TABLET_HEIGHT)
 @Composable
-private fun ScreenPreviewDarkTablet() = ScreenPreview(Theme.Dark)
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, widthDp = TABLET_WIDTH, heightDp = TABLET_HEIGHT)
-@Composable
-private fun ScreenPreviewPrivateTablet() = ScreenPreview(Theme.Private)
+private fun UnlockLoginsScreenPreviewPrivateTablet() = UnlockLoginsScreenContent(Theme.Private)
 
 @Composable
-private fun ScreenPreview(theme: Theme) {
+private fun UnlockLoginsScreenContent(theme: Theme) {
     FirefoxTheme(theme) {
         UnlockScreen(
             title = "Unlock to view your secure feature",
