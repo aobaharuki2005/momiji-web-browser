@@ -6,7 +6,7 @@
 use crate::platform::linux::{set_socket_cloexec, set_socket_default_flags};
 #[cfg(target_os = "macos")]
 use crate::platform::macos::{set_socket_cloexec, set_socket_default_flags};
-use crate::{ignore_eintr, IntoRawAncillaryData, ProcessHandle, IO_TIMEOUT};
+use crate::{ignore_eintr, IntoRawAncillaryData, PlatformError, ProcessHandle, IO_TIMEOUT};
 
 use nix::{
     cmsg_space,
@@ -48,7 +48,7 @@ impl IPCConnector {
     /// will not be possible to inerhit this connector in a child process.
     pub(crate) fn from_fd(socket: OwnedFd) -> Result<IPCConnector, IPCError> {
         let connector = IPCConnector::from_fd_inheritable(socket)?;
-        set_socket_cloexec(connector.socket.as_fd()).map_err(IPCError::System)?;
+        set_socket_cloexec(connector.socket.as_fd()).map_err(IPCError::CreationFailure)?;
         Ok(connector)
     }
 
@@ -56,7 +56,7 @@ impl IPCConnector {
     /// `FD_CLOEXEC` flag will not be set on the underlying socket and thus it
     /// will be possible to inherit this connector in a child process.
     pub(crate) fn from_fd_inheritable(socket: OwnedFd) -> Result<IPCConnector, IPCError> {
-        set_socket_default_flags(socket.as_fd()).map_err(IPCError::System)?;
+        set_socket_default_flags(socket.as_fd()).map_err(IPCError::CreationFailure)?;
         Ok(IPCConnector { socket })
     }
 
@@ -106,15 +106,15 @@ impl IPCConnector {
         self.socket.as_fd()
     }
 
-    pub fn poll(&self, flags: PollFlags) -> Result<(), Errno> {
+    pub fn poll(&self, flags: PollFlags) -> Result<(), PlatformError> {
         let timeout = PollTimeout::from(IO_TIMEOUT);
         let res = ignore_eintr!(poll(
             &mut [PollFd::new(self.socket.as_fd(), flags)],
             timeout
         ));
         match res {
-            Err(e) => Err(e),
-            Ok(_res @ 0) => Err(Errno::EAGAIN),
+            Err(e) => Err(PlatformError::PollFailure(e)),
+            Ok(_res @ 0) => Err(PlatformError::PollFailure(Errno::EAGAIN)),
             Ok(_) => Ok(()),
         }
     }
@@ -137,14 +137,14 @@ impl IPCConnector {
         let header = self.recv_header()?;
 
         if header.kind != T::kind() {
-            return Err(IPCError::ReceptionFailure(Errno::EBADMSG));
+            return Err(IPCError::UnexpectedMessage(header.kind));
         }
 
-        let (data, _) = self.recv(header.size).map_err(IPCError::ReceptionFailure)?;
+        let (data, _) = self.recv(header.size)?;
         T::decode(&data, None).map_err(IPCError::from)
     }
 
-    fn send_nonblock(&self, buff: &[u8], fd: &Option<AncillaryData>) -> Result<(), Errno> {
+    fn send_nonblock(&self, buff: &[u8], fd: &Option<AncillaryData>) -> Result<(), PlatformError> {
         let iov = [IoSlice::new(buff)];
         let scm_fds: Vec<i32> = fd.iter().map(|fd| fd.as_raw_fd()).collect();
         let scm = ControlMessage::ScmRights(&scm_fds);
@@ -162,19 +162,17 @@ impl IPCConnector {
                 if bytes_sent == buff.len() {
                     Ok(())
                 } else {
-                    // TODO: This should never happen but we might want to put a
-                    // better error message here.
-                    Err(Errno::EMSGSIZE)
+                    Err(PlatformError::SendTooShort(buff.len(), bytes_sent))
                 }
             }
-            Err(code) => Err(code),
+            Err(code) => Err(PlatformError::SendFailure(code)),
         }
     }
 
-    fn send(&self, buff: &[u8], fd: Option<AncillaryData>) -> Result<(), Errno> {
+    fn send(&self, buff: &[u8], fd: Option<AncillaryData>) -> Result<(), PlatformError> {
         let res = self.send_nonblock(buff, &fd);
         match res {
-            Err(_code @ Errno::EAGAIN) => {
+            Err(PlatformError::SendFailure(Errno::EAGAIN)) => {
                 // If the socket was not ready to send data wait for it to
                 // become unblocked then retry sending just once.
                 self.poll(PollFlags::POLLOUT)?;
@@ -185,16 +183,14 @@ impl IPCConnector {
     }
 
     pub fn recv_header(&self) -> Result<messages::Header, IPCError> {
-        let (header, _) = self
-            .recv(messages::HEADER_SIZE)
-            .map_err(IPCError::ReceptionFailure)?;
+        let (header, _) = self.recv(messages::HEADER_SIZE)?;
         messages::Header::decode(&header).map_err(IPCError::BadMessage)
     }
 
     fn recv_nonblock(
         &self,
         expected_size: usize,
-    ) -> Result<(Vec<u8>, Option<AncillaryData>), Errno> {
+    ) -> Result<(Vec<u8>, Option<AncillaryData>), PlatformError> {
         let mut buff: Vec<u8> = vec![0; expected_size];
         let mut cmsg_buffer = cmsg_space!(RawFd);
         let mut iov = [IoSliceMut::new(&mut buff)];
@@ -221,7 +217,7 @@ impl IPCConnector {
                 Some(&mut cmsg_buffer),
                 MsgFlags::empty(),
             ))?,
-            Err(e) => return Err(e),
+            Err(e) => return Err(PlatformError::ReceiveFailure(e)),
             Ok(val) => val,
         };
 
@@ -229,31 +225,31 @@ impl IPCConnector {
             if let ControlMessageOwned::ScmRights(fds) = cmsg {
                 fds.first().map(|&fd| unsafe { OwnedFd::from_raw_fd(fd) })
             } else {
-                return Err(Errno::EBADMSG);
+                return Err(PlatformError::ReceiveMissingCredentials);
             }
         } else {
             None
         };
 
         if res.bytes != expected_size {
-            // TODO: This should only ever happen if the other side has gone rogue,
-            // we need a better error message here.
-            return Err(Errno::EBADMSG);
+            return Err(PlatformError::ReceiveTooShort(expected_size, res.bytes));
         }
 
         Ok((buff, fd))
     }
 
-    pub fn recv(&self, expected_size: usize) -> Result<(Vec<u8>, Option<AncillaryData>), Errno> {
+    pub fn recv(&self, expected_size: usize) -> Result<(Vec<u8>, Option<AncillaryData>), IPCError> {
         let res = self.recv_nonblock(expected_size);
         match res {
-            Err(_code @ Errno::EAGAIN) => {
+            Err(PlatformError::ReceiveFailure(Errno::EAGAIN)) => {
                 // If the socket was not ready to receive data wait for it to
                 // become unblocked then retry receiving just once.
-                self.poll(PollFlags::POLLIN)?;
+                self.poll(PollFlags::POLLIN)
+                    .map_err(IPCError::ReceptionFailure)?;
                 self.recv_nonblock(expected_size)
             }
             _ => res,
         }
+        .map_err(IPCError::ReceptionFailure)
     }
 }
