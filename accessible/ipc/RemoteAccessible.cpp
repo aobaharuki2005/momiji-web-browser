@@ -1297,9 +1297,7 @@ Relation RemoteAccessible::RelationByType(RelationType aType) const {
   // both aria-labelledby and a <figcaption> must return two LABELLED_BY
   // targets: the aria-labelledby and then the <figcaption>.
   if (aType == RelationType::LABELLED_BY) {
-    for (RemoteAccessible* label : LegendsOrCaptions()) {
-      rel.AppendTarget(label);
-    }
+    rel.AppendIter(new ArrayAccIterator(LegendsOrCaptions()));
   } else if (aType == RelationType::LABEL_FOR) {
     if (RemoteAccessible* labelTarget = LegendOrCaptionFor()) {
       rel.AppendTarget(labelTarget);
@@ -1309,12 +1307,12 @@ Relation RemoteAccessible::RelationByType(RelationType aType) const {
   return rel;
 }
 
-nsTArray<RemoteAccessible*> RemoteAccessible::LegendsOrCaptions() const {
-  nsTArray<RemoteAccessible*> children;
+nsTArray<Accessible*> RemoteAccessible::LegendsOrCaptions() const {
+  nsTArray<Accessible*> children;
   auto AddChildWithTag = [this, &children](nsAtom* aTarget) {
     uint32_t count = ChildCount();
     for (uint32_t c = 0; c < count; ++c) {
-      RemoteAccessible* child = RemoteChildAt(c);
+      Accessible* child = ChildAt(c);
       MOZ_ASSERT(child);
       if (child->TagName() == aTarget) {
         children.AppendElement(child);
