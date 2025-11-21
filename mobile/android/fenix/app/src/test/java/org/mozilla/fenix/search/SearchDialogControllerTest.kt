@@ -34,12 +34,13 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Toolbar
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.search.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.HISTORY_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.search.TABS_SEARCH_ENGINE_ID
@@ -81,6 +82,8 @@ class SearchDialogControllerTest {
     private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
     private lateinit var browserStore: BrowserStore
 
+    private var currentMode: BrowsingMode = BrowsingMode.Normal
+
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
 
@@ -101,6 +104,8 @@ class SearchDialogControllerTest {
             every { id } returns R.id.searchDialogFragment
         }
         every { activity.components.nimbus.events } returns mockk(relaxUnitFun = true)
+
+        currentMode = BrowsingMode.Normal
     }
 
     @Test
@@ -119,7 +124,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = url,
                 newTab = false,
                 forceSearch = false,
-                private = activity.browsingModeManager.mode.isPrivate,
+                private = currentMode.isPrivate,
                 searchEngine = searchEngine,
             )
         }
@@ -152,7 +157,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = url,
                 newTab = false,
                 forceSearch = false,
-                private = activity.browsingModeManager.mode.isPrivate,
+                private = currentMode.isPrivate,
                 searchEngine = searchEngine,
             )
         }
@@ -183,7 +188,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = url,
                 newTab = false,
                 forceSearch = true,
-                private = activity.browsingModeManager.mode.isPrivate,
+                private = currentMode.isPrivate,
                 searchEngine = searchEngine,
             )
         }
@@ -229,7 +234,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = searchTerm,
                 newTab = false,
                 forceSearch = true,
-                private = activity.browsingModeManager.mode.isPrivate,
+                private = currentMode.isPrivate,
                 searchEngine = searchEngine,
             )
         }
@@ -255,7 +260,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = searchTerm,
                 newTab = false,
                 forceSearch = true,
-                private = activity.browsingModeManager.mode.isPrivate,
+                private = currentMode.isPrivate,
                 searchEngine = searchEngine,
             )
         }
@@ -342,7 +347,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO),
                 newTab = false,
                 forceSearch = false,
-                private = activity.browsingModeManager.mode.isPrivate,
+                private = currentMode.isPrivate,
                 searchEngine = searchEngine,
             )
         }
@@ -414,11 +419,11 @@ class SearchDialogControllerTest {
         createController().handleUrlTapped(url)
 
         verify {
-            activity.openToBrowserAndLoad(
+            fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = url,
                 newTab = false,
-                from = BrowserDirection.FromSearchDialog,
                 flags = flags,
+                private = currentMode.isPrivate,
             )
         }
 
@@ -447,11 +452,11 @@ class SearchDialogControllerTest {
         createController().handleUrlTapped(url)
 
         verify {
-            activity.openToBrowserAndLoad(
+            fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = url,
                 newTab = false,
-                from = BrowserDirection.FromSearchDialog,
                 flags = flags,
+                private = currentMode.isPrivate,
             )
         }
 
@@ -476,12 +481,12 @@ class SearchDialogControllerTest {
         createController().handleSearchTermsTapped(searchTerms)
 
         verify {
-            activity.openToBrowserAndLoad(
+            fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = searchTerms,
                 newTab = false,
-                from = BrowserDirection.FromSearchDialog,
-                engine = searchEngine,
                 forceSearch = true,
+                private = currentMode.isPrivate,
+                searchEngine = searchEngine,
             )
         }
 
@@ -497,12 +502,12 @@ class SearchDialogControllerTest {
         createController().handleSearchTermsTapped(searchTerms)
 
         verify {
-            activity.openToBrowserAndLoad(
+            fenixBrowserUseCases.loadUrlOrSearch(
                 searchTermOrURL = searchTerms,
                 newTab = false,
-                from = BrowserDirection.FromSearchDialog,
-                engine = searchEngine,
                 forceSearch = true,
+                private = currentMode.isPrivate,
+                searchEngine = searchEngine,
             )
         }
 
@@ -515,7 +520,7 @@ class SearchDialogControllerTest {
     fun handleSearchShortcutEngineSelected() {
         val searchEngine: SearchEngine = mockk(relaxed = true)
         val browsingMode = BrowsingMode.Private
-        every { activity.browsingModeManager.mode } returns browsingMode
+        currentMode = browsingMode
 
         var focusToolbarInvoked = false
         createController(
@@ -621,7 +626,7 @@ class SearchDialogControllerTest {
             assertEquals("selected", action.tabId)
         }
 
-        verify { activity.openToBrowser(from = BrowserDirection.FromSearchDialog) }
+        verify { navController.navigate(actionGlobalBrowser()) }
 
         middleware.assertLastAction(AwesomeBarAction.EngagementFinished::class) { action ->
             assertFalse(action.abandoned)
@@ -635,7 +640,7 @@ class SearchDialogControllerTest {
         middleware.assertFirstAction(TabListAction.SelectTabAction::class) { action ->
             assertEquals("tab-id", action.tabId)
         }
-        verify { activity.openToBrowser(from = BrowserDirection.FromSearchDialog) }
+        verify { navController.navigate(actionGlobalBrowser()) }
 
         middleware.assertLastAction(AwesomeBarAction.EngagementFinished::class) { action ->
             assertFalse(action.abandoned)
@@ -670,8 +675,11 @@ class SearchDialogControllerTest {
         dismissDialog: () -> Unit = { },
         dismissDialogAndGoBack: () -> Unit = { },
     ): SearchDialogController {
+        val appStore = AppStore(initialState = AppState(mode = currentMode))
+
         return SearchDialogController(
-            activity = activity,
+            appStore = appStore,
+            context = activity,
             store = browserStore,
             tabsUseCases = TabsUseCases(browserStore),
             fenixBrowserUseCases = fenixBrowserUseCases,

@@ -244,7 +244,7 @@ class BookmarkFragment : Fragment() {
         }
         else -> fragmentStore(
             createInitialSearchFragmentState(
-                activity = requireActivity() as HomeActivity,
+                context = requireContext(),
                 components = requireComponents,
                 tabId = null,
                 pastedText = null,

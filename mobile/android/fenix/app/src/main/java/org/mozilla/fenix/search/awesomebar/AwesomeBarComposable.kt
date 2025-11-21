@@ -246,7 +246,7 @@ class AwesomeBarComposable(
 
     private fun initializeSearchStore() = fragment.fragmentStore(
         createInitialSearchFragmentState(
-            activity = activity,
+            context = activity,
             components = components,
             tabId = tabId,
             pastedText = null,

@@ -818,7 +818,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         toolbarStore: BrowserToolbarStore,
     ) = fragmentStore(
         createInitialSearchFragmentState(
-            activity = requireActivity() as HomeActivity,
+            context = requireContext(),
             components = requireComponents,
             tabId = null,
             pastedText = null,

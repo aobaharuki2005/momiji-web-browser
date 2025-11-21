@@ -19,7 +19,6 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.automotive.isAndroidAutomotiveAvailable
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -52,7 +51,7 @@ class SearchFragmentStore(
      *
      * This is Activity/Fragment lifecycle dependent and should be handled carefully to avoid memory leaks.
      *
-     * @property context Activity [Context] used for various system interactions.
+     * @property context [Context] used for various system interactions.
      * @property viewLifecycleOwner [LifecycleOwner] depending on which lifecycle related operations will be scheduled.
      * @property browsingModeManager [BrowsingModeManager] for querying the current browsing mode.
      * @property navController [NavController] used to navigate to other destinations.
@@ -238,15 +237,16 @@ data class SearchFragmentState(
  * Creates the initial state for the search fragment.
  */
 fun createInitialSearchFragmentState(
-    activity: HomeActivity,
+    context: Context,
     components: Components,
     tabId: String?,
     pastedText: String?,
     searchAccessPoint: MetricsUtils.Source,
     searchEngine: SearchEngine? = null,
-    isAndroidAutomotiveAvailable: Boolean = activity.isAndroidAutomotiveAvailable(),
+    isAndroidAutomotiveAvailable: Boolean = context.isAndroidAutomotiveAvailable(),
 ): SearchFragmentState {
     val settings = components.settings
+    val browsingMode = components.appStore.state.mode
     val tab = tabId?.let { components.core.store.state.findTab(it) }
     val url = tab?.content?.url.orEmpty()
 
@@ -267,7 +267,7 @@ fun createInitialSearchFragmentState(
         shouldShowSearchSuggestions = false,
         defaultEngine = null,
         showSearchSuggestionsFromCurrentEngine = shouldShowSearchSuggestions(
-            browsingMode = activity.browsingModeManager.mode,
+            browsingMode = browsingMode,
             settings = settings,
         ),
         showSearchSuggestionsHint = false,
@@ -284,12 +284,12 @@ fun createInitialSearchFragmentState(
         showAllSyncedTabsSuggestions = settings.shouldShowSyncedTabsSuggestions,
         showSessionSuggestionsForCurrentEngine = false,
         showAllSessionSuggestions = true,
-        showSponsoredSuggestions = activity.browsingModeManager.mode == BrowsingMode.Normal &&
+        showSponsoredSuggestions = browsingMode == BrowsingMode.Normal &&
             settings.enableFxSuggest && settings.showSponsoredSuggestions,
-        showNonSponsoredSuggestions = activity.browsingModeManager.mode == BrowsingMode.Normal &&
+        showNonSponsoredSuggestions = browsingMode == BrowsingMode.Normal &&
             settings.enableFxSuggest && settings.showNonSponsoredSuggestions,
         showTrendingSearches = shouldShowTrendingSearchSuggestions(
-            browsingMode = activity.browsingModeManager.mode,
+            browsingMode = browsingMode,
             settings = settings,
             isTrendingSuggestionSupported =
             components.core.store.state.search.selectedOrDefaultSearchEngine?.trendingUrl != null,

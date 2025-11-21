@@ -32,7 +32,9 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.search.SearchFragmentAction.SearchProvidersUpdated
 import org.mozilla.fenix.search.SearchFragmentAction.SearchStarted
@@ -56,6 +58,9 @@ class SearchFragmentStoreTest {
     @MockK(relaxed = true)
     private lateinit var settings: Settings
 
+    @MockK(relaxed = true)
+    private lateinit var appStore: AppStore
+
     @Before
     fun setup() {
         MockKAnnotations.init(this)
@@ -65,11 +70,15 @@ class SearchFragmentStoreTest {
         }
         every { components.settings } returns settings
         every { searchEngine.trendingUrl } returns null
+
+        appStore = AppStore(initialState = AppState(mode = BrowsingMode.Normal))
+        every { components.appStore } returns appStore
     }
 
     @Test
     fun `createInitialSearchFragmentState with no tab in normal browsing mode`() {
-        activity.browsingModeManager.mode = BrowsingMode.Normal
+        appStore = AppStore(initialState = AppState(mode = BrowsingMode.Normal))
+        every { components.appStore } returns appStore
         every { components.core.store.state } returns BrowserState()
         every { settings.shouldShowSearchShortcuts } returns true
         every { settings.showUnifiedSearchFeature } returns true
@@ -134,7 +143,8 @@ class SearchFragmentStoreTest {
 
     @Test
     fun `createInitialSearchFragmentState with no tab in private browsing mode`() {
-        activity.browsingModeManager.mode = BrowsingMode.Private
+        appStore = AppStore(initialState = AppState(mode = BrowsingMode.Private))
+        every { components.appStore } returns appStore
         every { components.core.store.state } returns BrowserState()
         every { settings.shouldShowSearchShortcuts } returns true
         every { settings.showUnifiedSearchFeature } returns true
@@ -172,7 +182,8 @@ class SearchFragmentStoreTest {
     @Test
     fun `createInitialSearchFragmentState with tab`() {
         every { settings.shouldUseBottomToolbar } returns true
-        activity.browsingModeManager.mode = BrowsingMode.Private
+        appStore = AppStore(initialState = AppState(mode = BrowsingMode.Private))
+        every { components.appStore } returns appStore
         every { components.core.store.state } returns BrowserState(
             tabs = listOf(
                 TabSessionState(
@@ -210,7 +221,8 @@ class SearchFragmentStoreTest {
 
     @Test
     fun `GIVEN sponsored and non-sponsored suggestions are enabled and Firefox Suggest is disabled WHEN the initial state is created THEN neither are displayed`() {
-        activity.browsingModeManager.mode = BrowsingMode.Normal
+        appStore = AppStore(initialState = AppState(mode = BrowsingMode.Normal))
+        every { components.appStore } returns appStore
         every { components.core.store.state } returns BrowserState()
         every { settings.enableFxSuggest } returns false
         every { settings.showSponsoredSuggestions } returns true
