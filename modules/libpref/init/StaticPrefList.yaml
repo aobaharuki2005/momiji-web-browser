@@ -17244,11 +17244,13 @@
   value: true
   mirror: always
 
+#ifdef XP_MACOSX
 # Dispatch WebAuthn requests to the macOS platform API
 - name: security.webauthn.enable_macos_passkeys
   type: RelaxedAtomicBool
   value: true
   mirror: always
+#endif
 
 # Dispatch WebAuthn requests to authenticator-rs
 - name: security.webauth.webauthn_enable_usbtoken
