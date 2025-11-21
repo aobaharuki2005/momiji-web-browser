@@ -512,6 +512,19 @@ class FreezeRunnable final : public WorkerControlRunnable {
   }
 };
 
+class SuspendRunnable final : public WorkerControlRunnable {
+ public:
+  explicit SuspendRunnable(WorkerPrivate* aWorkerPrivate, bool aSuspend)
+      : WorkerControlRunnable("SuspendRunnable"), mSuspend{aSuspend} {}
+
+ private:
+  bool mSuspend = false;
+  virtual bool WorkerRun(JSContext* aCx,
+                         WorkerPrivate* aWorkerPrivate) override {
+    return aWorkerPrivate->SuspendTimeoutManagerInternal(mSuspend);
+  }
+};
+
 class ThawRunnable final : public WorkerControlRunnable {
  public:
   explicit ThawRunnable(WorkerPrivate* aWorkerPrivate)
@@ -2248,10 +2261,14 @@ void WorkerPrivate::ParentWindowPaused() {
     MOZ_ALWAYS_SUCCEEDS(
         mMainThreadDebuggeeEventTarget->SetIsPaused(!isCanceling));
   }
+
+  SuspendTimeoutManager();
 }
 
 void WorkerPrivate::ParentWindowResumed() {
   AssertIsOnMainThread();
+
+  ResumeTimeoutManager();
 
   MOZ_ASSERT(mParentWindowPaused);
   mParentWindowPaused = false;
@@ -4773,9 +4790,47 @@ bool WorkerPrivate::FreezeInternal() {
   auto* timeoutManager =
       data->mScope ? data->mScope->GetTimeoutManager() : nullptr;
   if (timeoutManager) {
-    timeoutManager->Suspend();
+    timeoutManager->Freeze();
   }
 
+  return true;
+}
+
+bool WorkerPrivate::SuspendTimeoutManager() {
+  AssertIsOnParentThread();
+  RefPtr<SuspendRunnable> runnable = new SuspendRunnable(this, true);
+  runnable->Dispatch(this);
+  return true;
+}
+
+bool WorkerPrivate::ResumeTimeoutManager() {
+  AssertIsOnParentThread();
+  RefPtr<SuspendRunnable> runnable = new SuspendRunnable(this, false);
+  runnable->Dispatch(this);
+  return true;
+}
+
+bool WorkerPrivate::SuspendTimeoutManagerInternal(bool aSuspend) {
+  AssertIsOnWorkerThread();
+  auto data = mWorkerThreadAccessible.Access();
+
+  for (uint32_t index = 0; index < data->mChildWorkers.Length(); index++) {
+    if (aSuspend) {
+      data->mChildWorkers[index]->SuspendTimeoutManager();
+    } else {
+      data->mChildWorkers[index]->ResumeTimeoutManager();
+    }
+  }
+
+  auto* timeoutManager =
+      data->mScope ? data->mScope->GetTimeoutManager() : nullptr;
+  if (timeoutManager) {
+    if (aSuspend) {
+      timeoutManager->Suspend();
+    } else {
+      timeoutManager->Resume();
+    }
+  }
   return true;
 }
 
@@ -4793,6 +4848,11 @@ bool WorkerPrivate::ThawInternal() {
   NS_ASSERTION(data->mFrozen, "Not yet frozen!");
 
   // BindRemoteWorkerDebuggerChild();
+  auto* timeoutManager =
+      data->mScope ? data->mScope->GetTimeoutManager() : nullptr;
+  if (timeoutManager) {
+    timeoutManager->Thaw();
+  }
 
   for (uint32_t index = 0; index < data->mChildWorkers.Length(); index++) {
     data->mChildWorkers[index]->Thaw(nullptr);
@@ -4803,12 +4863,6 @@ bool WorkerPrivate::ThawInternal() {
   // The worker can thaw even if it failed to run (and doesn't have a global).
   if (data->mScope) {
     data->mScope->MutableClientSourceRef().Thaw();
-  }
-
-  auto* timeoutManager =
-      data->mScope ? data->mScope->GetTimeoutManager() : nullptr;
-  if (timeoutManager) {
-    timeoutManager->Resume();
   }
 
   return true;

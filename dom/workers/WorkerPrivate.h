@@ -409,6 +409,12 @@ class WorkerPrivate final
 
   bool FreezeInternal();
 
+  bool SuspendTimeoutManager();
+
+  bool ResumeTimeoutManager();
+
+  bool SuspendTimeoutManagerInternal(bool aSuspend);
+
   bool ThawInternal();
 
   void PropagateStorageAccessPermissionGrantedInternal();
