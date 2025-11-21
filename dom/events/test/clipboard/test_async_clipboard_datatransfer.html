@@ -41,7 +41,6 @@ async function paste(aCallback) {
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["dom.events.asyncClipboard.readText", true],
       ["dom.events.asyncClipboard.clipboardItem", true],
     ],
   });

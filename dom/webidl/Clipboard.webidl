@@ -17,7 +17,7 @@ typedef sequence<ClipboardItem> ClipboardItems;
 interface Clipboard : EventTarget {
   [Pref="dom.events.asyncClipboard.clipboardItem", NewObject, NeedsSubjectPrincipal]
   Promise<ClipboardItems> read();
-  [Func="Clipboard::ReadTextEnabled", NewObject, NeedsSubjectPrincipal]
+  [NewObject, NeedsSubjectPrincipal]
   Promise<DOMString> readText();
 
   [Pref="dom.events.asyncClipboard.clipboardItem", NewObject, NeedsSubjectPrincipal]

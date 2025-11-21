@@ -20,12 +20,6 @@ const kApzTestNativeEventUtilsUrl =
 
 Services.scriptloader.loadSubScript(kApzTestNativeEventUtilsUrl, this);
 
-add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.events.asyncClipboard.readText", true]],
-  });
-});
-
 add_task(async function test_paste_button_clickjacking() {
   await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {
     const pasteButtonIsShown = promisePasteButtonIsShown();

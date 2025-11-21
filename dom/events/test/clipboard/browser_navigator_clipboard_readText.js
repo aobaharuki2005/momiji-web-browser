@@ -43,10 +43,7 @@ function promiseMutatedReadTextResultFromContentElement(aBrowser) {
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.events.asyncClipboard.readText", true],
-      ["test.events.async.enabled", true],
-    ],
+    set: [["test.events.async.enabled", true]],
   });
 });
 
