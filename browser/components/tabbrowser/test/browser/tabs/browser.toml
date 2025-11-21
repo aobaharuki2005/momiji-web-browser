@@ -183,9 +183,6 @@ skip-if = [
 ["browser_long_data_url_label_truncation.js"]
 tags = "vertical-tabs"
 
-["browser_tab_label_character_cap.js"]
-tags = "vertical-tabs"
-
 ["browser_middle_click_new_tab_button_loads_clipboard.js"]
 tags = "vertical-tabs"
 fail-if =  ["vertical_tab"] # Bug 1932787, fails in the "vertical-tabs" variant

@@ -30,7 +30,6 @@
 
   const DIRECTION_FORWARD = 1;
   const DIRECTION_BACKWARD = -1;
-  const TAB_LABEL_MAX_LENGTH = 256;
 
   /**
    * Updates the User Context UI indicators if the browser is in a non-default context
@@ -1980,11 +1979,6 @@
           this._regex_shortenURLForTabLabel = /^[^:]+:\/\/(?:www\.)?/;
         }
         aLabel = aLabel.replace(this._regex_shortenURLForTabLabel, "");
-      }
-
-      if (aLabel.length > TAB_LABEL_MAX_LENGTH) {
-        // Clamp overly-long titles to avoid DoS-type hangs (bug 736194).
-        aLabel = aLabel.substring(0, TAB_LABEL_MAX_LENGTH);
       }
 
       aTab._labelIsContentTitle = isContentTitle;
