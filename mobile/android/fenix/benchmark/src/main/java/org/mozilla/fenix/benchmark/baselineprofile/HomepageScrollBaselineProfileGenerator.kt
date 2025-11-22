@@ -19,8 +19,6 @@ import org.mozilla.fenix.benchmark.utils.flingToEnd
 import org.mozilla.fenix.benchmark.utils.isWallpaperOnboardingShown
 import androidx.core.net.toUri
 import org.mozilla.fenix.benchmark.utils.FENIX_HOME_DEEP_LINK
-import org.mozilla.fenix.benchmark.utils.dismissCFR
-import org.mozilla.fenix.benchmark.utils.isBrowserToolbarCfrShown
 
 /**
  * This test class generates a baseline profile on a critical user journey, that scrolls down on the
@@ -66,10 +64,6 @@ class HomepageScrollBaselineProfileGenerator {
 
             if (device.isWallpaperOnboardingShown()) {
                 device.dismissWallpaperOnboarding()
-            }
-
-            if (device.isBrowserToolbarCfrShown()) {
-                device.dismissCFR()
             }
 
             device.flingToEnd(

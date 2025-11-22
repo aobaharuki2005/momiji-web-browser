@@ -19,8 +19,6 @@ import org.mozilla.fenix.benchmark.utils.flingToBeginning
 import org.mozilla.fenix.benchmark.utils.flingToEnd
 import androidx.core.net.toUri
 import org.mozilla.fenix.benchmark.utils.HtmlAsset
-import org.mozilla.fenix.benchmark.utils.dismissCFR
-import org.mozilla.fenix.benchmark.utils.isBrowserToolbarCfrShown
 import org.mozilla.fenix.benchmark.utils.uri
 
 /**
@@ -69,10 +67,6 @@ class BrowserPageScrollBaselineProfileGenerator {
             intent.setPackage(packageName)
 
             startActivityAndWait(intent = intent)
-
-            if (device.isBrowserToolbarCfrShown()) {
-                device.dismissCFR()
-            }
 
             device.flingToEnd(
                 scrollableId = "$packageName:id/engineView",
