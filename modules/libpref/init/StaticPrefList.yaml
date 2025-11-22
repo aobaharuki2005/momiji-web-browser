@@ -7411,10 +7411,12 @@
   mirror: once
 #endif
 
+#ifdef XP_WIN
 - name: gfx.use-mutex-on-present
   type: bool
   value: false
   mirror: once
+#endif
 
 #ifdef MOZ_WIDGET_ANDROID
 # Use SurfaceTextures as preferred backend for TextureClient/Host.
