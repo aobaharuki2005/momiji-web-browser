@@ -12,7 +12,9 @@ support-files = [
 ]
 
 ["browser_DOMDocElementInserted.js"]
-skip-if = ["bits == 64 && (os == 'mac' || os == 'linux')"] #Bug 1646862
+skip-if = [
+  "arch == 'x86_64' && (os == 'mac' || os == 'linux')", # Bug 1646862
+]
 
 ["browser_ImageDocument_svg_zoom.js"]
 

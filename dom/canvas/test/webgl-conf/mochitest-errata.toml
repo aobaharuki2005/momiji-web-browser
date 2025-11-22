@@ -1962,7 +1962,7 @@ skip-if = ["os == 'android'"]
 
 ["generated/test_conformance__rendering__gl-scissor-test.html"]
 fail-if = ["display == 'wayland'"]
-skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'"] # Bug TBD
+skip-if = ["os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'"]
 
 
 ####################

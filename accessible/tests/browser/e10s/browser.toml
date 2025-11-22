@@ -39,7 +39,9 @@ https_first_disabled = true
 ["browser_caching_hyperlink.js"]
 
 ["browser_caching_innerHTML.js"]
-skip-if = ["os != 'win'"]
+skip-if = [
+  "os != 'win'",
+]
 
 ["browser_caching_interfaces.js"]
 
@@ -60,7 +62,9 @@ skip-if = ["os != 'win'"]
 # Events tests
 
 ["browser_events_announcement.js"]
-skip-if = ["os == 'win'"] # Bug 1288839
+skip-if = [
+  "os == 'win'", # Bug 1288839
+]
 
 ["browser_events_caretmove.js"]
 

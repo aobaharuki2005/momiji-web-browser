@@ -32,7 +32,9 @@ prefs = [
 ["browser_test_focus_dialog.js"]
 
 ["browser_test_focus_urlbar.js"]
-skip-if = ["os == 'win'"] # Bug 1818994
+skip-if = [
+  "os == 'win'", # Bug 1818994
+]
 
 ["browser_test_panel.js"]
 

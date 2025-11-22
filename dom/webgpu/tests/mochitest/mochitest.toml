@@ -8,8 +8,8 @@ subsuite = "webgpu"
 # `mochitest-no-pref.html`, except for `verify`.
 run-if = [
   "early_beta_or_earlier",
-  "os == 'win'",
   "os == 'mac' && arch == 'aarch64'",
+  "os == 'win'",
 ]
 
 prefs = [

@@ -3,7 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [DEFAULT]
-run-if = ["http3"]
+run-if = [
+  "http3",
+]
 prefs = [
   "network.dns.localDomains=foo.example.com",
   "network.webtransport.enabled=true",

@@ -636,7 +636,7 @@ yellow = submarine
         # Should simplify exising conditions
         filename = "test_simplify_linux.js"
         assert filename in manifest
-        condition = "os == 'linux'"
+        condition = "os == 'win'"
         manifestparser.toml.add_skip_if(manifest, filename, condition)
 
         manifest_str = manifestparser.toml.alphabetize_toml_str(manifest)

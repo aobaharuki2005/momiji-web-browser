@@ -1,5 +1,7 @@
 [DEFAULT]
-run-if = ["os != 'android'"]
+run-if = [
+  "os != 'android'",
+]
 head = "head.js"
 firefox-appdir = "browser"
 support-files = ["data/engine.xml"]
@@ -121,14 +123,14 @@ prefs = [
 
 ["test_protocol_swap.js"]
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'", # Bug 1968543
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'", # Bug 1968543
 ]
 
 ["test_providerAliasEngines.js"]
 
 ["test_providerHeuristicFallback.js"]
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'", # Bug 1968543
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'", # Bug 1968543
 ]
 
 ["test_providerHistoryUrlHeuristic.js"]
@@ -167,7 +169,9 @@ requesttimeoutfactor = 2  # Slow on Linux and Windows
 ["test_quickactions.js"]
 
 ["test_remote_tabs.js"]
-skip-if = ["!sync"]
+skip-if = [
+  "!sync",
+]
 
 ["test_resultGroups.js"]
 
@@ -179,7 +183,7 @@ skip-if = ["!sync"]
 
 ["test_search_suggestions.js"]
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && display == 'x11'", # Bug 1968543
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'", # Bug 1968543
 ]
 
 ["test_search_suggestions_aliases.js"]

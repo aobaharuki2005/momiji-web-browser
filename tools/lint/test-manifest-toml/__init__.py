@@ -4,6 +4,7 @@
 
 import os
 import re
+from pathlib import Path
 
 from manifestparser import TestManifest
 from manifestparser.toml import DEFAULT_SECTION, alphabetize_toml_str, sort_paths
@@ -29,6 +30,121 @@ def make_result(path, message, is_error=False):
         "level": level,
     }
     return result
+
+
+def check_condition(results: list, config, path: Path, c: str) -> int:
+    """
+    Checks the condition for warnings or errors and updates results
+    Returns the number of fixable warnings
+    """
+
+    fixable: int = 0
+    if "verify" in c:
+        return fixable  # do not warn with verify or verify-standalone
+    if c.find("bits == ") >= 0:
+        r = make_result(
+            path,
+            "using 'bits' is not idiomatic, use 'arch' instead",
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    if c.find("processor == ") >= 0:
+        r = make_result(
+            path,
+            "using 'processor' is not idiomatic, use 'arch' instead",
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    if c.find("android_version == ") >= 0:
+        r = make_result(
+            path,
+            "using 'android_version' is not idiomatic, use 'os_version' instead (see testing/mozbase/mozinfo/mozinfo/platforminfo.py)",
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    if c.find("os == 'linux'") >= 0:
+        if c.find("os_version == '18.04'") >= 0:
+            r = make_result(
+                path,
+                "linux os_version == '18.04' is no longer used",
+            )
+            results.append(result.from_config(config, **r))
+            fixable += 1
+        elif c.find("os_version == '22.04'") >= 0 and c.find("display == 'x11'") >= 0:
+            r = make_result(
+                path,
+                "linux os_version == '22.04' is only supported on display == 'wayland'",
+            )
+            results.append(result.from_config(config, **r))
+            fixable += 1
+        elif (
+            c.find("os_version == '24.04'") >= 0 and c.find("display == 'wayland'") >= 0
+        ):
+            r = make_result(
+                path,
+                "linux os_version == '24.04' is only supported on display == 'x11'",
+            )
+            results.append(result.from_config(config, **r))
+            fixable += 1
+    if c.find("os == 'mac'") >= 0:
+        if c.find("os_version == '11.20'") >= 0:
+            r = make_result(
+                path,
+                "mac os_version == '11.20' is no longer used",
+            )
+            results.append(result.from_config(config, **r))
+            fixable += 1
+    if c.find("os == 'win'") >= 0:
+        if c.find("os_version == '11.2009'") >= 0:
+            r = make_result(
+                path,
+                "win os_version == '11.2009' is no longer used",
+            )
+            results.append(result.from_config(config, **r))
+            fixable += 1
+    if c.find("apple_catalina") >= 0:
+        r = make_result(
+            path,
+            "instead of 'apple_catalina' please use os == 'mac' && os_version == '10.15' && arch == 'x86_64'",
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    if c.find("apple_silicon") >= 0:
+        r = make_result(
+            path,
+            "instead of 'apple_silicon' please use os == 'mac' && os_version == '15.30' && arch == 'aarch64'",
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    if c.find("win10_2009") >= 0:
+        r = make_result(
+            path,
+            "instead of win10_2009 please use os == 'win' && os_version = '10.2009' && arch == 'x86_64'",
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    if c.find("win11_2009") >= 0:
+        r = make_result(
+            path,
+            "win11_2009 is no longer used",
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    if c.find("!debug") >= 0:
+        r = make_result(
+            path,
+            'instead of "!debug" use three conditions: "asan", "opt", "tsan"',
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    if c.find("== true") >= 0 or c.find("== false") >= 0:
+        r = make_result(
+            path,
+            "use boolean variables directly instead of testing for literal values",
+        )
+        results.append(result.from_config(config, **r))
+        fixable += 1
+    return fixable
 
 
 def lint(paths, config, fix=None, **lintargs):
@@ -125,20 +241,14 @@ def lint(paths, config, fix=None, **lintargs):
                                         True,
                                     )
                                     results.append(result.from_config(config, **r))
-                                if e.find("bits == ") > 0:
-                                    r = make_result(
-                                        path,
-                                        "using 'bits' is not idiomatic, use 'arch' instead",
+                                else:
+                                    fixable: int = check_condition(
+                                        results, config, path, e
                                     )
-                                    results.append(result.from_config(config, **r))
-                                if e.find("processor == ") > 0:
-                                    r = make_result(
-                                        path,
-                                        "using 'processor' is not idiomatic, use 'arch' instead",
-                                    )
-                                    results.append(result.from_config(config, **r))
+                                    if fix:
+                                        fixed += fixable
 
-        if fix:
+        if fix and fixed > 0:
             manifest_str = alphabetize_toml_str(manifest, True)
             fp = open(file_name, "w", encoding="utf-8", newline="\n")
             fp.write(manifest_str)

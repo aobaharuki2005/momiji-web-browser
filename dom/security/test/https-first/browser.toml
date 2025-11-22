@@ -28,8 +28,7 @@ support-files = [
 ["browser_https_rr_no_downgrade.js"]
 support-files = ["file_https_rr_no_downgrade.sjs"]
 skip-if = [
-  "os == 'mac' && os_version == '10.15'",
-  "os == 'mac' && os_version == '11.20' && arch == 'aarch64'", # Bug 1950553
+  "os == 'mac' && os_version == '10.15' && arch == 'x86_64'",
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt && socketprocess_networking", # Bug 1950553
 ]
 
@@ -39,8 +38,8 @@ support-files = [
   "file_no_https_support.sjs"
 ]
 skip-if = [
-  "http3",
   "http2",
+  "http3",
   "socketprocess_networking",
 ]
 
@@ -49,8 +48,8 @@ support-files = [
   "file_https_telemetry_csp_uir.html",
 ]
 skip-if = [
-  "http3",
   "http2",
+  "http3",
   "socketprocess_networking",
 ]
 
@@ -81,7 +80,9 @@ support-files = ["file_nohttps_download.html", "file_nohttps_download.sjs"]
 support-files = ["file_redirect_exemption_clearing.sjs"]
 
 ["browser_schemeless.js"]
-skip-if = ["!debug && tsan"] #Bug 1890170
+skip-if = [
+  "tsan", # Bug 1890170
+]
 
 ["browser_schemeless_redirect.js"]
 support-files = [

@@ -5,6 +5,7 @@
 from pathlib import Path
 
 import mozunit
+import pytest
 
 LINTER = "test-manifest-toml"
 fixed = 0
@@ -86,9 +87,14 @@ def test_unsorted_fix(lint, paths, create_temp_file):
     expected = Path(fix).read_text()
     path = create_temp_file(original, f"{basename}.toml")
     results = lint([path], fix=True)
-    assert len(results) == 1
+    assert len(results) == 2
     assert results[0].message == "The manifest sections are not in alphabetical order."
     assert results[0].level == WARNING
+    assert (
+        results[1].message
+        == 'instead of "!debug" use three conditions: "asan", "opt", "tsan"'
+    )
+    assert results[1].level == WARNING
     assert Path(path).read_text() == expected
 
 
@@ -141,26 +147,109 @@ def test_non_idiomatic_fix(lint, paths, create_temp_file):
     expected = Path(fix).read_text()
     path = create_temp_file(original, f"{basename}.toml")
     results = lint([path], fix=True)
-    assert len(results) == 6
-    assert results[0].message == "using 'bits' is not idiomatic, use 'arch' instead"
-    assert results[0].level == WARNING
-    assert results[1].message == "using 'bits' is not idiomatic, use 'arch' instead"
-    assert results[1].level == WARNING
-    assert results[2].message == "using 'bits' is not idiomatic, use 'arch' instead"
-    assert results[2].level == WARNING
+    assert len(results) == 16
+    i: int = 0
     assert (
-        results[3].message == "using 'processor' is not idiomatic, use 'arch' instead"
+        results[i].message
+        == 'instead of "!debug" use three conditions: "asan", "opt", "tsan"'
     )
-    assert results[3].level == WARNING
+    assert results[i].level == WARNING
+    i += 1
     assert (
-        results[4].message == "using 'processor' is not idiomatic, use 'arch' instead"
+        results[i].message
+        == "instead of 'apple_catalina' please use os == 'mac' && os_version == '10.15' && arch == 'x86_64'"
     )
-    assert results[4].level == WARNING
+    assert results[i].level == WARNING
+    i += 1
     assert (
-        results[5].message == "using 'processor' is not idiomatic, use 'arch' instead"
+        results[i].message
+        == "instead of 'apple_silicon' please use os == 'mac' && os_version == '15.30' && arch == 'aarch64'"
     )
-    assert results[5].level == WARNING
+    assert results[i].level == WARNING
+    i += 1
+    assert (
+        results[i].message
+        == "instead of win10_2009 please use os == 'win' && os_version = '10.2009' && arch == 'x86_64'"
+    )
+    assert results[i].level == WARNING
+    i += 1
+    assert results[i].message == "linux os_version == '18.04' is no longer used"
+    assert results[i].level == WARNING
+    i += 1
+    assert (
+        results[i].message
+        == "linux os_version == '24.04' is only supported on display == 'x11'"
+    )
+    assert results[i].level == WARNING
+    i += 1
+    assert results[i].message == "mac os_version == '11.20' is no longer used"
+    assert results[i].level == WARNING
+    i += 1
+    assert (
+        results[i].message
+        == "use boolean variables directly instead of testing for literal values"
+    )
+    assert results[i].level == WARNING
+    i += 1
+    assert (
+        results[i].message
+        == "use boolean variables directly instead of testing for literal values"
+    )
+    assert results[i].level == WARNING
+    i += 1
+    assert (
+        results[i].message
+        == "using 'android_version' is not idiomatic, use 'os_version' instead (see testing/mozbase/mozinfo/mozinfo/platforminfo.py)"
+    )
+    assert results[i].level == WARNING
+    i += 1
+    assert results[i].message == "using 'bits' is not idiomatic, use 'arch' instead"
+    assert results[i].level == WARNING
+    i += 1
+    assert results[i].message == "using 'bits' is not idiomatic, use 'arch' instead"
+    assert results[i].level == WARNING
+    i += 1
+    assert (
+        results[i].message == "using 'processor' is not idiomatic, use 'arch' instead"
+    )
+    assert results[i].level == WARNING
+    i += 1
+    assert (
+        results[i].message == "using 'processor' is not idiomatic, use 'arch' instead"
+    )
+    assert results[i].level == WARNING
+    i += 1
+    assert results[i].message == "win os_version == '11.2009' is no longer used"
+    assert results[i].level == WARNING
+    i += 1
+    assert results[i].message == "win11_2009 is no longer used"
+    assert results[i].level == WARNING
     assert Path(path).read_text() == expected
+
+
+def test_android_os_mismatch(lint, paths, create_temp_file):
+    """Test an android_version os_version mismatch"""
+
+    contents = (
+        "[DEFAULT]\nskip-if = [\"android_version == '36' && os_version == '15'\"]"
+    )
+    path = create_temp_file(contents, "android_mismatch.toml")
+    with pytest.raises(Exception) as e:
+        _results = lint([path], fix=True)
+    assert str(e.value) == "android_version == '36' conflicts with os_version == '15'"
+
+
+def test_unknown_android_version(lint, paths, create_temp_file):
+    """Test unknown android_version"""
+
+    contents = "[DEFAULT]\nskip-if = [\"android_version == '37'\"]"
+    path = create_temp_file(contents, "unknown_android.toml")
+    with pytest.raises(Exception) as e:
+        _results = lint([path], fix=True)
+    assert (
+        str(e.value)
+        == "Unknown Android API version '37'. Supported versions are dict_values(['24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36'])."
+    )
 
 
 if __name__ == "__main__":

@@ -40,3 +40,10 @@ Non idiomatic manifest warnings
 -------------------------------
 * Using ``processor`` instead of ``arch``
 * Using ``bits`` instead of ``arch``
+* Using ``android_version`` instead of ``os_version``
+* Using platform combination variables: ``apple_catalina``, ``apple_silicon``, ``win10_2009``, ``win11_2009`` (unused)
+* Platforms no longer used by CI: ``Linux 18.04``, ``MacOS 11.20``, ``Windows 11.2009``
+* Specifying display ``x11`` on Linux 22.04 where only ``wayland`` is supported
+* Specifying display ``wayland`` on Linux 24.04 where only ``x11`` is supported
+* Using ``!debug`` instead of ``asan``, ``opt``, or ``tsan``
+* Using literal boolean values for single variables like ``debug == false``

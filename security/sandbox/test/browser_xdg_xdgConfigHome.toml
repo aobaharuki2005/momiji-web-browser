@@ -3,7 +3,8 @@
 [DEFAULT]
 skip-if = [
   "ccov",
-  "os == 'linux' && (asan || tsan)", # bug 1784517
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && asan", # bug 1784517
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && tsan", # bug 1784517
 ]
 tags = "contentsandbox"
 support-files = [
@@ -17,4 +18,6 @@ environment = [
 ]
 
 ["browser_content_sandbox_fs_xdg_xdgConfigHome.js"]
-run-if = ["os == 'linux'"]
+run-if = [
+  "os == 'linux'",
+]
