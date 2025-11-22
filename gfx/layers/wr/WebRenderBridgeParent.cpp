@@ -2673,6 +2673,7 @@ void WebRenderBridgeParent::FlushTransactionIdsForEpoch(
             transactionId.mId, aCompositeStartTime, aRenderStartTime, aEndTime,
             contentFrameTime,
             aStats ? (double(aStats->resource_upload_time) / 1000000.0) : 0.0,
+            aStats ? (double(aStats->gpu_cache_upload_time) / 1000000.0) : 0.0,
             transactionId.mTxnStartTime, transactionId.mRefreshStartTime,
             transactionId.mFwdTime, transactionId.mSceneBuiltTime,
             transactionId.mSkippedComposites, transactionId.mTxnURL));

@@ -10,6 +10,7 @@ use crate::render_api::DebugCommand;
 use crate::composite::NativeSurfaceOperation;
 use crate::device::TextureFilter;
 use crate::renderer::{FullFrameStats, PipelineInfo};
+use crate::gpu_cache::GpuCacheUpdateList;
 use crate::gpu_types::BlurEdgeMode;
 use crate::frame_builder::Frame;
 use crate::profiler::TransactionProfile;
@@ -1349,6 +1350,7 @@ pub enum ResultMsg {
     DebugCommand(DebugCommand),
     DebugOutput(DebugOutput),
     RefreshShader(PathBuf),
+    UpdateGpuCache(GpuCacheUpdateList),
     UpdateResources {
         resource_updates: ResourceUpdateList,
         memory_pressure: bool,

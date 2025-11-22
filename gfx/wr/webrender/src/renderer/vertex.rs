@@ -479,8 +479,8 @@ pub mod desc {
             // specific clip attributes
             VertexAttribute {
                 name: "aClipDataResourceAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
+                count: 2,
+                kind: VertexAttributeKind::U16,
             },
             VertexAttribute {
                 name: "aClipSrcRectSize",
@@ -503,6 +503,22 @@ pub mod desc {
                 kind: VertexAttributeKind::F32,
             },
         ],
+    };
+
+    pub const GPU_CACHE_UPDATE: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::U16Norm,
+            },
+            VertexAttribute {
+                name: "aValue",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[],
     };
 
     pub const RESOLVE: VertexDescriptor = VertexDescriptor {
@@ -562,8 +578,8 @@ pub mod desc {
             },
             VertexAttribute {
                 name: "aFilterExtraDataAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
+                count: 2,
+                kind: VertexAttributeKind::U16,
             },
         ],
     };
@@ -612,8 +628,8 @@ pub mod desc {
             },
             VertexAttribute {
                 name: "aFilterExtraDataAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
+                count: 2,
+                kind: VertexAttributeKind::U16,
             },
         ],
     };

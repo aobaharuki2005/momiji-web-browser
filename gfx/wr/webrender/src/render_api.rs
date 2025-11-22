@@ -973,6 +973,8 @@ pub enum DebugCommand {
     EnableNativeCompositor(bool),
     /// Sets the maximum amount of existing batches to visit before creating a new one.
     SetBatchingLookback(u32),
+    /// Invalidate GPU cache, forcing the update from the CPU mirror.
+    InvalidateGpuCache,
     /// Causes the scene builder to pause for a given amount of milliseconds each time it
     /// processes a transaction.
     SimulateLongSceneBuild(u32),
@@ -1488,6 +1490,8 @@ pub struct MemoryReport {
     // CPU Memory.
     //
     pub clip_stores: usize,
+    pub gpu_cache_metadata: usize,
+    pub gpu_cache_cpu_mirror: usize,
     pub hit_testers: usize,
     pub fonts: usize,
     pub weak_fonts: usize,
@@ -1504,6 +1508,7 @@ pub struct MemoryReport {
     //
     // GPU memory.
     //
+    pub gpu_cache_textures: usize,
     pub vertex_data_textures: usize,
     pub render_target_textures: usize,
     pub picture_tile_textures: usize,

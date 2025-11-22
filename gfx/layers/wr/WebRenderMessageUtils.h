@@ -296,6 +296,8 @@ inline auto TiedFields<mozilla::wr::MemoryReport>(
   // clang-format off
   return std::tie(
     a.clip_stores,
+    a.gpu_cache_metadata,
+    a.gpu_cache_cpu_mirror,
     a.hit_testers,
     a.fonts,
     a.weak_fonts,
@@ -308,6 +310,7 @@ inline auto TiedFields<mozilla::wr::MemoryReport>(
     a.swgl,
     a.frame_allocator,
     a.render_tasks,
+    a.gpu_cache_textures,
     a.vertex_data_textures,
     a.render_target_textures,
     a.picture_tile_textures,

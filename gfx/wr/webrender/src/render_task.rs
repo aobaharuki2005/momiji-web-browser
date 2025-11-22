@@ -15,6 +15,7 @@ use crate::profiler::{add_text_marker};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::FrameBuilderConfig;
+use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind, TransformPaletteId, BlurEdgeMode};
 use crate::internal_types::{CacheTextureId, FastHashMap, FilterGraphNode, FilterGraphOp, FilterGraphPictureReference, SVGFE_CONVOLVE_VALUES_LIMIT, TextureSource, Swizzle};
 use crate::picture::{ResolvedSurfaceTexture, MAX_SURFACE_SIZE};
@@ -25,7 +26,7 @@ use crate::prim_store::gradient::{
 };
 use crate::resource_cache::{ResourceCache, ImageRequest};
 use std::{usize, f32, i32, u32};
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF};
 use crate::render_backend::DataStores;
 use crate::render_target::{ResolveOp, RenderTargetKind};
 use crate::render_task_graph::{PassId, RenderTaskId, RenderTaskGraphBuilder};
@@ -345,7 +346,7 @@ pub enum SvgFilterInfo {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SvgFilterTask {
     pub info: SvgFilterInfo,
-    pub extra_gpu_data: Option<GpuBufferAddress>,
+    pub extra_gpu_cache_handle: Option<GpuCacheHandle>,
 }
 
 #[derive(Debug)]
@@ -355,7 +356,7 @@ pub struct SVGFEFilterTask {
     pub node: FilterGraphNode,
     pub op: FilterGraphOp,
     pub content_origin: DevicePoint,
-    pub extra_gpu_data: Option<GpuBufferAddress>,
+    pub extra_gpu_cache_handle: Option<GpuCacheHandle>,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -627,6 +628,7 @@ impl RenderTaskKind {
         clip_node_range: ClipNodeRange,
         root_spatial_node_index: SpatialNodeIndex,
         clip_store: &mut ClipStore,
+        gpu_cache: &mut GpuCache,
         gpu_buffer_builder: &mut GpuBufferBuilderF,
         resource_cache: &mut ResourceCache,
         rg_builder: &mut RenderTaskGraphBuilder,
@@ -684,10 +686,11 @@ impl RenderTaskKind {
                         }),
                         false,
                         RenderTaskParent::RenderTask(clip_task_id),
+                        gpu_cache,
                         gpu_buffer_builder,
                         rg_builder,
                         surface_builder,
-                        &mut |rg_builder, _| {
+                        &mut |rg_builder, _, _| {
                             let clip_data = ClipData::rounded_rect(
                                 source.minimal_shadow_rect.size(),
                                 &source.shadow_radius,
@@ -847,32 +850,38 @@ impl RenderTaskKind {
 
     pub fn write_gpu_blocks(
         &mut self,
-        gpu_buffer: &mut GpuBufferBuilder,
+        gpu_cache: &mut GpuCache,
     ) {
         match self {
             RenderTaskKind::SvgFilter(ref mut filter_task) => {
                 match filter_task.info {
                     SvgFilterInfo::ColorMatrix(ref matrix) => {
-                        let mut writer = gpu_buffer.f32.write_blocks(5);
-                        for i in 0..5 {
-                            writer.push_one([matrix[i*4], matrix[i*4+1], matrix[i*4+2], matrix[i*4+3]]);
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            for i in 0..5 {
+                                request.push([matrix[i*4], matrix[i*4+1], matrix[i*4+2], matrix[i*4+3]]);
+                            }
                         }
-                        filter_task.extra_gpu_data = Some(writer.finish());
                     }
                     SvgFilterInfo::DropShadow(color) |
                     SvgFilterInfo::Flood(color) => {
-                        let mut writer = gpu_buffer.f32.write_blocks(1);
-                        writer.push_one(color.to_array());
-                        filter_task.extra_gpu_data = Some(writer.finish());
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            request.push(color.to_array());
+                        }
                     }
                     SvgFilterInfo::ComponentTransfer(ref data) => {
-                        filter_task.extra_gpu_data = Some(data.write_gpu_blocks(&mut gpu_buffer.f32));
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(request) = gpu_cache.request(handle) {
+                            data.update(request);
+                        }
                     }
                     SvgFilterInfo::Composite(ref operator) => {
                         if let CompositeOperator::Arithmetic(k_vals) = operator {
-                            let mut writer = gpu_buffer.f32.write_blocks(1);
-                            writer.push_one(*k_vals);
-                            filter_task.extra_gpu_data = Some(writer.finish());
+                            let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                            if let Some(mut request) = gpu_cache.request(handle) {
+                                request.push(*k_vals);
+                            }
                         }
                     }
                     _ => {},
@@ -896,19 +905,21 @@ impl RenderTaskKind {
                     FilterGraphOp::SVGFEBlendSaturation => {}
                     FilterGraphOp::SVGFEBlendColor => {}
                     FilterGraphOp::SVGFEBlendLuminosity => {}
-                    FilterGraphOp::SVGFEColorMatrix { values: matrix } => {
-                        let mut writer = gpu_buffer.f32.write_blocks(5);
-                        for i in 0..5 {
-                            writer.push_one([matrix[i*4], matrix[i*4+1], matrix[i*4+2], matrix[i*4+3]]);
+                    FilterGraphOp::SVGFEColorMatrix{values: matrix} => {
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            for i in 0..5 {
+                                request.push([matrix[i*4], matrix[i*4+1], matrix[i*4+2], matrix[i*4+3]]);
+                            }
                         }
-                        filter_task.extra_gpu_data = Some(writer.finish());
                     }
                     FilterGraphOp::SVGFEComponentTransfer => unreachable!(),
                     FilterGraphOp::SVGFEComponentTransferInterned{..} => {}
                     FilterGraphOp::SVGFECompositeArithmetic{k1, k2, k3, k4} => {
-                        let mut writer = gpu_buffer.f32.write_blocks(1);
-                        writer.push_one([k1, k2, k3, k4]);
-                        filter_task.extra_gpu_data = Some(writer.finish());
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            request.push([k1, k2, k3, k4]);
+                        }
                     }
                     FilterGraphOp::SVGFECompositeATop => {}
                     FilterGraphOp::SVGFECompositeIn => {}
@@ -919,40 +930,44 @@ impl RenderTaskKind {
                     FilterGraphOp::SVGFEConvolveMatrixEdgeModeDuplicate{order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha} |
                     FilterGraphOp::SVGFEConvolveMatrixEdgeModeNone{order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha} |
                     FilterGraphOp::SVGFEConvolveMatrixEdgeModeWrap{order_x, order_y, kernel, divisor, bias, target_x, target_y, kernel_unit_length_x, kernel_unit_length_y, preserve_alpha} => {
-                        let mut writer = gpu_buffer.f32.write_blocks(8);
-                        assert!(SVGFE_CONVOLVE_VALUES_LIMIT == 25);
-                        writer.push_one([-target_x as f32, -target_y as f32, order_x as f32, order_y as f32]);
-                        writer.push_one([kernel_unit_length_x as f32, kernel_unit_length_y as f32, 1.0 / divisor, bias]);
-                        writer.push_one([kernel[0], kernel[1], kernel[2], kernel[3]]);
-                        writer.push_one([kernel[4], kernel[5], kernel[6], kernel[7]]);
-                        writer.push_one([kernel[8], kernel[9], kernel[10], kernel[11]]);
-                        writer.push_one([kernel[12], kernel[13], kernel[14], kernel[15]]);
-                        writer.push_one([kernel[16], kernel[17], kernel[18], kernel[19]]);
-                        writer.push_one([kernel[20], 0.0, 0.0, preserve_alpha as f32]);
-                        filter_task.extra_gpu_data = Some(writer.finish());
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            request.push([-target_x as f32, -target_y as f32, order_x as f32, order_y as f32]);
+                            request.push([kernel_unit_length_x as f32, kernel_unit_length_y as f32, 1.0 / divisor, bias]);
+                            assert!(SVGFE_CONVOLVE_VALUES_LIMIT == 25);
+                            request.push([kernel[0], kernel[1], kernel[2], kernel[3]]);
+                            request.push([kernel[4], kernel[5], kernel[6], kernel[7]]);
+                            request.push([kernel[8], kernel[9], kernel[10], kernel[11]]);
+                            request.push([kernel[12], kernel[13], kernel[14], kernel[15]]);
+                            request.push([kernel[16], kernel[17], kernel[18], kernel[19]]);
+                            request.push([kernel[20], 0.0, 0.0, preserve_alpha as f32]);
+                        }
                     }
                     FilterGraphOp::SVGFEDiffuseLightingDistant{..} => {}
                     FilterGraphOp::SVGFEDiffuseLightingPoint{..} => {}
                     FilterGraphOp::SVGFEDiffuseLightingSpot{..} => {}
                     FilterGraphOp::SVGFEDisplacementMap{scale, x_channel_selector, y_channel_selector} => {
-                        let mut writer = gpu_buffer.f32.write_blocks(1);
-                        writer.push_one([x_channel_selector as f32, y_channel_selector as f32, scale, 0.0]);
-                        filter_task.extra_gpu_data = Some(writer.finish());
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            request.push([x_channel_selector as f32, y_channel_selector as f32, scale, 0.0]);
+                        }
                     }
-                    FilterGraphOp::SVGFEDropShadow { color, .. } |
-                    FilterGraphOp::SVGFEFlood { color } => {
-                        let mut writer = gpu_buffer.f32.write_blocks(1);
-                        writer.push_one(color.to_array());
-                        filter_task.extra_gpu_data = Some(writer.finish());
-                     }
+                    FilterGraphOp::SVGFEDropShadow{color, ..} |
+                    FilterGraphOp::SVGFEFlood{color} => {
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            request.push(color.to_array());
+                        }
+                    }
                     FilterGraphOp::SVGFEGaussianBlur{..} => {}
                     FilterGraphOp::SVGFEIdentity => {}
-                    FilterGraphOp::SVGFEImage {..} => {}
-                    FilterGraphOp::SVGFEMorphologyDilate { radius_x, radius_y } |
-                    FilterGraphOp::SVGFEMorphologyErode { radius_x, radius_y } => {
-                        let mut writer = gpu_buffer.f32.write_blocks(1);
-                        writer.push_one([radius_x, radius_y, 0.0, 0.0]);
-                        filter_task.extra_gpu_data = Some(writer.finish());
+                    FilterGraphOp::SVGFEImage{..} => {}
+                    FilterGraphOp::SVGFEMorphologyDilate{radius_x, radius_y} |
+                    FilterGraphOp::SVGFEMorphologyErode{radius_x, radius_y} => {
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        if let Some(mut request) = gpu_cache.request(handle) {
+                            request.push([radius_x, radius_y, 0.0, 0.0]);
+                        }
                     }
                     FilterGraphOp::SVGFEOpacity{..} => {}
                     FilterGraphOp::SVGFESourceAlpha => {}
@@ -1038,7 +1053,7 @@ pub struct RenderTask {
     ///
     /// Will be set to None if the render task is cached, in which case the texture cache
     /// manages the handle.
-    pub uv_rect_handle: GpuBufferAddress,
+    pub uv_rect_handle: GpuCacheHandle,
     pub cache_handle: Option<RenderTaskCacheEntryHandle>,
     uv_rect_kind: UvRectKind,
 }
@@ -1056,7 +1071,7 @@ impl RenderTask {
             kind,
             free_after: PassId::MAX,
             render_on: PassId::MIN,
-            uv_rect_handle: GpuBufferAddress::INVALID,
+            uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
             sub_pass: None,
@@ -1101,7 +1116,7 @@ impl RenderTask {
             }),
             free_after: PassId::MAX,
             render_on: PassId::MIN,
-            uv_rect_handle: GpuBufferAddress::INVALID,
+            uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
             sub_pass: None,
@@ -1120,7 +1135,7 @@ impl RenderTask {
             kind: RenderTaskKind::Test(target),
             free_after: PassId::MAX,
             render_on: PassId::MIN,
-            uv_rect_handle: GpuBufferAddress::INVALID,
+            uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
             sub_pass: None,
@@ -1620,7 +1635,7 @@ impl RenderTask {
         let task_id = rg_builder.add().init(RenderTask::new_dynamic(
             target_size,
             RenderTaskKind::SvgFilter(SvgFilterTask {
-                extra_gpu_data: None,
+                extra_gpu_cache_handle: None,
                 info,
             }),
         ).with_uv_rect_kind(uv_rect_kind));
@@ -1650,7 +1665,7 @@ impl RenderTask {
     pub fn new_svg_filter_graph(
         filter_nodes: &[(FilterGraphNode, FilterGraphOp)],
         rg_builder: &mut RenderTaskGraphBuilder,
-        gpu_buffer: &mut GpuBufferBuilderF,
+        gpu_cache: &mut GpuCache,
         data_stores: &mut DataStores,
         _uv_rect_kind: UvRectKind,
         original_task_id: RenderTaskId,
@@ -2352,7 +2367,7 @@ impl RenderTask {
                                 },
                                 op: FilterGraphOp::SVGFEIdentity,
                                 content_origin: DevicePoint::zero(),
-                                extra_gpu_data: None,
+                                extra_gpu_cache_handle: None,
                             }
                         ),
                     ).with_uv_rect_kind(UvRectKind::Rect));
@@ -2396,7 +2411,7 @@ impl RenderTask {
                                 },
                                 op: FilterGraphOp::SVGFEIdentity,
                                 content_origin: node_task_rect.min,
-                                extra_gpu_data: None,
+                                extra_gpu_cache_handle: None,
                             }
                         ),
                     ).with_uv_rect_kind(node_uv_rect_kind));
@@ -2482,7 +2497,7 @@ impl RenderTask {
                                 },
                                 op: FilterGraphOp::SVGFEIdentity,
                                 content_origin: node_task_rect.min,
-                                extra_gpu_data: None,
+                                extra_gpu_cache_handle: None,
                             }
                         ),
                     ).with_uv_rect_kind(UvRectKind::Rect));
@@ -2537,7 +2552,7 @@ impl RenderTask {
                                     std_deviation_x: 0.0, std_deviation_y: 0.0,
                                 },
                                 content_origin: node_task_rect.min,
-                                extra_gpu_data: None,
+                                extra_gpu_cache_handle: None,
                             }
                         ),
                     ).with_uv_rect_kind(node_uv_rect_kind));
@@ -2575,7 +2590,7 @@ impl RenderTask {
                                 },
                                 op: op.clone(),
                                 content_origin: source_subregion.min.cast_unit(),
-                                extra_gpu_data: None,
+                                extra_gpu_cache_handle: None,
                             }
                         ),
                     ).with_uv_rect_kind(node_uv_rect_kind));
@@ -2586,13 +2601,13 @@ impl RenderTask {
                     // FIXME: Doing this in prepare_interned_prim_for_render
                     // doesn't seem to be enough, where should it be done?
                     let filter_data = &mut data_stores.filter_data[handle];
-                    filter_data.write_gpu_blocks(gpu_buffer);
-                    // ComponentTransfer has a gpu buffer address that we need to
+                    filter_data.update(gpu_cache);
+                    // ComponentTransfer has a gpu_cache_handle that we need to
                     // pass along
                     task_id = rg_builder.add().init(RenderTask::new_dynamic(
                         node_task_size,
                         RenderTaskKind::SVGFENode(
-                            SVGFEFilterTask {
+                            SVGFEFilterTask{
                                 node: FilterGraphNode{
                                     kept_by_optimizer: true,
                                     linear: node.linear,
@@ -2602,7 +2617,7 @@ impl RenderTask {
                                 },
                                 op: op.clone(),
                                 content_origin: node_task_rect.min,
-                                extra_gpu_data: Some(filter_data.gpu_buffer_address),
+                                extra_gpu_cache_handle: Some(filter_data.gpu_cache_handle),
                             }
                         ),
                     ).with_uv_rect_kind(node_uv_rect_kind));
@@ -2634,7 +2649,7 @@ impl RenderTask {
                                 },
                                 op: op.clone(),
                                 content_origin: node_task_rect.min,
-                                extra_gpu_data: None,
+                                extra_gpu_cache_handle: None,
                             }
                         ),
                     ).with_uv_rect_kind(node_uv_rect_kind));
@@ -2675,8 +2690,8 @@ impl RenderTask {
         self.uv_rect_kind
     }
 
-    pub fn get_texture_address(&self) -> GpuBufferAddress {
-        self.uv_rect_handle
+    pub fn get_texture_address(&self, gpu_cache: &GpuCache) -> GpuCacheAddress {
+        gpu_cache.get_address(&self.uv_rect_handle)
     }
 
     pub fn get_target_texture(&self) -> CacheTextureId {
@@ -2758,11 +2773,11 @@ impl RenderTask {
     pub fn write_gpu_blocks(
         &mut self,
         target_rect: DeviceIntRect,
-        gpu_buffer: &mut GpuBufferBuilder,
+        gpu_cache: &mut GpuCache,
     ) {
         profile_scope!("write_gpu_blocks");
 
-        self.kind.write_gpu_blocks(gpu_buffer);
+        self.kind.write_gpu_blocks(gpu_cache);
 
         if self.cache_handle.is_some() {
             // The uv rect handle of cached render tasks is requested and set by the
@@ -2770,16 +2785,17 @@ impl RenderTask {
             return;
         }
 
-        let p0 = target_rect.min.to_f32();
-        let p1 = target_rect.max.to_f32();
-        let image_source = ImageSource {
-            p0,
-            p1,
-            user_data: [0.0; 4],
-            uv_rect_kind: self.uv_rect_kind,
-        };
-
-        self.uv_rect_handle = image_source.write_gpu_blocks(&mut gpu_buffer.f32);
+        if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
+            let p0 = target_rect.min.to_f32();
+            let p1 = target_rect.max.to_f32();
+            let image_source = ImageSource {
+                p0,
+                p1,
+                user_data: [0.0; 4],
+                uv_rect_kind: self.uv_rect_kind,
+            };
+            image_source.write_gpu_blocks(&mut request);
+        }
     }
 
     /// Called by the render task cache.
