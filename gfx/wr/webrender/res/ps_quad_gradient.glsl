@@ -398,7 +398,7 @@ void swgl_drawSpanRGBA8() {
 
 #ifdef WR_FEATURE_DITHERING
       swgl_commitDitheredRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
-          stop_count, repeat, pos, start_radius, gl_FragCoord);
+          stop_count, repeat, pos, start_radius);
 #else
       swgl_commitRadialGradientFromStopsRGBA8(sGpuBufferF, offsets_addr, colors_addr,
           stop_count, repeat, pos, start_radius);
