@@ -333,6 +333,7 @@ static const char* gExactCallbackPrefs[] = {
     "dom.meta-viewport.enabled",
     "image.animation_mode",
     "intl.accept_languages",
+    "layout.abspos.fragmentainer-aware-positioning.enabled",
     "layout.css.devPixelsPerPx",
     "layout.css.dpi",
     "layout.css.letter-spacing.model",
@@ -605,6 +606,11 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   if (prefName.EqualsLiteral("layout.css.ruby.normalize-metrics-factor")) {
     mRubyPositioningFactor = -1;  // mark as uninitialized
     changeHint |= NS_STYLE_HINT_REFLOW;
+  }
+
+  if (prefName.EqualsLiteral(
+          "layout.abspos.fragmentainer-aware-positioning.enabled")) {
+    changeHint |= nsChangeHint_ReconstructFrame;
   }
 
   // Same, this just frees a bunch of memory.

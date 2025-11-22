@@ -11080,6 +11080,13 @@
 #endif
   mirror: always
 
+# Enable the support to position absoluetly positioned frames properly across
+# fragmentainers (Bug 1994316).
+- name: layout.abspos.fragmentainer-aware-positioning.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "logging."
 #---------------------------------------------------------------------------

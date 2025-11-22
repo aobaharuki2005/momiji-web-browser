@@ -846,21 +846,23 @@ void nsContainerFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
                                             ReflowOutput& aDesiredSize,
                                             const ReflowInput& aReflowInput,
                                             nsReflowStatus& aStatus) {
-  if (HasAbsolutelyPositionedChildren()) {
-    AbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
-
+  AbsoluteContainingBlock* absoluteContainer =
+      IsAbsoluteContainer() ? GetAbsoluteContainingBlock() : nullptr;
+  if (absoluteContainer && absoluteContainer->PrepareAbsoluteFrames(this)) {
     // The containing block for the abs pos kids is formed by our padding edge.
-    nsMargin usedBorder = GetUsedBorder();
-    nsRect containingBlock(nsPoint{}, aDesiredSize.PhysicalSize());
-    containingBlock.Deflate(usedBorder);
+    const auto wm = GetWritingMode();
+    LogicalRect cbRect(wm, LogicalPoint(wm), aDesiredSize.Size(wm));
+    cbRect.Deflate(wm, GetLogicalUsedBorder(wm).ApplySkipSides(
+                           PreReflowBlockLevelLogicalSkipSides()));
     // XXX: To optimize the performance, set the flags only when the CB width or
     // height actually changes.
     AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation,
                             AbsPosReflowFlag::CBWidthChanged,
                             AbsPosReflowFlag::CBHeightChanged};
-    absoluteContainer->Reflow(this, aPresContext, aReflowInput, aStatus,
-                              containingBlock, flags,
-                              &aDesiredSize.mOverflowAreas);
+    absoluteContainer->Reflow(
+        this, aPresContext, aReflowInput, aStatus,
+        cbRect.GetPhysicalRect(wm, aDesiredSize.PhysicalSize()), flags,
+        &aDesiredSize.mOverflowAreas);
   }
 }
 
@@ -2827,9 +2829,10 @@ void nsContainerFrame::SanityCheckChildListsBeforeReflow() const {
   const auto didPushItemsBit = IsFlexContainerFrame()
                                    ? NS_STATE_FLEX_DID_PUSH_ITEMS
                                    : NS_STATE_GRID_DID_PUSH_ITEMS;
-  ChildListIDs absLists = {FrameChildListID::Absolute, FrameChildListID::Fixed,
-                           FrameChildListID::OverflowContainers,
-                           FrameChildListID::ExcessOverflowContainers};
+  ChildListIDs absLists = {
+      FrameChildListID::Absolute, FrameChildListID::PushedAbsolute,
+      FrameChildListID::Fixed, FrameChildListID::OverflowContainers,
+      FrameChildListID::ExcessOverflowContainers};
   ChildListIDs itemLists = {FrameChildListID::Principal,
                             FrameChildListID::Overflow};
   for (const nsIFrame* f = this; f; f = f->GetNextInFlow()) {
