@@ -4265,10 +4265,11 @@ criteria = "safe-to-deploy"
 delta = "0.2.6 -> 0.2.9"
 
 [[audits.mtu]]
-who = "Erich Gubler <erichdongubler@gmail.com>"
+who = "Valentin Gosu <valentin.gosu@gmail.com>"
 criteria = "safe-to-deploy"
-delta = "0.2.9 -> 0.2.9@git:5bfb65919fb5804ec1dd68cc93e014cb9c830d94"
+delta = "0.2.9 -> 0.2.9@git:3dbba8ffc2b3c78713161d1925b2858bd2098548"
 importable = false
+notes = "mtu crate is now part of neqo and maintained by Mozilla employees"
 
 [[audits.naga]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"

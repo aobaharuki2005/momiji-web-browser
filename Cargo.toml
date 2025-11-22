@@ -292,8 +292,3 @@ zip = { path = "third_party/rust/zip" }
 
 # Patch libcrux-traits to avoid unnecessary unused dependencies and conflicts.
 libcrux-traits = { path = "build/rust/libcrux-traits" }
-
-[patch."https://github.com/mozilla/neqo"]
-neqo-common = { git = "https://github.com/erichdongubler-mozilla/neqo", rev = "5bfb65919fb5804ec1dd68cc93e014cb9c830d94" }
-neqo-udp = { git = "https://github.com/erichdongubler-mozilla/neqo", rev = "5bfb65919fb5804ec1dd68cc93e014cb9c830d94" }
-mtu = { git = "https://github.com/erichdongubler-mozilla/neqo", rev = "5bfb65919fb5804ec1dd68cc93e014cb9c830d94" }
