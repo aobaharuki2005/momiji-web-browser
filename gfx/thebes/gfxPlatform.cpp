@@ -1238,16 +1238,6 @@ bool gfxPlatform::IsBackendAccelerated(
   return false;
 }
 
-/* static */
-bool gfxPlatform::CanMigrateMacGPUs() {
-  int32_t pMigration = StaticPrefs::gfx_compositor_gpu_migration();
-
-  bool forceDisable = pMigration == 0;
-  bool forceEnable = pMigration == 2;
-
-  return forceEnable || !forceDisable;
-}
-
 static bool sLayersIPCIsUp = false;
 
 /* static */

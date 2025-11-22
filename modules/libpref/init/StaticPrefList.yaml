@@ -6917,16 +6917,14 @@
   value: true # Match naive behavior, but hopefully we can stop soon!
   mirror: always
 
+#ifdef XP_MACOSX
 # Whether GL contexts can be migrated to a different GPU (to match the one the
 # OS is using for composition).
-#
-# 0 = force disable migration
-# 1 = use migration where in safe configurations (the default)
-# 2 = force enable migration (for testing)
 - name: gfx.compositor.gpu-migration
-  type: RelaxedAtomicInt32
-  value: 1
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
+#endif
 
 #ifdef XP_DARWIN
 - name: gfx.core-animation.tint-opaque
