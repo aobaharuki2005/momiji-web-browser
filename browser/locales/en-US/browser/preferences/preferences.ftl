@@ -177,11 +177,31 @@ preferences-data-migration-button =
     .label = Import Data
     .accesskey = m
 
-preferences-profiles-header = Profiles
-preferences-manage-profiles-description = Each profile has separate browsing data and settings, including history, passwords, and more.
-preferences-manage-profiles-learn-more = Learn more
+preferences-profiles-group-header =
+    .heading = Profiles
+preferences-profiles-subpane-description =
+    .description = Each profile has separate browsing data and settings, including history, passwords, and more.
+preferences-profiles-section-header =
+    .label = Profiles
+    .description = Each profile has separate browsing data and settings, including history, passwords, and more.
 preferences-manage-profiles-button =
   .label = Manage Profiles
+preferences-profiles-settings-button =
+  .label = Settings
+# This string labels the entire copy profile section in the profiles sub-pane.
+preferences-copy-profile-header =
+    .label = Copy an existing profile
+    .description = The new profile will copy your settings, add-ons, history, and saved data like bookmarks and passwords — but not your account or sync info.
+# This string sits next to the copy controls, both the copy-profile-select
+# drop-down and the copy-profile-button, so that the user understands they
+# need to first pick a profile to copy, and then click the copy button.
+preferences-profile-to-copy =
+  .label = Profile to copy
+# This string is a placeholder that will be shown in a drop-down list of
+# profiles. The user will select a profile, then click the copy button
+# to make a copy of that profile.
+preferences-copy-profile-select = Select profile
+preferences-copy-profile-button = Copy
 
 tabs-group-header2 =
   .label = Tabs
