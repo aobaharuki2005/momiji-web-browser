@@ -1796,13 +1796,13 @@ fn convert_h3_to_h1_headers(headers: &[Header], ret_headers: &mut ThinVec<u8>) -
         .value();
 
     ret_headers.extend_from_slice(b"HTTP/3 ");
-    ret_headers.extend_from_slice(status_val.as_bytes());
+    ret_headers.extend_from_slice(status_val);
     ret_headers.extend_from_slice(b"\r\n");
 
     for hdr in headers.iter().filter(|&h| h.name() != ":status") {
         ret_headers.extend_from_slice(&sanitize_header(Cow::from(hdr.name().as_bytes())));
         ret_headers.extend_from_slice(b": ");
-        ret_headers.extend_from_slice(&sanitize_header(Cow::from(hdr.value().as_bytes())));
+        ret_headers.extend_from_slice(&sanitize_header(Cow::from(hdr.value())));
         ret_headers.extend_from_slice(b"\r\n");
     }
     ret_headers.extend_from_slice(b"\r\n");
