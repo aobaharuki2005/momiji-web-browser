@@ -7404,10 +7404,12 @@
   value: false
   mirror: once
 
+#ifdef XP_MACOSX
 - name: gfx.use-iosurface-textures
   type: bool
   value: false
   mirror: once
+#endif
 
 - name: gfx.use-mutex-on-present
   type: bool
