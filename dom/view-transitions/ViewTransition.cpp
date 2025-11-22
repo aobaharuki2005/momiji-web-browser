@@ -889,9 +889,11 @@ void ViewTransition::SetupTransitionPseudoElements() {
     // If both of capturedElement's old image and new element are not null,
     // then:
     if (capturedElement.mOldState.mTriedImage && capturedElement.mNewElement) {
-      NS_ConvertUTF16toUTF8 dynamicAnimationName(
-          kGroupAnimPrefix + nsDependentAtomString(transitionName));
-
+      nsAutoCString dynamicAnimationName;
+      nsStyleUtil::AppendQuotedCSString(
+          NS_ConvertUTF16toUTF8(kGroupAnimPrefix +
+                                nsDependentAtomString(transitionName)),
+          dynamicAnimationName);
       capturedElement.mGroupKeyframes =
           BuildGroupKeyframes(mDocument, capturedElement.mOldState.mTransform,
                               capturedElement.mOldState.mBorderBoxSize,

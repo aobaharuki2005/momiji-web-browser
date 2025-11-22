@@ -43,11 +43,10 @@ class nsStyleUtil {
                             const nsAString& aValue,
                             const nsStringComparator& aComparator);
 
-  // Append a quoted (with 'quoteChar') and escaped version of aString
-  // to aResult.  'aQuoteChar' must be ' or ".
-  static void AppendEscapedCSSString(const nsACString& aString,
-                                     nsACString& aResult,
-                                     char aQuoteChar = '"');
+  // Append a quoted (with 'quoteChar') version of aString to aResult.
+  // 'aQuoteChar' must be ' or ".
+  static void AppendQuotedCSString(const nsACString& aString,
+                                   nsACString& aResult, char aQuoteChar = '"');
 
   // Append the identifier given by |aIdent| to |aResult|, with
   // appropriate escaping so that it can be reparsed to the same
