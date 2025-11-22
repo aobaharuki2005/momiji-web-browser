@@ -7416,11 +7416,13 @@
   value: false
   mirror: once
 
+#ifdef MOZ_WIDGET_ANDROID
 # Use SurfaceTextures as preferred backend for TextureClient/Host.
 - name: gfx.use-surfacetexture-textures
   type: bool
   value: false
   mirror: once
+#endif
 
 - name: gfx.vsync.compositor.unobserve-count
   type: int32_t
