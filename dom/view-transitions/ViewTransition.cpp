@@ -890,7 +890,7 @@ void ViewTransition::SetupTransitionPseudoElements() {
     // then:
     if (capturedElement.mOldState.mTriedImage && capturedElement.mNewElement) {
       nsAutoCString dynamicAnimationName;
-      nsStyleUtil::AppendQuotedCSString(
+      nsStyleUtil::AppendQuotedCSSString(
           NS_ConvertUTF16toUTF8(kGroupAnimPrefix +
                                 nsDependentAtomString(transitionName)),
           dynamicAnimationName);

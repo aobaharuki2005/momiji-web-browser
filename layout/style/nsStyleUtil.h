@@ -45,7 +45,7 @@ class nsStyleUtil {
 
   // Append a quoted (with 'quoteChar') version of aString to aResult.
   // 'aQuoteChar' must be ' or ".
-  static void AppendQuotedCSString(const nsACString& aString,
+  static void AppendQuotedCSSString(const nsACString& aString,
                                    nsACString& aResult, char aQuoteChar = '"');
 
   // Append the identifier given by |aIdent| to |aResult|, with
