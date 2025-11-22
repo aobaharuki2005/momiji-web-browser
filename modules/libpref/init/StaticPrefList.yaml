@@ -7995,11 +7995,18 @@
   value: false
   mirror: once
 
+#ifdef XP_WIN
 # Whether to use the D3D11 RenderCompositor when using WebRender software backend
 - name: gfx.webrender.software.d3d11
   type: bool
   value: true
   mirror: once
+
+- name: gfx.webrender.software.d3d11.upload-mode
+  type: RelaxedAtomicInt32
+  value: 4
+  mirror: always
+#endif
 
 - name: gfx.webrender.software.opengl
   type: bool
@@ -8009,11 +8016,6 @@
   value: false
 #endif
   mirror: once
-
-- name: gfx.webrender.software.d3d11.upload-mode
-  type: RelaxedAtomicInt32
-  value: 4
-  mirror: always
 
 # Whether to force widgets to don't support acceleration to use WebRender
 # despite that
