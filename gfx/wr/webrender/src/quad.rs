@@ -9,24 +9,20 @@ use crate::batch::{BatchKey, BatchKind, BatchTextures};
 use crate::clip::{ClipChainInstance, ClipIntern, ClipItemKind, ClipNodeRange, ClipSpaceConversion, ClipStore};
 use crate::command_buffer::{CommandBufferIndex, PrimitiveCommand, QuadFlags};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
-use crate::gpu_types::{PrimitiveInstanceData, QuadHeader, QuadInstance, QuadPrimitive, QuadSegment, TransformPaletteId, ZBufferId};
+use crate::gpu_types::{PrimitiveInstanceData, QuadInstance, QuadSegment, TransformPaletteId, ZBufferId};
 use crate::intern::DataStore;
 use crate::internal_types::TextureSource;
 use crate::pattern::{Pattern, PatternBuilder, PatternBuilderContext, PatternBuilderState, PatternKind, PatternShaderInput};
 use crate::prim_store::{PrimitiveInstanceIndex, PrimitiveScratchBuffer};
 use crate::render_task::{MaskSubPass, RenderTask, RenderTaskAddress, RenderTaskKind, SubPass};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskGraphBuilder, RenderTaskId};
-use crate::renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF, GpuBufferDataI};
+use crate::renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF};
 use crate::segment::EdgeAaSegmentMask;
 use crate::space::SpaceMapper;
 use crate::spatial_tree::{CoordinateSpaceMapping, SpatialNodeIndex, SpatialTree};
 use crate::surface::SurfaceBuilder;
 use crate::util::{extract_inner_rect_k, MaxRect, ScaleOffset};
 use crate::visibility::compute_conservative_visible_rect;
-
-/// This type reflects the unfortunate situation with quad coordinates where we
-/// sometimes use layout and sometimes device coordinates.
-pub type LayoutOrDeviceRect = api::euclid::default::Box2D<f32>;
 
 const MIN_AA_SEGMENTS_SIZE: f32 = 4.0;
 const MIN_QUAD_SPLIT_SIZE: f32 = 256.0;
@@ -339,8 +335,8 @@ fn prepare_quad_impl(
 
         let main_prim_address = write_prim_blocks(
             &mut frame_state.frame_gpu_data.f32,
-            local_rect.to_untyped(),
-            clip_chain.local_clip_rect.to_untyped(),
+            *local_rect,
+            clip_chain.local_clip_rect,
             pattern.base_color,
             pattern.texture_input.task_id,
             &[],
@@ -399,8 +395,8 @@ fn prepare_quad_impl(
 
             let main_prim_address = write_prim_blocks(
                 &mut frame_state.frame_gpu_data.f32,
-                local_rect.to_untyped(),
-                clip_chain.local_clip_rect.to_untyped(),
+                *local_rect,
+                clip_chain.local_clip_rect,
                 pattern.base_color,
                 pattern.texture_input.task_id,
                 &[],
@@ -429,7 +425,7 @@ fn prepare_quad_impl(
                 &mut frame_state.surface_builder,
             );
 
-            let rect = clipped_surface_rect.to_f32().to_untyped();
+            let rect = clipped_surface_rect.to_f32().cast_unit();
             add_composite_prim(
                 pattern_builder.get_base_color(&ctx),
                 prim_instance_index,
@@ -656,8 +652,8 @@ fn prepare_quad_impl(
 
                         let main_prim_address = write_prim_blocks(
                             &mut state.frame_gpu_data.f32,
-                            local_rect.to_untyped(),
-                            clip_chain.local_clip_rect.to_untyped(),
+                            *local_rect,
+                            clip_chain.local_clip_rect,
                             pattern.base_color,
                             pattern.texture_input.task_id,
                             &[],
@@ -708,8 +704,8 @@ fn prepare_quad_impl(
                     &pattern,
                     local_to_device.inverse(),
                     prim_instance_index,
-                    device_prim_rect.to_untyped(),
-                    clip_coverage_rect.to_untyped(),
+                    device_prim_rect.cast_unit(),
+                    clip_coverage_rect.cast_unit(),
                     pattern.is_opaque,
                     frame_state,
                     targets,
@@ -721,7 +717,7 @@ fn prepare_quad_impl(
                 add_composite_prim(
                     pattern_builder.get_base_color(&ctx),
                     prim_instance_index,
-                    clip_coverage_rect.to_untyped(),
+                    clip_coverage_rect.cast_unit(),
                     frame_state,
                     targets,
                     &scratch.quad_indirect_segments,
@@ -833,8 +829,8 @@ fn prepare_quad_impl(
 
                         let main_prim_address = write_prim_blocks(
                             &mut state.frame_gpu_data.f32,
-                            local_rect.to_untyped(),
-                            clip_chain.local_clip_rect.to_untyped(),
+                            *local_rect,
+                            clip_chain.local_clip_rect,
                             pattern.base_color,
                             pattern.texture_input.task_id,
                             &[],
@@ -1035,8 +1031,8 @@ fn add_pattern_prim(
     pattern: &Pattern,
     pattern_transform: ScaleOffset,
     prim_instance_index: PrimitiveInstanceIndex,
-    rect: LayoutOrDeviceRect,
-    clip_rect: LayoutOrDeviceRect,
+    rect: LayoutRect,
+    clip_rect: LayoutRect,
     is_opaque: bool,
     frame_state: &mut FrameBuildingState,
     targets: &[CommandBufferIndex],
@@ -1080,7 +1076,7 @@ fn add_pattern_prim(
 fn add_composite_prim(
     base_color: ColorF,
     prim_instance_index: PrimitiveInstanceIndex,
-    rect: LayoutOrDeviceRect,
+    rect: LayoutRect,
     frame_state: &mut FrameBuildingState,
     targets: &[CommandBufferIndex],
     segments: &[QuadSegment],
@@ -1125,25 +1121,24 @@ fn add_composite_prim(
 
 pub fn write_prim_blocks(
     builder: &mut GpuBufferBuilderF,
-    prim_rect: LayoutOrDeviceRect,
-    clip_rect: LayoutOrDeviceRect,
+    prim_rect: LayoutRect,
+    clip_rect: LayoutRect,
     pattern_base_color: ColorF,
     pattern_texture_input: RenderTaskId,
     segments: &[QuadSegment],
-    pattern_scale_offset: ScaleOffset,
+    scale_offset: ScaleOffset,
 ) -> GpuBufferAddress {
     let mut writer = builder.write_blocks(5 + segments.len() * 2);
 
-    writer.push(&QuadPrimitive {
-        bounds: prim_rect,
-        clip: clip_rect,
-        input_task: pattern_texture_input,
-        pattern_scale_offset,
-        color: pattern_base_color.premultiplied(),
-    });
+    writer.push_one(prim_rect);
+    writer.push_one(clip_rect);
+    writer.push_render_task(pattern_texture_input);
+    writer.push_one(scale_offset);
+    writer.push_one(pattern_base_color.premultiplied());
 
     for segment in segments {
-        writer.push(segment);
+        writer.push_one(segment.rect);
+        writer.push_render_task(segment.task_id)
     }
 
     writer.finish()
@@ -1177,12 +1172,13 @@ pub fn add_to_batch<F>(
     }
 
     // See QuadHeader in ps_quad.glsl
-    let mut writer = gpu_buffer_builder.i32.write_blocks(QuadHeader::NUM_BLOCKS);
-    writer.push(&QuadHeader {
-        transform_id,
-        z_id,
-        pattern_input,
-    });
+    let mut writer = gpu_buffer_builder.i32.write_blocks(1);
+    writer.push_one([
+        transform_id.0 as i32,
+        z_id.0,
+        pattern_input.0,
+        pattern_input.1,
+    ]);
     let prim_address_i = writer.finish();
 
     let texture = match src_task_id {

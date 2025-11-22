@@ -13,15 +13,15 @@ flat varying mediump vec2 v_scale_dir;
 
 #ifdef WR_VERTEX_SHADER
 
-struct LinearGradientBrushData {
+struct Gradient {
     vec4 start_end_point;
     int extend_mode;
     vec2 stretch_size;
 };
 
-LinearGradientBrushData fetch_gradient(int address) {
+Gradient fetch_gradient(int address) {
     vec4 data[2] = fetch_from_gpu_buffer_2f(address);
-    return LinearGradientBrushData(
+    return Gradient(
         data[0],
         int(data[1].x),
         data[1].yz
@@ -40,7 +40,7 @@ void brush_vs(
     int brush_flags,
     vec4 texel_rect
 ) {
-    LinearGradientBrushData gradient = fetch_gradient(prim_address);
+    Gradient gradient = fetch_gradient(prim_address);
 
     write_gradient_vertex(
         vi,

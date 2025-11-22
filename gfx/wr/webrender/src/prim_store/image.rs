@@ -10,7 +10,6 @@ use api::{
 use api::units::*;
 use euclid::point2;
 use crate::composite::CompositorSurfaceKind;
-use crate::gpu_types::{ImageBrushPrimitiveData, YuvPrimitive};
 use crate::renderer::{GpuBufferBuilderF, GpuBufferWriterF};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
@@ -29,6 +28,7 @@ use crate::render_task_cache::{
     RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent
 };
 use crate::resource_cache::{ImageRequest, ImageProperties, ResourceCache};
+use crate::util::pack_as_float;
 use crate::visibility::{PrimitiveVisibility, compute_conservative_visible_rect};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::image_tiling;
@@ -395,14 +395,18 @@ impl ImageData {
     }
 
     pub fn write_prim_gpu_blocks(&self, adjustment: &AdjustedImageSource, writer: &mut GpuBufferWriterF) {
-        let stretch_size = adjustment.map_stretch_size(self.stretch_size)
-             + self.tile_spacing;
-
-        writer.push(&ImageBrushPrimitiveData {
-            color: self.color.premultiplied(),
-            background_color: PremultipliedColorF::WHITE,
-            stretch_size,
-        });
+        let stretch_size = adjustment.map_stretch_size(self.stretch_size);
+        // Images are drawn as a white color, modulated by the total
+        // opacity coming from any collapsed property bindings.
+        // Size has to match `VECS_PER_SPECIFIC_BRUSH` from `brush_image.glsl` exactly.
+        writer.push_one(self.color.premultiplied());
+        writer.push_one(PremultipliedColorF::WHITE);
+        writer.push_one([
+            stretch_size.width + self.tile_spacing.width,
+            stretch_size.height + self.tile_spacing.height,
+            0.0,
+            0.0,
+        ]);
     }
 }
 
@@ -710,11 +714,13 @@ impl YuvImageData {
     }
 
     pub fn write_prim_gpu_blocks(&self, writer: &mut GpuBufferWriterF) {
-        writer.push(&YuvPrimitive {
-            channel_bit_depth: self.color_depth.bit_depth(),
-            color_space: self.color_space.with_range(self.color_range),
-            yuv_format: self.format,
-        });
+        let ranged_color_space = self.color_space.with_range(self.color_range);
+        writer.push_one([
+            pack_as_float(self.color_depth.bit_depth()),
+            pack_as_float(ranged_color_space as u32),
+            pack_as_float(self.format as u32),
+            0.0
+        ]);
     }
 }
 

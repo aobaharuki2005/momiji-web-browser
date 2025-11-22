@@ -109,7 +109,6 @@ void brush_shader_main_vs(
         segment_rect = ph.local_rect;
         segment_data = vec4(0.0);
     } else {
-        // See BrushSegmentGpuData
         int segment_address = ph.specific_prim_address +
                               VECS_PER_SPECIFIC_BRUSH +
                               instance.segment_index * VECS_PER_SEGMENT;

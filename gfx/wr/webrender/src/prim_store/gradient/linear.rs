@@ -12,7 +12,6 @@ use euclid::approxeq::ApproxEq;
 use euclid::{point2, vec2, size2};
 use api::{ExtendMode, GradientStop, LineOrientation, PremultipliedColorF, ColorF, ColorU};
 use api::units::*;
-use crate::gpu_types::{ImageBrushPrimitiveData, LinearGradientBrushData};
 use crate::pattern::{Pattern, PatternBuilder, PatternBuilderContext, PatternBuilderState, PatternKind, PatternShaderInput, PatternTextureInput};
 use crate::prim_store::gradient::{gpu_gradient_stops_blocks, write_gpu_gradient_stops_tree, write_gpu_gradient_stops_linear, GradientKind};
 use crate::scene_building::IsVisible;
@@ -29,6 +28,7 @@ use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
 use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
 use crate::segment::EdgeAaSegmentMask;
+use crate::util::pack_as_float;
 use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder, apply_gradient_local_clip};
 use std::ops::{Deref, DerefMut};
 use std::mem::swap;
@@ -84,8 +84,8 @@ impl InternDebug for LinearGradientKey {}
 pub struct LinearGradientTemplate {
     pub common: PrimTemplateCommonData,
     pub extend_mode: ExtendMode,
-    pub start_point: LayoutPoint,
-    pub end_point: LayoutPoint,
+    pub start_point: DevicePoint,
+    pub end_point: DevicePoint,
     pub task_size: DeviceIntSize,
     pub scale: DeviceVector2D,
     pub stretch_size: LayoutSize,
@@ -397,8 +397,8 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
         // should be drawn in.
         let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
-        let start_point = LayoutPoint::new(item.start_point.x, item.start_point.y);
-        let end_point = LayoutPoint::new(item.end_point.x, item.end_point.y);
+        let start_point = DevicePoint::new(item.start_point.x, item.start_point.y);
+        let end_point = DevicePoint::new(item.end_point.x, item.end_point.y);
         let tile_spacing: LayoutSize = item.tile_spacing.into();
         let stretch_size: LayoutSize = item.stretch_size.into();
         let mut task_size: DeviceSize = stretch_size.cast_unit();
@@ -498,24 +498,36 @@ impl LinearGradientTemplate {
 
         // Write_prim_gpu_blocks
         if self.cached {
-            writer.push(&ImageBrushPrimitiveData {
-                color: PremultipliedColorF::WHITE,
-                background_color: PremultipliedColorF::WHITE,
-                stretch_size: self.stretch_size,
-            });
+            // We are using the image brush.
+            writer.push_one(PremultipliedColorF::WHITE);
+            writer.push_one(PremultipliedColorF::WHITE);
+            writer.push_one([
+                self.stretch_size.width,
+                self.stretch_size.height,
+                0.0,
+                0.0,
+            ]);
         } else {
             // We are using the gradient brush.
-            writer.push(&LinearGradientBrushData {
-                start: self.start_point,
-                end: self.end_point,
-                extend_mode: self.extend_mode,
-                stretch_size: self.stretch_size,
-            });
+            writer.push_one([
+                self.start_point.x,
+                self.start_point.y,
+                self.end_point.x,
+                self.end_point.y,
+            ]);
+            writer.push_one([
+                pack_as_float(self.extend_mode as u32),
+                self.stretch_size.width,
+                self.stretch_size.height,
+                0.0,
+            ]);
         }
 
         // write_segment_gpu_blocks
         for segment in &self.brush_segments {
-            segment.write_gpu_blocks(&mut writer);
+            // has to match VECS_PER_SEGMENT
+            writer.push_one(segment.local_rect);
+            writer.push_one(segment.extra_data);
         }
 
         self.common.gpu_buffer_address = writer.finish();
@@ -591,11 +603,8 @@ impl LinearGradientTemplate {
                     rg_builder.add().init(RenderTask::new_dynamic(
                         self.task_size,
                         RenderTaskKind::LinearGradient(LinearGradientTask {
-                            // Cached brush gradients are rasteried with 1 layout
-                            // pixel = 1 device pixel (regardless of potential
-                            // scaling factors).
-                            start: self.start_point.cast_unit(),
-                            end: self.end_point.cast_unit(),
+                            start: self.start_point,
+                            end: self.end_point,
                             scale: self.scale,
                             extend_mode: self.extend_mode,
                             stops: stops.unwrap(),
@@ -777,8 +786,8 @@ pub struct LinearGradientCacheKey {
 }
 
 pub fn linear_gradient_pattern(
-    start: LayoutPoint,
-    end: LayoutPoint,
+    start: DevicePoint,
+    end: DevicePoint,
     extend_mode: ExtendMode,
     stops: &[GradientStop],
     is_software: bool,

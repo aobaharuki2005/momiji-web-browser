@@ -17,11 +17,11 @@ use crate::image_tiling::{self, Repetition};
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::clip::{ClipStore, ClipNodeRange};
 use crate::pattern::Pattern;
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferWriterF, GpuBufferDataF};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferWriterF};
 use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainInstance, ClipItemKind};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
-use crate::gpu_types::{BrushFlags, LinearGradientBrushData};
+use crate::gpu_types::BrushFlags;
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor, Filter};
 use crate::picture::{ClusterFlags, PictureCompositeMode, PicturePrimitive, SliceId};
 use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode, Picture3DContext};
@@ -35,7 +35,7 @@ use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
 use crate::render_task::{EmptyTask, MaskSubPass, RenderTask, RenderTaskKind, SubPass};
 use crate::segment::SegmentBuilder;
-use crate::util::{clamp_to_scale_factor, ScaleOffset};
+use crate::util::{clamp_to_scale_factor, pack_as_float, ScaleOffset};
 use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
 
 
@@ -786,13 +786,20 @@ fn prepare_interned_prim_for_render(
                     &mut scratch.gradient_tiles,
                     &frame_context.spatial_tree,
                     Some(&mut |_, gpu_buffer| {
-                        let mut writer = gpu_buffer.write_blocks(LinearGradientBrushData::NUM_BLOCKS);
-                        writer.push(&LinearGradientBrushData {
-                            start: prim_data.start_point,
-                            end: prim_data.end_point,
-                            extend_mode: prim_data.extend_mode,
-                            stretch_size: prim_data.stretch_size,
-                        });
+                        let mut writer = gpu_buffer.write_blocks(2);
+                        writer.push_one([
+                            prim_data.start_point.x,
+                            prim_data.start_point.y,
+                            prim_data.end_point.x,
+                            prim_data.end_point.y,
+                        ]);
+                        writer.push_one([
+                            pack_as_float(prim_data.extend_mode as u32),
+                            prim_data.stretch_size.width,
+                            prim_data.stretch_size.height,
+                            0.0,
+                        ]);
+
                         writer.finish()
                     }),
                 );
@@ -999,7 +1006,7 @@ fn prepare_interned_prim_for_render(
                 }
 
                 let pic_surface_index = pic.raster_config.as_ref().unwrap().surface_index;
-                let prim_local_rect: LayoutRect = frame_state
+                let prim_local_rect = frame_state
                     .surfaces[pic_surface_index.0]
                     .clipped_local_rect
                     .cast_unit();
@@ -1008,8 +1015,8 @@ fn prepare_interned_prim_for_render(
 
                 let prim_address_f = quad::write_prim_blocks(
                     &mut frame_state.frame_gpu_data.f32,
-                    prim_local_rect.to_untyped(),
-                    prim_instance.vis.clip_chain.local_clip_rect.to_untyped(),
+                    prim_local_rect,
+                    prim_instance.vis.clip_chain.local_clip_rect,
                     pattern.base_color,
                     pattern.texture_input.task_id,
                     &[],
@@ -1221,7 +1228,8 @@ fn write_segment<F>(
         f(&mut writer);
 
         for segment in segments {
-            segment.write_gpu_blocks(&mut writer);
+            writer.push_one(segment.local_rect);
+            writer.push_one([0.0; 4]);
         }
 
         segment_instance.gpu_data = writer.finish();

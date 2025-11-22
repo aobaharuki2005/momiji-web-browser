@@ -31,15 +31,15 @@ flat varying mediump vec2 v_perspective;
 #define BLEND_MODE_ALPHA            0
 #define BLEND_MODE_PREMUL_ALPHA     1
 
-struct ImageBrushPrimitiveData {
+struct ImageBrushData {
     vec4 color;
     vec4 background_color;
     vec2 stretch_size;
 };
 
-ImageBrushPrimitiveData fetch_image_data(int address) {
+ImageBrushData fetch_image_data(int address) {
     vec4[3] raw_data = fetch_from_gpu_buffer_3f(address);
-    ImageBrushPrimitiveData data = ImageBrushPrimitiveData(
+    ImageBrushData data = ImageBrushData(
         raw_data[0],
         raw_data[1],
         raw_data[2].xy
@@ -63,7 +63,7 @@ void brush_vs(
     int brush_flags,
     vec4 segment_data
 ) {
-    ImageBrushPrimitiveData image_data = fetch_image_data(prim_address);
+    ImageBrushData image_data = fetch_image_data(prim_address);
 
     // If this is in WR_FEATURE_TEXTURE_RECT mode, the rect and size use
     // non-normalized texture coordinates.

@@ -7,7 +7,6 @@ use api::{
     LineOrientation, LineStyle, PremultipliedColorF, Shadow,
 };
 use api::units::*;
-use crate::gpu_types::ImageBrushPrimitiveData;
 use crate::renderer::GpuBufferWriterF;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
@@ -90,14 +89,14 @@ impl LineDecorationData {
     ) {
         match self.cache_key.as_ref() {
             Some(cache_key) => {
-                writer.push(&ImageBrushPrimitiveData {
-                    color: self.color.premultiplied(),
-                    background_color: PremultipliedColorF::WHITE,
-                    stretch_size: LayoutSize::new(
-                        cache_key.size.width.to_f32_px(),
-                        cache_key.size.height.to_f32_px(),
-                    ),
-                });
+                writer.push_one(self.color.premultiplied());
+                writer.push_one(PremultipliedColorF::WHITE);
+                writer.push_one([
+                    cache_key.size.width.to_f32_px(),
+                    cache_key.size.height.to_f32_px(),
+                    0.0,
+                    0.0,
+                ]);
             }
             None => {
                 writer.push_one(self.color.premultiplied());

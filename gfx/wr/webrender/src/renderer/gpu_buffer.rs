@@ -30,7 +30,7 @@ pub type GpuBufferI = GpuBuffer<GpuBufferBlockI>;
 pub type GpuBufferBuilderI = GpuBufferBuilderImpl<GpuBufferBlockI>;
 
 pub type GpuBufferWriterF<'l> = GpuBufferWriter<'l, GpuBufferBlockF>;
-pub type GpuBufferWriterI<'l> = GpuBufferWriter<'l, GpuBufferBlockI>;
+//pub type GpuBufferWriterI<'l> = GpuBufferWriter<'l, GpuBufferBlockI>;
 
 unsafe impl Texel for GpuBufferBlockF {
     fn image_format() -> ImageFormat { ImageFormat::RGBAF32 }
@@ -117,19 +117,6 @@ impl GpuBufferBlockI {
 }
 
 impl Into<GpuBufferBlockF> for LayoutRect {
-    fn into(self) -> GpuBufferBlockF {
-        GpuBufferBlockF {
-            data: [
-                self.min.x,
-                self.min.y,
-                self.max.x,
-                self.max.y,
-            ],
-        }
-    }
-}
-
-impl Into<GpuBufferBlockF> for crate::quad::LayoutOrDeviceRect {
     fn into(self) -> GpuBufferBlockF {
         GpuBufferBlockF {
             data: [
@@ -236,30 +223,6 @@ impl Into<GpuBufferBlockI> for [i32; 4] {
     }
 }
 
-pub trait GpuBufferDataF {
-    const NUM_BLOCKS: usize;
-    fn write(&self, writer: &mut GpuBufferWriterF);
-}
-
-pub trait GpuBufferDataI {
-    const NUM_BLOCKS: usize;
-    fn write(&self, writer: &mut GpuBufferWriterI);
-}
-
-impl GpuBufferDataF for [f32; 4] {
-    const NUM_BLOCKS: usize = 1;
-    fn write(&self, writer: &mut GpuBufferWriterF) {
-        writer.push_one(*self);
-    }
-}
-
-impl GpuBufferDataI for [i32; 4] {
-    const NUM_BLOCKS: usize = 1;
-    fn write(&self, writer: &mut GpuBufferWriterI) {
-        writer.push_one(*self);
-    }
-}
-
 /// Record a patch to the GPU buffer for a render task
 struct DeferredBlock {
     task_id: RenderTaskId,
@@ -316,20 +279,6 @@ impl<'a, T> GpuBufferWriter<'a, T> where T: Texel {
         assert!(self.buffer.len() <= self.index + self.max_block_count);
 
         GpuBufferAddress(self.index as u32)
-    }
-}
-
-impl<'a> GpuBufferWriterF<'a> {
-    pub fn push<Data: GpuBufferDataF>(&mut self, data: &Data) {
-        let _start_index = self.buffer.len();
-        data.write(self);
-        debug_assert_eq!(self.buffer.len() - _start_index, Data::NUM_BLOCKS);
-    }
-}
-
-impl<'a> GpuBufferWriterI<'a> {
-    pub fn push<Data: GpuBufferDataI>(&mut self, data: &Data) {
-        data.write(self);
     }
 }
 
