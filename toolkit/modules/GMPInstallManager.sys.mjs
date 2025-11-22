@@ -898,13 +898,7 @@ GMPDownloader.prototype = {
         type: "downloaderr",
       });
     }
-    // If the HTTPS-Only Mode is enabled, every insecure request gets upgraded
-    // by default. This upgrade has to be prevented for openh264 downloads since
-    // the server doesn't support https://
-    const downloadOptions = {
-      httpsOnlyNoUpgrade: gmpAddon.isOpenH264,
-    };
-    return ProductAddonChecker.downloadAddon(gmpAddon, downloadOptions).then(
+    return ProductAddonChecker.downloadAddon(gmpAddon).then(
       zipPath => {
         let now = Math.round(Date.now() / 1000);
         GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_DOWNLOAD, now, gmpAddon.id);
