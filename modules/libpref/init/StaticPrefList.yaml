@@ -6928,12 +6928,12 @@
   value: 1
   mirror: always
 
+#ifdef XP_DARWIN
 - name: gfx.core-animation.tint-opaque
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-#ifdef XP_DARWIN
   # Create specialized video-only layers for video content in
   # fullscreen windows. Consistently works well on Apple Silicon,
   # some issues remain on Intel hardware.
