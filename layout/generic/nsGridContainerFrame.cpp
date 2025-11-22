@@ -10272,6 +10272,7 @@ void nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aLists);
+    DisplayAbsoluteContinuations(aBuilder, aLists);
   }
 
   // Our children are all grid-level boxes, which behave the same as
