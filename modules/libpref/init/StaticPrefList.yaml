@@ -9677,10 +9677,12 @@
   value: true
   mirror: once
 
+#ifdef XP_DARWIN
 - name: layers.iosurfaceimage.recycle-limit
   type: RelaxedAtomicUint32
   value: 15
   mirror: always
+#endif
 
 #---------------------------------------------------------------------------
 # Prefs starting with "layout."
