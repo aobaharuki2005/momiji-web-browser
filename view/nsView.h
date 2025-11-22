@@ -192,19 +192,6 @@ class nsView final : public nsIWidgetListener {
   virtual void List(FILE* out, int32_t aIndent = 0) const;
 #endif  // DEBUG
 
-  /**
-   * @result true iff this is the root view for its view manager
-   */
-  bool IsRoot() const;
-
-  static LayoutDeviceIntRect CalcWidgetBounds(
-      const nsRect& aBounds, int32_t aAppUnitsPerDevPixel,
-      nsIFrame* aParentFrame, nsIWidget* aThisWidget,
-      mozilla::widget::WindowType, mozilla::widget::TransparencyMode);
-
-  LayoutDeviceIntRect CalcWidgetBounds(mozilla::widget::WindowType,
-                                       mozilla::widget::TransparencyMode);
-
   // nsIWidgetListener
   mozilla::PresShell* GetPresShell() override;
   nsView* GetView() override { return this; }

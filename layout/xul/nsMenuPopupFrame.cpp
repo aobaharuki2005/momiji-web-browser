@@ -68,6 +68,7 @@
 #include "nsXULPopupManager.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 using mozilla::dom::Document;
 using mozilla::dom::Element;
 using mozilla::dom::Event;
@@ -339,10 +340,28 @@ void nsMenuPopupFrame::CreateWidget() {
 }
 
 LayoutDeviceIntRect nsMenuPopupFrame::CalcWidgetBounds() const {
-  return nsView::CalcWidgetBounds(
-      GetRect(), PresContext()->AppUnitsPerDevPixel(),
-      PresShell()->GetRootFrame(), nullptr, widget::WindowType::Popup,
-      nsLayoutUtils::GetFrameTransparency(this, this));
+  auto a2d = PresContext()->AppUnitsPerDevPixel();
+  nsPoint offset;
+  nsIWidget* parentWidget =
+      PresShell()->GetRootFrame()->GetNearestWidget(offset);
+  // We want the bounds be relative to the parent widget, in appunits
+  if (parentWidget) {
+    // put offset into screen coordinates. (based on client area origin)
+    offset += LayoutDeviceIntPoint::ToAppUnits(
+        parentWidget->WidgetToScreenOffset(), a2d);
+  }
+  int32_t roundTo =
+      parentWidget ? parentWidget->RoundsWidgetCoordinatesTo() : 1;
+  auto bounds = GetRect() + offset;
+  // We use outside pixels for transparent windows if possible, so that we
+  // don't truncate the contents. For opaque popups, we use nearest pixels
+  // which prevents having pixels not drawn by the frame.
+  const auto transparency = nsLayoutUtils::GetFrameTransparency(this, this);
+  const bool opaque = transparency == TransparencyMode::Opaque;
+  const auto idealBounds = LayoutDeviceIntRect::FromUnknownRect(
+      opaque ? bounds.ToNearestPixels(a2d) : bounds.ToOutsidePixels(a2d));
+  return nsIWidget::MaybeRoundToDisplayPixels(idealBounds, transparency,
+                                              roundTo);
 }
 
 void nsMenuPopupFrame::DestroyWidget() {
