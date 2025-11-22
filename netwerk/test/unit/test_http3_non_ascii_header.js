@@ -68,7 +68,7 @@ add_task(async function test_non_ascii_header() {
   );
 
   let protocol1 = req1.protocolVersion;
-  Assert.ok(protocol1 === "h3" || protocol1 === "h2", `Using ${protocol1}`);
+  Assert.strictEqual(protocol1, "h3", `Using ${protocol1}`);
   Assert.equal(req1.responseStatus, 200);
   info(buf1);
 
@@ -82,6 +82,6 @@ add_task(async function test_non_ascii_header() {
   );
 
   let protocol2 = req2.protocolVersion;
-  Assert.ok(protocol2 === "h3" || protocol2 === "h2", `Using ${protocol2}`);
+  Assert.strictEqual(protocol2, "h3", `Using ${protocol2}`);
   Assert.equal(req2.responseStatus, 200);
 });

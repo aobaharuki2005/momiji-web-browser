@@ -45,7 +45,7 @@ use nserror::{
     NS_ERROR_FILE_ALREADY_EXISTS, NS_ERROR_ILLEGAL_VALUE, NS_ERROR_INVALID_ARG,
     NS_ERROR_NET_HTTP3_PROTOCOL_ERROR, NS_ERROR_NET_INTERRUPT, NS_ERROR_NET_RESET,
     NS_ERROR_NET_TIMEOUT, NS_ERROR_NOT_AVAILABLE, NS_ERROR_NOT_CONNECTED, NS_ERROR_OUT_OF_MEMORY,
-    NS_ERROR_SOCKET_ADDRESS_IN_USE, NS_ERROR_UNEXPECTED, NS_OK, NS_ERROR_DOM_INVALID_HEADER_VALUE,
+    NS_ERROR_SOCKET_ADDRESS_IN_USE, NS_ERROR_UNEXPECTED, NS_OK, NS_ERROR_DOM_INVALID_HEADER_NAME,
 };
 use nsstring::{nsACString, nsCString};
 use thin_vec::ThinVec;
@@ -1145,41 +1145,59 @@ fn parse_headers(headers: &nsACString) -> Result<Vec<Header>, nsresult> {
     let mut hdrs = Vec::new();
     // this is only used for headers built by Firefox.
     // Firefox supplies all headers already prepared for sending over http1.
-    // They need to be split into (String, String) pairs.
-    match str::from_utf8(headers) {
-        Err(_) => {
-            // Header names are checked for UTF8 in Necko
-            // Values aren't necessaryly UTF-8 - Should be fixed in bug 1999659
-            return Err(NS_ERROR_DOM_INVALID_HEADER_VALUE);
-        }
-        Ok(h) => {
-            for elem in h.split("\r\n").skip(1) {
-                if elem.starts_with(':') {
-                    // colon headers are for http/2 and 3 and this is http/1
-                    // input, so that is probably a smuggling attack of some
-                    // kind.
-                    continue;
-                }
-                if elem.is_empty() {
-                    continue;
-                }
+    // They need to be split into (name, value) pairs where name is a String
+    // and value is a Vec<u8>.
 
-                let mut hdr_str = elem.splitn(2, ':');
-                let name = hdr_str
-                    .next()
-                    .expect("`elem` is not empty")
-                    .trim()
-                    .to_lowercase();
-                if is_excluded_header(&name) {
-                    continue;
-                }
-                let value = hdr_str
-                    .next()
-                    .map_or_else(String::new, |v| v.trim().to_string());
+    let headers_bytes: &[u8] = headers;
 
-                hdrs.push(Header::new(name, value));
-            }
+    // Split on either \r or \n. When splitting "\r\n" sequences, this produces
+    // an empty element between them which is filtered out by the is_empty check.
+    // This also handles malformed inputs with bare \r or \n.
+    for elem in headers_bytes.split(|&b| b == b'\r' || b == b'\n').skip(1) {
+        if elem.is_empty() {
+            continue;
         }
+        if elem.starts_with(b":") {
+            // colon headers are for http/2 and 3 and this is http/1
+            // input, so that is probably a smuggling attack of some
+            // kind.
+            continue;
+        }
+
+        let colon_pos = match elem.iter().position(|&b| b == b':') {
+            Some(pos) => pos,
+            None => continue, // No colon, skip this line
+        };
+
+        let name_bytes = &elem[..colon_pos];
+        // Safe: if colon is at the end, this yields an empty slice
+        let value_bytes = &elem[colon_pos + 1..];
+
+        // Header names must be valid UTF-8
+        let name = match str::from_utf8(name_bytes) {
+            Ok(n) => n.trim().to_lowercase(),
+            Err(_) => return Err(NS_ERROR_DOM_INVALID_HEADER_NAME),
+        };
+
+        if is_excluded_header(&name) {
+            continue;
+        }
+
+        // Trim leading and trailing optional whitespace (OWS) from value.
+        // Per RFC 9110, OWS is defined as *( SP / HTAB ), i.e., space and tab only.
+        let value = value_bytes
+            .iter()
+            .position(|&b| b != b' ' && b != b'\t')
+            .map_or(&value_bytes[0..0], |start| {
+                let end = value_bytes
+                    .iter()
+                    .rposition(|&b| b != b' ' && b != b'\t')
+                    .map_or(value_bytes.len(), |pos| pos + 1);
+                &value_bytes[start..end]
+            })
+            .to_vec();
+
+        hdrs.push(Header::new(name, value));
     }
     Ok(hdrs)
 }
@@ -2685,4 +2703,33 @@ pub unsafe extern "C" fn neqo_decoder_remaining(decoder: &mut NeqoDecoder) -> u6
 pub unsafe extern "C" fn neqo_decoder_offset(decoder: &mut NeqoDecoder) -> u64 {
     let decoder = decoder.decoder.as_mut().unwrap();
     decoder.offset() as u64
+}
+
+// Test function called from C++ gtest
+// Callback signature: fn(user_data, name_ptr, name_len, value_ptr, value_len)
+type HeaderCallback = extern "C" fn(*mut c_void, *const u8, usize, *const u8, usize);
+
+#[no_mangle]
+pub extern "C" fn neqo_glue_test_parse_headers(
+    headers_input: &nsACString,
+    callback: HeaderCallback,
+    user_data: *mut c_void,
+) -> bool {
+    match parse_headers(headers_input) {
+        Ok(headers) => {
+            for header in headers {
+                let name_bytes = header.name().as_bytes();
+                let value_bytes = header.value();
+                callback(
+                    user_data,
+                    name_bytes.as_ptr(),
+                    name_bytes.len(),
+                    value_bytes.as_ptr(),
+                    value_bytes.len(),
+                );
+            }
+            true
+        }
+        Err(_) => false,
+    }
 }

@@ -1513,12 +1513,6 @@ nsresult Http3Session::TryActivating(
       QueueStream(aStream);
       return rv;
     }
-    if (rv == NS_ERROR_DOM_INVALID_HEADER_VALUE) {
-      // neqo_http3conn_fetch may fail if the headers contain non-ascii
-      // values. In that case we want to fallback to HTTP/2 right away.
-      // HACK: This should be removed when we fix it in bug 1999659
-      return NS_ERROR_HTTP2_FALLBACK_TO_HTTP1;
-    }
 
     // Previously we always returned NS_OK here, which caused the
     // transaction to wait until the quic connection timed out
