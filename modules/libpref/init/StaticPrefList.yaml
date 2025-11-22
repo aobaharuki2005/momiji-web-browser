@@ -8014,6 +8014,7 @@
   mirror: always
 #endif
 
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
 - name: gfx.webrender.software.opengl
   type: bool
 #if defined(MOZ_WIDGET_ANDROID)
@@ -8022,6 +8023,7 @@
   value: false
 #endif
   mirror: once
+#endif
 
 # Whether to force widgets to don't support acceleration to use WebRender
 # despite that
