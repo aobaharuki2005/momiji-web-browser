@@ -743,6 +743,8 @@ partial interface Document {
 partial interface Document {
   [Pref="dom.viewTransitions.enabled"]
   ViewTransition startViewTransition(optional ViewTransitionUpdateCallback updateCallback);
+  [Pref="dom.viewTransitions.enabled"]
+  readonly attribute ViewTransition? activeViewTransition;
 };
 
 // https://github.com/w3c/csswg-drafts/pull/10767 for the name divergence in the spec
