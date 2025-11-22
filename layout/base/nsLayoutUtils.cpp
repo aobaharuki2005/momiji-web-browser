@@ -1103,6 +1103,28 @@ bool nsLayoutUtils::IsProperAncestorFrame(const nsIFrame* aAncestorFrame,
 }
 
 // static
+bool nsLayoutUtils::IsProperAncestorFrameConsideringContinuations(
+    const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
+    const nsIFrame* aCommonAncestor) {
+  MOZ_ASSERT(aAncestorFrame);
+  const nsIFrame* ancestorFirstContinuation =
+      aAncestorFrame->FirstContinuation();
+  if (!aFrame || aFrame->FirstContinuation() == ancestorFirstContinuation) {
+    return false;
+  }
+  const nsIFrame* commonFirstContinuation =
+      aCommonAncestor ? aCommonAncestor->FirstContinuation() : nullptr;
+  const nsIFrame* f = aFrame;
+  for (; f && f->FirstContinuation() != commonFirstContinuation;
+       f = f->GetParent()) {
+    if (f->FirstContinuation() == ancestorFirstContinuation) {
+      return true;
+    }
+  }
+  return f && commonFirstContinuation == ancestorFirstContinuation;
+}
+
+// static
 const nsIFrame* nsLayoutUtils::FillAncestors(
     const nsIFrame* aFrame, const nsIFrame* aStopAtAncestor,
     nsTArray<const nsIFrame*>* aAncestors) {
