@@ -2009,10 +2009,10 @@ var gSync = {
     let sendTabToDeviceSeparator = document.getElementById(
       "context_sendTabToDeviceSeparator"
     );
-    sendTabToDeviceSeparator.disabled = !enabled;
 
     if (hideItems || !hasASendableURI) {
       sendTabsToDevice.hidden = true;
+      sendTabToDeviceSeparator.hidden = true;
     } else {
       let tabCount = aTargetTab.multiselected
         ? gBrowser.multiSelectedTabsCount
@@ -2022,6 +2022,7 @@ var gSync = {
         JSON.stringify({ tabCount })
       );
       sendTabsToDevice.hidden = false;
+      sendTabToDeviceSeparator.hidden = false;
     }
   },
 
