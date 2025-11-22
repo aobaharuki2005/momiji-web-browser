@@ -281,11 +281,6 @@ const CONFIG_PANES = Object.freeze({
     l10nId: "autofill-payment-methods-manage-payments-title",
     groupIds: ["managePayments"],
   },
-  paneProfiles: {
-    parent: "general",
-    l10nId: "preferences-profiles-group-header",
-    groupIds: ["profilePane"],
-  },
 });
 
 var gLastCategory = { category: undefined, subcategory: undefined };
