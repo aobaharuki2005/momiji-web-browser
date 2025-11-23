@@ -164,7 +164,7 @@ function CssRuleView(inspector, document, store) {
   this._outputParser = new OutputParser(document, this.cssProperties);
   this._abortController = new this.styleWindow.AbortController();
 
-  this._onAddRule = this._onAddRule.bind(this);
+  this.addNewRule = this.addNewRule.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onFilterStyles = this._onFilterStyles.bind(this);
@@ -226,7 +226,7 @@ function CssRuleView(inspector, document, store) {
   );
   this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
-  this.addRuleButton.addEventListener("click", this._onAddRule);
+  this.addRuleButton.addEventListener("click", this.addNewRule);
   this.searchField.addEventListener("input", this._onFilterStyles);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
   this.pseudoClassToggle.addEventListener(
@@ -752,7 +752,7 @@ CssRuleView.prototype = {
   /**
    * Add a new rule to the current element.
    */
-  async _onAddRule() {
+  addNewRule() {
     const elementStyle = this._elementStyle;
     const element = elementStyle.element;
     const pseudoClasses = element.pseudoClassLocks;
@@ -765,14 +765,20 @@ CssRuleView.prototype = {
   },
 
   /**
+   * Returns true if the "Add Rule" action (either via the addRuleButton or the context
+   * menu entry) can be performed for the currently selected node.
+   *
+   * @returns {boolean}
+   */
+  canAddNewRuleForSelectedNode() {
+    return this._viewedElement && this.inspector.selection.isElementNode();
+  },
+
+  /**
    * Disables add rule button when needed
    */
   refreshAddRuleButtonState() {
-    const shouldBeDisabled =
-      !this._viewedElement ||
-      !this.inspector.selection.isElementNode() ||
-      this.inspector.selection.isNativeAnonymousNode();
-    this.addRuleButton.disabled = shouldBeDisabled;
+    this.addRuleButton.disabled = !this.canAddNewRuleForSelectedNode();
   },
 
   /**
@@ -1008,7 +1014,7 @@ CssRuleView.prototype = {
     this.styleDocument.removeEventListener("click", this, { capture: true });
     this.element.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
-    this.addRuleButton.removeEventListener("click", this._onAddRule);
+    this.addRuleButton.removeEventListener("click", this.addNewRule);
     this.searchField.removeEventListener("input", this._onFilterStyles);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
     this.pseudoClassPanel.removeEventListener(

@@ -254,10 +254,9 @@ StyleInspectorMenu.prototype = {
         "styleinspector.contextmenu.addNewRule"
       ),
       accesskey: STYLE_INSPECTOR_L10N.getStr(addRuleAccessKey),
-      click: () => this.view._onAddRule(),
+      click: () => this.view.addNewRule(),
       visible: this.isRuleView,
-      disabled:
-        !this.isRuleView || this.inspector.selection.isNativeAnonymousNode(),
+      disabled: !this.isRuleView || !this.view.canAddNewRuleForSelectedNode(),
     });
     menu.append(menuitemAddRule);
 
