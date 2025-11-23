@@ -141,14 +141,11 @@ RuleEditor.prototype = {
   },
 
   get isSelectorEditable() {
-    const trait =
+    return (
       this.isEditable &&
       this.rule.domRule.type !== ELEMENT_STYLE &&
-      this.rule.domRule.type !== CSSRule.KEYFRAME_RULE;
-
-    // Do not allow editing anonymousselectors until we can
-    // detect mutations on  pseudo elements in Bug 1034110.
-    return trait && !this.rule.elementStyle.element.isNativeAnonymous;
+      this.rule.domRule.type !== CSSRule.KEYFRAME_RULE
+    );
   },
 
   _create() {

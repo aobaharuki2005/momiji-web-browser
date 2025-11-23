@@ -14,6 +14,9 @@ const TEST_URI = `
   <h1 class=foo>pseudo</h1>`;
 
 add_task(async function test_inline_sheet() {
+  // Avoid focusing the first declaration after editing the selector
+  await pushPref("devtools.inspector.rule-view.focusNextOnEnter", false);
+
   await addTab(
     `data:text/html,<meta charset=utf8>${encodeURIComponent(TEST_URI)}`
   );
@@ -105,5 +108,58 @@ add_task(async function test_inline_sheet() {
     ruleEditor.element.getAttribute("unmatched"),
     "false",
     "pseudo element rule does match back the h1 node"
+  );
+
+  info(
+    "Check that we can edit the selector when the pseudo element node is selected"
+  );
+  const h1NodeFront = await getNodeFront("h1", inspector);
+  let h1NodeFrontChildren = await inspector.walker.children(h1NodeFront);
+  const h1AfterNodeFront = h1NodeFrontChildren.nodes.at(-1);
+  await selectNode(h1AfterNodeFront, inspector);
+  // sanity check
+  is(
+    inspector.selection.nodeFront.displayName,
+    "::after",
+    "We selected the ::after pseudo element"
+  );
+
+  info(`Modify "h1::after" into ".foo::after"`);
+  ruleEditor = getRuleViewRuleEditor(view, 0);
+  editor = await focusEditableField(view, ruleEditor.selectorText);
+  onRuleViewChanged = view.once("ruleview-changed");
+  editor.input.value = ".foo::after";
+  EventUtils.synthesizeKey("KEY_Enter");
+  info("waiting for <onRuleViewChanged>");
+  await onRuleViewChanged;
+
+  // Get the new rule editor reference
+  ruleEditor = getRuleViewRuleEditor(view, 0);
+  is(ruleEditor.selectorText.textContent, ".foo::after");
+  is(
+    ruleEditor.element.getAttribute("unmatched"),
+    "false",
+    "pseudo element rule still matches"
+  );
+
+  info(`Modify ".foo::after" into "h2::after"`);
+  ruleEditor = getRuleViewRuleEditor(view, 0);
+  editor = await focusEditableField(view, ruleEditor.selectorText);
+  onRuleViewChanged = view.once("ruleview-changed");
+  const onSelection = inspector.selection.once("new-node-front");
+  editor.input.value = "h2::after";
+  EventUtils.synthesizeKey("KEY_Enter");
+  await onRuleViewChanged;
+  await onSelection;
+  is(
+    inspector.selection.nodeFront,
+    h1NodeFront,
+    "The parent node of the pseudo element was selected"
+  );
+  h1NodeFrontChildren = await inspector.walker.children(h1NodeFront);
+  is(
+    h1NodeFrontChildren.nodes.find(child => child.displayName === "::after"),
+    undefined,
+    "The ::after pseudo element was removed"
   );
 });
