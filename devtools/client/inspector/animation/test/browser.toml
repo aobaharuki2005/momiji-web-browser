@@ -115,6 +115,8 @@ fail-if = [
 
 ["browser_animation_fission_switch-target.js"]
 
+["browser_animation_iframe.js"]
+
 ["browser_animation_indication-bar.js"]
 skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt && a11y_checks", # Bug 1858041 and 1849028 for causing intermittent a11y_checks results
