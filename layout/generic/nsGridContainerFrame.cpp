@@ -3276,11 +3276,6 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
       MOZ_ASSERT(mGridItems.Length() == len + 1, "can't find GridItemInfo");
     }
 
-    if (aGridContainerFrame->IsAbsoluteContainer()) {
-      // Prepare absolute frames before constructing GridItemInfo.
-      aGridContainerFrame->GetAbsoluteContainingBlock()->PrepareAbsoluteFrames(
-          aGridContainerFrame);
-    }
     // XXX NOTE: This is O(n^2) in the number of abs.pos. items. (bug 1252186)
     const nsFrameList& absPosChildren = aGridContainerFrame->GetChildList(
         aGridContainerFrame->GetAbsoluteListID());
@@ -9306,7 +9301,6 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aGridRI,
 
   AbsoluteContainingBlock* absoluteContainer =
       IsAbsoluteContainer() ? GetAbsoluteContainingBlock() : nullptr;
-  // We have prepared the absolute frames when initializing GridReflowInput.
   if (absoluteContainer && absoluteContainer->HasAbsoluteFrames()) {
     // 'gridOrigin' is the origin of the grid (the start of the first track),
     // with respect to the grid container's padding-box (CB).
@@ -10272,7 +10266,6 @@ void nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aLists);
-    DisplayAbsoluteContinuations(aBuilder, aLists);
   }
 
   // Our children are all grid-level boxes, which behave the same as
