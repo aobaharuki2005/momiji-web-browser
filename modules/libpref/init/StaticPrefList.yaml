@@ -1952,13 +1952,6 @@
   value: 2
   mirror: always
 
-# If set, use DocumentChannel to directly initiate loads entirely
-# from parent-process BrowsingContexts
-- name: browser.tabs.documentchannel.parent-controlled
-  type: bool
-  value: false
-  mirror: always
-
 # If set, middle clicking on a link opens the link in a new tab.
 - name: browser.tabs.opentabfor.middleclick
   type: bool

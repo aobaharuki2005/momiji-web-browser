@@ -8718,16 +8718,15 @@
             // before the location changed.
 
             this.mBrowser.userTypedValue = null;
-            // When browser.tabs.documentchannel.parent-controlled pref and SHIP
-            // are enabled and a load gets cancelled due to another one
+            // When SHIP is enabled and a load gets cancelled due to another one
             // starting, the error is NS_BINDING_CANCELLED_OLD_LOAD.
             // When these prefs are not enabled, the error is different and
             // that's why we still want to look at the isNavigating flag.
             // We could add a workaround and make sure that in the alternative
             // codepaths we would also omit the same error, but considering
             // how we will be enabling fission by default soon, we can keep
-            // using isNavigating for now, and remove it when the
-            // parent-controlled pref and SHIP are enabled by default.
+            // using isNavigating for now, and remove it when SHIP is enabled
+            // by default.
             // Bug 1725716 has been filed to consider removing isNavigating
             // field alltogether.
             let isNavigating = this.mBrowser.isNavigating;
