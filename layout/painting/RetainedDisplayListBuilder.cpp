@@ -1265,6 +1265,15 @@ bool RetainedDisplayListBuilder::ComputeRebuildRegion(
 
 bool RetainedDisplayListBuilder::ShouldBuildPartial(
     nsTArray<nsIFrame*>& aModifiedFrames) {
+  // We don't support retaining with overlay scrollbars, since they require
+  // us to look at the display list and pick the highest z-index, which
+  // we can't do during partial building.
+  if (mBuilder.DisablePartialUpdates()) {
+    mBuilder.SetDisablePartialUpdates(false);
+    Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::Disabled;
+    return false;
+  }
+
   if (mList.IsEmpty()) {
     // Partial builds without a previous display list do not make sense.
     Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::EmptyList;
@@ -1275,15 +1284,6 @@ bool RetainedDisplayListBuilder::ShouldBuildPartial(
       StaticPrefs::layout_display_list_rebuild_frame_limit()) {
     // Computing a dirty rect with too many modified frames can be slow.
     Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::RebuildLimit;
-    return false;
-  }
-
-  // We don't support retaining with overlay scrollbars, since they require
-  // us to look at the display list and pick the highest z-index, which
-  // we can't do during partial building.
-  if (mBuilder.DisablePartialUpdates()) {
-    mBuilder.SetDisablePartialUpdates(false);
-    Metrics()->mPartialUpdateFailReason = PartialUpdateFailReason::Disabled;
     return false;
   }
 
