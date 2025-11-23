@@ -829,11 +829,20 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
    * @param {Array} actors A list of AnimationPlayerActor.
    */
   pauseSome(actors) {
-    for (const { player } of actors) {
-      this.pauseSync(player);
+    const handledActors = [];
+    for (const actor of actors) {
+      // The client could call this with actors that we no longer handle, as it might
+      // not have received the mutations event yet for removed animations.
+      // In such case, ignore the actor, as pausing the animation again might trigger a
+      // new mutation, which would cause problems here and on the client.
+      if (!this.actors.includes(actor)) {
+        continue;
+      }
+      this.pauseSync(actor.player);
+      handledActors.push(actor);
     }
 
-    return this.waitForNextFrame(actors);
+    return this.waitForNextFrame(handledActors);
   }
 
   /**
@@ -842,22 +851,39 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
    * @param {Array} actors A list of AnimationPlayerActor.
    */
   playSome(actors) {
-    for (const { player } of actors) {
-      this.playSync(player);
+    const handledActors = [];
+    for (const actor of actors) {
+      // The client could call this with actors that we no longer handle, as it might
+      // not have received the mutations event yet for removed animations.
+      // In such case, ignore the actor, as playing the animation again might trigger a
+      // new mutation, which would cause problems here and on the client.
+      if (!this.actors.includes(actor)) {
+        continue;
+      }
+      this.playSync(actor.player);
+      handledActors.push(actor);
     }
 
-    return this.waitForNextFrame(actors);
+    return this.waitForNextFrame(handledActors);
   }
 
   /**
    * Set the current time of several animations at the same time.
    *
-   * @param {Array} players A list of AnimationPlayerActor.
+   * @param {Array} actors A list of AnimationPlayerActor.
    * @param {number} time The new currentTime.
    * @param {boolean} shouldPause Should the players be paused too.
    */
-  setCurrentTimes(players, time, shouldPause) {
-    for (const actor of players) {
+  setCurrentTimes(actors, time, shouldPause) {
+    const handledActors = [];
+    for (const actor of actors) {
+      // The client could call this with actors that we no longer handle, as it might
+      // not have received the mutations event yet for removed animations.
+      // In such case, ignore the actor, as setting the time might trigger a
+      // new mutation, which would cause problems here and on the client.
+      if (!this.actors.includes(actor)) {
+        continue;
+      }
       const player = actor.player;
 
       if (shouldPause) {
@@ -869,9 +895,10 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
           ? time - actor.createdTime
           : actor.createdTime - time;
       player.currentTime = currentTime * Math.abs(player.playbackRate);
+      handledActors.push(actor);
     }
 
-    return this.waitForNextFrame(players);
+    return this.waitForNextFrame(handledActors);
   }
 
   /**
@@ -880,13 +907,20 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
    * @param {Array} actors A list of AnimationPlayerActor.
    * @param {number} rate The new rate.
    */
-  setPlaybackRates(players, rate) {
-    return Promise.all(
-      players.map(({ player }) => {
-        player.updatePlaybackRate(rate);
-        return player.ready;
-      })
-    );
+  setPlaybackRates(actors, rate) {
+    const readyPromises = [];
+    for (const actor of actors) {
+      // The client could call this with actors that we no longer handle, as it might
+      // not have received the mutations event yet for removed animations.
+      // In such case, ignore the actor, as setting the playback rate might trigger a
+      // new mutation, which would cause problems here and on the client.
+      if (!this.actors.includes(actor)) {
+        continue;
+      }
+      actor.player.updatePlaybackRate(rate);
+      readyPromises.push(actor.player.ready);
+    }
+    return Promise.all(readyPromises);
   }
 
   /**

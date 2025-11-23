@@ -112,6 +112,8 @@ skip-if = [
 
 ["browser_animation_simple.js"]
 
+["browser_animation_unhandledActorPlayers.js"]
+
 ["browser_animation_updatedState.js"]
 
 ["browser_application_manifest.js"]
