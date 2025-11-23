@@ -110,32 +110,7 @@ add_task(async function () {
 
   info("Checking content of each animation item");
   for (let i = 0; i < TEST_DATA.length; i++) {
-    const testData = TEST_DATA[i];
-    info(`Checking pseudo element for animation at index #${i}`);
-    const animationItemEl = await findAnimationItemByIndex(panel, i);
-
-    if (!animationItemEl) {
-      ok(false, `Didn't find an animation at index #${i}`);
-      continue;
-    }
-
-    info("Checking text content of animation target");
-    const animationTargetEl = animationItemEl.querySelector(
-      ".animation-list .animation-item .animation-target"
-    );
-    is(
-      animationTargetEl.textContent,
-      testData.expectedTargetLabel,
-      `Got expected target for animation at index #${i}`
-    );
-
-    info("Checking text content of animation name");
-    const animationNameEl = animationItemEl.querySelector(".animation-name");
-    is(
-      animationNameEl.textContent,
-      testData.expectedAnimationNameLabel,
-      `Got expected animation name for animation at index #${i}`
-    );
+    await checkAnimationItemAtIndex(panel, i, TEST_DATA[i]);
   }
 
   info(
@@ -220,7 +195,60 @@ add_task(async function () {
     "::view-transition-group(my-vt)",
     "Expected view transition pseudo element node was selected"
   );
+
+  info("Reload the page");
+  await reloadBrowser();
+
+  info("Waiting for expected animations to be displayed");
+  // No need to check for view transition this time, we want to assert that we do get
+  // animations for pseudo element after reloading (assert fix for Bug 2001126)
+  const TEST_DATA_AFTER_RELOAD = TEST_DATA.filter(
+    ({ expectedTargetLabel }) =>
+      !expectedTargetLabel.startsWith("::view-transition")
+  );
+  await waitFor(
+    () =>
+      panel.querySelectorAll(".animation-list .animation-item").length ===
+      TEST_DATA_AFTER_RELOAD.length
+  );
+  ok(
+    true,
+    `Got expectedCount of animation item should be ${TEST_DATA_AFTER_RELOAD.length} after reloading`
+  );
+
+  info("Checking content of each animation item after reload");
+  for (let i = 0; i < TEST_DATA_AFTER_RELOAD.length; i++) {
+    await checkAnimationItemAtIndex(panel, i, TEST_DATA_AFTER_RELOAD[i]);
+  }
 });
+
+async function checkAnimationItemAtIndex(panel, index, testData) {
+  info(`Checking pseudo element for animation at index #${index}`);
+  const animationItemEl = await findAnimationItemByIndex(panel, index);
+
+  if (!animationItemEl) {
+    ok(false, `Didn't find an animation at index #${index}`);
+    return;
+  }
+
+  info("Checking text content of animation target");
+  const animationTargetEl = animationItemEl.querySelector(
+    ".animation-list .animation-item .animation-target"
+  );
+  is(
+    animationTargetEl.textContent,
+    testData.expectedTargetLabel,
+    `Got expected target for animation at index #${index}`
+  );
+
+  info("Checking text content of animation name");
+  const animationNameEl = animationItemEl.querySelector(".animation-name");
+  is(
+    animationNameEl.textContent,
+    testData.expectedAnimationNameLabel,
+    `Got expected animation name for animation at index #${index}`
+  );
+}
 
 function assertAnimationCount(panel, expectedCount) {
   info("Checking count of animation item");

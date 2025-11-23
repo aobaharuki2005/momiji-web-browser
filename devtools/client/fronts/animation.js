@@ -208,6 +208,16 @@ class AnimationsFront extends FrontClassWithSpec(animationsSpec) {
     // Attribute name from which to retrieve the actorID out of the target actor's form
     this.formAttributeName = "animationsActor";
   }
+
+  setWalkerActor(walkerFront) {
+    this.walker = walkerFront;
+    return super.setWalkerActor(walkerFront);
+  }
+
+  destroy() {
+    super.destroy();
+    this.walker = null;
+  }
 }
 
 exports.AnimationsFront = AnimationsFront;
