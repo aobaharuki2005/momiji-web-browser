@@ -34,12 +34,6 @@ gcloud:
 
   device:
     - model: MediumPhone.arm
-      version: 26
-      locale: en_US
-    - model: MediumPhone.arm
-      version: 28
-      locale: en_US
-    - model: MediumPhone.arm
       version: 30
       locale: en_US
     - model: MediumPhone.arm

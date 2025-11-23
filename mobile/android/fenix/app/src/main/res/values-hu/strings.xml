@@ -846,7 +846,7 @@
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Könyvjelzők keresése</string>
   <!-- Preference title for switch preference to show shortcuts when searching -->
-  <string name="preferences_show_shortcuts" tools:ignore="UnusedResources" moz:removedIn="147">Gyorsbillentyűk megjelenítése</string>
+  <string name="preferences_show_shortcuts" tools:ignore="UnusedResources" moz:removedIn="147">Indítóikonok megjelenítése</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Szinkronizált lapok keresése</string>
   <!-- Preference for account settings -->
@@ -965,7 +965,7 @@
   <!-- Title for the opening wallpaper settings screen -->
   <string name="customize_wallpapers">Háttérképek</string>
   <!-- Title for the customize home screen section with sponsored shortcuts. -->
-  <string name="customize_toggle_contile">Szponzorált gyorskeresők</string>
+  <string name="customize_toggle_contile">Szponzorált indítóikonok</string>
   <!--
     Wallpapers
 
@@ -1052,6 +1052,8 @@
   <string name="alternative_app_icon_group_gradients">Színátmenetek</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Egyéb</string>
+  <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_featured">Kiemelt</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Lecseréli az alkalmazásikont?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
@@ -1060,6 +1062,8 @@
   <string name="restart_warning_dialog_button_positive_2">Ikon módosítása</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Mégse</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Nem sikerült az alkalmazásikon frissítése. Távolítsa el a meglévő indítóikonokat, és próbálja újra.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -2346,6 +2350,16 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Engedélyezés, hogy a %1$s automatikusan alkalmazza a nagyobb webhelyhibák elkerüléséhez szükséges kivételeket.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">A csak az apró hibák megoldásához és a kényelmi funkciók elérhetőségéhez szükséges kivételek automatikus alkalmazása.</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Nagy oldalhibák javítása (ajánlott)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Kisebb oldalhibák javítása</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">A fő problémák javításaival együtt használandó.</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Webhelyproblémák javítása</string>
+  <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_learn_more">További tudnivalók</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
@@ -3004,12 +3018,12 @@
 
     Title text displayed for the shortcuts home screen section.
   -->
-  <string name="homepage_shortcuts_title">Gyorsbillentyűk</string>
+  <string name="homepage_shortcuts_title">Indítóikonok</string>
   <!--
     Context description text for the "Show all" button in the shortcuts home screen section
     which navigates the user to a screen displaying all the shortcuts.
   -->
-  <string name="homepage_shortcuts_show_all_content_description">Összes gyorsbillentyű megjelenítése</string>
+  <string name="homepage_shortcuts_show_all_content_description">Összes indítóikon megjelenítése</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Az indítóikonok korlátja elérve</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3023,7 +3037,7 @@
   <!-- Hint for renaming title of a shortcut -->
   <string name="shortcut_name_hint">Indítóikon neve</string>
   <!-- Hint for editing URL of a shortcut. -->
-  <string name="shortcut_url_hint">Indító webcíme</string>
+  <string name="shortcut_url_hint">Indítóikon webcíme</string>
   <!-- Dialog button text for canceling the rename top site prompt. -->
   <string name="top_sites_rename_dialog_cancel">Mégse</string>
   <!-- Text for the menu button to open the homepage settings. -->
@@ -3035,7 +3049,7 @@
   <!-- Text for the menu item to edit a top site. -->
   <string name="top_sites_edit_top_site">Szerkesztés</string>
   <!-- Text for the dialog title to edit a top site. -->
-  <string name="top_sites_edit_dialog_title">Indító szerkesztése</string>
+  <string name="top_sites_edit_dialog_title">Indítóikon szerkesztése</string>
   <!-- Button caption to confirm the edit of the top site. -->
   <string name="top_sites_edit_dialog_save">Mentés</string>
   <!-- Error message when the user entered an invalid URL -->
@@ -3873,6 +3887,10 @@
   <string name="settings_search_clear_recent_searches_message">Összes törlése</string>
   <!-- Section header for recent search results -->
   <string name="settings_search_recent_searches_section_header">Legutóbbi keresési találatok</string>
+  <!-- Message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_title">Nincs találat</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">Próbáljon meg egy másik keresést?</string>
   <!--
     Terms of use pop up prompt
 

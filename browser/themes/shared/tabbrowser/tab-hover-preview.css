@@ -57,6 +57,10 @@
   }
 }
 
-#tabgroup-panel-content > toolbarbutton.active-tab {
-  font-weight: var(--font-weight-semibold);
+#tabgroup-panel-content {
+  max-width: var(--menuitem-max-width);
+
+  & toolbarbutton.active-tab {
+    font-weight: var(--font-weight-semibold);
+  }
 }

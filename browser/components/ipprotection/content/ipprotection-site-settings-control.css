@@ -4,14 +4,15 @@
 
 @import "chrome://global/skin/global.css";
 
-#flag-wrapper {
-  display: flex;
-  align-items: center;
-  gap: var(--space-small);
+#site-settings-label {
+  --box-border-radius-start: initial;
 }
 
-#location-icon {
-  height: var(--icon-size);
-  width: var(--icon-size);
-  pointer-events: none;
+.site-settings {
+  --box-group-border: none;
+  background-color: var(--background-color-box);
+}
+
+.exception-enabled {
+  --box-icon-fill: var(--icon-color-success);
 }

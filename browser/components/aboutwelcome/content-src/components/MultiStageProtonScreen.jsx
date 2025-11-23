@@ -785,11 +785,18 @@ export class ProtonScreen extends React.PureComponent {
                 />
               ) : null}
               {this.renderLanguageSwitcher()}
+              {content?.tiles_container?.position !==
+              "after_supporting_content" ? (
+                <ContentTiles {...this.props} />
+              ) : null}
               {content.above_button_content
                 ? this.renderOrderedContent(content.above_button_content)
                 : null}
               {this.renderActionButtons("after_supporting_content", content)}
-              <ContentTiles {...this.props} />
+              {content?.tiles_container?.position ===
+              "after_supporting_content" ? (
+                <ContentTiles {...this.props} />
+              ) : null}
               {!hideStepsIndicator && aboveButtonStepsIndicator
                 ? this.renderStepsIndicator()
                 : null}

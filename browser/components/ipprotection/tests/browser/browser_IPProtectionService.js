@@ -158,9 +158,11 @@ add_task(
       "User should now be enrolled"
     );
 
+    let statusCard = content.statusCardEl;
+
     // User is already signed in so the toggle should be available.
     Assert.ok(
-      content.connectionToggleEl,
+      statusCard?.connectionToggleEl,
       "Status card connection toggle should be present"
     );
 
@@ -278,9 +280,18 @@ add_task(async function test_IPProtectionService_pass_errors() {
     () => content.shadowRoot.querySelector("ipprotection-message-bar")
   );
 
-  content.connectionToggleEl.click();
+  let statusCard = content.statusCardEl;
+
+  let toggleChangedPromise = BrowserTestUtils.waitForMutationCondition(
+    statusCard.shadowRoot,
+    { childList: true, subtree: true },
+    () => !statusCard.toggleEnabled
+  );
+
+  statusCard.connectionToggleEl.click();
 
   await messageBarLoadedPromise;
+  await toggleChangedPromise;
 
   Assert.equal(
     IPProtectionService.state,
@@ -290,7 +301,10 @@ add_task(async function test_IPProtectionService_pass_errors() {
 
   let messageBar = content.shadowRoot.querySelector("ipprotection-message-bar");
 
-  Assert.ok(!content.connectionToggleEl.pressed, "Toggle is off");
+  Assert.ok(
+    !statusCard.connectionToggleEl.pressed,
+    "Toggle is still turned off because of an error"
+  );
   Assert.ok(messageBar, "Message bar should be present");
   Assert.equal(
     content.state.error,
@@ -330,6 +344,7 @@ add_task(async function test_IPProtectionService_retry_errors() {
   IPProtectionService.updateState();
 
   let content = await openPanel();
+  let statusCard = content.statusCardEl;
 
   // Mock a failure
   IPPEnrollAndEntitleManager.resetEntitlement();
@@ -341,7 +356,7 @@ add_task(async function test_IPProtectionService_retry_errors() {
     false,
     () => !!IPProtectionService.activatedAt
   );
-  content.connectionToggleEl.click();
+  statusCard.connectionToggleEl.click();
 
   await startedEventPromise;
 
@@ -371,13 +386,14 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
   IPProtectionService.updateState();
 
   let content = await openPanel();
+  let statusCard = content.statusCardEl;
 
   Assert.ok(
     BrowserTestUtils.isVisible(content),
     "ipprotection content component should be present"
   );
   Assert.ok(
-    content.connectionToggleEl,
+    statusCard.connectionToggleEl,
     "Status card connection toggle should be present"
   );
 
@@ -387,7 +403,7 @@ add_task(async function test_IPProtectionService_stop_on_signout() {
     false,
     () => !!IPProtectionService.activatedAt
   );
-  content.connectionToggleEl.click();
+  statusCard.connectionToggleEl.click();
 
   await startedEventPromise;
 
@@ -450,6 +466,7 @@ add_task(async function test_IPProtectionService_reload() {
   });
 
   let content = await openPanel();
+  let statusCard = content.statusCardEl;
   await IPProtectionService.enrolling;
   Assert.equal(
     IPProtectionService.state,
@@ -462,12 +479,12 @@ add_task(async function test_IPProtectionService_reload() {
     "ipprotection content component should be present"
   );
   Assert.ok(
-    content.connectionToggleEl,
+    statusCard.connectionToggleEl,
     "Status card connection toggle should be present"
   );
 
   let tabReloaded = waitForTabReloaded(gBrowser.selectedTab);
-  content.connectionToggleEl.click();
+  statusCard.connectionToggleEl.click();
   await tabReloaded;
 
   Assert.equal(
@@ -477,7 +494,7 @@ add_task(async function test_IPProtectionService_reload() {
   );
 
   tabReloaded = waitForTabReloaded(gBrowser.selectedTab);
-  content.connectionToggleEl.click();
+  statusCard.connectionToggleEl.click();
   await tabReloaded;
 
   Assert.notStrictEqual(

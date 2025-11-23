@@ -814,6 +814,8 @@ support-files = [
   "searchSuggestionEngine.sjs",
 ]
 
+["browser_view_reusable.js"]
+
 ["browser_view_selectionByMouse.js"]
 skip-if = ["os == 'linux' && os_version == '18.04' && processor == 'x86_64' && asan"] # Bug 1789051
 

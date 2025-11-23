@@ -1125,12 +1125,16 @@
   <string name="preference_bottom_toolbar">پایین</string>
   <!-- Preference for using simple toolbar -->
   <string name="preference_simple_toolbar">ساده</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">باز کردن زبانهٔ جدید</string>
   <!-- Share shortcut in toolbar customization -->
   <string name="toolbar_customize_shortcut_share">هم‌رسانی</string>
   <!-- Add bookmark shortcut in toolbar customization -->
   <string name="toolbar_customize_shortcut_add_bookmark">افزودن نشانک</string>
   <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
   <string name="toolbar_customize_shortcut_translate">ترجمه</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">بازگشت</string>
   <!--
     Theme Preferences
 
@@ -1542,6 +1546,10 @@
   <string name="webcompat_reporter_send">ارسال</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text_2">گزارش ارسال شد</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">گزارش پیش‌نمایش</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">پیش‌نمایش گزارش</string>
   <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
   <string name="webcompat_reporter_preview_bottom_sheet_send">ارسال</string>
   <!--

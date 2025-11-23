@@ -2906,13 +2906,14 @@ void UnmarkGrayTracer::onChild(JS::GCCellPtr thing, const char* name) {
   Zone* zone = tenured.zoneFromAnyThread();
 
   // As well as updating the mark bits, we may need to update the color in the
-  // atom marking bitmap to record that |sourceZone| now has a black edge to
-  // |thing|.
+  // atom marking bitmap for symbols to record that |sourceZone| now has a black
+  // edge to |thing|.
   if (zone->isAtomsZone() && sourceZone) {
-    MOZ_ASSERT(tenured.is<JS::Symbol>());
     GCRuntime* gc = &runtime()->gc;
-    JS::Symbol* symbol = tenured.as<JS::Symbol>();
-    gc->atomMarking.maybeUnmarkGrayAtomically(sourceZone, symbol);
+    if (tenured.is<JS::Symbol>()) {
+      JS::Symbol* symbol = tenured.as<JS::Symbol>();
+      gc->atomMarking.maybeUnmarkGrayAtomically(sourceZone, symbol);
+    }
   }
 
   // If the cell is in a zone whose mark bits are being cleared, then it will

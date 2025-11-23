@@ -236,11 +236,8 @@ export class BackupUIParent extends JSWindowActorParent {
         lazy.logConsole.error(`Failed to rerun encryption`, e);
         return { success: false, errorCode: e.cause || lazy.ERRORS.UNKNOWN };
       }
-      /**
-       * TODO: (Bug 1901640) after enabling encryption, recreate the backup,
-       * this time with the new password.
-       */
-      return { success: true };
+
+      return await this.#triggerCreateBackup({ reason: "encryption" });
     } else if (message.name == "ShowBackupLocation") {
       this.#bs.showBackupLocation();
     } else if (message.name == "EditBackupLocation") {
@@ -266,6 +263,10 @@ export class BackupUIParent extends JSWindowActorParent {
           e
         );
       }
+    } else if (message.name == "SetEmbeddedComponentPersistentData") {
+      this.#bs.setEmbeddedComponentPersistentData(message.data);
+    } else if (message.name == "FlushEmbeddedComponentPersistentData") {
+      this.#bs.setEmbeddedComponentPersistentData({});
     }
 
     return null;

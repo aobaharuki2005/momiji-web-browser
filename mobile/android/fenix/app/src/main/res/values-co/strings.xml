@@ -1726,6 +1726,8 @@
   <string name="webcompat_reporter_etp_checkbox_text">Mandà l’indirizzi web bluccate da a prutezzione contr’à u spiunagiu</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">A prutezzione rinfurzata contr’à u spiunagiu pò bluccà perseguitatori è scenarii chì certi siti web anu bisognu per funziunà currettamente.</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Mandà</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2340,6 +2342,8 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Permette à %1$s d’appiecà autumaticamente l’eccezzioni richieste per evità l’interruzzioni maiò di u situ web.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Appiecà dinù autumaticamente l’eccezzioni chì sò solu richieste per currege i prublemi minò è rende dispunibule funzioni di cumudità.</string>
+  <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Sapene di più</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 

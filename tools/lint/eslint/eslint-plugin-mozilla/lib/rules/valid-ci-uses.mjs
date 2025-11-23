@@ -27,6 +27,7 @@ const platformSpecificInterfaces = new Map([
   ["nsIWindowsRegKey", "windows"],
   ["nsIWindowsPackageManager", "windows"],
   ["nsIWindowsShellService", "windows"],
+  ["nsIWindowsTestDebug", "windows"],
   ["nsIWindowsUIUtils", "windows"],
   ["nsIAccessibleMacEvent", "darwin"],
   ["nsIAccessibleMacInterface", "darwin"],

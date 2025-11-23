@@ -50,6 +50,8 @@ export default class BackupSettings extends MozLitElement {
   static get queries() {
     return {
       scheduledBackupsButtonEl: "#backup-toggle-scheduled-button",
+      archiveSectionEl: "#scheduled-backups",
+      restoreSectionEl: "#restore-from-backup",
       triggerBackupButtonEl: "#backup-trigger-button",
       changePasswordButtonEl: "#backup-change-password-button",
       disableBackupEncryptionEl: "disable-backup-encryption",

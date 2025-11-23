@@ -19,6 +19,8 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -44,6 +46,8 @@ import mozilla.components.ui.icons.R as iconsR
  */
 @Composable
 fun HomepageHeader(
+    wordmarkColor: Color?,
+    privateBrowsingButtonColor: Color,
     browsingMode: BrowsingMode,
     browsingModeChanged: (BrowsingMode) -> Unit,
 ) {
@@ -54,13 +58,14 @@ fun HomepageHeader(
             .padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 32.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        WordmarkLogo()
+        WordmarkLogo(wordmarkColor)
 
-        WordmarkText()
+        WordmarkText(wordmarkColor)
 
         Spacer(modifier = Modifier.weight(1f))
 
         PrivateBrowsingButton(
+            color = privateBrowsingButtonColor,
             browsingMode = browsingMode,
             browsingModeChanged = browsingModeChanged,
         )
@@ -68,7 +73,7 @@ fun HomepageHeader(
 }
 
 @Composable
-private fun WordmarkLogo() {
+private fun WordmarkLogo(color: Color?) {
     Image(
         modifier = Modifier
             .height(40.dp)
@@ -78,12 +83,13 @@ private fun WordmarkLogo() {
             }
             .padding(end = 10.dp),
         painter = painterResource(getAttr(R.attr.fenixWordmarkLogo)),
+        colorFilter = color?.let { ColorFilter.tint(it) },
         contentDescription = null,
     )
 }
 
 @Composable
-private fun WordmarkText() {
+private fun WordmarkText(color: Color?) {
     Image(
         modifier = Modifier
             .semantics {
@@ -92,12 +98,14 @@ private fun WordmarkText() {
             }
             .height(dimensionResource(R.dimen.wordmark_text_height)),
         painter = painterResource(getAttr(R.attr.fenixWordmarkText)),
+        colorFilter = color?.let { ColorFilter.tint(it) },
         contentDescription = stringResource(R.string.app_name),
     )
 }
 
 @Composable
 private fun PrivateBrowsingButton(
+    color: Color,
     browsingMode: BrowsingMode,
     browsingModeChanged: (BrowsingMode) -> Unit,
 ) {
@@ -118,7 +126,7 @@ private fun PrivateBrowsingButton(
         },
     ) {
         Icon(
-            tint = colorResource(getAttr(iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color)),
+            tint = color,
             painter = painterResource(iconsR.drawable.mozac_ic_private_mode_24),
             contentDescription = stringResource(R.string.content_description_private_browsing),
         )
@@ -126,7 +134,7 @@ private fun PrivateBrowsingButton(
 }
 
 @Composable
-private fun getAttr(resId: Int): Int {
+internal fun getAttr(resId: Int): Int {
     val typedArray = LocalContext.current.obtainStyledAttributes(intArrayOf(resId))
     val newResId = typedArray.getResourceId(0, 0)
     typedArray.recycle()
@@ -140,6 +148,12 @@ private fun HomepageHeaderPreview() {
     FirefoxTheme {
         Row(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             HomepageHeader(
+                wordmarkColor = null,
+                privateBrowsingButtonColor = colorResource(
+                    getAttr(
+                        iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                    ),
+                ),
                 browsingMode = BrowsingMode.Normal,
                 browsingModeChanged = {},
             )
@@ -153,6 +167,12 @@ private fun PrivateHomepageHeaderPreview() {
     FirefoxTheme(theme = Theme.Private) {
         Row(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             HomepageHeader(
+                wordmarkColor = null,
+                privateBrowsingButtonColor = colorResource(
+                    getAttr(
+                        iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                    ),
+                ),
                 browsingMode = BrowsingMode.Private,
                 browsingModeChanged = {},
             )

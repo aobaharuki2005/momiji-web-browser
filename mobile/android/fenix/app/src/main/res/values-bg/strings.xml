@@ -1062,6 +1062,8 @@
   <string name="restart_warning_dialog_button_positive_2">Промяна на иконката</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Отказ</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Неуспешно актуализиране на иконата на приложението. Премахнете съществуващите преки пътища и опитайте отново.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -3750,7 +3752,7 @@
   <!-- Subtitle for a setup checklist with 3 steps when the first task is completed. -->
   <string name="setup_checklist_subtitle_3_steps_first_step">Страхотно начало! Завършихте 1 от общо 3 стъпки.</string>
   <!-- Subtitle for a setup checklist with 3 steps when two of the tasks are completed. -->
-  <string name="setup_checklist_subtitle_3_steps_second_step">Почти е готов! Две стъпки са завършени и остава 1 до края.</string>
+  <string name="setup_checklist_subtitle_3_steps_second_step">Почти е готово! Две стъпки са завършени и остава 1 до края.</string>
   <!-- Subtitle for a setup checklist with 3 steps completed state. %1$s is the name of the app (for example "Firefox"). -->
   <string name="setup_checklist_subtitle_3_steps_completed_state">Завършихте всичките 3 стъпки. Насладете се на скоростта, поверителността и сигурността на %1$s.</string>
   <!--

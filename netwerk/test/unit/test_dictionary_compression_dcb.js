@@ -472,6 +472,7 @@ async function setupDicts() {
 }
 
 add_setup(async function () {
+  Services.prefs.setBoolPref("network.http.dictionaries.enable", true);
   if (!server) {
     server = await setupDCBTestServer();
   }

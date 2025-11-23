@@ -1463,6 +1463,10 @@ richlistitem .text-link:hover {
   margin: 0 0 var(--space-small);
 }
 
+.subsection-heading {
+  margin-bottom: var(--space-small);
+}
+
 .section-header-last {
   margin: 0 0 var(--space-large);
 }

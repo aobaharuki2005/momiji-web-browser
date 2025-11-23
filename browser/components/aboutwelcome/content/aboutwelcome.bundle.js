@@ -1618,7 +1618,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     }) : null) : null, content.video_container ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_OnboardingVideo__WEBPACK_IMPORTED_MODULE_7__.OnboardingVideo, {
       content: content.video_container,
       handleAction: this.props.handleAction
-    }) : null, this.renderLanguageSwitcher(), content.above_button_content ? this.renderOrderedContent(content.above_button_content) : null, this.renderActionButtons("after_supporting_content", content), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ContentTiles__WEBPACK_IMPORTED_MODULE_10__.ContentTiles, this.props), !hideStepsIndicator && aboveButtonStepsIndicator ? this.renderStepsIndicator() : null, this.renderActionButtons("end", content),
+    }) : null, this.renderLanguageSwitcher(), content?.tiles_container?.position !== "after_supporting_content" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ContentTiles__WEBPACK_IMPORTED_MODULE_10__.ContentTiles, this.props) : null, content.above_button_content ? this.renderOrderedContent(content.above_button_content) : null, this.renderActionButtons("after_supporting_content", content), content?.tiles_container?.position === "after_supporting_content" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ContentTiles__WEBPACK_IMPORTED_MODULE_10__.ContentTiles, this.props) : null, !hideStepsIndicator && aboveButtonStepsIndicator ? this.renderStepsIndicator() : null, this.renderActionButtons("end", content),
     /* Fullscreen dot-style step indicator should sit inside the
     main inner content to share its padding, which will be
     configurable with Bug 1956042 */
@@ -2562,9 +2562,10 @@ const ContentTiles = props => {
   };
   const renderContentTiles = () => {
     if (Array.isArray(tiles)) {
+      const containerStyle = content?.tiles_container?.style;
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
         id: "content-tiles-container",
-        style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_11__.AboutWelcomeUtils.getValidStyle(content?.contentTilesContainer?.style, CONTAINER_STYLES)
+        style: _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_11__.AboutWelcomeUtils.getValidStyle(containerStyle, CONTAINER_STYLES)
       }, tiles.map((tile, index) => renderContentTile(tile, index)));
     }
     // If tiles is not an array render the tile alone without a container
@@ -3431,7 +3432,7 @@ const EmbeddedFxBackupOptIn = ({
     const {
       current
     } = backupRef;
-    const handleBackupEvent = () => {
+    const handleEnableScheduledBackups = () => {
       handleAction({
         currentTarget: {
           value: "tile_button"
@@ -3440,6 +3441,17 @@ const EmbeddedFxBackupOptIn = ({
           navigate: true
         },
         source: "backup_enabled"
+      });
+    };
+    const handleAdvanceScreens = () => {
+      handleAction({
+        currentTarget: {
+          value: "tile_button"
+        },
+        action: {
+          navigate: true
+        },
+        source: "advance_screens"
       });
     };
     const handleStateUpdate = ({
@@ -3461,10 +3473,12 @@ const EmbeddedFxBackupOptIn = ({
       current.supportBaseLink = state.supportBaseLink;
     };
     current?.addEventListener("BackupUI:StateWasUpdated", handleStateUpdate);
-    current?.addEventListener("BackupUI:EnableScheduledBackups", handleBackupEvent);
+    current?.addEventListener("BackupUI:EnableScheduledBackups", handleEnableScheduledBackups);
+    current?.addEventListener("SpotlightOnboardingAdvanceScreens", handleAdvanceScreens);
     return () => {
-      current?.removeEventListener("BackupUI:EnableScheduledBackups", handleBackupEvent);
+      current?.removeEventListener("BackupUI:EnableScheduledBackups", handleEnableScheduledBackups);
       current?.removeEventListener("BackupUI:StateWasUpdated", handleStateUpdate);
+      current?.removeEventListener("SpotlightOnboardingAdvanceScreens", handleAdvanceScreens);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -3475,6 +3489,7 @@ const EmbeddedFxBackupOptIn = ({
     "hide-secondary-button": !isEncryptedBackup || hide_secondary_button ? "" : undefined,
     "hide-file-path-chooser": isEncryptedBackup && !hide_password_input ? "" : undefined,
     "embedded-fx-backup-opt-in": "",
+    "backup-is-encrypted": isEncryptedBackup ? "" : undefined,
     "file-path-label-l10n-id": file_path_label,
     "turn-on-backup-header-l10n-id": turn_on_backup_header,
     "create-password-label-l10n-id": create_password_label,

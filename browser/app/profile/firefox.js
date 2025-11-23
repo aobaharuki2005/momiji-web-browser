@@ -3516,7 +3516,9 @@ pref("browser.contextual-services.contextId.rust-component.enabled", true);
 
 // Pref to enable the IP protection feature
 pref("browser.ipProtection.enabled", false);
-// Pref to enable IP protection autostart
+// Pref to enable the autoStart feature
+pref("browser.ipProtection.features.autoStart", false);
+// Prefs to track the user turning on autostart preference
 pref("browser.ipProtection.autoStartEnabled", false);
 pref("browser.ipProtection.autoStartPrivateEnabled", false);
 // Pref to track whether the user has turned IP protection on
@@ -3525,6 +3527,8 @@ pref("browser.ipProtection.userEnabled", false);
 pref("browser.ipProtection.variant", "");
 // Pref to track number of times the VPN panel is opened
 pref("browser.ipProtection.panelOpenCount", 0);
+// Pref to enable support for site exceptions
+pref("browser.ipProtection.features.siteExceptions", false);
 pref("browser.ipProtection.exceptionsMode", "all");
 pref("browser.ipProtection.domainExclusions", "");
 pref("browser.ipProtection.domainInclusions", "");

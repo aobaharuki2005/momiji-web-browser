@@ -63,6 +63,7 @@ async function sync_from_server() {
 }
 
 add_setup(async function () {
+  Services.prefs.setBoolPref("network.http.dictionaries.enable", true);
   if (!server) {
     server = await setupServer();
   }

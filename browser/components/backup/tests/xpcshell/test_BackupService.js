@@ -33,6 +33,18 @@ const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
 /** @type {nsIToolkitProfile} */
 let currentProfile;
 
+// Mock backup metadata
+const DATE = "2024-06-25T21:59:11.777Z";
+const IS_ENCRYPTED = true;
+const DEVICE_NAME = "test-device";
+const APP_NAME = "test-app-name";
+const APP_VERSION = "test-app-version";
+const BUILD_ID = "test-build-id";
+const OS_NAME = "test-os-name";
+const OS_VERSION = "test-os-version";
+const TELEMETRY_ENABLED = true;
+const LEGACY_CLIENT_ID = "legacy-client-id";
+
 add_setup(function () {
   currentProfile = setupProfile();
 });
@@ -279,6 +291,26 @@ async function testCreateBackupHelper(sandbox, taskFn) {
   // make our current profile default
   profileSvc.defaultProfile = currentProfile;
 
+  await bs.getBackupFileInfo(backupFilePath);
+  const restoreID = bs.state.restoreID;
+
+  // Intercept the telemetry that we want to check for before it gets submitted
+  // and cleared out.
+  let restoreStartedEvents;
+  let restoreCompleteEvents;
+  let restoreCompleteCallback = () => {
+    Services.obs.removeObserver(
+      restoreCompleteCallback,
+      "browser-backup-restore-complete"
+    );
+    restoreStartedEvents = Glean.browserBackup.restoreStarted.testGetValue();
+    restoreCompleteEvents = Glean.browserBackup.restoreComplete.testGetValue();
+  };
+  Services.obs.addObserver(
+    restoreCompleteCallback,
+    "browser-backup-restore-complete"
+  );
+
   let recoveredProfile = await bs.recoverFromBackupArchive(
     backupFilePath,
     null,
@@ -302,6 +334,28 @@ async function testCreateBackupHelper(sandbox, taskFn) {
     profileSvc.defaultProfile,
     recoveredProfile,
     "The new profile should now be the default"
+  );
+
+  Assert.equal(
+    restoreStartedEvents.length,
+    1,
+    "Should be a single restore start event after we start restoring a profile"
+  );
+  Assert.deepEqual(
+    restoreStartedEvents[0].extra,
+    { restore_id: restoreID },
+    "Restore start event should have the right data"
+  );
+
+  Assert.equal(
+    restoreCompleteEvents.length,
+    1,
+    "Should be a single restore complete event after we start restoring a profile"
+  );
+  Assert.deepEqual(
+    restoreCompleteEvents[0].extra,
+    { restore_id: restoreID },
+    "Restore complete event should have the right data"
   );
 
   // Check that resources were recovered from highest to lowest backup priority.
@@ -1033,17 +1087,23 @@ add_task(async function test_checkForPostRecovery() {
 add_task(async function test_getBackupFileInfo() {
   let sandbox = sinon.createSandbox();
 
-  const DATE = "2024-06-25T21:59:11.777Z";
-  const IS_ENCRYPTED = true;
-  const DEVICE_NAME = "test-device";
-
   let fakeSampleArchiveResult = {
     isEncrypted: IS_ENCRYPTED,
     startByteOffset: 26985,
     contentType: "multipart/mixed",
     archiveJSON: {
       version: 1,
-      meta: { date: DATE, deviceName: DEVICE_NAME },
+      meta: {
+        date: DATE,
+        deviceName: DEVICE_NAME,
+        appName: APP_NAME,
+        appVersion: APP_VERSION,
+        buildID: BUILD_ID,
+        osName: OS_NAME,
+        osVersion: OS_VERSION,
+        healthTelemetryEnabled: TELEMETRY_ENABLED,
+        legacyClientID: LEGACY_CLIENT_ID,
+      },
       encConfig: {},
     },
   };
@@ -1063,7 +1123,18 @@ add_task(async function test_getBackupFileInfo() {
 
   Assert.deepEqual(
     bs.state.backupFileInfo,
-    { isEncrypted: IS_ENCRYPTED, date: DATE, deviceName: DEVICE_NAME },
+    {
+      isEncrypted: IS_ENCRYPTED,
+      date: DATE,
+      deviceName: DEVICE_NAME,
+      appName: APP_NAME,
+      appVersion: APP_VERSION,
+      buildID: BUILD_ID,
+      osName: OS_NAME,
+      osVersion: OS_VERSION,
+      healthTelemetryEnabled: TELEMETRY_ENABLED,
+      legacyClientID: LEGACY_CLIENT_ID,
+    },
     "State should match a subset from the archive sample."
   );
 
@@ -1099,23 +1170,17 @@ add_task(async function test__deleteLastBackup_file_does_not_exist() {
 add_task(async function test_getBackupFileInfo_error_handling() {
   let sandbox = sinon.createSandbox();
 
-  const testCases = [
-    // Errors that should clear backupFileInfo
-    { error: ERRORS.FILE_SYSTEM_ERROR, shouldClear: true },
-    { error: ERRORS.CORRUPTED_ARCHIVE, shouldClear: true },
-    { error: ERRORS.UNSUPPORTED_BACKUP_VERSION, shouldClear: true },
-    // Errors that shouldn't clear backupFileInfo
-    { error: ERRORS.INTERNAL_ERROR, shouldClear: false },
-    { error: ERRORS.UNINITIALIZED, shouldClear: false },
-    { error: ERRORS.INVALID_PASSWORD, shouldClear: false },
+  const errorTypes = [
+    ERRORS.FILE_SYSTEM_ERROR,
+    ERRORS.CORRUPTED_ARCHIVE,
+    ERRORS.UNSUPPORTED_BACKUP_VERSION,
+    ERRORS.INTERNAL_ERROR,
+    ERRORS.UNINITIALIZED,
+    ERRORS.INVALID_PASSWORD,
   ];
 
-  for (const testCase of testCases) {
+  for (const testError of errorTypes) {
     let bs = new BackupService();
-
-    const DATE = "2024-06-25T21:59:11.777Z";
-    const IS_ENCRYPTED = true;
-    const DEVICE_NAME = "test-device";
 
     let fakeSampleArchiveResult = {
       isEncrypted: IS_ENCRYPTED,
@@ -1123,7 +1188,17 @@ add_task(async function test_getBackupFileInfo_error_handling() {
       contentType: "multipart/mixed",
       archiveJSON: {
         version: 1,
-        meta: { date: DATE, deviceName: DEVICE_NAME },
+        meta: {
+          date: DATE,
+          deviceName: DEVICE_NAME,
+          appName: APP_NAME,
+          appVersion: APP_VERSION,
+          buildID: BUILD_ID,
+          osName: OS_NAME,
+          osVersion: OS_VERSION,
+          healthTelemetryEnabled: TELEMETRY_ENABLED,
+          legacyClientID: LEGACY_CLIENT_ID,
+        },
         encConfig: {},
       },
     };
@@ -1140,6 +1215,13 @@ add_task(async function test_getBackupFileInfo_error_handling() {
         isEncrypted: IS_ENCRYPTED,
         date: DATE,
         deviceName: DEVICE_NAME,
+        appName: APP_NAME,
+        appVersion: APP_VERSION,
+        buildID: BUILD_ID,
+        osName: OS_NAME,
+        osVersion: OS_VERSION,
+        healthTelemetryEnabled: TELEMETRY_ENABLED,
+        legacyClientID: LEGACY_CLIENT_ID,
       },
       "Initial state should be set correctly"
     );
@@ -1153,7 +1235,7 @@ add_task(async function test_getBackupFileInfo_error_handling() {
     sandbox.restore();
     sandbox
       .stub(BackupService.prototype, "sampleArchive")
-      .rejects(new Error("Test error", { cause: testCase.error }));
+      .rejects(new Error("Test error", { cause: testError }));
     const setRecoveryErrorStub = sandbox.stub(bs, "setRecoveryError");
 
     try {
@@ -1161,43 +1243,25 @@ add_task(async function test_getBackupFileInfo_error_handling() {
     } catch (error) {
       Assert.ok(
         false,
-        `Expected getBackupFileInfo to throw for error ${testCase.error}`
+        `Expected getBackupFileInfo to throw for error ${testError}`
       );
     }
 
     Assert.ok(
-      setRecoveryErrorStub.calledOnceWith(testCase.error),
-      `setRecoveryError should be called with ${testCase.error}`
+      setRecoveryErrorStub.calledOnceWith(testError),
+      `setRecoveryError should be called with ${testError}`
     );
 
-    // backupFileInfo should be either cleared or preserved based on error type
-    if (testCase.shouldClear) {
-      Assert.strictEqual(
-        bs.state.backupFileInfo,
-        null,
-        `backupFileInfo should be cleared for error ${testCase.error}`
-      );
-      Assert.strictEqual(
-        bs.state.backupFileToRestore,
-        null,
-        `backupFileToRestore should be cleared for error ${testCase.error}`
-      );
-    } else {
-      Assert.deepEqual(
-        bs.state.backupFileInfo,
-        {
-          isEncrypted: IS_ENCRYPTED,
-          date: DATE,
-          deviceName: DEVICE_NAME,
-        },
-        `backupFileInfo should be preserved for error ${testCase.error}`
-      );
-      Assert.strictEqual(
-        bs.state.backupFileToRestore,
-        "test-backup.html",
-        `backupFileToRestore should be preserved for error ${testCase.error}`
-      );
-    }
+    Assert.strictEqual(
+      bs.state.backupFileInfo,
+      null,
+      `backupFileInfo should be cleared for error ${testError}`
+    );
+    Assert.strictEqual(
+      bs.state.backupFileToRestore,
+      null,
+      `backupFileToRestore should be cleared for error ${testError}`
+    );
 
     sandbox.restore();
   }

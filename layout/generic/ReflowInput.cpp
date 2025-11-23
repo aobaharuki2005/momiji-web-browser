@@ -357,21 +357,35 @@ nscoord SizeComputationInput::ComputeISizeValue(
     const SizeOrMaxSize& aSize) const {
   WritingMode wm = GetWritingMode();
   const auto borderPadding = ComputedLogicalBorderPadding(wm);
+  const auto margin = ComputedLogicalMargin(wm);
   const LogicalSize contentEdgeToBoxSizing =
       aBoxSizing == StyleBoxSizing::Border ? borderPadding.Size(wm)
                                            : LogicalSize(wm);
-  const nscoord boxSizingToMarginEdgeISize =
-      borderPadding.IStartEnd(wm) + ComputedLogicalMargin(wm).IStartEnd(wm) -
-      contentEdgeToBoxSizing.ISize(wm);
+  const nscoord boxSizingToMarginEdgeISize = borderPadding.IStartEnd(wm) +
+                                             margin.IStartEnd(wm) -
+                                             contentEdgeToBoxSizing.ISize(wm);
+
+  // Get the bSize with anchor functions resolved, and manually resolve
+  // 'stretch'-like sizes as well (we should do this a bit cleaner,
+  // see bug 2000035):
+  auto bSize = mFrame->StylePosition()->BSize(
+      wm, AnchorPosResolutionParams::From(mFrame, mAnchorPosResolutionCache));
+  if (bSize->BehavesLikeStretchOnBlockAxis()) {
+    if (NS_UNCONSTRAINEDSIZE == aContainingBlockSize.BSize(wm)) {
+      bSize = AnchorResolvedSizeHelper::Auto();
+    } else {
+      nscoord stretchBSize = nsLayoutUtils::ComputeStretchBSize(
+          aContainingBlockSize.BSize(wm), margin.BStartEnd(wm),
+          borderPadding.BStartEnd(wm), aBoxSizing);
+      bSize = AnchorResolvedSizeHelper::LengthPercentage(
+          StyleLengthPercentage::FromAppUnits(stretchBSize));
+    }
+  }
 
   return mFrame
       ->ComputeISizeValue(mRenderingContext, wm, aContainingBlockSize,
                           contentEdgeToBoxSizing, boxSizingToMarginEdgeISize,
-                          aSize,
-                          *mFrame->StylePosition()->BSize(
-                              wm, AnchorPosResolutionParams::From(
-                                      mFrame, mAnchorPosResolutionCache)),
-                          mFrame->GetAspectRatio())
+                          aSize, *bSize, mFrame->GetAspectRatio())
       .mISize;
 }
 
@@ -603,29 +617,23 @@ static bool MightBeContainingBlockFor(nsIFrame* aMaybeContainingBlock,
 }
 
 void ReflowInput::InitCBReflowInput() {
-  if (!mParentReflowInput) {
-    mCBReflowInput = nullptr;
+  mCBReflowInput = mParentReflowInput;
+  if (!mCBReflowInput || mParentReflowInput->mFlags.mDummyParentReflowInput) {
     return;
   }
-  if (mParentReflowInput->mFlags.mDummyParentReflowInput) {
-    mCBReflowInput = mParentReflowInput;
-    return;
-  }
-
   // To avoid a long walk up the frame tree check if the parent frame can be a
   // containing block for mFrame.
-  if (MightBeContainingBlockFor(mParentReflowInput->mFrame, mFrame,
+  if (MightBeContainingBlockFor(mCBReflowInput->mFrame, mFrame,
                                 mStyleDisplay) &&
-      mParentReflowInput->mFrame ==
-          mFrame->GetContainingBlock(0, mStyleDisplay)) {
+      mCBReflowInput->mFrame == mFrame->GetContainingBlock(0, mStyleDisplay)) {
     // Inner table frames need to use the containing block of the outer
     // table frame.
     if (mFrame->IsTableFrame()) {
+      MOZ_ASSERT(mParentReflowInput->mCBReflowInput,
+                 "Inner table frames shouldn't be reflow roots");
       mCBReflowInput = mParentReflowInput->mCBReflowInput;
-    } else {
-      mCBReflowInput = mParentReflowInput;
     }
-  } else {
+  } else if (mParentReflowInput->mCBReflowInput) {
     mCBReflowInput = mParentReflowInput->mCBReflowInput;
   }
 }
@@ -2145,11 +2153,13 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
   }
 
   auto IsQuirky = [](const StyleSize& aSize) -> bool {
-    return aSize.ConvertsToPercentage();
+    return aSize.ConvertsToPercentage() ||
+           aSize.BehavesLikeStretchOnBlockAxis();
   };
   const auto anchorResolutionParams = AnchorPosResolutionParams::From(this);
-  // an element in quirks mode gets a containing block based on looking for a
-  // parent with a non-auto height if the element has a percent height.
+  // In quirks mode, if an element has a percent height (or a 'stretch' height,
+  // which is kinda like a special version of 100%), then it gets its
+  // containing block by looking for an ancestor with a non-auto height.
   // Note: We don't emulate this quirk for percents in calc(), or in vertical
   // writing modes, or if the containing block is a flex or grid item.
   if (!wm.IsVertical() && NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
@@ -2236,8 +2246,23 @@ void ReflowInput::InitConstraints(
                 mComputeSizeFlags, aBorder, aPadding, mStyleDisplay);
 
     // For calculating the size of this box, we use its own writing mode
-    const auto blockSize =
+    auto blockSize =
         mStylePosition->BSize(wm, AnchorPosResolutionParams::From(this));
+    if (blockSize->BehavesLikeStretchOnBlockAxis()) {
+      // Resolve 'stretch' to either 'auto' or the stretched bsize, depending
+      // on whether our containing block has a definite bsize.
+      // TODO(dholbert): remove this in bug 2000035.
+      if (NS_UNCONSTRAINEDSIZE == cbSize.BSize(wm)) {
+        blockSize = AnchorResolvedSizeHelper::Auto();
+      } else {
+        nscoord stretchBSize = nsLayoutUtils::ComputeStretchBSize(
+            cbSize.BSize(wm), ComputedLogicalMargin(wm).BStartEnd(wm),
+            ComputedLogicalBorderPadding(wm).BStartEnd(wm),
+            mStylePosition->mBoxSizing);
+        blockSize = AnchorResolvedSizeHelper::LengthPercentage(
+            StyleLengthPercentage::FromAppUnits(stretchBSize));
+      }
+    }
     bool isAutoBSize = blockSize->BehavesLikeInitialValueOnBlockAxis();
 
     // Check for a percentage based block size and a containing block

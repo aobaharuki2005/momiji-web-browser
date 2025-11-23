@@ -73,6 +73,7 @@ export default class MozBoxGroup extends MozLitElement {
       let listTag =
         this.type == GROUP_TYPES.reorderable ? literal`ol` : literal`ul`;
       return staticHtml`<${listTag}
+          tabindex="-1"
           class="list scroll-container"
           aria-orientation="vertical"
           @keydown=${this.handleKeydown}
@@ -87,7 +88,9 @@ export default class MozBoxGroup extends MozLitElement {
         </${listTag}>
         <slot hidden></slot>`;
     }
-    return html`<div class="scroll-container"><slot></slot></div>`;
+    return html`<div class="scroll-container">
+      <slot></slot>
+    </div>`;
   }
 
   handleReorder(event) {

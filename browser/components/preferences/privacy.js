@@ -201,7 +201,9 @@ Preferences.addAll([
 
   // Firefox VPN
   { id: "browser.ipProtection.variant", type: "string" },
+  { id: "browser.ipProtection.features.siteExceptions", type: "bool" },
   { id: "browser.ipProtection.exceptionsMode", type: "string" },
+  { id: "browser.ipProtection.features.autoStart", type: "bool" },
   { id: "browser.ipProtection.autoStartEnabled", type: "bool" },
   { id: "browser.ipProtection.autoStartPrivateEnabled", type: "bool" },
 
@@ -1252,12 +1254,20 @@ Preferences.addSetting({
   pref: "browser.ipProtection.variant",
   get: prefVal => prefVal == "beta",
 });
+Preferences.addSetting({
+  id: "ipProtectionSiteExceptionsFeatureEnabled",
+  pref: "browser.ipProtection.features.siteExceptions",
+});
 // This setting also affects the radio group for site exceptions
 Preferences.addSetting({
   id: "ipProtectionExceptionsMode",
   pref: "browser.ipProtection.exceptionsMode",
-  deps: ["ipProtectionVisible"],
-  visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
+  deps: ["ipProtectionVisible", "ipProtectionSiteExceptionsFeatureEnabled"],
+  visible: ({
+    ipProtectionVisible,
+    ipProtectionSiteExceptionsFeatureEnabled,
+  }) =>
+    ipProtectionVisible.value && ipProtectionSiteExceptionsFeatureEnabled.value,
 });
 Preferences.addSetting({
   id: "ipProtectionExceptionAllListButton",
@@ -1302,9 +1312,15 @@ Preferences.addSetting({
   },
 });
 Preferences.addSetting({
+  id: "ipProtectionAutoStartFeatureEnabled",
+  pref: "browser.ipProtection.features.autoStart",
+  get: prefVal => prefVal,
+});
+Preferences.addSetting({
   id: "ipProtectionAutoStart",
-  deps: ["ipProtectionVisible"],
-  visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
+  deps: ["ipProtectionVisible", "ipProtectionAutoStartFeatureEnabled"],
+  visible: ({ ipProtectionVisible, ipProtectionAutoStartFeatureEnabled }) =>
+    ipProtectionVisible.value && ipProtectionAutoStartFeatureEnabled.value,
 });
 Preferences.addSetting({
   id: "ipProtectionAutoStartCheckbox",

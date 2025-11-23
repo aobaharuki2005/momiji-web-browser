@@ -47,6 +47,9 @@ Networking and routing
 ``browser.ipProtection.guardian.endpoint`` (string, default: ``"https://vpn.mozilla.org/"``)
   Endpoint for the server‑side infrastructure.
 
+``browser.ipProtection.productVpn.endpoint`` (string, default: ``"https://www.mozilla.org/"``)
+  Endpoint for the production mozilla webservice.
+
 ``browser.ipProtection.mode`` (integer, default: ``0``)
   Selects which requests are proxied by ``IPPChannelFilter``:
   ``0`` routes all traffic (``MODE_FULL``), ``1`` only private browsing windows

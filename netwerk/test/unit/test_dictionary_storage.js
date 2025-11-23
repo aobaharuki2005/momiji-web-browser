@@ -46,6 +46,7 @@ const TEST_DICTIONARIES = {
 let server = null;
 
 add_setup(async function () {
+  Services.prefs.setBoolPref("network.http.dictionaries.enable", true);
   if (!server) {
     server = await setupServer();
   }

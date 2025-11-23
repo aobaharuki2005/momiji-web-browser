@@ -1173,7 +1173,7 @@
   <!-- Preference switch for usage and technical learn more link in new compose -->
   <string name="preference_usage_data_learn_more_2">Докладніше про технічні дані</string>
   <!-- Preference description for marketing data collection. Note: The words "Firefox" should NOT be translated -->
-  <string name="preferences_usage_data_description_1" tools:ignore="BrandUsage">Дані про ваш пристрій, конфігурацію обладнання та використання допомагають нам удосконалити функції, швидкодію і стабільність Firefox.</string>
+  <string name="preferences_usage_data_description_1" tools:ignore="BrandUsage">Дані про ваш пристрій, конфігурацію обладнання та використання допомагають нам покращити функції, продуктивність і стабільність Firefox.</string>
   <!-- Preference switch for daily usage ping data collection -->
   <string name="preferences_daily_usage_ping_title">Щоденний сигнал використання</string>
   <string name="preferences_daily_usage_ping_description">Це допомагає Mozilla оцінити кількість активних користувачів.</string>
@@ -2343,7 +2343,7 @@
   <!-- Preference for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict">Надійний</string>
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-  <string name="preference_enhanced_tracking_protection_strict_description_4">Кращий захист від стеження і швидкодія, але деякі сайти можуть працювати неправильно.</string>
+  <string name="preference_enhanced_tracking_protection_strict_description_4">Кращий захист від стеження і продуктивність, але деякі сайти можуть працювати неправильно.</string>
   <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Дозволити %1$s автоматично застосовувати винятки для запобігання збоям у роботі вебсайтів.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->

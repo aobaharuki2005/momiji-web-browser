@@ -20,6 +20,13 @@ import "chrome://global/content/elements/moz-message-bar.mjs";
  */
 export default class RestoreFromBackup extends MozLitElement {
   #placeholderFileIconURL = "chrome://global/skin/icons/page-portrait.svg";
+  /**
+   * When the user clicks the button to choose a backup file to restore, we send
+   * a message to the `BackupService` process asking it to read that file.
+   * When we do this, we set this property to be a promise, which we resolve
+   * when the file reading is complete.
+   */
+  #backupFileReadPromise = null;
 
   static properties = {
     _fileIconURL: { type: String },
@@ -80,6 +87,7 @@ export default class RestoreFromBackup extends MozLitElement {
     this.maybeGetBackupFileInfo();
 
     this.addEventListener("BackupUI:SelectNewFilepickerPath", this);
+    this.addEventListener("BackupUI:StateWasUpdated", this);
 
     // Resize the textarea when the window is resized
     if (this.aboutWelcomeEmbedded) {
@@ -138,7 +146,39 @@ export default class RestoreFromBackup extends MozLitElement {
     if (event.type == "BackupUI:SelectNewFilepickerPath") {
       let { path, iconURL } = event.detail;
       this._fileIconURL = iconURL;
+
+      this.#backupFileReadPromise = Promise.withResolvers();
+      this.#backupFileReadPromise.promise.then(() => {
+        const payload = {
+          location: this.backupServiceState?.backupFileCoarseLocation,
+          valid: this.backupServiceState?.recoveryErrorCode == ERRORS.NONE,
+        };
+        if (payload.valid) {
+          payload.backup_timestamp = new Date(
+            this.backupServiceState?.backupFileInfo?.date || 0
+          ).getTime();
+          payload.restore_id = this.backupServiceState?.restoreID;
+          payload.encryption =
+            this.backupServiceState?.backupFileInfo?.isEncrypted;
+          payload.app_name = this.backupServiceState?.backupFileInfo?.appName;
+          payload.version = this.backupServiceState?.backupFileInfo?.appVersion;
+          payload.build_id = this.backupServiceState?.backupFileInfo?.buildID;
+          payload.os_name = this.backupServiceState?.backupFileInfo?.osName;
+          payload.os_version =
+            this.backupServiceState?.backupFileInfo?.osVersion;
+          payload.telemetry_enabled =
+            this.backupServiceState?.backupFileInfo?.healthTelemetryEnabled;
+        }
+        Glean.browserBackup.restoreFileChosen.record(payload);
+        Services.obs.notifyObservers(null, "browser-backup-glean-sent");
+      });
+
       this.getBackupFileInfo(path);
+    } else if (event.type == "BackupUI:StateWasUpdated") {
+      if (this.#backupFileReadPromise) {
+        this.#backupFileReadPromise.resolve();
+        this.#backupFileReadPromise = null;
+      }
     }
   }
 

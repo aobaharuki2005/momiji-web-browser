@@ -6596,7 +6596,7 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   // isAutoBSize is true, or styleBSize is of type LengthPercentage()).
   const auto styleBSize = [&] {
     auto styleBSizeConsideringOverrides =
-        (aSizeOverrides.mStyleBSize)
+        aSizeOverrides.mStyleBSize
             ? AnchorResolvedSizeHelper::Overridden(*aSizeOverrides.mStyleBSize)
             : stylePos->BSize(aWM, anchorResolutionParams);
     if (styleBSizeConsideringOverrides->BehavesLikeStretchOnBlockAxis() &&
@@ -7343,8 +7343,42 @@ nsIFrame::ISizeComputationResult nsIFrame::ComputeISizeValue(
     if (nsLayoutUtils::IsAutoBSize(aStyleBSize, aCBSize.BSize(aWM))) {
       return Nothing();
     }
+
+    // Helper used below to resolve aStyleBSize if it's 'stretch' or an alias.
+    // XXXdholbert Really we should be resolving 'stretch' and its aliases
+    // sooner; see bug 2000035.
+    auto ResolveStretchBSize = [&]() {
+      MOZ_ASSERT(aStyleBSize.BehavesLikeStretchOnBlockAxis(),
+                 "Only call me for 'stretch'-like BSizes");
+      MOZ_ASSERT(aCBSize.BSize(aWM) != NS_UNCONSTRAINEDSIZE,
+                 "If aStyleBSize is stretch-like, then unconstrained "
+                 "aCBSize.BSize should make us return via the IsAutoBSize "
+                 "check above");
+
+      // NOTE: the borderPadding and margin variables might be zero-filled
+      // instead of having the true values, if those values haven't been
+      // stashed in our property-table yet (e.g. if we're in the midst of
+      // setting up a ReflowInput for our first reflow). So ideally, we should
+      // be resolving 'stretch' **in our callers** rather than here, if those
+      // callers have more up-to-date resolved margin/border/padding values.
+      // We'll still make a best-effort attempt to resolve 'stretch' here,
+      // though, for the benefit of callers that might not have handled it, to
+      // be sure we don't abort in aStyleBSize.AsLengthPercentage(). Ultimately
+      // this all can be removed when we fix bug 2000035.
+      const auto borderPadding =
+          GetLogicalUsedBorderAndPadding(aWM);
+      const auto margin = GetLogicalUsedMargin(aWM);
+      nscoord stretchBSize = nsLayoutUtils::ComputeStretchBSize(
+          aCBSize.BSize(aWM), margin.BStartEnd(aWM),
+          borderPadding.BStartEnd(aWM), StylePosition()->mBoxSizing);
+      return LengthPercentage::FromAppUnits(stretchBSize);
+    };
+
     return Some(ComputeISizeValueFromAspectRatio(
-        aWM, aCBSize, aContentEdgeToBoxSizing, aStyleBSize.AsLengthPercentage(),
+        aWM, aCBSize, aContentEdgeToBoxSizing,
+        aStyleBSize.BehavesLikeStretchOnBlockAxis()
+            ? ResolveStretchBSize()
+            : aStyleBSize.AsLengthPercentage(),
         aAspectRatio));
   }();
 
@@ -8705,9 +8739,8 @@ bool nsIFrame::IsBlockContainer() const {
   //
   // If we ever start skipping table row groups from being containing blocks,
   // you need to remove the StickyScrollContainer hack referencing bug 1421660.
-  return !IsLineParticipant() && !IsBlockWrapper() && !IsSubgrid() &&
-         // Table rows are not containing blocks either
-         !IsTableRowFrame();
+  // Table rows are not containing blocks either
+  return !IsLineParticipant() && !IsBlockWrapper() && !IsTableRowFrame();
 }
 
 nsIFrame* nsIFrame::GetContainingBlock(
