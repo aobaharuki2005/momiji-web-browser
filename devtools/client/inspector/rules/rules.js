@@ -1243,7 +1243,10 @@ CssRuleView.prototype = {
    * Update the pseudo class options for the currently highlighted element.
    */
   refreshPseudoClassPanel() {
-    if (!this._elementStyle || !this.inspector.selection.isElementNode()) {
+    if (
+      !this._elementStyle ||
+      !this.inspector.canTogglePseudoClassForSelectedNode()
+    ) {
       this.pseudoClassCheckboxes.forEach(checkbox => {
         checkbox.disabled = true;
       });

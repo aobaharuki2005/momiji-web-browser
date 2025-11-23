@@ -1994,6 +1994,22 @@ class Inspector extends EventEmitter {
   }
 
   /**
+   * Returns true if the "Change pseudo class" (either via the ":hov" panel checkboxes,
+   * or the markup view context menu entries) can be performed for the currently selected node.
+   *
+   * @returns {boolean}
+   */
+  canTogglePseudoClassForSelectedNode() {
+    if (!this.selection) {
+      return false;
+    }
+
+    return (
+      this.selection.isElementNode() && !this.selection.isPseudoElementNode()
+    );
+  }
+
+  /**
    * Initiate screenshot command on selected node.
    */
   async screenshotNode() {
