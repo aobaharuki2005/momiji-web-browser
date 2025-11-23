@@ -458,27 +458,27 @@
   -->
   <string name="onboarding_first_screen_title">Добро пожаловать в %1$s</string>
   <!-- New Onboarding flow first screen subtitle the one that appears under title -->
-  <string name="onboarding_first_screen_subtitle">Быстро. Приватный. Никаких отвлечений.</string>
+  <string name="onboarding_first_screen_subtitle">Быстрый. Приватный. Никаких отвлечений.</string>
   <!--
     New Onboarding flow first screen 'terms of use' text
 
     %1$s will be replaced by a link using onboarding_first_screen_terms_of_use_link as text
   -->
-  <string name="onboarding_first_screen_terms_of_use_text_2" tools:ignore="UnusedResources">Продолжая, вы соглашаетесь с %1$s.</string>
+  <string name="onboarding_first_screen_terms_of_use_text_2" tools:ignore="UnusedResources">Продолжая, вы соглашаетесь с «%1$s».</string>
   <!--
     New Onboarding flow first screen 'terms of use link'
 
     Text for the link used in onboarding_first_screen_terms_of_use_text
   -->
-  <string name="onboarding_first_screen_terms_of_use_link_2" tools:ignore="BrandUsage">Условия использования Firefox</string>
+  <string name="onboarding_first_screen_terms_of_use_link_2" tools:ignore="BrandUsage">Условиями использования Firefox</string>
   <!--
     New Onboarding flow first screen 'privacy notice' text
 
     %1$s will be replaced by a link using onboarding_first_screen_privacy_notice_link as text
   -->
-  <string name="onboarding_first_screen_privacy_notice_text_2" tools:ignore="BrandUsage">Firefox заботится о вашей конфиденциальности. Узнайте больше в нашем %1$s.</string>
+  <string name="onboarding_first_screen_privacy_notice_text_2" tools:ignore="BrandUsage">Firefox заботится о вашей конфиденциальности. Узнайте больше в нашей «%1$s».</string>
   <!-- Text for the link used in onboarding_first_screen_privacy_notice_text -->
-  <string name="onboarding_first_screen_privacy_notice_link_2">Политика приватности</string>
+  <string name="onboarding_first_screen_privacy_notice_link_2">Политике приватности</string>
   <!-- New Onboarding flow first screen button label -->
   <string name="onboarding_first_screen_button_agree_and_continue_2">Продолжить</string>
   <!-- In the first screen of new onboarding flow, additional accessibility description for content that contain urls. -->
@@ -751,7 +751,7 @@
     Tip displayed on home view explaining how to add sites to homescreen
     %1$s is replaced with a line break in the application.
   -->
-  <string name="tip_add_to_homescreen">Получайте доступ к нужным сайтам в одно касание%1$s Меню &gt; Добавить на домашний экран</string>
+  <string name="tip_add_to_homescreen">Получайте доступ к нужным сайтам в одно касание%1$s «Меню» &gt; «Добавить на домашний экран»</string>
   <!--
     Tip displayed on home view explaining how to make Focus the default browser
     %1$s is the name of the app (for example "Firefox Focus" or "Firefox Klar").
@@ -797,7 +797,7 @@
   <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
   <string name="preference_category_block_cookies">Хотите заблокировать куки?</string>
   <!-- Title for the tab crash report screen -->
-  <string name="tab_crash_report_title">Вкладка упала</string>
+  <string name="tab_crash_report_title">Падение вкладки</string>
   <!-- Headline for the tab crash report screen -->
   <string name="tab_crash_report_headline">Извините. С этой вкладкой возникли проблемы.</string>
   <!-- Subtitle for the tab crash report screen -->
