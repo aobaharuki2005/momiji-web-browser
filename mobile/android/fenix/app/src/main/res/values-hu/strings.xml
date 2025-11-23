@@ -846,7 +846,7 @@
   <!-- Preference title for switch preference to suggest bookmarks when searching -->
   <string name="preferences_search_bookmarks">Könyvjelzők keresése</string>
   <!-- Preference title for switch preference to show shortcuts when searching -->
-  <string name="preferences_show_shortcuts" tools:ignore="UnusedResources" moz:removedIn="147">Gyorsbillentyűk megjelenítése</string>
+  <string name="preferences_show_shortcuts" tools:ignore="UnusedResources" moz:removedIn="147">Indítóikonok megjelenítése</string>
   <!-- Preference title for switch preference to suggest synced tabs when searching -->
   <string name="preferences_search_synced_tabs">Szinkronizált lapok keresése</string>
   <!-- Preference for account settings -->
@@ -965,7 +965,7 @@
   <!-- Title for the opening wallpaper settings screen -->
   <string name="customize_wallpapers">Háttérképek</string>
   <!-- Title for the customize home screen section with sponsored shortcuts. -->
-  <string name="customize_toggle_contile">Szponzorált gyorskeresők</string>
+  <string name="customize_toggle_contile">Szponzorált indítóikonok</string>
   <!--
     Wallpapers
 
@@ -1062,6 +1062,8 @@
   <string name="restart_warning_dialog_button_positive_2">Ikon módosítása</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Mégse</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Nem sikerült az alkalmazásikon frissítése. Távolítsa el a meglévő indítóikonokat, és próbálja újra.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -3016,12 +3018,12 @@
 
     Title text displayed for the shortcuts home screen section.
   -->
-  <string name="homepage_shortcuts_title">Gyorsbillentyűk</string>
+  <string name="homepage_shortcuts_title">Indítóikonok</string>
   <!--
     Context description text for the "Show all" button in the shortcuts home screen section
     which navigates the user to a screen displaying all the shortcuts.
   -->
-  <string name="homepage_shortcuts_show_all_content_description">Összes gyorsbillentyű megjelenítése</string>
+  <string name="homepage_shortcuts_show_all_content_description">Összes indítóikon megjelenítése</string>
   <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
   <string name="shortcut_max_limit_title">Az indítóikonok korlátja elérve</string>
   <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -3035,7 +3037,7 @@
   <!-- Hint for renaming title of a shortcut -->
   <string name="shortcut_name_hint">Indítóikon neve</string>
   <!-- Hint for editing URL of a shortcut. -->
-  <string name="shortcut_url_hint">Indító webcíme</string>
+  <string name="shortcut_url_hint">Indítóikon webcíme</string>
   <!-- Dialog button text for canceling the rename top site prompt. -->
   <string name="top_sites_rename_dialog_cancel">Mégse</string>
   <!-- Text for the menu button to open the homepage settings. -->
@@ -3047,7 +3049,7 @@
   <!-- Text for the menu item to edit a top site. -->
   <string name="top_sites_edit_top_site">Szerkesztés</string>
   <!-- Text for the dialog title to edit a top site. -->
-  <string name="top_sites_edit_dialog_title">Indító szerkesztése</string>
+  <string name="top_sites_edit_dialog_title">Indítóikon szerkesztése</string>
   <!-- Button caption to confirm the edit of the top site. -->
   <string name="top_sites_edit_dialog_save">Mentés</string>
   <!-- Error message when the user entered an invalid URL -->

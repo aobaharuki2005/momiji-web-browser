@@ -1062,6 +1062,8 @@
   <string name="restart_warning_dialog_button_positive_2">Endre ikon</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Avbryt</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Mislykka oppdatering av appikonet. Fjern eksisterande snarvegar og prøv igjen.</string>
   <!--
     Add-ons general availability nimbus message
 
