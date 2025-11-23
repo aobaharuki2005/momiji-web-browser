@@ -6,8 +6,6 @@
 
 #include "MediaDrmRemoteCDMParent.h"
 
-#include <dlfcn.h>
-
 #include <limits>
 
 #include "mozilla/CheckedInt.h"
@@ -730,7 +728,7 @@ void MediaDrmRemoteCDMParent::HandleEvent(nsString&& aSessionId,
 }
 
 void MediaDrmRemoteCDMParent::HandleExpirationUpdate(nsString&& aSessionId,
-                                                     int aExpiryTimeInMS) {
+                                                     int64_t aExpiryTimeInMS) {
   const auto i = mSessions.find(aSessionId);
   if (i == mSessions.end()) {
     EME_LOG(
@@ -741,8 +739,8 @@ void MediaDrmRemoteCDMParent::HandleExpirationUpdate(nsString&& aSessionId,
   }
 
   EME_LOG("[%p] MediaDrmRemoteCDMParent::HandleExpirationUpdate", this);
-  (void)SendOnSessionKeyExpiration(
-      RemoteCDMKeyExpirationIPDL(std::move(aSessionId), aExpiryTimeInMS));
+  (void)SendOnSessionKeyExpiration(RemoteCDMKeyExpirationIPDL(
+      std::move(aSessionId), static_cast<double>(aExpiryTimeInMS)));
 }
 
 void MediaDrmRemoteCDMParent::HandleKeysChange(
