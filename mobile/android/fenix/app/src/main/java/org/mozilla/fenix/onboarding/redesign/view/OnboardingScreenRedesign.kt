@@ -473,7 +473,7 @@ private object PageContentLayout {
     val MIN_WIDTH_SMALL_SCREEN_DP = 300.dp
     val MIN_HEIGHT_TABLET_DP = 620.dp
     val MIN_WIDTH_TABLET_DP = 440.dp
-    const val HEIGHT_RATIO = 0.8f
+    const val HEIGHT_RATIO = 0.6f
     const val WIDTH_RATIO = 0.85f
     const val TABLET_WIDTH_RATIO = 0.35f
     const val TABLET_HEIGHT_RATIO = 0.50f
