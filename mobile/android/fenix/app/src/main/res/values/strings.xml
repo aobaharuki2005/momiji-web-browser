@@ -2529,12 +2529,12 @@
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Add card</string>
-    <!-- Content description for the "credit card feature" top bar back button -->
-    <string name="credit_cards_navigate_back_button_content_description">Navigate back</string>
     <!-- Title of the "Edit card" screen -->
     <string name="credit_cards_edit_card">Edit card</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Card Number</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Expiration Date</string>
     <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Expiration Date Month</string>
     <!-- The label for the expiration date year of a credit card to be used by a11y services-->
