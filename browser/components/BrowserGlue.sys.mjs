@@ -678,9 +678,11 @@ BrowserGlue.prototype = {
     if (makeWindowPrivate) {
       browserWindowFeatures += ",private";
     }
+
+    // We use a null URI such that the window stays on the initial uncommitted about:blank
     let win = Services.ww.openWindow(
       null,
-      "about:blank",
+      null,
       null,
       browserWindowFeatures,
       null

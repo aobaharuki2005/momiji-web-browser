@@ -773,6 +773,10 @@ export var BrowserTestUtils = {
             );
           }
           let newTab = openEvent.target;
+          if (wantLoad == "about:blank") {
+            TestUtils.executeSoon(() => resolve(newTab));
+            return;
+          }
           let newBrowser = newTab.linkedBrowser;
           let result;
           if (waitForLoad) {
@@ -902,12 +906,14 @@ export var BrowserTestUtils = {
             }
           }
 
-          promises.push(
-            TestUtils.topicObserved(
-              "browser-delayed-startup-finished",
-              subject => subject == win
-            )
-          );
+          if (!(win.gBrowserInit && win.gBrowserInit.delayedStartupFinished)) {
+            promises.push(
+              TestUtils.topicObserved(
+                "browser-delayed-startup-finished",
+                subject => subject == win
+              )
+            );
+          }
 
           if (url || waitForAnyURLLoaded) {
             let loadPromise = this.browserLoaded(win.gBrowser.selectedBrowser, {

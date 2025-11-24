@@ -513,6 +513,8 @@ bool nsParser::HasNonzeroScriptNestingLevel() const { return false; }
 
 bool nsParser::IsScriptCreated() { return false; }
 
+bool nsParser::IsAboutBlankMode() { return false; }
+
 /**
  *  This is the main controlling routine in the parsing process.
  *  Note that it may get called multiple times for the same scanner,

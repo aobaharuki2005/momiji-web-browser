@@ -354,7 +354,7 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
   async #onConfigurationComplete(window) {
     // parser blocking doesn't work for initial about:blank, so ensure
     // browsing_context.create waits for configuration to complete
-    if (window.location.href.startsWith("about:blank")) {
+    if (window.document.isInitialDocument) {
       await this.messageHandler.forwardCommand({
         moduleName: "browsingContext",
         commandName: "_onConfigurationComplete",

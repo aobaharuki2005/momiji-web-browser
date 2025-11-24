@@ -303,35 +303,33 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
     presShell = doc->GetPresShell();
   }
 
-  // If |PresShell::Destroy| has been called due to handling the event the pres
-  // context will return a null pres shell. See bug 125624. Using presShell to
-  // dispatch the event. It makes sure that event is not handled if the window
-  // is being destroyed.
-  if (presShell) {
-    SubmitEventInit init;
-    init.mBubbles = true;
-    init.mCancelable = true;
-    init.mSubmitter =
-        aSubmitter ? nsGenericHTMLElement::FromNode(aSubmitter) : nullptr;
-    RefPtr<SubmitEvent> event =
-        SubmitEvent::Constructor(this, u"submit"_ns, init);
-    event->SetTrusted(true);
-    nsEventStatus status = nsEventStatus_eIgnore;
-    presShell->HandleDOMEventWithTarget(this, event, &status);
+  if (!doc->IsCurrentActiveDocument()) {
+    // Bug 125624
+    return;
   }
+
+  SubmitEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = true;
+  init.mSubmitter =
+      aSubmitter ? nsGenericHTMLElement::FromNode(aSubmitter) : nullptr;
+  RefPtr<SubmitEvent> event =
+      SubmitEvent::Constructor(this, u"submit"_ns, init);
+  event->SetTrusted(true);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  EventDispatcher::DispatchDOMEvent(this, nullptr, event, nullptr, &status);
 }
 
 void HTMLFormElement::MaybeReset(Element* aSubmitter) {
-  // If |PresShell::Destroy| has been called due to handling the event the pres
-  // context will return a null pres shell. See bug 125624. Using presShell to
-  // dispatch the event. It makes sure that event is not handled if the window
-  // is being destroyed.
-  if (RefPtr<PresShell> presShell = OwnerDoc()->GetPresShell()) {
-    InternalFormEvent event(true, eFormReset);
-    event.mOriginator = aSubmitter;
-    nsEventStatus status = nsEventStatus_eIgnore;
-    presShell->HandleDOMEventWithTarget(this, &event, &status);
+  if (!OwnerDoc()->IsCurrentActiveDocument()) {
+    // Bug 125624
+    return;
   }
+
+  InternalFormEvent event(true, eFormReset);
+  event.mOriginator = aSubmitter;
+  nsEventStatus status = nsEventStatus_eIgnore;
+  EventDispatcher::DispatchDOMEvent(this, &event, nullptr, nullptr, &status);
 }
 
 void HTMLFormElement::Submit(ErrorResult& aRv) { aRv = DoSubmit(); }

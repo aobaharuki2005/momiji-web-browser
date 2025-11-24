@@ -668,6 +668,8 @@ class Document : public nsINode,
     }
   };
 
+  void ApplyCspFromLoadInfo(nsILoadInfo* aLoadInfo);
+
   /**
    * Let the document know that we're starting to load data into it.
    * @param aCommand The parser command. Must not be null.
@@ -1014,22 +1016,35 @@ class Document : public nsINode,
    */
   void SetBidiEnabled() { mBidiEnabled = true; }
 
+  /**
+   * Whether a document is the initial document in its window, and if so,
+   * which stage of initialness it is in.
+   */
   enum class InitialStatus : uint8_t {
-    IsInitial,
+    // The first stage of an initial document. No navigation has occured,
+    // we might navigate away or commit to this document by firing load.
+    IsInitialUncommitted,
+    // An explicit navigation to `about:blank` occured. Load was fired or will
+    // be soon.
+    IsInitialCommitted,
+    // document.open() was called on the initial document.
     IsInitialButExplicitlyOpened,
-    WasInitial,
+    // This document is not initial
     NeverInitial,
   };
 
   /**
-   * Ask this document whether it's the initial document in its window.
+   * Ask this document if the "is initial about:blank" flag is set, i.e.
+   * it is the initial document in its window.
+   * https://html.spec.whatwg.org/#is-initial-about:blank
    */
   bool IsInitialDocument() const {
-    return mInitialStatus == InitialStatus::IsInitial;
+    return mInitialStatus == InitialStatus::IsInitialUncommitted ||
+           mInitialStatus == InitialStatus::IsInitialCommitted;
   }
 
   /**
-   * Ask this document whether it has ever been a initial document in its
+   * Ask this document whether it has ever been an initial document in its
    * window.
    */
   bool IsEverInitialDocument() const {
@@ -1037,14 +1052,36 @@ class Document : public nsINode,
   }
 
   /**
-   * Tell this document that it's the initial document in its window.  See
-   * comments on mIsInitialDocumentInWindow for when this should be called.
+   * Ask this document whether it is the initial document in its window and
+   * no navigation to about:blank has yet occured that would cause us to commit
+   * to it.
    */
-  void SetIsInitialDocument(bool aIsInitialDocument);
+  bool IsUncommittedInitialDocument() const {
+    return mInitialStatus == InitialStatus::IsInitialUncommitted;
+  }
 
   InitialStatus GetInitialStatus() const { return mInitialStatus; }
 
+  /**
+   * Tell this document whether it's the initial document in its window.
+   * Should be called when creating the initial `about:blank`, when committing
+   * to it, and from `document.open()`.
+   */
   void SetInitialStatus(Document::InitialStatus aStatus);
+
+  /**
+   * Returns true if this is the initial document in its window
+   * and we are currently committing to it.
+   */
+  bool InitialAboutBlankLoadCompleting() const {
+    return mInitialAboutBlankLoadCompleting;
+  }
+
+  void BeginInitialAboutBlankLoadCompleting(nsIChannel* aChannel);
+
+  void EndInitialAboutBlankLoadCompleting() {
+    mInitialAboutBlankLoadCompleting = false;
+  }
 
   void SetLoadedAsData(bool aLoadedAsData, bool aConsiderForMemoryReporting);
 
@@ -4875,6 +4912,13 @@ class Document : public nsINode,
   // True if we may need to recompute the language prefs for this document.
   bool mMayNeedFontPrefsUpdate : 1;
 
+  // True if we are trying to fire the load event for the initial about:blank.
+  // Since the initial about:blank is already in READYSTATE_COMPLETE when
+  // firing the load event, a different indicator is needed.
+  // IsInitialDocument() isn't a sufficient indicator, because it
+  // remains set, when navigating back in history.
+  bool mInitialAboutBlankLoadCompleting : 1;
+
   bool mIgnoreDocGroupMismatches : 1;
 
   // True if the document is considered for memory reporting as a
@@ -5035,6 +5079,7 @@ class Document : public nsINode,
 
   bool mDelayFrameLoaderInitialization : 1;
 
+  // True if we should fire load events synchronously
   bool mSynchronousDOMContentLoaded : 1;
 
   // Set to true when the document is possibly controlled by the ServiceWorker.

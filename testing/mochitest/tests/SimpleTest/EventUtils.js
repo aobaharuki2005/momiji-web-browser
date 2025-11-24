@@ -3560,7 +3560,12 @@ function synthesizeDrop(
   } finally {
     let srcWindowUtils = _getDOMWindowUtils(aWindow);
     const srcDragSession = srcWindowUtils.dragSession;
-    srcDragSession.endDragSession(true, _parseModifiers(aDragEvent));
+    if (srcDragSession) {
+      // After each event handler, there is a microtask checkpoint.
+      // Event handlers or microtasks might've already ended our drag session.
+      // E.g. in SubDialog.open during browser_toolbar_drop_bookmarklet.js
+      srcDragSession.endDragSession(true, _parseModifiers(aDragEvent));
+    }
   }
 }
 

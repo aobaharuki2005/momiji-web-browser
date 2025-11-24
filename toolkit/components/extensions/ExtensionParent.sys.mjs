@@ -1490,6 +1490,9 @@ class HiddenXULWindow {
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
     }
 
+    // Prevent initial about:blank load before navigating to extension URI
+    browser.setAttribute("nodefaultsrc", "true");
+
     chromeDoc.documentElement.appendChild(browser);
 
     // Forcibly flush layout so that we get a pres shell soon enough, see

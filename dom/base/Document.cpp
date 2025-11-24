@@ -1377,6 +1377,7 @@ Document::Document(const char* aContentType,
       mRenderingSuppressedForViewTransitions(false),
       mBidiEnabled(false),
       mMayNeedFontPrefsUpdate(true),
+      mInitialAboutBlankLoadCompleting(false),
       mIgnoreDocGroupMismatches(false),
       mAddedToMemoryReportingAsDataDocument(false),
       mMayStartLayout(true),
@@ -3682,6 +3683,20 @@ static void CheckIsBadPolicy(nsILoadInfo::CrossOriginOpenerPolicy aPolicy,
 #endif  // defined(EARLY_BETA_OR_EARLIER)
 }
 
+void Document::ApplyCspFromLoadInfo(nsILoadInfo* aLoadInfo) {
+  // The CSP directives upgrade-insecure-requests as well as
+  // block-all-mixed-content not only apply to the toplevel document,
+  // but also to nested documents. The loadInfo of a subdocument
+  // load already holds the correct flag, so let's just set it here
+  // on the document. Please note that we set the appropriate preload
+  // bits just for the sake of completeness here, because the preloader
+  // does not reach into subdocuments.
+  mUpgradeInsecureRequests = aLoadInfo->GetUpgradeInsecureRequests();
+  mUpgradeInsecurePreloads = mUpgradeInsecureRequests;
+  mBlockAllMixedContent = aLoadInfo->GetBlockAllMixedContent();
+  mBlockAllMixedContentPreloads = mBlockAllMixedContent;
+}
+
 nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
@@ -3795,17 +3810,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     (void)docShell->GetBrowsingContext()->SetOpenerPolicy(policy);
   }
 
-  // The CSP directives upgrade-insecure-requests as well as
-  // block-all-mixed-content not only apply to the toplevel document,
-  // but also to nested documents. The loadInfo of a subdocument
-  // load already holds the correct flag, so let's just set it here
-  // on the document. Please note that we set the appropriate preload
-  // bits just for the sake of completeness here, because the preloader
-  // does not reach into subdocuments.
-  mUpgradeInsecureRequests = loadInfo->GetUpgradeInsecureRequests();
-  mUpgradeInsecurePreloads = mUpgradeInsecureRequests;
-  mBlockAllMixedContent = loadInfo->GetBlockAllMixedContent();
-  mBlockAllMixedContentPreloads = mBlockAllMixedContent;
+  ApplyCspFromLoadInfo(loadInfo);
 
   // HTTPS-Only Mode flags
   // The HTTPS_ONLY_EXEMPT flag of the HTTPS-Only state gets propagated to all
@@ -8608,7 +8613,7 @@ void Document::BeginLoad() {
   mDidFireDOMContentLoaded = false;
   BlockDOMContentLoaded();
 
-  if (mScriptLoader) {
+  if (mScriptLoader && !IsInitialDocument()) {
     mScriptLoader->BeginDeferringScripts();
   }
 
@@ -8836,9 +8841,10 @@ void Document::UnblockDOMContentLoaded() {
 
   mDidFireDOMContentLoaded = true;
 
-  MOZ_ASSERT(mReadyState == READYSTATE_INTERACTIVE);
+  MOZ_ASSERT(IsInitialDocument() || mReadyState == READYSTATE_INTERACTIVE);
   if (!mSynchronousDOMContentLoaded) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(!IsInitialDocument());
     nsCOMPtr<nsIRunnable> ev =
         NewRunnableMethod("Document::DispatchContentLoadedEvents", this,
                           &Document::DispatchContentLoadedEvents);
@@ -10474,10 +10480,6 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
     mSecurityInfo = callerDoc->GetSecurityInfo();
 
     // Step 16
-    // See <https://github.com/whatwg/html/issues/4299>.  Since our
-    // URL may be changing away from about:blank here, we really want to unset
-    // this flag no matter what, since only about:blank can be an initial
-    // document.
     if (IsInitialDocument()) {
       SetInitialStatus(Document::InitialStatus::IsInitialButExplicitlyOpened);
     }
@@ -12417,8 +12419,10 @@ void Document::BlockOnload() {
   // -- it's not ours.
   // If we're already complete there's no need to mess with the loadgroup
   // either, we're not blocking the load event after all.
+  // Note that ready state is not reliable for the initial about:blank.
   if (mOnloadBlockCount == 0 && mScriptGlobalObject &&
-      mReadyState != ReadyState::READYSTATE_COMPLETE) {
+      (mReadyState != ReadyState::READYSTATE_COMPLETE ||
+       mInitialAboutBlankLoadCompleting)) {
     if (nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup()) {
       loadGroup->AddRequest(mOnloadBlocker, nullptr);
     }
@@ -14848,7 +14852,8 @@ class UnblockParsingPromiseHandler final : public PromiseNativeHandler {
                                         const BlockParsingOptions& aOptions)
       : mPromise(aPromise) {
     nsCOMPtr<nsIParser> parser = aDocument->CreatorParserOrNull();
-    if (parser &&
+    // Parser blocking is not allowed for about:blank
+    if (parser && !parser->IsAboutBlankMode() &&
         (aOptions.mBlockScriptCreated || !parser->IsScriptCreated())) {
       parser->BlockParser();
       mParser = do_GetWeakReference(parser);
@@ -20368,28 +20373,40 @@ nsIPrincipal* Document::GetPrincipalForPrefBasedHacks() const {
   return nullptr;
 }
 
-void Document::SetIsInitialDocument(bool aIsInitialDocument) {
-  if (aIsInitialDocument) {
-    mInitialStatus = InitialStatus::IsInitial;
-  } else if (mInitialStatus != InitialStatus::NeverInitial) {
-    mInitialStatus = InitialStatus::WasInitial;
-  }
-
-  // Asynchronously tell the parent process that we are, or are no longer, the
-  // initial document. This happens async.
-  if (auto* wgc = GetWindowGlobalChild()) {
-    wgc->SendSetIsInitialDocument(aIsInitialDocument);
-  }
-}
-
 void Document::SetInitialStatus(InitialStatus aStatus) {
   mInitialStatus = aStatus;
 
+  if (aStatus == InitialStatus::IsInitialUncommitted) {
+    // Set readyState to complete silently.
+    mReadyState = READYSTATE_COMPLETE;
+    mSetCompleteAfterDOMContentLoaded = false;
+    mSynchronousDOMContentLoaded = true;
+  } else if (aStatus == InitialStatus::IsInitialButExplicitlyOpened) {
+    mSynchronousDOMContentLoaded = false;
+  }
+
   // Asynchronously tell the parent process that we are, or are no longer, the
   // initial document. This happens async.
   if (auto* wgc = GetWindowGlobalChild()) {
-    wgc->SendSetIsInitialDocument(aStatus == InitialStatus::IsInitial);
+    wgc->SendSetIsInitialDocument(IsInitialDocument());
   }
+}
+
+void Document::BeginInitialAboutBlankLoadCompleting(nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+  SetInitialStatus(InitialStatus::IsInitialCommitted);
+  if (auto* wgc = GetWindowGlobalChild()) {
+    wgc->SendCommitToInitialDocument();
+  }
+  mInitialAboutBlankLoadCompleting = true;
+  mChannel = aChannel;
+  mChannel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+
+  // This is the condition under which we would usually set
+  // mMaybeServiceWorkerControlled in SetScriptGlobalObject.
+  MOZ_ASSERT(mDocumentContainer && mScriptGlobalObject,
+             "Should have document container and script global");
+  mMaybeServiceWorkerControlled = true;
 }
 
 // static

@@ -1727,9 +1727,15 @@ nsresult PresShell::Initialize() {
     // fires, if painting is still locked down, then we will go ahead and
     // trigger a full invalidate and allow painting to proceed normally.
     mPaintingSuppressed = true;
-    // Don't suppress painting if the document isn't loading.
-    Document::ReadyState readyState = mDocument->GetReadyStateEnum();
-    if (readyState != Document::READYSTATE_COMPLETE) {
+    // Don't suppress painting if the document isn't loading. However,
+    // the initial about:blank appears not to be loading, but we still
+    // want to suppress painting.
+    nsIDocShell* docShell = mDocument->GetDocShell();
+    if ((docShell &&
+         !nsDocShell::Cast(docShell)
+              ->HasStartedLoadingOtherThanInitialBlankURI() &&
+         mDocument->IsInitialDocument()) ||
+        mDocument->GetReadyStateEnum() != Document::READYSTATE_COMPLETE) {
       mPaintSuppressionTimer = NS_NewTimer();
     }
     if (!mPaintSuppressionTimer) {

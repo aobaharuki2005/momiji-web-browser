@@ -51,7 +51,7 @@ function* doTest() {
   // create a new window
   var testWin = chromeWindow.open("", "bug 608669", "chrome,width=600,height=600");
   testWin.x = "y";
-  is(notificationCount, 1, "after created window");
+  is(notificationCount, 0, "after created window");
 
   // Try loading in the window
   testWin.location = "bug608669.xhtml";

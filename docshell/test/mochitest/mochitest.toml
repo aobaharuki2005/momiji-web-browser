@@ -280,6 +280,8 @@ skip-if = [
   "http3",
 ]
 
+["test_initial_blank_doc_principal.html"]
+
 ["test_javascript_sandboxed_popup.html"]
 
 ["test_load_during_reload.html"]

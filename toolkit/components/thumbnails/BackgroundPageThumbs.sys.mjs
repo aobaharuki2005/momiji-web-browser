@@ -593,7 +593,8 @@ Capture.prototype = {
             this._done(browser, null, TEL_CAPTURE_DONE_BAD_URI);
           }
         },
-        () => {
+        err => {
+          console.error(err);
           // The query can fail when a crash occurs while loading. The error causes
           // thumbnail crash tests to fail with an uninteresting error message.
         }

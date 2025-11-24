@@ -1438,6 +1438,8 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     return nullptr;
   }
 
+  windowParent->Init();
+
   // Tell the content process to set up its PBrowserChild.
   bool ok = constructorSender->SendConstructBrowser(
       std::move(childEp), std::move(windowEp), tabId,
@@ -1451,8 +1453,6 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   // Ensure that we're marked as the current BrowserParent on our
   // CanonicalBrowsingContext.
   aBrowsingContext->Canonical()->SetCurrentBrowserParent(browserParent);
-
-  windowParent->Init();
 
   RefPtr<BrowserHost> browserHost = new BrowserHost(browserParent);
   browserParent->SetOwnerElement(aFrameElement);
@@ -5166,10 +5166,13 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   openInfo->mIsForPrinting = aForPrinting;
   openInfo->mIsForWindowDotPrint = aForWindowDotPrint;
   openInfo->mNextRemoteBrowser = aNextRemoteBrowser;
-  openInfo->mOriginAttributes = aOriginAttributes;
   openInfo->mIsTopLevelCreatedByWebContent = aIsTopLevelCreatedByWebContent;
   openInfo->mHasValidUserGestureActivation = aUserActivation;
   openInfo->mTextDirectiveUserActivation = aTextDirectiveUserActivation;
+  openInfo->mPrincipalToInheritForAboutBlank = aTriggeringPrincipal;
+  MOZ_ASSERT(
+      aOriginAttributes == openInfo->GetOriginAttributes(),
+      "Open window info gets the expected origin attributes from principal");
 
   MOZ_ASSERT_IF(aForWindowDotPrint, aForPrinting);
 

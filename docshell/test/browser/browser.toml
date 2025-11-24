@@ -361,6 +361,8 @@ support-files = ["file_replace_state_during_navigation.html"]
 
 ["browser_search_notification.js"]
 
+["browser_system_principal_initial_document.js"]
+
 ["browser_tab_replace_while_loading.js"]
 skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && tsan", # Bug 1604237

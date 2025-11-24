@@ -886,43 +886,43 @@ nsresult nsWindowWatcher::OpenWindowInternal(
          : nsContentUtils::GetSystemPrincipal();
   MOZ_ASSERT(subjectPrincipal);
 
-  nsCOMPtr<nsIPrincipal> newWindowPrincipal;
+  // Information used when opening new content windows. This object will be
+  // passed through to the inner nsFrameLoader.
+  RefPtr<nsOpenWindowInfo> openWindowInfo = new nsOpenWindowInfo();
+
   if (!targetBC) {
     if (windowTypeIsChrome) {
       // If we are creating a chrome window, we must be called with a system
       // principal, and should inherit that for the new chrome window.
       MOZ_RELEASE_ASSERT(subjectPrincipal->IsSystemPrincipal(),
                          "Only system principals can create chrome windows");
-      newWindowPrincipal = subjectPrincipal;
+      openWindowInfo->mPrincipalToInheritForAboutBlank = subjectPrincipal;
     } else if (nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal)) {
       // Don't allow initial about:blank documents to inherit a system or
       // expanded principal, instead replace it with a null principal. We can't
       // inherit origin attributes from the system principal, so use the parent
       // BC if it's available.
       if (parentBC) {
-        newWindowPrincipal =
+        openWindowInfo->mPrincipalToInheritForAboutBlank =
             NullPrincipal::Create(parentBC->OriginAttributesRef());
       } else {
-        newWindowPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
+        openWindowInfo->mPrincipalToInheritForAboutBlank =
+            NullPrincipal::CreateWithoutOriginAttributes();
       }
     } else if (aForceNoOpener) {
       // If we're opening a new window with noopener, create a new opaque
       // principal for the new window, rather than re-using the existing
       // principal.
-      newWindowPrincipal =
+      openWindowInfo->mPrincipalToInheritForAboutBlank =
           NullPrincipal::CreateWithInheritedAttributes(subjectPrincipal);
     } else {
       // Finally, if there's an opener relationship and it's not a special
       // principal, we should inherit that principal for the new window.
-      newWindowPrincipal = subjectPrincipal;
+      openWindowInfo->mPrincipalToInheritForAboutBlank = subjectPrincipal;
     }
   }
 
-  // Information used when opening new content windows. This object will be
-  // passed through to the inner nsFrameLoader.
-  RefPtr<nsOpenWindowInfo> openWindowInfo;
   if (!targetBC && !windowTypeIsChrome) {
-    openWindowInfo = new nsOpenWindowInfo();
     openWindowInfo->mForceNoOpener = aForceNoOpener;
     openWindowInfo->mParent = parentBC;
     openWindowInfo->mIsForPrinting = aPrintKind != PRINT_NONE;
@@ -935,21 +935,17 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     openWindowInfo->mIsRemote = XRE_IsContentProcess();
 
     // Inherit our OriginAttributes from the computed new window principal.
-    MOZ_ASSERT(
-        newWindowPrincipal &&
-        !nsContentUtils::IsSystemOrExpandedPrincipal(newWindowPrincipal));
-    openWindowInfo->mOriginAttributes =
-        newWindowPrincipal->OriginAttributesRef();
+    MOZ_ASSERT(openWindowInfo->mPrincipalToInheritForAboutBlank &&
+               !nsContentUtils::IsSystemOrExpandedPrincipal(
+                   openWindowInfo->mPrincipalToInheritForAboutBlank));
 
     MOZ_DIAGNOSTIC_ASSERT(
-        !parentBC || openWindowInfo->mOriginAttributes.EqualsIgnoringFPD(
+        !parentBC || openWindowInfo->GetOriginAttributes().EqualsIgnoringFPD(
                          parentBC->OriginAttributesRef()),
         "subject principal origin attributes doesn't match opener");
   }
 
   uint32_t activeDocsSandboxFlags = 0;
-  nsCOMPtr<nsIPolicyContainer> policyContainerToInheritForAboutBlank;
-  Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> coepToInheritForAboutBlank;
   if (!targetBC) {
     // We're going to either open up a new window ourselves or ask a
     // nsIWindowProvider for one.  In either case, we'll want to set the right
@@ -963,8 +959,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       activeDocsSandboxFlags = parentDoc->GetSandboxFlags();
 
       if (!aForceNoOpener) {
-        policyContainerToInheritForAboutBlank = parentDoc->GetPolicyContainer();
-        coepToInheritForAboutBlank = parentDoc->GetEmbedderPolicy();
+        openWindowInfo->mPolicyContainerToInheritForAboutBlank =
+            parentDoc->GetPolicyContainer();
+        openWindowInfo->mCoepToInheritForAboutBlank =
+            parentDoc->GetEmbedderPolicy();
       }
 
       // Check to see if this frame is allowed to navigate, but don't check if
@@ -1003,7 +1001,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
               windowIsNew = false;
             }
           }
-
         } else if (rv == NS_ERROR_ABORT) {
           // NS_ERROR_ABORT means the window provider has flat-out rejected
           // the open-window call and we should bail.  Don't return an error
@@ -1090,8 +1087,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
          completely honest: we clear that indicator if the opener is chrome, so
          that the downstream consumer can treat the indicator to mean simply
          that the new window is subject to popup control. */
-      rv = CreateChromeWindow(parentChrome, chromeFlags, openWindowInfo,
-                              getter_AddRefs(newChrome));
+      rv = CreateChromeWindow(
+          parentChrome, chromeFlags,
+          windowTypeIsChrome ? nullptr : openWindowInfo.get(),
+          getter_AddRefs(newChrome));
       if (parentTopInnerWindow) {
         parentTopInnerWindow->Resume();
       }
@@ -1232,8 +1231,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   if (windowIsNew) {
     MOZ_DIAGNOSTIC_ASSERT(
         !targetBC->IsContent() ||
-        newWindowPrincipal->OriginAttributesRef().EqualsIgnoringFPD(
-            targetBC->OriginAttributesRef()));
+        openWindowInfo->mPrincipalToInheritForAboutBlank->OriginAttributesRef()
+            .EqualsIgnoringFPD(targetBC->OriginAttributesRef()));
 
     bool autoPrivateBrowsing = StaticPrefs::browser_privatebrowsing_autostart();
 
@@ -1263,16 +1262,28 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     NS_ASSERTION(targetOuterWin == targetDocShell->GetWindow(),
                  "Different windows??");
 
-    // Initialize the principal of the initial about:blank document. For
-    // toplevel windows, this call may have already happened when the window was
-    // created, but SetInitialPrincipal is safe to call multiple times.
     if (targetOuterWin) {
       MOZ_ASSERT(windowIsNew);
       MOZ_ASSERT(!targetOuterWin->GetSameProcessOpener() ||
                  targetOuterWin->GetSameProcessOpener() == aParent);
-      targetOuterWin->SetInitialPrincipal(newWindowPrincipal,
-                                          policyContainerToInheritForAboutBlank,
-                                          coepToInheritForAboutBlank);
+      Document* doc = targetBC->GetExtantDocument();
+      if (doc) {
+        // Previously, the principal was set here. Assert that we already have
+        // the principal that we would have previously set here.
+        MOZ_ASSERT(doc->GetPrincipal()->Equals(
+                       openWindowInfo->mPrincipalToInheritForAboutBlank) ||
+                       (doc->GetPrincipal()->GetIsNullPrincipal() &&
+                        openWindowInfo->mPrincipalToInheritForAboutBlank
+                            ->GetIsNullPrincipal()),
+                   "Wrong principal!");
+        // Setting the principal would've caused a location change event and
+        // frontend code depends on that for setting browser.documentURI.
+        if (nsIURI* uri = doc->GetDocumentURI()) {
+          targetDocShell->FireOnLocationChange(targetDocShell, nullptr, uri, 0);
+        }
+      } else {
+        MOZ_ASSERT_UNREACHABLE("How come there is no doc?");
+      }
 
       if (aIsPopupSpam) {
         MOZ_ASSERT(!targetBC->GetIsPopupSpam(),
@@ -1315,19 +1326,31 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       targetBC->UseRemoteSubframes() ==
       !!(chromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW));
 
-  if (aLoadState) {
+  // We need to distinguish the case where the no-URL-argument case behaves like
+  // an explicit about:blank argument.
+  RefPtr<nsDocShellLoadState> loadState = aLoadState;
+  nsCOMPtr<nsIURI> uriToLoad = aUri;
+  if (windowIsNew && !uriToLoad && aCalledFromJS && !loadState) {
+    NS_NewURI(getter_AddRefs(uriToLoad), "about:blank"_ns);
+    // Create loadState lazily for about:blank instead of before consuming
+    // user activation in nsGlobalWindowOuter::OpenInternal. See Bug 1901139
+    loadState = CreateLoadState(
+        uriToLoad, aParent ? nsPIDOMWindowOuter::From(aParent) : nullptr);
+  }
+
+  if (loadState) {
     // TriggeringPrincipal and ReferrerInfo are set up here because we
     // rely on the `jsapiChromeGuard` set above to get proper value.
-    // Ideally, aLoadState should contain that value when passed in.
-    if (!aLoadState->TriggeringPrincipal()) {
-      aLoadState->SetTriggeringPrincipal(subjectPrincipal);
+    // Ideally, loadState should contain that value when passed in.
+    if (!loadState->TriggeringPrincipal()) {
+      loadState->SetTriggeringPrincipal(subjectPrincipal);
 #ifndef ANDROID
       MOZ_ASSERT(subjectPrincipal,
                  "nsWindowWatcher: triggeringPrincipal required");
 #endif
     }
 
-    if (!aLoadState->GetReferrerInfo() && !aForceNoReferrer) {
+    if (!loadState->GetReferrerInfo() && !aForceNoReferrer) {
       /* use the URL from the *extant* document, if any. The usual accessor
          GetDocument will synchronously create an about:blank document if
          it has no better answer, and we only care about a real document.
@@ -1340,7 +1363,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       }
       if (doc) {
         auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
-        aLoadState->SetReferrerInfo(referrerInfo);
+        loadState->SetReferrerInfo(referrerInfo);
       }
     }
 
@@ -1349,7 +1372,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       if (win) {
         nsCOMPtr<nsIPolicyContainer> policyContainer =
             win->GetPolicyContainer();
-        aLoadState->SetPolicyContainer(policyContainer);
+        loadState->SetPolicyContainer(policyContainer);
       }
     }
   }
@@ -1379,10 +1402,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     if (obsSvc) {
       RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
 
-      if (aUri) {
+      if (uriToLoad) {
         // The url notified in the webNavigation.onCreatedNavigationTarget
         // event.
-        props->SetPropertyAsACString(u"url"_ns, aUri->GetSpecOrDefault());
+        props->SetPropertyAsACString(u"url"_ns, uriToLoad->GetSpecOrDefault());
       }
 
       props->SetPropertyAsInterface(u"sourceTabDocShell"_ns, parentDocShell);
@@ -1395,7 +1418,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     }
   }
 
-  if (aLoadState) {
+  if (loadState) {
     uint32_t loadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
     if (windowIsNew) {
       loadFlags |= nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD;
@@ -1412,11 +1435,11 @@ nsresult nsWindowWatcher::OpenWindowInternal(
         loadFlags |= nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
       }
     }
-    aLoadState->SetLoadFlags(loadFlags);
-    aLoadState->SetFirstParty(true);
+    loadState->SetLoadFlags(loadFlags);
+    loadState->SetFirstParty(true);
 
     // Should this pay attention to errors returned by LoadURI?
-    targetBC->LoadURI(aLoadState);
+    targetBC->LoadURI(loadState);
   }
 
   if (windowIsModal) {

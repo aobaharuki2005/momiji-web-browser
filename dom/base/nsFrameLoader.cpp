@@ -110,6 +110,7 @@
 #include "nsLayoutUtils.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
+#include "nsOpenWindowInfo.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsQueryObject.h"
@@ -765,7 +766,8 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
 
   // Kick off the load...
   bool tmpState = mNeedsAsyncDestroy;
-  mNeedsAsyncDestroy = true;
+  // Sync destroy should be possible from the sync about:blank load event
+  mNeedsAsyncDestroy = !NS_IsAboutBlankAllowQueryAndFragment(mURIToLoad);
 
   RefPtr<nsDocShell> docShell = GetDocShell();
   rv = docShell->LoadURI(loadState, false);
@@ -955,6 +957,7 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* aFrame) {
     return ShowRemoteFrame(aFrame);
   }
   const LayoutDeviceIntSize size = aFrame->GetInitialSubdocumentSize();
+
   nsresult rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
     return false;
@@ -985,7 +988,9 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* aFrame) {
   }
 
   RefPtr<nsDocShell> baseWindow = GetDocShell();
-  baseWindow->InitWindow(nullptr, 0, 0, size.width, size.height);
+  MOZ_ASSERT(ds == baseWindow, "How did the docshell change?");
+  baseWindow->InitWindow(nullptr, 0, 0, size.width, size.height, nullptr,
+                         nullptr);
   baseWindow->SetVisibility(true);
   NS_ENSURE_TRUE(GetDocShell(), false);
 
@@ -2236,12 +2241,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     nsGlobalWindowOuter::Cast(newWindow)->AllowScriptsToClose();
   }
 
-  if (!docShell->Initialize()) {
-    // Do not call Destroy() here. See bug 472312.
-    NS_WARNING("Something wrong when creating the docshell for a frameloader!");
-    return NS_ERROR_FAILURE;
-  }
-
   NS_ENSURE_STATE(mOwnerContent);
 
   // If we are an in-process browser, we want to set up our session history.
@@ -2264,19 +2263,55 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   MOZ_ALWAYS_SUCCEEDS(mPendingBrowsingContext->SetInitialSandboxFlags(
       mPendingBrowsingContext->GetSandboxFlags()));
 
+  // Gather things to inherit into the initial about:blank
+
+  // For HTML [i]frames and objects, perform the inheritance here. (It would
+  // probably be more proper to hoist this to each call site of
+  // nsFrameLoader::Create.)
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  nsCOMPtr<nsIPrincipal> partitionedPrincipal = doc->PartitionedPrincipal();
+
+  // We use mOpenWindowInfo so that JS can force a principal onto us
+  if (mOpenWindowInfo && mOpenWindowInfo->PrincipalToInheritForAboutBlank()) {
+    principal = mOpenWindowInfo->PrincipalToInheritForAboutBlank();
+    partitionedPrincipal =
+        mOpenWindowInfo->PartitionedPrincipalToInheritForAboutBlank();
+  }
+
+  if ((mPendingBrowsingContext->IsContent() || XRE_IsContentProcess()) &&
+      (!principal || principal->IsSystemPrincipal())) {
+    // Never inherit system principal to a content HTML [i]frame.
+    principal = NullPrincipal::Create(
+        mPendingBrowsingContext->OriginAttributesRef(), nullptr);
+    partitionedPrincipal = principal;
+  }
+
+  RefPtr<nsOpenWindowInfo> openWindowInfo = new nsOpenWindowInfo();
+  openWindowInfo->mPrincipalToInheritForAboutBlank = principal.forget();
+  openWindowInfo->mPartitionedPrincipalToInheritForAboutBlank =
+      partitionedPrincipal.forget();
+  openWindowInfo->mPolicyContainerToInheritForAboutBlank =
+      doc->GetPolicyContainer();
+  openWindowInfo->mCoepToInheritForAboutBlank = doc->GetEmbedderPolicy();
+  openWindowInfo->mBaseUriToInheritForAboutBlank = mOwnerContent->GetBaseURI();
+  if (!docShell->Initialize(openWindowInfo, nullptr)) {
+    // Do not call Destroy() here. See bug 472312.
+    NS_WARNING("Something wrong when creating the docshell for a frameloader!");
+    return NS_ERROR_FAILURE;
+  }
+
   ReallyLoadFrameScripts();
 
-  // Previously we would forcibly create the initial about:blank document for
-  // in-process content frames from a frame script which eagerly loaded in
-  // every tab.  This lead to other frontend components growing dependencies on
-  // the initial about:blank document being created eagerly.  See bug 1471327
-  // for details.
-  //
-  // We also eagerly create the initial about:blank document for remote loads
-  // separately when initializing BrowserChild.
-  if (mIsTopLevelContent &&
-      mPendingBrowsingContext->GetMessageManagerGroup() == u"browsers"_ns) {
-    (void)mDocShell->GetDocument();
+  // Previously, the lazy about:blank creation had the effect of running
+  // nsGlobalWindowOuter::DispatchDOMWindowCreated, which sets up the message
+  // manager, after ReallyLoadFrameScripts(). We can't achieve the same by using
+  // a script blocker while calling `docShell->Initialize()`, because the
+  // initialization expects to be able to assert that scripts are allowed to
+  // run. Therefore, let's fix up the message manager setup here.
+  if (Document* doc = docShell->GetDocument()) {
+    if (nsPIDOMWindowOuter* window = doc->GetWindow()) {
+      window->UpdateParentTarget();
+    }
   }
 
   return NS_OK;

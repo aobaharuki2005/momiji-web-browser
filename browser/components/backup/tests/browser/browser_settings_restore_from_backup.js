@@ -41,11 +41,21 @@ add_setup(async () => {
   });
 });
 
+async function waitInitialRequestStateSettled() {
+  // restore-from-backup.mjs is rendered quite late during the load.
+  // Bug 543435 caused a timing change such that withNewTab resolves right after
+  // that component dispatches BackupUI:InitWidget. So BackupUIParent hasn't yet
+  // received RequestState. If the RequestState / StateUpdate happens during the test
+  // that can mess things up, so wait a tick. See bug 2001583
+  await new Promise(res => setTimeout(res));
+}
+
 /**
  * Tests for when the user specifies an invalid backup file to restore.
  */
 add_task(async function test_backup_failure() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    await waitInitialRequestStateSettled();
     const mockBackupFilePath = await IOUtils.createUniqueFile(
       TEST_PROFILE_PATH,
       "backup.html"
@@ -101,6 +111,7 @@ add_task(async function test_backup_failure() {
  */
 add_task(async function test_restore_from_backup() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    await waitInitialRequestStateSettled();
     // Info about our mock backup
     const date = new Date().getTime();
     const deviceName = "test-device";
@@ -256,6 +267,7 @@ add_task(async function test_restore_from_backup() {
  */
 add_task(async function test_restore_uses_matching_initial_folder() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    await waitInitialRequestStateSettled();
     const mockBackupFilePath = await IOUtils.createUniqueFile(
       TEST_PROFILE_PATH,
       "backup.html"
@@ -312,6 +324,7 @@ add_task(async function test_restore_uses_matching_initial_folder() {
  */
 add_task(async function test_restore_in_progress() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    await waitInitialRequestStateSettled();
     let sandbox = sinon.createSandbox();
     let bs = getAndMaybeInitBackupService();
 
@@ -456,6 +469,7 @@ add_task(
     await BrowserTestUtils.withNewTab(
       "about:preferences#sync",
       async browser => {
+        await waitInitialRequestStateSettled();
         let sandbox = sinon.createSandbox();
         let settings = browser.contentDocument.querySelector("backup-settings");
         await settings.updateComplete;
@@ -539,6 +553,7 @@ add_task(
  */
 add_task(async function test_restore_backup_file_info_display() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    await waitInitialRequestStateSettled();
     let settings = browser.contentDocument.querySelector("backup-settings");
     await settings.updateComplete;
 
@@ -633,6 +648,7 @@ function assertNonEmbeddedSupportLink(link, linkName) {
  */
 add_task(async function test_support_links_non_embedded() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    await waitInitialRequestStateSettled();
     let settings = browser.contentDocument.querySelector("backup-settings");
     await settings.updateComplete;
 

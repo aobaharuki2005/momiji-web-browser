@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346659
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=346659">Mozilla Bug 346659</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -40,7 +40,7 @@ async function handleCmd(evt) {
   } catch (e) {
     // Not json, so it should be a test result. We don't need to set up test.
     return false;
-  }  
+  }
 
   if ("load" in cmd) {
     var testNum = cmd.load;
@@ -146,7 +146,7 @@ async function messageReceiver(evt) {
       is(testResult, "4", "Props on window opened from new window should be preserved when writing");
       break;
     case 5:
-      is(testResult, "undefined", "Props on new window's child should go away when loading");
+      is(testResult, "5", "Props on new window's child should be preserved when loading");
       break;
     case 6:
       is(testResult, "6", "Props on new window's child should not go away when writing");
@@ -155,7 +155,7 @@ async function messageReceiver(evt) {
       is(testResult, "7", "Props on different-domain window opened from different-domain new window can stay");
       break;
     case 9:
-      is(testResult, "undefined", "Props on different-domain new window's child should go away when loading");
+      is(testResult, "9", "Props on different-domain new window's child should be preserved when loading");
       break;
     case 11:
       is(testResult, "undefined", "Props on same-domain window opened from different-domain new window should go away when loading");

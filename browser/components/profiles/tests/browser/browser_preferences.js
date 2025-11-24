@@ -24,7 +24,9 @@ async function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
 
   if (!newTabBrowser.contentWindow) {
     await BrowserTestUtils.waitForEvent(newTabBrowser, "Initialized", true);
-    await BrowserTestUtils.waitForEvent(newTabBrowser.contentWindow, "load");
+    if (newTabBrowser.contentDocument.readyState != "complete") {
+      await BrowserTestUtils.waitForEvent(newTabBrowser.contentWindow, "load");
+    }
     await finalPrefPaneLoaded;
   }
 

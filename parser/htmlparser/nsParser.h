@@ -223,6 +223,11 @@ class nsParser final : public nsIParser,
   virtual bool IsScriptCreated() override;
 
   /**
+   * Always false.
+   */
+  virtual bool IsAboutBlankMode() override;
+
+  /**
    * This is called when the final chunk has been
    * passed to the parser and the content sink has
    * interrupted token processing. It schedules

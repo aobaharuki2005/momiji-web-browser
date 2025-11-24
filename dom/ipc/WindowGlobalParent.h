@@ -157,6 +157,8 @@ class WindowGlobalParent final : public WindowContext,
     return mIsInitialDocument.isSome() && mIsInitialDocument.value();
   }
 
+  bool IsUncommittedInitialDocument() { return mIsUncommittedInitialDocument; }
+
   already_AddRefed<mozilla::dom::Promise> PermitUnload(
       PermitUnloadAction aAction, uint32_t aTimeout, mozilla::ErrorResult& aRv);
 
@@ -275,6 +277,12 @@ class WindowGlobalParent final : public WindowContext,
     }
 
     mIsInitialDocument = Some(aIsInitialDocument);
+    mIsUncommittedInitialDocument = aIsInitialDocument;
+    return IPC_OK();
+  }
+  mozilla::ipc::IPCResult RecvCommitToInitialDocument() {
+    MOZ_ASSERT(mIsInitialDocument.isSome() && mIsInitialDocument.value());
+    mIsUncommittedInitialDocument = false;
     return IPC_OK();
   }
   mozilla::ipc::IPCResult RecvUpdateDocumentSecurityInfo(
@@ -380,6 +388,8 @@ class WindowGlobalParent final : public WindowContext,
   Maybe<nsString> mDocumentTitle;
 
   Maybe<bool> mIsInitialDocument;
+
+  bool mIsUncommittedInitialDocument;
 
   // True if this window has a "beforeunload" event listener.
   bool mHasBeforeUnload;

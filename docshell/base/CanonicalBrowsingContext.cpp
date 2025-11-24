@@ -67,6 +67,8 @@
 #include "nsIXPConnect.h"
 #include "nsImportModule.h"
 #include "UnitTransforms.h"
+#include "nsIOpenWindowInfo.h"
+#include "nsOpenWindowInfo.h"
 
 using namespace mozilla::ipc;
 
@@ -2301,6 +2303,10 @@ nsresult CanonicalBrowsingContext::PendingRemotenessChange::FinishSubframe() {
 
   nsCOMPtr<nsIPrincipal> initialPrincipal =
       NullPrincipal::Create(target->OriginAttributesRef());
+  RefPtr<nsOpenWindowInfo> openWindowInfo = new nsOpenWindowInfo();
+  openWindowInfo->mPrincipalToInheritForAboutBlank = initialPrincipal;
+  openWindowInfo->mPartitionedPrincipalToInheritForAboutBlank =
+      initialPrincipal;
   WindowGlobalInit windowInit =
       WindowGlobalActor::AboutBlankInitializer(target, initialPrincipal);
 
