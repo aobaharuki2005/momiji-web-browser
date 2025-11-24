@@ -331,6 +331,11 @@ var allowlist = [
   {
     file: "resource://app/modules/backup/CookiesBackupResource.sys.mjs",
   },
+
+  // Bug 2000725 importer lands (backed out due to unused file)
+  {
+    file: "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs",
+  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
