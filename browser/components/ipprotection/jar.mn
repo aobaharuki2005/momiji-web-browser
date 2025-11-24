@@ -8,8 +8,6 @@ browser.jar:
     content/browser/ipprotection/ipprotection-content.mjs (content/ipprotection-content.mjs)
     content/browser/ipprotection/ipprotection-constants.mjs (content/ipprotection-constants.mjs)
     content/browser/ipprotection/ipprotection-customelements.js (content/ipprotection-customelements.js)
-    content/browser/ipprotection/ipprotection-header.css (content/ipprotection-header.css)
-    content/browser/ipprotection/ipprotection-header.mjs (content/ipprotection-header.mjs)
     content/browser/ipprotection/ipprotection-message-bar.mjs (content/ipprotection-message-bar.mjs)
     content/browser/ipprotection/ipprotection-signedout.mjs (content/ipprotection-signedout.mjs)
     content/browser/ipprotection/ipprotection-site-settings-control.css (content/ipprotection-site-settings-control.css)

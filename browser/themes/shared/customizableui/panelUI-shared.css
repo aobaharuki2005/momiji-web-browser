@@ -2325,11 +2325,11 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
   width: 400px;
 }
 
-#PanelUI-ipprotection-header {
-  width: 100%;
+#ipprotection-experiment-badge {
+  margin-inline-start: var(--space-xsmall);
+  display: inline-block;
 }
 
-#PanelUI-ipprotection .panel-header,
-#PanelUI-ipprotection .panel-header + toolbarseparator {
-  display: none;
+#ipprotection-header-button {
+  list-style-image: url(chrome://global/skin/icons/help.svg);
 }
