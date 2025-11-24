@@ -854,6 +854,53 @@ FormAutofillUtils = {
   },
 
   /**
+   * Attempts to find the full sub-region name from an abbreviated / ISO code,
+   * using the address metadata for the specified country.
+   *
+   * @param   {string} abbreviatedValue A short sub-region code (e.g. "B").
+   * @param   {string} country The country code (e.g. "AR").
+   * @returns {string|null} The full sub-region name (e.g. "Buenos Aires") or null.
+   */
+  getFullSubregionName(abbreviatedValue, country) {
+    if (!abbreviatedValue || !country) {
+      return null;
+    }
+
+    const collators = this.getSearchCollators(country);
+    for (const metadata of this.getCountryAddressDataWithLocales(country)) {
+      const {
+        sub_keys: subKeys,
+        sub_names: subNames,
+        sub_lnames: subLnames,
+        sub_isoids: subIsoids,
+      } = metadata;
+      if (!subKeys) {
+        continue;
+      }
+
+      // Use latin names if available, otherwise use native names.
+      const targetNames = subLnames || subNames || subKeys;
+
+      // Check if the abbreviatedValue matches an ISO ID (e.g. "B") or a key (which may also be an ISO ID).
+      let matchIndex = subKeys.findIndex(key =>
+        this.strCompare(abbreviatedValue, key, collators)
+      );
+
+      if (matchIndex === -1 && subIsoids) {
+        matchIndex = subIsoids.findIndex(isoid =>
+          this.strCompare(abbreviatedValue, isoid, collators)
+        );
+      }
+
+      if (matchIndex !== -1 && targetNames.length > matchIndex) {
+        // Return the full or latin name from the targetNames list at the matching index.
+        return targetNames[matchIndex];
+      }
+    }
+    return null;
+  },
+
+  /**
    * Find the option element from select element.
    * 1. Try to find the locale using the country from address.
    * 2. First pass try to find exact match.
