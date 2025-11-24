@@ -7,7 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
   ERRORS: "chrome://browser/content/backup/backup-constants.mjs",
 });
 
-const bs = new BackupService({ FakeBackupResource1 });
+let bs;
 const correctPassword = "correcthorsebatterystaple";
 const incorrectPassword = "Tr0ub4dor&3";
 let testBackupDirPath;
@@ -27,12 +27,14 @@ add_setup(async function () {
     PathUtils.tempDir,
     "wrongPasswordTestBackup"
   );
+  bs = new BackupService({ FakeBackupResource1 });
   await bs.enableEncryption(correctPassword);
   testBackupPath = (await bs.createBackup({ profilePath: testBackupDirPath }))
     .archivePath;
 
   registerCleanupFunction(async () => {
     sandbox.restore();
+    bs = null;
 
     await IOUtils.remove(testBackupDirPath, { recursive: true });
   });

@@ -1272,15 +1272,14 @@ add_task(async function test_getBackupFileInfo_error_handling() {
  */
 add_task(async function test_changing_prefs_cleanup() {
   let sandbox = sinon.createSandbox();
-  let bs = BackupService.init();
-
+  Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, true);
+  let bs = new BackupService();
+  bs.initStatusObservers();
   let cleanupStub = sandbox.stub(bs, "cleanupBackupFiles");
   let statusUpdatePromise = TestUtils.topicObserved(
     "backup-service-status-updated"
   );
-
   Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME, false);
-
   await statusUpdatePromise;
 
   Assert.equal(
@@ -1298,4 +1297,34 @@ add_task(async function test_changing_prefs_cleanup() {
   );
 
   Services.prefs.clearUserPref(BACKUP_ARCHIVE_ENABLED_PREF_NAME);
+});
+
+add_task(function test_checkOsSupportsBackup_win10() {
+  const osParams = {
+    name: "Windows_NT",
+    version: "10.0",
+    build: "20000",
+  };
+  const result = BackupService.checkOsSupportsBackup(osParams);
+  Assert.ok(result);
+});
+
+add_task(function test_checkOsSupportsBackup_win11() {
+  const osParams = {
+    name: "Windows_NT",
+    version: "10.0",
+    build: "22000",
+  };
+  const result = BackupService.checkOsSupportsBackup(osParams);
+  Assert.ok(!result);
+});
+
+add_task(function test_checkOsSupportsBackup_linux() {
+  const osParams = {
+    name: "Linux",
+    version: "10.0",
+    build: "22000",
+  };
+  const result = BackupService.checkOsSupportsBackup(osParams);
+  Assert.ok(!result);
 });
