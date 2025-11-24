@@ -3400,7 +3400,12 @@
 # Only used in fission; in e10s we use 1 always
 - name: dom.ipc.processPrelaunch.fission.number
   type: uint32_t
+#ifdef ANDROID
+  # Bug 1999950: Prelaunch 1 process on Android due to a performance regression.
+  value: 1
+#else
   value: 3
+#endif
   mirror: always
 
 # Limit preallocated processes below this memory size (in MB)
