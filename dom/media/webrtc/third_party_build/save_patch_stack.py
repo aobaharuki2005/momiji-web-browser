@@ -69,6 +69,14 @@ def write_prestack_and_standard_patches(
     stdout_lines = run_shell(cmd)
     base_commit_summary = "Bug 1376873 - Rollup of local modifications"
     found_lines = [s for s in stdout_lines if base_commit_summary in s]
+    if len(found_lines) == 0:
+        global error_help
+        error_help = (
+            "The base commit for Mozilla's patch-stack was not found in the\n"
+            "git log.  The commit summary we're looking for is:\n"
+            f"{base_commit_summary}"
+        )
+        sys.exit(1)
     base_commit_sha = found_lines[0].split(" ")[0]
     print(f"Found base_commit_sha: {base_commit_sha}")
 
