@@ -5,6 +5,7 @@
 package org.mozilla.fenix.webcompat.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -90,6 +92,8 @@ fun WebCompatReporter(
 
     var previewSheetVisible by remember { mutableStateOf(false) }
 
+    val scrollState = rememberScrollState()
+
     BackHandler {
         store.dispatch(WebCompatReporterAction.BackPressed)
     }
@@ -100,12 +104,14 @@ fun WebCompatReporter(
                 onBackClick = {
                     store.dispatch(WebCompatReporterAction.BackPressed)
                 },
+                scrollState = scrollState,
             )
         },
+        containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(paddingValues)
                 .imePadding()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -256,7 +262,6 @@ fun WebCompatReporter(
                     style = FirefoxTheme.typography.subtitle2,
 
                 )
-
                 Icon(
                     painter = painterResource(R.drawable.ic_arrowhead_right),
                     contentDescription = "",
@@ -356,6 +361,7 @@ private fun WebCompatReporterState.toDropdownItems(
 @Composable
 private fun TempAppBar(
     onBackClick: () -> Unit,
+    scrollState: ScrollState,
 ) {
     TopAppBar(
         title = {
@@ -375,6 +381,13 @@ private fun TempAppBar(
         windowInsets = WindowInsets(
             top = 0.dp,
             bottom = 0.dp,
+        ),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = if (scrollState.canScrollBackward) {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
         ),
     )
 }
