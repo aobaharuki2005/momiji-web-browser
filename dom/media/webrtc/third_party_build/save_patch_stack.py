@@ -57,27 +57,15 @@ def write_patch_files_with_prefix(
         )
 
 
-def save_patch_stack(
+def write_prestack_and_standard_patches(
     github_path,
-    github_branch,
     patch_directory,
-    state_directory,
-    target_branch_head,
-    bug_number,
+    start_commit_sha,
+    end_commit_sha,
 ):
-    # remove the current patch files
-    files_to_remove = os.listdir(patch_directory)
-    for file in files_to_remove:
-        os.remove(os.path.join(patch_directory, file))
-
-    # find the base of the patch stack
-    cmd = f"git merge-base {github_branch} {target_branch_head}"
-    stdout_lines = run_git(cmd, github_path)
-    merge_base = stdout_lines[0]
-
     # grab the log of our patches that live on top of libwebrtc, and find
     # the commit of our base patch.
-    cmd = f"cd {github_path} ; git log --oneline {merge_base}..{github_branch}"
+    cmd = f"cd {github_path} ; git log --oneline {start_commit_sha}..{end_commit_sha}"
     stdout_lines = run_shell(cmd)
     base_commit_summary = "Bug 1376873 - Rollup of local modifications"
     found_lines = [s for s in stdout_lines if base_commit_summary in s]
@@ -118,13 +106,45 @@ def save_patch_stack(
 
     # write only the pre-stack patches out
     write_patch_files_with_prefix(
-        github_path, patch_directory, f"{merge_base}", f"{base_commit_sha}^", "p"
+        github_path, patch_directory, f"{start_commit_sha}", f"{base_commit_sha}^", "p"
     )
 
-    # write only the standard stack patches out
+    # write only the "standard" stack patches out
     write_patch_files_with_prefix(
-        github_path, patch_directory, f"{base_commit_sha}^", f"{github_branch}", "s"
+        github_path, patch_directory, f"{base_commit_sha}^", f"{end_commit_sha}", "s"
     )
+
+
+def save_patch_stack(
+    github_path,
+    github_branch,
+    patch_directory,
+    state_directory,
+    target_branch_head,
+    bug_number,
+    no_pre_stack,
+):
+    # remove the current patch files
+    files_to_remove = os.listdir(patch_directory)
+    for file in files_to_remove:
+        os.remove(os.path.join(patch_directory, file))
+
+    # find the base of the patch stack
+    cmd = f"git merge-base {github_branch} {target_branch_head}"
+    stdout_lines = run_git(cmd, github_path)
+    merge_base = stdout_lines[0]
+
+    if no_pre_stack:
+        write_patch_files_with_prefix(
+            github_path, patch_directory, f"{merge_base}", f"{github_branch}", ""
+        )
+    else:
+        write_prestack_and_standard_patches(
+            github_path,
+            patch_directory,
+            f"{merge_base}",
+            f"{github_branch}",
+        )
 
     # remove the unhelpful first line of the patch files that only
     # causes diff churn.  For reasons why we can't skip creating backup
@@ -218,6 +238,12 @@ if __name__ == "__main__":
         help="integer Bugzilla number (example: 1800920), if provided will write patch stack as separate commit",
     )
     parser.add_argument(
+        "--no-pre-stack",
+        action="store_true",
+        default=False,
+        help="don't look for pre-stack/standard patches, simply write the patches all sequentially",
+    )
+    parser.add_argument(
         "--skip-startup-sanity",
         action="store_true",
         default=False,
@@ -254,6 +280,7 @@ if __name__ == "__main__":
         args.state_path,
         args.target_branch_head,
         args.separate_commit_bug_number,
+        args.no_pre_stack,
     )
 
     # unregister the exit handler so the normal exit doesn't falsely
