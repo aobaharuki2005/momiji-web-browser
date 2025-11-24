@@ -84,7 +84,7 @@ def save_patch_stack(
     base_commit_sha = found_lines[0].split(" ")[0]
     print(f"Found base_commit_sha: {base_commit_sha}")
 
-    # First, a word about pre-stack and normal patches.  During the
+    # First, a word about pre-stack and standard patches.  During the
     # libwebrtc update process, there are 2 cases where we insert
     # patches between the upstream trunk commit we're current based on
     # and the Mozilla patch-stack:
@@ -106,17 +106,22 @@ def save_patch_stack(
     #    technique allows us to fix any potential rebase conflicts when
     #    the commit is eventually relanded the final time.
     #
-    # Pre-stack commits are everything that we insert between upstream and
-    # the Mozilla patch-stack from the two categories above.
+    # Pre-stack commits (written with a 'p' prefix) are everything that
+    # we insert between upstream and the Mozilla patch-stack from the
+    # two categories above.
     #
-    # Normal commits are the Mozilla patch-stack commits.
+    # Standard commits (written with a 's' prefix) are the Mozilla
+    # patch-stack commits.
+    #
+    # Note: the prefixes are also conveniently alphabetical so that
+    # restoring them can be done with a simple 'git am *.patch' command.
 
     # write only the pre-stack patches out
     write_patch_files_with_prefix(
         github_path, patch_directory, f"{merge_base}", f"{base_commit_sha}^", "p"
     )
 
-    # write only the "normal" stack patches out
+    # write only the standard stack patches out
     write_patch_files_with_prefix(
         github_path, patch_directory, f"{base_commit_sha}^", f"{github_branch}", "s"
     )
