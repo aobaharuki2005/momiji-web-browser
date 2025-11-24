@@ -79,10 +79,6 @@ class GtkCompositorWidget : public CompositorWidget,
   // Resume rendering with to given aXWindow (X11) or nsWindow (Wayland).
   void SetRenderingSurface(const uintptr_t aXWindow) override;
 
-  // If we fail to set window size (due to different screen scale or so)
-  // we can't paint the frame by compositor.
-  bool SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
-
 #if defined(MOZ_X11)
   Window XWindow() const { return mProvider.GetXWindow(); }
 #endif

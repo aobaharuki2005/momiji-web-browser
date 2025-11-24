@@ -122,17 +122,6 @@ EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
   return window;
 }
 
-bool GtkCompositorWidget::SetEGLNativeWindowSize(
-    const LayoutDeviceIntSize& aEGLWindowSize) {
-#if defined(MOZ_WAYLAND)
-  // We explicitly need to set EGL window size on Wayland only.
-  if (GdkIsWaylandDisplay() && mWidget) {
-    return mWidget->SetEGLNativeWindowSize(aEGLWindowSize);
-  }
-#endif
-  return true;
-}
-
 LayoutDeviceIntRegion GtkCompositorWidget::GetTransparentRegion() {
   LayoutDeviceIntRegion fullRegion(
       LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetClientSize()));

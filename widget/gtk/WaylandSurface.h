@@ -35,7 +35,7 @@ class WaylandSurface final {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaylandSurface);
 
-  WaylandSurface(RefPtr<WaylandSurface> aParent);
+  explicit WaylandSurface(RefPtr<WaylandSurface> aParent);
 
 #ifdef MOZ_LOGGING
   nsAutoCString GetDebugTag() const;
@@ -68,11 +68,11 @@ class WaylandSurface final {
       const WaylandSurfaceLock& aProofOfLock,
       const std::function<void(bool)>& aFrameCallbackStateHandler);
 
-  // Create and resize EGL window (Gdk coordinates).
   wl_egl_window* GetEGLWindow(DesktopIntSize aSize);
-  // Resize EGL window (pixel coordinates).
-  bool SetEGLWindowSize(LayoutDeviceIntSize aSize);
   bool HasEGLWindow() const { return !!mEGLWindow; }
+
+  // Set WaylandSurface target size (viewport & ELG surface if it's present).
+  void SetSize(DesktopIntSize aSize);
 
   // Mapped means we have all internals created.
   bool IsMapped() const { return mIsMapped; }
@@ -279,8 +279,8 @@ class WaylandSurface final {
                  WaylandSurfaceLock* aParentWaylandSurfaceLock,
                  DesktopIntPoint aSubsurfacePosition, bool aSubsurfaceDesync);
 
-  void SetSizeLocked(const WaylandSurfaceLock& aProofOfLock,
-                     DesktopIntSize aSize);
+  void SetRenderingSizeLocked(const WaylandSurfaceLock& aProofOfLock,
+                              DesktopIntSize aSize);
 
   wl_surface* Lock(WaylandSurfaceLock* aWaylandSurfaceLock);
   void Unlock(struct wl_surface** aSurface,
@@ -318,9 +318,7 @@ class WaylandSurface final {
   std::function<void(void)> mGdkCommitCallback;
   std::function<void(void)> mUnmapCallback;
 
-  // Scaled surface size, ceiled or fractional.
-  // This reflects real surface size which we paint.
-  gfx::IntSize mSizeScaled;
+  DesktopIntSize mSize;
 
   // Parent GdkWindow where we paint to, directly or via subsurface.
   RefPtr<GdkWindow> mGdkWindow;
