@@ -139,12 +139,17 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
             intArrayOf(colorTertiary, colorOnSurfaceVariant),
         )
 
+        row.isFocusable = true
+        row.isFocusableInTouchMode = true
+        row.isClickable = isEnabled
+        row.isEnabled = isEnabled
+        row.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+
         if (isEnabled) {
             val clicker = View.OnClickListener { onClick(option) }
             row.setOnClickListener(clicker)
         }
 
-        row.isEnabled = isEnabled
         return row
     }
 
