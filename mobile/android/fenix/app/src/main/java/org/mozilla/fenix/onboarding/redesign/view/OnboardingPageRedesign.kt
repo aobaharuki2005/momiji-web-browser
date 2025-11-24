@@ -135,7 +135,7 @@ private fun Content(
     ) {
         Text(
             text = pageState.title,
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.headlineSmall,
         )
 
         mainImage()

@@ -84,7 +84,7 @@ fun ToolbarOnboardingPageRedesign(
             Text(
                 text = pageState.title,
                 textAlign = TextAlign.Start,
-                style = FirefoxTheme.typography.headline5,
+                style = MaterialTheme.typography.headlineSmall,
             )
 
             Spacer(Modifier.height(36.dp))
