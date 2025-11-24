@@ -28,10 +28,12 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.TextButton
 import org.mozilla.fenix.R
+import org.mozilla.fenix.onboarding.notification.NotificationMainImage
 import org.mozilla.fenix.onboarding.redesign.view.defaultbrowser.SetToDefaultMainImage
 import org.mozilla.fenix.onboarding.redesign.view.sync.SyncMainImage
 import org.mozilla.fenix.onboarding.view.Action
 import org.mozilla.fenix.onboarding.view.OnboardingPageState
+import org.mozilla.fenix.onboarding.widget.SetSearchWidgetMainImage
 import org.mozilla.fenix.theme.FirefoxTheme
 
 const val TITLE_TOP_SPACER_WEIGHT = 0.3f
@@ -190,6 +192,54 @@ private fun OnboardingPageSyncPreview() {
                 onRecordImpressionEvent = {},
             ),
             mainImage = { SyncMainImage() },
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun OnboardingPageNotificationPreview() {
+    FirefoxTheme {
+        OnboardingPageRedesign(
+            pageState = OnboardingPageState(
+                imageRes = R.drawable.ic_notification_permission, // Unused in the redesign.
+                title = stringResource(R.string.juno_onboarding_enable_notifications_title_nimbus_2),
+                description = stringResource(R.string.juno_onboarding_enable_notifications_description_nimbus_2),
+                primaryButton = Action(
+                    text = stringResource(R.string.juno_onboarding_enable_notifications_positive_button),
+                    onClick = {},
+                ),
+                secondaryButton = Action(
+                    text = stringResource(R.string.juno_onboarding_enable_notifications_negative_button),
+                    onClick = {},
+                ),
+                onRecordImpressionEvent = {},
+            ),
+            mainImage = { NotificationMainImage() },
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun OnboardingPageSearchWidgetPreview() {
+    FirefoxTheme {
+        OnboardingPageRedesign(
+            pageState = OnboardingPageState(
+                imageRes = R.drawable.ic_notification_permission, // Unused in the redesign.
+                title = stringResource(R.string.juno_onboarding_add_search_widget_title),
+                description = stringResource(R.string.juno_onboarding_add_search_widget_description),
+                primaryButton = Action(
+                    text = stringResource(R.string.juno_onboarding_add_search_widget_positive_button),
+                    onClick = {},
+                ),
+                secondaryButton = Action(
+                    text = stringResource(R.string.juno_onboarding_add_search_widget_negative_button),
+                    onClick = {},
+                ),
+                onRecordImpressionEvent = {},
+            ),
+            mainImage = { SetSearchWidgetMainImage() },
         )
     }
 }

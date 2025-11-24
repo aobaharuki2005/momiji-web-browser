@@ -335,7 +335,6 @@ features:
               secondary-button-label: onboarding_redesign_sync_negative_button
 
             toolbar-placement:
-              ordering: 17
               title: onboarding_redesign_customize_toolbar_title
               body: onboarding_customize_toolbar_description
               image-res: ic_onboarding_customize_toolbar
@@ -360,13 +359,7 @@ features:
                   body-line-one-link-text: onboarding_marketing_redesign_learn_more
                   body-line-two-text: onboarding_marketing_redesign_opt_out_checkbox
 
-            # Disable the defaults that are not included in the redesign
-            add-search-widget:
-              enabled: false
-
-            notification-permission:
-              enabled: false
-
+            # Disable the defaults that are not included in the redesign.
             theme-selection:
               enabled: false
 

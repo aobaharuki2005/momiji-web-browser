@@ -56,6 +56,7 @@ import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
+import org.mozilla.fenix.onboarding.notification.NotificationMainImage
 import org.mozilla.fenix.onboarding.redesign.view.defaultbrowser.SetToDefaultMainImage
 import org.mozilla.fenix.onboarding.redesign.view.sync.SyncMainImage
 import org.mozilla.fenix.onboarding.store.OnboardingAction.OnboardingToolbarAction
@@ -68,6 +69,7 @@ import org.mozilla.fenix.onboarding.view.OnboardingTermsOfServiceEventHandler
 import org.mozilla.fenix.onboarding.view.ToolbarOption
 import org.mozilla.fenix.onboarding.view.ToolbarOptionType
 import org.mozilla.fenix.onboarding.view.mapToOnboardingPageState
+import org.mozilla.fenix.onboarding.widget.SetSearchWidgetMainImage
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.isLargeScreenSize
 
@@ -104,6 +106,9 @@ private object GradientColors {
  * @param onSkipDefaultClick Invoked when negative button on default browser page is clicked.
  * @param onSignInButtonClick Invoked when the positive button on the sign in page is clicked.
  * @param onSkipSignInClick Invoked when the negative button on the sign in page is clicked.
+ * @param onNotificationPermissionButtonClick Invoked when positive button on notification page is
+ * clicked.
+ * @param onSkipNotificationClick Invoked when negative button on notification page is clicked.
  * @param onAddFirefoxWidgetClick Invoked when positive button on add search widget page is clicked.
  * @param onSkipFirefoxWidgetClick Invoked when negative button on add search widget page is clicked.
  * @param onboardingStore The store which contains all the state related to the add-ons onboarding screen.
@@ -125,6 +130,8 @@ fun OnboardingScreenRedesign(
     onSkipDefaultClick: () -> Unit,
     onSignInButtonClick: () -> Unit,
     onSkipSignInClick: () -> Unit,
+    onNotificationPermissionButtonClick: () -> Unit,
+    onSkipNotificationClick: () -> Unit,
     onAddFirefoxWidgetClick: () -> Unit,
     onSkipFirefoxWidgetClick: () -> Unit,
     onboardingStore: OnboardingStore? = null,
@@ -218,6 +225,14 @@ fun OnboardingScreenRedesign(
             scrollToNextPageOrDismiss()
             onSkipSignInClick()
         },
+        onNotificationPermissionButtonClick = {
+            scrollToNextPageOrDismiss()
+            onNotificationPermissionButtonClick()
+        },
+        onNotificationPermissionSkipClick = {
+            scrollToNextPageOrDismiss()
+            onSkipNotificationClick()
+        },
         onAddFirefoxWidgetClick = {
             if (isWidgetPinnedState) {
                 scrollToNextPageOrDismiss()
@@ -279,6 +294,8 @@ private fun OnboardingContent(
     onMakeFirefoxDefaultSkipClick: () -> Unit,
     onSignInButtonClick: () -> Unit,
     onSignInSkipClick: () -> Unit,
+    onNotificationPermissionButtonClick: () -> Unit,
+    onNotificationPermissionSkipClick: () -> Unit,
     onAddFirefoxWidgetClick: () -> Unit,
     onSkipFirefoxWidgetClick: () -> Unit,
     onboardingStore: OnboardingStore? = null,
@@ -334,6 +351,8 @@ private fun OnboardingContent(
                     onMakeFirefoxDefaultSkipClick = onMakeFirefoxDefaultSkipClick,
                     onSignInButtonClick = onSignInButtonClick,
                     onSignInSkipClick = onSignInSkipClick,
+                    onNotificationPermissionButtonClick = onNotificationPermissionButtonClick,
+                    onNotificationPermissionSkipClick = onNotificationPermissionSkipClick,
                     onAddFirefoxWidgetClick = onAddFirefoxWidgetClick,
                     onAddFirefoxWidgetSkipClick = onSkipFirefoxWidgetClick,
                     onCustomizeToolbarButtonClick = onCustomizeToolbarButtonClick,
@@ -398,6 +417,16 @@ private fun OnboardingPageForType(
             mainImage = { SyncMainImage() },
         )
 
+        OnboardingPageUiData.Type.ADD_SEARCH_WIDGET -> OnboardingPageRedesign(
+            pageState = state,
+            mainImage = { SetSearchWidgetMainImage() },
+        )
+
+        OnboardingPageUiData.Type.NOTIFICATION_PERMISSION -> OnboardingPageRedesign(
+            pageState = state,
+            mainImage = { NotificationMainImage() },
+        )
+
         OnboardingPageUiData.Type.TOOLBAR_PLACEMENT -> {
             val context = LocalContext.current
             onboardingStore?.let { store ->
@@ -430,8 +459,6 @@ private fun OnboardingPageForType(
         )
 
         // no-ops
-        OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
-        OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
         OnboardingPageUiData.Type.THEME_SELECTION,
             -> {
             logger.error("Unsupported page type: $type used for onboarding redesign.")
@@ -550,6 +577,8 @@ private fun OnboardingScreenPreview() {
             onMarketingDataLearnMoreClick = {},
             onMarketingOptInToggle = {},
             onMarketingDataContinueClick = {},
+            onNotificationPermissionButtonClick = {},
+            onNotificationPermissionSkipClick = {},
         )
     }
 }
