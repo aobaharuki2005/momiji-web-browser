@@ -618,9 +618,11 @@ void HttpConnectionUDP::Close(nsresult reason, bool aIsShutdown) {
   if (socket) {
     socket->Close();
   }
-
-  MOZ_DIAGNOSTIC_ASSERT(!mHttp3Session || mHttp3Session->IsClosed(),
-                        "Http3Session should already be closed");
+  if (mHttp3Session) {
+    mHttp3Session->SetCleanShutdown(true);
+    mHttp3Session->Close(reason);
+    mHttp3Session = nullptr;
+  }
 
   for (const auto& trans : mQueuedHttpConnectTransaction) {
     trans->Close(reason);
