@@ -37,6 +37,26 @@ def build_repo_name_from_path(input_dir):
     return output_dir
 
 
+def write_patch_files_with_prefix(
+    github_path,
+    patch_directory,
+    start_commit_sha,
+    end_commit_sha,
+    prefix,
+):
+    cmd = f"git format-patch --keep-subject --no-signature --output-directory {patch_directory} {start_commit_sha}..{end_commit_sha}"
+    run_git(cmd, github_path)
+
+    # remove the commit summary from the file name and add provided prefix
+    patches_to_rename = os.listdir(patch_directory)
+    for file in patches_to_rename:
+        shortened_name = re.sub(r"^(\d\d\d\d)-.*\.patch", f"{prefix}\\1.patch", file)
+        os.rename(
+            os.path.join(patch_directory, file),
+            os.path.join(patch_directory, shortened_name),
+        )
+
+
 def save_patch_stack(
     github_path,
     github_branch,
@@ -92,32 +112,14 @@ def save_patch_stack(
     # Normal commits are the Mozilla patch-stack commits.
 
     # write only the pre-stack patches out
-    cmd = f"git format-patch --keep-subject --no-signature --output-directory {patch_directory} {merge_base}..{base_commit_sha}^"
-    stdout_lines = run_git(cmd, github_path)
-
-    # remove the commit summary from the file name - also prefix the pre-stack
-    # patches with 'p'
-    patches_to_rename = os.listdir(patch_directory)
-    for file in patches_to_rename:
-        shortened_name = re.sub(r"^(\d\d\d\d)-.*\.patch", "p\\1.patch", file)
-        os.rename(
-            os.path.join(patch_directory, file),
-            os.path.join(patch_directory, shortened_name),
-        )
+    write_patch_files_with_prefix(
+        github_path, patch_directory, f"{merge_base}", f"{base_commit_sha}^", "p"
+    )
 
     # write only the "normal" stack patches out
-    cmd = f"git format-patch --keep-subject --no-signature --output-directory {patch_directory} {base_commit_sha}^..{github_branch}"
-    run_git(cmd, github_path)
-
-    # remove the commit summary from the file name - also prefix the "normal"
-    # patches with 's'
-    patches_to_rename = os.listdir(patch_directory)
-    for file in patches_to_rename:
-        shortened_name = re.sub(r"^(\d\d\d\d)-.*\.patch", "s\\1.patch", file)
-        os.rename(
-            os.path.join(patch_directory, file),
-            os.path.join(patch_directory, shortened_name),
-        )
+    write_patch_files_with_prefix(
+        github_path, patch_directory, f"{base_commit_sha}^", f"{github_branch}", "s"
+    )
 
     # remove the unhelpful first line of the patch files that only
     # causes diff churn.  For reasons why we can't skip creating backup
