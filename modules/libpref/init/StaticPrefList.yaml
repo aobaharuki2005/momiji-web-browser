@@ -11095,6 +11095,18 @@
 #endif
   mirror: always
 
+# Enable the support to position absoluetly positioned frames properly across
+# fragmentainers (Bug 1994316).
+#
+# Note: Layout code should use
+# nsPresContext::FragmentainerAwarePositioningEnabled() rather than checking
+# this pref directly. This ensures a given frame tree handles abspos
+# fragmentation consistently even if the actual pref value changes.
+- name: layout.abspos.fragmentainer-aware-positioning.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "logging."
 #---------------------------------------------------------------------------

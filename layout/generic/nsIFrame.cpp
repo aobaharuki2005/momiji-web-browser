@@ -644,6 +644,13 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
     // Copy other bits in nsIFrame from prev-in-flow.
     mHasColumnSpanSiblings = aPrevInFlow->HasColumnSpanSiblings();
+
+    // If our prev-in-flow is an absolute containing block, we must be one, too.
+    if (aPrevInFlow->IsAbsoluteContainer()) {
+      MOZ_ASSERT(HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN),
+                 "We should've carried this bit from our prev-in-flow!");
+      MarkAsAbsoluteContainingBlock();
+    }
   } else {
     PresContext()->ConstructedFrame();
   }
@@ -2021,18 +2028,24 @@ nscoord nsIFrame::GetLogicalBaseline(
 }
 
 const nsFrameList& nsIFrame::GetChildList(ChildListID aListID) const {
-  if (IsAbsoluteContainer() && aListID == GetAbsoluteListID()) {
-    return GetAbsoluteContainingBlock()->GetChildList();
-  } else {
-    return nsFrameList::EmptyList();
+  if (IsAbsoluteContainer()) {
+    if (aListID == GetAbsoluteListID()) {
+      return GetAbsoluteContainingBlock()->GetChildList();
+    } else if (aListID == FrameChildListID::PushedAbsolute) {
+      return GetAbsoluteContainingBlock()->GetPushedChildList();
+    }
   }
+  return nsFrameList::EmptyList();
 }
 
 void nsIFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   if (IsAbsoluteContainer()) {
-    const nsFrameList& absoluteList =
-        GetAbsoluteContainingBlock()->GetChildList();
+    const auto* absCB = GetAbsoluteContainingBlock();
+    const nsFrameList& absoluteList = absCB->GetChildList();
     absoluteList.AppendIfNonempty(aLists, GetAbsoluteListID());
+    const nsFrameList& pushedAbsoluteList = absCB->GetPushedChildList();
+    pushedAbsoluteList.AppendIfNonempty(aLists,
+                                        FrameChildListID::PushedAbsolute);
   }
 }
 

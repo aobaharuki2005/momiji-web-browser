@@ -867,7 +867,14 @@ void nsFrameConstructorState::PushAbsoluteContainingBlock(
   }();
 
   if (aNewAbsoluteContainingBlock) {
-    aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
+    if (!aNewAbsoluteContainingBlock->GetPrevContinuation()) {
+      aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
+    } else {
+      MOZ_ASSERT(
+          aNewAbsoluteContainingBlock->GetAbsoluteContainingBlock(),
+          "nsIFrame::Init() should've constructed AbsoluteContainingBlock in "
+          "this case, since the frame is a continuation!");
+    }
   }
 }
 
@@ -2979,12 +2986,20 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
   if (!prevPageContentFrame) {
     // The canvas is an inheriting anon box, so needs to be "owned" by the page
     // content.
-    pageContentFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
+    pageContentFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES |
+                                   NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+    // Make it an absolute container for fixed-pos elements
+    pageContentFrame->MarkAsAbsoluteContainingBlock();
+  } else {
+    MOZ_ASSERT(
+        pageContentFrame->HasAllStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN),
+        "This bit should've been carried over from the previous continuation "
+        "in nsIFrame::Init().");
+    MOZ_ASSERT(pageContentFrame->GetAbsoluteContainingBlock(),
+               "nsIFrame::Init() should've constructed AbsoluteContainingBlock "
+               "for continuations!");
   }
   SetInitialSingleChild(pageFrame, pageContentFrame);
-  // Make it an absolute container for fixed-pos elements
-  pageContentFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-  pageContentFrame->MarkAsAbsoluteContainingBlock();
 
   RefPtr<ComputedStyle> canvasPseudoStyle =
       styleSet->ResolveInheritingAnonymousBoxStyle(PseudoStyleType::canvas,

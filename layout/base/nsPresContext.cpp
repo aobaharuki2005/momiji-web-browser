@@ -709,6 +709,9 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
     }
   }
 
+  mFragmentainerAwarePositioningEnabled =
+      StaticPrefs::layout_abspos_fragmentainer_aware_positioning_enabled();
+
   // Register callbacks so we're notified when the preferences change
   Preferences::RegisterPrefixCallbacks(nsPresContext::PreferenceChanged,
                                        gPrefixCallbackPrefs, this);

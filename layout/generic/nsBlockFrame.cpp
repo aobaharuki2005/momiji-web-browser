@@ -1646,8 +1646,9 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // resetting the size. Because of this, we must not reflow our abs-pos
   // children in that situation --- what we think is our "new size" will not be
   // our real new size. This also happens to be more efficient.
-  if (HasAbsolutelyPositionedChildren()) {
-    AbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
+  AbsoluteContainingBlock* absoluteContainer =
+      IsAbsoluteContainer() ? GetAbsoluteContainingBlock() : nullptr;
+  if (absoluteContainer && absoluteContainer->PrepareAbsoluteFrames(this)) {
     bool haveInterrupt = aPresContext->HasPendingInterrupt();
     if (aReflowInput.WillReflowAgainForClearance() || haveInterrupt) {
       // Make sure that when we reflow again we'll actually reflow all the abs
@@ -1694,11 +1695,6 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
           !(isRoot && NS_UNCONSTRAINEDSIZE == aReflowInput.ComputedHeight()) &&
           aMetrics.Height() != oldSize.height;
 
-      const LogicalRect containingBlock = [&]() {
-        LogicalRect rect(wm, LogicalPoint(wm), aMetrics.Size(wm));
-        rect.Deflate(wm, aReflowInput.ComputedLogicalBorder(wm));
-        return rect;
-      }();
       AbsPosReflowFlags flags{AbsPosReflowFlag::AllowFragmentation};
       if (cbWidthChanged) {
         flags += AbsPosReflowFlag::CBWidthChanged;
@@ -1710,9 +1706,13 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       // calculating hypothetical position of absolutely-positioned
       // frames.
       SetupLineCursorForQuery();
+
+      LogicalRect cbRect(wm, LogicalPoint(wm), aMetrics.Size(wm));
+      cbRect.Deflate(wm, aReflowInput.ComputedLogicalBorder(wm).ApplySkipSides(
+                             PreReflowBlockLevelLogicalSkipSides()));
       absoluteContainer->Reflow(
           this, aPresContext, aReflowInput, reflowStatus,
-          containingBlock.GetPhysicalRect(wm, aMetrics.PhysicalSize()), flags,
+          cbRect.GetPhysicalRect(wm, aMetrics.PhysicalSize()), flags,
           &aMetrics.mOverflowAreas);
     }
   }
