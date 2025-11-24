@@ -15,8 +15,6 @@ const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
 const BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME =
   "browser.backup.archive.overridePlatformCheck";
 const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
-const BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME =
-  "browser.backup.restore.overridePlatformCheck";
 const SANITIZE_ON_SHUTDOWN_PREF_NAME = "privacy.sanitize.sanitizeOnShutdown";
 const SELECTABLE_PROFILES_CREATED_PREF_NAME = "browser.profiles.created";
 
@@ -51,27 +49,15 @@ add_setup(async () => {
 
 add_task(async function test_archive_killswitch_enrollment() {
   let cleanupExperiment;
-  const savedPref = Services.prefs.getBoolPref(
-    BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-    false
-  );
   await archiveTemplate({
     internalReason: "nimbus",
     async disable() {
-      Services.prefs.setBoolPref(
-        BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-        false
-      );
       cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
         featureId: "backupService",
         value: { archiveKillswitch: true },
       });
     },
     async enable() {
-      Services.prefs.setBoolPref(
-        BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-        savedPref
-      );
       await cleanupExperiment();
     },
     // Nimbus calls onUpdate if any experiments are running, meaning that the
@@ -149,11 +135,6 @@ add_task(async function test_archive_disabled_unsupported_os() {
   );
   Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME, false);
   sandbox.stub(BackupService, "checkOsSupportsBackup").returns(false);
-  const cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
-    featureId: "backupService",
-    value: { archiveKillswitch: false },
-  });
-
   try {
     const bs = new BackupService();
     const status = bs.archiveEnabledStatus;
@@ -165,7 +146,6 @@ add_task(async function test_archive_disabled_unsupported_os() {
       BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
       archiveWasEnabled
     );
-    await cleanupExperiment();
   }
 });
 
@@ -177,10 +157,6 @@ add_task(async function test_archive_enabled_supported_os() {
   );
   Services.prefs.setBoolPref(BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME, false);
   sandbox.stub(BackupService, "checkOsSupportsBackup").returns(true);
-  const cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
-    featureId: "backupService",
-    value: { archiveKillswitch: false },
-  });
   try {
     const bs = new BackupService();
     const status = bs.archiveEnabledStatus;
@@ -191,33 +167,20 @@ add_task(async function test_archive_enabled_supported_os() {
       BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
       archiveWasEnabled
     );
-    await cleanupExperiment();
   }
 });
 
 add_task(async function test_restore_killswitch_enrollment() {
   let cleanupExperiment;
-  const savedPref = Services.prefs.getBoolPref(
-    BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME,
-    false
-  );
   await restoreTemplate({
     internalReason: "nimbus",
     async disable() {
-      Services.prefs.setBoolPref(
-        BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME,
-        false
-      );
       cleanupExperiment = await NimbusTestUtils.enrollWithFeatureConfig({
         featureId: "backupService",
         value: { restoreKillswitch: true },
       });
     },
     async enable() {
-      Services.prefs.setBoolPref(
-        BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME,
-        savedPref
-      );
       await cleanupExperiment();
     },
     // Nimbus calls onUpdate if any experiments are running, meaning that the
