@@ -10457,7 +10457,8 @@ void CodeGenerator::visitWasmStackSwitchToSuspendable(
   const Register ScratchReg1 = ScratchReg;
 #  elif defined(JS_CODEGEN_ARM)
   const Register ScratchReg1 = ABINonArgReturnVolatileReg;
-#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
+#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64) || \
+      defined(JS_CODEGEN_MIPS64)
   UseScratchRegisterScope temps(masm);
   const Register ScratchReg1 = temps.Acquire();
 #  else
@@ -10540,7 +10541,8 @@ void CodeGenerator::visitWasmStackSwitchToSuspendable(
 
   // Call wasm function fast.
 #  ifdef JS_USE_LINK_REGISTER
-#    if defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
+#    if defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64) || \
+        defined(JS_CODEGEN_MIPS64)
   masm.mov(ReturnAddressReg, ra);
 #    else
   masm.mov(ReturnAddressReg, lr);
@@ -10606,7 +10608,8 @@ void CodeGenerator::visitWasmStackSwitchToMain(LWasmStackSwitchToMain* lir) {
   const Register ScratchReg1 = ScratchReg;
 #  elif defined(JS_CODEGEN_ARM)
   const Register ScratchReg1 = ABINonArgReturnVolatileReg;
-#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
+#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64) || \
+      defined(JS_CODEGEN_MIPS64)
   UseScratchRegisterScope temps(masm);
   const Register ScratchReg1 = temps.Acquire();
 #  else
@@ -10726,7 +10729,8 @@ void CodeGenerator::visitWasmStackSwitchToMain(LWasmStackSwitchToMain* lir) {
 
   // Call wasm function fast.
 #  ifdef JS_USE_LINK_REGISTER
-#    if defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
+#    if defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64) || \
+        defined(JS_CODEGEN_MIPS64)
   masm.mov(ReturnAddressReg, ra);
 #    else
   masm.mov(ReturnAddressReg, lr);
@@ -10802,7 +10806,8 @@ void CodeGenerator::visitWasmStackContinueOnSuspendable(
   const Register ScratchReg1 = ScratchReg;
 #  elif defined(JS_CODEGEN_ARM)
   const Register ScratchReg1 = ABINonArgReturnVolatileReg;
-#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64)
+#  elif defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_RISCV64) || \
+      defined(JS_CODEGEN_MIPS64)
   UseScratchRegisterScope temps(masm);
   const Register ScratchReg1 = temps.Acquire();
 #  else
