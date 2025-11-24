@@ -10,7 +10,6 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -105,7 +104,7 @@ internal fun CustomTabMenu(
     onStopButtonClick: () -> Unit,
     onShareButtonClick: () -> Unit,
     onExtensionsMenuClick: () -> Unit,
-    extensionSubmenu: @Composable ColumnScope.() -> Unit,
+    extensionSubmenu: @Composable () -> Unit,
 ) {
     MenuFrame(
         contentModifier = Modifier
@@ -224,14 +223,15 @@ internal fun CustomTabMenu(
 
             if (shouldShowExtensionsMenu) {
                 ExtensionsMenuItem(
+                    inCustomTab = true,
+                    isPrivate = isPrivate,
                     isExtensionsProcessDisabled = isExtensionsProcessDisabled,
                     isExtensionsExpanded = isExtensionsExpanded,
-                    isPrivate = isPrivate,
+                    isAllWebExtensionsDisabled = isAllWebExtensionsDisabled,
                     webExtensionMenuCount = webExtensionMenuCount,
-                    allWebExtensionsDisabled = isAllWebExtensionsDisabled,
+                    extensionsMenuItemDescription = extensionsMenuDescription,
                     onExtensionsMenuClick = onExtensionsMenuClick,
                     extensionSubmenu = extensionSubmenu,
-                    extensionsMenuItemDescription = extensionsMenuDescription,
                 )
             }
         }
@@ -257,8 +257,7 @@ internal fun CustomTabMenu(
 
 @Composable
 internal fun CustomTabAddons(
-    availableAddons: List<Addon>,
-    webExtensionMenuItems: List<WebExtensionMenuItem>,
+    webExtensionMenuItems: Map<WebExtensionMenuItem, Addon?>,
     onWebExtensionMenuItemClick: () -> Unit,
 ) {
     Column(
@@ -269,8 +268,7 @@ internal fun CustomTabAddons(
                 accessPoint = MenuAccessPoint.External,
                 webExtensionMenuItems = webExtensionMenuItems,
                 onWebExtensionMenuItemClick = onWebExtensionMenuItemClick,
-                availableAddons = availableAddons,
-                onSettingsClick = {},
+                onWebExtensionMenuItemSettingsClick = {},
             )
         }
     }

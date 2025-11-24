@@ -441,7 +441,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         state.extensionMenuState.webExtensionsCount
                     }
 
-                    val allWebExtensionsDisabled by store.observeAsState(initialValue = false) { state ->
+                    val isAllWebExtensionsDisabled by store.observeAsState(initialValue = false) { state ->
                         state.extensionMenuState.allWebExtensionsDisabled
                     }
 
@@ -483,10 +483,16 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
                     val extensionsMenuItemDescription = getExtensionsMenuItemDescription(
                         isExtensionsProcessDisabled = isExtensionsProcessDisabled,
-                        allWebExtensionsDisabled = allWebExtensionsDisabled,
+                        isAllWebExtensionsDisabled = isAllWebExtensionsDisabled,
                         availableAddons = availableAddons,
                         browserWebExtensionMenuItems = browserWebExtensionMenuItem,
                     )
+
+                    val webExtensionMenuItems = remember(availableAddons, browserWebExtensionMenuItem) {
+                        browserWebExtensionMenuItem.associateWith { menuItem ->
+                            availableAddons.find { addon -> addon.id == menuItem.id }
+                        }
+                    }
 
                     BackHandler {
                         this@MenuDialogFragment.dismissAllowingStateLoss()
@@ -582,7 +588,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     showBanner = shouldShowMenuBanner && !defaultBrowser,
                                     isDownloadHighlighted = isDownloadHighlighted,
                                     webExtensionMenuCount = webExtensionsCount,
-                                    allWebExtensionsDisabled = allWebExtensionsDisabled,
+                                    isAllWebExtensionsDisabled = isAllWebExtensionsDisabled,
                                     onMozillaAccountButtonClick = {
                                         store.dispatch(
                                             MenuAction.Navigate.MozillaAccount(
@@ -620,7 +626,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     },
                                     onExtensionsMenuClick = {
                                         if (
-                                            allWebExtensionsDisabled ||
+                                            isAllWebExtensionsDisabled ||
                                             isExtensionsProcessDisabled ||
                                             extensionsMenuItemDescription == null
                                         ) {
@@ -720,7 +726,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                         Addons(
                                             accessPoint = args.accesspoint,
                                             availableAddons = availableAddons,
-                                            webExtensionMenuItems = browserWebExtensionMenuItem,
+                                            webExtensionMenuItems = webExtensionMenuItems,
                                             addonInstallationInProgress = addonInstallationInProgress,
                                             recommendedAddons = recommendedAddons,
                                             onAddonClick = { addon ->
@@ -778,7 +784,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                     isPrivate = isPrivate,
                                     isExtensionsExpanded = isExtensionsExpanded,
                                     isExtensionsProcessDisabled = isExtensionsProcessDisabled,
-                                    isAllWebExtensionsDisabled = allWebExtensionsDisabled,
+                                    isAllWebExtensionsDisabled = isAllWebExtensionsDisabled,
                                     shouldShowExtensionsMenu = settings.shouldShowCustomTabExtensions,
                                     webExtensionMenuCount = webExtensionsCount,
                                     extensionsMenuDescription = extensionsMenuItemDescription,
@@ -820,14 +826,13 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                         store.dispatch(MenuAction.Navigate.Share)
                                     },
                                     onExtensionsMenuClick = {
-                                        if (!allWebExtensionsDisabled && !isExtensionsProcessDisabled) {
+                                        if (!isAllWebExtensionsDisabled && !isExtensionsProcessDisabled) {
                                             isExtensionsExpanded = !isExtensionsExpanded
                                         }
                                     },
                                     extensionSubmenu = {
                                         CustomTabAddons(
-                                            availableAddons = availableAddons,
-                                            webExtensionMenuItems = browserWebExtensionMenuItem,
+                                            webExtensionMenuItems = webExtensionMenuItems,
                                             onWebExtensionMenuItemClick = {
                                                 Events.browserMenuAction.record(
                                                     Events.BrowserMenuActionExtra(
@@ -848,7 +853,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
 
     private fun getExtensionsMenuItemDescription(
         isExtensionsProcessDisabled: Boolean,
-        allWebExtensionsDisabled: Boolean,
+        isAllWebExtensionsDisabled: Boolean,
         availableAddons: List<Addon>,
         browserWebExtensionMenuItems: List<WebExtensionMenuItem>,
     ): String? {
@@ -866,7 +871,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                 browserWebExtensionMenuItems.joinToString(separator = ", ") { it.label }
             }
 
-            allWebExtensionsDisabled -> {
+            isAllWebExtensionsDisabled -> {
                 requireContext().getString(R.string.browser_menu_no_extensions_installed_description)
             }
 

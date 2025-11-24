@@ -4,6 +4,13 @@
 
 package org.mozilla.fenix.components.menu.compose
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,6 +59,7 @@ import org.mozilla.fenix.components.menu.MenuDialogTestTag.WEB_EXTENSION_ITEM
 import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.utils.DURATION_MS_MAIN_MENU_ITEM
 import mozilla.components.ui.icons.R as iconsR
 
 private val MENU_ITEM_HEIGHT_WITHOUT_DESC = 52.dp
@@ -381,6 +389,44 @@ internal fun Badge(
             style = FirefoxTheme.typography.headline8,
             maxLines = 1,
         )
+    }
+}
+
+@Composable
+internal fun ExpandableMenuItemAnimation(
+    isExpanded: Boolean,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = isExpanded,
+        enter = expandVertically(
+            expandFrom = Alignment.Top,
+            animationSpec = tween(
+                durationMillis = DURATION_MS_MAIN_MENU_ITEM,
+                easing = LinearEasing,
+            ),
+        ) + fadeIn(
+            animationSpec = tween(
+                durationMillis = DURATION_MS_MAIN_MENU_ITEM,
+                easing = LinearEasing,
+            ),
+        ),
+        exit = shrinkVertically(
+            shrinkTowards = Alignment.Top,
+            animationSpec = tween(
+                durationMillis = DURATION_MS_MAIN_MENU_ITEM,
+                easing = LinearEasing,
+            ),
+        ) + fadeOut(
+            animationSpec = tween(
+                durationMillis = DURATION_MS_MAIN_MENU_ITEM,
+                easing = LinearEasing,
+            ),
+        ),
+    ) {
+        Column {
+            content()
+        }
     }
 }
 
