@@ -33,4 +33,18 @@ data class CreditCardEditorState(
     val selectedExpiryYearIndex: Int,
     val inEditMode: Boolean,
     val showDeleteDialog: Boolean = false,
-) : State
+) : State {
+
+    companion object {
+        val Default = CreditCardEditorState(
+            guid = "",
+            cardNumber = "",
+            nameOnCard = "",
+            inEditMode = false,
+            expiryMonths = listOf(),
+            selectedExpiryMonthIndex = 0,
+            expiryYears = listOf(),
+            selectedExpiryYearIndex = 0,
+        )
+    }
+}
