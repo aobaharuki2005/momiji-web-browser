@@ -175,6 +175,7 @@ support-files = [
   "referrer_change_server.sjs",
   "file_change_policy_redirect.html",
   "file_bug1198095.js",
+  "file_bug1126851_post_unload.html",
   "file_bug1250148.sjs",
   "file_bug1268962.sjs",
   "iframe_meta_refresh.sjs",

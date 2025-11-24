@@ -17,8 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1126851
   let gotUnload = false;
 
   function runTest() {
-    win = window.open("about:blank", "");
-    win.onunload = function() {
+    win = window.open("file_bug1126851_post_unload.html", "");
+    // Reload replaces the inner window so we cannot wait for win.onunload
+    // and instead must rely on messages from the popup.
+    window.onmessage = function() {
       if (gotUnload) {
         SimpleTest.finish();
       } else {
@@ -36,8 +38,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1126851
         win.location.reload();
       }
     }
-    evt = new win.Event("resize", { bubbles: true });
-    win.document.dispatchEvent(evt);
+    win.onload = function() {
+      evt = new win.Event("resize", { bubbles: true });
+      win.document.dispatchEvent(evt);
+    }
   }
 
 

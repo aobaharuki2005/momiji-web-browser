@@ -4,7 +4,9 @@
       let o1;
       let p1, p2;
       window.addEventListener("MozReftestInvalidate", finish);
-      try { o1 = window.open("") } catch(e) { }
+      try { o1 = window.open("/") } catch(e) { }
+      o1.foo = 1
+      // We require inner window reuse, so reload while an async load is ongoing
       try { o1.location.reload() } catch(e) { }
       try { o2 = o1.navigator } catch(e) { }
       try { o3 = o2.mediaDevices } catch(e) { }
@@ -21,6 +23,10 @@
         try {
           await p2;
         } catch (e) {}
+        if (o1.foo != 1) {
+          // fail if no window reuse
+          return;
+        }
         try {
           o1.close();
         } catch (e) {}
