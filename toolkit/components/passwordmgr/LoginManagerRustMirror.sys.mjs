@@ -7,8 +7,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
 
+const rustMirrorTelemetryVersion = "2";
+
 /* Check if an url has punicode encoded hostname */
-function isPunycode(origin) {
+function isPunycodeOrigin(origin) {
   try {
     return origin && new URL(origin).hostname.startsWith("xn--");
   } catch (_) {
@@ -16,64 +18,91 @@ function isPunycode(origin) {
   }
 }
 
-function recordIncompatibleFormats(runId, operation, loginInfo) {
-  if (isPunycode(loginInfo.origin)) {
-    Glean.pwmgr.rustIncompatibleLoginFormat.record({
-      run_id: runId,
-      issue: "nonAsciiOrigin",
-      operation,
-    });
-  }
-  if (isPunycode(loginInfo.formActionOrigin)) {
-    Glean.pwmgr.rustIncompatibleLoginFormat.record({
-      run_id: runId,
-      issue: "nonAsciiFormAction",
-      operation,
-    });
-  }
-
-  if (loginInfo.origin === ".") {
-    Glean.pwmgr.rustIncompatibleLoginFormat.record({
-      run_id: runId,
-      issue: "dotOrigin",
-      operation,
-    });
-  }
-
-  if (
-    loginInfo.username?.includes("\n") ||
-    loginInfo.username?.includes("\r")
-  ) {
-    Glean.pwmgr.rustIncompatibleLoginFormat.record({
-      run_id: runId,
-      issue: "usernameLineBreak",
-      operation,
-    });
-  }
+/* Check if an origin is a single dot */
+function isSingleDot(str) {
+  return str === ".";
 }
 
-function recordMirrorStatus(runId, operation, status, error = null) {
+/* Check if an origin does not contain http protocol */
+function isHttpOrigin(str) {
+  return str.startsWith("https://") || str.startsWith("http://");
+}
+
+/* Check if a string contains line breaks */
+function containsLineBreaks(str) {
+  return str.includes("\n") || str.includes("\r");
+}
+
+/* Check if a string contains Nul string */
+function containsNul(str) {
+  return str.includes("\0");
+}
+
+/* Normalize different errors */
+function normalizeRustStorageErrorMessage(error) {
+  const message = error?.message || String(error);
+
+  return message
+    .replace(/^reason: /, "")
+    .replace(/^Invalid login: /, "")
+    .replace(/\{[0-9a-fA-F-]{36}\}/, "{UUID}");
+}
+
+function recordMirrorFailure(runId, operation, error, login = null) {
+  // lookup poisoned status
   const poisoned = Services.prefs.getBoolPref(
     "signon.rustMirror.poisoned",
     false
   );
 
-  let errorMessage = "";
-  if (error) {
-    errorMessage = error.message ?? String(error);
+  const data = {
+    metric_version: rustMirrorTelemetryVersion,
+    run_id: runId,
+    operation,
+    poisoned,
+
+    error_message: normalizeRustStorageErrorMessage(error),
+
+    is_deleted: false,
+    has_empty_password: false,
+    has_punycode_origin: false,
+    has_single_dot_origin: false,
+    has_non_http_origin: false,
+    has_username_line_break: false,
+    has_username_nul: false,
+  };
+
+  if (login) {
+    data.is_deleted = login.deleted;
+    data.has_empty_password = !login.password;
+    data.has_punycode_origin = isPunycodeOrigin(
+      login.origin || login.formActionOrigin
+    );
+    data.has_single_dot_origin = isSingleDot(
+      login.origin || login.formActionOrigin
+    );
+    data.has_non_http_origin = !isHttpOrigin(
+      login.origin || login.formActionOrigin
+    );
+    data.has_username_line_break = containsLineBreaks(login.username);
+    data.has_username_nul = containsNul(login.username);
   }
 
+  Glean.pwmgr.rustWriteFailure.record(data);
+
+  // set poisoned status on error
+  if (!poisoned) {
+    Services.prefs.setBoolPref("signon.rustMirror.poisoned", true);
+  }
+}
+
+function recordMirrorStatus(runId, operation, status) {
   Glean.pwmgr.rustMirrorStatus.record({
+    metric_version: rustMirrorTelemetryVersion,
     run_id: runId,
     operation,
     status,
-    error_message: errorMessage,
-    poisoned,
   });
-
-  if (status === "failure" && !poisoned) {
-    Services.prefs.setBoolPref("signon.rustMirror.poisoned", true);
-  }
 }
 
 function recordMigrationStatus(
@@ -85,22 +114,12 @@ function recordMigrationStatus(
   const had_errors = numberOfLoginsMigrated < numberOfLoginsToMigrate;
 
   Glean.pwmgr.rustMigrationStatus.record({
+    metric_version: rustMirrorTelemetryVersion,
     run_id: runId,
     duration_ms: duration,
     number_of_logins_to_migrate: numberOfLoginsToMigrate,
     number_of_logins_migrated: numberOfLoginsMigrated,
     had_errors,
-  });
-
-  if (had_errors) {
-    Services.prefs.setBoolPref("signon.rustMirror.poisoned", true);
-  }
-}
-
-function recordMigrationFailure(runId, error) {
-  Glean.pwmgr.rustMigrationFailure.record({
-    run_id: runId,
-    error_message: error.message ?? String(error),
   });
 }
 
@@ -166,7 +185,6 @@ export class LoginManagerRustMirror {
       this.#logger.log("Rust Mirror is enabled.");
     } catch (e) {
       this.#logger.error("Login migration failed", e);
-      recordMirrorStatus("migration-enable", "failure", e);
     }
   }
 
@@ -201,19 +219,20 @@ export class LoginManagerRustMirror {
     const runId = Services.uuid.generateUUID();
     let loginToModify;
     let newLoginData;
+    let status = "success";
 
     switch (eventName) {
       case "addLogin":
         this.#logger.log(`adding login ${subject.guid}...`);
         try {
-          recordIncompatibleFormats(runId, "add", subject);
           await this.#rustStorage.addLoginsAsync([subject]);
-          recordMirrorStatus(runId, "add", "success");
           this.#logger.log(`added login ${subject.guid}.`);
         } catch (e) {
+          status = "failure";
+          recordMirrorFailure(runId, "add", e, subject);
           this.#logger.error("mirror-error:", e);
-          recordMirrorStatus(runId, "add", "failure", e);
         }
+        recordMirrorStatus(runId, "add", status);
         break;
 
       case "modifyLogin":
@@ -221,38 +240,40 @@ export class LoginManagerRustMirror {
         newLoginData = subject.queryElementAt(1, Ci.nsILoginInfo);
         this.#logger.log(`modifying login ${loginToModify.guid}...`);
         try {
-          recordIncompatibleFormats(runId, "modify", newLoginData);
           this.#rustStorage.modifyLogin(loginToModify, newLoginData);
-          recordMirrorStatus(runId, "modify", "success");
           this.#logger.log(`modified login ${loginToModify.guid}.`);
         } catch (e) {
+          status = "failure";
+          recordMirrorFailure(runId, "modify", e, newLoginData);
           this.#logger.error("error: modifyLogin:", e);
-          recordMirrorStatus(runId, "modify", "failure", e);
         }
+        recordMirrorStatus(runId, "modify", status);
         break;
 
       case "removeLogin":
         this.#logger.log(`removing login ${subject.guid}...`);
         try {
           this.#rustStorage.removeLogin(subject);
-          recordMirrorStatus(runId, "remove", "success");
           this.#logger.log(`removed login ${subject.guid}.`);
         } catch (e) {
+          status = "failure";
+          recordMirrorFailure(runId, "remove", e, subject);
           this.#logger.error("error: removeLogin:", e);
-          recordMirrorStatus(runId, "remove", "failure", e);
         }
+        recordMirrorStatus(runId, "remove", status);
         break;
 
       case "removeAllLogins":
         this.#logger.log("removing all logins...");
         try {
           this.#rustStorage.removeAllLogins();
-          recordMirrorStatus(runId, "remove-all", "success");
           this.#logger.log("removed all logins.");
         } catch (e) {
+          status = "failure";
           this.#logger.error("error: removeAllLogins:", e);
-          recordMirrorStatus(runId, "remove-all", "failure", e);
+          recordMirrorFailure(runId, "remove-all", e);
         }
+        recordMirrorStatus(runId, "remove-all", status);
         break;
 
       // re-migrate on importLogins event
@@ -318,14 +339,15 @@ export class LoginManagerRustMirror {
 
       Services.prefs.setBoolPref("signon.rustMirror.poisoned", false);
 
-      const logins = await this.#jsonStorage.getAllLogins();
+      // get all logins; exclude deletion stubs
+      const logins = await this.#jsonStorage.getAllLogins(false);
       numberOfLoginsToMigrate = logins.length;
 
       const results = await this.#rustStorage.addLoginsAsync(logins, true);
-      for (const { error } of results) {
+      for (const [i, { error }] of results.entries()) {
         if (error) {
           this.#logger.error("error during migration:", error.message);
-          recordMigrationFailure(runId, error);
+          recordMirrorFailure(runId, "migration", error, logins[i]);
         } else {
           numberOfLoginsMigrated += 1;
         }

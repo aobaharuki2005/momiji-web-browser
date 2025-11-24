@@ -850,6 +850,9 @@ pwmgr:
       - passwords-dev@mozilla.org
     expires: never
     extra_keys:
+      metric_version:
+         type: string
+         description: Identifier for rust mirror telemetry version
       run_id:
         type: string
         description: Unique identifier for the login change event
@@ -860,64 +863,6 @@ pwmgr:
       status:
         description: >
           The result of the operation ("success" or "failure").
-        type: string
-      error_message:
-        description: >
-          The error message or exception string from the failure.
-        type: string
-      poisoned:
-        description: >
-          Whether there was a previous error, meaning that this event must be viewed with caution.
-        type: boolean
-
-  rust_migration_failure:
-    type: event
-    description: >
-      Records errors during a migration run.
-    bugs:
-      - https://bugzil.la/1991676
-    data_reviews:
-      - https://bugzil.la/1991676
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - passwords-dev@mozilla.org
-    expires: never
-    extra_keys:
-      run_id:
-        type: string
-        description: Unique identifier for the migration run.
-      error_message:
-        type: string
-        description: The error message from the failed login entry.
-
-  rust_incompatible_login_format:
-    type: event
-    description: >
-      Records whenever a login format is incompatible with the Rust password
-      store. Includes which field was affected and during which operation.
-    bugs:
-      - https://bugzil.la/1981814
-    data_reviews:
-      - https://bugzil.la/1981814
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - passwords-dev@mozilla.org
-    expires: never
-    extra_keys:
-      run_id:
-        type: string
-        description: Unique identifier for the login change event
-      issue:
-        description: >
-          Which kind of incompatible format (dotOrigin, nonAsciiOrigin,
-          nonAsciiFormAction, usernameLineBreak).
-        type: string
-      operation:
-        description: >
-          The operation being performed when the incompatible format was found
-          (e.g. addLogin, modifyLogin, removeLogin).
         type: string
 
   rust_migration_status:
@@ -935,6 +880,9 @@ pwmgr:
       - passwords-dev@mozilla.org
     expires: never
     extra_keys:
+      metric_version:
+        type: string
+        description: Identifier for rust mirror telemetry version
       run_id:
         type: string
         description: Unique identifier for the migration run.
@@ -953,6 +901,67 @@ pwmgr:
       had_errors:
         description: >
           Whether the migration had errors.
+        type: boolean
+
+  rust_write_failure:
+    type: event
+    description: >
+      Records errors during mirror or migration run.
+    bugs:
+      - https://bugzil.la/1991676
+    data_reviews:
+      - https://bugzil.la/1991676
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - passwords-dev@mozilla.org
+    expires: never
+    extra_keys:
+      metric_version:
+         type: string
+         description: Identifier for rust mirror telemetry version
+      run_id:
+        type: string
+        description: Unique identifier for the login change event
+      operation:
+        description: >
+          The type of operation that failed (e.g. "add", "modify", "remove", "remove-all", "migration", etc.).
+        type: string
+      poisoned:
+        description: >
+          Whether there was a previous error, meaning that this event must be viewed with caution.
+        type: boolean
+      error_message:
+        description: >
+          The error message or exception string from the failure.
+        type: string
+      has_empty_password:
+        description: >
+          Whether the login to add/modify/remove has an empty password
+        type: boolean
+      has_punycode_origin:
+        description: >
+          Whether the login to add/modify/remove has a punycode origin or form_action_origin
+        type: boolean
+      has_single_dot_origin:
+        description: >
+          Whether the login to add/modify/remove has an origin or form_action_origin consisting of a single dot only
+        type: boolean
+      has_non_http_origin:
+        description: >
+          Whether the login to add/modify/remove has an origin or form_action_origin which does not start with http:// or https://
+        type: boolean
+      has_username_line_break:
+        description: >
+          Whether the login to add/modify/remove has a username containing a line break
+        type: boolean
+      has_username_nul:
+        description: >
+          Whether the login to add/modify/remove has a username containing a Nul char
+        type: boolean
+      is_deleted:
+        description: >
+          Whether the login to add/modify/remove is a deletion stub
         type: boolean
 
   saving_enabled:
