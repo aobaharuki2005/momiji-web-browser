@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.termsofuse.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
@@ -146,7 +148,7 @@ private fun BottomSheetContent(
     Column(
         modifier = Modifier
             .verticalScroll(scrollState)
-            .padding(horizontal = 32.dp),
+            .padding(start = 32.dp, end = 32.dp, bottom = 16.dp),
     ) {
         if (!showDragHandle) {
             Spacer(Modifier.size(16.dp))
@@ -180,6 +182,21 @@ private fun BottomSheetContent(
 
         Spacer(Modifier.size(16.dp))
 
+        TextButton(
+            modifier = Modifier.fillMaxWidth(),
+            border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline),
+            text = stringResource(R.string.terms_of_use_prompt_postpone),
+            onClick = {
+                onRemindMeLaterClicked()
+
+                coroutineScope.launch {
+                    sheetState.hide()
+                }.invokeOnCompletion {
+                    onDismiss()
+                }
+            },
+        )
+
         FilledButton(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.terms_of_use_prompt_accept),
@@ -192,20 +209,6 @@ private fun BottomSheetContent(
                 onDismiss()
             }
         }
-
-        TextButton(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.terms_of_use_prompt_postpone),
-            onClick = {
-                onRemindMeLaterClicked()
-
-                coroutineScope.launch {
-                    sheetState.hide()
-                }.invokeOnCompletion {
-                    onDismiss()
-                }
-            },
-        )
     }
 }
 
