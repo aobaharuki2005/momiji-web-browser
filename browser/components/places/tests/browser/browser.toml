@@ -53,6 +53,9 @@ skip-if = [
 
 ["browser_bookmark_add_tags.js"]
 https_first_disabled = true
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1775656
+]
 
 ["browser_bookmark_backup_export_import.js"]
 
@@ -116,6 +119,9 @@ skip-if = [
 ["browser_bug427633_no_newfolder_if_noip.js"]
 
 ["browser_bug485100-change-case-loses-tag.js"]
+skip-if = [
+  "socketprocess_networking", # Bug 1973561
+]
 
 ["browser_bug631374_tags_selector_scroll.js"]
 support-files = ["favicon-normal16.png"]

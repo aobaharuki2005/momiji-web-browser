@@ -157,8 +157,8 @@ info.update(
     }
 )
 
-# we want to transition to this instead of using `!debug`, etc.
-info["arch"] = info["processor"]
+if info.get("arch", "") != "aarch64":
+    info["arch"] = info["processor"]
 
 
 if info["os"] == "linux":
@@ -193,7 +193,9 @@ def sanitize(info):
         else:
             info["processor"] = "x86"
             info["bits"] = 32
-    info["arch"] = info["processor"]
+
+    if info.get("arch", "") != "aarch64":
+        info["arch"] = info["processor"]
 
 
 # method for updating information

@@ -34,6 +34,9 @@ tags = "vertical-tabs"
 fail-if =  [
   "vertical_tab", # Bug 1935548, fails in the "vertical-tabs" variant
 ]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1988657
+]
 
 ["browser_beforeunload_duplicate_dialogs.js"]
 https_first_disabled = true
@@ -629,7 +632,9 @@ tags = "vertical-tabs"
 
 ["browser_tab_splitview_contextmenu.js"]
 skip-if = [
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt", # Bug 1996471
   "os == 'mac' && os_version == '10.15' && arch == 'x86_64'", # Bug 1994508
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1996471
 ]
 
 ["browser_tab_splitview_footer.js"]

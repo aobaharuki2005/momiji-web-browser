@@ -16,6 +16,9 @@ prefs = [
 ["browser_content_prompt.js"]
 
 ["browser_focus_document.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1962169
+]
 
 ["browser_initial_blank_load.js"]
 

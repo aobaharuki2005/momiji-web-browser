@@ -16,6 +16,9 @@ skip-if = [
 ["browser_domfullscreen_sidebar.js"]
 
 ["browser_extensions_sidebar.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1894409
+]
 
 ["browser_glean_sidebar.js"]
 skip-if = [

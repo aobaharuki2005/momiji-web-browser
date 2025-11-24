@@ -98,6 +98,7 @@ skip-if = [
 ["browser_bfcache_copycommand.js"]
 skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt", # Bug 1730593
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1775931
 ]
 
 ["browser_browsingContext-01.js"]

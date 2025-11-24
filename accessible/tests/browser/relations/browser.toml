@@ -23,5 +23,9 @@ prefs = [
 ["browser_relations_general.js"]
 
 ["browser_relations_general_002.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 2001032
+]
+
 
 ["browser_shadow_dom_and_custom_elements.js"]

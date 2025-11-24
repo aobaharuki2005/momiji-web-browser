@@ -10,6 +10,7 @@ https_first_disabled = true
 ["browser_bug713810.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt", # Bug 1775668
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1775668
 ]
 
 ["browser_contextmenu.js"]

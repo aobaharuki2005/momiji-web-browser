@@ -33,6 +33,9 @@ support-files = [
 ["browser_chat_shortcuts.js"]
 
 ["browser_chat_sidebar.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1992633
+]
 
 ["browser_chat_telemetry.js"]
 skip-if = [
@@ -55,6 +58,9 @@ support-files = [
   "data/readableFr.html",
   "data/readableEn.html",
   "data/encodingWithShiftJIS.html"
+]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1996489
 ]
 
 ["browser_link_preview_nimbus.js"]
