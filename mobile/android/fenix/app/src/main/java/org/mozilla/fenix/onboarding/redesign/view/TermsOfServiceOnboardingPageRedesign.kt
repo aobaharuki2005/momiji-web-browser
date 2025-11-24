@@ -5,7 +5,6 @@
 package org.mozilla.fenix.onboarding.redesign.view
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -53,11 +52,11 @@ fun TermsOfServiceOnboardingPageRedesign(
     eventHandler: OnboardingTermsOfServiceEventHandler,
 ) {
     Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Column(
             modifier = Modifier
-                .background(FirefoxTheme.colors.layer1)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 24.dp)
                 .verticalScroll(rememberScrollState()),
@@ -107,7 +106,6 @@ private fun Header(pageState: OnboardingPageState) {
     ) {
         Text(
             text = pageState.title,
-            color = FirefoxTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.headlineMedium,
         )
@@ -137,7 +135,7 @@ private fun SubHeaderText(text: String) {
     Text(
         text = text,
         style = FirefoxTheme.typography.body2.copy(
-            color = FirefoxTheme.colors.textSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         ),
     )
@@ -190,7 +188,7 @@ private fun BodyLinkText(
 ) {
     val style = FirefoxTheme.typography.caption.copy(
         textAlign = TextAlign.Start,
-        color = FirefoxTheme.colors.textSecondary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     LinkText(

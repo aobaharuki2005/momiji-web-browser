@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.onboarding.redesign.view
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -82,9 +80,6 @@ private fun SecondaryButton(
             },
         text = secondaryButton.text,
         onClick = secondaryButton.onClick,
-        colors = ButtonDefaults.textButtonColors(
-            contentColor = FirefoxTheme.colors.textActionSecondary,
-        ),
     )
 }
 
@@ -96,12 +91,11 @@ private fun CardView(
 ) {
     Card(
         modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Column(
-            modifier = Modifier
-                .background(FirefoxTheme.colors.layer1)
-                .padding(horizontal = 16.dp, vertical = 24.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.weight(TITLE_TOP_SPACER_WEIGHT))
@@ -133,15 +127,12 @@ private fun Content(
     mainImage: @Composable () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .background(FirefoxTheme.colors.layer1)
-            .padding(horizontal = 20.dp),
+        modifier = Modifier.padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = pageState.title,
-            color = FirefoxTheme.colors.textPrimary,
             style = MaterialTheme.typography.headlineMedium,
         )
 
@@ -149,7 +140,7 @@ private fun Content(
 
         Text(
             text = pageState.description,
-            color = FirefoxTheme.colors.textSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = FirefoxTheme.typography.body1,
         )
     }

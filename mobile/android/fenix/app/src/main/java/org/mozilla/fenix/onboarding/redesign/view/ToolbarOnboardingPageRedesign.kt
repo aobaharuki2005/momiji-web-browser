@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +53,7 @@ import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.onboarding.view.ToolbarOption
 import org.mozilla.fenix.onboarding.view.ToolbarOptionType
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * A Composable for displaying toolbar placement onboarding page content.
@@ -67,11 +69,11 @@ fun ToolbarOnboardingPageRedesign(
     onToolbarSelectionClicked: (ToolbarOptionType) -> Unit,
 ) {
     Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Column(
             modifier = Modifier
-                .background(FirefoxTheme.colors.layer1)
                 .padding(horizontal = 32.dp, vertical = 24.dp)
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState()),
@@ -81,7 +83,6 @@ fun ToolbarOnboardingPageRedesign(
 
             Text(
                 text = pageState.title,
-                color = FirefoxTheme.colors.textPrimary,
                 textAlign = TextAlign.Start,
                 style = FirefoxTheme.typography.headline5,
             )
@@ -153,7 +154,6 @@ private fun ToolbarPositionOption(
 
         Text(
             text = option.label,
-            color = FirefoxTheme.colors.textPrimary,
             modifier = Modifier.align(Alignment.CenterHorizontally),
             style = FirefoxTheme.typography.headline7,
         )
@@ -258,7 +258,7 @@ private fun AddressBarIllustration(
             .background(addressBarBackground),
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_search),
+            painter = painterResource(iconsR.drawable.mozac_ic_search_24),
             tint = iconTint,
             contentDescription = null,
             modifier = Modifier
@@ -280,23 +280,31 @@ private fun TabIllustration(modifier: Modifier) {
 @Composable
 private fun imageColors(isSelected: Boolean): ImageColors {
     val borderColor by animateColorAsState(
-        targetValue = if (isSelected) FirefoxTheme.colors.borderAccent else FirefoxTheme.colors.borderPrimary,
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.outlineVariant
+        },
         label = "borderColor",
     )
     val cardBackground by animateColorAsState(
-        targetValue = if (isSelected) FirefoxTheme.colors.badgeActive else Color.White,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.White,
         label = "cardBackground",
     )
     val addressBarBackground by animateColorAsState(
-        targetValue = if (isSelected) FirefoxTheme.colors.borderAccent else Color.White,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.White,
         label = "addressBarBackground",
     )
     val toolbarBackground by animateColorAsState(
-        targetValue = if (isSelected) FirefoxTheme.colors.layerSearch else FirefoxTheme.colors.borderPrimary,
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.surfaceDim
+        } else {
+            MaterialTheme.colorScheme.outlineVariant
+        },
         label = "toolbarBackground",
     )
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) Color.White else FirefoxTheme.colors.iconSecondary,
+        targetValue = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "iconColor",
     )
 

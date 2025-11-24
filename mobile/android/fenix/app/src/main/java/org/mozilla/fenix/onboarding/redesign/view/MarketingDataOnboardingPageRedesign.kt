@@ -5,7 +5,6 @@
 package org.mozilla.fenix.onboarding.redesign.view
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,11 +66,11 @@ fun MarketingDataOnboardingPageRedesign(
     onMarketingDataContinueClick: (allowMarketingDataCollection: Boolean) -> Unit,
 ) {
     Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Column(
             modifier = Modifier
-                .background(FirefoxTheme.colors.layer1)
                 .padding(horizontal = 36.dp, vertical = 24.dp)
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState()),
@@ -81,7 +80,6 @@ fun MarketingDataOnboardingPageRedesign(
 
             Text(
                 text = state.title,
-                color = FirefoxTheme.colors.textPrimary,
                 textAlign = TextAlign.Start,
                 style = FirefoxTheme.typography.headline5,
             )
@@ -91,7 +89,6 @@ fun MarketingDataOnboardingPageRedesign(
             Image(
                 painter = painterResource(id = state.imageRes),
                 contentDescription = null,
-                modifier = Modifier,
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -155,15 +152,10 @@ private fun MarketingDataView(
                 onCheckedChange = {
                     onMarketingOptInToggle.invoke(!checkboxChecked)
                 },
-                colors = CheckboxDefaults.colors(
-                    checkedColor = FirefoxTheme.colors.formSelected,
-                    uncheckedColor = FirefoxTheme.colors.formDefault,
-                ),
             )
 
             Text(
                 text = marketingData.bodyTwoText,
-                color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.body2,
                 textAlign = TextAlign.Start,
             )
