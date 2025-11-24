@@ -186,7 +186,7 @@ internal sealed class HomepageState {
             Private(
                 headerState = HeaderState(
                     showHeader = settings.showHomepageHeader,
-                    wordmarkColor = null,
+                    wordmarkTextColor = null,
                     privateBrowsingButtonColor = colorResource(
                         getAttr(
                             R.attr.mozac_ic_private_mode_circle_fill_icon_color,
@@ -240,7 +240,7 @@ internal sealed class HomepageState {
                 showCollections = settings.collections,
                 headerState = HeaderState(
                     showHeader = settings.showHomepageHeader,
-                    wordmarkColor = wallpaperState.currentWallpaper.textColor?.let { Color(it) },
+                    wordmarkTextColor = wallpaperState.currentWallpaper.textColor?.let { Color(it) },
                     privateBrowsingButtonColor = wallpaperState.currentWallpaper.textColor
                         ?.let { Color(it) } ?: colorResource(
                         getAttr(
@@ -273,12 +273,12 @@ internal sealed class HomepageState {
  * A simple wrapper around state required for the homepage header.
  *
  * @property showHeader whether the header should be shown
- * @property wordmarkColor an optional color for the wordmark text and logo
+ * @property wordmarkTextColor an optional color for the wordmark text
  * @property privateBrowsingButtonColor the color to use for the private browsing button
  */
 internal data class HeaderState(
     val showHeader: Boolean,
-    val wordmarkColor: Color?,
+    val wordmarkTextColor: Color?,
     val privateBrowsingButtonColor: Color,
 )
 
