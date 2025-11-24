@@ -338,11 +338,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   void SetProcessIsForeground();
 #endif
 
-#if defined(MOZ_WIDGET_ANDROID)
-  RefPtr<UiCompositorControllerChild> CreateUiCompositorController(
-      nsIWidget* aWidget, const LayersId aId);
-#endif  // defined(MOZ_WIDGET_ANDROID)
-
   RefPtr<CompositorSession> CreateRemoteSession(
       nsIWidget* aWidget, WebRenderLayerManager* aLayerManager,
       const LayersId& aRootLayerTreeId, CSSToLayoutDeviceScale aScale,

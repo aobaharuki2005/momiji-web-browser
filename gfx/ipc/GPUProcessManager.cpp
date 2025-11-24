@@ -41,6 +41,7 @@
 #include "mozilla/layers/InProcessCompositorSession.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/RemoteCompositorSession.h"
+#include "mozilla/layers/UiCompositorControllerChild.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
@@ -65,8 +66,6 @@
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/java/SurfaceControlManagerWrappers.h"
-#  include "mozilla/widget/AndroidUiThread.h"
-#  include "mozilla/layers/UiCompositorControllerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 #if defined(XP_WIN)
@@ -549,39 +548,6 @@ bool GPUProcessManager::EnsureVRManager() {
   VRManagerChild::InitWithGPUProcess(std::move(childPipe));
   return true;
 }
-
-#if defined(MOZ_WIDGET_ANDROID)
-RefPtr<UiCompositorControllerChild>
-GPUProcessManager::CreateUiCompositorController(nsIWidget* aWidget,
-                                                const LayersId aId) {
-  MOZ_DIAGNOSTIC_ASSERT(IsGPUReady());
-
-  if (!mGPUChild) {
-    return UiCompositorControllerChild::CreateForSameProcess(aId, aWidget);
-  }
-
-  ipc::Endpoint<PUiCompositorControllerParent> parentPipe;
-  ipc::Endpoint<PUiCompositorControllerChild> childPipe;
-  nsresult rv = PUiCompositorController::CreateEndpoints(
-      mGPUChild->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
-      &parentPipe, &childPipe);
-  if (NS_FAILED(rv)) {
-    DisableGPUProcess("Failed to create PUiCompositorController endpoints");
-    return nullptr;
-  }
-
-  mGPUChild->SendInitUiCompositorController(aId, std::move(parentPipe));
-  RefPtr<UiCompositorControllerChild> result =
-      UiCompositorControllerChild::CreateForGPUProcess(
-          mProcessToken, std::move(childPipe), aWidget);
-
-  if (result) {
-    result->SetCompositorSurfaceManager(
-        mProcess->GetCompositorSurfaceManager());
-  }
-  return result;
-}
-#endif  // defined(MOZ_WIDGET_ANDROID)
 
 void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
   MOZ_ASSERT(mProcess && mProcess == aHost);
@@ -1285,16 +1251,6 @@ already_AddRefed<CompositorSession> GPUProcessManager::CreateTopLevelCompositor(
         aInnerWindowId);
   }
 
-#if defined(MOZ_WIDGET_ANDROID)
-  if (session) {
-    // Nothing to do if controller gets a nullptr
-    auto controller =
-        CreateUiCompositorController(aWidget, session->RootLayerTreeId());
-    MOZ_ASSERT(controller);
-    session->SetUiCompositorControllerChild(std::move(controller));
-  }
-#endif  // defined(MOZ_WIDGET_ANDROID)
-
   *aRetryOut = false;
   return session.forget();
 }
@@ -1362,7 +1318,31 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
     apz->SetInputBridge(inputBridge);
   }
 
-  return new RemoteCompositorSession(aWidget, child, widget, apz,
+  RefPtr<UiCompositorControllerChild> uiController = nullptr;
+#  if defined(MOZ_WIDGET_ANDROID)
+  {
+    ipc::Endpoint<PUiCompositorControllerParent> parentPipe;
+    ipc::Endpoint<PUiCompositorControllerChild> childPipe;
+    nsresult rv = PUiCompositorController::CreateEndpoints(
+        mGPUChild->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
+        &parentPipe, &childPipe);
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+    mGPUChild->SendInitUiCompositorController(aRootLayerTreeId,
+                                              std::move(parentPipe));
+    uiController = UiCompositorControllerChild::CreateForGPUProcess(
+        mProcessToken, std::move(childPipe), aWidget);
+    MOZ_ASSERT(uiController);
+    if (!uiController) {
+      return nullptr;
+    }
+    uiController->SetCompositorSurfaceManager(
+        mProcess->GetCompositorSurfaceManager());
+  }
+#  endif
+
+  return new RemoteCompositorSession(aWidget, child, widget, apz, uiController,
                                      aRootLayerTreeId);
 #else
   gfxCriticalNote << "Platform does not support out-of-process compositing";

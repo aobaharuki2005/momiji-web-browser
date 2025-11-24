@@ -41,7 +41,8 @@ class InProcessCompositorSession final : public CompositorSession {
   InProcessCompositorSession(nsIWidget* aWidget,
                              widget::CompositorWidget* aCompositorWidget,
                              CompositorBridgeChild* aChild,
-                             CompositorBridgeParent* aParent);
+                             CompositorBridgeParent* aParent,
+                             UiCompositorControllerChild* aUiController);
 
  private:
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;
