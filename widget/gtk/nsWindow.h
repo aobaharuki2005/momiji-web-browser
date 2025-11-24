@@ -483,6 +483,7 @@ class nsWindow final : public nsIWidget {
   static void TransferFocusToWaylandWindow(nsWindow* aWindow);
   void FocusWaylandWindow(const char* aTokenID);
 
+  bool SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
   void WaylandDragWorkaround(GdkEventButton* aEvent);
 
   void CreateCompositorVsyncDispatcher() override;

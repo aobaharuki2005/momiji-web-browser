@@ -590,8 +590,8 @@ void nsWindow::DispatchResized() {
 
   auto clientSize = GetClientSize();
 
-  LOG("nsWindow::DispatchResized() client scaled size [%d, %d]",
-      (int)clientSize.width, (int)clientSize.height);
+  LOG("nsWindow::DispatchResized() client size [%d, %d]", (int)clientSize.width,
+      (int)clientSize.height);
 
   // Check out painting texture size
   if (mCompositorSession &&
@@ -599,14 +599,6 @@ void nsWindow::DispatchResized() {
     gfxCriticalNoteOnce << "Invalid mClientArea in MaybeDispatchResized "
                         << clientSize << " size state " << mSizeMode;
   }
-
-#ifdef MOZ_WAYLAND
-  if (mSurface) {
-    LOG("  WaylanSurface unscaled size [%d, %d]", mClientArea.Size().width,
-        mClientArea.Size().height);
-    mSurface->SetSize(mClientArea.Size());
-  }
-#endif
 
   // Notify the GtkCompositorWidget of a ClientSizeChange
   if (mCompositorWidgetDelegate) {
@@ -6406,7 +6398,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   if (GdkIsWaylandDisplay()) {
     mSurface = new WaylandSurface(
         parentnsWindow ? MOZ_WL_SURFACE(parentnsWindow->GetMozContainer())
-                       : nullptr);
+                       : nullptr,
+        gfx::IntSize(ToLayoutDevicePixels(mLastSizeRequest).ToUnknownSize()));
   }
   container = moz_container_new(this, mSurface);
 #else
@@ -9890,6 +9883,37 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
 }
 
 nsWindow* nsWindow::GetFocusedWindow() { return gFocusWindow; }
+
+#ifdef MOZ_WAYLAND
+bool nsWindow::SetEGLNativeWindowSize(
+    const LayoutDeviceIntSize& aEGLWindowSize) {
+  // SetEGLNativeWindowSize() is Wayland only call.
+  MOZ_ASSERT(GdkIsWaylandDisplay());
+
+  if (mIsDestroyed) {
+    return true;
+  }
+
+#  ifdef MOZ_LOGGING
+  if (LOG_ENABLED_VERBOSE()) {
+    float scale = FractionalScaleFactor();
+    static uintptr_t lastSizeLog = 0;
+    uintptr_t sizeLog =
+        uintptr_t(this) + aEGLWindowSize.width + aEGLWindowSize.height + scale +
+        aEGLWindowSize.width / scale + aEGLWindowSize.height / scale;
+    if (lastSizeLog != sizeLog) {
+      lastSizeLog = sizeLog;
+      LOGVERBOSE(
+          "nsWindow::SetEGLNativeWindowSize() %d x %d scale %.2f (unscaled "
+          "%.2f x %.2f)",
+          aEGLWindowSize.width, aEGLWindowSize.height, scale,
+          aEGLWindowSize.width / scale, aEGLWindowSize.height / scale);
+    }
+  }
+#  endif
+  return mSurface->SetEGLWindowSize(aEGLWindowSize);
+}
+#endif
 
 nsWindow* nsWindow::GetWindow(GdkWindow* window) {
   return get_window_for_gdk_window(window);
