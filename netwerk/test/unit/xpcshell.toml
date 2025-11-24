@@ -46,6 +46,8 @@ prefs = [
 
 ["test_1073747.js"]
 
+["test_303_redirect_caching.js"]
+
 ["test_304_headers.js"]
 
 ["test_304_responses.js"]

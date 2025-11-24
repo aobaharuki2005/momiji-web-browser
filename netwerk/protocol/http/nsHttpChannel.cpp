@@ -3225,12 +3225,27 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
       break;
     case 301:
     case 302:
+    case 303:
     case 307:
     case 308:
-    case 303:
 #if 0
     case 305: // disabled as a security measure (see bug 187996).
 #endif
+      // RFC 9110: 303 responses are cacheable, but only with explicit
+      // freshness information (max-age or Expires). Without these directives,
+      // 303 should not be cached.
+      if (httpStatus == 303) {
+        uint32_t freshnessLifetime = 0;
+        bool hasFreshness =
+            (NS_SUCCEEDED(
+                 mResponseHead->ComputeFreshnessLifetime(&freshnessLifetime)) &&
+             freshnessLifetime > 0) ||
+            mResponseHead->HasHeader(nsHttp::Expires);
+        if (mResponseHead->NoStore() || mResponseHead->NoCache() ||
+            !hasFreshness) {
+          CloseCacheEntry(false);
+        }
+      }
       // don't store the response body for redirects
       MaybeInvalidateCacheEntryForSubsequentGet();
       PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse4);
