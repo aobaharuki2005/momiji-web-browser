@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 
-static const PRTime kCTExpirationTime = INT64_C(1769689504000000);
+static const PRTime kCTExpirationTime = INT64_C(1770038955000000);
 
 namespace mozilla::ct {
 
@@ -148,7 +148,7 @@ const CTLogInfo kCTLogList[] = {
      "\xa3",
      91},
     {"Cloudflare 'Nimbus2027'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1757030400000,  // 2025-09-05T00:00:00Z
+     1763164800000,  // 2025-11-15T00:00:00Z
      1,              // operated by Cloudflare
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x62\x37\x7f\x8c\x4d\x04\xa0\x08\x4d"
