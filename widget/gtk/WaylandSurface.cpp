@@ -86,12 +86,10 @@ bool WaylandSurface::IsOpaqueRegionEnabled() {
   return sIsOpaqueRegionEnabled;
 }
 
-WaylandSurface::WaylandSurface(RefPtr<WaylandSurface> aParent,
-                               gfx::IntSize aSize)
-    : mSizeScaled(aSize), mParent(aParent) {
-  LOGWAYLAND("WaylandSurface::WaylandSurface(), parent [%p] size [%d x %d]",
-             mParent ? mParent->GetLoggingWidget() : nullptr, mSizeScaled.width,
-             mSizeScaled.height);
+WaylandSurface::WaylandSurface(RefPtr<WaylandSurface> aParent)
+    : mParent(aParent) {
+  LOGWAYLAND("WaylandSurface::WaylandSurface(), parent [%p]",
+             mParent ? mParent->GetLoggingWidget() : nullptr);
   struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
   mSurface = wl_compositor_create_surface(compositor);
   MOZ_RELEASE_ASSERT(mSurface, "Can't create wl_surface!");
@@ -404,7 +402,7 @@ void WaylandSurface::VisibleCallbackHandler() {
 bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
                                wl_surface* aParentWLSurface,
                                WaylandSurfaceLock* aParentWaylandSurfaceLock,
-                               gfx::IntPoint aSubsurfacePosition,
+                               DesktopIntPoint aSubsurfacePosition,
                                bool aSubsurfaceDesync) {
   LOGWAYLAND("WaylandSurface::MapLocked()");
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
@@ -473,14 +471,14 @@ bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
 
 bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
                                wl_surface* aParentWLSurface,
-                               gfx::IntPoint aSubsurfacePosition) {
+                               DesktopIntPoint aSubsurfacePosition) {
   return MapLocked(aProofOfLock, aParentWLSurface, nullptr, aSubsurfacePosition,
                    /* aSubsurfaceDesync */ true);
 }
 
 bool WaylandSurface::MapLocked(const WaylandSurfaceLock& aProofOfLock,
                                WaylandSurfaceLock* aParentWaylandSurfaceLock,
-                               gfx::IntPoint aSubsurfacePosition) {
+                               DesktopIntPoint aSubsurfacePosition) {
   return MapLocked(aProofOfLock, nullptr, aParentWaylandSurfaceLock,
                    aSubsurfacePosition,
                    /* aSubsurfaceDesync */ false);
@@ -544,7 +542,7 @@ void WaylandSurface::UnmapLocked(WaylandSurfaceLock& aSurfaceLock) {
   ClearScaleLocked(aSurfaceLock);
 
   MozClearPointer(mViewport, wp_viewport_destroy);
-  mViewportDestinationSize = gfx::IntSize(-1, -1);
+  mViewportDestinationSize = DesktopIntSize(-1, -1);
   mViewportSourceRect = gfx::Rect(-1, -1, -1, -1);
 
   MozClearPointer(mFractionalScaleListener, wp_fractional_scale_v1_destroy);
@@ -608,7 +606,7 @@ void WaylandSurface::CommitLocked(const WaylandSurfaceLock& aProofOfLock,
 }
 
 void WaylandSurface::MoveLocked(const WaylandSurfaceLock& aProofOfLock,
-                                gfx::IntPoint aPosition) {
+                                DesktopIntPoint aPosition) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
   MOZ_DIAGNOSTIC_ASSERT(mIsMapped);
 
@@ -617,7 +615,7 @@ void WaylandSurface::MoveLocked(const WaylandSurfaceLock& aProofOfLock,
   }
 
   MOZ_DIAGNOSTIC_ASSERT(mSubsurface);
-  LOGWAYLAND("WaylandSurface::MoveLocked() [%d,%d]", (int)aPosition.x,
+  LOGWAYLAND("WaylandSurface::MoveLocked() unscaled [%d,%d]", (int)aPosition.x,
              (int)aPosition.y);
   mSubsurfacePosition = aPosition;
   wl_subsurface_set_position(mSubsurface, aPosition.x, aPosition.y);
@@ -785,21 +783,17 @@ void WaylandSurface::SetCeiledScaleLocked(
 }
 
 void WaylandSurface::SetSizeLocked(const WaylandSurfaceLock& aProofOfLock,
-                                   gfx::IntSize aSizeScaled,
-                                   gfx::IntSize aSizeUnscaled) {
+                                   DesktopIntSize aSize) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
-  LOGVERBOSE(
-      "WaylandSurface::SetSizeLocked(): Size [%d x %d] unscaled size [%d x %d]",
-      aSizeScaled.width, aSizeScaled.height, aSizeUnscaled.width,
-      aSizeUnscaled.height);
-  mSizeScaled = aSizeScaled;
+  LOGVERBOSE("WaylandSurface::SetSizeLocked(): size [%d x %d]", aSize.width,
+             aSize.height);
   if (mViewportFollowsSizeChanges) {
-    SetViewPortDestLocked(aProofOfLock, aSizeUnscaled);
+    SetViewPortDestLocked(aProofOfLock, aSize);
   }
 }
 
 void WaylandSurface::SetViewPortDestLocked(
-    const WaylandSurfaceLock& aProofOfLock, gfx::IntSize aDestSize) {
+    const WaylandSurfaceLock& aProofOfLock, DesktopIntSize aDestSize) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
   if (!mViewport) {
     return;
@@ -967,7 +961,7 @@ wl_egl_window* WaylandSurface::GetEGLWindow(DesktopIntSize aSize) {
   }
 
   if (mEGLWindow) {
-    SetSizeLocked(lock, scaledSize.ToUnknownSize(), aSize.ToUnknownSize());
+    SetSizeLocked(lock, aSize);
   }
 
   return mEGLWindow;
@@ -994,7 +988,7 @@ bool WaylandSurface::SetEGLWindowSize(LayoutDeviceIntSize aSize) {
       GetScale());
 
   wl_egl_window_resize(mEGLWindow, aSize.width, aSize.height, 0, 0);
-  SetSizeLocked(lock, aSize.ToUnknownSize(), unscaledSize.ToUnknownSize());
+  SetSizeLocked(lock, unscaledSize);
   return true;
 }
 
@@ -1083,10 +1077,11 @@ bool WaylandSurface::AttachLocked(const WaylandSurfaceLock& aSurfaceLock,
 
   auto scale = GetScale();
   LayoutDeviceIntSize bufferSize = aBuffer->GetSize();
+
   // TODO: rounding?
-  SetSizeLocked(aSurfaceLock, gfx::IntSize(bufferSize.width, bufferSize.height),
-                gfx::IntSize((int)round(bufferSize.width / scale),
-                             (int)round(bufferSize.height / scale)));
+  DesktopIntSize unscaledSize((int)round(bufferSize.width / scale),
+                              (int)round(bufferSize.height / scale));
+  SetSizeLocked(aSurfaceLock, unscaledSize);
 
   LOGWAYLAND(
       "WaylandSurface::AttachLocked() transactions [%d] WaylandBuffer [%p] "
@@ -1113,7 +1108,7 @@ void WaylandSurface::RemoveAttachedBufferLocked(
 
   LOGWAYLAND("WaylandSurface::RemoveAttachedBufferLocked()");
 
-  SetSizeLocked(aSurfaceLock, gfx::IntSize(0, 0), gfx::IntSize(0, 0));
+  SetSizeLocked(aSurfaceLock, DesktopIntSize(0, 0));
   wl_surface_attach(mSurface, nullptr, 0, 0);
   mLatestAttachedBuffer = 0;
   mSurfaceNeedsCommit = true;

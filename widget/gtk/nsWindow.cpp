@@ -6398,8 +6398,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   if (GdkIsWaylandDisplay()) {
     mSurface = new WaylandSurface(
         parentnsWindow ? MOZ_WL_SURFACE(parentnsWindow->GetMozContainer())
-                       : nullptr,
-        gfx::IntSize(ToLayoutDevicePixels(mLastSizeRequest).ToUnknownSize()));
+                       : nullptr);
   }
   container = moz_container_new(this, mSurface);
 #else

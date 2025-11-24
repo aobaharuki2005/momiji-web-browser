@@ -83,7 +83,7 @@ using namespace mozilla;
 using namespace mozilla::widget;
 
 static bool moz_container_wayland_ensure_surface(
-    MozContainer* container, gfx::IntPoint* aPosition = nullptr);
+    MozContainer* container, DesktopIntPoint* aPosition = nullptr);
 
 // Invalidate gtk wl_surface to commit changes to wl_subsurface.
 // wl_subsurface changes are effective when parent surface is commited.
@@ -176,14 +176,14 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
     // We need to position our subsurface according to GdkWindow
     // when offset changes (GdkWindow is maximized for instance).
     // see gtk-clutter-embed.c for reference.
-    gfx::IntPoint position(allocation->x, allocation->y);
-    moz_container_wayland_ensure_surface(MOZ_CONTAINER(widget), &position);
+    auto pos = DesktopIntPoint(allocation->x, allocation->y);
+    moz_container_wayland_ensure_surface(MOZ_CONTAINER(widget), &pos);
     MOZ_WL_CONTAINER(widget)->before_first_size_alloc = false;
   }
 }
 
 static bool moz_container_wayland_ensure_surface(MozContainer* container,
-                                                 gfx::IntPoint* aPosition) {
+                                                 DesktopIntPoint* aPosition) {
   WaylandSurface* surface = MOZ_WL_SURFACE(container);
   WaylandSurfaceLock lock(surface);
 
@@ -213,12 +213,8 @@ static bool moz_container_wayland_ensure_surface(MozContainer* container,
   nsWindow* window = moz_container_get_nsWindow(container);
   MOZ_RELEASE_ASSERT(window);
 
-  gfx::IntPoint subsurfacePosition;
-  if (aPosition) {
-    subsurfacePosition = *aPosition;
-  }
-
-  if (!surface->MapLocked(lock, parentSurface, subsurfacePosition)) {
+  if (!surface->MapLocked(lock, parentSurface,
+                          aPosition ? *aPosition : DesktopIntPoint())) {
     return false;
   }
 
