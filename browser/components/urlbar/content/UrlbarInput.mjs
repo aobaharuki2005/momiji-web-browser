@@ -4251,18 +4251,13 @@ export class UrlbarInput extends HTMLElement {
       this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
     }
 
-    if (this.#isAddressbar) {
-      if (!engineName && !source) {
-        try {
-          // This will throw before DOMContentLoaded in
-          // PrivateBrowsingUtils.privacyContextFromWindow because
-          // aWindow.docShell is null.
-          this.initPlaceHolder(true);
-        } catch (ex) {}
-        this.removeAttribute("searchmode");
-        return;
-      }
+    if (!engineName && !source) {
+      this.removeAttribute("searchmode");
+      this.initPlaceHolder(true);
+      return;
+    }
 
+    if (this.#isAddressbar) {
       if (engineName) {
         // Set text content for the search mode indicator.
         this._searchModeIndicatorTitle.textContent = engineName;
