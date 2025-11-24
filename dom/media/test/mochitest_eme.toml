@@ -790,3 +790,6 @@ skip-if = [
 
 ["test_eme_wv_privacy.html"]
 scheme = "https"
+skip-if = [
+  "os == 'android'", # Bug 2001935
+]
