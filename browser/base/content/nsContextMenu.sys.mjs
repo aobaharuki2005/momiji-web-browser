@@ -2832,6 +2832,11 @@ export class nsContextMenu {
       return;
     }
 
+    if (isPrivateSearchMenuitem && !lazy.PrivateBrowsingUtils.enabled) {
+      menuitem.hidden = true;
+      return;
+    }
+
     let isBrowserPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
       this.browser
     );
