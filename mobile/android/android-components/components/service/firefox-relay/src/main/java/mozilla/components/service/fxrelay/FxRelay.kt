@@ -6,7 +6,6 @@ package mozilla.components.service.fxrelay
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mozilla.appservices.relay.RelayAddress
 import mozilla.appservices.relay.RelayApiException
 import mozilla.appservices.relay.RelayClient
 import mozilla.components.support.base.log.logger.Logger
@@ -100,7 +99,7 @@ class FxRelay(
         usedOn: String,
     ): RelayAddress? = withContext(Dispatchers.IO) {
         handleRelayExceptions(RelayOperation.CREATE_ADDRESS, { null }) {
-            client.createAddress(description, generatedFor, usedOn)
+            client.createAddress(description, generatedFor, usedOn).into()
         }
     }
 
@@ -111,7 +110,7 @@ class FxRelay(
         handleRelayExceptions(
             RelayOperation.FETCH_ALL_ADDRESSES, { emptyList() },
         ) {
-            client.fetchAddresses()
+            client.fetchAddresses().map { it.into() }
         }
     }
 }
