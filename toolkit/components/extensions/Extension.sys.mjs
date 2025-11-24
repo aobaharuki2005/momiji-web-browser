@@ -1717,6 +1717,7 @@ export class ExtensionData {
       manifestVersion: this.manifestVersion,
       // We introduced this context param in Bug 1831417.
       ignoreUnrecognizedProperties: false,
+      temporarilyInstalled: this.temporarilyInstalled,
     };
 
     if (this.fluentL10n || this.localeData) {
