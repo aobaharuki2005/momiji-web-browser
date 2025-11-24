@@ -10,6 +10,9 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "nsISupportsImpl.h"
+#if defined(MOZ_WIDGET_ANDROID)
+#  include "mozilla/layers/UiCompositorControllerChild.h"
+#endif  // defined(MOZ_WIDGET_ANDROID)
 
 class nsIWidget;
 
@@ -29,7 +32,6 @@ class IAPZCTreeManager;
 class CompositorBridgeParent;
 class CompositorBridgeChild;
 class ClientLayerManager;
-class UiCompositorControllerChild;
 
 // A CompositorSession provides access to a compositor without exposing whether
 // or not it's in-process or out-of-process.
@@ -68,12 +70,20 @@ class CompositorSession {
   LayersId RootLayerTreeId() const { return mRootLayerTreeId; }
 
 #if defined(MOZ_WIDGET_ANDROID)
-  RefPtr<UiCompositorControllerChild> GetUiCompositorControllerChild() const;
+  // Set the UiCompositorControllerChild after Session creation so the Session
+  // constructor doesn't get mucked up for other platforms.
+  void SetUiCompositorControllerChild(
+      RefPtr<UiCompositorControllerChild>&& aUiController) {
+    mUiCompositorControllerChild = std::move(aUiController);
+  }
+
+  RefPtr<UiCompositorControllerChild> GetUiCompositorControllerChild() {
+    return mUiCompositorControllerChild;
+  }
 #endif  // defined(MOZ_WIDGET_ANDROID)
  protected:
   CompositorSession(nsIWidget* aWidget, CompositorWidgetDelegate* aDelegate,
                     CompositorBridgeChild* aChild,
-                    UiCompositorControllerChild* aUiController,
                     const LayersId& aRootLayerTreeId);
   virtual ~CompositorSession();
 
@@ -81,9 +91,10 @@ class CompositorSession {
   nsIWidget* mWidget;
   CompositorWidgetDelegate* mCompositorWidgetDelegate;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
-  RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
   LayersId mRootLayerTreeId;
-
+#if defined(MOZ_WIDGET_ANDROID)
+  RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
+#endif  // defined(MOZ_WIDGET_ANDROID)
  private:
   DISALLOW_COPY_AND_ASSIGN(CompositorSession);
 };
