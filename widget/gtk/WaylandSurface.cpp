@@ -782,12 +782,16 @@ void WaylandSurface::SetCeiledScaleLocked(
   }
 }
 
-void WaylandSurface::SetSizeLocked(const WaylandSurfaceLock& aProofOfLock,
-                                   DesktopIntSize aSize) {
+void WaylandSurface::SetRenderingSizeLocked(
+    const WaylandSurfaceLock& aProofOfLock, DesktopIntSize aSize) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
-  LOGVERBOSE("WaylandSurface::SetSizeLocked(): size [%d x %d]", aSize.width,
-             aSize.height);
-  if (mViewportFollowsSizeChanges) {
+  LOGVERBOSE("WaylandSurface::SetRenderingSizeLocked(): size [%d x %d]",
+             aSize.width, aSize.height);
+  mSize = aSize;
+
+  // non-EGL rendering changes are applied at WaylandSurface::AttachLocked().
+  // We want to sync size changes with matching buffer.
+  if (mViewportFollowsSizeChanges && mEGLWindow) {
     SetViewPortDestLocked(aProofOfLock, aSize);
   }
 }
@@ -960,36 +964,26 @@ wl_egl_window* WaylandSurface::GetEGLWindow(DesktopIntSize aSize) {
     wl_egl_window_resize(mEGLWindow, scaledSize.width, scaledSize.height, 0, 0);
   }
 
-  if (mEGLWindow) {
-    SetSizeLocked(lock, aSize);
-  }
-
+  SetRenderingSizeLocked(lock, aSize);
   return mEGLWindow;
 }
 
-// Return false if scale factor doesn't match buffer size.
-// We need to skip painting in such case do avoid Wayland compositor freaking.
-bool WaylandSurface::SetEGLWindowSize(LayoutDeviceIntSize aSize) {
+void WaylandSurface::SetSize(DesktopIntSize aSize) {
   WaylandSurfaceLock lock(this);
 
-  // We may be called after unmap so we're missing egl window completelly.
-  // In such case don't return false which would block compositor.
-  // We return true here and don't block flush WebRender queue.
-  // We'll be repainted if our window become visible again anyway.
-  MOZ_DIAGNOSTIC_ASSERT(mEGLWindow, "Missing ELG window?");
-
-  auto unscaledSize =
-      DesktopIntSize::Round(aSize / DesktopToLayoutDeviceScale(GetScale()));
+  auto scaledSize = LayoutDeviceIntSize::Round(
+      aSize * DesktopToLayoutDeviceScale(GetScale()));
 
   LOGVERBOSE(
-      "WaylandSurface::SetEGLWindowSize() scaled [%d x %d] unscaled [%d x %d] "
-      "scale %f",
-      aSize.width, aSize.height, unscaledSize.width, unscaledSize.height,
-      GetScale());
+      "WaylandSurface::SetSize() size [%d x %d] "
+      "scale %f scaled [%d x %d]",
+      aSize.width, aSize.height, GetScale(), scaledSize.width,
+      scaledSize.height);
 
-  wl_egl_window_resize(mEGLWindow, aSize.width, aSize.height, 0, 0);
-  SetSizeLocked(lock, unscaledSize);
-  return true;
+  if (mEGLWindow) {
+    wl_egl_window_resize(mEGLWindow, scaledSize.width, scaledSize.height, 0, 0);
+  }
+  SetRenderingSizeLocked(lock, aSize);
 }
 
 void WaylandSurface::InvalidateRegionLocked(
@@ -1077,17 +1071,28 @@ bool WaylandSurface::AttachLocked(const WaylandSurfaceLock& aSurfaceLock,
 
   auto scale = GetScale();
   LayoutDeviceIntSize bufferSize = aBuffer->GetSize();
-
-  // TODO: rounding?
-  DesktopIntSize unscaledSize((int)round(bufferSize.width / scale),
-                              (int)round(bufferSize.height / scale));
-  SetSizeLocked(aSurfaceLock, unscaledSize);
-
+  DesktopIntSize surfaceSize((int)round(mSize.width * scale),
+                             (int)round(mSize.height * scale));
+  bool sizeMatches = bufferSize.width == surfaceSize.width &&
+                     bufferSize.height == surfaceSize.height;
   LOGWAYLAND(
       "WaylandSurface::AttachLocked() transactions [%d] WaylandBuffer [%p] "
-      "attached [%d] size [%d x %d] fractional scale %f",
+      "attached [%d] buffer size [%d x %d] surface (scaled) size [%d x %d] "
+      "fractional scale %f matches %d",
       (int)mBufferTransactions.Length(), aBuffer.get(), aBuffer->IsAttached(),
-      bufferSize.width, bufferSize.height, scale);
+      bufferSize.width, bufferSize.height, surfaceSize.width,
+      surfaceSize.height, scale, sizeMatches);
+
+  if (mViewportFollowsSizeChanges) {
+    DesktopIntSize viewportSize;
+    if (!sizeMatches) {
+      viewportSize =
+          DesktopIntSize::Round(bufferSize / DesktopToLayoutDeviceScale(scale));
+    } else {
+      viewportSize = mSize;
+    }
+    SetViewPortDestLocked(aSurfaceLock, viewportSize);
+  }
 
   auto* transaction = GetNextTransactionLocked(aSurfaceLock, aBuffer);
   if (!transaction) {
@@ -1108,7 +1113,7 @@ void WaylandSurface::RemoveAttachedBufferLocked(
 
   LOGWAYLAND("WaylandSurface::RemoveAttachedBufferLocked()");
 
-  SetSizeLocked(aSurfaceLock, DesktopIntSize(0, 0));
+  SetRenderingSizeLocked(aSurfaceLock, DesktopIntSize());
   wl_surface_attach(mSurface, nullptr, 0, 0);
   mLatestAttachedBuffer = 0;
   mSurfaceNeedsCommit = true;
