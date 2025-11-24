@@ -4,8 +4,6 @@ prefs = [
   "browser.backup.archive.enabled=true",
   "browser.backup.restore.enabled=true",
   "browser.backup.scheduled.enabled=false",
-  "browser.backup.archive.overridePlatformCheck=true",
-  "browser.backup.restore.overridePlatformCheck=true",
 ]
 support-files = [
   "head.js",

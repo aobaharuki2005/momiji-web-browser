@@ -24,11 +24,7 @@ const BACKUP_DIR_PREF_NAME = "browser.backup.location";
 const BACKUP_ERROR_CODE_PREF_NAME = "browser.backup.errorCode";
 const SCHEDULED_BACKUPS_ENABLED_PREF_NAME = "browser.backup.scheduled.enabled";
 const BACKUP_ARCHIVE_ENABLED_PREF_NAME = "browser.backup.archive.enabled";
-const BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME =
-  "browser.backup.archive.overridePlatformCheck";
 const BACKUP_RESTORE_ENABLED_PREF_NAME = "browser.backup.restore.enabled";
-const BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME =
-  "browser.backup.restore.overridePlatformCheck";
 const IDLE_THRESHOLD_SECONDS_PREF_NAME =
   "browser.backup.scheduled.idle-threshold-seconds";
 const MINIMUM_TIME_BETWEEN_BACKUPS_SECONDS_PREF_NAME =
@@ -666,20 +662,6 @@ export class BackupService extends EventTarget {
       };
     }
 
-    if (
-      !this.#osSupportsBackup &&
-      !Services.prefs.getBoolPref(
-        BACKUP_ARCHIVE_ENABLED_OVERRIDE_PREF_NAME,
-        false
-      )
-    ) {
-      return {
-        enabled: false,
-        reason: "Backup creation not enabled on this os version yet",
-        internalReason: "os version",
-      };
-    }
-
     return { enabled: true };
   }
 
@@ -731,19 +713,6 @@ export class BackupService extends EventTarget {
         reason:
           "Restoring a profile is disabled because the user has created selectable profiles.",
         internalReason: "selectable profiles",
-      };
-    }
-    if (
-      !this.#osSupportsRestore &&
-      !Services.prefs.getBoolPref(
-        BACKUP_RESTORE_ENABLED_OVERRIDE_PREF_NAME,
-        false
-      )
-    ) {
-      return {
-        enabled: false,
-        reason: "Backup restore not enabled on this os version yet",
-        internalReason: "os version",
       };
     }
 
@@ -837,8 +806,6 @@ export class BackupService extends EventTarget {
     restoreID: null,
     /** Utilized by the spotlight to persist information between screens */
     embeddedComponentPersistentData: {},
-    recoveryErrorCode: ERRORS.NONE,
-    backupErrorCode: lazy.backupErrorCode,
   };
 
   /**
@@ -1247,17 +1214,6 @@ export class BackupService extends EventTarget {
     return this.#instance;
   }
 
-  static checkOsSupportsBackup(osParams) {
-    // Currently we only want to show Backup on Windows 10 devices.
-    // The first build of Windows 11 is 22000
-    return (
-      osParams.name == "Windows_NT" &&
-      osParams.version == "10.0" &&
-      osParams.build &&
-      Number(osParams.build) < 22000
-    );
-  }
-
   /**
    * Create a BackupService instance.
    *
@@ -1318,24 +1274,7 @@ export class BackupService extends EventTarget {
       }
       Glean.browserBackup.restoredProfileData.set(payload);
     });
-    const osParams = {
-      name: Services.sysinfo.getProperty("name"),
-      version: Services.sysinfo.getProperty("version"),
-      build: Services.sysinfo.getProperty("build"),
-    };
-    this.#osSupportsBackup = BackupService.checkOsSupportsBackup(osParams);
-    this.#osSupportsRestore = true;
-    this.#lastSeenArchiveStatus = this.archiveEnabledStatus;
-    this.#lastSeenRestoreStatus = this.restoreEnabledStatus;
   }
-
-  // Backup is currently limited to Windows 10. Will be populated by constructor
-  #osSupportsBackup = false;
-  // Restore is not limited, but leaving this in place if restrictions are needed.
-  #osSupportsRestore = true;
-  // Remembering status allows us to notify observers when the status changes
-  #lastSeenArchiveStatus = false;
-  #lastSeenRestoreStatus = false;
 
   /**
    * Returns a reference to a Promise that will resolve with undefined once
@@ -4169,47 +4108,12 @@ export class BackupService extends EventTarget {
    * 2. If archive is disabled, clean up any backup files
    */
   #handleStatusChange() {
-    const archiveStatus = this.archiveEnabledStatus;
-    const restoreStatus = this.restoreEnabledStatus;
-    // Update the BackupService state before notifying observers about the
-    // state change
-    this.#_state.archiveEnabledStatus = this.archiveEnabledStatus.enabled;
-    this.#_state.restoreEnabledStatus = this.restoreEnabledStatus.enabled;
+    this.#notifyStatusObservers();
 
-    this.#updateGleanEnablement(archiveStatus, restoreStatus);
-    if (
-      archiveStatus.enabled != this.#lastSeenArchiveStatus ||
-      restoreStatus.enabled != this.#lastSeenRestoreStatus
-    ) {
-      this.#lastSeenArchiveStatus = archiveStatus.enabled;
-      this.#lastSeenRestoreStatus = restoreStatus.enabled;
-      this.#notifyStatusObservers();
-    }
-    if (!archiveStatus.enabled) {
+    if (!this.archiveEnabledStatus.enabled) {
       // We won't wait for this promise to accept/reject since rejections are
       // ignored anyways
       this.cleanupBackupFiles();
-    }
-  }
-
-  #updateGleanEnablement(archiveStatus, restoreStatus) {
-    Glean.browserBackup.archiveEnabled.set(archiveStatus.enabled);
-    Glean.browserBackup.restoreEnabled.set(restoreStatus.enabled);
-    if (!archiveStatus.enabled) {
-      this.#wasArchivePreviouslyDisabled = true;
-      Glean.browserBackup.archiveDisabledReason.set(
-        archiveStatus.internalReason
-      );
-    } else if (this.#wasArchivePreviouslyDisabled) {
-      Glean.browserBackup.archiveDisabledReason.set("reenabled");
-    }
-    if (!restoreStatus.enabled) {
-      this.#wasRestorePreviouslyDisabled = true;
-      Glean.browserBackup.restoreDisabledReason.set(
-        restoreStatus.internalReason
-      );
-    } else if (this.#wasRestorePreviouslyDisabled) {
-      Glean.browserBackup.restoreDisabledReason.set("reenabled");
     }
   }
 
@@ -4223,6 +4127,24 @@ export class BackupService extends EventTarget {
     );
 
     Services.obs.notifyObservers(null, "backup-service-status-updated");
+
+    let status = this.archiveEnabledStatus;
+    Glean.browserBackup.archiveEnabled.set(status.enabled);
+    if (!status.enabled) {
+      this.#wasArchivePreviouslyDisabled = true;
+      Glean.browserBackup.archiveDisabledReason.set(status.internalReason);
+    } else if (this.#wasArchivePreviouslyDisabled) {
+      Glean.browserBackup.archiveDisabledReason.set("reenabled");
+    }
+
+    status = this.restoreEnabledStatus;
+    Glean.browserBackup.restoreEnabled.set(status.enabled);
+    if (!status.enabled) {
+      this.#wasRestorePreviouslyDisabled = true;
+      Glean.browserBackup.restoreDisabledReason.set(status.internalReason);
+    } else if (this.#wasRestorePreviouslyDisabled) {
+      Glean.browserBackup.restoreDisabledReason.set("reenabled");
+    }
   }
 
   async cleanupBackupFiles() {
