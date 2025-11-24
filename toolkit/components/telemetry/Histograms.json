@@ -1720,6 +1720,32 @@
     "keyed": true,
     "description": "HTTP channel (keys: uses_http3_page, uses_http3_sub, supports_http3_page, supports_http3_sub): Overall load time - network (ms)"
   },
+  "HTTP3_PERF_PAGE_LOAD_TIME_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1675503],
+    "keyed": true,
+    "description": "Time in milliseconds from navigationStart to loadEventStart for the foreground http or https root content document. This is collected only on page load where the main document uses or suppports HTTP3"
+  },
+  "HTTP3_PERF_FIRST_CONTENTFUL_PAINT_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1675503],
+    "keyed": true,
+    "description": "The time between navigationStart and the first contentful paint of a foreground http or https root content document, in milliseconds. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint. This is collected only on page load where the main document uses or suppports HTTP3"
+  },
   "H3P_PERF_PAGE_LOAD_TIME_MS": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
@@ -2032,6 +2058,18 @@
     "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
     "bug_numbers": [1354405]
   },
+  "NETWORK_RACE_CACHE_BANDWIDTH_NOT_RACE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 32,
+    "high": 16777216,
+    "n_buckets": 100,
+    "description": "Amount of bytes received when we decide not to race cache with network.",
+    "alert_emails": ["necko@mozilla.com", "mnovotny@mozilla.com"],
+    "bug_numbers": [1354405]
+  },
   "NETWORK_RACE_CACHE_VALIDATION": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
@@ -2077,6 +2115,58 @@
     "high": 60000,
     "n_buckets": 100,
     "description": "The delay caused by the e10s back pressure suspension(ms)"
+  },
+  "NETWORK_ASYNC_OPEN_CHILD_TO_TRANSACTION_PENDING_EXP_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+    "bug_numbers": [1789468],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 50,
+    "description": "The time spent from HttpChannelChild::AsyncOpen to adding the transactionto the nsHttpConnectionMgr, in milliseconds, keyed by the classOfService flags"
+  },
+  "NETWORK_RESPONSE_START_PARENT_TO_CONTENT_EXP_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+    "bug_numbers": [1793975],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 50,
+    "description": "The time spent relaying response start from the socket thread of the parent process to the content process, in milliseconds, keyed by the classOfService flags"
+  },
+  "NETWORK_DNS_END_TO_CONNECT_START_EXP_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+    "bug_numbers": [1791077],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 50,
+    "description": "The time spent from dns resolution to connect start, in milliseconds, keyed by protocol version and the classOfService flags"
+  },
+  "NETWORK_RESPONSE_END_PARENT_TO_CONTENT_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+    "bug_numbers": [1795775],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 50,
+    "description": "The time spent relaying response completion from the socket thread of the parent process to the content process, in milliseconds, keyed by the classOfService flags"
   },
   "TLS_EARLY_DATA_NEGOTIATED": {
     "record_in_processes": ["main", "socket"],
@@ -3284,6 +3374,19 @@
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "kind": "enumerated",
     "description": "The reason why we failed to connect with an HTTPSSVC record"
+  },
+  "DNS_PERF_FIRST_CONTENTFUL_PAINT_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "acreskey@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1796639],
+    "keyed": true,
+    "description": "The time between navigationStart and the first contentful paint of a foreground http or https root content document, in milliseconds. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint. Keyed by TRR domain for DoH or 'Native' otherwise"
   },
   "DNS_PERF_FIRST_BYTE_MS": {
     "record_in_processes": ["content"],

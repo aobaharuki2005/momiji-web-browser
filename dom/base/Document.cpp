@@ -2464,6 +2464,15 @@ void Document::AccumulatePageLoadTelemetry() {
     glean::performance_pageload::fcp.AccumulateRawDuration(
         firstContentfulComposite - navigationStart);
 
+    if (!http3Key.IsEmpty()) {
+      glean::perf::http3_first_contentful_paint.Get(http3Key)
+          .AccumulateRawDuration(firstContentfulComposite - navigationStart);
+#ifndef ANDROID
+      AccumulateHttp3FcpGleanPref(http3Key,
+                                  firstContentfulComposite - navigationStart);
+#endif
+    }
+
     if (!http3WithPriorityKey.IsEmpty()) {
       glean::perf::h3p_first_contentful_paint.Get(http3WithPriorityKey)
           .AccumulateRawDuration(firstContentfulComposite - navigationStart);
@@ -2472,6 +2481,9 @@ void Document::AccumulatePageLoadTelemetry() {
           http3WithPriorityKey, firstContentfulComposite - navigationStart);
 #endif
     }
+
+    glean::perf::dns_first_contentful_paint.Get(dnsKey).AccumulateRawDuration(
+        firstContentfulComposite - navigationStart);
 
     glean::performance_pageload::fcp_responsestart.AccumulateRawDuration(
         firstContentfulComposite - responseStart);
@@ -2496,6 +2508,10 @@ void Document::AccumulatePageLoadTelemetry() {
           GetNavigationTiming()->GetLoadEventStartTimeStamp()) {
     glean::performance_pageload::load_time.AccumulateRawDuration(
         loadEventStart - navigationStart);
+    if (!http3Key.IsEmpty()) {
+      glean::perf::http3_page_load_time.Get(http3Key).AccumulateRawDuration(
+          loadEventStart - navigationStart);
+    }
 
     if (!http3WithPriorityKey.IsEmpty()) {
       glean::perf::h3p_page_load_time.Get(http3WithPriorityKey)
