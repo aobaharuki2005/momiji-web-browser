@@ -16,8 +16,6 @@ prefs = [
   # For perfomance tests do not enable the remote control cue, which gets set
   # when Marionette is enabled, but users normally don't see.
   "browser.chrome.disableRemoteControlCueForTests=true",
-  # Need to keep the revamped sidebar off until Bug 1905212 is done
-  "sidebar.revamp=false",
 ]
 support-files = ["head.js"]
 
