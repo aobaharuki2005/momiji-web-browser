@@ -2371,6 +2371,43 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     return NS_BINDING_ABORTED;
   }
 
+  // We must ensure that any dcb/dcz content is decompressed in the parent
+  // process, and removed from the Content-Encoding before it's sent down
+  // to the content process.  In most (all?) cases, this should have occurred
+  // before this.
+  if (mResponseHead && XRE_IsParentProcess() && !LoadHasAppliedConversion()) {
+    nsAutoCString contentEncoding;
+    (void)mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
+    // Note: doesn't handle multiple compressors: "dcb, gzip" or
+    // "gzip, dcb" (etc)
+    if (contentEncoding.Equals("dcb") || contentEncoding.Equals("dcz")) {
+      LOG_DICTIONARIES(
+          ("Still had %s encoding at CallOnStartRequest, converting",
+           contentEncoding.get()));
+      nsCOMPtr<nsIStreamListener> listener;
+      MOZ_DIAGNOSTIC_ASSERT(LoadHasAppliedConversion() == false);
+      // Insist we install a converter.  This should never be the case, but
+      // if somehow it is, we need a converter; content can't be allowed
+      // to see dcb/dcz since it can't convert them
+      StoreHasAppliedConversion(false);
+      rv = DoApplyContentConversions(mListener, getter_AddRefs(listener),
+                                     nullptr);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      if (listener) {
+        MOZ_ASSERT(!LoadDataSentToChildProcess(),
+                   "DataSentToChildProcess being true means ODAs are sent to "
+                   "the child process directly. We MUST NOT apply content "
+                   "converter in this case.");
+        mListener = listener;
+        mCompressListener = listener;
+
+        StoreHasAppliedConversion(true);
+      }
+    }
+  }
+
   // Allow consumers to override our content type
   if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
     // NOTE: We can have both a txn pump and a cache pump when the cache
@@ -3585,11 +3622,12 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
 
   // We may need to install the cache listener before CallonStartRequest,
   // since InstallCacheListener can modify the Content-Encoding to remove
-  // dcb/dcz (and perhaps others), and CallOnStartRequest() sends the
-  // Content-Encoding to the content process.  If this doesn't install a
-  // listener (because this isn't a dictionary or dictionary-compressed),
-  // call it after CallOnStartRequest so that we save the compressed data
-  // in the cache, and run the decompressor in the content process.
+  // dcb/dcz (and perhaps others), and CallOnStartRequest() copies
+  // Content-Encoding to send to the content process.  If this doesn't
+  // install a listener (because this isn't a dictionary or
+  // dictionary-compressed), call it after CallOnStartRequest so that we
+  // save the compressed data in the cache, and run the decompressor in the
+  // content process.
   bool isDictionaryCompressed = false;
   nsAutoCString contentEncoding;
   (void)mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
