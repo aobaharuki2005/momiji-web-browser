@@ -924,6 +924,7 @@ class BrowserToolbarMiddleware(
             distinctUntilChangedBy { it.selectedTab?.content?.url }
             .collect {
                 updateCurrentPageOrigin(context)
+                updateEndBrowserActions(context)
                 updateNavigationActions(context)
             }
         }
