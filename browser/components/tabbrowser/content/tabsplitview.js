@@ -64,6 +64,11 @@
       this.#tabChangeObserver?.disconnect();
       this.ownerGlobal.removeEventListener("TabSelect", this);
       this.#deactivate();
+      this.dispatchEvent(
+        new CustomEvent("SplitViewRemoved", {
+          bubbles: true,
+        })
+      );
     }
 
     #observeTabChanges() {
