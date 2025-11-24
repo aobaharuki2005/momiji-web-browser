@@ -3895,7 +3895,6 @@ bool ObjectKeysReplacer::escapes(MInstruction* ins) {
         const Shape* shape = objectKeys()->resultShape();
         MOZ_DIAGNOSTIC_ASSERT(shape);
         auto* guard = def->toGuardShape();
-        MOZ_DIAGNOSTIC_ASSERT(shape == guard->shape());
         if (shape != guard->shape()) {
           JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", def);
           return true;
