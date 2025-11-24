@@ -67,6 +67,7 @@ import mozilla.components.feature.addons.ui.summary
 import mozilla.components.service.fxa.manager.AccountState
 import mozilla.components.service.fxa.manager.AccountState.AuthenticationProblem
 import mozilla.components.service.fxa.store.Account
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.menu.MenuAccessPoint
 import org.mozilla.fenix.components.menu.MenuDialogTestTag.DESKTOP_SITE_OFF
@@ -338,7 +339,7 @@ fun MainMenu(
 
 @Suppress("LongParameterList", "LongMethod", "CognitiveComplexMethod")
 @Composable
-private fun ExtensionsMenuItem(
+internal fun ExtensionsMenuItem(
     isExtensionsProcessDisabled: Boolean,
     isExtensionsExpanded: Boolean,
     isPrivate: Boolean,
@@ -789,6 +790,7 @@ internal fun Addons(
             )
         } else if (accessPoint == MenuAccessPoint.Browser && webExtensionMenuItems.isNotEmpty()) {
             WebExtensionMenuItems(
+                accessPoint = accessPoint,
                 webExtensionMenuItems = webExtensionMenuItems,
                 onWebExtensionMenuItemClick = onWebExtensionMenuItemClick,
                 availableAddons = availableAddons,
@@ -859,7 +861,8 @@ private fun AddonsMenuItems(
 }
 
 @Composable
-private fun WebExtensionMenuItems(
+internal fun WebExtensionMenuItems(
+    accessPoint: MenuAccessPoint,
     webExtensionMenuItems: List<WebExtensionMenuItem>,
     onWebExtensionMenuItemClick: () -> Unit,
     availableAddons: List<Addon> = emptyList(),
@@ -892,13 +895,22 @@ private fun WebExtensionMenuItems(
                 enabled = webExtensionMenuItem.enabled,
                 badgeText = webExtensionMenuItem.badgeText,
                 onClick = {
-                    onWebExtensionMenuItemClick()
-                    webExtensionMenuItem.onClick()
-                },
-                onSettingsClick = {
-                    if (addon != null) {
-                        onSettingsClick(addon)
+                    if (accessPoint != MenuAccessPoint.External) {
+                        onWebExtensionMenuItemClick()
+                        webExtensionMenuItem.onClick()
+                    } else {
+                        // TODO(Bug 1959344): CustomTab should be visible to add-ons through the tabs API
+                        // and it should be detected as active tab while in foreground.
+                        Logger.error(
+                            message = "WebExtensionsMenuItem does not does not support onClick in CustomTab mode",
+                            throwable = NotImplementedError(),
+                        )
                     }
+                },
+                onSettingsClick = if (accessPoint != MenuAccessPoint.External) {
+                    { addon?.let { onSettingsClick(addon) } }
+                } else {
+                    null
                 },
             )
         }

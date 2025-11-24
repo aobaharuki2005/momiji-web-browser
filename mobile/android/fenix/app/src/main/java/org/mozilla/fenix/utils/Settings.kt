@@ -2274,6 +2274,14 @@ class Settings(
     )
 
     /**
+     * Indicates if the extensions status should be shown in the menu opened for custom tabs.
+     */
+    var shouldShowCustomTabExtensions by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_should_show_custom_tab_extensions),
+        default = false,
+    )
+
+    /**
      * Indicates if the Homepage as a New Tab is enabled.
      */
     var enableHomepageAsNewTab by lazyFeatureFlagPreference(

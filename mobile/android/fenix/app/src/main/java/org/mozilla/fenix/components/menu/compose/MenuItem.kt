@@ -268,17 +268,19 @@ internal fun WebExtensionMenuItem(
                     )
                 }
 
-                VerticalDivider()
+                if (onSettingsClick != null) {
+                    VerticalDivider()
 
-                IconButton(
-                    modifier = Modifier.size(24.dp),
-                    onClick = onSettingsClick ?: {},
-                ) {
-                    Icon(
-                        painter = painterResource(iconsR.drawable.mozac_ic_settings_24),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        contentDescription = null,
-                    )
+                    IconButton(
+                        modifier = Modifier.size(24.dp),
+                        onClick = onSettingsClick,
+                    ) {
+                        Icon(
+                            painter = painterResource(iconsR.drawable.mozac_ic_settings_24),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
         },

@@ -82,6 +82,7 @@ class WebExtensionsMenuBindingTest {
 
             val binding = WebExtensionsMenuBinding(
                 browserStore = browserStore,
+                customTabId = null,
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
@@ -130,6 +131,7 @@ class WebExtensionsMenuBindingTest {
 
             val binding = WebExtensionsMenuBinding(
                 browserStore = browserStore,
+                customTabId = null,
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
@@ -178,6 +180,7 @@ class WebExtensionsMenuBindingTest {
 
             val binding = WebExtensionsMenuBinding(
                 browserStore = browserStore,
+                customTabId = null,
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
@@ -234,6 +237,7 @@ class WebExtensionsMenuBindingTest {
 
             val binding = WebExtensionsMenuBinding(
                 browserStore = browserStore,
+                customTabId = null,
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
@@ -286,6 +290,7 @@ class WebExtensionsMenuBindingTest {
 
             val binding = WebExtensionsMenuBinding(
                 browserStore = browserStore,
+                customTabId = null,
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},

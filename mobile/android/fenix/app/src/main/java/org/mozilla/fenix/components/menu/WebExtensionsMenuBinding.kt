@@ -8,8 +8,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
-import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -27,12 +28,14 @@ import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
  * and [TabSessionState.extensionState].
  *
  * @param browserStore Used to listen for changes to [WebExtensionState].
+ * @param customTabId The ID of the custom tab to observe, or null to observe the selected tab.
  * @param menuStore The [Store] for holding the [MenuState] and applying [MenuAction]s.
  * @param iconSize for [WebExtensionMenuItem].
  * @param onDismiss Callback invoked to dismiss the menu dialog.
  */
 class WebExtensionsMenuBinding(
     browserStore: BrowserStore,
+    private val customTabId: String?,
     private val menuStore: MenuStore,
     private val iconSize: Int,
     private val onDismiss: () -> Unit,
@@ -46,7 +49,7 @@ class WebExtensionsMenuBinding(
             }
 
         // Session level flows
-        val sessionFlow = flow.mapNotNull { state -> state.selectedTab }
+        val sessionFlow = flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }
             .distinctUntilChangedBy {
                 it.extensionState
             }
@@ -154,6 +157,6 @@ class WebExtensionsMenuBinding(
  * @property browserState The browser or global state.
  */
 private data class WebExtensionsFlowState(
-    val sessionState: TabSessionState,
+    val sessionState: SessionState,
     val browserState: BrowserState,
 )

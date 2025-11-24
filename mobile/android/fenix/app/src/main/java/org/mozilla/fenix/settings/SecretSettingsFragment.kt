@@ -95,6 +95,21 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
                             context.settings().shouldShowToolbarCustomization = false
                         }
                     }
+                    requirePreference<SwitchPreference>(R.string.pref_key_should_show_custom_tab_extensions).apply {
+                        val shouldEnableCustomTabExtensions = newOption || context.settings().enableMenuRedesign
+                        isEnabled = shouldEnableCustomTabExtensions
+                        when (shouldEnableCustomTabExtensions) {
+                            true -> {
+                                summary = null
+                            }
+
+                            false -> {
+                                isChecked = false
+                                summary = getString(R.string.preferences_debug_settings_custom_tab_extensions_summary)
+                                context.settings().shouldShowCustomTabExtensions = false
+                            }
+                        }
+                    }
                 }
                 true
             }
@@ -160,6 +175,38 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_enable_menu_redesign).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().enableMenuRedesign
+            onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                (newValue as? Boolean)?.let { newOption ->
+                    context.settings().enableMenuRedesign = newOption
+                    requirePreference<SwitchPreference>(R.string.pref_key_should_show_custom_tab_extensions).apply {
+                        val shouldEnableCustomTabExtensions = newOption || context.settings().shouldUseComposableToolbar
+                        isEnabled = shouldEnableCustomTabExtensions
+                        when (shouldEnableCustomTabExtensions) {
+                            true -> {
+                                summary = null
+                            }
+
+                            false -> {
+                                isChecked = false
+                                summary = getString(R.string.preferences_debug_settings_custom_tab_extensions_summary)
+                                context.settings().shouldShowCustomTabExtensions = false
+                            }
+                        }
+                    }
+                }
+                true
+            }
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_should_show_custom_tab_extensions).apply {
+            isVisible = Config.channel.isDebug
+            isChecked = context.settings().shouldShowCustomTabExtensions
+            val newOption = context.settings().enableMenuRedesign || context.settings().shouldUseComposableToolbar
+            isEnabled = newOption
+            summary = when (newOption) {
+                true -> null
+                false -> getString(R.string.preferences_debug_settings_custom_tab_extensions_summary)
+            }
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
