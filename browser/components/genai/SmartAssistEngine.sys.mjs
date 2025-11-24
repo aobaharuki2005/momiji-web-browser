@@ -86,8 +86,8 @@ export const SmartAssistEngine = {
       });
       return token;
     } catch (error) {
-      console.error("Error obtaining FxA token:", error);
-      throw error;
+      console.warn("Error obtaining FxA token:", error);
+      return null;
     }
   },
 
