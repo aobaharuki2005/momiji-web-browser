@@ -3162,9 +3162,6 @@ export class UrlbarView {
    *   The DOM node for the result's action.
    */
   #setSwitchTabActionChiclet(result, actionNode) {
-    this.#l10nCache.setElementL10n(actionNode, {
-      id: "urlbar-result-action-switch-tab",
-    });
     actionNode.classList.add("urlbarView-switchToTab");
 
     let contextualIdentityAction = actionNode.parentNode.querySelector(
@@ -3181,6 +3178,7 @@ export class UrlbarView {
       if (!contextualIdentityAction) {
         contextualIdentityAction = actionNode.cloneNode(true);
         contextualIdentityAction.classList.add("action-contextualidentity");
+        this.#l10nCache.removeElementL10n(contextualIdentityAction);
         actionNode.parentNode.insertBefore(
           contextualIdentityAction,
           actionNode
@@ -3205,6 +3203,7 @@ export class UrlbarView {
     ) {
       if (!tabGroupAction) {
         tabGroupAction = actionNode.cloneNode(true);
+        this.#l10nCache.removeElementL10n(tabGroupAction);
         actionNode.parentNode.insertBefore(tabGroupAction, actionNode);
       }
 
@@ -3212,6 +3211,10 @@ export class UrlbarView {
     } else {
       tabGroupAction?.remove();
     }
+
+    this.#l10nCache.setElementL10n(actionNode, {
+      id: "urlbar-result-action-switch-tab",
+    });
   }
 
   #addContextualIdentityToSwitchTabChiclet(result, actionNode) {
