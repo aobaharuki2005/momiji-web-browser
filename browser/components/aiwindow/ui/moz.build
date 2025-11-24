@@ -4,3 +4,7 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning: Frontend")
+
+MOZ_SRC_FILES += [
+    "modules/AIWindow.sys.mjs",
+]
