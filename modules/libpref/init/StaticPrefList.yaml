@@ -19668,13 +19668,13 @@
   mirror: always
 #endif
 
+#ifdef ANDROID
 # Whether to render in to a child SurfaceControl rather than directly into the SurfaceView
 - name: widget.android.use-surfacecontrol
   type: bool
   value: false
   mirror: once
 
-#ifdef ANDROID
 # A threshold value for double click by mouse.
 - name: widget.double-click.threshold
   type: RelaxedAtomicInt32
