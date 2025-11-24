@@ -70,7 +70,7 @@ bool MoofParser::RebuildFragmentedIndex(BoxContext& aContext) {
       ParseMoov(box);
     } else if (box.IsType("moof")) {
       Moof moof(box, mTrackParseMode, mTrex, mMvhd, mMdhd, mEdts, mSinf,
-                &mLastDecodeTime, mIsAudio, mTracksEndCts);
+                mIsAudio, &mLastDecodeTime, mTracksEndCts);
 
       if (!moof.IsValid()) {
         continue;  // Skip to next box.
@@ -430,8 +430,8 @@ class CtsComparator {
 };
 
 Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
-           Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, const Sinf& aSinf,
-           uint64_t* aDecodeTime, bool aIsAudio,
+           const Mvhd& aMvhd, const Mdhd& aMdhd, const Edts& aEdts,
+           const Sinf& aSinf, const bool aIsAudio, uint64_t* aDecodeTime,
            nsTArray<TrackEndCts>& aTracksEndCts)
     : mRange(aBox.Range()),
       mTfhd(aTrex),
@@ -452,7 +452,7 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("traf")) {
       ParseTraf(box, aTrackParseMode, aTrex, aMvhd, aMdhd, aEdts, aSinf,
-                aDecodeTime, aIsAudio);
+                aIsAudio, aDecodeTime);
     }
     if (box.IsType("pssh")) {
       psshBoxes.AppendElement(box);
@@ -528,8 +528,8 @@ Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
       TimeUnit presentationDuration =
           ctsOrder.LastElement()->mCompositionRange.end -
           ctsOrder[0]->mCompositionRange.start;
-      auto decodeOffset =
-          aMdhd.ToTimeUnit((int64_t)*aDecodeTime - aEdts.mMediaStart);
+      auto decodeOffset = aMdhd.ToTimeUnit(static_cast<int64_t>(*aDecodeTime) -
+                                           aEdts.mMediaStart);
       auto offsetOffset = aMvhd.ToTimeUnit(aEdts.mEmptyOffset);
       TimeUnit endDecodeTime =
           (decodeOffset.isOk() && offsetOffset.isOk())
@@ -726,8 +726,9 @@ const CencSampleEncryptionInfoEntry* Moof::GetSampleEncryptionEntry(
 }
 
 void Moof::ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode,
-                     Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts,
-                     const Sinf& aSinf, uint64_t* aDecodeTime, bool aIsAudio) {
+                     Trex& aTrex, const Mvhd& aMvhd, const Mdhd& aMdhd,
+                     const Edts& aEdts, const Sinf& aSinf, const bool aIsAudio,
+                     uint64_t* aDecodeTime) {
   LOG_DEBUG(
       Traf,
       "Starting, aTrackParseMode=%s, track#=%" PRIu32
@@ -798,7 +799,7 @@ void Moof::ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode,
   Box sencBox;
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("trun")) {
-      if (ParseTrun(box, aMvhd, aMdhd, aEdts, &decodeTime, aIsAudio).isOk()) {
+      if (ParseTrun(box, aMvhd, aMdhd, aEdts, aIsAudio, &decodeTime).isOk()) {
         mValid = true;
       } else {
         LOG_WARN(Moof, "ParseTrun failed");
@@ -909,9 +910,10 @@ Result<Ok, nsresult> Moof::ParseSenc(Box& aBox, const Sinf& aSinf) {
   return Ok();
 }
 
-Result<Ok, nsresult> Moof::ParseTrun(Box& aBox, Mvhd& aMvhd, Mdhd& aMdhd,
-                                     Edts& aEdts, uint64_t* aDecodeTime,
-                                     bool aIsAudio) {
+Result<Ok, nsresult> Moof::ParseTrun(Box& aBox, const Mvhd& aMvhd,
+                                     const Mdhd& aMdhd, const Edts& aEdts,
+                                     const bool aIsAudio,
+                                     uint64_t* aDecodeTime) {
   LOG_DEBUG(Trun, "Starting.");
   if (!mTfhd.IsValid() || !aMvhd.IsValid() || !aMdhd.IsValid() ||
       !aEdts.IsValid()) {
