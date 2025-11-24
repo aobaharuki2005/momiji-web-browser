@@ -64,7 +64,7 @@ export const HeuristicsRegExp = {
         "|miasto|miejscowosc|miejscowość" + //pl-PL
         "|\\bstad|woonplaats|plaats", // nl
       "address-housenumber":
-        "(house|building)[\\s\-]*number|hausnummer|haus|house[a-z\-]*n(r|o)" +
+        "(house|building|street1?)[\\s\\-_]*number|hausnummer|haus|house[a-z\-]*n(r|o)" +
         "|n[úu]mero" +
         "|domu" + // pl-PL
         "|huisnummer", // nl
