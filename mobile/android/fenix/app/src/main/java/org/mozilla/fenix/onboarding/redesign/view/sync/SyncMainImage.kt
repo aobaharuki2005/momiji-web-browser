@@ -5,9 +5,8 @@
 package org.mozilla.fenix.onboarding.redesign.view.sync
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -36,7 +35,7 @@ fun SyncMainImage() {
 @Composable
 private fun SyncMainImagePreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Surface {
             SyncMainImage()
         }
     }
