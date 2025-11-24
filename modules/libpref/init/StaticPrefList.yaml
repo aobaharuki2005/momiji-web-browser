@@ -3697,6 +3697,13 @@
   value: false
   mirror: always
 
+# For non-Navigation API navigations, create an internal method tracker
+# so that it's possible to await navigations being committed.
+- name: dom.navigation.api.internal_method_tracker
+  type: bool
+  value: false
+  mirror: always
+
 # Network Information API
 # This feature is not available on Firefox desktop. It exposes too much
 # user information. Let's be consistent and disable it on Android.
