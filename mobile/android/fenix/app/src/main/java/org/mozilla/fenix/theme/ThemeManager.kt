@@ -24,7 +24,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
-import com.google.android.material.R as materialR
 
 abstract class ThemeManager {
 
@@ -121,7 +120,7 @@ abstract class ThemeManager {
         }
 
         private fun updateNavigationBar(window: Window, context: Context) {
-            window.setNavigationBarColorCompat(context.getColorFromAttr(materialR.attr.colorSurface))
+            window.setNavigationBarColorCompat(context.getColorFromAttr(R.attr.layer1))
         }
 
         private fun setStatusBarColor(

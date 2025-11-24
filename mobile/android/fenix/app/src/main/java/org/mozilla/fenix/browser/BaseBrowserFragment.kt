@@ -245,7 +245,6 @@ import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wifi.SitePermissionsWifiIntegration
 import java.lang.ref.WeakReference
 import kotlin.coroutines.cancellation.CancellationException
-import com.google.android.material.R as materialR
 import mozilla.components.feature.downloads.R as downloadsR
 import mozilla.components.ui.widgets.R as widgetsR
 
@@ -934,7 +933,7 @@ abstract class BaseBrowserFragment :
             PasswordGeneratorDialogColors(
                 title = ThemeManager.resolveAttributeColor(attribute = R.attr.textPrimary),
                 description = ThemeManager.resolveAttributeColor(attribute = R.attr.textSecondary),
-                background = ThemeManager.resolveAttributeColor(attribute = materialR.attr.colorSurface),
+                background = ThemeManager.resolveAttributeColor(attribute = R.attr.layer1),
                 cancelText = ThemeManager.resolveAttributeColor(attribute = R.attr.textAccent),
                 confirmButton = ThemeManager.resolveAttributeColor(attribute = R.attr.actionPrimary),
                 passwordBox = ThemeManager.resolveAttributeColor(attribute = R.attr.layer2),

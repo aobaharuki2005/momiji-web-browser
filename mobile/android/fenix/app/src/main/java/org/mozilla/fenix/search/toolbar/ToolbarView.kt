@@ -23,7 +23,6 @@ import org.mozilla.fenix.search.SearchFragmentState
 import org.mozilla.fenix.telemetry.ACTION_CLEAR_CLICKED
 import org.mozilla.fenix.telemetry.SOURCE_ADDRESS_BAR
 import org.mozilla.fenix.utils.Settings
-import com.google.android.material.R as materialR
 import org.mozilla.fenix.GleanMetrics.Toolbar as GleanMetricsToolbar
 
 /**
@@ -90,7 +89,7 @@ class ToolbarView(
 
             background = AppCompatResources.getDrawable(
                 context,
-                context.theme.resolveAttribute(materialR.attr.colorSurface),
+                context.theme.resolveAttribute(R.attr.layer1),
             )
 
             edit.hint = context.getString(R.string.search_hint)
