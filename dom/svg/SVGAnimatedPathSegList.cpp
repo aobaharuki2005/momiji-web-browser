@@ -124,7 +124,8 @@ class MOZ_STACK_CLASS SVGPathSegmentInitWrapper final {
         return StylePathCommand::Arc(
             MakeEndPoint(PositionType::Absolute, mInit.mValues[5],
                          mInit.mValues[6]),
-            {mInit.mValues[0], mInit.mValues[1]},
+            StyleArcRadii<float>(mInit.mValues[0],
+                                 StyleOptional<float>::Some(mInit.mValues[1])),
             mInit.mValues[4] ? StyleArcSweep::Cw : StyleArcSweep::Ccw,
             mInit.mValues[3] ? StyleArcSize::Large : StyleArcSize::Small,
             mInit.mValues[2]);
@@ -132,7 +133,8 @@ class MOZ_STACK_CLASS SVGPathSegmentInitWrapper final {
         return StylePathCommand::Arc(
             MakeEndPoint(PositionType::Relative, mInit.mValues[5],
                          mInit.mValues[6]),
-            {mInit.mValues[0], mInit.mValues[1]},
+            StyleArcRadii<float>(mInit.mValues[0],
+                                 StyleOptional<float>::Some(mInit.mValues[1])),
             mInit.mValues[4] ? StyleArcSweep::Cw : StyleArcSweep::Ccw,
             mInit.mValues[3] ? StyleArcSize::Large : StyleArcSize::Small,
             mInit.mValues[2]);

@@ -16,6 +16,7 @@
 #include "mozilla/AspectRatio.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/SVGContentUtils.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -1370,6 +1371,30 @@ StyleControlPoint<StyleShapePosition<LengthPercentage>,
   } else {
     return cp;
   }
+}
+
+template <>
+inline gfx::Point StyleArcRadii<StyleCSSFloat>::ToGfxPoint(
+    const CSSSize* aBasis) const {
+  return ry.IsSome() ? gfx::Point(rx, ry.AsSome()) : gfx::Point(rx, rx);
+}
+
+template <>
+inline gfx::Point StyleArcRadii<LengthPercentage>::ToGfxPoint(
+    const CSSSize* aBasis) const {
+  MOZ_ASSERT(aBasis);
+  if (ry.IsSome()) {
+    return gfx::Point(rx.ResolveToCSSPixels(aBasis->Width()),
+                      ry.AsSome().ResolveToCSSPixels(aBasis->Height()));
+  }
+
+  // Else percentages are resolved against the direction-agnostic size
+  // of the reference box for both radiuses.
+  // https://drafts.csswg.org/css-shapes-1/#typedef-shape-arc-command
+  const auto directionAgnostic = SVGContentUtils::ComputeNormalizedHypotenuse(
+      aBasis->Width(), aBasis->Height());
+  const auto radius = rx.ResolveToCSSPixels(directionAgnostic);
+  return gfx::Point(radius, radius);
 }
 
 inline StylePhysicalSide ToStylePhysicalSide(mozilla::Side aSide) {

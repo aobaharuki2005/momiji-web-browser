@@ -598,8 +598,9 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
       }
       case StylePathCommand::Tag::Arc: {
         const auto& arc = cmd.arc;
-        float rx = arc.radii.x * aZoom;
-        float ry = arc.radii.y * aZoom;
+        auto radii = arc.radii.ToGfxPoint() * aZoom;
+        float rx = radii.x;
+        float ry = radii.y;
         float angle = arc.rotate;
         bool largeArcFlag = arc.arc_size == StyleArcSize::Large;
         bool sweepFlag = arc.arc_sweep == StyleArcSweep::Cw;
