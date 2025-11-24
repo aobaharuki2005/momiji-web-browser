@@ -238,7 +238,8 @@ nsresult nsXREDirProvider::GetUserProfilesRootDir(nsIFile** aResult) {
 #if defined(MOZ_WIDGET_GTK)
     switch (gXdgTelemetry) {
       case legacyOrXDGHomeTelemetry::legacyExists:
-        mozilla::glean::profiles::creation_place.Get("legacy_exists"_ns).Add(1);
+        mozilla::glean::profiles::creation_place.Get("legacy_existing"_ns)
+            .Add(1);
         break;
       case legacyOrXDGHomeTelemetry::legacyForced:
         mozilla::glean::profiles::creation_place.Get("legacy_forced"_ns).Add(1);
