@@ -1302,12 +1302,12 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
     ipc::Endpoint<PAPZInputBridgeParent> parentPipe;
     ipc::Endpoint<PAPZInputBridgeChild> childPipe;
     nsresult rv = PAPZInputBridge::CreateEndpoints(
-        mGPUChild->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
+        child->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
         &parentPipe, &childPipe);
     if (NS_FAILED(rv)) {
       return nullptr;
     }
-    mGPUChild->SendInitAPZInputBridge(aRootLayerTreeId, std::move(parentPipe));
+    child->SendInitAPZInputBridge(std::move(parentPipe));
 
     RefPtr<APZInputBridgeChild> inputBridge =
         APZInputBridgeChild::Create(mProcessToken, std::move(childPipe));
@@ -1324,13 +1324,12 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
     ipc::Endpoint<PUiCompositorControllerParent> parentPipe;
     ipc::Endpoint<PUiCompositorControllerChild> childPipe;
     nsresult rv = PUiCompositorController::CreateEndpoints(
-        mGPUChild->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
+        child->OtherEndpointProcInfo(), ipc::EndpointProcInfo::Current(),
         &parentPipe, &childPipe);
     if (NS_FAILED(rv)) {
       return nullptr;
     }
-    mGPUChild->SendInitUiCompositorController(aRootLayerTreeId,
-                                              std::move(parentPipe));
+    child->SendInitUiCompositorController(std::move(parentPipe));
     uiController = UiCompositorControllerChild::CreateForGPUProcess(
         mProcessToken, std::move(childPipe), aWidget);
     MOZ_ASSERT(uiController);

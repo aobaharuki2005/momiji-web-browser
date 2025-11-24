@@ -46,7 +46,6 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/ProcessUtils.h"
-#include "mozilla/layers/APZInputBridgeParent.h"
 #include "mozilla/layers/APZPublicUtils.h"  // for apz::InitializeGlobalState
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -55,7 +54,6 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layers/RemoteTextureMap.h"
-#include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -469,20 +467,6 @@ mozilla::ipc::IPCResult GPUParent::RecvInitVRManager(
 mozilla::ipc::IPCResult GPUParent::RecvInitVR(
     Endpoint<PVRGPUChild>&& aEndpoint) {
   gfx::VRGPUChild::InitForGPUProcess(std::move(aEndpoint));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult GPUParent::RecvInitUiCompositorController(
-    const LayersId& aRootLayerTreeId,
-    Endpoint<PUiCompositorControllerParent>&& aEndpoint) {
-  UiCompositorControllerParent::Start(aRootLayerTreeId, std::move(aEndpoint));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult GPUParent::RecvInitAPZInputBridge(
-    const LayersId& aRootLayerTreeId,
-    Endpoint<PAPZInputBridgeParent>&& aEndpoint) {
-  APZInputBridgeParent::Create(aRootLayerTreeId, std::move(aEndpoint));
   return IPC_OK();
 }
 
