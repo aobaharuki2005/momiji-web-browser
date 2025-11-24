@@ -356,8 +356,6 @@ private fun OnboardingContent(
             if (!isSmallPhoneScreen) {
                 PagerIndicator(
                     pagerState = pagerState,
-                    activeColor = FirefoxTheme.colors.actionPrimary,
-                    inactiveColor = FirefoxTheme.colors.actionSecondary,
                     leaveTrail = true,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
