@@ -367,7 +367,9 @@ export class SettingControl extends SettingElement {
           .config=${item.config}
           .setting=${item.setting}
           .getSetting=${this.getSetting}
-          slot=${ifDefined(ITEM_SLOT_BY_PARENT.get(control))}
+          slot=${ifDefined(
+            item.config.slot || ITEM_SLOT_BY_PARENT.get(control)
+          )}
         ></setting-control>`
     );
   }
