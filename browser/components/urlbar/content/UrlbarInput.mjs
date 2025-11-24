@@ -235,6 +235,11 @@ export class UrlbarInput extends HTMLElement {
     this.isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(this.window);
 
     lazy.UrlbarPrefs.addObserver(this);
+    window.addEventListener("unload", () => {
+      // Stop listening to pref changes to make sure we don't init the new
+      // searchbar in closed windows that have not been gc'd yet.
+      lazy.UrlbarPrefs.removeObserver(this);
+    });
   }
 
   /**
@@ -275,7 +280,7 @@ export class UrlbarInput extends HTMLElement {
   /**
    * Initialization that happens once on the first connect.
    */
-  #init() {
+  #initOnce() {
     this.#sapName = this.getAttribute("sap-name");
     this.#isAddressbar = this.#sapName == "urlbar";
 
@@ -350,8 +355,19 @@ export class UrlbarInput extends HTMLElement {
   }
 
   connectedCallback() {
+    if (
+      this.sapName == "searchbar" &&
+      !lazy.UrlbarPrefs.get("browser.search.widget.new")
+    ) {
+      return;
+    }
+
+    this.#init();
+  }
+
+  #init() {
     if (!this.controller) {
-      this.#init();
+      this.#initOnce();
     }
 
     // Don't attach event listeners if the toolbar is not visible
@@ -433,8 +449,21 @@ export class UrlbarInput extends HTMLElement {
   }
 
   disconnectedCallback() {
-    this.inputField.controllers.removeController(this._copyCutController);
-    delete this._copyCutController;
+    if (
+      this.sapName == "searchbar" &&
+      !lazy.UrlbarPrefs.get("browser.search.widget.new")
+    ) {
+      return;
+    }
+
+    this.#uninit();
+  }
+
+  #uninit() {
+    if (this._copyCutController) {
+      this.inputField.controllers.removeController(this._copyCutController);
+      delete this._copyCutController;
+    }
 
     for (let event of UrlbarInput.#inputFieldEvents) {
       this.inputField.removeEventListener(event, this);
@@ -562,12 +591,14 @@ export class UrlbarInput extends HTMLElement {
         );
         break;
       case "browser.search.widget.new": {
-        if (
-          this.#sapName == "searchbar" &&
-          lazy.UrlbarPrefs.get("browser.search.widget.new")
-        ) {
-          // Update dimensions because the searchbar was invisible before.
-          this.#updateLayoutBreakout();
+        if (this.sapName == "searchbar" && this.isConnected) {
+          if (lazy.UrlbarPrefs.get("browser.search.widget.new")) {
+            // The connectedCallback was skipped. Init now.
+            this.#init();
+          } else {
+            // Uninit now, the disconnectedCallback will be skipped.
+            this.#uninit();
+          }
         }
       }
     }
@@ -3847,6 +3878,9 @@ export class UrlbarInput extends HTMLElement {
   }
 
   _initCopyCutController() {
+    if (this._copyCutController) {
+      return;
+    }
     this._copyCutController = new CopyCutController(this);
     this.inputField.controllers.insertControllerAt(0, this._copyCutController);
   }
