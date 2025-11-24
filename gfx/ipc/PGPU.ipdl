@@ -8,7 +8,6 @@ include GraphicsMessages;
 include MemoryReportTypes;
 include HangTypes;
 include PrefsTypes;
-include protocol PAPZInputBridge;
 include protocol PCompositorManager;
 include protocol PImageBridge;
 include protocol PProfiler;
@@ -16,7 +15,6 @@ include protocol PVRGPU;
 include protocol PVRManager;
 include protocol PVideoBridge;
 include protocol PVsyncBridge;
-include protocol PUiCompositorController;
 include protocol PRemoteMediaManager;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -73,9 +71,6 @@ parent:
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async InitVideoBridge(Endpoint<PVideoBridgeParent> endpoint, VideoBridgeSource aSource);
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
-  async InitUiCompositorController(LayersId rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
-  async InitAPZInputBridge(LayersId layersId,
-                           Endpoint<PAPZInputBridgeParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
   // Forward GPU process its endpoints to the VR process.
   async InitVR(Endpoint<PVRGPUChild> endpoint);

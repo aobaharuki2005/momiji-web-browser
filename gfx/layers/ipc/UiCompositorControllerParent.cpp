@@ -42,15 +42,10 @@ UiCompositorControllerParent::GetFromRootLayerTreeId(
 RefPtr<UiCompositorControllerParent> UiCompositorControllerParent::Start(
     const LayersId& aRootLayerTreeId,
     Endpoint<PUiCompositorControllerParent>&& aEndpoint) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   RefPtr<UiCompositorControllerParent> parent =
       new UiCompositorControllerParent(aRootLayerTreeId);
-
-  RefPtr<Runnable> task =
-      NewRunnableMethod<Endpoint<PUiCompositorControllerParent>&&>(
-          "layers::UiCompositorControllerParent::Open", parent,
-          &UiCompositorControllerParent::Open, std::move(aEndpoint));
-  CompositorThread()->Dispatch(task.forget());
-
+  parent->Open(std::move(aEndpoint));
   return parent;
 }
 
