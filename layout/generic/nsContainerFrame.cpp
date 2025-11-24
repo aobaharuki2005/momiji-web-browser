@@ -1018,6 +1018,15 @@ void nsContainerFrame::DisplayOverflowContainers(
   }
 }
 
+void nsContainerFrame::DisplayAbsoluteContinuations(
+    nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists) {
+  for (nsIFrame* frame : GetChildList(FrameChildListID::Absolute)) {
+    if (frame->GetPrevInFlow()) {
+      BuildDisplayListForChild(aBuilder, frame, aLists);
+    }
+  }
+}
+
 bool nsContainerFrame::TryRemoveFrame(FrameListPropertyDescriptor aProp,
                                       nsIFrame* aChildToRemove) {
   nsFrameList* list = GetProperty(aProp);

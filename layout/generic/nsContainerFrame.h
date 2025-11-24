@@ -437,6 +437,15 @@ class nsContainerFrame : public nsSplittableFrame {
                                  const nsDisplayListSet& aLists);
 
   /**
+   * Add absolute frame continuations to the display list.
+   *
+   * Note: for absolute frame's first-in-flow, it will be painted through its
+   * placeholder frame.
+   */
+  void DisplayAbsoluteContinuations(nsDisplayListBuilder* aBuilder,
+                                    const nsDisplayListSet& aLists);
+
+  /**
    * Builds display lists for the children. The background
    * of each child is placed in the Content() list (suitable for inline
    * children and other elements that behave like inlines,
