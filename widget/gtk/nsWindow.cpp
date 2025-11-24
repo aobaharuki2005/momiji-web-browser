@@ -426,6 +426,7 @@ nsWindow::nsWindow()
       mHasMappedToplevel(false),
       mPanInProgress(false),
       mPendingBoundsChange(false),
+      mPendingBoundsChangeMayChangeCsdMargin(false),
       mTitlebarBackdropState(false),
       mAlwaysOnTop(false),
       mIsTransparent(false),
@@ -3360,8 +3361,8 @@ LayoutDeviceIntCoord GetXWindowBorder(GdkWindow* aWin) {
                           top corner, so matches CSD size - (40,40).
 */
 #ifdef MOZ_X11
-void nsWindow::RecomputeBoundsX11() {
-  LOGVERBOSE("RecomputeBoundsX11()");
+void nsWindow::RecomputeBoundsX11(bool aMayChangeCsdMargin) {
+  LOG("RecomputeBoundsX11(%d)", aMayChangeCsdMargin);
 
   auto* toplevel = GetToplevelGdkWindow();
 
@@ -3369,10 +3370,6 @@ void nsWindow::RecomputeBoundsX11() {
   auto GetFrameTitlebarBounds = [&](GdkWindow* aWin) {
     GdkRectangle b{0};
     gdk_window_get_frame_extents(aWin, &b);
-    LOGVERBOSE(
-        "  GetFrameTitlebarBounds(): gdk_window_get_frame_extents() [%d,%d] -> "
-        "[%d x %d]",
-        b.x, b.y, b.width, b.height);
     if (gtk_check_version(3, 24, 35) &&
         gdk_window_get_window_type(aWin) == GDK_WINDOW_TEMP) {
       // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/4820
@@ -3405,15 +3402,11 @@ void nsWindow::RecomputeBoundsX11() {
       // event size, to avoid spurious resizes on e.g. sizemode changes.
       gdk_window_get_geometry(aWin, nullptr, nullptr, &b.width, &b.height);
       gdk_window_get_origin(aWin, &b.x, &b.y);
-      LOGVERBOSE("  GetBounds(): toplevel [%d,%d] -> [%d x %d]", b.x, b.y,
-                 b.width, b.height);
       return DesktopIntRect(b.x, b.y, b.width, b.height);
     }
     gdk_window_get_position(aWin, &b.x, &b.y);
     b.width = gdk_window_get_width(aWin);
     b.height = gdk_window_get_height(aWin);
-    LOGVERBOSE("  GetBounds(): popup [%d,%d] -> [%d x %d]", b.x, b.y, b.width,
-               b.height);
     return DesktopIntRect(b.x, b.y, b.width, b.height);
   };
 
@@ -3436,7 +3429,7 @@ void nsWindow::RecomputeBoundsX11() {
       IsTopLevelWidget() && mSizeMode != nsSizeMode_Fullscreen && !mUndecorated;
   if (!decorated) {
     mClientMargin = {};
-  } else {
+  } else if (aMayChangeCsdMargin) {
     // TODO: Do we really need so complex margin calculation on X11?
     const DesktopIntRect clientRectRelativeToFrame = [&] {
       auto topLevelBoundsRelativeToFrame = toplevelBounds;
@@ -3457,6 +3450,8 @@ void nsWindow::RecomputeBoundsX11() {
     mClientMargin = DesktopIntRect(DesktopIntPoint(), finalBounds.Size()) -
                     clientRectRelativeToFrame;
     mClientMargin.EnsureAtLeast(DesktopIntMargin());
+  } else {
+    // Assume the client margin remains the same.
   }
 
   mClientArea = finalBounds;
@@ -3464,7 +3459,7 @@ void nsWindow::RecomputeBoundsX11() {
 }
 #endif
 #ifdef MOZ_WAYLAND
-void nsWindow::RecomputeBoundsWayland() {
+void nsWindow::RecomputeBoundsWayland(bool aMayChangeCsdMargin) {
   auto GetBounds = [&](GdkWindow* aWin) {
     GdkRectangle b{0};
     gdk_window_get_position(aWin, &b.x, &b.y);
@@ -3476,11 +3471,11 @@ void nsWindow::RecomputeBoundsWayland() {
   const auto toplevelBounds = GetBounds(GetToplevelGdkWindow());
   mClientArea = GetBounds(mGdkWindow);
 
-  LOG("RecomputeBoundsWayland() GetBounds(mGdkWindow) [%d,%d] -> [%d x %d] "
+  LOG("RecomputeBoundsWayland(%d) GetBounds(mGdkWindow) [%d,%d] -> [%d x %d] "
       "GetBounds(mShell) [%d,%d] -> [%d x %d]",
-      mClientArea.x, mClientArea.y, mClientArea.width, mClientArea.height,
-      toplevelBounds.x, toplevelBounds.y, toplevelBounds.width,
-      toplevelBounds.height);
+      aMayChangeCsdMargin, mClientArea.x, mClientArea.y, mClientArea.width,
+      mClientArea.height, toplevelBounds.x, toplevelBounds.y,
+      toplevelBounds.width, toplevelBounds.height);
 
   if (mClientArea.X() < 0 || mClientArea.Y() < 0 || mClientArea.Width() <= 1 ||
       mClientArea.Height() <= 1) {
@@ -3492,18 +3487,22 @@ void nsWindow::RecomputeBoundsWayland() {
       IsTopLevelWidget() && mSizeMode != nsSizeMode_Fullscreen && !mUndecorated;
   if (!decorated) {
     mClientMargin = {};
-  } else {
+  } else if (aMayChangeCsdMargin) {
     mClientMargin =
         DesktopIntRect(DesktopIntPoint(), toplevelBounds.Size()) - mClientArea;
     mClientMargin.EnsureAtLeast(DesktopIntMargin());
+  } else {
+    // Assume the client margin remains the same.
   }
 }
 #endif
 
-void nsWindow::RecomputeBounds(bool aScaleChange) {
-  LOG("RecomputeBounds() scale change %d", aScaleChange);
+void nsWindow::RecomputeBounds(bool aMayChangeCsdMargin, bool aScaleChange) {
+  LOG("RecomputeBounds() margin %d scale change %d", aMayChangeCsdMargin,
+      aScaleChange);
 
   mPendingBoundsChange = false;
+  mPendingBoundsChangeMayChangeCsdMargin = false;
 
   auto* toplevel = GetToplevelGdkWindow();
   if (!toplevel || mIsDestroyed) {
@@ -3515,16 +3514,14 @@ void nsWindow::RecomputeBounds(bool aScaleChange) {
 
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
-    RecomputeBoundsX11();
+    RecomputeBoundsX11(aMayChangeCsdMargin);
   }
 #endif
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
-    RecomputeBoundsWayland();
+    RecomputeBoundsWayland(aMayChangeCsdMargin);
   }
 #endif
-
-  bool marginChanged = (oldMargin != mClientMargin);
 
 #ifdef MOZ_LOGGING
   if (LOG_ENABLED()) {
@@ -3577,9 +3574,9 @@ void nsWindow::RecomputeBounds(bool aScaleChange) {
 
   // We need to send WindowMoved even if only the client margins changed
   // so that BrowserParent picks up the new offsets.
-  const bool moved = aScaleChange || marginChanged ||
+  const bool moved = aScaleChange || aMayChangeCsdMargin ||
                      oldClientArea.TopLeft() != mClientArea.TopLeft();
-  const bool resized = aScaleChange || marginChanged ||
+  const bool resized = aScaleChange || aMayChangeCsdMargin ||
                        oldClientArea.Size() != mClientArea.Size();
 
   if (moved) {
@@ -3595,7 +3592,7 @@ gboolean nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget,
                                          GdkEventProperty* aEvent) {
   if (aEvent->atom == gdk_atom_intern("_NET_FRAME_EXTENTS", FALSE)) {
     LOG("OnPropertyNotifyEvent(_NET_FRAME_EXTENTS)");
-    SchedulePendingBounds();
+    SchedulePendingBounds(MayChangeCsdMargin::Yes);
     return FALSE;
   }
   if (!mGdkWindow) {
@@ -4281,7 +4278,7 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
   // X11 calc bounds from outer window while Wayland uses
   // container size after container allocation event.
   if (GdkIsX11Display()) {
-    SchedulePendingBounds();
+    SchedulePendingBounds(MayChangeCsdMargin::No);
   }
   return FALSE;
 }
@@ -4304,7 +4301,7 @@ void nsWindow::OnContainerSizeAllocate(GtkAllocation* aAllocation) {
   // Also, this runs for both top level size_allocate and MozContainer size
   // allocate, so even if the client bounds are the same, we need to recompute
   // the bounds because the client margin might not.
-  SchedulePendingBounds();
+  SchedulePendingBounds(MayChangeCsdMargin::Yes);
 
   // Invalidate the new part of the window now for the pending paint to
   // minimize background flashes (GDK does not do this for external
@@ -4326,7 +4323,9 @@ void nsWindow::OnContainerSizeAllocate(GtkAllocation* aAllocation) {
   }
 }
 
-void nsWindow::SchedulePendingBounds() {
+void nsWindow::SchedulePendingBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
+  mPendingBoundsChangeMayChangeCsdMargin |=
+      aMayChangeCsdMargin == MayChangeCsdMargin::Yes;
   if (mPendingBoundsChange) {
     return;
   }
@@ -4338,7 +4337,7 @@ void nsWindow::SchedulePendingBounds() {
 void nsWindow::MaybeRecomputeBounds() {
   LOG("MaybeRecomputeBounds %d", mPendingBoundsChange);
   if (mPendingBoundsChange) {
-    RecomputeBounds();
+    RecomputeBounds(mPendingBoundsChangeMayChangeCsdMargin);
   }
 }
 
@@ -5722,7 +5721,7 @@ void nsWindow::RefreshScale(bool aRefreshScreen, bool aForceRefresh) {
     return;
   }
 
-  RecomputeBounds(/* ScaleChanged*/ true);
+  RecomputeBounds(/* MayChangeCsdMargin */ true, /* ScaleChanged*/ true);
 
   if (PresShell* presShell = GetPresShell()) {
     presShell->BackingScaleFactorChanged();
