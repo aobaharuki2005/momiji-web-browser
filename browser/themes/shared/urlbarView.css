@@ -731,7 +731,11 @@
     visibility: hidden;
     width: 0;
     margin-inline: 0;
-    padding-inline: 0;
+    /* The !important is for the switch-to-tab chiclet when action-override is set.
+       Farther down below we add extra padding on .urlbarView-switchToTab to
+       account for the tab icon. Without !important here, that padding is
+       visible even when the chiclet is hidden due to action-override. */
+    padding-inline: 0 !important;
     border-inline: 0;
   }
 
