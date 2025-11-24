@@ -160,7 +160,7 @@ def get_runtimes(platform, suite_name):
         raise OSError(f"manifest runtime file at {path} not found.")
 
     with open(path) as fh:
-        return json.load(fh)[suite_name]
+        return json.load(fh).get(suite_name, {})
 
 
 def chunk_manifests(suite, platform, chunks, manifests):

@@ -172,7 +172,7 @@ linux-tests:
     - gtest
     # - jittest  # See comment in linux-ccov-tests set.
     - jsreftest
-    - marionette
+    - marionette-integration
     - marionette-unittest
     - mochitest-a11y
     - mochitest-browser-a11y
@@ -204,7 +204,7 @@ linux-2404-tsan-tests:
     - gtest
     # - jittest  # See comment in linux-ccov-tests set.
     - jsreftest
-    - marionette
+    - marionette-integration
     - marionette-unittest
     - mochitest-a11y
     - mochitest-browser-a11y
@@ -243,7 +243,7 @@ linux2204-wayland-tests:
     - firefox-ui-functional
     - gtest
     - jsreftest
-    - marionette
+    - marionette-integration
     - marionette-unittest
     - mochitest-a11y
     - mochitest-browser-a11y
@@ -276,7 +276,7 @@ windows32-tests:
     - gtest
     - firefox-ui-functional
     - jsreftest
-    - marionette
+    - marionette-integration
     - marionette-unittest
     - mochitest-a11y
     - mochitest-browser-a11y
@@ -321,7 +321,7 @@ windows11-24h2-tests:
     - firefox-ui-functional
     - gtest
     - jsreftest
-    - marionette
+    - marionette-integration
     - marionette-unittest
     - mochitest-a11y
     - mochitest-browser-a11y
@@ -443,7 +443,7 @@ macosx1470-64-tests:
     - gtest
     - jittest
     - jsreftest
-    - marionette
+    - marionette-integration
     - marionette-unittest
     - mochitest-a11y
     - mochitest-browser-a11y
