@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -73,35 +72,45 @@ fun ToolbarOnboardingPageRedesign(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Column(
-            modifier = Modifier
-                .padding(horizontal = 32.dp, vertical = 24.dp)
-                .fillMaxHeight()
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.weight(TITLE_TOP_SPACER_WEIGHT))
 
-            Text(
-                text = pageState.title,
-                textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.headlineSmall,
-            )
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .weight(CONTENT_WEIGHT)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(36.dp),
+            ) {
+                Text(
+                    text = pageState.title,
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.typography.headlineSmall,
+                )
 
-            Spacer(Modifier.height(36.dp))
-
-            ToolbarPositionOptions(
-                onboardingStore = onboardingStore,
-                pageState = pageState,
-                onToolbarSelectionClicked = onToolbarSelectionClicked,
-            )
-
-            Spacer(modifier = Modifier.weight(BODY_BUTTON_SPACER_WEIGHT))
+                Box(
+                    modifier = Modifier
+                        .height(CONTENT_IMAGE_HEIGHT)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ToolbarPositionOptions(
+                        onboardingStore = onboardingStore,
+                        pageState = pageState,
+                        onToolbarSelectionClicked = onToolbarSelectionClicked,
+                    )
+                }
+            }
 
             FilledButton(
                 text = pageState.primaryButton.text,
                 modifier = Modifier
                     .width(width = FirefoxTheme.layout.size.maxWidth.small)
-                    .semantics { testTag = pageState.title + "onboarding_card_redesign.positive_button" },
+                    .semantics {
+                        testTag = pageState.title + "onboarding_card_redesign.positive_button"
+                    },
                 onClick = pageState.primaryButton.onClick,
             )
         }
@@ -118,19 +127,20 @@ private fun ToolbarPositionOptions(
     pageState: OnboardingPageState,
     onToolbarSelectionClicked: (ToolbarOptionType) -> Unit,
 ) {
-    val state by onboardingStore.observeAsState(initialValue = onboardingStore.state) { it }
-    pageState.toolbarOptions?.let { options ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(26.dp),
-        ) {
-            options.forEach {
-                ToolbarPositionOption(
-                    modifier = Modifier.weight(1f),
-                    option = it,
-                    isSelected = it.toolbarType == state.toolbarOptionSelected,
-                    onClick = { onToolbarSelectionClicked(it.toolbarType) },
-                )
+    Box(
+        modifier = Modifier.height(CONTENT_IMAGE_HEIGHT),
+        contentAlignment = Alignment.Center,
+    ) {
+        val state by onboardingStore.observeAsState(initialValue = onboardingStore.state) { it }
+        pageState.toolbarOptions?.let { options ->
+            Row(horizontalArrangement = Arrangement.spacedBy(26.dp)) {
+                options.forEach {
+                    ToolbarPositionOption(
+                        option = it,
+                        isSelected = it.toolbarType == state.toolbarOptionSelected,
+                        onClick = { onToolbarSelectionClicked(it.toolbarType) },
+                    )
+                }
             }
         }
     }
@@ -138,12 +148,11 @@ private fun ToolbarPositionOptions(
 
 @Composable
 private fun ToolbarPositionOption(
-    modifier: Modifier,
     option: ToolbarOption,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(modifier = modifier) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         ToolbarPositionImage(
             option = option,
             isSelected = isSelected,

@@ -7,16 +7,12 @@ package org.mozilla.fenix.onboarding.notification
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
-
-private val IMAGE_HEIGHT = 200.dp
 
 /**
  * Renders the main image for the "Notification" onboarding screen.
@@ -28,7 +24,6 @@ fun NotificationMainImage() {
     Image(
         painter = painterResource(R.drawable.ic_notification_permission),
         contentDescription = null, // Decorative only
-        modifier = Modifier.height(IMAGE_HEIGHT),
     )
 }
 

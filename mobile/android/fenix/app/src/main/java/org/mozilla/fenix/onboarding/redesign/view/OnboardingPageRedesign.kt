@@ -5,9 +5,12 @@
 package org.mozilla.fenix.onboarding.redesign.view
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -36,8 +39,10 @@ import org.mozilla.fenix.onboarding.view.OnboardingPageState
 import org.mozilla.fenix.onboarding.widget.SetSearchWidgetMainImage
 import org.mozilla.fenix.theme.FirefoxTheme
 
-const val TITLE_TOP_SPACER_WEIGHT = 0.3f
-const val BODY_BUTTON_SPACER_WEIGHT = 1f
+const val TITLE_TOP_SPACER_WEIGHT = 0.1f
+const val CONTENT_WEIGHT = 1f
+
+val CONTENT_IMAGE_HEIGHT = 176.dp
 
 /**
  * A composable for displaying onboarding page content.
@@ -50,19 +55,10 @@ fun OnboardingPageRedesign(
     pageState: OnboardingPageState,
     mainImage: @Composable () -> Unit = {},
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        CardView(
-            modifier = Modifier.weight(1f),
-            pageState = pageState,
-            mainImage = mainImage,
-        )
-    }
+    CardView(
+        pageState = pageState,
+        mainImage = mainImage,
+    )
 
     LaunchedEffect(pageState) {
         pageState.onRecordImpressionEvent()
@@ -87,12 +83,10 @@ private fun SecondaryButton(
 
 @Composable
 private fun CardView(
-    modifier: Modifier = Modifier,
     pageState: OnboardingPageState,
     mainImage: @Composable () -> Unit,
 ) {
     Card(
-        modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
@@ -103,8 +97,6 @@ private fun CardView(
             Spacer(modifier = Modifier.weight(TITLE_TOP_SPACER_WEIGHT))
 
             Content(pageState) { mainImage() }
-
-            Spacer(modifier = Modifier.weight(BODY_BUTTON_SPACER_WEIGHT))
 
             FilledButton(
                 modifier = Modifier
@@ -124,26 +116,35 @@ private fun CardView(
 }
 
 @Composable
-private fun Content(
+private fun ColumnScope.Content(
     pageState: OnboardingPageState,
     mainImage: @Composable () -> Unit,
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .weight(CONTENT_WEIGHT)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(36.dp),
     ) {
         Text(
             text = pageState.title,
             style = MaterialTheme.typography.headlineSmall,
         )
 
-        mainImage()
+        Box(
+            modifier = Modifier
+                .height(CONTENT_IMAGE_HEIGHT)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            mainImage()
+        }
 
         Text(
             text = pageState.description,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = FirefoxTheme.typography.body1,
+            style = FirefoxTheme.typography.subtitle1,
         )
     }
 }
