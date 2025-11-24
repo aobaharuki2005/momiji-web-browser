@@ -134,3 +134,35 @@ add_task(async function test_notsecure_label_without_tracking() {
   await toggleETP(tab);
   await BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_drag_and_drop() {
+  const tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: "https://example.com",
+    waitForLoad: true,
+  });
+
+  info("Start DnD");
+  let trustIcon = document.getElementById("trust-icon");
+  let newtabButton = document.getElementById("tabs-newtab-button");
+  await BrowserTestUtils.waitForCondition(() =>
+    BrowserTestUtils.isVisible(trustIcon)
+  );
+
+  let newTabOpened = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "https://example.com/",
+    true
+  );
+
+  await EventUtils.synthesizePlainDragAndDrop({
+    srcElement: trustIcon,
+    destElement: newtabButton,
+  });
+
+  let tabByDnD = await newTabOpened;
+  Assert.ok(tabByDnD, "DnD works from trust icon correctly");
+
+  await BrowserTestUtils.removeTab(tabByDnD);
+  await BrowserTestUtils.removeTab(tab);
+});

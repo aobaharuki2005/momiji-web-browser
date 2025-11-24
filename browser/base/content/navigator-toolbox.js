@@ -492,6 +492,11 @@ document.addEventListener(
       .addEventListener("dragstart", event => {
         gIdentityHandler.onDragStart(event);
       });
+    document
+      .getElementById("trust-icon-container")
+      .addEventListener("dragstart", event => {
+        gIdentityHandler.onDragStart(event);
+      });
 
     let trackingProtectionIconContainer = document.getElementById(
       "tracking-protection-icon-container"
