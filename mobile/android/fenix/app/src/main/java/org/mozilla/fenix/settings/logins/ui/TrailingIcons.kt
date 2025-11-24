@@ -72,7 +72,7 @@ private fun EyePasswordIconButtonPreview() {
                     .fillMaxWidth()
                     .padding(8.dp),
                 label = "",
-                trailingIcons = {
+                trailingIcon = {
                     EyePasswordIconButton(
                         isPasswordVisible = isPasswordVisible,
                         onTrailingIconClick = { isPasswordVisible = !isPasswordVisible },
@@ -105,7 +105,7 @@ private fun EyePasswordIconButtonPrivatePreview() {
                     .fillMaxWidth()
                     .padding(8.dp),
                 label = "",
-                trailingIcons = {
+                trailingIcon = {
                     EyePasswordIconButton(
                         isPasswordVisible = isPasswordVisible,
                         onTrailingIconClick = { isPasswordVisible = !isPasswordVisible },

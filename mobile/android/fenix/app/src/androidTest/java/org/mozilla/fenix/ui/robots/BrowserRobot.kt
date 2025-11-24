@@ -1293,6 +1293,9 @@ class BrowserRobot {
     }
 
     fun clickBrokenSiteFormSendButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickBrokenSiteFormSendButton: Trying to close the keyboard.")
+        closeSoftKeyboard()
+        Log.i(TAG, "clickBrokenSiteFormSendButton: Closed the keyboard.")
         Log.i(TAG, "clickBrokenSiteFormSendButton: Trying to click the \"Cancel\" button")
         composeTestRule.onNodeWithText(getStringResource(R.string.webcompat_reporter_send))
             .performClick()

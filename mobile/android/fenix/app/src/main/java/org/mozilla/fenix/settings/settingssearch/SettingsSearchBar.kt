@@ -6,9 +6,10 @@ package org.mozilla.fenix.settings.settingssearch
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -25,7 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.compose.base.textfield.TextFieldColors
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -49,7 +49,7 @@ fun SettingsSearchBar(
 
     TopAppBar(
         modifier = Modifier
-            .height(72.dp),
+            .wrapContentHeight(),
         title = {
             TextField(
                 value = searchQuery,
@@ -63,12 +63,12 @@ fun SettingsSearchBar(
                 placeholder = stringResource(R.string.settings_search_title),
                 singleLine = true,
                 errorText = stringResource(R.string.settings_search_error_message),
-                colors = TextFieldColors.default(
+                colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     errorIndicatorColor = Color.Transparent,
                 ),
-                trailingIcons = {
+                trailingIcon = {
                     when (state) {
                         is SettingsSearchState.SearchInProgress,
                          is SettingsSearchState.NoSearchResults,

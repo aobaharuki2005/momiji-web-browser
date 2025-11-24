@@ -48,8 +48,6 @@ import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.compose.base.textfield.TextFieldColors
-import mozilla.components.compose.base.textfield.TextFieldStyle
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -204,26 +202,18 @@ private fun LoginDetailMenu(
 
 @Composable
 private fun LoginDetailsUrl(store: LoginsStore, url: String) {
-    Text(
-        text = stringResource(R.string.preferences_passwords_saved_logins_site),
-        style = TextFieldStyle.default().labelStyle,
-        color = TextFieldColors.default().labelColor,
-        modifier = Modifier
-            .padding(horizontal = FirefoxTheme.layout.space.static200)
-            .width(FirefoxTheme.layout.size.containerMaxWidth),
-    )
-
     TextField(
         value = url,
         onValueChange = {},
         isEnabled = false,
         placeholder = "",
         errorText = "",
+        label = stringResource(R.string.preferences_passwords_saved_logins_site),
         modifier = Modifier
             .padding(horizontal = FirefoxTheme.layout.space.static200)
             .wrapContentHeight()
             .width(FirefoxTheme.layout.size.containerMaxWidth),
-        trailingIcons = {
+        trailingIcon = {
             IconButton(
                 onClick = {
                     store.dispatch(DetailLoginAction.GoToSiteClicked(url))
@@ -248,26 +238,18 @@ private fun LoginDetailsUsername(
     val usernameSnackbarText = stringResource(R.string.logins_username_copied)
     val coroutineScope = rememberCoroutineScope()
 
-    Text(
-        text = stringResource(R.string.preferences_passwords_saved_logins_username),
-        style = TextFieldStyle.default().labelStyle,
-        color = TextFieldColors.default().labelColor,
-        modifier = Modifier
-            .padding(horizontal = FirefoxTheme.layout.space.static200)
-            .width(FirefoxTheme.layout.size.containerMaxWidth),
-    )
-
     TextField(
         value = username,
         onValueChange = {},
         isEnabled = false,
         placeholder = "",
         errorText = "",
+        label = stringResource(R.string.preferences_passwords_saved_logins_username),
         modifier = Modifier
             .padding(horizontal = FirefoxTheme.layout.space.static200)
             .wrapContentHeight()
             .width(FirefoxTheme.layout.size.containerMaxWidth),
-        trailingIcons = {
+        trailingIcon = {
             IconButton(
                 onClick = {
                     store.dispatch(DetailLoginAction.CopyUsernameClicked(username))
@@ -302,8 +284,6 @@ private fun LoginDetailsPassword(
 
     Text(
         text = stringResource(R.string.preferences_passwords_saved_logins_password),
-        style = TextFieldStyle.default().labelStyle,
-        color = TextFieldColors.default().labelColor,
         modifier = Modifier
             .padding(horizontal = FirefoxTheme.layout.space.static200)
             .width(FirefoxTheme.layout.size.containerMaxWidth),
@@ -319,7 +299,7 @@ private fun LoginDetailsPassword(
             .padding(horizontal = FirefoxTheme.layout.space.static200)
             .wrapContentHeight()
             .width(FirefoxTheme.layout.size.containerMaxWidth),
-        trailingIcons = {
+        trailingIcon = {
             EyePasswordIconButton(
                 isPasswordVisible = isPasswordVisible,
                 onTrailingIconClick = { isPasswordVisible = !isPasswordVisible },

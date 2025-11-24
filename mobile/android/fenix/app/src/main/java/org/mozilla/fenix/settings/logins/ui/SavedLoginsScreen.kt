@@ -316,8 +316,6 @@ private fun LoginsListTopBar(
     )
 }
 
-private val IconButtonHeight = 48.dp
-
 @Composable
 private fun SearchBar(
     text: String,
@@ -330,40 +328,39 @@ private fun SearchBar(
         focusRequester.requestFocus()
     }
 
-    TextField(
-        value = text,
-        placeholder = stringResource(R.string.preferences_passwords_saved_logins_search_2),
-        onValueChange = {
-            store.dispatch(SearchLogins(searchText = it, loginItems = store.state.loginItems))
-        },
-        errorText = "",
-        modifier = Modifier
-            .fillMaxWidth()
-            .focusRequester(focusRequester),
-        minHeight = IconButtonHeight,
-        trailingIcons = {
-            if (text.isNotBlank()) {
-                IconButton(
-                    onClick = {
-                        store.dispatch(
-                            SearchLogins(
-                                searchText = "",
-                                loginItems = store.state.loginItems,
-                            ),
-                        )
-                    },
-                    contentDescription = null,
-                ) {
-                    Icon(
-                        painter = painterResource(iconsR.drawable.mozac_ic_cross_24),
+        TextField(
+            value = text,
+            placeholder = stringResource(R.string.preferences_passwords_saved_logins_search_2),
+            onValueChange = {
+                store.dispatch(SearchLogins(searchText = it, loginItems = store.state.loginItems))
+            },
+            errorText = "",
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
+            trailingIcon = {
+                if (text.isNotBlank()) {
+                    IconButton(
+                        onClick = {
+                            store.dispatch(
+                                SearchLogins(
+                                    searchText = "",
+                                    loginItems = store.state.loginItems,
+                                ),
+                            )
+                        },
                         contentDescription = null,
-                    )
+                    ) {
+                        Icon(
+                            painter = painterResource(iconsR.drawable.mozac_ic_cross_24),
+                            contentDescription = null,
+                        )
+                    }
                 }
-            }
-        },
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-    )
+            },
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+        )
 }
 
 @Composable

@@ -32,15 +32,12 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.compose.base.textfield.TextFieldColors
-import mozilla.components.compose.base.textfield.TextFieldStyle
+import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import mozilla.components.ui.icons.R as iconsR
-
-private val IconButtonHeight = 48.dp
 
 @Composable
 internal fun EditLoginScreen(store: LoginsStore) {
@@ -131,8 +128,8 @@ internal fun EditLoginTopBar(store: LoginsStore, loginItem: LoginItem) {
 private fun EditLoginUrl(url: String) {
     Text(
         text = stringResource(R.string.preferences_passwords_saved_logins_site),
-        style = TextFieldStyle.default().labelStyle,
-        color = TextFieldColors.default().labelColor,
+        style = AcornTheme.typography.caption,
+        color = AcornTheme.colors.textPrimary,
         modifier = Modifier
             .padding(horizontal = FirefoxTheme.layout.space.static200)
             .width(FirefoxTheme.layout.size.containerMaxWidth),
@@ -140,7 +137,7 @@ private fun EditLoginUrl(url: String) {
 
     Text(
         text = url,
-        style = TextFieldStyle.default().placeholderStyle,
+        style = AcornTheme.typography.subtitle1,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
         modifier = Modifier
             .padding(
@@ -171,8 +168,7 @@ private fun EditLoginUsername(store: LoginsStore, user: String) {
             )
             .width(FirefoxTheme.layout.size.containerMaxWidth),
         label = stringResource(R.string.preferences_passwords_saved_logins_username),
-        minHeight = IconButtonHeight,
-        trailingIcons = {
+        trailingIcon = {
             if (editState?.newUsername?.isNotEmpty() == true) {
                 CrossTextFieldButton {
                     store.dispatch(EditLoginAction.UsernameChanged(""))
@@ -204,8 +200,7 @@ private fun EditLoginPassword(store: LoginsStore, pass: String) {
                 )
                 .width(FirefoxTheme.layout.size.containerMaxWidth),
             label = stringResource(R.string.preferences_passwords_saved_logins_password),
-            minHeight = IconButtonHeight,
-            trailingIcons = {
+            trailingIcon = {
                 EyePasswordIconButton(
                     isPasswordVisible = isPasswordVisible,
                     onTrailingIconClick = {

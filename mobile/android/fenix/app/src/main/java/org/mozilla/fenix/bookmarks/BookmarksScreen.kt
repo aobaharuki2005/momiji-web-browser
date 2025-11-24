@@ -105,7 +105,6 @@ import mozilla.components.compose.base.snackbar.Snackbar
 import mozilla.components.compose.base.snackbar.displaySnackbar
 import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.compose.base.textfield.TextFieldColors
 import mozilla.components.compose.base.utils.BackInvokedHandler
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
@@ -138,7 +137,6 @@ import org.mozilla.fenix.search.SearchFragmentStore
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
-private val IconButtonHeight = 48.dp
 private const val MATERIAL_DESIGN_SCRIM = "#52000000"
 
 /**
@@ -1683,15 +1681,11 @@ private fun ClearableTextField(
             .onFocusChanged { isFocused = it.isFocused }
             .padding(0.dp)
             .paddingFromBaseline(0.dp),
-        minHeight = IconButtonHeight,
-        trailingIcons = {
+        trailingIcon = {
             if (isFocused && value.isNotEmpty()) {
                 CrossTextFieldButton { onValueChange("") }
             }
         },
-        colors = TextFieldColors.default(
-            placeholderColor = MaterialTheme.colorScheme.onSurface,
-        ),
     )
 }
 

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,7 +16,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -48,7 +46,6 @@ class TrailingIconScope(rowScope: RowScope) : RowScope by rowScope {
     ) = TrailingIconButton(
         iconId = iconsR.drawable.mozac_ic_eye_24,
         contentDescription = contentDescription,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
         onTrailingIconClick = onTrailingIconClick,
     )
 
@@ -62,7 +59,6 @@ class TrailingIconScope(rowScope: RowScope) : RowScope by rowScope {
     ) = TrailingIconButton(
         iconId = iconsR.drawable.mozac_ic_cross_circle_fill_24,
         contentDescription = contentDescription,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
         onTrailingIconClick = onTrailingIconClick,
     )
 
@@ -70,7 +66,6 @@ class TrailingIconScope(rowScope: RowScope) : RowScope by rowScope {
     private fun TrailingIconButton(
         @DrawableRes iconId: Int,
         contentDescription: Text?,
-        tint: Color,
         onTrailingIconClick: () -> Unit,
     ) {
         IconButton(
@@ -80,7 +75,6 @@ class TrailingIconScope(rowScope: RowScope) : RowScope by rowScope {
             Icon(
                 painter = painterResource(id = iconId),
                 contentDescription = null,
-                tint = tint,
             )
         }
     }
@@ -105,7 +99,7 @@ private fun EyeTextFieldButtonPreview() {
                     .fillMaxWidth()
                     .padding(8.dp),
                 label = "Eye",
-                trailingIcons = { EyeTextFieldButton { isPasswordVisible = !isPasswordVisible } },
+                trailingIcon = { EyeTextFieldButton { isPasswordVisible = !isPasswordVisible } },
                 visualTransformation = if (isPasswordVisible) {
                     VisualTransformation.None
                 } else {
@@ -138,7 +132,7 @@ private fun EyeTextFieldButtonPrivatePreview() {
                     .fillMaxWidth()
                     .padding(8.dp),
                 label = "Eye",
-                trailingIcons = { EyeTextFieldButton { isPasswordVisible = !isPasswordVisible } },
+                trailingIcon = { EyeTextFieldButton { isPasswordVisible = !isPasswordVisible } },
                 visualTransformation = if (isPasswordVisible) {
                     VisualTransformation.None
                 } else {
@@ -167,7 +161,7 @@ private fun CrossTextFieldButtonPreview() {
                     .fillMaxWidth()
                     .padding(8.dp),
                 label = "Cross",
-                trailingIcons = { CrossTextFieldButton { textFieldInput = "" } },
+                trailingIcon = { CrossTextFieldButton { textFieldInput = "" } },
             )
         }
     }
@@ -194,7 +188,7 @@ private fun CrossTextFieldButtonPrivatePreview() {
                     .fillMaxWidth()
                     .padding(8.dp),
                 label = "Cross",
-                trailingIcons = { CrossTextFieldButton { textFieldInput = "" } },
+                trailingIcon = { CrossTextFieldButton { textFieldInput = "" } },
             )
         }
     }

@@ -35,8 +35,6 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.compose.base.textfield.TextFieldColors
-import mozilla.components.compose.base.textfield.TextFieldStyle
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.ktx.util.URLStringUtils.isHttpOrHttps
 import mozilla.components.support.ktx.util.URLStringUtils.isValidHost
@@ -44,8 +42,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import mozilla.components.ui.icons.R as iconsR
-
-private val IconButtonHeight = 48.dp
 
 @Composable
 internal fun AddLoginScreen(store: LoginsStore) {
@@ -146,8 +142,7 @@ private fun AddLoginHost(store: LoginsStore) {
             )
             .width(FirefoxTheme.layout.size.containerMaxWidth),
         label = stringResource(R.string.preferences_passwords_saved_logins_site),
-        minHeight = IconButtonHeight,
-        trailingIcons = {
+        trailingIcon = {
             if (isFocused && isValidHost(host)) {
                 CrossTextFieldButton { store.dispatch(AddLoginAction.HostChanged("")) }
             }
@@ -162,8 +157,6 @@ private fun AddLoginHost(store: LoginsStore) {
             modifier = Modifier
                 .padding(horizontal = FirefoxTheme.layout.space.static200)
                 .width(FirefoxTheme.layout.size.containerMaxWidth),
-            style = TextFieldStyle.default().labelStyle,
-            color = TextFieldColors.default().placeholderColor,
         )
     }
 }
@@ -191,8 +184,7 @@ private fun AddLoginUsername(store: LoginsStore) {
             )
             .width(FirefoxTheme.layout.size.containerMaxWidth),
         label = stringResource(R.string.preferences_passwords_saved_logins_username),
-        minHeight = IconButtonHeight,
-        trailingIcons = {
+        trailingIcon = {
             if (isFocused && addLoginState?.username?.isNotEmpty() == true) {
                 CrossTextFieldButton { store.dispatch(AddLoginAction.UsernameChanged("")) }
             }
@@ -222,8 +214,7 @@ private fun AddLoginPassword(store: LoginsStore) {
             )
             .width(FirefoxTheme.layout.size.containerMaxWidth),
         label = stringResource(R.string.preferences_passwords_saved_logins_password),
-        minHeight = IconButtonHeight,
-        trailingIcons = {
+        trailingIcon = {
             if (isFocused && state?.password?.isNotEmpty() == true) {
                 CrossTextFieldButton { store.dispatch(AddLoginAction.PasswordChanged("")) }
             }
