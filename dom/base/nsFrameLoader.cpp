@@ -1879,8 +1879,11 @@ void nsFrameLoader::StartDestroy(bool aForProcessSwitch) {
         if (mozilla::SessionHistoryInParent()) {
           uint32_t addedEntries = 0;
           browsingContext->PreOrderWalk([&addedEntries](BrowsingContext* aBC) {
-            // The initial load doesn't increase history length.
-            addedEntries += aBC->GetHistoryEntryCount() - 1;
+            const uint32_t len = aBC->GetHistoryEntryCount();
+            // There might not be a SH entry yet, which is fine.
+            // The first entry doesn't increase history length, as it's added to
+            // it's parent entry
+            addedEntries += len > 0 ? len - 1 : 0;
           });
 
           nsID changeID = {};
