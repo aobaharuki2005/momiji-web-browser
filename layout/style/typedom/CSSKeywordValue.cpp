@@ -57,6 +57,11 @@ void CSSKeywordValue::SetValue(const nsACString& aArg, ErrorResult& aRv) {
 
 // end of CSSKeywordValue Web IDL implementation
 
+void CSSKeywordValue::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
+                                            nsACString& aDest) const {
+  aDest.Append(mValue);
+}
+
 CSSKeywordValue& CSSStyleValue::GetAsCSSKeywordValue() {
   MOZ_DIAGNOSTIC_ASSERT(mValueType == ValueType::Keyword);
 

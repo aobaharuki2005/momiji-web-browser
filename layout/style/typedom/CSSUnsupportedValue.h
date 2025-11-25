@@ -35,7 +35,8 @@ class CSSUnsupportedValue final : public CSSStyleValue {
 
   const CSSPropertyId& GetPropertyId() const { return mPropertyId; }
 
-  void GetValue(nsACString& aRetVal) const;
+  void ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
+                             nsACString& aDest) const;
 
  private:
   virtual ~CSSUnsupportedValue() = default;

@@ -73,17 +73,17 @@ void StylePropertyMap::Set(
     return;
   }
 
-  nsAutoCString value;
+  nsAutoCString cssText;
 
   if (styleValue.IsCSSUnsupportedValue()) {
     CSSUnsupportedValue& unsupportedValue =
         styleValue.GetAsCSSUnsupportedValue();
 
-    unsupportedValue.GetValue(value);
+    unsupportedValue.ToCssTextWithProperty(propertyId, cssText);
   } else if (styleValue.IsCSSKeywordValue()) {
     CSSKeywordValue& keywordValue = styleValue.GetAsCSSKeywordValue();
 
-    keywordValue.GetValue(value);
+    keywordValue.ToCssTextWithProperty(propertyId, cssText);
   } else {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
@@ -99,7 +99,7 @@ void StylePropertyMap::Set(
 
   nsCOMPtr<nsDOMCSSDeclaration> declaration = styledElement->Style();
 
-  declaration->SetProperty(aProperty, value, ""_ns, aRv);
+  declaration->SetProperty(aProperty, cssText, ""_ns, aRv);
 }
 
 void StylePropertyMap::Append(
