@@ -142,12 +142,8 @@ class nsView final : public nsIWidgetListener {
    */
   nsSize GetSize() const { return mSize; }
 
-  /**
-   * Destroys the associated widget for this view.  If this method is
-   * not called explicitly, the widget when be destroyed when its
-   * view gets destroyed.
-   */
-  void DestroyWidget();
+  // Stops listening to mWidget and clears it.
+  void DetachWidget();
 
   /**
    * Attach/detach a top level widget from this view. When attached, the view
@@ -176,10 +172,6 @@ class nsView final : public nsIWidgetListener {
    * Returns true if the view has a widget associated with it.
    */
   bool HasWidget() const { return mWindow != nullptr; }
-
-  void SetForcedRepaint(bool aForceRepaint) { mForcedRepaint = aForceRepaint; }
-
-  void SetNeedsWindowPropertiesSync();
 
 #ifdef DEBUG
   /**
@@ -226,8 +218,6 @@ class nsView final : public nsIWidgetListener {
  private:
   explicit nsView(nsViewManager* = nullptr);
 
-  bool ForcedRepaint() { return mForcedRepaint; }
-
   void SetSize(const nsSize& aSize) { mSize = aSize; }
 
   void CallOnAllRemoteChildren(
@@ -238,7 +228,6 @@ class nsView final : public nsIWidgetListener {
   nsCOMPtr<nsIWidget> mWindow;
   nsCOMPtr<nsIWidget> mPreviousWindow;
   nsSize mSize;
-  bool mForcedRepaint;
   bool mIsDirty = false;
 };
 

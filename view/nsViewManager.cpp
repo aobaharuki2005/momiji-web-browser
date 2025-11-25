@@ -150,25 +150,6 @@ void nsViewManager::FlushDelayedResize() {
   }
 }
 
-nsViewManager* nsViewManager::RootViewManager() const {
-  const auto* cur = this;
-  while (auto* parent = cur->GetParentViewManager()) {
-    cur = parent;
-  }
-  return const_cast<nsViewManager*>(cur);
-}
-
-nsViewManager* nsViewManager::GetParentViewManager() const {
-  if (!mPresShell) {
-    return nullptr;
-  }
-  auto* pc = mPresShell->GetPresContext();
-  if (auto* parent = pc->GetParentPresContext()) {
-    return parent->PresShell()->GetViewManager();
-  }
-  return nullptr;
-}
-
 void nsViewManager::PaintWindow(nsIWidget* aWidget) {
   RefPtr ps = mPresShell;
   if (!ps) {
