@@ -5,6 +5,7 @@
 /* eslint-disable import/no-unassigned-import */
 
 import {
+  gHasSts,
   gIsCertError,
   isCaptive,
   getCSSClass,
@@ -111,6 +112,19 @@ export class NetErrorCard extends MozLitElement {
     }
   }
 
+  shouldHideExceptionButton() {
+    let prefValue = RPMGetBoolPref(
+      "security.certerror.hideAddException",
+      false
+    );
+    if (prefValue) {
+      return true;
+    }
+
+    const isIframed = window.self !== window.top;
+    return gHasSts || !this.errorInfo.errorIsOverridable || isIframed;
+  }
+
   init() {
     document.l10n.setAttributes(
       document.querySelector("title"),
@@ -118,6 +132,7 @@ export class NetErrorCard extends MozLitElement {
     );
 
     this.errorInfo = this.getErrorInfo();
+    this.hideExceptionButton = this.shouldHideExceptionButton();
     this.hostname = HOST_NAME;
     const { port } = document.location;
     if (port && port != 443) {
@@ -199,7 +214,6 @@ export class NetErrorCard extends MozLitElement {
           learnMoreSupportPage: "connection-not-secure",
           viewCert: true,
           viewDateTime: true,
-          proceedButton: true,
         });
         break;
       }
@@ -220,7 +234,6 @@ export class NetErrorCard extends MozLitElement {
           learnMoreSupportPage: "connection-not-secure",
           viewCert: true,
           viewDateTime: true,
-          proceedButton: true,
         });
         break;
       }
@@ -241,7 +254,6 @@ export class NetErrorCard extends MozLitElement {
             learnMoreSupportPage: "time-errors",
             viewCert: true,
             viewDateTime: true,
-            proceedButton: true,
           });
         } else {
           content = this.advancedSectionTemplate({
@@ -257,7 +269,6 @@ export class NetErrorCard extends MozLitElement {
             learnMoreSupportPage: "time-errors",
             viewCert: true,
             viewDateTime: true,
-            proceedButton: true,
           });
         }
         break;
@@ -269,7 +280,6 @@ export class NetErrorCard extends MozLitElement {
           importantNote: "fp-certerror-self-signed-important-note",
           viewCert: true,
           viewDateTime: true,
-          proceedButton: true,
         });
         break;
       }
@@ -288,7 +298,6 @@ export class NetErrorCard extends MozLitElement {
           learnMoreSupportPage: "time-errors",
           viewCert: true,
           viewDateTime: true,
-          proceedButton: true,
         });
         break;
       }
@@ -301,7 +310,6 @@ export class NetErrorCard extends MozLitElement {
             error: this.errorInfo.errorCodeString,
           },
           learnMoreSupportPage: "connection-not-secure",
-          proceedButton: false,
         });
         break;
       }
@@ -315,7 +323,6 @@ export class NetErrorCard extends MozLitElement {
           learnMoreL10nId: "fp-learn-more-about-secure-connection-failures",
           learnMoreSupportPage: "connection-not-secure",
           viewCert: true,
-          proceedButton: true,
         });
         break;
       }
@@ -339,7 +346,6 @@ export class NetErrorCard extends MozLitElement {
       learnMoreSupportPage,
       viewCert,
       viewDateTime,
-      proceedButton,
     } = params;
     return html`<p>
         ${whyDangerousL10nId
@@ -405,7 +411,7 @@ export class NetErrorCard extends MozLitElement {
             data-l10n-args=${JSON.stringify({ datetime: Date.now() })}
           ></p>`
         : null}
-      ${proceedButton
+      ${!this.hideExceptionButton
         ? html` <moz-button
             id="exception-button"
             data-l10n-id="fp-certerror-override-exception-button"
@@ -505,7 +511,9 @@ export class NetErrorCard extends MozLitElement {
     this.certErrorDebugInfoShowing = false;
 
     // Reveal, but disabled (and grayed-out) for 3.0s.
-    this.exceptionButton.disabled = true;
+    if (this.exceptionButton) {
+      this.exceptionButton.disabled = true;
+    }
 
     // -
 
@@ -539,7 +547,9 @@ export class NetErrorCard extends MozLitElement {
     }
 
     // Enable and un-gray-out.
-    this.exceptionButton.disabled = false;
+    if (this.exceptionButton) {
+      this.exceptionButton.disabled = false;
+    }
   }
 
   async toggleCertErrorDebugInfoShowing(event) {
