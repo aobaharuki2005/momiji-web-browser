@@ -5,7 +5,9 @@
 package mozilla.components.feature.search.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
@@ -19,8 +21,6 @@ import mozilla.components.feature.search.storage.SearchMetadataStorage
 import mozilla.components.support.test.fakes.android.FakeSharedPreferences
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -28,7 +28,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
@@ -39,10 +38,8 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class SearchMiddlewareTest {
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
-    private val dispatcher = coroutinesTestRule.testDispatcher
 
+    private val dispatcher = StandardTestDispatcher()
     private lateinit var originalLocale: Locale
 
     @Before
@@ -924,7 +921,7 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `Loads additional search engine and honors user choice`() = runTestOnMain {
+    fun `Loads additional search engine and honors user choice`() = runTest(dispatcher) {
         val metadataStorage = SearchMetadataStorage(testContext, preferences = lazy { FakeSharedPreferences() })
         metadataStorage.setAdditionalSearchEngines(listOf("reddit"))
 
@@ -973,7 +970,7 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `Loads custom search engines`() = runTestOnMain {
+    fun `Loads custom search engines`() = runTest(dispatcher) {
         val searchEngine = SearchEngine(
             id = "test-search",
             name = "Test Engine",
@@ -1007,7 +1004,7 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `Loads default search engine ID`() = runTestOnMain {
+    fun `Loads default search engine ID`() = runTest(dispatcher) {
         val storage = SearchMetadataStorage(testContext)
         storage.setUserSelectedSearchEngine("test-id", null)
 
@@ -1245,7 +1242,7 @@ class SearchMiddlewareTest {
 
     @Test
     fun `Custom search engines - Create, Update, Delete`() {
-        runTestOnMain {
+        runTest(dispatcher) {
             val storage: SearchMiddleware.CustomStorage = mock()
             doReturn(emptyList<SearchEngine>()).`when`(storage).loadSearchEngineList()
 
@@ -1329,7 +1326,7 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN disabled engines list contains elements WHEN metadata storage is created THEN the engines are disabled`() = runTestOnMain {
+    fun `GIVEN disabled engines list contains elements WHEN metadata storage is created THEN the engines are disabled`() = runTest(dispatcher) {
         val additionalBundledSearchEngineIds = setOf("reddit", "youtube")
         val metadataStorage = SearchMetadataStorage(
             testContext,
@@ -1342,7 +1339,7 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `WHEN update disabled engine action is sent THEN search state and storage get updated`() = runTestOnMain {
+    fun `WHEN update disabled engine action is sent THEN search state and storage get updated`() = runTest(dispatcher) {
         val metadataStorage = SearchMetadataStorage(testContext, preferences = lazy { FakeSharedPreferences() })
         metadataStorage.setAdditionalSearchEngines(listOf("reddit"))
 
@@ -1387,7 +1384,7 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `WHEN restore hidden search engines action THEN hidden engines are added back to bundled engines list`() = runTestOnMain {
+    fun `WHEN restore hidden search engines action THEN hidden engines are added back to bundled engines list`() = runTest(dispatcher) {
         val metadataStorage = SearchMetadataStorage(testContext, preferences = lazy { FakeSharedPreferences() })
         val searchMiddleware = SearchMiddleware(
             testContext,
