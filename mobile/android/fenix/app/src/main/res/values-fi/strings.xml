@@ -1062,6 +1062,8 @@
   <string name="restart_warning_dialog_button_positive_2">Vaihda kuvake</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Peruuta</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Sovelluskuvakkeen päivittäminen epäonnistui. Poista nykyiset pikakuvakkeet ja yritä uudelleen.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -2348,6 +2350,14 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Salli %1$sin soveltaa automaattisesti poikkeuksia, joita tarvitaan verkkosivustojen merkittävien rikkoutumisten välttämiseksi.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Käytä myös automaattisesti poikkeuksia, jotka ovat tarpeen vain pienten ongelmien korjaamiseksi ja mukavuusominaisuuksien käyttöön ottamiseksi.</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Korjaa merkittävät sivusto-ongelmat (suositus)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Korjaa vähäiset sivusto-ongelmat</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">On käytettävä merkittävien ongelmien korjausten kanssa.</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Korjaa sivusto-ongelmat</string>
   <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Lue lisää</string>
   <!--
@@ -3585,6 +3595,8 @@
   <string name="microsurvey_close_handle_content_description">Sulje kysely</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Sulje</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Automaattisen täytön työkalut</string>
   <!--
     Debug drawer logins
 
@@ -3875,6 +3887,10 @@
   <string name="settings_search_clear_recent_searches_message">Tyhjennä kaikki</string>
   <!-- Section header for recent search results -->
   <string name="settings_search_recent_searches_section_header">Viimeisimmät hakutulokset</string>
+  <!-- Message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_title">Mitään ei löytynyt</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">Kokeile eri hakuehtoja</string>
   <!--
     Terms of use pop up prompt
 

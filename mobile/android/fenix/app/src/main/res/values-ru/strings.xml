@@ -319,7 +319,7 @@
   <!-- Browser menu label for navigating to the translation feature, which provides language translation options the current visited page -->
   <string name="browser_menu_translate_page_2">Перевести страницу</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
-  <string name="browser_menu_webcompat_reporter">Сообщить о сломанном сайте…</string>
+  <string name="browser_menu_webcompat_reporter">Сломанный сайт?…</string>
   <!-- Browser menu label for navigating to the Web Compat Reporter feature, which provides users the ability to send bug reports for broken sites. -->
   <string name="browser_menu_webcompat_reporter_2">Сообщить о сломанном сайте</string>
   <!-- Browser menu label that is displayed when the current page has been translated by the translation feature. -->

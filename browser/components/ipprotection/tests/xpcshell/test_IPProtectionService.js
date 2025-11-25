@@ -271,7 +271,7 @@ add_task(
 );
 
 /**
- * Tests that refetchEntlement returns errors if no linked VPN is found and
+ * Tests that refetchEntitlement returns errors if no linked VPN is found and
  * sends an event.
  */
 add_task(
