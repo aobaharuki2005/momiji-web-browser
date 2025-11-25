@@ -1774,12 +1774,10 @@ SettingGroupManager.registerGroups({
           {
             id: "lists",
             l10nId: "home-prefs-lists-header",
-            control: "moz-checkbox",
           },
           {
             id: "timer",
             l10nId: "home-prefs-timer-header",
-            control: "moz-checkbox",
           },
         ],
       },
@@ -1890,17 +1888,14 @@ SettingGroupManager.registerGroups({
           {
             id: "recentActivityVisited",
             l10nId: "home-prefs-highlights-option-visited-pages",
-            control: "moz-checkbox",
           },
           {
             id: "recentActivityBookmarks",
             l10nId: "home-prefs-highlights-options-bookmarks",
-            control: "moz-checkbox",
           },
           {
             id: "recentActivityDownloads",
             l10nId: "home-prefs-highlights-option-most-recent-download",
-            control: "moz-checkbox",
           },
         ],
       },
