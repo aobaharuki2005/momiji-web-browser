@@ -112,7 +112,6 @@
           "moz-src:///browser/components/newtab/SponsorProtection.sys.mjs",
         TabMetrics:
           "moz-src:///browser/components/tabbrowser/TabMetrics.sys.mjs",
-        TabNotes: "moz-src:///browser/components/tabbrowser/TabNotes.sys.mjs",
         TabStateFlusher:
           "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
         TaskbarTabsUtils:
@@ -9722,8 +9721,9 @@ var TabContextMenu = {
     let contextAddNote = document.getElementById("context_addNote");
     let contextEditNote = document.getElementById("context_editNote");
     if (gBrowser._tabNotesEnabled) {
-      let noteURL = this.contextTab.linkedBrowser.currentURI.spec;
-      let hasNote = gBrowser.TabNotes.has(noteURL);
+      let noteURL = this.contextTab.canonicalUrl;
+      let hasNote = this.TabNotes.has(noteURL);
+      contextAddNote.disabled = !noteURL;
       contextAddNote.hidden = hasNote;
       contextEditNote.hidden = !hasNote;
     } else {
@@ -10281,4 +10281,5 @@ var TabContextMenu = {
 
 ChromeUtils.defineESModuleGetters(TabContextMenu, {
   GenAI: "resource:///modules/GenAI.sys.mjs",
+  TabNotes: "moz-src:///browser/components/tabnotes/TabNotes.sys.mjs",
 });
