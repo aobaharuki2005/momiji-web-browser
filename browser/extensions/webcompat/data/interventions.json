@@ -5077,6 +5077,10 @@
       "1969245": {
         "issue": "broken-images",
         "matches": ["*://www.wills-vegan-store.com/*"]
+      },
+      "1998101": {
+        "issue": "broken-images",
+        "matches": ["*://*.wills-vegan-shop.de/*", "*://*.vegan-store.eu/*"]
       }
     },
     "interventions": [
