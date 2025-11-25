@@ -1603,6 +1603,8 @@ run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_websocket_offline.js"]
 
+["test_websocket_proxy.js"]
+
 ["test_websocket_server.js"]
 run-sequentially = ["true"] # node server exceptions dont replay well
 
