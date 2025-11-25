@@ -53,8 +53,8 @@ add_task(async function click_toolbar_button() {
   );
 
   let header = panelView.querySelector(
-    lazy.IPProtectionPanel.CONTENT_TAGNAME
-  ).headerEl;
+    `#${lazy.IPProtectionPanel.HEADER_AREA_ID}`
+  );
   Assert.ok(
     BrowserTestUtils.isVisible(header),
     "ipprotection-header component should be present"
@@ -99,8 +99,8 @@ add_task(async function test_panel_in_new_window() {
   );
 
   let header = panelView.querySelector(
-    lazy.IPProtectionPanel.CONTENT_TAGNAME
-  ).headerEl;
+    `#${lazy.IPProtectionPanel.HEADER_AREA_ID}`
+  );
   Assert.ok(
     BrowserTestUtils.isVisible(header),
     "ipprotection-header component should be present"

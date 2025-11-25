@@ -27,6 +27,8 @@ class BackupTest(MarionetteTestCase):
                 "browser.backup.log": True,
                 "browser.backup.archive.enabled": True,
                 "browser.backup.restore.enabled": True,
+                "browser.backup.archive.overridePlatformCheck": True,
+                "browser.backup.restore.overridePlatformCheck": True,
                 # Necessary to test Session Restore from backup, which relies on
                 # the crash restore mechanism.
                 "browser.sessionstore.resume_from_crash": True,

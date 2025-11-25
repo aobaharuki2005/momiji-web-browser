@@ -13,10 +13,6 @@ import androidx.fragment.app.DialogFragment
  * Be mindful to call [onConfirmRedirect] when you want to open the linked app.
  */
 abstract class RedirectDialogFragment : DialogFragment() {
-    /**
-     * The URL that triggered the dialog.
-     */
-    open val triggerUrl: String? = null
 
     /**
      * A callback to trigger a redirect action. Call it when you are ready to open the linked app. For instance,

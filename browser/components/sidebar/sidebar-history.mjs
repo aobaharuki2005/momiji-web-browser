@@ -21,6 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SidebarTreeView:
     "moz-src:///browser/components/sidebar/SidebarTreeView.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
@@ -101,6 +102,10 @@ export class SidebarHistory extends SidebarPage {
         child.hidden = isMultiSelectCommand;
       }
     }
+    let privateWindowMenuItem = this._contextMenu.querySelector(
+      "#sidebar-history-context-open-in-private-window"
+    );
+    privateWindowMenuItem.hidden = !lazy.PrivateBrowsingUtils.enabled;
   }
 
   handleContextMenuEvent(e) {
