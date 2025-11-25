@@ -228,7 +228,6 @@ class nsView final : public nsIWidgetListener {
   nsCOMPtr<nsIWidget> mWindow;
   nsCOMPtr<nsIWidget> mPreviousWindow;
   nsSize mSize;
-  bool mIsDirty = false;
 };
 
 #endif
