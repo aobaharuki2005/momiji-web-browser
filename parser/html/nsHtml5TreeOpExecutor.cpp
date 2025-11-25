@@ -186,9 +186,9 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
     }
   });
 
-  // This comes from nsXMLContentSink and nsHTMLContentSink
-  // If this parser has been marked as broken, treat the end of parse as
-  // forced termination.
+  // This comes from nsXMLContentSink and the old (now removed)
+  // nsHTMLContentSink. If this parser has been marked as broken, treat the end
+  // of parse as forced termination.
   DidBuildModelImpl(aTerminated || NS_FAILED(IsBroken()));
 
   bool destroying = true;

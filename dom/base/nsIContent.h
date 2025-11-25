@@ -407,7 +407,7 @@ class nsIContent : public nsINode {
    * element (through createElement() or cloneNode() generally) then add a
    * uint32_t aFromParser to the NS_NewXXX() constructor for your element and
    * have the parser pass the appropriate flags. See HTMLInputElement.cpp and
-   * nsHTMLContentSink::MakeContentObject().
+   * nsHtml5TreeBuilder::elementPopped().
    *
    * DO NOT USE THIS METHOD to get around the fact that it's hard to deal with
    * attributes dynamically.  If you make attributes affect your element from
@@ -429,7 +429,7 @@ class nsIContent : public nsINode {
    * element (through createElement() or cloneNode() generally) then add a
    * boolean aFromParser to the NS_NewXXX() constructor for your element and
    * have the parser pass true.  See HTMLInputElement.cpp and
-   * nsHTMLContentSink::MakeContentObject().
+   * nsHtml5TreeBuilder::elementPopped().
    *
    * @param aHaveNotified Whether there has been a
    *        ContentInserted/ContentAppended notification for this content node

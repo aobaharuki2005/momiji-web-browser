@@ -76,13 +76,7 @@ when all of the document has been tokenized and there aren't any pending
 nsParserContinueEvents. This can cause problems if the application assumes
 that it can monitor the load requests to determine when the document load has
 been completed. This is what happens in Mozilla. The document is considered
-completely loaded when all of the load requests have been satisfied. To delay
-the document load until all of the parsing has been completed the
-nsHTMLContentSink adds a dummy parser load request which is not removed until
-the nsHTMLContentSink's DidBuildModel is called. The CNavDTD will not call
-DidBuildModel until the final chunk of data has been passed to the parser
-through the OnDataAvailable and there aren't any pending
-nsParserContineEvents.
+completely loaded when all of the load requests have been satisfied.
 
 Currently the parser is ignores requests to be interrupted during the
 processing of script.  This is because a document.write followed by JavaScript
