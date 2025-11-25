@@ -62,6 +62,8 @@ for patch in \
  bug-1856290-ICU-20548-dateinterval-timezone.diff \
  bug-1954138-dtitvfmt-adopt-calendar.diff \
  bug-1972781-chinese-based-calendar.diff \
+ bug-2000225-ICU-23264-increase-measure-unit-capacity.diff \
+ bug-2000225-ICU-23262-missing-resource-error-for-iso8601-era.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch
