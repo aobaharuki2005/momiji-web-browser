@@ -37,6 +37,14 @@ class nsViewManager final {
   nsViewManager();
 
   /**
+   * Initialize the ViewManager
+   * Note: this instance does not hold a reference to the presshell
+   * because it holds a reference to this instance.
+   * @result The result of the initialization, NS_OK if no errors
+   */
+  nsresult Init();
+
+  /**
    * Create an ordinary view
    * @param aSize initial size for view
    *        XXX We should eliminate this parameter; you can set the bounds
@@ -100,11 +108,28 @@ class nsViewManager final {
   static uint32_t GetLastUserEventTime() { return gLastUserEventTime; }
   static void MaybeUpdateLastUserEventTime(mozilla::WidgetGUIEvent*);
 
+  /**
+   * Flush the accumulated dirty region to the widget and update widget
+   * geometry.
+   */
+  MOZ_CAN_RUN_SCRIPT void ProcessPendingUpdates();
+
  private:
   static uint32_t gLastUserEventTime;
 
+  /**
+   * Call WillPaint() on all view observers under this vm root.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CallWillPaintOnObservers();
+  static void CollectVMsForWillPaint(nsView* aView, nsViewManager* aParentVM,
+                                     nsTArray<RefPtr<nsViewManager>>& aVMs);
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoSetWindowDimensions(const nsSize&);
   bool ShouldDelayResize() const;
+
+  nsViewManager* RootViewManager() const;
+  nsViewManager* GetParentViewManager() const;
+  bool IsRootVM() const { return !GetParentViewManager(); }
 
   MOZ_CAN_RUN_SCRIPT void WillPaintWindow(nsIWidget* aWidget);
   MOZ_CAN_RUN_SCRIPT void PaintWindow(nsIWidget* aWidget);
