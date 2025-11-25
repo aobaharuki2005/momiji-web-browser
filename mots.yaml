@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-11-17T16:30:56.137888+00:00'
+updated_at: '2025-11-25T05:26:10.720332+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -753,6 +753,10 @@ people:
     bmo_id: 636237
     name: Maxx Crawford
     nick: maxx
+  - &mbeier
+    bmo_id: 754437
+    name: Moritz Beier
+    nick: mbeier
   - &mcarare
     bmo_id: 648814
     name: Mihai Adrian Carare
@@ -3477,9 +3481,10 @@ modules:
         peers:
           - *daisuke
           - *dao
-          - *mak
-          - *standard8
           - *jteow
+          - *mak
+          - *mbeier
+          - *standard8
         meta:
           components:
             - Firefox::Address Bar
@@ -4645,5 +4650,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: cfb3fce3f5f17682ce93b06b7bdca3f585eaaec5
-  export: 63226cccbcfa7f0d59349143a71ab4639e623650
+  config: 314ba8587bb32d8e00fe77b708be928a87143258
+  export: 83464afd72538dc8596edd7b749d9f461fe35cea
