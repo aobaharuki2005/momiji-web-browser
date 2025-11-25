@@ -250,13 +250,13 @@
 
   #tabbrowser-tabs[movingtab] & {
     position: relative;
-  }
 
-  @media (prefers-reduced-motion: no-preference) {
-    #tabbrowser-tabs[movingtab] :not(tab-group:active) > &[fadein]:not(:active, [multiselected]),
-    &[multiselected-move-together],
-    &[tabdrop-samewindow] {
-      transition: var(--tab-dragover-transition);
+    @media (prefers-reduced-motion: no-preference) {
+      :not(tab-group:active) > &[fadein]:not(:active, [multiselected]),
+      &[multiselected-move-together],
+      &[tabdrop-samewindow] {
+        transition: var(--tab-dragover-transition);
+      }
     }
   }
 
