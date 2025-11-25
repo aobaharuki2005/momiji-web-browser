@@ -2419,7 +2419,7 @@
   <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_social_media_trackers_description">Սահմանափակում է սոցիալական ցանցերի ունակությունը՝ հետագծելու ձեր դիտարկվող ակտիվությունը համացանցում:</string>
   <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_cookies_title">Միջակայքային հետագծման Cookie-ներ</string>
+  <string name="etp_cookies_title">Միջկայքային հետևող թխուկներ</string>
   <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_cookies_title_2">Միջկայքային թխուկներ</string>
   <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
@@ -2437,9 +2437,9 @@
   <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_tracking_content_description">Դադարեցվում է արտաքին գովազդի, տեսանյութերի և այլ բովանդակության բեռնումը, որը պարունակում է հետագծման կոդ: Կարող է ազդել կայքի որոշ գործառությունների վրա:</string>
   <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-  <string name="etp_panel_on">Պաշտպանությունը միացված է այս կայքի համար</string>
+  <string name="etp_panel_on">Պաշտպանությունները ՄԻԱՑՎԱԾ են այս կայքի համար</string>
   <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-  <string name="etp_panel_off">Պաշտպանությունները անջատված են այս կայքի համար</string>
+  <string name="etp_panel_off">Պաշտպանություններն ԱՆՋԱՏՎԱԾ են այս կայքի համար</string>
   <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
   <string name="enhanced_tracking_protection_exceptions">Ուժեղացված Հետագծման պաշտպանությունը անջատված է այս կայքերի համար</string>
   <!--
@@ -2569,7 +2569,7 @@
   <!-- About page link text to open privacy notice link -->
   <string name="about_privacy_notice">Գաղտնիության ծանուցում</string>
   <!-- About page link text to open know your rights link -->
-  <string name="about_know_your_rights">Իմացե՛ք Ձեր իրավունքները</string>
+  <string name="about_know_your_rights">Իմացեք Ձեր իրավունքները</string>
   <!-- About page link text to open terms of use link -->
   <string name="about_terms_of_use" tools:ignore="UnusedResources">Օգտագործման պայմաններ</string>
   <!-- About page link text to open licensing information link -->
@@ -2703,7 +2703,7 @@
   <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_set_up_now">Տեղակայել հիմա</string>
   <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
-  <string name="logins_biometric_prompt_message_pin">Ապակողպել ձեր սարքը</string>
+  <string name="logins_biometric_prompt_message_pin">Ապակողպեք Ձեր սարքը</string>
   <!-- Title for Accessibility Force Enable Zoom Preference -->
   <string name="preference_accessibility_force_enable_zoom">Մեծացնել բոլոր կայքերը</string>
   <!-- Summary for Accessibility Force Enable Zoom Preference -->
@@ -2941,7 +2941,7 @@
   <!-- Browser menu button that adds a shortcut to the home fragment -->
   <string name="browser_menu_add_to_shortcuts">Հավելել դյուրանցումներին</string>
   <!-- Browser menu button that removes a shortcut from the home fragment -->
-  <string name="browser_menu_remove_from_shortcuts">Հեռացնել դյուրանցումներից</string>
+  <string name="browser_menu_remove_from_shortcuts">Հանել դյուրանցումներից</string>
   <!--
     text shown before the issuer name to indicate who its verified by, %1$s is the name of
     the certificate authority that verified the ticket
@@ -3864,7 +3864,7 @@
   <!-- Title for a prompt asking the user to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
   <string name="review_prompt_rate_header">Շնորհակալություն %1$s-ին սիրելու համար։ Ունե՞ք վայրկյան՝ Ձեր սերը գնահատելու համար։</string>
   <!-- Label for a button proceeding to rate the app on Google Play Store. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="review_prompt_rate_button">Գնահատեք %1$s-ը Play Store-ում</string>
+  <string name="review_prompt_rate_button">Գնահատել %1$s-ը Play Store-ում</string>
   <!-- Title for a prompt asking the user send us feedback. %1$s is the name of the app (for example "Firefox"). -->
   <string name="review_prompt_feedback_header">Ցավում ենք, որ խնդիրներ ունեք։ Տեղեկացրեք մեզ, թե ինչպես կարող ենք բարելավել %1$s-ը։</string>
   <!-- Label for a button opening a feedback forum -->
