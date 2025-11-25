@@ -59,14 +59,20 @@ def sort_paths(paths):
 
 def parse_toml_str(contents):
     """
-    Parse TOML contents using toml
+    Parse TOML contents using rtoml (fastest), tomllib, or toml
     """
     try:
-        from tomllib import TOMLDecodeError
-        from tomllib import loads as TOMLloads
+        import rtoml
+
+        TOMLDecodeError = ValueError  # rtoml raises ValueError on parse errors
+        TOMLloads = rtoml.loads
     except ImportError:
-        from toml import TomlDecodeError as TOMLDecodeError
-        from toml import loads as TOMLloads
+        try:
+            from tomllib import TOMLDecodeError
+            from tomllib import loads as TOMLloads
+        except ImportError:
+            from toml import TomlDecodeError as TOMLDecodeError
+            from toml import loads as TOMLloads
 
     error = None
     manifest = None
