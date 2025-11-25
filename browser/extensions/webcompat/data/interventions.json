@@ -5258,6 +5258,23 @@
       }
     ]
   },
+  "1978572": {
+    "label": "store.renishaw.com",
+    "bugs": {
+      "1978572": {
+        "issue": "broken-interactive-elements",
+        "matches": ["*://store.renishaw.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "css": ["bug1978572-store.renishaw.com-fix-range-sliders.css"]
+        }
+      }
+    ]
+  },
   "1934908": {
     "label": "www.cbsnews.com",
     "bugs": {
