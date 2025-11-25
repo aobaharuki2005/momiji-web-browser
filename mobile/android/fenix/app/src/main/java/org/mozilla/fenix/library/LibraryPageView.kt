@@ -12,6 +12,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.setToolbarColors
+import com.google.android.material.R as materialR
 
 open class LibraryPageView(
     val containerView: ViewGroup,
@@ -24,8 +25,8 @@ open class LibraryPageView(
     ) {
         updateToolbar(
             title = title,
-            foregroundColor = context.getColorFromAttr(R.attr.textPrimary),
-            backgroundColor = context.getColorFromAttr(R.attr.layer1),
+            foregroundColor = context.getColorFromAttr(materialR.attr.colorOnSurface),
+            backgroundColor = context.getColorFromAttr(materialR.attr.colorSurface),
         )
     }
 

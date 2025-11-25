@@ -6,8 +6,6 @@
     <!-- Design system color attributes -->
 
     <!-- Layers -->
-    <!-- Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header -->
-    <attr name="layer1" format="reference" />
     <!-- Card background, Menu background, Dialog, Banner -->
     <attr name="layer2" format="reference" />
     <!-- Search -->
