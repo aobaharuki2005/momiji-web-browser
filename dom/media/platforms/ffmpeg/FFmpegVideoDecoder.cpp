@@ -1200,21 +1200,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   });
 
 #if defined(MOZ_WIDGET_ANDROID) && defined(USING_MOZFFVPX)
-  RefPtr<MediaDrmCryptoInfo> cryptoInfo;
-  if (aSample->mCrypto.IsEncrypted()) {
-    if (NS_WARN_IF(!mCDM)) {
-      return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                         RESULT_DETAIL("Missing CDM for encrypted sample"));
-    }
-
-    cryptoInfo = mCDM->CreateCryptoInfo(aSample);
-    if (NS_WARN_IF(!cryptoInfo)) {
-      return MediaResult(
-          NS_ERROR_DOM_MEDIA_DECODE_ERR,
-          RESULT_DETAIL("Failed to create CryptoInfo for encrypted sample"));
-    }
-
-    packet->moz_ndk_crypto_info = cryptoInfo->GetNdkCryptoInfo();
+  MediaResult ret = MaybeAttachCryptoInfo(aSample, packet);
+  if (NS_FAILED(ret)) {
+    return ret;
   }
 #endif
 
@@ -2470,6 +2458,14 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitMediaCodecDecoder() {
     FFMPEG_LOG("  failed to allocate extradata.");
     return ret;
   }
+
+#  ifdef USING_MOZFFVPX
+  ret = MaybeAttachCDM();
+  if (NS_FAILED(ret)) {
+    FFMPEG_LOG("  failed to attach CDM.");
+    return ret;
+  }
+#  endif
 
   if (mLib->avcodec_open2(mCodecContext, codec, nullptr) < 0) {
     FFMPEG_LOG("  avcodec_open2 failed for MediaCodec decoder");
