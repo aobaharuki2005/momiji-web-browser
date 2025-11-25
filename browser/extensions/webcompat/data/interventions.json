@@ -5920,11 +5920,14 @@
     ]
   },
   "1996823": {
-    "label": "rogers.com",
+    "label": "rogers.com and fido.ca",
     "bugs": {
       "1996823": {
         "issue": "page-fails-to-load",
-        "matches": ["*://www.rogers.com/bbapp/bbapi.js*"]
+        "matches": [
+          "*://www.rogers.com/bbapp/bbapi.js*",
+          "*://www.fido.ca/bbapp/bbapi.js*"
+        ]
       }
     },
     "interventions": [
@@ -5934,7 +5937,10 @@
           {
             "find": "window\\.location\\.href = link;",
             "replace": "let url = new URL(window.location.href); url.hash = link; window.location.href = url.href;",
-            "urls": ["*://www.rogers.com/bbapp/bbapi.js*"]
+            "urls": [
+              "*://www.rogers.com/bbapp/bbapi.js*",
+              "*://www.fido.ca/bbapp/bbapi.js*"
+            ]
           }
         ]
       }
