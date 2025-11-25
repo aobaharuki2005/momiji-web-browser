@@ -1239,7 +1239,10 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
   }
 
   // If the object has dense elements, mark the dense elements as
-  // maybe-in-iteration.
+  // maybe-in-iteration. However if we're unregistered (as is the case in
+  // an Object.keys scalar replacement), we're not able to do the appropriate
+  // invalidations on deletion etc. anyway. Accordingly, we're forced to just
+  // disable the indices optimization for this iterator entirely.
   //
   // The iterator is a snapshot so if indexed properties are added after this
   // point we don't need to do anything. However, the object might have sparse
@@ -1248,9 +1251,11 @@ static PropertyIteratorObject* GetIteratorImpl(JSContext* cx,
   //
   // In debug builds, AssertDenseElementsNotIterated is used to check the flag
   // is set correctly.
-  if (!SkipRegistration) {
-    if (obj->is<NativeObject>() &&
-        obj->as<NativeObject>().getDenseInitializedLength() > 0) {
+  if (obj->is<NativeObject>() &&
+      obj->as<NativeObject>().getDenseInitializedLength() > 0) {
+    if (SkipRegistration) {
+      supportsIndices = false;
+    } else {
       obj->as<NativeObject>().markDenseElementsMaybeInIteration();
     }
   }
