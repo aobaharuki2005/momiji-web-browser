@@ -1403,6 +1403,7 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
           icScript_->removeInlinedChild(loc.bytecodeToOffset(script_));
         }
         fallbackStub->setTrialInliningState(TrialInliningState::Failure);
+        oracle_->ignoreFailedICHash();
         return false;
       }
       case AbortReason::Error:
