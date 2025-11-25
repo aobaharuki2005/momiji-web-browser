@@ -10,7 +10,9 @@ function test(o, deleter) {
 
 function test2(o, deleter) {
   var result = 0;
-  for (var s of Object.keys(o)) {
+  var keys = Object.keys(o);
+  for (var i = 0; i < keys.length; i++) {
+    var s = keys[i];
     if (!o.hasOwnProperty(s)) { continue; }
     result += o[s];
     deleter(o);
@@ -37,6 +39,7 @@ assertEq(test([1,2], (o) => {o.length = 0}), 1);
 assertEq(test({x: 1, y: 2, z: 3}, (o) => delete o.y), 4);
 assertEq(test([1,2,3], (o) => delete o[1]), 4);
 assertEq(test([1,2,3,4], (o) => {o.length = 2}), 3);
+assertEq(test([,2,3], (o) => o.reverse()), 2);
 
 assertEq(test({x: 1, y: 2, z: 3}, (o) => delete o.x), 6);
 assertEq(test([1,2,3], (o) => delete o[0]), 6);
@@ -49,6 +52,7 @@ assertEq(test2([1,2], (o) => {o.length = 0}), 1);
 assertEq(test2({x: 1, y: 2, z: 3}, (o) => delete o.y), 4);
 assertEq(test2([1,2,3], (o) => delete o[1]), 4);
 assertEq(test2([1,2,3,4], (o) => {o.length = 2}), 3);
+assertEq(test2([,2,3], (o) => o.reverse()), 2);
 
 assertEq(test2({x: 1, y: 2, z: 3}, (o) => delete o.x), 6);
 assertEq(test2([1,2,3], (o) => delete o[0]), 6);

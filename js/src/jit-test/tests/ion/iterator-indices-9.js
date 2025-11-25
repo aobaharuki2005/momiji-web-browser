@@ -18,14 +18,18 @@ function test(obj) {
 
 function test2(obj) {
   let index = 0;
-  for (var s of Object.keys(obj)) {
+  var keys = Object.keys(obj);
+  for (var i = 0; i < keys.length; i++) {
+    var s = keys[i];
     if (s.startsWith("test")) {
       obj[s] = index;
     }
     index++;
   }
   index = 0;
-  for (var s of Object.keys(obj)) {
+  var keys = Object.keys(obj);
+  for (var i = 0; i < keys.length; i++) {
+    var s = keys[i];
     if (s.startsWith("test")) {
       assertEq(obj[s], index);
     }

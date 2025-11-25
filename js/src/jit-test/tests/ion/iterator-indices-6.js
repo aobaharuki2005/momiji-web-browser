@@ -17,14 +17,19 @@ function test(o1, o2) {
 
 function test2(o1, o2) {
   var count = 0;
-  for (var s1 of Object.keys(o1)) {
-    for (var s2 of Object.keys(o2)) {
-      if (Object.hasOwn(o1, s1)) {
-  count += o1[s1];
-      }
-      if (Object.hasOwn(o2, s2)) {
-  count += o2[s2];
-      }
+  var keys1 = Object.keys(o1);
+  for (var i = 0; i < keys1.length; i++) {
+    var s1 = keys1[i];
+
+      var keys2 = Object.keys(o2);
+      for (var j = 0; j < keys2.length; j++) {
+        var s2 = keys2[i];
+        if (Object.hasOwn(o1, s1)) {
+          count += o1[s1];
+        }
+        if (Object.hasOwn(o2, s2)) {
+          count += o2[s2];
+        }
     }
   }
   assertEq(count, 2);

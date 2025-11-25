@@ -18,9 +18,11 @@ function foo(o, trigger) {
 
 function foo2(o, trigger) {
     var result;
-    for (var key of Object.keys(o)) {
-    result = o[key];
-    bar(o, trigger);
+      var keys = Object.keys(o);
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        result = o[key];
+        bar(o, trigger);
     }
     return result;
 }

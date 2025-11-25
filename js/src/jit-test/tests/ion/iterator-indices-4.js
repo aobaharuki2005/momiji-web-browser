@@ -7,7 +7,9 @@ function foo(obj) {
 }
 
 function foo2(obj) {
-  for (var key of Object.keys(obj)) {
+  var keys = Object.keys(obj);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
     assertEq(id(obj[key]), obj[key]);
   }
 }

@@ -7,7 +7,9 @@ function test(obj, expected) {
 }
 function test2(obj, expected) {
   var actual = 0;
-  for (var s of Object.keys(obj)) {
+  var keys = Object.keys(obj);
+  for (var i = 0; i < keys.length; i++) {
+    var s = keys[i];
     actual += obj[s];
   }
   assertEq(actual, expected);
