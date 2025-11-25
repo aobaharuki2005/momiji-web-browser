@@ -63,6 +63,7 @@ pypi-optional:orjson>=3.10:json operations will be slower in various tools
 # We aren't (yet) able to pin packages in automation, so we have to
 # support down to the oldest locally-installed version (5.4.2).
 pypi-optional:psutil>=5.4.2:telemetry will be missing some data
+pypi-optional:rtoml>=0.11.0:toml operations will be slower in various tools
 pypi-optional:zstandard>=0.11.1,<=0.24.0:zstd archives will not be possible to extract
 vendored-fallback:pyyaml:third_party/python/pyyaml/lib/:faster native loading is disabled
 vendored:third_party/python/ansicon
