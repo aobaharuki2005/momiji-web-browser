@@ -40,7 +40,6 @@ private val logger = Logger(DistributionIdManager::class.simpleName)
  * @param packageManager device package manager for checking installed packages
  * @param browserStoreProvider used to update and fetch the stored distribution Id
  * @param distributionProviderChecker used for checking content providers for a distribution provider
- * @param legacyDistributionProviderChecker used for checking content providers for a distribution provider
  * @param distributionSettings used to persist and retrieve the distribution ID
  * @param appPreinstalledOnVivoDevice checks if the vivo preinstalled file exists.
  * @param isDtTelefonicaInstalled checks if the DT telefonica app is installed on the device
@@ -50,7 +49,6 @@ class DistributionIdManager(
     private val packageManager: PackageManagerWrapper,
     private val browserStoreProvider: DistributionBrowserStoreProvider,
     private val distributionProviderChecker: DistributionProviderChecker,
-    private val legacyDistributionProviderChecker: DistributionProviderChecker,
     private val distributionSettings: DistributionSettings,
     private val appPreinstalledOnVivoDevice: () -> Boolean = { wasAppPreinstalledOnVivoDevice() },
     private val isDtTelefonicaInstalled: () -> Boolean = { isDtTelefonicaInstalled(packageManager) },
@@ -69,9 +67,8 @@ class DistributionIdManager(
         distribution?.let { return it.id }
 
         val provider = distributionProviderChecker.queryProvider()
-        val providerLegacy = legacyDistributionProviderChecker.queryProvider()
 
-        val isProviderDigitalTurbine = isProviderDigitalTurbine(provider) || isProviderDigitalTurbine(providerLegacy)
+        val isProviderDigitalTurbine = isProviderDigitalTurbine(provider)
 
         val savedId = distributionSettings.getDistributionId()
 
@@ -85,43 +82,9 @@ class DistributionIdManager(
             else -> Distribution.DEFAULT
         }
 
-        recordProviderCheckerEvents(
-            isProviderDigitalTurbine = isProviderDigitalTurbine(provider),
-            isLegacyProviderDigitalTurbine = isProviderDigitalTurbine(providerLegacy),
-            distributionMetricsProvider = DefaultDistributionMetricsProvider(),
-        )
-
         setDistribution(distribution)
 
         return distribution.id
-    }
-
-    @VisibleForTesting
-    internal fun recordProviderCheckerEvents(
-        isProviderDigitalTurbine: Boolean,
-        isLegacyProviderDigitalTurbine: Boolean,
-        distributionMetricsProvider: DistributionMetricsProvider,
-    ) {
-        when {
-            isProviderDigitalTurbine && isDtTelefonicaInstalled() -> {
-                distributionMetricsProvider.recordDt001Detected()
-            }
-            isLegacyProviderDigitalTurbine && isDtTelefonicaInstalled() -> {
-                distributionMetricsProvider.recordDt001LegacyDetected()
-            }
-            isProviderDigitalTurbine && isDtUsaInstalled() -> {
-                distributionMetricsProvider.recordDt002Detected()
-            }
-            isLegacyProviderDigitalTurbine && isDtUsaInstalled() -> {
-                distributionMetricsProvider.recordDt002LegacyDetected()
-            }
-            isProviderDigitalTurbine -> {
-                distributionMetricsProvider.recordDt003Detected()
-            }
-            isLegacyProviderDigitalTurbine -> {
-                distributionMetricsProvider.recordDt003LegacyDetected()
-            }
-        }
     }
 
     /**

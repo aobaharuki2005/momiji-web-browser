@@ -48,7 +48,6 @@ import org.mozilla.fenix.distributions.DefaultDistributionBrowserStoreProvider
 import org.mozilla.fenix.distributions.DefaultDistributionProviderChecker
 import org.mozilla.fenix.distributions.DefaultDistributionSettings
 import org.mozilla.fenix.distributions.DistributionIdManager
-import org.mozilla.fenix.distributions.LegacyDistributionProviderChecker
 import org.mozilla.fenix.ext.asRecentTabs
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.filterState
@@ -349,7 +348,6 @@ class Components(private val context: Context) {
             packageManager = context.packageManagerWrapper,
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(core.store),
             distributionProviderChecker = DefaultDistributionProviderChecker(context),
-            legacyDistributionProviderChecker = LegacyDistributionProviderChecker(context),
             distributionSettings = DefaultDistributionSettings(settings),
         )
     }

@@ -27,7 +27,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.components.metrics.MarketingAttributionService
 import org.mozilla.fenix.distributions.DefaultDistributionProviderChecker
-import org.mozilla.fenix.distributions.LegacyDistributionProviderChecker
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -146,7 +145,6 @@ private fun DebugInfo(
         Button(
             onClick = {
                 DefaultDistributionProviderChecker(context).queryProvider()
-                LegacyDistributionProviderChecker(context).queryProvider()
             },
         ) {
             Text(

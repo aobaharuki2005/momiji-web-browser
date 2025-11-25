@@ -65,10 +65,6 @@ class FenixApplicationTest {
         override fun queryProvider(): String? = null
     }
 
-    private val testLegacyDistributionProviderChecker = object : DistributionProviderChecker {
-        override fun queryProvider(): String? = null
-    }
-
     private val testDistributionSettings = object : DistributionSettings {
         override fun getDistributionId(): String = ""
         override fun saveDistributionId(id: String) = Unit
@@ -86,7 +82,6 @@ class FenixApplicationTest {
             packageManager = testContext.packageManagerWrapper,
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(browserStore),
             distributionProviderChecker = testDistributionProviderChecker,
-            legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
         )
     }
