@@ -191,6 +191,7 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
   }
   const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
   DisplayItemType type = aItem->GetType();
+  const ActiveScrolledRoot* stickyAsr = nullptr;
   if (type == DisplayItemType::TYPE_STICKY_POSITION) {
     // For sticky position items, the ASR is computed differently depending on
     // whether the item has a fixed descendant or not. But for WebRender
@@ -199,6 +200,8 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
     // the sticky item.
     auto* sticky = static_cast<nsDisplayStickyPosition*>(aItem);
     asr = sticky->GetContainerASR();
+    stickyAsr = ActiveScrolledRoot::GetStickyASRFromFrame(sticky->Frame());
+    MOZ_ASSERT(stickyAsr);
   }
 
   CLIP_LOG("processing item %p (%s) asr %p clip %p, inherited = %p\n", aItem,
@@ -250,20 +253,25 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
     clip = clip->mParent;
   }
 
-  // There are two ASR chains here that we need to be fully defined. One is the
-  // ASR chain pointed to by |asr|. The other is the
-  // ASR chain pointed to by clip->mASR. We pick the leafmost
-  // of these two chains because that one will include the other. Calling
-  // DefineSpatialNodes with this leafmost ASR will recursively define all the
-  // ASRs that we care about for this item, but will not actually push
-  // anything onto the WR stack.
-  const ActiveScrolledRoot* leafmostASR = asr;
-  if (clip) {
-    leafmostASR = ActiveScrolledRoot::PickDescendant(leafmostASR, clip->mASR);
+  // There are up to three ASR chains here that we need to be fully defined:
+  //  1. The ASR chain pointed to by |asr|
+  //  2. The ASR chain pointed to by clip->mASR
+  //  3. For a sticky item, the ASR chain pointed to by the item's sticky ASR.
+  //     This one is needed so that when we create WebRender commands for the
+  //     sticky item, we can give WebRender accurate information about the
+  //     spatial node we're in.
+  // These chains will often be the same, or one will include the other,
+  // but we can't rely on that always being the case, so we make a
+  // DefineSpatialNodes call on all three. These calls will recursively
+  // define all the ASRs that we care about for this item, but will not
+  // actually push anything onto the WR stack.
+  (void)DefineSpatialNodes(aBuilder, asr, aItem);
+  if (clip && clip->mASR != asr) {
+    (void)DefineSpatialNodes(aBuilder, clip->mASR, aItem);
   }
-  Maybe<wr::WrSpatialId> leafmostId =
-      DefineSpatialNodes(aBuilder, leafmostASR, aItem);
-  (void)leafmostId;
+  if (stickyAsr && stickyAsr != asr) {
+    (void)DefineSpatialNodes(aBuilder, stickyAsr, aItem);
+  }
 
   // Define all the clips in the item's clip chain, and obtain a clip chain id
   // for it.
