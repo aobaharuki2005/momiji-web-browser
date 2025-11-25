@@ -95,11 +95,7 @@ void ICU4XChineseBasedCalendar::handleComputeFields(int32_t julianDay,
   }
   MOZ_ASSERT(date);
 
-  MonthCode monthCode = monthCodeFrom(date.get(), status);
-  if (U_FAILURE(status)) {
-    return;
-  }
-
+  MonthCode monthCode = monthCodeFrom(date.get());
   int32_t extendedYear = icu4x::capi::icu4x_Date_extended_year_mv1(date.get());
   int32_t month = icu4x::capi::icu4x_Date_ordinal_month_mv1(date.get());
   int32_t dayOfMonth = icu4x::capi::icu4x_Date_day_of_month_mv1(date.get());
