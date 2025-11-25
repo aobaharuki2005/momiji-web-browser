@@ -69,9 +69,6 @@ class ClipManager {
                           const wr::WrSpatialId& aSpatialId);
   void PopOverrideForASR(const ActiveScrolledRoot* aASR);
 
-  void PushStickyItem(const nsDisplayStickyPosition* aItem);
-  void PopStickyItem();
-
  private:
   wr::WrSpatialId SpatialIdAfterOverride(const wr::WrSpatialId& aSpatialId);
   wr::WrSpatialId GetSpatialId(const ActiveScrolledRoot* aASR);
@@ -84,8 +81,6 @@ class ClipManager {
   Maybe<wr::WrSpatialId> DefineStickyNode(
       nsDisplayListBuilder* aBuilder, Maybe<wr::WrSpatialId> aParentSpatialId,
       const ActiveScrolledRoot* aASR, nsDisplayItem* aItem);
-  const nsDisplayStickyPosition* FindStickyItem(
-      nsDisplayItem* aItemWithStickyASR, const nsIFrame* aStickyFrame) const;
 
   Maybe<wr::WrClipChainId> DefineClipChain(const DisplayItemClipChain* aChain,
                                            int32_t aAppUnitsPerDevPixel);
@@ -126,11 +121,6 @@ class ClipManager {
   // be multiple different "Y" clips (in case of nested cache overrides), which
   // is why we need a stack.
   std::unordered_map<wr::WrSpatialId, std::stack<wr::WrSpatialId>> mASROverride;
-
-  // A stack of sticky display items that WebRender display list building has
-  // entered. This is used to find the sticky display item corresponding to
-  // a sticky frame when creating a sticky spatial node in DefineStickyNode.
-  std::vector<const nsDisplayStickyPosition*> mStickyItemStack;
 
   // This holds some clip state for a single nsDisplayItem
   struct ItemClips {

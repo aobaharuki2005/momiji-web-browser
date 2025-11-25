@@ -1992,16 +1992,6 @@ struct MOZ_STACK_CLASS WebRenderCommandBuilder::AutoOpaqueRegionStateTracker {
   }
 };
 
-struct MOZ_STACK_CLASS AutoEnterStickyItem {
-  ClipManager& mClipManager;
-
-  AutoEnterStickyItem(ClipManager& aClipManager, nsDisplayStickyPosition* aItem)
-      : mClipManager(aClipManager) {
-    mClipManager.PushStickyItem(aItem);
-  }
-  ~AutoEnterStickyItem() { mClipManager.PopStickyItem(); }
-};
-
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     nsDisplayList* aDisplayList, nsDisplayItem* aWrappingItem,
     nsDisplayListBuilder* aDisplayListBuilder, const StackingContextHelper& aSc,
@@ -2048,12 +2038,6 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     // them got cached with a flattened opacity values., which may no longer be
     // applied.
     Maybe<AutoDisplayItemCacheSuppressor> cacheSuppressor;
-
-    Maybe<AutoEnterStickyItem> autoStickyItem;
-    if (itemType == DisplayItemType::TYPE_STICKY_POSITION) {
-      autoStickyItem.emplace(mClipManager,
-                             static_cast<nsDisplayStickyPosition*>(item));
-    }
 
     if (itemType == DisplayItemType::TYPE_OPACITY) {
       nsDisplayOpacity* opacity = static_cast<nsDisplayOpacity*>(item);
