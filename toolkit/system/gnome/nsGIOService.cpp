@@ -30,6 +30,7 @@
 #  include <dlfcn.h>
 #  include "mozilla/widget/AsyncDBus.h"
 #  include "mozilla/WidgetUtilsGtk.h"
+#  include "nsAppShell.h"
 #endif
 
 using namespace mozilla;
@@ -729,6 +730,7 @@ nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
     }
     GUniquePtr<GError> error;
 
+    nsAppShell::DBusConnectionCheck();
     RefPtr<GDBusProxy> proxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
         G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr, OPENURI_BUS_NAME,
         OPENURI_OBJECT_PATH, OPENURI_INTERFACE_NAME,
@@ -1023,6 +1025,7 @@ static nsresult RevealFileViaDBusWithProxy(GDBusProxy* aProxy, nsIFile* aFile,
   const int32_t timeout =
       StaticPrefs::widget_gtk_file_manager_show_items_timeout_ms();
 
+  nsAppShell::DBusConnectionCheck();
   if (!(strcmp(aMethod, kMethodOpenDirectory) == 0)) {
     GUniquePtr<gchar> uri(g_filename_to_uri(path.get(), nullptr, nullptr));
     if (!uri) {

@@ -36,6 +36,7 @@
 #include "mozilla/WidgetUtilsGtk.h"
 #include "ScreenHelperGTK.h"
 #include "ScrollbarDrawing.h"
+#include "nsAppShell.h"
 
 #include "GtkWidgets.h"
 #include "nsString.h"
@@ -244,6 +245,7 @@ bool nsLookAndFeel::RecomputeDBusSettings() {
   g_variant_builder_add(&namespacesBuilder, "s", "org.freedesktop.appearance");
 
   GUniquePtr<GError> error;
+  nsAppShell::DBusConnectionCheck();
   RefPtr<GVariant> variant = dont_AddRef(g_dbus_proxy_call_sync(
       mDBusSettingsProxy, "ReadAll", g_variant_new("(as)", &namespacesBuilder),
       G_DBUS_CALL_FLAGS_NONE,
@@ -293,6 +295,7 @@ bool nsLookAndFeel::RecomputeDBusSettings() {
 void nsLookAndFeel::WatchDBus() {
   LOGLNF("nsLookAndFeel::WatchDBus");
   GUniquePtr<GError> error;
+  nsAppShell::DBusConnectionCheck();
   mDBusSettingsProxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
       G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
       "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
@@ -320,6 +323,7 @@ void nsLookAndFeel::UnwatchDBus() {
   g_signal_handlers_disconnect_by_func(
       mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb), this);
   mDBusSettingsProxy = nullptr;
+  nsAppShell::DBusConnectionCheck();
 }
 
 nsLookAndFeel::nsLookAndFeel() {
