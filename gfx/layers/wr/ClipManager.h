@@ -84,8 +84,8 @@ class ClipManager {
   Maybe<wr::WrSpatialId> DefineStickyNode(
       nsDisplayListBuilder* aBuilder, Maybe<wr::WrSpatialId> aParentSpatialId,
       const ActiveScrolledRoot* aASR, nsDisplayItem* aItem);
-  const nsDisplayStickyPosition* FindStickyItemFromFrame(
-      const nsIFrame* aStickyFrame) const;
+  const nsDisplayStickyPosition* FindStickyItem(
+      nsDisplayItem* aItemWithStickyASR, const nsIFrame* aStickyFrame) const;
 
   Maybe<wr::WrClipChainId> DefineClipChain(const DisplayItemClipChain* aChain,
                                            int32_t aAppUnitsPerDevPixel);
