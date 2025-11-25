@@ -218,20 +218,21 @@ class MustConsumeMicroTask {
     return JS::MaybeGetPromiseFromJSMicroTask(task);
   }
 
-  JSObject* MaybeGetHostDefinedDataFromJSMicroTask() {
+  bool MaybeGetHostDefinedDataFromJSMicroTask(
+      JS::MutableHandle<JSObject*> out) {
     JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
     if (!task) {
-      return nullptr;
+      return false;
     }
-    return JS::MaybeGetHostDefinedDataFromJSMicroTask(task);
+    return JS::MaybeGetHostDefinedDataFromJSMicroTask(task, out);
   }
 
-  JSObject* MaybeGetAllocationSiteFromJSMicroTask() {
+  bool MaybeGetAllocationSiteFromJSMicroTask(JS::MutableHandle<JSObject*> out) {
     JS::JSMicroTask* task = JS::ToUnwrappedJSMicroTask(mMicroTask);
     if (!task) {
-      return nullptr;
+      return false;
     }
-    return JS::MaybeGetAllocationSiteFromJSMicroTask(task);
+    return JS::MaybeGetAllocationSiteFromJSMicroTask(task, out);
   }
 
   JSObject* MaybeGetHostDefinedGlobalFromJSMicroTask() {

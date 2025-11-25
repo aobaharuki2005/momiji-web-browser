@@ -7696,14 +7696,15 @@ inline bool JSObject::is<MicroTaskEntry>() const {
   return is<ThenableJob>() || is<PromiseReactionRecord>();
 }
 
-JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedDataFromJSMicroTask(
-    JS::JSMicroTask* entry) {
+JS_PUBLIC_API bool JS::MaybeGetHostDefinedDataFromJSMicroTask(
+    JS::JSMicroTask* entry, MutableHandleObject out) {
+  out.set(nullptr);
   JSObject* task = CheckedUnwrapStatic(entry);
   if (!task) {
-    return nullptr;
+    return false;
   }
   if (JS_IsDeadWrapper(task)) {
-    return nullptr;
+    return false;
   }
 
   MOZ_ASSERT(task->is<MicroTaskEntry>());
@@ -7711,34 +7712,44 @@ JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedDataFromJSMicroTask(
       task->as<MicroTaskEntry>().getHostDefinedData().toObjectOrNull();
 
   if (!maybeHostDefined) {
-    return nullptr;
+    return true;
   }
 
   if (JS_IsDeadWrapper(maybeHostDefined)) {
-    return nullptr;
+    return false;
   }
-  return CheckedUnwrapStatic(maybeHostDefined);
+
+  JSObject* unwrapped = CheckedUnwrapStatic(maybeHostDefined);
+  if (!unwrapped) {
+    return false;
+  }
+  out.set(unwrapped);
+  return true;
 }
 
-JS_PUBLIC_API JSObject* JS::MaybeGetAllocationSiteFromJSMicroTask(
-    JS::JSMicroTask* entry) {
+JS_PUBLIC_API bool JS::MaybeGetAllocationSiteFromJSMicroTask(
+    JS::JSMicroTask* entry, MutableHandleObject out) {
   JSObject* task = UncheckedUnwrap(entry);
   if (JS_IsDeadWrapper(task)) {
-    return nullptr;
+    return false;
   };
 
   MOZ_ASSERT(task->is<MicroTaskEntry>());
   JSObject* maybeWrappedStack = task->as<MicroTaskEntry>().allocationStack();
 
-  // If the stack is in a compartment which has gone away, best we
-  // can do is return nullptr.
-  if (!maybeWrappedStack || JS_IsDeadWrapper(maybeWrappedStack)) {
-    return nullptr;
+  if (!maybeWrappedStack) {
+    out.set(nullptr);
+    return true;
+  }
+
+  if (JS_IsDeadWrapper(maybeWrappedStack)) {
+    return false;
   }
 
   JSObject* unwrapped = UncheckedUnwrap(maybeWrappedStack);
   MOZ_ASSERT(unwrapped->is<SavedFrame>());
-  return unwrapped;
+  out.set(unwrapped);
+  return true;
 }
 
 JS_PUBLIC_API JSObject* JS::MaybeGetHostDefinedGlobalFromJSMicroTask(
