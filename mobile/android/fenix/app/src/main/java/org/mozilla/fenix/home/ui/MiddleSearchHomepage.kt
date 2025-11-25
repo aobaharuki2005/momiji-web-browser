@@ -179,7 +179,7 @@ private fun MiddleSearchHomepagePreview() {
                 showCollections = true,
                 headerState = HeaderState(
                     showHeader = false,
-                    wordmarkColor = null,
+                    wordmarkTextColor = null,
                     privateBrowsingButtonColor = colorResource(
                         getAttr(
                             R.attr.mozac_ic_private_mode_circle_fill_icon_color,
