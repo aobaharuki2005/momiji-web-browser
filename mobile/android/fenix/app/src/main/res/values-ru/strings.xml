@@ -1222,7 +1222,7 @@
 
     Instructions on how to access pairing
   -->
-  <string name="pair_instructions_2"><![CDATA[Считайте штрих-код на <b>firefox.com/pair</b>]]></string>
+  <string name="pair_instructions_2"><![CDATA[Отсканируйте QR-код на <b>firefox.com/pair</b>]]></string>
   <!--
     Toolbar Preferences
 

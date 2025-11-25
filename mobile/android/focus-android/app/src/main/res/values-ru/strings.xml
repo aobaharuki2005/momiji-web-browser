@@ -46,7 +46,7 @@
   -->
   <string name="menu_open_with_a_browser2">Открыть в…</string>
   <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
-  <string name="menu_add_to_home_screen">Добавить на домашний экран</string>
+  <string name="menu_add_to_home_screen">На домашний экран</string>
   <!-- Menu item: Add the current site as a shortcut on the Home screen -->
   <string name="menu_add_to_shortcuts">Добавить в ярлыки</string>
   <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
@@ -512,7 +512,7 @@
   <!-- First run tour (Shortcut): Title -->
   <string name="firstrun_shortcut_title">Добавьте ярлыки на домашний экран</string>
   <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
-  <string name="firstrun_shortcut_text">С %1$s вы сможете быстро вернуться к любимым сайтам. Просто выберите «Добавить на домашний экран» из меню %1$s.</string>
+  <string name="firstrun_shortcut_text">С %1$s вы сможете быстро вернуться к любимым сайтам. Просто выберите «На домашний экран» из меню %1$s.</string>
   <!-- First run tour (Privacy): Title -->
   <string name="firstrun_privacy_title">Сделайте приватность своей привычкой</string>
   <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
@@ -751,7 +751,7 @@
     Tip displayed on home view explaining how to add sites to homescreen
     %1$s is replaced with a line break in the application.
   -->
-  <string name="tip_add_to_homescreen">Получайте доступ к нужным сайтам в одно касание%1$s «Меню» &gt; «Добавить на домашний экран»</string>
+  <string name="tip_add_to_homescreen">Получайте доступ к нужным сайтам в одно касание%1$s «Меню» &gt; «На домашний экран»</string>
   <!--
     Tip displayed on home view explaining how to make Focus the default browser
     %1$s is the name of the app (for example "Firefox Focus" or "Firefox Klar").
@@ -927,7 +927,7 @@
     This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog.
   -->
-  <string name="promote_search_widget_button_text">Добавить виджет на домашний экран</string>
+  <string name="promote_search_widget_button_text">Виджет на домашний экран</string>
   <!--
     This is te text of the snackbar that appears after the search widget was added successfully
     to the home screen.

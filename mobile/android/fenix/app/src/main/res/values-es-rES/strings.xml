@@ -1062,6 +1062,8 @@
   <string name="restart_warning_dialog_button_positive_2">Cambiar icono</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Cancelar</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">No se ha podido actualizar el icono de la aplicación. Elimina los accesos directos existentes y vuelve a intentarlo.</string>
   <!--
     Add-ons general availability nimbus message
 
