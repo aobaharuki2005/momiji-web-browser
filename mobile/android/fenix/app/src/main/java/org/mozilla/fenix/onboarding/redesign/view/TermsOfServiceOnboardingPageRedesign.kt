@@ -8,7 +8,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -56,20 +55,26 @@ fun TermsOfServiceOnboardingPageRedesign(
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 24.dp)
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Header(pageState)
+            Spacer(modifier = Modifier.weight(TITLE_TOP_SPACER_WEIGHT))
 
-            Spacer(Modifier.weight(1f))
+            Column(
+                modifier = Modifier
+                    .weight(CONTENT_WEIGHT)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Header(pageState)
 
-            pageState.termsOfService?.let { BodyText(it, eventHandler) }
+                Spacer(Modifier.weight(1f))
 
-            Spacer(Modifier.height(26.dp))
+                pageState.termsOfService?.let { BodyText(it, eventHandler) }
+
+                Spacer(Modifier.height(26.dp))
+            }
 
             FilledButton(
                 text = pageState.primaryButton.text,
@@ -81,10 +86,10 @@ fun TermsOfServiceOnboardingPageRedesign(
                 onClick = pageState.primaryButton.onClick,
             )
         }
+    }
 
-        LaunchedEffect(pageState) {
-            pageState.onRecordImpressionEvent()
-        }
+    LaunchedEffect(pageState) {
+        pageState.onRecordImpressionEvent()
     }
 }
 
@@ -100,18 +105,15 @@ private fun Header(pageState: OnboardingPageState) {
 
     Spacer(Modifier.height(20.dp))
 
-    Column(
-        modifier = Modifier.padding(horizontal = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = pageState.title,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.headlineMedium,
-        )
+    Text(
+        text = pageState.title,
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.headlineMedium,
+    )
 
-        pageState.termsOfService?.let { Subheaders(it) }
-    }
+    Spacer(Modifier.height(10.dp))
+
+    pageState.termsOfService?.let { Subheaders(it) }
 }
 
 @Composable
@@ -135,7 +137,7 @@ private fun SubHeaderText(text: String) {
     Text(
         text = text,
         style = FirefoxTheme.typography.body2.copy(
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.secondary,
             textAlign = TextAlign.Center,
         ),
     )
