@@ -2526,8 +2526,6 @@
     <string name="preferences_addresses_sync_addresses_across_devices">Sync addresses across devices</string>
     <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_addresses_sync_addresses">Sync addresses</string>
-    <!-- Content description navigating back from autofill settings screen. -->
-    <string name="autofill_settings_navigate_back_button_content_description">Back</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Add card</string>
