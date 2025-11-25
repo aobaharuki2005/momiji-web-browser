@@ -4,18 +4,24 @@
 
 "use strict";
 
+/* import-globals-from http3_proxy_common.js */
+
 const {
   NodeWebSocketPlainServer,
   NodeWebSocketServer,
-  NodeWebSocketHttp2Server,
   NodeHTTPProxyServer,
   NodeHTTPSProxyServer,
-  NodeHTTP2ProxyServer,
-  WebSocketConnection,
-  with_node_servers,
 } = ChromeUtils.importESModule("resource://testing-common/NodeServer.sys.mjs");
 
-async function channelOpenPromise(url, msg) {
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
+add_setup(async function setup() {
+  do_get_profile();
+});
+
+async function wsChannelOpen(url, msg) {
   let conn = new WebSocketConnection();
   let statusObj = await Promise.race([conn.open(url), conn.finished()]);
   if (statusObj && statusObj.status != Cr.NS_OK) {
@@ -39,23 +45,27 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.proxy.allow_hijacking_localhost");
 });
 
-async function do_ws_requests(expectedProxyType) {
-  await with_node_servers(
-    [NodeWebSocketPlainServer, NodeWebSocketServer, NodeWebSocketHttp2Server],
-    async server => {
-      Assert.notEqual(server.port(), null);
-      await server.registerMessageHandler((data, ws) => {
-        ws.send(data);
-      });
+async function do_ws_requests(
+  expectedProxyType,
+  servers = [
+    NodeWebSocketPlainServer,
+    NodeWebSocketServer,
+    NodeWebSocketHttp2Server,
+  ]
+) {
+  await with_node_servers(servers, async server => {
+    Assert.notEqual(server.port(), null);
+    await server.registerMessageHandler((data, ws) => {
+      ws.send(data);
+    });
 
-      let url = `${server.protocol()}://localhost:${server.port()}`;
-      const msg = `test ${server.constructor.name} with proxy`;
-      let [status, res, proxyType] = await channelOpenPromise(url, msg);
-      Assert.equal(status, Cr.NS_OK);
-      Assert.deepEqual(res, [msg]);
-      Assert.equal(proxyType, expectedProxyType, "WebSocket should use proxy");
-    }
-  );
+    let url = `${server.protocol()}://localhost:${server.port()}`;
+    const msg = `test ${server.constructor.name} with proxy`;
+    let [status, res, proxyType] = await wsChannelOpen(url, msg);
+    Assert.equal(status, Cr.NS_OK);
+    Assert.deepEqual(res, [msg]);
+    Assert.equal(proxyType, expectedProxyType, "WebSocket should use proxy");
+  });
 }
 
 add_task(async function test_http_proxy() {
@@ -93,3 +103,13 @@ add_task(async function test_http2_proxy() {
 
   await proxy.stop();
 });
+
+// Skipped on Android due to H3 proxy server not working - Bug 1982955
+add_task(
+  { skip_if: () => AppConstants.platform == "android" },
+  async function test_masque_proxy() {
+    await setup_http3_proxy();
+
+    await do_ws_requests("masque");
+  }
+);
