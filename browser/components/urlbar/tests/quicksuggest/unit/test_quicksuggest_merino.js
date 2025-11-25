@@ -398,7 +398,9 @@ add_task(async function dismissals_unmanaged_1() {
   UrlbarPrefs.set("quicksuggest.online.available", true);
   UrlbarPrefs.set("quicksuggest.online.enabled", true);
 
-  let provider = "some-unknown-merino-provider";
+  // The "top_picks" provider is the only supported unmanaged suggestion.
+  let provider = "top_picks";
+
   let tests = [
     {
       suggestion: {
@@ -545,7 +547,8 @@ add_task(async function dismissals_unmanaged_2() {
   UrlbarPrefs.set("quicksuggest.online.available", true);
   UrlbarPrefs.set("quicksuggest.online.enabled", true);
 
-  let provider = "some-unknown-merino-provider";
+  // The "top_picks" provider is the only supported unmanaged suggestion.
+  let provider = "top_picks";
 
   MerinoTestUtils.server.response =
     MerinoTestUtils.server.makeDefaultResponse();
@@ -726,12 +729,13 @@ add_task(async function bestMatch() {
   UrlbarPrefs.set("quicksuggest.online.available", true);
   UrlbarPrefs.set("quicksuggest.online.enabled", true);
 
-  // Set up a suggestion with `is_top_pick` and an unknown provider so that
+  // Set up a suggestion with `is_top_pick` and the "top_picks" provider so that
   // UrlbarProviderQuickSuggest will make a default result for it.
+  let provider = "top_picks";
   MerinoTestUtils.server.response.body.suggestions = [
     {
       is_top_pick: true,
-      provider: "some_top_pick_provider",
+      provider,
       full_keyword: "full_keyword",
       title: "title",
       url: "url",
@@ -753,7 +757,7 @@ add_task(async function bestMatch() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         heuristic: false,
         payload: {
-          telemetryType: "some_top_pick_provider",
+          telemetryType: provider,
           title: "title",
           url: "url",
           icon: null,
@@ -763,7 +767,7 @@ add_task(async function bestMatch() {
           isManageable: true,
           displayUrl: "url",
           source: "merino",
-          provider: "some_top_pick_provider",
+          provider,
         },
       },
     ],
@@ -785,7 +789,6 @@ add_task(async function unmanaged_sponsored_allDisabled() {
     suggestion: {
       title: "Sponsored without feature",
       url: "https://example.com/sponsored-without-feature",
-      provider: "sponsored-unrecognized-provider",
       is_sponsored: true,
     },
     shouldBeAdded: false,
@@ -800,7 +803,6 @@ add_task(async function unmanaged_sponsored_sponsoredDisabled() {
     suggestion: {
       title: "Sponsored without feature",
       url: "https://example.com/sponsored-without-feature",
-      provider: "sponsored-unrecognized-provider",
       is_sponsored: true,
     },
     shouldBeAdded: false,
@@ -815,7 +817,6 @@ add_task(async function unmanaged_nonsponsored_allDisabled() {
     suggestion: {
       title: "Nonsponsored without feature",
       url: "https://example.com/nonsponsored-without-feature",
-      provider: "nonsponsored-unrecognized-provider",
       // no is_sponsored
     },
     shouldBeAdded: false,
@@ -831,7 +832,6 @@ add_task(async function unmanaged_nonsponsored_sponsoredDisabled() {
     suggestion: {
       title: "Nonsponsored without feature",
       url: "https://example.com/nonsponsored-without-feature",
-      provider: "nonsponsored-unrecognized-provider",
       // no is_sponsored
     },
     shouldBeAdded: true,
@@ -839,6 +839,9 @@ add_task(async function unmanaged_nonsponsored_sponsoredDisabled() {
 });
 
 async function doUnmanagedTest({ pref, suggestion, shouldBeAdded }) {
+  // The "top_picks" provider is the only supported unmanaged suggestion.
+  suggestion.provider = "top_picks";
+
   UrlbarPrefs.set("suggest.quicksuggest.all", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await QuickSuggestTestUtils.forceSync();
@@ -929,6 +932,32 @@ async function doUnmanagedTest({ pref, suggestion, shouldBeAdded }) {
   MerinoTestUtils.server.reset();
   merinoClient().resetSession();
 }
+
+// An unmanaged suggestion with an unrecognized Merino provider (i.e., not
+// "top_picks") should not be added.
+add_task(async function unmanaged_unrecognized() {
+  UrlbarPrefs.set("suggest.quicksuggest.all", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  await QuickSuggestTestUtils.forceSync();
+
+  UrlbarPrefs.set("quicksuggest.online.available", true);
+  UrlbarPrefs.set("quicksuggest.online.enabled", true);
+  MerinoTestUtils.server.response.body.suggestions = [
+    {
+      title: "Some unrecognized suggestion",
+      url: "https://example.com/unmanaged_unrecognized",
+      provider: "unmanaged-unrecognized-provider",
+    },
+  ];
+
+  await check_results({
+    context: createContext("test", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+});
 
 function merinoClient() {
   return QuickSuggest.getFeature("SuggestBackendMerino")?.client;
