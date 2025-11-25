@@ -68,6 +68,15 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
                                                      const uint8_t* aString) {
   AssertIsOnMainThread();
   MOZ_ASSERT(!mRequestHandle->IsEmpty());
+
+  if (aStringLen > GetWorkerScriptMaxSizeInBytes()) {
+    Document* parentDoc = mWorkerRef->Private()->GetDocument();
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "DOM"_ns,
+                                    parentDoc, nsContentUtils::eDOM_PROPERTIES,
+                                    "WorkerScriptTooLargeError");
+    return NS_ERROR_DOM_ABORT_ERR;
+  }
+
   WorkerLoadContext* loadContext = mRequestHandle->GetContext();
 
   if (!loadContext->mChannel) {
