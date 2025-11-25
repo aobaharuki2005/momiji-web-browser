@@ -119,12 +119,9 @@ class BookmarkFragment : Fragment() {
                                     openBookmarksInNewTab = if (settings().enableHomepageAsNewTab) {
                                         false
                                     } else {
-                                        val wasPreviousAppDestinationHome =
                                             navController
-                                                .previousBackStackEntry?.destination?.id == R.id.homeFragment
-                                        val browsingMode =
-                                            homeActivity.browsingModeManager.mode
-                                        wasPreviousAppDestinationHome || browsingMode.isPrivate
+                                                .previousBackStackEntry?.destination?.id ==
+                                                    R.id.homeFragment
                                     },
                                     getNavController = { composeNavController },
                                     exitBookmarks = { navController.popBackStack() },
