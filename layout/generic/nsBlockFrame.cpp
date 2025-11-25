@@ -1646,8 +1646,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // resetting the size. Because of this, we must not reflow our abs-pos
   // children in that situation --- what we think is our "new size" will not be
   // our real new size. This also happens to be more efficient.
-  AbsoluteContainingBlock* absoluteContainer =
-      IsAbsoluteContainer() ? GetAbsoluteContainingBlock() : nullptr;
+  auto* absoluteContainer = GetAbsoluteContainingBlock();
   if (absoluteContainer && absoluteContainer->PrepareAbsoluteFrames(this)) {
     bool haveInterrupt = aPresContext->HasPendingInterrupt();
     if (aReflowInput.WillReflowAgainForClearance() || haveInterrupt) {

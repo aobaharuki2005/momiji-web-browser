@@ -3276,10 +3276,9 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
       MOZ_ASSERT(mGridItems.Length() == len + 1, "can't find GridItemInfo");
     }
 
-    if (aGridContainerFrame->IsAbsoluteContainer()) {
+    if (auto* absCB = aGridContainerFrame->GetAbsoluteContainingBlock()) {
       // Prepare absolute frames before constructing GridItemInfo.
-      aGridContainerFrame->GetAbsoluteContainingBlock()->PrepareAbsoluteFrames(
-          aGridContainerFrame);
+      absCB->PrepareAbsoluteFrames(aGridContainerFrame);
     }
     // XXX NOTE: This is O(n^2) in the number of abs.pos. items. (bug 1252186)
     const nsFrameList& absPosChildren = aGridContainerFrame->GetChildList(
@@ -9304,8 +9303,7 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aGridRI,
   aDesiredSize.mOverflowAreas.UnionWith(ocBounds);
   aStatus.MergeCompletionStatusFrom(ocStatus);
 
-  AbsoluteContainingBlock* absoluteContainer =
-      IsAbsoluteContainer() ? GetAbsoluteContainingBlock() : nullptr;
+  auto* absoluteContainer = GetAbsoluteContainingBlock();
   // We have prepared the absolute frames when initializing GridReflowInput.
   if (absoluteContainer && absoluteContainer->HasAbsoluteFrames()) {
     // 'gridOrigin' is the origin of the grid (the start of the first track),
