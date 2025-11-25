@@ -55,29 +55,36 @@ void CodeGenerator::visitUnbox(LUnbox* unbox) {
   Register result = ToRegister(unbox->output());
 
   if (mir->fallible()) {
-    ValueOperand value = ToValue(unbox->input());
     Label bail;
-    switch (mir->type()) {
-      case MIRType::Int32:
-        masm.fallibleUnboxInt32(value, result, &bail);
-        break;
-      case MIRType::Boolean:
-        masm.fallibleUnboxBoolean(value, result, &bail);
-        break;
-      case MIRType::Object:
-        masm.fallibleUnboxObject(value, result, &bail);
-        break;
-      case MIRType::String:
-        masm.fallibleUnboxString(value, result, &bail);
-        break;
-      case MIRType::Symbol:
-        masm.fallibleUnboxSymbol(value, result, &bail);
-        break;
-      case MIRType::BigInt:
-        masm.fallibleUnboxBigInt(value, result, &bail);
-        break;
-      default:
-        MOZ_CRASH("Given MIRType cannot be unboxed.");
+    auto fallibleUnboxImpl = [&](auto value) {
+      switch (mir->type()) {
+        case MIRType::Int32:
+          masm.fallibleUnboxInt32(value, result, &bail);
+          break;
+        case MIRType::Boolean:
+          masm.fallibleUnboxBoolean(value, result, &bail);
+          break;
+        case MIRType::Object:
+          masm.fallibleUnboxObject(value, result, &bail);
+          break;
+        case MIRType::String:
+          masm.fallibleUnboxString(value, result, &bail);
+          break;
+        case MIRType::Symbol:
+          masm.fallibleUnboxSymbol(value, result, &bail);
+          break;
+        case MIRType::BigInt:
+          masm.fallibleUnboxBigInt(value, result, &bail);
+          break;
+        default:
+          MOZ_CRASH("Given MIRType cannot be unboxed.");
+      }
+    };
+    LAllocation* input = unbox->getOperand(LUnbox::Input);
+    if (input->isGeneralReg()) {
+      fallibleUnboxImpl(ValueOperand(ToRegister(input)));
+    } else {
+      fallibleUnboxImpl(ToAddress(input));
     }
     bailoutFrom(&bail, unbox->snapshot());
     return;
