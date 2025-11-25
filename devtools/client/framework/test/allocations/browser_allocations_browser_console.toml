@@ -12,6 +12,5 @@ prefs = "extensions.webcompat.disable_debug_logging=true"
 
 ["browser_allocations_browser_console.js"]
 run-if = [
-  "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && display == 'wayland' && opt", # Results should be platform agnostic - only run on linux64-opt
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt", # Results should be platform agnostic - only run on linux64-opt
+  "os == 'linux' && opt", # Results should be platform agnostic - only run on linux64-opt
 ]
