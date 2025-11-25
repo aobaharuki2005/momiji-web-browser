@@ -1546,6 +1546,9 @@ function forkProcessInternal(forked) {
     }
 
     if (Object.keys(forked.messageHandlers).length === 0) {
+      console.log(
+        `child process ${id} closing code: ${code} signal: ${signal}`
+      );
       return;
     }
 
