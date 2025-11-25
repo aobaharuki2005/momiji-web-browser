@@ -5381,6 +5381,21 @@
       }
     ]
   },
+  "1902496": {
+    "label": "be.bim.mx",
+    "bugs": {
+      "1902496": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://be.bim.mx/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "1902507": {
     "label": "riverside.fm",
     "bugs": {
