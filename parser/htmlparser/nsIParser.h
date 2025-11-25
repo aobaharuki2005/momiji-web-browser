@@ -19,7 +19,6 @@
 
 #include "nsISupports.h"
 #include "nsIStreamListener.h"
-#include "nsIDTD.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsAtom.h"

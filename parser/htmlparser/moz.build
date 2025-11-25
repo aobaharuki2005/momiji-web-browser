@@ -21,7 +21,6 @@ EXPORTS += [
     "nsHTMLTagList.h",
     "nsHTMLTags.h",
     "nsIContentSink.h",
-    "nsIDTD.h",
     "nsIFragmentContentSink.h",
     "nsIParser.h",
     "nsParserBase.h",
