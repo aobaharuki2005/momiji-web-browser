@@ -662,31 +662,6 @@ skip script test262/language/statements/with/set-mutable-binding-idref-compound-
 skip script test262/built-ins/Iterator/concat/fresh-iterator-result.js
 skip script test262/built-ins/Iterator/concat/next-method-returns-throwing-value.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1950211
-skip script test262/built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js
-skip script test262/built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js
-skip script test262/built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js
-skip script test262/built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js
-skip script test262/built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js
-skip script test262/built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js
-skip script test262/built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js
-skip script test262/built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js
-skip script test262/built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js
-skip script test262/built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js
-skip script test262/built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js
-skip script test262/built-ins/String/prototype/split/cstm-split-on-boolean-primitive.js
-skip script test262/built-ins/String/prototype/split/cstm-split-on-string-primitive.js
-skip script test262/built-ins/String/prototype/split/cstm-split-on-number-primitive.js
-skip script test262/built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js
-skip script test262/built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js
-skip script test262/built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js
-skip script test262/built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js
-skip script test262/built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js
-skip script test262/built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js
-skip script test262/built-ins/String/prototype/search/cstm-search-on-string-primitive.js
-skip script test262/built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js
-skip script test262/built-ins/String/prototype/search/cstm-search-on-number-primitive.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1970162
 # https://github.com/tc39/ecma402/pull/989
 skip script test262/intl402/PluralRules/constructor-options-throwing-getters.js
