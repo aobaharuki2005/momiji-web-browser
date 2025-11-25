@@ -287,7 +287,7 @@ fun WebCompatReporter(
                         text = stringResource(id = R.string.webcompat_reporter_add_more_info),
                         modifier = Modifier
                             .clickable {
-                                store.dispatch(WebCompatReporterAction.SendMoreInfoClicked)
+                                store.dispatch(WebCompatReporterAction.AddMoreInfoClicked)
                             },
                         style = FirefoxTheme.typography.body2,
                         color = MaterialTheme.colorScheme.tertiary,

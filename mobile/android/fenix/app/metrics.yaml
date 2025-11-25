@@ -14045,10 +14045,10 @@ webcompatreporting:
         description: >
           Whether the user opted into including blocked tracker origins.
         type: boolean
-  send_more_info:
+  add_more_info:
     type: event
     description: |
-      Recorded when a user clicks on the Send More Info link in the reporting UI
+      Recorded when a user clicks on the Add More Info link in the reporting UI
       The user will be redirected to webcompat.com to submit a more comprehensive report.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1932462

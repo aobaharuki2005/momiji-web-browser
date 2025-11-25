@@ -620,7 +620,7 @@ class WebCompatReporterSubmissionMiddlewareTest {
             ),
         )
 
-        store.dispatch(WebCompatReporterAction.SendMoreInfoClicked)
+        store.dispatch(WebCompatReporterAction.AddMoreInfoClicked)
 
         assertTrue(moreWebCompatInfoSent)
         captureActionsMiddleware.assertFirstAction(WebCompatReporterAction.SendMoreInfoSubmitted::class)

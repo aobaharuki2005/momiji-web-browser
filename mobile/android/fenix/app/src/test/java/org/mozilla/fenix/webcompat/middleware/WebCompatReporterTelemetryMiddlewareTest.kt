@@ -38,13 +38,13 @@ class WebCompatReporterTelemetryMiddlewareTest {
     @Test
     fun `WHEN send more info button is clicked THEN record send more info button telemetry`() {
         val store = createStore()
-        assertNull(Webcompatreporting.sendMoreInfo.testGetValue())
+        assertNull(Webcompatreporting.addMoreInfo.testGetValue())
 
-        store.dispatch(WebCompatReporterAction.SendMoreInfoClicked)
+        store.dispatch(WebCompatReporterAction.AddMoreInfoClicked)
 
-        val snapshot = Webcompatreporting.sendMoreInfo.testGetValue()!!
+        val snapshot = Webcompatreporting.addMoreInfo.testGetValue()!!
         assertEquals(1, snapshot.size)
-        assertEquals("send_more_info", snapshot.single().name)
+        assertEquals("add_more_info", snapshot.single().name)
     }
 
     @Test

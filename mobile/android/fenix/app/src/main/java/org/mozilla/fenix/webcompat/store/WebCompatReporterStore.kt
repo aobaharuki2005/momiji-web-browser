@@ -169,9 +169,9 @@ sealed class WebCompatReporterAction : Action {
     data object SendMoreInfoSubmitted : WebCompatReporterAction(), NavigationAction
 
     /**
-     * Dispatched when the user requests to send more info.
+     * Dispatched when the user requests to add more info.
      */
-    data object SendMoreInfoClicked : WebCompatReporterAction(), WebCompatReporterStorageAction
+    data object AddMoreInfoClicked : WebCompatReporterAction(), WebCompatReporterStorageAction
 
     /**
      * Dispatched when the user requests to cancel the report.
@@ -206,7 +206,7 @@ private fun reduce(
     )
     is WebCompatReporterAction.NavigationAction -> state
     WebCompatReporterAction.SendReportClicked -> state
-    WebCompatReporterAction.SendMoreInfoClicked -> state
+    WebCompatReporterAction.AddMoreInfoClicked -> state
     WebCompatReporterAction.LearnMoreClicked -> state
     is WebCompatReporterAction.IncludeEtpBlockedUrlsChanged -> state.copy(includeEtpBlockedUrls = action.include)
 }
