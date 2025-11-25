@@ -7,7 +7,6 @@
 #include "nsAtom.h"
 #include "CParserContext.h"
 #include "prenv.h"
-#include "nsIHTMLContentSink.h"
 #include "nsMimeTypes.h"
 
 CParserContext::CParserContext(nsIURI* aURI, eParserCommands aCommand)

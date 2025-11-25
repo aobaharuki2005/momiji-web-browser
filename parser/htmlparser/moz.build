@@ -23,7 +23,6 @@ EXPORTS += [
     "nsIContentSink.h",
     "nsIDTD.h",
     "nsIFragmentContentSink.h",
-    "nsIHTMLContentSink.h",
     "nsIParser.h",
     "nsParserBase.h",
     "nsParserConstants.h",
@@ -32,7 +31,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    "CNavDTD.cpp",
     "CParserContext.cpp",
     "nsElementTable.cpp",
     "nsExpatDriver.cpp",

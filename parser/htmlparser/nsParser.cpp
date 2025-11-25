@@ -12,7 +12,6 @@
 #include "plstr.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
-#include "CNavDTD.h"
 #include "prenv.h"
 #include "prlock.h"
 #include "prcvar.h"
@@ -25,7 +24,6 @@
 #include "nsMimeTypes.h"
 #include "nsCharsetSource.h"
 #include "nsThreadUtils.h"
-#include "nsIHTMLContentSink.h"
 
 #include "mozilla/CondVar.h"
 #include "mozilla/dom/ScriptLoader.h"
@@ -54,16 +52,12 @@ scheduling of the continue events will proceed until either:
   1) All of the remaining data can be processed without interrupting
   2) The parser has been cancelled.
 
-
-This capability is currently used in CNavDTD and nsHTMLContentSink. The
-nsHTMLContentSink is notified by CNavDTD when a chunk of tokens is going to be
-processed and when each token is processed. The nsHTML content sink records
-the time when the chunk has started processing and will return
-NS_ERROR_HTMLPARSER_INTERRUPTED if the token processing time has exceeded a
-threshold called max tokenizing processing time. This allows the content sink
-to limit how much data is processed in a single chunk which in turn gates how
-much time is spent away from the event loop. Processing smaller chunks of data
-also reduces the time spent in subsequent reflows.
+The nsContentSink records the time when the chunk has started processing and
+will return NS_ERROR_HTMLPARSER_INTERRUPTED if the token processing time has
+exceeded a threshold called max tokenizing processing time. This allows the
+content sink to limit how much data is processed in a single chunk which in
+turn gates how much time is spent away from the event loop. Processing smaller
+chunks of data also reduces the time spent in subsequent reflows.
 
 This capability is most apparent when loading large documents. If the maximum
 token processing time is set small enough the application will remain
@@ -120,7 +114,6 @@ void nsParser::Initialize() {
 
   mProcessingNetworkData = false;
   mOnStopPending = false;
-  mIsAboutBlank = false;
 }
 
 void nsParser::Cleanup() {
@@ -246,10 +239,6 @@ nsParser::SetContentSink(nsIContentSink* aSink) {
 
   if (mSink) {
     mSink->SetParser(this);
-    nsCOMPtr<nsIHTMLContentSink> htmlSink = do_QueryInterface(mSink);
-    if (htmlSink) {
-      mIsAboutBlank = true;
-    }
   }
 }
 
@@ -281,13 +270,8 @@ nsresult nsParser::WillBuildModel() {
   if (eUnknownDetect != mParserContext->mAutoDetectStatus) return NS_OK;
 
   if (eDTDMode_autodetect == mParserContext->mDTDMode) {
-    if (mIsAboutBlank) {
-      mParserContext->mDTDMode = eDTDMode_quirks;
-      mParserContext->mDocType = eHTML_Quirks;
-    } else {
-      mParserContext->mDTDMode = eDTDMode_full_standards;
-      mParserContext->mDocType = eXML;
-    }
+    mParserContext->mDTDMode = eDTDMode_full_standards;
+    mParserContext->mDocType = eXML;
   }  // else XML fragment with nested parser context
 
   // We always find a DTD.
@@ -298,17 +282,11 @@ nsresult nsParser::WillBuildModel() {
              "The old parser is not supposed to be used for View Source "
              "anymore.");
 
-  // Now see if we're parsing XML or HTML (which, as far as we're concerned,
-  // simply means "not XML").
-  if (mParserContext->mDocType == eXML) {
-    RefPtr<nsExpatDriver> expat = new nsExpatDriver();
-    nsresult rv = expat->Initialize(mParserContext->mScanner.GetURI(), mSink);
-    NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<nsExpatDriver> expat = new nsExpatDriver();
+  nsresult rv = expat->Initialize(mParserContext->mScanner.GetURI(), mSink);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    mDTD = expat.forget();
-  } else {
-    mDTD = new CNavDTD();
-  }
+  mDTD = expat.forget();
 
   return mSink->WillBuildModel(mParserContext->mDTDMode);
 }
@@ -918,14 +896,6 @@ inline char GetNextChar(nsACString::const_iterator& aStart,
   return (++aStart != aEnd) ? *aStart : '\0';
 }
 
-static nsresult NoOpParserWriteFunc(nsIInputStream* in, void* closure,
-                                    const char* fromRawSegment,
-                                    uint32_t toOffset, uint32_t count,
-                                    uint32_t* writeCount) {
-  *writeCount = count;
-  return NS_OK;
-}
-
 typedef struct {
   bool mNeedCharsetCheck;
   nsParser* mParser;
@@ -1007,16 +977,6 @@ nsresult nsParser::OnDataAvailable(nsIRequest* request,
              "Must have a buffered input stream");
 
   nsresult rv = NS_OK;
-
-  if (mIsAboutBlank) {
-    MOZ_ASSERT(false, "Must not get OnDataAvailable for about:blank");
-    // ... but if an extension tries to feed us data for about:blank in a
-    // release build, silently ignore the data.
-    uint32_t totalRead;
-    rv = pIStream->ReadSegments(NoOpParserWriteFunc, nullptr, aLength,
-                                &totalRead);
-    return rv;
-  }
 
   if (mParserContext->mRequest == request) {
     mParserContext->mStreamListenerState = eOnDataAvail;

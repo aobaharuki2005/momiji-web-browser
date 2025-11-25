@@ -363,7 +363,6 @@
 #include "nsIFrame.h"
 #include "nsIGlobalObject.h"
 #include "nsIHTMLCollection.h"
-#include "nsIHTMLContentSink.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
