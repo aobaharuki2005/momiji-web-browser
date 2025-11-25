@@ -345,7 +345,7 @@ class TrustPanel {
     );
 
     let hostElement = document.getElementById("trustpanel-popup-host");
-    hostElement.textContent = host;
+    hostElement.setAttribute("value", host);
     hostElement.setAttribute("tooltiptext", host);
 
     document.l10n.setAttributes(
