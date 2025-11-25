@@ -61,7 +61,6 @@ for patch in \
  double-conversion.diff \
  bug-1856290-ICU-20548-dateinterval-timezone.diff \
  bug-1954138-dtitvfmt-adopt-calendar.diff \
- bug-1954138-ICU-23069-rosh-hashanah-postponement.diff \
  bug-1972781-chinese-based-calendar.diff \
 ; do
   echo "Applying local patch $patch"
