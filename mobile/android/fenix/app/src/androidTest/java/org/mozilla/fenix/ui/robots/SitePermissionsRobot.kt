@@ -16,6 +16,7 @@ import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextEquals
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -82,6 +83,12 @@ class SitePermissionsRobot {
                 assertItemTextEquals(allowPagePermissionButton(), expectedText = "Allow")
             }
         }
+    }
+
+    fun verifyDoNotAskAgainIsHidden() {
+        Log.i(TAG, "verifyDoNotAskAgainIsHidden: asserting that the \"Remember decision for this site\" check box does not exist")
+        assertUIObjectIsGone(doNotAskAgainCheckBox())
+        Log.i(TAG, "verifyDoNotAskAgainIsHidden: asserted that the \"Remember decision for this site\" check box does not exist")
     }
 
     fun verifyNotificationsPermissionPrompt(host: String, blocked: Boolean = false) {
@@ -226,3 +233,6 @@ private fun allowPagePermissionButton() =
 
 private fun denyPagePermissionButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/deny_button"))
+
+private fun doNotAskAgainCheckBox() =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/do_not_ask_again"))

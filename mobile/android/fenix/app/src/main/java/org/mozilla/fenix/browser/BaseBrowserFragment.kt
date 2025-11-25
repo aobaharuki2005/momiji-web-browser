@@ -1257,6 +1257,7 @@ abstract class BaseBrowserFragment :
                         it,
                     )
                 },
+                shouldShowDoNotAskAgainCheckBox = context.components.appStore.state.mode != BrowsingMode.Private,
                 store = store,
             ),
             owner = this,
