@@ -2628,11 +2628,10 @@ bool nsRefreshDriver::PaintIfNeeded() {
     }
     mCompositionPayloads.Clear();
   }
-  RefPtr<PresShell> ps = mPresContext->PresShell();
+  RefPtr<nsViewManager> vm = mPresContext->PresShell()->GetViewManager();
   {
     PaintTelemetry::AutoRecordPaint record;
-    ps->SyncWindowPropertiesIfNeeded();
-    ps->PaintSynchronously();
+    vm->ProcessPendingUpdates();
     // Paint our popups.
     if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
       pm->PaintPopups(this);
