@@ -2108,7 +2108,8 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
           aSample->mEOS ? " eos" : "");
 
   decoder.StartRecordDecodingPerf(aTrack, aSample);
-  if (mMediaEngineId && aSample->mCrypto.IsEncrypted()) {
+  if (aSample->mCrypto.IsEncrypted() &&
+      (mMediaEngineId || (mCDMProxy && !!mCDMProxy->AsRemoteCDMChild()))) {
     aSample->mShouldCopyCryptoToRemoteRawData = true;
   }
   decoder.mDecoder->Decode(aSample)
