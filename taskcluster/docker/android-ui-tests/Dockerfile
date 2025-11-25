@@ -14,7 +14,6 @@ ENV CURL='curl --location --retry 5' \
 
 RUN apt-get update && \
     apt-get install \
-      autoconf2.13 \
       build-essential \
       base-files \
       ccache \

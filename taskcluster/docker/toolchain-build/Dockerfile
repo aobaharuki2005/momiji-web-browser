@@ -14,7 +14,6 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
 RUN apt-get update && \
     apt-get install \
       autoconf \
-      autoconf2.13 \
       automake \
       bison \
       build-essential \
