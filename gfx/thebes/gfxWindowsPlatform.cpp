@@ -603,6 +603,7 @@ void gfxWindowsPlatform::GetCommonFallbackFonts(
       // in future if we get better at handling things like `lang=zh-Hant`, not
       // just resolving based on the Unicode text.
     case Script::TRADITIONAL_HAN:
+    case Script::TRADITIONAL_HAN_WITH_LATIN:
       aFontList.AppendElement("MingLiU");
       if (aCh > 0xFFFF) {
         aFontList.AppendElement("MingLiU-ExtB");
@@ -963,6 +964,7 @@ void gfxWindowsPlatform::GetCommonFallbackFonts(
 
     case Script::AFAKA:
     case Script::ANATOLIAN_HIEROGLYPHS:
+    case Script::BERIA_ERFE:
     case Script::BLISSYMBOLS:
     case Script::BOOK_PAHLAVI:
     case Script::CHORASMIAN:
@@ -1002,14 +1004,17 @@ void gfxWindowsPlatform::GetCommonFallbackFonts(
     case Script::OLD_UYGHUR:
     case Script::RONGORONGO:
     case Script::SARATI:
+    case Script::SIDETIC:
     case Script::SIGNWRITING:
     case Script::SOGDIAN:
     case Script::SOYOMBO:
     case Script::SUNUWAR:
+    case Script::TAI_YO:
     case Script::TANGSA:
     case Script::TANGUT:
     case Script::TENGWAR:
     case Script::TODHRI:
+    case Script::TOLONG_SIKI:
     case Script::TOTO:
     case Script::TULU_TIGALARI:
     case Script::UNKNOWN:
