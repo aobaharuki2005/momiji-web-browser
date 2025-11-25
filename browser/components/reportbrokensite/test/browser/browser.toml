@@ -8,9 +8,6 @@ support-files = [
 
 ["browser_addon_data_sent.js"]
 support-files = [ "send_more_info.js" ]
-skip-if = [
-  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt", # Bug 1955805
-]
 
 ["browser_antitracking_data_sent.js"]
 support-files = [ "send_more_info.js" ]
@@ -37,6 +34,8 @@ skip-if = [
 ["browser_prefers_contrast.js"]
 
 ["browser_reason_dropdown.js"]
+
+["browser_report_preview.js"]
 
 ["browser_report_send.js"]
 support-files = [ "send.js" ]
