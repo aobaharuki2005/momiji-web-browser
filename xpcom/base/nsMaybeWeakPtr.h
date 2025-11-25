@@ -11,7 +11,6 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsTArray.h"
 #include "nsCycleCollectionNoteChild.h"
-#include "xpcpublic.h"
 
 // nsMaybeWeakPtr is a helper object to hold a strong-or-weak reference
 // to the template class.  It's pretty minimal, but sufficient.
@@ -81,15 +80,6 @@ class nsMaybeWeakPtrArray : public CopyableTArray<nsMaybeWeakPtr<T>> {
   nsresult AppendWeakElement(T* aElement, bool aOwnsWeak) {
     nsMaybeWeakPtr<T> ref;
     MOZ_TRY(SetMaybeWeakPtr(ref, aElement, aOwnsWeak));
-
-#if (defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && !defined(MOZ_THUNDERBIRD))
-    // Checking for duplicates is expensive, so we enforce callers to avoid
-    // this with a diagnostic assertion. See bug 2000788 for Thunderbird.
-    if (MaybeWeakArray::Contains(aElement)) {
-      xpc_DumpJSStack(true, true, false);
-      MOZ_DIAGNOSTIC_ASSERT(false, "Element already in array.");
-    }
-#endif
 
     MaybeWeakArray::AppendElement(ref);
     return NS_OK;
