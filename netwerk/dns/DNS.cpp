@@ -250,8 +250,12 @@ nsILoadInfo::IPAddressSpace NetAddr::GetIpAddressSpace() const {
     return overriddenIpAddressSpace;
   }
 
-  if (addr->IsBenchMarkingAddress() || addr->IsLoopbackAddr() ||
-      addr->IsIPAddrAny()) {
+  if (StaticPrefs::network_lna_benchmarking_is_local() &&
+      addr->IsBenchMarkingAddress()) {
+    return nsILoadInfo::IPAddressSpace::Local;
+  }
+
+  if (addr->IsLoopbackAddr() || addr->IsIPAddrAny()) {
     return nsILoadInfo::IPAddressSpace::Local;
   }
 

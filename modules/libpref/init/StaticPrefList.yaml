@@ -14594,6 +14594,16 @@
   value: true
   mirror: always
 
+# When true, benchmarking IP addresses 198.18.X.X is treated as local
+# Depending on how this ends up being treated in the LNA spec, we might
+# change it to be in the private space, but for now it's disabled to
+# match Chrome LNA behaviour.
+- name: network.lna.benchmarking-is-local
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+
 # The proxy type. See nsIProtocolProxyService.idl
 #     PROXYCONFIG_DIRECT   = 0
 #     PROXYCONFIG_MANUAL   = 1
