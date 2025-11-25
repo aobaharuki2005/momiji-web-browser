@@ -6099,6 +6099,21 @@
       }
     ]
   },
+  "2000529": {
+    "label": "top.cafe.daum.net",
+    "bugs": {
+      "2000529": {
+        "issue": "desktop-layout-not-mobile",
+        "matches": ["*://top.cafe.daum.net/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
+  },
   "2000558": {
     "label": "www.jal.co.jp",
     "bugs": {
