@@ -238,6 +238,10 @@ mobile/android/**/.kotlin
 mobile/android/**/bin
 mobile/android/**/generated
 
+# app-services build artifacts.
+services/app-services/tools/nimbus-gradle-plugin/.gradle
+services/app-services/tools/nimbus-gradle-plugin/build
+
 # Android local.properties
 mobile/android/**/local.properties
 

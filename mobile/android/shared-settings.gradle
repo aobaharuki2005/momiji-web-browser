@@ -45,6 +45,8 @@ class Config {
     public final Integer compileSdkVersion
     public final Integer minSdkVersion
     public final Integer targetSdkVersion
+    public final String ndkVersion
+
 
     Config(
             String componentsVersion,
@@ -52,7 +54,8 @@ class Config {
             Integer jvmTargetCompatibility,
             Integer compileSdkVersion,
             Integer minSdkVersion,
-            Integer targetSdkVersion
+            Integer targetSdkVersion,
+            String ndkVersion
     ) {
         this.componentsVersion = componentsVersion
         this.componentsGroupId = componentsGroupId
@@ -60,6 +63,7 @@ class Config {
         this.compileSdkVersion = compileSdkVersion
         this.minSdkVersion = minSdkVersion
         this.targetSdkVersion = targetSdkVersion
+        this.ndkVersion = ndkVersion
     }
 }
 
@@ -141,6 +145,8 @@ gradle.projectsLoaded { ->
     } else if (gradle.hasProperty("localProperties.branchBuild.android-components.version")) {
         version = gradle.getProperty("localProperties.branchBuild.android-components.version")
     }
+    // get the ndk version from the external build environment.
+    def ndkVersion = "${gradle.mozconfig.substs.ANDROID_NDK_MAJOR_VERSION}.${gradle.mozconfig.substs.ANDROID_NDK_MINOR_VERSION}"
 
     // Wait until root project is "loaded" before we set "config"
     // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
@@ -151,7 +157,8 @@ gradle.projectsLoaded { ->
             configData.jvmTargetCompatibility,
             configData.compileSdkVersion,
             configData.minSdkVersion,
-            configData.targetSdkVersion
+            configData.targetSdkVersion,
+            ndkVersion
     )
 
     gradle.rootProject.ext.buildConfig = buildconfig
