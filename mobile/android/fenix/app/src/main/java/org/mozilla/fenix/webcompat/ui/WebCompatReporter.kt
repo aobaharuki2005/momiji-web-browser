@@ -114,7 +114,9 @@ fun WebCompatReporter(
                 .verticalScroll(scrollState)
                 .padding(paddingValues)
                 .imePadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .width(FirefoxTheme.layout.size.containerMaxWidth),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             LinkText(
                 text = stringResource(
