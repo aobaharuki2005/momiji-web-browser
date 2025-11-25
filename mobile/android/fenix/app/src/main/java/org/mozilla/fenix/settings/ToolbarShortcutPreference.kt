@@ -139,9 +139,6 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
             intArrayOf(colorTertiary, colorOnSurfaceVariant),
         )
 
-        row.isFocusable = true
-        row.isFocusableInTouchMode = true
-        row.isClickable = isEnabled
         row.isEnabled = isEnabled
         row.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
 
