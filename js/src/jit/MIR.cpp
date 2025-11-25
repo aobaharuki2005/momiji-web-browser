@@ -7179,7 +7179,8 @@ MDefinition* MGuardSpecificInt32::foldsTo(TempAllocator& alloc) {
 
 MDefinition* MGuardShape::foldsTo(TempAllocator& alloc) {
   if (object()->isGuardShape() &&
-      shape() == object()->toGuardShape()->shape()) {
+      shape() == object()->toGuardShape()->shape() && dependency() &&
+      object()->dependency() == dependency()) {
     return object();
   }
   return this;
