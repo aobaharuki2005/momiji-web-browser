@@ -96,9 +96,9 @@ class HistoryMetadataGroupFragment :
 
         interactor = DefaultHistoryMetadataGroupInteractor(
             controller = DefaultHistoryMetadataGroupController(
-                historyStorage = (activity as HomeActivity).components.core.historyStorage,
-                browserStore = (activity as HomeActivity).components.core.store,
-                appStore = requireContext().components.appStore,
+                historyStorage = requireComponents.core.historyStorage,
+                browserStore = requireComponents.core.store,
+                appStore = requireComponents.appStore,
                 store = historyMetadataGroupStore,
                 selectOrAddUseCase = requireComponents.useCases.tabsUseCases.selectOrAddTab,
                 fenixBrowserUseCases = requireComponents.useCases.fenixBrowserUseCases,
