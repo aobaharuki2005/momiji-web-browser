@@ -5308,6 +5308,7 @@ fail-if = [
   "os == 'linux' && os_version == '18.04'",
   "os == 'linux' && os_version == '22.04'",
 ]
+tags = "os_integration"
 
 ["generated/test_2_conformance2__context__context-mode.html"]
 subsuite = "webgl2-core"

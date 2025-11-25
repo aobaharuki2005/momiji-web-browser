@@ -410,6 +410,7 @@ run-if = [
   "os == 'win'", # Only Windows 1809+ supports pen input synthesis
 ]
 support-files = ["!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"]
+tags = "os_integration"
 
 ["test_click_hold_context_menus.html"]
 tags = "os_integration"

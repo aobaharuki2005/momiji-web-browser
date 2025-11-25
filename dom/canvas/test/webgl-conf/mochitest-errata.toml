@@ -48,6 +48,8 @@ fail-if = [
   "os == 'linux' && os_version == '18.04'",
   "os == 'linux' && os_version == '22.04'",
 ]
+tags = "os_integration"
+
 
 ["generated/test_2_conformance2__extensions__ext-color-buffer-float.html"]
 skip-if = [

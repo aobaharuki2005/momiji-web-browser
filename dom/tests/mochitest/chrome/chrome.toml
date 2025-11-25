@@ -77,6 +77,7 @@ tags = "openwindow"
 ["test_first_focusable_in_scope.xhtml"]
 
 ["test_focus.xhtml"]
+tags = "os_integration"
 
 ["test_focus_dialog.xhtml"]
 
