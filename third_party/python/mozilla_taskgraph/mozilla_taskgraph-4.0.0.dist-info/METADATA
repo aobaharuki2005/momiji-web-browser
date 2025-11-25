@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: mozilla-taskgraph
-Version: 4.0.1
+Version: 4.0.0
 Summary: Mozilla specific transforms and utilities for Taskgraph
 Project-URL: Repository, https://github.com/mozilla-releng/mozilla-taskgraph
 Project-URL: Issues, https://github.com/mozilla-releng/mozilla-taskgraph/issues
@@ -13,11 +13,9 @@ Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
 Classifier: Programming Language :: Python :: 3.12
-Classifier: Programming Language :: Python :: 3.13
-Classifier: Programming Language :: Python :: 3.14
 Classifier: Topic :: Software Development
 Requires-Python: >=3.9
-Requires-Dist: taskcluster-taskgraph<19,>=16.2.1
+Requires-Dist: taskcluster-taskgraph<18,>=16.2.1
 Description-Content-Type: text/markdown
 
 [![Task Status](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-releng/mozilla-taskgraph/main/badge.svg)](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-releng/mozilla-taskgraph/main/latest)

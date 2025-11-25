@@ -67,6 +67,15 @@ run_task_schema = Schema(
             ),
         ): str,
         Required(
+            "sparse-profile",
+            description=dedent(
+                """
+                The sparse checkout profile to use. Value is the filename relative to the
+                directory where sparse profiles are defined (build/sparse-profiles/).
+                """.lstrip()
+            ),
+        ): Any(str, None),
+        Required(
             "command",
             description=dedent(
                 """
@@ -131,11 +140,20 @@ def common_setup(config, task, taskdesc, command):
             task,
             taskdesc,
             repo_configs=repo_configs,
+            sparse=bool(run["sparse-profile"]),
         )
 
         for repo_config in repo_configs.values():
             checkout_path = path.join(vcs_path, repo_config.path)
             command.append(f"--{repo_config.prefix}-checkout={checkout_path}")
+
+        if run["sparse-profile"]:
+            command.append(
+                "--{}-sparse-profile=build/sparse-profiles/{}".format(
+                    repo_config.prefix,  # type: ignore
+                    run["sparse-profile"],
+                )
+            )
 
         if "cwd" in run:
             run["cwd"] = path.normpath(run["cwd"].format(checkout=vcs_path))
@@ -156,6 +174,7 @@ def common_setup(config, task, taskdesc, command):
 
 worker_defaults = {
     "checkout": True,
+    "sparse-profile": None,
     "run-as-root": False,
 }
 

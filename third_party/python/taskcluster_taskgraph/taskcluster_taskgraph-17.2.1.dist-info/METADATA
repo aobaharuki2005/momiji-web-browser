@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: taskcluster-taskgraph
-Version: 18.0.0
+Version: 17.2.1
 Summary: Build taskcluster taskgraphs
 Project-URL: Repository, https://github.com/taskcluster/taskgraph
 Project-URL: Issues, https://github.com/taskcluster/taskgraph/issues
@@ -26,7 +26,7 @@ Requires-Dist: redo>=2.0
 Requires-Dist: requests>=2.25
 Requires-Dist: slugid>=2.0
 Requires-Dist: taskcluster-urls>=11.0
-Requires-Dist: taskcluster<92.0,>=91.0
+Requires-Dist: taskcluster>=91.0
 Requires-Dist: voluptuous>=0.12.1
 Provides-Extra: load-image
 Requires-Dist: zstandard; extra == 'load-image'
