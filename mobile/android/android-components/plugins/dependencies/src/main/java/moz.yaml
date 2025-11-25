@@ -31,11 +31,11 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: 44e382ea51c8a794763fab2f67b452e1df11f0df (2025-11-25T05:04:09).
+  release: a654412b9624ead4cb1406629e2d5890ce766dda (2025-11-25T17:06:15).
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 44e382ea51c8a794763fab2f67b452e1df11f0df
+  revision: a654412b9624ead4cb1406629e2d5890ce766dda
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
