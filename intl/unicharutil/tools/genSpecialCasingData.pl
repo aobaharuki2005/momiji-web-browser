@@ -83,8 +83,8 @@ print <<__END__;
    by genSpecialCasingData.pl - do not edit! */
 
 #include "nsSpecialCasingData.h"
-#include "mozilla/ArrayUtils.h" // for ArrayLength
 #include <stdlib.h>       // for bsearch
+#include <array>          // for std::size
 
 __END__
 map { print "/* $_ */\n" } @headerLines;
