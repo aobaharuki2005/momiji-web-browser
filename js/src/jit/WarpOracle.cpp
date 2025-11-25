@@ -862,12 +862,6 @@ bool WarpOracle::addFuseDependency(RealmFuses::FuseIndex fuseIndex,
                               CompilationDependency::Type::RegExpPrototype>;
       return addIfStillValid(Dependency());
     }
-    case RealmFuses::FuseIndex::OptimizeStringPrototypeSymbolsFuse: {
-      using Dependency = RealmFuseDependency<
-          &RealmFuses::optimizeStringPrototypeSymbolsFuse,
-          CompilationDependency::Type::StringPrototypeSymbols>;
-      return addIfStillValid(Dependency());
-    }
     default:
       MOZ_ASSERT(!RealmFuses::isInvalidatingFuse(fuseIndex));
       *stillValid = true;
