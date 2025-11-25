@@ -19286,6 +19286,9 @@ class CGBindingRoot(CGThing):
             or descriptorHasObservableArrayTypes(d)
             for d in descriptors
         )
+        bindingHeaders["mozilla/dom/ToJSValue.h"] = any(
+            descriptorHasObservableArrayTypes(d) for d in descriptors
+        )
         bindingDeclareHeaders["js/TypeDecls.h"] = not bindingDeclareHeaders["jsapi.h"]
         bindingDeclareHeaders["js/RootingAPI.h"] = not bindingDeclareHeaders["jsapi.h"]
 
