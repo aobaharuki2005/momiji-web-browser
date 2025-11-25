@@ -1293,7 +1293,10 @@ class PresShell final : public nsStubDocumentObserver,
     return mNeedLayoutFlush || mNeedStyleFlush;
   }
 
-  void SyncWindowProperties();
+  void MOZ_CAN_RUN_SCRIPT PaintSynchronously();
+  // Ensures the top-level window has the right size constraints /
+  // color-scheme / etc.
+  void SyncWindowPropertiesIfNeeded();
   struct WindowSizeConstraints {
     nsSize mMinSize;
     nsSize mMaxSize;
@@ -3413,6 +3416,7 @@ class PresShell final : public nsStubDocumentObserver,
   bool mDidInitialize : 1;
   bool mIsDestroying : 1;
   bool mIsReflowing : 1;
+  bool mIsPainting : 1 = false;
   bool mIsObservingDocument : 1;
 
   // Whether we shouldn't ever get to FlushPendingNotifications. This flag is

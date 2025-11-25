@@ -101,14 +101,6 @@ class nsViewManager final {
 
  public:
   /**
-   * Indicate whether the viewmanager is currently painting
-   *
-   * @param aPainting true if the viewmanager is painting
-   *                  false otherwise
-   */
-  void IsPainting(bool& aIsPainting);
-
-  /**
    * Retrieve the time of the last user event. User events
    * include mouse and keyboard events. The viewmanager
    * saves the time of the last user event.
@@ -122,27 +114,8 @@ class nsViewManager final {
    */
   MOZ_CAN_RUN_SCRIPT void ProcessPendingUpdates();
 
-  /**
-   * Just update widget geometry without flushing the dirty region
-   */
-  MOZ_CAN_RUN_SCRIPT void UpdateWidgetGeometry();
-
-  // Call this when you need to let the viewmanager know that it now has
-  // pending updates.
-  void PostPendingUpdate();
-
  private:
   static uint32_t gLastUserEventTime;
-
-  void FlushPendingInvalidates();
-
-  MOZ_CAN_RUN_SCRIPT
-  void ProcessPendingUpdatesForView(nsView* aView,
-                                    bool aFlushDirtyRegion = true);
-  void ProcessPendingUpdatesRecurse(
-      nsView* aView, AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets);
-  MOZ_CAN_RUN_SCRIPT
-  void ProcessPendingUpdatesPaint(nsIWidget* aWidget);
 
   /**
    * Call WillPaint() on all view observers under this vm root.
@@ -151,24 +124,15 @@ class nsViewManager final {
   static void CollectVMsForWillPaint(nsView* aView, nsViewManager* aParentVM,
                                      nsTArray<RefPtr<nsViewManager>>& aVMs);
 
-  // aView is the view for aWidget and aRegion is relative to aWidget.
-  MOZ_CAN_RUN_SCRIPT
-  void Refresh(nsView* aView, const LayoutDeviceIntRegion& aRegion);
-
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoSetWindowDimensions(const nsSize&);
   bool ShouldDelayResize() const;
-
-  bool IsPainting() const { return RootViewManager()->mPainting; }
-
-  void SetPainting(bool aPainting) { RootViewManager()->mPainting = aPainting; }
 
   nsViewManager* RootViewManager() const;
   nsViewManager* GetParentViewManager() const;
   bool IsRootVM() const { return !GetParentViewManager(); }
 
   MOZ_CAN_RUN_SCRIPT void WillPaintWindow(nsIWidget* aWidget);
-  MOZ_CAN_RUN_SCRIPT
-  bool PaintWindow(nsIWidget* aWidget, const LayoutDeviceIntRegion& aRegion);
+  MOZ_CAN_RUN_SCRIPT void PaintWindow(nsIWidget* aWidget);
   MOZ_CAN_RUN_SCRIPT void DidPaintWindow();
 
   mozilla::PresShell* mPresShell;
@@ -178,14 +142,6 @@ class nsViewManager final {
   nsSize mDelayedResize;
 
   nsView* mRootView;
-
-  // The following members should not be accessed directly except by
-  // the root view manager.  Some have accessor functions to enforce
-  // this, as noted.
-  // Use IsPainting() and SetPainting() to access mPainting.
-  bool mPainting;
-  bool mHasPendingWidgetGeometryChanges;
-
   // from here to public should be static and locked... MMP
 };
 

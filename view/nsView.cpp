@@ -263,9 +263,9 @@ void nsView::WillPaintWindow(nsIWidget* aWidget) {
   vm->WillPaintWindow(aWidget);
 }
 
-bool nsView::PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion aRegion) {
+bool nsView::PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion) {
   RefPtr<nsViewManager> vm = mViewManager;
-  vm->Refresh(this, aRegion);
+  vm->PaintWindow(aWidget);
   return true;
 }
 

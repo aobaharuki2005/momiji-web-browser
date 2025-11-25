@@ -54,9 +54,7 @@ uint32_t nsViewManager::gLastUserEventTime = 0;
 nsViewManager::nsViewManager()
     : mPresShell(nullptr),
       mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
-      mRootView(nullptr),
-      mPainting(false),
-      mHasPendingWidgetGeometryChanges(false) {}
+      mRootView(nullptr) {}
 
 nsViewManager::~nsViewManager() {
   if (mRootView) {
@@ -171,170 +169,28 @@ nsViewManager* nsViewManager::GetParentViewManager() const {
   return nullptr;
 }
 
-/**
-   aRegion is given in device coordinates!!
-   aContext may be null, in which case layers should be used for
-   rendering.
-*/
-void nsViewManager::Refresh(nsView* aView,
-                            const LayoutDeviceIntRegion& aRegion) {
-  NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
-
-  if (mPresShell && mPresShell->IsNeverPainting()) {
-    return;
-  }
-
-  if (aRegion.IsEmpty()) {
-    return;
-  }
-
-  nsIWidget* widget = aView->GetWidget();
-  if (!widget) {
-    return;
-  }
-
-  MOZ_ASSERT(!IsPainting(), "recursive painting not permitted");
-  if (NS_WARN_IF(IsPainting())) {
-    return;
-  }
-
-  {
-    nsAutoScriptBlocker scriptBlocker;
-    SetPainting(true);
-
-    if (RefPtr<PresShell> presShell = mPresShell) {
-#ifdef MOZ_DUMP_PAINTING
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("--COMPOSITE-- %p\n", presShell.get());
-      }
-#endif
-      RefPtr<WindowRenderer> renderer = widget->GetWindowRenderer();
-      if (!renderer->NeedsWidgetInvalidation()) {
-        renderer->FlushRendering(wr::RenderReasons::WIDGET);
-      } else {
-        presShell->SyncPaintFallback(presShell->GetRootFrame(), renderer);
-      }
-#ifdef MOZ_DUMP_PAINTING
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("--ENDCOMPOSITE--\n");
-      }
-#endif
-      mozilla::StartupTimeline::RecordOnce(
-          mozilla::StartupTimeline::FIRST_PAINT);
-    }
-
-    SetPainting(false);
-  }
-}
-
-void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
-                                                 bool aFlushDirtyRegion) {
-  NS_ASSERTION(IsRootVM(), "Updates will be missed");
-  if (!aView) {
-    return;
-  }
-
-  RefPtr<PresShell> rootPresShell = mPresShell;
-  AutoTArray<nsCOMPtr<nsIWidget>, 1> widgets;
-  aView->GetViewManager()->ProcessPendingUpdatesRecurse(aView, widgets);
-  for (nsIWidget* widget : widgets) {
-    MOZ_ASSERT(widget->IsTopLevelWidget());
-    if (RefPtr ps = widget->GetPresShell()) {
-      ps->SyncWindowProperties();
-    }
-  }
-  if (rootPresShell->GetViewManager() != this) {
-    return;  // presentation might have been torn down
-  }
-  if (aFlushDirtyRegion) {
-    nsAutoScriptBlocker scriptBlocker;
-    SetPainting(true);
-    for (nsIWidget* widget : widgets) {
-      if (RefPtr ps = widget->GetPresShell()) {
-        RefPtr vm = ps->GetViewManager();
-        vm->ProcessPendingUpdatesPaint(MOZ_KnownLive(widget));
-      }
-    }
-    SetPainting(false);
-  }
-}
-
-void nsViewManager::ProcessPendingUpdatesRecurse(
-    nsView* aView, AutoTArray<nsCOMPtr<nsIWidget>, 1>& aWidgets) {
-  if (mPresShell && mPresShell->IsNeverPainting()) {
-    return;
-  }
-
-  if (nsIWidget* widget = aView->GetWidget()) {
-    aWidgets.AppendElement(widget);
-  }
-}
-
-void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
-  if (!aWidget->NeedsPaint()) {
-    return;
-  }
-  // If an ancestor widget was hidden and then shown, we could
-  // have a delayed resize to handle.
-  if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) && mPresShell &&
-      mPresShell->IsVisible()) {
-    FlushDelayedResize();
-  }
-
-  if (!mRootView || !mPresShell) {
-    NS_ERROR("FlushDelayedResize destroyed the view?");
-    return;
-  }
-
-  nsIWidgetListener* previousListener =
-      aWidget->GetPreviouslyAttachedWidgetListener();
-
-  if (previousListener && previousListener != mRootView &&
-      mRootView->IsPrimaryFramePaintSuppressed()) {
-    return;
-  }
-
+void nsViewManager::PaintWindow(nsIWidget* aWidget) {
   RefPtr ps = mPresShell;
-#ifdef MOZ_DUMP_PAINTING
-  if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-    printf_stderr("---- PAINT START ----PresShell(%p), nsIWidget(%p)\n",
-                  ps.get(), aWidget);
+  if (!ps) {
+    return;
   }
-#endif
-
-  ps->PaintAndRequestComposite(ps->GetRootFrame(), aWidget->GetWindowRenderer(),
-                               PaintFlags::None);
-  mRootView->SetForcedRepaint(false);
-
-#ifdef MOZ_DUMP_PAINTING
-  if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-    printf_stderr("---- PAINT END ----\n");
+  RefPtr renderer = aWidget->GetWindowRenderer();
+  if (renderer->NeedsWidgetInvalidation()) {
+    renderer->FlushRendering(wr::RenderReasons::WIDGET);
+  } else {
+    ps->SyncPaintFallback(ps->GetRootFrame(), renderer);
   }
-#endif
-}
-
-void nsViewManager::PostPendingUpdate() {
-  nsViewManager* rootVM = RootViewManager();
-  rootVM->mHasPendingWidgetGeometryChanges = true;
-  if (rootVM->mPresShell) {
-    rootVM->mPresShell->SetNeedLayoutFlush();
-    rootVM->mPresShell->SchedulePaint();
-  }
+  mozilla::StartupTimeline::RecordOnce(mozilla::StartupTimeline::FIRST_PAINT);
 }
 
 void nsViewManager::WillPaintWindow(nsIWidget* aWidget) {
-  if (!aWidget) {
+  WindowRenderer* renderer = aWidget->GetWindowRenderer();
+  if (renderer->NeedsWidgetInvalidation()) {
     return;
   }
-  WindowRenderer* renderer = aWidget->GetWindowRenderer();
-  if (mRootView &&
-      (mRootView->ForcedRepaint() || !renderer->NeedsWidgetInvalidation())) {
-    ProcessPendingUpdates();
-    // Re-get the view pointer here since the ProcessPendingUpdates might have
-    // destroyed it during CallWillPaintOnObservers.
-    if (mRootView) {
-      mRootView->SetForcedRepaint(false);
-    }
+  if (RefPtr ps = mPresShell) {
+    // FIXME(bug 2002232): Why is this needed?
+    ps->PaintSynchronously();
   }
 }
 
@@ -368,64 +224,4 @@ void nsViewManager::ResizeView(nsView* aView, const nsSize& aSize) {
   // in the case where mClipRect has been optimized away to just be a null
   // pointer, and this resize is implicitly changing the clip rect, it's OK
   // because layout will change it back again if necessary.
-}
-
-void nsViewManager::IsPainting(bool& aIsPainting) {
-  aIsPainting = IsPainting();
-}
-
-void nsViewManager::ProcessPendingUpdates() {
-  if (!IsRootVM()) {
-    RefPtr<nsViewManager> rootViewManager = RootViewManager();
-    rootViewManager->ProcessPendingUpdates();
-    return;
-  }
-
-  // Flush things like reflows by calling WillPaint on observer presShells.
-  if (mPresShell) {
-    RefPtr<nsViewManager> strongThis(this);
-    CallWillPaintOnObservers();
-
-    ProcessPendingUpdatesForView(mRootView, true);
-  }
-}
-
-void nsViewManager::UpdateWidgetGeometry() {
-  if (!IsRootVM()) {
-    RefPtr<nsViewManager> rootViewManager = RootViewManager();
-    rootViewManager->UpdateWidgetGeometry();
-    return;
-  }
-
-  if (mHasPendingWidgetGeometryChanges) {
-    mHasPendingWidgetGeometryChanges = false;
-    ProcessPendingUpdatesForView(mRootView, false);
-  }
-}
-
-/* static */ void nsViewManager::CollectVMsForWillPaint(
-    nsView* aView, nsViewManager* aParentVM,
-    nsTArray<RefPtr<nsViewManager>>& aVMs) {
-  nsViewManager* vm = aView->GetViewManager();
-  if (vm != aParentVM) {
-    aVMs.AppendElement(vm);
-  }
-}
-
-void nsViewManager::CallWillPaintOnObservers() {
-  MOZ_ASSERT(IsRootVM(), "Must be root VM for this to be called!");
-
-  if (!mRootView) {
-    return;
-  }
-
-  AutoTArray<RefPtr<nsViewManager>, 2> VMs;
-  CollectVMsForWillPaint(mRootView, nullptr, VMs);
-  for (const auto& vm : VMs) {
-    if (vm->GetRootView()) {
-      if (RefPtr<PresShell> presShell = vm->GetPresShell()) {
-        presShell->WillPaint();
-      }
-    }
-  }
 }
