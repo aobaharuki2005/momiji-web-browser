@@ -9972,16 +9972,6 @@ void nsWindow::OnUnmap() {
     // Reset scale for hidden windows
     mCeiledScaleFactor = sNoScale;
   }
-
-  // Until bug 1654938 is fixed we delete layer manager for hidden popups,
-  // otherwise it can easily hold 1GB+ memory for a long time.
-  //
-  // Don't do this for temporarily hidden popups tho, as remote content is not
-  // set up to survive the layer manager destruction of the containing window,
-  // see bug 1958695.
-  if (mWindowType == WindowType::Popup && !mPopupTemporaryHidden) {
-    DestroyLayerManager();
-  }
 }
 
 // Apply workaround for Mutter compositor bug (mzbz#1777269).
