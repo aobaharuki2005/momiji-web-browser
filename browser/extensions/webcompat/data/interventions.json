@@ -5576,6 +5576,21 @@
       }
     ]
   },
+  "1982880": {
+    "label": "yoshinoya-mini-web.starboss.biz",
+    "bugs": {
+      "1982880": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://yoshinoya-mini-web.starboss.biz/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1983538": {
     "label": "incontrol.landrover.com",
     "bugs": {
