@@ -5,9 +5,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning: General")
 
-MOZ_SRC_FILES += [
-    "InsightsHistorySource.sys.mjs",
-]
+MOZ_SRC_FILES += ["InsightsHistorySource.sys.mjs", "IntentClassifier.sys.mjs"]
 
 XPCSHELL_TESTS_MANIFESTS += [
     "tests/xpcshell/xpcshell.toml",

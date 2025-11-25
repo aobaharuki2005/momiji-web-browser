@@ -336,6 +336,11 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs",
   },
+
+  // Bug 2000945 - Move query intent detection to AI-window r?mardak (backed out due to unused file)
+  {
+    file: "moz-src:///browser/components/aiwindow/models/IntentClassifier.sys.mjs",
+  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
