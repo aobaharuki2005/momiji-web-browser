@@ -6145,5 +6145,20 @@
         }
       }
     ]
+  },
+  "2002012": {
+    "label": "bbs.colg.cn",
+    "bugs": {
+      "2002012": {
+        "issue": "broken-layout",
+        "matches": ["*://bbs.colg.cn/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["desktop"],
+        "ua_string": ["Chrome_with_FxQuantum"]
+      }
+    ]
   }
 }
