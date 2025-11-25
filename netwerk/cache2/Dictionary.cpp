@@ -169,7 +169,7 @@ bool DictionaryCacheEntry::Match(const nsACString& aFilePath,
                 aType)) != mMatchDest.NoIndex) {
       UrlpPattern pattern;
       UrlpOptions options;
-      const nsCString base(mURI);
+      const nsCString base("https://foo.com/"_ns);
       if (!urlp_parse_pattern_from_string(&mPattern, &base, options,
                                           &pattern)) {
         DICTIONARY_LOG(
