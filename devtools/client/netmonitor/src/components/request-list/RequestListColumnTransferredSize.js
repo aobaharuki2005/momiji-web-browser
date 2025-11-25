@@ -79,7 +79,8 @@ class RequestListColumnTransferredSize extends Component {
 
     return dom.td(
       {
-        className: "requests-list-column requests-list-transferred",
+        className:
+          "requests-list-column requests-list-number-column requests-list-transferred",
         title,
       },
       text
