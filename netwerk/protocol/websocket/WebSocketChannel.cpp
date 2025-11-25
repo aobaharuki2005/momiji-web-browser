@@ -3517,6 +3517,8 @@ WebSocketChannel::AsyncOpenNative(nsIURI* aURI, const nsACString& aOrigin,
   nsCOMPtr<nsIURI> localURI;
   nsCOMPtr<nsIChannel> localChannel;
 
+  LOG(("WebSocketChannel::AsyncOpen uri=%s", mURI->GetSpecOrDefault().get()));
+
   rv = NS_MutateURI(mURI)
            .SetScheme(mEncrypted ? "https"_ns : "http"_ns)
            .Finalize(localURI);
