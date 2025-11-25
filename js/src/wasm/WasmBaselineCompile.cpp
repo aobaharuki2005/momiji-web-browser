@@ -8974,12 +8974,17 @@ bool BaseCompiler::emitRefCast(bool nullable) {
 
   RegRef ref = popRef();
 
-  Label success;
+  OutOfLineCode* ool = addOutOfLineCode(
+      new (alloc_) OutOfLineAbortingTrap(Trap::BadCast, trapSiteDesc()));
+  if (!ool) {
+    return false;
+  }
+
   BranchIfRefSubtypeRegisters regs =
       allocRegistersForBranchIfRefSubtype(destType);
   FaultingCodeOffset fco = masm.branchWasmRefIsSubtype(
-      ref, MaybeRefType(sourceType), destType, &success,
-      /*onSuccess=*/true, /*signalNullChecks=*/true, regs.superSTV,
+      ref, MaybeRefType(sourceType), destType, ool->entry(),
+      /*onSuccess=*/false, /*signalNullChecks=*/true, regs.superSTV,
       regs.scratch1, regs.scratch2);
   if (fco.isValid()) {
     masm.append(wasm::Trap::BadCast, wasm::TrapMachineInsnForLoadWord(),
@@ -8987,8 +8992,6 @@ bool BaseCompiler::emitRefCast(bool nullable) {
   }
   freeRegistersForBranchIfRefSubtype(regs);
 
-  trap(Trap::BadCast);
-  masm.bind(&success);
   pushRef(ref);
 
   return true;
