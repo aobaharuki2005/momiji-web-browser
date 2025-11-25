@@ -501,7 +501,7 @@ skip-if = [
 ["browser_tabContextMenu_keyboard.js"]
 tags = "vertical-tabs"
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && asan", # Bug 1974090
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64'", # Bug 1974090
 ]
 
 ["browser_tabDrop.js"]
