@@ -17,10 +17,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.benchmark.utils.FENIX_HOME_DEEP_LINK
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
-import org.mozilla.fenix.benchmark.utils.dismissCFR
 import org.mozilla.fenix.benchmark.utils.dismissWallpaperOnboarding
 import org.mozilla.fenix.benchmark.utils.flingToEnd
-import org.mozilla.fenix.benchmark.utils.isBrowserToolbarCfrShown
 import org.mozilla.fenix.benchmark.utils.isWallpaperOnboardingShown
 import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
 
@@ -80,10 +78,6 @@ class BaselineProfilesHomepageScrollBenchmark {
 
             if (device.isWallpaperOnboardingShown()) {
                 device.dismissWallpaperOnboarding()
-            }
-
-            if (device.isBrowserToolbarCfrShown()) {
-                device.dismissCFR()
             }
 
             device.flingToEnd(

@@ -17,10 +17,8 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.benchmark.utils.HtmlAsset
 import org.mozilla.fenix.benchmark.utils.MockWebServerRule
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
-import org.mozilla.fenix.benchmark.utils.dismissCFR
 import org.mozilla.fenix.benchmark.utils.flingToBeginning
 import org.mozilla.fenix.benchmark.utils.flingToEnd
-import org.mozilla.fenix.benchmark.utils.isBrowserToolbarCfrShown
 import org.mozilla.fenix.benchmark.utils.measureRepeatedDefault
 import org.mozilla.fenix.benchmark.utils.uri
 
@@ -82,10 +80,6 @@ class BaselineProfilesBrowserPageScrollBenchmark {
             intent.setPackage(packageName)
 
             startActivityAndWait(intent = intent)
-
-            if (device.isBrowserToolbarCfrShown()) {
-                device.dismissCFR()
-            }
 
             device.flingToEnd(
                 scrollableId = "$packageName:id/engineView",

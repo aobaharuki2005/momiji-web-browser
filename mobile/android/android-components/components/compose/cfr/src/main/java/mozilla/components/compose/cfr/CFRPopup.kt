@@ -40,7 +40,7 @@ import java.lang.ref.WeakReference
  * the indicator arrow will be pointing to the middle of the anchor.
  * @property popupStartOffset Maximum distance between the popup and anchor start.
  */
-class CFRPopupProperties(
+data class CFRPopupProperties(
     val popupWidth: Dp = CFRPopup.DEFAULT_WIDTH.dp,
     val popupAlignment: PopupAlignment = PopupAlignment.BODY_TO_ANCHOR_CENTER,
     val popupBodyColors: List<Int> = listOf(Color.Blue.toArgb()),

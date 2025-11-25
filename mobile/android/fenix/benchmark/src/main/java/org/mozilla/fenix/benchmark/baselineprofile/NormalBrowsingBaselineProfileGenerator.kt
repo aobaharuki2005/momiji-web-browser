@@ -18,10 +18,8 @@ import org.mozilla.fenix.benchmark.utils.HtmlAsset
 import org.mozilla.fenix.benchmark.utils.MockWebServerRule
 import org.mozilla.fenix.benchmark.utils.ParameterizedToolbarsTest
 import org.mozilla.fenix.benchmark.utils.TARGET_PACKAGE
-import org.mozilla.fenix.benchmark.utils.dismissCFR
 import org.mozilla.fenix.benchmark.utils.dismissWallpaperOnboarding
 import org.mozilla.fenix.benchmark.utils.enterSearchMode
-import org.mozilla.fenix.benchmark.utils.isBrowserToolbarCfrShown
 import org.mozilla.fenix.benchmark.utils.isWallpaperOnboardingShown
 import org.mozilla.fenix.benchmark.utils.loadSite
 import org.mozilla.fenix.benchmark.utils.url
@@ -76,10 +74,6 @@ class NormalBrowsingBaselineProfileGenerator(
 
             if (device.isWallpaperOnboardingShown()) {
                 device.dismissWallpaperOnboarding()
-            }
-
-            if (device.isBrowserToolbarCfrShown()) {
-                device.dismissCFR()
             }
 
             device.enterSearchMode(useComposableToolbar)

@@ -32,13 +32,6 @@ fun UiDevice.dismissWallpaperOnboarding() {
     closeButton.click()
 }
 
-fun UiDevice.isBrowserToolbarCfrShown() : Boolean {
-    val browserToolbarCfrText = findObject(
-        UiSelector().text("Designed for Android. Refined for You")
-    )
-    return browserToolbarCfrText.exists()
-}
-
 fun UiDevice.dismissCFR() {
     val cfrDismiss = findObject(
         UiSelector().resourceId("cfr.dismiss")
