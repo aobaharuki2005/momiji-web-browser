@@ -1005,7 +1005,19 @@ struct MOZ_STACK_CLASS MOZ_RAII AutoFallbackStyleSetter {
             });
   }
 
-  void CommitCurrentFallback() { mOldCacheState = OldCacheState{None{}}; }
+  void CommitCurrentFallback() {
+    mOldCacheState = OldCacheState{None{}};
+    // If we have a non-layout dependent margin / paddings, which are different
+    // from our original style, we need to make sure to commit it into the frame
+    // property so that it doesn't get lost after returning from reflow.
+    nsMargin margin;
+    if (mOldStyle &&
+        !mOldStyle->StyleMargin()->MarginEquals(*mFrame->StyleMargin()) &&
+        mFrame->StyleMargin()->GetMargin(margin)) {
+      mFrame->SetOrUpdateDeletableProperty(nsIFrame::UsedMarginProperty(),
+                                           margin);
+    }
+  }
 
  private:
   nsIFrame* const mFrame;
