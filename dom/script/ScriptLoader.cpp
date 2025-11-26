@@ -2082,9 +2082,9 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
   } else {
     MOZ_ASSERT(aRequest->IsSerializedStencil());
 
-    JS::TranscodeRange bytecode = aRequest->Bytecode();
+    JS::TranscodeRange range = aRequest->SerializedStencil();
     if (!StaticPrefs::javascript_options_parallel_parsing() ||
-        bytecode.length() < OffThreadMinimumBytecodeLength) {
+        range.length() < OffThreadMinimumBytecodeLength) {
       return NS_OK;
     }
   }
@@ -2337,9 +2337,9 @@ nsresult ScriptLoader::CreateOffThreadTask(
     JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions& aOptions,
     CompileOrDecodeTask** aCompileOrDecodeTask) {
   if (aRequest->IsSerializedStencil()) {
-    JS::TranscodeRange bytecode = aRequest->Bytecode();
+    JS::TranscodeRange range = aRequest->SerializedStencil();
     JS::DecodeOptions decodeOptions(aOptions);
-    RefPtr<ScriptDecodeTask> decodeTask = new ScriptDecodeTask(bytecode);
+    RefPtr<ScriptDecodeTask> decodeTask = new ScriptDecodeTask(range);
     nsresult rv = decodeTask->Init(decodeOptions);
     NS_ENSURE_SUCCESS(rv, rv);
     decodeTask.forget(aCompileOrDecodeTask);
@@ -3154,7 +3154,7 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
                                 profilerLabelString);
 
       RefPtr<JS::Stencil> stencil;
-      Decode(aCx, aCompileOptions, aRequest->Bytecode(), stencil, aRv);
+      Decode(aCx, aCompileOptions, aRequest->SerializedStencil(), stencil, aRv);
 
       if (stencil) {
         aRequest->SetStencil(stencil);

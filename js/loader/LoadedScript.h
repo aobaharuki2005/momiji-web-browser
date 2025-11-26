@@ -258,7 +258,7 @@ class LoadedScript : public nsIMemoryReporter {
     MOZ_ASSERT(CanHaveSRIAndSerializedStencil());
     return mSRIAndBytecode;
   }
-  TranscodeRange Bytecode() const {
+  TranscodeRange SerializedStencil() const {
     MOZ_ASSERT(CanHaveSRIAndSerializedStencil());
     const auto& bytecode = mSRIAndBytecode;
     auto offset = mBytecodeOffset;
@@ -558,7 +558,9 @@ class LoadedScriptDelegate {
   TranscodeBuffer& SRIAndSerializedStencil() {
     return GetLoadedScript()->SRIAndSerializedStencil();
   }
-  TranscodeRange Bytecode() const { return GetLoadedScript()->Bytecode(); }
+  TranscodeRange SerializedStencil() const {
+    return GetLoadedScript()->SerializedStencil();
+  }
 
   size_t GetSRILength() const { return GetLoadedScript()->GetSRILength(); }
   void SetSRILength(size_t sriLength) {
