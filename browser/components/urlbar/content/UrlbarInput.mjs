@@ -4566,7 +4566,7 @@ export class UrlbarInput extends HTMLElement {
    * Determines if we should select all the text in the Urlbar based on the
    *  Urlbar state, and whether the selection is empty.
    */
-  _maybeSelectAll() {
+  #maybeSelectAll() {
     if (
       !this._preventClickSelectsAll &&
       this.#compositionState != lazy.UrlbarUtils.COMPOSITION.COMPOSING &&
@@ -4671,7 +4671,7 @@ export class UrlbarInput extends HTMLElement {
     switch (event.target) {
       case this.inputField:
       case this._inputContainer:
-        this._maybeSelectAll();
+        this.#maybeSelectAll();
         this.#maybeUntrimUrl();
         break;
 
@@ -4708,7 +4708,7 @@ export class UrlbarInput extends HTMLElement {
       return;
     }
 
-    this._maybeSelectAll();
+    this.#maybeSelectAll();
   }
 
   _on_focus(event) {
@@ -4757,7 +4757,7 @@ export class UrlbarInput extends HTMLElement {
       }
 
       if (this.inputField.hasAttribute("refocused-by-panel")) {
-        this._maybeSelectAll();
+        this.#maybeSelectAll();
       }
     }
 
