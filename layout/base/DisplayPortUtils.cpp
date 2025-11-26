@@ -834,8 +834,17 @@ bool DisplayPortUtils::MaybeCreateDisplayPort(
 
 nsIFrame* DisplayPortUtils::OneStepInAsyncScrollableAncestorChain(
     nsIFrame* aFrame) {
+  // This mirrors one iteration of GetNearestScrollableOrOverflowClipFrame in
+  // nsLayoutUtils.cpp as called by
+  // nsLayoutUtils::GetAsyncScrollableAncestorFrame. They should be kept in
+  // sync. See that function for comments about the structure of this code.
   if (aFrame->IsMenuPopupFrame()) {
     return nullptr;
+  }
+  nsIFrame* anchor = nullptr;
+  while ((anchor =
+              AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(aFrame))) {
+    aFrame = anchor;
   }
   if (aFrame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
       nsLayoutUtils::IsReallyFixedPos(aFrame)) {
