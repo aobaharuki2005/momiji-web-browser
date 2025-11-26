@@ -893,8 +893,15 @@ nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
   }
 
   const nsAtom* defaultAnchorName = pos->mPositionAnchor.AsIdent().AsAtom();
-  return const_cast<nsIFrame*>(
+  nsIFrame* anchor = const_cast<nsIFrame*>(
       aFrame->PresShell()->GetAnchorPosAnchor(defaultAnchorName, aFrame));
+  // TODO Bug 1997026 We need to update the anchor finding code so this can't
+  // happen. For now we just detect it and reject it.
+  if (anchor && !nsLayoutUtils::IsProperAncestorFrameConsideringContinuations(
+                    aFrame->GetParent(), anchor)) {
+    return nullptr;
+  }
+  return anchor;
 }
 
 }  // namespace mozilla
