@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use rustc_version::{version, Version};
+use rustc_version::{version, version_meta, Channel, Version};
 
 fn main() {
     let mut build = cc::Build::new();
@@ -27,7 +27,9 @@ fn main() {
         println!("cargo:rustc-cfg=oom_with=\"hook\"");
     } else if ver < max_alloc_error_panic_version {
         println!("cargo:rustc-cfg=oom_with=\"alloc_error_panic\"");
-    } else if std::env::var("MOZ_AUTOMATION").is_ok() {
+    } else if std::env::var("MOZ_AUTOMATION").is_ok()
+        && version_meta().unwrap().channel != Channel::Nightly
+    {
         panic!("Builds on automation must use a version of rust for which we know how to hook OOM: want < {}, have {}",
                max_alloc_error_panic_version, ver);
     }
