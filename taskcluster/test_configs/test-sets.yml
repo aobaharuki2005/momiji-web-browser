@@ -32,10 +32,6 @@ web-platform-tests:
     - web-platform-tests-webcodecs
     - web-platform-tests-eme
 
-1804-tsan:
-    - web-platform-tests
-    - web-platform-tests-canvas
-
 web-platform-tests-2404-tsan:
     # - web-platform-tests
     - web-platform-tests-crashtest
