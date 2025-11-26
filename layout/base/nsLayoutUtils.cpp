@@ -1318,6 +1318,11 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
   MOZ_ASSERT(
       aFrame,
       "GetNearestScrollableOrOverflowClipFrame expects a non-null frame");
+  // Only one of these two flags can be set at a time.
+  MOZ_ASSERT_IF(aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE,
+                !(aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASRS));
+  MOZ_ASSERT_IF(aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASRS,
+                !(aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE));
 
   auto GetNextFrame = [aFlags](const nsIFrame* aFrame) -> nsIFrame* {
     return (aFlags & nsLayoutUtils::SCROLLABLE_SAME_DOC)
@@ -1326,7 +1331,8 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
   };
 
   // This should be kept in sync with
-  // DisplayPortUtils::OneStepInAsyncScrollableAncestorChain.
+  // DisplayPortUtils::OneStepInAsyncScrollableAncestorChain and
+  // DisplayPortUtils::OneStepInASRChain.
   for (nsIFrame* f = aFrame; f; f = GetNextFrame(f)) {
     if (aClipFrameCheck && aClipFrameCheck(f)) {
       return f;
@@ -1338,7 +1344,8 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
 
     // TODO: We should also stop at popup frames other than
     // SCROLLABLE_ONLY_ASYNC_SCROLLABLE cases.
-    if ((aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE) &&
+    if ((aFlags & (nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE |
+                   nsLayoutUtils::SCROLLABLE_ONLY_ASRS)) &&
         f->IsMenuPopupFrame()) {
       break;
     }
@@ -1346,6 +1353,10 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
     if (ScrollContainerFrame* scrollContainerFrame = do_QueryFrame(f)) {
       if (aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
         if (scrollContainerFrame->WantAsyncScroll()) {
+          return f;
+        }
+      } else if (aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASRS) {
+        if (scrollContainerFrame->IsMaybeAsynchronouslyScrolled()) {
           return f;
         }
       } else {
@@ -1381,10 +1392,26 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
     // (because of that same reason), and that moving up one will happen either
     // via the special fixed pos behaviour below or the next iteration of the
     // outer for loop.
-    if (aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
+    if (aFlags & (nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE |
+                  nsLayoutUtils::SCROLLABLE_ONLY_ASRS)) {
       while (
           (anchor = AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(f))) {
         f = anchor;
+      }
+    }
+
+    // Note that the order of checking for anchors and sticky pos is significant
+    // even though a frame can't be both sticky pos and anchored (because
+    // anchoring requires abs pos). However, if we follow an anchor, the anchor
+    // could be an active sticky pos, so that would generate an ASR and we want
+    // to return that rather than do another iteration of the outer for loop
+    // which moves on to the (crossdoc) parent frame.
+    if (aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASRS) {
+      if (f->StyleDisplay()->mPosition == StylePositionProperty::Sticky) {
+        auto* ssc = StickyScrollContainer::GetOrCreateForFrame(f);
+        if (ssc && ssc->ScrollContainer()->IsMaybeAsynchronouslyScrolled()) {
+          return f;
+        }
       }
     }
 
@@ -1402,6 +1429,10 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
 // static
 ScrollContainerFrame* nsLayoutUtils::GetNearestScrollContainerFrame(
     nsIFrame* aFrame, uint32_t aFlags) {
+  // Not suitable to use SCROLLABLE_ONLY_ASRS here because it needs to return
+  // non-scroll frames.
+  MOZ_ASSERT(!(aFlags & SCROLLABLE_ONLY_ASRS),
+             "can't use SCROLLABLE_ONLY_ASRS flag");
   nsIFrame* found = GetNearestScrollableOrOverflowClipFrame(aFrame, aFlags);
   if (!found) {
     return nullptr;
@@ -2628,6 +2659,21 @@ ScrollContainerFrame* nsLayoutUtils::GetAsyncScrollableAncestorFrame(
                    nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE |
                    nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT;
   return nsLayoutUtils::GetNearestScrollContainerFrame(aTarget, flags);
+}
+
+nsIFrame* nsLayoutUtils::GetASRAncestorFrame(nsIFrame* aTarget,
+                                             nsDisplayListBuilder* aBuilder) {
+  MOZ_ASSERT(aBuilder->IsPaintingToWindow());
+  // We use different flags from GetAsyncScrollableAncestorFrame above because
+  // the ASR tree is different from the "async scrollable ancestor chain". We
+  // don't want SCROLLABLE_ALWAYS_MATCH_ROOT because we only want to match the
+  // root if it generates an ASR. We don't want SCROLLABLE_FIXEDPOS_FINDS_ROOT
+  // because the ASR tree does not jump from fixed pos to root (that behaviour
+  // exists so that fixed pos in the root document in the process can find some
+  // apzc, ASRs have no such need and that would be incorrect).
+  // This should be kept in sync with DisplayPortUtils::OneStepInASRChain.
+  uint32_t flags = nsLayoutUtils::SCROLLABLE_ONLY_ASRS;
+  return GetNearestScrollableOrOverflowClipFrame(aTarget, flags);
 }
 
 void nsLayoutUtils::AddExtraBackgroundItems(nsDisplayListBuilder* aBuilder,

@@ -289,6 +289,16 @@ class DisplayPortUtils {
   static nsIFrame* OneStepInAsyncScrollableAncestorChain(nsIFrame* aFrame);
 
   /**
+   * Step up one frame in the ASR chain, to be used in conjunction with
+   * GetASRAncestorFrame to walk the ASR chain. Note this doesn't go from one
+   * ASR frame to the next. Rather this walks all frame types, taking only one
+   * ancestor step per call. Note that a frame returned from this function could
+   * generate two ASRs: an inner one corresponding to an activated scroll frame,
+   * and an outer one corresponding to sticky pos.
+   */
+  static nsIFrame* OneStepInASRChain(nsIFrame* aFrame);
+
+  /**
    * Sets a zero margin display port on all proper ancestors of aFrame that
    * are async scrollable.
    */

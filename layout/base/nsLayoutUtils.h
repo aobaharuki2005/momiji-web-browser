@@ -603,12 +603,22 @@ class nsLayoutUtils {
      */
     SCROLLABLE_FIXEDPOS_FINDS_ROOT = 0x10,
     /**
+     * If the SCROLLABLE_ONLY_ASRS flag is set, then we only want to return
+     * frames that will generate an ASR. This means that they are either
+     * scrollable frames for which IsMaybeAsynchronouslyScrolled() returns true
+     * (aka mWillBuildScrollableLayer == true) or they are sticky position
+     * frames for which their corresponding scroll frame will generate an ASR.
+     * This is an internal only flag, you cannot pass it to
+     * GetNearestScrollContainerFrame since that can only return scroll frames.
+     */
+    SCROLLABLE_ONLY_ASRS = 0x20,
+    /**
      * If the SCROLLABLE_STOP_AT_PAGE flag is set, then we stop searching
      * for scrollable ancestors when seeing a nsPageFrame.  This can be used
      * to avoid finding the viewport scroll frame in Print Preview (which
      * would be undesirable as a 'position:sticky' container for content).
      */
-    SCROLLABLE_STOP_AT_PAGE = 0x20,
+    SCROLLABLE_STOP_AT_PAGE = 0x40,
   };
   /**
    * GetNearestScrollContainerFrame locates the first ancestor of aFrame
@@ -2890,8 +2900,35 @@ class nsLayoutUtils {
   static FrameMetrics CalculateBasicFrameMetrics(
       mozilla::ScrollContainerFrame* aScrollContainerFrame);
 
+  /**
+   * Follows the async scrollable ancestor chain of scroll frames to find
+   * scroll frames that WantAsyncScroll(). This is used when activating scroll
+   * frames and finding APZCs.
+   */
   static mozilla::ScrollContainerFrame* GetAsyncScrollableAncestorFrame(
       nsIFrame* aTarget);
+  /**
+   * Follows the ASR (ActiveScrolledRoot) chain of frames, so that if
+   * f is the frame of an ASR A, then calling this function on
+   * OneStepInASRChain(f) will return the frame of parent ASR of A. Frames that
+   * generate an ASR are scroll frames for which IsMaybeAsynchronouslyScrolled()
+   * returns true (aka mWillBuildScrollableLayer == true) or they are sticky
+   * position frames for which their corresponding scroll frame will generate an
+   * ASR. This function is different from GetAsyncScrollableAncestorFrame above
+   * because GetAsyncScrollableAncestorFrame looks only for scroll frames that
+   * WantAsyncScroll that that function walks from fixed pos to the root scroll
+   * frame. Because that status (ie mWillBuildScrollableLayer) can change this
+   * should only be called during a paint to the window after BuildDisplayList
+   * has been called on aTarget so that mWillBuildScrollableLayer will have been
+   * updated for this paint already for any frame we need to consult. Or for
+   * some other reason you know that mWillBuildScrollableLayer is up to date for
+   * this paint for any frame that might need to be consulted, ie you just
+   * updated them yourself. Note that a frame returned from this function could
+   * generate two ASRs: an inner one corresponding to an activated scroll frame,
+   * and an outer one corresponding to sticky pos.
+   */
+  static nsIFrame* GetASRAncestorFrame(nsIFrame* aTarget,
+                                       nsDisplayListBuilder* aBuilder);
 
   static void SetBSizeFromFontMetrics(
       const nsIFrame* aFrame, mozilla::ReflowOutput& aMetrics,
