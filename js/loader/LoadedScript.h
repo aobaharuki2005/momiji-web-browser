@@ -261,7 +261,7 @@ class LoadedScript : public nsIMemoryReporter {
   TranscodeRange SerializedStencil() const {
     MOZ_ASSERT(CanHaveSRIAndSerializedStencil());
     const auto& buf = mSRIAndSerializedStencil;
-    auto offset = mBytecodeOffset;
+    auto offset = mSerializedStencilOffset;
     return TranscodeRange(buf.begin() + offset, buf.length() - offset);
   }
 
@@ -269,11 +269,11 @@ class LoadedScript : public nsIMemoryReporter {
 
   size_t GetSRILength() const {
     MOZ_ASSERT(CanHaveSRIOnly() || CanHaveSRIAndSerializedStencil());
-    return mBytecodeOffset;
+    return mSerializedStencilOffset;
   }
   void SetSRILength(size_t sriLength) {
     MOZ_ASSERT(CanHaveSRIOnly() || CanHaveSRIAndSerializedStencil());
-    mBytecodeOffset = AlignTranscodingBytecodeOffset(sriLength);
+    mSerializedStencilOffset = AlignTranscodingBytecodeOffset(sriLength);
   }
 
   bool HasNoSRIOrSRIAndSerializedStencil() const {
@@ -379,8 +379,8 @@ class LoadedScript : public nsIMemoryReporter {
   mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
  public:
-  // Offset of the bytecode in mSRIAndSerializedStencil.
-  uint32_t mBytecodeOffset;
+  // Offset of the serialized Stencil in mSRIAndSerializedStencil.
+  uint32_t mSerializedStencilOffset;
 
  private:
   static constexpr uint64_t InvalidCacheEntryId = 0;
