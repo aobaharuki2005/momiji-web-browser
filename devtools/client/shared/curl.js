@@ -463,7 +463,7 @@ const CurlUtils = {
 
         // Then escape all characters we are not sure about with ^ to ensure it
         // gets to MS Crt parser safely.
-        // Note: Also do not escape unicode control (C) non-printable characters 
+        // Note: Also do not escape unicode control (C) non-printable characters
         // https://www.compart.com/en/unicode/category (this is captured with `\p{C}` and the `u` unicode flag)
         .replace(/[^-a-zA-Z0-9\s_:=+~\/.',?;()*`\p{C}]/gu, "^$&")
 
