@@ -15,6 +15,7 @@ support-files = ["file_promise_and_timeout_ordering.js"]
 support-files = ["file_promise_argument_tests.js"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -23,6 +24,7 @@ skip-if = [
 support-files = ["file_promise_argument_tests.js"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -31,6 +33,7 @@ skip-if = [
 support-files = ["file_promise_retval_tests.js"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -38,6 +41,7 @@ skip-if = [
 ["test_promise_uncatchable_exception.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]

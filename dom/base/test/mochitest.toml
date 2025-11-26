@@ -1435,6 +1435,7 @@ support-files = ["file_sandbox_and_document_uri.html"]
 ["test_setInterval_uncatchable_exception.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]

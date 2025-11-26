@@ -22,6 +22,7 @@ prefs = [
 ["test_async_iterable.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -31,6 +32,7 @@ skip-if = [
 ["test_attributes_on_types.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -58,6 +60,7 @@ support-files = [
 ["test_bug1036214.html"]
 skip-if = [
   "asan",
+  "ccov",
   "http2",
   "http3",
   "opt",
@@ -69,6 +72,7 @@ skip-if = [
 ["test_bug1123516_maplikesetlike.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -108,6 +112,7 @@ skip-if = [
 ["test_exceptionSanitization.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -121,6 +126,7 @@ skip-if = [
 ["test_exception_options_from_jsimplemented.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -134,6 +140,7 @@ tags = "webrtc"
 skip-if = [
   "!nightly_build", # Bug 1952253
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -143,6 +150,7 @@ skip-if = [
 ["test_interfaceLength.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -154,6 +162,7 @@ skip-if = [
 ["test_iterable.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -161,6 +170,7 @@ skip-if = [
 ["test_jsimplemented_cross_realm_this.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -168,6 +178,7 @@ skip-if = [
 ["test_jsimplemented_eventhandler.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -178,6 +189,7 @@ skip-if = [
 skip-if = [
   "arch == 'x86'", # Large ArrayBuffers are only supported on 64-bit platforms.
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -195,6 +207,7 @@ skip-if = [
 ["test_observablearray.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -202,6 +215,7 @@ skip-if = [
 ["test_observablearray_helper.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -209,6 +223,7 @@ skip-if = [
 ["test_observablearray_proxyhandler.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -218,6 +233,7 @@ skip-if = [
 ["test_prefOnConstructor.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -227,6 +243,7 @@ skip-if = [
 ["test_promise_rejections_from_jsimplemented.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -243,6 +260,7 @@ support-files = [
 ]
 skip-if = [
   "asan",
+  "ccov",
   "opt", # Test WebIDL interfaces are only available in debug builds
   "tsan",
 ]
@@ -253,6 +271,7 @@ skip-if = [
 skip-if = [
   "!nightly_build", # Bug 1670026
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -260,6 +279,7 @@ skip-if = [
 ["test_returnUnion.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -267,6 +287,7 @@ skip-if = [
 ["test_sequence_detection.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -279,6 +300,7 @@ subsuite = "gpu"
 ["test_stringBindings.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -288,6 +310,7 @@ skip-if = [
 ["test_toJSON.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -301,6 +324,7 @@ skip-if = [
 ["test_usvstring.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]

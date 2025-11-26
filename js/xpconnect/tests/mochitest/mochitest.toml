@@ -254,6 +254,7 @@ skip-if = [
 ["test_getWebIDLCaller.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]
@@ -269,6 +270,7 @@ skip-if = [
 ["test_paris_weakmap_keys.html"]
 skip-if = [
   "asan",
+  "ccov",
   "opt",
   "tsan",
 ]

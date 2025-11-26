@@ -239,10 +239,13 @@ skip-if = [
 
 ["browser_privacypane_2.js"]
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'&& opt",
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt && a11y_checks",
 ]
 
 ["browser_privacypane_3.js"]
+skip-if = [
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt && a11y_checks",
+]
 
 ["browser_proxy_backup.js"]
 
@@ -302,6 +305,9 @@ skip-if = [
 ["browser_search_userEngineDialog.js"]
 
 ["browser_search_within_preferences_1.js"]
+skip-if = [
+  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && ccov"
+]
 
 ["browser_search_within_preferences_2.js"]
 

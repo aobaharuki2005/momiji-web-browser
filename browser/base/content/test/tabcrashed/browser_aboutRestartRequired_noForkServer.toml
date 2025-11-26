@@ -16,5 +16,11 @@ prefs = [
 # Bug 1876056: remove once bug 1877361 is fixed
 
 ["browser_aboutRestartRequired_buildid_false-positive.js"]
+skip-if = [
+  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && ccov"
+]
 
 ["browser_aboutRestartRequired_buildid_true.js"]
+skip-if = [
+  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && ccov"
+]

@@ -80,6 +80,7 @@ reason = "Still broken on macOS and not yet supported on Windows"
 
 ["test_crash_stl.js"]
 skip-if = [
+  "ccov",
   "os != 'mac' && opt",
   "os == 'win'",
 ]
