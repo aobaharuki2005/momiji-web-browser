@@ -294,9 +294,11 @@ class DisplayPortUtils {
    * ASR frame to the next. Rather this walks all frame types, taking only one
    * ancestor step per call. Note that a frame returned from this function could
    * generate two ASRs: an inner one corresponding to an activated scroll frame,
-   * and an outer one corresponding to sticky pos.
+   * and an outer one corresponding to sticky pos. Returns null if we hit
+   * aLimitAncestor.
    */
-  static nsIFrame* OneStepInASRChain(nsIFrame* aFrame);
+  static nsIFrame* OneStepInASRChain(nsIFrame* aFrame,
+                                     nsIFrame* aLimitAncestor = nullptr);
 
   /**
    * Sets a zero margin display port on all proper ancestors of aFrame that
