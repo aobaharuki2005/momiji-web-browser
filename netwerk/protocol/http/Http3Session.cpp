@@ -1462,7 +1462,13 @@ nsresult Http3Session::TryActivating(
 
   if (mState == ZERORTT) {
     if (!aStream->Do0RTT()) {
-      MOZ_ASSERT(!mCannotDo0RTTStreams.Contains(aStream));
+      // Stream can't do 0RTT - queue it for activation when the session
+      // reaches CONNECTED state via Finish0Rtt.
+      if (!mCannotDo0RTTStreams.Contains(aStream)) {
+        LOG(("Http3Session %p queuing stream %p for post-0RTT activation", this,
+             aStream));
+        mCannotDo0RTTStreams.AppendElement(aStream);
+      }
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
   }

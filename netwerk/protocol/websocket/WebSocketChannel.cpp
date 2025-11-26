@@ -3747,9 +3747,9 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport* aTransport,
 
   nsresult rv;
   rv = mTransport->SetEventSink(nullptr, nullptr);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
   rv = mTransport->SetSecurityCallbacks(this);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   return OnTransportAvailableInternal();
 }
