@@ -18,6 +18,7 @@
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/ViewTransitionBinding.h"
+#include "mozilla/dom/ViewTransitionTypeSet.h"
 #include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -245,7 +246,7 @@ static inline void ImplCycleCollectionTraverse(
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ViewTransition, mDocument,
                                       mUpdateCallback,
                                       mUpdateCallbackDonePromise, mReadyPromise,
-                                      mFinishedPromise, mNamedElements,
+                                      mFinishedPromise, mNamedElements, mTypes,
                                       mSnapshotContainingBlock)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ViewTransition)
@@ -257,8 +258,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(ViewTransition)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ViewTransition)
 
 ViewTransition::ViewTransition(Document& aDoc,
-                               ViewTransitionUpdateCallback* aCb)
-    : mDocument(&aDoc), mUpdateCallback(aCb) {}
+                               ViewTransitionUpdateCallback* aCb,
+                               TypeList&& aTypeList)
+    : mDocument(&aDoc), mUpdateCallback(aCb), mTypeList(std::move(aTypeList)) {}
 
 ViewTransition::~ViewTransition() { ClearTimeoutTimer(); }
 
@@ -2011,6 +2013,17 @@ Maybe<nsRect> ViewTransition::GetNewActiveRect(nsAtom* aName) const {
   }
 
   return el->mNewActiveRect;
+}
+
+ViewTransitionTypeSet* ViewTransition::Types() {
+  if (!mTypes) {
+    mTypes = new ViewTransitionTypeSet(*this);
+    for (const auto& type : mTypeList) {
+      ViewTransitionTypeSet_Binding::SetlikeHelpers::Add(
+          mTypes, nsDependentAtomString(type), IgnoreErrors());
+    }
+  }
+  return mTypes;
 }
 
 };  // namespace mozilla::dom
