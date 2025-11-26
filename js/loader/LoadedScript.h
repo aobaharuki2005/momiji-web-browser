@@ -436,11 +436,12 @@ class LoadedScript : public nsIMemoryReporter {
   // Holds the stencil for the script.  This field is used in all DataType.
   RefPtr<Stencil> mStencil;
 
-  // The cache info channel used when saving the bytecode to the necko cache.
+  // The cache info channel used when saving the serialized Stencil to the
+  // necko cache.
   //
   // This field is populated if the cache is enabled and this is either
-  // IsTextSource() or IsCachedStencil(), and it's cleared after saving the
-  // bytecode (Thus, used only once).
+  // IsTextSource() or IsCachedStencil(), and it's cleared after saving to the
+  // necko cache, and thus, this field is used only once.
   nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
 };
 

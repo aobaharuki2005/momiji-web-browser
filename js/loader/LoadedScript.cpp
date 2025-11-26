@@ -76,8 +76,8 @@ LoadedScript::LoadedScript(const LoadedScript& aOther)
       mStencil(aOther.mStencil) {
   MOZ_ASSERT(mFetchOptions);
   MOZ_ASSERT(mURI);
-  // NOTE: This is only for the stencil case.
-  //       The script text and the bytecode are not reflected.
+  // NOTE: This is only for the cached stencil case.
+  //       The script text and the serialized stencil are not reflected.
   MOZ_DIAGNOSTIC_ASSERT(aOther.mDataType == DataType::eCachedStencil);
   MOZ_DIAGNOSTIC_ASSERT(mStencil);
   MOZ_ASSERT(!mScriptData);
