@@ -452,8 +452,9 @@ add_task(async function test_hasKeysForScope_not_verified() {
     ...MOCK_ACCOUNT_KEYS,
   };
   const fxa = await MakeFxAccounts({ credentials });
-  // Should return false when user is not verified
-  Assert.ok(!(await fxa.keys.hasKeysForScope(SCOPE_APP_SYNC)));
+  // Should return true even keys exist locally
+  // (Keys are provided during OAuth before the account is marked verified)
+  Assert.ok(await fxa.keys.hasKeysForScope(SCOPE_APP_SYNC));
 });
 
 add_task(async function test_hasKeysForScope_no_keys() {

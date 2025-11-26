@@ -117,9 +117,6 @@ export class FxAccountsKeys {
       if (!userData) {
         return false;
       }
-      if (!userData.verified) {
-        return false;
-      }
       return !!(
         userData.scopedKeys && userData.scopedKeys.hasOwnProperty(scope)
       );
