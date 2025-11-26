@@ -67,8 +67,6 @@
     --tab-selected-outline-color: var(--lwt-tab-line-color, currentColor);
   }
   --tab-dragover-transition: transform 200ms var(--animation-easing-function);
-  --tab-width-transition: min-width 100ms ease-out, max-width 100ms ease-out;
-  --tab-height-transition: min-height 100ms ease-out, max-height 100ms ease-out;
 
   --vertical-tabs-scrollbar-color: auto;
   @media (-moz-platform: macos) {
@@ -147,6 +145,8 @@
       padding-bottom: 15px;
       margin-bottom: -15px;
     }
+
+    --tab-width-transition: min-width 100ms ease-out, max-width 100ms ease-out;
   }
 
   &[noshadowfortests] {
@@ -2170,6 +2170,7 @@ tab-group {
 }
 
 #tabbrowser-tabs[orient="vertical"] {
+  --tab-min-width: unset;
   --tab-inline-padding: calc((var(--tab-collapsed-width) - var(--icon-size)) / 2);
 
   min-height: 0;
@@ -2200,21 +2201,13 @@ tab-group {
   }
 
   .tabbrowser-tab {
+    flex: none;
     padding-inline: 0;
     padding-block: 3px 2px;
-    /* Set tab height so closing transtion occurs but include padding block values */
-    min-height: calc(var(--tab-min-height) + 5px);
-    max-height: calc(var(--tab-min-height) + 5px);
-    transition: var(--tab-height-transition);
 
     /* prevent the shadow of the close button from being cutoff by the toolbar on the first tab */
     &:nth-child(1 of :not([hidden], [pinned])) {
       padding-block-start: 5px;
-    }
-
-    &:not([pinned], [fadein]) {
-      max-height: 0.1px;
-      min-height: 0.1px;
     }
   }
 
