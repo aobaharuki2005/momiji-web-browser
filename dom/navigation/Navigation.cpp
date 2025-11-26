@@ -364,9 +364,9 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
       MOZ_LOG(gNavigationAPILog, LogLevel::Debug, ("Push navigation"));
       mCurrentEntryIndex =
           Some(mCurrentEntryIndex ? *mCurrentEntryIndex + 1 : 0);
-      while (*mCurrentEntryIndex < mEntries.Length()) {
-        disposedEntries.AppendElement(mEntries.PopLastElement());
-      }
+      disposedEntries.AppendElements(Span(mEntries).From(*mCurrentEntryIndex));
+      mEntries.RemoveElementsAt(*mCurrentEntryIndex,
+                                mEntries.Length() - *mCurrentEntryIndex);
       mEntries.AppendElement(MakeRefPtr<NavigationHistoryEntry>(
           GetOwnerGlobal(), aDestinationSHE, *mCurrentEntryIndex));
       break;
