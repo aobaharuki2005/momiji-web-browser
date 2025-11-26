@@ -2695,24 +2695,6 @@
       }
     ]
   },
-  "1901000": {
-    "label": "eyebuydirect.ca",
-    "bugs": {
-      "1901000": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://*.eyebuydirect.ca/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["desktop"],
-        "max_version": 134,
-        "content_scripts": {
-          "css": ["bug1901000-eyebuydirect.ca-fix-paypal-button.css"]
-        }
-      }
-    ]
-  },
   "1901780": {
     "label": "vanbreda-health.be",
     "bugs": {
@@ -3967,24 +3949,6 @@
           "js": ["bug1928941-oasis.decart.ai-window-chrome-shim.js"]
         },
         "ua_string": ["Chrome", "add_Firefox_as_Gecko"]
-      }
-    ]
-  },
-  "1928954": {
-    "label": "publix.com",
-    "bugs": {
-      "1928954": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://*.publix.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "max_version": 139,
-        "content_scripts": {
-          "js": ["bug1928954-publix.com-prevent-nav-on-javascript-url-click.js"]
-        }
       }
     ]
   },
