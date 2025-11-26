@@ -9,6 +9,7 @@
 #include "ScrollContainerFrame.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsCanvasFrame.h"
@@ -876,6 +877,9 @@ bool AnchorPositioningUtils::FitsInContainingBlock(
 
 nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
     nsIFrame* aFrame) {
+  if (!StaticPrefs::apz_async_scroll_css_anchor_pos_AtStartup()) {
+    return nullptr;
+  }
   mozilla::PhysicalAxes axes = aFrame->GetAnchorPosCompensatingForScroll();
   // TODO for now we return the anchor if we are compensating in either axis.
   // This is not fully spec compliant, bug 1988034 tracks this.
