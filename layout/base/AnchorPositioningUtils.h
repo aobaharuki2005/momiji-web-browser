@@ -309,6 +309,12 @@ struct AnchorPositioningUtils {
       const ContainingBlockInfo& aContainingBlockInfo,
       const nsIFrame* aPositioned,
       const AnchorPosReferenceData* aReferenceData);
+
+  /**
+   * If aFrame is positioned using CSS anchor positioning, and it scrolls with
+   * its anchor this function returns the anchor. Otherwise null.
+   */
+  static nsIFrame* GetAnchorThatFrameScrollsWith(nsIFrame* aFrame);
 };
 
 }  // namespace mozilla
