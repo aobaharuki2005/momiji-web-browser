@@ -165,7 +165,6 @@
 #include "nsTransitionManager.h"
 #include "nsXULPopupManager.h"
 #include "prenv.h"
-#include "AnchorPositioningUtils.h"
 
 // Make sure getpid() works.
 #ifdef XP_WIN

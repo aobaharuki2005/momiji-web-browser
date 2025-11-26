@@ -8,6 +8,7 @@
 
 #include <ostream>
 
+#include "AnchorPositioningUtils.h"
 #include "FrameMetrics.h"
 #include "RetainedDisplayListBuilder.h"
 #include "StickyScrollContainer.h"
@@ -26,7 +27,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
-#include "AnchorPositioningUtils.h"
 
 namespace mozilla {
 
