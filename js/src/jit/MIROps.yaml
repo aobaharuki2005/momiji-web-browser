@@ -2826,14 +2826,6 @@
   result_type: Boolean
   alias_set: custom
 
-- name: IteratorsMatchAndHaveIndices
-  operands:
-    object: Object
-    iterator: Object
-    otherIterator: Object
-  result_type: Boolean
-  alias_set: custom
-
 - name: LoadSlotByIteratorIndex
   operands:
     object: Object
@@ -2851,6 +2843,12 @@
   alias_set: custom
   generate_lir: true
   lir_temps: 2
+
+
+# The following two instructions need too many registers on x86. We could
+# spill or do some cheeky stuff potentially but it's likely not worth the
+# complexity
+#ifndef JS_CODEGEN_X86
 
 # Okay this is a confusing name, but essentially, the above ops load/store a
 # slot of an object using the PropertyIndex associated with the *current* key
@@ -2875,6 +2873,7 @@
   alias_set: custom
   generate_lir: true
   lir_temps: 2
+#endif
 
 # Load the private value expando from a DOM proxy. The target is stored in the
 # proxy object's private slot.

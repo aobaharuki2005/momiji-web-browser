@@ -18585,11 +18585,15 @@ void CodeGenerator::visitValueToIterator(LValueToIterator* lir) {
   callVM<Fn, ValueToIterator>(lir);
 }
 
-void CodeGenerator::emitIteratorHasIndicesAndBranch(Register iterator,
-                                                    Register object,
-                                                    Register temp,
-                                                    Register temp2,
-                                                    Label* ifFalse) {
+void CodeGenerator::visitIteratorHasIndicesAndBranch(
+    LIteratorHasIndicesAndBranch* lir) {
+  Register iterator = ToRegister(lir->iterator());
+  Register object = ToRegister(lir->object());
+  Register temp = ToRegister(lir->temp0());
+  Register temp2 = ToRegister(lir->temp1());
+  Label* ifTrue = getJumpLabelForBranch(lir->ifTrue());
+  Label* ifFalse = getJumpLabelForBranch(lir->ifFalse());
+
   // Check that the iterator has indices available.
   Address nativeIterAddr(iterator,
                          PropertyIteratorObject::offsetOfIteratorSlot());
@@ -18604,39 +18608,6 @@ void CodeGenerator::emitIteratorHasIndicesAndBranch(Register iterator,
   masm.loadPtr(objShapeAddr, temp);
   masm.branchTestObjShape(Assembler::NotEqual, object, temp, temp2, object,
                           ifFalse);
-}
-
-void CodeGenerator::visitIteratorHasIndicesAndBranch(
-    LIteratorHasIndicesAndBranch* lir) {
-  Register iterator = ToRegister(lir->iterator());
-  Register object = ToRegister(lir->object());
-  Register temp = ToRegister(lir->temp0());
-  Register temp2 = ToRegister(lir->temp1());
-  Label* ifTrue = getJumpLabelForBranch(lir->ifTrue());
-  Label* ifFalse = getJumpLabelForBranch(lir->ifFalse());
-
-  emitIteratorHasIndicesAndBranch(iterator, object, temp, temp2, ifFalse);
-
-  if (!isNextBlock(lir->ifTrue()->lir())) {
-    masm.jump(ifTrue);
-  }
-}
-
-void CodeGenerator::visitIteratorsMatchAndHaveIndicesAndBranch(
-    LIteratorsMatchAndHaveIndicesAndBranch* lir) {
-  Register iterator = ToRegister(lir->iterator());
-  Register otherIterator = ToRegister(lir->otherIterator());
-  Register object = ToRegister(lir->object());
-  Register temp = ToRegister(lir->temp0());
-  Register temp2 = ToRegister(lir->temp1());
-  Label* ifTrue = getJumpLabelForBranch(lir->ifTrue());
-  Label* ifFalse = getJumpLabelForBranch(lir->ifFalse());
-
-  // Check that the iterators match, and then we can use either iterator
-  // as a basis as if this were visitIteratorHasIndicesAndBranch
-  masm.branchPtr(Assembler::NotEqual, iterator, otherIterator, ifFalse);
-
-  emitIteratorHasIndicesAndBranch(iterator, object, temp, temp2, ifFalse);
 
   if (!isNextBlock(lir->ifTrue()->lir())) {
     masm.jump(ifTrue);
@@ -18698,6 +18669,7 @@ void CodeGenerator::visitLoadSlotByIteratorIndex(
   visitLoadSlotByIteratorIndexCommon(object, indexScratch, kindScratch, result);
 }
 
+#ifndef JS_CODEGEN_X86
 void CodeGenerator::visitLoadSlotByIteratorIndexIndexed(
     LLoadSlotByIteratorIndexIndexed* lir) {
   Register object = ToRegister(lir->object());
@@ -18712,6 +18684,7 @@ void CodeGenerator::visitLoadSlotByIteratorIndexIndexed(
 
   visitLoadSlotByIteratorIndexCommon(object, indexScratch, kindScratch, result);
 }
+#endif
 
 void CodeGenerator::visitStoreSlotByIteratorIndexCommon(Register object,
                                                         Register indexScratch,
@@ -18783,6 +18756,7 @@ void CodeGenerator::visitStoreSlotByIteratorIndex(
   visitStoreSlotByIteratorIndexCommon(object, indexScratch, kindScratch, value);
 }
 
+#ifndef JS_CODEGEN_X86
 void CodeGenerator::visitStoreSlotByIteratorIndexIndexed(
     LStoreSlotByIteratorIndexIndexed* lir) {
   Register object = ToRegister(lir->object());
@@ -18797,6 +18771,7 @@ void CodeGenerator::visitStoreSlotByIteratorIndexIndexed(
 
   visitStoreSlotByIteratorIndexCommon(object, indexScratch, kindScratch, value);
 }
+#endif
 
 void CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins) {
   LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();

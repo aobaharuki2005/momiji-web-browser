@@ -2810,14 +2810,6 @@
     iterator: WordSized
   num_temps: 2
 
-- name: IteratorsMatchAndHaveIndicesAndBranch
-  successors: [ifTrue, ifFalse]
-  operands:
-    object: WordSized
-    iterator: WordSized
-    otherIterator: WordSized
-  num_temps: 2
-
 # Patchable jump to stubs generated for a SetProperty cache.
 - name: SetPropertyCache
   operands:

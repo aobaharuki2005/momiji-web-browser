@@ -1283,21 +1283,6 @@ void LIRGenerator::visitTest(MTest* test) {
     return;
   }
 
-  if (opd->isIteratorsMatchAndHaveIndices()) {
-    MOZ_ASSERT(opd->isEmittedAtUses());
-
-    MDefinition* object = opd->toIteratorsMatchAndHaveIndices()->object();
-    MDefinition* iterator = opd->toIteratorsMatchAndHaveIndices()->iterator();
-    MDefinition* otherIterator =
-        opd->toIteratorsMatchAndHaveIndices()->otherIterator();
-    LIteratorsMatchAndHaveIndicesAndBranch* lir =
-        new (alloc()) LIteratorsMatchAndHaveIndicesAndBranch(
-            ifTrue, ifFalse, useRegister(object), useRegister(iterator),
-            useRegister(otherIterator), temp(), temp());
-    add(lir, test);
-    return;
-  }
-
   switch (opd->type()) {
     case MIRType::Double:
       add(new (alloc()) LTestDAndBranch(ifTrue, ifFalse, useRegister(opd)));
@@ -6286,6 +6271,7 @@ void LIRGenerator::visitStoreSlotByIteratorIndex(
   add(lir, ins);
 }
 
+#ifndef JS_CODEGEN_X86
 void LIRGenerator::visitLoadSlotByIteratorIndexIndexed(
     MLoadSlotByIteratorIndexIndexed* ins) {
   auto* lir = new (alloc()) LLoadSlotByIteratorIndexIndexed(
@@ -6301,14 +6287,9 @@ void LIRGenerator::visitStoreSlotByIteratorIndexIndexed(
       useRegister(ins->index()), useBox(ins->value()), temp(), temp());
   add(lir, ins);
 }
+#endif
 
 void LIRGenerator::visitIteratorHasIndices(MIteratorHasIndices* ins) {
-  MOZ_ASSERT(ins->hasOneUse());
-  emitAtUses(ins);
-}
-
-void LIRGenerator::visitIteratorsMatchAndHaveIndices(
-    MIteratorsMatchAndHaveIndices* ins) {
   MOZ_ASSERT(ins->hasOneUse());
   emitAtUses(ins);
 }
