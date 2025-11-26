@@ -3565,34 +3565,8 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
   //  Linux (ext3/ext4...) stores filenames with a maximum 255 bytes.
   // So here we just use the maximum of 255 bytes.
   // 0 means don't truncate at a maximum size.
-  uint32_t maxBytes =
+  const uint32_t maxBytes =
       (aFlags & VALIDATE_DONT_TRUNCATE) ? 0 : kDefaultMaxFileNameLength;
-
-  const auto downloadSuffix = u".download"_ns;
-  bool appendDownloadSuffix = false;
-
-  if (!(aFlags & VALIDATE_ALLOW_INVALID_FILENAMES)) {
-    // If the extension is one these types, we append .download, as these
-    // types of files can have significance on Windows or Linux.
-    // This happens for any file, not just those with the shortcut mime type.
-    if (StringEndsWith(fileName, u".lnk"_ns,
-                       nsCaseInsensitiveStringComparator) ||
-        StringEndsWith(fileName, u".local"_ns,
-                       nsCaseInsensitiveStringComparator) ||
-        StringEndsWith(fileName, u".url"_ns,
-                       nsCaseInsensitiveStringComparator) ||
-        StringEndsWith(fileName, u".scf"_ns,
-                       nsCaseInsensitiveStringComparator) ||
-        StringEndsWith(fileName, u".desktop"_ns,
-                       nsCaseInsensitiveStringComparator)) {
-      appendDownloadSuffix = true;
-
-      // To ensure this will not make the final name too long, adjust maxBytes.
-      if (maxBytes) {
-        maxBytes -= downloadSuffix.Length();
-      }
-    }
-  }
 
   // True if the last character added was whitespace.
   bool lastWasWhitespace = false;
@@ -3613,13 +3587,6 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
 
   // The length of the extension in bytes.
   uint32_t extensionBytesLength = 0;
-
-  // Given the minimal benefits, the "_files" suffix is intentionally not
-  // localized (see also contentAreaUtils.js). Localizing it introduces
-  // complexity in handling OS filename length limits (e.g. bug 1959738)
-  // and risks breaking the folder-linking feature if an unsupported suffix
-  // is used.
-  constexpr uint32_t filesFolderLength = "_files"_ns.Length();
 
   // This algorithm iterates over each character in the string and appends it
   // or a replacement character if needed to outFileName.
@@ -3709,13 +3676,10 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
     AppendUCS4ToUTF16(nextChar, outFileName);
   }
 
-  // If the filename is longer than the maximum allowed filename size, or
-  // if replacing the extension with the filesFolder name would make it so,
+  // If the filename is longer than the maximum allowed filename size,
   // truncate it, but preserve the desired extension that is currently
   // on the filename.
-  if ((bytesLength > std::min(maxBytes, maxBytes - filesFolderLength +
-                                            extensionBytesLength)) &&
-      !outFileName.IsEmpty()) {
+  if (bytesLength > maxBytes && !outFileName.IsEmpty()) {
     // Get the sanitized extension from the filename without the dot.
     nsAutoString extension;
     int32_t dotidx = outFileName.RFind(u".");
@@ -3737,7 +3701,7 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
       // characters, but if they don't match, it just means we crop off
       // more than is necessary. This is OK since it is better than cropping
       // off too little.
-      longFileNameEnd -= std::max(extensionBytesLength, filesFolderLength);
+      longFileNameEnd -= extensionBytesLength;
       if (longFileNameEnd <= 0) {
         // This is extremely unlikely, but if the extension is larger than the
         // maximum size, just get rid of it. In this case, the extension
@@ -3788,8 +3752,22 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
   }
 #endif
 
-  if (appendDownloadSuffix) {
-    outFileName.Append(downloadSuffix);
+  if (!(aFlags & VALIDATE_ALLOW_INVALID_FILENAMES)) {
+    // If the extension is one these types, replace it with .download, as these
+    // types of files can have significance on Windows or Linux.
+    // This happens for any file, not just those with the shortcut mime type.
+    if (StringEndsWith(outFileName, u".lnk"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".local"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".url"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".scf"_ns,
+                       nsCaseInsensitiveStringComparator) ||
+        StringEndsWith(outFileName, u".desktop"_ns,
+                       nsCaseInsensitiveStringComparator)) {
+      outFileName.AppendLiteral(".download");
+    }
   }
 
   aFileName = outFileName;
