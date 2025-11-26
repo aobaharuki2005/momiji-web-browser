@@ -880,10 +880,6 @@
       "1818818": {
         "issue": "broken-interactive-elements",
         "matches": ["*://*.wellcare.com/*"]
-      },
-      "1953730": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://jobs.jobvite.com/*"]
       }
     },
     "interventions": [
