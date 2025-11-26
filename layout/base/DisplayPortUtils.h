@@ -238,6 +238,12 @@ class DisplayPortUtils {
   static void RemoveDisplayPort(nsIContent* aContent);
 
   /**
+   * Set minimal display port margins during painting.
+   */
+  static void SetMinimalDisplayPortDuringPainting(nsIContent* aContent,
+                                                  PresShell* aPresShell);
+
+  /**
    * Return true if aPresContext's viewport has a displayport.
    */
   static bool ViewportHasDisplayPort(nsPresContext* aPresContext);
@@ -332,6 +338,23 @@ class DisplayPortUtils {
    * of displayports.
    */
   static bool WillUseEmptyDisplayPortMargins(nsIContent* aContent);
+
+  /**
+   * Calls DecideScrollableLayerEnsureDisplayport on all proper ancestors of
+   * aAnchor that are async scrollable up to but not including aLimitAncestor
+   * (this creates a minimal display port on all async scrollable ancestors if
+   * they don't have a display port) and makes sure that there is an ASR struct
+   * created for all such async scrollable ancestors.
+   * Returns the ASR of aAnchor.
+   * This is a very specific function for anchor positioning and likely not
+   * what you want. In that context, aAnchor is the anchor of an abspos frame f
+   * (not passed to this function because it is not needed) and aLimitAncestor
+   * is the parent/containing block of f.
+   */
+  static const ActiveScrolledRoot* ActivateDisplayportOnASRAncestors(
+      nsIFrame* aAnchor, nsIFrame* aLimitAncestor,
+      const ActiveScrolledRoot* aASRofLimitAncestor,
+      nsDisplayListBuilder* aBuilder);
 };
 
 }  // namespace mozilla

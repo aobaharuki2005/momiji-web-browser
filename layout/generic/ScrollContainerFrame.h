@@ -738,6 +738,16 @@ class ScrollContainerFrame : public nsContainerFrame,
   }
 
   /**
+   * Like DecideScrollableLayer but skips computing dirty/visible rects and
+   * setting the base rect. In addition, this always ensures a display port is
+   * set if this scroll frame could async scroll. DecideScrollableLayer only
+   * sets a display port in that situation if ShouldActivateAllScrollFrames
+   * returns true. However you should only call this function is
+   * ShouldActivateAllScrollFrames returns true anyways.
+   * */
+  bool DecideScrollableLayerEnsureDisplayport(nsDisplayListBuilder* aBuilder);
+
+  /**
    * Notify the scrollframe that the current scroll offset and origin have been
    * sent over in a layers transaction.
    *
