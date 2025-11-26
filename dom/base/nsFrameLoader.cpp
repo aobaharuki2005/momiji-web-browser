@@ -2231,6 +2231,10 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   if (NS_WARN_IF(!newWindow)) {
     // Do not call Destroy() here. See bug 472312.
     NS_WARNING("Something wrong when creating the docshell for a frameloader!");
+    // The docshell isn't completely initialized. Clear it so that it isn't
+    // reachable. Future calls to MaybeCreateDocShell will fail due to
+    // mInitialized.
+    mDocShell = nullptr;
     return NS_ERROR_FAILURE;
   }
 
