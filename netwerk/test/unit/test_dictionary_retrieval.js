@@ -206,26 +206,23 @@ async function setupRetrievalTestServer() {
     }
   );
 
-  await server.registerPathHandler(
-    "/wildcard",
-    function (request, response) {
-      const RETRIEVAL_TEST_DICTIONARIES = {
-        wildcard: {
-          id: "wildcard-dict",
-          content: "WILDCARD_DATA",
-          pattern: "*",
-          type: "raw",
-        },
-      };
-      let dict = RETRIEVAL_TEST_DICTIONARIES.wildcard;
-      response.writeHead(200, {
-        "Content-Type": "application/octet-stream",
-        "Use-As-Dictionary": `match="${dict.pattern}", id="${dict.id}", type=${dict.type}`,
-        "Cache-Control": "max-age=3600",
-      });
-      response.end(dict.content, "binary");
-    }
-  );
+  await server.registerPathHandler("/wildcard", function (request, response) {
+    const RETRIEVAL_TEST_DICTIONARIES = {
+      wildcard: {
+        id: "wildcard-dict",
+        content: "WILDCARD_DATA",
+        pattern: "*",
+        type: "raw",
+      },
+    };
+    let dict = RETRIEVAL_TEST_DICTIONARIES.wildcard;
+    response.writeHead(200, {
+      "Content-Type": "application/octet-stream",
+      "Use-As-Dictionary": `match="${dict.pattern}", id="${dict.id}", type=${dict.type}`,
+      "Cache-Control": "max-age=3600",
+    });
+    response.end(dict.content, "binary");
+  });
 
   await server.registerPathHandler("/js", function (request, response) {
     const RETRIEVAL_TEST_DICTIONARIES = {
@@ -289,12 +286,7 @@ add_task(async function test_setup_dictionaries() {
   await sync_to_server();
 
   // Store all test dictionaries
-  const dictPaths = [
-    "/dict/api-v1",
-    "/dict/api-generic",
-    "/wildcard",
-    "/js",
-  ];
+  const dictPaths = ["/dict/api-v1", "/dict/api-generic", "/wildcard", "/js"];
 
   for (let path of dictPaths) {
     let url = `https://localhost:${server.port()}${path}`;
