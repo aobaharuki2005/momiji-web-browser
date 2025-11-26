@@ -266,6 +266,8 @@ int64_t Http3ConnectUDPStream::GetFileDescriptor() { return -1; }
 
 void Http3ConnectUDPStream::EnableWritePoll() {}
 
+bool Http3ConnectUDPStream::IsSocketClosed() { return mSendState == SEND_DONE; }
+
 void Http3ConnectUDPStream::AddOutputBytes(uint32_t aBytes) {}
 
 void Http3ConnectUDPStream::AddInputBytes(uint32_t aBytes) {}
