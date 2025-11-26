@@ -7,6 +7,7 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -92,7 +93,7 @@ class DefaultBrowserToolbarMenuController(
     private val tabCollectionStorage: TabCollectionStorage,
     private val topSitesStorage: DefaultTopSitesStorage,
     private val pinnedSiteStorage: PinnedSiteStorage,
-    private val deleteAndQuit: (HomeActivity) -> Unit,
+    private val deleteAndQuit: (FragmentActivity) -> Unit,
 ) : BrowserToolbarMenuController {
 
     private val currentSession

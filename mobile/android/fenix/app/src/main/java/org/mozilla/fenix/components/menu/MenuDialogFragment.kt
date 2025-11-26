@@ -42,7 +42,6 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -50,6 +49,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import mozilla.components.browser.state.selector.findCustomTab
@@ -97,7 +97,11 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
+import org.mozilla.fenix.settings.deletebrowsingdata.DefaultDeleteBrowsingDataController
+import org.mozilla.fenix.settings.deletebrowsingdata.DefaultDeleteBrowsingDataController.DataStorage
+import org.mozilla.fenix.settings.deletebrowsingdata.DefaultDeleteBrowsingDataController.DeleteDataUseCases
+import org.mozilla.fenix.settings.deletebrowsingdata.DefaultDeleteBrowsingDataController.Stores
+import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataController
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.DELAY_MS_MAIN_MENU
 import org.mozilla.fenix.utils.DELAY_MS_SUB_MENU
@@ -139,6 +143,28 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
     private val webExtensionsMenuBinding = ViewBoundFeatureWrapper<WebExtensionsMenuBinding>()
     private var bottomSheetBehavior: BottomSheetBehavior<View>? = null
     private var isPrivate: Boolean = false
+
+    private val deleteBrowsingDataController: DeleteBrowsingDataController by lazy {
+        DefaultDeleteBrowsingDataController(
+            deleteDataUseCases = DeleteDataUseCases(
+                removeAllTabs =
+                    requireComponents.useCases.tabsUseCases.removeAllTabs,
+                removeAllDownloads =
+                    requireComponents.useCases.downloadUseCases.removeAllDownloads,
+            ),
+            dataStorage = DataStorage(
+                history = requireComponents.core.historyStorage,
+                permissions = requireComponents.core.permissionStorage,
+            ),
+            stores = Stores(
+                appStore = requireComponents.appStore,
+                browserStore = requireComponents.core.store,
+            ),
+            engine = requireComponents.core.engine,
+            settings = requireComponents.settings,
+            coroutineContext = lifecycleScope.coroutineContext,
+        )
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         Events.toolbarMenuVisible.record(NoExtras())
@@ -291,14 +317,13 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                                 materialAlertDialogBuilder = MaterialAlertDialogBuilder(context),
                                 topSitesMaxLimit = components.settings.topSitesMaxLimit,
                                 onDeleteAndQuit = {
-                                    deleteAndQuit(
-                                        activity = activity as HomeActivity,
-                                        // This menu's coroutineScope would cancel all in progress operations
-                                        // when the dialog is closed.
-                                        // Need to use a scope that will ensure the background operation
-                                        // will continue even if the dialog is closed.
-                                        coroutineScope = (activity as LifecycleOwner).lifecycleScope,
-                                    )
+                                    activity?.let { activity ->
+                                        activity.lifecycleScope.launch {
+                                            deleteBrowsingDataController.clearBrowsingDataOnQuit {
+                                                activity.finishAndRemoveTask()
+                                            }
+                                        }
+                                    }
                                 },
                                 onDismiss = {
                                     withContext(Dispatchers.Main) {

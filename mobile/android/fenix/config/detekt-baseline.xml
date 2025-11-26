@@ -263,12 +263,9 @@
     <ID>UndocumentedPublicClass:DefaultSyncController.kt$SyncController</ID>
     <ID>UndocumentedPublicClass:DefaultSyncInteractor.kt$SyncInteractor</ID>
     <ID>UndocumentedPublicClass:DefaultTopSitesView.kt$DefaultTopSitesView : TopSitesView</ID>
-    <ID>UndocumentedPublicClass:DeleteBrowsingDataController.kt$DefaultDeleteBrowsingDataController : DeleteBrowsingDataController</ID>
-    <ID>UndocumentedPublicClass:DeleteBrowsingDataController.kt$DeleteBrowsingDataController</ID>
     <ID>UndocumentedPublicClass:DeleteBrowsingDataFragment.kt$DeleteBrowsingDataFragment : Fragment</ID>
     <ID>UndocumentedPublicClass:DeleteBrowsingDataItem.kt$DeleteBrowsingDataItem : ConstraintLayout</ID>
     <ID>UndocumentedPublicClass:DeleteBrowsingDataOnQuitFragment.kt$DeleteBrowsingDataOnQuitFragment : PreferenceFragmentCompat</ID>
-    <ID>UndocumentedPublicClass:DeleteBrowsingDataOnQuitType.kt$DeleteBrowsingDataOnQuitType</ID>
     <ID>UndocumentedPublicClass:DesktopFolders.kt$DesktopFolders</ID>
     <ID>UndocumentedPublicClass:DownloadService.kt$DownloadService : AbstractFetchDownloadService</ID>
     <ID>UndocumentedPublicClass:DropDownListPreference.kt$DropDownListPreference : DropDownPreference</ID>
@@ -571,12 +568,6 @@
     <ID>UndocumentedPublicFunction:DefaultToolbarMenu.kt$DefaultToolbarMenu$@VisibleForTesting(otherwise = PRIVATE) fun canAddToHomescreen(): Boolean</ID>
     <ID>UndocumentedPublicFunction:DefaultToolbarMenu.kt$DefaultToolbarMenu$@VisibleForTesting(otherwise = PRIVATE) fun shouldShowOpenInApp(): Boolean</ID>
     <ID>UndocumentedPublicFunction:DefaultToolbarMenu.kt$DefaultToolbarMenu$@VisibleForTesting(otherwise = PRIVATE) fun shouldShowReaderViewCustomization(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:DeleteBrowsingDataController.kt$DeleteBrowsingDataController$suspend fun deleteBrowsingHistory()</ID>
-    <ID>UndocumentedPublicFunction:DeleteBrowsingDataController.kt$DeleteBrowsingDataController$suspend fun deleteCachedFiles()</ID>
-    <ID>UndocumentedPublicFunction:DeleteBrowsingDataController.kt$DeleteBrowsingDataController$suspend fun deleteCookiesAndSiteData()</ID>
-    <ID>UndocumentedPublicFunction:DeleteBrowsingDataController.kt$DeleteBrowsingDataController$suspend fun deleteDownloads()</ID>
-    <ID>UndocumentedPublicFunction:DeleteBrowsingDataController.kt$DeleteBrowsingDataController$suspend fun deleteSitePermissions()</ID>
-    <ID>UndocumentedPublicFunction:DeleteBrowsingDataController.kt$DeleteBrowsingDataController$suspend fun deleteTabs()</ID>
     <ID>UndocumentedPublicFunction:DeleteBrowsingDataOnQuitType.kt$DeleteBrowsingDataOnQuitType$fun getPreferenceKey(context: Context)</ID>
     <ID>UndocumentedPublicFunction:DesktopFolders.kt$DesktopFolders$suspend fun withOptionalDesktopFolders(node: BookmarkNode): BookmarkNode</ID>
     <ID>UndocumentedPublicFunction:DownloadState.kt$fun DownloadState.isActiveDownload(): Boolean</ID>
@@ -718,7 +709,6 @@
     <ID>UndocumentedPublicFunction:SearchStringValidator.kt$SearchStringValidator$fun isSearchStringValid(client: Client, searchString: String): Result</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$@VisibleForTesting(otherwise = PRIVATE) fun setStrictETP()</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun amoCollectionOverrideConfigured(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType): Boolean</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getSitePermissionsCustomSettingsRules(): SitePermissionsRules</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getTabTimeout(): Long</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun getTabTimeoutPingString(): String</ID>
@@ -729,9 +719,7 @@
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun incrementShowLoginsSecureWarningSyncCount()</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun incrementVisitedInstallableCount()</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun recordPasswordsEncryptionKeyGenerated()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun setDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType, value: Boolean)</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun setSitePermissionSettingListener(lifecycleOwner: LifecycleOwner, listener: () -&gt; Unit)</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldDeleteAnyDataOnQuit()</ID>
     <ID>UndocumentedPublicFunction:ShareCloseView.kt$ShareCloseInteractor$fun onShareClosed()</ID>
     <ID>UndocumentedPublicFunction:ShareCloseView.kt$ShareCloseView$fun setTabs(tabs: List&lt;ShareData&gt;)</ID>
     <ID>UndocumentedPublicFunction:ShareController.kt$DefaultShareController$@VisibleForTesting fun getShareText()</ID>

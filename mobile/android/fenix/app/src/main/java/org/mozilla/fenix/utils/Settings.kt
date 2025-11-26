@@ -1429,13 +1429,41 @@ class Settings(
             return touchExplorationIsEnabled || switchServiceIsEnabled
         }
 
+    /**
+     * Checks if a specific type of browsing data is configured to be deleted on quit.
+     *
+     * @param type The [DeleteBrowsingDataOnQuitType] to check.
+     * @return `true` if the data type is set to be deleted on quit, `false` otherwise.
+     */
     fun getDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType): Boolean =
         preferences.getBoolean(type.getPreferenceKey(appContext), false)
 
+    /**
+     * Sets whether a specific type of browsing data should be deleted on quit.
+     *
+     * This function is used to configure the "Delete browsing data on quit" feature.
+     * It writes the user's choice to `SharedPreferences` for the given data type.
+     * The value is later retrieved by `getDeleteDataOnQuit`.
+     *
+     * @param type The [DeleteBrowsingDataOnQuitType] to configure.
+     * @param value `true` to enable deletion for this type on quit, `false` to disable it.
+     */
     fun setDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType, value: Boolean) {
         preferences.edit { putBoolean(type.getPreferenceKey(appContext), value) }
     }
 
+    /**
+     * Checks if any browsing data type is configured to be deleted on quit.
+     *
+     * This function provides a quick way to determine if the "Delete browsing data on quit"
+     * feature is active in any capacity. It iterates through all possible data types
+     * and returns `true` if at least one of them is set for deletion.
+     *
+     * This is useful for UI components that need to know whether to display a general
+     * indicator that the feature is enabled, without needing to know the specific details.
+     *
+     * @return `true` if one or more data types are set to be deleted on quit, `false` otherwise.
+     */
     fun shouldDeleteAnyDataOnQuit() =
         DeleteBrowsingDataOnQuitType.entries.any { getDeleteDataOnQuit(it) }
 

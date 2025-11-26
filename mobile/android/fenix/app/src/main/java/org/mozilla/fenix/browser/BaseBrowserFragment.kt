@@ -35,6 +35,7 @@ import androidx.core.text.HtmlCompat
 import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -232,7 +233,7 @@ import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComposable
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
-import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
+import org.mozilla.fenix.settings.deletebrowsingdata.DefaultDeleteBrowsingDataController
 import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
 import org.mozilla.fenix.tabstray.Page
@@ -579,6 +580,25 @@ abstract class BaseBrowserFragment :
         _findInPageLauncher = {
             launchFindInPageFeature(view, store)
         }
+
+        val deleteBrowsingDataController = DefaultDeleteBrowsingDataController(
+            deleteDataUseCases = DefaultDeleteBrowsingDataController.DeleteDataUseCases(
+                removeAllTabs = activity.components.useCases.tabsUseCases.removeAllTabs,
+                removeAllDownloads = activity.components.useCases.downloadUseCases.removeAllDownloads,
+            ),
+            dataStorage = DefaultDeleteBrowsingDataController.DataStorage(
+                history = activity.components.core.historyStorage,
+                permissions = activity.components.core.permissionStorage,
+            ),
+            stores = DefaultDeleteBrowsingDataController.Stores(
+                appStore = activity.components.appStore,
+                browserStore = activity.components.core.store,
+            ),
+            engine = activity.components.core.engine,
+            settings = activity.components.settings,
+            coroutineContext = activity.lifecycleScope.coroutineContext,
+        )
+
         _browserToolbarMenuController = DefaultBrowserToolbarMenuController(
             fragment = this,
             store = store,
@@ -601,8 +621,12 @@ abstract class BaseBrowserFragment :
             tabCollectionStorage = requireComponents.core.tabCollectionStorage,
             topSitesStorage = requireComponents.core.topSitesStorage,
             pinnedSiteStorage = requireComponents.core.pinnedSiteStorage,
-            deleteAndQuit = { activity: HomeActivity ->
-                deleteAndQuit(activity, activity.lifecycleScope)
+            deleteAndQuit = { activity: FragmentActivity ->
+                lifecycleScope.launch {
+                    deleteBrowsingDataController.clearBrowsingDataOnQuit {
+                        activity.finishAndRemoveTask()
+                    }
+                }
             },
         )
 

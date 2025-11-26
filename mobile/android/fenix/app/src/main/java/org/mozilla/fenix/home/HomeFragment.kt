@@ -159,6 +159,7 @@ import org.mozilla.fenix.search.SearchDialogFragment
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComposable
 import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
+import org.mozilla.fenix.settings.deletebrowsingdata.DefaultDeleteBrowsingDataController
 import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
 import org.mozilla.fenix.tabstray.Page
@@ -637,6 +638,23 @@ class HomeFragment : Fragment() {
                 interactor = sessionControlInteractor,
                 homeFragment = this,
                 homeActivity = activity,
+                deleteBrowsingDataController = DefaultDeleteBrowsingDataController(
+                    deleteDataUseCases = DefaultDeleteBrowsingDataController.DeleteDataUseCases(
+                        removeAllTabs = activity.components.useCases.tabsUseCases.removeAllTabs,
+                        removeAllDownloads = activity.components.useCases.downloadUseCases.removeAllDownloads,
+                    ),
+                    dataStorage = DefaultDeleteBrowsingDataController.DataStorage(
+                        history = activity.components.core.historyStorage,
+                        permissions = activity.components.core.permissionStorage,
+                    ),
+                    stores = DefaultDeleteBrowsingDataController.Stores(
+                        appStore = activity.components.appStore,
+                        browserStore = activity.components.core.store,
+                    ),
+                    engine = activity.components.core.engine,
+                    settings = activity.components.settings,
+                    coroutineContext = activity.lifecycleScope.coroutineContext,
+                ),
             )
         }
 
