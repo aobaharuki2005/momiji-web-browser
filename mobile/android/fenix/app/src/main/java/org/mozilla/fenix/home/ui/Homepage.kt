@@ -119,7 +119,7 @@ internal fun Homepage(
         ) {
             if (state.headerState.showHeader) {
                 HomepageHeader(
-                    wordmarkColor = state.headerState.wordmarkColor,
+                    wordmarkTextColor = state.headerState.wordmarkTextColor,
                     privateBrowsingButtonColor = state.headerState.privateBrowsingButtonColor,
                     browsingMode = state.browsingMode,
                     browsingModeChanged = interactor::onPrivateModeButtonClicked,
@@ -486,7 +486,7 @@ private fun HomepagePreview() {
                 showCollections = true,
                 headerState = HeaderState(
                     showHeader = false,
-                    wordmarkColor = null,
+                    wordmarkTextColor = null,
                     privateBrowsingButtonColor = colorResource(
                         getAttr(
                             iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
@@ -536,7 +536,7 @@ private fun HomepagePreviewCollections() {
                 showCollections = true,
                 headerState = HeaderState(
                     showHeader = false,
-                    wordmarkColor = null,
+                    wordmarkTextColor = null,
                     privateBrowsingButtonColor = colorResource(
                         getAttr(
                             iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
@@ -586,7 +586,7 @@ private fun MinimalHomepagePreview() {
                 showCollections = false,
                 HeaderState(
                     showHeader = false,
-                    wordmarkColor = null,
+                    wordmarkTextColor = null,
                     privateBrowsingButtonColor = colorResource(
                         getAttr(
                             iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
@@ -621,7 +621,7 @@ private fun PrivateHomepagePreview() {
             state = HomepageState.Private(
                 headerState = HeaderState(
                     showHeader = false,
-                    wordmarkColor = null,
+                    wordmarkTextColor = null,
                     privateBrowsingButtonColor = colorResource(
                         getAttr(
                             iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,

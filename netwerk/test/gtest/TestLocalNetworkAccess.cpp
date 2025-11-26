@@ -21,7 +21,7 @@ TEST(TestNetAddrLNAUtil, IPAddressSpaceCategorization)
  100.64.0.0/10          | Carrier-Grade NAT      | RFC6598   | private |
  172.16.0.0/12          | Private Use            | RFC1918   | private |
  192.168.0.0/16         | Private Use            | RFC1918   | private |
- 198.18.0.0/15          | Benchmarking           | RFC2544   | local   |
+ 198.18.0.0/15          | Benchmarking           | RFC2544   | pref/local
  169.254.0.0/16         | Link Local             | RFC3927   | private |
  ::1/128                | IPv6 Loopback          | RFC4291   | local   |
  fc00::/7               | Unique Local           | RFC4193   | private |
@@ -30,6 +30,7 @@ TEST(TestNetAddrLNAUtil, IPAddressSpaceCategorization)
  address space |
  *--------------------------------------------------------------------------*/
   using namespace mozilla::net;
+  using namespace mozilla;
 
   struct TestCase {
     const char* mIp;
@@ -40,8 +41,12 @@ TEST(TestNetAddrLNAUtil, IPAddressSpaceCategorization)
       // Local IPv4
       {"", nsILoadInfo::IPAddressSpace::Unknown},
       {"127.0.0.1", nsILoadInfo::IPAddressSpace::Local},
-      {"198.18.0.0", nsILoadInfo::IPAddressSpace::Local},
-      {"198.19.255.255", nsILoadInfo::IPAddressSpace::Local},
+      {"198.18.0.0", StaticPrefs::network_lna_benchmarking_is_local()
+                         ? nsILoadInfo::IPAddressSpace::Local
+                         : nsILoadInfo::IPAddressSpace::Public},
+      {"198.19.255.255", StaticPrefs::network_lna_benchmarking_is_local()
+                             ? nsILoadInfo::IPAddressSpace::Local
+                             : nsILoadInfo::IPAddressSpace::Public},
 
       // Private IPv4
       {"10.0.0.1", nsILoadInfo::IPAddressSpace::Private},
@@ -124,7 +129,7 @@ TEST(TestNetAddrLNAUtil, DefaultAndOverrideTransitions)
        "network.lna.address_space.public.override"},
 
       // Local -> Private
-      {"198.18.0.1", 9999, IPAddressSpace::Local, IPAddressSpace::Private,
+      {"127.0.0.1", 9999, IPAddressSpace::Local, IPAddressSpace::Private,
        "network.lna.address_space.private.override"},
   };
 

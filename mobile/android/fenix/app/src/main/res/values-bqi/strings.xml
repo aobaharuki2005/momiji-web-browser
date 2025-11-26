@@ -311,7 +311,7 @@
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar custom tab menu. -->
   <string name="browser_custom_tab_menu_handlebar_content_description">بستن ورق نومگه بلگه سفارشی</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
-  <string name="browser_menu_bookmark_this_page_2">نشووه ناهاڌن بلگه</string>
+  <string name="browser_menu_bookmark_this_page_2">نشووک ناهاڌن بلگه</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">آلشت نشووک</string>
   <!-- Browser menu label that the saves the currently visited page as a PDF -->

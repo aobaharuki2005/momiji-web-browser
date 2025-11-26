@@ -46,7 +46,7 @@ import mozilla.components.ui.icons.R as iconsR
  */
 @Composable
 fun HomepageHeader(
-    wordmarkColor: Color?,
+    wordmarkTextColor: Color?,
     privateBrowsingButtonColor: Color,
     browsingMode: BrowsingMode,
     browsingModeChanged: (BrowsingMode) -> Unit,
@@ -58,9 +58,9 @@ fun HomepageHeader(
             .padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 32.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        WordmarkLogo(wordmarkColor)
+        WordmarkLogo()
 
-        WordmarkText(wordmarkColor)
+        WordmarkText(wordmarkTextColor)
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -73,7 +73,7 @@ fun HomepageHeader(
 }
 
 @Composable
-private fun WordmarkLogo(color: Color?) {
+private fun WordmarkLogo() {
     Image(
         modifier = Modifier
             .height(40.dp)
@@ -83,7 +83,6 @@ private fun WordmarkLogo(color: Color?) {
             }
             .padding(end = 10.dp),
         painter = painterResource(getAttr(R.attr.fenixWordmarkLogo)),
-        colorFilter = color?.let { ColorFilter.tint(it) },
         contentDescription = null,
     )
 }
@@ -148,7 +147,7 @@ private fun HomepageHeaderPreview() {
     FirefoxTheme {
         Row(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             HomepageHeader(
-                wordmarkColor = null,
+                wordmarkTextColor = null,
                 privateBrowsingButtonColor = colorResource(
                     getAttr(
                         iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
@@ -167,7 +166,7 @@ private fun PrivateHomepageHeaderPreview() {
     FirefoxTheme(theme = Theme.Private) {
         Row(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             HomepageHeader(
-                wordmarkColor = null,
+                wordmarkTextColor = null,
                 privateBrowsingButtonColor = colorResource(
                     getAttr(
                         iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
