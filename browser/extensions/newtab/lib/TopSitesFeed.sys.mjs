@@ -106,6 +106,12 @@ const PREF_UNIFIED_ADS_COUNTS = "discoverystream.placements.tiles.counts";
 const PREF_UNIFIED_ADS_BLOCKED_LIST = "unifiedAds.blockedAds";
 const PREF_UNIFIED_ADS_ADSFEED_ENABLED = "unifiedAds.adsFeed.enabled";
 
+const PREF_SOV_ENABLED = "sov.enabled";
+const PREF_SOV_NAME = "sov.name";
+const PREF_SOV_AMP_ALLOCATION = "sov.amp.allocation";
+const PREF_SOV_FRECENCY_ALLOCATION = "sov.frecency.allocation";
+const DEFAULT_SOV_SLOT_COUNT = 3;
+
 // Search experiment stuff
 const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
 const SEARCH_FILTERS = [
@@ -139,9 +145,11 @@ const CONTILE_CACHE_VALID_FOR_FALLBACK = 3 * 60 * 60; // 3 hours in seconds
 // Partners of sponsored tiles.
 const SPONSORED_TILE_PARTNER_AMP = "amp";
 const SPONSORED_TILE_PARTNER_MOZ_SALES = "moz-sales";
+const SPONSORED_TILE_PARTNER_FREC_BOOST = "frec-boost";
 const SPONSORED_TILE_PARTNERS = new Set([
   SPONSORED_TILE_PARTNER_AMP,
   SPONSORED_TILE_PARTNER_MOZ_SALES,
+  SPONSORED_TILE_PARTNER_FREC_BOOST,
 ]);
 
 const DISPLAY_FAIL_REASON_OVERSOLD = "oversold";
@@ -515,6 +523,64 @@ export class ContileIntegration {
     return { tiles: formattedTileData };
   }
 
+  sovEnabled() {
+    return this._topSitesFeed.store.getState().Prefs.values[PREF_SOV_ENABLED];
+  }
+
+  csvToInts(val) {
+    if (!val) {
+      return [];
+    }
+
+    return val
+      .split(",")
+      .map(s => s.trim())
+      .filter(item => item)
+      .map(item => parseInt(item, 10));
+  }
+
+  /**
+   * Builds a Share of Voice (SOV) config.
+   *
+   * @example input data from prefs/trainhopConfig
+   * // name: "SOV-20251122215625"
+   * // amp:  "100, 100, 100"
+   * // frec: "0, 0, 0"
+   *
+   * @returns {{
+   *   name: string,
+   *   allocations: Array<{
+   *     position: number,
+   *     allocation: Array<{
+   *       partner: string,
+   *       percentage: number,
+   *     }>,
+   *   }>,
+   * }}
+   */
+  generateSov() {
+    const { values } = this._topSitesFeed.store.getState().Prefs;
+    const name = values[PREF_SOV_NAME];
+    const amp = this.csvToInts(values[PREF_SOV_AMP_ALLOCATION]);
+    const frec = this.csvToInts(values[PREF_SOV_FRECENCY_ALLOCATION]);
+
+    const allocations = Array.from(
+      { length: DEFAULT_SOV_SLOT_COUNT },
+      (val, i) => ({
+        position: i + 1, // 1-based
+        allocation: [
+          { partner: SPONSORED_TILE_PARTNER_AMP, percentage: amp[i] || 0 },
+          {
+            partner: SPONSORED_TILE_PARTNER_FREC_BOOST,
+            percentage: frec[i] || 0,
+          },
+        ],
+      })
+    );
+
+    return { name, allocations };
+  }
+
   // eslint-disable-next-line max-statements
   async _fetchSites() {
     if (
@@ -687,6 +753,8 @@ export class ContileIntegration {
       // Logic below runs the same regardless of ad source
       if (body?.sov) {
         this._sov = JSON.parse(atob(body.sov));
+      } else if (this.sovEnabled()) {
+        this._sov = this.generateSov();
       }
 
       if (body?.tiles && Array.isArray(body.tiles)) {
@@ -1245,6 +1313,16 @@ export class TopSitesFeed {
   }
 
   /**
+   * Fetch topsites spocs that are frecency boosted.
+   *
+   * @returns {Array} An array of sponsored tile objects.
+   */
+  fetchFrecencyBoostedSpocs() {
+    let sponsored = [];
+    return sponsored;
+  }
+
+  /**
    * Fetch topsites spocs from the DiscoveryStream feed.
    *
    * @returns {Array} An array of sponsored tile objects.
@@ -1417,11 +1495,13 @@ export class TopSitesFeed {
     );
 
     const discoverySponsored = this.fetchDiscoveryStreamSpocs();
+    const frecencyBoostedSponsored = this.fetchFrecencyBoostedSpocs();
     this._telemetryUtility.setTiles(discoverySponsored);
 
     const sponsored = this._mergeSponsoredLinks({
       [SPONSORED_TILE_PARTNER_AMP]: contileSponsored,
       [SPONSORED_TILE_PARTNER_MOZ_SALES]: discoverySponsored,
+      [SPONSORED_TILE_PARTNER_FREC_BOOST]: frecencyBoostedSponsored,
     });
 
     this._maybeCapSponsoredLinks(sponsored);

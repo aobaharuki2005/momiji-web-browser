@@ -956,6 +956,35 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "sov.enabled",
+    {
+      title: "Enables share of voice (SOV)",
+      value: false,
+    },
+  ],
+  [
+    "sov.name",
+    {
+      title:
+        "A unique id, usually this is a timestamp for the day it was generated",
+      value: "SOV-20251122215625",
+    },
+  ],
+  [
+    "sov.amp.allocation",
+    {
+      title: "How many positions can be filled from amp",
+      value: "100, 100, 100",
+    },
+  ],
+  [
+    "sov.frecency.allocation",
+    {
+      title: "How many positions can be filled by frecency",
+      value: "0, 0, 0",
+    },
+  ],
+  [
     "widgets.system.enabled",
     {
       title: "Enables visibility of all widgets and controls to enable them",
