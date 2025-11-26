@@ -23,6 +23,17 @@ namespace jit {
 class JitActivation;
 class JSJitProfilingFrameIterator;
 class JitcodeGlobalEntry;
+
+// Information about a single frame in a JIT call stack, returned by
+// JitcodeGlobalEntry::callStackAtAddr.
+struct CallStackFrameInfo {
+  // The function name or label for this frame.
+  const char* label;
+  // The script source ID for this frame. Used to identify which script source
+  // this frame belongs to.
+  uint32_t sourceId;
+};
+
 }  // namespace jit
 namespace wasm {
 class ProfilingFrameIterator;
@@ -295,8 +306,7 @@ class ProfiledFrameRange {
   void* addr_;
   js::jit::JitcodeGlobalEntry* entry_;
   // Assume maximum inlining depth is <64
-  const char* labels_[64];
-  uint32_t sourceIds_[64];
+  js::jit::CallStackFrameInfo frames_[64];
   uint32_t depth_;
 };
 
