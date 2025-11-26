@@ -1326,9 +1326,8 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
 
   // This is just a cheap check to limit the damage we can do to ourselves if
   // we try to monomorphically inline an indirectly recursive call.
-  const uint32_t maxInliningDepth = 8;
   if (!isTrialInlined &&
-      info_->inlineScriptTree()->depth() > maxInliningDepth) {
+      info_->inlineScriptTree()->depth() > InlineScriptTree::MaxDepth) {
     return false;
   }
 
