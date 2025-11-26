@@ -85,7 +85,7 @@ private fun Header(title: String) {
             text = title,
             textAlign = TextAlign.Center,
             style = FirefoxTheme.typography.headline6,
-            maxLines = 1,
+            maxLines = 2,
         )
     }
 }
