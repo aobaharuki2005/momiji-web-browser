@@ -337,9 +337,6 @@ const COMMON_PREFERENCES = new Map([
   // Disable connectivity service pings
   ["network.connectivity-service.enabled", false],
 
-  // Do not prompt with long usernames or passwords in URLs
-  ["network.http.phishy-userpass-length", 255],
-
   // Do not prompt for temporary redirects
   ["network.http.prompt-temp-redirect", false],
 

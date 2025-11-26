@@ -101,8 +101,6 @@ support-files = [
   "file_subdocument_downgrade.sjs",
 ]
 
-["browser_superfluos_auth.js"]
-
 ["browser_tlds.js"]
 
 ["browser_upgrade_onion.js"]

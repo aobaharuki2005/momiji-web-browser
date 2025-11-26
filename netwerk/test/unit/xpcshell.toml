@@ -60,8 +60,6 @@ prefs = [
 
 ["test_NetUtil.js"]
 
-["test_SuperfluousAuth.js"]
-
 ["test_URIs.js"]
 
 ["test_URIs2.js"]

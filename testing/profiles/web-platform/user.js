@@ -41,8 +41,6 @@ user_pref("toolkit.startup.max_resumed_crashes", -1);
 user_pref("gfx.font_loader.delay", 0);
 // Disable antialiasing for the Ahem font.
 user_pref("gfx.font_rendering.ahem_antialias_none", true);
-// Disable antiphishing popup
-user_pref("network.http.phishy-userpass-length", 255);
 // Disable safebrowsing components
 user_pref("browser.safebrowsing.blockedURIs.enabled", false);
 user_pref("browser.safebrowsing.downloads.enabled", false);

@@ -13298,13 +13298,6 @@
   value: false
   mirror: always
 
-# Whether to show anti-spoof confirmation prompts when navigating to a url
-# with userinfo
-- name: network.auth.confirmAuth.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Whether to display auth prompts if X-Frame-Options header will block loading
 # page
 - name: network.auth.supress_auth_prompt_for_XFO_failures
@@ -16928,12 +16921,6 @@
 
 # Insecure form submit warning.
 - name: prompts.modalType.insecureFormSubmit
-  type: int32_t
-  value: 2
-  mirror: always
-
-# nsHttpChannelAuthProvider#ConfirmAuth anti-phishing prompts.
-- name: prompts.modalType.confirmAuth
   type: int32_t
   value: 2
   mirror: always
