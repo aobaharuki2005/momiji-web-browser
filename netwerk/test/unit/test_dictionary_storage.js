@@ -25,14 +25,14 @@ const TEST_DICTIONARIES = {
   },
   large: {
     id: "test-dict-large",
-    content: "A".repeat(1024 * 100), // 100KB dictionary
+    content: "C".repeat(1024 * 100), // 100KB dictionary
     pattern: "*.html",
     type: "raw",
   },
   large_url: {
     id: "test-dict-large-url",
     content: "large URL content",
-    pattern: "large",
+    pattern: "file",
     type: "raw",
   },
   too_large_url: {
@@ -135,7 +135,7 @@ async function setupServer() {
       const TEST_DICTIONARIES = {
         large: {
           id: "test-dict-large",
-          content: "A".repeat(1024 * 100), // 100KB dictionary
+          content: "C".repeat(1024 * 100), // 100KB dictionary
           pattern: "*.html",
           type: "raw",
         },
@@ -160,7 +160,7 @@ async function setupServer() {
         large_url: {
           id: "test-dict-large-url",
           content: "large URL content",
-          pattern: "large",
+          pattern: "file",
           type: "raw",
         },
       };
@@ -551,7 +551,7 @@ add_task(async function test_long_dictionary_url() {
   });
 
   // Verify Use-As-Dictionary header was processed and it's an active dictionary
-  url = `https://localhost:${server.port()}/large`;
+  url = `https://localhost:${server.port()}/dict/large/file`;
   chan = makeChan(url);
   [req, data] = await channelOpenPromise(chan);
 
