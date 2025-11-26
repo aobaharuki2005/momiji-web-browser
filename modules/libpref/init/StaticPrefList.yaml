@@ -953,12 +953,6 @@
   value: false
   mirror: always
 
-# Whether to async scroll CSS anchor pos.
-- name: apz.async_scroll_css_anchor_pos
-  type: bool
-  value: true
-  mirror: once
-
 #---------------------------------------------------------------------------
 # Prefs starting with "beacon."
 #---------------------------------------------------------------------------
