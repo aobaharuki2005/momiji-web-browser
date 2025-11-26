@@ -1906,15 +1906,13 @@
     "bugs": {
       "1895997": {
         "issue": "unsupported-warning",
-        "matches": ["*://e.seb.lt/ib/login*"]
+        "matches": ["*://login.seb.lt/ui/*"]
       }
     },
     "interventions": [
       {
         "platforms": ["all"],
-        "content_scripts": {
-          "js": ["bug1895997-e.seb.lt-prevent-unsupported-warning.js"]
-        }
+        "ua_string": ["add_Chrome"]
       }
     ]
   },
