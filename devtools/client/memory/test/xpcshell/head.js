@@ -3,7 +3,7 @@
 
 "use strict";
 
-// via xpcshell.ini
+// via xpcshell.toml
 /* import-globals-from ../../../shared/test/shared-head.js */
 
 Services.prefs.setBoolPref("devtools.testing", true);

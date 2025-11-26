@@ -166,7 +166,7 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
-// When loaded from xpcshell test, this file is loaded via xpcshell.ini's head property
+// When loaded from xpcshell test, this file is loaded via xpcshell.toml's head property
 // and so it loaded first before anything else and isn't having access to Services global.
 // Whereas many head.js files from mochitest import this file via loadSubScript
 // and already expose Services as a global.
@@ -256,7 +256,7 @@ try {
   ok(
     false,
     "MISSING DEPENDENCY ON telemetry-test-helpers.js\n" +
-      "Please add the following line in browser.ini:\n" +
+      "Please add the following line in browser.toml:\n" +
       "  !/devtools/client/shared/test/telemetry-test-helpers.js\n"
   );
   throw e;

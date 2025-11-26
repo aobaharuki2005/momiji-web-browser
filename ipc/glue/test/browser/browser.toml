@@ -59,6 +59,6 @@ support-files = [
 skip-if = [
   "!gecko_profiler",
   "tsan",
-] # from tools/profiler/tests/browser/browser.ini, timing out on profiler tests?
+] # from tools/profiler/tests/browser/browser.toml, timing out on profiler tests?
 
 ["browser_utility_start_clean_shutdown.js"]

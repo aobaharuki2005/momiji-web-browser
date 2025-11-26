@@ -5,7 +5,7 @@ prefs = [
   "gfx.font_loader.delay=0",
 ]
 # Support files for chrome tests that we want to load over HTTP need
-# to go in here, not chrome.ini.
+# to go in here, not chrome.toml.
 support-files = [
   "chrome/file_animate_xrays.html",
   "mozilla/xhr_doc.html",

@@ -235,7 +235,7 @@ StartupRecorder.prototype = {
         this.data.profile = profileData;
         // There's no equivalent StartProfiler call in this file because the
         // profiler is started using the MOZ_PROFILER_STARTUP environment
-        // variable in browser/base/content/test/performance/browser.ini
+        // variable in browser/base/content/test/performance/browser.toml
         Services.profiler.StopProfiler();
 
         this._resolve();
