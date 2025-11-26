@@ -269,11 +269,6 @@ export class ProgressListener {
     return this.#webProgress.browsingContext.currentWindowGlobal.documentURI;
   }
 
-  get isInitialDocument() {
-    return this.#webProgress.browsingContext.currentWindowGlobal
-      .isInitialDocument;
-  }
-
   get isLoadingDocument() {
     return this.#webProgress.isLoadingDocument;
   }
@@ -339,16 +334,6 @@ export class ProgressListener {
             // real error page was loaded.
             this.#trace(`Error=${errorName}, wait for redirect to error page`);
             this.#errorName = errorName;
-            return;
-          }
-
-          // Handle an aborted navigation. While for an initial document another
-          // navigation to the real document will happen it's not the case for
-          // normal documents. Here we need to stop the listener immediately.
-          if (status == Cr.NS_BINDING_ABORTED && this.isInitialDocument) {
-            this.#trace(
-              "Ignore aborted navigation error to the initial document."
-            );
             return;
           }
 
