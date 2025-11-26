@@ -55,7 +55,7 @@ parent:
   /**
    * Sets the shared memory to be used for readback.
    */
-  async SetDataSurfaceBuffer(uint32_t aId, MutableSharedMemoryHandle aBufferHandle);
+  async SetDataSurfaceBuffer(MutableSharedMemoryHandle aBufferHandle);
 
   /**
    * Notify CanvasTranslator it is about to be minimized.

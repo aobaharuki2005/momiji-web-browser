@@ -552,12 +552,7 @@ bool CanvasChild::EnsureDataSurfaceShmem(size_t aSizeRequired) {
       return false;
     }
 
-    auto id = ++mNextDataSurfaceShmemId;
-    if (!id) {
-      // If ids overflow, ensure that zero is reserved.
-      id = ++mNextDataSurfaceShmemId;
-    }
-    if (!SendSetDataSurfaceBuffer(id, std::move(shmemHandle))) {
+    if (!SendSetDataSurfaceBuffer(std::move(shmemHandle))) {
       return false;
     }
 
@@ -653,13 +648,19 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     return nullptr;
   }
 
-  RecordEvent(RecordedCacheDataSurface(aSurface));
+  // If growing the data surface shmem, allocation may require significant time
+  // in the content process, during which the GPU process may issue an earlier
+  // readback while the content process is still busy. If the existing data
+  // surface shmem is to be reused instead, then try to instead read the data
+  // directly into the shmem to avoid a superfluous copy after readback.
+  bool forceData = ShouldGrowDataSurfaceShmem(sizeRequired);
+  RecordEvent(RecordedCacheDataSurface(aSurface, forceData));
 
   if (!EnsureDataSurfaceShmem(sizeRequired)) {
     return nullptr;
   }
 
-  RecordEvent(RecordedGetDataForSurface(mNextDataSurfaceShmemId, aSurface));
+  RecordEvent(RecordedGetDataForSurface(aSurface));
   auto checkpoint = CreateCheckpoint();
   if (NS_WARN_IF(!mRecorder->WaitForCheckpoint(checkpoint))) {
     return nullptr;

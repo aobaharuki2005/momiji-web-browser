@@ -197,7 +197,6 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   std::shared_ptr<ipc::ReadOnlySharedMemoryMapping> mDataSurfaceShmem;
   bool mDataSurfaceShmemAvailable = false;
-  uint32_t mNextDataSurfaceShmemId = 0;
   int64_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
   struct TextureInfo {

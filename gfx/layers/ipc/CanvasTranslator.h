@@ -8,7 +8,6 @@
 #define mozilla_layers_CanvasTranslator_h
 
 #include <deque>
-#include <map>
 #include <memory>
 #include <unordered_map>
 
@@ -113,7 +112,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * Sets the shared memory to be used for readback.
    */
   ipc::IPCResult RecvSetDataSurfaceBuffer(
-      uint32_t aId, ipc::MutableSharedMemoryHandle&& aBufferHandle);
+      ipc::MutableSharedMemoryHandle&& aBufferHandle);
 
   ipc::IPCResult RecvClearCachedResources();
 
@@ -292,7 +291,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void NextBuffer();
 
-  void GetDataSurface(uint32_t aId, uint64_t aSurfaceRef);
+  void GetDataSurface(uint64_t aSurfaceRef);
 
   /**
    * Wait for a canvas to produce the designated surface. If necessary,
@@ -353,9 +352,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
       MOZ_ASSERT(mTag == Tag::AddBuffer);
     }
     CanvasTranslatorEvent(const Tag aTag,
-                          ipc::MutableSharedMemoryHandle&& aBufferHandle,
-                          uint32_t aId = 0)
-        : mTag(aTag), mBufferHandle(std::move(aBufferHandle)), mId(aId) {
+                          ipc::MutableSharedMemoryHandle&& aBufferHandle)
+        : mTag(aTag), mBufferHandle(std::move(aBufferHandle)) {
       MOZ_ASSERT(mTag == Tag::SetDataSurfaceBuffer);
     }
 
@@ -370,9 +368,9 @@ class CanvasTranslator final : public gfx::InlineTranslator,
     }
 
     static UniquePtr<CanvasTranslatorEvent> SetDataSurfaceBuffer(
-        uint32_t aId, ipc::MutableSharedMemoryHandle&& aBufferHandle) {
+        ipc::MutableSharedMemoryHandle&& aBufferHandle) {
       return MakeUnique<CanvasTranslatorEvent>(Tag::SetDataSurfaceBuffer,
-                                               std::move(aBufferHandle), aId);
+                                               std::move(aBufferHandle));
     }
 
     static UniquePtr<CanvasTranslatorEvent> ClearCachedResources() {
@@ -398,8 +396,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       return nullptr;
     }
-
-    uint32_t mId = 0;
   };
 
   /*
@@ -412,11 +408,9 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * @returns true if next HandleCanvasTranslatorEvents() needs to call
    * TranslateRecording().
    */
-  bool SetDataSurfaceBuffer(uint32_t aId,
-                            ipc::MutableSharedMemoryHandle&& aBufferHandle);
+  bool SetDataSurfaceBuffer(ipc::MutableSharedMemoryHandle&& aBufferHandle);
 
-  void DataSurfaceBufferWillChange(uint32_t aId = 0, bool aKeepAlive = true,
-                                   size_t aLimit = 0);
+  void DataSurfaceBufferWillChange();
 
   bool ReadNextEvent(EventType& aEventType);
 
@@ -532,14 +526,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   std::queue<CanvasShmem> mCanvasShmems;
   CanvasShmem mCurrentShmem;
   gfx::MemReader mCurrentMemReader{0, 0};
-  // Track any data surfaces pointing to a shmem mapping.
-  struct DataSurfaceShmem {
-    ipc::SharedMemoryMapping mShmem;
-    ThreadSafeWeakPtr<gfx::DataSourceSurface> mOwner;
-  };
-  std::map<uint32_t, DataSurfaceShmem> mDataSurfaceShmems;
-  // The last shmem id that was assigned to a mapping.
-  uint32_t mLastDataSurfaceShmemId = 0;
+  ipc::SharedMemoryMapping mDataSurfaceShmem;
+  ThreadSafeWeakPtr<gfx::DataSourceSurface> mDataSurfaceShmemOwner;
   UniquePtr<CrossProcessSemaphore> mWriterSemaphore;
   UniquePtr<CrossProcessSemaphore> mReaderSemaphore;
   TextureType mTextureType = TextureType::Unknown;
@@ -587,8 +575,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   std::deque<UniquePtr<CanvasTranslatorEvent>> mPendingCanvasTranslatorEvents;
 
   std::unordered_map<gfx::ReferencePtr, ExportSurface> mExportSurfaces;
-
-  gfx::UserDataKey mDataSurfaceShmemIdKey = {0};
 };
 
 }  // namespace layers
