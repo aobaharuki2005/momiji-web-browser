@@ -764,22 +764,16 @@ partial interface Document {
     readonly attribute FragmentDirective fragmentDirective;
 };
 
-
-callback ViewTransitionUpdateCallback = Promise<any> ();
-dictionary StartViewTransitionOptions {
-  ViewTransitionUpdateCallback? update = null;
-  sequence<DOMString>? types = null;
-};
-
-// https://drafts.csswg.org/css-view-transitions-2/#idl-index
+// https://drafts.csswg.org/css-view-transitions-1/#additions-to-document-api
 partial interface Document {
   [Pref="dom.viewTransitions.enabled"]
-  ViewTransition startViewTransition(
-    optional (ViewTransitionUpdateCallback or StartViewTransitionOptions) callbackOptions = {}
-  );
+  ViewTransition startViewTransition(optional ViewTransitionUpdateCallback updateCallback);
   [Pref="dom.viewTransitions.enabled"]
   readonly attribute ViewTransition? activeViewTransition;
 };
+
+// https://github.com/w3c/csswg-drafts/pull/10767 for the name divergence in the spec
+callback ViewTransitionUpdateCallback = Promise<any> ();
 
 // https://wicg.github.io/sanitizer-api/#sanitizer-api
 partial interface Document {

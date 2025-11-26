@@ -285,7 +285,6 @@
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/RequestContextService.h"
 #include "nsAboutProtocolUtils.h"
-#include "nsAtom.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsBaseHashtable.h"
@@ -18792,27 +18791,10 @@ void Document::ClearStaleServoData() {
 
 // https://drafts.csswg.org/css-view-transitions-1/#dom-document-startviewtransition
 already_AddRefed<ViewTransition> Document::StartViewTransition(
-    const ViewTransitionUpdateCallbackOrStartViewTransitionOptions& aOptions) {
+    const Optional<OwningNonNull<ViewTransitionUpdateCallback>>& aCallback) {
   // Steps 1-3
-
-  nsTArray<RefPtr<nsAtom>> types;
-  ViewTransitionUpdateCallback* cb = nullptr;
-  if (aOptions.IsViewTransitionUpdateCallback()) {
-    cb = &aOptions.GetAsViewTransitionUpdateCallback();
-  } else {
-    MOZ_ASSERT(aOptions.IsStartViewTransitionOptions());
-    const auto& options = aOptions.GetAsStartViewTransitionOptions();
-    cb = options.mUpdate.get();
-    if (!options.mTypes.IsNull()) {
-      const auto& optionsTypes = options.mTypes.Value();
-      types.SetCapacity(optionsTypes.Length());
-      for (const auto& type : optionsTypes) {
-        // TODO(emilio): should probably de-duplicate here.
-        types.AppendElement(NS_AtomizeMainThread(type));
-      }
-    }
-  }
-  RefPtr transition = new ViewTransition(*this, cb, std::move(types));
+  RefPtr transition = new ViewTransition(
+      *this, aCallback.WasPassed() ? &aCallback.Value() : nullptr);
   if (Hidden()) {
     // Step 4:
     //

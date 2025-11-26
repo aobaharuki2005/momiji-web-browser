@@ -288,7 +288,7 @@ class TrustedHTMLOrString;
 class OwningTrustedHTMLOrString;
 enum class ViewportFitType : uint8_t;
 class ViewTransition;
-class ViewTransitionUpdateCallbackOrStartViewTransitionOptions;
+class ViewTransitionUpdateCallback;
 class WakeLockSentinel;
 class WindowContext;
 class WindowGlobalChild;
@@ -4065,7 +4065,7 @@ class Document : public nsINode,
   DetermineProximityToViewportAndNotifyResizeObservers();
 
   already_AddRefed<ViewTransition> StartViewTransition(
-      const ViewTransitionUpdateCallbackOrStartViewTransitionOptions&);
+      const Optional<OwningNonNull<ViewTransitionUpdateCallback>>&);
   ViewTransition* GetActiveViewTransition() const {
     return mActiveViewTransition;
   }

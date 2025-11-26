@@ -34,7 +34,6 @@ class IpcResourceUpdateQueue;
 
 namespace dom {
 
-class ViewTransitionTypeSet;
 extern LazyLogModule gViewTransitionsLog;
 
 #define VT_LOG(...)                                                    \
@@ -80,19 +79,15 @@ enum class ViewTransitionPhase : uint8_t {
 class ViewTransition final : public nsISupports, public nsWrapperCache {
  public:
   using Phase = ViewTransitionPhase;
-  using TypeList = nsTArray<RefPtr<nsAtom>>;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ViewTransition)
 
-  ViewTransition(Document&, ViewTransitionUpdateCallback*, TypeList&&);
+  ViewTransition(Document&, ViewTransitionUpdateCallback*);
 
   Promise* GetUpdateCallbackDone(ErrorResult&);
   Promise* GetReady(ErrorResult&);
   Promise* GetFinished(ErrorResult&);
-  ViewTransitionTypeSet* Types();
-  const TypeList& GetTypeList() const { return mTypeList; }
-  TypeList& GetTypeList() { return mTypeList; }
 
   void SkipTransition(SkipTransitionReason = SkipTransitionReason::JS);
   MOZ_CAN_RUN_SCRIPT void PerformPendingOperations();
@@ -217,9 +212,6 @@ class ViewTransition final : public nsISupports, public nsWrapperCache {
   RefPtr<Promise> mUpdateCallbackDonePromise;
   RefPtr<Promise> mReadyPromise;
   RefPtr<Promise> mFinishedPromise;
-
-  TypeList mTypeList;
-  RefPtr<ViewTransitionTypeSet> mTypes;
 
   static void TimeoutCallback(nsITimer*, void*);
   RefPtr<nsITimer> mTimeoutTimer;

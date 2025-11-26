@@ -804,39 +804,6 @@ bool Gecko_MatchViewTransitionClass(
   return vt->MatchClassList(name, *aPtNameAndClassSelector);
 }
 
-static bool IsValidViewTransitionType(nsAtom* aName) {
-  nsDependentAtomString str(aName);
-  return !StringBeginsWith(str, u"-ua-"_ns,
-                           nsASCIICaseInsensitiveStringComparator) &&
-         !str.LowerCaseEqualsASCII("none");
-}
-
-bool Gecko_HasActiveViewTransitionTypes(
-    const mozilla::dom::Document* aDoc,
-    const nsTArray<StyleCustomIdent>* aNames) {
-  MOZ_ASSERT(aDoc);
-  MOZ_ASSERT(aNames);
-  const ViewTransition* vt = aDoc->GetActiveViewTransition();
-  if (!vt) {
-    return false;
-  }
-  const auto& typeList = vt->GetTypeList();
-  if (typeList.IsEmpty()) {
-    return false;
-  }
-  for (const auto& name : *aNames) {
-    if (typeList.Contains(name.AsAtom())) {
-      // NOTE(emilio): This IsValidViewTransitionType() check is not in the spec
-      // and is rather weird, but matches other browsers for now, see:
-      // https://github.com/w3c/csswg-drafts/issues/13141
-      if (IsValidViewTransitionType(name.AsAtom())) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 nsAtom* Gecko_GetXMLLangValue(const Element* aElement) {
   const nsAttrValue* attr =
       aElement->GetParsedAttr(nsGkAtoms::lang, kNameSpaceID_XML);

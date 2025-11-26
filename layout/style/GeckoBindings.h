@@ -147,8 +147,6 @@ const mozilla::PreferenceSheet::Prefs* Gecko_GetPrefSheetPrefs(
 
 bool Gecko_IsTableBorderNonzero(const mozilla::dom::Element* element);
 bool Gecko_IsSelectListBox(const mozilla::dom::Element* element);
-bool Gecko_HasActiveViewTransitionTypes(
-    const mozilla::dom::Document*, const nsTArray<mozilla::StyleCustomIdent>*);
 
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_) \
