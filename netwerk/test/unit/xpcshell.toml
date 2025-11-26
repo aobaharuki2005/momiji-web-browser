@@ -485,6 +485,7 @@ run-sequentially = ["true"] # httpd server
 run-sequentially = ["true"] # httpd server
 
 ["test_cache2_compression_dictionary.js"]
+run-sequentially = ["true"]
 
 ["test_cache2_nostore.js"]
 
@@ -593,10 +594,13 @@ prefs = ["content.cors.use_triggering_principal=true"] # See bug 1982916.
 ["test_defaultURI.js"]
 
 ["test_dictionary_compression_dcb.js"]
+run-sequentially = ["true"]
 
 ["test_dictionary_retrieval.js"]
+run-sequentially = ["true"]
 
 ["test_dictionary_storage.js"]
+run-sequentially = ["true"]
 
 ["test_dns_by_type_resolve.js"]
 
