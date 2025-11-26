@@ -305,6 +305,8 @@ skip-if = [
   "http3",
 ]
 
+["test_replaceState_during_fragment_navigation.html"]
+
 ["test_reserved.html"]
 skip-if = [
   "debug", # bug 1263213
