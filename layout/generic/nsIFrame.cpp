@@ -4435,6 +4435,14 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
         !PresContext()->Document()->GetActiveViewTransition()) {
       scrollsWithAnchor =
           AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(child);
+
+      if (scrollsWithAnchor && aBuilder->IsRetainingDisplayList()) {
+        if (aBuilder->IsPartialUpdate()) {
+          aBuilder->SetPartialBuildFailed(true);
+        } else {
+          aBuilder->SetDisablePartialUpdates(true);
+        }
+      }
     }
 
     const ActiveScrolledRoot* asr =
