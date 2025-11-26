@@ -6090,24 +6090,6 @@
       }
     ]
   },
-  "1997687": {
-    "label": "sakti.kemenkeu.go.id",
-    "bugs": {
-      "1997687": {
-        "issue": "page-fails-to-load",
-        "matches": ["*://sakti.kemenkeu.go.id/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "all_frames": true,
-          "js": ["bug1997687-sakti.kemenkeu.go.id-ZoneAwarePromise-fix.js"]
-        }
-      }
-    ]
-  },
   "1997575": {
     "label": "perplexity.ai",
     "bugs": {
