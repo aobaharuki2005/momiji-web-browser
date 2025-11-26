@@ -766,6 +766,10 @@ void DeleteAnchorPosReferenceData(AnchorPosReferenceData* aData) {
   delete aData;
 }
 
+void DeleteLastSuccessfulPositionData(LastSuccessfulPositionData* aData) {
+  delete aData;
+}
+
 const nsAtom* AnchorPositioningUtils::GetUsedAnchorName(
     const nsIFrame* aPositioned, const nsAtom* aAnchorName) {
   if (aAnchorName && !aAnchorName->IsEmpty()) {
@@ -902,6 +906,52 @@ nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
     return nullptr;
   }
   return anchor;
+}
+
+bool AnchorPositioningUtils::TriggerLayoutOnOverflow(
+    PresShell* aPresShell, bool aEvaluateAllFallbacksIfNeeded) {
+  bool didLayoutPositionedItems = false;
+
+  for (auto* positioned : aPresShell->GetAnchorPosPositioned()) {
+    AnchorPosReferenceData* referencedAnchors =
+        positioned->GetProperty(nsIFrame::AnchorPosReferences());
+    if (NS_WARN_IF(!referencedAnchors)) {
+      continue;
+    }
+
+    auto totalFallbacks =
+        positioned->StylePosition()->mPositionTryFallbacks._0.Length();
+    if (!totalFallbacks) {
+      // No fallbacks specified.
+      continue;
+    }
+
+    const bool positionedFitsInCB =
+        AnchorPositioningUtils::FitsInContainingBlock(
+            AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(
+                positioned),
+            positioned, referencedAnchors);
+    if (positionedFitsInCB) {
+      continue;
+    }
+
+    // TODO(bug 1987964): Try to only do this when the scroll offset changes?
+    auto* lastSuccessfulPosition =
+        positioned->GetProperty(nsIFrame::LastSuccessfulPositionFallback());
+    const bool needsRetry =
+        aEvaluateAllFallbacksIfNeeded ||
+        (lastSuccessfulPosition && !lastSuccessfulPosition->mTriedAllFallbacks);
+    if (needsRetry) {
+      // We want to retry from the first position; remove the last position
+      // property so all potential positions are re-evaluated.
+      positioned->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
+      aPresShell->FrameNeedsReflow(positioned, mozilla::IntrinsicDirty::None,
+                                   NS_FRAME_IS_DIRTY);
+      didLayoutPositionedItems = true;
+    }
+  }
+
+  return didLayoutPositionedItems;
 }
 
 }  // namespace mozilla

@@ -1182,14 +1182,13 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   // TODO(emilio): Right now fallback only applies to position-area, which only
   // makes a difference with a default anchor... Generalize it?
   if (aAnchorPosResolutionCache) {
-    bool found = false;
-    uint32_t index = aKidFrame->GetProperty(
-        nsIFrame::LastSuccessfulPositionFallback(), &found);
-    if (found) {
-      if (!SeekFallbackTo(index)) {
+    const auto* lastSuccessfulPosition =
+        aKidFrame->GetProperty(nsIFrame::LastSuccessfulPositionFallback());
+    if (lastSuccessfulPosition) {
+      if (!SeekFallbackTo(lastSuccessfulPosition->mIndex)) {
         aKidFrame->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
       } else {
-        firstTryIndex = Some(index);
+        firstTryIndex = Some(lastSuccessfulPosition->mIndex);
       }
     }
   }
@@ -1614,8 +1613,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
                              StylePositionVisibility::NO_OVERFLOW);
 
   if (currentFallbackIndex) {
-    aKidFrame->SetProperty(nsIFrame::LastSuccessfulPositionFallback(),
-                           *currentFallbackIndex);
+    aKidFrame->SetOrUpdateDeletableProperty(
+        nsIFrame::LastSuccessfulPositionFallback(), *currentFallbackIndex,
+        isOverflowingCB);
   }
 
 #ifdef DEBUG

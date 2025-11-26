@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <limits>
 
+#include "AnchorPositioningUtils.h"
 #include "Attr.h"
 #include "ErrorList.h"
 #include "ExpandedPrincipal.h"
@@ -18619,6 +18620,8 @@ void Document::DetermineProximityToViewportAndNotifyResizeObservers() {
       interruptible ? FlushType::InterruptibleLayout : FlushType::Layout,
       /* aFlushAnimations = */ false, /* aUpdateRelevancy = */ false);
 
+  bool initialAnchorOverflowDone = false;
+
   // 2. While true:
   while (true) {
     // 2.1. Recalculate styles and update layout for doc.
@@ -18646,6 +18649,16 @@ void Document::DetermineProximityToViewportAndNotifyResizeObservers() {
     //
     // https://github.com/whatwg/html/issues/11210 for the timing of this.
     UpdateLastRememberedSizes();
+
+    const bool evaluateAllFallbacksIfNeeded = !initialAnchorOverflowDone;
+    initialAnchorOverflowDone = true;
+    if (AnchorPositioningUtils::TriggerLayoutOnOverflow(
+            ps, evaluateAllFallbacksIfNeeded)) {
+      // If any of the anchor positioned items overflow its cb, then we trigger
+      // a layout for them. If we triggered for any item, we have to restart the
+      // loop to flush all layouts.
+      continue;
+    }
 
     // 2.2. Let hadInitialVisibleContentVisibilityDetermination be false.
     //      (this is part of "result").
