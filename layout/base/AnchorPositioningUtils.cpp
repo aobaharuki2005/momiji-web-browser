@@ -874,4 +874,23 @@ bool AnchorPositioningUtils::FitsInContainingBlock(
       .Contains(rect);
 }
 
+nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
+    nsIFrame* aFrame) {
+  mozilla::PhysicalAxes axes = aFrame->GetAnchorPosCompensatingForScroll();
+  // TODO for now we return the anchor if we are compensating in either axis.
+  // This is not fully spec compliant, bug 1988034 tracks this.
+  if (axes.isEmpty()) {
+    return nullptr;
+  }
+
+  const auto* pos = aFrame->StylePosition();
+  if (!pos->mPositionAnchor.IsIdent()) {
+    return nullptr;
+  }
+
+  const nsAtom* defaultAnchorName = pos->mPositionAnchor.AsIdent().AsAtom();
+  return const_cast<nsIFrame*>(
+      aFrame->PresShell()->GetAnchorPosAnchor(defaultAnchorName, aFrame));
+}
+
 }  // namespace mozilla
