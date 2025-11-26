@@ -315,7 +315,7 @@ void SharedScriptCache::UpdateDiskCache() {
     }
 
     if (!mEncodeItems.emplaceBack(loadedScript->GetStencil(),
-                                  std::move(loadedScript->SRIAndBytecode()),
+                                  std::move(loadedScript->SRI()),
                                   loadedScript)) {
       continue;
     }

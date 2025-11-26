@@ -190,7 +190,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
     }
   } else {
     MOZ_ASSERT(mRequest->IsSerializedStencil());
-    if (!mRequest->SRIAndBytecode().append(aData, aDataLength)) {
+    if (!mRequest->SRIAndSerializedStencil().append(aData, aDataLength)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -301,7 +301,7 @@ nsresult ScriptLoadHandler::MaybeDecodeSRI(uint32_t* sriLength) {
   }
 
   // Skip until the content is large enough to be decoded.
-  JS::TranscodeBuffer& receivedData = mRequest->SRIAndBytecode();
+  JS::TranscodeBuffer& receivedData = mRequest->SRIAndSerializedStencil();
   if (receivedData.length() <= mSRIDataVerifier->DataSummaryLength()) {
     return NS_OK;
   }
@@ -422,7 +422,7 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       }
     } else {
       MOZ_ASSERT(mRequest->IsSerializedStencil());
-      JS::TranscodeBuffer& bytecode = mRequest->SRIAndBytecode();
+      JS::TranscodeBuffer& bytecode = mRequest->SRIAndSerializedStencil();
       if (!bytecode.append(aData, aDataLength)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
