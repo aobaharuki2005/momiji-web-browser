@@ -67,6 +67,12 @@ with Files("CODE_OF_CONDUCT.md"):
 with Files("SECURITY.md"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
+with Files("AGENTS.md"):
+    BUG_COMPONENT = ("Developer Infrastructure", "AI for Development")
+
+with Files("CLAUDE.md"):
+    BUG_COMPONENT = ("Developer Infrastructure", "AI for Development")
+
 with Files("nsprpub/**"):
     BUG_COMPONENT = ("NSPR", "NSPR")
 
