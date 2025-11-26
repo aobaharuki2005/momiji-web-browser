@@ -177,6 +177,16 @@ DebugScript* DebugScript::getOrCreate(JSContext* cx, HandleScript script) {
 }
 
 /* static */
+bool DebugScript::hasBreakpointSite(JSScript* script, jsbytecode* pc) {
+  if (!script->hasDebugScript()) {
+    return false;
+  }
+
+  uint32_t offset = script->pcToOffset(pc);
+  return getUnbarriered(script)->breakpoints[offset];
+}
+
+/* static */
 JSBreakpointSite* DebugScript::getBreakpointSite(JSScript* script,
                                                  jsbytecode* pc) {
   uint32_t offset = script->pcToOffset(pc);
@@ -406,13 +416,12 @@ void DebugAPI::checkDebugScriptAfterMovingGC(DebugScript* ds) {
 
 /* static */
 bool DebugAPI::stepModeEnabledSlow(JSScript* script) {
-  return DebugScript::get(script)->stepperCount > 0;
+  return DebugScript::getUnbarriered(script)->stepperCount > 0;
 }
 
 /* static */
 bool DebugAPI::hasBreakpointsAtSlow(JSScript* script, jsbytecode* pc) {
-  JSBreakpointSite* site = DebugScript::getBreakpointSite(script, pc);
-  return !!site;
+  return DebugScript::hasBreakpointSite(script, pc);
 }
 
 /* static */

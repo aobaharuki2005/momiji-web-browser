@@ -92,6 +92,7 @@ class DebugScript {
   static DebugScript* getOrCreate(JSContext* cx, HandleScript script);
 
  public:
+  static bool hasBreakpointSite(JSScript* script, jsbytecode* pc);
   static JSBreakpointSite* getBreakpointSite(JSScript* script, jsbytecode* pc);
   static JSBreakpointSite* getOrCreateBreakpointSite(JSContext* cx,
                                                      HandleScript script,
