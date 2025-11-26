@@ -4450,13 +4450,33 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
 
 #ifdef DEBUG
     if (aBuilder->IsPaintingToWindow()) {
+      // Assert that the asr is as expected.
       if (savedOutOfFlowData->mContainingBlockInViewTransitionCapture) {
         MOZ_ASSERT(asr == nullptr);
         MOZ_ASSERT(aBuilder->IsInViewTransitionCapture());
-      } else {
+      } else if ((asr ? asr->mFrame : nullptr) !=
+                 nsLayoutUtils::GetASRAncestorFrame(child->GetParent(),
+                                                    aBuilder)) {
+        // A weird case for native anonymous content in the custom content
+        // container when the root is captured by a view transition. This
+        // content is built outside of the view transition capture but the
+        // containing block (the canvas frame) was built inside the capture, so
+        // savedOutOfFlowData is saved as if we are inside the capture while we
+        // are outside it (bug 2002160).
+        MOZ_ASSERT(asr == nullptr);
+        MOZ_ASSERT(PresContext()->Document()->GetActiveViewTransition());
         MOZ_ASSERT(
-            (asr ? asr->mFrame : nullptr) ==
-            nsLayoutUtils::GetASRAncestorFrame(child->GetParent(), aBuilder));
+            child->GetParent()->GetContent()->IsInNativeAnonymousSubtree());
+        bool inTopLayer = false;
+        nsIFrame* curr = child->GetParent();
+        while (curr) {
+          if (curr->StyleDisplay()->mTopLayer == StyleTopLayer::Auto) {
+            inTopLayer = true;
+            break;
+          }
+          curr = curr->GetParent();
+        }
+        MOZ_ASSERT(inTopLayer);
       }
     }
 #endif
