@@ -378,7 +378,7 @@ static void CollectScriptTelemetry(ScriptLoadRequest* aRequest) {
   } else {
     if (aRequest->IsTextSource()) {
       script_loading_source.EnumGet(ScriptLoadingSourceLabel::eSource).Add();
-    } else if (aRequest->IsBytecode()) {
+    } else if (aRequest->IsSerializedStencil()) {
       script_loading_source.EnumGet(ScriptLoadingSourceLabel::eAltdata).Add();
     }
   }
@@ -1978,7 +1978,7 @@ class OffThreadCompilationCompleteTask : public Task {
       if (mRequest->IsTextSource()) {
         scriptSourceString = "ScriptCompileOffThread";
       } else {
-        MOZ_ASSERT(mRequest->IsBytecode());
+        MOZ_ASSERT(mRequest->IsSerializedStencil());
         scriptSourceString = "BytecodeDecodeOffThread";
       }
 
@@ -2080,7 +2080,7 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
       return NS_OK;
     }
   } else {
-    MOZ_ASSERT(aRequest->IsBytecode());
+    MOZ_ASSERT(aRequest->IsSerializedStencil());
 
     JS::TranscodeRange bytecode = aRequest->Bytecode();
     if (!StaticPrefs::javascript_options_parallel_parsing() ||
@@ -2336,7 +2336,7 @@ class ScriptDecodeTask final : public CompileOrDecodeTask {
 nsresult ScriptLoader::CreateOffThreadTask(
     JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions& aOptions,
     CompileOrDecodeTask** aCompileOrDecodeTask) {
-  if (aRequest->IsBytecode()) {
+  if (aRequest->IsSerializedStencil()) {
     JS::TranscodeRange bytecode = aRequest->Bytecode();
     JS::DecodeOptions decodeOptions(aOptions);
     RefPtr<ScriptDecodeTask> decodeTask = new ScriptDecodeTask(bytecode);
@@ -2534,7 +2534,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
   // Free any source data, but keep the bytecode content as we might have to
   // save it later.
   aRequest->ClearScriptSource();
-  if (aRequest->IsBytecode()) {
+  if (aRequest->IsSerializedStencil()) {
     // We received bytecode as input, thus we were decoding, and we will not be
     // encoding the bytecode once more. We can safely clear the content of this
     // buffer.
@@ -2806,8 +2806,10 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
 
   // The following conditions apply only to the disk cache.
 
-  if (aRequest->IsBytecode()) {
-    LOG(("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: IsBytecode",
+  if (aRequest->IsSerializedStencil()) {
+    LOG(
+        ("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: "
+         "IsSerializedStencil",
          aRequest));
     aRequest->MarkSkippedDiskCaching();
     MOZ_ASSERT(!aRequest->getLoadedScript()->HasDiskCacheReference());
@@ -3124,7 +3126,7 @@ void ScriptLoader::InstantiateClassicScriptFromMaybeEncodedSource(
 
   CalculateCacheFlag(aRequest);
 
-  if (aRequest->IsBytecode()) {
+  if (aRequest->IsSerializedStencil()) {
     if (aRequest->GetScriptLoadContext()->mCompileOrDecodeTask) {
       LOG(("ScriptLoadRequest (%p): Decode Bytecode & instantiate and Execute",
            aRequest));

@@ -165,7 +165,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mRequest->IsBytecode() && firstTime) {
+  if (mRequest->IsSerializedStencil() && firstTime) {
     PerfStats::RecordMeasurementStart(PerfStats::Metric::JSBC_IO_Read);
   }
 
@@ -189,7 +189,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
       mSRIStatus = mSRIDataVerifier->Update(aDataLength, aData);
     }
   } else {
-    MOZ_ASSERT(mRequest->IsBytecode());
+    MOZ_ASSERT(mRequest->IsSerializedStencil());
     if (!mRequest->SRIAndBytecode().append(aData, aDataLength)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -344,7 +344,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
     nsAutoCString altDataType;
     cic->GetAlternativeDataType(altDataType);
     if (altDataType.Equals(ScriptLoader::BytecodeMimeTypeFor(mRequest))) {
-      mRequest->SetBytecode();
+      mRequest->SetSerializedStencil();
       TRACE_FOR_TEST(mRequest, "load:diskcache");
       return NS_OK;
     }
@@ -399,7 +399,7 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (mRequest->IsBytecode() && !firstMessage) {
+    if (mRequest->IsSerializedStencil() && !firstMessage) {
       // if firstMessage, then entire stream is in aData, and PerfStats would
       // measure 0 time
       PerfStats::RecordMeasurementEnd(PerfStats::Metric::JSBC_IO_Read);
@@ -421,7 +421,7 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
         mSRIStatus = mSRIDataVerifier->Update(aDataLength, aData);
       }
     } else {
-      MOZ_ASSERT(mRequest->IsBytecode());
+      MOZ_ASSERT(mRequest->IsSerializedStencil());
       JS::TranscodeBuffer& bytecode = mRequest->SRIAndBytecode();
       if (!bytecode.append(aData, aDataLength)) {
         return NS_ERROR_OUT_OF_MEMORY;

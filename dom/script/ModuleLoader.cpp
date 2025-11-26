@@ -300,7 +300,7 @@ nsresult ModuleLoader::CompileJavaScriptModule(
     };
     stencil = maybeSource.mapNonEmpty(compile);
   } else {
-    MOZ_ASSERT(aRequest->IsBytecode());
+    MOZ_ASSERT(aRequest->IsSerializedStencil());
     JS::DecodeOptions decodeOptions(aOptions);
     decodeOptions.borrowBuffer = true;
 

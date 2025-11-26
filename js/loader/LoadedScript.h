@@ -124,10 +124,10 @@ class LoadedScript : public nsIMemoryReporter {
     // mSRIAndBytecode holds the SRI.
     eTextSource,
 
-    // This script is received as a bytecode from the channel.
-    // mSRIAndBytecode holds the SRI and the bytecode, and mStencil holds the
-    // decoded stencil.
-    eBytecode,
+    // This script is received as a serialized stencil from the channel,
+    // mSRIAndBytecode holds the SRI and the serialized stencil, and mStencil
+    // holds the decoded stencil.
+    eSerializedStencil,
 
     // This script is cached from the previous load.
     // mStencil holds the cached stencil, and mSRIAndBytecode holds the SRI.
@@ -147,7 +147,9 @@ class LoadedScript : public nsIMemoryReporter {
   bool IsUnknownDataType() const { return mDataType == DataType::eUnknown; }
   bool IsTextSource() const { return mDataType == DataType::eTextSource; }
   bool IsSource() const { return IsTextSource(); }
-  bool IsBytecode() const { return mDataType == DataType::eBytecode; }
+  bool IsSerializedStencil() const {
+    return mDataType == DataType::eSerializedStencil;
+  }
   bool IsCachedStencil() const { return mDataType == DataType::eCachedStencil; }
 
   void SetUnknownDataType() {
@@ -161,9 +163,9 @@ class LoadedScript : public nsIMemoryReporter {
     mScriptData.emplace(VariantType<ScriptTextBuffer<Utf8Unit>>());
   }
 
-  void SetBytecode() {
+  void SetSerializedStencil() {
     MOZ_ASSERT(IsUnknownDataType());
-    mDataType = DataType::eBytecode;
+    mDataType = DataType::eSerializedStencil;
   }
 
   void ConvertToCachedStencil() {
@@ -220,7 +222,7 @@ class LoadedScript : public nsIMemoryReporter {
   }
 
   bool CanHaveBytecode() const {
-    return IsBytecode() || IsSource() || IsCachedStencil();
+    return IsSerializedStencil() || IsSource() || IsCachedStencil();
   }
 
   TranscodeBuffer& SRIAndBytecode() {
@@ -231,7 +233,7 @@ class LoadedScript : public nsIMemoryReporter {
     return mSRIAndBytecode;
   }
   TranscodeRange Bytecode() const {
-    MOZ_ASSERT(IsBytecode());
+    MOZ_ASSERT(IsSerializedStencil());
     const auto& bytecode = mSRIAndBytecode;
     auto offset = mBytecodeOffset;
     return TranscodeRange(bytecode.begin() + offset,
@@ -467,7 +469,9 @@ class LoadedScriptDelegate {
   }
   bool IsTextSource() const { return GetLoadedScript()->IsTextSource(); }
   bool IsSource() const { return GetLoadedScript()->IsSource(); }
-  bool IsBytecode() const { return GetLoadedScript()->IsBytecode(); }
+  bool IsSerializedStencil() const {
+    return GetLoadedScript()->IsSerializedStencil();
+  }
   bool IsCachedStencil() const { return GetLoadedScript()->IsCachedStencil(); }
 
   void SetUnknownDataType() { GetLoadedScript()->SetUnknownDataType(); }
@@ -476,7 +480,7 @@ class LoadedScriptDelegate {
     GetLoadedScript()->SetTextSource(maybeLoadContext);
   }
 
-  void SetBytecode() { GetLoadedScript()->SetBytecode(); }
+  void SetSerializedStencil() { GetLoadedScript()->SetSerializedStencil(); }
 
   void ConvertToCachedStencil() { GetLoadedScript()->ConvertToCachedStencil(); }
 
