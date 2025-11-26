@@ -51,7 +51,7 @@ export class BackupUIParent extends JSWindowActorParent {
    */
   actorCreated() {
     this.#bs.addEventListener("BackupService:StateUpdate", this);
-    Services.obs.addObserver(this.sendState, "backup-service-status-updated");
+    Services.obs.addObserver(this, "backup-service-status-updated");
     // Note that loadEncryptionState is an async function.
     // This function is no-op if the encryption state was already loaded.
     this.#bs.loadEncryptionState();
@@ -62,10 +62,7 @@ export class BackupUIParent extends JSWindowActorParent {
    */
   didDestroy() {
     this.#bs.removeEventListener("BackupService:StateUpdate", this);
-    Services.obs.removeObserver(
-      this.sendState,
-      "backup-service-status-updated"
-    );
+    Services.obs.removeObserver(this, "backup-service-status-updated");
   }
 
   /**
@@ -111,7 +108,9 @@ export class BackupUIParent extends JSWindowActorParent {
    */
   async receiveMessage(message) {
     if (message.name == "RequestState") {
-      this.sendState();
+      this.sendAsyncMessage("StateUpdate", {
+        state: this.#bs.state,
+      });
     } else if (message.name == "TriggerCreateBackup") {
       return await this.#triggerCreateBackup({ reason: "manual" });
     } else if (message.name == "EnableScheduledBackups") {
@@ -281,13 +280,13 @@ export class BackupUIParent extends JSWindowActorParent {
     return null;
   }
 
-  /**
-   * Sends the StateUpdate message to the BackupUIChild, along with the most
-   * recent state object from BackupService.
-   */
-  sendState() {
-    this.sendAsyncMessage("StateUpdate", {
-      state: this.#bs.state,
-    });
+  observe(_subject, topic, _data) {
+    if (topic == "backup-service-status-updated") {
+      // Send the StateUpdate message to the BackupUIChild, along with the most
+      // recent state object from BackupService.
+      this.sendAsyncMessage("StateUpdate", {
+        state: this.#bs.state,
+      });
+    }
   }
 }
