@@ -121,17 +121,17 @@ class LoadedScript : public nsIMemoryReporter {
     // This script is received as a plain text from the channel.
     // mScriptData holds the text source, and mStencil holds the compiled
     // stencil.
-    // mSRIAndBytecode holds the SRI.
+    // mSRIAndSerializedStencil holds the SRI.
     eTextSource,
 
     // This script is received as a serialized stencil from the channel,
-    // mSRIAndBytecode holds the SRI and the serialized stencil, and mStencil
-    // holds the decoded stencil.
+    // mSRIAndSerializedStencil holds the SRI and the serialized stencil, and
+    // mStencil holds the decoded stencil.
     eSerializedStencil,
 
     // This script is cached from the previous load.
-    // mStencil holds the cached stencil, and mSRIAndBytecode holds the SRI.
-    // mScriptData is unused.
+    // mStencil holds the cached stencil, and mSRIAndSerializedStencil holds
+    // the SRI. mScriptData is unused.
     eCachedStencil
   };
 
@@ -228,8 +228,8 @@ class LoadedScript : public nsIMemoryReporter {
   }
 
   // ==== Methods to access the serialized data or the SRI part ====
-  // mSRIAndBytecode field is shared between two separate consumers.
-  // See mSRIAndBytecode comment for more info.
+  // mSRIAndSerializedStencil field is shared between two separate consumers.
+  // See mSRIAndSerializedStencil comment for more info.
 
   // ---- For SRI-only consumers ----
 
@@ -237,17 +237,17 @@ class LoadedScript : public nsIMemoryReporter {
 
   bool HasSRI() {
     MOZ_ASSERT(CanHaveSRIOnly());
-    return !mSRIAndBytecode.empty();
+    return !mSRIAndSerializedStencil.empty();
   }
 
   TranscodeBuffer& SRI() {
     MOZ_ASSERT(CanHaveSRIOnly());
-    return mSRIAndBytecode;
+    return mSRIAndSerializedStencil;
   }
 
   void DropSRI() {
     MOZ_ASSERT(CanHaveSRIOnly());
-    mSRIAndBytecode.clearAndFree();
+    mSRIAndSerializedStencil.clearAndFree();
   }
 
   // ---- For SRI and serialized Stencil consumers ---
@@ -256,14 +256,13 @@ class LoadedScript : public nsIMemoryReporter {
 
   TranscodeBuffer& SRIAndSerializedStencil() {
     MOZ_ASSERT(CanHaveSRIAndSerializedStencil());
-    return mSRIAndBytecode;
+    return mSRIAndSerializedStencil;
   }
   TranscodeRange SerializedStencil() const {
     MOZ_ASSERT(CanHaveSRIAndSerializedStencil());
-    const auto& bytecode = mSRIAndBytecode;
+    const auto& buf = mSRIAndSerializedStencil;
     auto offset = mBytecodeOffset;
-    return TranscodeRange(bytecode.begin() + offset,
-                          bytecode.length() - offset);
+    return TranscodeRange(buf.begin() + offset, buf.length() - offset);
   }
 
   // ---- Methods shared between both consumers ----
@@ -279,12 +278,12 @@ class LoadedScript : public nsIMemoryReporter {
 
   bool HasNoSRIOrSRIAndSerializedStencil() const {
     MOZ_ASSERT(CanHaveSRIOnly() || CanHaveSRIAndSerializedStencil());
-    return mSRIAndBytecode.empty();
+    return mSRIAndSerializedStencil.empty();
   }
 
   void DropSRIOrSRIAndSerializedStencil() {
     MOZ_ASSERT(CanHaveSRIOnly() || CanHaveSRIAndSerializedStencil());
-    mSRIAndBytecode.clearAndFree();
+    mSRIAndSerializedStencil.clearAndFree();
   }
 
   // ==== Methods to access the stencil ====
@@ -361,7 +360,7 @@ class LoadedScript : public nsIMemoryReporter {
  public:
   // Fields.
 
-  // Determine whether the mScriptData or mSRIAndBytecode is used.
+  // Determine whether the mScriptData or mSRIAndSerializedStencil is used.
   // See DataType description for more info.
   DataType mDataType;
 
@@ -380,7 +379,7 @@ class LoadedScript : public nsIMemoryReporter {
   mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
  public:
-  // Offset of the bytecode in mSRIAndBytecode.
+  // Offset of the bytecode in mSRIAndSerializedStencil.
   uint32_t mBytecodeOffset;
 
  private:
@@ -429,10 +428,10 @@ class LoadedScript : public nsIMemoryReporter {
   // Holds either of the following for non-inline scripts:
   //   * The SRI serialized hash and the paddings, which is calculated when
   //     receiving the source text
-  //   * The SRI, padding, and the script bytecode, which is received
+  //   * The SRI, padding, and the serialized Stencil, which is received
   //     from necko. The data is laid out according to ScriptBytecodeDataLayout
   //     or, if compression is enabled, ScriptBytecodeCompressedDataLayout.
-  TranscodeBuffer mSRIAndBytecode;
+  TranscodeBuffer mSRIAndSerializedStencil;
 
   // Holds the stencil for the script.  This field is used in all DataType.
   RefPtr<Stencil> mStencil;

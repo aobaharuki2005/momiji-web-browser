@@ -81,7 +81,7 @@ LoadedScript::LoadedScript(const LoadedScript& aOther)
   MOZ_DIAGNOSTIC_ASSERT(aOther.mDataType == DataType::eCachedStencil);
   MOZ_DIAGNOSTIC_ASSERT(mStencil);
   MOZ_ASSERT(!mScriptData);
-  MOZ_ASSERT(mSRIAndBytecode.empty());
+  MOZ_ASSERT(mSRIAndSerializedStencil.empty());
 }
 
 LoadedScript::~LoadedScript() {
@@ -134,7 +134,7 @@ size_t LoadedScript::SizeOfIncludingThis(
     }
   }
 
-  bytes += mSRIAndBytecode.sizeOfExcludingThis(aMallocSizeOf);
+  bytes += mSRIAndSerializedStencil.sizeOfExcludingThis(aMallocSizeOf);
 
   // NOTE: Stencil is reported by SpiderMonkey.
   return bytes;
