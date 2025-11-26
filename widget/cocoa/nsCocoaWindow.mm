@@ -4624,7 +4624,6 @@ BOOL ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow,
 
 nsCocoaWindow::nsCocoaWindow()
     : mWindow(nil),
-      mClosedRetainedWindow(nil),
       mDelegate(nil),
       mChildView(nil),
       mBackingScaleFactor(0.0),
@@ -4673,12 +4672,7 @@ void nsCocoaWindow::DestroyNativeWindow() {
   // sent to it after this object has been destroyed.
   mWindow.delegate = nil;
 
-  // Closing the window will also release it. Our second reference will
-  // keep it alive through our destructor. Release any reference we might
-  // have from an earlier call to DestroyNativeWindow, then create a new
-  // one.
-  [mClosedRetainedWindow autorelease];
-  mClosedRetainedWindow = [mWindow retain];
+  // Closing the window will also release it.
   MOZ_ASSERT(mWindow.releasedWhenClosed);
   [mWindow close];
 
@@ -4696,8 +4690,6 @@ nsCocoaWindow::~nsCocoaWindow() {
     CancelAllTransitions();
     DestroyNativeWindow();
   }
-
-  [mClosedRetainedWindow release];
 
   // Our NativeLayerRoot must be empty before it is destructed.
   if (mNativeLayerRoot) {
