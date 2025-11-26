@@ -11,7 +11,7 @@ mozilla_taskgraph/transforms/scriptworker/release_artifacts.py,sha256=yOO7wSggP-
 mozilla_taskgraph/transforms/scriptworker/shipit/__init__.py,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
 mozilla_taskgraph/transforms/scriptworker/shipit/mark_as_shipped.py,sha256=tx3OI6veKByRlxYKGJPv4IunPqMyyxPKxNm0uhya_zQ,2688
 mozilla_taskgraph/util/signed_artifacts.py,sha256=5dI1sOE6nocXjAmwZQ7WgnhBgAM8wjX1Y1Q00qW62_w,702
-mozilla_taskgraph-4.0.0.dist-info/METADATA,sha256=AhyhwsR5uw3qHe6wqNeJaBM7OzsNhIS8vvssp71qnSs,1960
-mozilla_taskgraph-4.0.0.dist-info/WHEEL,sha256=qtCwoSJWgHk21S1Kb4ihdzI2rlJ1ZKaIurTj_ngOhyQ,87
-mozilla_taskgraph-4.0.0.dist-info/licenses/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
-mozilla_taskgraph-4.0.0.dist-info/RECORD,,
+mozilla_taskgraph-4.0.1.dist-info/METADATA,sha256=uwzhJSEAR7ePPajdhs5Htu_tmxY9txu_PQG_0EmAq1w,2062
+mozilla_taskgraph-4.0.1.dist-info/WHEEL,sha256=qtCwoSJWgHk21S1Kb4ihdzI2rlJ1ZKaIurTj_ngOhyQ,87
+mozilla_taskgraph-4.0.1.dist-info/licenses/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
+mozilla_taskgraph-4.0.1.dist-info/RECORD,,
