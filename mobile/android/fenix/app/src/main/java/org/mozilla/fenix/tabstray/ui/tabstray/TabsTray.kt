@@ -7,20 +7,18 @@
 package org.mozilla.fenix.tabstray.ui.tabstray
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +30,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
@@ -51,8 +48,7 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.isNormalTab
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 import org.mozilla.fenix.tabstray.ui.banner.TabsTrayBanner
-import org.mozilla.fenix.tabstray.ui.bottomappbar.TabManagerBottomAppBar
-import org.mozilla.fenix.tabstray.ui.fab.TabsTrayFab
+import org.mozilla.fenix.tabstray.ui.fab.TabManagerFloatingToolbar
 import org.mozilla.fenix.tabstray.ui.tabpage.NormalTabsPage
 import org.mozilla.fenix.tabstray.ui.tabpage.PrivateTabsPage
 import org.mozilla.fenix.tabstray.ui.tabpage.SyncedTabsPage
@@ -61,13 +57,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.browser.storage.sync.Tab as SyncTab
 import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabClick as OnSyncedTabClick
 import org.mozilla.fenix.tabstray.ui.syncedtabs.OnTabCloseClick as OnSyncedTabClose
-
-/**
- * There is a bug in the [Scaffold] code where it miscalculates the FAB padding and it's off by 4
- * when using [FabPosition.EndOverlay], causing the FAB to be too close to the top of the
- * BottomAppBar.
- */
-private val ScaffoldFabOffsetCorrection = 4.dp
 
 /**
  * Top-level UI for displaying the Tabs Tray feature.
@@ -189,7 +178,11 @@ fun TabsTray(
     }
 
     val topAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val bottomAppBarScrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
+    val isScrolled by remember(topAppBarScrollBehavior.state) {
+        derivedStateOf {
+            topAppBarScrollBehavior.state.collapsedFraction == 1f
+        }
+    }
 
     LaunchedEffect(tabsTrayState.selectedPage) {
         pagerState.animateScrollToPage(Page.pageToPosition(tabsTrayState.selectedPage))
@@ -198,7 +191,6 @@ fun TabsTray(
     Scaffold(
         modifier = modifier
             .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
-            .nestedScroll(bottomAppBarScrollBehavior.nestedScrollConnection)
             .testTag(TabsTrayTestTag.TABS_TRAY),
         snackbarHost = {
             SnackbarHost(
@@ -235,31 +227,22 @@ fun TabsTray(
                 },
             )
         },
-        bottomBar = {
-            TabManagerBottomAppBar(
+        floatingActionButton = {
+            TabManagerFloatingToolbar(
                 tabsTrayStore = tabsTrayStore,
+                expanded = !isScrolled,
+                isSignedIn = isSignedIn,
                 pbmLocked = isPbmLocked,
-                scrollBehavior = bottomAppBarScrollBehavior,
+                onOpenNewNormalTabClicked = onOpenNewNormalTabClicked,
+                onOpenNewPrivateTabClicked = onOpenNewPrivateTabClicked,
+                onSyncedTabsFabClicked = onSyncedTabsFabClicked,
                 onTabSettingsClick = onTabSettingsClick,
                 onRecentlyClosedClick = onRecentlyClosedClick,
                 onAccountSettingsClick = onAccountSettingsClick,
                 onDeleteAllTabsClick = onDeleteAllTabsClick,
             )
         },
-        floatingActionButton = {
-            TabsTrayFab(
-                tabsTrayStore = tabsTrayStore,
-                expanded = bottomAppBarScrollBehavior.state.collapsedFraction == 0f,
-                modifier = Modifier.offset(y = ScaffoldFabOffsetCorrection),
-                isSignedIn = isSignedIn,
-                pbmLocked = isPbmLocked,
-                onOpenNewNormalTabClicked = onOpenNewNormalTabClicked,
-                onOpenNewPrivateTabClicked = onOpenNewPrivateTabClicked,
-                onSyncedTabsFabClicked = onSyncedTabsFabClicked,
-            )
-        },
-        floatingActionButtonPosition = FabPosition.EndOverlay,
-        containerColor = MaterialTheme.colorScheme.surface,
+        floatingActionButtonPosition = FabPosition.Center,
     ) { paddingValues ->
         HorizontalPager(
             modifier = Modifier
