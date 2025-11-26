@@ -46,30 +46,6 @@ class RegExpStatics {
 
   inline void checkInvariants();
 
-  // Legacy RegExp static properties support.
- private:
-  bool invalidated_ = false;
-
- public:
-  bool isInvalidated() const {
-    if (!JS::Prefs::experimental_legacy_regexp()) {
-      return false;
-    }
-    return invalidated_;
-  }
-
-  inline void invalidate() {
-    if (JS::Prefs::experimental_legacy_regexp()) {
-      invalidated_ = true;
-    }
-  }
-
-  inline void clearInvalidation() {
-    if (JS::Prefs::experimental_legacy_regexp()) {
-      invalidated_ = false;
-    }
-  }
-
   /*
    * Check whether a match for pair |pairNum| occurred.  If so, allocate and
    * store the match string in |*out|; otherwise place |undefined| in |*out|.
@@ -186,12 +162,6 @@ inline bool RegExpStatics::createLastMatch(JSContext* cx,
   if (!executeLazy(cx)) {
     return false;
   }
-
-  if (isInvalidated()) {
-    out.setUndefined();
-    return true;
-  }
-
   return makeMatch(cx, 0, out);
 }
 
@@ -199,11 +169,6 @@ inline bool RegExpStatics::createLastParen(JSContext* cx,
                                            MutableHandleValue out) {
   if (!executeLazy(cx)) {
     return false;
-  }
-
-  if (isInvalidated()) {
-    out.setUndefined();
-    return true;
   }
 
   if (matches.empty() || matches.pairCount() == 1) {
@@ -227,11 +192,6 @@ inline bool RegExpStatics::createParen(JSContext* cx, size_t pairNum,
     return false;
   }
 
-  if (isInvalidated()) {
-    out.setUndefined();
-    return true;
-  }
-
   if (matches.empty() || pairNum >= matches.pairCount()) {
     out.setString(cx->runtime()->emptyString);
     return true;
@@ -243,11 +203,6 @@ inline bool RegExpStatics::createLeftContext(JSContext* cx,
                                              MutableHandleValue out) {
   if (!executeLazy(cx)) {
     return false;
-  }
-
-  if (isInvalidated()) {
-    out.setUndefined();
-    return true;
   }
 
   if (matches.empty()) {
@@ -265,11 +220,6 @@ inline bool RegExpStatics::createRightContext(JSContext* cx,
                                               MutableHandleValue out) {
   if (!executeLazy(cx)) {
     return false;
-  }
-
-  if (isInvalidated()) {
-    out.setUndefined();
-    return true;
   }
 
   if (matches.empty()) {
@@ -300,7 +250,7 @@ inline bool RegExpStatics::updateFromMatchPairs(JSContext* cx,
     ReportOutOfMemory(cx);
     return false;
   }
-  clearInvalidation();
+
   return true;
 }
 

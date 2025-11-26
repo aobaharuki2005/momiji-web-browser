@@ -687,10 +687,6 @@ MSG_DEF(JSMSG_INVALID_CLASS_SET_OP,        0, JSEXN_SYNTAXERR, "invalid class se
 MSG_DEF(JSMSG_INVALID_CHAR_IN_CLASS,       0, JSEXN_SYNTAXERR, "invalid character in class in regular expression")
 MSG_DEF(JSMSG_NEGATED_CLASS_WITH_STR,      0, JSEXN_SYNTAXERR, "negated character class with strings in regular expression")
 MSG_DEF(JSMSG_MULTIPLE_FLAG_DASHES,        0, JSEXN_SYNTAXERR, "multiple dashes in flag group")
-MSG_DEF(JSMSG_INCOMPATIBLE_RECEIVER, 1, JSEXN_TYPEERR, "RegExp static property '{0}' called with incompatible receiver")
-MSG_DEF(JSMSG_REGEXP_STATIC_EMPTY, 1, JSEXN_TYPEERR, "RegExp static property '{0}' is invalid")
-MSG_DEF(JSMSG_REGEXP_CROSS_REALM, 0, JSEXN_TYPEERR, "RegExp operation not permitted on object from different realm")
-MSG_DEF(JSMSG_REGEXP_LEGACY_FEATURES_DISABLED, 0, JSEXN_TYPEERR, "RegExp legacy features are disabled")
 
 // Typed object
 MSG_DEF(JSMSG_TYPEDOBJECT_SETTING_IMMUTABLE, 0, JSEXN_ERR, "setting immutable field")

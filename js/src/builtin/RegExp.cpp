@@ -20,7 +20,6 @@
 #include "js/PropertySpec.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "util/StringBuilder.h"
-#include "vm/EqualityOperations.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
@@ -318,27 +317,6 @@ static int32_t CreateRegExpSearchResult(JSContext* cx,
   cx->regExpSearcherLastLimit = matches[0].limit;
   return matches[0].start;
 }
-/*
- * https://github.com/tc39/proposal-regexp-legacy-features/blob/master/README.md#regexpbuiltinexec--r-s-
- *
- */
-
-static bool ShouldUpdateRegExpStatics(JSContext* cx,
-                                      Handle<RegExpObject*> regexp) {
-  if (!JS::Prefs::experimental_legacy_regexp()) {
-    return true;
-  }
-  // Step 5. Let thisRealm be the current Realm Record.
-  JS::Realm* thisRealm = cx->realm();
-  // Step 6. Let rRealm be the value of R's [[Realm]] internal slot.
-  JS::Realm* rRealm = regexp->realm();
-
-  // Step 7. If SameValue(thisRealm, rRealm) is true, then
-  if (thisRealm == rRealm) {
-    return regexp->legacyFeaturesEnabled();
-  }
-  return false;
-}
 
 /*
  * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2
@@ -348,19 +326,14 @@ static RegExpRunStatus ExecuteRegExpImpl(JSContext* cx, RegExpStatics* res,
                                          MutableHandleRegExpShared re,
                                          Handle<JSLinearString*> input,
                                          size_t searchIndex,
-                                         VectorMatchPairs* matches,
-                                         Handle<RegExpObject*> regexp) {
+                                         VectorMatchPairs* matches) {
   RegExpRunStatus status =
       RegExpShared::execute(cx, re, input, searchIndex, matches);
 
   /* Out of spec: Update RegExpStatics. */
   if (status == RegExpRunStatus::Success && res) {
-    if (ShouldUpdateRegExpStatics(cx, regexp)) {
-      if (!res->updateFromMatchPairs(cx, input, *matches)) {
-        return RegExpRunStatus::Error;
-      }
-    } else {
-      res->invalidate();
+    if (!res->updateFromMatchPairs(cx, input, *matches)) {
+      return RegExpRunStatus::Error;
     }
   }
   return status;
@@ -381,7 +354,7 @@ bool js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res,
   VectorMatchPairs matches;
 
   RegExpRunStatus status =
-      ExecuteRegExpImpl(cx, res, &shared, input, *lastIndex, &matches, reobj);
+      ExecuteRegExpImpl(cx, res, &shared, input, *lastIndex, &matches);
   if (status == RegExpRunStatus::Error) {
     return false;
   }
@@ -501,10 +474,9 @@ static bool RegExpInitializeIgnoringLastIndex(JSContext* cx,
 
 /* ES 2016 draft Mar 25, 2016 21.2.3.2.3. */
 bool js::RegExpCreate(JSContext* cx, HandleValue patternValue,
-                      HandleValue flagsValue, MutableHandleValue rval,
-                      HandleObject newTarget) {
+                      HandleValue flagsValue, MutableHandleValue rval) {
   /* Step 1. */
-  Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject, newTarget));
+  Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject));
   if (!regexp) {
     return false;
   }
@@ -574,51 +546,21 @@ static bool SetLastIndex(JSContext* cx, Handle<RegExpObject*> regexp,
   return SetProperty(cx, regexp, cx->names().lastIndex, val);
 }
 
-/*
- * RegExp.prototype.compile ( pattern, flags )
- * https://github.com/tc39/proposal-regexp-legacy-features?tab=readme-ov-file#regexpprototypecompile--pattern-flags-
- * ES6 B.2.5.1.
- */
+/* ES6 B.2.5.1. */
 MOZ_ALWAYS_INLINE bool regexp_compile_impl(JSContext* cx,
                                            const CallArgs& args) {
   MOZ_ASSERT(IsRegExpObject(args.thisv()));
 
   Rooted<RegExpObject*> regexp(cx, &args.thisv().toObject().as<RegExpObject>());
 
-  if (JS::Prefs::experimental_legacy_regexp()) {
-    // Step 3. Let thisRealm be the current Realm Record.
-    JS::Realm* thisRealm = cx->realm();
-
-    // Step 4. Let oRealm be the value of O’s [[Realm]] internal slot.
-    JS::Realm* oRealm = regexp->realm();
-
-    // Step 5. If SameValue(thisRealm, oRealm) is false, throw a TypeError
-    // exception.
-    if (thisRealm != oRealm) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_REGEXP_CROSS_REALM);
-      return false;
-    }
-
-    // Step 6. If the value of R’s [[LegacyFeaturesEnabled]] internal slot is
-    // false, throw a TypeError exception.
-    bool legacyEnabled = regexp->legacyFeaturesEnabled();
-    if (!legacyEnabled) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_REGEXP_LEGACY_FEATURES_DISABLED);
-      return false;
-    }
-  }
-
-  // Step 7. If Type(pattern) is Object and pattern has a [[RegExpMatcher]]
-  // internal slot, then
+  // Step 3.
   RootedValue patternValue(cx, args.get(0));
   ESClass cls;
   if (!GetClassOfValue(cx, patternValue, &cls)) {
     return false;
   }
   if (cls == ESClass::RegExp) {
-    // Step 7.i. If flags is not undefined, throw a TypeError exception.
+    // Step 3a.
     if (args.hasDefined(1)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_NEWREGEXP_FLAGGED);
@@ -633,8 +575,7 @@ MOZ_ALWAYS_INLINE bool regexp_compile_impl(JSContext* cx,
     Rooted<JSAtom*> sourceAtom(cx);
     RegExpFlags flags = RegExpFlag::NoFlags;
     {
-      // Step 7.ii. Let P be the value of pattern’s [[OriginalSource]] internal
-      // slot.
+      // Step 3b.
       RegExpShared* shared = RegExpToShared(cx, patternObj);
       if (!shared) {
         return false;
@@ -644,20 +585,20 @@ MOZ_ALWAYS_INLINE bool regexp_compile_impl(JSContext* cx,
       flags = shared->getFlags();
     }
 
-    // Step 9, minus lastIndex zeroing.
+    // Step 5, minus lastIndex zeroing.
     regexp->initIgnoringLastIndex(sourceAtom, flags);
   } else {
-    // Step 8.
+    // Step 4.
     RootedValue P(cx, patternValue);
     RootedValue F(cx, args.get(1));
 
-    // Step 9, minus lastIndex zeroing.
+    // Step 5, minus lastIndex zeroing.
     if (!RegExpInitializeIgnoringLastIndex(cx, regexp, P, F)) {
       return false;
     }
   }
 
-  // The final niggling bit of step 8.
+  // The final niggling bit of step 5.
   //
   // |regexp| is user-exposed, so its "lastIndex" property might be
   // non-writable.
@@ -683,14 +624,15 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSConstructorProfilerEntry pseudoFrame(cx, "RegExp");
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedObject newTarget(cx);
-
   // Steps 1.
   bool patternIsRegExp;
   if (!IsRegExp(cx, args.get(0), &patternIsRegExp)) {
     return false;
   }
 
+  // We can delay step 3 and step 4a until later, during
+  // GetPrototypeFromBuiltinConstructor calls. Accessing the new.target
+  // and the callee from the stack is unobservable.
   if (!args.isConstructing()) {
     // Step 3.b.
     if (patternIsRegExp && !args.hasDefined(1)) {
@@ -710,8 +652,6 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
         return true;
       }
     }
-  } else {
-    newTarget = &args.newTarget().toObject();
   }
 
   RootedValue patternValue(cx, args.get(0));
@@ -753,8 +693,7 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    Rooted<RegExpObject*> regexp(
-        cx, RegExpAlloc(cx, GenericObject, proto, newTarget));
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject, proto));
     if (!regexp) {
       return false;
     }
@@ -830,8 +769,7 @@ bool js::regexp_construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  Rooted<RegExpObject*> regexp(
-      cx, RegExpAlloc(cx, GenericObject, proto, newTarget));
+  Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject, proto));
   if (!regexp) {
     return false;
   }
@@ -1366,45 +1304,11 @@ static bool regexp_escape(JSContext* cx, unsigned argc, Value* vp) {
  *  RegExp.rightContext         $'
  */
 
-static bool checkRegexpLegacyFeatures(JSContext* cx, const CallArgs& args,
-                                      const char* name) {
-  if (JS::Prefs::experimental_legacy_regexp()) {
-    /* Step 1. Assert C is an object that has an internal slot named
-     * internalSlotName.*/
-    JSObject* regexpCtor =
-        GlobalObject::getOrCreateRegExpConstructor(cx, cx->global());
-    if (!regexpCtor) return false;
-
-    /* Step 2. If SameValue(C, thisValue) is false, throw TypeError */
-    bool same = false;
-    if (!args.thisv().isObject() ||
-        !SameValue(cx, args.thisv(), ObjectValue(*regexpCtor), &same) ||
-        !same) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_INCOMPATIBLE_RECEIVER, name,
-                                InformalValueTypeName(args.thisv()));
-      return false;
-    }
-
-    /* Step 4. If val is empty, throw a TypeError exception */
-    RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());
-    if (!res) return false;
-    if (res->isInvalidated()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_REGEXP_STATIC_EMPTY, name,
-                                InformalValueTypeName(args.thisv()));
-      return false;
-    }
-  }
-  return true;
-}
-
 #define DEFINE_STATIC_GETTER(name, code)                                   \
   static bool name(JSContext* cx, unsigned argc, Value* vp) {              \
     CallArgs args = CallArgsFromVp(argc, vp);                              \
     RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global()); \
     if (!res) return false;                                                \
-    if (!checkRegexpLegacyFeatures(cx, args, #name)) return false;         \
     code;                                                                  \
   }
 
@@ -1431,80 +1335,29 @@ DEFINE_STATIC_GETTER(static_paren9_getter, STATIC_PAREN_GETTER_CODE(9))
 
 #define DEFINE_STATIC_SETTER(name, code)                                   \
   static bool name(JSContext* cx, unsigned argc, Value* vp) {              \
-    CallArgs args = CallArgsFromVp(argc, vp);                              \
     RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global()); \
     if (!res) return false;                                                \
-    if (!checkRegexpLegacyFeatures(cx, args, #name)) return false;         \
     code;                                                                  \
     return true;                                                           \
   }
 
 static bool static_input_setter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (JS::Prefs::experimental_legacy_regexp()) {
-    // Step 1. Assert C is an object that has an internal slot named
-    // internalSlotName.
-    JSObject* regexpCtor =
-        GlobalObject::getOrCreateRegExpConstructor(cx, cx->global());
-    if (!regexpCtor) {
-      return false;
-    }
-
-    // Step 2. If SameValue(C, thisValue) is false, throw a TypeError exception.
-    bool same = false;
-    if (!args.thisv().isObject() ||
-        !SameValue(cx, args.thisv(), ObjectValue(*regexpCtor), &same) ||
-        !same) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_INCOMPATIBLE_RECEIVER,
-                                InformalValueTypeName(args.thisv()));
-      return false;
-    }
-  }
-
   RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());
   if (!res) {
     return false;
   }
 
-  // Step 3. Let strVal be ? ToString(val).
   RootedString str(cx, ToString<CanGC>(cx, args.get(0)));
   if (!str) {
     return false;
   }
 
-  // Step 4. Set the value of the internal slot of C named internalSlotName to
-  // strVal.
   res->setPendingInput(str);
   args.rval().setString(str);
   return true;
 }
 
-#ifdef NIGHTLY_BUILD
-const JSPropertySpec js::regexp_static_props[] = {
-    JS_PSGS("input", static_input_getter, static_input_setter, 0),
-    JS_PSG("lastMatch", static_lastMatch_getter, 0),
-    JS_PSG("lastParen", static_lastParen_getter, 0),
-    JS_PSG("leftContext", static_leftContext_getter, 0),
-    JS_PSG("rightContext", static_rightContext_getter, 0),
-    JS_PSG("$1", static_paren1_getter, 0),
-    JS_PSG("$2", static_paren2_getter, 0),
-    JS_PSG("$3", static_paren3_getter, 0),
-    JS_PSG("$4", static_paren4_getter, 0),
-    JS_PSG("$5", static_paren5_getter, 0),
-    JS_PSG("$6", static_paren6_getter, 0),
-    JS_PSG("$7", static_paren7_getter, 0),
-    JS_PSG("$8", static_paren8_getter, 0),
-    JS_PSG("$9", static_paren9_getter, 0),
-    JS_PSGS("$_", static_input_getter, static_input_setter, 0),
-    JS_PSG("$&", static_lastMatch_getter, 0),
-    JS_PSG("$+", static_lastParen_getter, 0),
-    JS_PSG("$`", static_leftContext_getter, 0),
-    JS_PSG("$'", static_rightContext_getter, 0),
-    JS_SELF_HOSTED_SYM_GET(species, "$RegExpSpecies", 0),
-    JS_PS_END,
-};
-#else
 const JSPropertySpec js::regexp_static_props[] = {
     JS_PSGS("input", static_input_getter, static_input_setter,
             JSPROP_PERMANENT | JSPROP_ENUMERATE),
@@ -1533,7 +1386,6 @@ const JSPropertySpec js::regexp_static_props[] = {
     JS_SELF_HOSTED_SYM_GET(species, "$RegExpSpecies", 0),
     JS_PS_END,
 };
-#endif
 
 const JSFunctionSpec js::regexp_static_methods[] = {
     JS_FN("escape", regexp_escape, 1, 0),
@@ -1578,12 +1430,13 @@ static RegExpRunStatus ExecuteRegExp(JSContext* cx, HandleObject regexp,
 
   /* Steps 3, 10-14, except 12.a.i, 12.c.i.1. */
   RegExpRunStatus status =
-      ExecuteRegExpImpl(cx, res, &re, input, lastIndex, matches, reobj);
+      ExecuteRegExpImpl(cx, res, &re, input, lastIndex, matches);
   if (status == RegExpRunStatus::Error) {
     return RegExpRunStatus::Error;
   }
 
   /* Steps 12.a.i, 12.c.i.i, 15 are done by Self-hosted function. */
+
   return status;
 }
 
@@ -2292,10 +2145,6 @@ bool js::RegExpBuiltinExec(JSContext* cx, Handle<RegExpObject*> regexp,
   static_assert(JSString::MAX_LENGTH <= INT32_MAX, "lastIndex fits in int32_t");
 
   // Steps 6, 8-35.
-  RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());
-  if (!res) {
-    return false;
-  }
 
   if (forTest) {
     bool result;
@@ -2303,7 +2152,6 @@ bool js::RegExpBuiltinExec(JSContext* cx, Handle<RegExpObject*> regexp,
                                          &result)) {
       return false;
     }
-
     rval.setBoolean(result);
     return true;
   }

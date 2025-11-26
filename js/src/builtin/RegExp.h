@@ -114,8 +114,7 @@ JSObject* InitRegExpClass(JSContext* cx, HandleObject obj);
 
 [[nodiscard]] extern bool RegExpCreate(JSContext* cx, HandleValue pattern,
                                        HandleValue flags,
-                                       MutableHandleValue rval,
-                                       HandleObject newTarget);
+                                       MutableHandleValue rval);
 
 [[nodiscard]] extern bool IsRegExpPrototypeOptimizable(JSContext* cx,
                                                        unsigned argc,

@@ -2227,19 +2227,6 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
                               RegExpStatics::offsetOfMatchesInput());
   Address lazySourceAddress(staticsReg, RegExpStatics::offsetOfLazySource());
   Address lazyIndexAddress(staticsReg, RegExpStatics::offsetOfLazyIndex());
-#ifdef DEBUG
-  if (JS::Prefs::experimental_legacy_regexp()) {
-    Label legacyFeaturesEnabled;
-    masm.unboxNonDouble(Address(regexp, NativeObject::getFixedSlotOffset(
-                                            RegExpObject::flagsSlot())),
-                        temp1, JSVAL_TYPE_INT32);
-    masm.branchTest32(Assembler::NonZero, temp1,
-                      Imm32(RegExpObject::LegacyFeaturesEnabledBit),
-                      &legacyFeaturesEnabled);
-    masm.assumeUnreachable("Non-legacy-enabled regexp in RegExp stub");
-    masm.bind(&legacyFeaturesEnabled);
-  }
-#endif
 
   masm.guardedCallPreBarrier(pendingInputAddress, MIRType::String);
   masm.guardedCallPreBarrier(matchesInputAddress, MIRType::String);

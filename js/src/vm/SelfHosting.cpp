@@ -1014,7 +1014,7 @@ static bool intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp) {
                 args[1].isString() || args[1].isUndefined());
   MOZ_ASSERT(!args.isConstructing());
 
-  return RegExpCreate(cx, args[0], args.get(1), args.rval(), nullptr);
+  return RegExpCreate(cx, args[0], args.get(1), args.rval());
 }
 
 static bool intrinsic_RegExpGetSubstitution(JSContext* cx, unsigned argc,
