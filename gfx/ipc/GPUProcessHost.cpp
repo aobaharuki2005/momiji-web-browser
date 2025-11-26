@@ -119,9 +119,10 @@ void GPUProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "GPUProcessHost::OnChannelConnected", [this, liveToken = mLiveToken]() {
-        if (*mLiveToken && mLaunchPhase == LaunchPhase::Waiting) {
-          InitAfterConnect(true);
+      "GPUProcessHost::OnChannelConnected",
+      [self = this, liveToken = mLiveToken]() {
+        if (*liveToken && self->mLaunchPhase == LaunchPhase::Waiting) {
+          self->InitAfterConnect(true);
         }
       }));
 }
@@ -157,10 +158,10 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
                                 true>::CreateAndResolve(csm, __func__);
             })
             ->Map(GetCurrentSerialEventTarget(), __func__,
-                  [this, liveToken = mLiveToken](
+                  [self = this, liveToken = mLiveToken](
                       java::CompositorSurfaceManager::GlobalRef&& aCsm) {
                     if (*liveToken) {
-                      mCompositorSurfaceManager = aCsm;
+                      self->mCompositorSurfaceManager = aCsm;
                     }
                     return Ok{};
                   });
@@ -169,9 +170,9 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
 
     GPUChild::InitPromiseType::All(GetCurrentSerialEventTarget(), initPromises)
         ->Then(GetCurrentSerialEventTarget(), __func__,
-               [this, liveToken = mLiveToken]() {
+               [self = this, liveToken = mLiveToken]() {
                  if (*liveToken) {
-                   this->OnAsyncInitComplete();
+                   self->OnAsyncInitComplete();
                  }
                });
   } else {
