@@ -1415,6 +1415,13 @@ struct NavigationWaitForAllScope final : public nsISupports,
               };
       if (mAPIMethodTracker &&
           !StaticPrefs::dom_navigation_api_internal_method_tracker()) {
+        // Promise::WaitForAll marks all promises as handled, but since we're
+        // delaying wait for all one microtask, we need to manually mark them
+        // here.
+        for (auto& promise : promiseList) {
+          (void)promise->SetAnyPromiseIsHandled();
+        }
+
         LOG_FMTD("Waiting for committed");
         mAPIMethodTracker->CommittedPromise()
             ->AddCallbacksWithCycleCollectedArgs(
