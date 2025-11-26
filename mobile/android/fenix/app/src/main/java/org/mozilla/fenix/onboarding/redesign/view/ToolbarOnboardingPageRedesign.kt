@@ -91,9 +91,7 @@ fun ToolbarOnboardingPageRedesign(
                 )
 
                 Box(
-                    modifier = Modifier
-                        .height(CONTENT_IMAGE_HEIGHT)
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
                     ToolbarPositionOptions(
@@ -127,20 +125,15 @@ private fun ToolbarPositionOptions(
     pageState: OnboardingPageState,
     onToolbarSelectionClicked: (ToolbarOptionType) -> Unit,
 ) {
-    Box(
-        modifier = Modifier.height(CONTENT_IMAGE_HEIGHT),
-        contentAlignment = Alignment.Center,
-    ) {
-        val state by onboardingStore.observeAsState(initialValue = onboardingStore.state) { it }
-        pageState.toolbarOptions?.let { options ->
-            Row(horizontalArrangement = Arrangement.spacedBy(26.dp)) {
-                options.forEach {
-                    ToolbarPositionOption(
-                        option = it,
-                        isSelected = it.toolbarType == state.toolbarOptionSelected,
-                        onClick = { onToolbarSelectionClicked(it.toolbarType) },
-                    )
-                }
+    val state by onboardingStore.observeAsState(initialValue = onboardingStore.state) { it }
+    pageState.toolbarOptions?.let { options ->
+        Row(horizontalArrangement = Arrangement.spacedBy(26.dp)) {
+            options.forEach {
+                ToolbarPositionOption(
+                    option = it,
+                    isSelected = it.toolbarType == state.toolbarOptionSelected,
+                    onClick = { onToolbarSelectionClicked(it.toolbarType) },
+                )
             }
         }
     }
@@ -181,6 +174,7 @@ private fun ToolbarPositionImage(
 
     Box(
         modifier = Modifier
+            .height(CONTENT_IMAGE_HEIGHT)
             .aspectRatio(aspectRatio)
             .clickable(role = Role.Button, onClick = onClick)
             .clip(shape = cardShape)
