@@ -141,36 +141,39 @@ void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
     return;
   }
 
-  // XXX Consider switch on result.tag
-  if (result.IsTyped()) {
-    auto typedValue = result.AsTyped();
+  RefPtr<CSSStyleValue> styleValue;
 
-    MOZ_ASSERT(typedValue.IsKeyword());
-    auto value = typedValue.AsKeyword();
+  switch (result.tag) {
+    case StylePropertyTypedValueResult::Tag::Typed: {
+      const auto& typedValue = result.AsTyped();
 
-    auto keywordValue = MakeRefPtr<CSSKeywordValue>(mParent, value);
+      switch (typedValue.tag) {
+        case StyleTypedValue::Tag::Keyword:
+          styleValue =
+              MakeRefPtr<CSSKeywordValue>(mParent, typedValue.AsKeyword());
+          break;
+      }
+      break;
+    }
 
-    aRetVal.SetAsCSSStyleValue() = std::move(keywordValue);
-    return;
+    case StylePropertyTypedValueResult::Tag::Unsupported: {
+      auto propertyId = CSSPropertyId::FromIdOrCustomProperty(id, aProperty);
+      auto rawBlock = result.AsUnsupported();
+      auto block = MakeRefPtr<DeclarationBlock>(rawBlock.Consume());
+      styleValue = MakeRefPtr<CSSUnsupportedValue>(mParent, propertyId,
+                                                   std::move(block));
+      break;
+    }
+
+    case StylePropertyTypedValueResult::Tag::None:
+      break;
   }
 
-  if (result.IsUnsupported()) {
-    auto propertyId = CSSPropertyId::FromIdOrCustomProperty(id, aProperty);
-
-    auto rawBlock = result.AsUnsupported();
-
-    auto block = MakeRefPtr<DeclarationBlock>(rawBlock.Consume());
-
-    auto unsupportedValue =
-        MakeRefPtr<CSSUnsupportedValue>(mParent, propertyId, std::move(block));
-
-    aRetVal.SetAsCSSStyleValue() = std::move(unsupportedValue);
-    return;
+  if (styleValue) {
+    aRetVal.SetAsCSSStyleValue() = std::move(styleValue);
+  } else {
+    aRetVal.SetUndefined();
   }
-
-  MOZ_ASSERT(result.IsNone());
-
-  aRetVal.SetUndefined();
 }
 
 // XXX This is not yet fully implemented and optimized!
