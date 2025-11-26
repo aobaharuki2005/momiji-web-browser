@@ -28,7 +28,12 @@ class AppIconMiddleware(
                 if (updateAppIcon(old = action.newIcon, new = action.oldIcon)) {
                     context.dispatch(SystemAction.Applied(action.newIcon))
                 } else {
-                    context.dispatch(SystemAction.UpdateFailed)
+                    context.dispatch(
+                        SystemAction.UpdateFailed(
+                            oldIcon = action.oldIcon,
+                            newIcon = action.newIcon,
+                        ),
+                    )
                 }
             }
 
@@ -37,8 +42,8 @@ class AppIconMiddleware(
             is SystemAction.Applied,
             is SystemAction.DialogDismissed,
             is SystemAction.SnackbarDismissed,
+            is SystemAction.SnackbarShown,
             is SystemAction.UpdateFailed,
-
                 -> {
                 // no-op
             }

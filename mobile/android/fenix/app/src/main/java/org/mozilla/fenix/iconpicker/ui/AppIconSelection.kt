@@ -99,11 +99,18 @@ fun AppIconSelection(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val snackbarState = state.snackbarState
     val errorSnackbarMessage = stringResource(R.string.shortcuts_update_error)
-    LaunchedEffect(state.snackbarState) {
-        when (state.snackbarState) {
+    LaunchedEffect(snackbarState) {
+        when (snackbarState) {
             AppIconSnackbarState.None -> return@LaunchedEffect
-            AppIconSnackbarState.ApplyingNewIconError -> scope.launch {
+            is AppIconSnackbarState.ApplyingNewIconError -> scope.launch {
+                store.dispatch(
+                    SystemAction.SnackbarShown(
+                        oldIcon = snackbarState.oldIcon,
+                        newIcon = snackbarState.newIcon,
+                    ),
+                )
                 snackbarHostState.displaySnackbar(
                     message = errorSnackbarMessage,
                     onDismissPerformed = {

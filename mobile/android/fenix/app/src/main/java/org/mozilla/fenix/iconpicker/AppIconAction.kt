@@ -55,8 +55,19 @@ sealed interface SystemAction : AppIconAction {
 
     /**
      * The app icon update failed (due to an exception thrown by a system call).
+     *
+     * @property oldIcon the currently used app icon.
+     * @property newIcon the app icon that the system tried and failed to apply.
      */
-    data object UpdateFailed : SystemAction
+    data class UpdateFailed(val oldIcon: AppIcon, val newIcon: AppIcon) : SystemAction
+
+    /**
+     * The app icon update error snackbar was shown.
+     *
+     * @property oldIcon the currently used app icon.
+     * @property newIcon the app icon that the system tried and failed to apply.
+     */
+    data class SnackbarShown(val oldIcon: AppIcon, val newIcon: AppIcon) : SystemAction
 
     /**
      * The app icon update error snackbar was dismissed.

@@ -34,8 +34,11 @@ sealed class AppIconSnackbarState {
 
     /**
      * Display a snackbar of the app icon update failure.
+     *
+     * @property oldIcon the currently used app icon.
+     * @property newIcon the app icon that the system tried and failed to apply.
      */
-    data object ApplyingNewIconError : AppIconSnackbarState()
+    data class ApplyingNewIconError(val oldIcon: AppIcon, val newIcon: AppIcon) : AppIconSnackbarState()
 }
 
 /**

@@ -12937,6 +12937,25 @@ app_icon_selection:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  error_snackbar_shown:
+    type: event
+    description: When a error snackbar was shown signaling a system error while applying the new icon.
+    extra_keys:
+      old_icon:
+        description: The title of the currently used app icon.
+        type: string
+      new_icon:
+        description: The title of the app icon that the system tried and failed to apply.
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1955888
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D273375
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 
 nimbus_system:
   recorded_nimbus_context:

@@ -43,7 +43,7 @@ class AppIconMiddlewareTest {
     fun `WHEN updateAppIcon call is successful THEN the middleware dispatches the Applied system action to the store`() {
         val currentIcon = AppIcon.AppDefault
         val newIcon = AppIcon.AppRetro2004
-        val middleware = AppIconMiddleware { newIcon, currentIcon -> true }
+        val middleware = AppIconMiddleware { _, _ -> true }
         val result = mutableListOf<AppIconAction>()
         val store = AppIconStore(
             initialState = AppIconState(
@@ -68,7 +68,7 @@ class AppIconMiddlewareTest {
     fun `WHEN updateAppIcon call returns with an a failure THEN the middleware dispatches the UpdateFailed system action to the store`() {
         val currentIcon = AppIcon.AppDefault
         val newIcon = AppIcon.AppRetro2004
-        val middleware = AppIconMiddleware { newIcon, currentIcon -> false }
+        val middleware = AppIconMiddleware { _, _ -> false }
         val result = mutableListOf<AppIconAction>()
         val store = AppIconStore(
             initialState = AppIconState(
@@ -86,6 +86,6 @@ class AppIconMiddlewareTest {
         val confirmAction = UserAction.Confirmed(newIcon = newIcon, oldIcon = currentIcon)
         store.dispatch(confirmAction)
 
-        assertEquals(listOf(confirmAction, SystemAction.UpdateFailed), result)
+        assertEquals(listOf(confirmAction, SystemAction.UpdateFailed(oldIcon = currentIcon, newIcon = newIcon)), result)
     }
 }

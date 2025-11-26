@@ -111,22 +111,41 @@ class AppIconReducerTest {
         assertEquals(dialogState, initialState.warningDialogState)
         assertEquals(AppIconSnackbarState.None, initialState.snackbarState)
 
-        val result = appIconReducer(initialState, SystemAction.UpdateFailed)
+        val result = appIconReducer(
+            initialState,
+            SystemAction.UpdateFailed(oldIcon = currentIcon, newIcon = newIcon),
+        )
 
         assertEquals(null, result.userSelectedAppIcon)
         assertEquals(AppIconWarningDialog.None, result.warningDialogState)
-        assertEquals(AppIconSnackbarState.ApplyingNewIconError, result.snackbarState)
+        assertEquals(
+            AppIconSnackbarState.ApplyingNewIconError(
+                oldIcon = currentIcon,
+                newIcon = newIcon,
+            ),
+            result.snackbarState,
+        )
     }
 
     @Test
     fun `GIVEN SnackbarDismissed system action WHEN reducer is called THEN the snackbar is hidden`() {
         val currentIcon = AppIcon.AppDefault
+        val newIcon = AppIcon.AppRetro2004
         val initialState = AppIconState(
             currentAppIcon = currentIcon,
-            snackbarState = AppIconSnackbarState.ApplyingNewIconError,
+            snackbarState = AppIconSnackbarState.ApplyingNewIconError(
+                oldIcon = currentIcon,
+                newIcon = newIcon,
+            ),
         )
 
-        assertEquals(AppIconSnackbarState.ApplyingNewIconError, initialState.snackbarState)
+        assertEquals(
+            AppIconSnackbarState.ApplyingNewIconError(
+                oldIcon = currentIcon,
+                newIcon = newIcon,
+            ),
+            initialState.snackbarState,
+        )
 
         val result = appIconReducer(initialState, SystemAction.SnackbarDismissed)
 

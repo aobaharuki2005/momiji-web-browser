@@ -34,15 +34,19 @@ private fun AppIconState.handleSystemAction(action: SystemAction): AppIconState 
             userSelectedAppIcon = null,
             warningDialogState = AppIconWarningDialog.None,
         )
-        SystemAction.DialogDismissed -> this.copy(
+        is SystemAction.DialogDismissed -> this.copy(
             userSelectedAppIcon = null,
             warningDialogState = AppIconWarningDialog.None,
         )
-        SystemAction.SnackbarDismissed -> this.copy(snackbarState = AppIconSnackbarState.None)
-        SystemAction.UpdateFailed -> this.copy(
+        is SystemAction.SnackbarDismissed -> this.copy(snackbarState = AppIconSnackbarState.None)
+        is SystemAction.UpdateFailed -> this.copy(
             userSelectedAppIcon = null,
-            snackbarState = AppIconSnackbarState.ApplyingNewIconError,
+            snackbarState = AppIconSnackbarState.ApplyingNewIconError(
+                oldIcon = action.oldIcon,
+                newIcon = action.newIcon,
+            ),
             warningDialogState = AppIconWarningDialog.None,
         )
+        is SystemAction.SnackbarShown -> this
     }
 }
