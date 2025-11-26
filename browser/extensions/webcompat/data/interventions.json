@@ -5814,21 +5814,6 @@
       }
     ]
   },
-  "1991941": {
-    "label": "brawlstats.com",
-    "bugs": {
-      "1991941": {
-        "issue": "desktop-layout-not-mobile",
-        "matches": ["*://brawlstats.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "ua_string": ["Chrome_with_FxQuantum"]
-      }
-    ]
-  },
   "1992121": {
     "label": "tutor-uksouth.classroom.cloud",
     "bugs": {
