@@ -207,7 +207,7 @@ async function setupRetrievalTestServer() {
   );
 
   await server.registerPathHandler(
-    "/dict/wildcard",
+    "/wildcard",
     function (request, response) {
       const RETRIEVAL_TEST_DICTIONARIES = {
         wildcard: {
@@ -227,7 +227,7 @@ async function setupRetrievalTestServer() {
     }
   );
 
-  await server.registerPathHandler("/dict/js", function (request, response) {
+  await server.registerPathHandler("/js", function (request, response) {
     const RETRIEVAL_TEST_DICTIONARIES = {
       js_files: {
         id: "js-dict",
@@ -292,8 +292,8 @@ add_task(async function test_setup_dictionaries() {
   const dictPaths = [
     "/dict/api-v1",
     "/dict/api-generic",
-    "/dict/wildcard",
-    "/dict/js",
+    "/wildcard",
+    "/js",
   ];
 
   for (let path of dictPaths) {
