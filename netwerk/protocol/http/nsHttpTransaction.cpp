@@ -1333,6 +1333,14 @@ void nsHttpTransaction::Close(nsresult reason) {
     mDNSRequest = nullptr;
   }
 
+  // If an HTTP/3 backup timer is active and this transaction ends in error,
+  // treat it as NS_ERROR_NET_RESET so the transaction will retry once.
+  // NOTE: This is a temporary workaround; the proper fix belongs in
+  // the Happy Eyeballs project.
+  if (NS_FAILED(reason) && mHttp3BackupTimerCreated && mHttp3BackupTimer) {
+    reason = NS_ERROR_NET_RESET;
+  }
+
   MaybeCancelFallbackTimer();
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
