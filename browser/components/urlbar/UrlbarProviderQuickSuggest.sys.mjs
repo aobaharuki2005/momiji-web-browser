@@ -368,9 +368,21 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
     result.payload.isSponsored = feature
       ? feature.isSuggestionSponsored(suggestion)
       : !!suggestion.is_sponsored;
-    if (suggestion.source == "rust") {
-      // `suggestionObject` is passed back into the Rust component on dismissal.
-      result.payload.suggestionObject = suggestion;
+
+    switch (suggestion.source) {
+      case "merino":
+        // Set `dismissalKey` unless the feature already did it.
+        if (
+          suggestion.dismissal_key &&
+          !result.payload.hasOwnProperty("dismissalKey")
+        ) {
+          result.payload.dismissalKey = suggestion.dismissal_key;
+        }
+        break;
+      case "rust":
+        // `suggestionObject` is passed back to the Rust component on dismissal.
+        result.payload.suggestionObject = suggestion;
+        break;
     }
 
     // Handle icons here so each feature doesn't have to do it, but use `||=` to
@@ -443,7 +455,6 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
     let payload = {
       url: suggestion.url,
       originalUrl: suggestion.original_url,
-      dismissalKey: suggestion.dismissal_key,
       isBlockable: true,
       isManageable: true,
     };

@@ -469,6 +469,7 @@ class _QuickSuggestTestUtils {
     isSuggestedIndexRelativeToGroup = true,
     isBestMatch = false,
     requestId = undefined,
+    dismissalKey = undefined,
     descriptionL10n = { id: "urlbar-result-action-sponsored" },
     categories = [],
   } = {}) {
@@ -525,6 +526,7 @@ class _QuickSuggestTestUtils {
       });
     } else {
       result.payload.icon = icon;
+      result.payload.dismissalKey = dismissalKey || fullKeyword || originalUrl;
     }
 
     return result;

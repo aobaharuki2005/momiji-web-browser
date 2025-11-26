@@ -992,6 +992,9 @@ function makeGlobalActionsResult({
  * @param {string} [options.completed]
  *   The value that would be filled if the autofill result was confirmed.
  *   Has no effect if `autofilled` is not specified.
+ * @param {object} [options.conditionalPayloadProperties]
+ *   An object mapping payload property names to objects { optional, ignore }.
+ *   See the code below.
  * @param {Array} options.matches
  *   An array of UrlbarResults.
  */
@@ -1001,6 +1004,7 @@ async function check_results({
   autofilled,
   completed,
   matches = [],
+  conditionalPayloadProperties = {},
 } = {}) {
   if (!context) {
     return;
@@ -1093,7 +1097,7 @@ async function check_results({
   //   Always ignore the property.
   // optional:
   //   Ignore the property if it's not in the expected result.
-  let conditionalPayloadProperties = {
+  conditionalPayloadProperties = {
     frecency: { optional: true },
     lastVisit: { optional: true },
     // `suggestionObject` is only used for dismissing Suggest Rust results, and
@@ -1101,6 +1105,7 @@ async function check_results({
     // payload object, so ignore it. There are Suggest tests specifically for
     // dismissals that indirectly test the important aspects of this property.
     suggestionObject: { ignore: true },
+    ...conditionalPayloadProperties,
   };
 
   for (let i = 0; i < matches.length; i++) {

@@ -104,17 +104,13 @@ export class AmpSuggestions extends SuggestProvider {
 
       // Normalize the Merino suggestion so it has camelCased properties like
       // Rust suggestions.
-      suggestion = {
-        title: suggestion.title,
-        url: suggestion.url,
-        fullKeyword: suggestion.full_keyword,
-        impressionUrl: suggestion.impression_url,
-        clickUrl: suggestion.click_url,
-        blockId: suggestion.block_id,
-        advertiser: suggestion.advertiser,
-        iabCategory: suggestion.iab_category,
-        requestId: suggestion.request_id,
-      };
+      suggestion.fullKeyword = suggestion.full_keyword;
+      suggestion.impressionUrl = suggestion.impression_url;
+      suggestion.clickUrl = suggestion.click_url;
+      suggestion.blockId = suggestion.block_id;
+      suggestion.iabCategory = suggestion.iab_category;
+      suggestion.requestId = suggestion.request_id;
+      suggestion.dismissalKey = suggestion.dismissal_key;
     }
 
     let payload = {
@@ -131,6 +127,15 @@ export class AmpSuggestions extends SuggestProvider {
       isBlockable: true,
       isManageable: true,
     };
+
+    // AMP suggestions are dismissed by their full keyword, not by URL like
+    // usual. For Rust suggestions, the Rust component handles that for us, no
+    // need to do anything here. For Merino suggestions, Merino should include
+    // `dismissal_key`, but fall back to the full keyword in case it doesn't.
+    if (suggestion.source == "merino") {
+      payload.dismissalKey =
+        suggestion.dismissalKey || suggestion.fullKeyword || originalUrl;
+    }
 
     let isTopPick =
       lazy.UrlbarPrefs.get("quickSuggestAmpTopPickCharThreshold") &&
