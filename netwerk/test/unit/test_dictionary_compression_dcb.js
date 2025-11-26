@@ -444,7 +444,7 @@ async function setupDicts() {
     let dictKey = dictKeys[i];
     let url = `${server.origin()}${path}`;
     dump(
-      `registering dictionary ${path} for match patter ${DCB_TEST_DICTIONARIES[dictKey].patterh}\n`
+      `registering dictionary ${path} for match pattern ${DCB_TEST_DICTIONARIES[dictKey].pattern}\n`
     );
 
     let chan = makeChan(url);
