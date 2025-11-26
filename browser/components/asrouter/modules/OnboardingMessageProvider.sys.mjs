@@ -753,6 +753,7 @@ const BASE_MESSAGES = () => [
                   args: "preferences#sync-backup",
                   where: "tab",
                 },
+                dismiss: true,
               },
             },
             additional_button: {
@@ -850,6 +851,7 @@ const BASE_MESSAGES = () => [
                   args: "preferences#sync-backup",
                   where: "tab",
                 },
+                dismiss: true,
               },
             },
             additional_button: {
