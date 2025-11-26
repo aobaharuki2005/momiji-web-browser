@@ -676,14 +676,3 @@ privatebrowsing-inc-origin-init:
         mozharness:
             extra-options:
                 - "--setpref=browser.privatebrowsing.autostart=true"
-
-navigation-api:
-    description: "{description} with Navigation API enabled"
-    component: "Core::DOM: Navigation"
-    expiration: "2026-05-01"
-    suffix: "nav"
-    mozinfo: "navigationApi"
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=dom.navigation.webidl.enabled=true"
