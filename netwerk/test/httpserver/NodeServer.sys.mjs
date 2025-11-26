@@ -987,7 +987,7 @@ class NodeWebSocketHttp2ServerCode extends BaseNodeHTTPServerCode {
 }
 
 export class NodeWebSocketHttp2Server extends BaseNodeServer {
-  _protocol = "h2ws";
+  _protocol = "wss";
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
