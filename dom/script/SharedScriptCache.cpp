@@ -360,19 +360,19 @@ void SharedScriptCache::SaveToDiskCache() {
   for (const auto& item : mEncodeItems) {
     if (item.mCompressed.empty()) {
       item.mLoadedScript->DropDiskCacheReference();
-      item.mLoadedScript->DropBytecode();
+      item.mLoadedScript->DropSRIOrSRIAndSerializedStencil();
       TRACE_FOR_TEST(item.mLoadedScript, "diskcache:failed");
       continue;
     }
 
     if (!ScriptLoader::SaveToDiskCache(item.mLoadedScript, item.mCompressed)) {
       item.mLoadedScript->DropDiskCacheReference();
-      item.mLoadedScript->DropBytecode();
+      item.mLoadedScript->DropSRIOrSRIAndSerializedStencil();
       TRACE_FOR_TEST(item.mLoadedScript, "diskcache:failed");
     }
 
     item.mLoadedScript->DropDiskCacheReference();
-    item.mLoadedScript->DropBytecode();
+    item.mLoadedScript->DropSRIOrSRIAndSerializedStencil();
     TRACE_FOR_TEST(item.mLoadedScript, "diskcache:saved");
   }
 

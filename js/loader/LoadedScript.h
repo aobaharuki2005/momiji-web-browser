@@ -282,7 +282,7 @@ class LoadedScript : public nsIMemoryReporter {
     return mSRIAndBytecode.empty();
   }
 
-  void DropBytecode() {
+  void DropSRIOrSRIAndSerializedStencil() {
     MOZ_ASSERT(CanHaveSRIOnly() || CanHaveSRIAndSerializedStencil());
     mSRIAndBytecode.clearAndFree();
   }
@@ -565,7 +565,9 @@ class LoadedScriptDelegate {
     GetLoadedScript()->SetSRILength(sriLength);
   }
 
-  void DropBytecode() { GetLoadedScript()->DropBytecode(); }
+  void DropSRIOrSRIAndSerializedStencil() {
+    GetLoadedScript()->DropSRIOrSRIAndSerializedStencil();
+  }
 
   bool HasStencil() const { return GetLoadedScript()->HasStencil(); }
   Stencil* GetStencil() const { return GetLoadedScript()->GetStencil(); }
