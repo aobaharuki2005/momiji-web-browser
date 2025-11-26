@@ -5990,23 +5990,6 @@
       }
     ]
   },
-  "1994571": {
-    "label": "chick-fil-a.com",
-    "bugs": {
-      "1994571": {
-        "issue": "broken-images",
-        "matches": ["*://www.chick-fil-a.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["desktop"],
-        "content_scripts": {
-          "css": ["1994571-chick-fil-a.com-fix-icon-heights.css"]
-        }
-      }
-    ]
-  },
   "1994704": {
     "label": "avlguest.justice.nsw.gov.au",
     "bugs": {
