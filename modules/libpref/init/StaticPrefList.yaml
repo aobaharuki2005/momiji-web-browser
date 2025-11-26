@@ -8994,6 +8994,13 @@
     mirror: always
     set_spidermonkey_pref: startup
 
+# Experimental support for Legacy RegExp in JavaScript.
+- name: javascript.options.experimental.legacy_regexp
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  set_spidermonkey_pref: always
+
 #ifdef NIGHTLY_BUILD
   # Experimental support for Async Iterator Helpers in JavaScript.
 -   name: javascript.options.experimental.async_iterator_helpers

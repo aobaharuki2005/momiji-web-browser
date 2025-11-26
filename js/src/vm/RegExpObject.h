@@ -36,7 +36,8 @@ class GenericPrinter;
 class JSONPrinter;
 
 extern RegExpObject* RegExpAlloc(JSContext* cx, NewObjectKind newKind,
-                                 HandleObject proto = nullptr);
+                                 HandleObject proto = nullptr,
+                                 HandleObject newTarget = nullptr);
 
 extern JSObject* CloneRegExpObject(JSContext* cx, Handle<RegExpObject*> regex);
 
@@ -61,23 +62,32 @@ class RegExpObject : public NativeObject {
   static const JSClass class_;
   static const JSClass protoClass_;
 
+  static const size_t RegExpFlagsMask = JS::RegExpFlag::AllFlags;
+  static const size_t LegacyFeaturesEnabledBit = Bit(8);
+
+  static_assert((RegExpFlagsMask & LegacyFeaturesEnabledBit) == 0,
+                "LegacyFeaturesEnabledBit must not overlap");
+
   // The maximum number of pairs a MatchResult can have, without having to
   // allocate a bigger MatchResult.
   static const size_t MaxPairCount = 14;
 
   template <typename CharT>
   static RegExpObject* create(JSContext* cx, const CharT* chars, size_t length,
-                              JS::RegExpFlags flags, NewObjectKind newKind);
+                              JS::RegExpFlags flags, NewObjectKind newKind,
+                              HandleObject newTarget = nullptr);
 
   // This variant assumes that the characters have already previously been
   // syntax checked.
   static RegExpObject* createSyntaxChecked(JSContext* cx,
                                            Handle<JSAtom*> source,
                                            JS::RegExpFlags flags,
-                                           NewObjectKind newKind);
+                                           NewObjectKind newKind,
+                                           HandleObject newTarget = nullptr);
 
   static RegExpObject* create(JSContext* cx, Handle<JSAtom*> source,
-                              JS::RegExpFlags flags, NewObjectKind newKind);
+                              JS::RegExpFlags flags, NewObjectKind newKind,
+                              HandleObject newTarget = nullptr);
 
   /*
    * Compute the initial shape to associate with fresh RegExp objects,
@@ -139,10 +149,35 @@ class RegExpObject : public NativeObject {
   }
 
   JS::RegExpFlags getFlags() const {
-    return JS::RegExpFlags(getFixedSlot(FLAGS_SLOT).toInt32());
+    uint32_t raw = getFixedSlot(FLAGS_SLOT).toInt32();
+    return JS::RegExpFlags(raw & RegExpFlagsMask);
   }
+
   void setFlags(JS::RegExpFlags flags) {
-    setFixedSlot(FLAGS_SLOT, Int32Value(flags.value()));
+    uint32_t raw = getFixedSlot(FLAGS_SLOT).toInt32();
+    uint32_t newValue = flags.value() | (raw & ~RegExpFlagsMask);
+    setFixedSlot(FLAGS_SLOT, Int32Value(newValue));
+  }
+
+  bool legacyFeaturesEnabled() const {
+    if (!JS::Prefs::experimental_legacy_regexp()) {
+      return false;
+    }
+    return (getFixedSlot(FLAGS_SLOT).toInt32() & LegacyFeaturesEnabledBit);
+  }
+
+  void setLegacyFeaturesEnabled(bool enabled) {
+    if (!JS::Prefs::experimental_legacy_regexp()) {
+      return;
+    }
+    Value flagsVal = getFixedSlot(FLAGS_SLOT);
+    uint32_t raw = flagsVal.isInt32() ? flagsVal.toInt32() : 0;
+    if (enabled) {
+      raw |= LegacyFeaturesEnabledBit;
+    } else {
+      raw &= ~LegacyFeaturesEnabledBit;
+    }
+    setFixedSlot(FLAGS_SLOT, Int32Value(raw));
   }
 
   bool hasIndices() const { return getFlags().hasIndices(); }
