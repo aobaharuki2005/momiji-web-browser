@@ -1333,6 +1333,14 @@
     <string name="tab_tray_menu_tab_settings">Tab settings</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Close all tabs</string>
+    <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+    <string name="tab_manager_close_all_tabs_dialog_title">Close all tabs?</string>Í
+    <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+    <string name="tab_manager_close_all_tabs_dialog_body">This will close all open tabs.</string>
+    <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+    <string name="tab_manager_close_all_tabs_dialog_confirm">Close tabs</string>
+    <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+    <string name="tab_manager_close_all_tabs_dialog_cancel">Cancel</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Bookmark</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->

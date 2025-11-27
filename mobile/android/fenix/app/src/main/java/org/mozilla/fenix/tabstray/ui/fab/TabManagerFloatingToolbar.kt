@@ -17,11 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -148,6 +151,8 @@ private fun FloatingToolbarActions(
     onDeleteAllTabsClick: () -> Unit,
 ) {
     var showBottomAppBarMenu by remember { mutableStateOf(false) }
+    var showCloseAllTabsDialog by remember { mutableStateOf(false) }
+
     val menuItems = generateMenuItems(
         selectedPage = state.selectedPage,
         normalTabCount = state.normalTabs.size,
@@ -156,7 +161,7 @@ private fun FloatingToolbarActions(
         onTabSettingsClick = onTabSettingsClick,
         onRecentlyClosedClick = onRecentlyClosedClick,
         onEnterMultiselectModeClick = onEnterMultiselectModeClick,
-        onDeleteAllTabsClick = onDeleteAllTabsClick,
+        onDeleteAllTabsClick = { showCloseAllTabsDialog = true },
     )
 
     Card(
@@ -191,6 +196,16 @@ private fun FloatingToolbarActions(
                 )
             }
         }
+    }
+
+    if (showCloseAllTabsDialog) {
+        CloseAllTabsConfirmationDialog(
+            onConfirm = {
+                showCloseAllTabsDialog = false
+                onDeleteAllTabsClick()
+            },
+            onDismiss = { showCloseAllTabsDialog = false },
+        )
     }
 }
 
@@ -265,6 +280,49 @@ private fun FloatingToolbarFAB(
             modifier = iconModifier,
         )
     }
+}
+
+/**
+ * Confirmation dialog shown when the user selects the "Close all tabs" action
+ * from the tab manager.
+ *
+ * @param onConfirm Invoked when the user confirms in closing all open tabs.
+ * @param onDismiss Invoked when the dialog is dismissed without confirming.
+ */
+@Composable
+private fun CloseAllTabsConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.tab_manager_close_all_tabs_dialog_title),
+                style = FirefoxTheme.typography.headline6,
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.tab_manager_close_all_tabs_dialog_body),
+                style = FirefoxTheme.typography.body2,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(R.string.tab_manager_close_all_tabs_dialog_confirm),
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(R.string.tab_manager_close_all_tabs_dialog_cancel),
+                )
+            }
+        },
+    )
 }
 
 @Suppress("LongParameterList")
