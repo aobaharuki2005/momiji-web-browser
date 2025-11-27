@@ -3813,26 +3813,24 @@ static DateDuration DifferenceISODate(const ISODate& one, const ISODate& two,
     }
   }
 
-  // Step 1.g.
+  // Balance intermediate result per ISODateSurpasses.
   auto intermediate = BalanceISOYearMonth(one.year + years, one.month + months);
-
-  // Step 1.h.
   auto constrained = ConstrainISODate(
       ISODate{int32_t(intermediate.year), intermediate.month, one.day});
 
-  // Step 1.i.
+  // Step 1.g.
   int64_t weeks = 0;
 
-  // Steps 1.k-n.
+  // Steps 1.i-k.
   int64_t days = MakeDay(two) - MakeDay(constrained);
 
-  // Step 1.j. (Reordered)
+  // Step 1.h. (Weeks computed from days.)
   if (largestUnit == TemporalUnit::Week) {
     weeks = days / 7;
     days %= 7;
   }
 
-  // Step 1.o.
+  // Step 1.l.
   auto result = DateDuration{
       int64_t(years),
       int64_t(months),
