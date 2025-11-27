@@ -20,7 +20,6 @@ searchfox-cli --id AudioSink -l 150 --cpp # search for identifier audio sink in 
 - `./mach build`: Build the project
 - `./mach test --auto`: Run tests
 - `./mach run`: Run the project
-- `gh issue view`: Read GitHub issues
 - `treeherder-check`: Pull CI results for a try push
 - Use the MCP resource `@moz:bugzilla://bug/{bug_id}` to retrieve a bug
 - Use the MCP resource `@moz:phabricator://revision/D{revision_id}` to retrieve a Phabricator revision
@@ -32,8 +31,6 @@ You can find the review identifier by inspecting the commit log with:
 
 - `jj log -T builtin_log_detailed` if using `jj`
 - `git log -v -l 10` if using git
-
-In github projects, use `gh-pr-comments https://github.com/link/to/pr`.
 
 ## Code Style
 - Our style guide forbids the use of emoji.
