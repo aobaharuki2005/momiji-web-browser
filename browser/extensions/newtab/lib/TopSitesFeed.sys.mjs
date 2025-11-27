@@ -524,7 +524,9 @@ export class ContileIntegration {
   }
 
   sovEnabled() {
-    return this._topSitesFeed.store.getState().Prefs.values[PREF_SOV_ENABLED];
+    const { values } = this._topSitesFeed.store.getState().Prefs;
+    const trainhopSovEnabled = values?.trainhopConfig?.sov?.enabled;
+    return trainhopSovEnabled || values[PREF_SOV_ENABLED];
   }
 
   csvToInts(val) {
@@ -560,9 +562,14 @@ export class ContileIntegration {
    */
   generateSov() {
     const { values } = this._topSitesFeed.store.getState().Prefs;
-    const name = values[PREF_SOV_NAME];
-    const amp = this.csvToInts(values[PREF_SOV_AMP_ALLOCATION]);
-    const frec = this.csvToInts(values[PREF_SOV_FRECENCY_ALLOCATION]);
+    const trainhopSovConfig = values?.trainhopConfig?.sov || {};
+    const name = trainhopSovConfig.name || values[PREF_SOV_NAME];
+    const amp = this.csvToInts(
+      trainhopSovConfig.amp || values[PREF_SOV_AMP_ALLOCATION]
+    );
+    const frec = this.csvToInts(
+      trainhopSovConfig.frec || values[PREF_SOV_FRECENCY_ALLOCATION]
+    );
 
     const allocations = Array.from(
       { length: DEFAULT_SOV_SLOT_COUNT },
