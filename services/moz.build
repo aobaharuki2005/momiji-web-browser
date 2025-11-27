@@ -7,6 +7,9 @@
 with Files("moz.build"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
+with Files("app-services-tools/**"):
+    BUG_COMPONENT = ("Application Services", "General")
+
 DIRS += [
     "common",
     "crypto",
@@ -32,6 +35,12 @@ if not CONFIG["RELEASE_OR_BETA"] or CONFIG["MOZ_DEBUG"]:
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     DIRS += [
         "fxaccounts",
+    ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    DIRS += [
+        "app-services-tools/embedded-uniffi-bindgen",
+        "app-services-tools/nimbus-fml",
     ]
 
 if CONFIG["MOZ_SERVICES_SYNC"]:

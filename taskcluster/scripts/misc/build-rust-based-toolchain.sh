@@ -66,7 +66,12 @@ esac
 
 PATH="$MOZ_FETCHES_DIR/rustc/bin:$MOZ_FETCHES_DIR/clang/bin:$PATH"
 
-CRATE_PATH=$MOZ_FETCHES_DIR/${FETCH-$project}
+if [ -n "${CRATE_PATH}" ]; then
+  CRATE_PATH="${GECKO_PATH}/${CRATE_PATH}"
+else
+  CRATE_PATH=$MOZ_FETCHES_DIR/${FETCH-$project}
+fi
+
 WORKSPACE_ROOT=$(cd $CRATE_PATH; cargo metadata --format-version 1 --no-deps --locked 2> /dev/null | jq -r .workspace_root)
 
 if test ! -f $WORKSPACE_ROOT/Cargo.lock; then
