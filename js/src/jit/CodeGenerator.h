@@ -273,6 +273,10 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void emitInstanceOf(LInstruction* ins, Register protoReg);
 
+  void emitIteratorHasIndicesAndBranch(Register iterator, Register object,
+                                       Register temp, Register temp2,
+                                       Label* ifFalse);
+
 #ifdef DEBUG
   void emitAssertResultV(const ValueOperand output, const MDefinition* mir);
   void emitAssertGCThingResult(Register input, const MDefinition* mir);

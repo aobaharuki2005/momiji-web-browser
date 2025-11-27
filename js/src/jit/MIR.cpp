@@ -7531,6 +7531,10 @@ AliasSet MIteratorHasIndices::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+AliasSet MIteratorsMatchAndHaveIndices::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
 AliasSet MAllocateAndStoreSlot::getAliasSet() const {
   return AliasSet::Store(AliasSet::ObjectFields | AliasSet::DynamicSlot);
 }
@@ -7850,7 +7854,6 @@ AliasSet MStoreSlotByIteratorIndex::getAliasSet() const {
                          AliasSet::DynamicSlot | AliasSet::Element);
 }
 
-#ifndef JS_CODEGEN_X86
 AliasSet MLoadSlotByIteratorIndexIndexed::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
                         AliasSet::DynamicSlot | AliasSet::Element);
@@ -7860,7 +7863,6 @@ AliasSet MStoreSlotByIteratorIndexIndexed::getAliasSet() const {
   return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot |
                          AliasSet::DynamicSlot | AliasSet::Element);
 }
-#endif
 
 MDefinition* MGuardInt32IsNonNegative::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(index()->type() == MIRType::Int32);
