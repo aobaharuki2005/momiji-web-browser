@@ -880,7 +880,12 @@ void gfxPlatform::Init() {
     forcedPrefs.AppendPrintf(
         "-W%d%d%d%d%d%d%d", StaticPrefs::webgl_angle_force_d3d11(),
         StaticPrefs::webgl_angle_force_warp(), StaticPrefs::webgl_disabled(),
-        StaticPrefs::webgl_disable_angle(), StaticPrefs::webgl_dxgl_enabled(),
+        StaticPrefs::webgl_disable_angle(),
+#ifdef XP_WIN
+        StaticPrefs::webgl_dxgl_enabled(),
+#else
+        false,
+#endif
         StaticPrefs::webgl_force_enabled(), StaticPrefs::webgl_msaa_force());
     // Prefs that don't fit into any of the other sections
     forcedPrefs.AppendPrintf("-T%d) ", StaticPrefs::gfx_canvas_accelerated());
