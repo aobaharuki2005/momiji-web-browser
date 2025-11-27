@@ -31,7 +31,7 @@ class CSSUnsupportedValue;
 
 class CSSStyleValue : public nsISupports, public nsWrapperCache {
  public:
-  enum class ValueType { Uninitialized, Unsupported, Keyword };
+  enum class ValueType { Uninitialized, UnsupportedValue, KeywordValue };
 
   explicit CSSStyleValue(nsCOMPtr<nsISupports> aParent);
 

@@ -76,14 +76,14 @@ void StylePropertyMap::Set(
   nsAutoCString cssText;
 
   switch (styleValue.GetValueType()) {
-    case CSSStyleValue::ValueType::Keyword: {
+    case CSSStyleValue::ValueType::KeywordValue: {
       CSSKeywordValue& keywordValue = styleValue.GetAsCSSKeywordValue();
 
       keywordValue.ToCssTextWithProperty(propertyId, cssText);
       break;
     }
 
-    case CSSStyleValue::ValueType::Unsupported: {
+    case CSSStyleValue::ValueType::UnsupportedValue: {
       CSSUnsupportedValue& unsupportedValue =
           styleValue.GetAsCSSUnsupportedValue();
 
