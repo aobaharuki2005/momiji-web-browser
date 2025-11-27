@@ -89,8 +89,6 @@ support-files = [
 
 ["test_bug1161721.html"]
 
-["test_bug1170911.html"]
-
 ["test_bug1208217.html"]
 
 ["test_bug1313753.html"]

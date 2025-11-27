@@ -5,6 +5,12 @@ support-files = [
   "!/gfx/layers/apz/test/mochitest/apz_test_utils.js",
 ]
 
+["browser_document_command_copy.js"]
+
+["browser_document_command_cut.js"]
+
+["browser_document_command_paste.js"]
+
 ["browser_navigator_clipboard_clickjacking.js"]
 support-files = ["simple_navigator_clipboard_keydown.html"]
 run-if = [
