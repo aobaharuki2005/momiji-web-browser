@@ -118,6 +118,7 @@ pwmgr:
       - https://bugzil.la/1754637
       - https://bugzil.la/1850872
       - https://bugzil.la/1969169
+      - https://bugzil.la/1999882
     data_reviews: &pwmgr_doorhanger_submitted_data_reviews
       - https://bugzil.la/1650929
       - https://bugzil.la/1650941
@@ -127,7 +128,7 @@ pwmgr:
       - https://bugzil.la/1850872
     notification_emails: &pwmgr_doorhanger_submitted_emails
       - passwords-dev@mozilla.org
-    expires: 148
+    expires: 155
     extra_keys: &pwmgr_doorhanger_submitted_extra
       did_edit_un:
         description: >
@@ -149,7 +150,6 @@ pwmgr:
           Whether or not the saved/updated password was selected by the user choosing a suggested value from the autocomplete popup.
 
         type: boolean
-    telemetry_mirror: Pwmgr_DoorhangerSubmitted_Save
 
   doorhanger_submitted_update:
     type: event
@@ -168,9 +168,8 @@ pwmgr:
     bugs: *pwmgr_doorhanger_submitted_bugs
     data_reviews: *pwmgr_doorhanger_submitted_data_reviews
     notification_emails: *pwmgr_doorhanger_submitted_emails
-    expires: 148
+    expires: 155
     extra_keys: *pwmgr_doorhanger_submitted_extra
-    telemetry_mirror: Pwmgr_DoorhangerSubmitted_Update
 
   saved_login_used_form_login:
     type: event
