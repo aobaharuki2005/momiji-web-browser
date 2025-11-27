@@ -3414,12 +3414,12 @@ static bool Duration_subtract(JSContext* cx, unsigned argc, Value* vp) {
 static bool Duration_round(JSContext* cx, const CallArgs& args) {
   auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
-  // Step 17. (Reordered)
+  // Step 18. (Reordered)
   auto existingLargestUnit = DefaultTemporalLargestUnit(duration);
 
-  // Steps 3-25.
-  auto smallestUnit = TemporalUnit::Auto;
-  TemporalUnit largestUnit;
+  // Steps 3-26.
+  auto smallestUnit = TemporalUnit::Unset;
+  auto largestUnit = TemporalUnit::Unset;
   auto roundingMode = TemporalRoundingMode::HalfExpand;
   auto roundingIncrement = Increment{1};
   Rooted<PlainDate> plainRelativeTo(cx);
@@ -3432,26 +3432,31 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     // Step 15.
     Rooted<JSString*> paramString(cx, args[0].toString());
     if (!GetTemporalUnitValuedOption(
-            cx, paramString, TemporalUnitKey::SmallestUnit,
-            TemporalUnitGroup::DateTime, &smallestUnit)) {
+            cx, paramString, TemporalUnitKey::SmallestUnit, &smallestUnit)) {
       return false;
     }
 
-    // Step 16. (Not applicable)
+    // Step 16.
+    if (!ValidateTemporalUnitValue(cx, TemporalUnitKey::SmallestUnit,
+                                   smallestUnit, TemporalUnitGroup::DateTime)) {
+      return false;
+    }
 
-    // Step 17. (Moved above)
+    // Step 17. (Not applicable)
 
-    // Step 18.
+    // Step 18. (Moved above)
+
+    // Step 19.
     auto defaultLargestUnit = std::min(existingLargestUnit, smallestUnit);
 
-    // Step 19. (Not applicable)
+    // Step 20. (Not applicable)
 
-    // Step 19.a. (Not applicable)
+    // Step 20.a. (Not applicable)
 
-    // Step 19.b.
+    // Step 20.b.
     largestUnit = defaultLargestUnit;
 
-    // Steps 20-25. (Not applicable)
+    // Steps 21-26. (Not applicable)
   } else {
     // Steps 3 and 5.
     Rooted<JSObject*> options(
@@ -3467,27 +3472,9 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     bool largestUnitPresent = true;
 
     // Steps 8-9.
-    //
-    // Inlined GetTemporalUnitValuedOption and GetOption so we can more easily
-    // detect an absent "largestUnit" value.
-    Rooted<Value> largestUnitValue(cx);
-    if (!GetProperty(cx, options, options, cx->names().largestUnit,
-                     &largestUnitValue)) {
+    if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::LargestUnit,
+                                     &largestUnit)) {
       return false;
-    }
-
-    if (!largestUnitValue.isUndefined()) {
-      Rooted<JSString*> largestUnitStr(cx, JS::ToString(cx, largestUnitValue));
-      if (!largestUnitStr) {
-        return false;
-      }
-
-      largestUnit = TemporalUnit::Auto;
-      if (!GetTemporalUnitValuedOption(
-              cx, largestUnitStr, TemporalUnitKey::LargestUnit,
-              TemporalUnitGroup::DateTime, &largestUnit)) {
-        return false;
-      }
     }
 
     // Steps 10-12.
@@ -3509,64 +3496,69 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
 
     // Step 15.
     if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::SmallestUnit,
-                                     TemporalUnitGroup::DateTime,
                                      &smallestUnit)) {
       return false;
     }
 
     // Step 16.
-    if (smallestUnit == TemporalUnit::Auto) {
-      // Step 16.a.
+    if (!ValidateTemporalUnitValue(cx, TemporalUnitKey::SmallestUnit,
+                                   smallestUnit, TemporalUnitGroup::DateTime)) {
+      return false;
+    }
+
+    // Step 17.
+    if (smallestUnit == TemporalUnit::Unset) {
+      // Step 17.a.
       smallestUnitPresent = false;
 
-      // Step 16.b.
+      // Step 17.b.
       smallestUnit = TemporalUnit::Nanosecond;
     }
 
-    // Step 17. (Moved above)
+    // Step 18. (Moved above)
 
-    // Step 18.
+    // Step 19.
     auto defaultLargestUnit = std::min(existingLargestUnit, smallestUnit);
 
-    // Steps 19-20.
-    if (largestUnitValue.isUndefined()) {
-      // Step 19.a.
+    // Steps 20-21.
+    if (largestUnit == TemporalUnit::Unset) {
+      // Step 20.a.
       largestUnitPresent = false;
 
-      // Step 19.b.
+      // Step 20.b.
       largestUnit = defaultLargestUnit;
     } else if (largestUnit == TemporalUnit::Auto) {
-      // Step 20.a
+      // Step 21.a
       largestUnit = defaultLargestUnit;
     }
 
-    // Step 21.
+    // Step 22.
     if (!smallestUnitPresent && !largestUnitPresent) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TEMPORAL_DURATION_MISSING_UNIT_SPECIFIER);
       return false;
     }
 
-    // Step 22.
+    // Step 23.
     if (largestUnit > smallestUnit) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TEMPORAL_INVALID_UNIT_RANGE);
       return false;
     }
 
-    // Steps 23-24.
+    // Steps 24-25.
     if (smallestUnit > TemporalUnit::Day) {
-      // Step 23.
+      // Step 24.
       auto maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
 
-      // Step 24.
+      // Step 25.
       if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,
                                              false)) {
         return false;
       }
     }
 
-    // Step 25.
+    // Step 26.
     if (roundingIncrement > Increment{1} && largestUnit != smallestUnit &&
         smallestUnit <= TemporalUnit::Day) {
       Int32ToCStringBuf cbuf;
@@ -3580,21 +3572,21 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // Step 26.
+  // Step 27.
   if (zonedRelativeTo) {
-    // Step 26.a.
+    // Step 27.a.
     auto internalDuration = ToInternalDurationRecord(duration);
 
-    // Steps 26.b-d. (Not applicable in our implementation.)
+    // Steps 27.b-d. (Not applicable in our implementation.)
 
-    // Step 26.e.
+    // Step 27.e.
     EpochNanoseconds targetEpochNs;
     if (!AddZonedDateTime(cx, zonedRelativeTo, internalDuration,
                           &targetEpochNs)) {
       return false;
     }
 
-    // Step 26.f.
+    // Step 27.f.
     if (!DifferenceZonedDateTimeWithRounding(cx, zonedRelativeTo, targetEpochNs,
                                              {
                                                  smallestUnit,
@@ -3606,80 +3598,10 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
       return false;
     }
 
-    // Step 26.g.
+    // Step 27.g.
     largestUnit = std::max(largestUnit, TemporalUnit::Hour);
 
-    // Step 26.h
-    Duration result;
-    if (!TemporalDurationFromInternal(cx, internalDuration, largestUnit,
-                                      &result)) {
-      return false;
-    }
-
-    auto* obj = CreateTemporalDuration(cx, result);
-    if (!obj) {
-      return false;
-    }
-
-    args.rval().setObject(*obj);
-    return true;
-  }
-
-  // Step 27.
-  if (plainRelativeTo) {
-    // Step 27.a.
-    auto internalDuration = ToInternalDurationRecordWith24HourDays(duration);
-
-    // Step 27.b.
-    auto targetTime = AddTime(Time{}, internalDuration.time);
-
-    // Step 27.c.
-    auto calendar = plainRelativeTo.calendar();
-
-    // Step 27.d.
-    auto dateDuration = DateDuration{
-        internalDuration.date.years,
-        internalDuration.date.months,
-        internalDuration.date.weeks,
-        targetTime.days,
-    };
-    MOZ_ASSERT(IsValidDuration(dateDuration));
-
-    // 27.e.
-    ISODate targetDate;
-    if (!CalendarDateAdd(cx, calendar, plainRelativeTo, dateDuration,
-                         TemporalOverflow::Constrain, &targetDate)) {
-      return false;
-    }
-
-    // Step 27.f.
-    auto isoDateTime = ISODateTime{plainRelativeTo, {}};
-
-    // Step 27.g.
-    auto targetDateTime = ISODateTime{targetDate, targetTime.time};
-
-    // DifferencePlainDateTimeWithRounding, step 2.
-    if (!ISODateTimeWithinLimits(isoDateTime) ||
-        !ISODateTimeWithinLimits(targetDateTime)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID);
-      return false;
-    }
-
-    // Step 27.h.
-    if (!DifferencePlainDateTimeWithRounding(cx, isoDateTime, targetDateTime,
-                                             calendar,
-                                             {
-                                                 smallestUnit,
-                                                 largestUnit,
-                                                 roundingMode,
-                                                 roundingIncrement,
-                                             },
-                                             &internalDuration)) {
-      return false;
-    }
-
-    // Step 27.i
+    // Step 27.h
     Duration result;
     if (!TemporalDurationFromInternal(cx, internalDuration, largestUnit,
                                       &result)) {
@@ -3696,6 +3618,76 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 28.
+  if (plainRelativeTo) {
+    // Step 28.a.
+    auto internalDuration = ToInternalDurationRecordWith24HourDays(duration);
+
+    // Step 28.b.
+    auto targetTime = AddTime(Time{}, internalDuration.time);
+
+    // Step 28.c.
+    auto calendar = plainRelativeTo.calendar();
+
+    // Step 28.d.
+    auto dateDuration = DateDuration{
+        internalDuration.date.years,
+        internalDuration.date.months,
+        internalDuration.date.weeks,
+        targetTime.days,
+    };
+    MOZ_ASSERT(IsValidDuration(dateDuration));
+
+    // Step 28.e.
+    ISODate targetDate;
+    if (!CalendarDateAdd(cx, calendar, plainRelativeTo, dateDuration,
+                         TemporalOverflow::Constrain, &targetDate)) {
+      return false;
+    }
+
+    // Step 28.f.
+    auto isoDateTime = ISODateTime{plainRelativeTo, {}};
+
+    // Step 28.g.
+    auto targetDateTime = ISODateTime{targetDate, targetTime.time};
+
+    // DifferencePlainDateTimeWithRounding, step 2.
+    if (!ISODateTimeWithinLimits(isoDateTime) ||
+        !ISODateTimeWithinLimits(targetDateTime)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID);
+      return false;
+    }
+
+    // Step 28.h.
+    if (!DifferencePlainDateTimeWithRounding(cx, isoDateTime, targetDateTime,
+                                             calendar,
+                                             {
+                                                 smallestUnit,
+                                                 largestUnit,
+                                                 roundingMode,
+                                                 roundingIncrement,
+                                             },
+                                             &internalDuration)) {
+      return false;
+    }
+
+    // Step 28.i
+    Duration result;
+    if (!TemporalDurationFromInternal(cx, internalDuration, largestUnit,
+                                      &result)) {
+      return false;
+    }
+
+    auto* obj = CreateTemporalDuration(cx, result);
+    if (!obj) {
+      return false;
+    }
+
+    args.rval().setObject(*obj);
+    return true;
+  }
+
+  // Step 29.
   if (existingLargestUnit < TemporalUnit::Day ||
       largestUnit < TemporalUnit::Day) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -3704,16 +3696,16 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 29.
+  // Step 30.
   MOZ_ASSERT(smallestUnit >= TemporalUnit::Day);
 
-  // Step 30.
+  // Step 31.
   auto internalDuration = ToInternalDurationRecordWith24HourDays(duration);
   MOZ_ASSERT(internalDuration.date == DateDuration{});
 
-  // Steps 31-32.
+  // Steps 32-33.
   if (smallestUnit == TemporalUnit::Day) {
-    // Steps 31.a-b.
+    // Steps 32.a-b.
     constexpr auto nsPerDay = ToNanoseconds(TemporalUnit::Day);
     auto rounded =
         RoundNumberToIncrement(internalDuration.time.toNanoseconds(), nsPerDay,
@@ -3722,7 +3714,7 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
                "rounded days fits in int64");
     auto days = static_cast<int64_t>(rounded);
 
-    // Step 31.c. (Inlined CreateDateDurationRecord)
+    // Step 32.c. (Inlined CreateDateDurationRecord)
     if (std::abs(days) > TimeDuration::max().toDays()) {
       JS_ReportErrorNumberASCII(
           cx, GetErrorMessage, nullptr,
@@ -3732,21 +3724,21 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     auto dateDuration = DateDuration{0, 0, 0, days};
     MOZ_ASSERT(IsValidDuration(dateDuration));
 
-    // Step 31.d.
+    // Step 32.d.
     internalDuration = {dateDuration, {}};
   } else {
-    // Step 32.a.
+    // Step 33.a.
     TimeDuration timeDuration;
     if (!RoundTimeDuration(cx, internalDuration.time, roundingIncrement,
                            smallestUnit, roundingMode, &timeDuration)) {
       return false;
     }
 
-    // Step 32.b.
+    // Step 33.b.
     internalDuration = {{}, timeDuration};
   }
 
-  // Step 32.
+  // Step 34.
   Duration result;
   if (!TemporalDurationFromInternal(cx, internalDuration, largestUnit,
                                     &result)) {
@@ -3781,7 +3773,7 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
   // Steps 3-10.
   Rooted<PlainDate> plainRelativeTo(cx);
   Rooted<ZonedDateTime> zonedRelativeTo(cx);
-  auto unit = TemporalUnit::Auto;
+  auto unit = TemporalUnit::Unset;
   if (args.get(0).isString()) {
     // Step 4. (Not applicable in our implementation.)
 
@@ -3791,7 +3783,7 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
     // Step 10.
     Rooted<JSString*> paramString(cx, args[0].toString());
     if (!GetTemporalUnitValuedOption(cx, paramString, TemporalUnitKey::Unit,
-                                     TemporalUnitGroup::DateTime, &unit)) {
+                                     &unit)) {
       return false;
     }
   } else {
@@ -3811,48 +3803,54 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
 
     // Step 10.
     if (!GetTemporalUnitValuedOption(cx, totalOf, TemporalUnitKey::Unit,
-                                     TemporalUnitGroup::DateTime, &unit)) {
+                                     &unit)) {
       return false;
     }
 
-    if (unit == TemporalUnit::Auto) {
+    if (unit == TemporalUnit::Unset) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TEMPORAL_MISSING_OPTION, "unit");
       return false;
     }
   }
 
-  // Steps 11-13.
+  // Step 11.
+  if (!ValidateTemporalUnitValue(cx, TemporalUnitKey::Unit, unit,
+                                 TemporalUnitGroup::DateTime)) {
+    return false;
+  }
+
+  // Steps 12-14.
   double total;
   if (zonedRelativeTo) {
-    // Step 11.a.
+    // Step 12.a.
     auto internalDuration = ToInternalDurationRecord(duration);
 
-    // Steps 11.b-d. (Not applicable in our implementation.)
+    // Steps 12.b-d. (Not applicable in our implementation.)
 
-    // Step 11.e.
+    // Step 12.e.
     EpochNanoseconds targetEpochNs;
     if (!AddZonedDateTime(cx, zonedRelativeTo, internalDuration,
                           &targetEpochNs)) {
       return false;
     }
 
-    // Step 11.f.
+    // Step 12.f.
     if (!DifferenceZonedDateTimeWithTotal(cx, zonedRelativeTo, targetEpochNs,
                                           unit, &total)) {
       return false;
     }
   } else if (plainRelativeTo) {
-    // Step 12.a.
+    // Step 13.a.
     auto internalDuration = ToInternalDurationRecordWith24HourDays(duration);
 
-    // Step 12.b.
+    // Step 13.b.
     auto targetTime = AddTime(Time{}, internalDuration.time);
 
-    // Step 12.c.
+    // Step 13.c.
     auto calendar = plainRelativeTo.calendar();
 
-    // Step 12.d.
+    // Step 13.d.
     auto dateDuration = DateDuration{
         internalDuration.date.years,
         internalDuration.date.months,
@@ -3861,17 +3859,17 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
     };
     MOZ_ASSERT(IsValidDuration(dateDuration));
 
-    // Step 12.e.
+    // Step 13.e.
     ISODate targetDate;
     if (!CalendarDateAdd(cx, calendar, plainRelativeTo, dateDuration,
                          TemporalOverflow::Constrain, &targetDate)) {
       return false;
     }
 
-    // Step 12.f.
+    // Step 13.f.
     auto isoDateTime = ISODateTime{plainRelativeTo, {}};
 
-    // Step 12.g.
+    // Step 13.g.
     auto targetDateTime = ISODateTime{targetDate, targetTime.time};
 
     // DifferencePlainDateTimeWithTotal, step 2.
@@ -3882,13 +3880,13 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
       return false;
     }
 
-    // Step 12.h.
+    // Step 13.h.
     if (!DifferencePlainDateTimeWithTotal(cx, isoDateTime, targetDateTime,
                                           calendar, unit, &total)) {
       return false;
     }
   } else {
-    // Steps 13.a-b.
+    // Steps 14.a-b.
     if (duration.years != 0 || duration.months != 0 || duration.weeks != 0 ||
         unit < TemporalUnit::Day) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -3897,14 +3895,14 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
       return false;
     }
 
-    // Step 13.c.
+    // Step 14.c.
     auto internalDuration = ToInternalDurationRecordWith24HourDays(duration);
 
-    // Step 13.d.
+    // Step 14.d.
     total = TotalTimeDuration(internalDuration.time, unit);
   }
 
-  // Step 14.
+  // Step 15.
   args.rval().setNumber(total);
   return true;
 }
@@ -3924,7 +3922,6 @@ static bool Duration_total(JSContext* cx, unsigned argc, Value* vp) {
 static bool Duration_toString(JSContext* cx, const CallArgs& args) {
   auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
-  // Steps 3-9.
   SecondsStringPrecision precision = {Precision::Auto(),
                                       TemporalUnit::Nanosecond, Increment{1}};
   auto roundingMode = TemporalRoundingMode::Trunc;
@@ -3948,13 +3945,19 @@ static bool Duration_toString(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 7.
-    auto smallestUnit = TemporalUnit::Auto;
+    auto smallestUnit = TemporalUnit::Unset;
     if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::SmallestUnit,
-                                     TemporalUnitGroup::Time, &smallestUnit)) {
+                                     &smallestUnit)) {
       return false;
     }
 
     // Step 8.
+    if (!ValidateTemporalUnitValue(cx, TemporalUnitKey::SmallestUnit,
+                                   smallestUnit, TemporalUnitGroup::Time)) {
+      return false;
+    }
+
+    // Step 9.
     if (smallestUnit == TemporalUnit::Hour ||
         smallestUnit == TemporalUnit::Minute) {
       const char* smallestUnitStr =
@@ -3965,35 +3968,35 @@ static bool Duration_toString(JSContext* cx, const CallArgs& args) {
       return false;
     }
 
-    // Step 9.
+    // Step 10.
     precision = ToSecondsStringPrecision(smallestUnit, digits);
   }
   MOZ_ASSERT(precision.unit >= TemporalUnit::Minute);
 
-  // Steps 10-16.
+  // Steps 11-17.
   auto roundedDuration = duration;
   if (precision.unit != TemporalUnit::Nanosecond ||
       precision.increment != Increment{1}) {
-    // Step 11.
+    // Step 12.
     auto largestUnit = DefaultTemporalLargestUnit(duration);
 
-    // Step 12.
+    // Step 13.
     auto internalDuration = ToInternalDurationRecord(duration);
 
-    // Step 13.
+    // Step 14.
     TimeDuration timeDuration;
     if (!RoundTimeDuration(cx, internalDuration.time, precision.increment,
                            precision.unit, roundingMode, &timeDuration)) {
       return false;
     }
 
-    // Step 14.
+    // Step 15.
     internalDuration = {internalDuration.date, timeDuration};
 
-    // Step 15.
+    // Step 16.
     auto roundedLargestUnit = std::min(largestUnit, TemporalUnit::Second);
 
-    // Step 16.
+    // Step 17.
     if (!TemporalDurationFromInternal(cx, internalDuration, roundedLargestUnit,
                                       &roundedDuration)) {
       return false;
@@ -4001,7 +4004,7 @@ static bool Duration_toString(JSContext* cx, const CallArgs& args) {
     MOZ_ASSERT(IsValidDuration(roundedDuration));
   }
 
-  // Steps 10.a. and 17.
+  // Steps 11.a. and 18.
   JSString* str =
       TemporalDurationToString(cx, roundedDuration, precision.precision);
   if (!str) {

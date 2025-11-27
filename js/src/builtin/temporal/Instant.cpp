@@ -951,8 +951,8 @@ static bool Instant_since(JSContext* cx, unsigned argc, Value* vp) {
 static bool Instant_round(JSContext* cx, const CallArgs& args) {
   auto epochNs = args.thisv().toObject().as<InstantObject>().epochNanoseconds();
 
-  // Steps 3-16.
-  auto smallestUnit = TemporalUnit::Auto;
+  // Steps 3-17.
+  auto smallestUnit = TemporalUnit::Unset;
   auto roundingMode = TemporalRoundingMode::HalfExpand;
   auto roundingIncrement = Increment{1};
   if (args.get(0).isString()) {
@@ -960,13 +960,18 @@ static bool Instant_round(JSContext* cx, const CallArgs& args) {
 
     // Step 9.
     Rooted<JSString*> paramString(cx, args[0].toString());
-    if (!GetTemporalUnitValuedOption(cx, paramString,
-                                     TemporalUnitKey::SmallestUnit,
-                                     TemporalUnitGroup::Time, &smallestUnit)) {
+    if (!GetTemporalUnitValuedOption(
+            cx, paramString, TemporalUnitKey::SmallestUnit, &smallestUnit)) {
       return false;
     }
 
-    // Steps 10-16. (Not applicable in our implementation.)
+    // Step 10.
+    if (!ValidateTemporalUnitValue(cx, TemporalUnitKey::SmallestUnit,
+                                   smallestUnit, TemporalUnitGroup::Time)) {
+      return false;
+    }
+
+    // Steps 11-17. (Not applicable in our implementation.)
   } else {
     // Steps 3 and 5.
     Rooted<JSObject*> options(
@@ -987,30 +992,37 @@ static bool Instant_round(JSContext* cx, const CallArgs& args) {
 
     // Step 9.
     if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::SmallestUnit,
-                                     TemporalUnitGroup::Time, &smallestUnit)) {
+                                     &smallestUnit)) {
       return false;
     }
-    if (smallestUnit == TemporalUnit::Auto) {
+
+    if (smallestUnit == TemporalUnit::Unset) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TEMPORAL_MISSING_OPTION, "smallestUnit");
       return false;
     }
 
-    // Steps 10-15.
+    // Step 10.
+    if (!ValidateTemporalUnitValue(cx, TemporalUnitKey::SmallestUnit,
+                                   smallestUnit, TemporalUnitGroup::Time)) {
+      return false;
+    }
+
+    // Steps 11-16.
     int64_t maximum = UnitsPerDay(smallestUnit);
 
-    // Step 16.
+    // Step 17.
     if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,
                                            true)) {
       return false;
     }
   }
 
-  // Step 17.
+  // Step 18.
   auto roundedNs = RoundTemporalInstant(epochNs, roundingIncrement,
                                         smallestUnit, roundingMode);
 
-  // Step 18.
+  // Step 19.
   auto* result = CreateTemporalInstant(cx, roundedNs);
   if (!result) {
     return false;
@@ -1084,13 +1096,26 @@ static bool Instant_toString(JSContext* cx, const CallArgs& args) {
     }
 
     // Step 7.
-    auto smallestUnit = TemporalUnit::Auto;
+    auto smallestUnit = TemporalUnit::Unset;
     if (!GetTemporalUnitValuedOption(cx, options, TemporalUnitKey::SmallestUnit,
-                                     TemporalUnitGroup::Time, &smallestUnit)) {
+                                     &smallestUnit)) {
       return false;
     }
 
     // Step 8.
+    Rooted<Value> timeZoneValue(cx);
+    if (!GetProperty(cx, options, options, cx->names().timeZone,
+                     &timeZoneValue)) {
+      return false;
+    }
+
+    // Step 9.
+    if (!ValidateTemporalUnitValue(cx, TemporalUnitKey::SmallestUnit,
+                                   smallestUnit, TemporalUnitGroup::Time)) {
+      return false;
+    }
+
+    // Step 10.
     if (smallestUnit == TemporalUnit::Hour) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TEMPORAL_INVALID_UNIT_OPTION, "hour",
@@ -1098,28 +1123,22 @@ static bool Instant_toString(JSContext* cx, const CallArgs& args) {
       return false;
     }
 
-    // Step 9.
-    Rooted<Value> value(cx);
-    if (!GetProperty(cx, options, options, cx->names().timeZone, &value)) {
-      return false;
-    }
-
-    // Step 10.
-    if (!value.isUndefined()) {
-      if (!ToTemporalTimeZone(cx, value, &timeZone)) {
+    // Step 11.
+    if (!timeZoneValue.isUndefined()) {
+      if (!ToTemporalTimeZone(cx, timeZoneValue, &timeZone)) {
         return false;
       }
     }
 
-    // Step 11.
+    // Step 12.
     precision = ToSecondsStringPrecision(smallestUnit, digits);
   }
 
-  // Steps 12-13.
+  // Steps 13-14.
   auto roundedNs = RoundTemporalInstant(epochNs, precision.increment,
                                         precision.unit, roundingMode);
 
-  // Step 14.
+  // Step 15.
   JSString* str =
       TemporalInstantToString(cx, roundedNs, timeZone, precision.precision);
   if (!str) {

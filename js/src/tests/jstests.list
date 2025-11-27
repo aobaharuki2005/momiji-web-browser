@@ -1099,15 +1099,3 @@ skip script test262/intl402/Temporal/PlainDateTime/from/calendar-not-supporting-
 skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/bubble-time-unit.js
 skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/bubble-time-unit.js
 skip script test262/built-ins/Temporal/Duration/prototype/round/bubble-time-unit.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1998672
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/toString/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/since/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/until/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/PlainTime/prototype/since/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/PlainTime/prototype/until/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/Instant/prototype/since/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/Instant/prototype/until/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/Instant/prototype/toString/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/since/options-read-before-algorithmic-validation.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/until/options-read-before-algorithmic-validation.js
