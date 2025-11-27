@@ -46,6 +46,7 @@ void NavigationHistoryEntry::GetUrl(nsAString& aResult) const {
     auto referrerPolicy = GetAssociatedDocument()->ReferrerPolicy();
     if (referrerPolicy == ReferrerPolicy::No_referrer ||
         referrerPolicy == ReferrerPolicy::Origin) {
+      aResult.SetIsVoid(true);
       return;
     }
   }
