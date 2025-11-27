@@ -8194,10 +8194,12 @@
 # Prefs starting with "gl." (OpenGL)
 #---------------------------------------------------------------------------
 
+#ifdef XP_MACOSX
 - name: gl.allow-high-power
   type: RelaxedAtomicBool
   value: true
   mirror: always
+#endif
 
 #ifdef XP_WIN
 - name: gl.ignore-dx-interop2-blacklist
