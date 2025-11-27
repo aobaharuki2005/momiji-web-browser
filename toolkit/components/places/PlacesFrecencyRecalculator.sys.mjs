@@ -86,6 +86,8 @@ const DEFAULT_CHUNK_SIZE = 50;
 // Threshold used to evaluate whether the number of Places events from the last
 // recalculation is high enough to deserve a recalculation rate increase.
 const ACCELERATION_EVENTS_THRESHOLD = 250;
+// The number of buckets to split moz_origins results
+const BUCKETS = 2;
 
 /**
  * Recalculates and decays frecency scores in Places.
@@ -323,12 +325,15 @@ export class PlacesFrecencyRecalculator {
         `
         UPDATE moz_origins
         SET frecency = IFNULL((
-          SELECT sum(frecency)
-          FROM moz_places h
-          WHERE origin_id = moz_origins.id
-          AND last_visit_date >
-            strftime('%s','now','localtime','start of day',
-                     '-${lazy.originsFrecencyCutOffDays} day','utc') * 1000000
+          SELECT SUM(f) FROM (
+            SELECT CAST(AVG(h.frecency) AS INTEGER) AS f
+            FROM moz_places h
+            WHERE origin_id = moz_origins.id
+            AND last_visit_date >
+              strftime('%s','now','localtime','start of day',
+                       '-${lazy.originsFrecencyCutOffDays} day','utc') * 1000000
+            GROUP BY date(last_visit_date / 1000000, 'unixepoch')
+          )
         ), 1.0), recalc_frecency = 0
         WHERE id IN (
           SELECT id FROM moz_origins
@@ -347,8 +352,23 @@ export class PlacesFrecencyRecalculator {
       // emptied.
       // In case of NULL, the default threshold is 2, that is higher than the
       // default frecency set above.
+      // Bug 2002569: We should modify the query to use percentiles.
       let threshold = (
-        await db.executeCached(`SELECT avg(frecency) FROM moz_origins`)
+        await db.executeCached(
+          `
+        	WITH ntiled AS (
+            SELECT
+              host,
+              frecency,
+              NTILE(:buckets) OVER (ORDER BY frecency ASC) AS ntile
+	          FROM moz_origins
+	          WHERE frecency > 1)
+          SELECT MAX(frecency)
+          FROM ntiled
+          WHERE ntile = 1
+        `,
+          { buckets: BUCKETS }
+        )
       )[0].getResultByIndex(0);
       await lazy.PlacesUtils.metadata.set(
         "origin_frecency_threshold",

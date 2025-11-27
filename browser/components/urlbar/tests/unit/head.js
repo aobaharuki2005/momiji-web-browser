@@ -1229,3 +1229,9 @@ async function checkOriginsOrder(host, prefixOrder) {
     Assert.deepEqual(prefixes, prefixOrder);
   });
 }
+
+function daysAgo(days) {
+  let date = new Date();
+  date.setDate(date.getDate() - days);
+  return date;
+}

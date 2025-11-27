@@ -201,6 +201,7 @@ prefs = ["places.frecency.pages.alternative.featureGate=true"]
 ["test_null_interfaces.js"]
 
 ["test_origins.js"]
+requesttimeoutfactor = 3  # Slow on Mac debug
 
 ["test_origins_parsing.js"]
 

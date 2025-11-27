@@ -1353,7 +1353,12 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 145 uses schema version 83
+      if (currentSchemaVersion < 84) {
+        rv = MigrateV84Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 147 uses schema version 84
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -2276,6 +2281,17 @@ nsresult Database::MigrateV83Up() {
   // Recalculate frecency due to changing calculate_frecency.
   nsresult rv = mMainConn->ExecuteSimpleSQL(
       "UPDATE moz_places SET recalc_frecency = 1 WHERE frecency > 0"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult Database::MigrateV84Up() {
+  printf("Upgrading database.");
+  // Recalculate frecency due to changing calculate_frecency.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_origins "
+      "SET recalc_frecency = 1 "
+      "WHERE frecency > 1"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
