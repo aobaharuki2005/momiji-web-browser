@@ -824,7 +824,7 @@ static constexpr std::string_view IcuEraName(CalendarId calendar, EraCode era) {
       return "be";
     }
 
-    // https://docs.rs/icu/latest/icu/calendar/cal/struct.Chinese.html#year-and-era-codes
+    // https://docs.rs/icu/latest/icu/calendar/cal/east_asian_traditional/struct.EastAsianTraditional.html#year-and-era-codes
     case CalendarId::Chinese: {
       MOZ_ASSERT(era == EraCode::Standard);
       return "";
@@ -836,7 +836,7 @@ static constexpr std::string_view IcuEraName(CalendarId calendar, EraCode era) {
       return "am";
     }
 
-    // https://docs.rs/icu/latest/icu/calendar/cal/struct.Dangi.html#era-codes
+    // https://docs.rs/icu/latest/icu/calendar/cal/east_asian_traditional/struct.EastAsianTraditional.html#year-and-era-codes
     case CalendarId::Dangi: {
       MOZ_ASSERT(era == EraCode::Standard);
       return "";
@@ -872,8 +872,7 @@ static constexpr std::string_view IcuEraName(CalendarId calendar, EraCode era) {
       return "shaka";
     }
 
-    // https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriTabular.html#era-codes
-    // https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriUmmAlQura.html#era-codes
+    // https://docs.rs/icu/latest/icu/calendar/cal/struct.Hijri.html#era-codes
     case CalendarId::IslamicCivil:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura: {

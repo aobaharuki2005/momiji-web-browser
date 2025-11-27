@@ -178,18 +178,16 @@ class MonthCodes final {
 //
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Buddhist.html#month-codes
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Indian.html#month-codes
-// https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriTabular.html#month-codes
-// https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriUmmAlQura.html#month-codes
+// https://docs.rs/icu/latest/icu/calendar/cal/struct.Hijri.html#months-and-days
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Japanese.html#month-codes
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Persian.html#month-codes
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Roc.html#month-codes
 //
-// https://docs.rs/icu/latest/icu/calendar/cal/struct.Chinese.html#month-codes
-// https://docs.rs/icu/latest/icu/calendar/cal/struct.Dangi.html#month-codes
+// https://docs.rs/icu/latest/icu/calendar/cal/east_asian_traditional/struct.EastAsianTraditional.html#months-and-days
 //
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Coptic.html#month-codes
-//
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Ethiopian.html#month-codes
+//
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Hebrew.html#month-codes
 namespace monthcodes {
 inline constexpr MonthCodes ISO8601 = {};
