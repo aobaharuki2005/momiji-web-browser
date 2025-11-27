@@ -3237,25 +3237,22 @@ bool js::temporal::CalendarYearMonthFromFields(
     MutableHandle<PlainYearMonth> result) {
   auto calendarId = calendar.identifier();
 
-  // Step 1.
+  // Step 2.
   if (!CalendarResolveFields(cx, calendarId, fields, FieldType::YearMonth)) {
     return false;
   }
 
-  // Step 2.
-  int32_t firstDayIndex = 1;
+  // Step 1. (Reordered)
+  Rooted<CalendarFields> resolvedFields(cx, CalendarFields{fields});
+  resolvedFields.setDay(1);
 
   // Step 3.
-  Rooted<CalendarFields> resolvedFields(cx, CalendarFields{fields});
-  resolvedFields.setDay(firstDayIndex);
-
-  // Step 4.
   ISODate date;
   if (!CalendarDateToISO(cx, calendarId, resolvedFields, overflow, &date)) {
     return false;
   }
 
-  // Steps 5-6.
+  // Steps 4-5.
   return CreateTemporalYearMonth(cx, date, calendar, result);
 }
 
