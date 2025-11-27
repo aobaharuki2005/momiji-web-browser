@@ -36,10 +36,10 @@ ScriptFetchOptions::ScriptFetchOptions(
     mozilla::dom::RequestPriority aFetchPriority,
     const ParserMetadata aParserMetadata, nsIPrincipal* aTriggeringPrincipal)
     : mCORSMode(aCORSMode),
-      mNonce(aNonce),
       mFetchPriority(aFetchPriority),
       mParserMetadata(aParserMetadata),
-      mTriggeringPrincipal(aTriggeringPrincipal) {}
+      mTriggeringPrincipal(aTriggeringPrincipal),
+      mNonce(aNonce) {}
 
 void ScriptFetchOptions::SetTriggeringPrincipal(
     nsIPrincipal* aTriggeringPrincipal) {
