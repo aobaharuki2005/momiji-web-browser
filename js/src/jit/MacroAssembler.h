@@ -5430,6 +5430,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void scrambleHashCode(Register result);
 
  public:
+  void hashAndScrambleValue(ValueOperand value, Register result, Register temp);
   void prepareHashNonGCThing(ValueOperand value, Register result,
                              Register temp);
   void prepareHashString(Register str, Register result, Register temp);
@@ -5442,6 +5443,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void prepareHashValue(Register setObj, ValueOperand value, Register result,
                         Register temp1, Register temp2, Register temp3,
                         Register temp4);
+
+  // Helper functions used to implement mozilla::HashTable lookup inline
+  // in jitcode.
+  void prepareHashMFBT(Register hashCode, bool alreadyScrambled);
 
  private:
   enum class IsBigInt { No, Yes, Maybe };
