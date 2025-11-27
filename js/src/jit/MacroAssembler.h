@@ -5447,6 +5447,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Helper functions used to implement mozilla::HashTable lookup inline
   // in jitcode.
   void prepareHashMFBT(Register hashCode, bool alreadyScrambled);
+  template <typename Table>
+  void computeHash1MFBT(Register hashTable, Register hashCode, Register hash1,
+                        Register scratch);
+  template <typename Table>
+  void computeHash2MFBT(Register hashTable, Register hashCode, Register hash2,
+                        Register sizeMask, Register scratch);
+  void applyDoubleHashMFBT(Register hash1, Register hash2, Register sizeMask);
 
  private:
   enum class IsBigInt { No, Yes, Maybe };

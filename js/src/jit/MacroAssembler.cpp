@@ -10510,6 +10510,57 @@ void MacroAssembler::prepareHashMFBT(Register hashCode, bool alreadyScrambled) {
   and32(Imm32(~CollisionBit), hashCode);
 }
 
+template <typename Table>
+void MacroAssembler::computeHash1MFBT(Register hashTable, Register hashCode,
+                                      Register hash1, Register scratch) {
+  // Inline implementation of |mozilla::HashTable::hash1|
+  // return aHash0 >> hashShift();
+  move32(hashCode, hash1);
+  load8ZeroExtend(Address(hashTable, Table::offsetOfHashShift()), scratch);
+  flexibleRshift32(scratch, hash1);
+}
+
+template void MacroAssembler::computeHash1MFBT<WeakMapObject::Map>(
+    Register hashTable, Register hashCode, Register hash1, Register scratch);
+
+template <typename Table>
+void MacroAssembler::computeHash2MFBT(Register hashTable, Register hashCode,
+                                      Register hash2, Register sizeMask,
+                                      Register scratch) {
+  // Inline implementation of |mozilla::detail::HashTable::hash2|
+
+  // Load hashShift into sizeMask
+  load8ZeroExtend(Address(hashTable, Table::offsetOfHashShift()), sizeMask);
+
+  //   uint32_t sizeLog2 = kHashNumberBits - hashShift();
+  move32(Imm32(kHashNumberBits), scratch);
+  sub32(sizeMask, scratch);
+
+  //   DoubleHash dh = {((aCurKeyHash << sizeLog2) >> hashShift()) | 1,
+  move32(hashCode, hash2);
+  flexibleLshift32(scratch, hash2);
+  flexibleRshift32(sizeMask, hash2);
+  or32(Imm32(1), hash2);
+
+  // sizeMask = (HashNumber(1) << sizeLog2) - 1};
+  move32(Imm32(1), sizeMask);
+  flexibleLshift32(scratch, sizeMask);
+  sub32(Imm32(1), sizeMask);
+}
+
+template void MacroAssembler::computeHash2MFBT<WeakMapObject::Map>(
+    Register hashTable, Register hashCode, Register hash2, Register sizeMask,
+    Register scratch);
+
+void MacroAssembler::applyDoubleHashMFBT(Register hash1, Register hash2,
+                                         Register sizeMask) {
+  // Inline implementation of |mozilla::detail::HashTable::applyDoubleHash|
+
+  // return WrappingSubtract(aHash1, aDoubleHash.mHash2) & aDoubleHash.mSizeMask
+  sub32(hash2, hash1);
+  and32(sizeMask, hash1);
+}
+
 // Can't push large frames blindly on windows, so we must touch frame memory
 // incrementally, with no more than 4096 - 1 bytes between touches.
 //
