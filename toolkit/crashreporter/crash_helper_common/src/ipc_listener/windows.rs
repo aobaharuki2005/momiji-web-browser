@@ -4,21 +4,18 @@
 
 use crate::{
     errors::IPCError,
-    ipc_listener::IPCListenerError,
-    platform::windows::{get_last_error, server_addr, OverlappedOperation, PlatformError},
+    platform::windows::{create_manual_reset_event, server_addr, OverlappedOperation},
     IPCConnector, Pid,
 };
 
 use std::{
-    cell::RefCell,
     ffi::{CStr, CString, OsString},
     os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle},
     ptr::null_mut,
-    rc::Rc,
     str::FromStr,
 };
 use windows_sys::Win32::{
-    Foundation::{HANDLE, INVALID_HANDLE_VALUE, TRUE},
+    Foundation::{GetLastError, HANDLE, INVALID_HANDLE_VALUE, TRUE},
     Security::SECURITY_ATTRIBUTES,
     Storage::FileSystem::{
         FILE_FLAG_FIRST_PIPE_INSTANCE, FILE_FLAG_OVERLAPPED, PIPE_ACCESS_DUPLEX,
@@ -30,86 +27,89 @@ use windows_sys::Win32::{
 };
 
 pub struct IPCListener {
-    /// The name of the pipe this listener will be bound to
     server_addr: CString,
-    /// A named pipe handle listening for incoming connections
-    handle: RefCell<Rc<OwnedHandle>>,
-    /// Stores the only listen operation that might be pending
+    handle: OwnedHandle,
     overlapped: Option<OverlappedOperation>,
+    event: OwnedHandle,
 }
 
 impl IPCListener {
-    pub(crate) fn new(server_addr: CString) -> Result<IPCListener, IPCListenerError> {
-        let pipe = create_named_pipe(&server_addr, /* first_instance */ true)
-            .map_err(IPCListenerError::PipeCreationFailure)?;
+    pub(crate) fn new(server_addr: CString) -> Result<IPCListener, IPCError> {
+        let pipe = create_named_pipe(&server_addr, /* first_instance */ true)?;
+        let event = create_manual_reset_event()?;
 
         Ok(IPCListener {
             server_addr,
-            handle: RefCell::new(Rc::new(pipe)),
+            handle: pipe,
             overlapped: None,
+            event,
         })
     }
 
-    pub(crate) fn as_raw(&self) -> HANDLE {
-        self.handle.borrow().as_raw_handle() as HANDLE
+    pub fn event_raw_handle(&self) -> HANDLE {
+        self.event.as_raw_handle() as HANDLE
     }
 
     pub(crate) fn address(&self) -> &CStr {
         &self.server_addr
     }
 
-    pub(crate) fn sched_listen(&self) -> Result<OverlappedOperation, IPCListenerError> {
-        OverlappedOperation::listen(&self.handle.borrow()).map_err(IPCListenerError::ListenError)
-    }
-
-    pub(crate) fn listen(&mut self) -> Result<(), IPCListenerError> {
-        self.overlapped = Some(self.sched_listen()?);
+    pub(crate) fn listen(&mut self) -> Result<(), IPCError> {
+        self.overlapped = Some(OverlappedOperation::listen(
+            self.handle
+                .try_clone()
+                .map_err(IPCError::CloneHandleFailed)?,
+            self.event_raw_handle(),
+        )?);
         Ok(())
     }
 
-    pub fn accept(&mut self) -> Result<IPCConnector, IPCListenerError> {
-        let overlapped = self
-            .overlapped
-            .take()
-            .expect("Accepting a connection without listening first");
-        overlapped.accept().map_err(IPCListenerError::AcceptError)?;
-        self.replace_pipe()
-    }
+    pub fn accept(&mut self) -> Result<IPCConnector, IPCError> {
+        // We should never call accept() on a listener that wasn't
+        // already waiting, so panic in that scenario.
+        let overlapped = self.overlapped.take().unwrap();
+        overlapped.accept(self.handle.as_raw_handle() as HANDLE)?;
+        let new_pipe = create_named_pipe(&self.server_addr, /* first_instance */ false)?;
+        let connected_pipe = std::mem::replace(&mut self.handle, new_pipe);
 
-    pub(crate) fn replace_pipe(&self) -> Result<IPCConnector, IPCListenerError> {
-        let new_pipe = create_named_pipe(&self.server_addr, /* first_instance */ false)
-            .map_err(IPCListenerError::PipeCreationFailure)?;
-        let connected_pipe = self.handle.replace(Rc::new(new_pipe));
+        // Once we've accepted a new connection and replaced the listener's
+        // pipe we need to listen again before we return, so that we're ready
+        // for the next iteration.
+        self.listen()?;
 
-        // We can guarantee that there's only one reference to this handle at
-        // this point in time.
-        Ok(IPCConnector::from_ancillary(
-            Rc::<OwnedHandle>::try_unwrap(connected_pipe).unwrap(),
-        )?)
+        IPCConnector::from_ancillary(connected_pipe)
     }
 
     /// Serialize this listener into a string that can be passed on the
     /// command-line to a child process. This only works for newly
     /// created listeners because they are explicitly created as inheritable.
     pub fn serialize(&self) -> OsString {
-        let raw_handle = self.handle.borrow().as_raw_handle() as usize;
+        let raw_handle = self.handle.as_raw_handle() as usize;
         OsString::from_str(raw_handle.to_string().as_ref()).unwrap()
     }
 
     /// Deserialize a listener from an argument passed on the command-line.
     /// The resulting listener is ready to accept new connections.
-    pub fn deserialize(string: &CStr, pid: Pid) -> Result<IPCListener, IPCListenerError> {
+    pub fn deserialize(string: &CStr, pid: Pid) -> Result<IPCListener, IPCError> {
         let server_addr = server_addr(pid);
         let string = string.to_str().map_err(|_e| IPCError::ParseError)?;
         let handle = usize::from_str(string).map_err(|_e| IPCError::ParseError)?;
         // SAFETY: This is a handle we passed in ourselves.
         let handle = unsafe { OwnedHandle::from_raw_handle(handle as RawHandle) };
+        let event = create_manual_reset_event()?;
 
-        Ok(IPCListener {
+        let mut listener = IPCListener {
             server_addr,
-            handle: RefCell::new(Rc::new(handle)),
+            handle,
             overlapped: None,
-        })
+            event,
+        };
+
+        // Since we've inherited this handler we need to start a new
+        // asynchronous operation to listen for incoming connections.
+        listener.listen()?;
+
+        Ok(listener)
     }
 }
 
@@ -118,10 +118,7 @@ impl IPCListener {
 // used internally and never visible externally.
 unsafe impl Send for IPCListener {}
 
-fn create_named_pipe(
-    server_addr: &CStr,
-    first_instance: bool,
-) -> Result<OwnedHandle, PlatformError> {
+fn create_named_pipe(server_addr: &CStr, first_instance: bool) -> Result<OwnedHandle, IPCError> {
     const PIPE_BUFFER_SIZE: u32 = 4096;
 
     let open_mode = PIPE_ACCESS_DUPLEX
@@ -154,7 +151,7 @@ fn create_named_pipe(
     };
 
     if pipe == INVALID_HANDLE_VALUE {
-        return Err(PlatformError::CreatePipeFailure(get_last_error()));
+        return Err(IPCError::System(unsafe { GetLastError() }));
     }
 
     // SAFETY: We just verified that the handle is valid.
