@@ -8067,6 +8067,47 @@ void MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
   append(desc, offset);
 }
 
+// Given a cell and the chunk containing that cell, load the word containing
+// the mark bits for that cell, and compute the bitIndex for a particular mark
+// color.
+void MacroAssembler::loadMarkBits(Register cell, Register chunk,
+                                  Register markWord, Register bitIndex,
+                                  Register temp, gc::ColorBit color) {
+  MOZ_ASSERT(temp != bitIndex);
+  MOZ_ASSERT(temp != chunk);
+  MOZ_ASSERT(chunk != bitIndex);
+
+  // Determine the bit index and store in bitIndex.
+  //
+  // bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
+  //        static_cast<uint32_t>(colorBit);
+  static_assert(gc::CellBytesPerMarkBit == 8,
+                "Calculation below relies on this");
+  andPtr(Imm32(gc::ChunkMask), cell, bitIndex);
+  rshiftPtr(Imm32(3), bitIndex);
+  if (int32_t(color) != 0) {
+    addPtr(Imm32(int32_t(color)), bitIndex);
+  }
+
+  static_assert(gc::ChunkMarkBitmap::BitsPerWord == JS_BITS_PER_WORD,
+                "Calculation below relies on this");
+
+  // Load the mark word
+  //
+  // word = chunk.bitmap[bit / WordBits];
+
+  // Fold the adjustment for the fact that arenas don't start at the beginning
+  // of the chunk into the offset to the chunk bitmap.
+  const size_t firstArenaAdjustment =
+      gc::ChunkMarkBitmap::FirstThingAdjustmentBits / CHAR_BIT;
+  const intptr_t offset =
+      intptr_t(gc::ChunkMarkBitmapOffset) - intptr_t(firstArenaAdjustment);
+
+  uint8_t shift = mozilla::FloorLog2Size(JS_BITS_PER_WORD);
+  rshiftPtr(Imm32(shift), bitIndex, temp);
+  loadPtr(BaseIndex(chunk, temp, ScalePointer, offset), markWord);
+}
+
 void MacroAssembler::emitPreBarrierFastPath(MIRType type, Register temp1,
                                             Register temp2, Register temp3,
                                             Label* noBarrier) {
@@ -8117,42 +8158,11 @@ void MacroAssembler::emitPreBarrierFastPath(MIRType type, Register temp1,
 #endif
   }
 
-  // Determine the bit index and store in temp1.
-  //
-  // bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
-  //        static_cast<uint32_t>(colorBit);
-  static_assert(gc::CellBytesPerMarkBit == 8,
-                "Calculation below relies on this");
-  static_assert(size_t(gc::ColorBit::BlackBit) == 0,
-                "Calculation below relies on this");
-  andPtr(Imm32(gc::ChunkMask), temp1);
-  rshiftPtr(Imm32(3), temp1);
-
-  static_assert(gc::ChunkMarkBitmap::BitsPerWord == JS_BITS_PER_WORD,
-                "Calculation below relies on this");
-
-  // Load the bitmap word in temp2.
-  //
-  // word = chunk.bitmap[bit / WordBits];
-
-  // Fold the adjustment for the fact that arenas don't start at the beginning
-  // of the chunk into the offset to the chunk bitmap.
-  const size_t firstArenaAdjustment =
-      gc::ChunkMarkBitmap::FirstThingAdjustmentBits / CHAR_BIT;
-  const intptr_t offset =
-      intptr_t(gc::ChunkMarkBitmapOffset) - intptr_t(firstArenaAdjustment);
-
-  movePtr(temp1, temp3);
-#if JS_BITS_PER_WORD == 64
-  rshiftPtr(Imm32(6), temp1);
-  loadPtr(BaseIndex(temp2, temp1, TimesEight, offset), temp2);
-#else
-  rshiftPtr(Imm32(5), temp1);
-  loadPtr(BaseIndex(temp2, temp1, TimesFour, offset), temp2);
-#endif
+  // Check if the cell is marked black.
+  // Load the bitindex into temp3 and the bitmap word into temp2.
+  loadMarkBits(temp1, temp2, temp2, temp3, temp1, gc::ColorBit::BlackBit);
 
   // Load the mask in temp1.
-  //
   // mask = uintptr_t(1) << (bit % WordBits);
   andPtr(Imm32(gc::ChunkMarkBitmap::BitsPerWord - 1), temp3);
   move32(Imm32(1), temp1);
@@ -8160,6 +8170,64 @@ void MacroAssembler::emitPreBarrierFastPath(MIRType type, Register temp1,
 
   // No barrier is needed if the bit is set, |word & mask != 0|.
   branchTestPtr(Assembler::NonZero, temp2, temp1, noBarrier);
+}
+
+void MacroAssembler::emitValueReadBarrierFastPath(
+    ValueOperand value, Register cell, Register temp1, Register temp2,
+    Register temp3, Register temp4, Label* barrier) {
+  Label done;
+
+  // No barrier needed for non-GC types
+  branchTestGCThing(Assembler::NotEqual, value, &done);
+
+  // Load the GC thing in `cell`.
+  unboxGCThingForGCBarrier(value, cell);
+
+  // Load the chunk address.
+  Register chunk = temp1;
+  andPtr(Imm32(int32_t(~gc::ChunkMask)), cell, chunk);
+
+  // If the GC thing is in the nursery, we don't need to barrier it.
+  branchPtr(Assembler::NotEqual, Address(chunk, gc::ChunkStoreBufferOffset),
+            ImmWord(0), &done);
+
+  // Load the mark word and bit index for the black bit.
+  Register markWord = temp2;
+  Register bitIndex = temp3;
+  loadMarkBits(cell, chunk, markWord, bitIndex, temp4, gc::ColorBit::BlackBit);
+
+  // The mask for the black bit is 1 << (bitIndex % WordBits).
+  Register mask = temp4;
+  andPtr(Imm32(gc::ChunkMarkBitmap::BitsPerWord - 1), bitIndex);
+  move32(Imm32(1), mask);
+  flexibleLshiftPtr(bitIndex, mask);
+
+  // No barrier is needed if the black bit is set.
+  branchTestPtr(Assembler::NonZero, markWord, mask, &done);
+
+  // The bit index for the gray bit is bitIndex + 1. If the black bit
+  // is any bit except the highest bit of the mark word, we can reuse
+  // the mark word we've already loaded, and simply shift the mask by
+  // 1.
+  Label noMaskOverflow;
+  lshiftPtr(Imm32(1), mask);
+  branchTestPtr(Assembler::NonZero, mask, mask, &noMaskOverflow);
+
+  // If the black bit was the high bit of the mark word, we need to load
+  // a new mark word. In this case the mask for the gray bit will always
+  // be 1 (the lowest bit of the next word).
+  loadMarkBits(cell, chunk, markWord, bitIndex, temp4,
+               gc::ColorBit::GrayOrBlackBit);
+  move32(Imm32(1), mask);
+  bind(&noMaskOverflow);
+
+  // If the gray bit is set, then we *do* need a barrier.
+  branchTestPtr(Assembler::NonZero, markWord, mask, barrier);
+
+  // Otherwise, we don't need a barrier unless we're in the middle of
+  // an incremental GC.
+  branchTestNeedsIncrementalBarrierAnyZone(Assembler::NonZero, barrier, temp1);
+  bind(&done);
 }
 
 // ========================================================================
