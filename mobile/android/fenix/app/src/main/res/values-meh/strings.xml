@@ -64,7 +64,7 @@
     %1$s is the name of the app (for example "Firefox").
     %2$s is a link using felt_privacy_info_card_subtitle_link_text as text
   -->
-  <string name="felt_privacy_info_card_subtitle_2">%1$s xina daa cookies, a nnánukunu jíí datos nuu ya\'a sa nakasɨnu kuaiyo da pestañas yu\'u. %2$s</string>
+  <string name="felt_privacy_info_card_subtitle_2" tools:ignore="UnusedResources" moz:removedIn="147">%1$s xina daa cookies, a nnánukunu jíí datos nuu ya\'a sa nakasɨnu kuaiyo da pestañas yu\'u. %2$s</string>
   <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
