@@ -199,9 +199,9 @@ static mozilla::EnumSet<CalendarField> CalendarExtraFields(
 
   // Step 2.
 
-  // "era" and "eraYear" are relevant for calendars with multiple eras when
+  // "era" and "eraYear" are relevant for calendars supporting eras when
   // "year" is present.
-  if (fields.contains(CalendarField::Year) && CalendarEraRelevant(calendar)) {
+  if (fields.contains(CalendarField::Year) && CalendarSupportsEra(calendar)) {
     return {CalendarField::Era, CalendarField::EraYear};
   }
   return {};
@@ -571,9 +571,9 @@ static auto NonISOFieldKeysToIgnore(CalendarId calendar,
     result += monthOrMonthCode;
   }
 
-  // "era", "eraYear", and "year" are mutually exclusive in non-single era
-  // calendar systems.
-  if (CalendarEraRelevant(calendar) && !(keys & eraOrAnyYear).isEmpty()) {
+  // "era", "eraYear", and "year" are mutually exclusive when the calendar
+  // supports eras.
+  if (CalendarSupportsEra(calendar) && !(keys & eraOrAnyYear).isEmpty()) {
     result += eraOrAnyYear;
   }
 

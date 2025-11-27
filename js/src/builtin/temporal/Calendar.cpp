@@ -754,9 +754,12 @@ static constexpr size_t EraNameMaxLength() {
   return length;
 }
 
-static mozilla::Maybe<EraCode> EraForString(CalendarId calendar,
-                                            JSLinearString* string) {
-  MOZ_ASSERT(CalendarEraRelevant(calendar));
+/**
+ * CanonicalizeEraInCalendar ( calendar, era )
+ */
+static mozilla::Maybe<EraCode> CanonicalizeEraInCalendar(
+    CalendarId calendar, JSLinearString* string) {
+  MOZ_ASSERT(CalendarSupportsEra(calendar));
 
   // Note: Assigning MaxLength to EraNameMaxLength() breaks the CDT indexer.
   constexpr size_t MaxLength = 24;
@@ -921,7 +924,7 @@ static mozilla::Result<UniqueICU4XDate, CalendarError> CreateDateFromCodes(
   MOZ_ASSERT(icu4x::capi::icu4x_Calendar_kind_mv1(calendar) ==
              ToAnyCalendarKind(calendarId));
   MOZ_ASSERT(CalendarErasAsEnumSet(calendarId).contains(eraYear.era));
-  MOZ_ASSERT_IF(CalendarEraRelevant(calendarId), eraYear.year > 0);
+  MOZ_ASSERT_IF(CalendarEraHasInverse(calendarId), eraYear.year > 0);
   MOZ_ASSERT(mozilla::Abs(eraYear.year) <= MaximumCalendarYear(calendarId));
   MOZ_ASSERT(IsValidMonthCodeForCalendar(calendarId, monthCode));
   MOZ_ASSERT(day > 0);
@@ -1667,10 +1670,10 @@ struct EraYears {
 
 static bool CalendarEraYear(JSContext* cx, CalendarId calendarId,
                             EraYear eraYear, EraYear* result) {
-  MOZ_ASSERT(CalendarEraRelevant(calendarId));
+  MOZ_ASSERT(CalendarSupportsEra(calendarId));
   MOZ_ASSERT(mozilla::Abs(eraYear.year) <= MaximumCalendarYear(calendarId));
 
-  if (eraYear.year > 0) {
+  if (eraYear.year > 0 || !CalendarEraHasInverse(calendarId)) {
     *result = eraYear;
     return true;
   }
@@ -1726,9 +1729,9 @@ static bool CalendarFieldYear(JSContext* cx, CalendarId calendar,
 
   // |eraYear| is to be ignored when not relevant for |calendar| per
   // CalendarResolveFields.
-  bool hasRelevantEra =
-      fields.has(CalendarField::Era) && CalendarEraRelevant(calendar);
-  MOZ_ASSERT_IF(fields.has(CalendarField::Era), CalendarEraRelevant(calendar));
+  bool supportsEra =
+      fields.has(CalendarField::Era) && CalendarSupportsEra(calendar);
+  MOZ_ASSERT_IF(fields.has(CalendarField::Era), CalendarSupportsEra(calendar));
 
   // Case 1: |year| field is present.
   mozilla::Maybe<EraYear> fromEpoch;
@@ -1745,12 +1748,12 @@ static bool CalendarFieldYear(JSContext* cx, CalendarId calendar,
 
     fromEpoch = mozilla::Some(CalendarEraYear(calendar, intYear));
   } else {
-    MOZ_ASSERT(hasRelevantEra);
+    MOZ_ASSERT(supportsEra);
   }
 
   // Case 2: |era| and |eraYear| fields are present and relevant for |calendar|.
   mozilla::Maybe<EraYear> fromEra;
-  if (hasRelevantEra) {
+  if (supportsEra) {
     MOZ_ASSERT(fields.has(CalendarField::Era));
     MOZ_ASSERT(fields.has(CalendarField::EraYear));
 
@@ -1766,7 +1769,7 @@ static bool CalendarFieldYear(JSContext* cx, CalendarId calendar,
     }
 
     // Ensure the requested era is valid for |calendar|.
-    auto eraCode = EraForString(calendar, linearEra);
+    auto eraCode = CanonicalizeEraInCalendar(calendar, linearEra);
     if (!eraCode) {
       if (auto code = QuoteString(cx, era)) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -1803,9 +1806,8 @@ struct Month {
 };
 
 /**
- * CalendarResolveFields ( calendar, fields, type )
- * CalendarDateToISO ( calendar, fields, overflow )
- * CalendarMonthDayToISOReferenceDate ( calendar, fields, overflow )
+ * NonISOCalendarDateToISO ( calendar, fields, overflow )
+ * NonISOMonthDayToISOReferenceDate ( calendar, fields, overflow )
  *
  * Extract `month` and `monthCode` from |fields| and perform some initial
  * validation to ensure the values are valid for the requested calendar.
@@ -2441,7 +2443,7 @@ static bool NonISOResolveFields(JSContext* cx, CalendarId calendar,
     missingField = "monthCode";
   } else if (requireDay && !fields.has(CalendarField::Day)) {
     missingField = "day";
-  } else if (!CalendarEraRelevant(calendar)) {
+  } else if (!CalendarSupportsEra(calendar)) {
     if (requireYear && !fields.has(CalendarField::Year)) {
       missingField = "year";
     }
@@ -2505,6 +2507,7 @@ static bool CalendarResolveFields(JSContext* cx, CalendarId calendar,
 /**
  * CalendarISOToDate ( calendar, isoDate )
  * NonISOCalendarISOToDate ( calendar, isoDate )
+ * CalendarDateEra ( calendar, date )
  *
  * Return the Calendar Date Record's [[Era]] field.
  */
@@ -2520,20 +2523,28 @@ bool js::temporal::CalendarEra(JSContext* cx, Handle<CalendarValue> calendar,
   }
 
   // Step 2.
-  if (!CalendarEraRelevant(calendarId)) {
+  if (!CalendarSupportsEra(calendarId)) {
     result.setUndefined();
     return true;
   }
 
-  auto cal = CreateICU4XCalendar(calendarId);
-  auto dt = CreateICU4XDate(cx, date, calendarId, cal.get());
-  if (!dt) {
-    return false;
-  }
+  auto era = EraCode::Standard;
 
-  EraCode era;
-  if (!CalendarDateEra(cx, calendarId, dt.get(), &era)) {
-    return false;
+  // Call into ICU4X if the calendar has more than one era.
+  auto eras = CalendarEras(calendarId);
+  if (eras.size() > 1) {
+    auto cal = CreateICU4XCalendar(calendarId);
+    auto dt = CreateICU4XDate(cx, date, calendarId, cal.get());
+    if (!dt) {
+      return false;
+    }
+
+    if (!CalendarDateEra(cx, calendarId, dt.get(), &era)) {
+      return false;
+    }
+  } else {
+    MOZ_ASSERT(*eras.begin() == EraCode::Standard,
+               "single era calendars use only the standard era");
   }
 
   auto* str = NewStringCopy<CanGC>(cx, CalendarEraName(calendarId, era));
@@ -2548,6 +2559,7 @@ bool js::temporal::CalendarEra(JSContext* cx, Handle<CalendarValue> calendar,
 /**
  * CalendarISOToDate ( calendar, isoDate )
  * NonISOCalendarISOToDate ( calendar, isoDate )
+ * CalendarDateEraYear ( calendar, date )
  *
  * Return the Calendar Date Record's [[EraYear]] field.
  */
@@ -2564,10 +2576,17 @@ bool js::temporal::CalendarEraYear(JSContext* cx,
   }
 
   // Step 2.
-  if (!CalendarEraRelevant(calendarId)) {
+  if (!CalendarSupportsEra(calendarId)) {
     result.setUndefined();
     return true;
   }
+
+  auto eras = CalendarEras(calendarId);
+  if (eras.size() == 1) {
+    // Return the calendar year for calendars with a single era.
+    return CalendarYear(cx, calendar, date, result);
+  }
+  MOZ_ASSERT(eras.size() > 1);
 
   auto cal = CreateICU4XCalendar(calendarId);
   auto dt = CreateICU4XDate(cx, date, calendarId, cal.get());
@@ -2583,6 +2602,7 @@ bool js::temporal::CalendarEraYear(JSContext* cx,
 /**
  * CalendarISOToDate ( calendar, isoDate )
  * NonISOCalendarISOToDate ( calendar, isoDate )
+ * CalendarDateArithmeticYear ( calendar, date )
  *
  * Return the Calendar Date Record's [[Year]] field.
  */
