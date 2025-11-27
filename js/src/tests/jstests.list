@@ -868,6 +868,12 @@ skip script test262/staging/Intl402/Temporal/old/indian-calendar.js
 # for Intl.DisplayNames.
 skip script test262/intl402/Intl/supportedValuesOf/calendars-accepted-by-DisplayNames.js
 
+# https://github.com/tc39/test262/pull/4721
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-ethioaa.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-ethiopic.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-indian.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-coptic.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
@@ -1062,31 +1068,5 @@ skip-if(release_or_beta) script test262/staging/Intl402/Temporal/old/non-iso-cal
 skip-if(release_or_beta) script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic-umalqura.js
 skip-if(release_or_beta) script test262/intl402/Temporal/PlainMonthDay/from/constrain-to-leap-day.js
 
-# https://github.com/tc39/proposal-intl-era-monthcode/issues/23. ICU4X 2.0 doesn't have inverse type
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-coptic.js
-
-# https://github.com/tc39/proposal-intl-era-monthcode/issues/4. ICU4X 2.0 doesn't have inverse type
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-ethiopic.js
-
-# https://github.com/tc39/proposal-intl-era-monthcode/issues/23 and https://github.com/tc39/proposal-intl-era-monthcode/issues/4
+# Fails for "ethiopic", see <https://unicode-org.atlassian.net/browse/CLDR-18739>.
 skip script test262/staging/sm/Temporal/PlainDate/non-positive-era-year.js
-
-# Canonical era names have changed.
-skip script test262/intl402/Temporal/ZonedDateTime/from/canonicalize-era-codes.js
-skip script test262/staging/Intl402/Temporal/old/japanese-before-era.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-gregory.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamicc.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-civil.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-tbla.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-umalqura.js
-skip script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-ethioaa.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-hebrew.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-buddhist.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-indian.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-persian.js
-skip script test262/intl402/Temporal/PlainYearMonth/from/calendar-not-supporting-eras.js
-skip script test262/intl402/Temporal/PlainYearMonth/from/reference-day-chinese.js
-skip script test262/intl402/Temporal/PlainYearMonth/from/reference-day-hebrew.js
-skip script test262/intl402/Temporal/PlainDate/from/calendar-not-supporting-eras.js
-skip script test262/intl402/Temporal/PlainDateTime/from/calendar-not-supporting-eras.js
