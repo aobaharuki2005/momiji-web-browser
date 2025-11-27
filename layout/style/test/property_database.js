@@ -5328,8 +5328,6 @@ var gCSSProperties = {
       "color-mix(in srgb, blue, red 80%)",
       "color-mix(in srgb, rgba(0, 200, 32, .5) 90%, red 50%)",
       "color-mix(in srgb, currentColor, red)",
-      "color-mix(red, blue)",
-      "color-mix(red blue)",
     ],
     invalid_values: [
       "#f",
@@ -5362,6 +5360,8 @@ var gCSSProperties = {
       "hsl(0 0% 0% /)",
       "hsl(0, 0%, 0% /)",
       /* color-mix */
+      "color-mix(red, blue)",
+      "color-mix(red blue)",
       "color-mix(in srgb, red blue)",
       "color-mix(in srgb, red 10% blue)",
     ],
