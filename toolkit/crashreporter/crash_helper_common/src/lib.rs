@@ -11,6 +11,7 @@ mod breakpad;
 mod ipc_channel;
 mod ipc_connector;
 mod ipc_listener;
+mod ipc_queue;
 mod platform;
 
 use messages::MessageError;
@@ -19,10 +20,12 @@ use messages::MessageError;
 pub use crate::breakpad::{BreakpadChar, BreakpadData, BreakpadRawData, Pid};
 pub use crate::ipc_channel::{IPCChannel, IPCClientChannel};
 pub use crate::ipc_connector::{
-    AncillaryData, IPCConnector, IPCEvent, RawAncillaryData, INVALID_ANCILLARY_DATA,
+    AncillaryData, IPCConnector, IPCConnectorKey, IPCEvent, RawAncillaryData,
+    INVALID_ANCILLARY_DATA,
 };
 pub use crate::ipc_listener::{IPCListener, IPCListenerError};
-pub use crate::platform::{PlatformError, ProcessHandle};
+pub use crate::ipc_queue::IPCQueue;
+pub use crate::platform::ProcessHandle;
 
 #[cfg(target_os = "windows")]
 pub use crate::platform::server_addr;

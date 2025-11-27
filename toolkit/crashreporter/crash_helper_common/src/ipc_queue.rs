@@ -4,20 +4,32 @@
 
 use thiserror::Error;
 
-use crate::{errors::IPCError, platform::PlatformError, IPCListenerError};
+use crate::{
+    errors::{IPCError, SystemError},
+    messages::MessageError,
+    IPCListenerError,
+};
 
 /*****************************************************************************
  * Error definitions                                                         *
  *****************************************************************************/
 
 #[derive(Debug, Error)]
-pub enum IPCChannelError {
-    #[error("Could not create connector: {0}")]
-    Connector(#[from] IPCError),
-    #[error("Could not create a listener: {0}")]
-    Listener(#[from] IPCListenerError),
-    #[error("Could not create a socketpair: {0}")]
-    SocketPair(#[from] PlatformError),
+pub enum IPCQueueError {
+    #[error("Could not create queue: {0}")]
+    CreationFailure(SystemError),
+    #[error("Could not register with queue: {0}")]
+    RegistrationFailure(SystemError),
+    #[error("Could not post an event on the queue: {0}")]
+    PostEventFailure(SystemError),
+    #[error("Could not wait for events: {0}")]
+    WaitError(SystemError),
+    #[error("Underlying IPC connector error: {0}")]
+    IPCError(#[from] IPCError),
+    #[error("Underlying IPC listener error: {0}")]
+    IPCListenerError(#[from] IPCListenerError),
+    #[error("Underlying message error: {0}")]
+    MessageError(#[from] MessageError),
 }
 
 /*****************************************************************************
@@ -25,17 +37,17 @@ pub enum IPCChannelError {
  *****************************************************************************/
 
 #[cfg(target_os = "windows")]
-pub use windows::{IPCChannel, IPCClientChannel};
+pub use windows::IPCQueue;
 
 #[cfg(target_os = "windows")]
 pub(crate) mod windows;
 
 /*****************************************************************************
  * Android, macOS & Linux                                                    *
-*****************************************************************************/
+ *****************************************************************************/
 
 #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
-pub use unix::{IPCChannel, IPCClientChannel};
+pub use unix::IPCQueue;
 
 #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
 pub(crate) mod unix;
