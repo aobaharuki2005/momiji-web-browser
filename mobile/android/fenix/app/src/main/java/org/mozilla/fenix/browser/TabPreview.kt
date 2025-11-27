@@ -518,7 +518,6 @@ class TabPreview @JvmOverloads constructor(
         val settings = context.settings()
         val isWideWindow = context.isWideWindow()
         val isTallWindow = context.isTallWindow()
-        val tabStripEnabled = settings.isTabStripEnabled
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
         val useCustomPrimary = settings.shouldShowToolbarCustomization
@@ -526,10 +525,6 @@ class TabPreview @JvmOverloads constructor(
             ?.toToolbarAction(tab).takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
 
         return listOf(
-            ToolbarActionConfig(ToolbarAction.Share) {
-                tabStripEnabled && isWideWindow && (!shouldUseExpandedToolbar || !isTallWindow) &&
-                        primarySlotAction == ToolbarAction.Share
-            },
             ToolbarActionConfig(primarySlotAction) {
                 (!shouldUseExpandedToolbar || !isTallWindow || isWideWindow) &&
                         tab?.content?.url != ABOUT_HOME_URL

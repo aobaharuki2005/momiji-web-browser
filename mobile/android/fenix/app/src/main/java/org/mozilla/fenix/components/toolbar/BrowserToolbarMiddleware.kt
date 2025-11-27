@@ -750,17 +750,12 @@ class BrowserToolbarMiddleware(
     private suspend fun buildEndBrowserActions(): List<Action> {
         val isWideWindow = isWideScreen()
         val isTallWindow = isTallScreen()
-        val tabStripEnabled = settings.isTabStripEnabled
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
         val useCustomPrimary = settings.shouldShowToolbarCustomization
         val primarySlotAction = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey)
             ?.toToolbarAction().takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
 
         val configs = listOf(
-            ToolbarActionConfig(ToolbarAction.Share) {
-                tabStripEnabled && isWideWindow && (!shouldUseExpandedToolbar || !isTallWindow) &&
-                        primarySlotAction != ToolbarAction.Share
-            },
             ToolbarActionConfig(primarySlotAction) {
                 !shouldUseExpandedToolbar || !isTallWindow || isWideWindow
             },

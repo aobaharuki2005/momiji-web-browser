@@ -4,9 +4,6 @@
 
 package org.mozilla.fenix.components.toolbar
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
@@ -1311,9 +1308,11 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN the current tab shows a content page WHEN the share button is clicked THEN record telemetry and start sharing the local resource`() = runTest {
+    fun `GIVEN the current tab shows a content page WHEN the share shortcut is clicked THEN record telemetry and start sharing the local resource`() = runTest {
         every { settings.isTabStripEnabled } returns true
         every { settings.shouldUseExpandedToolbar } returns false
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.toolbarSimpleShortcutKey } returns ShortcutType.SHARE.value
         val browserScreenStore = buildBrowserScreenStore()
         val captureMiddleware = CaptureActionsMiddleware<BrowserState, BrowserAction>()
         val currentTab = createTab("content://test", private = false)
@@ -1344,9 +1343,11 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN the current tab shows a normal webpage WHEN the share button is clicked THEN record telemetry and open the share dialog`() {
+    fun `GIVEN the current tab shows a normal webpage WHEN the share shortcut is clicked THEN record telemetry and open the share dialog`() {
         every { settings.isTabStripEnabled } returns true
         every { settings.shouldUseExpandedToolbar } returns false
+        every { settings.shouldShowToolbarCustomization } returns true
+        every { settings.toolbarSimpleShortcutKey } returns ShortcutType.SHARE.value
         every { navController.currentDestination?.id } returns R.id.browserFragment
         every { navController.navigate(any<NavDirections>(), null) } just Runs
         val browserScreenStore = buildBrowserScreenStore()
@@ -1442,37 +1443,6 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(expectedNewTabButton(), newTabButton)
         assertEqualsTabCounterButton(expectedTabCounterButton(), tabCounterButton)
         assertEquals(expectedMenuButton(), menuButton)
-    }
-
-    @Test
-    fun `GIVEN on a wide screen with tabstrip is enabled and not using the extended layout THEN show a share button as browser end action`() {
-        every { settings.isTabStripEnabled } returns true
-        every { settings.shouldUseExpandedToolbar } returns false
-        val browserScreenStore = buildBrowserScreenStore()
-        val middleware = buildMiddleware(
-            browserScreenStore = browserScreenStore,
-            isWideScreen = { true },
-            isTallScreen = { false },
-        )
-        val toolbarStore = buildStore(middleware)
-
-        val shareButton = toolbarStore.state.displayState.browserActionsEnd[0]
-        assertEquals(expectedShareButton(), shareButton)
-    }
-
-    @Test
-    fun `GIVEN short window with tabstrip is enabled and not using the extended layout THEN show a share button as browser end action`() {
-        every { settings.isTabStripEnabled } returns true
-        every { settings.shouldUseExpandedToolbar } returns false
-        val browserScreenStore = buildBrowserScreenStore()
-        val middleware = buildMiddleware(
-            browserScreenStore = browserScreenStore,
-            isWideScreen = { true },
-        )
-        val toolbarStore = buildStore(middleware)
-
-        val shareButton = toolbarStore.state.displayState.browserActionsEnd[0]
-        assertEquals(expectedShareButton(), shareButton)
     }
 
     @Test
