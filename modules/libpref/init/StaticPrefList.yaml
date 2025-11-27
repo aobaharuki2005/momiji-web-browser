@@ -6871,10 +6871,12 @@
   value: true
   mirror: always
 
+#ifdef XP_WIN
 - name: gfx.canvas.remote.use-draw-image-fast-path-d3d
   type: RelaxedAtomicBool
   value: true
   mirror: always
+#endif
 
 - name: gfx.canvas.remote.recycle-used-data-surface
   type: RelaxedAtomicBool
