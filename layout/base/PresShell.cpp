@@ -10137,21 +10137,24 @@ void PresShell::WillPaint() {
 }
 
 void PresShell::DidPaintWindow() {
-  if (mHasReceivedPaintMessage) {
+  nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
+  if (rootPresContext != mPresContext) {
+    // This could be a popup's presshell. No point in notifying XPConnect
+    // about compositing of popups.
     return;
   }
-  mHasReceivedPaintMessage = true;
-  nsPIDOMWindowOuter* win = mDocument->GetWindow();
-  if (!win || !nsGlobalWindowOuter::Cast(win)->IsChromeWindow()) {
-    return;
+
+  if (!mHasReceivedPaintMessage) {
+    mHasReceivedPaintMessage = true;
+
+    nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService();
+    if (obsvc && mDocument) {
+      nsPIDOMWindowOuter* window = mDocument->GetWindow();
+      if (window && nsGlobalWindowOuter::Cast(window)->IsChromeWindow()) {
+        obsvc->NotifyObservers(window, "widget-first-paint", nullptr);
+      }
+    }
   }
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction("NotifyWidgetFirstPaint", [win = RefPtr{win}] {
-        if (nsCOMPtr<nsIObserverService> obsvc =
-                services::GetObserverService()) {
-          obsvc->NotifyObservers(win, "widget-first-paint", nullptr);
-        }
-      }));
 }
 
 nsSubDocumentFrame* PresShell::GetInProcessEmbedderFrame() const {

@@ -199,7 +199,11 @@ class nsView final : public nsIWidgetListener {
   void AndroidPipModeChanged(bool) override;
 #endif
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void PaintWindow(nsIWidget* aWidget) override;
+  void WillPaintWindow(nsIWidget* aWidget) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  bool PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion aRegion) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  void DidPaintWindow() override;
   void DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                           const mozilla::TimeStamp& aCompositeStart,
                           const mozilla::TimeStamp& aCompositeEnd) override;

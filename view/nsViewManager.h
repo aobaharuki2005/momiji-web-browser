@@ -106,6 +106,10 @@ class nsViewManager final {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoSetWindowDimensions(const nsSize&);
   bool ShouldDelayResize() const;
 
+  MOZ_CAN_RUN_SCRIPT void WillPaintWindow(nsIWidget* aWidget);
+  MOZ_CAN_RUN_SCRIPT void PaintWindow(nsIWidget* aWidget);
+  MOZ_CAN_RUN_SCRIPT void DidPaintWindow();
+
   mozilla::PresShell* mPresShell;
 
   // The size for a resize that we delayed until the root view becomes
