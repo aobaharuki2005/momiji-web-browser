@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Gizli %s</string>
@@ -1058,6 +1065,8 @@
   <string name="restart_warning_dialog_title">Uygulama simgesi değiştirilsin mi?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Uygulama kapanabilir. %1$s uygulamasını yeniden açmak için yeni simgenize dokunmanız yeterlidir.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Simgeyi değiştirdiğinizde ana ekranınıza kaydettiğiniz siteler ve kısayollar varsa silinecektir. \n\n%1$s kapanabilir. Yeniden açmak için yeni simgenize dokunun.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Simgeyi değiştir</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2748,6 +2757,8 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Adresleri cihazlar arasında eşitle</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Adresleri eşitle</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Geri</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Kart ekle</string>
   <!-- Title of the "Edit card" screen -->

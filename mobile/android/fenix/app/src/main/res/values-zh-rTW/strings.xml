@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">隱私 %s</string>
@@ -1058,6 +1065,8 @@
   <string name="restart_warning_dialog_title">要更改應用程式圖示嗎？</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">應用程式可能需要關閉，再次點擊閃亮的新圖示即可重新開啟 %1$s。</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">更改圖示將移除在裝置主畫面新增的所有網站與捷徑。\n\n%1$s 可能會關閉，點擊新圖示即可重新開啟。</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">更改圖示</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2748,6 +2757,8 @@
   <string name="preferences_addresses_sync_addresses_across_devices">在不同裝置間同步地址資訊</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">同步地址資訊</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">返回</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">新增付款卡片</string>
   <!-- Title of the "Edit card" screen -->

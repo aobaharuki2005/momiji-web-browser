@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Ñemigua %s</string>
@@ -1058,6 +1065,8 @@
   <string name="restart_warning_dialog_title">¿Emoambue tembiporu’i ra’ãnga’i?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Tembiporu’i oñembotykuaa. Epoko ta’ãnga’i vera embojurujajey hag̃ua %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Emoambuévo ta’ãnga’i, oguéta umi tenda ha jeike pya’eha eñongatúva ne mba’erechaha ñepyrũhápe.\n\nIkatu %1$s oñemboty. Eikutu ta’ãnga’i pyahu embojuruja jey hag̃ua.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Emoambue ta’ãnga’i</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2748,6 +2757,8 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Embojuehe kundaharape mba’e’oka pa’ũme</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Embojuehe kundaharape</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Tapykue</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Embojuaju kuatia’atã</string>
   <!-- Title of the "Edit card" screen -->
