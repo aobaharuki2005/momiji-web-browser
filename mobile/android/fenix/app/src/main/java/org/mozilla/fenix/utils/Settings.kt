@@ -2663,7 +2663,7 @@ class Settings(
      * Indicates whether or not we should use the new compose autofill settings UI
      */
     var enableComposeAutofillSettings by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_compose_logins),
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_compose_autofill_settings),
         default = false,
     )
 
