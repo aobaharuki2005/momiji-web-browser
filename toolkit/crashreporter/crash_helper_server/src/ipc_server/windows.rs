@@ -4,7 +4,7 @@
 
 use std::convert::TryInto;
 
-use crash_helper_common::{errors::IPCError, IPCEvent};
+use crash_helper_common::{errors::IPCError, IPCEvent, PlatformError};
 use log::error;
 use windows_sys::Win32::{
     Foundation::{ERROR_BROKEN_PIPE, FALSE, HANDLE, WAIT_OBJECT_0},
@@ -60,7 +60,9 @@ impl IPCServer {
                     events.push(IPCEvent::Header(index, header));
                 }
                 Err(error) => match error {
-                    IPCError::System(_code @ ERROR_BROKEN_PIPE) => {
+                    IPCError::ReceptionFailure(
+                        _error @ PlatformError::IOError(ERROR_BROKEN_PIPE),
+                    ) => {
                         events.push(IPCEvent::Disconnect(index));
                     }
                     _ => return Err(error),
