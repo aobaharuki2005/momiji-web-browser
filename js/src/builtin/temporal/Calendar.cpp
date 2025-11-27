@@ -962,7 +962,7 @@ static bool FirstYearOfJapaneseEra(JSContext* cx, CalendarId calendarId,
                                    const icu4x::capi::Calendar* calendar,
                                    EraCode era, int32_t* result) {
   MOZ_ASSERT(calendarId == CalendarId::Japanese);
-  MOZ_ASSERT(!CalendarEraStartsAtYearBoundary(calendarId, era));
+  MOZ_ASSERT(IsJapaneseEraName(era));
 
   // All supported Japanese eras last at least one year, so December 31 is
   // guaranteed to be in the first year of the era.
@@ -1141,7 +1141,7 @@ static UniqueICU4XDate CreateDateFromCodes(
       // or case 3. Handle a possible case 1 error first by mapping the era year
       // to a common era year and then re-try creating the date.
       if (calendarId == CalendarId::Japanese &&
-          !CalendarEraStartsAtYearBoundary(calendarId, eraYear.era)) {
+          IsJapaneseEraName(eraYear.era)) {
         EraYear commonEraYear;
         if (!JapaneseEraYearToCommonEraYear(cx, calendarId, calendar, eraYear,
                                             &commonEraYear)) {
@@ -1219,7 +1219,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendarId,
       if (!date) {
         return nullptr;
       }
-      MOZ_ASSERT_IF(CalendarEraStartsAtYearBoundary(calendarId),
+      MOZ_ASSERT_IF(!CalendarHasMidYearEras(calendarId),
                     OrdinalMonth(date.get()) == month);
       return date;
     }

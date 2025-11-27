@@ -206,41 +206,30 @@ constexpr auto CalendarEraName(CalendarId calendar, EraCode era) {
   return *names.begin();
 }
 
-constexpr bool CalendarEraStartsAtYearBoundary(CalendarId id) {
-  switch (id) {
-    // Calendar system which use a single era.
-    case CalendarId::ISO8601:
-    case CalendarId::Buddhist:
-    case CalendarId::Chinese:
-    case CalendarId::Coptic:
-    case CalendarId::Dangi:
-    case CalendarId::Ethiopian:
-    case CalendarId::EthiopianAmeteAlem:
-    case CalendarId::Hebrew:
-    case CalendarId::Indian:
-    case CalendarId::Persian:
-      return true;
-
-    // Calendar system which use multiple eras, but each era starts at a year
-    // boundary.
-    case CalendarId::Gregorian:
-    case CalendarId::IslamicCivil:
-    case CalendarId::IslamicTabular:
-    case CalendarId::IslamicUmmAlQura:
-    case CalendarId::ROC:
-      return true;
-
-    // Calendar system which use multiple eras and eras can start within a year.
-    case CalendarId::Japanese:
-      return false;
-  }
-  MOZ_CRASH("invalid calendar id");
+/**
+ * CalendarHasMidYearEras ( calendar )
+ */
+constexpr bool CalendarHasMidYearEras(CalendarId calendar) {
+  // Steps 1-2.
+  //
+  // Japanese eras can start in the middle of the year. All other calendars
+  // start their eras at year boundaries. (Or don't have eras at all.)
+  return calendar == CalendarId::Japanese;
 }
 
-constexpr bool CalendarEraStartsAtYearBoundary(CalendarId id, EraCode era) {
-  MOZ_ASSERT_IF(id != CalendarId::Japanese,
-                CalendarEraStartsAtYearBoundary(id));
-  return era == EraCode::Standard || era == EraCode::Inverse;
+constexpr bool IsJapaneseEraName(EraCode era) {
+  switch (era) {
+    case EraCode::Standard:
+    case EraCode::Inverse:
+      return false;
+    case EraCode::Meiji:
+    case EraCode::Taisho:
+    case EraCode::Showa:
+    case EraCode::Heisei:
+    case EraCode::Reiwa:
+      return true;
+  }
+  MOZ_CRASH("invalid era");
 }
 
 struct EraYear {

@@ -577,10 +577,9 @@ static auto NonISOFieldKeysToIgnore(CalendarId calendar,
     result += eraOrAnyYear;
   }
 
-  // If eras don't start at year boundaries, we have to ignore "era" and
+  // If eras can start in the middle of the year, we have to ignore "era" and
   // "eraYear" if any of "day", "month", or "monthCode" is present.
-  if (!CalendarEraStartsAtYearBoundary(calendar) &&
-      !(keys & dayOrAnyMonth).isEmpty()) {
+  if (CalendarHasMidYearEras(calendar) && !(keys & dayOrAnyMonth).isEmpty()) {
     result += eraOrEraYear;
   }
 
