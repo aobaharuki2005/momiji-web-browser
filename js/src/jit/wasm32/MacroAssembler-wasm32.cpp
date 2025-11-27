@@ -431,7 +431,7 @@ void MacroAssembler::callWithABINoProfiler(const Address& fun, ABIType result) {
   MOZ_CRASH();
 }
 
-void MacroAssembler::call(const Address& addr) { MOZ_CRASH(); }
+CodeOffset MacroAssembler::call(const Address& addr) { MOZ_CRASH(); }
 
 void MacroAssembler::call(ImmWord imm) { MOZ_CRASH(); }
 
