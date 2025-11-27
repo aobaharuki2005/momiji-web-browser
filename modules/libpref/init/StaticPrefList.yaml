@@ -8199,10 +8199,12 @@
   value: true
   mirror: always
 
+#ifdef XP_WIN
 - name: gl.ignore-dx-interop2-blacklist
   type: RelaxedAtomicBool
   value: false
   mirror: always
+#endif
 
 - name: gl.use-tls-is-current
   type: RelaxedAtomicInt32
