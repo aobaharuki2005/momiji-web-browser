@@ -41,11 +41,11 @@ use neqo_transport::{
     Error as TransportError, Output, OutputBatch, RandomConnectionIdGenerator, StreamId, Version,
 };
 use nserror::{
-    nsresult, NS_BASE_STREAM_WOULD_BLOCK, NS_ERROR_CONNECTION_REFUSED, NS_ERROR_FAILURE,
-    NS_ERROR_FILE_ALREADY_EXISTS, NS_ERROR_ILLEGAL_VALUE, NS_ERROR_INVALID_ARG,
-    NS_ERROR_NET_HTTP3_PROTOCOL_ERROR, NS_ERROR_NET_INTERRUPT, NS_ERROR_NET_RESET,
-    NS_ERROR_NET_TIMEOUT, NS_ERROR_NOT_AVAILABLE, NS_ERROR_NOT_CONNECTED, NS_ERROR_OUT_OF_MEMORY,
-    NS_ERROR_SOCKET_ADDRESS_IN_USE, NS_ERROR_UNEXPECTED, NS_OK, NS_ERROR_DOM_INVALID_HEADER_NAME,
+    nsresult, NS_BASE_STREAM_WOULD_BLOCK, NS_ERROR_CONNECTION_REFUSED,
+    NS_ERROR_DOM_INVALID_HEADER_NAME, NS_ERROR_FILE_ALREADY_EXISTS, NS_ERROR_ILLEGAL_VALUE,
+    NS_ERROR_INVALID_ARG, NS_ERROR_NET_HTTP3_PROTOCOL_ERROR, NS_ERROR_NET_INTERRUPT,
+    NS_ERROR_NET_RESET, NS_ERROR_NET_TIMEOUT, NS_ERROR_NOT_AVAILABLE, NS_ERROR_NOT_CONNECTED,
+    NS_ERROR_OUT_OF_MEMORY, NS_ERROR_SOCKET_ADDRESS_IN_USE, NS_ERROR_UNEXPECTED, NS_OK,
 };
 use nsstring::{nsACString, nsCString};
 use thin_vec::ThinVec;
@@ -2398,6 +2398,7 @@ pub unsafe extern "C" fn neqo_http3conn_webtransport_set_sendorder(
 ///
 /// Note that this conversion is specific to `neqo_glue`, i.e. does not aim to
 /// implement a general-purpose conversion.
+/// Treat NS_ERROR_NET_RESET as a generic retryable error for the upper layer.
 ///
 /// Modeled after
 /// [`ErrorAccordingToNSPR`](https://searchfox.org/mozilla-central/rev/a965e3c683ecc035dee1de72bd33a8d91b1203ed/netwerk/base/nsSocketTransport2.cpp#164-168).
@@ -2448,16 +2449,6 @@ fn into_nsresult(e: &io::Error) -> nsresult {
 
         // TODO: nightly-only for now <https://doc.rust-lang.org/std/io/enum.ErrorKind.html#variant.FilesystemLoop>.
         // io::ErrorKind::FilesystemLoop => NS_ERROR_FILE_UNRESOLVABLE_SYMLINK,
-
-        // > NSPR's socket code can return these, but they're not worth breaking out
-        // > into their own error codes, distinct from NS_ERROR_FAILURE:
-        // >
-        // > PR_BAD_DESCRIPTOR_ERROR
-        // > PR_INVALID_ARGUMENT_ERROR
-        //
-        // <https://searchfox.org/mozilla-central/rev/a965e3c683ecc035dee1de72bd33a8d91b1203ed/netwerk/base/nsSocketTransport2.cpp#231>
-        io::ErrorKind::InvalidInput => NS_ERROR_FAILURE,
-
         io::ErrorKind::TimedOut => NS_ERROR_NET_TIMEOUT,
         io::ErrorKind::Interrupted => NS_ERROR_NET_INTERRUPT,
 
@@ -2477,7 +2468,7 @@ fn into_nsresult(e: &io::Error) -> nsresult {
         | io::ErrorKind::InvalidData
         | io::ErrorKind::WriteZero
         | io::ErrorKind::Unsupported
-        | io::ErrorKind::Other => NS_ERROR_FAILURE,
+        | io::ErrorKind::Other => NS_ERROR_NET_RESET,
 
         // TODO: available since Rust v1.83.0 only
         // <https://doc.rust-lang.org/std/io/enum.ErrorKind.html>.
@@ -2491,11 +2482,13 @@ fn into_nsresult(e: &io::Error) -> nsresult {
         // | io::ErrorKind::ArgumentListTooLong
         // | io::ErrorKind::NetworkDown
         // | io::ErrorKind::StaleNetworkFileHandle
-        // | io::ErrorKind::StorageFull => NS_ERROR_FAILURE,
+        // | io::ErrorKind::StorageFull => NS_ERROR_NET_RESET,
 
         // TODO: nightly-only for now <https://doc.rust-lang.org/std/io/enum.ErrorKind.html>.
-        // io::ErrorKind::CrossesDevices | io::ErrorKind::InvalidFilename => NS_ERROR_FAILURE,
-        _ => NS_ERROR_FAILURE,
+        // io::ErrorKind::CrossesDevices
+        // | io::ErrorKind::InvalidFilename
+        // | io::ErrorKind::InvalidInput => NS_ERROR_NET_RESET,
+        _ => NS_ERROR_NET_RESET,
     }
 }
 

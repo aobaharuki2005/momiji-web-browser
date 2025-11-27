@@ -1337,7 +1337,8 @@ void nsHttpTransaction::Close(nsresult reason) {
   // treat it as NS_ERROR_NET_RESET so the transaction will retry once.
   // NOTE: This is a temporary workaround; the proper fix belongs in
   // the Happy Eyeballs project.
-  if (NS_FAILED(reason) && mHttp3BackupTimerCreated && mHttp3BackupTimer) {
+  if (NS_FAILED(reason) && AllowedErrorForTransactionRetry(reason) &&
+      mHttp3BackupTimerCreated && mHttp3BackupTimer) {
     reason = NS_ERROR_NET_RESET;
   }
 
@@ -1392,7 +1393,7 @@ void nsHttpTransaction::Close(nsresult reason) {
   // to make sure this transaction can be restarted with the same conncetion
   // info.
   bool shouldRestartTransactionForHTTPSRR =
-      mOrigConnInfo && AllowedErrorForHTTPSRRFallback(reason) &&
+      mOrigConnInfo && AllowedErrorForTransactionRetry(reason) &&
       !mDoNotRemoveAltSvc;
 
   //
