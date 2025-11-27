@@ -463,7 +463,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   nsresult InternalLoad(nsDocShellLoadState* aLoadState);
 
   void Navigate(
-      nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv,
+      nsIURI* aURI, Document* aSourceDocument, nsIPrincipal& aSubjectPrincipal,
+      ErrorResult& aRv,
       NavigationHistoryBehavior aHistoryHandling =
           NavigationHistoryBehavior::Auto,
       bool aNeedsCompletelyLoadedDocument = false,
@@ -1101,7 +1102,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // principal, and if so construct the right nsDocShellLoadInfo for the load
   // and return it.
   already_AddRefed<nsDocShellLoadState> CheckURLAndCreateLoadState(
-      nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
+      nsIURI* aURI, nsIPrincipal& aSubjectPrincipal, Document* aSourceDocument,
+      ErrorResult& aRv);
 
   bool AddSHEntryWouldIncreaseLength(SessionHistoryInfo* aCurrentEntry) const;
 
