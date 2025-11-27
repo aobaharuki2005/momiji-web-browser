@@ -262,8 +262,7 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<JSObject*> item,
                                     MutableHandle<ZonedDateTime> result) {
   // Step 1. (Not applicable in our implementation.)
 
-  // Step 2.
-  auto offsetBehaviour = OffsetBehaviour::Option;
+  // Step 2. (Not applicable)
 
   // Step 3.
   auto matchBehaviour = MatchBehaviour::MatchExactly;
@@ -325,34 +324,36 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<JSObject*> item,
   // Step 4.e.
   auto offsetString = fields.offset();
 
-  // Step 4.f.
-  if (!fields.has(CalendarField::Offset)) {
-    offsetBehaviour = OffsetBehaviour::Wall;
-  }
-
-  // Steps 4.g-j.
+  // Steps 4.f-i.
   ZonedDateTimeOptions resolvedOptions;
   if (!ToTemporalZonedDateTimeOptions(cx, options, &resolvedOptions)) {
     return false;
   }
   auto [disambiguation, offsetOption, overflow] = resolvedOptions;
 
-  // Step 4.k.
+  // Steps 4.j-l.
   ISODateTime dateTime;
   if (!InterpretTemporalDateTimeFields(cx, calendar, fields, overflow,
                                        &dateTime)) {
     return false;
   }
 
-  // Step 6.
+  // Steps 5-6. (Not applicable)
+
+  // Steps 7-8.
+  auto offsetBehaviour = !fields.has(CalendarField::Offset)
+                             ? OffsetBehaviour::Wall
+                             : OffsetBehaviour::Option;
+
+  // Step 9.
   int64_t offsetNanoseconds = 0;
 
-  // Step 7.
+  // Step 10.
   if (offsetBehaviour == OffsetBehaviour::Option) {
     offsetNanoseconds = int64_t(offsetString);
   }
 
-  // Step 8.
+  // Step 11.
   EpochNanoseconds epochNanoseconds;
   if (!InterpretISODateTimeOffset(
           cx, dateTime, offsetBehaviour, offsetNanoseconds, timeZone,
@@ -361,7 +362,7 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<JSObject*> item,
   }
   MOZ_ASSERT(IsValidEpochNanoseconds(epochNanoseconds));
 
-  // Step 9.
+  // Step 12.
   result.set(ZonedDateTime{epochNanoseconds, timeZone, calendar});
   return true;
 }
@@ -374,11 +375,7 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
                                     MutableHandle<ZonedDateTime> result) {
   // Step 1. (Not applicable in our implementation.)
 
-  // Step 2.
-  auto offsetBehaviour = OffsetBehaviour::Option;
-
-  // Step 3.
-  auto matchBehaviour = MatchBehaviour::MatchExactly;
+  // Steps 2-3. (Not applicable)
 
   // Step 4.
   if (item.isObject()) {
@@ -430,16 +427,9 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
   // Step 5.f. (Not applicable in our implementation.)
 
   // Step 5.g.
-  if (parsed.timeZone().constructed<UTCTimeZone>()) {
-    offsetBehaviour = OffsetBehaviour::Exact;
-  }
+  bool hasUTCDesignator = parsed.timeZone().constructed<UTCTimeZone>();
 
-  // Step 5.h.
-  else if (parsed.timeZone().empty()) {
-    offsetBehaviour = OffsetBehaviour::Wall;
-  }
-
-  // Steps 5.i-k.
+  // Steps 5.h-i.
   Rooted<CalendarValue> calendar(cx, CalendarValue(CalendarId::ISO8601));
   if (parsed.calendar()) {
     if (!CanonicalizeCalendar(cx, parsed.calendar(), &calendar)) {
@@ -447,37 +437,42 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
     }
   }
 
-  // Step 5.l.
-  matchBehaviour = MatchBehaviour::MatchMinutes;
+  // Step 5.k.
+  auto matchBehaviour = MatchBehaviour::MatchMinutes;
 
-  // Step 5.m.
+  // Step 5.l.
   if (parsed.timeZone().constructed<OffsetTimeZone>()) {
-    // Steps 5.m.i-iii.
+    // Steps 5.l.i-iii.
     if (parsed.timeZone().ref<OffsetTimeZone>().hasSubMinutePrecision) {
       matchBehaviour = MatchBehaviour::MatchExactly;
     }
   }
 
-  // Steps 5.n-q.
+  // Steps 5.m-p.
   ZonedDateTimeOptions resolvedOptions;
   if (!ToTemporalZonedDateTimeOptions(cx, options, &resolvedOptions)) {
     return false;
   }
   auto [disambiguation, offsetOption, overflow] = resolvedOptions;
 
-  // Steps 5.r-s.
+  // Steps 5.q-r.
   const auto& isoDateTime = parsed.dateTime();
 
-  // Step 6.
+  // Steps 6-8.
+  auto offsetBehaviour = hasUTCDesignator            ? OffsetBehaviour::Exact
+                         : parsed.timeZone().empty() ? OffsetBehaviour::Wall
+                                                     : OffsetBehaviour::Option;
+
+  // Step 9.
   int64_t offsetNanoseconds = 0;
 
-  // Step 7.
+  // Step 10.
   if (offsetBehaviour == OffsetBehaviour::Option) {
     MOZ_ASSERT(parsed.timeZone().constructed<OffsetTimeZone>());
     offsetNanoseconds = parsed.timeZone().ref<OffsetTimeZone>().offset;
   }
 
-  // Step 8.
+  // Step 11.
   EpochNanoseconds epochNanoseconds;
   if (parsed.isStartOfDay()) {
     if (!InterpretISODateTimeOffset(
@@ -494,7 +489,7 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
   }
   MOZ_ASSERT(IsValidEpochNanoseconds(epochNanoseconds));
 
-  // Step 9.
+  // Step 12.
   result.set(ZonedDateTime{epochNanoseconds, timeZone, calendar});
   return true;
 }
