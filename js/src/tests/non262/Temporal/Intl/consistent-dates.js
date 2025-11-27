@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-temporal) skip-if(!this.hasOwnProperty("Temporal")||!this.hasOwnProperty("Intl"))
+// |reftest| skip-if(!this.hasOwnProperty("Temporal")||!this.hasOwnProperty("Intl"))
 
 // Ensure Intl.DateTimeFormat and Temporal return consistent year-month-day values
 // for reasonable dates.
