@@ -176,7 +176,7 @@ partial interface Document {
   boolean queryCommandIndeterm(DOMString commandId);
   [Throws]
   boolean queryCommandState(DOMString commandId);
-  [Throws, NeedsCallerType]
+  [Throws, NeedsSubjectPrincipal]
   boolean queryCommandSupported(DOMString commandId);
   [Throws]
   DOMString queryCommandValue(DOMString commandId);

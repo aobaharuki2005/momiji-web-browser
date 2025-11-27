@@ -5988,13 +5988,16 @@ bool Document::QueryCommandEnabled(const nsAString& aHTMLCommandName,
       break;
   }
 
-  // cut & copy are always allowed
+  // Report false for restricted commands
   if (commandData.IsCutOrCopyCommand()) {
+    // XXX: should we report "disabled" when the target is not editable for cut
+    // command?
     return nsContentUtils::IsCutCopyAllowed(this, aSubjectPrincipal);
   }
 
-  // Report false for restricted commands
-  if (commandData.IsPasteCommand() && !aSubjectPrincipal.IsSystemPrincipal()) {
+  if (commandData.IsPasteCommand() &&
+      !nsContentUtils::PrincipalHasPermission(aSubjectPrincipal,
+                                              nsGkAtoms::clipboardRead)) {
     return false;
   }
 
@@ -6182,7 +6185,7 @@ bool Document::QueryCommandState(const nsAString& aHTMLCommandName,
 }
 
 bool Document::QueryCommandSupported(const nsAString& aHTMLCommandName,
-                                     CallerType aCallerType, ErrorResult& aRv) {
+                                     nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) {
   // Only allow on HTML documents.
   if (!IsHTMLOrXHTML()) {
     aRv.ThrowInvalidStateError(
@@ -6213,17 +6216,15 @@ bool Document::QueryCommandSupported(const nsAString& aHTMLCommandName,
   // may also be disallowed to be called from non-privileged content.
   // For that reason, we report the support status of corresponding
   // command accordingly.
-  if (aCallerType != CallerType::System) {
-    if (commandData.IsPasteCommand()) {
-      return false;
-    }
-    if (commandData.IsCutOrCopyCommand() &&
-        !StaticPrefs::dom_allow_cut_copy()) {
-      // XXXbz should we worry about correctly reporting "true" in the
-      // "restricted, but we're an addon with clipboardWrite permissions" case?
-      // See also nsContentUtils::IsCutCopyAllowed.
-      return false;
-    }
+  if (commandData.IsPasteCommand() &&
+      !nsContentUtils::PrincipalHasPermission(aSubjectPrincipal,
+                                              nsGkAtoms::clipboardRead)) {
+    return false;
+  }
+  if (commandData.IsCutOrCopyCommand() && !StaticPrefs::dom_allow_cut_copy() &&
+      !nsContentUtils::PrincipalHasPermission(aSubjectPrincipal,
+                                              nsGkAtoms::clipboardWrite)) {
+    return false;
   }
 
   // aHTMLCommandName is supported if it can be converted to a Midas command

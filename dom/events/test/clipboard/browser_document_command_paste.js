@@ -159,13 +159,14 @@ describe("test paste comment", () => {
         await BrowserTestUtils.withNewTab(kContentFileUrl, async browser => {
           let [supported, enabled, succeed] =
             await extension.awaitMessage("ready");
-          // XXX: should "paste" command be supported if extension has
-          // clipboardRead permission?
-          ok(!supported, "Check if the 'paste' command is supported");
-          // XXX: should "paste" command be enabled if extension has
-          // clipboardRead permission?
-          ok(
-            !enabled,
+          is(
+            supported,
+            aPermission,
+            "Check if the 'paste' command is supported"
+          );
+          is(
+            enabled,
+            aPermission,
             "Check if the 'paste' command is enabled without user activation"
           );
           is(
@@ -178,10 +179,9 @@ describe("test paste comment", () => {
           promiseClickContentElement(browser, "btn");
           [supported, enabled, succeed] =
             await extension.awaitMessage("result");
-          // XXX: should "paste" command be enabled if extension has
-          // clipboardRead permission?
-          ok(
-            !enabled,
+          is(
+            enabled,
+            aPermission,
             "Check if the 'paste' command is enabled with user activation"
           );
           is(
@@ -235,13 +235,14 @@ describe("test paste comment", () => {
         await BrowserTestUtils.withNewTab(kContentFileUrl, async browser => {
           let [supported, enabled, succeed] =
             await extension.awaitMessage("ready");
-          // XXX: should "paste" command be supported if extension has
-          // clipboardRead permission?
-          ok(!supported, "Check if the 'paste' command is supported");
-          // XXX: should "paste" command be enabled if extension has
-          // clipboardRead permission?
-          ok(
-            !enabled,
+          is(
+            supported,
+            aPermission,
+            "Check if the 'paste' command is supported"
+          );
+          is(
+            enabled,
+            aPermission,
             "Check if the 'paste' command is enabled without user activation"
           );
           is(
@@ -254,10 +255,9 @@ describe("test paste comment", () => {
           promiseClickContentElement(browser, "btn");
           [supported, enabled, succeed] =
             await extension.awaitMessage("result");
-          // XXX: should "paste" command be enabled if extension has
-          // clipboardRead permission?
-          ok(
-            !enabled,
+          is(
+            enabled,
+            aPermission,
             "Check if the 'paste' command is enabled with user activation"
           );
           is(
@@ -288,12 +288,12 @@ describe("test paste comment", () => {
         await BrowserTestUtils.withNewTab(kContentFileUrl, async browser => {
           let [supported, enabled, succeed] =
             await extension.awaitMessage("ready");
-          // XXX: should "paste" command be supported if extension has
-          // clipboardRead permission?
-          ok(!supported, "Check if the 'paste' command is supported");
-          // XXX: should "paste" command be enabled if extension has
-          // clipboardRead permission?
-          ok(!enabled, "Check if the 'paste' command is enabled");
+          is(
+            supported,
+            aPermission,
+            "Check if the 'paste' command is supported"
+          );
+          is(enabled, aPermission, "Check if the 'paste' command is enabled");
           is(succeed, aPermission, "Check if the 'paste' command is succeed");
         });
         await extension.unload();

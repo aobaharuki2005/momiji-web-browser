@@ -165,11 +165,9 @@ const kContentFileUrl = kBaseUrlForContent + "simple_page_ext.html";
           await BrowserTestUtils.withNewTab(kContentFileUrl, async browser => {
             let [supported, enabled, succeed] =
               await extension.awaitMessage("ready");
-            // XXX: should "copy" command be supported if extension has
-            // clipboardWrite permission?
             is(
               supported,
-              aPrefValue,
+              aPrefValue || aPermission,
               "Check if the 'copy' command is supported"
             );
             is(
@@ -246,11 +244,9 @@ const kContentFileUrl = kBaseUrlForContent + "simple_page_ext.html";
           await BrowserTestUtils.withNewTab(kContentFileUrl, async browser => {
             let [supported, enabled, succeed] =
               await extension.awaitMessage("ready");
-            // XXX: should "copy" command be supported if extension has
-            // clipboardWrite permission?
             is(
               supported,
-              aPrefValue,
+              aPrefValue || aPermission,
               "Check if the 'copy' command is supported"
             );
             is(
@@ -301,11 +297,9 @@ const kContentFileUrl = kBaseUrlForContent + "simple_page_ext.html";
           await BrowserTestUtils.withNewTab(kContentFileUrl, async browser => {
             let [supported, enabled, succeed] =
               await extension.awaitMessage("ready");
-            // XXX: should "copy" command be supported if extension has
-            // clipboardWrite permission.
             is(
               supported,
-              aPrefValue,
+              aPrefValue || aPermission,
               "Check if the 'copy' command is supported"
             );
             is(enabled, aPermission, "Check if the 'copy' command is enabled");

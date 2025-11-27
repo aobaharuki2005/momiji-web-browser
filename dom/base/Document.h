@@ -3549,7 +3549,7 @@ class Document : public nsINode,
   MOZ_CAN_RUN_SCRIPT bool QueryCommandState(const nsAString& aHTMLCommandName,
                                             mozilla::ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT bool QueryCommandSupported(
-      const nsAString& aHTMLCommandName, mozilla::dom::CallerType aCallerType,
+      const nsAString& aHTMLCommandName, nsIPrincipal& aSubjectPrincipal,
       mozilla::ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void QueryCommandValue(const nsAString& aHTMLCommandName,
                                             nsAString& aValue,
