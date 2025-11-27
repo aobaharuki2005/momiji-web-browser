@@ -14,6 +14,7 @@ use std::{
     io::Error,
     os::windows::io::{AsRawHandle, FromRawHandle, IntoRawHandle, OwnedHandle, RawHandle},
     ptr::null_mut,
+    rc::Rc,
     str::FromStr,
     time::{Duration, Instant},
 };
@@ -68,7 +69,7 @@ fn extract_buffer_and_handle(buffer: Vec<u8>) -> Result<(Vec<u8>, Option<OwnedHa
 
 pub struct IPCConnector {
     /// A connected pipe handle
-    handle: OwnedHandle,
+    handle: Rc<OwnedHandle>,
     /// A handle to an event which will be used for overlapped I/O on the pipe
     event: OwnedHandle,
     /// Stores the only pending operation we might have on the pipe
@@ -83,7 +84,7 @@ impl IPCConnector {
         let event = create_manual_reset_event()?;
 
         Ok(IPCConnector {
-            handle,
+            handle: Rc::new(handle),
             event,
             overlapped: None,
             process: None,
@@ -205,11 +206,11 @@ impl IPCConnector {
     }
 
     pub fn into_ancillary(self) -> AncillaryData {
-        self.handle
+        Rc::try_unwrap(self.handle).expect("Multiple references to the underlying handle")
     }
 
     pub fn into_raw_ancillary(self) -> RawAncillaryData {
-        self.handle.into_raw()
+        self.into_ancillary().into_raw()
     }
 
     pub fn send_message<T>(&self, message: T) -> Result<(), IPCError>
@@ -252,9 +253,7 @@ impl IPCConnector {
         }
 
         self.overlapped = Some(OverlappedOperation::sched_recv(
-            self.handle
-                .try_clone()
-                .map_err(IPCError::CloneHandleFailed)?,
+            &self.handle,
             self.event_raw_handle(),
             HANDLE_SIZE + messages::HEADER_SIZE,
         )?);
@@ -281,21 +280,14 @@ impl IPCConnector {
         buffer.extend(handle.to_ne_bytes());
         buffer.extend(buff);
 
-        let overlapped = OverlappedOperation::sched_send(
-            self.handle
-                .try_clone()
-                .map_err(IPCError::CloneHandleFailed)?,
-            self.event_raw_handle(),
-            buffer,
-        )?;
+        let overlapped =
+            OverlappedOperation::sched_send(&self.handle, self.event_raw_handle(), buffer)?;
         overlapped.complete_send(/* wait */ true)
     }
 
     pub fn recv(&self, expected_size: usize) -> Result<(Vec<u8>, Option<AncillaryData>), IPCError> {
         let overlapped = OverlappedOperation::sched_recv(
-            self.handle
-                .try_clone()
-                .map_err(IPCError::CloneHandleFailed)?,
+            &self.handle,
             self.event_raw_handle(),
             HANDLE_SIZE + expected_size,
         )?;
