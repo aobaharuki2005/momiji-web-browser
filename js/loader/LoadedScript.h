@@ -407,7 +407,10 @@ class LoadedScript : public nsIMemoryReporter {
   //   * this is cached in SharedScriptCache
   //   * A behavior around the network request is modified, and
   //     the cache needs validation on the necko side
-  bool mIsDirty : 1;
+  //
+  // NOTE: In order to pack this with the mCacheEntryId above on windows,
+  //       this must be uint64_t.
+  uint64_t mIsDirty : 1;
 
   RefPtr<ScriptFetchOptions> mFetchOptions;
   nsCOMPtr<nsIURI> mURI;
