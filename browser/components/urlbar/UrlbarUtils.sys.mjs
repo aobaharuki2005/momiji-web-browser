@@ -160,6 +160,7 @@ export var UrlbarUtils = {
     SEARCH_GLASS: "chrome://global/skin/icons/search-glass.svg",
     TRENDING: "chrome://global/skin/icons/trending.svg",
     TIP: "chrome://global/skin/icons/lightbulb.svg",
+    GLOBE: "chrome://global/skin/icons/defaultFavicon.svg",
   },
 
   // The number of results by which Page Up/Down move the selection.

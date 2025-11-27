@@ -761,6 +761,12 @@ urlbar-searchmode-button2 =
 urlbar-searchmode-button-no-engine =
     .label = No shortcut selected, pick a shortcut
     .tooltiptext = No shortcut selected, pick a shortcut
+
+# Refers to the ability to search using keywords in the address bar
+urlbar-searchmode-no-keyword =
+    .label = Keyword search is disabled
+    .tooltiptext = Keyword search is disabled
+
 urlbar-searchmode-dropmarker =
     .tooltiptext = Pick a Search Engine
 urlbar-searchmode-bookmarks =

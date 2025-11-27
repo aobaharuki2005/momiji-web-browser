@@ -35,6 +35,7 @@ const DEFAULT_ENGINE_ICON =
  */
 export class SearchModeSwitcher {
   static DEFAULT_ICON = lazy.UrlbarUtils.ICON.SEARCH_GLASS;
+  static DEFAULT_ICON_KEYWORD_DISABLED = lazy.UrlbarUtils.ICON.GLOBE;
   #popup;
   #input;
   #toolbarbutton;
@@ -287,7 +288,7 @@ export class SearchModeSwitcher {
     if (!lazy.UrlbarPrefs.get("unifiedSearchButton.always")) {
       const keywordEnabled = lazy.UrlbarPrefs.get("keyword.enabled");
       if (!keywordEnabled && !inSearchMode) {
-        icon = SearchModeSwitcher.DEFAULT_ICON;
+        icon = SearchModeSwitcher.DEFAULT_ICON_KEYWORD_DISABLED;
       }
     } else if (!inSearchMode) {
       // Use default icon set in CSS.
@@ -321,6 +322,14 @@ export class SearchModeSwitcher {
       labelEl.replaceChildren();
     } else {
       labelEl.textContent = label;
+    }
+
+    // If keyword.enabled is true, then the tooltip is already set.
+    if (!lazy.UrlbarPrefs.get("keyword.enabled")) {
+      this.#input.document.l10n.setAttributes(
+        this.#toolbarbutton,
+        "urlbar-searchmode-no-keyword"
+      );
     }
   }
 
