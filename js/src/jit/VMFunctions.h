@@ -733,8 +733,6 @@ void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
 
 void AssertPropertyLookup(NativeObject* obj, PropertyKey id, uint32_t slot);
 
-void ReadBarrier(gc::Cell* cell);
-
 // Functions used when JS_MASM_VERBOSE is enabled.
 void AssumeUnreachable(const char* output);
 void Printf0(const char* output);

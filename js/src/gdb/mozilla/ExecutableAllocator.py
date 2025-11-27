@@ -58,9 +58,7 @@ class jsjitExecutableAllocator:
             self.table = allocator.value["m_pools"]["mImpl"]["mTable"]
             self.index = 0
             kHashNumberBits = 32
-            hashShiftMask = 0xFF
-            genAndHashShift = allocator.value["m_pools"]["mImpl"]["mGenAndHashShift"]
-            hashShift = genAndHashShift & hashShiftMask
+            hashShift = allocator.value["m_pools"]["mImpl"]["mHashShift"]
             self.capacity = 1 << (kHashNumberBits - hashShift)
             if self.table == 0:
                 self.capacity = 0

@@ -81,7 +81,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
@@ -425,13 +424,6 @@ class MOZ_STANDALONE_DEBUG HashMap {
   using Range = typename Impl::Range;
   using Enum = typename Impl::Enum;
   Range all() const { return mImpl.all(); }
-
-  static size_t offsetOfHashShift() {
-    return offsetof(HashMap, mImpl) + Impl::offsetOfHashShift();
-  }
-  static size_t offsetOfTable() {
-    return offsetof(HashMap, mImpl) + Impl::offsetOfTable();
-  }
 };
 
 //---------------------------------------------------------------------------
@@ -983,19 +975,12 @@ class HashMapEntry {
   const Value& value() const { return value_; }
   Value& value() { return value_; }
 
-  static size_t offsetOfKey() { return offsetof(HashMapEntry, key_); }
-  static size_t offsetOfValue() { return offsetof(HashMapEntry, value_); }
-
  private:
   HashMapEntry(const HashMapEntry&) = delete;
   void operator=(const HashMapEntry&) = delete;
 };
 
 namespace detail {
-
-static const HashNumber kHashTableFreeKey = 0;
-static const HashNumber kHashTableRemovedKey = 1;
-static const HashNumber kHashTableCollisionBit = 1;
 
 template <class T, class HashPolicy, class AllocPolicy>
 class HashTable;
@@ -1072,9 +1057,9 @@ class HashTableEntry {
                 "subsequent N*2 T values must not require more than an even "
                 "number of HashNumbers provides");
 
-  static const HashNumber sFreeKey = kHashTableFreeKey;
-  static const HashNumber sRemovedKey = kHashTableRemovedKey;
-  static const HashNumber sCollisionBit = kHashTableCollisionBit;
+  static const HashNumber sFreeKey = 0;
+  static const HashNumber sRemovedKey = 1;
+  static const HashNumber sCollisionBit = 1;
 
   alignas(NonConstT) unsigned char mValueData[sizeof(NonConstT)];
 
@@ -1517,7 +1502,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     // memory to be minimised after removing entries they should call compact().
     ~ModIterator() {
       if (mRekeyed) {
-        mTable.incrementGeneration();
+        mTable.mGen++;
         mTable.infallibleRehashIfOverloaded();
       }
 
@@ -1593,7 +1578,16 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     ReentrancyGuard g1(*this);
     ReentrancyGuard g2(aOther);
 
-    std::swap(mGenAndHashShift, aOther.mGenAndHashShift);
+    // Manual swap of generation because it's a bitfield
+    uint64_t generation = mGen;
+    mGen = aOther.mGen;
+    aOther.mGen = generation;
+
+    // Manual swap of hashShift because it's a bitfield
+    uint64_t hashShift = mHashShift;
+    mHashShift = aOther.mHashShift;
+    aOther.mHashShift = hashShift;
+
     std::swap(mTable, aOther.mTable);
     std::swap(mEntryCount, aOther.mEntryCount);
     std::swap(mRemovedCount, aOther.mRemovedCount);
@@ -1605,7 +1599,8 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
 
  private:
   void moveFrom(HashTable& aRhs) {
-    mGenAndHashShift = aRhs.mGenAndHashShift;
+    mGen = aRhs.mGen;
+    mHashShift = aRhs.mHashShift;
     mTable = aRhs.mTable;
     mEntryCount = aRhs.mEntryCount;
     mRemovedCount = aRhs.mRemovedCount;
@@ -1624,11 +1619,11 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
   static const uint32_t CAP_BITS = 30;
 
  public:
-  uint64_t mGenAndHashShift;  // entry storage generation number (56 bits)
-                              // and multiplicative hash shift (8 bits)
-  char* mTable;               // entry storage
-  uint32_t mEntryCount;       // number of entries in mTable
-  uint32_t mRemovedCount;     // removed entry sentinels in mTable
+  uint64_t mGen : 56;       // entry storage generation number
+  uint64_t mHashShift : 8;  // multiplicative hash shift
+  char* mTable;             // entry storage
+  uint32_t mEntryCount;     // number of entries in mTable
+  uint32_t mRemovedCount;   // removed entry sentinels in mTable
 
 #ifdef DEBUG
   uint64_t mMutationCount;
@@ -1654,29 +1649,6 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
   static const HashNumber sRemovedKey = Entry::sRemovedKey;
   static const HashNumber sCollisionBit = Entry::sCollisionBit;
 
-  static const uint64_t sHashShiftBits = 8;
-  static const uint64_t sHashShiftMask = (1 << sHashShiftBits) - 1;
-  static const uint64_t sGenerationShift = sHashShiftBits;
-
-  MOZ_ALWAYS_INLINE uint8_t hashShift() const {
-    return uint8_t(mGenAndHashShift & sHashShiftMask);
-  }
-  MOZ_ALWAYS_INLINE uint64_t gen() const {
-    return mGenAndHashShift >> sGenerationShift;
-  }
-
- private:
-  void setGenAndHashShift(uint64_t aGeneration, uint8_t aHashShift) {
-    mGenAndHashShift = aGeneration << sGenerationShift | aHashShift;
-  }
-
- public:
-  void incrementGeneration() { setGenAndHashShift(gen() + 1, hashShift()); }
-  void setHashShift(uint32_t aHashShift) {
-    MOZ_ASSERT((aHashShift & sHashShiftMask) == aHashShift);
-    mGenAndHashShift = (mGenAndHashShift & ~sHashShiftMask) | aHashShift;
-  }
-
   static uint32_t bestCapacity(uint32_t aLen) {
     static_assert(
         (sMaxInit * sAlphaDenominator) / sAlphaDenominator == sMaxInit,
@@ -1701,7 +1673,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     return capacity;
   }
 
-  static uint32_t hashShiftForLength(uint32_t aLen) {
+  static uint32_t hashShift(uint32_t aLen) {
     // Reject all lengths whose initial computed capacity would exceed
     // sMaxCapacity. Round that maximum aLen down to the nearest power of two
     // for speedier code.
@@ -1771,7 +1743,8 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
  public:
   HashTable(AllocPolicy aAllocPolicy, uint32_t aLen)
       : AllocPolicy(std::move(aAllocPolicy)),
-        mGenAndHashShift(hashShiftForLength(aLen)),
+        mGen(0),
+        mHashShift(hashShift(aLen)),
         mTable(nullptr),
         mEntryCount(0),
         mRemovedCount(0)
@@ -1793,7 +1766,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
   }
 
  private:
-  HashNumber hash1(HashNumber aHash0) const { return aHash0 >> hashShift(); }
+  HashNumber hash1(HashNumber aHash0) const { return aHash0 >> mHashShift; }
 
   struct DoubleHash {
     HashNumber mHash2;
@@ -1801,8 +1774,8 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
   };
 
   DoubleHash hash2(HashNumber aCurKeyHash) const {
-    uint32_t sizeLog2 = kHashNumberBits - hashShift();
-    DoubleHash dh = {((aCurKeyHash << sizeLog2) >> hashShift()) | 1,
+    uint32_t sizeLog2 = kHashNumberBits - mHashShift;
+    DoubleHash dh = {((aCurKeyHash << sizeLog2) >> mHashShift) | 1,
                      (HashNumber(1) << sizeLog2) - 1};
     return dh;
   }
@@ -1933,9 +1906,9 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     }
 
     // We can't fail from here on, so update table parameters.
+    mHashShift = kHashNumberBits - newLog2;
     mRemovedCount = 0;
-    incrementGeneration();
-    setHashShift(kHashNumberBits - newLog2);
+    mGen++;
     mTable = newTable;
 
     // Copy only live entries, leaving removed ones behind.
@@ -2017,7 +1990,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
   // would have gotten through random insertion order.
   void rehashTableInPlace() {
     mRemovedCount = 0;
-    incrementGeneration();
+    mGen++;
     forEachSlot(mTable, capacity(), [&](Slot& slot) { slot.unsetCollision(); });
     for (uint32_t i = 0; i < capacity();) {
       Slot src = slotForIndex(i);
@@ -2090,9 +2063,8 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     if (empty()) {
       // Free the entry storage.
       freeTable(*this, mTable, capacity());
-      incrementGeneration();
-      setHashShift(
-          hashShiftForLength(0));  // gives minimum capacity on regrowth
+      mGen++;
+      mHashShift = hashShift(0);  // gives minimum capacity on regrowth
       mTable = nullptr;
       mRemovedCount = 0;
       return;
@@ -2143,11 +2115,11 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
 
   uint32_t count() const { return mEntryCount; }
 
-  uint32_t rawCapacity() const { return 1u << (kHashNumberBits - hashShift()); }
+  uint32_t rawCapacity() const { return 1u << (kHashNumberBits - mHashShift); }
 
   uint32_t capacity() const { return mTable ? rawCapacity() : 0; }
 
-  Generation generation() const { return Generation(gen()); }
+  Generation generation() const { return Generation(mGen); }
 
   size_t shallowSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(mTable);
@@ -2342,23 +2314,6 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     rekeyWithoutRehash(aPtr, aLookup, aKey);
     infallibleRehashIfOverloaded();
   }
-
-  static size_t offsetOfHashShift() {
-    static_assert(sHashShiftBits == 8,
-                  "callers assume hash shift is stored in a byte");
-    // The hash shift is stored in the least significant bits of
-    // mGenAndHashShift. On little-endian platforms, this is the
-    // same offset as mGenAndHashShift itself. On big-endian platforms,
-    // we have to add an additional offset to point to the last byte.
-    // (Or we would if we had JIT support for any big-endian platforms.)
-#if MOZ_BIG_ENDIAN()
-    return offsetof(HashTable, mGenAndHashShift) + sizeof(mGenAndHashShift) -
-           sizeof(uint8_t);
-#else
-    return offsetof(HashTable, mGenAndHashShift);
-#endif
-  }
-  static size_t offsetOfTable() { return offsetof(HashTable, mTable); }
 };
 
 }  // namespace detail

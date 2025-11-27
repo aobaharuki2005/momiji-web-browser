@@ -3319,27 +3319,6 @@ void AssertPropertyLookup(NativeObject* obj, PropertyKey id, uint32_t slot) {
 #endif
 }
 
-// This is a specialized version of ExposeJSThingToActiveJS
-void ReadBarrier(gc::Cell* cell) {
-  AutoUnsafeCallWithABI unsafe;
-
-  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
-  MOZ_ASSERT(!gc::IsInsideNursery(cell));
-
-  gc::TenuredCell* tenured = &cell->asTenured();
-  MOZ_ASSERT(!gc::detail::TenuredCellIsMarkedBlack(tenured));
-
-  Zone* zone = tenured->zone();
-  if (zone->needsIncrementalBarrier()) {
-    gc::PerformIncrementalReadBarrier(tenured);
-  } else if (!zone->isGCPreparing() &&
-             gc::detail::NonBlackCellIsMarkedGray(tenured)) {
-    gc::UnmarkGrayGCThingRecursively(tenured);
-  }
-  MOZ_ASSERT_IF(!zone->isGCPreparing(),
-                !gc::detail::TenuredCellIsMarkedGray(tenured));
-}
-
 void AssumeUnreachable(const char* output) {
   MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }

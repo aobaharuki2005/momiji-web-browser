@@ -8067,59 +8067,12 @@ void MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
   append(desc, offset);
 }
 
-// Given a cell and the chunk containing that cell, load the word containing
-// the mark bits for that cell, and compute the bitIndex for a particular mark
-// color.
-void MacroAssembler::loadMarkBits(Register cell, Register chunk,
-                                  Register markWord, Register bitIndex,
-                                  Register temp, gc::ColorBit color) {
-  MOZ_ASSERT(temp != bitIndex);
-  MOZ_ASSERT(temp != chunk);
-  MOZ_ASSERT(chunk != bitIndex);
-
-  // Determine the bit index and store in bitIndex.
-  //
-  // bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
-  //        static_cast<uint32_t>(colorBit);
-  static_assert(gc::CellBytesPerMarkBit == 8,
-                "Calculation below relies on this");
-  andPtr(Imm32(gc::ChunkMask), cell, bitIndex);
-  rshiftPtr(Imm32(3), bitIndex);
-  if (int32_t(color) != 0) {
-    addPtr(Imm32(int32_t(color)), bitIndex);
-  }
-
-  static_assert(gc::ChunkMarkBitmap::BitsPerWord == JS_BITS_PER_WORD,
-                "Calculation below relies on this");
-
-  // Load the mark word
-  //
-  // word = chunk.bitmap[bit / WordBits];
-
-  // Fold the adjustment for the fact that arenas don't start at the beginning
-  // of the chunk into the offset to the chunk bitmap.
-  const size_t firstArenaAdjustment =
-      gc::ChunkMarkBitmap::FirstThingAdjustmentBits / CHAR_BIT;
-  const intptr_t offset =
-      intptr_t(gc::ChunkMarkBitmapOffset) - intptr_t(firstArenaAdjustment);
-
-  uint8_t shift = mozilla::FloorLog2Size(JS_BITS_PER_WORD);
-  rshiftPtr(Imm32(shift), bitIndex, temp);
-  loadPtr(BaseIndex(chunk, temp, ScalePointer, offset), markWord);
-}
-
-void MacroAssembler::emitPreBarrierFastPath(MIRType type, Register temp1,
-                                            Register temp2, Register temp3,
-                                            Label* noBarrier) {
+void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
+                                            Register temp1, Register temp2,
+                                            Register temp3, Label* noBarrier) {
   MOZ_ASSERT(temp1 != PreBarrierReg);
   MOZ_ASSERT(temp2 != PreBarrierReg);
   MOZ_ASSERT(temp3 != PreBarrierReg);
-
-#ifdef JS_CODEGEN_X64
-  MOZ_ASSERT(temp3 == rcx);
-#elif JS_CODEGEN_X86
-  MOZ_ASSERT(temp3 == ecx);
-#endif
 
   // Load the GC thing in temp1.
   if (type == MIRType::Value) {
@@ -8158,76 +8111,71 @@ void MacroAssembler::emitPreBarrierFastPath(MIRType type, Register temp1,
 #endif
   }
 
-  // Check if the cell is marked black.
-  // Load the bitindex into temp3 and the bitmap word into temp2.
-  loadMarkBits(temp1, temp2, temp2, temp3, temp1, gc::ColorBit::BlackBit);
+  // Determine the bit index and store in temp1.
+  //
+  // bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
+  //        static_cast<uint32_t>(colorBit);
+  static_assert(gc::CellBytesPerMarkBit == 8,
+                "Calculation below relies on this");
+  static_assert(size_t(gc::ColorBit::BlackBit) == 0,
+                "Calculation below relies on this");
+  andPtr(Imm32(gc::ChunkMask), temp1);
+  rshiftPtr(Imm32(3), temp1);
+
+  static_assert(gc::ChunkMarkBitmap::BitsPerWord == JS_BITS_PER_WORD,
+                "Calculation below relies on this");
+
+  // Load the bitmap word in temp2.
+  //
+  // word = chunk.bitmap[bit / WordBits];
+
+  // Fold the adjustment for the fact that arenas don't start at the beginning
+  // of the chunk into the offset to the chunk bitmap.
+  const size_t firstArenaAdjustment =
+      gc::ChunkMarkBitmap::FirstThingAdjustmentBits / CHAR_BIT;
+  const intptr_t offset =
+      intptr_t(gc::ChunkMarkBitmapOffset) - intptr_t(firstArenaAdjustment);
+
+  movePtr(temp1, temp3);
+#if JS_BITS_PER_WORD == 64
+  rshiftPtr(Imm32(6), temp1);
+  loadPtr(BaseIndex(temp2, temp1, TimesEight, offset), temp2);
+#else
+  rshiftPtr(Imm32(5), temp1);
+  loadPtr(BaseIndex(temp2, temp1, TimesFour, offset), temp2);
+#endif
 
   // Load the mask in temp1.
+  //
   // mask = uintptr_t(1) << (bit % WordBits);
   andPtr(Imm32(gc::ChunkMarkBitmap::BitsPerWord - 1), temp3);
   move32(Imm32(1), temp1);
-  lshiftPtr(temp3, temp1);
+#ifdef JS_CODEGEN_X64
+  MOZ_ASSERT(temp3 == rcx);
+  shlq_cl(temp1);
+#elif JS_CODEGEN_X86
+  MOZ_ASSERT(temp3 == ecx);
+  shll_cl(temp1);
+#elif JS_CODEGEN_ARM
+  ma_lsl(temp3, temp1, temp1);
+#elif JS_CODEGEN_ARM64
+  Lsl(ARMRegister(temp1, 64), ARMRegister(temp1, 64), ARMRegister(temp3, 64));
+#elif JS_CODEGEN_MIPS64
+  ma_dsll(temp1, temp1, temp3);
+#elif JS_CODEGEN_LOONG64
+  as_sll_d(temp1, temp1, temp3);
+#elif JS_CODEGEN_RISCV64
+  sll(temp1, temp1, temp3);
+#elif JS_CODEGEN_WASM32
+  MOZ_CRASH();
+#elif JS_CODEGEN_NONE
+  MOZ_CRASH();
+#else
+#  error "Unknown architecture"
+#endif
 
   // No barrier is needed if the bit is set, |word & mask != 0|.
   branchTestPtr(Assembler::NonZero, temp2, temp1, noBarrier);
-}
-
-void MacroAssembler::emitValueReadBarrierFastPath(
-    ValueOperand value, Register cell, Register temp1, Register temp2,
-    Register temp3, Register temp4, Label* barrier) {
-  Label done;
-
-  // No barrier needed for non-GC types
-  branchTestGCThing(Assembler::NotEqual, value, &done);
-
-  // Load the GC thing in `cell`.
-  unboxGCThingForGCBarrier(value, cell);
-
-  // Load the chunk address.
-  Register chunk = temp1;
-  andPtr(Imm32(int32_t(~gc::ChunkMask)), cell, chunk);
-
-  // If the GC thing is in the nursery, we don't need to barrier it.
-  branchPtr(Assembler::NotEqual, Address(chunk, gc::ChunkStoreBufferOffset),
-            ImmWord(0), &done);
-
-  // Load the mark word and bit index for the black bit.
-  Register markWord = temp2;
-  Register bitIndex = temp3;
-  loadMarkBits(cell, chunk, markWord, bitIndex, temp4, gc::ColorBit::BlackBit);
-
-  // The mask for the black bit is 1 << (bitIndex % WordBits).
-  Register mask = temp4;
-  andPtr(Imm32(gc::ChunkMarkBitmap::BitsPerWord - 1), bitIndex);
-  move32(Imm32(1), mask);
-  flexibleLshiftPtr(bitIndex, mask);
-
-  // No barrier is needed if the black bit is set.
-  branchTestPtr(Assembler::NonZero, markWord, mask, &done);
-
-  // The bit index for the gray bit is bitIndex + 1. If the black bit
-  // is any bit except the highest bit of the mark word, we can reuse
-  // the mark word we've already loaded, and simply shift the mask by
-  // 1.
-  Label noMaskOverflow;
-  lshiftPtr(Imm32(1), mask);
-  branchTestPtr(Assembler::NonZero, mask, mask, &noMaskOverflow);
-
-  // If the black bit was the high bit of the mark word, we need to load
-  // a new mark word. In this case the mask for the gray bit will always
-  // be 1 (the lowest bit of the next word).
-  loadMarkBits(cell, chunk, markWord, bitIndex, temp4,
-               gc::ColorBit::GrayOrBlackBit);
-  move32(Imm32(1), mask);
-  bind(&noMaskOverflow);
-
-  // If the gray bit is set, then we *do* need a barrier.
-  branchTestPtr(Assembler::NonZero, markWord, mask, barrier);
-
-  // Otherwise, we don't need a barrier unless we're in the middle of
-  // an incremental GC.
-  branchTestNeedsIncrementalBarrierAnyZone(Assembler::NonZero, barrier, temp1);
-  bind(&done);
 }
 
 // ========================================================================
@@ -9988,13 +9936,17 @@ void MacroAssembler::scrambleHashCode(Register result) {
   mul32(Imm32(mozilla::kGoldenRatioU32), result);
 }
 
-void MacroAssembler::hashAndScrambleValue(ValueOperand value, Register result,
-                                          Register temp) {
-  // Inline implementation of:
-  // mozilla::ScrambleHashCode(mozilla::HashGeneric(v.asRawBits()))
-  // Note that this uses the raw bits, which will change if a GC thing moves.
-  // This function should only be used for non-GC things, or in cases where
-  // moving GC things are handled specially (eg WeakMapObject).
+void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
+                                           Register temp) {
+  // Inline implementation of |OrderedHashTableImpl::prepareHash()| and
+  // |mozilla::HashGeneric(v.asRawBits())|.
+
+#ifdef DEBUG
+  Label ok;
+  branchTestGCThing(Assembler::NotEqual, value, &ok);
+  assumeUnreachable("Unexpected GC thing");
+  bind(&ok);
+#endif
 
   // uint32_t v1 = static_cast<uint32_t>(aValue);
 #ifdef JS_PUNBOX64
@@ -10028,21 +9980,6 @@ void MacroAssembler::hashAndScrambleValue(ValueOperand value, Register result,
   //
   // scrambleHashCode(result);
   mul32(Imm32(mozilla::kGoldenRatioU32 * mozilla::kGoldenRatioU32), result);
-}
-
-void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
-                                           Register temp) {
-  // Inline implementation of |OrderedHashTableImpl::prepareHash()| and
-  // |mozilla::HashGeneric(v.asRawBits())|.
-
-#ifdef DEBUG
-  Label ok;
-  branchTestGCThing(Assembler::NotEqual, value, &ok);
-  assumeUnreachable("Unexpected GC thing");
-  bind(&ok);
-#endif
-
-  hashAndScrambleValue(value, result, temp);
 }
 
 void MacroAssembler::prepareHashString(Register str, Register result,
@@ -10534,187 +10471,6 @@ void MacroAssembler::loadSetObjectSize(Register setObj, Register result) {
 void MacroAssembler::loadMapObjectSize(Register mapObj, Register result) {
   loadOrderedHashTableCount<MapObject>(mapObj, result);
 }
-
-void MacroAssembler::prepareHashMFBT(Register hashCode, bool alreadyScrambled) {
-  // Inline implementation of |mozilla::HashTable::prepareHash()|.
-  static_assert(sizeof(HashNumber) == sizeof(uint32_t));
-
-  // In some cases scrambling can be more efficiently folded into the
-  // computation of the hash itself.
-  if (!alreadyScrambled) {
-    // HashNumber keyHash = ScrambleHashCode(aInputHash);
-    scrambleHashCode(hashCode);
-  }
-
-  const mozilla::HashNumber RemovedKey = mozilla::detail::kHashTableRemovedKey;
-  const mozilla::HashNumber CollisionBit =
-      mozilla::detail::kHashTableCollisionBit;
-
-  // Avoid reserved hash codes:
-  // if (!isLiveHash(keyHash)) {
-  Label isLive;
-  branch32(Assembler::Above, hashCode, Imm32(RemovedKey), &isLive);
-  //   keyHash -= (sRemovedKey + 1);
-  sub32(Imm32(RemovedKey + 1), hashCode);
-  bind(&isLive);
-
-  // return keyHash & ~sCollisionBit;
-  and32(Imm32(~CollisionBit), hashCode);
-}
-
-template <typename Table>
-void MacroAssembler::computeHash1MFBT(Register hashTable, Register hashCode,
-                                      Register hash1, Register scratch) {
-  // Inline implementation of |mozilla::HashTable::hash1|
-  // return aHash0 >> hashShift();
-  move32(hashCode, hash1);
-  load8ZeroExtend(Address(hashTable, Table::offsetOfHashShift()), scratch);
-  flexibleRshift32(scratch, hash1);
-}
-
-template void MacroAssembler::computeHash1MFBT<WeakMapObject::Map>(
-    Register hashTable, Register hashCode, Register hash1, Register scratch);
-
-template <typename Table>
-void MacroAssembler::computeHash2MFBT(Register hashTable, Register hashCode,
-                                      Register hash2, Register sizeMask,
-                                      Register scratch) {
-  // Inline implementation of |mozilla::detail::HashTable::hash2|
-
-  // Load hashShift into sizeMask
-  load8ZeroExtend(Address(hashTable, Table::offsetOfHashShift()), sizeMask);
-
-  //   uint32_t sizeLog2 = kHashNumberBits - hashShift();
-  move32(Imm32(kHashNumberBits), scratch);
-  sub32(sizeMask, scratch);
-
-  //   DoubleHash dh = {((aCurKeyHash << sizeLog2) >> hashShift()) | 1,
-  move32(hashCode, hash2);
-  flexibleLshift32(scratch, hash2);
-  flexibleRshift32(sizeMask, hash2);
-  or32(Imm32(1), hash2);
-
-  // sizeMask = (HashNumber(1) << sizeLog2) - 1};
-  move32(Imm32(1), sizeMask);
-  flexibleLshift32(scratch, sizeMask);
-  sub32(Imm32(1), sizeMask);
-}
-
-template void MacroAssembler::computeHash2MFBT<WeakMapObject::Map>(
-    Register hashTable, Register hashCode, Register hash2, Register sizeMask,
-    Register scratch);
-
-void MacroAssembler::applyDoubleHashMFBT(Register hash1, Register hash2,
-                                         Register sizeMask) {
-  // Inline implementation of |mozilla::detail::HashTable::applyDoubleHash|
-
-  // return WrappingSubtract(aHash1, aDoubleHash.mHash2) & aDoubleHash.mSizeMask
-  sub32(hash2, hash1);
-  and32(sizeMask, hash1);
-}
-
-template <typename Table>
-void MacroAssembler::checkForMatchMFBT(Register hashTable, Register hashIndex,
-                                       Register hashCode, Register scratch,
-                                       Register scratch2, Label* missing,
-                                       Label* collision) {
-  // Helper for inline implementation of |mozilla::detail::HashTable::lookup|
-  // The following code is used twice in |lookup|:
-  //
-  //  Slot slot = slotForIndex(h1);
-  //  if (slot.isFree()) {
-  //    <not found>
-  //  }
-  //  if (slot.matchHash(aKeyHash) && match(slot.get(), aLookup)) {
-  //    <found>
-  //  }
-  //
-  // To reduce register pressure, we do some inlining and reorder some
-  // intermediate computation. We inline the following functions:
-  //
-  // Slot slotForIndex(HashNumber aIndex) const {
-  //   auto hashes = reinterpret_cast<HashNumber*>(mTable);
-  //   auto entries = reinterpret_cast<Entry*>(&hashes[capacity()]);
-  //   return Slot(&entries[aIndex], &hashes[aIndex]);
-  // }
-  //
-  // uint32_t rawCapacity() { return 1u << (kHashNumberBits - hashShift()); }
-  //
-  // bool isFree() const { return *mKeyHash == Entry::sFreeKey; }
-  //
-  // bool matchHash(HashNumber hn) {
-  //   return (*mKeyHash & ~Entry::sCollisionBit) == hn;
-  // }
-  //
-  // Reordered, we implement:
-  //
-  // auto hashes = reinterpret_cast<HashNumber*>(mTable);
-  // HashNumber hashInTable = hashes[hashIndex];
-  // if (hashInTable == Entry::sFreeKey) {
-  //   <jump to missing label>
-  // }
-  // if (hashInTable & ~CollisionBit != hashCode) {
-  //   <jump to collision label>
-  // }
-  // auto entries = hashes[capacity()];
-  // Entry* entry = entries[hashIndex]
-  // <fall through to entry-specific match code>
-  const mozilla::HashNumber FreeKey = mozilla::detail::kHashTableFreeKey;
-  const mozilla::HashNumber CollisionBit =
-      mozilla::detail::kHashTableCollisionBit;
-
-  Address tableAddr(hashTable, Table::offsetOfTable());
-  Address hashShiftAddr(hashTable, Table::offsetOfHashShift());
-
-  // auto hashes = reinterpret_cast<HashNumber*>(mTable);
-  Register hashes = scratch;
-  loadPtr(tableAddr, scratch);
-
-  // HashNumber hashInTable = hashes[hashIndex];
-  Register hashInTable = scratch2;
-  static_assert(sizeof(HashNumber) == 4);
-  load32(BaseIndex(hashes, hashIndex, Scale::TimesFour), hashInTable);
-
-  // if (hashInTable == Entry::sFreeKey) {
-  //   <jump to missing label>
-  // }
-  branch32(Assembler::Equal, hashInTable, Imm32(FreeKey), missing);
-
-  // if (hashInTable & ~CollisionBit != hashCode) {
-  //   <jump to collision label>
-  // }
-  and32(Imm32(~CollisionBit), hashInTable);
-  branch32(Assembler::NotEqual, hashInTable, hashCode, collision);
-
-  // entries = hashes[capacity()]
-  // = hashes[1 << (kHashNumberBits - hashShift()]
-  // = &hashes + (1 << (kHashNumberBits - hashShift())) * sizeof(HashNumber)
-  // = &hashes + sizeof(HashNumber) << (kHashNumberBits - hashShift())
-  // = &hashes + sizeof(HashNumber) << (kHashNumberBits + -hashShift())
-  Register capacityOffset = scratch;
-  load8ZeroExtend(hashShiftAddr, scratch2);
-  neg32(scratch2);
-  add32(Imm32(kHashNumberBits), scratch2);
-  move32(Imm32(sizeof(mozilla::HashNumber)), capacityOffset);
-  flexibleLshift32(scratch2, capacityOffset);
-  Register entries = scratch2;
-  loadPtr(tableAddr, entries);
-  addPtr(capacityOffset, entries);
-
-  // Load entries[hashIndex] into |scratch|
-  // TODO: support non-power-of-2 entry sizes
-  constexpr size_t EntrySize = sizeof(typename Table::Entry);
-  static_assert(mozilla::IsPowerOfTwo(EntrySize));
-  uint32_t shift = mozilla::FloorLog2(EntrySize);
-  lshiftPtr(Imm32(shift), hashIndex, scratch);
-
-  computeEffectiveAddress(BaseIndex(entries, scratch, Scale::TimesOne),
-                          scratch);
-}
-
-template void MacroAssembler::checkForMatchMFBT<WeakMapObject::Map>(
-    Register hashTable, Register hashIndex, Register hashCode, Register scratch,
-    Register scratch2, Label* missing, Label* collision);
 
 // Can't push large frames blindly on windows, so we must touch frame memory
 // incrementally, with no more than 4096 - 1 bytes between touches.
