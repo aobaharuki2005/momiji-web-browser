@@ -923,7 +923,7 @@ static mozilla::Result<UniqueICU4XDate, CalendarError> CreateDateFromCodes(
   MOZ_ASSERT(CalendarErasAsEnumSet(calendarId).contains(eraYear.era));
   MOZ_ASSERT_IF(CalendarEraRelevant(calendarId), eraYear.year > 0);
   MOZ_ASSERT(mozilla::Abs(eraYear.year) <= MaximumCalendarYear(calendarId));
-  MOZ_ASSERT(CalendarMonthCodes(calendarId).contains(monthCode));
+  MOZ_ASSERT(IsValidMonthCodeForCalendar(calendarId, monthCode));
   MOZ_ASSERT(day > 0);
   MOZ_ASSERT(day <= CalendarDaysInMonth(calendarId).second);
 
@@ -1040,7 +1040,7 @@ static UniqueICU4XDate CreateDateFromCodes(
     JSContext* cx, CalendarId calendarId, const icu4x::capi::Calendar* calendar,
     EraYear eraYear, MonthCode monthCode, int32_t day,
     TemporalOverflow overflow) {
-  MOZ_ASSERT(CalendarMonthCodes(calendarId).contains(monthCode));
+  MOZ_ASSERT(IsValidMonthCodeForCalendar(calendarId, monthCode));
   MOZ_ASSERT(day > 0);
   MOZ_ASSERT(day <= CalendarDaysInMonth(calendarId).second);
 
@@ -1850,8 +1850,7 @@ static bool CalendarFieldMonth(JSContext* cx, CalendarId calendar,
     }
 
     // Ensure the month code is valid for this calendar.
-    const auto& monthCodes = CalendarMonthCodes(calendar);
-    if (!monthCodes.contains(fromMonthCode)) {
+    if (!IsValidMonthCodeForCalendar(calendar, fromMonthCode)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_TEMPORAL_CALENDAR_INVALID_MONTHCODE,
                                MonthCodeString{monthCode}.toCString());
