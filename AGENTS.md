@@ -1,8 +1,7 @@
 # Global instructions
 Limit the amount of comments you put in the code to a strict minimum. You should almost never add comments, except sometimes on non-trivial code, function definitions if the arguments aren't self-explanatory, and class definitions and their members.
 
-## Main project
-If there is a file called `./mach` in the root of the repo, it is a Firefox repository. It is very big and so it isn't advised to blindly run grep or rg commands without specifying a narrow set of directories to search. There are tools available to help, see next section.
+The Firefox repository is very big and so it isn't advised to blindly run grep or rg commands without specifying a narrow set of directories to search. There are tools available to help, see next section.
 
 ## Tooling for Firefox work
 - Some tools useful for Firefox work are available in the `moz` MCP server
@@ -27,7 +26,7 @@ searchfox-cli --id AudioSink -l 150 --cpp # search for identifier audio sink in 
 - Use the MCP resource `@moz:phabricator://revision/D{revision_id}` to retrieve a Phabricator revision
 
 ## Fixing review comments
-In Firefox, use `@moz:phabricator://revision/D{revision_id}`.
+Use `@moz:phabricator://revision/D{revision_id}` to retrieve the revision and its comments.
 
 You can find the review identifier by inspecting the commit log with:
 
@@ -44,6 +43,6 @@ In github projects, use `gh-pr-comments https://github.com/link/to/pr`.
 - You can run tests by using `./mach test --auto`. Once you are satisfied with the tests you run locally, use `mach try auto` to run tests in CI
 - Ask if you should run a test. If you do, you probably want to run the test with `--headless`
 - Do not perform commits yourself, ever
-- When working on Firefox, it's better to just run `./mach build` without subdirectory, the build system is well optimized
+- It's better to just run `./mach build` without subdirectory, the build system is well optimized
 - Always build normally, never use subdirectories, e.g. `./mach build` is the only command to run
 - Never build with a subdirectory. Always simply do `./mach build`
