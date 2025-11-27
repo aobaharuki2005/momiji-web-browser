@@ -1470,8 +1470,8 @@ static bool CalendarDateEra(JSContext* cx, CalendarId calendar,
 /**
  * Return the extended (non-era) year from |date|.
  */
-static bool CalendarDateYear(JSContext* cx, CalendarId calendar,
-                             const icu4x::capi::Date* date, int32_t* result) {
+static int32_t CalendarDateYear(CalendarId calendar,
+                                const icu4x::capi::Date* date) {
   MOZ_ASSERT(calendar != CalendarId::ISO8601);
 
   switch (calendar) {
@@ -1487,15 +1487,13 @@ static bool CalendarDateYear(JSContext* cx, CalendarId calendar,
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::Japanese: {
-      *result = icu4x::capi::icu4x_Date_extended_year_mv1(date);
-      return true;
+      return icu4x::capi::icu4x_Date_extended_year_mv1(date);
     }
 
     case CalendarId::Chinese:
     case CalendarId::Dangi: {
       // Return the related ISO year for Chinese/Dangi.
-      *result = icu4x::capi::icu4x_Date_era_year_or_related_iso_mv1(date);
-      return true;
+      return icu4x::capi::icu4x_Date_era_year_or_related_iso_mv1(date);
     }
 
     case CalendarId::Ethiopian: {
@@ -1520,8 +1518,7 @@ static bool CalendarDateYear(JSContext* cx, CalendarId calendar,
         year = FromAmeteAlemToAmeteMihret(year);
       }
 
-      *result = year;
-      return true;
+      return year;
     }
 
     case CalendarId::ROC: {
@@ -1552,8 +1549,7 @@ static bool CalendarDateYear(JSContext* cx, CalendarId calendar,
         year = -(year - 1);
       }
 
-      *result = year;
-      return true;
+      return year;
     }
   }
   MOZ_CRASH("invalid calendar id");
@@ -1563,9 +1559,8 @@ static bool CalendarDateYear(JSContext* cx, CalendarId calendar,
  * Retrieve the month code from |date| and then map the returned ICU4X month
  * code to the corresponding |MonthCode| member.
  */
-static bool CalendarDateMonthCode(JSContext* cx, CalendarId calendar,
-                                  const icu4x::capi::Date* date,
-                                  MonthCode* result) {
+static MonthCode CalendarDateMonthCode(CalendarId calendar,
+                                       const icu4x::capi::Date* date) {
   MOZ_ASSERT(calendar != CalendarId::ISO8601);
 
   // Valid month codes are "M01".."M13" and "M01L".."M12L".
@@ -1596,10 +1591,9 @@ static bool CalendarDateMonthCode(JSContext* cx, CalendarId calendar,
   auto monthCode = MonthCode{ordinal, isLeapMonth};
 
   // The month code must be valid for this calendar.
-  MOZ_ASSERT(CalendarMonthCodes(calendar).contains(monthCode));
+  MOZ_ASSERT(IsValidMonthCodeForCalendar(calendar, monthCode));
 
-  *result = monthCode;
-  return true;
+  return monthCode;
 }
 
 class MonthCodeString {
@@ -1935,10 +1929,7 @@ static bool CalendarFieldEraYearMatchesYear(JSContext* cx, CalendarId calendar,
   int32_t intYear;
   MOZ_ALWAYS_TRUE(mozilla::NumberEqualsInt32(year, &intYear));
 
-  int32_t yearFromEraYear;
-  if (!CalendarDateYear(cx, calendar, date, &yearFromEraYear)) {
-    return false;
-  }
+  int32_t yearFromEraYear = CalendarDateYear(calendar, date);
 
   // The user requested year must match the actual (extended/epoch) year.
   if (intYear != yearFromEraYear) {
@@ -2170,16 +2161,10 @@ static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
   }
 
   // Find the calendar year for the ISO start date.
-  int32_t calendarYear;
-  if (!CalendarDateYear(cx, calendar, fromIsoDate.get(), &calendarYear)) {
-    return false;
-  }
+  int32_t calendarYear = CalendarDateYear(calendar, fromIsoDate.get());
 
   // Find the calendar year for the ISO end date.
-  int32_t toCalendarYear;
-  if (!CalendarDateYear(cx, calendar, toIsoDate.get(), &toCalendarYear)) {
-    return false;
-  }
+  int32_t toCalendarYear = CalendarDateYear(calendar, toIsoDate.get());
 
   while (direction < 0 ? calendarYear >= toCalendarYear
                        : calendarYear <= toCalendarYear) {
@@ -2302,9 +2287,7 @@ static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
     }
 
     if (!fields.has(CalendarField::MonthCode)) {
-      if (!CalendarDateMonthCode(cx, calendar, date.get(), &monthCode)) {
-        return false;
-      }
+      monthCode = CalendarDateMonthCode(calendar, date.get());
     }
     MOZ_ASSERT(monthCode != MonthCode{});
 
@@ -2621,11 +2604,7 @@ bool js::temporal::CalendarYear(JSContext* cx, Handle<CalendarValue> calendar,
     return false;
   }
 
-  int32_t year;
-  if (!CalendarDateYear(cx, calendarId, dt.get(), &year)) {
-    return false;
-  }
-
+  int32_t year = CalendarDateYear(calendarId, dt.get());
   result.setInt32(year);
   return true;
 }
@@ -2691,11 +2670,7 @@ bool js::temporal::CalendarMonthCode(JSContext* cx,
     return false;
   }
 
-  MonthCode monthCode;
-  if (!CalendarDateMonthCode(cx, calendarId, dt.get(), &monthCode)) {
-    return false;
-  }
-
+  auto monthCode = CalendarDateMonthCode(calendarId, dt.get());
   auto* str = NewStringCopy<CanGC>(cx, std::string_view{monthCode});
   if (!str) {
     return false;
@@ -3102,10 +3077,7 @@ static bool ISODateToFields(JSContext* cx, Handle<CalendarValue> calendar,
   }
 
   // Step 3.
-  MonthCode monthCode;
-  if (!CalendarDateMonthCode(cx, calendarId, dt.get(), &monthCode)) {
-    return false;
-  }
+  auto monthCode = CalendarDateMonthCode(calendarId, dt.get());
   result.setMonthCode(monthCode);
 
   // Step 4.
@@ -3116,10 +3088,7 @@ static bool ISODateToFields(JSContext* cx, Handle<CalendarValue> calendar,
 
   // Step 5.
   if (type == DateFieldType::YearMonth || type == DateFieldType::Date) {
-    int32_t year;
-    if (!CalendarDateYear(cx, calendarId, dt.get(), &year)) {
-      return false;
-    }
+    int32_t year = CalendarDateYear(calendarId, dt.get());
     result.setYear(year);
   }
 
@@ -3395,6 +3364,12 @@ struct CalendarDate {
   int32_t day = 0;
 };
 
+struct CalendarDateWithOrdinalMonth {
+  int32_t year = 0;
+  int32_t month = 0;
+  int32_t day = 0;
+};
+
 /**
  * CompareISODate adjusted for calendar dates.
  */
@@ -3412,47 +3387,39 @@ static int32_t CompareCalendarDate(const CalendarDate& one,
   return 0;
 }
 
-static bool ToCalendarDate(JSContext* cx, CalendarId calendarId,
-                           const icu4x::capi::Date* dt, CalendarDate* result) {
-  int32_t year;
-  if (!CalendarDateYear(cx, calendarId, dt, &year)) {
-    return false;
-  }
-
-  MonthCode monthCode;
-  if (!CalendarDateMonthCode(cx, calendarId, dt, &monthCode)) {
-    return false;
-  }
-
-  int32_t day = DayOfMonth(dt);
-
-  *result = {year, monthCode, day};
-  return true;
+/**
+ * CompareISODate adjusted for calendar dates.
+ */
+static int32_t CompareCalendarDate(const CalendarDateWithOrdinalMonth& one,
+                                   const CalendarDateWithOrdinalMonth& two) {
+  return CompareISODate(ISODate{one.year, one.month, one.day},
+                        ISODate{two.year, two.month, two.day});
 }
 
-/**
- * Store a calendar date in a |ISODate| struct when leap months don't matter.
- */
-static bool ToCalendarDate(JSContext* cx, CalendarId calendarId,
-                           const icu4x::capi::Date* dt, ISODate* result) {
+static CalendarDate ToCalendarDate(CalendarId calendarId,
+                                   const icu4x::capi::Date* dt) {
+  int32_t year = CalendarDateYear(calendarId, dt);
+  auto monthCode = CalendarDateMonthCode(calendarId, dt);
+  int32_t day = DayOfMonth(dt);
+
+  return {year, monthCode, day};
+}
+
+static CalendarDateWithOrdinalMonth ToCalendarDateWithOrdinalMonth(
+    CalendarId calendarId, const icu4x::capi::Date* dt) {
   MOZ_ASSERT(!CalendarHasLeapMonths(calendarId));
 
-  int32_t year;
-  if (!CalendarDateYear(cx, calendarId, dt, &year)) {
-    return false;
-  }
-
+  int32_t year = CalendarDateYear(calendarId, dt);
   int32_t month = OrdinalMonth(dt);
   int32_t day = DayOfMonth(dt);
 
-  *result = {year, month, day};
-  return true;
+  return {year, month, day};
 }
 
-static bool AddYearMonthDuration(JSContext* cx, CalendarId calendarId,
-                                 const ISODate& calendarDate,
-                                 const DateDuration& duration,
-                                 CalendarDate* result) {
+static bool AddYearMonthDuration(
+    JSContext* cx, CalendarId calendarId,
+    const CalendarDateWithOrdinalMonth& calendarDate,
+    const DateDuration& duration, CalendarDate* result) {
   MOZ_ASSERT(!CalendarHasLeapMonths(calendarId));
   MOZ_ASSERT(IsValidDuration(duration));
 
@@ -3560,10 +3527,7 @@ static bool AddYearMonthDuration(JSContext* cx, CalendarId calendarId,
       return false;
     }
 
-    if (!CalendarDateMonthCode(cx, calendarId, firstDayOfMonth.get(),
-                               &monthCode)) {
-      return false;
-    }
+    monthCode = CalendarDateMonthCode(calendarId, firstDayOfMonth.get());
   }
 
   *result = {year, monthCode, day};
@@ -3585,18 +3549,12 @@ static bool AddNonISODate(JSContext* cx, CalendarId calendarId,
 
   CalendarDate calendarDate;
   if (!CalendarHasLeapMonths(calendarId)) {
-    ISODate date;
-    if (!ToCalendarDate(cx, calendarId, dt.get(), &date)) {
-      return false;
-    }
+    auto date = ToCalendarDateWithOrdinalMonth(calendarId, dt.get());
     if (!AddYearMonthDuration(cx, calendarId, date, duration, &calendarDate)) {
       return false;
     }
   } else {
-    CalendarDate date;
-    if (!ToCalendarDate(cx, calendarId, dt.get(), &date)) {
-      return false;
-    }
+    auto date = ToCalendarDate(calendarId, dt.get());
     if (!AddYearMonthDuration(cx, calendarId, cal.get(), date, duration,
                               &calendarDate)) {
       return false;
@@ -3836,17 +3794,10 @@ static bool DifferenceNonISODate(JSContext* cx, CalendarId calendarId,
     // implementation to compute the date duration.
     int32_t monthsPerYear = CalendarMonthsPerYear(calendarId);
 
-    ISODate oneDate;
-    if (!ToCalendarDate(cx, calendarId, dtOne.get(), &oneDate)) {
-      return false;
-    }
+    auto oneDate = ToCalendarDateWithOrdinalMonth(calendarId, dtOne.get());
+    auto twoDate = ToCalendarDateWithOrdinalMonth(calendarId, dtTwo.get());
 
-    ISODate twoDate;
-    if (!ToCalendarDate(cx, calendarId, dtTwo.get(), &twoDate)) {
-      return false;
-    }
-
-    int32_t sign = -CompareISODate(oneDate, twoDate);
+    int32_t sign = -CompareCalendarDate(oneDate, twoDate);
     MOZ_ASSERT(sign != 0);
 
     years = twoDate.year - oneDate.year;
@@ -3855,17 +3806,17 @@ static bool DifferenceNonISODate(JSContext* cx, CalendarId calendarId,
     // If |oneDate + years| surpasses |twoDate|, reduce |years| by one and add
     // |monthsPerYear| to |months|. The next step will balance the intermediate
     // result.
-    auto intermediate =
-        ISODate{oneDate.year + years, oneDate.month, oneDate.day};
-    if (CompareISODate(intermediate, twoDate) * sign > 0) {
+    auto intermediate = CalendarDateWithOrdinalMonth{
+        oneDate.year + years, oneDate.month, oneDate.day};
+    if (CompareCalendarDate(intermediate, twoDate) * sign > 0) {
       years -= sign;
       months += monthsPerYear * sign;
     }
 
     // Add both |years| and |months| and then balance the intermediate result to
     // ensure its month is within the valid bounds.
-    intermediate =
-        ISODate{oneDate.year + years, oneDate.month + months, oneDate.day};
+    intermediate = CalendarDateWithOrdinalMonth{
+        oneDate.year + years, oneDate.month + months, oneDate.day};
     if (intermediate.month > monthsPerYear) {
       intermediate.month -= monthsPerYear;
       intermediate.year += 1;
@@ -3875,7 +3826,7 @@ static bool DifferenceNonISODate(JSContext* cx, CalendarId calendarId,
     }
 
     // If |intermediate| surpasses |twoDate|, reduce |month| by one.
-    if (CompareISODate(intermediate, twoDate) * sign > 0) {
+    if (CompareCalendarDate(intermediate, twoDate) * sign > 0) {
       months -= sign;
     }
 
@@ -3901,15 +3852,8 @@ static bool DifferenceNonISODate(JSContext* cx, CalendarId calendarId,
     MOZ_ASSERT(CompareISODate(constrainedIso, two) * sign <= 0,
                "constrained doesn't surpass two");
   } else {
-    CalendarDate oneDate;
-    if (!ToCalendarDate(cx, calendarId, dtOne.get(), &oneDate)) {
-      return false;
-    }
-
-    CalendarDate twoDate;
-    if (!ToCalendarDate(cx, calendarId, dtTwo.get(), &twoDate)) {
-      return false;
-    }
+    auto oneDate = ToCalendarDate(calendarId, dtOne.get());
+    auto twoDate = ToCalendarDate(calendarId, dtTwo.get());
 
     int32_t sign = -CompareCalendarDate(oneDate, twoDate);
     MOZ_ASSERT(sign != 0);
@@ -3927,11 +3871,7 @@ static bool DifferenceNonISODate(JSContext* cx, CalendarId calendarId,
       return false;
     }
 
-    CalendarDate constrainedDate;
-    if (!ToCalendarDate(cx, calendarId, constrained.get(), &constrainedDate)) {
-      return false;
-    }
-
+    auto constrainedDate = ToCalendarDate(calendarId, constrained.get());
     if (CompareCalendarDate(constrainedDate, twoDate) * sign > 0) {
       years -= sign;
     }
