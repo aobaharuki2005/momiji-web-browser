@@ -2208,6 +2208,115 @@ static bool CalendarDateToISO(JSContext* cx, CalendarId calendar,
 }
 
 /**
+ * CalendarMonthDayToISOReferenceDate ( calendar, fields, overflow )
+ */
+static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
+                                             icu4x::capi::Calendar* cal,
+                                             ISODate startISODate,
+                                             ISODate endISODate,
+                                             MonthCode monthCode, int32_t day,
+                                             UniqueICU4XDate& resultDate) {
+  MOZ_ASSERT(startISODate != endISODate);
+
+  int32_t direction = startISODate > endISODate ? -1 : 1;
+
+  auto fromIsoDate = CreateICU4XDate(cx, startISODate, calendar, cal);
+  if (!fromIsoDate) {
+    return false;
+  }
+
+  auto toIsoDate = CreateICU4XDate(cx, endISODate, calendar, cal);
+  if (!toIsoDate) {
+    return false;
+  }
+
+  // Find the calendar year for the ISO start date.
+  int32_t calendarYear;
+  if (!CalendarDateYear(cx, calendar, fromIsoDate.get(), &calendarYear)) {
+    return false;
+  }
+
+  // Find the calendar year for the ISO end date.
+  int32_t toCalendarYear;
+  if (!CalendarDateYear(cx, calendar, toIsoDate.get(), &toCalendarYear)) {
+    return false;
+  }
+
+  while (direction < 0 ? calendarYear >= toCalendarYear
+                       : calendarYear <= toCalendarYear) {
+    // This loop can run for a long time.
+    if (!CheckForInterrupt(cx)) {
+      return false;
+    }
+
+    auto candidateYear = CalendarEraYear(calendar, calendarYear);
+
+    auto result =
+        CreateDateFromCodes(calendar, cal, candidateYear, monthCode, day);
+    if (result.isOk()) {
+      auto isoDate = ToISODate(result.inspect().get());
+
+      // Make sure the resolved date is before |startISODate|.
+      if (direction < 0 ? isoDate > startISODate : isoDate < startISODate) {
+        calendarYear += direction;
+        continue;
+      }
+
+      // Stop searching if |endISODate| was reached.
+      if (direction < 0 ? isoDate < endISODate : isoDate > endISODate) {
+        resultDate = nullptr;
+        return true;
+      }
+
+      resultDate = result.unwrap();
+      return true;
+    }
+
+    switch (result.inspectErr()) {
+      case CalendarError::UnknownMonthCode: {
+        MOZ_ASSERT(CalendarHasLeapMonths(calendar));
+        MOZ_ASSERT(monthCode.isLeapMonth());
+
+        // Try the next candidate year if the requested leap month doesn't
+        // occur in the current year.
+        calendarYear += direction;
+        continue;
+      }
+
+      case CalendarError::OutOfRange: {
+        // ICU4X throws an out-of-range error when:
+        // 1. month > monthsInYear(year), or
+        // 2. days > daysInMonthOf(year, month).
+        //
+        // Case 1 can't happen for month-codes, so it doesn't apply here.
+        // Case 2 can only happen when |day| is larger than the minimum number
+        // of days in the month.
+        MOZ_ASSERT(day > CalendarDaysInMonth(calendar, monthCode).first);
+
+        // Try next candidate year to find an earlier year which can fulfill
+        // the input request.
+        calendarYear += direction;
+        continue;
+      }
+
+      case CalendarError::UnknownEra:
+        MOZ_ASSERT(false, "unexpected calendar error");
+        break;
+
+      case CalendarError::Generic:
+        break;
+    }
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_CALENDAR_INTERNAL_ERROR);
+    return false;
+  }
+
+  resultDate = nullptr;
+  return true;
+}
+
+/**
  * NonISOMonthDayToISOReferenceDate ( calendar, fields, overflow )
  */
 static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
@@ -2287,85 +2396,34 @@ static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
     }
   }
 
-  // Try years starting from 31 December, 1972.
-  constexpr auto isoReferenceDate = ISODate{1972, 12, 31};
+  constexpr ISODate candidates[][2] = {
+      // The reference date is the latest ISO 8601 date corresponding to the
+      // calendar date that is between January 1, 1900 and December 31, 1972
+      // inclusive.
+      {ISODate{1972, 12, 31}, ISODate{1900, 1, 1}},
 
-  auto fromIsoDate = CreateICU4XDate(cx, isoReferenceDate, calendar, cal.get());
-  if (!fromIsoDate) {
-    return false;
-  }
+      // If there is no such date, it is the earliest ISO 8601 date
+      // corresponding to the calendar date between January 1, 1973 and
+      // December 31, 2035.
+      {ISODate{1973, 1, 1}, ISODate{2035, 12, 31}},
 
-  // Find the calendar year for the ISO reference date.
-  int32_t calendarYear;
-  if (!CalendarDateYear(cx, calendar, fromIsoDate.get(), &calendarYear)) {
-    return false;
-  }
-
-  // 10'000 is sufficient to find all possible month-days, even for rare cases
-  // like `{calendar: "chinese", monthCode: "M09L", day: 30}`.
-  constexpr size_t maxIterations = 10'000;
+      // If there is still no such date, it is the latest ISO 8601 date
+      // corresponding to the calendar date on or before December 31, 1899.
+      //
+      // Year -8000 is sufficient to find all possible month-days, even for
+      // rare cases like `{calendar: "chinese", monthCode: "M09L", day: 30}`.
+      {ISODate{1899, 12, 31}, ISODate{-8000, 1, 1}},
+  };
 
   UniqueICU4XDate date;
-  for (size_t i = 0; i < maxIterations; i++) {
-    // This loop can run for a long time.
-    if (!CheckForInterrupt(cx)) {
+  for (auto& [start, end] : candidates) {
+    if (!NonISOMonthDayToISOReferenceDate(cx, calendar, cal.get(), start, end,
+                                          monthCode, day, date)) {
       return false;
     }
-
-    auto candidateYear = CalendarEraYear(calendar, calendarYear);
-
-    auto result =
-        CreateDateFromCodes(calendar, cal.get(), candidateYear, monthCode, day);
-    if (result.isOk()) {
-      // Make sure the resolved date is before December 31, 1972.
-      auto isoDate = ToISODate(result.inspect().get());
-      if (isoDate.year > isoReferenceDate.year) {
-        calendarYear -= 1;
-        continue;
-      }
-
-      date = result.unwrap();
+    if (date) {
       break;
     }
-
-    switch (result.inspectErr()) {
-      case CalendarError::UnknownMonthCode: {
-        MOZ_ASSERT(CalendarHasLeapMonths(calendar));
-        MOZ_ASSERT(monthCode.isLeapMonth());
-
-        // Try the next candidate year if the requested leap month doesn't
-        // occur in the current year.
-        calendarYear -= 1;
-        continue;
-      }
-
-      case CalendarError::OutOfRange: {
-        // ICU4X throws an out-of-range error when:
-        // 1. month > monthsInYear(year), or
-        // 2. days > daysInMonthOf(year, month).
-        //
-        // Case 1 can't happen for month-codes, so it doesn't apply here.
-        // Case 2 can only happen when |day| is larger than the minimum number
-        // of days in the month.
-        MOZ_ASSERT(day > CalendarDaysInMonth(calendar, monthCode).first);
-
-        // Try next candidate year to find an earlier year which can fulfill
-        // the input request.
-        calendarYear -= 1;
-        continue;
-      }
-
-      case CalendarError::UnknownEra:
-        MOZ_ASSERT(false, "unexpected calendar error");
-        break;
-
-      case CalendarError::Generic:
-        break;
-    }
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TEMPORAL_CALENDAR_INTERNAL_ERROR);
-    return false;
   }
 
   // We shouldn't end up here with |maxIterations == 10'000|, but just in case
