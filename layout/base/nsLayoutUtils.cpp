@@ -1925,12 +1925,6 @@ void nsLayoutUtils::PostTranslate(Matrix4x4& aTransform, const nsPoint& aOrigin,
 }
 
 bool nsLayoutUtils::ShouldSnapToGrid(const nsIFrame* aFrame) {
-  // TODO: Remove this function when this pref is being removed.
-  if (StaticPrefs::layout_disable_pixel_alignment() &&
-      nsDisplayListBuilder::IsPaintingForWebRender()) {
-    return aFrame && aFrame->IsSVGOuterSVGAnonChildFrame();
-  }
-
   return !aFrame || !aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
          aFrame->IsSVGOuterSVGAnonChildFrame();
 }
@@ -3310,7 +3304,6 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     }
   }
 
-  builder->SetPaintingForWebRender(false);
   --paintFrameDepth;
 #if 0
   if (XRE_IsParentProcess()) {
