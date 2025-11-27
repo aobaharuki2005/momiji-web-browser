@@ -10561,6 +10561,109 @@ void MacroAssembler::applyDoubleHashMFBT(Register hash1, Register hash2,
   and32(sizeMask, hash1);
 }
 
+template <typename Table>
+void MacroAssembler::checkForMatchMFBT(Register hashTable, Register hashIndex,
+                                       Register hashCode, Register scratch,
+                                       Register scratch2, Label* missing,
+                                       Label* collision) {
+  // Helper for inline implementation of |mozilla::detail::HashTable::lookup|
+  // The following code is used twice in |lookup|:
+  //
+  //  Slot slot = slotForIndex(h1);
+  //  if (slot.isFree()) {
+  //    <not found>
+  //  }
+  //  if (slot.matchHash(aKeyHash) && match(slot.get(), aLookup)) {
+  //    <found>
+  //  }
+  //
+  // To reduce register pressure, we do some inlining and reorder some
+  // intermediate computation. We inline the following functions:
+  //
+  // Slot slotForIndex(HashNumber aIndex) const {
+  //   auto hashes = reinterpret_cast<HashNumber*>(mTable);
+  //   auto entries = reinterpret_cast<Entry*>(&hashes[capacity()]);
+  //   return Slot(&entries[aIndex], &hashes[aIndex]);
+  // }
+  //
+  // uint32_t rawCapacity() { return 1u << (kHashNumberBits - hashShift()); }
+  //
+  // bool isFree() const { return *mKeyHash == Entry::sFreeKey; }
+  //
+  // bool matchHash(HashNumber hn) {
+  //   return (*mKeyHash & ~Entry::sCollisionBit) == hn;
+  // }
+  //
+  // Reordered, we implement:
+  //
+  // auto hashes = reinterpret_cast<HashNumber*>(mTable);
+  // HashNumber hashInTable = hashes[hashIndex];
+  // if (hashInTable == Entry::sFreeKey) {
+  //   <jump to missing label>
+  // }
+  // if (hashInTable & ~CollisionBit != hashCode) {
+  //   <jump to collision label>
+  // }
+  // auto entries = hashes[capacity()];
+  // Entry* entry = entries[hashIndex]
+  // <fall through to entry-specific match code>
+  const mozilla::HashNumber FreeKey = mozilla::detail::kHashTableFreeKey;
+  const mozilla::HashNumber CollisionBit =
+      mozilla::detail::kHashTableCollisionBit;
+
+  Address tableAddr(hashTable, Table::offsetOfTable());
+  Address hashShiftAddr(hashTable, Table::offsetOfHashShift());
+
+  // auto hashes = reinterpret_cast<HashNumber*>(mTable);
+  Register hashes = scratch;
+  loadPtr(tableAddr, scratch);
+
+  // HashNumber hashInTable = hashes[hashIndex];
+  Register hashInTable = scratch2;
+  static_assert(sizeof(HashNumber) == 4);
+  load32(BaseIndex(hashes, hashIndex, Scale::TimesFour), hashInTable);
+
+  // if (hashInTable == Entry::sFreeKey) {
+  //   <jump to missing label>
+  // }
+  branch32(Assembler::Equal, hashInTable, Imm32(FreeKey), missing);
+
+  // if (hashInTable & ~CollisionBit != hashCode) {
+  //   <jump to collision label>
+  // }
+  and32(Imm32(~CollisionBit), hashInTable);
+  branch32(Assembler::NotEqual, hashInTable, hashCode, collision);
+
+  // entries = hashes[capacity()]
+  // = hashes[1 << (kHashNumberBits - hashShift()]
+  // = &hashes + (1 << (kHashNumberBits - hashShift())) * sizeof(HashNumber)
+  // = &hashes + sizeof(HashNumber) << (kHashNumberBits - hashShift())
+  // = &hashes + sizeof(HashNumber) << (kHashNumberBits + -hashShift())
+  Register capacityOffset = scratch;
+  load8ZeroExtend(hashShiftAddr, scratch2);
+  neg32(scratch2);
+  add32(Imm32(kHashNumberBits), scratch2);
+  move32(Imm32(sizeof(mozilla::HashNumber)), capacityOffset);
+  flexibleLshift32(scratch2, capacityOffset);
+  Register entries = scratch2;
+  loadPtr(tableAddr, entries);
+  addPtr(capacityOffset, entries);
+
+  // Load entries[hashIndex] into |scratch|
+  // TODO: support non-power-of-2 entry sizes
+  constexpr size_t EntrySize = sizeof(typename Table::Entry);
+  static_assert(mozilla::IsPowerOfTwo(EntrySize));
+  uint32_t shift = mozilla::FloorLog2(EntrySize);
+  lshiftPtr(Imm32(shift), hashIndex, scratch);
+
+  computeEffectiveAddress(BaseIndex(entries, scratch, Scale::TimesOne),
+                          scratch);
+}
+
+template void MacroAssembler::checkForMatchMFBT<WeakMapObject::Map>(
+    Register hashTable, Register hashIndex, Register hashCode, Register scratch,
+    Register scratch2, Label* missing, Label* collision);
+
 // Can't push large frames blindly on windows, so we must touch frame memory
 // incrementally, with no more than 4096 - 1 bytes between touches.
 //
