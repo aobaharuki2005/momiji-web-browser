@@ -97,6 +97,7 @@
 #include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/TypedArrayObject.h"
 #include "vm/Uint8Clamped.h"
+#include "vm/Warnings.h"
 #include "vm/WrapperObject.h"
 
 #include "gc/WeakMap-inl.h"
@@ -310,25 +311,25 @@ static bool intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static void ThrowErrorWithType(JSContext* cx, JSExnType type,
-                               const CallArgs& args) {
-  MOZ_RELEASE_ASSERT(args[0].isInt32());
+static bool PrepareErrorArguments(JSContext* cx, JSExnType type,
+                                  const CallArgs& args,
+                                  UniqueChars (&errorArgs)[3]) {
+#ifdef DEBUG
+  MOZ_ASSERT(args[0].isInt32());
   uint32_t errorNumber = args[0].toInt32();
 
-#ifdef DEBUG
   const JSErrorFormatString* efs = GetErrorMessage(nullptr, errorNumber);
   MOZ_ASSERT(efs->argCount == args.length() - 1);
   MOZ_ASSERT(efs->exnType == type,
              "error-throwing intrinsic and error number are inconsistent");
 #endif
 
-  UniqueChars errorArgs[3];
   for (unsigned i = 1; i < 4 && i < args.length(); i++) {
     HandleValue val = args[i];
     if (val.isInt32() || val.isString()) {
       JSString* str = ToString<CanGC>(cx, val);
       if (!str) {
-        return;
+        return false;
       }
       errorArgs[i - 1] = QuoteString(cx, str);
     } else {
@@ -336,8 +337,20 @@ static void ThrowErrorWithType(JSContext* cx, JSExnType type,
           DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
     }
     if (!errorArgs[i - 1]) {
-      return;
+      return false;
     }
+  }
+  return true;
+}
+
+static void ThrowErrorWithType(JSContext* cx, JSExnType type,
+                               const CallArgs& args) {
+  MOZ_RELEASE_ASSERT(args[0].isInt32());
+  uint32_t errorNumber = args[0].toInt32();
+
+  UniqueChars errorArgs[3];
+  if (!PrepareErrorArguments(cx, type, args, errorArgs)) {
+    return;
   }
 
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber,
@@ -396,6 +409,27 @@ static bool intrinsic_CreateSuppressedError(JSContext* cx, unsigned argc,
   return true;
 }
 #endif
+
+static bool intrinsic_ReportWarning(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() >= 1);
+
+  MOZ_RELEASE_ASSERT(args[0].isInt32());
+  uint32_t errorNumber = args[0].toInt32();
+
+  UniqueChars errorArgs[3];
+  if (!PrepareErrorArguments(cx, JSEXN_WARN, args, errorArgs)) {
+    return false;
+  }
+
+  if (!WarnNumberUTF8(cx, errorNumber, errorArgs[0].get(), errorArgs[1].get(),
+                      errorArgs[2].get())) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
 
 /**
  * Handles an assertion failure in self-hosted code just like an assertion
@@ -1785,6 +1819,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpSearcher", RegExpSearcher, 3, 0, RegExpSearcher),
     JS_INLINABLE_FN("RegExpSearcherLastLimit", RegExpSearcherLastLimit, 0, 0,
                     RegExpSearcherLastLimit),
+    JS_FN("ReportWarning", intrinsic_ReportWarning, 4, 0),
     JS_INLINABLE_FN("SameValue", js::obj_is, 2, 0, ObjectIs),
     JS_FN("SetCopy", SetObject::copy, 1, 0),
     JS_FN("StringReplaceAllString", intrinsic_StringReplaceAllString, 3, 0),

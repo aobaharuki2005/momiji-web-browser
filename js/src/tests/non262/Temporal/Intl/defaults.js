@@ -25,11 +25,6 @@ let plainTime = zonedDateTime.toPlainTime();
 
 for (let locale of locales) {
   for (let calendar of Intl.supportedValuesOf("calendar")) {
-    // Invalid calendar identifiers for Temporal.
-    if (calendar === "islamic" || calendar === "islamic-rgsa") {
-      continue;
-    }
-
     // Calendar must match for YearMonth and MonthDay.
     //
     // https://github.com/js-temporal/proposal-temporal-v2/issues/29
