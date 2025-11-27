@@ -28,11 +28,12 @@ private class BooleanPreference(
         if (thisRef.preferences.contains(key)) {
             thisRef.preferences.getBoolean(key, default())
         } else {
+            val value = default()
             if (persistDefaultIfNotExists) {
-                thisRef.preferences.edit { putBoolean(key, default()) }
+                thisRef.preferences.edit { putBoolean(key, value) }
             }
 
-            default()
+            value
         }
 
     override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: Boolean) =
@@ -85,11 +86,12 @@ private class StringPreference(
         if (thisRef.preferences.contains(key)) {
             thisRef.preferences.getString(key, null) ?: default()
         } else {
+            val value = default()
             if (persistDefaultIfNotExists) {
-                thisRef.preferences.edit { putString(key, default()) }
+                thisRef.preferences.edit { putString(key, value) }
             }
 
-            default()
+            value
         }
 
     override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: String) =

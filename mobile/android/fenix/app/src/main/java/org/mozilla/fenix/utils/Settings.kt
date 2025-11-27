@@ -418,7 +418,7 @@ class Settings(
 
     var contileContextId by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_contile_context_id),
-        default = TopSites.contextId.generateAndSet().toString(),
+        default = { TopSites.contextId.generateAndSet().toString() },
         persistDefaultIfNotExists = true,
     )
 
@@ -2087,7 +2087,7 @@ class Settings(
      */
     val pocketSponsoredStoriesProfileId by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories_profile),
-        default = UUID.randomUUID().toString(),
+        default = { UUID.randomUUID().toString() },
         persistDefaultIfNotExists = true,
     )
 
