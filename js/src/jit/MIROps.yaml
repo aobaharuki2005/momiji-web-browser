@@ -3920,9 +3920,13 @@
   result_type: Value
   alias_set: custom
   movable: false
-  possibly_calls: true
   generate_lir: true
+#ifdef JS_CODEGEN_X86
+  possibly_calls: true
   lir_temps: 1
+#else
+  lir_temps: 7
+#endif
 
 - name: WeakMapHasObject
   operands:

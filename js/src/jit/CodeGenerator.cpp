@@ -22674,6 +22674,86 @@ void CodeGenerator::visitMapObjectSize(LMapObjectSize* ins) {
 }
 
 void CodeGenerator::visitWeakMapGetObject(LWeakMapGetObject* ins) {
+#ifndef JS_CODEGEN_X86
+  Register weakMap = ToRegister(ins->weakMap());
+  Register obj = ToRegister(ins->object());
+  Register hashTable = ToRegister(ins->temp0());
+  Register hashCode = ToRegister(ins->temp1());
+  Register scratch = ToRegister(ins->temp2());
+  Register scratch2 = ToRegister(ins->temp3());
+  Register scratch3 = ToRegister(ins->temp4());
+  Register scratch4 = ToRegister(ins->temp5());
+  Register scratch5 = ToRegister(ins->temp6());
+  ValueOperand output = ToOutValue(ins);
+
+  Label found, missing;
+
+  // Load hash map if it exists. If not, return `undefined`.
+  Address mapAddr(weakMap,
+                  NativeObject::getFixedSlotOffset(WeakMapObject::DataSlot));
+  masm.branchTestUndefined(Assembler::Equal, mapAddr, missing);
+  masm.loadPrivate(mapAddr, hashTable);
+
+  // Hash and scramble address of object.
+#ifdef JS_PUNBOX64
+  ValueOperand boxedObj(scratch);
+#else
+  ValueOperand boxedObj(scratch, obj);
+#endif
+  masm.tagValue(JSVAL_TYPE_OBJECT, obj, boxedObj);
+  masm.hashAndScrambleValue(boxedObj, hashCode, scratch2);
+  masm.prepareHashMFBT(hashCode, /*alreadyScrambled*/ true);
+
+  using Entry = WeakMapObject::Map::Entry;
+  auto matchEntry = [&]() {
+    Register entry = scratch;
+    Label noMatch;
+    masm.fallibleUnboxObject(Address(entry, Entry::offsetOfKey()), scratch2,
+                             &noMatch);
+    masm.branchPtr(Assembler::Equal, obj, scratch2, &found);
+    masm.bind(&noMatch);
+  };
+  masm.lookupMFBT<WeakMapObject::Map>(hashTable, hashCode, scratch, scratch2,
+                                      scratch3, scratch4, scratch5, &missing,
+                                      matchEntry);
+  masm.bind(&found);
+
+  masm.loadValue(Address(scratch, Entry::offsetOfValue()), output);
+
+  auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
+    // Unboxed, tenured GC cell that needs to be barriered is in scratch.
+
+    LiveRegisterSet regsToSave(RegisterSet::Volatile());
+    regsToSave.takeUnchecked(hashTable);
+    regsToSave.takeUnchecked(hashCode);
+    regsToSave.takeUnchecked(scratch);
+    regsToSave.takeUnchecked(scratch2);
+    regsToSave.takeUnchecked(scratch3);
+    regsToSave.takeUnchecked(scratch4);
+    regsToSave.takeUnchecked(scratch5);
+    masm.PushRegsInMask(regsToSave);
+
+    using Fn = void (*)(js::gc::Cell* cell);
+    masm.setupAlignedABICall();
+    masm.passABIArg(scratch);
+    masm.callWithABI<Fn, js::jit::ReadBarrier>();
+
+    masm.PopRegsInMask(regsToSave);
+
+    masm.jump(ool.rejoin());
+  });
+  addOutOfLineCode(ool, ins->mir());
+
+  masm.emitValueReadBarrierFastPath(output, scratch, scratch2, scratch3,
+                                    scratch4, scratch5, ool->entry());
+  masm.jump(ool->rejoin());
+
+  masm.bind(&missing);
+  masm.moveValue(UndefinedValue(), output);
+
+  masm.bind(ool->rejoin());
+#else
+  // x86 doesn't have enough registers, so we call into the VM.
   Register weakMap = ToRegister(ins->weakMap());
   Register obj = ToRegister(ins->object());
   Register temp = ToRegister(ins->temp0());
@@ -22691,6 +22771,7 @@ void CodeGenerator::visitWeakMapGetObject(LWeakMapGetObject* ins) {
   masm.callWithABI<Fn, js::WeakMapObject::getObject>();
 
   masm.Pop(output);
+#endif
 }
 
 void CodeGenerator::visitWeakMapHasObject(LWeakMapHasObject* ins) {
