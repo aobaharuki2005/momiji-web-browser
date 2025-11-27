@@ -203,7 +203,9 @@ class Assembler : public AssemblerShared,
     MOZ_ASSERT(!isFinished);
     isFinished = true;
   }
-  void enterNoPool(size_t maxInst) { m_buffer.enterNoPool(maxInst); }
+  void enterNoPool(size_t maxInst, size_t maxNewDeadlines = 0) {
+    m_buffer.enterNoPool(maxInst, maxNewDeadlines);
+  }
   void leaveNoPool() { m_buffer.leaveNoPool(); }
   bool swapBuffer(wasm::Bytes& bytes);
   // Size of the instruction stream, in bytes.
@@ -563,9 +565,10 @@ class ABIArgGenerator : public ABIArgGeneratorShared {
 // will assert.
 class BlockTrampolinePoolScope {
  public:
-  explicit BlockTrampolinePoolScope(Assembler* assem, int margin)
+  explicit BlockTrampolinePoolScope(Assembler* assem, size_t margin,
+                                    size_t maxBranches = 0)
       : assem_(assem) {
-    assem_->enterNoPool(margin);
+    assem_->enterNoPool(margin, maxBranches);
   }
   ~BlockTrampolinePoolScope() { assem_->leaveNoPool(); }
 
