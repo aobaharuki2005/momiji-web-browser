@@ -305,6 +305,7 @@
   mirror: always
   do_not_use_directly: true
 
+#ifdef XP_WIN
 # Whether to avoid accessibility activation on Windows shortly after clipboard
 # copy.
 #
@@ -328,6 +329,7 @@
   type: uint32_t
   value: 2
   mirror: always
+#endif
 
 #---------------------------------------------------------------------------
 # Prefs starting with "alerts."
