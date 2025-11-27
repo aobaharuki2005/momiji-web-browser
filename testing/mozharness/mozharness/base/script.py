@@ -34,6 +34,7 @@ import zipfile
 import zlib
 from contextlib import contextmanager
 from io import BytesIO
+from pathlib import Path
 from queue import Empty, Queue
 
 import mozinfo
@@ -2385,16 +2386,38 @@ class BaseScript(ScriptMixin, LogMixin):
                 self.fatal("Aborting due to failure in pre-run listener.")
 
         self.dump_config()
+        perfherder_data = {
+            "framework": {"name": "mozharness"},
+            "suites": [],
+        }
         try:
             for action in self.all_actions:
                 if action not in self.actions:
                     self.action_message(f"Skipping {action} step.")
                     continue
 
+                start = time.monotonic()
                 self.run_action(action)
+                end = time.monotonic()
+                perfherder_data["suites"].append(
+                    {
+                        "name": action,
+                        "value": end - start,
+                        "lowerIsBetter": True,
+                        "unit": "s",
+                        "shouldAlert": False,
+                        "subtests": [],
+                    }
+                )
         except Exception:
             self.fatal("Uncaught exception: %s" % traceback.format_exc())
         finally:
+            if "MOZ_AUTOMATION" in os.environ and "UPLOAD_DIR" in os.environ:
+                upload_dir = Path(os.environ["UPLOAD_DIR"])
+                upload_dir.mkdir(parents=True, exist_ok=True)
+                upload_path = upload_dir / "perfherder-data-mozharness-actions.json"
+                with upload_path.open("w", encoding="utf-8") as f:
+                    json.dump(perfherder_data, f)
             post_success = True
             for fn in self._listeners["post_run"]:
                 try:
