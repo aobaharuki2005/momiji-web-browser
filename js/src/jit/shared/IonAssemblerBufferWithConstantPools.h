@@ -15,7 +15,7 @@
 #include "jit/JitSpewer.h"
 #include "jit/shared/IonAssemblerBuffer.h"
 
-// [SMDOC] JIT AssemblerBuffer constant pooling (ARM/ARM64/MIPS)
+// [SMDOC] JIT AssemblerBuffer constant pooling (ARM/ARM64/RISCV64)
 //
 // This code extends the AssemblerBuffer to support the pooling of values loaded
 // using program-counter relative addressing modes. This is necessary with the
@@ -69,9 +69,9 @@
 // leaveNoPool().
 
 // The only planned instruction sets that require inline constant pools are the
-// ARM, ARM64, and MIPS, and these all have fixed 32-bit sized instructions so
-// for simplicity the code below is specialized for fixed 32-bit sized
-// instructions and makes no attempt to support variable length
+// ARM, ARM64, RISCV64 (and historically MIPS), and these all have fixed 32-bit
+// sized instructions so for simplicity the code below is specialized for fixed
+// 32-bit sized instructions and makes no attempt to support variable length
 // instructions. The base assembler buffer which supports variable width
 // instruction is used by the x86 and x64 backends.
 
