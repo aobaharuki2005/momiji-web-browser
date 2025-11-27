@@ -4191,8 +4191,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // ========================================================================
   // Barrier functions.
 
-  void emitPreBarrierFastPath(JSRuntime* rt, MIRType type, Register temp1,
-                              Register temp2, Register temp3, Label* noBarrier);
+  void emitPreBarrierFastPath(MIRType type, Register temp1, Register temp2,
+                              Register temp3, Label* noBarrier);
 
  public:
   // ========================================================================

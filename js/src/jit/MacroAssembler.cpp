@@ -8067,12 +8067,18 @@ void MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
   append(desc, offset);
 }
 
-void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
-                                            Register temp1, Register temp2,
-                                            Register temp3, Label* noBarrier) {
+void MacroAssembler::emitPreBarrierFastPath(MIRType type, Register temp1,
+                                            Register temp2, Register temp3,
+                                            Label* noBarrier) {
   MOZ_ASSERT(temp1 != PreBarrierReg);
   MOZ_ASSERT(temp2 != PreBarrierReg);
   MOZ_ASSERT(temp3 != PreBarrierReg);
+
+#ifdef JS_CODEGEN_X64
+  MOZ_ASSERT(temp3 == rcx);
+#elif JS_CODEGEN_X86
+  MOZ_ASSERT(temp3 == ecx);
+#endif
 
   // Load the GC thing in temp1.
   if (type == MIRType::Value) {
@@ -8150,29 +8156,7 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
   // mask = uintptr_t(1) << (bit % WordBits);
   andPtr(Imm32(gc::ChunkMarkBitmap::BitsPerWord - 1), temp3);
   move32(Imm32(1), temp1);
-#ifdef JS_CODEGEN_X64
-  MOZ_ASSERT(temp3 == rcx);
-  shlq_cl(temp1);
-#elif JS_CODEGEN_X86
-  MOZ_ASSERT(temp3 == ecx);
-  shll_cl(temp1);
-#elif JS_CODEGEN_ARM
-  ma_lsl(temp3, temp1, temp1);
-#elif JS_CODEGEN_ARM64
-  Lsl(ARMRegister(temp1, 64), ARMRegister(temp1, 64), ARMRegister(temp3, 64));
-#elif JS_CODEGEN_MIPS64
-  ma_dsll(temp1, temp1, temp3);
-#elif JS_CODEGEN_LOONG64
-  as_sll_d(temp1, temp1, temp3);
-#elif JS_CODEGEN_RISCV64
-  sll(temp1, temp1, temp3);
-#elif JS_CODEGEN_WASM32
-  MOZ_CRASH();
-#elif JS_CODEGEN_NONE
-  MOZ_CRASH();
-#else
-#  error "Unknown architecture"
-#endif
+  lshiftPtr(temp3, temp1);
 
   // No barrier is needed if the bit is set, |word & mask != 0|.
   branchTestPtr(Assembler::NonZero, temp2, temp1, noBarrier);
