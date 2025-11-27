@@ -49,7 +49,11 @@ add_task(async function connect_from_tab_to_bg_and_crash_tab() {
   await extension.awaitMessage("bg_runtime_onConnect");
   // Force the message manager to disconnect without giving the content a
   // chance to send an "Extension:Port:Disconnect" message.
-  await BrowserTestUtils.crashFrame(tab.linkedBrowser);
+  await BrowserTestUtils.crashFrame(
+    tab.linkedBrowser,
+    /* shouldShowTabCrashPage */ true,
+    /* shouldClearMinidumps */ false
+  );
   await extension.awaitMessage("port_disconnected");
   BrowserTestUtils.removeTab(tab);
   await extension.unload();
@@ -106,7 +110,11 @@ add_task(async function connect_from_bg_to_tab_and_crash_tab() {
   await extension.awaitMessage("tab_runtime_onConnect");
   // Force the message manager to disconnect without giving the content a
   // chance to send an "Extension:Port:Disconnect" message.
-  await BrowserTestUtils.crashFrame(tab.linkedBrowser);
+  await BrowserTestUtils.crashFrame(
+    tab.linkedBrowser,
+    /* shouldShowTabCrashPage */ true,
+    /* shouldClearMinidumps */ false
+  );
   await extension.awaitMessage("port_disconnected");
   BrowserTestUtils.removeTab(tab);
   await extension.unload();
