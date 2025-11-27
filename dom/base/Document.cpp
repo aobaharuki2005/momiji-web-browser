@@ -17495,7 +17495,7 @@ void Document::MaybeRecomputePartitionKey() {
   // Set the partition key to the document's node principal. So we will use the
   // right partition key afterward.
   mozilla::net::CookieJarSettings::Cast(mCookieJarSettings)
-      ->SetPartitionKey(originURI, false);
+      ->SetPartitionKey(originURI);
 }
 
 bool Document::RecomputeResistFingerprinting(bool aForceRefreshRTPCallerType) {

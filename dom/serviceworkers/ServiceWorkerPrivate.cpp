@@ -643,8 +643,7 @@ nsresult ServiceWorkerPrivate::Initialize() {
       }
     }
   } else {
-    net::CookieJarSettings::Cast(cookieJarSettings)
-        ->SetPartitionKey(uri, false);
+    net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
     firstPartyURI = uri;
 
     // The service worker is for a first-party context, we can use the uri of
