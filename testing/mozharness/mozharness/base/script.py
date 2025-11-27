@@ -2282,10 +2282,6 @@ class BaseScript(ScriptMixin, LogMixin):
             self.error("No such method %s!" % method_name)
 
     def run_action(self, action):
-        if action not in self.actions:
-            self.action_message("Skipping %s step." % action)
-            return
-
         method_name = action.replace("-", "_")
         self.action_message("Running %s step." % action)
 
@@ -2391,6 +2387,10 @@ class BaseScript(ScriptMixin, LogMixin):
         self.dump_config()
         try:
             for action in self.all_actions:
+                if action not in self.actions:
+                    self.action_message(f"Skipping {action} step.")
+                    continue
+
                 self.run_action(action)
         except Exception:
             self.fatal("Uncaught exception: %s" % traceback.format_exc())
