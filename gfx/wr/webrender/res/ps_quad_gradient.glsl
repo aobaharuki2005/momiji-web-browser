@@ -193,7 +193,7 @@ vec4 sample_gradient_stops_tree(float offset) {
     // The index distance between consecutive stop offsets at
     // the current level. At the last level, the stride is 1.
     // each has a 5 times more stride than the next (so the
-    // index stride starts high and is devided by 5 at each
+    // index stride starts high and is divided by 5 at each
     // iteration).
     int index_stride = 1;
     while (index_stride * 5 <= count) {
