@@ -207,7 +207,7 @@ class Components(
                 AdsTelemetryMiddleware(adsTelemetry),
                 BlockedTrackersMiddleware(context),
                 RecordingDevicesMiddleware(context, notificationsDelegate),
-                CfrMiddleware(context),
+                CfrMiddleware(appStore, settings),
                 FileUploadsDirCleanerMiddleware(fileUploadsDirCleaner),
             ) + EngineMiddleware.create(
                 engine,
