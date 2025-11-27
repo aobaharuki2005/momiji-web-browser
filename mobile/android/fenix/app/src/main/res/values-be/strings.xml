@@ -1,11 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--
-  This Source Code Form is subject to the terms of the Mozilla Public
-  License, v. 2.0. If a copy of the MPL was not distributed with this
-  file, You can obtain one at http://mozilla.org/MPL/2.0/.
--->
-
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Прыватны %s</string>
@@ -290,10 +283,6 @@
   <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Даведка</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
   <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Налады</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
-  <string name="browser_save_menu_handlebar_content_description">Закрыць меню захавання</string>
-  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar tools menu. -->
-  <string name="browser_tools_menu_handlebar_content_description">Закрыць меню інструментаў</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
   <string name="browser_menu_bookmark_this_page_2">Зрабіць закладку</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
@@ -529,8 +518,6 @@
   <string name="onboarding_redesign_sync_positive_button">Пачаць сінхранізацыю</string>
   <!-- Sync onboarding redesign negative button text. -->
   <string name="onboarding_redesign_sync_negative_button">Не зараз</string>
-  <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_title" tools:ignore="BrandUsage,UnusedResources">Дапамажыце нам развіваць Firefox</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_learn_more" tools:ignore="UnusedResources">Як мы выкарыстоўваем дадзеныя</string>
   <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
@@ -1396,8 +1383,6 @@
   <!-- Content description for retry download action button on the downloads screen -->
   <string name="download_retry_action">Паўтарыць</string>
   <string name="download_clear_search_description">Ачысціць</string>
-  <!-- Text for the button to share the download URL -->
-  <string name="download_share_url">Падзяліцца URL-адрасам</string>
   <!-- Text for the button to share the download file -->
   <string name="download_share_file">Падзяліцца файлам</string>
   <!-- Alert dialog confirmation before deleting multiple download items, this is the positive action. -->
@@ -1458,8 +1443,6 @@
   <string name="webcompat_reporter_cancel">Скасаваць</string>
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">Даслаць</string>
-  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
-  <string name="webcompat_reporter_preview_bottom_sheet_send">Даслаць</string>
   <!-- Broken site reason text for site is slow -->
   <string name="webcompat_reporter_reason_slow2">Сайт марудны</string>
   <!-- Broken site reason text for missing content -->
@@ -1486,8 +1469,6 @@
   <string name="unsubmitted_crash_dialog_checkbox_label">Аўтаматычна адпраўляць справаздачы аб збоях</string>
   <!-- Unsubmitted crash dialog negative button to dismiss the dialog -->
   <string name="unsubmitted_crash_dialog_negative_button">Закрыць</string>
-  <!-- Unsubmitted crash dialog negative button to never be asked for the submission -->
-  <string name="unsubmitted_crash_requested_by_devs_dialog_never_button">Ніколі не паказваць зноў</string>
   <!-- Unsubmitted crash dialog positive button to submit crash report -->
   <string name="unsubmitted_crash_dialog_positive_button">Даслаць справаздачу пра крах</string>
   <!-- Unsubmitted crash dialog button to open a web page with more details on the feature and privacy policy -->
@@ -2112,8 +2093,6 @@
   <string name="preference_doh_provider_default">(змоўчны)</string>
   <!-- Text displayed for "Custom" under "DNS over HTTPS" providers -->
   <string name="preference_doh_provider_custom">Адмысловы</string>
-  <!-- Cancel button text for provider textfield under "DNS over HTTPS" -->
-  <string name="preference_doh_provider_custom_dialog_cancel">Скасаваць</string>
   <!-- Add button text for provider textfield under "DNS over HTTPS" -->
   <string name="preference_doh_provider_custom_dialog_add">Дадаць</string>
   <!-- Preference to access list of login exceptions that we don't use DNS over HTTPS -->
