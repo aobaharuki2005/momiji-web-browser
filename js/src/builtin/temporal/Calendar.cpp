@@ -529,42 +529,14 @@ bool js::temporal::GetTemporalCalendarWithISODefault(
   return ToTemporalCalendar(cx, calendarValue, result);
 }
 
-static inline bool DayOfMonthCanBeZero(CalendarId calendarId) {
-  // Workaround when day-of-month returns zero.
-  //
-  // See <https://github.com/unicode-org/icu4x/issues/5069>.
-  return calendarId == CalendarId::IslamicUmmAlQura;
-}
-
-static inline int32_t OrdinalMonth(CalendarId calendarId,
-                                   const icu4x::capi::Date* date) {
+static inline int32_t OrdinalMonth(const icu4x::capi::Date* date) {
   int32_t month = icu4x::capi::icu4x_Date_ordinal_month_mv1(date);
   MOZ_ASSERT(month > 0);
-
-  if (DayOfMonthCanBeZero(calendarId)) {
-    // If |dayOfMonth| is zero, interpret as last day of previous month.
-    int32_t dayOfMonth = icu4x::capi::icu4x_Date_day_of_month_mv1(date);
-    if (dayOfMonth == 0) {
-      MOZ_ASSERT(month > 1);
-      month -= 1;
-    }
-  }
-
   return month;
 }
 
-static inline int32_t DayOfMonth(CalendarId calendarId,
-                                 const icu4x::capi::Date* date) {
+static inline int32_t DayOfMonth(const icu4x::capi::Date* date) {
   int32_t dayOfMonth = icu4x::capi::icu4x_Date_day_of_month_mv1(date);
-
-  if (DayOfMonthCanBeZero(calendarId)) {
-    // If |dayOfMonth| is zero, interpret as last day of previous month.
-    if (dayOfMonth == 0) {
-      MOZ_ASSERT(CalendarDaysInMonth(calendarId).second == 30);
-      dayOfMonth = 30;
-    }
-  }
-
   MOZ_ASSERT(dayOfMonth > 0);
   return dayOfMonth;
 }
@@ -1248,7 +1220,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendarId,
         return nullptr;
       }
       MOZ_ASSERT_IF(CalendarEraStartsAtYearBoundary(calendarId),
-                    OrdinalMonth(calendarId, date.get()) == month);
+                    OrdinalMonth(date.get()) == month);
       return date;
     }
 
@@ -1271,7 +1243,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendarId,
 
       // If the ordinal month of |date| matches the input month, no additional
       // changes are necessary and we can directly return |date|.
-      int32_t ordinal = OrdinalMonth(calendarId, date.get());
+      int32_t ordinal = OrdinalMonth(date.get());
       if (ordinal == month) {
         return date;
       }
@@ -1308,7 +1280,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendarId,
             return nullptr;
           }
 
-          int32_t ordinal = OrdinalMonth(calendarId, date.get());
+          int32_t ordinal = OrdinalMonth(date.get());
           if (ordinal == month) {
             return date;
           }
@@ -1338,8 +1310,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendarId,
       if (!date) {
         return nullptr;
       }
-      MOZ_ASSERT(OrdinalMonth(calendarId, date.get()) == month,
-                 "unexpected ordinal month");
+      MOZ_ASSERT(OrdinalMonth(date.get()) == month, "unexpected ordinal month");
       return date;
     }
 
@@ -1359,7 +1330,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendarId,
 
       // If the ordinal month of |date| matches the input month, no additional
       // changes are necessary and we can directly return |date|.
-      int32_t ordinal = OrdinalMonth(calendarId, date.get());
+      int32_t ordinal = OrdinalMonth(date.get());
       if (ordinal == month) {
         return date;
       }
@@ -1400,8 +1371,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendarId,
       if (!date) {
         return nullptr;
       }
-      MOZ_ASSERT(OrdinalMonth(calendarId, date.get()) == month,
-                 "unexpected ordinal month");
+      MOZ_ASSERT(OrdinalMonth(date.get()) == month, "unexpected ordinal month");
       return date;
     }
   }
@@ -1609,15 +1579,6 @@ static bool CalendarDateMonthCode(JSContext* cx, CalendarId calendar,
       AsciiDigitToNumber(view[1]) * 10 + AsciiDigitToNumber(view[2]);
   bool isLeapMonth = view.length() > 3;
   auto monthCode = MonthCode{ordinal, isLeapMonth};
-
-  if (DayOfMonthCanBeZero(calendar)) {
-    // If |dayOfMonth| is zero, interpret as last day of previous month.
-    int32_t dayOfMonth = icu4x::capi::icu4x_Date_day_of_month_mv1(date);
-    if (dayOfMonth == 0) {
-      MOZ_ASSERT(ordinal > 1 && !isLeapMonth);
-      monthCode = MonthCode{ordinal - 1};
-    }
-  }
 
   // The month code must be valid for this calendar.
   MOZ_ASSERT(CalendarMonthCodes(calendar).contains(monthCode));
@@ -1991,11 +1952,10 @@ static bool CalendarFieldEraYearMatchesYear(JSContext* cx, CalendarId calendar,
  * > month.
  */
 static bool CalendarFieldMonthCodeMatchesMonth(JSContext* cx,
-                                               CalendarId calendarId,
                                                Handle<CalendarFields> fields,
                                                const icu4x::capi::Date* date,
                                                int32_t month) {
-  int32_t ordinal = OrdinalMonth(calendarId, date);
+  int32_t ordinal = OrdinalMonth(date);
 
   // The user requested month must match the actual ordinal month.
   if (month != ordinal) {
@@ -2021,17 +1981,6 @@ static ISODate ToISODate(const icu4x::capi::Date* date) {
   MOZ_ASSERT(1 <= isoMonth && isoMonth <= 12);
 
   int32_t isoDay = icu4x::capi::icu4x_IsoDate_day_of_month_mv1(isoDate.get());
-
-  // TODO: Workaround for <https://github.com/unicode-org/icu4x/issues/5070>.
-  if (isoDay == 0) {
-    MOZ_ASSERT(icu4x::capi::icu4x_Calendar_kind_mv1(
-                   icu4x::capi::icu4x_Date_calendar_mv1(date)) ==
-               icu4x::capi::CalendarKind_Indian);
-    isoDay = 31;
-    isoMonth = 12;
-    isoYear -= 1;
-  }
-
   MOZ_ASSERT(1 <= isoDay && isoDay <= ::ISODaysInMonth(isoYear, isoMonth));
 
   return {isoYear, isoMonth, isoDay};
@@ -2068,7 +2017,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendar,
 
   // |month| and |monthCode| must be consistent.
   if (month.code != MonthCode{} && month.ordinal > 0) {
-    if (!CalendarFieldMonthCodeMatchesMonth(cx, calendar, fields, date.get(),
+    if (!CalendarFieldMonthCodeMatchesMonth(cx, fields, date.get(),
                                             month.ordinal)) {
       return nullptr;
     }
@@ -2349,11 +2298,11 @@ static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
       // Call into ICU4X if `day` exceeds the minimum number of days.
       int32_t minDaysInMonth = CalendarDaysInMonth(calendar, monthCode).first;
       if (day > minDaysInMonth) {
-        day = DayOfMonth(calendar, date.get());
+        day = DayOfMonth(date.get());
       }
     } else {
       MOZ_ASSERT(overflow == TemporalOverflow::Reject);
-      MOZ_ASSERT(day == DayOfMonth(calendar, date.get()));
+      MOZ_ASSERT(day == DayOfMonth(date.get()));
     }
   } else {
     MOZ_ASSERT(monthCode != MonthCode{});
@@ -2411,7 +2360,7 @@ static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
 
   // |month| and |monthCode| must be consistent.
   if (month.code != MonthCode{} && month.ordinal > 0) {
-    if (!CalendarFieldMonthCodeMatchesMonth(cx, calendar, fields, date.get(),
+    if (!CalendarFieldMonthCodeMatchesMonth(cx, fields, date.get(),
                                             month.ordinal)) {
       return false;
     }
@@ -2691,7 +2640,7 @@ bool js::temporal::CalendarMonth(JSContext* cx, Handle<CalendarValue> calendar,
     return false;
   }
 
-  int32_t month = OrdinalMonth(calendarId, dt.get());
+  int32_t month = OrdinalMonth(dt.get());
   result.setInt32(month);
   return true;
 }
@@ -2766,7 +2715,7 @@ bool js::temporal::CalendarDay(JSContext* cx, Handle<CalendarValue> calendar,
     return false;
   }
 
-  int32_t day = DayOfMonth(calendarId, dt.get());
+  int32_t day = DayOfMonth(dt.get());
   result.setInt32(day);
   return true;
 }
@@ -2833,38 +2782,6 @@ bool js::temporal::CalendarDayOfYear(JSContext* cx,
   auto dt = CreateICU4XDate(cx, date, calendarId, cal.get());
   if (!dt) {
     return false;
-  }
-
-  // Workaround for https://github.com/unicode-org/icu4x/issues/5655
-  if (calendarId == CalendarId::Japanese) {
-    // Use the extended year instead of the era year to correctly handle the
-    // case when the era changes in the current year. This can happen in the
-    // Japanese calendar.
-    int32_t year;
-    if (!CalendarDateYear(cx, calendarId, dt.get(), &year)) {
-      return false;
-    }
-    auto eraYear = CalendarEraYear(calendarId, year);
-
-    int32_t dayOfYear = DayOfMonth(calendarId, dt.get());
-    int32_t month = OrdinalMonth(calendarId, dt.get());
-
-    // Add the number of days of all preceding months to compute the overall day
-    // of the year.
-    while (month > 1) {
-      auto previousMonth = CreateDateFrom(cx, calendarId, cal.get(), eraYear,
-                                          --month, 1, TemporalOverflow::Reject);
-      if (!previousMonth) {
-        return false;
-      }
-
-      dayOfYear += DaysInMonth(previousMonth.get());
-    }
-
-    MOZ_ASSERT(dayOfYear <= DaysInYear(dt.get()));
-
-    result.setInt32(dayOfYear);
-    return true;
   }
 
   int32_t day = DayOfYear(dt.get());
@@ -3179,7 +3096,7 @@ static bool ISODateToFields(JSContext* cx, Handle<CalendarValue> calendar,
 
   // Step 4.
   if (type == DateFieldType::MonthDay || type == DateFieldType::Date) {
-    int32_t day = DayOfMonth(calendarId, dt.get());
+    int32_t day = DayOfMonth(dt.get());
     result.setDay(day);
   }
 
@@ -3493,7 +3410,7 @@ static bool ToCalendarDate(JSContext* cx, CalendarId calendarId,
     return false;
   }
 
-  int32_t day = DayOfMonth(calendarId, dt);
+  int32_t day = DayOfMonth(dt);
 
   *result = {year, monthCode, day};
   return true;
@@ -3511,8 +3428,8 @@ static bool ToCalendarDate(JSContext* cx, CalendarId calendarId,
     return false;
   }
 
-  int32_t month = OrdinalMonth(calendarId, dt);
-  int32_t day = DayOfMonth(calendarId, dt);
+  int32_t month = OrdinalMonth(dt);
+  int32_t day = DayOfMonth(dt);
 
   *result = {year, month, day};
   return true;
@@ -3578,7 +3495,7 @@ static bool AddYearMonthDuration(JSContext* cx, CalendarId calendarId,
     if (months > 0) {
       while (true) {
         // Check if adding |months| is still in the current year.
-        int32_t month = OrdinalMonth(calendarId, firstDayOfMonth.get());
+        int32_t month = OrdinalMonth(firstDayOfMonth.get());
         int32_t monthsInYear = MonthsInYear(firstDayOfMonth.get());
         if (month + months <= monthsInYear) {
           break;
@@ -3601,7 +3518,7 @@ static bool AddYearMonthDuration(JSContext* cx, CalendarId calendarId,
 
       while (true) {
         // Check if subtracting |months| is still in the current year.
-        int32_t month = OrdinalMonth(calendarId, firstDayOfMonth.get());
+        int32_t month = OrdinalMonth(firstDayOfMonth.get());
         if (month + months >= 1) {
           break;
         }
@@ -3622,7 +3539,7 @@ static bool AddYearMonthDuration(JSContext* cx, CalendarId calendarId,
     }
 
     // Compute the actual month to find the correct month code.
-    int32_t month = OrdinalMonth(calendarId, firstDayOfMonth.get()) + months;
+    int32_t month = OrdinalMonth(firstDayOfMonth.get()) + months;
     firstDayOfMonth = CreateDateFrom(cx, calendarId, calendar, eraYear, month,
                                      1, TemporalOverflow::Constrain);
     if (!firstDayOfMonth) {
@@ -4022,18 +3939,17 @@ static bool DifferenceNonISODate(JSContext* cx, CalendarId calendarId,
 
     // Convert years to months if necessary.
     if (largestUnit == TemporalUnit::Month && years != 0) {
-      auto monthsUntilEndOfYear = [calendarId](const icu4x::capi::Date* date) {
-        int32_t month = OrdinalMonth(calendarId, date);
+      auto monthsUntilEndOfYear = [](const icu4x::capi::Date* date) {
+        int32_t month = OrdinalMonth(date);
         int32_t monthsInYear = MonthsInYear(date);
         MOZ_ASSERT(1 <= month && month <= monthsInYear);
 
         return monthsInYear - month + 1;
       };
 
-      auto monthsSinceStartOfYear =
-          [calendarId](const icu4x::capi::Date* date) {
-            return OrdinalMonth(calendarId, date) - 1;
-          };
+      auto monthsSinceStartOfYear = [](const icu4x::capi::Date* date) {
+        return OrdinalMonth(date) - 1;
+      };
 
       // Add months until end of year resp. since start of year.
       if (sign > 0) {
