@@ -81,6 +81,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
@@ -424,6 +425,10 @@ class MOZ_STANDALONE_DEBUG HashMap {
   using Range = typename Impl::Range;
   using Enum = typename Impl::Enum;
   Range all() const { return mImpl.all(); }
+
+  static size_t offsetOfHashShift() {
+    return offsetof(HashMap, mImpl) + Impl::offsetOfHashShift();
+  }
 };
 
 //---------------------------------------------------------------------------
@@ -2330,6 +2335,22 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
   void rekeyAndMaybeRehash(Ptr aPtr, const Lookup& aLookup, const Key& aKey) {
     rekeyWithoutRehash(aPtr, aLookup, aKey);
     infallibleRehashIfOverloaded();
+  }
+
+  static size_t offsetOfHashShift() {
+    static_assert(sHashShiftBits == 8,
+                  "callers assume hash shift is stored in a byte");
+    // The hash shift is stored in the least significant bits of
+    // mGenAndHashShift. On little-endian platforms, this is the
+    // same offset as mGenAndHashShift itself. On big-endian platforms,
+    // we have to add an additional offset to point to the last byte.
+    // (Or we would if we had JIT support for any big-endian platforms.)
+#if MOZ_BIG_ENDIAN()
+    return offsetof(HashTable, mGenAndHashShift) + sizeof(mGenAndHashShift) -
+           sizeof(uint8_t);
+#else
+    return offsetof(HashTable, mGenAndHashShift);
+#endif
   }
 };
 
