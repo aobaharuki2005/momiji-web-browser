@@ -870,7 +870,12 @@ void gfxPlatform::Init() {
         StaticPrefs::layers_acceleration_disabled_AtStartup_DoNotUseDirectly(),
         StaticPrefs::
             layers_acceleration_force_enabled_AtStartup_DoNotUseDirectly(),
-        StaticPrefs::layers_d3d11_force_warp_AtStartup());
+#ifdef XP_WIN
+        StaticPrefs::layers_d3d11_force_warp_AtStartup()
+#else
+        false
+#endif
+    );
     // WebGL prefs
     forcedPrefs.AppendPrintf(
         "-W%d%d%d%d%d%d%d", StaticPrefs::webgl_angle_force_d3d11(),

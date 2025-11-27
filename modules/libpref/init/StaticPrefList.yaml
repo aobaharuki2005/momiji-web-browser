@@ -9522,6 +9522,7 @@
   mirror: once
   do_not_use_directly: true
 
+#ifdef XP_WIN
 - name: layers.d3d11.force-warp
   type: bool
   value: false
@@ -9531,6 +9532,7 @@
   type: bool
   value: true
   mirror: once
+#endif
 
 # Enable DEAA antialiasing for transformed layers in the compositor.
 - name: layers.deaa.enabled
