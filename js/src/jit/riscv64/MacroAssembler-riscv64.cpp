@@ -635,7 +635,7 @@ template <typename F>
 void MacroAssemblerRiscv64::RoundHelper(FPURegister dst, FPURegister src,
                                         FPURegister fpu_scratch,
                                         FPURoundingMode frm) {
-  BlockTrampolinePoolScope block_trampoline_pool(this, 20);
+  BlockTrampolinePoolScope block_trampoline_pool(this, 20, 2);
   UseScratchRegisterScope temps(this);
   Register scratch2 = temps.Acquire();
 
@@ -2623,7 +2623,9 @@ static void AtomicExchange(MacroAssembler& masm,
   if (nbytes == 4) {
     masm.memoryBarrierBefore(sync);
     masm.bind(&again);
-    BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
+    BlockTrampolinePoolScope block_trampoline_pool(&masm,
+                                                   /* 1 + 1 + 1 + 4 + 1 = */ 8,
+                                                   1);
     if (access) {
       masm.append(*access, wasm::TrapMachineInsn::Atomic,
                   FaultingCodeOffset(masm.currentOffset()));
@@ -2660,7 +2662,8 @@ static void AtomicExchange(MacroAssembler& masm,
 
   masm.bind(&again);
 
-  BlockTrampolinePoolScope block_trampoline_pool(&masm, 10);
+  BlockTrampolinePoolScope block_trampoline_pool(
+      &masm, /* 1 + 1 + 1 + 1 + 4 + 1 + 2 + 1 = */ 12, 1);
   if (access) {
     masm.append(*access, wasm::TrapMachineInsn::Atomic,
                 FaultingCodeOffset(masm.currentOffset()));
@@ -2713,7 +2716,9 @@ static void AtomicExchange64(MacroAssembler& masm,
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&tryAgain);
-  BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
+  BlockTrampolinePoolScope block_trampoline_pool(&masm,
+                                                 /* 1 + 1 + 1 + 4 + 1 = */ 8,
+                                                 1);
   if (access) {
     masm.append(*access, js::wasm::TrapMachineInsn::Load64,
                 FaultingCodeOffset(masm.currentOffset()));
@@ -2743,7 +2748,9 @@ static void AtomicFetchOp64(MacroAssembler& masm,
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&tryAgain);
-  BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
+  BlockTrampolinePoolScope block_trampoline_pool(&masm,
+                                                 /* 1 + 1 + 1 + 4 + 1 = */ 8,
+                                                 1);
   if (access) {
     masm.append(*access, js::wasm::TrapMachineInsn::Load64,
                 FaultingCodeOffset(masm.currentOffset()));
@@ -4821,7 +4828,7 @@ bool MacroAssemblerRiscv64::CalculateOffset(Label* L, int32_t* offset,
 
 void MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L) {
   MOZ_ASSERT(L == nullptr || offset == 0);
-  BlockTrampolinePoolScope block_trampoline_pool(this, 2);
+  BlockTrampolinePoolScope block_trampoline_pool(this, 2, 1);
   offset = GetOffset(offset, L, OffsetSize::kOffset21);
   Assembler::j(offset);
 }
@@ -4845,7 +4852,7 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
     scratch = rt.rm();
   }
   {
-    BlockTrampolinePoolScope block_trampoline_pool(this, 2);
+    BlockTrampolinePoolScope block_trampoline_pool(this, 2, 1);
     switch (cond) {
       case Always:
         if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
@@ -6913,7 +6920,7 @@ void MacroAssemblerRiscv64::GenPCRelativeJumpAndLink(Register rd,
 CodeOffset MacroAssemblerRiscv64::BranchAndLinkShortHelper(int32_t offset,
                                                            Label* L) {
   MOZ_ASSERT(L == nullptr || offset == 0);
-  BlockTrampolinePoolScope block_trampoline_pool(this, 2);
+  BlockTrampolinePoolScope block_trampoline_pool(this, 2, 1);
   offset = GetOffset(offset, L, OffsetSize::kOffset21);
   return jal(offset);
 }
